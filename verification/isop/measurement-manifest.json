@@ -1,0 +1,70 @@
+{
+  "schema": "noble-isop-measurement-manifest/v1",
+  "criteria": {
+    "commit": "350fb83224725a71097322685916df809c4a5ccd",
+    "path": "verification/isop/criteria.md",
+    "sha256": "14ea06da05f0d9d874fc6568b58620b3642e22cfb36c617bea865f70f9f21337",
+    "freeze_amendment_precedes_all_measurement": true
+  },
+  "source": {
+    "commit": "810f397b49d7e162ac9b3423297dbc00e74c4342",
+    "tree_clean_before_build_and_measurement": true,
+    "release_build_command": "NOBLE_ROOT=/home/brittonr/.cache/noble-iss/wt/isop-35 NOBLE_TARGET=/home/brittonr/.cache/noble-iss/target/isop-35 $HOME/.cache/noble-iss/cargo.sh build -p noble-ngraph-experiment --release --bin ngraph-phase-c --offline --locked",
+    "release_build_exit_code": 0,
+    "executable": "/home/brittonr/.cache/noble-iss/target/isop-35/release/ngraph-phase-c",
+    "executable_sha256": "d77284cb6c7a287e4b2e5e29ec02bc80773740f2806b100159dca26699d75cd3",
+    "toolchain": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+    "cpu": "AMD RYZEN AI MAX+ 395 w/ Radeon 8060S"
+  },
+  "protocol": {
+    "runs": 3,
+    "workloads_per_run": 5,
+    "samples_per_arm": 30,
+    "minimum_calibrated_batch_ns": 20000,
+    "requested_cpu": "2",
+    "process_affinity_verified": "2",
+    "timer": "std::time::Instant (CLOCK_MONOTONIC)",
+    "all_independent_checks_passed": true
+  },
+  "runs": [
+    {
+      "run": 1,
+      "started_at": "2026-11-13T19:01:54.364Z",
+      "finished_at": "2026-11-13T19:01:54.403Z",
+      "exit_code": 0,
+      "process_affinity": "2",
+      "loadavg_start": "22.67 19.27 20.78 26/6610 2590109",
+      "scratch_output": "/home/brittonr/.cache/noble-iss/scratch/isop-35/measurements/run-01.json",
+      "retained_output": "verification/isop/run-01.json",
+      "sha256": "fe661dece89568efe387451339951060ab2672d1e50187e79098fbb075c3cae4",
+      "bytes": 12094,
+      "command": "/run/current-system/sw/bin/taskset -c 2 /home/brittonr/.cache/noble-iss/target/isop-35/release/ngraph-phase-c --isop-bench true --samples 30 --source-rev 810f397b49d7e162ac9b3423297dbc00e74c4342 --toolchain \"rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\" --pinned-cpu 2 --out /home/brittonr/.cache/noble-iss/scratch/isop-35/measurements/run-01.json"
+    },
+    {
+      "run": 2,
+      "started_at": "2026-11-13T19:01:54.403Z",
+      "finished_at": "2026-11-13T19:01:54.440Z",
+      "exit_code": 0,
+      "process_affinity": "2",
+      "loadavg_start": "22.67 19.27 20.78 36/6609 2590112",
+      "scratch_output": "/home/brittonr/.cache/noble-iss/scratch/isop-35/measurements/run-02.json",
+      "retained_output": "verification/isop/run-02.json",
+      "sha256": "c8d69aea8c58c8103ab7a332552daca8a096452bc6285ef672bd494f0660f061",
+      "bytes": 12062,
+      "command": "/run/current-system/sw/bin/taskset -c 2 /home/brittonr/.cache/noble-iss/target/isop-35/release/ngraph-phase-c --isop-bench true --samples 30 --source-rev 810f397b49d7e162ac9b3423297dbc00e74c4342 --toolchain \"rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\" --pinned-cpu 2 --out /home/brittonr/.cache/noble-iss/scratch/isop-35/measurements/run-02.json"
+    },
+    {
+      "run": 3,
+      "started_at": "2026-11-13T19:01:54.440Z",
+      "finished_at": "2026-11-13T19:01:54.476Z",
+      "exit_code": 0,
+      "process_affinity": "2",
+      "loadavg_start": "22.67 19.27 20.78 26/6609 2590113",
+      "scratch_output": "/home/brittonr/.cache/noble-iss/scratch/isop-35/measurements/run-03.json",
+      "retained_output": "verification/isop/run-03.json",
+      "sha256": "23fd85ed822f4ce0a6b40a40a89ac8b11fa49ce5d9832c520518dc2c87f80156",
+      "bytes": 12095,
+      "command": "/run/current-system/sw/bin/taskset -c 2 /home/brittonr/.cache/noble-iss/target/isop-35/release/ngraph-phase-c --isop-bench true --samples 30 --source-rev 810f397b49d7e162ac9b3423297dbc00e74c4342 --toolchain \"rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\" --pinned-cpu 2 --out /home/brittonr/.cache/noble-iss/scratch/isop-35/measurements/run-03.json"
+    }
+  ]
+}

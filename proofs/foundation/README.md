@@ -2887,8 +2887,11 @@ Neither tests nor measurements establish correspondence to the Noble source
 language or graph IR.
 
 The frozen whitelist and adoption criterion are in
-[`verification/isop/criteria.md`](../../verification/isop/criteria.md). The
-current #32 residual whitelist contains only two I64 arithmetic operations;
+[`verification/isop/criteria.md`](../../verification/isop/criteria.md); the
+three synthetic runs and source-integration decision are in
+[`verification/isop/decision.md`](../../verification/isop/decision.md), with
+their manifest and raw run receipts beside it. The current #32 residual
+whitelist contains only two I64 arithmetic operations;
 the graph does not contain general Boolean AND/OR/NOT, and the foundation
 fragment excludes branching. The Boolean-region census is therefore zero by
 construction, so source integration is **NO-GO/deferred** until a separately
