@@ -5920,6 +5920,60 @@
       "claim": "a seeded interpreter with swapped subtraction operands disagrees with the reference"
     },
     {
+      "name": "NobleFoundation.Synthesis.not_certifiable_of_refuted",
+      "phase": 2,
+      "role": "symbolic-solver",
+      "claim": "a pair with a refuting input has no certificate for every input"
+    },
+    {
+      "name": "NobleFoundation.Synthesis.arithCommuted_certified",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the synthesized program `7 + +` and its reference `(+ (+ x 7) y)` agree on every input, a graph-model theorem"
+    },
+    {
+      "name": "NobleFoundation.Synthesis.arithSubtract_certified",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the synthesized program `- 7 +` and its reference `(- (+ x 7) y)` agree on every input, a graph-model theorem"
+    },
+    {
+      "name": "NobleFoundation.Synthesis.arithScaled_certified",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the synthesized program `7 + 5 * +` and its reference `(+ x (* 5 (+ 7 y)))` agree on every input, a graph-model theorem"
+    },
+    {
+      "name": "NobleFoundation.Synthesis.overBoundControl_certified",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the synthesized program `3 + 7 3 - * +` and its reference `(+ x (* (+ y 3) 4))` agree on every input, a graph-model theorem"
+    },
+    {
+      "name": "NobleFoundation.Synthesis.bitOr_refused_witness_refutes",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the refused candidate `-` really refutes `bitOr`'s reference at the recorded bits"
+    },
+    {
+      "name": "NobleFoundation.Synthesis.bitOr_refused_not_certifiable",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the refused candidate for `bitOr` has no certificate, from its kernel-checked witness"
+    },
+    {
+      "name": "NobleFoundation.Synthesis.bitXor_refused_witness_refutes",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the refused candidate `-` really refutes `bitXor`'s reference at the recorded bits"
+    },
+    {
+      "name": "NobleFoundation.Synthesis.bitXor_refused_not_certifiable",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the refused candidate for `bitXor` has no certificate, from its kernel-checked witness"
+    },
+    {
       "name": "NobleFoundation.OperandForwarding.targetFuel_le",
       "phase": 1,
       "role": "operand-forwarding",

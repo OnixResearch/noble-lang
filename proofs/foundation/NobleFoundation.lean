@@ -51,6 +51,7 @@ import NobleFoundation.CacheLookup
 import NobleFoundation.ConstructorReuse
 import NobleFoundation.SgdReference
 import NobleFoundation.FirstProjection
+import NobleFoundation.SynthesisCertified
 import NobleFoundation.OperandForwarding
 import NobleFoundation.Binary32Scale
 import NobleFoundation.ReverseADMutations
