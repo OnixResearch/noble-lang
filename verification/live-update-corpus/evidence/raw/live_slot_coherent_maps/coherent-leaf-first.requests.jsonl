@@ -1,0 +1,8 @@
+{"operation":"define","id":"defTracedE","name":"tracedE","source":"def tracedE [ drop \"relocated\" test.emit drop 21 ]","inputs":[]}
+{"operation":"define","id":"defInert","name":"inertBody","source":"def inertBody [ drop 21 ]","inputs":[]}
+{"operation":"install","id":"tracedE","source":"tracedE","inputs":["I64"],"selected_name":"tracedE"}
+{"operation":"install","id":"caller","source":"slot.invoke","inputs":["I64","LiveRef<I64,I64,live.dispatch+test.emit>"]}
+{"operation":"candidate","id":"caller"}
+{"operation":"publish","slot":"E","id":"tracedE","program_index":0,"expected_epoch":"0"}
+{"operation":"publish","slot":"B","id":"caller","program_index":0,"expected_epoch":"1"}
+{"operation":"invoke","id":"caller","inputs":[{"kind":"i64","value":"5"}],"refs":[{"position":1,"ordinal":0,"slot":"E"}]}

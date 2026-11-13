@@ -1,0 +1,8 @@
+{"epoch":"0","guest_requests":0,"outcome":"configured","protected_operations":0,"retire_code_spans":[],"schema":"noble-live-slot-report/v1","stage":"slot"}
+{"id":"defLeaf","name":"emittingLeaf","outcome":"definition-retained","schema":"noble-live-slot-report/v1","source_generation":1,"source_sha256":"24ad3f9a3d0bdb236fdb67dad4ddd7fe5103fdb59a62c7e32e20bf1fb161b1a8","stage":"source"}
+{"artifact_sha256":"37e57e25184cd0f724b7c40620b03f663a9350e1ab87763fb007bf0fe4bfe18f","generation":"1","guest_requests":0,"handle":4108,"id":"leaf","outcome":"installed","protected_operations":0,"retire_code_spans":[],"schema":"noble-live-slot-report/v1","stage":"slot"}
+{"artifact_sha256":"23a0652cc4f15fd9feaab0d5f5da2c0c79b760066d84d297a6f756d869007298","generation":"2","guest_requests":0,"handle":4110,"id":"callerA","outcome":"installed","protected_operations":0,"retire_code_spans":[],"schema":"noble-live-slot-report/v1","stage":"slot"}
+{"guest_requests":0,"id":"callerA","outcome":"candidate-staged","program_index":0,"protected_operations":0,"retire_code_spans":[],"schema":"noble-live-slot-report/v1","stage":"slot"}
+{"epoch":"1","generation":"1","guest_requests":0,"incarnation":"1","outcome":"published","protected_operations":0,"retire_code_spans":[],"schema":"noble-live-slot-report/v1","stage":"slot"}
+{"epoch":"2","generation":"1","guest_requests":0,"incarnation":"1","outcome":"published","protected_operations":0,"retire_code_spans":[],"schema":"noble-live-slot-report/v1","stage":"slot"}
+{"diagnostic":"unregistered bound root slot","guest_requests":0,"outcome":"refused","protected_operations":0,"schema":"noble-live-slot-report/v1","stage":"command"}

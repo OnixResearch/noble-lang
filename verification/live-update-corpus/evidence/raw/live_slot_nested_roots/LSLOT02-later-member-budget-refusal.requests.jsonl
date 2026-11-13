@@ -1,0 +1,7 @@
+{"operation":"install","id":"B1","source":"1 +","inputs":["I64"]}
+{"operation":"install","id":"A1","source":"slot.invoke slot.invoke","inputs":["I64","LiveRef<I64,I64,pure>"]}
+{"operation":"bootstrap","expected_epoch":"0","members":[{"slot":"B","id":"B1"},{"slot":"A","id":"A1"}]}
+{"operation":"delete","slot":"B","expected_epoch":"0","expected_incarnation":"1","expected_generation":"1"}
+{"operation":"delete","slot":"A","expected_epoch":"0","expected_incarnation":"1","expected_generation":"1"}
+{"operation":"trace"}
+{"operation":"bootstrap","expected_epoch":"0","members":[{"slot":"B","id":"B1"},{"slot":"A","id":"A1"}]}

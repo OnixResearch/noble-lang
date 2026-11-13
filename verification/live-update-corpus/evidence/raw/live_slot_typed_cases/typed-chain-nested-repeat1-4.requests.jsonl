@@ -1,0 +1,12 @@
+{"operation":"install","id":"callerA","source":"slot.invoke","inputs":["I64","LiveRef<I64,I64,pure>","LiveRef<I64+LiveRef<I64,I64,pure>,I64,live.dispatch>"]}
+{"operation":"install","id":"callerLeaf","source":"slot.invoke","inputs":["I64","LiveRef<I64,I64,pure>"]}
+{"operation":"install","id":"A1","source":"slot.invoke slot.invoke","inputs":["I64","LiveRef<I64,I64,pure>"]}
+{"operation":"install","id":"B1","source":"1 +","inputs":["I64"]}
+{"operation":"install","id":"B2","source":"2 +","inputs":["I64"]}
+{"operation":"candidate","id":"B2"}
+{"operation":"bootstrap","expected_epoch":"0","members":[{"slot":"B","id":"B1"},{"slot":"A","id":"callerA"}]}
+{"operation":"bootstrap","expected_epoch":"0","members":[{"slot":"B","id":"B1"},{"slot":"A","id":"A1"}]}
+{"operation":"bootstrap","expected_epoch":"0","members":[{"slot":"B","id":"B1"},{"slot":"A","id":"A1"}]}
+{"operation":"reflect","id":"callerA","site_id":0}
+{"operation":"reflect","id":"A1","site_id":0}
+{"operation":"invoke","id":"callerA","inputs":[{"kind":"i64","value":"20"}],"refs":[{"position":1,"ordinal":0,"slot":"B"},{"position":2,"ordinal":1,"slot":"A"}]}
