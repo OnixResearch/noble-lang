@@ -65,7 +65,10 @@ fn decode_word(values: &[Value]) -> u64 {
             panic!("non-F32 output: {value:?}")
         };
         let cell = f32::from_bits(*bits);
-        assert!(cell == 0.0 || cell == 1.0, "non-bit output: {cell:?}");
+        match cell {
+            0.0 | 1.0 => {}
+            _ => panic!("non-bit output: {cell:?}"),
+        }
         word | ((cell as u64) << bit)
     })
 }
@@ -99,7 +102,7 @@ fn run(graph: &Graph, a: u64, b: u64) -> u64 {
 }
 
 #[test]
-fn recurrent_wrapping_adder_matches_reference_and_source_boundaries() {
+fn wrapping_adder_matches_reference_and_source_boundaries() {
     let graph = exact_adder();
     for a in 0..4 {
         for b in 0..4 {
