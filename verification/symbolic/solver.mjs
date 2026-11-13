@@ -33,7 +33,7 @@
  *
  * Usage (pinned Node, env -i, from a clean checkout):
  *   node verification/symbolic/solver.mjs --bitwuzla BIN --z3 BIN --time GNU_TIME
- *     --foundation-receipt DIR --output NEW_FILE --witnesses NEW_FILE
+ *     --foundation-receipt DIR --output NEW_FILE --witnesses NEW_FILE --queries NEW_FILE
  */
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -53,6 +53,7 @@ const BUDGET = Object.freeze({ nodes: 64, slots: 16, formula_bytes: 65536, solve
 const STRICT_AXIOMS = ['propext', 'Classical.choice', 'Quot.sound'];
 const SOLVERS = ['bitwuzla', 'z3'];
 const FAULTS = ['sub-order', 'mul-as-add', 'constant-bit', 'drop-output'];
+const ANSWERS = ['sat', 'unsat', 'unknown', 'timeout', 'error'];
 const MASK = (1n << 64n) - 1n;
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const read = relative => fs.readFileSync(path.join(ROOT, relative));
@@ -62,7 +63,7 @@ const elapsed = started => Number(process.hrtime.bigint() - started);
 class Unsupported extends Error {}
 
 function options() {
-  const wanted = ['--bitwuzla', '--z3', '--time', '--foundation-receipt', '--output', '--witnesses'];
+  const wanted = ['--bitwuzla', '--z3', '--time', '--foundation-receipt', '--output', '--witnesses', '--queries'];
   const argv = process.argv.slice(2);
   assert.equal(argv.length, wanted.length * 2, `usage: solver.mjs ${wanted.map(flag => `${flag} V`).join(' ')}`);
   const out = {};
@@ -71,7 +72,7 @@ function options() {
     out[argv[index]] = argv[index + 1];
   }
   for (const key of ['--bitwuzla', '--z3', '--time']) assert.ok(path.isAbsolute(out[key]), `${key} must be absolute`);
-  for (const key of ['--output', '--witnesses']) {
+  for (const key of ['--output', '--witnesses', '--queries']) {
     assert.ok(!fs.existsSync(out[key]), `${key} must not exist`);
     assert.ok(!path.resolve(out[key]).startsWith(ROOT + path.sep), `${key} must be outside the repository`);
   }
@@ -280,24 +281,44 @@ function solve(tools, solver, query, { timeoutMs = BUDGET.solver_ms, watchdogMs 
 
 /* ---------- Outcomes ---------- */
 
-/** The status one solver answer supports for one claim, given what the query was bound to. */
+/**
+ * The status one solver answer supports for one claim, given what the query was bound to, and the
+ * observation tuple that status was derived from. Every row of the receipt carries that tuple, and
+ * `NobleFoundation.SymbolicRefusals.classify` is proved against the retained receipt to reproduce
+ * this function's status from it (`SymbolicRefusalsReplay`). The replay of a parsed model is
+ * computed before the certificate check so the tuple records what happened, not what the status
+ * happened to need; the status order here is the lane's.
+ */
 function outcome(pair, query, expected, answer, certificate) {
-  if (query.encoder !== expected.encoder || query.semantic_revision !== expected.semantic_revision
-    || query.profile !== expected.profile || query.pair_sha256 !== pair.digest) {
-    return { status: 'inconclusive', reason: 'query bound to other bytes or revisions' };
-  }
-  if (certificate) return { status: 'certified', reason: certificate };
-  if (answer.answer === 'sat') {
-    if (answer.rejected) return { status: 'inconclusive', reason: `model rejected: ${answer.rejected}` };
+  const bound = query.encoder === expected.encoder && query.semantic_revision === expected.semantic_revision
+    && query.profile === expected.profile && query.pair_sha256 === pair.digest;
+  const parsed = answer.answer === 'sat' && !answer.rejected;
+  let replays = false;
+  let replay_ns;
+  let witness;
+  if (parsed) {
     const started = process.hrtime.bigint();
-    const replays = refutes(pair, answer.slots);
-    const replay_ns = elapsed(started);
-    const witness = Object.fromEntries([...answer.slots].map(([slot, bits]) => [`s${slot}`, `0x${hex16(bits)}`]));
-    if (!replays) return { status: 'inconclusive', reason: 'model does not replay on the original graphs', model: witness, replay_ns };
-    return { status: 'refuted', reason: 'model replays on the original graphs', witness, replay_ns };
+    replays = refutes(pair, answer.slots);
+    replay_ns = elapsed(started);
+    witness = Object.fromEntries([...answer.slots].map(([slot, bits]) => [`s${slot}`, `0x${hex16(bits)}`]));
   }
-  if (answer.answer === 'unsat') return { status: 'inconclusive', reason: 'external UNSAT without an accepted proof' };
-  return { status: 'inconclusive', reason: `solver ${answer.answer}` };
+  const observation = {
+    within_budget: true,
+    bound,
+    certificate: Boolean(certificate),
+    model_parsed: parsed,
+    model_replays: parsed && replays,
+    answer: ANSWERS.includes(answer.answer) ? answer.answer : 'error',
+  };
+  if (!bound) return { status: 'inconclusive', reason: 'query bound to other bytes or revisions', observation };
+  if (certificate) return { status: 'certified', reason: certificate, observation };
+  if (answer.answer === 'sat') {
+    if (answer.rejected) return { status: 'inconclusive', reason: `model rejected: ${answer.rejected}`, observation };
+    if (!replays) return { status: 'inconclusive', reason: 'model does not replay on the original graphs', model: witness, replay_ns, observation };
+    return { status: 'refuted', reason: 'model replays on the original graphs', witness, replay_ns, observation };
+  }
+  if (answer.answer === 'unsat') return { status: 'inconclusive', reason: 'external UNSAT without an accepted proof', observation };
+  return { status: 'inconclusive', reason: `solver ${answer.answer}`, observation };
 }
 
 /** Kernel certificates, accepted only from a clean receipt that recorded the bytes read here. */
@@ -371,6 +392,7 @@ function main() {
   const pairs = parseCorpus(corpusBytes.toString('utf8'));
   const cache = new Map();
   const witnessesOf = new Map();
+  const queries = [];
 
   // The claims: every corpus pair, both solvers, sliced and unsliced queries.
   const claims = pairs.map(pair => {
@@ -378,6 +400,9 @@ function main() {
     const sliced = encode(pair, types);
     const unsliced = encode(pair, types, { slice: false });
     assert.ok(sliced.bytes <= unsliced.bytes && sliced.nodes <= unsliced.nodes, `${pair.name}: slicing never grows a query`);
+    for (const [mode, query] of [['sliced', sliced], ['unsliced', unsliced]]) {
+      queries.push({ pair: pair.name, mode, bytes: query.bytes, nodes: query.nodes, sha256: query.sha256, text: query.text });
+    }
     const runs = [];
     for (const [mode, query] of [['sliced', sliced], ['unsliced', unsliced]]) {
       for (const solver of SOLVERS) {
@@ -501,6 +526,8 @@ function main() {
     edit(copy);
     return { label, certificate: certificates(copy, corpusBytes, certifiedBytes).of(certifiedPair.name) };
   };
+  const certifiedQuery = encode(certifiedPair, admit(certifiedPair));
+  const certifiedAnswer = solve(tools, 'z3', certifiedQuery);
   const certificateControls = [
     { label: 'bound receipt, the positive control', certificate: certs.of(certifiedPair.name) },
     tamper('corpus bytes differ from the receipt', copy => { copy.sources_sha256[CORPUS] = sha('other corpus'); }),
@@ -511,16 +538,19 @@ function main() {
     tamper('disallowed axiom', copy => {
       copy.theorems.find(theorem => theorem.name === `${CORPUS_NAMESPACE}.${certifiedPair.name}_certified`).axioms.push('sorryAx');
     }),
-  ];
+  ].map(({ label, certificate }) => ({ label, certificate,
+    ...outcome(certifiedPair, bind(certifiedPair), expected, certifiedAnswer, certificate) }));
   assert.ok(certificateControls[0].certificate && certificateControls.slice(1).every(entry => entry.certificate === null),
     'only a bound, clean, proved, strict certificate certifies');
-  const certifiedQuery = encode(certifiedPair, admit(certifiedPair));
   const forced = [
-    ['injected UNKNOWN', { answer: 'unknown' }],
-    ['injected solver error', { answer: 'error' }],
-    ['watchdog timeout', solve(tools, 'bitwuzla', certifiedQuery, { watchdogMs: 1 })],
-  ].map(([label, answer]) => ({ label, answer: answer.answer, ...outcome(certifiedPair, bind(certifiedPair), expected, answer, null) }));
-  assert.ok(forced.every(entry => entry.status === 'inconclusive'), 'UNKNOWN, errors and timeouts are inconclusive');
+    ['injected UNKNOWN', { answer: 'unknown' }, null],
+    ['injected solver error', { answer: 'error' }, null],
+    ['watchdog timeout', solve(tools, 'bitwuzla', certifiedQuery, { watchdogMs: 1 }), null],
+    ['bound certificate with an injected UNKNOWN', { answer: 'unknown' }, certs.of(certifiedPair.name)],
+  ].map(([label, answer, certificate]) => ({ label, answer: answer.answer,
+    ...outcome(certifiedPair, bind(certifiedPair), expected, answer, certificate) }));
+  assert.ok(forced.slice(0, 3).every(entry => entry.status === 'inconclusive'), 'UNKNOWN, errors and timeouts are inconclusive');
+  assert.equal(forced[3].status, 'certified', 'a bound kernel certificate decides whatever the solver answered');
   const refusals = [
     ['node budget', () => admit({ ...refutedPair, left: [...Array(BUDGET.nodes + 1)].map(() => ({ op: 'input', slot: 0 })) })],
     ['slot budget', () => admit({ ...refutedPair, left: [{ op: 'input', slot: BUDGET.slots }, ...refutedPair.left.slice(1)] })],
@@ -533,7 +563,12 @@ function main() {
       return { label, status: 'admitted' };
     } catch (error) {
       if (!(error instanceof Unsupported)) throw error;
-      return { label, status: 'unsupported', reason: error.message };
+      // A refused row never ran: admission comes first, so no binding, certificate, model or
+      // answer was examined. The tuple records exactly that, and `classify` must report
+      // `unsupported` from it.
+      return { label, status: 'unsupported', reason: error.message,
+        observation: { within_budget: false, bound: false, certificate: false,
+          model_parsed: false, model_replays: false, answer: 'notRun' } };
     }
   });
   assert.ok(refusals.every(entry => entry.status === 'unsupported'), 'every exhausted budget or fragment violation is unsupported');
@@ -562,6 +597,12 @@ function main() {
     '# written by verification/symbolic/solver.mjs; refutes = replayed on the original graphs, rejects = did not',
     ...witnessLines, ''].join('\n');
   fs.writeFileSync(flags['--witnesses'], witnessText, { flag: 'wx' });
+  // Every emitted query's text, so the Lean encoder model can be bound to the exact bytes the
+  // solvers read (`SymbolicEncoderCorpus`, generated by verification/symbolic/solver-lean.mjs).
+  const queryText = `${JSON.stringify({ schema: 'noble-symbolic-queries/v1',
+    note: 'queries as encode() writes them, in corpus order, sliced and unsliced, without any injected fault',
+    encoder: ENCODER, corpus_sha256: sha(corpusBytes), queries }, null, 2)}\n`;
+  fs.writeFileSync(flags['--queries'], queryText, { flag: 'wx' });
   const receipt = {
     schema: 'noble-symbolic-solver-receipt/v1',
     claim: 'untrusted SMT solving of the fixed graph pairs, with replay, kernel-certificate binding and controls; graph-model statuses, not Wasm theorems',
@@ -571,6 +612,7 @@ function main() {
     tools: { bitwuzla: tool('bitwuzla'), z3: tool('z3'), time: tool('time') },
     budget: BUDGET,
     claims,
+    queries: { sha256: sha(queryText), rows: queries.length },
     witnesses: { sha256: sha(witnessText), refutes: witnessLines.filter(line => line.startsWith('refutes')).length,
       rejects: witnessLines.filter(line => line.startsWith('rejects')).length },
     measurements: { slicing, warm_cache: { entries: cache.size, retained_bytes: cacheRetainedBytes } },
@@ -593,4 +635,8 @@ function main() {
     mutations: `${receipt.controls.mutations.detected}/${receipt.controls.mutations.total}`, corrupted: corrupted.length })}\n`);
 }
 
-main();
+// The corpus parser and the encoder are exported for the Lean corpus generator
+// (`verification/symbolic/solver-lean.mjs`), which must encode the same graph the lane does.
+export { parseCorpus, admit, encode };
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();

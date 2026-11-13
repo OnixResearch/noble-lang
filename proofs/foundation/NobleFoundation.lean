@@ -27,6 +27,7 @@ import NobleFoundation.SymbolicMutations
 import NobleFoundation.SymbolicPair
 import NobleFoundation.SymbolicSolver
 import NobleFoundation.SymbolicRefusals
+import NobleFoundation.SymbolicEncoder
 import NobleFoundation.SymbolicShrink
 import NobleFoundation.SymbolicPairCorpus
 import NobleFoundation.SymbolicShrinkCorpus
