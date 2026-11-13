@@ -124,8 +124,8 @@ Those v1 measurements did not contain an integrated total or a per-run saving.
 ### Integrated in-memory accounting (v2)
 
 [rewrite-cost-v2.txt](rewrite-cost-v2.txt), committed as `e7ccedcbf` before integrated timings,
-keeps every historical fixture and proposer. The current [runner](rewrite-cost.mjs) measures the
-real library pipeline, not a source compiler, Wasm executable, Lean replay or deployed BLAKE3 path:
+keeps every historical fixture and proposer. The runner revision bound by the v2 receipt measured
+the real library pipeline, not a source compiler, Wasm executable, Lean replay or deployed BLAKE3 path:
 
 - Baseline: exact source admission, packed preparation, actual-layout export/validation, first execution.
 - Certified: the same source admission, proposal/construction, exact endpoint certificate check,
@@ -185,6 +185,9 @@ remain in the receipt and are not compared as successful execution times. These 
 figures do not establish a production speedup or amortization benefit. An overwrite attempt returned
 exit 2 without changing the receipt; a dirty-source attempt refused before Cargo execution.
 
+To reproduce the historical v2 receipt, check out its source commit `0a0592f1e` and use that
+revision's runner. The current runner is v3-bound; these v2 totals are not a fresh v2 rerun.
+
 Run from a clean committed checkout, using the selected Node executable in `policy/tool-selection.json`:
 
 ```text
@@ -196,6 +199,102 @@ directly with an isolated Cargo home/target and disabled Rust wrappers. It retai
 stdout/stderr, process status and hashes; checks commit/tree/status and source hashes before/after;
 and validates all 28 rows and both coverage denominators. Dirty source refuses before Cargo runs.
 Failed attempts remain failures in their own evidence directories; historical receipts are unchanged.
+
+### Issue #64 v2 corpus and deferred ranker
+
+The frozen [v1 corpus](rewrite-quality-v1.txt) is unchanged. The new
+[v2 corpus](rewrite-quality-v2.txt) names every ordered output explicitly, including repeated
+node indices. Its `independent-folds` outputs are `[2,5]`; `ordered-outputs` is `[4,2]`; and
+`repeated-outputs` is `[2,2]`. The existing integration-test parser preserves that order and
+multiplicity. The cost lane checks that all three graphs pass source admission and that reference
+evaluation returns the corresponding exact output vectors. Other v1 node declarations and targets
+are retained and pinned by the cost test.
+
+[rewrite-cost-v3.txt](rewrite-cost-v3.txt) was pre-registered and committed as `d9b62eaf` before
+measurement. It fixes the eight-fixture/four-proposer workload (32 attempts), inherited 50 µs/step
+checker ceiling, execution and cost eligibility criteria, coverage denominators, and unmeasured
+stages. The runner ([rewrite-cost.mjs](rewrite-cost.mjs)) binds the v3 plan and v2 corpus and rejects
+missing rows or changed output vectors. Historical v1/v2 plans and receipts remain unchanged.
+
+The certificate decision is to adopt `ngraph-cert/1` as a new revision with certified dead-node
+removal (an explicit old-to-new node map) and sequential premises, while retaining
+`ngraph-cert/0` and its pinned regressions. That implementation remains in #42's scope; this slice
+does not edit `cert.rs`.
+
+The learned/circuit ranker is **NO-GO / deferred**. The current lane has no independently admitted
+non-identity rewrite, so ranking has no useful work to prioritize; with the present confluent,
+fold-only rules, rewrite order does not change the result. Training a scorer or comparing rankings
+now would manufacture a choice the accepted candidate universe does not provide. Reopen only when
+all of these hold:
+
+1. #42's new `ngraph-cert/1` supports certified dead-node removal with an explicit old-to-new node
+   map and sequential premises, without changing the pinned `ngraph-cert/0` regressions.
+2. The unchanged checker and candidate-admission pipeline independently admits at least one
+   non-identity rewrite that reaches a frozen quality target.
+3. A deterministic baseline exposes at least two eligible choices whose ordering can change useful
+   work under the same frozen total-work budget; otherwise record NO-GO without training.
+4. The comparison freezes the candidate universe, features and scorer identity before held-out
+   evaluation; ranking may only reorder those choices. It cannot add rules, alter premises, repair
+   endpoints, weaken refusals, raise budgets or bypass certificate/admission/layout checks.
+
+Training and circuit search remain in RSI Lab #73; the optional LLVM comparison in compiler-lab
+#176 is outside Noble's scope. This deferral is not an implementation of either consumer.
+
+### Issue #64 v3 clean-source measurement
+
+The [v3 receipt](rewrite-cost-v3-2026-11-13.json) binds the clean source and plan commit
+`d9b62eaf64091c26808eb21592c346d9fa9c4c98`; its source tree is `0bfb0e47cf20e8db6ad2e349859eb5595fbae7ce`.
+The sibling `.evidence` directory retains matching [source-before](rewrite-cost-v3-2026-11-13.json.evidence/source-before.json)
+and [source-after](rewrite-cost-v3-2026-11-13.json.evidence/source-after.json) snapshots, the
+[process record](rewrite-cost-v3-2026-11-13.json.evidence/process.json), [raw stdout](rewrite-cost-v3-2026-11-13.json.evidence/raw/stdout),
+[raw stderr](rewrite-cost-v3-2026-11-13.json.evidence/raw/stderr) and selected Cargo config; the receipt
+records their hashes. The runner completed all 32 fixture/proposer rows (64 unrecorded priming
+iterations and 200 samples per row).
+
+| Observation | Result |
+|---|---|
+| Source admission | All 8 fixture graphs admitted; explicit-output reference results include `[12,7]` for `independent-folds`, `[12,5]` for `ordered-outputs` and `[12,12]` for `repeated-outputs`. |
+| Raw certificate coverage | 32 attempts, 31 accepted, 1 refused, 19 residual targets reached. |
+| Integrated pipeline | 0 input refusals, 1 certificate refusal (`chained-folds`/`fixed-point`), 23 candidate-admission refusals, 0 layout/execution refusals, 8 executed rows. |
+| Executed candidates | All 8 are `identity`; no non-identity candidate executed. The 23 candidate refusals are `E-GRAPH-MALFORMED` for dead operand nodes reaching no output and no guard (`NodeId(0)` or `NodeId(1)`). |
+| Execution calls | 16,896 baseline calls; 4,224 certified calls; refused candidates receive zero execution calls. Calls include priming and measured fresh/warm execution. |
+| Fresh full-attempt medians across executed identity rows | Baseline 33.262–45.165 µs; certified 105.486–145.221 µs. |
+| Warm-execution medians across executed identity rows | Baseline 0.421–0.752 µs; certified 0.431–0.761 µs. |
+| Certificate-check cost per step | 10.54–33.14 µs for step-bearing rows, below the 50 µs/step informational ceiling. |
+| Break-even / optimization benefit | Unmeasured: no executed non-identity candidate reaches the residual target; the raw target-reaching proposals were refused at candidate admission. |
+
+The source, baseline and certified outputs agree exactly on all 8 executed identity rows, including
+wrapping `-9223372036854775808` and the ordered/repeated output vectors. Timings are debug-build,
+shared-host medians after priming, not OS-cache-cold; they do not establish a production speedup.
+Wire encoding and retained memory (allocator/RSS) remain unmeasured.
+
+Reproduce from a clean committed checkout, using the selected Node executable in
+`policy/tool-selection.json`:
+
+```text
+node verification/ngraph/rewrite-cost.mjs --output /absolute/outside-checkout/receipt.json
+```
+
+The runner refuses dirty source or pre-existing output/evidence paths and retains the raw process
+streams and source snapshots beside the receipt. This v3 result leaves the executable-optimization
+item open pending #42's `ngraph-cert/1`; it does not close #64.
+
+### Issue #64 effects-as-laws controls
+
+`crates/noble-kernel/tests/acceptance/rewrite/effect/laws.rs` adds controls to the existing kernel
+acceptance target. The test harness accepts the original first, then constructs the candidate's
+expected stack interface and allowed effect bound from that original `Checked.interface`; it carries
+the original declared `stack_height` limit forward. A candidate cannot supply these expectations.
+The controls show that an added `test.emit` is refused by effect inclusion, while a dropped effect
+kind can pass the kernel's upper-bound inclusion check but is refused by an independent exact-set
+equality law, even when both accepted interfaces return `Unit`. Changed output types and exceeding
+the original stack-height limit also refuse before execution. A counterfactual candidate-shaped
+request demonstrates why using the candidate's own output claim would be unsound.
+
+These are acceptance/interface controls, not runtime semantic equivalence tests. Effect bounds are
+idempotent upper sets of effect identities: exact equality detects dropping an identity, not
+dropping an occurrence. Allocation, hidden state, caching and runtime depth are not laws represented
+by this kernel interface, and no guarantee about them is made.
 
 ## Files
 

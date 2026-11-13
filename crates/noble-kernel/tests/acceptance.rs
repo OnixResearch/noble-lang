@@ -34,6 +34,8 @@ mod nominal;
 mod ownership;
 #[path = "acceptance/programs.rs"]
 mod programs;
+#[path = "acceptance/rewrite/effect/laws.rs"]
+mod rewrite_effect_laws;
 #[path = "acceptance/sums.rs"]
 mod sums;
 

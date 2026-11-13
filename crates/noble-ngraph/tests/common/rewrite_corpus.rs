@@ -20,6 +20,9 @@ pub struct Fixture {
     pub name: String,
     pub target: String,
     pub nodes: Vec<String>,
+    /// Explicit ordered output node indices in quality corpus v2. `None` retains v1's last-node
+    /// output rule; v2 requires this list and permits repeated indices.
+    pub outputs: Option<Vec<usize>>,
 }
 
 /// A pre-registered continuation threshold (issue #64 item 7).
@@ -76,6 +79,15 @@ pub fn parse(path: &Path) -> Result<Manifest, Box<dyn std::error::Error>> {
             _ => {}
         }
     }
+    match schema.as_str() {
+        "noble-rewrite-quality/v1" if fixtures.iter().any(|fixture| fixture.outputs.is_some()) => {
+            return Err("quality v1 fixtures use the implicit last-node output".into());
+        }
+        "noble-rewrite-quality/v2" if fixtures.iter().any(|fixture| fixture.outputs.is_none()) => {
+            return Err("quality v2 fixtures require explicit outputs".into());
+        }
+        _ => {}
+    }
     Ok(Manifest {
         schema,
         rules,
@@ -131,24 +143,50 @@ fn parse_fixture(rest: &str) -> Result<Fixture, Box<dyn std::error::Error>> {
         .and_then(|part| part.strip_prefix("target "))
         .ok_or("fixture target")?
         .to_string();
-    let nodes = parts
-        .next()
-        .and_then(|part| part.strip_prefix("nodes "))
+    let mut outputs = None;
+    let mut node_specs = None;
+    for part in parts {
+        if let Some(list) = part.strip_prefix("outputs ") {
+            if outputs.is_some() {
+                return Err("duplicate fixture outputs".into());
+            }
+            outputs = Some(
+                list.split(',')
+                    .map(|index| index.trim().parse::<usize>().map_err(Into::into))
+                    .collect::<Result<Vec<_>, Box<dyn std::error::Error>>>()?,
+            );
+        } else if let Some(nodes) = part.strip_prefix("nodes ") {
+            if node_specs.is_some() {
+                return Err("duplicate fixture nodes".into());
+            }
+            node_specs = Some(nodes);
+        } else {
+            return Err(std::format!("unknown fixture clause: {part}").into());
+        }
+    }
+    let nodes: Vec<String> = node_specs
         .ok_or("fixture nodes")?
         .split_whitespace()
         .map(str::to_string)
         .collect();
+    if outputs.as_ref().is_some_and(|indices| {
+        indices.is_empty() || indices.iter().any(|index| *index >= nodes.len())
+    }) {
+        return Err("fixture output index is empty or out of range".into());
+    }
     Ok(Fixture {
         name,
         target,
         nodes,
+        outputs,
     })
 }
 
 /// Build one fixture's graph exactly as the manifest declares its nodes.
 ///
 /// Node specifications are `const:<decimal>`, `add:<left>:<right>` and `mul:<left>:<right>`, where
-/// the operands name earlier nodes by canonical creation index. The last node is the output.
+/// operands name earlier nodes by canonical creation index. Quality v1 uses the last node as the
+/// sole output; quality v2 names an ordered output list, including permitted repetitions.
 pub fn build(
     ids: &dyn IdentityScheme,
     fixture: &Fixture,
@@ -181,6 +219,13 @@ pub fn build(
         };
         ids_by_index.push(node);
     }
-    builder.output(*ids_by_index.last().ok_or("fixture output")?);
+    match &fixture.outputs {
+        Some(outputs) => {
+            for output in outputs {
+                builder.output(*ids_by_index.get(*output).ok_or("fixture output index")?);
+            }
+        }
+        None => builder.output(*ids_by_index.last().ok_or("fixture output")?),
+    }
     Ok(builder.finish())
 }

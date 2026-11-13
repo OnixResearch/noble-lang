@@ -1,0 +1,20 @@
+# noble-rewrite-quality/v2
+# Frozen optimization-quality corpus for certified graph rewrites (issue #64).
+#
+# Unlike v1's implicit last-node output, every v2 fixture declares its full ordered output list.
+# Repeated node indices are deliberate repeated outputs, not duplicate rows to be removed. Targets
+# remain residual properties; the admission and execution lanes independently verify each fixture.
+# Node specifications are const:<decimal>, add:<left>:<right>, and mul:<left>:<right>.
+#
+schema noble-rewrite-quality/v2
+rules fold-add-constants
+lens noble-ngraph cert.rs
+
+fixture independent-folds | target no-foldable-sites | outputs 2,5 | nodes const:5 const:7 add:0:1 const:3 const:4 add:3:4
+fixture single-fold | target no-foldable-sites | outputs 2 | nodes const:5 const:7 add:0:1
+fixture chained-folds | target no-foldable-sites | outputs 4 | nodes const:5 const:7 add:0:1 const:3 add:2:3
+fixture ordered-outputs | target no-foldable-sites | outputs 4,2 | nodes const:2 const:3 add:0:1 const:10 add:0:3
+fixture shared-operand | target no-foldable-sites | outputs 3 | nodes const:5 const:1 add:0:1 mul:2:0
+fixture wrapping-boundary | target no-foldable-sites | outputs 2 | nodes const:9223372036854775807 const:1 add:0:1
+fixture operand-order | target no-foldable-sites | outputs 2 | nodes const:5 const:7 add:1:0
+fixture repeated-outputs | target no-foldable-sites | outputs 2,2 | nodes const:5 const:7 add:0:1
