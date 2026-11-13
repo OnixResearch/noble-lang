@@ -28,7 +28,7 @@ const noCandidateExecution = new Set([
 ]);
 const rawRowFields = Object.freeze([
   'fixture', 'proposer', 'steps', 'refused', 'residual', 'propose_us', 'propose_iqr_us',
-  'check_us', 'check_iqr_us', 'check_per_step_us', 'in_memory_footprint_bytes', 'wire_bytes',
+  'check_us', 'check_iqr_us', 'check_per_step_us', 'in_memory_footprint_bytes',
   'check_threshold_met',
 ]);
 const pipelineStages = Object.freeze([
@@ -516,8 +516,10 @@ function validateReport(report, manifest, corpus) {
     }
     requireThat(Number.isInteger(row.in_memory_footprint_bytes) && row.in_memory_footprint_bytes >= 0,
       `row ${index}.in_memory_footprint_bytes is invalid`);
-    requireThat(Number.isInteger(row.wire_bytes) && row.wire_bytes > 0,
-      `row ${index}.wire_bytes is invalid`);
+    if (Object.hasOwn(row, 'wire_bytes')) {
+      requireThat(Number.isInteger(row.wire_bytes) && row.wire_bytes > 0,
+        `row ${index}.wire_bytes is invalid`);
+    }
     requireThat(typeof row.check_threshold_met === 'boolean',
       `row ${index}.check_threshold_met is invalid`);
     validatePipeline(row, index);

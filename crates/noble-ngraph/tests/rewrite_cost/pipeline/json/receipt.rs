@@ -95,7 +95,9 @@ fn path(aggregate: &mut PathAggregate, is_certified: bool) -> String {
 
 const fn unmeasured_stages() -> &'static str {
     concat!(
-        "[{\"name\":\"decoding_replay\",\"status\":\"unmeasured\",",
+        "[{\"name\":\"certificate_wire_bytes\",\"status\":\"unmeasured\",",
+        "\"reason\":\"wire size is measured per derivation row, but is not a timed or retained pipeline stage\"},",
+        "{\"name\":\"decoding_replay\",\"status\":\"unmeasured\",",
         "\"reason\":\"this in-memory pipeline never transports the certificate, so the decoder is exercised by the codec tests and not timed here\"},",
         "{\"name\":\"retained_memory\",\"status\":\"unmeasured\",",
         "\"reason\":\"no allocator or RSS accounting; graph/code estimates and scratch lease observations are separately labeled\"}]"

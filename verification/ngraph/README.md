@@ -95,10 +95,12 @@ carries **no steps** and reaches no target, so every certificate-bearing row pay
 measured saving. Retaining the baseline is valid, and nothing here shows the certified path pays for
 itself.
 
-Reported **unmeasured, with the reason, never zero**: input admission, certificate wire bytes (no Rust
-encoder exists; the structural footprint above is not wire bytes), decoding/replay (the token codec
-is a Lean model only), candidate admission, schedule validation, backend preparation, first execution,
-warm execution, retained memory (no allocator/RSS measurement is installed). **Break-even is
+At the time of these v1 measurements, **unmeasured, with the reason, never zero**: input admission,
+certificate wire bytes (the Rust token codec had not yet been implemented; the structural footprint
+above is not wire bytes), decoding/replay, candidate admission, schedule validation, backend
+preparation, first execution, warm execution, retained memory (no allocator/RSS measurement is
+installed). The later v2 row measurements below do not retroactively alter this historical report.
+**Break-even is
 unmeasured** because this lane never executes a program, so there is no per-run saving to amortize
 check cost against. "Cold" is not reported separately: the library caches nothing across calls, so a
 cold figure would price page faults rather than work.
