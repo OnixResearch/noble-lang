@@ -1,0 +1,397 @@
+{
+  "schema": "noble-llvm-lowering-bundle/v1",
+  "profile": "ngraph-llvm-i64/0",
+  "identity_scheme": "test",
+  "revisions": {
+    "ir": "ngraph-ir/0",
+    "semantic": "ngraph-sem/0",
+    "facts": "ngraph-facts/0",
+    "lowering": "ngraph-llvm-i64/0",
+    "llvm_parser": "ngraph-llvm-i64/0",
+    "llvm_validator": "ngraph-llvm-i64/0",
+    "rewrite_certificate": "ngraph-cert/0",
+    "production_backend": "ngraph-layered/0"
+  },
+  "assumptions": [
+    "I64 addition, subtraction and multiplication wrap modulo 2^64; flagged LLVM forms are refused.",
+    "The ABI is exactly two i64 noundef arguments and one returned i64; memory, calls, globals and externals are outside the profile.",
+    "The input domain is every unsigned 64-bit pair and the observation is the returned i64 value.",
+    "The Lean theorem proves the parsed-instruction model; Rust parser-to-model correspondence and native-code correspondence are not proved here.",
+    "Recorded concrete executions are spot checks and do not replace the universal theorem."
+  ],
+  "target": {
+    "triple": "x86_64-unknown-linux-gnu",
+    "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+    "calling_convention": "ccc",
+    "function": "noble_i64",
+    "parameters": ["i64 noundef %a0", "i64 noundef %a1"],
+    "result": "i64",
+    "attributes": [],
+    "flags": []
+  },
+  "pair": {
+    "original": "foldable", "rewritten": "foldable-rewritten",
+    "certificate": "pair/certificate.json", "relation": "equivalence",
+    "direction": "both", "request": "request.json",
+    "source_module": "pair/source.ll", "target_module": "pair/target.ll"
+  },
+  "bindings": {
+    "certificate_identity": "e76079d76b4a96a3000000000000000000000000000000000000000000000000",
+    "request_identity": "bb8c378809df6418000000000000000000000000000000000000000000000000",
+    "lean_corpus": "proofs/foundation/NobleFoundation/LlvmLoweringCorpus.lean",
+    "lean_corpus_identity": "0083985571839a17000000000000000000000000000000000000000000000000"
+  },
+  "source_bindings": [
+    {"path": "crates/noble-ngraph/src/llvm.rs", "identity": "931bf383b932c7f6000000000000000000000000000000000000000000000000"},
+    {"path": "crates/noble-ngraph/src/ir.rs", "identity": "a8f648acc8721e14000000000000000000000000000000000000000000000000"},
+    {"path": "crates/noble-ngraph/src/check.rs", "identity": "8572416fb017adad000000000000000000000000000000000000000000000000"},
+    {"path": "crates/noble-ngraph/src/format/graph.rs", "identity": "830acc75deb565b3000000000000000000000000000000000000000000000000"},
+    {"path": "crates/noble-ngraph/src/sem.rs", "identity": "bb44eb0012a2a71b000000000000000000000000000000000000000000000000"},
+    {"path": "crates/noble-ngraph/src/eval.rs", "identity": "b198ab9b907b9482000000000000000000000000000000000000000000000000"},
+    {"path": "crates/noble-ngraph/src/cert.rs", "identity": "d75899aadc16d7ae000000000000000000000000000000000000000000000000"},
+    {"path": "crates/noble-ngraph/tests/cert/differential.rs", "identity": "987a28be4b02bac1000000000000000000000000000000000000000000000000"},
+    {"path": "crates/noble-ngraph/tests/cert/llvm.rs", "identity": "45d3ae70c30c4be0000000000000000000000000000000000000000000000000"},
+    {"path": "crates/noble-ngraph/tests/cert/llvm/artifact_tests.rs", "identity": "e8e22ebe64763971000000000000000000000000000000000000000000000000"},
+    {"path": "crates/noble-ngraph/tests/cert/llvm/bundle.rs", "identity": "4a34ae682f827e68000000000000000000000000000000000000000000000000"},
+    {"path": "crates/noble-ngraph/tests/cert/llvm/controls.rs", "identity": "6a212ad15d5ef17e000000000000000000000000000000000000000000000000"},
+    {"path": "crates/noble-ngraph/tests/cert/llvm/corpus.rs", "identity": "ac07e75df4c69819000000000000000000000000000000000000000000000000"},
+    {"path": "crates/noble-ngraph/tests/cert/llvm/fixtures.rs", "identity": "8256c22cc63bc4b1000000000000000000000000000000000000000000000000"},
+    {"path": "crates/noble-ngraph/tests/cert/llvm/model.rs", "identity": "5436b7b772b4d9d7000000000000000000000000000000000000000000000000"},
+    {"path": "crates/noble-ngraph/tests/cert/llvm/profile_tests.rs", "identity": "c9272fcbfde5f626000000000000000000000000000000000000000000000000"},
+    {"path": "proofs/foundation/NobleFoundation/LlvmLowering.lean", "identity": "ae1b80badede01b0000000000000000000000000000000000000000000000000"},
+    {"path": "verification/llvm-lowering/replay.mjs", "identity": "c73a9e370f337ba6000000000000000000000000000000000000000000000000"}
+  ],
+  "artifacts": [
+    {
+      "name": "wrapping",
+      "doc": "MIN and MAX constants: `(a0 + i64::MAX) * i64::MIN * a1` wraps at every step",
+      "role": "original",
+      "graph": "artifacts/wrapping.graph",
+      "module": "artifacts/wrapping.ll",
+      "graph_identity": "4ada0bd2595ca16f000000000000000000000000000000000000000000000000",
+      "graph_text_identity": "b556661513c2d6d5000000000000000000000000000000000000000000000000",
+      "module_identity": "e4774b4cd7219ba7000000000000000000000000000000000000000000000000",
+      "nodes": 7,
+      "instructions": 3,
+      "output": "%v6",
+      "validator": "accepted",
+      "executions": [
+        {
+          "theorem": "wrapping_execution_0_agrees",
+          "inputs": ["0x0000000000000000", "0x0000000000000000"],
+          "module": "0x0000000000000000",
+          "reference": "0x0000000000000000"
+        },
+        {
+          "theorem": "wrapping_execution_1_agrees",
+          "inputs": ["0x8000000000000000", "0x7FFFFFFFFFFFFFFF"],
+          "module": "0x8000000000000000",
+          "reference": "0x8000000000000000"
+        }
+      ]
+    },
+    {
+      "name": "negative",
+      "doc": "negative constants: `(a0 * -3) - -7`, then `* a1`",
+      "role": "original",
+      "graph": "artifacts/negative.graph",
+      "module": "artifacts/negative.ll",
+      "graph_identity": "3ffb7b261a706d86000000000000000000000000000000000000000000000000",
+      "graph_text_identity": "704167cd99e888fa000000000000000000000000000000000000000000000000",
+      "module_identity": "f8e692d0024f7c67000000000000000000000000000000000000000000000000",
+      "nodes": 7,
+      "instructions": 3,
+      "output": "%v6",
+      "validator": "accepted",
+      "executions": [
+        {
+          "theorem": "negative_execution_0_agrees",
+          "inputs": ["0x0000000000000000", "0x0000000000000000"],
+          "module": "0x0000000000000000",
+          "reference": "0x0000000000000000"
+        },
+        {
+          "theorem": "negative_execution_1_agrees",
+          "inputs": ["0x8000000000000000", "0x7FFFFFFFFFFFFFFF"],
+          "module": "0xFFFFFFFFFFFFFFF9",
+          "reference": "0xFFFFFFFFFFFFFFF9"
+        }
+      ]
+    },
+    {
+      "name": "subtractive",
+      "doc": "subtraction order: `(a0 - a1) * (a1 - a0)`",
+      "role": "original",
+      "graph": "artifacts/subtractive.graph",
+      "module": "artifacts/subtractive.ll",
+      "graph_identity": "0c19e438373398ae000000000000000000000000000000000000000000000000",
+      "graph_text_identity": "ac9b7af8e33c0f85000000000000000000000000000000000000000000000000",
+      "module_identity": "9575c427c2a47e92000000000000000000000000000000000000000000000000",
+      "nodes": 5,
+      "instructions": 3,
+      "output": "%v4",
+      "validator": "accepted",
+      "executions": [
+        {
+          "theorem": "subtractive_execution_0_agrees",
+          "inputs": ["0x0000000000000000", "0x0000000000000000"],
+          "module": "0x0000000000000000",
+          "reference": "0x0000000000000000"
+        },
+        {
+          "theorem": "subtractive_execution_1_agrees",
+          "inputs": ["0x8000000000000000", "0x7FFFFFFFFFFFFFFF"],
+          "module": "0xFFFFFFFFFFFFFFFF",
+          "reference": "0xFFFFFFFFFFFFFFFF"
+        }
+      ]
+    },
+    {
+      "name": "shared",
+      "doc": "sharing: one `a0 * a0` node and one `-1` literal each feed two consumers",
+      "role": "original",
+      "graph": "artifacts/shared.graph",
+      "module": "artifacts/shared.ll",
+      "graph_identity": "96a21e853c1eff58000000000000000000000000000000000000000000000000",
+      "graph_text_identity": "cc2287edb470130e000000000000000000000000000000000000000000000000",
+      "module_identity": "47d58bf107368a93000000000000000000000000000000000000000000000000",
+      "nodes": 9,
+      "instructions": 6,
+      "output": "%v8",
+      "validator": "accepted",
+      "executions": [
+        {
+          "theorem": "shared_execution_0_agrees",
+          "inputs": ["0x0000000000000000", "0x0000000000000000"],
+          "module": "0x0000000000000000",
+          "reference": "0x0000000000000000"
+        },
+        {
+          "theorem": "shared_execution_1_agrees",
+          "inputs": ["0x8000000000000000", "0x7FFFFFFFFFFFFFFF"],
+          "module": "0x7FFFFFFFFFFFFFFF",
+          "reference": "0x7FFFFFFFFFFFFFFF"
+        }
+      ]
+    },
+    {
+      "name": "foldable",
+      "doc": "a fold LLVM may already perform: `(3 + 5) * a0 + a1 + 3 + 5`",
+      "role": "original",
+      "graph": "artifacts/foldable.graph",
+      "module": "artifacts/foldable.ll",
+      "graph_identity": "f4f71828f4dd4f69000000000000000000000000000000000000000000000000",
+      "graph_text_identity": "54ed03243207d341000000000000000000000000000000000000000000000000",
+      "module_identity": "62cd32ff656546cc000000000000000000000000000000000000000000000000",
+      "nodes": 9,
+      "instructions": 5,
+      "output": "%v8",
+      "validator": "accepted",
+      "executions": [
+        {
+          "theorem": "foldable_execution_0_agrees",
+          "inputs": ["0x0000000000000000", "0x0000000000000000"],
+          "module": "0x0000000000000008",
+          "reference": "0x0000000000000008"
+        },
+        {
+          "theorem": "foldable_execution_1_agrees",
+          "inputs": ["0x8000000000000000", "0x7FFFFFFFFFFFFFFF"],
+          "module": "0x8000000000000007",
+          "reference": "0x8000000000000007"
+        }
+      ]
+    },
+    {
+      "name": "foldable-rewritten",
+      "doc": "the certified rewrite of `foldable`: `add(3, 5)` is replaced in place by the constant 8",
+      "role": "rewritten",
+      "graph": "artifacts/foldable-rewritten.graph",
+      "module": "artifacts/foldable-rewritten.ll",
+      "graph_identity": "0e3aa91e0be07cae000000000000000000000000000000000000000000000000",
+      "graph_text_identity": "cc20c08497223f57000000000000000000000000000000000000000000000000",
+      "module_identity": "68c40b12ae67dec6000000000000000000000000000000000000000000000000",
+      "nodes": 9,
+      "instructions": 4,
+      "output": "%v8",
+      "validator": "accepted",
+      "executions": [
+        {
+          "theorem": "foldable_rewritten_execution_0_agrees",
+          "inputs": ["0x0000000000000000", "0x0000000000000000"],
+          "module": "0x0000000000000008",
+          "reference": "0x0000000000000008"
+        },
+        {
+          "theorem": "foldable_rewritten_execution_1_agrees",
+          "inputs": ["0x8000000000000000", "0x7FFFFFFFFFFFFFFF"],
+          "module": "0x8000000000000007",
+          "reference": "0x8000000000000007"
+        }
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "artifact": "subtractive",
+      "class": "operand-swapped",
+      "refusal": "L-OPERANDS",
+      "stage": "verify",
+      "model": true,
+      "path": "controls/subtractive-operand-swapped.ll",
+      "text_identity": "4f034654865bb74d000000000000000000000000000000000000000000000000"
+    },
+    {
+      "artifact": "negative",
+      "class": "constant-changed",
+      "refusal": "L-OPERANDS",
+      "stage": "verify",
+      "model": true,
+      "path": "controls/negative-constant-changed.ll",
+      "text_identity": "f98007beea76a180000000000000000000000000000000000000000000000000"
+    },
+    {
+      "artifact": "shared",
+      "class": "negative-zero",
+      "refusal": "L-OPERAND",
+      "stage": "parse",
+      "model": false,
+      "path": "controls/shared-negative-zero.ll",
+      "text_identity": "0c5bad0432667ba7000000000000000000000000000000000000000000000000"
+    },
+    {
+      "artifact": "shared",
+      "class": "return-changed",
+      "refusal": "L-OUTPUT",
+      "stage": "verify",
+      "model": true,
+      "path": "controls/shared-return-changed.ll",
+      "text_identity": "ca912596a950c426000000000000000000000000000000000000000000000000"
+    },
+    {
+      "artifact": "wrapping",
+      "class": "flag-nsw",
+      "refusal": "L-FLAGS",
+      "stage": "parse",
+      "model": false,
+      "path": "controls/wrapping-flag-nsw.ll",
+      "text_identity": "7ba4418e8cdd9b70000000000000000000000000000000000000000000000000"
+    },
+    {
+      "artifact": "wrapping",
+      "class": "flag-nuw",
+      "refusal": "L-FLAGS",
+      "stage": "parse",
+      "model": false,
+      "path": "controls/wrapping-flag-nuw.ll",
+      "text_identity": "9bcc01d8accdc372000000000000000000000000000000000000000000000000"
+    },
+    {
+      "artifact": "shared",
+      "class": "opcode-unsupported",
+      "refusal": "L-OPCODE",
+      "stage": "parse",
+      "model": false,
+      "path": "controls/shared-opcode-unsupported.ll",
+      "text_identity": "3af7ccf80f6b4872000000000000000000000000000000000000000000000000"
+    },
+    {
+      "artifact": "shared",
+      "class": "instruction-call",
+      "refusal": "L-INSTRUCTION",
+      "stage": "parse",
+      "model": false,
+      "path": "controls/shared-instruction-call.ll",
+      "text_identity": "4925ab329360a728000000000000000000000000000000000000000000000000"
+    },
+    {
+      "artifact": "wrapping",
+      "class": "attribute-dropped",
+      "refusal": "L-INTERFACE",
+      "stage": "parse",
+      "model": false,
+      "path": "controls/wrapping-attribute-dropped.ll",
+      "text_identity": "571ee33be6e1bc96000000000000000000000000000000000000000000000000"
+    },
+    {
+      "artifact": "wrapping",
+      "class": "convention-named",
+      "refusal": "L-INTERFACE",
+      "stage": "parse",
+      "model": false,
+      "path": "controls/wrapping-convention-named.ll",
+      "text_identity": "0eb54ca5b5938145000000000000000000000000000000000000000000000000"
+    },
+    {
+      "artifact": "wrapping",
+      "class": "triple-changed",
+      "refusal": "L-TARGET",
+      "stage": "parse",
+      "model": false,
+      "path": "controls/wrapping-triple-changed.ll",
+      "text_identity": "86c83afa8ba086f9000000000000000000000000000000000000000000000000"
+    },
+    {
+      "artifact": "wrapping",
+      "class": "datalayout-changed",
+      "refusal": "L-TARGET",
+      "stage": "parse",
+      "model": false,
+      "path": "controls/wrapping-datalayout-changed.ll",
+      "text_identity": "1b25b8665916b7c5000000000000000000000000000000000000000000000000"
+    },
+    {
+      "artifact": "foldable",
+      "class": "artifact-substituted",
+      "refusal": "L-NODEMAP",
+      "stage": "verify",
+      "model": true,
+      "path": "controls/foldable-artifact-substituted.ll",
+      "text_identity": "00a3f2739e57eb53000000000000000000000000000000000000000000000000"
+    },
+    {
+      "artifact": "shared",
+      "class": "return-duplicated",
+      "refusal": "L-RETURN",
+      "stage": "parse",
+      "model": false,
+      "path": "controls/shared-return-duplicated.ll",
+      "text_identity": "9304b269c3b25653000000000000000000000000000000000000000000000000"
+    },
+    {
+      "artifact": "wrapping",
+      "class": "text-after-brace",
+      "refusal": "L-RETURN",
+      "stage": "parse",
+      "model": false,
+      "path": "controls/wrapping-text-after-brace.ll",
+      "text_identity": "4c36f75c2ab918b6000000000000000000000000000000000000000000000000"
+    },
+    {
+      "artifact": "shared",
+      "class": "instruction-missing",
+      "refusal": "L-NODEMAP",
+      "stage": "verify",
+      "model": true,
+      "path": "controls/shared-instruction-missing.ll",
+      "text_identity": "0cc6c6b2c46a5fc1000000000000000000000000000000000000000000000000"
+    },
+    {
+      "artifact": "shared",
+      "class": "destination-changed",
+      "refusal": "L-NODEMAP",
+      "stage": "verify",
+      "model": true,
+      "path": "controls/shared-destination-changed.ll",
+      "text_identity": "27cb1db92eee44ac000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "stages": [
+    {"stage": "graph-rewrite", "status": "accepted", "evidence": "cert::check accepts the retained derivation"},
+    {"stage": "graph-to-llvm-lowering", "status": "validated", "evidence": "llvm::validate on the retained bytes"},
+    {"stage": "semantic-validation", "status": "proved", "evidence": "LlvmLowering.validate_sound over all BitVec 64 input pairs"},
+    {"stage": "concrete-agreement", "status": "checked", "evidence": "parsed artifacts versus graph reference at the recorded finite inputs"},
+    {"stage": "llvm-optimisation", "status": "not-run", "evidence": "compiler-lab #124 owns it; no pinned LLVM here"},
+    {"stage": "native-artifact", "status": "not-run", "evidence": "compiler-lab #124 owns it; no pinned LLVM here"}
+  ]
+}

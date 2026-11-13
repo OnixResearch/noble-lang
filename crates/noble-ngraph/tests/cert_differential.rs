@@ -5,8 +5,17 @@
     reason = "Owner: noble-maintainers; malformed test fixtures or unexpected evaluator outcomes must fail this integration test immediately with the observed value, not return a successful test result."
 )]
 #![allow(
+    tigerstyle::ambiguous_params,
+    tigerstyle::assertion_density,
+    tigerstyle::clone_then_borrow,
+    tigerstyle::explicit_defaults,
+    tigerstyle::fallible_int_fallback,
+    tigerstyle::missing_const_fn,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    tigerstyle::raw_arithmetic_overflow,
     tigerstyle::underscore_in_module_filename,
-    reason = "Owner: noble-maintainers; this Cargo integration target keeps its stable underscore filename for the certificate differential executable."
+    reason = "Owner: noble-maintainers; this existing integration target keeps its stable filename and its test fixtures intentionally use direct assertions, explicit option defaults and concrete mutable graphs to make each refusal observable."
 )]
 
 //! Differential execution of a certificate's two endpoints (issue #42).
@@ -44,6 +53,8 @@ mod admission;
 mod scoped;
 #[path = "cert/scoped_corpus.rs"]
 mod scoped_corpus;
+#[path = "cert/llvm.rs"]
+mod llvm;
 
 #[test]
 fn a_folded_endpoint_evaluates_identically_with_a_constant() -> Result<(), noble_ngraph::Diagnostic>

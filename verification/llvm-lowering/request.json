@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "kind": "compiler-lab-llvm-pair-request",
+  "source_module": {
+    "path": "pair/source.ll",
+    "entry": "noble_i64",
+    "triple": "x86_64-unknown-linux-gnu",
+    "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+  },
+  "target_module": {
+    "path": "pair/target.ll",
+    "entry": "noble_i64",
+    "triple": "x86_64-unknown-linux-gnu",
+    "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+  },
+  "relation": "equivalence",
+  "direction": "both",
+  "triples": {
+    "source": "x86_64-unknown-linux-gnu",
+    "target": "x86_64-unknown-linux-gnu"
+  },
+  "data_layouts": {
+    "source": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+    "target": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+  },
+  "arguments": ["i64", "i64"],
+  "result": "i64",
+  "calling_convention": "ccc",
+  "attributes": [],
+  "input_domain": "all-u64-pairs",
+  "poison_policy": "exclude",
+  "permitted_externals": []
+}
