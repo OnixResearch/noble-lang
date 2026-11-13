@@ -16,8 +16,8 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(import.meta.url), '../../..');
-export const receiptFile = 'verification/effect-protocol/execution-9b1fe313.json';
-const receiptSha256 = 'b38f9bcc3013137fa528578d503089c8b9c012583df9cbbbb1d62cdcd065e5d8';
+export const receiptFile = 'verification/effect-protocol/execution-20261113-547c0eee.json';
+const receiptSha256 = 'ae92cccf2ec4cb8232d602e8099103d58179b1317302fb2599f49289d6ad43ae';
 export const leanFile = 'proofs/m5/RegionTraceRuntime.lean';
 export const inventoryFile = 'proofs/m5/region-trace-runtime-inventory.json';
 const axioms = ['propext', 'Classical.choice', 'Quot.sound'];
@@ -270,6 +270,9 @@ export function generate() {
   for (const row of rows) {
     const name = fixtureName(row);
     const observed = observe(row);
+    // A complete v2 scope-ceiling trace is longer than the former v1 prefix; give its finite
+    // `decide` checks enough recursion depth without changing the limits for smaller fixtures.
+    const proofOption = observed.length > 64 ? 'set_option maxRecDepth 4096 in\n' : '';
     const source = project(observed);
     const label = `${row.id} ${row.variant}`;
     const owner = natural(row.observed.registration?.identity);
@@ -320,8 +323,8 @@ export function generate() {
         && event.offset === String(forged.start) && event.length === String(forged.length)),
       `${label} requests the control region`);
       const control = { type: 'commit', identity, start: String(forged.start), length: String(forged.length) };
-      sections.push(`theorem ${name}_relates :\n    related\n      ${list(source.map(leanSource), '      ')}\n      (lower ${name}) = true := by\n  decide`);
-      sections.push(`theorem ${name}_refuses_an_unexplained_commit :\n    related\n      ${list([...source, ...project([control])].map(leanSource), '      ')}\n      (lower (${name} ++ [${leanObserved(control)}])) = false := by\n  decide`);
+      sections.push(`${proofOption}theorem ${name}_relates :\n    related\n      ${list(source.map(leanSource), '      ')}\n      (lower ${name}) = true := by\n  decide`);
+      sections.push(`${proofOption}theorem ${name}_refuses_an_unexplained_commit :\n    related\n      ${list([...source, ...project([control])].map(leanSource), '      ')}\n      (lower (${name} ++ [${leanObserved(control)}])) = false := by\n  decide`);
       theorems.push(
         { name: `RegionTrace.${name}_relates`,
           role: `WIT-TRACE-05 runtime fixture: the recorded ${label} trace (exit ${exit}) relates to its projection`,
