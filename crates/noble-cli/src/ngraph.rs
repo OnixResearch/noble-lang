@@ -503,13 +503,11 @@ fn specialize(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, S
     // Independent acceptance before publication (design D9): the ordinary
     // declared-text frontend, the kernel and the extractor must all accept the
     // emitted residual first.
-    let readmitted = attempt!(noble_ngraph::specialize::readmit(
-        &IDS,
-        &source,
-        &types,
-        &args.budgets
-    )
-    .map_err(|d| Line::diagnostic(C, "admission", &d)));
+    let readmitted =
+        attempt!(
+            noble_ngraph::specialize::readmit(&IDS, &source, &types, &args.budgets)
+                .map_err(|d| Line::diagnostic(C, "admission", &d))
+        );
     if let Some(path) = args.path_value("--graph-out") {
         let text = noble_ngraph::format::graph::print(residual.checked.graph());
         attempt!(publish(C, &path, text.as_bytes()));
@@ -521,7 +519,10 @@ fn specialize(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, S
         .with("residual_graph", report::digest(&report.residual_graph))
         .with("readmitted_graph", report::digest(&readmitted.id()))
         .with("readmitted_nodes", report::count(readmitted.node_count()))
-        .with("source", report::digest(blake3::hash(source.as_bytes()).as_bytes()))
+        .with(
+            "source",
+            report::digest(blake3::hash(source.as_bytes()).as_bytes())
+        )
         .with("accounting", string(report.accounting))
         .with(
             "static_inputs",

@@ -20,7 +20,7 @@
 
 use noble_ngraph::prng::SplitMix64;
 use noble_ngraph::sem::{obs_eq_all, Value};
-use noble_ngraph_experiment::b2i64::{random, Lowered, Oracle};
+use noble_ngraph_experiment::b2i64::{pe, random, Lowered, Oracle};
 
 /// The L1 adapter's attribution and completion checks against fixture children (issue #75).
 /// The module is test-only; `cfg(test)` states that scope, as Octet's test-context

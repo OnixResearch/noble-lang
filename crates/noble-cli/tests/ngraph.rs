@@ -3209,7 +3209,11 @@ fn specialize_publishes_a_re_admitted_residual_program() -> TestResult {
     let line = expect_normal(&run, "specialize")?;
     assert_eq!(line["stage"], "specialization", "{line}");
     assert_eq!(line["accounting"], "ngraph-pe/0", "{line}");
-    assert_eq!(line["static_inputs"], serde_json::json!([5, null]), "{line}");
+    assert_eq!(
+        line["static_inputs"],
+        serde_json::json!([5, null]),
+        "{line}"
+    );
     assert_eq!(line["inputs"], serde_json::json!(["i64"]), "{line}");
     assert_eq!(line["original_nodes"], 4, "{line}");
     assert_eq!(line["folded_nodes"], 1, "{line}");
@@ -3236,7 +3240,10 @@ fn specialize_publishes_a_re_admitted_residual_program() -> TestResult {
     assert_published(&out);
     assert_published(&graph_out);
     // The published graph file is the residual and independently checks.
-    let checked = expect_normal(&scratch.run(&Ngraph::new("check").arg(&graph_out))?, "check")?;
+    let checked = expect_normal(
+        &scratch.run(&Ngraph::new("check").arg(&graph_out))?,
+        "check",
+    )?;
     assert_eq!(checked["graph"], line["residual_graph"], "{checked}");
     assert_eq!(checked["live_nodes"], 4, "{checked}");
     assert_eq!(checked["inputs"], serde_json::json!(["i64"]), "{checked}");
@@ -3332,15 +3339,25 @@ fn specialize_budget_ladder_refuses_below_and_raised_caps() -> TestResult {
     let scratch = Scratch::new("pe-budget")?;
     let graph = scratch.write("pe.graph", PE_GRAPH)?;
     let out = scratch.path("residual.noble");
-    let below = specialize(&graph, "0=5", &out).arg("--budget-residual-nodes").arg("3");
-    let line = expect_code(&scratch.run(&below)?, "specialize", "E-BUDGET-RESIDUAL-NODES")?;
+    let below = specialize(&graph, "0=5", &out)
+        .arg("--budget-residual-nodes")
+        .arg("3");
+    let line = expect_code(
+        &scratch.run(&below)?,
+        "specialize",
+        "E-BUDGET-RESIDUAL-NODES",
+    )?;
     assert_eq!(line["stage"], "specialization", "{line}");
     assert_no_publication(&out);
-    let at = specialize(&graph, "0=5", &out).arg("--budget-residual-nodes").arg("4");
+    let at = specialize(&graph, "0=5", &out)
+        .arg("--budget-residual-nodes")
+        .arg("4");
     expect_normal(&scratch.run(&at)?, "specialize")?;
     assert_published(&out);
     let fresh = scratch.path("fresh.noble");
-    let variants = specialize(&graph, "0=5", &fresh).arg("--budget-variants").arg("0");
+    let variants = specialize(&graph, "0=5", &fresh)
+        .arg("--budget-variants")
+        .arg("0");
     let line = expect_code(&scratch.run(&variants)?, "specialize", "E-BUDGET-VARIANTS")?;
     assert_eq!(line["stage"], "specialization", "{line}");
     assert_no_publication(&fresh);
@@ -3369,7 +3386,10 @@ fn specialize_is_deterministic_and_never_overwrites() -> TestResult {
         "the residual source is deterministic"
     );
     let existing = std::fs::read_to_string(&first)?;
-    let again = expect_host_refusal(&scratch.run(&specialize(&graph, "1=3", &first))?, "specialize")?;
+    let again = expect_host_refusal(
+        &scratch.run(&specialize(&graph, "1=3", &first))?,
+        "specialize",
+    )?;
     assert_eq!(again["stage"], "output", "{again}");
     assert_eq!(
         std::fs::read_to_string(&first)?,
@@ -3385,7 +3405,11 @@ fn specialize_reports_no_input_when_every_leaf_is_dynamic() -> TestResult {
     let graph = scratch.write("pe.graph", PE_GRAPH)?;
     let out = scratch.path("residual.noble");
     let line = expect_normal(&scratch.run(&specialize(&graph, "", &out))?, "specialize")?;
-    assert_eq!(line["static_inputs"], serde_json::json!([null, null]), "{line}");
+    assert_eq!(
+        line["static_inputs"],
+        serde_json::json!([null, null]),
+        "{line}"
+    );
     assert_eq!(line["inputs"], serde_json::json!(["i64", "i64"]), "{line}");
     assert_eq!(line["folded_nodes"], 0, "{line}");
     assert_eq!(line["pruned_nodes"], 0, "{line}");
@@ -3406,19 +3430,14 @@ fn specialize_reports_no_input_when_every_leaf_is_dynamic() -> TestResult {
 fn ngraph_extract_refuses_effectful_and_control_sources_without_a_graph() -> TestResult {
     let scratch = Scratch::new("pe-negative")?;
     for (name, source, code, stage) in [
+        ("emit", "1 + \"hi\" test.emit\n", "E-EFFECT", "admission"),
         (
-            "emit",
-            "1 + \"hi\" test.emit\n",
-            "E-EFFECT",
-            "admission",
+            "control",
+            "drop true [ 1 ] [ 2 ] if\n",
+            "E-CONTROL",
+            "extraction",
         ),
-        ("control", "drop true [ 1 ] [ 2 ] if\n", "E-CONTROL", "extraction"),
-        (
-            "program",
-            "drop [ 1 + ]\n",
-            "E-PROGRAM-OUTPUT",
-            "admission",
-        ),
+        ("program", "drop [ 1 + ]\n", "E-PROGRAM-OUTPUT", "admission"),
     ] {
         let path = scratch.write(&format!("{name}.noble"), source)?;
         let out = scratch.path(&format!("{name}.graph"));
@@ -3435,8 +3454,17 @@ fn ngraph_extract_refuses_effectful_and_control_sources_without_a_graph() -> Tes
         assert_no_publication(&out);
         // Specialization takes an admitted graph only, so a refused subject has
         // no path to it at all.
-        let specialize_run = scratch.run(&specialize(&out, "", &scratch.path(&format!("{name}.residual"))))?;
-        assert_eq!(specialize_run.exit, Some(2), "{name}: {}", specialize_run.describe());
+        let specialize_run = scratch.run(&specialize(
+            &out,
+            "",
+            &scratch.path(&format!("{name}.residual")),
+        ))?;
+        assert_eq!(
+            specialize_run.exit,
+            Some(2),
+            "{name}: {}",
+            specialize_run.describe()
+        );
         assert_no_publication(&scratch.path(&format!("{name}.residual")));
     }
     // The ordinary Core profile does execute the same effectful submission, so

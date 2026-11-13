@@ -50,10 +50,7 @@ fn outputs(obs: Obs) -> Result<Vec<Value>, String> {
 ///
 /// # Errors
 /// A non-normal observation or a graph-node evaluation failure.
-pub fn observe_l3(
-    checked: &CheckedGraph,
-    inputs: &[Value],
-) -> Result<(Vec<Value>, u64), String> {
+pub fn observe_l3(checked: &CheckedGraph, inputs: &[Value]) -> Result<(Vec<Value>, u64), String> {
     let mut control = Control::default();
     let report = eval::reference(checked, inputs, None, &mut control);
     let nodes = report.evaluated_nodes;
@@ -64,10 +61,7 @@ pub fn observe_l3(
 ///
 /// # Errors
 /// A non-normal observation.
-pub fn observe_l4(
-    compiled: &Compiled,
-    inputs: &[Value],
-) -> Result<(Vec<Value>, u64), String> {
+pub fn observe_l4(compiled: &Compiled, inputs: &[Value]) -> Result<(Vec<Value>, u64), String> {
     let report = compiled.evaluate(inputs, None, &mut Control::default());
     let nodes = report.evaluated_nodes;
     outputs(report.obs).map(|values| (values, nodes))
@@ -93,8 +87,7 @@ impl Lowered {
         .map_err(|d| d.to_string())?;
         let compiled = Compiled::new(&BLAKE3, &residual.checked);
         let source = specialize::emit_source(&residual.checked).map_err(|d| d.to_string())?;
-        let types =
-            specialize::interface_types(&residual.checked).map_err(|d| d.to_string())?;
+        let types = specialize::interface_types(&residual.checked).map_err(|d| d.to_string())?;
         let readmitted =
             specialize::readmit(&BLAKE3, &source, &types, &budgets).map_err(|d| d.to_string())?;
         let readmitted_compiled = Compiled::new(&BLAKE3, &readmitted);
@@ -213,12 +206,30 @@ pub fn differential(
         counts.l3_readmitted = counts.l3_readmitted.saturating_add(l3_readmitted);
         counts.l4_readmitted = counts.l4_readmitted.saturating_add(l4_readmitted);
         for (leg, observed) in [
-            ("l3 original vs l4 original", noble_ngraph::sem::obs_eq_all(&original_l3, &original_l4)),
-            ("l3 residual vs l3 original", noble_ngraph::sem::obs_eq_all(&residual_l3, &original_l3)),
-            ("l4 residual vs l4 original", noble_ngraph::sem::obs_eq_all(&residual_l4, &original_l4)),
-            ("l3 readmitted vs l3 residual", noble_ngraph::sem::obs_eq_all(&readmitted_l3, &residual_l3)),
-            ("l4 readmitted vs l4 residual", noble_ngraph::sem::obs_eq_all(&readmitted_l4, &residual_l4)),
-            ("l3 readmitted vs l4 readmitted", noble_ngraph::sem::obs_eq_all(&readmitted_l3, &readmitted_l4)),
+            (
+                "l3 original vs l4 original",
+                noble_ngraph::sem::obs_eq_all(&original_l3, &original_l4),
+            ),
+            (
+                "l3 residual vs l3 original",
+                noble_ngraph::sem::obs_eq_all(&residual_l3, &original_l3),
+            ),
+            (
+                "l4 residual vs l4 original",
+                noble_ngraph::sem::obs_eq_all(&residual_l4, &original_l4),
+            ),
+            (
+                "l3 readmitted vs l3 residual",
+                noble_ngraph::sem::obs_eq_all(&readmitted_l3, &residual_l3),
+            ),
+            (
+                "l4 readmitted vs l4 residual",
+                noble_ngraph::sem::obs_eq_all(&readmitted_l4, &residual_l4),
+            ),
+            (
+                "l3 readmitted vs l4 readmitted",
+                noble_ngraph::sem::obs_eq_all(&readmitted_l3, &readmitted_l4),
+            ),
         ] {
             if !observed && counts.agree {
                 counts.agree = false;

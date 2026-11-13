@@ -354,9 +354,7 @@ pub fn specialize(
     }
     for (slot, position) in positions.iter().enumerate() {
         let Some(position) = position else { continue };
-        if request.static_inputs[*position].is_some()
-            && graph.slots[slot].ty != ScalarType::I64
-        {
+        if request.static_inputs[*position].is_some() && graph.slots[slot].ty != ScalarType::I64 {
             return Err(at(
                 crate::diag::Code::Interface,
                 crate::diag::Site::Slot(slot as u32),
@@ -365,7 +363,8 @@ pub fn specialize(
         }
     }
     // The model's `rank` for every slot, and the residual's slots.
-    let mut rank_of: alloc::vec::Vec<Option<u32>> = alloc::vec::Vec::with_capacity(graph.slots.len());
+    let mut rank_of: alloc::vec::Vec<Option<u32>> =
+        alloc::vec::Vec::with_capacity(graph.slots.len());
     let mut slots: alloc::vec::Vec<Slot> = alloc::vec::Vec::new();
     let mut next_rank = 0u32;
     for (slot, position) in positions.iter().enumerate() {
@@ -418,15 +417,13 @@ pub fn specialize(
                         folded = folded.saturating_add(1);
                         Op::Const(Literal::I64(v))
                     }
-                    None => Op::Input(
-                        rank_of[*k as usize].ok_or_else(|| {
-                            at(
-                                crate::diag::Code::Interface,
-                                crate::diag::Site::Node(NodeId(index as u32)),
-                                alloc::format!("slot {k} has no dynamic rank"),
-                            )
-                        })?,
-                    ),
+                    None => Op::Input(rank_of[*k as usize].ok_or_else(|| {
+                        at(
+                            crate::diag::Code::Interface,
+                            crate::diag::Site::Node(NodeId(index as u32)),
+                            alloc::format!("slot {k} has no dynamic rank"),
+                        )
+                    })?),
                 }
             }
             Op::Const(literal) => {
@@ -740,15 +737,15 @@ pub fn readmit(
     budgets: &crate::check::Budgets,
 ) -> Result<crate::check::CheckedGraph, crate::diag::Diagnostic> {
     let limits = noble_contracts::Limits::default();
-    let retained = noble_contracts::source::RetainedSourceLimit::new(limits.bytes).ok_or_else(|| {
-        refuse(
-            crate::diag::Code::Profile,
-            "the default source limit exceeds the retained-source cap",
-        )
-    })?;
-    let session =
-        noble_contracts::source::ModuleSession::new_declared_text(&[], false, retained)
-            .map_err(source_refusal)?;
+    let retained =
+        noble_contracts::source::RetainedSourceLimit::new(limits.bytes).ok_or_else(|| {
+            refuse(
+                crate::diag::Code::Profile,
+                "the default source limit exceeds the retained-source cap",
+            )
+        })?;
+    let session = noble_contracts::source::ModuleSession::new_declared_text(&[], false, retained)
+        .map_err(source_refusal)?;
     let prepared = session
         .prepare(source.as_bytes(), inputs, limits)
         .map_err(source_refusal)?;
@@ -832,7 +829,10 @@ mod tests {
         checked(builder.finish())
     }
 
-    fn run(checked: &crate::check::CheckedGraph, inputs: &[i64]) -> alloc::vec::Vec<crate::sem::Value> {
+    fn run(
+        checked: &crate::check::CheckedGraph,
+        inputs: &[i64],
+    ) -> alloc::vec::Vec<crate::sem::Value> {
         match crate::eval::reference(
             checked,
             &crate::eval::i64_inputs(inputs),
@@ -868,7 +868,10 @@ mod tests {
         assert_eq!(residual.report.folded_nodes, 0);
         assert_eq!(residual.report.pruned_nodes, 0);
         assert_eq!(residual.report.residual_nodes, 4);
-        assert_eq!(residual.report.dynamic_inputs, alloc::vec![ScalarType::I64; 2]);
+        assert_eq!(
+            residual.report.dynamic_inputs,
+            alloc::vec![ScalarType::I64; 2]
+        );
         for (x, y) in [(5i64, 4i64), (-1, i64::MAX), (0, 0)] {
             assert_eq!(
                 run(&residual.checked, &[x, y]),
@@ -884,7 +887,10 @@ mod tests {
         // `x = 5` static: `%2 = 5·y` stays residual, `%3 = %2 + 5`.
         let residual = specialize_with(&original, &[Some(5), None]).expect("specialized");
         assert_eq!(residual.report.folded_nodes, 1);
-        assert_eq!(residual.report.dynamic_inputs, alloc::vec![ScalarType::I64; 1]);
+        assert_eq!(
+            residual.report.dynamic_inputs,
+            alloc::vec![ScalarType::I64; 1]
+        );
         for y in [0i64, 4, -3, i64::MIN] {
             assert_eq!(
                 run(&residual.checked, &[y]),
@@ -903,7 +909,10 @@ mod tests {
         let original = product_plus();
         // `y = 7` static, `x` dynamic: the residual's only input is `x` (rank 0).
         let residual = specialize_with(&original, &[None, Some(7)]).expect("specialized");
-        assert_eq!(residual.report.dynamic_inputs, alloc::vec![ScalarType::I64; 1]);
+        assert_eq!(
+            residual.report.dynamic_inputs,
+            alloc::vec![ScalarType::I64; 1]
+        );
         for x in [0i64, 3, -9] {
             assert_eq!(
                 run(&residual.checked, &[x]),
@@ -1054,7 +1063,10 @@ mod tests {
         let sum = builder.op(Op::I64Add(y, five));
         builder.output(sum);
         let original = checked(builder.finish());
-        assert_eq!(run(&original, &[4, 3]), alloc::vec![crate::sem::Value::I64(8)]);
+        assert_eq!(
+            run(&original, &[4, 3]),
+            alloc::vec![crate::sem::Value::I64(8)]
+        );
         let residual = specialize_with(&original, &[Some(2), None]).expect("specialized");
         assert_eq!(residual.report.pruned_nodes, 2);
         assert_eq!(residual.report.residual_nodes, 3);
@@ -1090,7 +1102,10 @@ mod tests {
     fn residual_identity_is_new_and_the_closure_is_kept() {
         let original = product_plus();
         let residual = specialize_with(&original, &[Some(5), None]).expect("specialized");
-        assert_ne!(residual.report.residual_graph, residual.report.original_graph);
+        assert_ne!(
+            residual.report.residual_graph,
+            residual.report.original_graph
+        );
         assert_eq!(residual.report.original_graph, original.id());
         assert_eq!(residual.checked.id(), residual.report.residual_graph);
         assert_eq!(
@@ -1241,7 +1256,10 @@ mod tests {
 
     #[test]
     fn merge_reports_its_arity_and_rejects_a_short_vector() {
-        assert_eq!(merge(&[Some(1), None, None], &[7, 8]), Some(crate::eval::i64_inputs(&[1, 7, 8])));
+        assert_eq!(
+            merge(&[Some(1), None, None], &[7, 8]),
+            Some(crate::eval::i64_inputs(&[1, 7, 8]))
+        );
         assert_eq!(merge(&[Some(1), None], &[]), None);
         assert_eq!(merge(&[None], &[1, 2]), None);
         assert_eq!(rank(&[None, Some(2)], 1), Some(1));
