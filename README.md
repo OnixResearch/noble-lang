@@ -435,22 +435,44 @@ printf '%s\n' noble-ngraph-vectors/0 'types i64 i64' 'v 3 4' > squares.vectors
 {"schema":"noble-ngraph-report/v1","command":"eval","stage":"evaluation","outcome":"normal","code":null,"site":null,"vector":0,"outputs":["i64:25"]}
 ```
 
-### Graph literal modes (`noble-graph-literal-modes/v1`)
+### Graph literal modes (`noble-graph-literal-modes/v2`)
 
-Graph and vector files carry `F32` literals in one of two implemented modes. Both are part of
-`ngraph-i64/0`'s file formats; the third row is the mode issue #40 asks for and is **not
-implemented**, so `0.1` is refused today.
+Graph, vector and data files default to the unchanged exact-literal policy. A file may select v2
+with `literal-modes noble-graph-literal-modes/v2` immediately after its schema line; only that
+version admits the explicitly marked `rne:<decimal>` form. The marker is per literal, so exact
+decimal and exact-bits syntax remain available in the same file. Canonical graph, vector and data
+printing writes exact bit encodings rather than the source spelling.
 
 | Mode | Syntax | Exact `0.5` | `0.1` | Refusal codes |
 |---|---|---|---|---|
 | `exact-decimal` | a decimal literal that denotes a binary32 value exactly: at most 112 significant digits and an exponent in `[-149, 38]` | accepted | refused | `E-LITERAL-INEXACT` |
-| `exact-bits` | `0x` followed by one to eight hex digits | n/a (the bits are the value) | n/a | `E-LITERAL-NONFINITE` if the bits are `nan`/`inf`; syntax error otherwise |
-| `rne-decimal` (proposed, #40) | a decimal literal rounded once, ties to even, into binary32 | accepted | accepted as `0x3dcccccd` | range and tie behaviour still to be specified |
+| `exact-bits` | `0x` followed by one to eight hex digits | n/a (the bits are the value) | n/a | Any binary32 encoding, including NaN and infinities; malformed bit syntax is refused |
+| `rne-decimal` (v2, #40) | `rne:` followed by a decimal literal (at most 4096 decimal bytes), rounded once, ties to even, into binary32 | accepted | accepted as `0x3dcccccd` | `E-LITERAL-OVERFLOW` when rounding would produce infinity; `E-BUDGET-LITERAL-BYTES` over the limit; `E-PROFILE` without the v2 declaration |
 
-The exact modes are unchanged by #40. Adding `rne-decimal` changes no existing diagnostic: text that
-the exact mode refuses would be accepted only when the caller selects the new mode, and every other
-input keeps its current code. A leading `+` is a syntax error in both modes, and `nan`/`inf` literals
-are refused because non-finite encodings do not pass the checker.
+The exact modes and their existing diagnostics are unchanged by #40. A leading `+` remains a syntax
+error; `nan` and `inf` words remain refused because non-finite encodings do not pass the checker.
+Non-finite values are still expressible with exact bit encodings where the file format permits them.
+
+The scalar boundary adapters in `noble_ngraph::sem` are explicit functions, not implicit coercions:
+
+| Function | Result | Contract |
+|---|---|---|
+| `i64_to_f32_exact(i64)` | `Result<u32, ConversionError>` | Refuses with `Inexact` if binary32 would discard integer bits. |
+| `i64_to_f32_rne(i64)` | `u32` | Round-to-nearest, ties-to-even; all I64 inputs are in finite binary32 range. |
+| `f32_to_i64_exact(u32)` | `Result<i64, ConversionError>` | Requires a finite, integral value in `[-2^63, 2^63)`. |
+| `f32_to_i64_trunc(u32)` | `Result<i64, ConversionError>` | Truncates toward zero, then requires the result in `[-2^63, 2^63)`. |
+
+The F32-to-I64 adapters return `NotFinite` for NaN/infinity and `Overflow` outside the I64 range;
+the exact adapter also returns `Inexact` for a finite fractional value. Both signed zero encodings
+convert to integer zero. The adapters operate on bits and checked integer arithmetic; they do not
+use a saturating or wrapping cast.
+
+`noble ngraph import GRAPH --out RECEIPT` records the original UTF-8 source bytes, their BLAKE3
+digest, the canonical exact-bit graph and its digest, the selected v2 mode and semantic revision,
+and each RNE literal's original spelling, line and resulting bits. Import input is bounded to 1 MiB;
+the immutable receipt is at most 16 MiB. `noble ngraph export RECEIPT --out GRAPH` verifies the
+receipt and exports its canonical graph. Add `--source` to export the byte-identical original
+source. Both commands use create-new publication and refuse to overwrite existing outputs.
 
 The written graph file is:
 
