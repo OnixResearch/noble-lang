@@ -79,6 +79,7 @@ function changedPin(digest) {
 function tamperedCopy(source, name) {
   const copy = path.join(work, name);
   fs.copyFileSync(source, copy);
+  fs.chmodSync(copy, 0o600);
   const bytes = fs.readFileSync(copy);
   bytes[Math.floor(bytes.length / 2)] ^= 0x01;
   fs.writeFileSync(copy, bytes);
