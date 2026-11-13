@@ -487,7 +487,7 @@ function main() {
       const runs = SOLVERS.map(solver => {
         const answer = solve(tools, solver, query);
         return { solver, answer: answer.answer, wall_ns: answer.wall_ns, peak_rss_kb: answer.peak_rss_kb,
-          status: outcome(padded, bind(padded), expected, answer, null).status };
+          ...outcome(padded, bind(padded), expected, answer, null) };
       });
       return [mode, { bytes: query.bytes, nodes: query.nodes, runs }];
     }));
