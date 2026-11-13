@@ -721,6 +721,37 @@ per row, so the decision is **NO-GO** and no batching work (SIMD, `F32`, chunked
 that issue. The lane lives in the existing `batch_row_reference` target as
 `tests/batch_rows/measure.rs`, is `#[ignore]`d by default, and reports allocation counts as an
 unavailable instrument because the workspace forbids `unsafe_code`.
-The cold, staging, output-copy and byte breakdown that item 6 asks for is retained in
+cold, staging, output-copy and byte breakdown that item 6 asks for is retained in
 [`batch-breakdown-2026-11-07.json`](batch-breakdown-2026-11-07.json), with its table in
 [`batch-decision.md`](batch-decision.md). The per-row reports are about five times the staged inputs.
+
+# Guard-scoped I64 rewrite certificates (2026-11-13, issue #108)
+
+The separately versioned [`ngraph-cert-scoped/0` specification](../../docs/ngraph-cert-scoped-v0.md)
+keeps the original `ngraph-cert/0` vocabulary unchanged. Its observation relation includes normal
+outputs, preflight refusals, and the identity and fact of the first failing guard; equality claims
+assume sufficient execution budgets and no cancellation.
+
+- **Model proof.** [`GuardedRewrite.lean`](../../proofs/foundation/NobleFoundation/GuardedRewrite.lean)
+  defines a small guard-and-input-fact fragment and proves that an accepted equality certificate
+  implies observation equality for every input. Its observations distinguish the first failed
+  guard. [`GuardedRewriteCorpus.lean`](../../proofs/foundation/NobleFoundation/GuardedRewriteCorpus.lean)
+  is generated from the Rust proposer's two accepted pilot certificates; the model checker accepts
+  each encoded certificate by `decide`.
+- **Concrete tests.** [`cert_scoped.rs`](../../crates/noble-ngraph/src/cert/scoped.rs) checks and
+  re-derives scoped evidence in Rust. The tests in
+  [`tests/cert/scoped.rs`](../../crates/noble-ngraph/tests/cert/scoped.rs) exercise the guard- and
+  input-fact-scoped pilots, controls, and two-guard cases through both the reference interpreter and
+  compiled evaluator, comparing complete observations for inputs violating zero, one, or both guard
+  predicates. These are finite tests, not a universal implementation proof.
+- **Implementation correspondence.** No theorem connects the Rust checker, either evaluator, or
+  certificate bytes to the Lean fragment. The corpus freshness test binds the generated Lean file to
+  the Rust exporter; it does not prove that the Rust implementation refines the model.
+- **Packed-schedule proof.** [`PackedSchedule.lean`](../../proofs/foundation/NobleFoundation/PackedSchedule.lean)
+  and its corpus remain a separate claim; they were not extended with guard-scoped rewrite rules and
+  are not evidence for this certificate checker.
+- **Cost lane.** The frozen [`scoped-rewrite-cost-v1.txt`](scoped-rewrite-cost-v1.txt) protocol and
+  [`tests/rewrite_cost/scoped.rs`](../../crates/noble-ngraph/tests/rewrite_cost/scoped.rs) measure
+  proposal and checking calls separately, with endpoint admission outside the timers and a structural
+  in-memory derivation-size estimate. Unadmitted candidates produce no row. These descriptive isolated
+  timings do not establish end-to-end speedup or optimization benefit.
