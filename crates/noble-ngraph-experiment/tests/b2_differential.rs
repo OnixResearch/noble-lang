@@ -1254,7 +1254,14 @@ fn issue125_shrink_inputs(
         "target_feature_preserved": target_feature_preserved,
         "mutation_site": std::env::var("NOBLE_ISSUE125_MUTATION_ID").ok(),
         "snapshot": null,
-        "limits": "default-numeric-graph-budgets",
+        "limits": {
+            "control": "Control::default()",
+            "fuel": null,
+            "cancellation": false,
+            "scratch_instrumentation": false,
+            "forward_scratch_override": null,
+            "effective_forward_scratch": noble_ngraph::check::Budgets::default().forward_scratch
+        },
         "mismatch_class": mismatch_class,
         "l2_after": format!("{:?}", legs.l2_apfloat),
         "l3_after": format!("{:?}", legs.l3_reference),
@@ -1358,6 +1365,15 @@ fn issue125_structured_interaction_matrix() {
                 "selected_table_index": issue125_runtime_table_index(&case.graph, family, &case.inputs),
                 "selected_table_node": issue125_selected_table_node(&case.graph, family, &case.inputs)
                     .map(|node| node.0),
+                "snapshot": null,
+                "limits": {
+                    "control": "Control::default()",
+                    "fuel": null,
+                    "cancellation": false,
+                    "scratch_instrumentation": false,
+                    "forward_scratch_override": null,
+                    "effective_forward_scratch": noble_ngraph::check::Budgets::default().forward_scratch
+                },
                 "expected_output_bits": expected,
                 "l3_nodes_evaluated": legs.l3_evaluated_nodes,
                 "checked_node_count": checked.node_count(),
@@ -1412,6 +1428,11 @@ fn issue125_structured_interaction_matrix() {
         .map(|cell| serde_json::json!({ "cell": cell["cell"], "mismatch_class": cell["mismatch_class"] }))
         .collect();
     let structured_reached_count = cells.iter().filter(|cell| cell["reached"] == true).count();
+    let structured_reached_cells: Vec<&str> = cells
+        .iter()
+        .filter(|cell| cell["reached"] == true)
+        .filter_map(|cell| cell["cell"].as_str())
+        .collect();
     let generator_comparison = serde_json::json!({
         "profiles_separate": true,
         "seed_budget": { "current_graph_seed": comparison_seed,
@@ -1434,8 +1455,11 @@ fn issue125_structured_interaction_matrix() {
             "first_disagreement": current_campaign.first_disagreement,
             "structural_interaction_pairs": current_interactions,
             "reached_interactions": current_reached_interactions,
+            "reached_cells": [],
+            "reached_cell_limitation": "No full-normal L3 execution; matrix-cell coverage is not inferred from structural tags.",
             "witness_kind": "connected operation nodes plus at least one normal, full-node L3 execution; no per-node or selected-branch trace" },
-        "structured_extension": { "cells": cells.len(), "reached_cells": structured_reached_count,
+        "structured_extension": { "cells": cells.len(), "reached_cell_count": structured_reached_count,
+            "reached_cells": structured_reached_cells,
             "actual_node_work": structured_node_budget, "distinct_attributed_failures": structured_failures,
             "witness_kind": "per-cell full-node L3 count, runtime-derived direct input branch/index, outputs and all-leg comparison" },
         "distinct_attributed_failures": { "current_generator_classes": current_campaign.failure_classes,

@@ -166,21 +166,18 @@ fn fuzz_oracles_reach_emission_and_real_worlds() -> Result<(), String> {
     Ok(())
 }
 
-/// The P1 matrix's composed boundary case also traverses the ordinary fuzz
-/// replay oracles and reaches real WAT emission in both supported Core profiles.
+/// The P1 matrix's composed boundary case traverses the Core source admission
+/// oracle in both supported Core profiles. Managed-Wasm execution belongs to
+/// the foundation differential lane, not this contract-WAT oracle.
 #[test]
-fn issue125_composed_prefix_reaches_fuzz_oracles() -> Result<(), String> {
+fn issue125_composed_prefix_is_admitted_by_core_source_oracles() -> Result<(), String> {
     let source = b"23 true 9223372036854775807 1 [ 1 + ] [ 2 * ] compose run\n";
     for profile in 0..2 {
         let mut header = HEADERS[0];
         header[super::oracles::SELECT] = profile;
         let data = super::oracles::encode(header, source);
-        for (target, oracle) in TARGETS.iter().take(3) {
-            oracle(&data)
-                .map_err(|violation| format!("{target}, profile {profile}: {violation}"))?;
-        }
-        let emitted = super::oracles::check_prepare_to_wasm(&data)?.len();
-        assert!(emitted > 0, "profile {profile} did not reach WAT emission");
+        super::oracles::check_source(&data)
+            .map_err(|violation| format!("Core source profile {profile}: {violation}"))?;
     }
     Ok(())
 }

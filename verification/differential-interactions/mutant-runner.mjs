@@ -6,7 +6,7 @@
 //   --corpus MINIMISED_SOURCE_CORPUS
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, realpathSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { userInfo } from 'node:os';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -213,6 +213,7 @@ try {
         const outcome = p1MismatchOutcome(receipt);
         const binaryEquivalent = candidateCliHash !== null && candidateCliHash === p1Baseline.toolchain.cli_sha256;
         const result = { id: mutant.id, profile: mutant.profile, family: mutant.family, cell: mutant.cell,
+          mutation: mutant,
           outcome: binaryEquivalent ? 'invalid-or-equivalent'
             : outcome === 'killed' && mutationResult.status === 0 && changed && verify.status !== 0 && !verified
               ? 'killed' : outcome === 'divergence-unreached' ? 'divergence-unreached'
@@ -224,6 +225,7 @@ try {
           failure_identity: witness?.failure_identity ?? null,
           witness_sizes_bytes: witness?.witness_sizes_bytes ?? null,
           shrink_work: witness?.shrink_work ?? null,
+          mutation_probe_witness: witness ?? null,
           historical_receipt_refused: verify.status !== 0 && !verified,
           historical_check_exit: verify.status, historical_check_json: stale,
           replay: replay && { source_commit: replay.source_commit, candidate_cli_sha256: replay.candidate_cli_sha256,
@@ -240,6 +242,7 @@ try {
           ? hashFile(sourcePath) : null;
         allKilled = false;
         entry = { id: mutant.id, profile: mutant.profile, family: mutant.family, cell: mutant.cell,
+          mutation: mutant,
           outcome: 'invalid-or-equivalent', command_exit: null, clean_source_commit: sourceCommit,
           source_path: mutant.source_path, baseline_source_sha256: sourceSha256, mutant_source_sha256: null,
           source_bytes_changed: false, error: error.message };
@@ -300,6 +303,7 @@ try {
             : sourceChanged && (probe?.outcome === 'divergence-unreached' || probe?.outcome === 'executed-survived')
               ? probe.outcome : 'incomplete';
         const result = { id: mutant.id, profile: mutant.profile, family: mutant.family, cell: mutant.cell,
+          mutation: mutant,
           outcome,
           command_exit: mutationResult.status, clean_source_commit: sourceCommit,
           source_path: mutant.source_path, baseline_source_sha256: beforeSha256,
@@ -308,6 +312,7 @@ try {
           historical_test_executable_blake3: p2BaselineHash,
           historical_executable_refused: probe?.candidate_test_executable_blake3 !== p2BaselineHash,
           failure_identity: probe?.failure_identity ?? null,
+          mutation_probe: probe ?? null,
           original_input_bits: receipt?.cells.find(cell => cell.cell === mutant.cell)?.input_bits ?? null,
           minimized_witness: receipt?.cells.find(cell => cell.cell === mutant.cell)?.minimized_witness ?? null,
           witness_sizes_bytes: probe ? { original: probe.original_witness_size_bytes,
@@ -327,6 +332,7 @@ try {
             ? hashFile(sourcePath) : null;
           allKilled = false;
           entry = { id: mutant.id, profile: mutant.profile, family: mutant.family, cell: mutant.cell,
+            mutation: mutant,
             outcome: 'invalid-or-equivalent', command_exit: null, clean_source_commit: sourceCommit,
             source_path: mutant.source_path, baseline_source_sha256: sourceSha256, mutant_source_sha256: null,
             source_bytes_changed: false, historical_test_executable_blake3: p2BaselineHash,
@@ -358,6 +364,9 @@ try {
       p1_seed: 125, p1_cases_per_mode: 18, p1_selected: 18, p2_selected: 24 },
     mutant_bank: { path: 'verification/differential-interactions/mutants-v1.json', sha256: hashFile(mutantPath),
       count: mutants.length },
+    baseline_receipts: { p1: p1Baseline, p2: p2Baseline },
+    command_runs: readdirSync(join(output, 'commands')).sort().map(label => ({ label,
+        ...JSON.parse(readFileSync(join(output, 'commands', label, 'command.json'), 'utf8')) })),
     inputs: { foundation_receipt: foundation, corpus: corpus, exported_cases: casesPath },
     baselines: { p1: { receipt: p1BaselinePath, source_tree: p1Baseline.source_tree,
         source_commit: p1Baseline.source_commit, clean_source: p1Baseline.clean_source,
