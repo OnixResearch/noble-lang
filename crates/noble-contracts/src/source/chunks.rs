@@ -205,9 +205,17 @@ impl Op {
 pub enum Node {
     I64(i64),
     Bool(bool),
-    Capture { index: u16 },
-    Operation { op: Op, instantiation: u16 },
-    Invoke { dependency: u16, instantiation: u16 },
+    Capture {
+        index: u16,
+    },
+    Operation {
+        op: Op,
+        instantiation: u16,
+    },
+    Invoke {
+        dependency: u16,
+        instantiation: u16,
+    },
     Quotation {
         body: alloc::vec::Vec<u32>,
         instantiation: u16,
@@ -620,7 +628,7 @@ impl Ledger {
     }
 
     fn refuse(&mut self, resource: Resource, observed: u32, at: Location) -> Refusal {
-        let resource_limit = self.limits.limit(resource);
+        let resource_limit_units = self.limits.limit(resource);
         let mut refusal = Refusal::new(
             Class::Exhausted,
             at,
@@ -628,7 +636,7 @@ impl Ledger {
         );
         refusal.resource = Some(resource);
         refusal.observed = observed;
-        refusal.limit = resource_limit;
+        refusal.limit = resource_limit_units;
         refusal
     }
 
@@ -638,7 +646,8 @@ impl Ledger {
             *slot = max_value;
         }
         let mut refusal = self.refuse(resource, u32::MAX, at);
-        refusal.message = alloc::string::String::from("budget count exceeds its u32 reporting range");
+        refusal.message =
+            alloc::string::String::from("budget count exceeds its u32 reporting range");
         refusal
     }
 
@@ -647,14 +656,14 @@ impl Ledger {
     /// always names the boundary that stopped the work.
     pub fn charge(&mut self, resource: Resource, amount: u32, at: Location) -> Result<(), Refusal> {
         let current = self.observed(resource);
-        let resource_limit = self.limits.limit(resource);
+        let resource_limit_units = self.limits.limit(resource);
         let next = match current.checked_add(amount) {
             Some(next) => next,
             None => return Err(self.refuse(resource, u32::MAX, at)),
         };
-        if next > resource_limit {
+        if next > resource_limit_units {
             if let Some(slot) = self.charged.get_mut(resource.slot()) {
-                *slot = resource_limit;
+                *slot = resource_limit_units;
             }
             return Err(self.refuse(resource, next, at));
         }
@@ -680,10 +689,10 @@ impl Ledger {
     /// Record a per-item ceiling. A smaller value than one already observed is
     /// kept out, so the ledger reports the worst case, never the last case.
     pub fn observe(&mut self, resource: Resource, value: u32, at: Location) -> Result<(), Refusal> {
-        let resource_limit = self.limits.limit(resource);
-        if value > resource_limit {
+        let resource_limit_units = self.limits.limit(resource);
+        if value > resource_limit_units {
             if let Some(slot) = self.charged.get_mut(resource.slot()) {
-                *slot = resource_limit;
+                *slot = resource_limit_units;
             }
             return Err(self.refuse(resource, value, at));
         }
@@ -889,9 +898,9 @@ fn absorb_identity_recipe(fold: &mut crate::companion::digest::Fold, envelope: &
 }
 
 /// One lane of the envelope identity fold over canonical body fields only.
-fn identity_lane(envelope: &Envelope, lane: u64) -> u64 {
+fn identity_lane(envelope: &Envelope, lane: usize) -> u64 {
     let mut fold = crate::companion::digest::Fold::new(crate::companion::digest::DOMAIN_CHUNK);
-    fold.absorb(lane);
+    fold.absorb_count(lane);
     fold.absorb(u64::from(envelope.format));
     fold.absorb(u64::from(envelope.semantic_revision));
     fold.absorb_bytes(envelope.profile.as_bytes());
@@ -908,8 +917,7 @@ pub fn chunk_identity_of(envelope: &Envelope) -> [u8; IDENTITY_BYTES] {
     let mut lanes_out = [0u8; IDENTITY_BYTES];
     let mut lane = 0usize;
     while lane < IDENTITY_BYTES / 8 {
-        let lane_index = u64::try_from(lane).unwrap_or(u64::MAX);
-        let value = identity_lane(envelope, lane_index);
+        let value = identity_lane(envelope, lane);
         let bytes = value.to_le_bytes();
         let base = lane.saturating_mul(8);
         let mut at = 0usize;
@@ -1141,7 +1149,7 @@ fn charge_instantiation(
     };
     ledger.charge_count(
         Resource::InstantiationBindings,
-        u64::try_from(instantiation.bindings.len()).unwrap_or(u64::MAX),
+        encoded_len(instantiation.bindings.len()),
         at,
     )
 }
@@ -1249,10 +1257,7 @@ fn emit(elements: &[Element], at: Location) -> Result<alloc::vec::Vec<u8>, Refus
         }
         out.push(b' ');
         if u32::try_from(out.len()).map_or(true, |length| length > MAX_SOURCE_BYTES) {
-            return Err(byte_budget_refusal(
-                u64::try_from(out.len()).unwrap_or(u64::MAX),
-                at,
-            ));
+            return Err(byte_budget_refusal(encoded_len(out.len()), at));
         }
     }
     Ok(out)
@@ -1265,7 +1270,10 @@ fn byte_budget_refusal(observed: u64, at: Location) -> Refusal {
         "emitted source exceeds the fixed byte bound",
     );
     refusal.resource = Some(Resource::SourceBytes);
-    refusal.observed = u32::try_from(observed).unwrap_or(u32::MAX);
+    refusal.observed = match u32::try_from(observed) {
+        Ok(observed) => observed,
+        Err(_) => u32::MAX,
+    };
     refusal.limit = MAX_SOURCE_BYTES;
     refusal
 }
@@ -1331,11 +1339,7 @@ impl Replay {
 
     fn push(&mut self, ty: Ty, ledger: &mut Ledger, at: Location) -> Result<(), Refusal> {
         self.stack.push(ty);
-        ledger.observe_count(
-            Resource::StackHeight,
-            u64::try_from(self.stack.len()).unwrap_or(u64::MAX),
-            at,
-        )
+        ledger.observe_count(Resource::StackHeight, encoded_len(self.stack.len()), at)
     }
 
     fn pop(&mut self, at: Location) -> Result<Ty, Refusal> {
@@ -1358,11 +1362,7 @@ impl Replay {
                 "the profile operation requires an I64 operand",
             ));
         }
-        ledger.observe_count(
-            Resource::StackHeight,
-            u64::try_from(self.height()).unwrap_or(u64::MAX),
-            at,
-        )
+        ledger.observe_count(Resource::StackHeight, u64::from(self.height()), at)
     }
 
     fn height(&self) -> usize {
@@ -1512,11 +1512,8 @@ impl Replay {
                     ));
                 }
                 self.stack = produced.as_ref().clone();
-                ledger.observe_count(
-                    Resource::StackHeight,
-                    u64::try_from(self.height()).unwrap_or(u64::MAX),
-                    at,
-                )
+                self.ledger
+                    .observe_count(Resource::StackHeight, u64::from(self.height()), at)
             }
         }
     }
@@ -1806,7 +1803,7 @@ impl Library {
         let mut ledger = Ledger::new(self.budget);
         ledger.charge_count(
             Resource::Entries,
-            u64::try_from(self.entries.len()).unwrap_or(u64::MAX),
+            encoded_len(self.entries.len()),
             Location::field("library.entries"),
         )?;
         ledger.charge(
@@ -1834,11 +1831,7 @@ impl Library {
             Location::field("envelope.interface"),
         )?;
         let source = emit(&expansion.elements, body_at)?;
-        ledger.observe_count(
-            Resource::SourceBytes,
-            u64::try_from(source.len()).unwrap_or(u64::MAX),
-            body_at,
-        )?;
+        ledger.observe_count(Resource::SourceBytes, encoded_len(source.len()), body_at)?;
         if canonical_revision(&source) != envelope.source_revision {
             return Err(Refusal::new(
                 Class::Invalid,
@@ -1957,7 +1950,7 @@ fn check_envelope(envelope: &Envelope, ledger: &mut Ledger) -> Result<(), Refusa
     }
     ledger.observe_count(
         Resource::RecipeNodes,
-        u64::try_from(envelope.body.nodes.len()).unwrap_or(u64::MAX),
+        encoded_len(envelope.body.nodes.len()),
         Location::field("envelope.body.nodes"),
     )?;
     if envelope.body.entry.len() > envelope.body.nodes.len()
@@ -2024,7 +2017,8 @@ fn add_encoded_size(total: &mut u64, amount: u64, at: Location) -> Result<(), Re
 }
 
 fn encoded_len(count: usize) -> u64 {
-    u64::try_from(count).unwrap_or(u64::MAX)
+    // Supported host and Wasm targets have at most 64-bit usize lengths.
+    count as u64
 }
 
 /// Measure the exact retained envelope shape used by the typed-chunk profile.
@@ -2128,11 +2122,7 @@ fn add_recipe_size(encoded_bytes: &mut u64, recipe: &Recipe, at: Location) -> Re
 
 fn check_stack(stack: &[Ty], ledger: &mut Ledger, field: &'static str) -> Result<(), Refusal> {
     let at = Location::field(field);
-    ledger.observe_count(
-        Resource::StackHeight,
-        u64::try_from(stack.len()).unwrap_or(u64::MAX),
-        at,
-    )?;
+    ledger.observe_count(Resource::StackHeight, encoded_len(stack.len()), at)?;
     for ty in stack {
         if !profile_type(ty) {
             return Err(Refusal::new(
@@ -2152,8 +2142,7 @@ pub fn profile_type(ty: &Ty) -> bool {
 
 fn check_captures(envelope: &Envelope) -> Result<(), Refusal> {
     let at = Location::field("envelope.captures");
-    if u64::try_from(envelope.captures.len())
-        .map_or(true, |count| count > u64::from(MAX_CAPTURES))
+    if u64::try_from(envelope.captures.len()).map_or(true, |count| count > u64::from(MAX_CAPTURES))
     {
         return Err(Refusal::new(
             Class::Invalid,
@@ -2197,7 +2186,7 @@ fn check_instantiations(envelope: &Envelope, ledger: &mut Ledger) -> Result<(), 
         }
         ledger.charge_count(
             Resource::InstantiationBindings,
-            u64::try_from(instantiation.bindings.len()).unwrap_or(u64::MAX),
+            encoded_len(instantiation.bindings.len()),
             at,
         )?;
         let mut previous: Option<u16> = None;
@@ -2711,11 +2700,11 @@ impl<'a> EditorWalk<'a> {
         Ok(true)
     }
 
-    fn append_leaf(
-        &mut self,
-        node: &super::editor::Node,
-        at: Location,
-    ) -> Result<(), Refusal> {
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; leaf handling mutates the runtime editor Vec and allocates typed refusal messages"
+    )]
+    fn append_leaf(&mut self, node: &super::editor::Node, at: Location) -> Result<(), Refusal> {
         match node {
             super::editor::Node::Integer(value) => self.elements.push(Element::I64(*value)),
             super::editor::Node::Boolean(value) => self.elements.push(Element::Bool(*value)),
@@ -2730,7 +2719,10 @@ impl<'a> EditorWalk<'a> {
                 }
             },
             super::editor::Node::Hole | super::editor::Node::Quotation(_) => {
-                return Err(internal(at, "editor path node was sent to the leaf handler"))
+                return Err(internal(
+                    at,
+                    "editor path node was sent to the leaf handler",
+                ))
             }
         }
         Ok(())
@@ -2814,11 +2806,7 @@ fn flatten_editor_tree(
 }
 
 /// Replace the hole with one proposal's elements.
-fn fill(
-    elements: &[Element],
-    hole: usize,
-    proposal: &[Element],
-) -> alloc::vec::Vec<Element> {
+fn fill(elements: &[Element], hole: usize, proposal: &[Element]) -> alloc::vec::Vec<Element> {
     let mut out = alloc::vec::Vec::with_capacity(
         elements
             .len()
@@ -3043,8 +3031,7 @@ fn evaluate<'a>(
     ledger: &mut Ledger,
 ) -> Result<Option<alloc::vec::Vec<Scalar>>, Refusal> {
     let at = Location::field("request.fixtures");
-    let mut stack: alloc::vec::Vec<Value<'a>> =
-        alloc::vec::Vec::with_capacity(MAX_STACK_CAPACITY);
+    let mut stack: alloc::vec::Vec<Value<'a>> = alloc::vec::Vec::with_capacity(MAX_STACK_CAPACITY);
     for input in inputs {
         stack.push(match input {
             Scalar::I64(value) => Value::I64(*value),
@@ -3092,11 +3079,7 @@ fn evaluate<'a>(
             Element::Op { op, .. } => eval_operation(*op, &mut stack, &mut frames, at)?,
             Element::Close | Element::Hole => return Ok(None),
         }
-        ledger.observe_count(
-            Resource::StackHeight,
-            u64::try_from(stack.len()).unwrap_or(u64::MAX),
-            at,
-        )?;
+        ledger.observe_count(Resource::StackHeight, encoded_len(stack.len()), at)?;
     }
     let mut out = alloc::vec::Vec::with_capacity(stack.len());
     for value in stack {
@@ -3154,7 +3137,7 @@ impl Search<'_> {
             let envelope = entry.envelope();
             ledger.observe_count(
                 Resource::RecipeNodes,
-                u64::try_from(envelope.body.nodes.len()).unwrap_or(u64::MAX),
+                encoded_len(envelope.body.nodes.len()),
                 Location::field("proposal.revalidation"),
             )?;
             let expansion = expand_recipe(
@@ -3175,7 +3158,7 @@ impl Search<'_> {
             )?;
             ledger.observe_count(
                 Resource::SourceBytes,
-                u64::try_from(source.len()).unwrap_or(u64::MAX),
+                encoded_len(source.len()),
                 Location::field("proposal.revalidation"),
             )?;
             if source != entry.source || canonical_revision(&source) != envelope.source_revision {
@@ -3262,11 +3245,7 @@ impl Search<'_> {
             current.truncate(current.len().saturating_sub(interface.stack_in.len()));
             current.extend(interface.stack_out.iter().cloned());
             self.ledger
-                .observe_count(
-                    Resource::StackHeight,
-                    u64::try_from(current.len()).unwrap_or(u64::MAX),
-                    at,
-                )?;
+                .observe_count(Resource::StackHeight, encoded_len(current.len()), at)?;
         }
         Ok(Ok(Composition {
             elements,
@@ -3292,12 +3271,7 @@ impl Search<'_> {
             ledger: &mut self.ledger,
             at,
         };
-        match derived_interface(
-            &mut admission,
-            source,
-            elements,
-            declared,
-        ) {
+        match derived_interface(&mut admission, source, elements, declared) {
             Ok(admitted) => Ok(Ok(admitted)),
             Err(refusal) => match refusal.class {
                 Class::Invalid | Class::Unsupported => Ok(Err(refusal)),
@@ -3349,11 +3323,7 @@ impl Search<'_> {
         let at = Location::field("proposal");
         self.ledger.charge(Resource::Candidates, 1, at)?;
         self.ledger
-            .observe_count(
-                Resource::ComposedChunks,
-                u64::try_from(sequence.len()).unwrap_or(u64::MAX),
-                at,
-            )?;
+            .observe_count(Resource::ComposedChunks, encoded_len(sequence.len()), at)?;
         let Composition {
             elements,
             stack,
@@ -3386,11 +3356,7 @@ impl Search<'_> {
             Err(refusal) => return Ok(Step::Refused(refusal)),
         };
         self.ledger
-            .observe_count(
-                Resource::SourceBytes,
-                u64::try_from(source.len()).unwrap_or(u64::MAX),
-                at,
-            )?;
+            .observe_count(Resource::SourceBytes, encoded_len(source.len()), at)?;
         let declared = Interface {
             stack_in: self.request.task.stack_in.clone(),
             stack_out: self.request.task.stack_out.clone(),
@@ -3416,16 +3382,11 @@ impl Search<'_> {
         ]
         .iter()
         .fold(0u64, |total, length| {
-            total.saturating_add(u64::try_from(*length).unwrap_or(u64::MAX))
+            total.saturating_add(encoded_len(*length))
         });
-        let output_bytes = u64::try_from(source.len())
-            .unwrap_or(u64::MAX)
+        let output_bytes = encoded_len(source.len())
             .saturating_mul(2)
-            .saturating_add(
-                u64::try_from(selected.len())
-                    .unwrap_or(u64::MAX)
-                    .saturating_mul(IDENTITY_BYTES_U64),
-            )
+            .saturating_add(encoded_len(selected.len()).saturating_mul(IDENTITY_BYTES_U64))
             .saturating_add(stack_bytes);
         self.ledger
             .charge_count(Resource::RetainedBytes, output_bytes, at)?;
@@ -3486,8 +3447,7 @@ fn comes_before(left: &Entry, right: &Entry) -> core::cmp::Ordering {
 }
 
 fn canonical_order(library: &Library) -> alloc::vec::Vec<u16> {
-    let mut order: alloc::vec::Vec<u16> =
-        alloc::vec::Vec::with_capacity(library.entries().len());
+    let mut order: alloc::vec::Vec<u16> = alloc::vec::Vec::with_capacity(library.entries().len());
     for index in 0..library.entries().len() {
         if let Ok(index) = u16::try_from(index) {
             order.push(index);
@@ -3566,7 +3526,11 @@ fn refusal_encoded_size(refusal: &Refusal) -> Result<u32, Refusal> {
     )?;
     add_encoded_size(
         &mut encoded_bytes,
-        1u64.saturating_add(if refusal.location.index.is_some() { 4 } else { 0 }),
+        1u64.saturating_add(if refusal.location.index.is_some() {
+            4
+        } else {
+            0
+        }),
         at,
     )?;
     add_encoded_size(&mut encoded_bytes, 1, at)?;
@@ -3599,8 +3563,7 @@ fn fixture_report_size(set: &FixtureSet) -> Result<u32, Refusal> {
     let mut encoded_bytes = 0u64;
     add_encoded_size(
         &mut encoded_bytes,
-        1u64
-            .saturating_add(IDENTITY_BYTES_U64)
+        1u64.saturating_add(IDENTITY_BYTES_U64)
             .saturating_add(4)
             .saturating_add(1)
             .saturating_add(4),
@@ -3731,9 +3694,7 @@ fn add_request_tail_size(
         at,
     )?;
     add_encoded_size(encoded_bytes, REVISION_BYTES_U64, at)?;
-    let budget_bytes = u64::try_from(Resource::COUNT)
-        .unwrap_or(u64::MAX)
-        .saturating_mul(4);
+    let budget_bytes = encoded_len(Resource::COUNT).saturating_mul(4);
     add_encoded_size(encoded_bytes, budget_bytes, at)?;
     if let Some(fixtures) = &request.fixtures {
         let fixture_header_bytes = 21u64;
@@ -3831,7 +3792,7 @@ fn charge_request_retention(
     )?;
     ledger.charge_count(
         Resource::Entries,
-        u64::try_from(library.entries().len()).unwrap_or(u64::MAX),
+        encoded_len(library.entries().len()),
         Location::field("request.library_entries"),
     )?;
     let total_retained = request_bytes
