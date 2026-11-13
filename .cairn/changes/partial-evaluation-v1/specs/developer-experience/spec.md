@@ -159,9 +159,12 @@ outputs in output order, and render `I64` constants as exact decimal text and `B
 constants as `true` or `false`. A re-preparation or re-admission refusal MUST be reported as
 that refusal, and then no residual file, graph file or source file may be created.
 
-The specialization path MUST perform zero host requests: effectful, resource, recursive,
-aggregate and control subjects MUST be refused at or before admission, with no graph, no
-residual and no published output.
+The specialization path MUST perform zero host requests: the library MUST execute no host
+effect, and the command MUST spawn no process, execute no Wasm and open no network connection.
+Effectful, resource, recursive, aggregate and control subjects MUST be refused by the
+profile's extraction stage at or before admission, with no graph, no residual and no published
+output, and such a subject MUST NOT be able to reach specialization at all: specialization
+accepts only an already admitted graph.
 
 #### Scenario: NGRAPH-PE-CASE-11 residual source acceptance
 
@@ -174,10 +177,10 @@ residual and no published output.
 #### Scenario: NGRAPH-PE-CASE-12 zero host requests
 
 - GIVEN an effectful subject, a resource-interface subject and a recursive subject
-- WHEN the specialize command runs on each
-- THEN each MUST be refused at the admission stage with `E-EFFECT`, `E-RESOURCE` or
-  `E-RECURSION`, the ordinary-path reports for the same sources MUST record zero guest and
-  zero host requests, and no output file MUST exist afterwards
+- WHEN the profile's extraction stage runs on each
+- THEN extraction MUST refuse each with `E-EFFECT`, `E-RESOURCE` or `E-RECURSION` before any
+  graph exists, the profile MUST create no graph file, residual or output, and specialization
+  MUST be unreachable because its only entry takes an admitted graph
 
 ### Requirement: NGRAPH-PE-07
 r[NGRAPH-PE-07]

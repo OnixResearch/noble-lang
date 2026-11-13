@@ -83,6 +83,7 @@ pub mod prng;
 pub mod schedule;
 pub mod sem;
 pub mod snapshot;
+pub mod specialize;
 pub mod train;
 
 pub use batch::{declared_row_work, evaluate, evaluate_into, Row, RowOp};
@@ -92,3 +93,6 @@ pub use eval::{reference, Control, Obs, Report};
 pub use identity::{IdentityHasher, IdentityScheme};
 pub use ir::{Graph, GraphBuilder, NodeId, Op, ScalarType, SubProfile};
 pub use sem::Value;
+pub use specialize::{
+    emit_source, interface_types, merge, rank, readmit, specialize, Residual, ACCOUNTING_REVISION,
+};

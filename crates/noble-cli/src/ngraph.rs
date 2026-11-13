@@ -25,6 +25,8 @@ pub(crate) const USAGE: &str = "usage:
       [--budget-KIND N]...
   noble ngraph eval GRAPH VECTORS [--reference] [--snapshot FILE [--snapshot-id HEX]] [--fuel N]
       [--budget-KIND N]...
+  noble ngraph specialize GRAPH --static INDEX=VALUE[,INDEX=VALUE...] --out RESIDUAL
+      [--graph-out RESIDUAL_GRAPH] [--budget-KIND N]...
   noble ngraph train MODEL --loss LOSS --data DATA --policy ngraph-deriv-real/0 --optimizer adam/0
       --seed U64 --steps N --out SNAPSHOT [--from PARENT] [--opt-in SPEC]...
       [--adam-lr X] [--adam-beta1 X] [--adam-beta2 X] [--adam-eps X] [--budget-KIND N]...
@@ -32,8 +34,12 @@ pub(crate) const USAGE: &str = "usage:
       [--from PARENT]] [--budget-KIND N]...
   T: i64 | bool. SPEC: %N:boolean=straight-through | %N:boolean=clamped-linear:0xBITS |
       %N:index=zero | %N:index=backward-difference. X: 0x<16 hex digits> or a decimal.
+  INDEX is a 0-based input leaf, VALUE a signed I64 decimal; unlisted leaves stay dynamic.
+  specialize emits let-based Noble source and publishes it only after the ordinary
+  frontend, kernel and extractor accept the residual.
   KIND: work expansion inline-depth live-nodes layers inputs outputs affine-terms table-length
       table-entries facts graph-bytes snapshot-bytes forward-scratch backward-scratch steps
+      residual-nodes variants
       (each subcommand accepts the kinds it charges; a value may only lower the /0 default).
   Reports are noble-ngraph-report/v1 JSON lines. Exit: 0 normal, 1 trap, 2 reject or usage,
       4 unsupported, 5 exhausted.";
@@ -117,10 +123,11 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     let result = match arguments.get(1).and_then(|s| s.to_str()) {
         Some("check") => check(rest),
         Some("extract") => extract(rest),
+        Some("specialize") => specialize(rest),
         Some("eval") => eval(rest, &mut observed),
         Some("train") => train(rest, &mut observed),
         Some("verify") => verify(rest, &mut observed),
-        _ => usage("expected check, extract, eval, train or verify"),
+        _ => usage("expected check, extract, specialize, eval, train or verify"),
     };
     let lines = match result {
         Ok(lines) => lines,
@@ -410,6 +417,132 @@ fn extract(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop
     .with("expanded_nodes", Json::Number(s.expanded_nodes))
     .with("pruned_nodes", Json::Number(s.pruned_nodes))
     .with("inline_depth", Json::Number(s.max_inline_depth))])
+}
+
+/// The `--static` map: one optional `I64` per input leaf, absent entries
+/// dynamic.
+fn static_map(
+    args: &Parsed,
+    leaves: usize,
+) -> Result<std::vec::Vec<Option<i64>>, std::string::String> {
+    let mut map = std::vec![None; leaves];
+    let Some(text) = attempt!(args.text("--static")) else {
+        return Ok(map);
+    };
+    if text.is_empty() {
+        return Ok(map);
+    }
+    for entry in text.split(',') {
+        let (index, value) = entry
+            .split_once('=')
+            .ok_or_else(|| std::format!("--static entry {entry:?} is not INDEX=VALUE"))?;
+        let index = match noble_ngraph::format::decimal_u32(index) {
+            Some(index) => index as usize,
+            None => {
+                return Err(std::format!(
+                    "--static index {index:?} is not an unsigned decimal"
+                ))
+            }
+        };
+        if index >= leaves {
+            return Err(std::format!(
+                "--static index {index} is not an input leaf; the graph has {leaves}"
+            ));
+        }
+        if map[index].is_some() {
+            return Err(std::format!("--static index {index} is given twice"));
+        }
+        map[index] = Some(attempt!(arguments::signed("--static", value)));
+    }
+    Ok(map)
+}
+
+fn specialize(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop> {
+    const C: &str = "specialize";
+    let budget_kinds = kinds(&[
+        &arguments::EXTRACTION,
+        &arguments::CHECKER,
+        &arguments::SPECIALIZATION,
+    ]);
+    let args = attempt!(arguments::parse(
+        &Spec {
+            positional: &["GRAPH"],
+            values: &["--static", "--out", "--graph-out"],
+            repeated: &[],
+            switches: &[],
+            budgets: &budget_kinds,
+        },
+        arguments
+    )
+    .map_err(Stop::Usage));
+    let Some(out) = args.path_value("--out") else {
+        return usage("--out is required");
+    };
+    attempt!(policy(C, &args.budgets));
+    let graph = attempt!(load_graph(C, &args.path(0), &args.budgets, "graph file"));
+    let leaves = graph
+        .graph()
+        .slots
+        .iter()
+        .filter(|slot| slot.kind == noble_ngraph::ir::SlotKind::Input)
+        .count();
+    let map = attempt!(static_map(&args, leaves).map_err(Stop::Usage));
+    let residual = attempt!(noble_ngraph::specialize::specialize(
+        &IDS,
+        &graph,
+        &noble_ngraph::specialize::Request {
+            static_inputs: &map,
+            budgets: &args.budgets,
+        },
+    )
+    .map_err(|d| Line::diagnostic(C, "specialization", &d)));
+    let source = attempt!(noble_ngraph::specialize::emit_source(&residual.checked)
+        .map_err(|d| Line::diagnostic(C, "source", &d)));
+    let types = attempt!(noble_ngraph::specialize::interface_types(&residual.checked)
+        .map_err(|d| Line::diagnostic(C, "source", &d)));
+    // Independent acceptance before publication (design D9): the ordinary
+    // declared-text frontend, the kernel and the extractor must all accept the
+    // emitted residual first.
+    let readmitted = attempt!(noble_ngraph::specialize::readmit(
+        &IDS,
+        &source,
+        &types,
+        &args.budgets
+    )
+    .map_err(|d| Line::diagnostic(C, "admission", &d)));
+    if let Some(path) = args.path_value("--graph-out") {
+        let text = noble_ngraph::format::graph::print(residual.checked.graph());
+        attempt!(publish(C, &path, text.as_bytes()));
+    }
+    attempt!(publish(C, &out, source.as_bytes()));
+    let report = residual.report;
+    Ok(std::vec![Line::normal(C, "specialization")
+        .with("graph", report::digest(&graph.id()))
+        .with("residual_graph", report::digest(&report.residual_graph))
+        .with("readmitted_graph", report::digest(&readmitted.id()))
+        .with("readmitted_nodes", report::count(readmitted.node_count()))
+        .with("source", report::digest(blake3::hash(source.as_bytes()).as_bytes()))
+        .with("accounting", string(report.accounting))
+        .with(
+            "static_inputs",
+            Json::Array(
+                report
+                    .static_inputs
+                    .iter()
+                    .map(|entry| match entry {
+                        Some(value) => Json::Signed(*value),
+                        None => Json::Null,
+                    })
+                    .collect()
+            )
+        )
+        .with("inputs", type_list(report.dynamic_inputs.iter().copied()))
+        .with("live_nodes", report::count(residual.checked.node_count()))
+        .with("original_nodes", Json::Number(report.original_nodes))
+        .with("folded_nodes", Json::Number(report.folded_nodes))
+        .with("pruned_nodes", Json::Number(report.pruned_nodes))
+        .with("residual_nodes", Json::Number(report.residual_nodes))
+        .with("variants", Json::Number(report.variants))])
 }
 
 fn eval(

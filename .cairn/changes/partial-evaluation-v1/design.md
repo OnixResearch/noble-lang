@@ -171,17 +171,25 @@ makes it bounded rather than "as large as the input".
 
 **Choice:** no new diagnostic code prefix. Every refusal is one of the existing D6 codes
 listed in D1 plus the two new budget kinds of the published `E-BUDGET-<kind>` family. The
-stage order is fixed and observable in reports:
+pipeline order is fixed, and the report's existing `stage` field names the reported stage:
 
-1. `profile` — the `/0` policy and the subject slice (D1);
-2. `request` — static-map arity and caps (D2, D7);
-3. `check` — the residual re-check by the independent checker;
-4. `source` — residual emission (D9);
-5. `admission` — independent re-acceptance of the emitted Program (D9);
-6. `publication` — file publication, only after 5 succeeded.
+1. `specialization` — the `/0` policy, the subject slice (D1), the static-map arity and caps
+   (D2, D7), in that order, and then the residual's independent re-check. The code names the
+   rule that fired (`E-PROFILE`, `E-INTERFACE`, `E-AGGREGATE`, `E-BUDGET-*`); the stage
+   names the phase.
+2. `source` — residual emission (D9);
+3. `admission` — independent re-acceptance of the emitted Program (D9);
+4. `publication` — file publication, only after 3 succeeded.
 
-A refusal at stages 1–5 publishes nothing. `noble ngraph specialize` reports the stage in the
-existing report field, so a test asserts *where* it stopped, not only which code came out.
+A refusal in the first three stages publishes nothing. `noble ngraph specialize` reports the
+stage in the existing report field, so a test asserts *where* it stopped, not only which code
+came out.
+
+Effectful, resource, recursive, aggregate and control subjects are refused by the profile's
+**extraction** stage (`noble ngraph extract`, `crate::extract::admit`) exactly as before this
+change, so they never become a checked graph and cannot reach `specialize` at all: the entry
+point's parameter type is the mechanical guarantee, and the negative controls below check the
+extraction stage and the ordinary path's zero-request accounting.
 
 **Rationale:** the published code table is generated into the compatibility view and cited by
 registered cases; adding a prefix would force a canonical change for no diagnostic benefit.
@@ -306,10 +314,14 @@ The frozen protocol (committed before any measurement it governs) is:
   Node BigInt oracle on the original. Every pair must agree under `≡obs`. Agreement is
   finite differential evidence, not a proof.
 - **Negative / zero host requests.** effectful (`E-EFFECT`), resource (`E-RESOURCE`) and
-  recursive (`E-RECURSION`) subjects, from the existing B3 control set, are refused at
-  `stage: admission` with no graph, no residual and no published file; the same sources'
-  ordinary-path reports carry `guest_requests: 0` and `host_requests: 0` (the existing
-  accounting), and the refused `specialize` invocation creates no output file.
+  recursive (`E-RECURSION`) subjects from the existing B3 control set are refused before any
+  graph exists, so `specialize` — which takes an admitted graph — is unreachable for them;
+  the CLI controls assert the code, the stage and that no output file exists. The zero-host
+  claim is a property of the profile, not a counter in its report: `noble-ngraph` executes no
+  host effect and the command spawns no process. The Core-Bootstrap profile is *not* the
+  same profile — it grants `test.emit`/`test.abort` test hosts and really does execute
+  `"hi" test.emit 5` (measured: one guest request) — so a Core session report is never used
+  as evidence for this profile, and the controls record that distinction explicitly.
 - **Budget ladder.** below/at/above each cap: a `RESIDUAL-NODES` refusal at
   `residual_nodes - 1`, acceptance at exactly `residual_nodes`, and a `VARIANTS` refusal at
   `0`; plus a raised cap refused with `E-PROFILE`.

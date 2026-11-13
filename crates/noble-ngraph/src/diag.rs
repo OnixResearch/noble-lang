@@ -40,6 +40,11 @@ pub enum BudgetKind {
     Steps,
     /// Host evaluation fuel (node evaluations) — runtime exhaustion, `Obs::Exhausted`.
     Fuel,
+    /// Residual nodes created by static-input specialization, before pruning
+    /// (`ngraph-pe/0`, issue #32).
+    ResidualNodes,
+    /// Residual variants produced by one specialization request.
+    Variants,
 }
 
 impl BudgetKind {
@@ -64,6 +69,8 @@ impl BudgetKind {
             Self::BackwardScratch => "BACKWARD-SCRATCH",
             Self::Steps => "STEPS",
             Self::Fuel => "FUEL",
+            Self::ResidualNodes => "RESIDUAL-NODES",
+            Self::Variants => "VARIANTS",
         }
     }
 }

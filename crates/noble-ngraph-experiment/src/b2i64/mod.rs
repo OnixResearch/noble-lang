@@ -13,6 +13,7 @@
 //! the evaluators (NG-PO-C).
 
 mod l2;
+pub mod pe;
 pub mod random;
 
 use crate::scheme::BLAKE3;

@@ -3385,7 +3385,7 @@ The clean-source receipt for the orientation analysis is
 (1005 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
 
-## Static-input specialization model (issue #32, phase 1)
+## Static-input specialization (issue #32)
 
 `NobleFoundation/Specialize.lean` defines a static map
 `Nat → Option (BitVec 64)`, the dynamic-slot rank, and a merge operation. The
@@ -3404,20 +3404,42 @@ slots as a prefix gives a different result on the non-prefix fixture.
 
 | Claim | Model / theorem(s) | Implementation boundary | Status |
 |---|---|---|---|
-| Bounded static-input specialization over packed graphs preserves values under merge | `staticValue_sound`, `specialize_wellFormed`, `congruenceWithInputs`, `residual_specialize_sound`, `specialize_sound` | Rust certificate emission, effect-aware program semantics, and runtime correspondence remain open | **proved** |
+| Bounded static-input specialization over packed graphs preserves values under merge | `staticValue_sound`, `specialize_wellFormed`, `congruenceWithInputs`, `residual_specialize_sound`, `specialize_sound` | The Rust entry point `noble_ngraph::specialize` and `noble ngraph specialize` now implement the model's substitution, `rank`/`merge` renumbering and `add`/`sub`/`mul` folding for checked `ngraph-i64/0` graphs, and emit a residual Program that the ordinary frontend and kernel re-accept; the `I64Eq` fold and dead-node pruning are extensions the model does not cover, differential tests are finite, and Rust/model correspondence plus Program refinement remain open (change `partial-evaluation-v1`) | **proved (model)** |
 
 The clean-source receipt for the specialization model is
 [`verification/foundation/receipts/84753c99e/`](../../verification/foundation/receipts/84753c99e/foundation-check.json)
 (692 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
 
+The implementation phase of the same issue keeps the four kinds of result apart:
+
+- **Model proof.** `specialize_sound` and its supporting lemmas are unchanged and
+  still cover only `add`/`sub`/`mul` on index-preserving packed graphs.
+- **Rust implementation, no correspondence claim.** `crates/noble-ngraph/src/specialize.rs`
+  implements the model's map, `rank`/`merge` and folding on a checked graph, adds an
+  `I64Eq` fold and a pruning/renumbering step, bounds the work with the `ngraph-pe/0`
+  accounting revision (`residual-nodes`, `variants`), and renders the residual as
+  `let`-based Noble source that `readmit` re-accepts through the ordinary
+  Declared-Text-v1 frontend, the kernel and the extractor. Nothing here relates the
+  Rust code to the Lean definitions.
+- **Finite differential tests.** The `extract_b2` issue-#32 leg compares the original
+  under the merged input vector, the checked residual and the re-admitted graph on L3,
+  L4 and (when `NOBLE_NODE` is set) the Node BigInt oracle. Agreement is finite
+  evidence about those graphs and vectors; it is not a proof.
+- **Runtime.** The measured node visits, residual sizes and retained bytes are recorded
+  in the change's measurement receipt. They report the two sides separately and claim
+  no equal budget, fuel or work (H-LIMIT-03) and no universal speedup.
+
 Open, and deliberately not closed:
 
 - pairs and `Unit` values, and `quote`/`compose`/`run`, are outside this graph
   model;
 - preservation of an arbitrary stack tail is not represented;
+- the `I64Eq` fold and the dead-node pruning step are implementation extensions with
+  no model theorem; pruning is justified only because the admitted slice has no
+  failing node;
 - budgets, thresholds, refusal/adoption criteria and other owner-reserved
-  contracts are not specified;
+  contracts remain the change's proposal, not an accepted policy;
 - effects, host calls, resource ownership and effect-aware partial execution
   are not modelled here;
 - no correspondence claim relates this model to Rust, Wasm, the certificate

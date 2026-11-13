@@ -545,7 +545,7 @@ const SNAPSHOT_KEYS: [&str; 19] = [
 
 const REPORT_SCHEMA: &str = "noble-ngraph-report/v1";
 
-const STAGES: [&str; 10] = [
+const STAGES: [&str; 12] = [
     "request",
     "input",
     "admission",
@@ -556,6 +556,8 @@ const STAGES: [&str; 10] = [
     "training",
     "replay",
     "output",
+    "specialization",
+    "source",
 ];
 
 const TRAP_CODES: [&str; 3] = ["G-FACT-FALSE", "E-NONFINITE-UPDATE", "C-CANCELLED"];
@@ -595,8 +597,9 @@ const UNSUPPORTED_CODES: [&str; 12] = [
     "E-DERIV-I64",
 ];
 
-// `E-BUDGET-<kind>` for every D9 kind, plus the runtime `FUEL`.
-const BUDGET_CODES: [&str; 17] = [
+// `E-BUDGET-<kind>` for every D9 kind, the two `ngraph-pe/0` caps and the
+// runtime `FUEL`.
+const BUDGET_CODES: [&str; 19] = [
     "E-BUDGET-WORK",
     "E-BUDGET-EXPANSION",
     "E-BUDGET-INLINE-DEPTH",
@@ -614,6 +617,8 @@ const BUDGET_CODES: [&str; 17] = [
     "E-BUDGET-BACKWARD-SCRATCH",
     "E-BUDGET-STEPS",
     "E-BUDGET-FUEL",
+    "E-BUDGET-RESIDUAL-NODES",
+    "E-BUDGET-VARIANTS",
 ];
 
 // D7 `check` fields; the `extract` report repeats them.
@@ -3157,5 +3162,305 @@ fn forged_optimizers_and_opt_ins_are_refused() -> TestResult {
         text,
         "the parent is only read"
     );
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// `noble ngraph specialize` (issue #32; design D1–D11 of
+// `partial-evaluation-v1`). The fixtures are flat `ngraph-i64/0` graphs: a
+// static map over the ordered input leaves, substituting, folding, pruning and
+// re-checking them, then emitting `let`-based source that must be independent-
+// ly accepted by the ordinary Declared-Text-v1 path before publication.
+// ---------------------------------------------------------------------------
+
+// `%0 = input 0; %1 = input 1; %2 = i64.mul %0 %1; %3 = i64.add %2 %0`.
+const PE_GRAPH: &str = "\
+ngraph-ir/0 ngraph-i64/0
+subject authored-name pe-cli-demo
+slot input i64
+slot input i64
+%0 = input 0
+%1 = input 1
+%2 = i64.mul %0 %1
+%3 = i64.add %2 %0
+out %3
+";
+
+fn specialize(graph: &Path, static_map: &str, out: &Path) -> Ngraph {
+    Ngraph::new("specialize")
+        .arg(graph)
+        .arg("--static")
+        .arg(static_map)
+        .arg("--out")
+        .arg(out)
+}
+
+#[test]
+fn specialize_publishes_a_re_admitted_residual_program() -> TestResult {
+    let scratch = Scratch::new("pe-specialize")?;
+    let graph = scratch.write("pe.graph", PE_GRAPH)?;
+    let out = scratch.path("residual.noble");
+    let graph_out = scratch.path("residual.graph");
+    let run = scratch.run(
+        &specialize(&graph, "0=5", &out)
+            .arg("--graph-out")
+            .arg(&graph_out),
+    )?;
+    let line = expect_normal(&run, "specialize")?;
+    assert_eq!(line["stage"], "specialization", "{line}");
+    assert_eq!(line["accounting"], "ngraph-pe/0", "{line}");
+    assert_eq!(line["static_inputs"], serde_json::json!([5, null]), "{line}");
+    assert_eq!(line["inputs"], serde_json::json!(["i64"]), "{line}");
+    assert_eq!(line["original_nodes"], 4, "{line}");
+    assert_eq!(line["folded_nodes"], 1, "{line}");
+    assert_eq!(line["pruned_nodes"], 0, "{line}");
+    assert_eq!(line["residual_nodes"], 4, "{line}");
+    assert_eq!(line["variants"], 1, "{line}");
+    for key in ["graph", "residual_graph", "readmitted_graph", "source"] {
+        let id = line[key].as_str().unwrap_or_default();
+        assert_eq!(id.len(), 64, "{key} is a digest: {line}");
+    }
+    assert_ne!(line["graph"], line["residual_graph"], "{line}");
+    // A residual is a new Program with its own subject, so the graph reached
+    // from its source is a different identity with the same shape (D5).
+    assert_ne!(line["residual_graph"], line["readmitted_graph"], "{line}");
+    assert_eq!(
+        line["readmitted_nodes"], line["residual_nodes"],
+        "the re-admitted Program extracts to the same node count: {line}"
+    );
+    let source = std::fs::read_to_string(&out)?;
+    assert_eq!(
+        source, "let v1\n5 let v0\nv0 v1 * let v2\nv2 v0 + let v3\nv3\n",
+        "the residual is one let binding per node, outputs last"
+    );
+    assert_published(&out);
+    assert_published(&graph_out);
+    // The published graph file is the residual and independently checks.
+    let checked = expect_normal(&scratch.run(&Ngraph::new("check").arg(&graph_out))?, "check")?;
+    assert_eq!(checked["graph"], line["residual_graph"], "{checked}");
+    assert_eq!(checked["live_nodes"], 4, "{checked}");
+    assert_eq!(checked["inputs"], serde_json::json!(["i64"]), "{checked}");
+    // The published source is accepted by the ordinary declared-text Wasm path.
+    let compiled = std::process::Command::new(env!("CARGO_BIN_EXE_noble"))
+        .arg("compile")
+        .arg(&out)
+        .arg("--declared-modules")
+        .arg("--text-byte-cursor")
+        .arg("--input-type")
+        .arg("I64")
+        .output()?;
+    assert!(
+        compiled.status.success(),
+        "the residual compiles on the ordinary path: {}",
+        String::from_utf8_lossy(&compiled.stderr)
+    );
+    assert!(
+        String::from_utf8_lossy(&compiled.stdout).starts_with("(module"),
+        "compile emits WAT"
+    );
+    Ok(())
+}
+
+#[test]
+fn specialize_folds_an_all_static_graph_to_one_constant() -> TestResult {
+    let scratch = Scratch::new("pe-static")?;
+    let graph = scratch.write("pe.graph", PE_GRAPH)?;
+    let out = scratch.path("residual.noble");
+    let line = expect_normal(
+        &scratch.run(&specialize(&graph, "0=6,1=7", &out))?,
+        "specialize",
+    )?;
+    assert_eq!(line["static_inputs"], serde_json::json!([6, 7]), "{line}");
+    assert_eq!(line["inputs"], serde_json::json!([]), "{line}");
+    // Two static leaves and two folded arithmetic nodes.
+    assert_eq!(line["folded_nodes"], 4, "{line}");
+    assert_eq!(line["pruned_nodes"], 3, "{line}");
+    assert_eq!(line["residual_nodes"], 1, "{line}");
+    assert_eq!(std::fs::read_to_string(&out)?, "48 let v0\nv0\n");
+    let compiled = std::process::Command::new(env!("CARGO_BIN_EXE_noble"))
+        .arg("compile")
+        .arg(&out)
+        .arg("--declared-modules")
+        .arg("--text-byte-cursor")
+        .output()?;
+    assert!(
+        compiled.status.success(),
+        "a closed residual compiles: {}",
+        String::from_utf8_lossy(&compiled.stderr)
+    );
+    Ok(())
+}
+
+#[test]
+fn specialize_refuses_a_wrong_static_map_and_publishes_nothing() -> TestResult {
+    let scratch = Scratch::new("pe-arity")?;
+    let graph = scratch.write("pe.graph", PE_GRAPH)?;
+    let out = scratch.path("residual.noble");
+    for (map, why) in [
+        ("0=1,1=2,2=3", "one entry too many"),
+        ("9=1", "an index that is not a leaf"),
+        ("0=1,0=2", "a duplicated index"),
+        ("0=+1", "a leading plus"),
+        ("0=nine", "a non-decimal value"),
+    ] {
+        let run = scratch.run(&specialize(&graph, map, &out))?;
+        if why == "one entry too many" {
+            let line = expect_code(&run, "specialize", "E-INTERFACE")?;
+            assert_eq!(line["stage"], "specialization", "{line}");
+        } else {
+            expect_usage(&run);
+        }
+        assert_no_publication(&out);
+    }
+    Ok(())
+}
+
+#[test]
+fn specialize_refuses_a_graph_outside_the_slice_and_publishes_nothing() -> TestResult {
+    let scratch = Scratch::new("pe-slice")?;
+    let graph = scratch.write("f32.graph", CHECK_GRAPH)?;
+    let out = scratch.path("residual.noble");
+    let run = scratch.run(&specialize(&graph, "", &out))?;
+    let line = expect_code(&run, "specialize", "E-PROFILE")?;
+    assert_eq!(line["stage"], "specialization", "{line}");
+    assert_no_publication(&out);
+    Ok(())
+}
+
+#[test]
+fn specialize_budget_ladder_refuses_below_and_raised_caps() -> TestResult {
+    let scratch = Scratch::new("pe-budget")?;
+    let graph = scratch.write("pe.graph", PE_GRAPH)?;
+    let out = scratch.path("residual.noble");
+    let below = specialize(&graph, "0=5", &out).arg("--budget-residual-nodes").arg("3");
+    let line = expect_code(&scratch.run(&below)?, "specialize", "E-BUDGET-RESIDUAL-NODES")?;
+    assert_eq!(line["stage"], "specialization", "{line}");
+    assert_no_publication(&out);
+    let at = specialize(&graph, "0=5", &out).arg("--budget-residual-nodes").arg("4");
+    expect_normal(&scratch.run(&at)?, "specialize")?;
+    assert_published(&out);
+    let fresh = scratch.path("fresh.noble");
+    let variants = specialize(&graph, "0=5", &fresh).arg("--budget-variants").arg("0");
+    let line = expect_code(&scratch.run(&variants)?, "specialize", "E-BUDGET-VARIANTS")?;
+    assert_eq!(line["stage"], "specialization", "{line}");
+    assert_no_publication(&fresh);
+    let raised = specialize(&graph, "0=5", &fresh)
+        .arg("--budget-residual-nodes")
+        .arg("262145");
+    let line = expect_code(&scratch.run(&raised)?, "specialize", "E-PROFILE")?;
+    assert_eq!(line["stage"], "request", "{line}");
+    assert_no_publication(&fresh);
+    Ok(())
+}
+
+#[test]
+fn specialize_is_deterministic_and_never_overwrites() -> TestResult {
+    let scratch = Scratch::new("pe-determinism")?;
+    let graph = scratch.write("pe.graph", PE_GRAPH)?;
+    let first = scratch.path("first.noble");
+    let second = scratch.path("second.noble");
+    let a = scratch.run(&specialize(&graph, "1=3", &first))?;
+    let b = scratch.run(&specialize(&graph, "1=3", &second))?;
+    assert_eq!(a.exit, Some(0), "{}", a.describe());
+    assert_eq!(a.stdout, b.stdout, "identical arguments report identically");
+    assert_eq!(
+        std::fs::read_to_string(&first)?,
+        std::fs::read_to_string(&second)?,
+        "the residual source is deterministic"
+    );
+    let existing = std::fs::read_to_string(&first)?;
+    let again = expect_host_refusal(&scratch.run(&specialize(&graph, "1=3", &first))?, "specialize")?;
+    assert_eq!(again["stage"], "output", "{again}");
+    assert_eq!(
+        std::fs::read_to_string(&first)?,
+        existing,
+        "an existing output is never overwritten"
+    );
+    Ok(())
+}
+
+#[test]
+fn specialize_reports_no_input_when_every_leaf_is_dynamic() -> TestResult {
+    let scratch = Scratch::new("pe-identity")?;
+    let graph = scratch.write("pe.graph", PE_GRAPH)?;
+    let out = scratch.path("residual.noble");
+    let line = expect_normal(&scratch.run(&specialize(&graph, "", &out))?, "specialize")?;
+    assert_eq!(line["static_inputs"], serde_json::json!([null, null]), "{line}");
+    assert_eq!(line["inputs"], serde_json::json!(["i64", "i64"]), "{line}");
+    assert_eq!(line["folded_nodes"], 0, "{line}");
+    assert_eq!(line["pruned_nodes"], 0, "{line}");
+    assert_eq!(line["residual_nodes"], 4, "{line}");
+    assert_eq!(
+        std::fs::read_to_string(&out)?,
+        "let v1\nlet v0\nv0 v1 * let v2\nv2 v0 + let v3\nv3\n"
+    );
+    Ok(())
+}
+
+// NGRAPH-PE-06: the profile's extraction stage refuses effectful, control and
+// Program-output subjects before any graph exists, and the profile publishes
+// nothing. The Core-Bootstrap profile is a different profile: it grants
+// `test.emit` and really executes it (one guest request below), so its report
+// is not evidence for this one.
+#[test]
+fn ngraph_extract_refuses_effectful_and_control_sources_without_a_graph() -> TestResult {
+    let scratch = Scratch::new("pe-negative")?;
+    for (name, source, code, stage) in [
+        (
+            "emit",
+            "1 + \"hi\" test.emit\n",
+            "E-EFFECT",
+            "admission",
+        ),
+        ("control", "drop true [ 1 ] [ 2 ] if\n", "E-CONTROL", "extraction"),
+        (
+            "program",
+            "drop [ 1 + ]\n",
+            "E-PROGRAM-OUTPUT",
+            "admission",
+        ),
+    ] {
+        let path = scratch.write(&format!("{name}.noble"), source)?;
+        let out = scratch.path(&format!("{name}.graph"));
+        let run = scratch.run(
+            &Ngraph::new("extract")
+                .arg(&path)
+                .arg("--inputs")
+                .arg("i64")
+                .arg("--out")
+                .arg(&out),
+        )?;
+        let line = expect_code(&run, "extract", code)?;
+        assert_eq!(line["stage"], stage, "{name}: {line}");
+        assert_no_publication(&out);
+        // Specialization takes an admitted graph only, so a refused subject has
+        // no path to it at all.
+        let specialize_run = scratch.run(&specialize(&out, "", &scratch.path(&format!("{name}.residual"))))?;
+        assert_eq!(specialize_run.exit, Some(2), "{name}: {}", specialize_run.describe());
+        assert_no_publication(&scratch.path(&format!("{name}.residual")));
+    }
+    // The ordinary Core profile does execute the same effectful submission, so
+    // its counters are its own and are recorded here only to keep the two
+    // profiles apart.
+    let mut child = std::process::Command::new(env!("CARGO_BIN_EXE_noble"))
+        .arg("session")
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .spawn()?;
+    std::io::Write::write_all(
+        child.stdin.as_mut().ok_or("missing session stdin")?,
+        b"\"hi\" test.emit 5\n",
+    )?;
+    drop(child.stdin.take());
+    let session = child.wait_with_output()?;
+    let report: Value = serde_json::from_slice(
+        std::str::from_utf8(&session.stdout)?
+            .lines()
+            .last()
+            .ok_or("no session report")?
+            .as_bytes(),
+    )?;
+    assert_eq!(report["outcome"], "normal", "{report}");
+    assert_eq!(report["guest_requests"], 1, "{report}");
     Ok(())
 }
