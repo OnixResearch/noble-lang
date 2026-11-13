@@ -2,8 +2,9 @@ use crate::common;
 use noble_ngraph::check;
 use noble_ngraph::compiled::Compiled;
 use noble_ngraph::eval::{self, Control, Obs};
-use noble_ngraph::ir::{Fact, Graph, GraphBuilder, NodeId, Op, ScalarType, SubProfile, Subject};
+use noble_ngraph::ir::{Fact, Graph, GraphBuilder, NodeId, Op, Provenance, ScalarType, SubProfile, Subject};
 use noble_ngraph::sem::Value;
+use noble_ngraph::snapshot::ParamSnapshot;
 
 const WIDTH: usize = 64;
 
@@ -26,8 +27,10 @@ fn exact_adder() -> Graph {
         left.push(a);
         right.push(b);
     }
-    let zero = builder.f32_const(0.0);
-    let one = builder.f32_const(1.0);
+    let zero = builder.param();
+    let one = builder.param();
+    builder.fact(zero, Fact::Bit, Provenance::InputValidated);
+    builder.fact(one, Fact::Bit, Provenance::InputValidated);
     let mut carry = zero;
     let mut sum = Vec::with_capacity(WIDTH);
     for (&a, &b) in left.iter().zip(&right) {
@@ -65,6 +68,7 @@ fn decode_word(values: &[Value]) -> u64 {
 
 fn run(graph: &Graph, a: u64, b: u64) -> u64 {
     let checked = check::check(&common::IDS, graph.clone()).expect("adder graph checks");
+    let weights = ParamSnapshot::new(&common::IDS, &checked, &[0.0, 1.0]).expect("weight snapshot");
     let left = encode_word(a);
     let right = encode_word(b);
     let inputs = left
@@ -75,8 +79,8 @@ fn run(graph: &Graph, a: u64, b: u64) -> u64 {
     let compiled = Compiled::new(&common::IDS, &checked);
     let mut compiled_control = Control::default();
     let mut reference_control = Control::default();
-    let compiled_result = compiled.evaluate(&inputs, None, &mut compiled_control);
-    let reference_result = eval::reference(&checked, &inputs, None, &mut reference_control);
+    let compiled_result = compiled.evaluate(&inputs, Some(&weights), &mut compiled_control);
+    let reference_result = eval::reference(&checked, &inputs, Some(&weights), &mut reference_control);
     let (Obs::Normal(compiled_values), Obs::Normal(reference_values)) =
         (compiled_result.obs, reference_result.obs)
     else {
