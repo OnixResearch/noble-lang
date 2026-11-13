@@ -1041,7 +1041,11 @@ function runTask(task, context) {
       task.train.map(example => example.output), { ...spec, bound: task.controlBound }, globals['max-candidates']);
     const controlProgram = control.program ?? null;
     assert.equal(record.status, 'exhausted', `${task.name}: a control-bound task is the narrow-bound negative`);
-    assert.ok(controlProgram, `${task.name}: the control bound must find a program; ${JSON.stringify(control)}`);
+    if (!controlProgram) {
+      assert.fail(`${task.name}: the control bound must find a program; ${JSON.stringify({
+        exhausted: control.exhausted, candidates: control.candidates, sizes: control.sizes,
+      })}`);
+    }
     const controlPair = pairFor(controlProgram);
     const controlAffine = certificateOf(controlPair, task.inputs);
     assert.ok(controlAffine.certifiable, `${task.name}: the control program must have the reference's affine form`);
