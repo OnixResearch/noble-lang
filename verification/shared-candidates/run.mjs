@@ -793,7 +793,8 @@ function decide(criteria, families) {
   ) / netD3Denominator;
   const growth = [];
   for (const state of families) {
-    for (const [arm, values] of Object.entries(state.measurement.summary)) {
+    for (const { name: arm } of criteria.arms) {
+      const values = state.measurement.summary[arm];
       if (values.second_warm_rss_kib === null) continue;
       growth.push({
         family: state.family.name,
