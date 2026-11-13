@@ -30,19 +30,19 @@ theorem rust_candidate_boundary_tie :
   decide +kernel
 
 theorem rust_candidate_overflow_output :
-  checkStep 0x3F800000 [0x3F800000, 0x7F7FFFFF] [0x3F800000, 0xFF7FFFFF] = .refused .unsupported .outputParam 1 := by
+  checkStep 0x3F800000 [0x3F800000, 0x7F7FFFFF] [0x3F800000, 0xFF7FFFFF] = .refused .unsupported (.outputParam 1) := by
   decide +kernel
 
 theorem rust_candidate_nan_parameter :
-  checkStep 0x3F000000 [0x3F800000, 0x7FC00000] [0x3F800000, 0x3F800000] = .refused .unsupported .param 1 := by
+  checkStep 0x3F000000 [0x3F800000, 0x7FC00000] [0x3F800000, 0x3F800000] = .refused .unsupported (.param 1) := by
   decide +kernel
 
 theorem rust_candidate_infinite_gradient :
-  checkStep 0x3F000000 [0x3F800000, 0x40000000] [0x7F800000, 0x3F800000] = .refused .unsupported .grad 0 := by
+  checkStep 0x3F000000 [0x3F800000, 0x40000000] [0x7F800000, 0x3F800000] = .refused .unsupported (.grad 0) := by
   decide +kernel
 
 theorem rust_candidate_infinite_eta :
-  checkStep 0x7F800000 [0x3F800000, 0x40000000] [0x3F800000, 0x3F800000] = .refused .unsupported .eta := by
+  checkStep 0x7F800000 [0x3F800000, 0x40000000] [0x3F800000, 0x3F800000] = .refused .unsupported (.eta) := by
   decide +kernel
 
 end NobleFoundation.Binary32.Sgd.Corpus

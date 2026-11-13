@@ -189,7 +189,7 @@ fn refused_observation(
             case.name
         );
         if actual.class == *class && actual.location == *path {
-            return Ok(format!(".refused .{} {}", class.as_str(), lean_location));
+            return Ok(format!(".refused .{} ({})", class.as_str(), lean_location));
         }
         return Err(format!(
             "{} refused {} at {}, expected {} at {}",
