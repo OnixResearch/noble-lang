@@ -1,0 +1,7 @@
+name = "noble-protected-solution-real"
+version = "0.1.0"
+defaultTargets = ["Solution"]
+
+[[lean_lib]]
+name = "Solution"
+roots = ["Solution", "Protected.Semantics"]
