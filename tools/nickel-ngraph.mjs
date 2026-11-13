@@ -21,6 +21,8 @@ const COMPOSITION_SOURCE = "nickel/ngraph/fixtures/composition.ncl";
 const DELAYED_SOURCE = "nickel/ngraph/fixtures/delayed-contract-failure.ncl";
 const LIBRARY = "nickel/ngraph/library.ncl";
 const CONTRACT = "nickel/ngraph/contract.ncl";
+const LOWERER_SOURCE = "crates/noble-cli/src/ngraph/nickel.rs";
+const LOWERER_REVISION = "noble-ngraph-nickel-lowerer/1";
 const DECLARED_CLOSURE = [SOURCE, LIBRARY, CONTRACT];
 const COMPOSITION_CLOSURE = [COMPOSITION_SOURCE, LIBRARY, CONTRACT];
 const I64_MIN = -(1n << 63n);
@@ -233,6 +235,9 @@ function admitConstructor(noble, bundle, options, out, label) {
   if (checked.profile !== "ngraph-i64/0" || !checked.subject.includes("authored-nickel")) {
     throw new Error(`${label}: native checker admitted an unexpected graph profile or producer identity`);
   }
+  if (checked.lowerer_revision !== LOWERER_REVISION) {
+    throw new Error(`${label}: native checker reported an unexpected lowerer revision`);
+  }
   const graphBytes = readFileSync(graphPath);
   return {
     bound,
@@ -337,6 +342,192 @@ function runCompositionLaws(noble, evaluator, out) {
   return { result, exportedBytes, exported, source, closure, admitted };
 }
 
+function fileRecord(relative) {
+  const bytes = readFileSync(path.join(ROOT, relative));
+  return { path: relative, sha256: sha256(bytes), bytes: bytes.length };
+}
+
+function receiptDigest(payload) {
+  return sha256(Buffer.from(stable(payload)));
+}
+
+function consumerBindings(payload) {
+  return {
+    source_commit: payload.source_commit,
+    source_bytes_sha256: sha256(Buffer.from(stable(payload.source_bytes))),
+    import_bytes_sha256: sha256(Buffer.from(stable(payload.import_bytes))),
+    import_closures_sha256: sha256(Buffer.from(stable(payload.import_closures))),
+    construction_parameters_sha256: sha256(Buffer.from(stable(payload.construction_parameters))),
+    versions_sha256: sha256(Buffer.from(stable(payload.versions))),
+    evaluator_identity_sha256: sha256(Buffer.from(stable(payload.evaluator_identity))),
+    exported_constructor_bytes_sha256: sha256(Buffer.from(stable(payload.exported_constructor_bytes))),
+    lowerer_revision: payload.lowerer.revision,
+    lowerer_source_sha256: payload.lowerer.sha256,
+    profile: payload.profile,
+    graphs: payload.graphs.map((graph) => ({
+      label: graph.label,
+      sha256: graph.sha256,
+      checked_identity: graph.checked_identity,
+      profile: graph.profile,
+    })),
+  };
+}
+
+function consumerDigest(record) {
+  return sha256(Buffer.from(stable({
+    schema: record.schema,
+    receipt_sha256: record.receipt_sha256,
+    bindings: record.bindings,
+  })));
+}
+
+function verifyReceipt(receipt) {
+  return receipt.schema === "noble-ngraph-nickel-receipt/v1"
+    && receipt.sha256 === receiptDigest(receipt.payload);
+}
+
+function verifyConsumer(consumer, receipt) {
+  return verifyReceipt(receipt)
+    && consumer.schema === "noble-ngraph-nickel-consumer/v1"
+    && consumer.receipt_sha256 === receipt.sha256
+    && stable(consumer.bindings) === stable(consumerBindings(receipt.payload))
+    && consumer.sha256 === consumerDigest(consumer);
+}
+
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function alterAt(value, keys) {
+  let parent = value;
+  for (const key of keys.slice(0, -1)) parent = parent[key];
+  const key = keys.at(-1);
+  const original = parent[key];
+  if (typeof original === "string") parent[key] = `${original}!stale`;
+  else if (typeof original === "number") parent[key] = original + 1;
+  else if (typeof original === "boolean") parent[key] = !original;
+  else throw new Error(`cannot mutate non-scalar binding ${keys.join(".")}`);
+}
+
+function staleBindingControls(receipt, consumer) {
+  const mutations = [
+    { field: "source bytes", receipt: ["source_bytes", 0, "sha256"], consumer: ["bindings", "source_bytes_sha256"] },
+    { field: "import bytes", receipt: ["import_bytes", 0, "sha256"], consumer: ["bindings", "import_bytes_sha256"] },
+    { field: "construction parameters", receipt: ["construction_parameters", 0, "parameters", 0, "value"], consumer: ["bindings", "construction_parameters_sha256"] },
+    { field: "library version", receipt: ["versions", "library"], consumer: ["bindings", "versions_sha256"] },
+    { field: "contract version", receipt: ["versions", "contract"], consumer: ["bindings", "versions_sha256"] },
+    { field: "evaluator identity", receipt: ["evaluator_identity", "node", "sha256"], consumer: ["bindings", "evaluator_identity_sha256"] },
+    { field: "import closure", receipt: ["import_closures", 0, "declared", 1], consumer: ["bindings", "import_closures_sha256"] },
+    { field: "exported constructor bytes", receipt: ["exported_constructor_bytes", 0, "sha256"], consumer: ["bindings", "exported_constructor_bytes_sha256"] },
+    { field: "lowerer revision", receipt: ["lowerer", "revision"], consumer: ["bindings", "lowerer_revision"] },
+    { field: "profile", receipt: ["profile"], consumer: ["bindings", "profile"] },
+    { field: "graph bytes", receipt: ["graphs", 0, "sha256"], consumer: ["bindings", "graphs", 0, "sha256"] },
+    { field: "checked identity", receipt: ["graphs", 0, "checked_identity"], consumer: ["bindings", "graphs", 0, "checked_identity"] },
+  ];
+  const results = mutations.map((mutation) => {
+    const staleReceipt = clone(receipt);
+    alterAt(staleReceipt.payload, mutation.receipt);
+    const receiptRefused = !verifyReceipt(staleReceipt);
+
+    const changedValidReceipt = clone(receipt);
+    alterAt(changedValidReceipt.payload, mutation.receipt);
+    changedValidReceipt.sha256 = receiptDigest(changedValidReceipt.payload);
+    const staleConsumerRefused = !verifyConsumer(consumer, changedValidReceipt);
+
+    const changedConsumer = clone(consumer);
+    alterAt(changedConsumer, mutation.consumer);
+    const consumerRecordRefused = !verifyConsumer(changedConsumer, receipt);
+    if (!receiptRefused || !staleConsumerRefused || !consumerRecordRefused) {
+      throw new Error(`stale binding control accepted a changed ${mutation.field}`);
+    }
+    return {
+      field: mutation.field,
+      stale_receipt_refused: receiptRefused,
+      stale_consumer_refused: staleConsumerRefused,
+      changed_consumer_record_refused: consumerRecordRefused,
+    };
+  });
+  return {
+    schema: "noble-ngraph-nickel-stale-controls/v1",
+    current_receipt_accepted: verifyReceipt(receipt),
+    current_consumer_accepted: verifyConsumer(consumer, receipt),
+    mutation_count: results.length,
+    mutations: results,
+  };
+}
+
+function retainReceipt(out, sourceCommit, arithmetic, composition, evaluator, closures, exported, checked) {
+  const arithmeticParameters = JSON.parse(readFileSync(path.join(out, "bound-constructor.json"), "utf8")).parameters;
+  const compositionParameters = Object.entries(composition.result.law_results).map(([name, law]) => ({
+    source: COMPOSITION_SOURCE,
+    case: name,
+    parameters: law.construction_parameters,
+  }));
+  const lowererBytes = readFileSync(path.join(ROOT, LOWERER_SOURCE));
+  const payload = {
+    source_commit: sourceCommit,
+    source_bytes: [SOURCE, COMPOSITION_SOURCE, DELAYED_SOURCE].map(fileRecord),
+    import_bytes: [LIBRARY, CONTRACT].map(fileRecord),
+    construction_parameters: [
+      { source: SOURCE, case: "arithmetic", parameters: arithmeticParameters },
+      ...compositionParameters,
+    ],
+    versions: {
+      schema: exported.schema,
+      library: exported.library_version,
+      contract: exported.contract_version,
+    },
+    evaluator_identity: evaluator,
+    import_closures: closures,
+    exported_constructor_bytes: [
+      { source: SOURCE, sha256: sha256(arithmetic.rawExport), bytes: arithmetic.rawExport.length },
+      { source: COMPOSITION_SOURCE, sha256: sha256(composition.exportedBytes), bytes: composition.exportedBytes.length },
+    ],
+    lowerer: {
+      revision: LOWERER_REVISION,
+      source: LOWERER_SOURCE,
+      sha256: sha256(lowererBytes),
+      bytes: lowererBytes.length,
+    },
+    profile: "ngraph-i64/0",
+    graphs: [
+      {
+        label: "arithmetic",
+        sha256: checked.graphSha,
+        bytes: checked.graphBytes.length,
+        checked_identity: checked.checked.graph,
+        profile: checked.checked.profile,
+      },
+      ...Object.entries(composition.admitted).map(([label, graph]) => ({
+        label: `composition-${label}`,
+        sha256: graph.graphSha,
+        bytes: graph.graphBytes.length,
+        checked_identity: graph.checked.graph,
+        profile: graph.checked.profile,
+      })),
+    ],
+  };
+  const receipt = {
+    schema: "noble-ngraph-nickel-receipt/v1",
+    payload,
+    sha256: receiptDigest(payload),
+  };
+  const consumer = {
+    schema: "noble-ngraph-nickel-consumer/v1",
+    receipt_sha256: receipt.sha256,
+    bindings: consumerBindings(payload),
+  };
+  consumer.sha256 = consumerDigest(consumer);
+  if (!verifyReceipt(receipt) || !verifyConsumer(consumer, receipt)) {
+    throw new Error("fresh Nickel provenance receipt or consumer record failed verification");
+  }
+  const stale = staleBindingControls(receipt, consumer);
+  writeFileSync(path.join(out, "receipt.json"), `${JSON.stringify(receipt, null, 2)}\n`);
+  writeFileSync(path.join(out, "consumer.json"), `${JSON.stringify(consumer, null, 2)}\n`);
+  writeFileSync(path.join(out, "stale-controls.json"), `${JSON.stringify(stale, null, 2)}\n`);
+  return { receipt, consumer, stale };
+}
+
 function cleanSourceCommit() {
   const status = run("git", ["status", "--porcelain"]);
   if (status.status !== 0) throw new Error(`git status failed: ${status.stderr}`);
@@ -404,6 +595,9 @@ function replay(noblePath, outPath) {
   if (checked.profile !== "ngraph-i64/0" || !checked.subject.includes("authored-nickel")) {
     throw new Error("native checker admitted an unexpected graph profile or producer identity");
   }
+  if (checked.lowerer_revision !== LOWERER_REVISION) {
+    throw new Error(`native checker reported an unexpected lowerer revision: ${checked.lowerer_revision}`);
+  }
   const graphBytes = readFileSync(graphPath);
   const inputs = ["0", "1", "-1", I64_MIN.toString(), I64_MAX.toString(), I64_WIDE.toString(), "-9007199254740995"];
   writeFileSync(vectorsPath, [
@@ -418,6 +612,25 @@ function replay(noblePath, outPath) {
   if (stable(reference) !== stable(expected)) throw new Error(`reference mismatch: ${stable(reference)}`);
   if (stable(packed) !== stable(expected)) throw new Error(`packed mismatch: ${stable(packed)}`);
   const composition = runCompositionLaws(noble, evaluator, out);
+  const closures = [
+    { entry: SOURCE, declared: DECLARED_CLOSURE, observed: importClosure },
+    { entry: COMPOSITION_SOURCE, declared: COMPOSITION_CLOSURE, observed: composition.closure },
+    {
+      entry: DELAYED_SOURCE,
+      declared: [DELAYED_SOURCE, SOURCE, LIBRARY, CONTRACT],
+      observed: delayedClosure,
+    },
+  ];
+  const provenance = retainReceipt(
+    out,
+    sourceCommit,
+    { rawExport },
+    composition,
+    evaluator,
+    closures,
+    exported,
+    { checked, graphBytes, graphSha: sha256(graphBytes) },
+  );
 
   const result = {
     schema: "noble-ngraph-nickel-fixture-result/v1",
@@ -447,6 +660,11 @@ function replay(noblePath, outPath) {
     reference,
     packed,
     composition: composition.result,
+    provenance: {
+      receipt_sha256: provenance.receipt.sha256,
+      consumer_sha256: provenance.consumer.sha256,
+      stale_controls: provenance.stale.mutation_count,
+    },
     non_claims: [
       "Finite implementation observations do not prove source-to-IR correspondence.",
       "No effect independence, resource permission, or arbitrary output reordering is claimed.",
@@ -468,6 +686,7 @@ function main(args) {
     graph_identity: result.admission.graph_identity,
     evaluators_match: true,
     composition_laws_match: result.composition.reassociation_equal,
+    provenance_bindings_match: result.provenance.stale_controls === 12,
   })}\n`);
 }
 

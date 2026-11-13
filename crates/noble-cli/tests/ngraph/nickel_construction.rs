@@ -45,6 +45,7 @@ fn lowerer_preserves_order_repetition_and_exact_i64_values() -> TestResult {
     )?;
     let report = expect_normal(&run, "check")?;
     assert_eq!(report["profile"], "ngraph-i64/0");
+    assert_eq!(report["lowerer_revision"], "noble-ngraph-nickel-lowerer/1");
     assert!(report["subject"]
         .as_str()
         .unwrap_or_default()

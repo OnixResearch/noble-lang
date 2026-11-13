@@ -9,6 +9,7 @@ use serde::Deserialize;
 const SCHEMA: &str = "noble-ngraph-nickel/v1";
 const LIBRARY_VERSION: &str = "noble-ngraph-nickel/1";
 const CONTRACT_VERSION: &str = "noble-ngraph-nickel-contracts/1";
+pub(super) const LOWERER_REVISION: &str = "noble-ngraph-nickel-lowerer/1";
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
