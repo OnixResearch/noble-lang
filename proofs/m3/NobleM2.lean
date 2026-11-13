@@ -13,6 +13,7 @@ import NobleM2.SizeChange
 import NobleM2.SizeChangeSites
 import NobleM2.SizeChangeClosure
 import NobleM2.SizeChangeChecker
+import NobleM2.SizeChangeGuarded
 import NobleM2.SizeChangePowers
 import NobleM2.SizeChangeTightness
 import NobleM2.SizeChangeMonoid
