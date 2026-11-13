@@ -1353,7 +1353,7 @@ impl Replay {
         }
     }
 
-    fn pop_i64(&mut self, ledger: &mut Ledger, at: Location) -> Result<(), Refusal> {
+    fn pop_i64(&mut self, at: Location) -> Result<(), Refusal> {
         let ty = self.pop(at)?;
         if ty != Ty::I64 {
             return Err(Refusal::new(
@@ -1362,7 +1362,7 @@ impl Replay {
                 "the profile operation requires an I64 operand",
             ));
         }
-        ledger.observe_count(Resource::StackHeight, u64::from(self.height()), at)
+        Ok(())
     }
 
     fn height(&self) -> usize {
@@ -1480,16 +1480,16 @@ impl Replay {
                 if !witness_matches(witness, &[]) {
                     return Err(invalid_witness(at));
                 }
-                self.pop_i64(ledger, at)?;
-                self.pop_i64(ledger, at)?;
+                self.pop_i64(at)?;
+                self.pop_i64(at)?;
                 self.push(Ty::I64, ledger, at)
             }
             Op::Eq => {
                 if !witness_matches(witness, &[]) {
                     return Err(invalid_witness(at));
                 }
-                self.pop_i64(ledger, at)?;
-                self.pop_i64(ledger, at)?;
+                self.pop_i64(at)?;
+                self.pop_i64(at)?;
                 self.push(Ty::Bool, ledger, at)
             }
             Op::Run => {
@@ -1512,8 +1512,7 @@ impl Replay {
                     ));
                 }
                 self.stack = produced.as_ref().clone();
-                self.ledger
-                    .observe_count(Resource::StackHeight, u64::from(self.height()), at)
+                ledger.observe_count(Resource::StackHeight, encoded_len(self.height()), at)
             }
         }
     }
