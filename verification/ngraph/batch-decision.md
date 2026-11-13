@@ -41,7 +41,9 @@ rather than removed: it is the honest comparison point if anything changes.
 ## What a later GO would require
 
 Both of: an into-sink run whose per-row reports are not owned allocations, and a row executor that
-beats 177 ns/row at 65536 rows by 15 %. Neither exists today, and neither is started here. Any
+beats 157 ns/row at 65536 rows by 15 % against the measured 181 ns/row single lane
+($181 / 1.15 \approx 157.39$, so the integer cutoff is 157). The earlier 177 ns/row figure was an
+arithmetic error. Neither exists today, and neither is started here. Any
 measurement that claims either must also state the allocation-count gap recorded above: this
 workspace cannot host a counting allocator under `unsafe_code = "forbid"`, so an allocation claim
 needs an explicit instrumentation seam decision by an owner first.

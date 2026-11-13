@@ -150,7 +150,7 @@ function main() {
     clean_source: true,
     file: FILE,
     file_sha256: committedSha,
-    harness: { target: TARGET, command: ['cargo', ...commandArgs] },
+    harness: { target: TARGET, command: [tools.cargo, ...commandArgs] },
     toolchain: { rustc: tools.version, vendor_nar_hash: tools.vendor.narHash },
     timeout_seconds: options.timeoutSeconds,
     unmutated_passed: baseline.passed,

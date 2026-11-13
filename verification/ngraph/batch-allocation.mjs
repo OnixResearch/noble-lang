@@ -153,6 +153,7 @@ function main() {
     source_commit: commit, source_tree: tree, clean_source: status === '',
     harness: harnessBinding(root, commit, harness, systemBinary('git')),
     toolchain: { rustc: tools.version, vendor_nar_hash: tools.vendor.narHash },
+    build_command: [tools.cargo, ...buildArgs],
     valgrind: {
       path: VALGRIND, version, tool: 'dhat',
       command: ['valgrind', '--tool=dhat', '--dhat-out-file=...', 'batch_row_reference', '--exact', 'measure::allocation_lane', '--ignored', '--nocapture'],

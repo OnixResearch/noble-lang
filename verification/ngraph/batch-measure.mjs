@@ -115,7 +115,7 @@ function main() {
     source_commit: commit, source_tree: tree, clean_source: status === '',
     harness: harnessBinding(root, commit, harness, systemBinary('git')),
     toolchain: { rustc: tools.version, vendor_nar_hash: tools.vendor.narHash },
-    command: ['cargo', ...commandArgs],
+    command: [tools.cargo, ...commandArgs],
     workload: 'the measure.rs graph: two I64 inputs, add, mul, mul, sub, eq; two outputs; rows cycle the seven i64 boundary values',
     sizes,
     runs_per_lane_and_size: 5,

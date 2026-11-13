@@ -254,6 +254,6 @@ fn timed_workloads() {
             native_last, single_last,
             "native and single agree at {size}"
         );
-        println!("MEASURE {{\"agreement\":{{\"rows\":{size},\"outputs\":{single_last:?}}}}}");
+        println!("MEASURE {{\"agreement\":{{\"rows\":{size},\"outputs\":\"{single_last:?}\"}}}}");
     }
 }
