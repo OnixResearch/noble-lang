@@ -1311,6 +1311,12 @@ Open, and deliberately not closed by this model:
 - host resource release: no acquired decision in this fragment releases a native
   object, and no runtime claim follows for an unimplemented profile.
 
+The clean-source receipt for the corpus lane is
+[`verification/foundation/receipts/2e932250/foundation-check.json`](../../verification/foundation/receipts/2e932250/foundation-check.json).
+It records 1,417 theorem checks with `clean_source: true`, `allow_dirty: false`,
+and only the foundation allow-list axioms; the ownership-prefix inventory has
+50 model, 7 conservation, and all 116 corpus theorems.
+
 ## Constructor reuse under a unique root (issue #36, phase 1)
 
 `NobleFoundation/ConstructorReuse.lean` is a finite observation model for the

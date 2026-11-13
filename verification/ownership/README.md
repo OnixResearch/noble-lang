@@ -22,6 +22,7 @@ and target.
 | `cases.txt` | One row per case: `name ops= in= out= trace= decision= reason=`. The Rust lane parses it. |
 | `../../proofs/foundation/NobleFoundation/OwnershipCorpus.lean` | The same rows as `decide`d equations of the model's `run` and per-word `runTrace`. A row whose expectation does not follow from the model fails `lake build`. |
 | `../../crates/noble-kernel/tests/acceptance/ownership.rs` | The lane: drives production per word prefix, compares every corpus row with its kernel-checked twin, checks a test-local shadow checker and its declared mutations, and minimises a failing case into a reproducer. |
+| `../../verification/foundation/receipts/2e932250/foundation-check.json` | Clean-source receipt for the imported model and all 116 corpus theorems (source commit `2e932250`). |
 | `differential-<commit8>.json` | The retained comparison receipt: clean commit, toolchain, host, digests, coverage, model-only counts by reason, mutation line and the open edge. |
 | `production-mutants-<commit8>.json` | The retained production-mutation receipt: which real rule changes the lane catches and which mutants survive. |
 | `minimised.txt` | Written only when a comparison fails: the shortest failing word prefix and input with its removable trailing operands trimmed. |
