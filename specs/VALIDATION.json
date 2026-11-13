@@ -15,10 +15,10 @@
     "node_api": "26.3.0"
   },
   "documents": 14,
-  "requirements": 574,
+  "requirements": 578,
   "scenarios": 248,
   "scenarios_executed": 167,
-  "open_test_design": 204,
+  "open_test_design": 208,
   "proof_obligations": 30,
   "completed_proofs": 3,
   "self_tests": [],
@@ -570,6 +570,22 @@
     {
       "file": ".cairn/archive/2026-11-08-behavioral-effect-protocol/tasks.md",
       "sha256": "8ca3c2bc9b6f87c4c27403794d623eec339baf174ffa8fc3eb464b959a629a76"
+    },
+    {
+      "file": ".cairn/archive/2026-11-13-allocator-admission-boundary/design.md",
+      "sha256": "60c475cec545d1f11fa96641d92334e5ae38b357dc4d178ed5245bd2665484ba"
+    },
+    {
+      "file": ".cairn/archive/2026-11-13-allocator-admission-boundary/proposal.md",
+      "sha256": "b424f3b2fcaa59e83cb98d880be9f956ccd196bf52176342e7e97e2a6bbd114b"
+    },
+    {
+      "file": ".cairn/archive/2026-11-13-allocator-admission-boundary/specs/verification-toolchain/spec.md",
+      "sha256": "575b81a0fe509bfe59c2971f9980a8175a92ba7d1472e1ed375f07165dccd0d7"
+    },
+    {
+      "file": ".cairn/archive/2026-11-13-allocator-admission-boundary/tasks.md",
+      "sha256": "bf536d84991737b30a93ec753d306cba4ac5bad373f96d196250230ee89a72d3"
     },
     {
       "file": ".cairn/archive/2026-11-13-binary32-lean-reference/design.md",
@@ -1333,11 +1349,11 @@
     },
     {
       "file": ".cairn/specs/verification-toolchain/spec.md",
-      "sha256": "14c8c0600ae984cd898d171ebb97e71b18987db68238f981e139a58a2130f07b"
+      "sha256": "5d5bea027d7276c755e0ed5c486533974dc228d4e70be2eaaaa562f28c5f7369"
     },
     {
       "file": ".cairn/specs/verification/spec.md",
-      "sha256": "85820cb4a9ea8bf8d6f5d96f55c3b1b32c233cd89173c0dc6246c6d5baf7e1da"
+      "sha256": "7f31c24eca2baa918c6aca58c6e847b96d001a645abf58fd96f8e9ec8e249ac3"
     },
     {
       "file": ".cairn/specs/wit-wasi/spec.md",
@@ -1369,7 +1385,11 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "a5593951438d7e2870179c3efefc7672ded1057d5984d1e688b66b1ed841080b"
+      "sha256": "1b46748a1864e0a238057f6526a20d309b9c894fd2c1130b67c30c1b58b723f3"
+    },
+    {
+      "file": "proofs/inets/README.md",
+      "sha256": "2b880041594701b80551d7d5560e01faa4f0ad8aa25f9448260dba72951463e1"
     },
     {
       "file": "proofs/m1/README.md",
@@ -1513,7 +1533,7 @@
     },
     {
       "file": "specs/requirements.json",
-      "sha256": "e57646c0ec7529a9b0cda5c192922b87a57252964ed51aaa5d96f9f4f77c9c41"
+      "sha256": "3ed47563cec65dba9be45e4861eef0d5875131ca8bf23e720faf5d9a530b74d5"
     },
     {
       "file": "specs/RESOURCE-ADAPTERS.md",
@@ -1553,11 +1573,11 @@
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
-      "sha256": "4c41d4fa257d178b52d415b95b7857530cfd0725d8cbb95876d7c5a4b6c57fe6"
+      "sha256": "94a47501f61cac4ce6fb1c82049d363bfff1b6ebf5bbeab2490f6012b46ef622"
     },
     {
       "file": "specs/VERIFICATION.md",
-      "sha256": "68d19f1c35124c4ee33b7ad489839a1d5e043dc56de1b99b73e071b9fc973150"
+      "sha256": "2d80a5c8a326da41a5862aead31301eedd4f2b23cd62acedc1b85ccf5e44fb1c"
     },
     {
       "file": "specs/verification/obligations.json",
@@ -1574,6 +1594,14 @@
     {
       "file": "specs/WORKER-CONFORMANCE.md",
       "sha256": "a1a0e1fa0cfc7bc55914207ce09ba894339dae13d83969a914ce9104606f242e"
+    },
+    {
+      "file": "verification/allocator-admission/decision.md",
+      "sha256": "4d1e4f134c1702d2d348509a03e2bd880bbea86327589d75a1b57dae68cb0f90"
+    },
+    {
+      "file": "verification/allocator-admission/README.md",
+      "sha256": "3044318268dc738b0f19574f3bd1bbbaa8f1917a580d776e0bb6275c24187682"
     },
     {
       "file": "verification/boundary-controls.md",
@@ -1641,7 +1669,7 @@
     },
     {
       "file": "verification/core-preview/README.md",
-      "sha256": "23f10044bb8abdd2d5ee374b6a98263ef7909c5de0752471fe49b4a793b8ae45"
+      "sha256": "0189ddd2f69e9216e92adc2f3bf0d1e2fb0253fb1436b3fd80a0bfda3bb30be0"
     },
     {
       "file": "verification/crush-eval/README.md",
@@ -1657,7 +1685,7 @@
     },
     {
       "file": "verification/extraction.md",
-      "sha256": "4bfe7f8d80d7cc77afb0e348ac2236e8d0ec87a6596999704ec853f45166eef7"
+      "sha256": "97d79c738557f1f5892e21dd4c92c2dac4d8c3aedca13c460e83a8e5c9fce2fe"
     },
     {
       "file": "verification/focus-elaboration/decision.md",
@@ -1705,11 +1733,15 @@
     },
     {
       "file": "verification/live-slot-coherence/README.md",
-      "sha256": "8b74fa55cc718335d61b52d2e371a1a61c450b6272664a73b6a15c548ae6e4e8"
+      "sha256": "7ff43a409741b0e750526158f0cb28be7b0da370e28c944ae1203ad870098b22"
     },
     {
       "file": "verification/live-slot-typed-cases/README.md",
       "sha256": "80e0599c07732c7bf8e5bb4c352b83085ac6074e60697f13701500e70c85e1d0"
+    },
+    {
+      "file": "verification/live-update-corpus/README.md",
+      "sha256": "37d68a1e028e4a24e1997f802d6032b5e89221453262d5708b1757288aa333b5"
     },
     {
       "file": "verification/m1-controls.md",
@@ -1813,7 +1845,7 @@
     },
     {
       "file": "verification/ngraph/README.md",
-      "sha256": "4966e3e886f5e94c4e555789cb3135af4fe00b0ef47bd66a7d5caf02710544b6"
+      "sha256": "fe3761087d8525d48e9fab0ffde9c89dfabbd07fd0a62c1dcc18e878d9705c6f"
     },
     {
       "file": "verification/numeric-graph-v1/architecture-exceptions.md",
@@ -1917,11 +1949,35 @@
     },
     {
       "file": "verification/symbolic/README.md",
-      "sha256": "5ebdf16af41ea194c844383f4c879d8cfbe1ab3bd0a33bd4567c5bc848179ed8"
+      "sha256": "d2f4ce36c819ab31c08efdf3ab1eac162a06e2019ae2c2dbb96541d644853db3"
+    },
+    {
+      "file": "verification/synthesis/decision.md",
+      "sha256": "b9f10d8f6b53fb32bcb44da22101180724f0f1adf6fcfcf08316962363f03788"
+    },
+    {
+      "file": "verification/synthesis/README.md",
+      "sha256": "028e94870dd1cdc2a63f240b0241d6a1a4e8b6c7cd1e72d9a507e51faf20d075"
     },
     {
       "file": "verification/tool-selection.md",
       "sha256": "cbf4b04ba3478b55b09db2d85b6d1f74b8b1c168bf6774b69eee51624baf2d86"
+    },
+    {
+      "file": "verification/use-permissions/decision.md",
+      "sha256": "fa805de2d86213db41ec5a4d7cb5210b3e69a5ad1f722cdd0c8819ba1fe0743a"
+    },
+    {
+      "file": "verification/use-permissions/differential-plan.md",
+      "sha256": "f2d52f36620c9199484660fc170ae27f89fa5002df7e66594d540640c5592097"
+    },
+    {
+      "file": "verification/use-permissions/obligations.md",
+      "sha256": "7075569af92520bf4bf2b329aee19c9342f47bf6669ad67a2e64521cbbf334c3"
+    },
+    {
+      "file": "verification/use-permissions/README.md",
+      "sha256": "c4e4213dbaa9e75c7795740cd319170baa9f02f21ade8afc042f676f18e78047"
     },
     {
       "file": "verification/verified-hamt/README.md",
