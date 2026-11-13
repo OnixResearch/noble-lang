@@ -196,3 +196,6 @@ fn nonfinite_update_publishes_nothing() {
     .expect("S0");
     assert_eq!(e.last.as_ref().map(ParamSnapshot::id), Some(s0.id()));
 }
+
+#[path = "b5_training/transaction_cases.rs"]
+mod transaction_cases;

@@ -144,6 +144,16 @@ Binary32.mul, Binary32.sub}`. The effect set is exactly `[]` (empty); an
 effect field, capability, foreign handle, memory access or host call is not
 part of this grammar.
 
+The host transport is strict JSON with exactly the envelope fields shown
+above. The opcode strings are `constant`, `broadcast`, `Binary32.mul` and
+`Binary32.sub`; a constant carries `bits` as `0x` plus eight hexadecimal
+digits. Operands are earlier integer node IDs or one of `$p`, `$g` and
+`$eta`. A node type is exactly `F32` or `F32[n]`. `outputs.parameters` is one
+node ID and `outputs.state` is `State0`. Unknown fields are rejected; the
+candidate cannot describe hidden inputs, callbacks or evaluator outputs. The
+candidate's declared budget object must equal the fixed table below, while the
+checker independently measures node and work use.
+
 ### Fixed budgets
 
 The envelope MUST carry these values verbatim, and the checker MUST measure
@@ -232,38 +242,92 @@ admission or a partially applied transition.
   state. A host that drops them is outside this premise, not kernel-enforced
   safety.
 
-## Fixtures and plan
+## Phase 2 implementation boundary
 
-Phase 2 (future, unchecked here) would add:
+The selected Rust reference experiment admits and interprets this exact
+envelope in `crates/noble-ngraph-experiment/src/opt/`. Its wire parser checks
+the published field/type/effect limits; its evaluator uses
+`noble_ngraph::sem::{mul,sub}` and classifies nonfinite values from their bits.
+`tests/support/opt_kernel/corpus.rs`, loaded through `tests/support/opt_kernel.rs`
+in the existing `b3_rejections` target, emits the finite Rust observations into
+`proofs/foundation/NobleFoundation/SgdReferenceCorpus.lean`, where Lean decides
+the matching `checkStep` rows. This is finite comparison evidence, not a proof
+of the Rust parser/interpreter or the compiler's execution of those bytes.
 
-- one fixed simple reference update that admits, publishes a fresh parameter
-  and state snapshot, and leaves the parent snapshot byte-stable;
-- rejected candidates: malformed envelope, effectful operation outside the
-  whitelist, over-budget nodes/state bytes/work/outputs, shape mismatch,
-  aliasing attempt, nonfinite input, invalid state transition (step counter
-  going backwards or a non-`State0` state); the selected pilot rule refuses
-  nonfinite inputs and outputs rather than propagating them;
-- boundary rounding values and a nonfinite control, tied to the #38 reference
-  rather than to finite differences;
-- extension and rollback controls: an early-update and a later-update fault must
-  each restore the whole trial, with append-only attempt records preserved and
-  an unavailable checkpoint failing closed;
-- evaluation-tampering controls: a candidate and a proposer that attempt to read
-  held-out data, evaluator internals or secrets, and a proposal that attempts to
-  influence its own evaluation.
+Fresh immutable parameter snapshots bind the exact candidate bytes, parent
+snapshot/parameter/state identities, caller-supplied graph/loss/derivative/data
+identities, seed, numeric contract and tool revisions. The host trial harness
+checkpoints parameters/state, RNG seed/draw cursor, data cursor and work/update
+counters; injected faults and refusals restore the complete original checkpoint
+while the separate attempt log remains append-only. Evaluation receives only
+the frozen candidate and typed numeric inputs; no candidate callback, I/O,
+held-out-set handle, evaluator secret or self-supplied verdict exists in the
+interpreter. Tampering with frozen bytes/data refuses before evaluation. This
+is a structural in-process boundary, not an OS sandbox or a proof about the
+host retaining secret material.
 
-## Proof obligations
+The following controls are executed as finite Rust tests:
 
-Named here, not discharged by this package:
+- one fixed update and normal, signed-zero, subnormal, ties-to-even, overflow
+  and nonfinite rows; the Rust output/refusal is emitted into the Lean corpus;
+- malformed JSON, effect, out-of-whitelist opcode, forged budget declaration,
+  measured node/work/output/state limits, shape mismatch, duplicate/forward
+  node IDs, nonfinite bits, descriptor version and backwards/skipped step
+  controls;
+- parent byte-stability and complete provenance bindings;
+- early and later injected failures, whole-checkpoint restoration, missing
+  checkpoint refusal and preserved append-only attempt records;
+- frozen candidate/data tampering, attempted held-out/evaluator-secret reads,
+  effects and candidate-supplied evaluation verdicts.
 
-- **Lean model theorems** for the selected F32 SGD-like transition: the
-  transition is total on admissible shapes, produces finite outputs where
-  declared, preserves the declared shape and leaves untouched slots unchanged.
-- **Checker obligations** for admission: envelope bounds, whitelist closure,
-  shape/state agreement and the state-transition predicate. Acceptance implies
-  the model's well-formedness premises.
-- **Finite Rust comparisons** between the ordered reference and the reference
-  update, labeled implementation evidence rather than proof.
+These controls do not execute arbitrary candidate code or prove general
+checker soundness. The fixed envelope has no memory state, random callback or
+data/evaluator capability; RNG/data cursor state belongs to the host trial
+checkpoint only.
+
+## Later learning-rule family (separately versioned; not implemented)
+
+The issue's trace-monomial proposal is a possible reopen route, not an
+extension of `ngraph-opt/1`. A future `trace-monomial/1` would take declared
+tensor names, exact shapes and locality degree; the checker would enumerate a
+finite order-4 dictionary, and the proposer could provide only a sparse
+coefficient vector over that dictionary. A coefficient naming a term outside
+the generated dictionary would be `malformed`. It would add no arbitrary
+opcodes, executable code or host capability to the SGD envelope.
+
+Before any coefficient search, a separate design must freeze one tiny MLP,
+budget limits and a count-only measurement for dictionary size per layer at
+degrees 1 and 2 plus contraction work per update. The paper's reported 11–40
+terms per layer is an author claim to check, not an assumed input. A matching
+Lean locality theorem must state that a layer update depends only on tensors in
+its declared degree-`d` neighbourhood, with a refusal control for a term that
+names an outside tensor. The derivative convention (whether downstream
+activations inside a term are held constant or differentiated through) must be
+selected before defining the update. The first executable instance would be
+one hand-written Hebbian monomial such as `yᵀ W x`, checked against an
+independent reference and passed through the same admission, snapshot and
+rollback controls before any learned coefficients.
+
+Fully contracted terms may be permutation-equivariant over real tensors, but
+the binary32 implementation must not claim bit-exact equivariance when
+relabeling changes ordered contraction sums. A future design must either fix a
+canonical summation order and state its theorem for that order, or keep the
+symmetry claim at the real-model level. This family remains unmeasured,
+unimplemented and default-off.
+
+## Proof and implementation boundary
+
+- **Lean model theorems:** `SgdReference.lean` kernel-checks the update,
+  shape/locality and admission lemmas. The generated corpus separately has Lean
+  decide eight concrete Rust candidate rows. These are model proofs and finite
+  comparisons, not a Rust implementation theorem.
+- **Checker obligations:** Rust tests exercise the named refusal classes,
+  budgets, typing, state-transition and tampering controls. General soundness
+  of the parser/interpreter and correspondence for all candidate envelopes
+  remain unproved.
+- **Finite Rust comparisons:** the corpus covers the enumerated normal,
+  boundary and refusal rows only. It does not establish universal agreement,
+  compilation fidelity or runtime execution correspondence.
 
 Arithmetic reference: #38. Numerical-error certificates: #44. Derivative
 policy: #45. This package does not restate their obligations and MUST NOT
@@ -286,9 +350,14 @@ certify host binary64 arithmetic from the F32 reference.
 
 - No convergence guarantee, numerical-stability theorem, descent or
   generalization claim. Successful typing and bounded tests supply none.
-- No arbitrary Python, in-process candidate execution or automatic trust.
+- No arbitrary Python or foreign candidate code; the fixed envelope is
+  interpreted in-process by the typed host evaluator.
+- No OS-level sandbox or proof that caller-supplied graph/loss/derivative
+  identities name the actual artifacts.
 - No claim that an `F32` candidate is an equivalent lowering of `adam/0`.
 - No unproved compiler/executed-artifact correspondence, and no promotion of
   `NG-PO-A..H`.
+- No CPU performance comparison: the conditional experiment was stopped before
+  timing under the recorded conservative decision.
 - No production adoption, and no change to ordinary Noble Programs, the `I64`
   slice or `ngraph-ir/0` admission.

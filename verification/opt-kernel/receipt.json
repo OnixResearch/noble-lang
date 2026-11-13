@@ -1,0 +1,118 @@
+{
+  "schema": "noble-ngraph-opt-conformance/v1",
+  "issue": 58,
+  "candidate_envelope": "ngraph-opt/1",
+  "source": {
+    "commit": "d8870c0625210af861759534973e1fd4a1f3c11f",
+    "tree": "30370019091022e83e2b2d3e822fd588be15d231",
+    "clean_at_execution": true
+  },
+  "host": "Linux 6.18.60 x86_64 GNU/Linux",
+  "rust_toolchain": {
+    "target": "x86_64-unknown-linux-gnu",
+    "cargo": "cargo 1.96.0-nightly (cbb9bb8bd 2026-03-13)",
+    "cargo_sha256": "862f9dd92f6d1065dbda15da68138db4432ad85581bceadf568ba2749171ddd4",
+    "rustc": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+    "rustc_commit": "ac7f9ec7da74d37fd28667c86bf117a39ba5b02a",
+    "rustc_sha256": "00a496ec0c5b2eb8f55539ad743fbb8dfc60d8c99480a5e3fa761a9f4b83f361",
+    "build_jobs": 6
+  },
+  "verification": {
+    "rust_tests": {
+      "command": "NOBLE_ROOT=/home/brittonr/.cache/noble-iss/wt/optkernel-58 NOBLE_TARGET=/home/brittonr/.cache/noble-iss/target/optkernel-58 TMPDIR=/home/brittonr/.cache/noble-iss/tmp ~/.cache/noble-iss/cargo.sh test -p noble-ngraph -p noble-ngraph-experiment --all-targets --all-features --offline --locked",
+      "exit": 0,
+      "totals": {
+        "passed": 229,
+        "failed": 0,
+        "ignored": 10
+      },
+      "packages": {
+        "noble-ngraph": { "passed": 147, "failed": 0, "ignored": 8 },
+        "noble-ngraph-experiment": { "passed": 82, "failed": 0, "ignored": 2 }
+      }
+    },
+    "clippy": {
+      "command": "NOBLE_ROOT=/home/brittonr/.cache/noble-iss/wt/optkernel-58 NOBLE_TARGET=/home/brittonr/.cache/noble-iss/target/optkernel-58 TMPDIR=/home/brittonr/.cache/noble-iss/tmp ~/.cache/noble-iss/cargo.sh clippy --workspace --all-targets --all-features --offline --locked -- -D warnings",
+      "exit": 0
+    },
+    "format": {
+      "command": "NOBLE_ROOT=/home/brittonr/.cache/noble-iss/wt/optkernel-58 NOBLE_TARGET=/home/brittonr/.cache/noble-iss/target/optkernel-58 TMPDIR=/home/brittonr/.cache/noble-iss/tmp ~/.cache/noble-iss/cargo.sh fmt --all -- --check",
+      "exit": 0
+    },
+    "octet": {
+      "command": "NOBLE_ROOT=/home/brittonr/.cache/noble-iss/wt/optkernel-58 NOBLE_TARGET=/home/brittonr/.cache/noble-iss/target/optkernel-58-octet TMPDIR=/home/brittonr/.cache/noble-iss/tmp ~/.cache/noble-iss/octet.sh /home/brittonr/.cache/noble-iss/scratch/optkernel-58/octet-clean-d8870c0",
+      "exit": 0,
+      "status": "clean",
+      "findings": 0,
+      "warnings": 0,
+      "errors": 0,
+      "architecture_findings": 0,
+      "architecture_receipt": "18d8dac359235497d1eec4e6e086bae57d0616da6655c176fe0c92c626748fff"
+    },
+    "lean_proofs": {
+      "command": "TMPDIR=/home/brittonr/.cache/noble-iss/tmp ~/.cache/noble-iss/slot.sh lean 3 verification/ci/lean-proofs.sh /home/brittonr/.cache/noble-iss/scratch/optkernel-58/lean-clean-d8870c0",
+      "exit": 0,
+      "stages": {
+        "m3_build": 0,
+        "m3_gate": 0,
+        "foundation_build": 0,
+        "foundation_check": 0
+      },
+      "source_commit": "d8870c0625210af861759534973e1fd4a1f3c11f",
+      "source_tree": "30370019091022e83e2b2d3e822fd588be15d231",
+      "clean_source": true,
+      "allow_dirty": false,
+      "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+      "foundation_theorem_count": 1301,
+      "receipt": "verification/foundation/receipts/d8870c062/foundation-check.json",
+      "receipt_sha256": "67cff611bd7a081b90c67a532336673f20ee4425192daf66464ae2d338ccabf0",
+      "audit_input": "verification/foundation/receipts/d8870c062/Audit.lean",
+      "audit_input_sha256": "c158e7993f0cc1829b4b22335b571fd0de2b2215c734febae76c826e676b3685"
+    }
+  },
+  "rust_to_lean": {
+    "freshness_test": "opt_kernel::corpus::sgd_rows_match_the_committed_reference",
+    "rows": 8,
+    "accepted": 4,
+    "refused": 4,
+    "claim": "Finite exact-bit Rust observations are matched to propositions decided by Lean; this is not a proof of the Rust checker or interpreter."
+  },
+  "source_sha256": {
+    "Cargo.lock": "87a504999bc56d5080cd6fc080bb8fe06b86f18ddc446de4065032f1ddbfb63b",
+    "policy/tool-selection.json": "813abda695dcfec6bc3e26025e15a7f286e72c2d5b79f767f35b091fa8e5fc81",
+    "crates/noble-ngraph-experiment/Cargo.toml": "f68a81759c47060dea67e16ef68c80a7a960dbba8cd5ce7996bbd976cc535348",
+    "crates/noble-ngraph-experiment/src/lib.rs": "f2cf3459df336660a5a80d8f43eb1f48b59aa8730980846fd31dadafff6f9d49",
+    "crates/noble-ngraph-experiment/src/opt/candidate.rs": "0df733fdece5fc1bb00021f977a830e7078945e3aa50983a435c6ef08dfe5988",
+    "crates/noble-ngraph-experiment/src/opt/evaluate.rs": "5a698834a35c69ae612e0379c9113bebb32fce81cd44d78f02b623a74fda703c",
+    "crates/noble-ngraph-experiment/src/opt/hash.rs": "4d422343eff91950003ece58e18432d4bee9093a1573191199434f359c7f8998",
+    "crates/noble-ngraph-experiment/src/opt/isolation.rs": "e0a328c397be5cde7cef131cb7314e961ab3fdb909ebc49e85b558bd2bf84c17",
+    "crates/noble-ngraph-experiment/src/opt/mod.rs": "8f5beab2e3e8ae6da5bd512e3ae48e90b0d2a2c4e2b7208b47937828726c6503",
+    "crates/noble-ngraph-experiment/src/opt/snapshot.rs": "d9af44d74009ff02517471df28a4eb7c4abbe471ad65c054e326f4bd36cd140b",
+    "crates/noble-ngraph-experiment/src/opt/trial.rs": "ce4cefae592cc5361f50c091f3b95ae161096f6381e309c531707bb7a95a15e8",
+    "crates/noble-ngraph-experiment/src/opt/types.rs": "e2d6acf60bbb9c220c9777def68d0ca7d71ff31023888226cd114238368bf5a8",
+    "crates/noble-ngraph-experiment/tests/b3_rejections.rs": "e2ee0ce4e9d7755d8f4456b1c2b172ead984e13dac25c2e55e7be7abba268a93",
+    "crates/noble-ngraph-experiment/tests/b5_training.rs": "2677c1fe07898ba97f91554169b05da9be3af304c38054302b8b64a947c7316f",
+    "crates/noble-ngraph-experiment/tests/b5_training/transaction_cases.rs": "5f6ba572486add3d99b59794ac6f2f03408dafb5261972010639cf1aca74a0c4",
+    "crates/noble-ngraph-experiment/tests/support/opt_kernel.rs": "c44f150ad525a20befe2e2146b8715a46cfeb2c3e8ff4ad9cc81311541879ab6",
+    "crates/noble-ngraph-experiment/tests/support/opt_kernel/corpus.rs": "fe4ee580a0f0d8125df604cf5b5373f3bdeaefb6df1f5ff2b03c704802dc21e4",
+    "crates/noble-ngraph-experiment/tests/support/opt_kernel/evaluation.rs": "f89856592f0d3c7bccfaa6758ba1afc3532020a8af2533edca47440737375747",
+    "crates/noble-ngraph-experiment/tests/support/opt_kernel/isolation.rs": "72437ceac9a59049e2a57e2e21cb93633937a62357d12fe447cdd8463d297739",
+    "crates/noble-ngraph-experiment/tests/support/opt_kernel/parser.rs": "93d58b4dc42cfeaa61ab8c79319a4e9ab3f9af9c950fb15835ba680f1b7ff62b",
+    "crates/noble-ngraph/src/sem.rs": "c8deb1b337f989e3561d68020928496c37abc71fd3bf0b995298050f457ef21c",
+    "proofs/foundation/NobleFoundation.lean": "7c3c5018ae3a1a47dc54b3f4785e636633661abeda070c4862b06210c6f28d06",
+    "proofs/foundation/NobleFoundation/SgdReference.lean": "c2d64930d7d61666f6989312577ea0197e1da02c080979a14bbdf9a87beb6102",
+    "proofs/foundation/NobleFoundation/SgdReferenceCorpus.lean": "b4e11731adec97bb4523b6b19eb21767984988f62b0b3f0f31b6caa8f0fa4dd4",
+    "proofs/foundation/inventory.json": "5a1ad48980e2375d8cb18bd4007dbdd2613e2a5253e7854a4307348531698486",
+    "verification/foundation/check.mjs": "6089d4b5cd12589b39b7837ca0d0120146607038a07cd69eff09e447480cf234",
+    "verification/ci/lean-proofs.sh": "7d3cb97cfa5c2d1a99c0f442c50838b93fa830fe708f62b6482635f1a9e37d97",
+    "verification/opt-kernel/decision.md": "3fa5ce272a0bc7037d2c061db7cd1dbf3a20ba1420fbacabea432aef22f8acf0",
+    ".cairn/changes/optimizer-kernel-experiment/design.md": "2e238a981e9a6359790e71ab9a66a6dfd14c42084d4624bc844960462e340260"
+  },
+  "limits": {
+    "general_checker_soundness": "Not established by finite Rust tests or the row corpus.",
+    "compiler_or_executed_artifact_correspondence": "Not established; this slice executes the Rust closed interpreter and does not claim a compiler artifact matches it.",
+    "evaluation_isolation": "The candidate interpreter uses explicit frozen bytes and inputs; this is not an OS sandbox or proof of secret custody.",
+    "performance_comparison": "Not run under the preregistered STOP decision; no timing, speedup, convergence, stability, descent, or generalization result is claimed.",
+    "reopen_route": "A separately versioned trace-monomial/1 design must satisfy the conditions in verification/opt-kernel/decision.md before another comparison is considered."
+  }
+}

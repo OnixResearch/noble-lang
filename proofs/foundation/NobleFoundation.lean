@@ -58,6 +58,7 @@ import NobleFoundation.IsopInterval
 import NobleFoundation.CacheLookup
 import NobleFoundation.ConstructorReuse
 import NobleFoundation.SgdReference
+import NobleFoundation.SgdReferenceCorpus
 import NobleFoundation.FirstProjection
 import NobleFoundation.SynthesisCertified
 import NobleFoundation.OperandForwarding
