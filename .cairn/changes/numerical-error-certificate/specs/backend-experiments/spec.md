@@ -8,8 +8,14 @@ over explicit finite inputs, with no overflow, division, branch discontinuity or
 training-derivative claim. Every constant and input bit pattern MUST be
 interpreted exactly, and a separately defined intended real graph MUST preserve
 the stored machine operation order. The ordered affine fold and the piecewise
-operations MUST be excluded from the first fragment because their rounding
-layers remain open under #38. The input relation MUST be stated explicitly:
+operations MUST be excluded from the first fragment because the certificate rule
+set covers input, constant, addition and multiplication nodes only: a fold or
+activation node has no rule and is refused as unsupported. Their rounding layers
+are no longer an open question under #38 — `Sequence.fold_error` and
+`SequenceFinite.fold_finite_error` bound the ordered affine fold with and without
+subnormal intermediates — but a proved rounding bound is not a certificate rule,
+and this exclusion MUST NOT be read as a claim that the fold is unproved. The
+input relation MUST be stated explicitly:
 either real inputs are the exact dyadic values of the supplied binary32 inputs,
 or the certificate includes a separately bounded input-rounding error. Initial
 representation error MUST NOT be silently omitted.

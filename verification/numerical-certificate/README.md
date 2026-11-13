@@ -5,6 +5,13 @@ This lane exercises the total certificate checker in
 on a pinned corpus. The kernel check is the proof. The sampling here is secondary evidence about
 bound quality.
 
+[`decision.md`](decision.md) is the go/no-go this lane was measured for: **NO-GO on integrating
+certification into execution**, and **deferred** broadening of the fragment to a new issue. The
+decision states its four conditions, quotes the receipts below, maps the issue's numoracle
+comparison cases to the kernel-decided controls that already cover them, and lists what would reopen
+it. The lane's own measurements are unchanged by the decision; none of them authorises an execution
+path to require or trust a certificate.
+
 [`lane.mjs`](lane.mjs) does four things:
 
 1. **Corpus.** It generates 24 add/multiply graphs over binary32 inputs and constants from SplitMix64
