@@ -73,3 +73,12 @@ fn an_over_budget_saved_program_root_is_refused_before_the_guest_runs() {
 fn a_control_that_commits_during_replay_keeps_its_receipt_and_the_session() {
     run_lane("live_slot_replay_control.mjs");
 }
+
+/// One root selects the same leaf slot twice while a compare-and-set republication of that leaf
+/// commits between the two selections. Both selections must come from the root's pinned map, so
+/// the root performs exactly the pinned version's events twice or not at all; a runtime that read
+/// the registry's current map per dispatch would mix the versions and perform exactly one.
+#[test]
+fn a_held_root_selects_the_same_leaf_twice_from_its_pinned_map() {
+    run_lane("live_slot_two_selections.mjs");
+}
