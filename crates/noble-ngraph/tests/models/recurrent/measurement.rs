@@ -293,8 +293,16 @@ fn recurrent_unrolled_cost_protocol() {
         measure("host_loop_compiled", &baseline, false, 8, baseline_build_ns);
     let (unrolled_ns, unrolled_rss) =
         measure("unrolled_compiled", &unrolled, true, 8, unrolled_build_ns);
+    let reference_build = Instant::now();
     let reference = lane(programs::one_step_adder(), true);
-    let (reference_ns, reference_rss) = measure("host_loop_reference", &reference, false, 8, 0);
+    let reference_build_ns = reference_build.elapsed().as_nanos();
+    let (reference_ns, reference_rss) = measure(
+        "host_loop_reference",
+        &reference,
+        false,
+        8,
+        reference_build_ns,
+    );
     let swap_host_build = Instant::now();
     let swap_host = lane(programs::swap_graph(), false);
     let swap_host_build_ns = swap_host_build.elapsed().as_nanos();
@@ -315,9 +323,15 @@ fn recurrent_unrolled_cost_protocol() {
         true,
         swap_unrolled_build_ns,
     );
+    let swap_reference_build = Instant::now();
     let swap_reference = lane(programs::swap_graph(), true);
-    let (swap_reference_ns, swap_reference_rss) =
-        measure_swap("stack_swap_host_loop_reference", &swap_reference, false, 0);
+    let swap_reference_build_ns = swap_reference_build.elapsed().as_nanos();
+    let (swap_reference_ns, swap_reference_rss) = measure_swap(
+        "stack_swap_host_loop_reference",
+        &swap_reference,
+        false,
+        swap_reference_build_ns,
+    );
     let mut native_times = Vec::with_capacity(REPS);
     for rep in 0..REPS {
         let before = rss_bytes();
@@ -342,6 +356,6 @@ fn recurrent_unrolled_cost_protocol() {
         println!("RECURRENT_COST\t{{\"lane\":\"stack_swap_native\",\"rep\":{rep},\"transitions\":{},\"eval_calls\":0,\"microsteps\":0,\"host_ops\":{},\"emitted_tokens\":0,\"skipped_work\":0,\"elapsed_ns\":{elapsed},\"ns_per_transition\":{:.1},\"compile_load_ns\":0,\"graph_bytes\":0,\"weight_bytes\":0,\"state_bytes\":16,\"rss_samples\":2,\"rss_before_bytes\":{before},\"rss_peak_bytes\":{peak},\"peak_scratch_rss_bytes\":{peak},\"rss_growth_bytes\":{}}}", CYCLES * STEPS as u64, CYCLES * STEPS as u64, elapsed as f64 / (CYCLES * STEPS as u64) as f64, peak.saturating_sub(before));
     }
     let native_swap_ns = median(native_swap_times);
-    println!("RECURRENT_COST_SUMMARY\t{{\"program\":\"wrapping-accumulator\",\"repetitions\":5,\"transitions_per_rep\":{},\"host_median_ns\":{baseline_ns},\"unrolled_median_ns\":{unrolled_ns},\"reference_median_ns\":{reference_ns},\"native_median_ns\":{native_ns},\"unrolled_over_host\":{:.5},\"host_rss_growth_bytes\":{baseline_rss},\"unrolled_rss_growth_bytes\":{unrolled_rss},\"reference_rss_growth_bytes\":{reference_rss},\"host_compile_load_ns\":{baseline_build_ns},\"unrolled_compile_load_ns\":{unrolled_build_ns},\"host_weight_bytes\":{},\"unrolled_weight_bytes\":{},\"host_graph_bytes\":{},\"unrolled_graph_bytes\":{},\"host_graph_nodes\":{},\"unrolled_graph_nodes\":{},\"state_bytes\":8,\"rss_sampling_overhead_included\":true,\"external_runtime\":\"none\"}}", CYCLES * STEPS as u64, unrolled_ns as f64 / baseline_ns as f64, baseline.weights.bytes().len(), unrolled.weights.bytes().len(), baseline.graph_bytes, unrolled.graph_bytes, baseline.checked.node_count(), unrolled.checked.node_count());
-    println!("RECURRENT_COST_SUMMARY\t{{\"program\":\"stack-swap\",\"repetitions\":5,\"transitions_per_rep\":{},\"host_median_ns\":{swap_host_ns},\"unrolled_median_ns\":{swap_unrolled_ns},\"reference_median_ns\":{swap_reference_ns},\"native_median_ns\":{native_swap_ns},\"unrolled_over_host\":{:.5},\"host_rss_growth_bytes\":{swap_host_rss},\"unrolled_rss_growth_bytes\":{swap_unrolled_rss},\"reference_rss_growth_bytes\":{swap_reference_rss},\"host_compile_load_ns\":{swap_host_build_ns},\"unrolled_compile_load_ns\":{swap_unrolled_build_ns},\"host_weight_bytes\":{},\"unrolled_weight_bytes\":{},\"host_graph_bytes\":{},\"unrolled_graph_bytes\":{},\"host_graph_nodes\":{},\"unrolled_graph_nodes\":{},\"state_bytes\":16,\"rss_sampling_overhead_included\":true,\"external_runtime\":\"none\"}}", CYCLES * STEPS as u64, swap_unrolled_ns as f64 / swap_host_ns as f64, swap_host.weights.bytes().len(), swap_unrolled.weights.bytes().len(), swap_host.graph_bytes, swap_unrolled.graph_bytes, swap_host.checked.node_count(), swap_unrolled.checked.node_count());
+    println!("RECURRENT_COST_SUMMARY\t{{\"program\":\"wrapping-accumulator\",\"repetitions\":5,\"transitions_per_rep\":{},\"host_median_ns\":{baseline_ns},\"unrolled_median_ns\":{unrolled_ns},\"reference_median_ns\":{reference_ns},\"native_median_ns\":{native_ns},\"unrolled_over_host\":{:.5},\"host_rss_growth_bytes\":{baseline_rss},\"unrolled_rss_growth_bytes\":{unrolled_rss},\"reference_rss_growth_bytes\":{reference_rss},\"host_compile_load_ns\":{baseline_build_ns},\"unrolled_compile_load_ns\":{unrolled_build_ns},\"reference_compile_load_ns\":{reference_build_ns},\"host_weight_bytes\":{},\"unrolled_weight_bytes\":{},\"host_graph_bytes\":{},\"unrolled_graph_bytes\":{},\"host_graph_nodes\":{},\"unrolled_graph_nodes\":{},\"state_bytes\":8,\"rss_sampling_overhead_included\":true,\"external_runtime\":\"none\"}}", CYCLES * STEPS as u64, unrolled_ns as f64 / baseline_ns as f64, baseline.weights.bytes().len(), unrolled.weights.bytes().len(), baseline.graph_bytes, unrolled.graph_bytes, baseline.checked.node_count(), unrolled.checked.node_count());
+    println!("RECURRENT_COST_SUMMARY\t{{\"program\":\"stack-swap\",\"repetitions\":5,\"transitions_per_rep\":{},\"host_median_ns\":{swap_host_ns},\"unrolled_median_ns\":{swap_unrolled_ns},\"reference_median_ns\":{swap_reference_ns},\"native_median_ns\":{native_swap_ns},\"unrolled_over_host\":{:.5},\"host_rss_growth_bytes\":{swap_host_rss},\"unrolled_rss_growth_bytes\":{swap_unrolled_rss},\"reference_rss_growth_bytes\":{swap_reference_rss},\"host_compile_load_ns\":{swap_host_build_ns},\"unrolled_compile_load_ns\":{swap_unrolled_build_ns},\"reference_compile_load_ns\":{swap_reference_build_ns},\"host_weight_bytes\":{},\"unrolled_weight_bytes\":{},\"host_graph_bytes\":{},\"unrolled_graph_bytes\":{},\"host_graph_nodes\":{},\"unrolled_graph_nodes\":{},\"state_bytes\":16,\"rss_sampling_overhead_included\":true,\"external_runtime\":\"none\"}}", CYCLES * STEPS as u64, swap_unrolled_ns as f64 / swap_host_ns as f64, swap_host.weights.bytes().len(), swap_unrolled.weights.bytes().len(), swap_host.graph_bytes, swap_unrolled.graph_bytes, swap_host.checked.node_count(), swap_unrolled.checked.node_count());
 }
