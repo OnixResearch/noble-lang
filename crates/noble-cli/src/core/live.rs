@@ -41,6 +41,13 @@ struct LiveOptions {
 enum ReloadDecision {
     Committed(serde_json::Value),
     Refused(std::string::String),
+    /// A retained preview no longer matches this installation. The reference
+    /// stays retained as a stale marker, so a plain reload cannot install
+    /// unreviewed bytes; only a new preview or `:preview cancel` clears it.
+    PreviewStale {
+        reason: std::string::String,
+        repeated: bool,
+    },
     SelectedSourceRefused(noble_contracts::source::Error),
     SourceChanged(super::output::Report),
     HostEffect(std::string::String),
@@ -413,11 +420,16 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             continue;
         }
         if line == ":preview" {
+            let measured = live.fingerprint();
             emit(&super::preview::refused(
-                live.generation,
+                measured.generation,
                 std::path::Path::new(""),
-                "preview-selection",
-                "preview requires an absolute selected source path",
+                &super::preview::Refusal::local(
+                    super::preview::RefusalKind::Selection,
+                    "preview requires an absolute selected source path".into(),
+                ),
+                &measured,
+                &measured,
             ));
             continue;
         }
@@ -1094,6 +1106,11 @@ impl Live {
                     "guest proposal reported a selected-file source error",
                 ));
             }
+            Ok(ReloadDecision::PreviewStale { reason, .. }) => {
+                return Err(fatal_failure(std::format!(
+                    "guest proposal reported a retained-preview refusal: {reason}"
+                )));
+            }
             Err(error) => return Err(error),
         };
         emit(&final_receipt);
@@ -1510,6 +1527,9 @@ impl Live {
                 ReloadDecision::SelectedSourceRefused(_) => Err(fatal_failure(
                     "direct definition reported a selected-file source error",
                 )),
+                ReloadDecision::PreviewStale { reason, .. } => Err(fatal_failure(std::format!(
+                    "direct definition reported a retained-preview refusal: {reason}"
+                ))),
             };
         }
         let submission = prepared
@@ -1694,12 +1714,29 @@ impl Live {
     }
 
     fn respond_preview(&mut self, path: &std::path::Path) -> serde_json::Value {
-        match self.preview_candidate(path) {
-            Ok((retained, report)) => {
+        let before = self.fingerprint();
+        let decision = self.preview_candidate(path);
+        let after = self.fingerprint();
+        match decision {
+            Ok((retained, compared)) => {
                 self.preview = Some(retained);
-                report
+                super::preview::previewed(&compared, &before, &after)
             }
-            Err((stage, reason)) => super::preview::refused(self.generation, path, stage, &reason),
+            Err(refusal) => {
+                super::preview::refused(before.generation, path, &refusal, &before, &after)
+            }
+        }
+    }
+
+    /// One measured point of installed session state, taken before and after an
+    /// operation so the preview's counters are derived from real observations.
+    fn fingerprint(&self) -> super::preview::Fingerprint {
+        super::preview::Fingerprint {
+            generation: self.generation,
+            submissions: self.session.submissions,
+            grant: self.grant.as_ref().map(|grant| grant.name.clone()),
+            live_code_entries: self.live_code_spans.len(),
+            acknowledged_digest: self.selected_file_hash.clone(),
         }
     }
 
@@ -1709,20 +1746,33 @@ impl Live {
     fn preview_candidate(
         &mut self,
         path: &std::path::Path,
-    ) -> Result<(super::preview::Retained, serde_json::Value), (&'static str, std::string::String)>
+    ) -> Result<(super::preview::Retained, super::preview::Comparison), super::preview::Refusal>
     {
-        let selected = selected_path(path).map_err(|reason| ("preview-selection", reason))?;
+        use super::preview::{Refusal, RefusalKind};
+        let selected =
+            selected_path(path).map_err(|reason| Refusal::local(RefusalKind::Selection, reason))?;
         if self
             .selected
             .as_ref()
             .is_some_and(|prior| prior != &selected)
         {
-            return Err((
-                "preview-selection",
+            return Err(Refusal::local(
+                RefusalKind::Selection,
                 "preview path differs from the selected source".into(),
             ));
         }
-        let candidate = snapshot(&selected).map_err(|reason| ("source-snapshot", reason))?;
+        let candidate =
+            snapshot(&selected).map_err(|reason| Refusal::local(RefusalKind::Snapshot, reason))?;
+        // A declared-modules session holds immutable module roots, not the Core
+        // definitions this successor check replaces. Its own reload path is the
+        // only review surface, so a Core preview refuses instead of describing a
+        // namespace that does not exist.
+        if self.declared.is_some() {
+            return Err(Refusal::local(
+                RefusalKind::UnsupportedProfile,
+                "a declared-modules session has no Core replacement preview; use :reload".into(),
+            ));
+        }
         let definition = match self.session.frontend.prepare(
             &candidate.bytes,
             &self.session.stack,
@@ -1730,18 +1780,16 @@ impl Live {
         ) {
             Ok(prepared) if prepared.is_definition() => prepared,
             Ok(_) => {
-                return Err((
-                    "preview-selection",
+                return Err(Refusal::local(
+                    RefusalKind::UnsupportedProfile,
                     "preview source must be one checked definition".into(),
                 ));
             }
-            Err(error) => {
-                return Err(("source-preparation", error.diagnostic().message.clone()));
-            }
+            Err(error) => return Err(Refusal::from_error(RefusalKind::Preparation, &error)),
         };
         let Some(definition_name) = definition.definition_name() else {
-            return Err((
-                "source-preparation",
+            return Err(Refusal::local(
+                RefusalKind::Preparation,
                 "missing checked definition name".into(),
             ));
         };
@@ -1750,71 +1798,86 @@ impl Live {
             .as_ref()
             .is_some_and(|previous| previous != definition_name)
         {
-            return Err((
-                "preview-selection",
+            return Err(Refusal::local(
+                RefusalKind::Selection,
                 "preview changed the selected definition name".into(),
             ));
         }
         let definition_name = definition_name.to_owned();
         let Some(prospective_identity) = definition.definition_identity() else {
-            return Err((
-                "source-preparation",
+            return Err(Refusal::local(
+                RefusalKind::Preparation,
                 "checked definition has no prospective identity".into(),
             ));
         };
-        let successor = match self.session.frontend.preview_core_rebuild(&definition) {
-            Ok(successor) => successor,
-            Err(error) => {
-                let stage = match error.stage() {
-                    noble_contracts::source::Stage::Check => "interface-or-effects",
-                    noble_contracts::source::Stage::Acceptance => "dependency-rebind-or-limits",
-                    _ => "source-preparation",
-                };
-                return Err((stage, error.diagnostic().message.clone()));
-            }
-        };
+        let successor = self
+            .session
+            .frontend
+            .preview_core_rebuild(&definition)
+            .map_err(|error| Refusal::from_preview(&error))?;
         // Both descriptors are the inert reload submission each namespace expects
         // against the current stack, so the comparison is like for like.
         let Some(candidate_interface) = self.inert_expectation(&successor) else {
-            return Err((
-                "source-preparation",
+            return Err(Refusal::local(
+                RefusalKind::Preparation,
                 "candidate reload submission has no expectation".into(),
             ));
+        };
+        // Both ordered interfaces are inferred from retained source before the
+        // report claims a comparison, so a preview never prints a status without
+        // its subject.
+        let compared_interface = self
+            .session
+            .frontend
+            .candidate_ordered_interface(&definition)
+            .map_err(|error| Refusal::from_error(RefusalKind::ComparisonFailed, &error))?
+            .ok_or_else(|| {
+                Refusal::local(
+                    RefusalKind::ComparisonFailed,
+                    "checked candidate definition has no inferred interface".into(),
+                )
+            })?;
+        let installed_interface = self
+            .session
+            .frontend
+            .installed_ordered_interface(&definition_name, super::SOURCE_LIMITS);
+        let (installed_interface, installed_interface_reason) = match installed_interface {
+            Ok(described) => (described, None),
+            Err(error) => (None, Some(error.diagnostic().message.clone())),
         };
         let installed_identity = self
             .session
             .frontend
-            .selected_definition_identity(&definition_name);
+            .installed_definition_identity(&definition_name);
         let dependents = self
             .session
             .frontend
             .current_dependent_names(&definition_name);
         let digest = crate::workflow::intrinsic::sha256(&candidate.bytes);
         let discarded_previous = self.preview.is_some();
-        let observed = super::preview::Observed {
-            generation: self.generation,
-            submissions: self.session.submissions,
-            installed_definition: self.selected_definition.as_deref(),
-            installed_identity,
-            dependents: &dependents,
-            discarded_previous,
-        };
-        let described = super::preview::Candidate {
-            path: &selected,
+        let compared = super::preview::Comparison {
+            path: selected.clone(),
             digest: digest.clone(),
             bytes: candidate.bytes.len(),
-            definition: &definition_name,
+            definition: definition_name.clone(),
             prospective_identity,
-            interface: candidate_interface,
+            candidate_interface: compared_interface,
+            installed_definition: self.selected_definition.clone(),
+            installed_identity,
+            installed_interface,
+            installed_interface_reason,
+            inert: candidate_interface,
+            dependents,
+            discarded_previous,
         };
-        let report = super::preview::previewed(&observed, &described);
         Ok((
             super::preview::Retained {
                 path: selected,
                 digest,
                 base_generation: self.generation,
+                stale: None,
             },
-            report,
+            compared,
         ))
     }
 
@@ -1829,8 +1892,10 @@ impl Live {
     }
 
     fn cancel_preview(&mut self) -> serde_json::Value {
+        let before = self.fingerprint();
         let discarded = self.preview.take().is_some();
-        super::preview::cancelled(self.generation, discarded)
+        let after = self.fingerprint();
+        super::preview::cancelled(before.generation, discarded, &before, &after)
     }
 
     fn respond_reload(&mut self, path: &std::path::Path) -> bool {
@@ -1911,6 +1976,13 @@ impl Live {
             Ok(ReloadDecision::Committed(report)) => report,
             Ok(ReloadDecision::Refused(problem)) => {
                 refusal(self.generation, &self.last_stack, &problem)
+            }
+            Ok(ReloadDecision::PreviewStale { reason, repeated }) => {
+                let mut report = refusal(self.generation, &self.last_stack, &reason);
+                report["preview_state"] = serde_json::json!("stale-retained-reference");
+                report["preview_repeated"] = serde_json::json!(repeated);
+                report["preview_control"] = serde_json::json!("preview again or :preview cancel");
+                report
             }
             Ok(ReloadDecision::SelectedSourceRefused(error)) => {
                 self.selected_source_refusal(&error)?
@@ -2176,21 +2248,28 @@ impl Live {
         let definition_name = definition_name.to_owned();
         // A retained preview is a comparison reference over exact candidate bytes
         // in an exact base namespace. An installation that no longer matches it is
-        // refused as stale rather than silently installing different bytes.
+        // refused as stale rather than silently installing different bytes, and the
+        // reference stays retained as a stale marker: every later plain reload is
+        // refused until a new preview replaces it or `:preview cancel` discards it.
         let preview_checked = if let Some(retained) = self.preview.as_ref() {
             let digest = crate::workflow::intrinsic::sha256(&candidate.bytes);
-            let stale = if retained.path != selected {
-                Some("retained preview names a different selected source; preview again")
+            let stale = if let Some(recorded) = retained.stale.clone() {
+                Some(recorded)
+            } else if retained.path != selected {
+                Some("retained preview names a different selected source; preview again".to_owned())
             } else if retained.digest != digest {
-                Some("candidate bytes changed after the preview; preview again")
+                Some("candidate bytes changed after the preview; preview again".to_owned())
             } else if retained.base_generation != self.generation {
-                Some("base namespace changed after the preview; preview again")
+                Some("base namespace changed after the preview; preview again".to_owned())
             } else {
                 None
             };
             if let Some(reason) = stale {
-                self.preview = None;
-                return Ok(ReloadDecision::Refused(reason.into()));
+                let repeated = self
+                    .preview
+                    .as_mut()
+                    .is_some_and(|retained| retained.stale.replace(reason.clone()).is_some());
+                return Ok(ReloadDecision::PreviewStale { reason, repeated });
             }
             true
         } else {

@@ -27,7 +27,7 @@ pub(super) fn compatible(
     previous: &super::Named,
     replacement: &super::Named,
     limits: crate::Limits,
-) -> Result<bool, crate::Diagnostic> {
+) -> Result<Compatibility, crate::Diagnostic> {
     let environment = session.environment()?;
     let old = infer(session, previous, &environment, limits)?;
     let new = infer(session, replacement, &environment, limits)?;
@@ -45,7 +45,7 @@ pub(super) fn compatible(
         .iter()
         .any(|effect| !old_effects.as_slice().contains(effect))
     {
-        return Ok(false);
+        return Ok(Compatibility::EffectGrowth);
     }
     let mut comparison = Comparison {
         old: &old.arena,
@@ -55,7 +55,93 @@ pub(super) fn compatible(
         span,
         meter: crate::Meter::new(limits),
     };
-    comparison.compare()
+    Ok(if comparison.compare()? {
+        Compatibility::Compatible
+    } else {
+        Compatibility::InterfaceChanged
+    })
+}
+
+/// Which replacement contract a completed comparison refused.
+///
+/// The caller keeps the diagnostic that names the rule; this class only says
+/// which rule it was, so no caller infers a cause from a checking stage.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[octet::sealed_enum]
+pub(super) enum Compatibility {
+    Compatible,
+    /// The ordered input/output stack interface differs.
+    InterfaceChanged,
+    /// The replacement admits an effect the installed definition does not.
+    EffectGrowth,
+}
+
+/// The ordered, statically inferred interface of one definition.
+///
+/// The root frame of a checked definition is its body, so the interface is that
+/// frame's own input and output stacks: both sides in source order (bottom
+/// first), the finite effect identities its latent bound admits, and whether
+/// each side still ends in an unconstrained stack variable. This is an
+/// inference result; it is not a runtime observation, not evidence of
+/// behavioural equivalence, and never acceptance.
+pub(super) fn ordered(
+    session: &super::Session,
+    definition: &super::Named,
+    limits: crate::Limits,
+) -> Result<super::OrderedInterface, crate::Diagnostic> {
+    let span = definition.tree.span;
+    let environment = session.environment()?;
+    let state = infer(session, definition, &environment, limits)?;
+    let body = state.bodies.first().ok_or_else(|| crate::internal(span))?;
+    let (stack_in, stack_in_tail, meter) =
+        ordered_side(&state.arena, body.input, span, crate::Meter::new(limits))?;
+    let (stack_out, stack_out_tail, mut meter) =
+        ordered_side(&state.arena, body.output, span, meter)?;
+    let (effects, unresolved_effects) = state.arena.editor_effect(body.effect, span, &mut meter)?;
+    Ok(super::OrderedInterface {
+        stack_in,
+        stack_in_tail,
+        stack_out,
+        stack_out_tail,
+        effects,
+        unresolved_effects,
+    })
+}
+
+/// One ordered stack side and whether it ends in a concrete stack or retains an
+/// unconstrained tail variable.
+fn ordered_side(
+    arena: &crate::inference::Arena,
+    stack: u32,
+    span: crate::Span,
+    meter: crate::Meter,
+) -> Result<
+    (
+        alloc::vec::Vec<alloc::string::String>,
+        super::InterfaceTail,
+        crate::Meter,
+    ),
+    crate::Diagnostic,
+> {
+    let mut cursor = stack;
+    let mut work_meter = meter;
+    // The suffix walk refuses any shape other than a finite Push chain ending in
+    // one of the three documented tails, so the tail walk below cannot diverge.
+    let ordered = arena.editor_stack_suffix(cursor, span, &mut work_meter)?;
+    loop {
+        let id = arena.root(cursor, span, &mut work_meter)?;
+        match arena.get(id, span)? {
+            crate::inference::Term::Push(rest, _) => cursor = rest,
+            crate::inference::Term::Empty => {
+                return Ok((ordered, super::InterfaceTail::Closed, work_meter));
+            }
+            crate::inference::Term::Hole(crate::inference::Sort::Stack)
+            | crate::inference::Term::RigidStack(_) => {
+                return Ok((ordered, super::InterfaceTail::Unconstrained, work_meter));
+            }
+            _ => return Err(crate::internal(span)),
+        }
+    }
 }
 
 struct Comparison<'a> {

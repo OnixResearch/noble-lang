@@ -183,14 +183,14 @@ impl super::ModuleSession {
                     "retained definition changed an unapproved resolved owner",
                 ));
             }
-            let is_compatible = attempt!(crate::source::replacement::compatible(
+            let compatibility = attempt!(crate::source::replacement::compatible(
                 &staged.source,
                 original,
                 replacement,
                 replay_limits,
             )
             .map_err(|error| super::super::diagnostic(crate::source::Stage::Check, error)));
-            if !is_compatible {
+            if compatibility != crate::source::replacement::Compatibility::Compatible {
                 return Err(refusal(
                     "import rebind changes a dependent interface or effect ceiling",
                 ));
