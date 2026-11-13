@@ -456,11 +456,13 @@ explicit output permutation and scalar copy. No correspondence theorem binds
 these Nickel source bytes, exported data, lowerer or evaluator results to the
 composition laws.
 
-**Implementation-tested.** [`verification/nickel-ngraph/`](verification/nickel-ngraph/)
-retains the pinned arithmetic export and admitted graph, independently
-calculated ordered outputs from both evaluators, composition-law matrix,
-demanded-contract and import-closure refusals, provenance receipt and consumer
-record, and independent stale-binding controls.
+**Implementation-tested.** The retained
+[fixture result](verification/nickel-ngraph/fixture-result.json) and
+[provenance receipt](verification/nickel-ngraph/receipt.json) accompany the
+pinned arithmetic export and admitted graph, independently calculated ordered
+outputs from both evaluators, composition-law matrix, demanded-contract and
+import-closure refusals, consumer record, and independent stale-binding
+controls.
 
 **Open.** These finite observations are not a source-to-implementation
 correspondence proof. They establish no effect independence, resource
