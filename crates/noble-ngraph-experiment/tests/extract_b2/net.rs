@@ -44,6 +44,7 @@ fn nested_pair_outputs_flatten_in_order_for_the_net() {
     let lowered = Lowered::new(&[], "dup dup 1 + swap pair pair", 1).expect("nested pair extracts");
     let inputs = i64s(&[41]);
     let expected = vec![Value::I64(41), Value::I64(42), Value::I64(41)];
+    assert_eq!(lowered.root_stack_arity, 1);
     assert_eq!(lowered.outputs(), expected.len());
     assert_eq!(lowered.l3(&inputs).expect("reference outputs"), expected);
     let report = lowered.l5(&inputs).expect("nested-pair net");

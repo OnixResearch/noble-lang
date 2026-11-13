@@ -298,7 +298,7 @@ fn run() -> Result<bool, String> {
         "load_average_at_start": load_start,
         "workload": format!(
             "B1 I1-I4; B2 {} named graphs + {} random Core programs x {} vectors (L2-L5, including per-row net construction, validation, reduction and read-back), L1 on named design vectors + {} vectors per named graph and {} random programs x {} vectors, I4 {} host steps; B3 source controls",
-            10, a.programs, a.vectors, a.l1_vectors, a.l1_programs, a.l1_vectors, a.steps
+            15, a.programs, a.vectors, a.l1_vectors, a.l1_programs, a.l1_vectors, a.steps
         ),
         "resource_limits": format!(
             "extraction /0 defaults: work units {}, expanded nodes {}, inline depth {}; checker /0 defaults; CLI Core session limits (65,536 bytes, 16,384 nodes, depth 64, work 2,000,000)",

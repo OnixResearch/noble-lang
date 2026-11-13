@@ -118,6 +118,10 @@ pub enum Value {
     I64(i64),
     /// `Bool`.
     Bool(bool),
+    /// An ordered pair returned by the ordinary Core path.
+    Pair(Box<Value>, Box<Value>),
+    /// `Unit`, which contributes no flattened graph output.
+    Unit,
     /// Any other value, by its reported type name.
     Other(String),
 }
@@ -126,12 +130,14 @@ impl Value {
     /// Source literal for an input value.
     ///
     /// # Panics
-    /// For [`Value::Other`], which has no literal.
+    /// For aggregates and [`Value::Other`], which are not scalar input literals.
     #[must_use]
     pub fn literal(&self) -> String {
         match self {
             Self::I64(v) => v.to_string(),
             Self::Bool(b) => b.to_string(),
+            Self::Pair(..) => panic!("a pair has no scalar source literal"),
+            Self::Unit => panic!("Unit has no scalar source literal"),
             Self::Other(t) => panic!("no source literal for {t}"),
         }
     }
@@ -1040,6 +1046,22 @@ fn value(item: &serde_json::Value) -> Result<Value, Error> {
             .and_then(serde_json::Value::as_bool)
             .map(Value::Bool)
             .ok_or_else(|| Error::Protocol(format!("bad Bool {item}"))),
+        "Pair" => {
+            let pair = item
+                .get("value")
+                .and_then(serde_json::Value::as_array)
+                .filter(|values| values.len() == 2)
+                .ok_or_else(|| Error::Protocol(format!("bad Pair {item}")))?;
+            Ok(Value::Pair(
+                Box::new(value(&pair[0])?),
+                Box::new(value(&pair[1])?),
+            ))
+        }
+        "Unit" => item
+            .get("value")
+            .filter(|value| value.is_null())
+            .map(|_| Value::Unit)
+            .ok_or_else(|| Error::Protocol(format!("bad Unit {item}"))),
         other => Ok(Value::Other(other.to_owned())),
     }
 }

@@ -15,6 +15,8 @@ pub struct Prepared {
     pub submission: noble_kernel::execution::Submission,
     /// Producer-claimed closure (sorted, unique).
     pub claimed_closure: alloc::vec::Vec<u64>,
+    /// Root stack arity before aggregate outputs are flattened into graph ports.
+    pub root_stack_arity: usize,
 }
 
 /// Prepares `definitions` (each one `def NAME [ … ]` submission, committed in
@@ -50,6 +52,7 @@ pub fn prepare(
     let p = session
         .prepare(root.as_bytes(), inputs, limits)
         .map_err(|e| alloc::format!("root {root:?}: {e:?}"))?;
+    let root_stack_arity = p.output().len();
     let submission = p
         .submission()
         .cloned()
@@ -61,6 +64,7 @@ pub fn prepare(
     Ok(Prepared {
         submission,
         claimed_closure,
+        root_stack_arity,
     })
 }
 

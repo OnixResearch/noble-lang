@@ -39,6 +39,8 @@ pub struct Lowered {
     pub root: String,
     /// `I64` inputs.
     pub inputs: usize,
+    /// Root stack arity before aggregate outputs are flattened into graph ports.
+    pub root_stack_arity: usize,
     /// Extraction.
     pub extraction: Extraction,
     /// L4.
@@ -74,16 +76,18 @@ impl Lowered {
             extract::extract(&BLAKE3, &admitted, &noble_ngraph::check::Budgets::default())
                 .map_err(|d| d.to_string())?;
         let compiled = Compiled::new(&BLAKE3, &extraction.checked);
+        let root_stack_arity = p.root_stack_arity;
         Ok(Self {
             definitions: definitions.to_vec(),
             root: root.to_owned(),
             inputs,
+            root_stack_arity,
             extraction,
             compiled,
         })
     }
 
-    /// Number of graph outputs (all roots here have scalar outputs).
+    /// Number of flattened scalar graph outputs.
     #[must_use]
     pub fn outputs(&self) -> usize {
         self.extraction.checked.graph().outputs.len()
@@ -153,6 +157,25 @@ fn l1_values(values: &[Value]) -> Vec<l1::Value> {
             Value::F32(bits) => l1::Value::Other(format!("F32 {bits:08x}")),
         })
         .collect()
+}
+
+fn flatten_l1_stack(values: &[l1::Value]) -> Result<Vec<l1::Value>, String> {
+    let mut pending: Vec<&l1::Value> = values.iter().rev().collect();
+    let mut flattened = Vec::new();
+    while let Some(value) = pending.pop() {
+        match value {
+            l1::Value::I64(_) | l1::Value::Bool(_) => flattened.push(value.clone()),
+            l1::Value::Unit => {}
+            l1::Value::Pair(left, right) => {
+                pending.push(right);
+                pending.push(left);
+            }
+            l1::Value::Other(kind) => {
+                return Err(format!("unsupported ordinary output type {kind}"));
+            }
+        }
+    }
+    Ok(flattened)
 }
 
 fn i64s(values: &[i64]) -> Vec<Value> {
@@ -271,6 +294,30 @@ const NAMED: &[Named] = &[
         design: &[i64::MIN, -1],
         expected: &[i64::MIN],
     },
+    Named {
+        name: "nested-pair-output",
+        definitions: &[],
+        root: "dup dup 1 + swap pair pair",
+        inputs: 1,
+        design: &[41],
+        expected: &[41, 42, 41],
+    },
+    Named {
+        name: "rebound-definition-before-overwrite",
+        definitions: &["def step [ 1 + ]"],
+        root: "step",
+        inputs: 1,
+        design: &[3],
+        expected: &[4],
+    },
+    Named {
+        name: "rebound-definition-after-overwrite",
+        definitions: &["def step [ 1 + ]", "def step [ 9 + ]"],
+        root: "step",
+        inputs: 1,
+        design: &[3],
+        expected: &[12],
+    },
 ];
 
 struct Tally {
@@ -351,7 +398,8 @@ fn legs(
         let mut modes = serde_json::Map::new();
         for opt in [Opt::Off, Opt::On] {
             let cli = Cli::new(bin.clone(), opt);
-            let run = match cli.run_vectors(&defs, &lowered.root, lowered.outputs(), &inputs) {
+            let run = match cli.run_vectors(&defs, &lowered.root, lowered.root_stack_arity, &inputs)
+            {
                 Ok(run) => run,
                 Err(l1::Error::Session(failure)) => {
                     // A protocol, process or transport failure is its own
@@ -384,11 +432,14 @@ fn legs(
                     quota.push(json!({ "vector": i, "outcome": r.outcome, "stage": r.stage, "diagnostic": r.diagnostic }));
                     continue;
                 }
-                let ok = r.outcome == "normal" && r.stack == l1_values(&l3_all[i]);
+                let flattened = flatten_l1_stack(&r.stack);
+                let expected = l1_values(&l3_all[i]);
+                let ok = r.outcome == "normal"
+                    && matches!(&flattened, Ok(values) if values == &expected);
                 t.check(
                     || {
                         format!(
-                            "{name} v{i}: L1 --opt {} {} ≢ L3 {:?}",
+                            "{name} v{i}: L1 --opt {} {} flattens to {flattened:?} ≢ L3 {:?}",
                             opt.flag(),
                             r.raw,
                             l3_all[i]
