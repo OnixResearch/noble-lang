@@ -337,8 +337,20 @@ impl HostEvent {
     }
 }
 
-/// Bounded: a trace never silently drops an event, and a trace that hit its bound says so.
+/// The resource table's scope ceiling, in the table limit's own type: the host refuses the read that
+/// exceeds it, and that refusal is the only host refusal a guest can reach.
+const SCOPES: u64 = 64;
+
+/// Bounded v1: a trace never silently drops an event, and a trace that hit its bound says so. The
+/// v1 report keeps this bound and its event encoding unchanged, so every retained v1 receipt stays
+/// byte-identical (EPROTO-OBS-01).
 const MAX_EVENTS: usize = 64;
+
+/// Bounded v2: above `3 * SCOPES + 4` events (196), so the trace reaches the scope ceiling's refusal
+/// instead of stopping before the refusing read (#50). The one trace that can reach the ceiling
+/// records three events per admitted read, a request and a refusal for the refused read, and a
+/// request and a response for the guest's release; the bound keeps a margin over that.
+const MAX_EVENTS_V2: usize = 256;
 
 /// What one bounded-region invocation returned, as the adapter observed it.
 struct Invocation {
@@ -396,7 +408,7 @@ impl Host {
                 pins: 1,
                 owners_per_context: 1,
                 generations: 1,
-                scopes: 64,
+                scopes: SCOPES,
             },
         )
         .map_err(|error| anyhow::anyhow!("resource table: {error:?}"))?;
@@ -452,7 +464,7 @@ impl Host {
     }
 
     fn record(&mut self, event: HostEvent) {
-        if self.events.len() >= MAX_EVENTS {
+        if self.events.len() >= MAX_EVENTS_V2 {
             self.events_truncated = true;
             return;
         }
@@ -690,11 +702,15 @@ impl Host {
                 Json::Array(
                     self.events
                         .iter()
+                        .take(MAX_EVENTS)
                         .map(|event| event.encode(Schema::V1))
                         .collect(),
                 ),
             ),
-            ("events_truncated", Json::Bool(self.events_truncated)),
+            (
+                "events_truncated",
+                Json::Bool(self.events_truncated || self.events.len() > MAX_EVENTS),
+            ),
             ("released_owners", Json::Number(self.releases)),
             ("live_owners", Json::Number(observation.live as u64)),
             ("native_pins", Json::Number(observation.native_pins as u64)),
@@ -1361,7 +1377,7 @@ mod tests {
 
 #[cfg(test)]
 mod ordered_trace_tests {
-    use super::{Host, HostEvent, Operation, ResponseKind, Schema, MAX_EVENTS};
+    use super::{Host, HostEvent, Operation, ResponseKind, Schema, MAX_EVENTS_V2, SCOPES};
 
     fn host(bytes: &[u8]) -> Host {
         Host::new(bytes.to_vec()).expect("host registration")
@@ -1508,15 +1524,47 @@ mod ordered_trace_tests {
         }
     }
 
+    /// The v2 bound is derived from the scope ceiling rather than guessed: the one trace that can
+    /// reach the ceiling needs three events per admitted read, the refused read's request and
+    /// refusal, and the guest release's request and response.
+    #[test]
+    fn the_v2_bound_exceeds_the_scope_ceiling_trace() {
+        let scopes = usize::try_from(SCOPES).expect("the scope ceiling fits a usize");
+        assert!(
+            MAX_EVENTS_V2 >= 3 * scopes + 4,
+            "the v2 bound must hold the whole ceiling trace"
+        );
+    }
+
+    /// #50: the v2 bound is large enough for the whole scope-ceiling trace, and a trace that
+    /// exceeds even that bound still says so instead of dropping an event silently.
     #[test]
     fn a_trace_that_hits_its_bound_says_so_instead_of_dropping_silently() {
         let mut host = host(b"abc");
         let claim = host.owner.as_ref().expect("owner").handle();
-        for _ in 0..(MAX_EVENTS / 3 + 1) {
-            assert_eq!(host.read(1, claim, 0, 1).expect("read"), b"a");
+        let scopes = usize::try_from(SCOPES).expect("the scope ceiling fits a usize");
+        for _ in 0..scopes {
+            assert_eq!(host.read(1, claim, 0, 1).expect("admitted read"), b"a");
+        }
+        assert_eq!(
+            host.events.len(),
+            3 * scopes,
+            "each admitted read records its request, its protected commit and its response"
+        );
+        assert!(
+            !host.events_truncated,
+            "the scope ceiling's own trace fits inside the v2 bound"
+        );
+        // Every read past the ceiling is refused, and records its request and its refusal, so the
+        // bounded trace fills rather than stopping at the scope ceiling.
+        let mut refusals = 0;
+        while !host.events_truncated {
+            assert_eq!(host.read(1, claim, 0, 1), Err("invalid-handle"));
+            refusals += 1;
+            assert!(refusals <= scopes, "the bounded trace never filled");
         }
         assert!(host.events_truncated);
-        assert_eq!(host.events.len(), MAX_EVENTS);
+        assert_eq!(host.events.len(), MAX_EVENTS_V2);
     }
 }
 
@@ -1525,6 +1573,7 @@ mod report_v2_tests {
     use super::{
         execute, options, outside_model, CleanupObservation, ExitClass, ExitV2, Host, HostEvent,
         Invocation, Operation, Options, RefusalClass, Release, ResponseKind, Schema, FUEL,
+        MAX_EVENTS, SCOPES,
     };
     use crate::workflow::encoding::Json;
     use std::ffi::OsString;
@@ -1549,6 +1598,46 @@ mod report_v2_tests {
             None,
         )
         .encode()
+    }
+
+    fn v1_json(host: &Host, cleanup: &CleanupObservation) -> Json {
+        host.report("read", ExitClass::Normal, cleanup, Some(0), None, None)
+    }
+
+    fn v2_json(host: &Host, cleanup: &CleanupObservation) -> Json {
+        host.report_v2(
+            "read",
+            ExitV2::Class(ExitClass::Normal),
+            cleanup,
+            Some(0),
+            None,
+            None,
+        )
+    }
+
+    fn field<'a>(report: &'a Json, name: &str) -> &'a Json {
+        let Json::Object(entries) = report else {
+            panic!("the report is an object");
+        };
+        entries
+            .iter()
+            .find(|(key, _)| *key == name)
+            .map(|(_, value)| value)
+            .expect("report field")
+    }
+
+    fn events(report: &Json) -> &[Json] {
+        match field(report, "events") {
+            Json::Array(events) => events,
+            _ => panic!("events is an array"),
+        }
+    }
+
+    fn truncated(report: &Json) -> bool {
+        match field(report, "events_truncated") {
+            Json::Bool(value) => *value,
+            _ => panic!("events_truncated is a boolean"),
+        }
     }
 
     /// F1 and F9: a guest release, a destructor release and a host retirement are different
@@ -1593,9 +1682,11 @@ mod report_v2_tests {
         }
     }
 
-    /// F8: the 65th read meets the scope ceiling. The guest sees `invalid-handle`, as it does for a
-    /// forged claim, but the v2 report classifies the two refusals apart. The counts sit beside the
-    /// bounded trace, so a class survives the trace's truncation.
+    /// F8 and #50: the 65th read meets the scope ceiling. The guest sees `invalid-handle`, as it
+    /// does for a forged claim, but the v2 report classifies the two refusals apart. The v2 bound
+    /// now reaches the refusal itself: the trace records the refused request and its refusal, and
+    /// no longer truncates. The v1 report keeps its own 64-event bound and truncation flag, so a
+    /// retained v1 receipt is unchanged (EPROTO-OBS-01).
     #[test]
     fn v2_classifies_scope_exhaustion_apart_from_an_identity_refusal() {
         let mut host = host(b"abc");
@@ -1603,11 +1694,41 @@ mod report_v2_tests {
         let mut forged = claim;
         forged.slot = 42;
         assert_eq!(host.read(1, forged, 0, 1), Err("invalid-handle"));
-        for _ in 0..64 {
+        let scopes = usize::try_from(SCOPES).expect("the scope ceiling fits a usize");
+        for _ in 0..scopes {
             assert_eq!(host.read(1, claim, 0, 1).expect("admitted read"), b"a");
         }
         assert_eq!(host.read(1, claim, 0, 1), Err("invalid-handle"));
-        assert!(host.events_truncated);
+        assert!(!host.events_truncated);
+        // One forged read, `scopes` admitted reads and the refused read: three events each for the
+        // admitted reads, and a request and a refusal for the other two.
+        let cleanup = CleanupObservation::AlreadyRetired;
+        let observed = v2_json(&host, &cleanup);
+        assert!(!truncated(&observed));
+        assert_eq!(events(&observed).len(), 3 * scopes + 4);
+        let trace = events(&observed);
+        assert!(trace[trace.len() - 2]
+            .encode()
+            .contains(r#""operation":"region.read""#));
+        assert_eq!(
+            trace[trace.len() - 1].encode(),
+            r#"{"kind":"response","result":"refused","bytes":null,"reason":"invalid-handle","host_class":"scope-exhausted"}"#,
+            "the trace records the host's refusal of the read past the scope ceiling"
+        );
+        let bounded = v1_json(&host, &cleanup);
+        assert_eq!(events(&bounded).len(), MAX_EVENTS);
+        assert!(truncated(&bounded));
+        let expected_v1_prefix = host
+            .events
+            .iter()
+            .take(MAX_EVENTS)
+            .map(|event| event.encode(Schema::V1).encode())
+            .collect::<Vec<_>>();
+        let observed_v1_prefix = events(&bounded)
+            .iter()
+            .map(Json::encode)
+            .collect::<Vec<_>>();
+        assert_eq!(observed_v1_prefix, expected_v1_prefix);
         let report = v2(&host, &CleanupObservation::AlreadyRetired);
         assert!(report.contains(r#""identity":1"#), "{report}");
         assert!(report.contains(r#""scope-exhausted":1"#), "{report}");

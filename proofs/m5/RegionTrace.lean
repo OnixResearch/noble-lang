@@ -3,8 +3,8 @@
 
 `.cairn/changes/region-trace-relation` fixes a source alphabet (`RegionProtocol-v1`'s
 `Req`/`Resp`/`Commit` classes) and a target alphabet (the emitted ABI steps of the bounded
-region host), defines the relation first, and permits erasure only for named internal ABI
-bookkeeping steps with a per-class justification.
+region host, abstracted as a handwritten model), defines the relation first, and permits
+erasure only for named internal ABI bookkeeping steps with a per-class justification.
 
 This module is a **model**: the target alphabet is a handwritten machine, not an emitted
 step sequence from a real lowering, and nothing here is a correspondence theorem about
@@ -17,8 +17,8 @@ Declared premises that stay premises, not claims:
   `identity_is_decision_identity` shows the projection keeps the identity it was given,
   while *that the host supplies the right identity* is a source obligation.
 * pairing and ordering: `append_projection` and `take_projection` give the prefix
-  structure; response-to-request pairing is preserved by construction because a target
-  response step carries its own operation, and *which* request it answers stays a premise.
+  structure; `responsesPaired` makes each projected response answer the preceding request
+  of the same operation, while permitting an unmatched final request at a truncated prefix.
 * cost/fuel: an exhaustion step may cut a trace, so the projection of a truncated trace is
   the projection of the prefix, never an invented commit (`take_projection`).
 -/
@@ -30,11 +30,18 @@ inductive Operation where
   | guestRelease
   deriving DecidableEq, Repr
 
-/-- The abnormal-exit class. `unknown` is a real member: an absent observation stays unknown
-rather than being filled in with a successful protocol outcome. -/
+/-- The abnormal-exit class, matching the classes the host itself reports for a run that did not end
+in a conformant protocol return: a guest trap, the host's fuel boundary, a cancellation the host
+performed, an adapter fault that is not a guest trap, a result outside the result schema, and a
+refused post-exit retirement. `normal` and `rejected` are conformant returns whose outcome is
+already in the responses, so they add no exit step. `unknown` is a real member: an absent
+observation stays unknown rather than being filled in with a successful protocol outcome. -/
 inductive ExitClass where
   | trap
   | quotaExhaustion
+  | cancelled
+  | adapterInvalid
+  | outsideModel
   | cleanupFailure
   | unknown
   deriving DecidableEq, Repr
@@ -57,7 +64,7 @@ inductive SourceEvent where
   | commit (kind : CommitKind) (identity : Nat)
   deriving DecidableEq, Repr
 
-/-- The target alphabet: the emitted ABI steps this host actually performs. -/
+/-- A handwritten target model of the bounded host's ABI steps, not an emitted component trace. -/
 inductive AbiStep where
   | importCrossing (op : Operation) (offset : Int) (length : Int)
   | hostDecision (op : Operation) (accepted : Bool) (identity : Nat)
@@ -103,9 +110,39 @@ def projectStep : AbiStep → Option SourceEvent
   | .handleTableIndex _ => none
   | .storeBookkeeping _ => none
 
-/-- The identities the host decided on, in order. -/
+/-! Every response must follow a request of its own operation, with only that request's own
+protected commits in between. Prefixes may end with that request unanswered, but a response before
+any request, a response for another operation, a differently-kinded commit, or another request
+before the answer is not paired. -/
+def commitMatchesRequest (op : Operation) (offset length : Int) : CommitKind → Bool
+  | .regionRead start size =>
+      decide (op = .regionRead ∧ offset = (start : Int) ∧ length = (size : Int))
+  | .guestRelease => decide (op = .guestRelease ∧ offset = 0 ∧ length = 0)
+  | .destructorRelease | .hostRetire => false
+
+mutual
+/-- A projected prefix is paired when every response answers the preceding request. -/
+def responsesPaired : List SourceEvent → Bool
+  | [] => true
+  | .resp _ _ _ :: _ => false
+  | .req op offset length :: rest => responseFollows op offset length rest
+  | .commit kind _ :: rest =>
+      match kind with
+      | .regionRead _ _ | .guestRelease => false
+      | .destructorRelease | .hostRetire => responsesPaired rest
+
+/-- The response a request expects, after any number of that request's protected commits. -/
+def responseFollows (op : Operation) (offset length : Int) : List SourceEvent → Bool
+  | [] => true
+  | .commit kind _ :: rest =>
+      commitMatchesRequest op offset length kind && responseFollows op offset length rest
+  | .resp other _ _ :: more => decide (op = other) && responsesPaired more
+  | .req _ _ _ :: _ => false
+end
+
+/-- The identities from accepted host decisions, in order. -/
 def decisionStep : AbiStep → Option Nat
-  | .hostDecision _ _ identity => some identity
+  | .hostDecision _ true identity => some identity
   | _ => none
 
 def decisions (steps : List AbiStep) : List Nat :=
@@ -138,11 +175,24 @@ def releaseMembers (steps : List AbiStep) : List Nat :=
         | .regionRead _ _ => none
     | _ => none
 
-/-- Every commit identity was decided first: no commit may carry an identity the host never
-authorised, so a rep number or handle class cannot stand in for the exact identity. -/
+/-- Every commit identity occurs among the accepted host decisions; ordering is checked separately
+by `commitAuthorityInOrder`, and read/release commits are additionally paired to their own request. -/
 def identitiesDecided (steps : List AbiStep) : Bool :=
   let decided := decisions steps
   (commitIdentities steps).all (fun identity => decided.contains identity)
+
+/-! A decision can authorize only commits that follow it. Registration is a separate premise and
+authorizes host retirement only; it is not folded into the decision list. -/
+def commitAuthorityInOrder (registered : List Nat) : List Nat → List AbiStep → Bool
+  | _, [] => true
+  | decided, .hostDecision _ accepted identity :: rest =>
+      commitAuthorityInOrder registered (if accepted then identity :: decided else decided) rest
+  | decided, .cleanup .hostRetire identity :: rest =>
+      (decided.contains identity || registered.contains identity) &&
+        commitAuthorityInOrder registered decided rest
+  | decided, .cleanup _ identity :: rest =>
+      decided.contains identity && commitAuthorityInOrder registered decided rest
+  | decided, _ :: rest => commitAuthorityInOrder registered decided rest
 
 /-- Every read commit is explained: a protected read commit must be preceded by the import
 crossing that asked for exactly that region. -/
@@ -152,11 +202,112 @@ def readCommits (steps : List AbiStep) : List (Nat × Nat) :=
     | .cleanup (.regionRead start length) _ => some (start, length)
     | _ => none
 
+/-! A read-side witness stream makes request/decision/copy/commit/response order explicit while
+ignoring unrelated target events. The erasure scan removes no member of this stream. -/
+inductive ReadTraceEvent where
+  | request (offset length : Int)
+  | decision (accepted : Bool) (identity : Nat)
+  | copy (length : Nat)
+  | commit (start length identity : Nat)
+  | response (value : Option Nat) (reason : Option String)
+  deriving DecidableEq, Repr
+
+def readTraceStep : AbiStep → Option ReadTraceEvent
+  | .importCrossing .regionRead offset length => some (.request offset length)
+  | .hostDecision .regionRead accepted identity => some (.decision accepted identity)
+  | .protectedCopy length => some (.copy length)
+  | .cleanup (.regionRead start length) identity => some (.commit start length identity)
+  | .returned .regionRead value reason => some (.response value reason)
+  | _ => none
+
+def readTraceEvents (steps : List AbiStep) : List ReadTraceEvent :=
+  steps.filterMap readTraceStep
+
+mutual
+def readTracePaired : List ReadTraceEvent → Bool
+  | [] => true
+  | .request offset length :: rest =>
+      readTraceResponseFollows offset length none false false rest
+  | _ :: _ => false
+
+def readTraceResponseFollows (offset length : Int) (decision : Option (Bool × Nat))
+    (copied committed : Bool) : List ReadTraceEvent → Bool
+  | [] => true
+  | .request _ _ :: _ => false
+  | .decision accepted identity :: rest =>
+      match decision with
+      | none => readTraceResponseFollows offset length (some (accepted, identity)) copied committed rest
+      | some _ => false
+  | .copy copyLength :: rest =>
+      match decision with
+      | some (true, _) =>
+          decide (length = (copyLength : Int)) && !copied &&
+            readTraceResponseFollows offset length decision true committed rest
+      | _ => false
+  | .commit start size identity :: rest =>
+      match decision with
+      | some (true, decisionIdentity) =>
+          decide (offset = (start : Int) ∧ length = (size : Int) ∧ identity = decisionIdentity) &&
+            copied && !committed &&
+            readTraceResponseFollows offset length decision copied true rest
+      | _ => false
+  | .response value reason :: rest =>
+      decide (value.isSome = committed ∧ value.isSome = reason.isNone) && readTracePaired rest
+end
+
 def readCommitsExplained (steps : List AbiStep) : Bool :=
-  let crossings := readCrossings steps
-  -- A commit's `Nat` region is compared through the exact embedding into `Int`, so a negative
-  -- crossing never explains a commit and a reinterpreted region is not the region asked for.
-  (readCommits steps).all (fun read => crossings.contains ((read.1 : Int), (read.2 : Int)))
+  readTracePaired (readTraceEvents steps)
+
+/-! Guest-release commits use their own request and accepted identity. A registered owner may
+authorize `hostRetire`, but it cannot supply a guest-release request or commit. -/
+inductive ReleaseTraceEvent where
+  | request (offset length : Int)
+  | decision (accepted : Bool) (identity : Nat)
+  | commit (identity : Nat)
+  | response (value : Option Nat) (reason : Option String)
+  deriving DecidableEq, Repr
+
+def releaseTraceStep : AbiStep → Option ReleaseTraceEvent
+  | .importCrossing .guestRelease offset length => some (.request offset length)
+  | .hostDecision .guestRelease accepted identity => some (.decision accepted identity)
+  | .cleanup .guestRelease identity => some (.commit identity)
+  | .returned .guestRelease value reason => some (.response value reason)
+  | _ => none
+
+def releaseTraceEvents (steps : List AbiStep) : List ReleaseTraceEvent :=
+  steps.filterMap releaseTraceStep
+
+mutual
+def releaseTracePaired : List ReleaseTraceEvent → Bool
+  | [] => true
+  | .request offset length :: rest =>
+      decide (offset = 0 ∧ length = 0) && releaseTraceResponseFollows none false rest
+  | _ :: _ => false
+
+def releaseTraceResponseFollows (decision : Option (Bool × Nat)) (committed : Bool) :
+    List ReleaseTraceEvent → Bool
+  | [] => true
+  | .request _ _ :: _ => false
+  | .decision accepted identity :: rest =>
+      match decision with
+      | none => releaseTraceResponseFollows (some (accepted, identity)) committed rest
+      | some _ => false
+  | .commit identity :: rest =>
+      match decision with
+      | some (true, decisionIdentity) =>
+          decide (identity = decisionIdentity) && !committed &&
+            releaseTraceResponseFollows decision true rest
+      | _ => false
+  | .response value reason :: rest =>
+      decide (value.isNone && (!committed || reason.isNone)) && releaseTracePaired rest
+end
+
+def releaseCommitsExplained (steps : List AbiStep) : Bool :=
+  releaseTracePaired (releaseTraceEvents steps)
+
+/-! A successful read response cannot erase its protected commit, and a refused read cannot invent
+one. Every commit is paired with the exact preceding signed request, accepted decision identity and
+copy length; a prefix may stop before the response without changing the committed prefix. -/
 
 /-- At most one release or retirement per trace: of `guestRelease`, `destructorRelease` and
 `hostRetire`, a trace commits at most one, so a guest release followed by a host retirement of
@@ -165,15 +316,17 @@ accepted that pair.) -/
 def atMostOnce (steps : List AbiStep) : Bool :=
   decide ((releaseMembers steps).length ≤ 1)
 
-/-- Target well-formedness: the relation relates the source trace to a target trace that is
-actually well formed, so a substituted identity, an unexplained read commit or a second
-release cannot be related at all. -/
+/-- Target well-formedness: accepted and ordered identities, request-bound read/release commits,
+release count and projected response pairing are conditions of the relation. An unmatched final
+request is allowed as a truncated prefix. -/
 def wellFormed (steps : List AbiStep) : Bool :=
-  identitiesDecided steps && readCommitsExplained steps && atMostOnce steps
+  identitiesDecided steps && commitAuthorityInOrder [] [] steps &&
+    readCommitsExplained steps && releaseCommitsExplained steps && atMostOnce steps &&
+    responsesPaired (steps.filterMap projectStep)
 
 /-- The relation: a source trace is related to a target trace when it is the projection of a
-well-formed target trace. Identity, read-commit explicability and at-most-once release are
-conditions *of the relation*, so a forged target trace is refused rather than projected. -/
+well-formed target trace. Identity, read-commit explicability, at-most-once release and response
+pairing are conditions *of the relation*, so a forged target trace is refused rather than projected. -/
 def related (source : List SourceEvent) (target : List AbiStep) : Bool :=
   (source == target.filterMap projectStep) && wellFormed target
 
@@ -206,12 +359,99 @@ theorem erase_preserves_decisions (steps : List AbiStep) :
       | handleTableIndex index => simpa [erase, eraseStep, decisions, decisionStep, List.filterMap_cons] using ih
       | storeBookkeeping slot => simpa [erase, eraseStep, decisions, decisionStep, List.filterMap_cons] using ih
       | importCrossing op offset length => simpa [erase, eraseStep, decisions, decisionStep, List.filterMap_cons] using ih
-      | hostDecision op accepted identity => simpa [erase, eraseStep, decisions, decisionStep, List.filterMap_cons] using ih
+      | hostDecision op accepted identity =>
+          cases accepted <;>
+            simpa [erase, eraseStep, decisions, decisionStep, List.filterMap_cons] using ih
       | protectedCopy length => simpa [erase, eraseStep, decisions, decisionStep, List.filterMap_cons] using ih
       | returned op value reason => simpa [erase, eraseStep, decisions, decisionStep, List.filterMap_cons] using ih
       | normalReturn => simpa [erase, eraseStep, decisions, decisionStep, List.filterMap_cons] using ih
       | abnormalExit exitClass => simpa [erase, eraseStep, decisions, decisionStep, List.filterMap_cons] using ih
       | cleanup kind identity => simpa [erase, eraseStep, decisions, decisionStep, List.filterMap_cons] using ih
+
+theorem erase_preserves_commit_authority (registered decided : List Nat) (steps : List AbiStep) :
+    commitAuthorityInOrder registered decided (erase steps) =
+      commitAuthorityInOrder registered decided steps := by
+  induction steps generalizing registered decided with
+  | nil => rfl
+  | cons head tail ih =>
+      have tailAuthority := ih
+      simp only [erase] at tailAuthority
+      cases head with
+      | handleTableIndex index =>
+          simp [erase, eraseStep, commitAuthorityInOrder, List.filterMap_cons,
+            tailAuthority registered decided]
+      | storeBookkeeping slot =>
+          simp [erase, eraseStep, commitAuthorityInOrder, List.filterMap_cons,
+            tailAuthority registered decided]
+      | importCrossing op offset length =>
+          simp [erase, eraseStep, commitAuthorityInOrder,
+            tailAuthority registered decided]
+      | hostDecision op accepted identity =>
+          simp [erase, eraseStep, commitAuthorityInOrder,
+            tailAuthority registered (if accepted then identity :: decided else decided)]
+      | protectedCopy length =>
+          simp [erase, eraseStep, commitAuthorityInOrder,
+            tailAuthority registered decided]
+      | returned op value reason =>
+          simp [erase, eraseStep, commitAuthorityInOrder,
+            tailAuthority registered decided]
+      | normalReturn =>
+          simp [erase, eraseStep, commitAuthorityInOrder, List.filterMap_cons,
+            tailAuthority registered decided]
+      | abnormalExit exitClass =>
+          simp [erase, eraseStep, commitAuthorityInOrder, List.filterMap_cons,
+            tailAuthority registered decided]
+      | cleanup kind identity =>
+          cases kind <;>
+            simp [erase, eraseStep, commitAuthorityInOrder, List.filterMap_cons,
+              tailAuthority registered decided]
+
+theorem commit_authority_mono (registered decided : List Nat) (steps : List AbiStep)
+    (h : commitAuthorityInOrder [] decided steps = true) :
+    commitAuthorityInOrder registered decided steps = true := by
+  induction steps generalizing decided with
+  | nil => rfl
+  | cons head tail ih =>
+      cases head with
+      | hostDecision op accepted identity =>
+          simp only [commitAuthorityInOrder] at h ⊢
+          exact ih (if accepted then identity :: decided else decided) h
+      | cleanup kind identity =>
+          cases kind with
+          | hostRetire =>
+              simp only [commitAuthorityInOrder, Bool.and_eq_true] at h ⊢
+              simp at h
+              exact ⟨by simp [h.1], ih decided h.2⟩
+          | regionRead start length =>
+              simp only [commitAuthorityInOrder, Bool.and_eq_true] at h ⊢
+              exact ⟨h.1, ih decided h.2⟩
+          | guestRelease =>
+              simp only [commitAuthorityInOrder, Bool.and_eq_true] at h ⊢
+              exact ⟨h.1, ih decided h.2⟩
+          | destructorRelease =>
+              simp only [commitAuthorityInOrder, Bool.and_eq_true] at h ⊢
+              exact ⟨h.1, ih decided h.2⟩
+      | importCrossing op offset length =>
+          simp only [commitAuthorityInOrder] at h ⊢
+          exact ih decided h
+      | protectedCopy length =>
+          simp only [commitAuthorityInOrder] at h ⊢
+          exact ih decided h
+      | returned op value reason =>
+          simp only [commitAuthorityInOrder] at h ⊢
+          exact ih decided h
+      | normalReturn =>
+          simp only [commitAuthorityInOrder] at h ⊢
+          exact ih decided h
+      | abnormalExit exitClass =>
+          simp only [commitAuthorityInOrder] at h ⊢
+          exact ih decided h
+      | handleTableIndex index =>
+          simp only [commitAuthorityInOrder] at h ⊢
+          exact ih decided h
+      | storeBookkeeping slot =>
+          simp only [commitAuthorityInOrder] at h ⊢
+          exact ih decided h
 
 theorem erase_preserves_commit_identities (steps : List AbiStep) :
     commitIdentities (erase steps) = commitIdentities steps := by
@@ -280,14 +520,73 @@ theorem erase_preserves_read_commits (steps : List AbiStep) :
       | cleanup kind identity =>
           cases kind <;> simpa [erase, eraseStep, readCommits] using ih
 
-/-- Erasure leaves well-formedness alone: it removes only the two named bookkeeping classes,
-and every scan the relation performs ranges over a derived list that ignores them. -/
+theorem erase_preserves_read_trace_events (steps : List AbiStep) :
+    readTraceEvents (erase steps) = readTraceEvents steps := by
+  induction steps with
+  | nil => rfl
+  | cons head tail ih =>
+      cases head with
+      | handleTableIndex index =>
+          simpa [erase, eraseStep, readTraceEvents, readTraceStep, List.filterMap_cons] using ih
+      | storeBookkeeping slot =>
+          simpa [erase, eraseStep, readTraceEvents, readTraceStep, List.filterMap_cons] using ih
+      | importCrossing op offset length =>
+          cases op <;>
+            simpa [erase, eraseStep, readTraceEvents, readTraceStep, List.filterMap_cons] using ih
+      | hostDecision op accepted identity =>
+          cases op <;>
+            simpa [erase, eraseStep, readTraceEvents, readTraceStep, List.filterMap_cons] using ih
+      | protectedCopy length =>
+          simpa [erase, eraseStep, readTraceEvents, readTraceStep, List.filterMap_cons] using ih
+      | returned op value reason =>
+          cases op <;>
+            simpa [erase, eraseStep, readTraceEvents, readTraceStep, List.filterMap_cons] using ih
+      | normalReturn =>
+          simpa [erase, eraseStep, readTraceEvents, readTraceStep, List.filterMap_cons] using ih
+      | abnormalExit exitClass =>
+          simpa [erase, eraseStep, readTraceEvents, readTraceStep, List.filterMap_cons] using ih
+      | cleanup kind identity =>
+          cases kind <;>
+            simpa [erase, eraseStep, readTraceEvents, readTraceStep, List.filterMap_cons] using ih
+
+theorem erase_preserves_release_trace_events (steps : List AbiStep) :
+    releaseTraceEvents (erase steps) = releaseTraceEvents steps := by
+  induction steps with
+  | nil => rfl
+  | cons head tail ih =>
+      cases head with
+      | handleTableIndex index =>
+          simpa [erase, eraseStep, releaseTraceEvents, releaseTraceStep, List.filterMap_cons] using ih
+      | storeBookkeeping slot =>
+          simpa [erase, eraseStep, releaseTraceEvents, releaseTraceStep, List.filterMap_cons] using ih
+      | importCrossing op offset length =>
+          cases op <;>
+            simpa [erase, eraseStep, releaseTraceEvents, releaseTraceStep, List.filterMap_cons] using ih
+      | hostDecision op accepted identity =>
+          cases op <;>
+            simpa [erase, eraseStep, releaseTraceEvents, releaseTraceStep, List.filterMap_cons] using ih
+      | protectedCopy length =>
+          simpa [erase, eraseStep, releaseTraceEvents, releaseTraceStep, List.filterMap_cons] using ih
+      | returned op value reason =>
+          cases op <;>
+            simpa [erase, eraseStep, releaseTraceEvents, releaseTraceStep, List.filterMap_cons] using ih
+      | normalReturn =>
+          simpa [erase, eraseStep, releaseTraceEvents, releaseTraceStep, List.filterMap_cons] using ih
+      | abnormalExit exitClass =>
+          simpa [erase, eraseStep, releaseTraceEvents, releaseTraceStep, List.filterMap_cons] using ih
+      | cleanup kind identity =>
+          cases kind <;>
+            simpa [erase, eraseStep, releaseTraceEvents, releaseTraceStep, List.filterMap_cons] using ih
+
+/-- Erasure leaves well-formedness alone: it removes only the two named bookkeeping classes, and
+every relation scan ranges over a derived list that ignores them or over the unchanged decisions. -/
 theorem erase_preserves_well_formedness (steps : List AbiStep) :
     wellFormed (erase steps) = wellFormed steps := by
-  simp only [wellFormed, identitiesDecided, readCommitsExplained, atMostOnce,
+  simp only [wellFormed, identitiesDecided, readCommitsExplained, releaseCommitsExplained, atMostOnce,
     erase_preserves_decisions, erase_preserves_commit_identities,
-    erase_preserves_read_commits, erase_preserves_read_crossings,
-    erase_preserves_release_members]
+    erase_preserves_read_trace_events, erase_preserves_commit_authority,
+    erase_preserves_release_trace_events, erase_preserves_release_members,
+    erase_preserves_projection]
 
 /-- The relation is erasure-invariant: a target trace and its erased form project to the same
 source trace and stay equally well formed, so an erased class cannot create or remove a source
@@ -306,9 +605,11 @@ theorem denial_projects_to_request_only :
 /-- A normal success projects its request and its protected commit, with the decision,
 copy and return steps carrying no source event. -/
 theorem normal_success_projects_request_and_commit :
-    related [.req .regionRead 0 8, .commit .guestRelease 7]
+    related [.req .regionRead 0 8, .commit (.regionRead 0 8) 7,
+      .resp .regionRead (some 8) none]
       [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7,
-       .protectedCopy 8, .normalReturn, .cleanup .guestRelease 7] = true := by
+       .protectedCopy 8, .cleanup (.regionRead 0 8) 7,
+       .returned .regionRead (some 8) none, .normalReturn] = true := by
   decide
 
 /-- A commit keeps the exact identity it was emitted with: the projection never rewrites it,
@@ -357,9 +658,9 @@ theorem take_projection (steps : List AbiStep) (bound : Nat) :
 commit, host cleanup disguised as a guest release, a denial erased into a success). Each forged
 target trace is refused by the relation rather than projected. -/
 theorem related_rejects_substituted_identity :
-    related [.req .regionRead 0 8, .commit .guestRelease 7]
+    related [.req .regionRead 0 8, .commit (.regionRead 0 8) 7]
       [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 9,
-       .cleanup .guestRelease 7] = false := by
+       .protectedCopy 8, .cleanup (.regionRead 0 8) 7] = false := by
   decide
 
 theorem related_rejects_unexplained_read_commit :
@@ -367,42 +668,105 @@ theorem related_rejects_unexplained_read_commit :
       [.hostDecision .regionRead true 5, .cleanup (.regionRead 0 8) 5] = false := by
   decide
 
+/-- A guest-release commit cannot be paired with a read request merely because both are commits. -/
+theorem related_rejects_read_as_guest_release_commit :
+    related [.req .regionRead 0 1, .commit .guestRelease 5]
+      [.importCrossing .regionRead 0 1, .hostDecision .regionRead true 5,
+       .cleanup .guestRelease 5] = false := by
+  decide
+
+/-- A later accepted identity cannot authorize an earlier read commit, even when the source and
+target projections otherwise agree. -/
+theorem related_rejects_read_commit_before_its_decision :
+    related [.req .regionRead 0 1, .commit (.regionRead 0 1) 5]
+      [.importCrossing .regionRead 0 1, .protectedCopy 1,
+       .cleanup (.regionRead 0 1) 5, .hostDecision .regionRead true 5] = false := by
+  decide
+
+/-- Two identities that are both decided are still not interchangeable between read requests; the
+adjacent matched trace is accepted. -/
+theorem related_rejects_crossed_read_commit_identities :
+    related
+        [.req .regionRead 0 1, .commit (.regionRead 0 1) 4, .resp .regionRead (some 1) none,
+         .req .regionRead 1 1, .commit (.regionRead 1 1) 4, .resp .regionRead (some 1) none]
+        [.importCrossing .regionRead 0 1, .hostDecision .regionRead true 4,
+         .protectedCopy 1, .cleanup (.regionRead 0 1) 4,
+         .returned .regionRead (some 1) none,
+         .importCrossing .regionRead 1 1, .hostDecision .regionRead true 5,
+         .protectedCopy 1, .cleanup (.regionRead 1 1) 4,
+         .returned .regionRead (some 1) none] = false ∧
+      related
+        [.req .regionRead 0 1, .commit (.regionRead 0 1) 4, .resp .regionRead (some 1) none,
+         .req .regionRead 1 1, .commit (.regionRead 1 1) 5, .resp .regionRead (some 1) none]
+        [.importCrossing .regionRead 0 1, .hostDecision .regionRead true 4,
+         .protectedCopy 1, .cleanup (.regionRead 0 1) 4,
+         .returned .regionRead (some 1) none,
+         .importCrossing .regionRead 1 1, .hostDecision .regionRead true 5,
+         .protectedCopy 1, .cleanup (.regionRead 1 1) 5,
+         .returned .regionRead (some 1) none] = true := by
+  decide
+
 theorem related_rejects_two_guest_releases :
-    related [.req .regionRead 0 8, .commit .guestRelease 5, .commit .guestRelease 5]
-      [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 5,
+    related [.req .guestRelease 0 0, .commit .guestRelease 5, .commit .guestRelease 5]
+      [.importCrossing .guestRelease 0 0, .hostDecision .guestRelease true 5,
        .cleanup .guestRelease 5, .cleanup .guestRelease 5] = false := by
+  decide
+
+/-- A guest-release commit keeps the exact identity from that release request's decision. -/
+theorem related_accepts_guest_release_commit :
+    related [.req .guestRelease 0 0, .commit .guestRelease 7,
+      .resp .guestRelease none none]
+      [.importCrossing .guestRelease 0 0, .hostDecision .guestRelease true 7,
+       .cleanup .guestRelease 7, .returned .guestRelease none none] = true := by
+  decide
+
+theorem related_rejects_crossed_guest_release_identity :
+    related
+        [.req .regionRead 0 1, .commit (.regionRead 0 1) 5,
+         .resp .regionRead (some 1) none,
+         .req .guestRelease 0 0, .commit .guestRelease 5]
+        [.importCrossing .regionRead 0 1, .hostDecision .regionRead true 5,
+         .protectedCopy 1, .cleanup (.regionRead 0 1) 5,
+         .returned .regionRead (some 1) none,
+         .importCrossing .guestRelease 0 0, .hostDecision .guestRelease true 4,
+         .cleanup .guestRelease 5] = false := by
   decide
 
 /-- A guest release followed by a host retirement of the same region is a second release of
 one region, and the relation refuses it even though each kind commits only once. -/
 theorem related_rejects_release_then_retirement :
-    related [.req .regionRead 0 8, .commit .guestRelease 7, .commit .hostRetire 7]
-      [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7, .protectedCopy 8,
-       .normalReturn, .cleanup .guestRelease 7, .cleanup .hostRetire 7] = false := by
+    related [.req .guestRelease 0 0, .commit .guestRelease 7,
+      .resp .guestRelease none none, .commit .hostRetire 7]
+      [.importCrossing .guestRelease 0 0, .hostDecision .guestRelease true 7,
+       .cleanup .guestRelease 7, .returned .guestRelease none none,
+       .abnormalExit .trap, .cleanup .hostRetire 7] = false := by
   decide
 
 theorem related_rejects_missing_protected_commit :
-    related [.req .regionRead 0 8, .commit .guestRelease 7]
+    related [.req .regionRead 0 8, .commit (.regionRead 0 8) 7,
+      .resp .regionRead (some 8) none]
       [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7, .normalReturn] = false := by
   decide
 
 theorem related_rejects_host_cleanup_as_guest_release :
-    related [.req .regionRead 0 8, .commit .guestRelease 7]
-      [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7,
+    related [.req .guestRelease 0 0, .commit .guestRelease 7]
+      [.importCrossing .guestRelease 0 0, .hostDecision .guestRelease true 7,
        .cleanup .hostRetire 7] = false := by
   decide
 
 theorem related_rejects_denial_erased_into_success :
     related [.req .regionRead 0 8]
       [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7,
-       .cleanup .guestRelease 7] = false := by
+       .protectedCopy 8, .cleanup (.regionRead 0 8) 7] = false := by
   decide
 
 /-- Positive control: a well-formed success relates, so the refusals above are not vacuous. -/
 theorem related_accepts_well_formed_success :
-    related [.req .regionRead 0 8, .commit .guestRelease 7]
+    related [.req .regionRead 0 8, .commit (.regionRead 0 8) 7,
+      .resp .regionRead (some 8) none]
       [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7,
-       .protectedCopy 8, .cleanup .guestRelease 7] = true := by
+       .protectedCopy 8, .cleanup (.regionRead 0 8) 7,
+       .returned .regionRead (some 8) none] = true := by
   decide
 
 /-! ## Cost and the exhaustion boundary (WIT-TRACE-04)
@@ -501,19 +865,19 @@ theorem exhaustion_keeps_commit_identities (fuel : Nat) (steps : List AbiStep) :
 /-- The exhaustion rule bites: a source trace claiming a commit that the retained prefix could not
 afford does not relate to that target under the fuel budget. -/
 theorem exhaustion_cannot_relate_an_unaffordable_commit :
-    related [.req .regionRead 0 8, .commit .guestRelease 7]
+    related [.req .regionRead 0 8, .commit (.regionRead 0 8) 7]
       (retainFrom 1
         [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7,
-         .cleanup .guestRelease 7]) = false := by
+         .protectedCopy 8, .cleanup (.regionRead 0 8) 7]) = false := by
   decide
 
 /-- The same trace relates under a budget that affords every step, so the refusal above is not an
 artefact of the fixture. -/
 theorem exhaustion_relates_when_affordable :
-    related [.req .regionRead 0 8, .commit .guestRelease 7]
-      (retainFrom 3
+    related [.req .regionRead 0 8, .commit (.regionRead 0 8) 7]
+      (retainFrom 11
         [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7,
-         .cleanup .guestRelease 7]) = true := by
+         .protectedCopy 8, .cleanup (.regionRead 0 8) 7]) = true := by
   decide
 
 /-! ## RegionProtocol corollaries (WIT-TRACE-03)
@@ -539,20 +903,22 @@ was decided by the target trace it relates to. -/
 theorem source_commits_are_decided (source : List SourceEvent) (steps : List AbiStep)
     (relatedTrace : related source steps = true) :
     (commitIdentities steps).all (fun identity => (decisions steps).contains identity) = true := by
-  have both := relatedTrace
-  rw [related, Bool.and_eq_true] at both
-  simp only [wellFormed, identitiesDecided, Bool.and_eq_true] at both
-  exact both.2.1.1
+  have relationParts : (source == steps.filterMap projectStep) = true ∧ wellFormed steps = true := by
+    simpa only [related, Bool.and_eq_true] using relatedTrace
+  have formed := relationParts.2
+  simp only [wellFormed, Bool.and_eq_true] at formed
+  simpa [identitiesDecided] using formed.1.1.1.1.1
 
 /-- A related source trace commits at most one release or retirement: at-most-once release is
 inherited by the source alphabet rather than asserted about it. -/
 theorem source_release_is_at_most_once (source : List SourceEvent) (steps : List AbiStep)
     (relatedTrace : related source steps = true) :
     (releaseMembers steps).length ≤ 1 := by
-  have both := relatedTrace
-  rw [related, Bool.and_eq_true] at both
-  simp only [wellFormed, atMostOnce, Bool.and_eq_true] at both
-  exact of_decide_eq_true both.2.2
+  have relationParts : (source == steps.filterMap projectStep) = true ∧ wellFormed steps = true := by
+    simpa only [related, Bool.and_eq_true] using relatedTrace
+  have formed := relationParts.2
+  simp only [wellFormed, atMostOnce, Bool.and_eq_true] at formed
+  exact of_decide_eq_true formed.1.2
 
 /-! ## Fixtures (WIT-TRACE-05, model level)
 
@@ -595,7 +961,7 @@ theorem fixture_quota_prefix_stops_before_the_copy :
     related [.req .regionRead 0 8]
       (retainFrom 2
         [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7,
-         .protectedCopy 8, .cleanup .guestRelease 7]) = true := by
+         .protectedCopy 8, .cleanup (.regionRead 0 8) 7]) = true := by
   decide
 
 /-- The same budget stops before a commit when the copy is affordable but the commit is not, so the
@@ -618,18 +984,28 @@ emitted component. -/
 
 /-- One observed host event, as the adapter records it. A read request carries the guest's signed
 arguments exactly. A release request records none (the adapter writes `null`), and the model writes
-them `0 0`. -/
+them `0 0`. `exit` is the class the host reported for the invocation. `retirementRefused` is a
+retirement the host attempted and the ownership table refused: the reason is retained, and the
+refusal commits nothing. -/
 inductive ObservedEvent where
   | request (op : Operation) (identity : Nat) (offset : Int) (length : Int)
   | protectedReadCommit (identity : Nat) (start : Nat) (length : Nat)
   | response (op : Operation) (value : Option Nat) (reason : Option String)
   | hostRetirement (identity : Nat)
+  | exit (exitClass : ExitClass)
+  | retirementRefused (identity : Nat) (reason : Option String)
   deriving DecidableEq, Repr
 
 /-- Lower the observed trace onto the target alphabet, preserving its order. A protected read
-commit becomes the copy and the commit of the exact identity that was authorised; a host
-retirement becomes a `hostRetire` commit and never a guest release. The decision step's acceptance
-bit is not observed: `lower` writes `true`, and no definition reads it. -/
+commit becomes the copy and the commit of the exact identity that was authorized; a host
+retirement becomes a `hostRetire` commit and never a guest release. The report does not expose a
+separate admission-decision event, so `lower` labels a request's identity witness accepted and the
+model only uses that label to check a commit; a response refusal with no commit stays visible. This
+is an explicit host-observation premise, not a measured decision. The reported exit class lowers to
+the target's abnormal-exit step, so a trap, a quota exhaustion and a cancellation stay distinct
+target steps even though the projection erases all three. A refused retirement lowers to the
+cleanup-failure exit class and commits nothing: the target alphabet has no step for a retirement
+that did not happen. -/
 def lower : List ObservedEvent → List AbiStep
   | [] => []
   | .request op identity offset length :: rest =>
@@ -638,6 +1014,8 @@ def lower : List ObservedEvent → List AbiStep
       .protectedCopy length :: .cleanup (.regionRead start length) identity :: lower rest
   | .response op value reason :: rest => .returned op value reason :: lower rest
   | .hostRetirement identity :: rest => .cleanup .hostRetire identity :: lower rest
+  | .exit exitClass :: rest => .abnormalExit exitClass :: lower rest
+  | .retirementRefused _ _ :: rest => .abnormalExit .cleanupFailure :: lower rest
 
 /-- The observed trace of an in-bounds read and a consuming guest release, in the order the host
 really records it (`region.read`, commit, response, `region.release`, response). -/
@@ -676,6 +1054,73 @@ theorem lower_keeps_read_arguments (events : List ObservedEvent) :
           simpa [lower, readCrossings, observedReadArguments, List.filterMap_cons] using ih
       | hostRetirement identity =>
           simpa [lower, readCrossings, observedReadArguments, List.filterMap_cons] using ih
+      | exit exitClass =>
+          simpa [lower, readCrossings, observedReadArguments, List.filterMap_cons] using ih
+      | retirementRefused identity reason =>
+          simpa [lower, readCrossings, observedReadArguments, List.filterMap_cons] using ih
+
+/-- Fixture: the host's reported exit class lowers to the target's own abnormal-exit step, so the
+target trace keeps the class even though the projection erases it. -/
+theorem observed_exit_lowers_to_its_abnormal_exit_class :
+    lower [.request .regionRead 2 0 1, .protectedReadCommit 2 0 1, .exit .trap] =
+        [.importCrossing .regionRead 0 1, .hostDecision .regionRead true 2, .protectedCopy 1,
+         .cleanup (.regionRead 0 1) 2, .abnormalExit .trap] ∧
+      lower [.exit .quotaExhaustion] = [.abnormalExit .quotaExhaustion] ∧
+      lower [.exit .cancelled] = [.abnormalExit .cancelled] ∧
+      lower [.exit .adapterInvalid] = [.abnormalExit .adapterInvalid] ∧
+      lower [.exit .outsideModel] = [.abnormalExit .outsideModel] := by
+  decide
+
+/-- Control: a trap, a quota exhaustion, a cancellation and an adapter fault stay distinct target
+steps after lowering. They are not collapsed into one abnormal exit, so the host's own class is
+recoverable from the lowered trace. -/
+theorem exit_classes_stay_distinct_after_lowering :
+    lower [.exit .trap] ≠ lower [.exit .quotaExhaustion] ∧
+      lower [.exit .quotaExhaustion] ≠ lower [.exit .cancelled] ∧
+      lower [.exit .trap] ≠ lower [.exit .cancelled] ∧
+      lower [.exit .cancelled] ≠ lower [.exit .adapterInvalid] ∧
+      lower [.exit .adapterInvalid] ≠ lower [.exit .trap] ∧
+      lower [.exit .outsideModel] ≠ lower [.exit .adapterInvalid] := by
+  decide
+
+/-- The projection erases the exit class, so two observations that differ only in their exit class
+project to the same source trace. This is why the target step carries the class, and why a
+cancellation cannot be read out of a source trace. -/
+theorem exit_class_is_not_in_the_projection :
+    (lower [.exit .trap]).filterMap projectStep = (lower [.exit .cancelled]).filterMap projectStep := by
+  decide
+
+/-- An abnormal exit with no other event relates to the empty source trace: the projection is
+right, and it says nothing about which abnormal exit it was unless the target step is read. -/
+theorem exit_without_events_relates_vacuously :
+    related [] (lower [.exit .cancelled]) = true := by
+  decide
+
+/-- A refused retirement is a cleanup failure, not a retirement: it lowers to the cleanup-failure
+exit class and commits nothing. -/
+theorem retirement_refused_is_a_cleanup_failure :
+    lower [.retirementRefused 2 (some "already-retired")] = [.abnormalExit .cleanupFailure] ∧
+      lower [.retirementRefused 2 none] = [.abnormalExit .cleanupFailure] := by
+  decide
+
+/-- Control: a source trace that claims the host retired the owner while the host's retirement was
+refused does not relate, and the trace that claims nothing relates. A refused retirement is never
+read as a retirement. -/
+theorem a_refused_retirement_is_not_a_retirement :
+    related [.commit .hostRetire 2] (lower [.retirementRefused 2 (some "already-retired")]) = false ∧
+      related [] (lower [.retirementRefused 2 (some "already-retired")]) = true := by
+  decide
+
+/-- A refused retirement does not drop or invent the protected commit the run already made: the
+committed read survives, and no retirement appears. -/
+theorem refused_retirement_keeps_the_committed_prefix :
+    related [.req .regionRead 0 1, .commit (.regionRead 0 1) 2]
+        (lower [.request .regionRead 2 0 1, .protectedReadCommit 2 0 1,
+                .retirementRefused 2 (some "already-retired")]) = true ∧
+      (lower [.request .regionRead 2 0 1, .protectedReadCommit 2 0 1,
+              .retirementRefused 2 (some "already-retired")]).filterMap projectStep =
+        [.req .regionRead 0 1, .commit (.regionRead 0 1) 2] := by
+  decide
 
 /-- Fixture (#90): a refused read with a negative offset lowers and projects with that offset,
 not with its unsigned 64-bit reinterpretation. -/
@@ -725,31 +1170,13 @@ theorem lowered_projection_starts_with_the_request :
        .req .guestRelease 0 0, .resp .guestRelease none none] := by
   decide
 
-/-! Every response must follow a request of its own operation, with only that request's own
-protected commits in between. A response that precedes any request, answers a different
-operation, or arrives after another request, is not paired. -/
-mutual
-/-- A projected trace is paired when every response follows a request of its own operation. -/
-def responsesPaired : List SourceEvent → Prop
-  | [] => True
-  | .resp _ _ _ :: _ => False
-  | .req op _ _ :: rest => responseFollows op rest
-  | .commit _ _ :: rest => responsesPaired rest
-
-/-- The response a request expects, after any number of that request's protected commits. -/
-def responseFollows (op : Operation) : List SourceEvent → Prop
-  | [] => False
-  | .commit _ _ :: rest => responseFollows op rest
-  | .resp other _ _ :: more => op = other ∧ responsesPaired more
-  | .req _ _ _ :: _ => False
-end
 /-- The projected trace the observed fixtures lower to is paired: every response follows a request
 of its own operation. -/
 theorem observed_traces_are_paired :
     responsesPaired
       [.req .regionRead 0 1, .commit (.regionRead 0 1) 2, .resp .regionRead (some 1) none,
-       .req .guestRelease 0 0, .resp .guestRelease none none] := by
-  simp [responsesPaired, responseFollows]
+       .req .guestRelease 0 0, .resp .guestRelease none none] = true := by
+  decide
 
 /-! General corollary the pilot was missing: every read commit a related trace projects is
 explained by an import crossing that asked for that exact region. -/
@@ -760,19 +1187,47 @@ theorem related_implies_read_commits_explained (source : List SourceEvent) (targ
     simp only [related, Bool.and_eq_true] at relatedTrace
     exact relatedTrace.2
   simp only [wellFormed, Bool.and_eq_true] at formed
-  exact formed.1.2
+  exact formed.1.1.1.2
+
+/-- Every trace related by the model has paired projected responses; an unanswered final request is
+permitted so an abnormal exit may cut a call at a prefix boundary. -/
+theorem related_projects_only_paired_traces (source : List SourceEvent) (target : List AbiStep)
+    (relatedTrace : related source target = true) : responsesPaired source = true := by
+  have relationParts :
+      (source == target.filterMap projectStep) = true ∧ wellFormed target = true := by
+    simpa only [related, Bool.and_eq_true] using relatedTrace
+  have projected := beq_iff_eq.mp relationParts.1
+  have paired : responsesPaired (target.filterMap projectStep) = true := by
+    have formed := relationParts.2
+    simp only [wellFormed, Bool.and_eq_true] at formed
+    exact formed.2
+  simpa [projected] using paired
+
+/-- Prefix pairing accepts a request whose response lies beyond the retained boundary. -/
+theorem paired_prefix_may_end_with_an_unanswered_request :
+    responsesPaired [.req .regionRead 0 1] = true := by
+  decide
 
 /-- A swapped response is unpaired: the response answers an operation its request never asked for. -/
 theorem swapped_response_is_unpaired :
-    ¬ responsesPaired [.req .regionRead 0 1, .resp .guestRelease none none] := by
-  simp only [responsesPaired, responseFollows]
+    responsesPaired [.req .regionRead 0 1, .resp .guestRelease none none] = false := by
   decide
 
 /-- And the relation refuses a target trace whose response answers the wrong operation. -/
 theorem related_rejects_swapped_response :
-    related [.req .regionRead 0 1, .resp .guestRelease none none]
+    related [.req .regionRead 0 1, .commit (.regionRead 0 1) 2,
+      .resp .guestRelease none none]
       [.importCrossing .regionRead 0 1, .hostDecision .regionRead true 2, .protectedCopy 1,
        .cleanup (.regionRead 0 1) 2, .returned .guestRelease none none] = false := by
+  decide
+
+/-- Positive control: the same target trace relates when its returned operation answers the read
+request that preceded it. -/
+theorem related_accepts_paired_response :
+    related [.req .regionRead 0 1, .commit (.regionRead 0 1) 2,
+      .resp .regionRead (some 1) none]
+      [.importCrossing .regionRead 0 1, .hostDecision .regionRead true 2, .protectedCopy 1,
+       .cleanup (.regionRead 0 1) 2, .returned .regionRead (some 1) none] = true := by
   decide
 
 /-- A substituted resource identity is refused: a commit under an identity the host never decided
@@ -845,23 +1300,24 @@ larger. -/
 def magicFuelRetain (fuel : Nat) (steps : List AbiStep) : List AbiStep :=
   if fuel ≤ traceCost steps then retainFrom fuel steps else []
 
-/-- A read whose region is released: three steps, each costing one unit. -/
-def releasedReadTarget : List AbiStep :=
-  [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7, .cleanup .guestRelease 7]
+/-- A successful protected read: request, decision, eight-byte copy and commit. -/
+def protectedReadTarget : List AbiStep :=
+  [.importCrossing .regionRead 0 8, .hostDecision .regionRead true 7,
+   .protectedCopy 8, .cleanup (.regionRead 0 8) 7]
 
 /-- Control: at the completing budget the control semantics relates exactly as the model does, but
 one unit later it does not, so a contract checked at a single fuel value would accept it. -/
 theorem magic_fuel_relates_only_at_one_budget :
-    related [.req .regionRead 0 8, .commit .guestRelease 7]
-        (magicFuelRetain 3 releasedReadTarget) = true ∧
-      related [.req .regionRead 0 8, .commit .guestRelease 7]
-        (magicFuelRetain 4 releasedReadTarget) = false := by
+    related [.req .regionRead 0 8, .commit (.regionRead 0 8) 7]
+        (magicFuelRetain 11 protectedReadTarget) = true ∧
+      related [.req .regionRead 0 8, .commit (.regionRead 0 8) 7]
+        (magicFuelRetain 12 protectedReadTarget) = false := by
   decide
 
 /-- Fuel stability refuses the control semantics. -/
 theorem magic_fuel_is_not_fuel_stable : ¬ FuelStable magicFuelRetain := by
   intro stable
-  have same := stable releasedReadTarget 3 4 (by decide) (by decide)
+  have same := stable protectedReadTarget 11 12 (by decide) (by decide)
   revert same
   decide
 
@@ -935,19 +1391,19 @@ theorem related_rejects_trap_that_drops_a_commit :
 
 /-- The observed trace of an in-bounds read of `length` bytes at `start` under `identity`, its
 response and a consuming guest release. -/
-def observedRead (identity start length : Nat) (value : Option Nat) : List ObservedEvent :=
+def observedRead (identity start length value : Nat) : List ObservedEvent :=
   [.request .regionRead identity start length, .protectedReadCommit identity start length,
-   .response .regionRead value none, .request .guestRelease identity 0 0,
+   .response .regionRead (some value) none, .request .guestRelease identity 0 0,
    .response .guestRelease none none]
 
 /-- The source trace that input relates to. -/
-def readAndReleaseSource (start length identity : Nat) (value : Option Nat) : List SourceEvent :=
+def readAndReleaseSource (start length identity value : Nat) : List SourceEvent :=
   [.req .regionRead start length, .commit (.regionRead start length) identity,
-   .resp .regionRead value none, .req .guestRelease 0 0, .resp .guestRelease none none]
+   .resp .regionRead (some value) none, .req .guestRelease 0 0, .resp .guestRelease none none]
 
 /-- A lowering is correct on every read-and-release input, not on one. -/
 def CorrectOnEveryInput (lowering : List ObservedEvent → List AbiStep) : Prop :=
-  ∀ (identity start length : Nat) (value : Option Nat),
+  ∀ (identity start length value : Nat),
     related (readAndReleaseSource start length identity value)
       (lowering (observedRead identity start length value)) = true
 
@@ -956,8 +1412,11 @@ the region and the returned value. -/
 theorem lower_correct_on_every_input : CorrectOnEveryInput lower := by
   intro identity start length value
   simp [readAndReleaseSource, observedRead, lower, related, wellFormed, identitiesDecided,
-    readCommitsExplained, atMostOnce, decisions, commitIdentities, readCrossings, readCommits,
-    releaseMembers, decisionStep, commitStep, projectStep, List.filterMap_cons]
+    commitAuthorityInOrder, readCommitsExplained, readTracePaired, readTraceResponseFollows,
+    readTraceEvents, readTraceStep, releaseCommitsExplained, releaseTracePaired,
+    releaseTraceResponseFollows, releaseTraceEvents, releaseTraceStep, atMostOnce,
+    decisions, commitIdentities, releaseMembers, decisionStep, commitStep, projectStep,
+    commitMatchesRequest, responsesPaired, responseFollows, List.filterMap_cons]
 
 /-- Control lowering: right for the empty input only. -/
 def lowerEmptyOnly (_events : List ObservedEvent) : List AbiStep := []
@@ -972,7 +1431,7 @@ theorem empty_only_lowering_matches_on_the_empty_input :
 theorem empty_only_lowering_is_not_correct_on_every_input :
     ¬ CorrectOnEveryInput lowerEmptyOnly := by
   intro correct
-  have refused := correct 2 0 1 (some 1)
+  have refused := correct 2 0 1 1
   revert refused
   decide
 
@@ -1020,7 +1479,9 @@ def authorisedFrom (registered : List Nat) (steps : List AbiStep) : Bool :=
 
 /-- Target well-formedness under a registration premise. -/
 def wellFormedFrom (registered : List Nat) (steps : List AbiStep) : Bool :=
-  authorisedFrom registered steps && readCommitsExplained steps && atMostOnce steps
+  authorisedFrom registered steps && commitAuthorityInOrder registered [] steps &&
+    readCommitsExplained steps && releaseCommitsExplained steps && atMostOnce steps &&
+    responsesPaired (steps.filterMap projectStep)
 
 /-- The relation under a registration premise. -/
 def relatedFrom (registered : List Nat) (source : List SourceEvent) (target : List AbiStep) : Bool :=
@@ -1053,11 +1514,17 @@ registration. -/
 theorem relatedFrom_of_related (registered : List Nat) (source : List SourceEvent)
     (target : List AbiStep) (hrelated : related source target = true) :
     relatedFrom registered source target = true := by
-  simp only [related, wellFormed, Bool.and_eq_true] at hrelated
-  obtain ⟨hprojection, ⟨hdecided, hexplained⟩, honce⟩ := hrelated
+  have relationParts : (source == target.filterMap projectStep) = true ∧ wellFormed target = true := by
+    simpa only [related, Bool.and_eq_true] using hrelated
+  have hprojection := relationParts.1
+  have hformed := relationParts.2
+  simp only [wellFormed, Bool.and_eq_true] at hformed
+  obtain ⟨⟨⟨⟨⟨hdecided, hordered⟩, hexplained⟩, hreleases⟩, honce⟩, hpaired⟩ := hformed
   simp only [relatedFrom, wellFormedFrom, Bool.and_eq_true]
-  exact ⟨hprojection, ⟨authorisedFrom_of_identitiesDecided registered target hdecided, hexplained⟩,
-    honce⟩
+  exact ⟨hprojection,
+    ⟨⟨⟨⟨⟨authorisedFrom_of_identitiesDecided registered target hdecided,
+      commit_authority_mono registered [] target hordered⟩, hexplained⟩, hreleases⟩,
+      honce⟩, hpaired⟩⟩
 
 /-- The gap closed: a host retirement before any guest request relates under the registration the
 host reports, and stays refused without it. -/

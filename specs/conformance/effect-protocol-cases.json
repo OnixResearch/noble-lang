@@ -330,6 +330,8 @@
             "outcome": "invalid-handle",
             "exit_class": "rejected",
             "region_reads": 64,
+            "events_truncated": false,
+            "event_count": 196,
             "releases": {
               "guest": 1,
               "destructor": 0,
@@ -338,9 +340,7 @@
             "refusals.scope-exhausted": 1,
             "refusals.identity": 0,
             "refusals.bounds": 0,
-            "monitor_verdicts": [
-              "truncated"
-            ]
+            "monitor_verdicts": []
           },
           "forged-and-cross-host-claims": {
             "tests_passed": [
@@ -363,7 +363,7 @@
         {
           "kind": "test",
           "subject": "EPROTO-CASE-03",
-          "claim": "A hostile component gets 64 region-read commits, and its 65th read is refused `invalid-handle` and counted as scope exhaustion, apart from identity and bounds refusals. The host bounds the trace at 64 events, and the monitor reports `truncated`. Direct host fixtures refuse forged and cross-host claims without reading or consuming the region.",
+          "claim": "Historical execution from source 3ef3f43a: a hostile component gets 64 region-read commits, and its 65th read is refused `invalid-handle` and counted as scope exhaustion, apart from identity and bounds refusals. At that revision the host bounded the trace at 64 events and the monitor reported `truncated`; a later execution records the complete trace. Direct host fixtures refuse forged and cross-host claims without reading or consuming the region.",
           "revision": "0.1.0-draft.5",
           "result": "passed",
           "source_revision": "git-tree:a9b7cf4b86ae37476819a5b0f956fc1db89a55ff",
@@ -389,6 +389,39 @@
             "Monitor verdicts are finite execution evidence, not a universal protocol proof (EPROTO-OBS-01).",
             "Proof stays open: the Lean RegionProtocol model proves T2–T4 at the model level only, and host refinement (T5) and compilation order (T6) are open.",
             "Hostile components are core modules written in the lane against the world's Canonical ABI and wrapped by the selected wasm-tools; none derives from compiler output.",
+            "The forged and cross-host claims are fixture-level host tests, not guest-reachable.",
+            "The native-access refusal is not exercised: Host::read passes native_access only the borrow begin has just opened, which T4 proves is authorized (open_borrow_returns)."
+          ]
+        },
+        {
+          "kind": "test",
+          "subject": "EPROTO-CASE-03",
+          "claim": "Fresh execution from source 547c0eee records the complete 196-event v2 scope-ceiling trace: 64 admitted reads and commits, a refused 65th `region.read` (`invalid-handle`, host class `scope-exhausted`), and the guest release. `events_truncated` is false; the monitor judges all 196 events and reports one guest-release commit. The direct host fixtures also pass; the native-access refusal remains unexercised.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:b4764a7b6e143f008e9d22a13ca3187bfd363e2f",
+          "configuration": {
+            "profile": "Effect-Protocol-Draft",
+            "compile_profile": "Component-Sync-Bootstrap",
+            "world": "noble-test:bounded-region/bounded@1.0.0",
+            "receipt": "../../verification/effect-protocol/execution-20261113-547c0eee.json",
+            "receipt_sha256": "ae92cccf2ec4cb8232d602e8099103d58179b1317302fb2599f49289d6ad43ae",
+            "gate": "../../verification/effect-protocol/execution.mjs",
+            "monitor": "../../verification/effect-protocol/monitor.mjs",
+            "variants": [
+              "scope-exhaustion",
+              "forged-and-cross-host-claims"
+            ],
+            "command_ids": [
+              "054",
+              "055"
+            ]
+          },
+          "assumptions": [
+            "Execution through `noble component read-region` of the CLI built from clean commit 547c0eee, recorded in the retained receipt; evidence about those executions only.",
+            "Monitor verdicts are finite execution evidence, not a universal protocol proof (EPROTO-OBS-01).",
+            "Proof stays open: the Lean RegionProtocol model proves T2-T4 at the model level only, and host refinement (T5) and compilation order (T6) are open.",
+            "The hostile component is a core module written in the lane against the world's Canonical ABI and wrapped by the selected wasm-tools; it is not compiler output.",
             "The forged and cross-host claims are fixture-level host tests, not guest-reachable.",
             "The native-access refusal is not exercised: Host::read passes native_access only the borrow begin has just opened, which T4 proves is authorized (open_borrow_returns)."
           ]

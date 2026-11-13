@@ -21,6 +21,24 @@
       ]
     },
     {
+      "name": "RegionTrace.erase_preserves_commit_authority",
+      "role": "WIT-TRACE-02: erasure leaves prefix-ordered commit authorization unchanged",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.commit_authority_mono",
+      "role": "#50: a registration only adds host-retirement authority and cannot revoke prior decisions",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
       "name": "RegionTrace.erase_preserves_commit_identities",
       "role": "WIT-TRACE-02: erasure leaves the commit identities alone",
       "allowed_standard_axioms": [
@@ -48,8 +66,26 @@
       ]
     },
     {
+      "name": "RegionTrace.erase_preserves_release_trace_events",
+      "role": "WIT-TRACE-02: erasure leaves release request, decision, commit and response ordering alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
       "name": "RegionTrace.erase_preserves_read_commits",
       "role": "WIT-TRACE-02: erasure leaves the protected read commits alone",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.erase_preserves_read_trace_events",
+      "role": "WIT-TRACE-02: erasure leaves read request, decision, copy, commit and response ordering alone",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
@@ -165,8 +201,53 @@
       ]
     },
     {
+      "name": "RegionTrace.related_rejects_read_as_guest_release_commit",
+      "role": "WIT-TRACE-02 control: a guest-release commit cannot satisfy a protected read request",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_read_commit_before_its_decision",
+      "role": "WIT-TRACE-02 control: a later host decision cannot authorize an earlier read commit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_crossed_read_commit_identities",
+      "role": "WIT-TRACE-02 control: a prior decision for another request cannot authorize a read commit",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
       "name": "RegionTrace.related_rejects_two_guest_releases",
       "role": "WIT-TRACE-03 negative control: a second release is refused",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_accepts_guest_release_commit",
+      "role": "WIT-TRACE-02 positive control: a guest-release commit is paired to its own request decision",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_rejects_crossed_guest_release_identity",
+      "role": "WIT-TRACE-02 control: a guest-release commit cannot reuse a prior read identity",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
@@ -381,6 +462,69 @@
       ]
     },
     {
+      "name": "RegionTrace.observed_exit_lowers_to_its_abnormal_exit_class",
+      "role": "#50: the host's reported exit class lowers to the target's own abnormal-exit step, keeping the class the projection erases",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.exit_classes_stay_distinct_after_lowering",
+      "role": "#50 control: a trap, a quota exhaustion, a cancellation and an adapter fault stay distinct target steps after lowering",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.exit_class_is_not_in_the_projection",
+      "role": "#50: two observations that differ only in their exit class project to the same source trace, so the class is a target-side observation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.exit_without_events_relates_vacuously",
+      "role": "#50: an abnormal exit with no other event relates to the empty source trace; the projection says nothing about which exit it was",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.retirement_refused_is_a_cleanup_failure",
+      "role": "#50: a refused retirement lowers to the cleanup-failure exit class and commits nothing",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.a_refused_retirement_is_not_a_retirement",
+      "role": "#50 control: a source trace that claims a refused retirement did retire the owner is refused, and the trace that claims nothing relates",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.refused_retirement_keeps_the_committed_prefix",
+      "role": "#50: a refused retirement neither drops nor invents the protected commit the run already made",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
       "name": "RegionTrace.observed_negative_request_projects_with_its_sign",
       "role": "#90 fixture: a refused read with offset -1 lowers and projects with -1, not with its unsigned 64-bit reinterpretation",
       "allowed_standard_axioms": [
@@ -454,7 +598,7 @@
     },
     {
       "name": "RegionTrace.swapped_response_is_unpaired",
-      "role": "WIT-TRACE-03 control: a response answering an operation its request never asked for is unpaired",
+      "role": "WIT-TRACE-02 control: a response answering an operation its request never asked for is unpaired",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
@@ -463,7 +607,7 @@
     },
     {
       "name": "RegionTrace.related_rejects_swapped_response",
-      "role": "WIT-TRACE-03 control: a response answering the wrong operation is refused, not paired",
+      "role": "WIT-TRACE-02 control: a response answering the wrong operation is refused by the relation's pairing condition",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
@@ -662,6 +806,33 @@
     {
       "name": "RegionTrace.registration_does_not_authorise_a_guest_release",
       "role": "#50 control: a registration does not authorise a guest release",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_projects_only_paired_traces",
+      "role": "WIT-TRACE-02: every related source prefix pairs each response with the preceding request of the same operation",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.related_accepts_paired_response",
+      "role": "WIT-TRACE-02 positive control: a response answering its preceding request relates",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "RegionTrace.paired_prefix_may_end_with_an_unanswered_request",
+      "role": "WIT-TRACE-02: a prefix ending before a response remains paired rather than inventing a response",
       "allowed_standard_axioms": [
         "propext",
         "Classical.choice",
