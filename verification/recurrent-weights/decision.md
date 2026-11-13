@@ -2,16 +2,16 @@
 
 ## Frozen rule
 
-The continuation criteria in `criteria.md` were committed before measurement in `0962b348` and have not been changed. The final receipt in `receipts/2026-11-13/evaluation-b09c6e8.json` was produced from clean implementation commit `b09c6e86f8e1e63a5d85fa1927b563d1912a4ce0`.
+The continuation criteria in `criteria.md` were committed before measurement in `0962b348` and have not been changed. The final receipt in `receipts/2026-11-13/evaluation-3e7b1d4.json` was produced from clean implementation commit `3e7b1d4daa4dc92e10ec7e5e96f69ba7fadd438a`.
 
 ## Unit disposition
 
 | Brief unit | Status | Evidence |
 |---|---|---|
 | U1 — criteria and design | DONE | `criteria.md` and `design.md`, commit `0962b348`. The exact-bit accumulator and stack-routing target, codec, bounded host contract, and continuation thresholds were fixed before measurement. |
-| U2 — host-loop baseline | DONE | `evaluation-b09c6e8.json`: both deterministic programs, exhaustive tiny domains, arithmetic boundaries, and separate 1,000-step teacher-forced/free-running trajectories. The checker receives the source program specification, graph and weights; it does not call the emitter. |
-| U3 — adversarial controls | DONE | `evaluation-b09c6e8.json` binds the focused recurrent test output: malformed values/shapes, corrupted snapshot weights, a seeded incorrect transition, wrong program configuration and decoder, insufficient fuel, cancellation, and boundary resume all refuse or are detected. |
-| U4 — bounded unrolling and costs | DONE | `evaluation-b09c6e8.json` contains five repetitions per path and summaries for both programs. Each unrolled graph was checked against 1-, 2-, and 4-step host-loop and source transitions. Reference evaluator, conventional native reference, and compiled lanes are separate; dense, sparse, and stock inference-runtime coverage is explicitly none. |
+| U2 — host-loop baseline | DONE | `evaluation-3e7b1d4.json`: both deterministic programs, exhaustive tiny domains, arithmetic boundaries, and separate 1,000-step teacher-forced/free-running trajectories. The checker receives the source program specification, graph and weights; it does not call the emitter. |
+| U3 — adversarial controls | DONE | `evaluation-3e7b1d4.json` binds the focused recurrent test output: malformed values/shapes, corrupted snapshot weights, a seeded incorrect transition, wrong program configuration and decoder, insufficient fuel, cancellation, and boundary resume all refuse or are detected. |
+| U4 — bounded unrolling and costs | DONE | `evaluation-3e7b1d4.json` contains five repetitions per path and summaries for both programs. Each unrolled graph was checked against 1-, 2-, and 4-step host-loop and source transitions. Reference evaluator, conventional native reference, and compiled lanes are separate; dense, sparse, and stock inference-runtime coverage is explicitly none. |
 | U5 — stop/continue decision | DONE — GO for continued bounded CPU prototype work only | Every clause of the frozen rule passed. The GO is not a portability or external-runtime claim. |
 
 ## Frozen criteria outcome
@@ -21,7 +21,7 @@ The continuation criteria in `criteria.md` were committed before measurement in 
 3. All enumerated corruption/refusal controls are caught; the seeded incorrect transition is rejected.
 4. Both programs complete 1,000-step free-running trajectories without resets, with source agreement at every transition; teacher-forced runs are reported separately.
 5. Both unrolled artifacts match host-loop execution and source transitions at 1, 2, and 4 steps.
-6. Five-repetition debug-profile median unrolled/host latency ratios: accumulator **0.64317×**, stack-swap **0.36602×** (≤1.25×). Weight bytes are 8/8 for the accumulator and 0/0 for routing (within 4×); process-RSS growth was **0 bytes** in measured lanes (≤16 MiB).
+6. Five-repetition debug-profile median unrolled/host latency ratios: accumulator **0.70157×**, stack-swap **0.38467×** (≤1.25×). Weight bytes are 8/8 for the accumulator and 0/0 for routing (within 4×); process-RSS growth was **0 bytes** in measured lanes (≤16 MiB).
 7. The 40 retained rows report end-to-end latency, compile/load, graph and weight bytes, mutable state bytes, RSS samples/peak, host operations, evaluator calls/microsteps, and skipped work (zero). Reference graph and native-reference paths are distinct and retained.
 
 ## Scope and reopen conditions
