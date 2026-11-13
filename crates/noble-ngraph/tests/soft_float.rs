@@ -18,6 +18,8 @@
 use noble_ngraph::prng::SplitMix64;
 use noble_ngraph::sem::soft;
 
+#[path = "soft_float_dir/adapters.rs"]
+mod adapters;
 mod common;
 #[path = "soft_float_dir/decimal.rs"]
 mod decimal;

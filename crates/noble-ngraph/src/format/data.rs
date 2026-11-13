@@ -90,6 +90,9 @@ pub fn parse(text: &str) -> Result<Data, crate::diag::Diagnostic> {
             "missing noble-ngraph-data/0 schema line",
         ));
     }
+    let mut mode = super::LiteralMode::Exact;
+    let mut mode_declared = false;
+    let mut record_started = false;
     let mut declared: Option<(
         alloc::vec::Vec<crate::ir::ScalarType>,
         alloc::vec::Vec<crate::ir::ScalarType>,
@@ -97,6 +100,22 @@ pub fn parse(text: &str) -> Result<Data, crate::diag::Diagnostic> {
     let mut points = alloc::vec::Vec::new();
     for l in lines {
         match l.tokens[0] {
+            "literal-modes" => {
+                if mode_declared {
+                    return Err(super::value::format_diag(
+                        l.number,
+                        "duplicate literal-modes line",
+                    ));
+                }
+                if record_started {
+                    return Err(super::value::format_diag(
+                        l.number,
+                        "literal-modes must immediately follow the schema line",
+                    ));
+                }
+                mode = super::value::literal_mode(&l.tokens, l.number)?;
+                mode_declared = true;
+            }
             "types" => {
                 if declared.is_some() {
                     return Err(super::value::format_diag(l.number, "duplicate types line"));
@@ -113,8 +132,8 @@ pub fn parse(text: &str) -> Result<Data, crate::diag::Diagnostic> {
                 })?;
                 let (a, b) = halves(&l.tokens[1..], l.number)?;
                 points.push((
-                    super::value::row(ti, &a, l.number)?,
-                    super::value::row(tt, &b, l.number)?,
+                    super::value::row_with_mode(ti, &a, l.number, mode)?,
+                    super::value::row_with_mode(tt, &b, l.number, mode)?,
                 ));
             }
             o => {
@@ -123,6 +142,9 @@ pub fn parse(text: &str) -> Result<Data, crate::diag::Diagnostic> {
                     alloc::format!("unknown line kind {o:?}"),
                 ))
             }
+        }
+        if l.tokens[0] != "literal-modes" {
+            record_started = true;
         }
     }
     let (inputs, targets) =

@@ -545,7 +545,7 @@ const SNAPSHOT_KEYS: [&str; 19] = [
 
 const REPORT_SCHEMA: &str = "noble-ngraph-report/v1";
 
-const STAGES: [&str; 10] = [
+const STAGES: [&str; 11] = [
     "request",
     "input",
     "admission",
@@ -556,15 +556,17 @@ const STAGES: [&str; 10] = [
     "training",
     "replay",
     "output",
+    "publication",
 ];
 
 const TRAP_CODES: [&str; 3] = ["G-FACT-FALSE", "E-NONFINITE-UPDATE", "C-CANCELLED"];
 
-const REJECT_CODES: [&str; 17] = [
+const REJECT_CODES: [&str; 18] = [
     "E-GRAPH-MALFORMED",
     "E-FORMAT",
     "E-LITERAL-INEXACT",
     "E-LITERAL-NONFINITE",
+    "E-LITERAL-OVERFLOW",
     "E-TYPE-MIX",
     "E-INTERFACE",
     "E-SUBJECT",
@@ -596,7 +598,7 @@ const UNSUPPORTED_CODES: [&str; 12] = [
 ];
 
 // `E-BUDGET-<kind>` for every D9 kind, plus the runtime `FUEL`.
-const BUDGET_CODES: [&str; 17] = [
+const BUDGET_CODES: [&str; 18] = [
     "E-BUDGET-WORK",
     "E-BUDGET-EXPANSION",
     "E-BUDGET-INLINE-DEPTH",
@@ -614,6 +616,7 @@ const BUDGET_CODES: [&str; 17] = [
     "E-BUDGET-BACKWARD-SCRATCH",
     "E-BUDGET-STEPS",
     "E-BUDGET-FUEL",
+    "E-BUDGET-LITERAL-BYTES",
 ];
 
 // D7 `check` fields; the `extract` report repeats them.
@@ -3157,5 +3160,237 @@ fn forged_optimizers_and_opt_ins_are_refused() -> TestResult {
         text,
         "the parent is only read"
     );
+    Ok(())
+}
+
+#[test]
+fn explicit_literal_import_receipt_replays_source_and_canonical_graph() -> TestResult {
+    let scratch = Scratch::new("literal-import-replay")?;
+    let source = concat!(
+        "ngraph-ir/0 ngraph-f32/0\r\n",
+        "literal-modes noble-graph-literal-modes/v2\r\n",
+        "subject authored-name import-demo\r\n",
+        "slot input f32\r\n",
+        "%0 = input 0\r\n",
+        "%1 = const f32 rne:0.1 # spelling retained\r\n",
+        "%2 = f32.add %0 %1\r\n",
+        "out %2\r\n",
+    );
+    let input = scratch.write("source.ngraph", source)?;
+    let receipt = scratch.path("import.receipt");
+    let imported = expect_normal(
+        &scratch.run(&Ngraph::new("import").arg(&input).arg("--out").arg(&receipt))?,
+        "import",
+    )?;
+    assert_eq!(imported["literal_count"], 1);
+    let receipt_text = std::fs::read_to_string(&receipt)?;
+    assert!(receipt_text.contains("literal 6 726e653a302e31 0x3dcccccd\n"));
+
+    let source_replay = scratch.path("source-replay.ngraph");
+    let exported_source = expect_normal(
+        &scratch.run(
+            &Ngraph::new("export")
+                .arg(&receipt)
+                .arg("--out")
+                .arg(&source_replay)
+                .arg("--source"),
+        )?,
+        "export",
+    )?;
+    assert_eq!(exported_source["form"], "source");
+    assert_eq!(std::fs::read(&source_replay)?, source.as_bytes());
+
+    let canonical = scratch.path("canonical.ngraph");
+    let exported_graph = expect_normal(
+        &scratch.run(
+            &Ngraph::new("export")
+                .arg(&receipt)
+                .arg("--out")
+                .arg(&canonical),
+        )?,
+        "export",
+    )?;
+    assert_eq!(exported_graph["form"], "canonical");
+    let canonical_text = std::fs::read_to_string(&canonical)?;
+    assert!(canonical_text.contains("const f32 0x3dcccccd"));
+    assert!(!canonical_text.contains("rne:"));
+    expect_normal(
+        &scratch.run(&Ngraph::new("check").arg(&canonical))?,
+        "check",
+    )?;
+    let vectors = scratch.write("round.vectors", &vector_file("f32", &["v 0.5"]))?;
+    let (_, evaluated) =
+        eval_lines(&scratch.run(&Ngraph::new("eval").arg(&canonical).arg(&vectors))?)?;
+    assert_eq!(evaluated.len(), 1);
+    assert_eq!(evaluated[0]["outcome"], "normal");
+    assert_eq!(evaluated[0]["outputs"], Value::from(vec!["f32:0x3f19999a"]));
+
+    let second_receipt = scratch.path("second.receipt");
+    expect_normal(
+        &scratch.run(
+            &Ngraph::new("import")
+                .arg(&source_replay)
+                .arg("--out")
+                .arg(&second_receipt),
+        )?,
+        "import",
+    )?;
+    assert_eq!(std::fs::read(&second_receipt)?, std::fs::read(&receipt)?);
+    Ok(())
+}
+
+#[test]
+fn literal_import_receipt_records_each_rne_graph_position() -> TestResult {
+    let scratch = Scratch::new("literal-import-all-sites")?;
+    let source = concat!(
+        "ngraph-ir/0 ngraph-f32/0\n",
+        "literal-modes noble-graph-literal-modes/v2\n",
+        "subject authored-name all-rne-sites\n",
+        "%0 = const f32 rne:0.1\n",
+        "%1 = f32.affine rne:-0.5 rne:0.25 %0 rne:0.125 one\n",
+        "%2 = guard %1 range rne:-1.0 rne:1.0\n",
+        "fact %0 range rne:-0.25 rne:0.25 input-validated\n",
+        "out %2\n",
+    );
+    let input = scratch.write("all-sites.ngraph", source)?;
+    let receipt = scratch.path("all-sites.receipt");
+    let imported = expect_normal(
+        &scratch.run(&Ngraph::new("import").arg(&input).arg("--out").arg(&receipt))?,
+        "import",
+    )?;
+    assert_eq!(imported["literal_count"], 8);
+    let receipt = std::fs::read_to_string(receipt)?;
+    for record in [
+        "literal 4 726e653a302e31 0x3dcccccd",
+        "literal 5 726e653a2d302e35 0xbf000000",
+        "literal 5 726e653a302e3235 0x3e800000",
+        "literal 5 726e653a302e313235 0x3e000000",
+        "literal 6 726e653a2d312e30 0xbf800000",
+        "literal 6 726e653a312e30 0x3f800000",
+        "literal 7 726e653a2d302e3235 0xbe800000",
+        "literal 7 726e653a302e3235 0x3e800000",
+    ] {
+        assert!(
+            receipt.lines().any(|line| line == record),
+            "missing {record}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn literal_import_and_export_refusals_leave_outputs_untouched() -> TestResult {
+    let scratch = Scratch::new("literal-import-cleanup")?;
+    let malformed = scratch.write("malformed.ngraph", "not an ngraph\n")?;
+    let malformed_receipt = scratch.path("malformed.receipt");
+    expect_code(
+        &scratch.run(
+            &Ngraph::new("import")
+                .arg(&malformed)
+                .arg("--out")
+                .arg(&malformed_receipt),
+        )?,
+        "import",
+        "E-GRAPH-MALFORMED",
+    )?;
+    assert!(!malformed_receipt.exists());
+    assert!(!scratch.path("malformed.receipt.partial").exists());
+
+    let overflow = scratch.write(
+        "overflow.ngraph",
+        concat!(
+            "ngraph-ir/0 ngraph-f32/0\n",
+            "literal-modes noble-graph-literal-modes/v2\n",
+            "subject authored-name overflow\n",
+            "%0 = const f32 rne:1e39\n",
+            "out %0\n",
+        ),
+    )?;
+    let overflow_receipt = scratch.path("overflow.receipt");
+    expect_code(
+        &scratch.run(
+            &Ngraph::new("import")
+                .arg(&overflow)
+                .arg("--out")
+                .arg(&overflow_receipt),
+        )?,
+        "import",
+        "E-LITERAL-OVERFLOW",
+    )?;
+    assert_no_publication(&overflow_receipt);
+
+    let oversized_literal = format!(
+        "ngraph-ir/0 ngraph-f32/0\nliteral-modes noble-graph-literal-modes/v2\nsubject authored-name oversized-rne\n%0 = const f32 rne:1{}\nout %0\n",
+        "0".repeat(noble_ngraph::sem::MAX_RNE_DECIMAL_BYTES)
+    );
+    let oversized_literal = scratch.write("oversized-rne.ngraph", &oversized_literal)?;
+    let oversized_literal_receipt = scratch.path("oversized-rne.receipt");
+    expect_code(
+        &scratch.run(
+            &Ngraph::new("import")
+                .arg(&oversized_literal)
+                .arg("--out")
+                .arg(&oversized_literal_receipt),
+        )?,
+        "import",
+        "E-BUDGET-LITERAL-BYTES",
+    )?;
+    assert_no_publication(&oversized_literal_receipt);
+
+    let oversized = scratch.path("oversized.ngraph");
+    std::fs::write(&oversized, vec![b'x'; 1_048_577])?;
+    let oversized_receipt = scratch.path("oversized.receipt");
+    let line = single_report(
+        &scratch.run(
+            &Ngraph::new("import")
+                .arg(&oversized)
+                .arg("--out")
+                .arg(&oversized_receipt),
+        )?,
+        "import",
+    )?;
+    assert_eq!(line["outcome"], "reject");
+    assert_eq!(line["code"], Value::Null);
+    assert!(!oversized_receipt.exists());
+    assert!(!scratch.path("oversized.receipt.partial").exists());
+
+    let existing = scratch.write("existing.receipt", "keep me\n")?;
+    let valid = scratch.write(
+        "valid.ngraph",
+        concat!(
+            "ngraph-ir/0 ngraph-f32/0\n",
+            "literal-modes noble-graph-literal-modes/v2\n",
+            "subject authored-name import-demo\n",
+            "%0 = const f32 rne:0.1\n",
+            "out %0\n",
+        ),
+    )?;
+    let line = single_report(
+        &scratch.run(
+            &Ngraph::new("import")
+                .arg(&valid)
+                .arg("--out")
+                .arg(&existing),
+        )?,
+        "import",
+    )?;
+    assert_eq!(line["outcome"], "reject");
+    assert_eq!(std::fs::read_to_string(&existing)?, "keep me\n");
+    assert!(!scratch.path("existing.receipt.partial").exists());
+
+    let invalid_receipt = scratch.write("invalid.receipt", "not a receipt\n")?;
+    let exported = scratch.path("must-not-exist.ngraph");
+    expect_code(
+        &scratch.run(
+            &Ngraph::new("export")
+                .arg(&invalid_receipt)
+                .arg("--out")
+                .arg(&exported),
+        )?,
+        "export",
+        "E-FORMAT",
+    )?;
+    assert!(!exported.exists());
+    assert!(!scratch.path("must-not-exist.ngraph.partial").exists());
     Ok(())
 }
