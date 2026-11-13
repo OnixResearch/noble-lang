@@ -174,7 +174,8 @@ function main() {
       interaction_profile: interactionCases.corpus },
     counts: { ...counts, structured_p1_cells: interactionCases.counts.structured_p1_cells,
       one_premise_invalid_variants: interactionCases.counts.one_premise_invalid_variants },
-    cases: [...cases, ...interactionCases.cases], invalid_cases: interactionCases.invalid_cases,
+    cases: [...cases, ...interactionCases.cases.map(plain)],
+    invalid_cases: interactionCases.invalid_cases.map(plain),
   };
   writeFileSync(resolve(output), `${JSON.stringify(exported, null, 2)}\n`);
   process.stdout.write(`${JSON.stringify({ output: resolve(output), counts })}\n`);
