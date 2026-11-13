@@ -7,7 +7,7 @@
     "Classical.choice",
     "Quot.sound"
   ],
-  "scope": "Lean model statements only (MC1 model, Mathlib oracle, transcribed literal accumulator and runtime helpers, plus the pinned NamedV1 normal-return linking and operand/continuation ABI model). No implementation theorem. The private_theorems list names every private or protected helper theorem: those are existence-checked by name, and their axioms are audited transitively through every inventoried theorem that depends on them, because Lean private names are not addressable from another module.",
+  "scope": "Lean model statements only (MC1 model, Mathlib oracle, transcribed literal accumulator and runtime helpers, pinned NamedV1 normal-return linking and operand/continuation ABI model, plus issue #107's parsed-I64-instruction semantic model). No Rust implementation-correspondence theorem. The private_theorems list names every private or protected helper theorem: those are existence-checked by name, and their axioms are audited transitively through every inventoried theorem that depends on them, because Lean private names are not addressable from another module.",
   "theorems": [
     {
       "name": "NobleFoundation.toZ_ofZ",
@@ -7766,6 +7766,264 @@
       "phase": 2,
       "role": "packed-layout",
       "claim": "a duplicated slot table passes the count and every row, and is refused only by slot uniqueness"
+    },
+    {
+      "name": "NobleFoundation.LlvmLowering.denotes_iff",
+      "phase": 1,
+      "role": "llvm-validator-model",
+      "claim": "the Boolean operand-to-node relation is exactly the model's denotation relation"
+    },
+    {
+      "name": "NobleFoundation.LlvmLowering.step_unwritten",
+      "phase": 1,
+      "role": "llvm-validator-model",
+      "claim": "an instruction step leaves every register except its destination unchanged"
+    },
+    {
+      "name": "NobleFoundation.LlvmLowering.denotes_value",
+      "phase": 1,
+      "role": "llvm-validator-model",
+      "claim": "each accepted parsed operand reads the graph value of the node it denotes"
+    },
+    {
+      "name": "NobleFoundation.LlvmLowering.spells_computes",
+      "phase": 1,
+      "role": "llvm-validator-model",
+      "claim": "an accepted arithmetic instruction computes its graph node's wrapping I64 value"
+    },
+    {
+      "name": "NobleFoundation.LlvmLowering.spells_dst",
+      "phase": 1,
+      "role": "llvm-validator-model",
+      "claim": "an instruction accepted at a graph node writes that node's register"
+    },
+    {
+      "name": "NobleFoundation.LlvmLowering.checkFrom_sound",
+      "phase": 1,
+      "role": "llvm-validator-model",
+      "claim": "a successful validator walk preserves earlier registers and computes every arithmetic node it visits"
+    },
+    {
+      "name": "NobleFoundation.LlvmLowering.validate_sound",
+      "phase": 1,
+      "role": "llvm-validator",
+      "claim": "for every input assignment, a well-formed graph and accepted parsed function return the graph reference's selected output"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.wrapping_validated",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the kernel accepts the retained MIN/MAX wrapping module's parsed instructions"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.wrapping_wellFormed",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the retained MIN/MAX wrapping graph is well formed"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.wrapping_sound",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the retained MIN/MAX wrapping module returns its graph output for all I64 input pairs"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.wrapping_execution_0_agrees",
+      "phase": 1,
+      "role": "concrete-agreement",
+      "claim": "the retained wrapping module and graph reference agree at the first recorded input pair"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.wrapping_execution_1_agrees",
+      "phase": 1,
+      "role": "concrete-agreement",
+      "claim": "the retained wrapping module and graph reference agree at the MIN/MAX input pair"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.negative_validated",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the kernel accepts the retained negative-constant module's parsed instructions"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.negative_wellFormed",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the retained negative-constant graph is well formed"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.negative_sound",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the retained negative-constant module returns its graph output for all I64 input pairs"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.negative_execution_0_agrees",
+      "phase": 1,
+      "role": "concrete-agreement",
+      "claim": "the retained negative-constant module and graph reference agree at the first recorded input pair"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.negative_execution_1_agrees",
+      "phase": 1,
+      "role": "concrete-agreement",
+      "claim": "the retained negative-constant module and graph reference agree at the MIN/MAX input pair"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.subtractive_validated",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the kernel accepts the retained subtraction-order module's parsed instructions"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.subtractive_wellFormed",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the retained subtraction-order graph is well formed"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.subtractive_sound",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the retained subtraction-order module returns its graph output for all I64 input pairs"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.subtractive_execution_0_agrees",
+      "phase": 1,
+      "role": "concrete-agreement",
+      "claim": "the retained subtraction-order module and graph reference agree at the first recorded input pair"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.subtractive_execution_1_agrees",
+      "phase": 1,
+      "role": "concrete-agreement",
+      "claim": "the retained subtraction-order module and graph reference agree at the MIN/MAX input pair"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.shared_validated",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the kernel accepts the retained shared-subexpression module's parsed instructions"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.shared_wellFormed",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the retained shared-subexpression graph is well formed"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.shared_sound",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the retained shared-subexpression module returns its graph output for all I64 input pairs"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.shared_execution_0_agrees",
+      "phase": 1,
+      "role": "concrete-agreement",
+      "claim": "the retained shared-subexpression module and graph reference agree at the first recorded input pair"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.shared_execution_1_agrees",
+      "phase": 1,
+      "role": "concrete-agreement",
+      "claim": "the retained shared-subexpression module and graph reference agree at the MIN/MAX input pair"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.foldable_validated",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the kernel accepts the retained constant-foldable module's parsed instructions"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.foldable_wellFormed",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the retained constant-foldable graph is well formed"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.foldable_sound",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the retained constant-foldable module returns its graph output for all I64 input pairs"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.foldable_execution_0_agrees",
+      "phase": 1,
+      "role": "concrete-agreement",
+      "claim": "the retained constant-foldable module and graph reference agree at the first recorded input pair"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.foldable_execution_1_agrees",
+      "phase": 1,
+      "role": "concrete-agreement",
+      "claim": "the retained constant-foldable module and graph reference agree at the MIN/MAX input pair"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.foldable_rewritten_validated",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the kernel accepts the retained certified-rewritten module's parsed instructions"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.foldable_rewritten_wellFormed",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the retained certified-rewritten graph is well formed"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.foldable_rewritten_sound",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "the retained certified-rewritten module returns its graph output for all I64 input pairs"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.foldable_rewritten_execution_0_agrees",
+      "phase": 1,
+      "role": "concrete-agreement",
+      "claim": "the retained certified-rewritten module and graph reference agree at the first recorded input pair"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.foldable_rewritten_execution_1_agrees",
+      "phase": 1,
+      "role": "concrete-agreement",
+      "claim": "the retained certified-rewritten module and graph reference agree at the MIN/MAX input pair"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.subtractive_operand_swapped_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the kernel refuses the actual parsed subtraction mutation with swapped ordered operands"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.negative_constant_changed_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the kernel refuses the actual parsed module whose negative constant changed"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.shared_return_changed_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the kernel refuses the actual parsed module whose return value changed"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.foldable_artifact_substituted_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the kernel refuses the rewritten endpoint's parsed module when substituted for the original graph"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.shared_instruction_missing_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the kernel refuses the parsed module with a missing arithmetic instruction"
+    },
+    {
+      "name": "NobleFoundation.LlvmLoweringCorpus.shared_destination_changed_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the kernel refuses the parsed module whose instruction destination names the wrong node"
     }
   ],
   "private_theorems": [

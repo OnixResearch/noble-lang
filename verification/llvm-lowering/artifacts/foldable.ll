@@ -1,0 +1,13 @@
+; ngraph-llvm-i64/0 module: one straight-line function, no memory, no calls
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-linux-gnu"
+
+define i64 @noble_i64(i64 noundef %a0, i64 noundef %a1) {
+entry:
+  %v4 = add i64 3, 5
+  %v5 = mul i64 %a0, %v4
+  %v6 = add i64 %v5, %a1
+  %v7 = add i64 %v6, 3
+  %v8 = add i64 %v7, 5
+  ret i64 %v8
+}

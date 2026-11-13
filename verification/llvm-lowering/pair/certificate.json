@@ -1,0 +1,9 @@
+{
+  "schema": "ngraph-certificate-pair/v1",
+  "revision": "ngraph-cert/0",
+  "left": "f4f71828f4dd4f69000000000000000000000000000000000000000000000000",
+  "right": "0e3aa91e0be07cae000000000000000000000000000000000000000000000000",
+  "steps": [
+    {"rule": "fold-add-constants", "node": 4, "operands": [2, 3], "first_bits": "0x0000000000000003", "second_bits": "0x0000000000000005", "claimed": "0x0000000000000008"}
+  ]
+}
