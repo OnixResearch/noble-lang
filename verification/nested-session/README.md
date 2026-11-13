@@ -86,7 +86,7 @@ declared stack limit, so its accepted bounded subset is finite.
 | `pact_label_set_erases_to_the_fixture`, `pact_reannotation_is_not_observable`, `pact_label_set_duality_holds`, `pact_label_set_wrong_branch_is_refused`, `pact_label_set_preserves_the_endpoint_identity`, `pact_work_bound_is_the_skeleton_bound`, `pact_factor_does_not_select` | **Pact preference-factor adjunct, default off**: an annotated table's only meaning is its erasure to the plain skeleton, so duality, wrong-branch refusal, endpoint identity preservation and the work bound are the skeleton's, and reversing the factors neither enables, refuses nor selects a label. Factors only: no utility function, decision rule or solver |
 | `vine_source_forms_denote_the_same_fixture`, `vine_source_continuation_mismatch_is_refused`, `vine_source_continuation_match_is_accepted` | **Vine source-form comparison, design examples only**: both proposed source forms denote the model's fixture, a source continuation that differs from the model's is refused with the witness trace `[send i64, recv bool]`, and the matched form is the same type. See [`vine-comparison.md`](vine-comparison.md) |
 
-`verification/nested-session/receipt-2026-11-13.json` is the retained receipt of the current
+`verification/nested-session/receipt-017fdf4b.json` is the retained receipt of the current
 clean-source run: **193** model theorems, every axiom inside the standard allow-list:
 - 43 theorems use no axiom, including the table check's decided controls and its definitional
   inversion lemmas, `stackState_within_the_limit`, `dualAction_is_involutive`, `StackAction.dual_dual`,
@@ -116,6 +116,9 @@ clean-source run: **193** model theorems, every axiom inside the standard allow-
 - 2 also use `Classical.choice`: `advance_preserves_the_endpoint_identity` and
   `steppers_preserve_the_endpoint_identity`.
 
+`verification/nested-session/receipt-2026-11-13.json` is the 193-theorem receipt of the model commit
+`7bbeb2ec`, the commit before the header's progress-scope sentence was corrected; its theorem set and
+every axiom are identical, and it is retained as the receipt the archived change's task note cites.
 `verification/nested-session/receipt.json` is the earlier 157-theorem receipt of the label-set commit
 `fea76dad2`, at Lean 4.31.0; it is retained unchanged. Earlier versions of this paragraph said
 `propext` was the only reported axiom and that no work bound was proved sufficient; the receipts never
