@@ -25,7 +25,7 @@ measurements. `wasm-merge` output is never treated as an unmodified emitted modu
 
 - `receipts/2026-11-09/patched.json`: pinned fork decoder patch accepts subject, reproducer and
   control; unpatched Owi refuses the real subject before linking.
-- `receipts/2026-11-13/host.json`: new clean-commit receipt, source `8a78dee0`; 27 imports matched,
+- `receipts/2026-11-13/host.json`: new clean-commit receipt, source `220c0aef`; 27 imports matched,
   ABI digest and all six limits bound, initial-state comparison passed, and zeroed `step_limit`
   was refused. This is an interface/initial-state check, not execution.
 - The patched symbolic attempt recorded in `receipts/2026-11-09/patched.json` reports
@@ -33,7 +33,7 @@ measurements. `wasm-merge` output is never treated as an unmodified emitted modu
 - No I64-input optimized/unoptimized matrix, symbolic driver, counterexample, replay, timeout
   control, or performance measurement exists in the retained lane evidence. Therefore the decision
   is a NO-GO, not an equivalence result or a successful Owi pilot.
-- Unit 1: DONE in `8a78dee0`; verification used the pinned Node 24 with `env -i`, a private
+- Unit 1: DONE in `220c0aef`; verification used the pinned Node 24 with `env -i`, a private
   temporary directory, pinned wasm-tools 1.245.1, and `verification/owi/host.mjs`; result
   `{"clean":true,"imports":27,"globals":{"i32":23,"i64":2}}`. The receipt is
   `receipts/2026-11-13/host.json`.
