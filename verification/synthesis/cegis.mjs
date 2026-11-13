@@ -394,6 +394,20 @@ const canStillReachOutput = (stacks, out) => stacks.every(stack => {
   return lists <= 1 && (lists === 0 || out === 'list');
 });
 
+/** A lower bound on the words needed to reduce a viable stack to the requested output type. */
+function minimumCompletionWords(stack, out) {
+  if (stack.length === 1 && stack[0].type === out) return 0;
+  if (out === 'bool') return stack.length === 1 ? 2 : stack.length - 1;
+  if (out === 'list') {
+    const lists = stack.filter(value => value.type === 'list').length;
+    return stack.length - lists + (lists === 0 ? 1 : 0);
+  }
+  return stack.length - 1;
+}
+
+const canCompleteWithin = (stacks, out, remaining) =>
+  stacks.every(stack => minimumCompletionWords(stack, out) <= remaining);
+
 /** What one complete program computes on every example. */
 const observedOf = stacks => stacks.map(stack => stack[0].value);
 
@@ -417,6 +431,7 @@ function discover(task, examples, expected, spec, budget) {
     let found = null;
     let completeHere = 0;
     for (const state of frontier) {
+      if (!canCompleteWithin(state.stacks, task.out, spec.bound - size)) continue;
       if (!complete(state.stacks, task.out)) continue;
       completeHere += 1;
       if (!found && matches(state)) found = state;
@@ -434,7 +449,8 @@ function discover(task, examples, expected, spec, budget) {
           if (!extended) { live = false; break; }
           stacks.push(extended);
         }
-        if (!live || !canStillReachOutput(stacks, task.out)) continue;
+        if (!live || !canStillReachOutput(stacks, task.out)
+          || !canCompleteWithin(stacks, task.out, spec.bound - size - 1)) continue;
         // Fuel counts admitted typed extensions, not rejected word/stack combinations.
         if (candidates >= budget) return { exhausted: 'candidate fuel', sizes, candidates };
         candidates += 1;
@@ -443,6 +459,10 @@ function discover(task, examples, expected, spec, budget) {
         if (seen.has(id)) continue;
         seen.add(id);
         next.set(id, extended);
+        if (complete(stacks, task.out) && matches(extended)) {
+          sizes.push({ size: size + 1, states: next.size, complete: 1, partial: true });
+          return { program: extended.words, sizes, candidates, observed: observedOf(stacks) };
+        }
       }
     }
     frontier = [...next.values()];
@@ -456,6 +476,8 @@ function baseline(task, examples, expected, spec, budget) {
   let candidates = 0;
   const outcomeOf = found => found ?? { exhausted: 'size bound' };
   const visit = (stacks, depth) => {
+    if (!canStillReachOutput(stacks, task.out)
+      || !canCompleteWithin(stacks, task.out, spec.bound - depth.length)) return null;
     if (complete(stacks, task.out)) {
       const observed = observedOf(stacks);
       const matches = observed.every((value, at) => stable(value) === stable(expected[at]));
@@ -470,7 +492,8 @@ function baseline(task, examples, expected, spec, budget) {
         if (!extended) { live = false; break; }
         next.push(extended);
       }
-      if (!live || !canStillReachOutput(next, task.out)) continue;
+      if (!live || !canStillReachOutput(next, task.out)
+        || !canCompleteWithin(next, task.out, spec.bound - depth.length - 1)) continue;
       // The baseline uses the same candidate definition and budget as the deduplicated search.
       if (candidates >= budget) return { exhausted: 'candidate fuel' };
       candidates += 1;

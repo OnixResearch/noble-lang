@@ -24,8 +24,14 @@ cannot be *written* without them. `drop` is excluded because a discarded value n
 computed, so it cannot shorten a size-minimal program; it would only enlarge the search.
 
 Bounds, all declared in the manifest: the size bound (words) per task, the depth bound
-(`max-stack`), the fuel bound (`max-candidates` one-word extensions in total) and the refinement
-budget (`max-rounds`). Nothing is unbounded, and a bound is reported with every status.
+(`max-stack`), the fuel bound (`max-candidates` admitted one-word extensions in total) and the
+refinement budget (`max-rounds`). A candidate is admitted only after type checking, output-type
+reachability, and a lower-bound check that it can complete within the remaining size bound;
+rejected word/stack combinations and impossible continuations do not consume candidate fuel.
+Observational-equivalent extensions are counted before deduplication. The plain baseline applies
+the same admission and fuel rules but retains equivalent states. The final size row is marked
+`partial` if discovery stops as soon as it generates a matching program at that size. Nothing is
+unbounded, and a bound is reported with every status.
 
 ## D2 — Bounded expressibility and proof boundary
 
