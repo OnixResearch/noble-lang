@@ -177,8 +177,20 @@ export function runControls({ directory, repositoryRoot = undefined, receipt = n
     const target = path.join(copy, 'raw', 'live_slot_relocation_witness',
       'reloc-old.responses.jsonl');
     const lines = fs.readFileSync(target, 'utf8').trim().split('\n');
-    fs.writeFileSync(target, `${lines.map(line =>
-      line.replace('"request":"relocated"', '"request":"relocated-forged"')).join('\n')}\n`);
+    let changed = false;
+    const mutated = lines.map(line => {
+      const row = JSON.parse(line);
+      for (const event of row.request_trace ?? []) {
+        if (event.operation !== 'effect' || event.request !== 'relocated') continue;
+        event.request = 'relocated-forged';
+        event.response = 'emitted:relocated-forged';
+        event.policyInput.request = 'relocated-forged';
+        changed = true;
+      }
+      return JSON.stringify(row);
+    });
+    assert.equal(changed, true, 'effect-mutation control must change an observed effect');
+    fs.writeFileSync(target, `${mutated.join('\n')}\n`);
     const corpusEdited = readJson(path.join(copy, 'corpus.json'));
     const scenario = corpusEdited.scenarios
       .find(row => row.case_id === 'noble-live-update/relocation-and-effect-prefix');
@@ -282,6 +294,7 @@ export function runControls({ directory, repositoryRoot = undefined, receipt = n
     const copy = structuredClone(receipt);
     copy.controls = { suite: SUITE, controls, passed: controls.every(row => row.passed) };
     delete copy.binding_sha256;
+    copy.binding_sha256 = digestValue(copy);
     return copy;
   })();
   const pristine = judge('pristine-evidence-verifies', null,

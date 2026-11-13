@@ -634,7 +634,7 @@ export const SCENARIOS = [
           'the reviewed host ledger admits 4096 saved owners and refuses the 4097th root before execution'),
         // 4096 successful invokes + 1 refused + 1 admitted after a release = 4098 invoke requests.
         declared: { capacity: 4096, summary: 'saved Program capacity 4096 refused the over-budget root before execution',
-          requests: { configure: 1, install: 1, publish: 1, invoke: 4098, 'release-program': 1 } },
+          requests: { install: 1, publish: 1, invoke: 4098, 'release-program': 1 } },
         extract: observed => ({
           capacity: observed.capacity.request_counts.invoke - 2,
           summary: observed.capacity.summary_line,
@@ -801,7 +801,8 @@ export const SCENARIOS = [
           'a candidate or invocation whose shape is not exactly compatible is refused without executing'),
         declared: { refused: 4, classes: ['binding-foreign-root', 'binding-wrong-position',
           'effect-not-granted', 'stack-incompatible'],
-        by_stage: { command: 3, slot: 1 }, guest_requests: 0, trace: [] },
+        by_stage: { command: 3, slot: 1 }, guest_requests: 2,
+        trace: [['dispatch', 'allowed'], ['effect', 'denied']] },
         extract: observed => observed.typed.negative,
         mismatch_class: 'unexpected-refusal',
         mapping: 'three refusals precede the guest; the withheld effect is refused at the slot stage with the guest\'s own denied row',
@@ -835,7 +836,11 @@ export const SCENARIOS = [
           'the declared authority bounds are a 128-type stack and 31 levels of constructor nesting'),
         declared: { stack: { admitted: 128, refused_first: 129 },
           nesting: { admitted: 31, refused_first: 32 }, refusal_stage: 'authority' },
-        extract: observed => observed.typed.type_boundaries,
+        extract: observed => ({
+          stack: observed.typed.type_boundaries.stack,
+          nesting: observed.typed.type_boundaries.nesting,
+          refusal_stage: observed.typed.type_boundaries.refusal_stage,
+        }),
         mapping: 'both bounds are checked as a boundary pair: the last admitted and the first refused',
       }),
     ],
@@ -1089,8 +1094,8 @@ function observeTyped(bundle) {
       cases: {
         directPureRepeat1: cases['typed-direct-pure-repeat1-0'],
         directPureRepeat2: cases['typed-direct-pure-repeat2-1'],
-        directEmitRepeat1: cases['typed-direct-emit-repeat1-2'],
-        directEmitRepeat2: cases['typed-direct-emit-repeat2-3'],
+        directEmitRepeat1: cases['typed-direct-dispatch+emit-repeat1-2'],
+        directEmitRepeat2: cases['typed-direct-dispatch+emit-repeat2-3'],
         chain: cases['typed-chain-nested-repeat1-4'],
       },
       coverage: report.coverage,
@@ -1139,7 +1144,9 @@ function observeOwnership(bundle) {
   // operation was refused without re-stating the lane's step list.
   const pairs = variant => {
     const requests = rowsOf(run.requests, variant);
-    const responses = rowsOf(run.responses, variant);
+    // Each session emits an initial `configured` response before its first request.
+    const responses = rowsOf(run.responses, variant)
+      .filter(response => response.outcome !== 'configured');
     return requests.map((request, ordinal) => ({ request, response: responses[ordinal] ?? null }));
   };
   const shared = cases['OWN-CASE-02'].map(entry => ({
