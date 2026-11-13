@@ -755,3 +755,9 @@ assume sufficient execution budgets and no cancellation.
   proposal and checking calls separately, with endpoint admission outside the timers and a structural
   in-memory derivation-size estimate. Unadmitted candidates produce no row. These descriptive isolated
   timings do not establish end-to-end speedup or optimization benefit.
+
+  The clean-source [cost receipt](scoped-rewrite-cost-2026-11-13.json) binds commit `37e93db` and this
+  protocol's SHA-256. It records 200 samples after 64 priming attempts per fixture: guarded-input
+  proposal/check medians of 1.653/1.894 µs, input-fact medians of 2.464/2.755 µs, and 364 estimated
+  structural bytes for each two-step derivation. These are descriptive shared-host timings, not a
+  performance or optimization-benefit claim.
