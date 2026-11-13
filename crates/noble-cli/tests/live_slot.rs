@@ -82,3 +82,12 @@ fn a_control_that_commits_during_replay_keeps_its_receipt_and_the_session() {
 fn a_held_root_selects_the_same_leaf_twice_from_its_pinned_map() {
     run_lane("live_slot_two_selections.mjs");
 }
+
+/// Two interface-identical versions of the same caller slot move one distinguished event out of
+/// the caller and into the callee: the old version emits and then dispatches, the new one only
+/// dispatches and the callee's version emits. Both keep the same checked caller site and the same
+/// stack result. A root frame cannot emit, which is why the calling *slot* performs the effect.
+#[test]
+fn an_event_relocates_from_the_caller_version_into_the_callee() {
+    run_lane("live_slot_caller_emits.mjs");
+}
