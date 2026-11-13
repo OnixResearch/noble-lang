@@ -6,13 +6,12 @@ nothing here claims source-to-Wasm correctness.
 
 ## Decision
 
-**Evaluation in progress; no symbolic result is claimed.** The decoder-only
-blocker described below was fixed and its patched package validates the subject,
-but `owi sym` still cannot load the separate Noble host module. A second Owi
-patch must register that module without changing the subject bytes; the lane is
-NO-GO unless that route is reproducibly implementable and executes a driver
-against the real emitted artifact. See [`decision.md`](decision.md) for the
-criteria, current evidence and reopen conditions.
+**NO-GO for symbolic execution on this lane.** The decoder-only blocker
+described below was fixed and patched Owi validates the subject, but `owi sym`
+still cannot load the separate Noble host module (`unknown module noble`, exit
+49). A second Owi patch must register that module without changing the subject
+bytes; no symbolic driver, witness, replay or measurements were produced.
+See [`decision.md`](decision.md) for criteria, evidence and reopen conditions.
 
 ## Update (2026-11-09): the decoder is fixed in a fork
 
@@ -124,9 +123,9 @@ which would be a different artifact and is not substituted here).
 ## Replay
 
 ```
-noble editor admit verification/owi/receipts/2026-10-26/subject-ast.json --emit /tmp/owi-emit
-wasm-tools validate /tmp/owi-emit/engine/module-1.wasm     # exit 0
-owi validate /tmp/owi-emit/engine/module-1.wasm            # exit 30, decoder refusal
+noble editor admit verification/owi/receipts/2026-10-26/subject-ast.json --emit <new directory outside the repository>
+wasm-tools validate <new directory outside the repository>/engine/module-1.wasm     # exit 0
+owi validate <new directory outside the repository>/engine/module-1.wasm            # exit 30, decoder refusal
 ```
 
 `noble` requires the pinned `wasm-tools 1.245.1` and `binaryen 125` binaries from

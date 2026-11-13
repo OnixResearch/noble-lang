@@ -149,7 +149,7 @@ function main() {
     initial_state: initial,
     control: { zeroed: 'step_limit', observed: refused.observed, problems: refused.problems },
     non_claims: [
-      'a faithful host module is not a faithful runtime: the globals start at zero and no host function exists because the subject imports none',
+      'a faithful host module is not a faithful runtime: pointer/counter globals start at zero, quota limits use ABI initial values, and no host function exists because the subject imports none',
       'symbolic execution still needs the engine to link the stub with the subject; this lane only proves the interface matches',
       'no Owi counterexample, witness or claim is produced here',
     ],
