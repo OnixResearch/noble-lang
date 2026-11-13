@@ -90,7 +90,7 @@ source tree serves both variants and they cannot drift:
 | `extraction_nightly_gated` | extracted nightly `cargo build` with the crate attribute | the extraction variant is representable — still not acceptance |
 | `charon` | `charon cargo --preset=aeneas --error-on-warnings --start-from probes::<root>` with the policy's cargo arguments | the root's closure are in the LLBC |
 | `aeneas` | `aeneas -backend lean -abort-on-error -warnings-as-errors -no-progress-bar -emit-json -dest …` | the closure translates; with the allocator erased |
-| `lean` | `lake build <Generated>` against the pinned Aeneas Lean library | the generated file elaborates — not a proof of anything |
+| `lean` | `lake env lean <Generated>.lean` against the pinned Aeneas Lean library | the generated file elaborates — not a proof of anything; this avoids building through the shared read-only package cache |
 | `admission` | `admission.mjs` over that LLBC, `translation.json` and binding | Noble admits or refuses, with the Rust position |
 
 Source compilation is a crate-level verdict (one `cargo build` unit); the extraction, translation, Lean

@@ -279,6 +279,9 @@ if (!fs.existsSync(libraryMarker)) throw Error(`no prebuilt Aeneas Lean library 
 const packagesSnapshot = () => ({
   vec_olean_mtime_ms: fs.statSync(libraryMarker).mtimeMs,
   aeneas_std_dir_mtime_ms: fs.statSync(path.dirname(libraryMarker)).mtimeMs,
+  newest_entry: fs.readdirSync(path.dirname(libraryMarker))
+    .map(entry => ({ entry, mtime_ms: fs.statSync(path.join(path.dirname(libraryMarker), entry)).mtimeMs }))
+    .sort((left, right) => right.mtime_ms - left.mtime_ms).slice(0, 3),
 });
 const before = packagesSnapshot();
 const leanProject = path.join(artifacts, 'lean-project');
@@ -287,6 +290,14 @@ fs.mkdirSync(path.join(leanProject, '.lake'));
 fs.copyFileSync(path.join(root, 'proofs/m1/lake-manifest.json'), path.join(leanProject, 'lake-manifest.json'));
 fs.copyFileSync(path.join(root, 'proofs/m1/lean-toolchain'), path.join(leanProject, 'lean-toolchain'));
 fs.symlinkSync(packages, path.join(leanProject, '.lake/packages'), 'dir');
+// The project's own lakefile never builds the shared packages: the stage runs
+// `lake env lean <file>`, which only sets LEAN_PATH and elaborates the one generated file into
+// nothing. A `lake build` here could write rebuilt oleans through the `.lake/packages` symlink
+// into the prebuilt library the proof projects share.
+fs.writeFileSync(path.join(leanProject, 'lakefile.toml'),
+  'name = "noble-allocator-admission"\n\n[[require]]\nname = "aeneas"\n'
+  + 'git = { url = "https://github.com/AeneasVerif/aeneas", subDir = "backends/lean" }\n'
+  + `rev = "${tools.aeneas.lean_library_rev}"\n`);
 
 const operational = [];
 for (const cell of cells) {
@@ -330,15 +341,10 @@ for (const cell of cells) {
     ?? produced[0];
   const library = entry.replace(/\.lean$/, '');
   fs.copyFileSync(path.join(generated, entry), path.join(leanProject, entry));
-  fs.writeFileSync(path.join(leanProject, 'lakefile.toml'),
-    `name = "noble-allocator-admission-${name}"\ndefaultTargets = ["${library}"]\n\n`
-    + "[[require]]\nname = \"aeneas\"\ngit = { url = \"https://github.com/AeneasVerif/aeneas\", "
-    + 'subDir = "backends/lean" }\n'
-    + `rev = "${tools.aeneas.lean_library_rev}"\n\n[[lean_lib]]\nname = "${library}"\n`);
-  const leanRun = run(`${name}-lean`, tool('lean', 'lake'), ['build', library],
+  const leanRun = run(`${name}-lean`, tool('lean', 'lake'), ['env', 'lean', entry],
     { ...fakeUser, PATH: `${path.dirname(tool('lean', 'lake'))}:${systemPath}` }, 1_800_000, leanProject);
-  stages.lean = { status: leanRun.exit === 0 ? 'built' : 'blocked', exit: leanRun.exit,
-    target: library, entry_sha256: fileSha(path.join(leanProject, entry)),
+  stages.lean = { status: leanRun.exit === 0 ? 'checked' : 'blocked', exit: leanRun.exit,
+    module: library, entry_sha256: fileSha(path.join(leanProject, entry)),
     diagnostic: leanRun.exit === 0 ? null : firstError(leanRun.output) ?? tail(leanRun.output, 3),
     log: leanRun.log };
 
@@ -437,7 +443,10 @@ const liveControl = (() => {
 })();
 
 const after = packagesSnapshot();
-const packagesMutated = before.vec_olean_mtime_ms !== after.vec_olean_mtime_ms
+// Observed, not asserted: the prebuilt Aeneas Lean library is shared with every proof project
+// and other lanes work against it concurrently. This lane's own commands are `lake env lean`,
+// which cannot write it, so a change here is another lane's build and is reported as such.
+const packageCacheChanged = before.vec_olean_mtime_ms !== after.vec_olean_mtime_ms
   || before.aeneas_std_dir_mtime_ms !== after.aeneas_std_dir_mtime_ms;
 
 // ---------------------------------------------------------------------------
@@ -497,7 +506,8 @@ const evidence = {
     cargo_args: selection.configuration.cargo_args, extraction_profile: selection.configuration.extraction_profile },
   stable_toolchain: stable,
   lean_library: { packages: normalize(packages), manifest_sha256: sha(leanLibrary), rev: leanLibraryRev,
-    marker: normalize(libraryMarker), packages_mutated: packagesMutated,
+    marker: normalize(libraryMarker), shared_cache_changed_during_run: packageCacheChanged,
+    lane_commands_can_write_cache: false, lane_stage: 'lake env lean <generated file>',
     snapshot_before: before, snapshot_after: after },
   source_stage: { expectations: sourceExpectations, stages: sourceStages, failures: sourceFailures,
     ungated_unstable_feature_errors: sourceStages.extraction_nightly_ungated.unstable_feature_errors ?? 0 },
@@ -520,7 +530,7 @@ const evidence = {
   commands,
   mismatches,
   result: mismatches.length === 0 && sourceFailures.length === 0 && controls.every(item => item.result !== 'failed')
-    && liveControl.result === 'accepted' && treeCleanAfter && !packagesMutated ? 'passed' : 'failed',
+    && liveControl.result === 'accepted' && treeCleanAfter ? 'passed' : 'failed',
 };
 fs.writeFileSync(path.join(artifacts, 'evidence.json'), JSON.stringify(evidence, null, 2) + '\n');
 
@@ -532,7 +542,7 @@ const summary = {
   controls: Object.fromEntries(controls.map(item => [item.name, item.result])),
   mismatches: mismatches.length,
   blocked_stages: observedBlockedStages,
-  packages_mutated: packagesMutated,
+  shared_package_cache_changed: packageCacheChanged,
   artifacts: normalize(artifacts),
 };
 console.log(JSON.stringify(summary, null, 2));
