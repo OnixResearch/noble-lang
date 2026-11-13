@@ -1,0 +1,3086 @@
+{
+  "schema": "noble-size-change-proof/v1",
+  "result": "passed",
+  "issue": 101,
+  "source_commit": "73e9fd4e05c7fe806940575384d21843000312ed",
+  "source_tree": "7bf60d5388a12347e838c9ac2a44a9f4008df9fc",
+  "clean_source": true,
+  "allow_dirty": false,
+  "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+  "lean_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+  "modules": [
+    "NobleM2.SizeChange",
+    "NobleM2.SizeChangeBounded",
+    "NobleM2.SizeChangeCallGraph",
+    "NobleM2.SizeChangeCallProgram",
+    "NobleM2.SizeChangeChecker",
+    "NobleM2.SizeChangeClosure",
+    "NobleM2.SizeChangeClosureSound",
+    "NobleM2.SizeChangeCounting",
+    "NobleM2.SizeChangeCriterion",
+    "NobleM2.SizeChangeDecEq",
+    "NobleM2.SizeChangeEnumeration",
+    "NobleM2.SizeChangeExact",
+    "NobleM2.SizeChangeFixtures",
+    "NobleM2.SizeChangeGuarded",
+    "NobleM2.SizeChangeIdempotent",
+    "NobleM2.SizeChangeMatrix",
+    "NobleM2.SizeChangeMatrixAssoc",
+    "NobleM2.SizeChangeMatrixCycle",
+    "NobleM2.SizeChangeMatrixDecEq",
+    "NobleM2.SizeChangeMatrixEnumeration",
+    "NobleM2.SizeChangeMatrixExponent",
+    "NobleM2.SizeChangeMatrixExtract",
+    "NobleM2.SizeChangeMatrixJoinFold",
+    "NobleM2.SizeChangeMatrixMonotone",
+    "NobleM2.SizeChangeMatrixPath",
+    "NobleM2.SizeChangeMatrixPathProduct",
+    "NobleM2.SizeChangeMatrixPeriod",
+    "NobleM2.SizeChangeMatrixPigeonhole",
+    "NobleM2.SizeChangeMatrixPrefix",
+    "NobleM2.SizeChangeMatrixPreserve",
+    "NobleM2.SizeChangeMatrixRepeat",
+    "NobleM2.SizeChangeMatrixScan",
+    "NobleM2.SizeChangeMatrixSemantics",
+    "NobleM2.SizeChangeMatrixShortening",
+    "NobleM2.SizeChangeMatrixSplice",
+    "NobleM2.SizeChangeMatrixStrict",
+    "NobleM2.SizeChangeMonoid",
+    "NobleM2.SizeChangePowers",
+    "NobleM2.SizeChangeRefusal",
+    "NobleM2.SizeChangeRepeat",
+    "NobleM2.SizeChangeSites",
+    "NobleM2.SizeChangeTightness",
+    "NobleM2.SizeChangeUniverse"
+  ],
+  "closure": [
+    "NobleM2.SizeChange",
+    "NobleM2.SizeChangeBounded",
+    "NobleM2.SizeChangeCallGraph",
+    "NobleM2.SizeChangeCallProgram",
+    "NobleM2.SizeChangeChecker",
+    "NobleM2.SizeChangeClosure",
+    "NobleM2.SizeChangeClosureSound",
+    "NobleM2.SizeChangeCounting",
+    "NobleM2.SizeChangeCriterion",
+    "NobleM2.SizeChangeDecEq",
+    "NobleM2.SizeChangeEnumeration",
+    "NobleM2.SizeChangeExact",
+    "NobleM2.SizeChangeFixtures",
+    "NobleM2.SizeChangeGuarded",
+    "NobleM2.SizeChangeIdempotent",
+    "NobleM2.SizeChangeMatrix",
+    "NobleM2.SizeChangeMatrixAssoc",
+    "NobleM2.SizeChangeMatrixCycle",
+    "NobleM2.SizeChangeMatrixDecEq",
+    "NobleM2.SizeChangeMatrixEnumeration",
+    "NobleM2.SizeChangeMatrixExponent",
+    "NobleM2.SizeChangeMatrixExtract",
+    "NobleM2.SizeChangeMatrixJoinFold",
+    "NobleM2.SizeChangeMatrixMonotone",
+    "NobleM2.SizeChangeMatrixPath",
+    "NobleM2.SizeChangeMatrixPathProduct",
+    "NobleM2.SizeChangeMatrixPeriod",
+    "NobleM2.SizeChangeMatrixPigeonhole",
+    "NobleM2.SizeChangeMatrixPrefix",
+    "NobleM2.SizeChangeMatrixPreserve",
+    "NobleM2.SizeChangeMatrixRepeat",
+    "NobleM2.SizeChangeMatrixScan",
+    "NobleM2.SizeChangeMatrixSemantics",
+    "NobleM2.SizeChangeMatrixShortening",
+    "NobleM2.SizeChangeMatrixSplice",
+    "NobleM2.SizeChangeMatrixStrict",
+    "NobleM2.SizeChangeMonoid",
+    "NobleM2.SizeChangePowers",
+    "NobleM2.SizeChangeRefusal",
+    "NobleM2.SizeChangeRepeat",
+    "NobleM2.SizeChangeSites",
+    "NobleM2.SizeChangeTightness",
+    "NobleM2.SizeChangeUniverse"
+  ],
+  "sources_sha256": {
+    "proofs/m3/NobleM2/SizeChange.lean": "4980fe948c8c0e057f0a6e584bacb7423b3cee012d96e0e2a81884dc6bdb057e",
+    "proofs/m3/NobleM2/SizeChangeBounded.lean": "45b0559330a9d509aa51c452e507a4505f1a258188398d9f1427967b99fc70fa",
+    "proofs/m3/NobleM2/SizeChangeCallGraph.lean": "13a4e83340509cc052e9da1c2cd41a37083a68c92036c95e77b5e1496676f981",
+    "proofs/m3/NobleM2/SizeChangeCallProgram.lean": "76399f1cb1eb3ee24e2cf3ace09796b56d66d781754bd60d7a4d27c81fecfd98",
+    "proofs/m3/NobleM2/SizeChangeChecker.lean": "9d3b7b74b176c1112ac32f9bd1e9afc1fd243140b5c0b94c0ef1d0100572e565",
+    "proofs/m3/NobleM2/SizeChangeClosure.lean": "ac6e0e1509a9ec5034517f6b28bdf56a8fcf31faf7491402b8e8039d85f450ae",
+    "proofs/m3/NobleM2/SizeChangeClosureSound.lean": "636a68d4daff5566a0dc8615c775f312348c4ba1cea4a48d56fb1aa7dc103a93",
+    "proofs/m3/NobleM2/SizeChangeCounting.lean": "b5126231cdefa874cd4d27e172a9a4c6f9b9c05a83da3a26ce061de302c21124",
+    "proofs/m3/NobleM2/SizeChangeCriterion.lean": "54d2513c3b7794adb8abb4b2d69ede198eb2cba608d1f377d01fa785e2d2c15f",
+    "proofs/m3/NobleM2/SizeChangeDecEq.lean": "fd7b4f8c36ab2c9979c39ad129025e60c0729c376236577010baaea7f7bb4727",
+    "proofs/m3/NobleM2/SizeChangeEnumeration.lean": "3ef62bcbc1be754f97d6e6fad4e975a1006cf2305cce057325c4a8b615e69a5d",
+    "proofs/m3/NobleM2/SizeChangeExact.lean": "0184c7797b2cb020b439bcd567d07658f2a7fdee6ea7a82da96ccbcb29ba5dee",
+    "proofs/m3/NobleM2/SizeChangeFixtures.lean": "519989090d6fd385c79352344384b5c500750f431fd541c9d1ab04695be9d162",
+    "proofs/m3/NobleM2/SizeChangeGuarded.lean": "367493aff02ee38461f4e83e6e4fac551acc6d2124e243b9688a7a49aa1fc812",
+    "proofs/m3/NobleM2/SizeChangeIdempotent.lean": "172587f496fc470e312ed355cc88a6c7a76e376f057829ea37bc3b3f0635a42a",
+    "proofs/m3/NobleM2/SizeChangeMatrix.lean": "aeb458c3acd306de26e1238d49708936350955aac77deaf9d2776a9d5982c319",
+    "proofs/m3/NobleM2/SizeChangeMatrixAssoc.lean": "a02336d2897396b119faaf6b7f5620a4eae612910c9fcb30ec5e425ed368130e",
+    "proofs/m3/NobleM2/SizeChangeMatrixCycle.lean": "cfea4fac1bf90376a753bb924a26ed87e22cc64c5473a2ee4ead37099415e038",
+    "proofs/m3/NobleM2/SizeChangeMatrixDecEq.lean": "e68695b1d85fa2660085052fb3f73c519ecb618f839996d3651364e9d13316c0",
+    "proofs/m3/NobleM2/SizeChangeMatrixEnumeration.lean": "12143fad4c8357e63e992996f79e55c4127f74d9020d98344ed60f9fb88b759d",
+    "proofs/m3/NobleM2/SizeChangeMatrixExponent.lean": "a0dd624caae5d70740a93a98c3d8fa1f369a2efb5bd313f3522c80d3e69844d4",
+    "proofs/m3/NobleM2/SizeChangeMatrixExtract.lean": "407a62c40b1b7fbb1ada25d204c9675d8eb99995ffeb75ca565de58523c6bc61",
+    "proofs/m3/NobleM2/SizeChangeMatrixJoinFold.lean": "2872b98ba789442400843dd08050ea8f4b3b7c525a847ce02c4381833fc588cf",
+    "proofs/m3/NobleM2/SizeChangeMatrixMonotone.lean": "6e968b5e9bf5dc85f92d1f7cb34d2efdf991ea33a8356de40574ba89b856d393",
+    "proofs/m3/NobleM2/SizeChangeMatrixPath.lean": "626dbc2b55f5711fc25e2b5ba262a21111bc082906b769552cd8dcea17171372",
+    "proofs/m3/NobleM2/SizeChangeMatrixPathProduct.lean": "31343ea731738f1808bc7a7842ec6e3a2938c4dbaed24d98723afc3571869007",
+    "proofs/m3/NobleM2/SizeChangeMatrixPeriod.lean": "cb20077358fa579a01514d4a5d582bd2a958dca78146a9393f43e84b3fb97825",
+    "proofs/m3/NobleM2/SizeChangeMatrixPigeonhole.lean": "5fc698479bd8d08e472a762d047885bbe91dfef754b8127397b8ddd722d9ffdc",
+    "proofs/m3/NobleM2/SizeChangeMatrixPrefix.lean": "a766445e64fa07f039c61d2ec38d64e60c27876e736cd30fc4fd6c964394dc44",
+    "proofs/m3/NobleM2/SizeChangeMatrixPreserve.lean": "dfde22c9b51037cff21123a1d3a8abf98e95cca9cad5ce98a8f236e2843c28f3",
+    "proofs/m3/NobleM2/SizeChangeMatrixRepeat.lean": "89a350ebf88c22f6ef2ee4399eada75d6fbd3903ef3eef24847c82cedd2fe1d0",
+    "proofs/m3/NobleM2/SizeChangeMatrixScan.lean": "b03a4d89391e3283893298f9f2592aeb53560043f833ebc1a78d3bfafc1a4460",
+    "proofs/m3/NobleM2/SizeChangeMatrixSemantics.lean": "70ea97cf2069cf047f82adecd5a959f52d8630d12dfc19ee336eb8153fb31051",
+    "proofs/m3/NobleM2/SizeChangeMatrixShortening.lean": "5cc4679af5495c14a2f51ae38982bdc74be9a6d8ac1259f0b37fbb4f36e72162",
+    "proofs/m3/NobleM2/SizeChangeMatrixSplice.lean": "ed3456f6b9f0e3a497b10bfb1502d7ae26ef15457f03420f3311f1351138097a",
+    "proofs/m3/NobleM2/SizeChangeMatrixStrict.lean": "b46b81fd79f9682ee7e8727ddd5b2d5e80956a0276f84b14179ba36117958f5e",
+    "proofs/m3/NobleM2/SizeChangeMonoid.lean": "21a8c3aecbb0207cef60963cd13a861f1253c3dc4b3508faca00f2fa344efded",
+    "proofs/m3/NobleM2/SizeChangePowers.lean": "c18374bb13ded6cf11b83b334ab0cdcf0da56eee427c7ac85a491d63176ad617",
+    "proofs/m3/NobleM2/SizeChangeRefusal.lean": "f2d210c341c97fddb5d415ba10dd80ba081cd0da3809ae4f5c1a17dc483ed7d8",
+    "proofs/m3/NobleM2/SizeChangeRepeat.lean": "d126fa153f662b17809bd0592a4d8d896edd0744f6956903c883173f2750c281",
+    "proofs/m3/NobleM2/SizeChangeSites.lean": "56c7000f74a3a1ecf8e9b073d29c05138c9f9fdf45830ab55e3d2a385409eb76",
+    "proofs/m3/NobleM2/SizeChangeTightness.lean": "e7f95e8ef5895bbbaa4fc978a035457062bb91b4469b47f70480f924880338d7",
+    "proofs/m3/NobleM2/SizeChangeUniverse.lean": "a4c0849fb68ef530ee2f1ff0517dcb31484f539e3480c3157b207434b459927b",
+    "proofs/m3/NobleM2.lean": "9b13889351f40867d5cf91b00f4bd0e5d1698f750eecb4259c657590a12496f9",
+    "proofs/m3/size-change-inventory.json": "1824f1996b0329d9aa27c8f374d6857e75aff3a43f5b3c4eabe26a03770ec41e",
+    "verification/size-change/check.mjs": "8157927d6692a06ff2d69b49effbc7f5460eb20036d9389be61d8e7a1e4571aa"
+  },
+  "claims": {
+    "model_theorems": 275,
+    "strict_theorems": 275,
+    "axioms": [
+      "Quot.sound",
+      "propext"
+    ],
+    "implementation_theorems": 0,
+    "correspondence": "none: the front end is checked in verification/size-change/scenarios.mjs"
+  },
+  "theorem_count": 275,
+  "theorems": [
+    {
+      "name": "NobleM2.SizeChange.Rel.compose_unknown_left",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel.compose_unknown_left : ∀ (x : NobleM2.SizeChange.Rel), NobleM2.SizeChange.Rel.unknown.compose x = NobleM2.SizeChange.Rel.unknown",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.compose_unknown_right",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel.compose_unknown_right : ∀ (x : NobleM2.SizeChange.Rel), x.compose NobleM2.SizeChange.Rel.unknown = NobleM2.SizeChange.Rel.unknown",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.compose_decrease_left",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel.compose_decrease_left : ∀ (x : NobleM2.SizeChange.Rel), x ≠ NobleM2.SizeChange.Rel.unknown → NobleM2.SizeChange.Rel.decrease.compose x = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.compose_decrease_right",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel.compose_decrease_right : ∀ (x : NobleM2.SizeChange.Rel), x ≠ NobleM2.SizeChange.Rel.unknown → x.compose NobleM2.SizeChange.Rel.decrease = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.known_of_decrease",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.Rel.known_of_decrease : ∀ {x : NobleM2.SizeChange.Rel}, x = NobleM2.SizeChange.Rel.decrease → x ≠ NobleM2.SizeChange.Rel.unknown",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.known_compose",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.Rel.known_compose : ∀ {x y : NobleM2.SizeChange.Rel}, x ≠ NobleM2.SizeChange.Rel.unknown → y ≠ NobleM2.SizeChange.Rel.unknown → x.compose y ≠ NobleM2.SizeChange.Rel.unknown",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.allowed_compose",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.Rel.allowed_compose : ∀ {r₁ r₂ : NobleM2.SizeChange.Rel} {a b c : Nat}, r₁.Allowed a b → r₂.Allowed b c → (r₁.compose r₂).Allowed a c",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.compose_decrease_unknown_raises",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel.compose_decrease_unknown_raises : NobleM2.SizeChange.Rel.decrease.Allowed 5 3 ∧ NobleM2.SizeChange.Rel.unknown.Allowed 3 9 ∧ ¬NobleM2.SizeChange.Rel.decrease.Allowed 5 9",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.eq_decrease_of_compose",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.Rel.eq_decrease_of_compose : ∀ {x y : NobleM2.SizeChange.Rel}, x.compose y = NobleM2.SizeChange.Rel.decrease → x = NobleM2.SizeChange.Rel.decrease ∨ y = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.certified_sound",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.certified_sound : ∀ {n : Nat} {g : NobleM2.SizeChange.Graph n}, NobleM2.SizeChange.certified g = true → ∃ i, g i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.certified_refusal",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.certified_refusal : ∀ {n : Nat} {g : NobleM2.SizeChange.Graph n}, NobleM2.SizeChange.certified g = false → ¬∃ i, g i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_self_decrease",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.compose_self_decrease : ∀ (x : NobleM2.SizeChange.Rel), (x.compose x == NobleM2.SizeChange.Rel.decrease) = (x == NobleM2.SizeChange.Rel.decrease)",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.certified_closure",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.certified_closure : ∀ {n : Nat} (g : NobleM2.SizeChange.Graph n), NobleM2.SizeChange.certified g.compose = NobleM2.SizeChange.certified g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.no_decreasing_chain",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.no_decreasing_chain : ∀ (m : Nat → Nat), (∀ (k : Nat), m (k + 1) < m k) → False",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.certified_terminates",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.certified_terminates : ∀ {n : Nat} {g : NobleM2.SizeChange.Graph n}, NobleM2.SizeChange.certified g = true → ∀ (state : Nat → Fin n → Nat), (∀ (t : Nat) (i : Fin n), g i = NobleM2.SizeChange.Rel.decrease → state (t + 1) i < state t i) → False",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.tail_accepted",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.tail_accepted : NobleM2.SizeChange.certified NobleM2.SizeChange.tailGraph = true",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.countdown_accepted",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.countdown_accepted : NobleM2.SizeChange.certified NobleM2.SizeChange.countdownGraph = true",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.same_refused",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.same_refused : NobleM2.SizeChange.certified NobleM2.SizeChange.sameGraph = false",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.wrapping_refused",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.wrapping_refused : NobleM2.SizeChange.certified NobleM2.SizeChange.wrappingGraph = false",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.wrapping_reports_no_decrease",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.wrapping_reports_no_decrease : ¬∃ i, NobleM2.SizeChange.wrappingGraph i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.grow_refused",
+      "module": "NobleM2.SizeChange",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.grow_refused : NobleM2.SizeChange.certified NobleM2.SizeChange.growGraph = false",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.decreasesWithin_sound",
+      "module": "NobleM2.SizeChangeBounded",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.decreasesWithin_sound : ∀ {n bound : Nat} {g : NobleM2.SizeChange.Graph n} {i : Fin n}, NobleM2.SizeChange.decreasesWithin n bound g i = true → ∃ j, j ≤ bound ∧ NobleM2.SizeChange.power (j + 1) g i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.decreasesWithin_mono",
+      "module": "NobleM2.SizeChangeBounded",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.decreasesWithin_mono : ∀ {n bound bound' : Nat} {g : NobleM2.SizeChange.Graph n} {i : Fin n}, bound ≤ bound' → NobleM2.SizeChange.decreasesWithin n bound g i = true → NobleM2.SizeChange.decreasesWithin n bound' g i = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.power_one_apply",
+      "module": "NobleM2.SizeChangeBounded",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.power_one_apply : ∀ {n : Nat} (g : NobleM2.SizeChange.Graph n) (i : Fin n), NobleM2.SizeChange.power 1 g i = g i",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.decreasesWithin_zero",
+      "module": "NobleM2.SizeChangeBounded",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.decreasesWithin_zero : ∀ {n : Nat} (g : NobleM2.SizeChange.Graph n) (i : Fin n), NobleM2.SizeChange.decreasesWithin n 0 g i = (g i == NobleM2.SizeChange.Rel.decrease)",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.decreasesWithin_complete_zero",
+      "module": "NobleM2.SizeChangeBounded",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.decreasesWithin_complete_zero : ∀ {n : Nat} (g : NobleM2.SizeChange.Graph n) (i : Fin n), NobleM2.SizeChange.decreasesWithin n 0 g i = true ↔ g i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.decreasingOne_found",
+      "module": "NobleM2.SizeChangeBounded",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.decreasingOne_found : NobleM2.SizeChange.decreasesWithin 1 3 NobleM2.SizeChange.decreasingOne 0 = true",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.reaches_trans",
+      "module": "NobleM2.SizeChangeCallGraph",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.reaches_trans : ∀ {n : Nat} {call : Fin n → Fin n → Bool} {i j k : Fin n}, NobleM2.SizeChange.Reaches call i j → NobleM2.SizeChange.Reaches call j k → NobleM2.SizeChange.Reaches call i k",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.sameSCC_refl",
+      "module": "NobleM2.SizeChangeCallGraph",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.sameSCC_refl : ∀ {n : Nat} (call : Fin n → Fin n → Bool) (i : Fin n), NobleM2.SizeChange.SameSCC call i i",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.sameSCC_symm",
+      "module": "NobleM2.SizeChangeCallGraph",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.sameSCC_symm : ∀ {n : Nat} {call : Fin n → Fin n → Bool} {i j : Fin n}, NobleM2.SizeChange.SameSCC call i j → NobleM2.SizeChange.SameSCC call j i",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.sameSCC_trans",
+      "module": "NobleM2.SizeChangeCallGraph",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.sameSCC_trans : ∀ {n : Nat} {call : Fin n → Fin n → Bool} {i j k : Fin n}, NobleM2.SizeChange.SameSCC call i j → NobleM2.SizeChange.SameSCC call j k → NobleM2.SizeChange.SameSCC call i k",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.onCycleEdge_sameSCC",
+      "module": "NobleM2.SizeChangeCallGraph",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.onCycleEdge_sameSCC : ∀ {n : Nat} {call : Fin n → Fin n → Bool} {i j : Fin n}, NobleM2.SizeChange.OnCycleEdge call i j → NobleM2.SizeChange.SameSCC call i j",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.twoCycle_twoCycleEdges",
+      "module": "NobleM2.SizeChangeCallGraph",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.twoCycle_twoCycleEdges : NobleM2.SizeChange.OnCycleEdge NobleM2.SizeChange.twoCycle 0 1 ∧ NobleM2.SizeChange.OnCycleEdge NobleM2.SizeChange.twoCycle 1 0",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.twoCycle_sameSCC",
+      "module": "NobleM2.SizeChangeCallGraph",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.twoCycle_sameSCC : NobleM2.SizeChange.SameSCC NobleM2.SizeChange.twoCycle 0 1",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.lasso_follows",
+      "module": "NobleM2.SizeChangeCallGraph",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.lasso_follows : ∀ (t : Nat), NobleM2.SizeChange.completeCall (NobleM2.SizeChange.lasso t) (NobleM2.SizeChange.lasso (t + 1)) = true",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.not_every_sequence_periodic",
+      "module": "NobleM2.SizeChangeCallGraph",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.not_every_sequence_periodic : ∀ (p : Nat), p ≠ 0 → ¬∀ (t : Nat), NobleM2.SizeChange.lasso (t + p) = NobleM2.SizeChange.lasso t",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.step_periodic",
+      "module": "NobleM2.SizeChangeCallProgram",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.step_periodic : ∀ {n m : Nat} {prog : NobleM2.SizeChange.Program n m} (run : NobleM2.SizeChange.CallRun prog) {p : Nat}, (∀ (t : Nat), run.node (t + p) = run.node t) → ∀ (t : Nat), run.step (t + p) = run.step t",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.call_run_terminates",
+      "module": "NobleM2.SizeChangeCallProgram",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.call_run_terminates : ∀ {n m : Nat} {prog : NobleM2.SizeChange.Program n m} (run : NobleM2.SizeChange.CallRun prog) {p : Nat} {i : Fin m}, (∀ (t : Nat), run.node (t + p) = run.node t) → NobleM2.SizeChange.pathMatrix p run.step 0 i i = NobleM2.SizeChange.Rel4.strict → False",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.classify_equal_sound",
+      "module": "NobleM2.SizeChangeChecker",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.classify_equal_sound : ∀ {value : Nat} {arg : NobleM2.SizeChange.Arg}, arg.classify = NobleM2.SizeChange.Rel.equal → NobleM2.SizeChange.Arg.eval value arg = value",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.classify_decrease_sound",
+      "module": "NobleM2.SizeChangeChecker",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.classify_decrease_sound : ∀ {value : Nat} {arg : NobleM2.SizeChange.Arg}, arg.classify = NobleM2.SizeChange.Rel.decrease → 0 < value → NobleM2.SizeChange.Arg.eval value arg < value",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.graphOf_decrease_sound",
+      "module": "NobleM2.SizeChangeChecker",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.graphOf_decrease_sound : ∀ {n : Nat} {args : NobleM2.SizeChange.Args n} {state : Fin n → Nat} {i : Fin n}, NobleM2.SizeChange.graphOf args i = NobleM2.SizeChange.Rel.decrease → 0 < state i → NobleM2.SizeChange.evalArgs args state i < state i",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.graphOf_equal_sound",
+      "module": "NobleM2.SizeChangeChecker",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.graphOf_equal_sound : ∀ {n : Nat} {args : NobleM2.SizeChange.Args n} {state : Fin n → Nat} {i : Fin n}, NobleM2.SizeChange.graphOf args i = NobleM2.SizeChange.Rel.equal → NobleM2.SizeChange.evalArgs args state i = state i",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.checked_family_certified",
+      "module": "NobleM2.SizeChangeChecker",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.checked_family_certified : ∀ {k n : Nat} {argsOf : Fin k → NobleM2.SizeChange.Args n} {i : Fin n}, (∀ (s : Fin k), argsOf s i = NobleM2.SizeChange.Arg.predOfSame) → (NobleM2.SizeChange.certifiedAll fun s => NobleM2.SizeChange.graphOf (argsOf s)) = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.checked_family_terminates",
+      "module": "NobleM2.SizeChangeChecker",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.checked_family_terminates : ∀ {k n : Nat} {argsOf : Fin k → NobleM2.SizeChange.Args n} {i : Fin n}, (∀ (s : Fin k), argsOf s i = NobleM2.SizeChange.Arg.predOfSame) → ∀ (_run : NobleM2.SizeChange.Run k n fun s => NobleM2.SizeChange.graphOf (argsOf s)), False",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.tailArgs_graph",
+      "module": "NobleM2.SizeChangeChecker",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.tailArgs_graph : NobleM2.SizeChange.graphOf NobleM2.SizeChange.tailArgs 0 = NobleM2.SizeChange.Rel.decrease ∧ NobleM2.SizeChange.graphOf NobleM2.SizeChange.tailArgs 1 = NobleM2.SizeChange.Rel.unknown",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.tailArgs_certified",
+      "module": "NobleM2.SizeChangeChecker",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.tailArgs_certified : (NobleM2.SizeChange.certifiedAll fun x => NobleM2.SizeChange.graphOf NobleM2.SizeChange.tailArgs) = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.identityArgs_classified",
+      "module": "NobleM2.SizeChangeChecker",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.identityArgs_classified : NobleM2.SizeChange.graphOf NobleM2.SizeChange.identityArgs 0 = NobleM2.SizeChange.Rel.equal",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.identityArgs_not_decreasing",
+      "module": "NobleM2.SizeChangeChecker",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.identityArgs_not_decreasing : ¬∃ i, NobleM2.SizeChange.graphOf NobleM2.SizeChange.identityArgs i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.composeGraph_decrease_left",
+      "module": "NobleM2.SizeChangeClosure",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.composeGraph_decrease_left : ∀ {n : Nat} {g h : NobleM2.SizeChange.Graph n} {i : Fin n}, g i = NobleM2.SizeChange.Rel.decrease → h i ≠ NobleM2.SizeChange.Rel.unknown → NobleM2.SizeChange.composeGraph g h i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.composeGraph_decrease_right",
+      "module": "NobleM2.SizeChangeClosure",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.composeGraph_decrease_right : ∀ {n : Nat} {g h : NobleM2.SizeChange.Graph n} {i : Fin n}, h i = NobleM2.SizeChange.Rel.decrease → g i ≠ NobleM2.SizeChange.Rel.unknown → NobleM2.SizeChange.composeGraph g h i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.closure_decreases_at",
+      "module": "NobleM2.SizeChangeClosure",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.closure_decreases_at : ∀ {k n : Nat} {sites : NobleM2.SizeChange.Sites k n} {i : Fin n}, (∀ (s : Fin k), sites s i = NobleM2.SizeChange.Rel.decrease) → ∀ (g : NobleM2.SizeChange.Graph n), NobleM2.SizeChange.Closure sites g → g i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.closure_decreases",
+      "module": "NobleM2.SizeChangeClosure",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.closure_decreases : ∀ {k n : Nat} {sites : NobleM2.SizeChange.Sites k n}, NobleM2.SizeChange.certifiedAll sites = true → ∃ i, ∀ (g : NobleM2.SizeChange.Graph n), NobleM2.SizeChange.Closure sites g → g i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.allEqual_no_decrease",
+      "module": "NobleM2.SizeChangeClosure",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.allEqual_no_decrease : ∀ {n : Nat} {g : NobleM2.SizeChange.Graph n}, NobleM2.SizeChange.AllEqual g → ¬∃ i, g i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.composeGraph_allEqual",
+      "module": "NobleM2.SizeChangeClosure",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.composeGraph_allEqual : ∀ {n : Nat} {g h : NobleM2.SizeChange.Graph n}, NobleM2.SizeChange.AllEqual g → NobleM2.SizeChange.AllEqual h → NobleM2.SizeChange.AllEqual (NobleM2.SizeChange.composeGraph g h)",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.composeGraph_allEqual_no_decrease",
+      "module": "NobleM2.SizeChangeClosure",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.composeGraph_allEqual_no_decrease : ∀ {n : Nat} {g h : NobleM2.SizeChange.Graph n}, NobleM2.SizeChange.AllEqual g → NobleM2.SizeChange.AllEqual h → ¬∃ i, NobleM2.SizeChange.composeGraph g h i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.closure_refuses_allEqual_site",
+      "module": "NobleM2.SizeChangeClosure",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.closure_refuses_allEqual_site : ∀ {k n : Nat} {sites : NobleM2.SizeChange.Sites k n} (s : Fin k), NobleM2.SizeChange.AllEqual (sites s) → ¬∀ (g : NobleM2.SizeChange.Graph n), NobleM2.SizeChange.Closure sites g → ∃ i, g i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.pairDecreasing_closure",
+      "module": "NobleM2.SizeChangeClosure",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.pairDecreasing_closure : ∃ i, ∀ (g : NobleM2.SizeChange.Graph 2), NobleM2.SizeChange.Closure NobleM2.SizeChange.pairDecreasing g → g i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.pairMixed_refused_by_closure",
+      "module": "NobleM2.SizeChangeClosure",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.pairMixed_refused_by_closure : ¬∀ (g : NobleM2.SizeChange.Graph 2), NobleM2.SizeChange.Closure NobleM2.SizeChange.pairMixed g → ∃ i, g i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.closure_uniform_terminates",
+      "module": "NobleM2.SizeChangeClosureSound",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.closure_uniform_terminates : ∀ {k n : Nat} {sites : NobleM2.SizeChange.Sites k n} {i : Fin n}, (∀ (g : NobleM2.SizeChange.Graph n), NobleM2.SizeChange.Closure sites g → g i = NobleM2.SizeChange.Rel.decrease) → ∀ (_run : NobleM2.SizeChange.Run k n sites), False",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.closure_uniform_iff_sites",
+      "module": "NobleM2.SizeChangeClosureSound",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.closure_uniform_iff_sites : ∀ {k n : Nat} (sites : NobleM2.SizeChange.Sites k n), (∃ i, ∀ (g : NobleM2.SizeChange.Graph n), NobleM2.SizeChange.Closure sites g → g i = NobleM2.SizeChange.Rel.decrease) ↔ ∃ i, ∀ (s : Fin k), sites s i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_no_uniform",
+      "module": "NobleM2.SizeChangeClosureSound",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.splitSites_no_uniform : ¬∀ (g : NobleM2.SizeChange.Graph 2), NobleM2.SizeChange.Closure NobleM2.SizeChange.splitSites g → g 1 = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.nodup_map_of_injective",
+      "module": "NobleM2.SizeChangeCounting",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.nodup_map_of_injective : ∀ {α β : Type} {l : List α} {f : α → β}, l.Nodup → (∀ (a : α), a ∈ l → ∀ (b : α), b ∈ l → f a = f b → a = b) → (List.map f l).Nodup",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.decompose_of_mem",
+      "module": "NobleM2.SizeChangeCounting",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.decompose_of_mem : ∀ {α : Type} (l : List α) {a : α}, a ∈ l → ∃ pre suf, l = pre ++ a :: suf",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.mem_of_ne_of_mem_append_cons",
+      "module": "NobleM2.SizeChangeCounting",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.mem_of_ne_of_mem_append_cons : ∀ {α : Type} {a b : α} (pre suf : List α), b ∈ pre ++ a :: suf → b ≠ a → b ∈ pre ++ suf",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.length_le_of_subset",
+      "module": "NobleM2.SizeChangeCounting",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.length_le_of_subset : ∀ {α : Type} (m l : List α), m.Nodup → (∀ (a : α), a ∈ m → a ∈ l) → m.length ≤ l.length",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.injective_bound",
+      "module": "NobleM2.SizeChangeCounting",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.injective_bound : ∀ {α : Type} (l : List α) {m : Nat} (f : Fin m → α), (∀ (i : Fin m), f i ∈ l) → (∀ (i j : Fin m), f i = f j → i = j) → m ≤ l.length",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.certified_hasStrict",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.certified_hasStrict : ∀ {n : Nat} {g : NobleM2.SizeChange.Graph n}, NobleM2.SizeChange.certified g = true → NobleM2.SizeChange.HasStrict g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.closure_hasStrict_of_certified",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.closure_hasStrict_of_certified : ∀ {k n : Nat} {sites : NobleM2.SizeChange.Sites k n}, NobleM2.SizeChange.certifiedAll sites = true → ∀ (g : NobleM2.SizeChange.Graph n), NobleM2.SizeChange.Closure sites g → NobleM2.SizeChange.HasStrict g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.closure_criterion_refused_of_site",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.closure_criterion_refused_of_site : ∀ {k n : Nat} {sites : NobleM2.SizeChange.Sites k n} (s : Fin k), ¬NobleM2.SizeChange.HasStrict (sites s) → ¬∀ (g : NobleM2.SizeChange.Graph n), NobleM2.SizeChange.Closure sites g → NobleM2.SizeChange.HasStrict g",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_each",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.splitSites_each : ∀ (s : Fin 2), NobleM2.SizeChange.HasStrict (NobleM2.SizeChange.splitSites s)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_no_shared",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.splitSites_no_shared : NobleM2.SizeChange.certifiedAll NobleM2.SizeChange.splitSites = false",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_product_unknown",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.splitSites_product_unknown : NobleM2.SizeChange.composeGraph (NobleM2.SizeChange.splitSites 0) (NobleM2.SizeChange.splitSites 1) = fun x => NobleM2.SizeChange.Rel.unknown",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_compose_zero",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.splitSites_compose_zero : NobleM2.SizeChange.composeGraph (NobleM2.SizeChange.splitSites 0) (NobleM2.SizeChange.splitSites 1) 0 = NobleM2.SizeChange.Rel.unknown",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_compose_zero_ne_decrease",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.splitSites_compose_zero_ne_decrease : NobleM2.SizeChange.composeGraph (NobleM2.SizeChange.splitSites 0) (NobleM2.SizeChange.splitSites 1) 0 ≠ NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_product_no_strict",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.splitSites_product_no_strict : ¬NobleM2.SizeChange.HasStrict (NobleM2.SizeChange.composeGraph (NobleM2.SizeChange.splitSites 0) (NobleM2.SizeChange.splitSites 1))",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_zero_iff",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.splitSites_zero_iff : ∀ (i : Fin 2), NobleM2.SizeChange.splitSites 0 i = NobleM2.SizeChange.Rel.decrease ↔ i = 0",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_one_iff",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.splitSites_one_iff : ∀ (i : Fin 2), NobleM2.SizeChange.splitSites 1 i = NobleM2.SizeChange.Rel.decrease ↔ i = 1",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.cycle_respects",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.cycle_respects : ∀ (t : Nat) (i : Fin 2), NobleM2.SizeChange.splitSites (NobleM2.SizeChange.cycleChoose t) i = NobleM2.SizeChange.Rel.decrease → NobleM2.SizeChange.cycleState (t + 1) i < NobleM2.SizeChange.cycleState t i",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.cycleRun_state_returns",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.cycleRun_state_returns : NobleM2.SizeChange.cycleRun.state 0 0 = 2 ∧ NobleM2.SizeChange.cycleRun.state 2 0 = 2",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_refused_but_runs",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.splitSites_refused_but_runs : NobleM2.SizeChange.certifiedAll NobleM2.SizeChange.splitSites = false ∧ Nonempty (NobleM2.SizeChange.Run 2 2 NobleM2.SizeChange.splitSites)",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.fin_two_cases",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.fin_two_cases : ∀ (i : Fin 2), i = 0 ∨ i = 1",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.alternate_zero_iff",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.alternate_zero_iff : ∀ (i : Fin 2), NobleM2.SizeChange.alternateSites 0 i = NobleM2.SizeChange.Rel.decrease ↔ i = 0",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.alternate_one_iff",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.alternate_one_iff : ∀ (i : Fin 2), NobleM2.SizeChange.alternateSites 1 i = NobleM2.SizeChange.Rel.decrease ↔ i = 1",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.alternate_closed",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.alternate_closed : ∀ {g : NobleM2.SizeChange.Graph 2}, NobleM2.SizeChange.Closure NobleM2.SizeChange.alternateSites g → (∀ (i : Fin 2), g i ≠ NobleM2.SizeChange.Rel.unknown) ∧ NobleM2.SizeChange.HasStrict g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.alternate_closure_strict",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.alternate_closure_strict : ∀ (g : NobleM2.SizeChange.Graph 2), NobleM2.SizeChange.Closure NobleM2.SizeChange.alternateSites g → NobleM2.SizeChange.HasStrict g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.alternate_respects",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.alternate_respects : ∀ (t : Nat) (i : Fin 2), NobleM2.SizeChange.alternateSites (NobleM2.SizeChange.cycleChoose t) i = NobleM2.SizeChange.Rel.decrease → NobleM2.SizeChange.cycleState (t + 1) i < NobleM2.SizeChange.cycleState t i",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.alternate_criterion_unsound",
+      "module": "NobleM2.SizeChangeCriterion",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.alternate_criterion_unsound : (∀ (g : NobleM2.SizeChange.Graph 2), NobleM2.SizeChange.Closure NobleM2.SizeChange.alternateSites g → NobleM2.SizeChange.HasStrict g) ∧ Nonempty (NobleM2.SizeChange.Run 2 2 NobleM2.SizeChange.alternateSites)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.pointwiseEq_true_iff",
+      "module": "NobleM2.SizeChangeDecEq",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.pointwiseEq_true_iff : ∀ {n : Nat} (a b : NobleM2.SizeChange.Graph n), NobleM2.SizeChange.pointwiseEq n a b = true ↔ a = b",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.pointwiseEq_same",
+      "module": "NobleM2.SizeChangeDecEq",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.pointwiseEq_same : (NobleM2.SizeChange.pointwiseEq 2 (fun x => NobleM2.SizeChange.Rel.decrease) fun x => NobleM2.SizeChange.Rel.decrease) = true",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.pointwiseEq_differs",
+      "module": "NobleM2.SizeChangeDecEq",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.pointwiseEq_differs : (NobleM2.SizeChange.pointwiseEq 2 (fun x => NobleM2.SizeChange.Rel.decrease) fun i => if i = 0 then NobleM2.SizeChange.Rel.decrease else NobleM2.SizeChange.Rel.equal) = false",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.decEq_differs",
+      "module": "NobleM2.SizeChangeDecEq",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.decEq_differs : ¬(fun x => NobleM2.SizeChange.Rel.decrease) = fun i => if i = 0 then NobleM2.SizeChange.Rel.decrease else NobleM2.SizeChange.Rel.equal",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.mem_all",
+      "module": "NobleM2.SizeChangeEnumeration",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel.mem_all : ∀ (r : NobleM2.SizeChange.Rel), r ∈ NobleM2.SizeChange.Rel.all",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.graphsAux_zero",
+      "module": "NobleM2.SizeChangeEnumeration",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.graphsAux_zero : (NobleM2.SizeChange.graphsAux 0).length = 1",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.graphsAux_length",
+      "module": "NobleM2.SizeChangeEnumeration",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.graphsAux_length : ∀ (n : Nat), (NobleM2.SizeChange.graphsAux n).length = 3 ^ n",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.mem_succ_of_mem",
+      "module": "NobleM2.SizeChangeEnumeration",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.mem_succ_of_mem : ∀ {n : Nat} {r : NobleM2.SizeChange.Rel} {f : Fin n → NobleM2.SizeChange.Rel}, f ∈ NobleM2.SizeChange.graphsAux n → (fun i => Fin.cases r f i) ∈ NobleM2.SizeChange.graphsAux (n + 1)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.graphsAux_complete",
+      "module": "NobleM2.SizeChangeEnumeration",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.graphsAux_complete : ∀ (n : Nat) (g : NobleM2.SizeChange.Graph n), g ∈ NobleM2.SizeChange.graphsAux n",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.certifiedAll_iff_shared",
+      "module": "NobleM2.SizeChangeExact",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.certifiedAll_iff_shared : ∀ {k n : Nat} [NeZero k] (sites : NobleM2.SizeChange.Sites k n), NobleM2.SizeChange.certifiedAll sites = true ↔ ∃ i, ∀ (s : Fin k), sites s i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.listRecursionFixture_accepted",
+      "module": "NobleM2.SizeChangeFixtures",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.listRecursionFixture_accepted : (NobleM2.SizeChange.certifiedAll fun s => NobleM2.SizeChange.graphOf (NobleM2.SizeChange.listRecursionArgs s)) = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.countdownFixture_accepted",
+      "module": "NobleM2.SizeChangeFixtures",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.countdownFixture_accepted : NobleM2.SizeChange.certifiedAll NobleM2.SizeChange.countdownFixture = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.nonDecreasingFixture_refused",
+      "module": "NobleM2.SizeChangeFixtures",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.nonDecreasingFixture_refused : NobleM2.SizeChange.certifiedAll NobleM2.SizeChange.nonDecreasingFixture = false",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.nonDecreasingFixture_no_shared",
+      "module": "NobleM2.SizeChangeFixtures",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.nonDecreasingFixture_no_shared : ¬∃ i, ∀ (s : Fin 1), NobleM2.SizeChange.nonDecreasingFixture s i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.wrappingFixture_refused",
+      "module": "NobleM2.SizeChangeFixtures",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.wrappingFixture_refused : (NobleM2.SizeChange.certifiedAll fun s => NobleM2.SizeChange.graphOf (NobleM2.SizeChange.wrappingArgs s)) = false",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.wrappingFixture_no_shared",
+      "module": "NobleM2.SizeChangeFixtures",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.wrappingFixture_no_shared : ¬∃ i, ∀ (s : Fin 1), NobleM2.SizeChange.graphOf (NobleM2.SizeChange.wrappingArgs s) i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.arg_pred_of_classify_decrease",
+      "module": "NobleM2.SizeChangeGuarded",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.arg_pred_of_classify_decrease : ∀ {arg : NobleM2.SizeChange.Arg}, arg.classify = NobleM2.SizeChange.Rel.decrease → arg = NobleM2.SizeChange.Arg.predOfSame",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.arg_ne_pred_of_graph_ne_decrease",
+      "module": "NobleM2.SizeChangeGuarded",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.arg_ne_pred_of_graph_ne_decrease : ∀ {n : Nat} {args : NobleM2.SizeChange.Args n} {i : Fin n}, NobleM2.SizeChange.graphOf args i ≠ NobleM2.SizeChange.Rel.decrease → args i ≠ NobleM2.SizeChange.Arg.predOfSame",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.guarded_run_drops",
+      "module": "NobleM2.SizeChangeGuarded",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.guarded_run_drops : ∀ {k n : Nat} {argsOf : Fin k → NobleM2.SizeChange.Args n} {i : Fin n}, (∀ (s : Fin k), argsOf s i = NobleM2.SizeChange.Arg.predOfSame) → ∀ (run : NobleM2.SizeChange.GuardedRun k n argsOf) (t : Nat), run.state (t + 1) i < run.state t i",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.guarded_terminates",
+      "module": "NobleM2.SizeChangeGuarded",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.guarded_terminates : ∀ {k n : Nat} {argsOf : Fin k → NobleM2.SizeChange.Args n}, (NobleM2.SizeChange.certifiedAll fun s => NobleM2.SizeChange.graphOf (argsOf s)) = true → ∀ (_run : NobleM2.SizeChange.GuardedRun k n argsOf), False",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.guarded_checked_family_terminates",
+      "module": "NobleM2.SizeChangeGuarded",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.guarded_checked_family_terminates : ∀ {k n : Nat} {argsOf : Fin k → NobleM2.SizeChange.Args n} {i : Fin n}, (∀ (s : Fin k), argsOf s i = NobleM2.SizeChange.Arg.predOfSame) → ∀ (_run : NobleM2.SizeChange.GuardedRun k n argsOf), False",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.guarded_bridge_terminates",
+      "module": "NobleM2.SizeChangeGuarded",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.guarded_bridge_terminates : ∀ {k n : Nat} {argsOf : Fin k → NobleM2.SizeChange.Args n}, (NobleM2.SizeChange.certifiedAll fun s => NobleM2.SizeChange.graphOf (argsOf s)) = true → ∀ (run : NobleM2.SizeChange.GuardedRun k n argsOf), False",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.countdownArgs_drops",
+      "module": "NobleM2.SizeChangeGuarded",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.countdownArgs_drops : ∀ (state : Fin 1 → Nat), 0 < state 0 → NobleM2.SizeChange.evalArgs NobleM2.SizeChange.countdownArgs state 0 < state 0",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.countdown_no_guarded_run",
+      "module": "NobleM2.SizeChangeGuarded",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.countdown_no_guarded_run : ∀ (_run : NobleM2.SizeChange.GuardedRun 1 1 fun x => NobleM2.SizeChange.countdownArgs), False",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.countdown_guard_necessary",
+      "module": "NobleM2.SizeChangeGuarded",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.countdown_guard_necessary : NobleM2.SizeChange.evalArgs NobleM2.SizeChange.countdownArgs (fun x => 0) 0 = 0 ∧ ¬NobleM2.SizeChange.evalArgs NobleM2.SizeChange.countdownArgs (fun x => 0) 0 < 0",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.staticArgs_not_certified",
+      "module": "NobleM2.SizeChangeGuarded",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.staticArgs_not_certified : (NobleM2.SizeChange.certifiedAll fun x => NobleM2.SizeChange.graphOf NobleM2.SizeChange.staticArgs) = false",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.staticArgs_no_shared",
+      "module": "NobleM2.SizeChangeGuarded",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.staticArgs_no_shared : ¬∃ i, ∀ (_s : Fin 1), NobleM2.SizeChange.graphOf NobleM2.SizeChange.staticArgs i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.idGraph_idempotent",
+      "module": "NobleM2.SizeChangeIdempotent",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.idGraph_idempotent : ∀ {n : Nat}, NobleM2.SizeChange.Idempotent NobleM2.SizeChange.idGraph",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.idempotent_powers",
+      "module": "NobleM2.SizeChangeIdempotent",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.idempotent_powers : ∀ {n : Nat} {g : NobleM2.SizeChange.Graph n}, NobleM2.SizeChange.Idempotent g → ∀ (j : Nat), NobleM2.SizeChange.power (j + 1) g = g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.idempotent_power_two_eq",
+      "module": "NobleM2.SizeChangeIdempotent",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.idempotent_power_two_eq : ∀ {n : Nat} {g : NobleM2.SizeChange.Graph n}, NobleM2.SizeChange.Idempotent g → NobleM2.SizeChange.power 2 g = g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.idempotent_closure_powers",
+      "module": "NobleM2.SizeChangeIdempotent",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.idempotent_closure_powers : ∀ {k n : Nat} {sites : NobleM2.SizeChange.Sites k n} {g : NobleM2.SizeChange.Graph n}, NobleM2.SizeChange.Closure sites g → NobleM2.SizeChange.Idempotent g → ∀ (j : Nat), NobleM2.SizeChange.Closure sites (NobleM2.SizeChange.power (j + 1) g) ∧ NobleM2.SizeChange.power (j + 1) g = g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.idempotent_compose_power",
+      "module": "NobleM2.SizeChangeIdempotent",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.idempotent_compose_power : ∀ {n : Nat} {g : NobleM2.SizeChange.Graph n}, NobleM2.SizeChange.Idempotent g → ∀ (j : Nat), NobleM2.SizeChange.composeGraph g (NobleM2.SizeChange.power (j + 1) g) = g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.compose_self",
+      "module": "NobleM2.SizeChangeIdempotent",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel.compose_self : ∀ (r : NobleM2.SizeChange.Rel), r.compose r = r",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.every_graph_idempotent",
+      "module": "NobleM2.SizeChangeIdempotent",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.every_graph_idempotent : ∀ {n : Nat} (g : NobleM2.SizeChange.Graph n), NobleM2.SizeChange.Idempotent g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.every_graph_powers",
+      "module": "NobleM2.SizeChangeIdempotent",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.every_graph_powers : ∀ {n : Nat} (g : NobleM2.SizeChange.Graph n) (j : Nat), NobleM2.SizeChange.power (j + 1) g = g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.compose_self",
+      "module": "NobleM2.SizeChangeMatrix",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel4.compose_self : ∀ (r : NobleM2.SizeChange.Rel4), r.compose r = r",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.join_loses_same",
+      "module": "NobleM2.SizeChangeMatrix",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel4.join_loses_same : NobleM2.SizeChange.Rel4.same.join NobleM2.SizeChange.Rel4.nonIncrease = NobleM2.SizeChange.Rel4.nonIncrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.compose_strict_left",
+      "module": "NobleM2.SizeChangeMatrix",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.Rel4.compose_strict_left : ∀ {r : NobleM2.SizeChange.Rel4}, r ≠ NobleM2.SizeChange.Rel4.unknown → NobleM2.SizeChange.Rel4.strict.compose r = NobleM2.SizeChange.Rel4.strict",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.compose_strict_right",
+      "module": "NobleM2.SizeChangeMatrix",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.Rel4.compose_strict_right : ∀ {r : NobleM2.SizeChange.Rel4}, r ≠ NobleM2.SizeChange.Rel4.unknown → r.compose NobleM2.SizeChange.Rel4.strict = NobleM2.SizeChange.Rel4.strict",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.join_unknown",
+      "module": "NobleM2.SizeChangeMatrix",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel4.join_unknown : ∀ (r : NobleM2.SizeChange.Rel4), r.join NobleM2.SizeChange.Rel4.unknown = r",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.join_comm_strict",
+      "module": "NobleM2.SizeChangeMatrix",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel4.join_comm_strict : ∀ (r : NobleM2.SizeChange.Rel4), NobleM2.SizeChange.Rel4.strict.join r = r.join NobleM2.SizeChange.Rel4.strict",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.join_assoc",
+      "module": "NobleM2.SizeChangeMatrix",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel4.join_assoc : ∀ (a b c : NobleM2.SizeChange.Rel4), (a.join b).join c = a.join (b.join c)",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.join_comm",
+      "module": "NobleM2.SizeChangeMatrix",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel4.join_comm : ∀ (a b : NobleM2.SizeChange.Rel4), a.join b = b.join a",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.join_idem",
+      "module": "NobleM2.SizeChangeMatrix",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel4.join_idem : ∀ (a : NobleM2.SizeChange.Rel4), a.join a = a",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.join_unknown_right",
+      "module": "NobleM2.SizeChangeMatrix",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel4.join_unknown_right : ∀ (a : NobleM2.SizeChange.Rel4), a.join NobleM2.SizeChange.Rel4.unknown = a",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.compose_join_left",
+      "module": "NobleM2.SizeChangeMatrix",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel4.compose_join_left : ∀ (a b c : NobleM2.SizeChange.Rel4), (a.join b).compose c = (a.compose c).join (b.compose c)",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.compose_join_right",
+      "module": "NobleM2.SizeChangeMatrix",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel4.compose_join_right : ∀ (a b c : NobleM2.SizeChange.Rel4), a.compose (b.join c) = (a.compose b).join (a.compose c)",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.foldr_join_unknown_of_all_unknown",
+      "module": "NobleM2.SizeChangeMatrix",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.foldr_join_unknown_of_all_unknown : ∀ {α : Type} (f : α → NobleM2.SizeChange.Rel4) (l : List α), (∀ (x : α), x ∈ l → f x = NobleM2.SizeChange.Rel4.unknown) → List.foldr (fun x acc => (f x).join acc) NobleM2.SizeChange.Rel4.unknown l = NobleM2.SizeChange.Rel4.unknown",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.join_unknown_left",
+      "module": "NobleM2.SizeChangeMatrix",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.join_unknown_left : ∀ (r : NobleM2.SizeChange.Rel4), NobleM2.SizeChange.Rel4.unknown.join r = r",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.foldr_join_of_single",
+      "module": "NobleM2.SizeChangeMatrix",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.foldr_join_of_single : ∀ {α : Type} [DecidableEq α] (f : α → NobleM2.SizeChange.Rel4) (x : α) (l : List α), x ∈ l → (∀ (y : α), y ∈ l → y ≠ x → f y = NobleM2.SizeChange.Rel4.unknown) → List.foldr (fun y acc => (f y).join acc) NobleM2.SizeChange.Rel4.unknown l = f x",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.composeMatrix_id_right",
+      "module": "NobleM2.SizeChangeMatrix",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.composeMatrix_id_right : ∀ {n : Nat} (g : NobleM2.SizeChange.MGraph n), NobleM2.SizeChange.composeMatrix g NobleM2.SizeChange.idMatrix = g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.same_compose_left",
+      "module": "NobleM2.SizeChangeMatrix",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.same_compose_left : ∀ (r : NobleM2.SizeChange.Rel4), NobleM2.SizeChange.Rel4.same.compose r = r",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.composeMatrix_id_left",
+      "module": "NobleM2.SizeChangeMatrix",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.composeMatrix_id_left : ∀ {n : Nat} (g : NobleM2.SizeChange.MGraph n), NobleM2.SizeChange.composeMatrix NobleM2.SizeChange.idMatrix g = g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.compose_assoc",
+      "module": "NobleM2.SizeChangeMatrixAssoc",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel4.compose_assoc : ∀ (a b c : NobleM2.SizeChange.Rel4), (a.compose b).compose c = a.compose (b.compose c)",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_fold_join_left",
+      "module": "NobleM2.SizeChangeMatrixAssoc",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.compose_fold_join_left : ∀ {α : Type} (f : α → NobleM2.SizeChange.Rel4) (c : NobleM2.SizeChange.Rel4) (l : List α), (List.foldr (fun a acc => (f a).join acc) NobleM2.SizeChange.Rel4.unknown l).compose c = List.foldr (fun a acc => ((f a).compose c).join acc) NobleM2.SizeChange.Rel4.unknown l",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_fold_join_right",
+      "module": "NobleM2.SizeChangeMatrixAssoc",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.compose_fold_join_right : ∀ {α : Type} (c : NobleM2.SizeChange.Rel4) (f : α → NobleM2.SizeChange.Rel4) (l : List α), c.compose (List.foldr (fun a acc => (f a).join acc) NobleM2.SizeChange.Rel4.unknown l) = List.foldr (fun a acc => (c.compose (f a)).join acc) NobleM2.SizeChange.Rel4.unknown l",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.cycle_pair_drops",
+      "module": "NobleM2.SizeChangeMatrixCycle",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.cycle_pair_drops : ∀ {n : Nat} {g : NobleM2.SizeChange.MGraph n} {i : Fin n}, NobleM2.SizeChange.composeMatrix g g i i = NobleM2.SizeChange.Rel4.strict → ∀ {s t u : Fin n → Nat}, NobleM2.SizeChange.MatrixSatisfies g s t → NobleM2.SizeChange.MatrixSatisfies g t u → u i < s i",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.cycle_terminates",
+      "module": "NobleM2.SizeChangeMatrixCycle",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.cycle_terminates : ∀ {n : Nat} {g : NobleM2.SizeChange.MGraph n} {i : Fin n}, NobleM2.SizeChange.composeMatrix g g i i = NobleM2.SizeChange.Rel4.strict → ∀ (state : Nat → Fin n → Nat), (∀ (t : Nat), NobleM2.SizeChange.MatrixSatisfies g (state t) (state (t + 1))) → False",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.funEq_true_iff",
+      "module": "NobleM2.SizeChangeMatrixDecEq",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.funEq_true_iff : ∀ {α : Type} (eqα : α → α → Bool), (∀ (x y : α), eqα x y = true ↔ x = y) → ∀ (n : Nat) (a b : Fin n → α), NobleM2.SizeChange.funEq eqα n a b = true ↔ a = b",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.rel4Eq_true_iff",
+      "module": "NobleM2.SizeChangeMatrixDecEq",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.rel4Eq_true_iff : ∀ (x y : NobleM2.SizeChange.Rel4), NobleM2.SizeChange.rel4Eq x y = true ↔ x = y",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.rowEq_true_iff",
+      "module": "NobleM2.SizeChangeMatrixDecEq",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.rowEq_true_iff : ∀ (n : Nat) (a b : Fin n → NobleM2.SizeChange.Rel4), NobleM2.SizeChange.rowEq n a b = true ↔ a = b",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixEq_true_iff",
+      "module": "NobleM2.SizeChangeMatrixDecEq",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.matrixEq_true_iff : ∀ (n : Nat) (a b : NobleM2.SizeChange.MGraph n), NobleM2.SizeChange.matrixEq n a b = true ↔ a = b",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.mem_foldr_append",
+      "module": "NobleM2.SizeChangeMatrixEnumeration",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.mem_foldr_append : ∀ {α β : Type} (g : α → List β) (l : List α) {b : β}, b ∈ List.foldr (fun a acc => g a ++ acc) [] l → ∃ a, a ∈ l ∧ b ∈ g a",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.mem_of_mem_foldr_append",
+      "module": "NobleM2.SizeChangeMatrixEnumeration",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.mem_of_mem_foldr_append : ∀ {α β : Type} (g : α → List β) (l : List α) (a : α) (b : β), a ∈ l → b ∈ g a → b ∈ List.foldr (fun a acc => g a ++ acc) [] l",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.funAux_extend",
+      "module": "NobleM2.SizeChangeMatrixEnumeration",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.funAux_extend : ∀ {α : Type} {codomain : List α} (k : Nat) {a : α}, a ∈ codomain → ∀ {f : Fin k → α}, f ∈ NobleM2.SizeChange.funAux k codomain → (fun i => Fin.cases a f i) ∈ NobleM2.SizeChange.funAux (k + 1) codomain",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.funAux_complete",
+      "module": "NobleM2.SizeChangeMatrixEnumeration",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.funAux_complete : ∀ {α : Type} {codomain : List α}, (∀ (a : α), a ∈ codomain) → ∀ (k : Nat) (f : Fin k → α), f ∈ NobleM2.SizeChange.funAux k codomain",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.mem_all",
+      "module": "NobleM2.SizeChangeMatrixEnumeration",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel4.mem_all : ∀ (r : NobleM2.SizeChange.Rel4), r ∈ NobleM2.SizeChange.Rel4.all",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixAux_complete",
+      "module": "NobleM2.SizeChangeMatrixEnumeration",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.matrixAux_complete : ∀ {n : Nat} (g : NobleM2.SizeChange.MGraph n), g ∈ NobleM2.SizeChange.matrixAux n",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.foldr_length_const",
+      "module": "NobleM2.SizeChangeMatrixEnumeration",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.foldr_length_const : ∀ {α β : Type} (g : α → List β) (m : Nat), (∀ (a : α), (g a).length = m) → ∀ (l : List α), (List.foldr (fun a acc => g a ++ acc) [] l).length = l.length * m",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.funAux_length",
+      "module": "NobleM2.SizeChangeMatrixEnumeration",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.funAux_length : ∀ {α : Type} (codomain : List α) (k : Nat), (NobleM2.SizeChange.funAux k codomain).length = codomain.length ^ k",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.all_length",
+      "module": "NobleM2.SizeChangeMatrixEnumeration",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel4.all_length : NobleM2.SizeChange.Rel4.all.length = 4",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixAux_length",
+      "module": "NobleM2.SizeChangeMatrixEnumeration",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.matrixAux_length : ∀ (n : Nat), (NobleM2.SizeChange.matrixAux n).length = (4 ^ n) ^ n",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.powerMatrix_add",
+      "module": "NobleM2.SizeChangeMatrixExponent",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.powerMatrix_add : ∀ {n : Nat} (g : NobleM2.SizeChange.MGraph n) (a b : Nat), NobleM2.SizeChange.powerMatrix (a + b) g = NobleM2.SizeChange.composeMatrix (NobleM2.SizeChange.powerMatrix a g) (NobleM2.SizeChange.powerMatrix b g)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.join_eq_of_ne_unknown",
+      "module": "NobleM2.SizeChangeMatrixExtract",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.join_eq_of_ne_unknown : ∀ {r a b : NobleM2.SizeChange.Rel4}, a.join b = r → r ≠ NobleM2.SizeChange.Rel4.unknown → a = r ∨ b = r",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.foldr_join_eq_of_ne_unknown",
+      "module": "NobleM2.SizeChangeMatrixExtract",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.foldr_join_eq_of_ne_unknown : ∀ {α : Type} (f : α → NobleM2.SizeChange.Rel4) (l : List α) (acc r : NobleM2.SizeChange.Rel4), List.foldr (fun x a => (f x).join a) acc l = r → r ≠ NobleM2.SizeChange.Rel4.unknown → (∃ x, x ∈ l ∧ f x = r) ∨ acc = r",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.join_fold_left",
+      "module": "NobleM2.SizeChangeMatrixJoinFold",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.join_fold_left : ∀ {β : Type} (f : β → NobleM2.SizeChange.Rel4) (l : List β) (c : NobleM2.SizeChange.Rel4), c.join (List.foldr (fun b acc => (f b).join acc) NobleM2.SizeChange.Rel4.unknown l) = List.foldr (fun b acc => (f b).join acc) c l",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.join_fold_right",
+      "module": "NobleM2.SizeChangeMatrixJoinFold",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.join_fold_right : ∀ {β : Type} (f : β → NobleM2.SizeChange.Rel4) (l : List β) (c : NobleM2.SizeChange.Rel4), (List.foldr (fun b acc => (f b).join acc) NobleM2.SizeChange.Rel4.unknown l).join c = List.foldr (fun b acc => (f b).join acc) c l",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.join_swap",
+      "module": "NobleM2.SizeChangeMatrixJoinFold",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.join_swap : ∀ (a b c d : NobleM2.SizeChange.Rel4), (a.join b).join (c.join d) = (a.join c).join (b.join d)",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.join_fold_zip",
+      "module": "NobleM2.SizeChangeMatrixJoinFold",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.join_fold_zip : ∀ {β : Type} (f g : β → NobleM2.SizeChange.Rel4) (l : List β), (List.foldr (fun b acc => (f b).join acc) NobleM2.SizeChange.Rel4.unknown l).join (List.foldr (fun b acc => (g b).join acc) NobleM2.SizeChange.Rel4.unknown l) = List.foldr (fun b acc => ((f b).join (g b)).join acc) NobleM2.SizeChange.Rel4.unknown l",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.fold_unknown",
+      "module": "NobleM2.SizeChangeMatrixJoinFold",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.fold_unknown : ∀ {β : Type} (l : List β), List.foldr (fun x acc => NobleM2.SizeChange.Rel4.unknown.join acc) NobleM2.SizeChange.Rel4.unknown l = NobleM2.SizeChange.Rel4.unknown",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.fold_join_comm",
+      "module": "NobleM2.SizeChangeMatrixJoinFold",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.fold_join_comm : ∀ {α β : Type} (F : α → β → NobleM2.SizeChange.Rel4) (l₁ : List α) (l₂ : List β), List.foldr (fun a acc => (List.foldr (fun b acc' => (F a b).join acc') NobleM2.SizeChange.Rel4.unknown l₂).join acc) NobleM2.SizeChange.Rel4.unknown l₁ = List.foldr (fun b acc => (List.foldr (fun a acc' => (F a b).join acc') NobleM2.SizeChange.Rel4.unknown l₁).join acc) NobleM2.SizeChange.Rel4.unknown l₂",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.composeMatrix_assoc",
+      "module": "NobleM2.SizeChangeMatrixJoinFold",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.composeMatrix_assoc : ∀ {n : Nat} (g h k : NobleM2.SizeChange.MGraph n), NobleM2.SizeChange.composeMatrix (NobleM2.SizeChange.composeMatrix g h) k = NobleM2.SizeChange.composeMatrix g (NobleM2.SizeChange.composeMatrix h k)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.weakerEq_refl",
+      "module": "NobleM2.SizeChangeMatrixMonotone",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel4.weakerEq_refl : ∀ (r : NobleM2.SizeChange.Rel4), r.weakerEq r = true",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_weaker_left",
+      "module": "NobleM2.SizeChangeMatrixMonotone",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.compose_weaker_left : ∀ {r r' s : NobleM2.SizeChange.Rel4}, r.weakerEq r' = true → (r.compose s).weakerEq (r'.compose s) = true",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_weaker_right",
+      "module": "NobleM2.SizeChangeMatrixMonotone",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.compose_weaker_right : ∀ {r s s' : NobleM2.SizeChange.Rel4}, s.weakerEq s' = true → (r.compose s).weakerEq (r.compose s') = true",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.MatrixSatisfies.strict",
+      "module": "NobleM2.SizeChangeMatrixPath",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.MatrixSatisfies.strict : ∀ {n : Nat} {g : NobleM2.SizeChange.MGraph n} {s t : Fin n → Nat}, NobleM2.SizeChange.MatrixSatisfies g s t → ∀ {i j : Fin n}, g i j = NobleM2.SizeChange.Rel4.strict → t j < s i",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.MatrixSatisfies.nonIncrease",
+      "module": "NobleM2.SizeChangeMatrixPath",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.MatrixSatisfies.nonIncrease : ∀ {n : Nat} {g : NobleM2.SizeChange.MGraph n} {s t : Fin n → Nat}, NobleM2.SizeChange.MatrixSatisfies g s t → ∀ {i j : Fin n}, g i j = NobleM2.SizeChange.Rel4.nonIncrease → t j ≤ s i",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.MatrixSatisfies.sameEq",
+      "module": "NobleM2.SizeChangeMatrixPath",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.MatrixSatisfies.sameEq : ∀ {n : Nat} {g : NobleM2.SizeChange.MGraph n} {s t : Fin n → Nat}, NobleM2.SizeChange.MatrixSatisfies g s t → ∀ {i j : Fin n}, g i j = NobleM2.SizeChange.Rel4.same → t j = s i",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_strict_steps",
+      "module": "NobleM2.SizeChangeMatrixPath",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.compose_strict_steps : ∀ {n : Nat} {g h : NobleM2.SizeChange.MGraph n} {i k : Fin n}, NobleM2.SizeChange.composeMatrix g h i k = NobleM2.SizeChange.Rel4.strict → ∀ {s t u : Fin n → Nat}, NobleM2.SizeChange.MatrixSatisfies g s t → NobleM2.SizeChange.MatrixSatisfies h t u → u k < s i",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_stepList",
+      "module": "NobleM2.SizeChangeMatrixPathProduct",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.matrixProduct_stepList : ∀ {n : Nat} (step : Nat → NobleM2.SizeChange.MGraph n) (k t : Nat), NobleM2.SizeChange.matrixProduct (NobleM2.SizeChange.stepList step k t) = NobleM2.SizeChange.pathMatrix k step t",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_singleton",
+      "module": "NobleM2.SizeChangeMatrixPathProduct",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.matrixProduct_singleton : ∀ {n : Nat} (g : NobleM2.SizeChange.MGraph n), NobleM2.SizeChange.matrixProduct [g] = g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_stepList_const",
+      "module": "NobleM2.SizeChangeMatrixPathProduct",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.matrixProduct_stepList_const : ∀ {n : Nat} (g : NobleM2.SizeChange.MGraph n) (k : Nat), NobleM2.SizeChange.matrixProduct (NobleM2.SizeChange.stepList (fun x => g) k 0) = NobleM2.SizeChange.powerMatrix k g",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.nat_le_induction",
+      "module": "NobleM2.SizeChangeMatrixPeriod",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.nat_le_induction : ∀ {P : Nat → Prop} (a : Nat), P a → (∀ (n : Nat), a ≤ n → P n → P (n + 1)) → ∀ (n : Nat), a ≤ n → P n",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.power_shift_usable",
+      "module": "NobleM2.SizeChangeMatrixPeriod",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.power_shift_usable : ∀ {n : Nat} {g : NobleM2.SizeChange.MGraph n} {a d : Nat}, NobleM2.SizeChange.powerMatrix a g = NobleM2.SizeChange.powerMatrix (a + d) g → NobleM2.SizeChange.powerMatrix a g = NobleM2.SizeChange.composeMatrix (NobleM2.SizeChange.powerMatrix a g) (NobleM2.SizeChange.powerMatrix d g)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.power_recurrence",
+      "module": "NobleM2.SizeChangeMatrixPeriod",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.power_recurrence : ∀ {n : Nat} {g : NobleM2.SizeChange.MGraph n} {a d : Nat}, NobleM2.SizeChange.powerMatrix a g = NobleM2.SizeChange.composeMatrix (NobleM2.SizeChange.powerMatrix a g) (NobleM2.SizeChange.powerMatrix d g) → ∀ (m : Nat), a ≤ m → NobleM2.SizeChange.powerMatrix m g = NobleM2.SizeChange.powerMatrix (m + d) g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.power_iterate",
+      "module": "NobleM2.SizeChangeMatrixPeriod",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.power_iterate : ∀ {n : Nat} {g : NobleM2.SizeChange.MGraph n} {a d : Nat}, NobleM2.SizeChange.powerMatrix a g = NobleM2.SizeChange.composeMatrix (NobleM2.SizeChange.powerMatrix a g) (NobleM2.SizeChange.powerMatrix d g) → ∀ (k m : Nat), a ≤ m → NobleM2.SizeChange.powerMatrix (m + k * d) g = NobleM2.SizeChange.powerMatrix m g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.power_idempotent",
+      "module": "NobleM2.SizeChangeMatrixPeriod",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.power_idempotent : ∀ {n : Nat} {g : NobleM2.SizeChange.MGraph n} {a d : Nat}, 0 < a → 0 < d → NobleM2.SizeChange.powerMatrix a g = NobleM2.SizeChange.composeMatrix (NobleM2.SizeChange.powerMatrix a g) (NobleM2.SizeChange.powerMatrix d g) → NobleM2.SizeChange.composeMatrix (NobleM2.SizeChange.powerMatrix (a * d) g) (NobleM2.SizeChange.powerMatrix (a * d) g) = NobleM2.SizeChange.powerMatrix (a * d) g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.idempotent_power_stable",
+      "module": "NobleM2.SizeChangeMatrixPeriod",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.idempotent_power_stable : ∀ {n : Nat} {x : NobleM2.SizeChange.MGraph n}, NobleM2.SizeChange.composeMatrix x x = x → ∀ (k : Nat), 1 ≤ k → NobleM2.SizeChange.powerMatrix k x = x",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.idempotent_power_nodup_length",
+      "module": "NobleM2.SizeChangeMatrixPeriod",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.idempotent_power_nodup_length : ∀ {n : Nat} {x : NobleM2.SizeChange.MGraph n}, NobleM2.SizeChange.composeMatrix x x = x → ∀ (l : List Nat), (∀ (k : Nat), k ∈ l → 1 ≤ k) → (List.map (fun k => NobleM2.SizeChange.powerMatrix k x) l).Nodup → l.length ≤ 1",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrix_sequence_not_injective",
+      "module": "NobleM2.SizeChangeMatrixPigeonhole",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.matrix_sequence_not_injective : ∀ {n : Nat} (f : Fin ((NobleM2.SizeChange.matrixAux n).length + 1) → NobleM2.SizeChange.MGraph n), ¬∀ (i j : Fin ((NobleM2.SizeChange.matrixAux n).length + 1)), f i = f j → i = j",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.powerMatrix_collision",
+      "module": "NobleM2.SizeChangeMatrixPigeonhole",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.powerMatrix_collision : ∀ {n : Nat} (g : NobleM2.SizeChange.MGraph n), ¬∀ (i j : Fin ((NobleM2.SizeChange.matrixAux n).length + 1)), NobleM2.SizeChange.powerMatrix (↑i) g = NobleM2.SizeChange.powerMatrix (↑j) g → i = j",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrix_composites_bounded",
+      "module": "NobleM2.SizeChangeMatrixPigeonhole",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.matrix_composites_bounded : ∀ {n : Nat} (l : List (NobleM2.SizeChange.MGraph n)), l.Nodup → l.length ≤ (NobleM2.SizeChange.matrixAux n).length",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.prefixProducts_length",
+      "module": "NobleM2.SizeChangeMatrixPrefix",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.prefixProducts_length : ∀ {n : Nat} (l : List (NobleM2.SizeChange.MGraph n)), (NobleM2.SizeChange.prefixProducts l).length = l.length + 1",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.prefixProducts_not_nodup",
+      "module": "NobleM2.SizeChangeMatrixPrefix",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.prefixProducts_not_nodup : ∀ {n : Nat} (l : List (NobleM2.SizeChange.MGraph n)), (NobleM2.SizeChange.matrixAux n).length + 1 ≤ l.length → ¬(NobleM2.SizeChange.prefixProducts l).Nodup",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_eq_nonIncrease",
+      "module": "NobleM2.SizeChangeMatrixPreserve",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.compose_eq_nonIncrease : ∀ (r s : NobleM2.SizeChange.Rel4), r.compose s = NobleM2.SizeChange.Rel4.nonIncrease ↔ r = NobleM2.SizeChange.Rel4.nonIncrease ∧ s = NobleM2.SizeChange.Rel4.nonIncrease ∨ r = NobleM2.SizeChange.Rel4.nonIncrease ∧ s = NobleM2.SizeChange.Rel4.same ∨ r = NobleM2.SizeChange.Rel4.same ∧ s = NobleM2.SizeChange.Rel4.nonIncrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_eq_same",
+      "module": "NobleM2.SizeChangeMatrixPreserve",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.compose_eq_same : ∀ (r s : NobleM2.SizeChange.Rel4), r.compose s = NobleM2.SizeChange.Rel4.same ↔ r = NobleM2.SizeChange.Rel4.same ∧ s = NobleM2.SizeChange.Rel4.same",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_nonIncrease_steps",
+      "module": "NobleM2.SizeChangeMatrixPreserve",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.compose_nonIncrease_steps : ∀ {n : Nat} {g h : NobleM2.SizeChange.MGraph n} {i k : Fin n}, NobleM2.SizeChange.composeMatrix g h i k = NobleM2.SizeChange.Rel4.nonIncrease → ∀ {s t u : Fin n → Nat}, NobleM2.SizeChange.MatrixSatisfies g s t → NobleM2.SizeChange.MatrixSatisfies h t u → u k ≤ s i",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_same_steps",
+      "module": "NobleM2.SizeChangeMatrixPreserve",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.compose_same_steps : ∀ {n : Nat} {g h : NobleM2.SizeChange.MGraph n} {i k : Fin n}, NobleM2.SizeChange.composeMatrix g h i k = NobleM2.SizeChange.Rel4.same → ∀ {s t u : Fin n → Nat}, NobleM2.SizeChange.MatrixSatisfies g s t → NobleM2.SizeChange.MatrixSatisfies h t u → u k = s i",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixSatisfies_compose",
+      "module": "NobleM2.SizeChangeMatrixPreserve",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.matrixSatisfies_compose : ∀ {n : Nat} {g h : NobleM2.SizeChange.MGraph n} {s t u : Fin n → Nat}, NobleM2.SizeChange.MatrixSatisfies g s t → NobleM2.SizeChange.MatrixSatisfies h t u → NobleM2.SizeChange.MatrixSatisfies (NobleM2.SizeChange.composeMatrix g h) s u",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixSatisfies_id",
+      "module": "NobleM2.SizeChangeMatrixPreserve",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.matrixSatisfies_id : ∀ {n : Nat} (s : Fin n → Nat), NobleM2.SizeChange.MatrixSatisfies NobleM2.SizeChange.idMatrix s s",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixSatisfies_power",
+      "module": "NobleM2.SizeChangeMatrixPreserve",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.matrixSatisfies_power : ∀ {n : Nat} (g : NobleM2.SizeChange.MGraph n) (state : Nat → Fin n → Nat), (∀ (t : Nat), NobleM2.SizeChange.MatrixSatisfies g (state t) (state (t + 1))) → ∀ (k t : Nat), NobleM2.SizeChange.MatrixSatisfies (NobleM2.SizeChange.powerMatrix k g) (state t) (state (t + k))",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.power_cycle_terminates",
+      "module": "NobleM2.SizeChangeMatrixPreserve",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.power_cycle_terminates : ∀ {n : Nat} {g : NobleM2.SizeChange.MGraph n} {k : Nat} {i : Fin n}, NobleM2.SizeChange.powerMatrix k g i i = NobleM2.SizeChange.Rel4.strict → ∀ (state : Nat → Fin n → Nat), (∀ (t : Nat), NobleM2.SizeChange.MatrixSatisfies g (state t) (state (t + 1))) → False",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.pathMatrix_const",
+      "module": "NobleM2.SizeChangeMatrixPreserve",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.pathMatrix_const : ∀ {n : Nat} (g : NobleM2.SizeChange.MGraph n) (k t : Nat), NobleM2.SizeChange.pathMatrix k (fun x => g) t = NobleM2.SizeChange.powerMatrix k g",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixSatisfies_path",
+      "module": "NobleM2.SizeChangeMatrixPreserve",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.matrixSatisfies_path : ∀ {n : Nat} (step : Nat → NobleM2.SizeChange.MGraph n) (state : Nat → Fin n → Nat), (∀ (t : Nat), NobleM2.SizeChange.MatrixSatisfies (step t) (state t) (state (t + 1))) → ∀ (k t : Nat), NobleM2.SizeChange.MatrixSatisfies (NobleM2.SizeChange.pathMatrix k step t) (state t) (state (t + k))",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.pathMatrix_shift",
+      "module": "NobleM2.SizeChangeMatrixPreserve",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.pathMatrix_shift : ∀ {n : Nat} {step : Nat → NobleM2.SizeChange.MGraph n} {p : Nat}, (∀ (t : Nat), step (t + p) = step t) → ∀ (k t : Nat), NobleM2.SizeChange.pathMatrix k step (t + p) = NobleM2.SizeChange.pathMatrix k step t",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.pathMatrix_period_blocks",
+      "module": "NobleM2.SizeChangeMatrixPreserve",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.pathMatrix_period_blocks : ∀ {n : Nat} {step : Nat → NobleM2.SizeChange.MGraph n} {p : Nat}, (∀ (t : Nat), step (t + p) = step t) → ∀ (m : Nat), NobleM2.SizeChange.pathMatrix p step (m * p) = NobleM2.SizeChange.pathMatrix p step 0",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.periodic_cycle_terminates",
+      "module": "NobleM2.SizeChangeMatrixPreserve",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.periodic_cycle_terminates : ∀ {n : Nat} {step : Nat → NobleM2.SizeChange.MGraph n} {p : Nat} {i : Fin n}, (∀ (t : Nat), step (t + p) = step t) → NobleM2.SizeChange.pathMatrix p step 0 i i = NobleM2.SizeChange.Rel4.strict → ∀ (state : Nat → Fin n → Nat), (∀ (t : Nat), NobleM2.SizeChange.MatrixSatisfies (step t) (state t) (state (t + 1))) → False",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.repeatSearch_sound",
+      "module": "NobleM2.SizeChangeMatrixRepeat",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.repeatSearch_sound : ∀ {n : Nat} {g : NobleM2.SizeChange.MGraph n}, NobleM2.SizeChange.repeatSearch n g = true → ∃ i j, ↑i < ↑j ∧ NobleM2.SizeChange.powerMatrix (↑i) g = NobleM2.SizeChange.powerMatrix (↑j) g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.repeatSearch_complete",
+      "module": "NobleM2.SizeChangeMatrixRepeat",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.repeatSearch_complete : ∀ {n : Nat} {g : NobleM2.SizeChange.MGraph n} {i j : Fin ((NobleM2.SizeChange.matrixAux n).length + 1)}, ↑i < ↑j → NobleM2.SizeChange.powerMatrix (↑i) g = NobleM2.SizeChange.powerMatrix (↑j) g → NobleM2.SizeChange.repeatSearch n g = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.any_eq_false_of_eq_false",
+      "module": "NobleM2.SizeChangeMatrixRepeat",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.any_eq_false_of_eq_false : ∀ {α : Type} {p : α → Bool} {l : List α}, l.any p = false → ∀ (x : α), x ∈ l → p x = false",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.repeatSearch_false_injective",
+      "module": "NobleM2.SizeChangeMatrixRepeat",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.repeatSearch_false_injective : ∀ {n : Nat} {g : NobleM2.SizeChange.MGraph n}, NobleM2.SizeChange.repeatSearch n g = false → ∀ (i j : Fin ((NobleM2.SizeChange.matrixAux n).length + 1)), NobleM2.SizeChange.powerMatrix (↑i) g = NobleM2.SizeChange.powerMatrix (↑j) g → i = j",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.repeatSearch_true",
+      "module": "NobleM2.SizeChangeMatrixRepeat",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.repeatSearch_true : ∀ {n : Nat} (g : NobleM2.SizeChange.MGraph n), NobleM2.SizeChange.repeatSearch n g = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.repeatSearch_witness",
+      "module": "NobleM2.SizeChangeMatrixRepeat",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.repeatSearch_witness : ∀ {n : Nat} (g : NobleM2.SizeChange.MGraph n), ∃ i j, ↑i < ↑j ∧ NobleM2.SizeChange.powerMatrix (↑i) g = NobleM2.SizeChange.powerMatrix (↑j) g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.hasRepeatPrefix_sound",
+      "module": "NobleM2.SizeChangeMatrixScan",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.hasRepeatPrefix_sound : ∀ {n : Nat} {l : List (NobleM2.SizeChange.MGraph n)}, NobleM2.SizeChange.hasRepeatPrefix l = true → ∃ i j, i < j ∧ j ≤ l.length ∧ NobleM2.SizeChange.matrixProduct (List.take i l) = NobleM2.SizeChange.matrixProduct (List.take j l)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.any_of_mem_eq_true",
+      "module": "NobleM2.SizeChangeMatrixScan",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.any_of_mem_eq_true : ∀ {α : Type} {p : α → Bool} {l : List α} {x : α}, x ∈ l → p x = true → l.any p = true",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.hasRepeatPrefix_true",
+      "module": "NobleM2.SizeChangeMatrixScan",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.hasRepeatPrefix_true : ∀ {n : Nat} (l : List (NobleM2.SizeChange.MGraph n)), (NobleM2.SizeChange.matrixAux n).length + 1 ≤ l.length → NobleM2.SizeChange.hasRepeatPrefix l = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_shorten",
+      "module": "NobleM2.SizeChangeMatrixScan",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.matrixProduct_shorten : ∀ {n : Nat} (l : List (NobleM2.SizeChange.MGraph n)), (NobleM2.SizeChange.matrixAux n).length + 1 ≤ l.length → ∃ l', l'.Sublist l ∧ l'.length < l.length ∧ NobleM2.SizeChange.matrixProduct l' = NobleM2.SizeChange.matrixProduct l",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_short_representative",
+      "module": "NobleM2.SizeChangeMatrixScan",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.matrixProduct_short_representative : ∀ {n : Nat} (l : List (NobleM2.SizeChange.MGraph n)), ∃ l', l'.Sublist l ∧ l'.length ≤ (NobleM2.SizeChange.matrixAux n).length ∧ NobleM2.SizeChange.matrixProduct l' = NobleM2.SizeChange.matrixProduct l",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.strict_diagonal_drops",
+      "module": "NobleM2.SizeChangeMatrixSemantics",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.strict_diagonal_drops : ∀ {n : Nat} {g : NobleM2.SizeChange.MGraph n} {s t : Fin n → Nat}, NobleM2.SizeChange.MatrixSatisfies g s t → ∀ {i : Fin n}, g i i = NobleM2.SizeChange.Rel4.strict → t i < s i",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrix_strict_diagonal_terminates",
+      "module": "NobleM2.SizeChangeMatrixSemantics",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.matrix_strict_diagonal_terminates : ∀ {n : Nat} {g : NobleM2.SizeChange.MGraph n} {i : Fin n}, g i i = NobleM2.SizeChange.Rel4.strict → ∀ (state : Nat → Fin n → Nat), (∀ (t : Nat), NobleM2.SizeChange.MatrixSatisfies g (state t) (state (t + 1))) → False",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.nonIncrease_diagonal_bounded",
+      "module": "NobleM2.SizeChangeMatrixSemantics",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.nonIncrease_diagonal_bounded : ∀ {n : Nat} {g : NobleM2.SizeChange.MGraph n} {s t : Fin n → Nat}, NobleM2.SizeChange.MatrixSatisfies g s t → ∀ {i : Fin n}, g i i = NobleM2.SizeChange.Rel4.nonIncrease → t i ≤ s i",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.same_diagonal_preserved",
+      "module": "NobleM2.SizeChangeMatrixSemantics",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.same_diagonal_preserved : ∀ {n : Nat} {g : NobleM2.SizeChange.MGraph n} {s t : Fin n → Nat}, NobleM2.SizeChange.MatrixSatisfies g s t → ∀ {i : Fin n}, g i i = NobleM2.SizeChange.Rel4.same → t i = s i",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_append",
+      "module": "NobleM2.SizeChangeMatrixShortening",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.matrixProduct_append : ∀ {n : Nat} (l₁ l₂ : List (NobleM2.SizeChange.MGraph n)), NobleM2.SizeChange.matrixProduct (l₁ ++ l₂) = NobleM2.SizeChange.composeMatrix (NobleM2.SizeChange.matrixProduct l₁) (NobleM2.SizeChange.matrixProduct l₂)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_idempotent_shorten",
+      "module": "NobleM2.SizeChangeMatrixShortening",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.matrixProduct_idempotent_shorten : ∀ {n : Nat} {x : NobleM2.SizeChange.MGraph n}, NobleM2.SizeChange.composeMatrix x x = x → ∀ (pre post : List (NobleM2.SizeChange.MGraph n)), NobleM2.SizeChange.matrixProduct (pre ++ x :: x :: post) = NobleM2.SizeChange.matrixProduct (pre ++ x :: post)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_all_same",
+      "module": "NobleM2.SizeChangeMatrixShortening",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.matrixProduct_all_same : ∀ {n : Nat} {x : NobleM2.SizeChange.MGraph n}, NobleM2.SizeChange.composeMatrix x x = x → ∀ (l : List (NobleM2.SizeChange.MGraph n)), (∀ (g : NobleM2.SizeChange.MGraph n), g ∈ l → g = x) → l ≠ [] → NobleM2.SizeChange.matrixProduct l = x",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_splice",
+      "module": "NobleM2.SizeChangeMatrixSplice",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.matrixProduct_splice : ∀ {n : Nat} (l : List (NobleM2.SizeChange.MGraph n)) {i j : Nat}, NobleM2.SizeChange.matrixProduct (List.take i l) = NobleM2.SizeChange.matrixProduct (List.take j l) → NobleM2.SizeChange.matrixProduct (List.take i l ++ List.drop j l) = NobleM2.SizeChange.matrixProduct l",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.splice_length_lt",
+      "module": "NobleM2.SizeChangeMatrixSplice",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.splice_length_lt : ∀ {n : Nat} (l : List (NobleM2.SizeChange.MGraph n)) {i j : Nat}, i < j → j ≤ l.length → (List.take i l ++ List.drop j l).length < l.length",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.splice_sublist",
+      "module": "NobleM2.SizeChangeMatrixSplice",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.splice_sublist : ∀ {n : Nat} (l : List (NobleM2.SizeChange.MGraph n)) {i j : Nat}, i ≤ j → (List.take i l ++ List.drop j l).Sublist l",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_shorten_of_repeat",
+      "module": "NobleM2.SizeChangeMatrixSplice",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.matrixProduct_shorten_of_repeat : ∀ {n : Nat} (l : List (NobleM2.SizeChange.MGraph n)) {i j : Nat}, i < j → j ≤ l.length → NobleM2.SizeChange.matrixProduct (List.take i l) = NobleM2.SizeChange.matrixProduct (List.take j l) → ∃ l', l'.Sublist l ∧ l'.length < l.length ∧ NobleM2.SizeChange.matrixProduct l' = NobleM2.SizeChange.matrixProduct l",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.splice_three_entries",
+      "module": "NobleM2.SizeChangeMatrixSplice",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.splice_three_entries : ∀ {n : Nat} (a b c : NobleM2.SizeChange.MGraph n), [a, c].Sublist [a, b, c]",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.join_eq_strict",
+      "module": "NobleM2.SizeChangeMatrixStrict",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel4.join_eq_strict : ∀ (r s : NobleM2.SizeChange.Rel4), r.join s = NobleM2.SizeChange.Rel4.strict ↔ r = NobleM2.SizeChange.Rel4.strict ∨ s = NobleM2.SizeChange.Rel4.strict",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.compose_eq_strict",
+      "module": "NobleM2.SizeChangeMatrixStrict",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel4.compose_eq_strict : ∀ (r s : NobleM2.SizeChange.Rel4), r.compose s = NobleM2.SizeChange.Rel4.strict ↔ r = NobleM2.SizeChange.Rel4.strict ∧ s ≠ NobleM2.SizeChange.Rel4.unknown ∨ s = NobleM2.SizeChange.Rel4.strict ∧ r ≠ NobleM2.SizeChange.Rel4.unknown",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.foldr_join_strict",
+      "module": "NobleM2.SizeChangeMatrixStrict",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.foldr_join_strict : ∀ {α : Type} (f : α → NobleM2.SizeChange.Rel4) (l : List α) (acc : NobleM2.SizeChange.Rel4), List.foldr (fun x a => (f x).join a) acc l = NobleM2.SizeChange.Rel4.strict → (∃ x, x ∈ l ∧ f x = NobleM2.SizeChange.Rel4.strict) ∨ acc = NobleM2.SizeChange.Rel4.strict",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.composeMatrix_strict_exists",
+      "module": "NobleM2.SizeChangeMatrixStrict",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.composeMatrix_strict_exists : ∀ {n : Nat} {g h : NobleM2.SizeChange.MGraph n} {i k : Fin n}, NobleM2.SizeChange.composeMatrix g h i k = NobleM2.SizeChange.Rel4.strict → ∃ j, j ∈ List.finRange n ∧ (g i j).compose (h j k) = NobleM2.SizeChange.Rel4.strict",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.composeGraph_assoc",
+      "module": "NobleM2.SizeChangeMonoid",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.composeGraph_assoc : ∀ {n : Nat} (a b c : NobleM2.SizeChange.Graph n), NobleM2.SizeChange.composeGraph (NobleM2.SizeChange.composeGraph a b) c = NobleM2.SizeChange.composeGraph a (NobleM2.SizeChange.composeGraph b c)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.composeGraph_left_identity",
+      "module": "NobleM2.SizeChangeMonoid",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.composeGraph_left_identity : ∀ {n : Nat} (g : NobleM2.SizeChange.Graph n), NobleM2.SizeChange.composeGraph NobleM2.SizeChange.idGraph g = g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.power_one",
+      "module": "NobleM2.SizeChangeMonoid",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.power_one : ∀ {n : Nat} (g : NobleM2.SizeChange.Graph n), NobleM2.SizeChange.power 1 g = g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.power_two",
+      "module": "NobleM2.SizeChangeMonoid",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.power_two : ∀ {n : Nat} (g : NobleM2.SizeChange.Graph n), NobleM2.SizeChange.power 2 g = NobleM2.SizeChange.composeGraph g g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.closure_compose_assoc",
+      "module": "NobleM2.SizeChangeMonoid",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.closure_compose_assoc : ∀ {k n : Nat} {sites : NobleM2.SizeChange.Sites k n} {g h j : NobleM2.SizeChange.Graph n}, NobleM2.SizeChange.Closure sites g → NobleM2.SizeChange.Closure sites h → NobleM2.SizeChange.Closure sites j → NobleM2.SizeChange.Closure sites (NobleM2.SizeChange.composeGraph (NobleM2.SizeChange.composeGraph g h) j) ∧ NobleM2.SizeChange.Closure sites (NobleM2.SizeChange.composeGraph g (NobleM2.SizeChange.composeGraph h j))",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.compose_equal_right",
+      "module": "NobleM2.SizeChangePowers",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.Rel.compose_equal_right : ∀ (x : NobleM2.SizeChange.Rel), x.compose NobleM2.SizeChange.Rel.equal = x",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.composeGraph_id",
+      "module": "NobleM2.SizeChangePowers",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.composeGraph_id : ∀ {n : Nat} (g : NobleM2.SizeChange.Graph n), NobleM2.SizeChange.composeGraph g NobleM2.SizeChange.idGraph = g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.composeGraph_id_left",
+      "module": "NobleM2.SizeChangePowers",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.composeGraph_id_left : ∀ {n : Nat} (g : NobleM2.SizeChange.Graph n), NobleM2.SizeChange.composeGraph NobleM2.SizeChange.idGraph g = g",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.closure_power_succ",
+      "module": "NobleM2.SizeChangePowers",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.closure_power_succ : ∀ {k n : Nat} {sites : NobleM2.SizeChange.Sites k n} {g : NobleM2.SizeChange.Graph n}, NobleM2.SizeChange.Closure sites g → ∀ (j : Nat), NobleM2.SizeChange.Closure sites (NobleM2.SizeChange.power (j + 1) g)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.power_decreases",
+      "module": "NobleM2.SizeChangePowers",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.power_decreases : ∀ {n : Nat} {g : NobleM2.SizeChange.Graph n} {i : Fin n}, g i = NobleM2.SizeChange.Rel.decrease → ∀ (j : Nat), NobleM2.SizeChange.power (j + 1) g i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.powers_of_certified_decrease",
+      "module": "NobleM2.SizeChangePowers",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.powers_of_certified_decrease : ∀ {k n : Nat} {sites : NobleM2.SizeChange.Sites k n}, NobleM2.SizeChange.certifiedAll sites = true → ∀ (s : Fin k), ∃ i, ∀ (j : Nat), NobleM2.SizeChange.power (j + 1) (sites s) i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.decreasingGraph_powers",
+      "module": "NobleM2.SizeChangePowers",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.decreasingGraph_powers : ∀ (j : Nat), NobleM2.SizeChange.power (j + 1) NobleM2.SizeChange.decreasingGraph 0 = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.ne_decrease_of_beq_not_true",
+      "module": "NobleM2.SizeChangeRefusal",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.ne_decrease_of_beq_not_true : ∀ {rel : NobleM2.SizeChange.Rel}, ¬(rel == NobleM2.SizeChange.Rel.decrease) = true → rel ≠ NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.exists_of_all_eq_false",
+      "module": "NobleM2.SizeChangeRefusal",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.exists_of_all_eq_false : ∀ {α : Type u_1} (l : List α) (p : α → Bool), l.all p = false → ∃ a, a ∈ l ∧ ¬p a = true",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.false_of_any_eq_false",
+      "module": "NobleM2.SizeChangeRefusal",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.false_of_any_eq_false : ∀ {α : Type u_1} (l : List α) (p : α → Bool), l.any p = false → ∀ (a : α), a ∈ l → p a = false",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.certifiedAll_refusal_site",
+      "module": "NobleM2.SizeChangeRefusal",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.certifiedAll_refusal_site : ∀ {k n : Nat} {sites : NobleM2.SizeChange.Sites k n}, NobleM2.SizeChange.certifiedAll sites = false → ∀ (i : Fin n), ∃ s, sites s i ≠ NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.certifiedAll_refusal_iff",
+      "module": "NobleM2.SizeChangeRefusal",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.certifiedAll_refusal_iff : ∀ {k n : Nat} {sites : NobleM2.SizeChange.Sites k n}, NobleM2.SizeChange.certifiedAll sites = false ↔ ∀ (i : Fin n), ∃ s, sites s i ≠ NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.checked_family_refusal_site",
+      "module": "NobleM2.SizeChangeRefusal",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.checked_family_refusal_site : ∀ {k n : Nat} {argsOf : Fin k → NobleM2.SizeChange.Args n}, (NobleM2.SizeChange.certifiedAll fun s => NobleM2.SizeChange.graphOf (argsOf s)) = false → ∀ (i : Fin n), ∃ s, argsOf s i ≠ NobleM2.SizeChange.Arg.predOfSame",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.nonDecreasingFixture_cycle",
+      "module": "NobleM2.SizeChangeRefusal",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.nonDecreasingFixture_cycle : ∀ (i : Fin 1), ∃ s, NobleM2.SizeChange.nonDecreasingFixture s i ≠ NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.nonDecreasingFixture_names_site",
+      "module": "NobleM2.SizeChangeRefusal",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.nonDecreasingFixture_names_site : NobleM2.SizeChange.nonDecreasingFixture 0 0 = NobleM2.SizeChange.Rel.equal ∧ NobleM2.SizeChange.nonDecreasingFixture 0 0 ≠ NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.wrappingFixture_cycle",
+      "module": "NobleM2.SizeChangeRefusal",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.wrappingFixture_cycle : ∀ (i : Fin 1), ∃ s, NobleM2.SizeChange.graphOf (NobleM2.SizeChange.wrappingArgs s) i ≠ NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.wrappingFixture_names_argument",
+      "module": "NobleM2.SizeChangeRefusal",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.wrappingFixture_names_argument : NobleM2.SizeChange.wrappingArgs 0 0 = NobleM2.SizeChange.Arg.opaque ∧ NobleM2.SizeChange.wrappingArgs 0 0 ≠ NobleM2.SizeChange.Arg.predOfSame",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.staticArgs_names_argument",
+      "module": "NobleM2.SizeChangeRefusal",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.staticArgs_names_argument : ∀ (i : Fin 1), ∃ _s, NobleM2.SizeChange.staticArgs i ≠ NobleM2.SizeChange.Arg.predOfSame",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.graphsAux_length_succ",
+      "module": "NobleM2.SizeChangeRepeat",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.graphsAux_length_succ : ∀ (n : Nat), (NobleM2.SizeChange.graphsAux n).length + 1 = 3 ^ n + 1",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.powers_not_injective",
+      "module": "NobleM2.SizeChangeRepeat",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.powers_not_injective : ∀ {n : Nat} (g : NobleM2.SizeChange.Graph n), ¬∀ (i j : Fin ((NobleM2.SizeChange.graphsAux n).length + 1)), NobleM2.SizeChange.power (↑i + 1) g = NobleM2.SizeChange.power (↑j + 1) g → i = j",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.powers_not_injective_card",
+      "module": "NobleM2.SizeChangeRepeat",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.powers_not_injective_card : ∀ {n : Nat} (g : NobleM2.SizeChange.Graph n), ¬∀ (i j : Fin (3 ^ n + 1)), NobleM2.SizeChange.power (↑i + 1) g = NobleM2.SizeChange.power (↑j + 1) g → i = j",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.three_graphs",
+      "module": "NobleM2.SizeChangeRepeat",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.three_graphs : (NobleM2.SizeChange.graphsAux 1).length = 3",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.decreasing_repeats",
+      "module": "NobleM2.SizeChangeRepeat",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.decreasing_repeats : ¬∀ (i j : Fin ((NobleM2.SizeChange.graphsAux 1).length + 1)), ((NobleM2.SizeChange.power (↑i + 1) fun x => NobleM2.SizeChange.Rel.decrease) = NobleM2.SizeChange.power (↑j + 1) fun x => NobleM2.SizeChange.Rel.decrease) → i = j",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.certifiedAll_implies_certified",
+      "module": "NobleM2.SizeChangeSites",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.certifiedAll_implies_certified : ∀ {k n : Nat} {sites : NobleM2.SizeChange.Sites k n}, NobleM2.SizeChange.certifiedAll sites = true → ∀ (s : Fin k), NobleM2.SizeChange.certified (sites s) = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.certifiedAll_sound",
+      "module": "NobleM2.SizeChangeSites",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.certifiedAll_sound : ∀ {k n : Nat} {sites : NobleM2.SizeChange.Sites k n}, NobleM2.SizeChange.certifiedAll sites = true → ∃ i, ∀ (s : Fin k), sites s i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.certifiedAll_refusal",
+      "module": "NobleM2.SizeChangeSites",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.certifiedAll_refusal : ∀ {k n : Nat} {sites : NobleM2.SizeChange.Sites k n}, NobleM2.SizeChange.certifiedAll sites = false → ¬∃ i, ∀ (s : Fin k), sites s i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.certifiedAll_terminates",
+      "module": "NobleM2.SizeChangeSites",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.certifiedAll_terminates : ∀ {k n : Nat} {sites : NobleM2.SizeChange.Sites k n}, NobleM2.SizeChange.certifiedAll sites = true → ∀ (_run : NobleM2.SizeChange.Run k n sites), False",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.twoSitesAccepted_ok",
+      "module": "NobleM2.SizeChangeSites",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.twoSitesAccepted_ok : NobleM2.SizeChange.certifiedAll NobleM2.SizeChange.twoSitesAccepted = true",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.twoSitesMixed_refused",
+      "module": "NobleM2.SizeChangeSites",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.twoSitesMixed_refused : NobleM2.SizeChange.certifiedAll NobleM2.SizeChange.twoSitesMixed = false",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.twoSitesMixed_reports_no_shared",
+      "module": "NobleM2.SizeChangeSites",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.twoSitesMixed_reports_no_shared : ¬∃ i, ∀ (s : Fin 2), NobleM2.SizeChange.twoSitesMixed s i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.twoSitesSecond_each",
+      "module": "NobleM2.SizeChangeSites",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.twoSitesSecond_each : NobleM2.SizeChange.certified (NobleM2.SizeChange.twoSitesSecond 0) = true ∧ NobleM2.SizeChange.certified (NobleM2.SizeChange.twoSitesSecond 1) = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.allEqual_refused",
+      "module": "NobleM2.SizeChangeTightness",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.allEqual_refused : ∀ {k n : Nat} [NeZero k] {sites : NobleM2.SizeChange.Sites k n}, (∀ (s : Fin k) (i : Fin n), sites s i = NobleM2.SizeChange.Rel.equal) → NobleM2.SizeChange.certifiedAll sites = false",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.allEqual_refused_and_stalls",
+      "module": "NobleM2.SizeChangeTightness",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.allEqual_refused_and_stalls : ∀ {k n : Nat} [NeZero k] {sites : NobleM2.SizeChange.Sites k n}, (∀ (s : Fin k) (i : Fin n), sites s i = NobleM2.SizeChange.Rel.equal) → NobleM2.SizeChange.certifiedAll sites = false ∧ Nonempty (NobleM2.SizeChange.Run k n sites)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.allEqual_no_sites_accepted",
+      "module": "NobleM2.SizeChangeTightness",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.allEqual_no_sites_accepted : (NobleM2.SizeChange.certifiedAll fun x x_1 => NobleM2.SizeChange.Rel.equal) = true",
+      "axioms": [],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.stallingSites_refused",
+      "module": "NobleM2.SizeChangeTightness",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.stallingSites_refused : NobleM2.SizeChange.certifiedAll NobleM2.SizeChange.stallingSites = false",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.stallingSites_stalls",
+      "module": "NobleM2.SizeChangeTightness",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.stallingSites_stalls : Nonempty (NobleM2.SizeChange.Run 2 2 NobleM2.SizeChange.stallingSites)",
+      "axioms": [
+        "propext"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.everyoneDecreases_sound",
+      "module": "NobleM2.SizeChangeUniverse",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.everyoneDecreases_sound : ∀ {n : Nat} {i : Fin n}, NobleM2.SizeChange.everyoneDecreases i = true → ∀ (g : NobleM2.SizeChange.Graph n), g i = NobleM2.SizeChange.Rel.decrease",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.everyoneDecreases_false",
+      "module": "NobleM2.SizeChangeUniverse",
+      "status": "proved",
+      "statement": "@NobleM2.SizeChange.everyoneDecreases_false : ∀ {n : Nat} (i : Fin n), NobleM2.SizeChange.everyoneDecreases i = false",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    },
+    {
+      "name": "NobleM2.SizeChange.decreasingSite_certified",
+      "module": "NobleM2.SizeChangeUniverse",
+      "status": "proved",
+      "statement": "NobleM2.SizeChange.decreasingSite_certified : NobleM2.SizeChange.certifiedAll NobleM2.SizeChange.decreasingSite = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "strict": true
+    }
+  ],
+  "commands": [
+    {
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD^{tree}"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+      "argv": [
+        "--version"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "argv": [
+        "build"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "argv": [
+        "env",
+        "lean",
+        "--json",
+        "$OUT/Audit.lean"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD^{tree}"
+      ],
+      "exit": 0
+    },
+    {
+      "command": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "exit": 0
+    }
+  ],
+  "scope": [
+    "The size-change reference model: one definition, several self-call sites over shared measures, the argument classifier, the guarded run, the constructive refusal witness, and the matrix lane.",
+    "Every theorem keeps to {propext, Quot.sound}; a theorem needing Classical.choice fails this lane.",
+    "The model proves classified relations, not an execution of the Rust front end; the scenarios lane records what the CLI observed."
+  ]
+}
