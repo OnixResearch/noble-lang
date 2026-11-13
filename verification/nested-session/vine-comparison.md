@@ -7,9 +7,11 @@ source notations would have to express and what they would cost.
 
 Grounding:
 
-- The model: `proofs/m6/NestedSession.lean` (`Endpoint` at lines 113-122, `clientProtocol`/
-  `serverProtocol` at 2619-2623, `labelSetProtocol` at 2699-2701, protocol equality and duality at
-  1490-2572, the table check and the two default-off adjuncts at 2776-3342).
+- The model: `proofs/m6/NestedSession.lean` — the `Endpoint` structure and its named refusals,
+  `clientProtocol`/`serverProtocol` and `labelSetProtocol` for the two fixtures, the section
+  *Protocol type equality and duality under a declared work bound*, and the sections *Table
+  well-formedness*, *Pact preference-factor adjunct* and *Vine source-form comparison* (cited by
+  name because line numbers move with header edits).
 - The addendum: the 11-11 comment on issue #67, including the reviewed Vine commit `cf0c3258` and its
   `tests/programs/par.vi` and `vine/src/features/inverse.rs`. That comment is a source review; the Vine
   code was not re-read or executed for this note, so every Vine statement below is reported from the
