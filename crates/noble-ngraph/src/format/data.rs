@@ -91,8 +91,8 @@ pub fn parse(text: &str) -> Result<Data, crate::diag::Diagnostic> {
         ));
     }
     let mut mode = super::LiteralMode::Exact;
-    let mut mode_declared = false;
-    let mut record_started = false;
+    let mut is_mode_declared = false;
+    let mut is_record_started = false;
     let mut declared: Option<(
         alloc::vec::Vec<crate::ir::ScalarType>,
         alloc::vec::Vec<crate::ir::ScalarType>,
@@ -101,20 +101,20 @@ pub fn parse(text: &str) -> Result<Data, crate::diag::Diagnostic> {
     for l in lines {
         match l.tokens[0] {
             "literal-modes" => {
-                if mode_declared {
+                if is_mode_declared {
                     return Err(super::value::format_diag(
                         l.number,
                         "duplicate literal-modes line",
                     ));
                 }
-                if record_started {
+                if is_record_started {
                     return Err(super::value::format_diag(
                         l.number,
                         "literal-modes must immediately follow the schema line",
                     ));
                 }
                 mode = super::value::literal_mode(&l.tokens, l.number)?;
-                mode_declared = true;
+                is_mode_declared = true;
             }
             "types" => {
                 if declared.is_some() {
@@ -144,7 +144,7 @@ pub fn parse(text: &str) -> Result<Data, crate::diag::Diagnostic> {
             }
         }
         if l.tokens[0] != "literal-modes" {
-            record_started = true;
+            is_record_started = true;
         }
     }
     let (inputs, targets) =

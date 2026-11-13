@@ -40,6 +40,10 @@ fn mode_declared(source: &str) -> bool {
     })
 }
 
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; each RNE spelling is appended to the caller-owned receipt records, and a slice cannot express this growth."
+)]
 fn append_literal(token: &str, line: usize, records: &mut Vec<String>) -> Result<(), Diagnostic> {
     if !token.starts_with("rne:") {
         return Ok(());

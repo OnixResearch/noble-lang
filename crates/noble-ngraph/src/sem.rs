@@ -8,8 +8,6 @@
 //! The library is `no_std`: float functions that `core` does not provide are
 //! the correctly rounded software routines in [`soft`].
 
-use core::cmp::Ordering;
-
 /// A graph value at the ABI (D3).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Value {
@@ -494,7 +492,7 @@ impl ConversionError {
 /// integer bits and valid for every signed 64-bit input.
 #[must_use]
 pub fn i64_to_f32_rne(value: i64) -> u32 {
-    let negative = value < 0;
+    let is_negative = value < 0;
     let magnitude = value.unsigned_abs();
     if magnitude == 0 {
         return POS_ZERO;
@@ -520,7 +518,7 @@ pub fn i64_to_f32_rne(value: i64) -> u32 {
     }
     let fraction = u32::try_from(significand - (1 << 23)).unwrap_or(0);
     let mut bits = (u32::try_from(encoded_exponent + 127).unwrap_or(0) << 23) | fraction;
-    if negative {
+    if is_negative {
         bits |= 0x8000_0000;
     }
     bits
@@ -551,7 +549,7 @@ pub fn f32_to_i64_exact(bits: u32) -> Result<i64, ConversionError> {
 }
 
 fn f32_to_i64(bits: u32, require_exact: bool) -> Result<i64, ConversionError> {
-    let negative = bits >> 31 != 0;
+    let is_negative = bits >> 31 != 0;
     let encoded_exponent = (bits >> 23) & 0xff;
     if encoded_exponent == 0xff {
         return Err(ConversionError::NotFinite);
@@ -587,7 +585,7 @@ fn f32_to_i64(bits: u32, require_exact: bool) -> Result<i64, ConversionError> {
             u64::from(significand >> shift)
         }
     };
-    let bound = if negative {
+    let bound = if is_negative {
         1u64 << 63
     } else {
         u64::try_from(i64::MAX).unwrap_or(0)
@@ -595,7 +593,7 @@ fn f32_to_i64(bits: u32, require_exact: bool) -> Result<i64, ConversionError> {
     if magnitude > bound {
         return Err(ConversionError::Overflow);
     }
-    if negative {
+    if is_negative {
         if magnitude == 1u64 << 63 {
             Ok(i64::MIN)
         } else {
@@ -636,7 +634,7 @@ impl Big {
             self.0.pop();
         }
     }
-    fn compare(&self, other: &Self) -> Ordering {
+    fn compare(&self, other: &Self) -> core::cmp::Ordering {
         self.0
             .len()
             .cmp(&other.0.len())
@@ -657,7 +655,7 @@ impl Big {
         self.trim();
     }
     fn subtract_assign(&mut self, other: &Self) {
-        debug_assert!(self.compare(other) != Ordering::Less);
+        debug_assert!(self.compare(other) != core::cmp::Ordering::Less);
         let mut borrow = 0u64;
         for (index, limb) in self.0.iter_mut().enumerate() {
             let subtrahend = u64::from(other.0.get(index).copied().unwrap_or(0)) + borrow;
@@ -734,9 +732,10 @@ fn ratio_at_least_power(numerator: &Big, denominator: &Big, exponent: i32) -> bo
         numerator.compare(&scaled_by_power(
             denominator,
             u32::try_from(exponent).unwrap_or(0),
-        )) != Ordering::Less
+        )) != core::cmp::Ordering::Less
     } else {
-        scaled_by_power(numerator, exponent.unsigned_abs()).compare(denominator) != Ordering::Less
+        scaled_by_power(numerator, exponent.unsigned_abs()).compare(denominator)
+            != core::cmp::Ordering::Less
     }
 }
 
@@ -761,7 +760,7 @@ fn quotient_at_most(numerator: &Big, denominator: &Big, maximum: u32) -> u32 {
     while lower + 1 < upper {
         let middle = lower + (upper - lower) / 2;
         product.assign_mul_small(denominator, middle);
-        if product.compare(numerator) != Ordering::Greater {
+        if product.compare(numerator) != core::cmp::Ordering::Greater {
             lower = middle;
         } else {
             upper = middle;
@@ -779,9 +778,9 @@ fn round_quotient(numerator: &Big, denominator: &Big, maximum: u32) -> u32 {
     let mut doubled_remainder = remainder;
     doubled_remainder.mul_small(2);
     match doubled_remainder.compare(denominator) {
-        Ordering::Greater => quotient + 1,
-        Ordering::Equal if quotient & 1 == 1 => quotient + 1,
-        Ordering::Equal | Ordering::Less => quotient,
+        core::cmp::Ordering::Greater => quotient + 1,
+        core::cmp::Ordering::Equal if quotient & 1 == 1 => quotient + 1,
+        core::cmp::Ordering::Equal | core::cmp::Ordering::Less => quotient,
     }
 }
 

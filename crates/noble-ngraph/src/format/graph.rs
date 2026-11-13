@@ -604,8 +604,8 @@ pub fn parse_within(
     let mut input_shape: Option<alloc::vec::Vec<crate::ir::ShapeTree>> = None;
     let mut output_shape: Option<alloc::vec::Vec<crate::ir::ShapeTree>> = None;
     let mut literal_mode = super::LiteralMode::Exact;
-    let mut literal_mode_declared = false;
-    let mut record_started = false;
+    let mut is_literal_mode_declared = false;
+    let mut is_record_started = false;
     for l in lines {
         let line = l.number;
         let mut t = Toks {
@@ -617,10 +617,10 @@ pub fn parse_within(
         let head = t.next()?;
         match head {
             "literal-modes" => {
-                if literal_mode_declared {
+                if is_literal_mode_declared {
                     return Err(syntax(line, "duplicate literal-modes line"));
                 }
-                if record_started {
+                if is_record_started {
                     return Err(crate::diag::Diagnostic::new(
                         crate::diag::Code::Profile,
                         crate::diag::Site::Line(line),
@@ -636,7 +636,7 @@ pub fn parse_within(
                     )
                 })?;
                 t.mode = literal_mode;
-                literal_mode_declared = true;
+                is_literal_mode_declared = true;
             }
             "subject" => {
                 if subject.is_some() {
@@ -707,7 +707,7 @@ pub fn parse_within(
         }
         t.done()?;
         if head != "literal-modes" {
-            record_started = true;
+            is_record_started = true;
         }
     }
     let mut g = b.finish();

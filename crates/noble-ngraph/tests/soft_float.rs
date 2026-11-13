@@ -9,6 +9,10 @@
     tigerstyle::raw_arithmetic_overflow,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
+#![expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-maintainers; the adapter corpus generator exhaustively maps its private fixed result enum into Lean expectations, so a newly added result must update the corpus mapping."
+)]
 //! `sem::soft` (design D2, NGRAPH-CASE-14): the `no_std` library's float
 //! routines agree bitwise with `std` on every non-NaN result, and give a NaN
 //! wherever `std` does. The default tier checks every special value, every

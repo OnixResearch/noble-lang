@@ -186,6 +186,16 @@ fn graph_rne_literals_require_v2_and_print_as_exact_bits() {
             .code_string(),
         "E-PROFILE"
     );
+    let stale_version = source.replace(
+        "noble-graph-literal-modes/v2",
+        "noble-graph-literal-modes/v1",
+    );
+    assert_eq!(
+        parse(&IDS, &stale_version)
+            .expect_err("the v1 policy cannot enable RNE")
+            .code_string(),
+        "E-PROFILE"
+    );
     let overflow = source.replace("rne:0.1", "rne:1e39");
     assert_eq!(
         parse(&IDS, &overflow)
