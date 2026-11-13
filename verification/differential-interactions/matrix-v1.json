@@ -18,8 +18,10 @@
       "execution_witness": "The source program is admitted and both Wasm modes finish with the expected result and positive execution-step metrics. The actual CLI report has no per-operator trace: record the source operators and the output-discriminating witness separately, and do not claim direct operator tracing. For preserved_prefix_multiple, at least two untouched prefix values survive in order before the result.",
       "properties": ["reference_stack_matches_source_wasm", "ordered_stack_and_prefix_preserved"],
       "comparison_legs": ["BigInt reference", "per-case Lean-kernel-checked expectation", "managed Wasm opt-off", "managed Wasm opt-on"],
-      "unsupported": [],
-      "notes": "A cell is not reached from its template or AST tag. Rejection/exhaustion counts do not contribute to semantic reach."
+      "budget": {"kind": "source-case evaluations per optimization mode", "seed": 125, "cases": 18,
+        "comparison": "current seeded generator and structured extension each receive 18 cases in each mode"},
+      "unsupported": [{"feature": "per-case runtime fuel boundary", "reason": "The foundation CLI observer exposes no runtime fuel override; the campaign freezes and measures its 18-case work budget instead."}],
+      "notes": "The matrix is exactly 18 cases per mode. A cell is not reached from its template or AST tag. Rejection/exhaustion counts do not contribute to semantic reach."
     },
     {
       "id": "P2-ngraph-f32",
@@ -31,9 +33,13 @@
       },
       "selected_cell_count": 24,
       "cell_id_template": "P2/{interaction_family}/{fp_class}",
-      "execution_witness": "The checked graph contains the required operation nodes and the L3 reference reports all checked nodes evaluated on a normal result. Record select/index branches from the concrete input bits and output-discriminating values. L4 exposes no per-node trace, so its witness kind is a successful comparison of those exact inputs/outputs, not an asserted internal trace.",
+      "execution_witness": "The checked graph contains the required operation nodes and the L3 reference reports all checked nodes evaluated on a normal result. Derive direct select branches and index table positions from concrete admitted input bits and graph operands; retain output-discriminating values. L4 exposes no per-node trace, so its witness kind is a successful comparison of those exact inputs/outputs, not an asserted internal trace.",
       "properties": ["all_supported_f32_observations_agree", "selected_edge_branch_matches_reference"],
       "comparison_legs": ["L2 APFloat oracle", "binary64-per-operation oracle", "L3 reference interpreter", "L4 compiled evaluator"],
+      "budget": {"kind": "L3 node evaluations", "seed": 125,
+        "cap": "the structured arm's measured total across its 24 accepted cells",
+        "current_generator": "keep the existing random graph generator, lower requested ops only as needed to fit one graph under the cap, then run floor(cap / graph_nodes) vectors",
+        "structured_extension": "one vector for each of the 24 frozen cells"},
       "unsupported": [
         {
           "feature": "immutable parameter-snapshot interactions",
