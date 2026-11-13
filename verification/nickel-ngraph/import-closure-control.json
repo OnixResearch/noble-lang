@@ -1,0 +1,8 @@
+{
+  "refused": true,
+  "code": "E-IMPORT-CLOSURE",
+  "declared": [
+    "nickel/ngraph/fixtures/arithmetic.ncl",
+    "nickel/ngraph/contract.ncl"
+  ]
+}

@@ -445,7 +445,8 @@ directory outside the checkout with the pinned Node executable selected by
 `policy/tool-selection.json` and a built CLI:
 
 ```sh
-node tools/nickel-ngraph.mjs replay \
+NODE="$(nix build .#node --no-link --print-out-paths)/bin/node"
+"$NODE" tools/nickel-ngraph.mjs replay \
   --noble <absolute path of the built noble CLI> \
   --out <new directory outside the repository>
 ```
@@ -457,12 +458,18 @@ these Nickel source bytes, exported data, lowerer or evaluator results to the
 composition laws.
 
 **Implementation-tested.** The retained
-[fixture result](verification/nickel-ngraph/fixture-result.json) and
-[provenance receipt](verification/nickel-ngraph/receipt.json) accompany the
-pinned arithmetic export and admitted graph, independently calculated ordered
-outputs from both evaluators, composition-law matrix, demanded-contract and
-import-closure refusals, consumer record, and independent stale-binding
-controls.
+[fixture result](verification/nickel-ngraph/fixture-result.json),
+[independent expected results](verification/nickel-ngraph/expected-results.json),
+[exported constructor data](verification/nickel-ngraph/exported-constructor.json),
+[admitted graph](verification/nickel-ngraph/admitted.ngraph),
+[composition-law matrix](verification/nickel-ngraph/composition-result.json),
+[demanded-contract control](verification/nickel-ngraph/delayed-contract-control.json),
+[import-closure control](verification/nickel-ngraph/import-closure-control.json),
+[consumer record](verification/nickel-ngraph/consumer.json),
+[provenance receipt](verification/nickel-ngraph/receipt.json), and
+[stale-binding controls](verification/nickel-ngraph/stale-controls.json) record
+the pinned arithmetic export, ordered outputs from both evaluators, and each
+independently checked binding refusal.
 
 **Open.** These finite observations are not a source-to-implementation
 correspondence proof. They establish no effect independence, resource

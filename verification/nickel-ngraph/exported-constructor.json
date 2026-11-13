@@ -1,0 +1,191 @@
+{
+  "bundle_sha256": "",
+  "contract_version": "noble-ngraph-nickel-contracts/1",
+  "inputs": [
+    {
+      "id": "x",
+      "scope": "first"
+    }
+  ],
+  "instances": [
+    {
+      "inputs": [
+        "x"
+      ],
+      "nodes": [
+        {
+          "id": "x",
+          "op": {
+            "kind": "input"
+          }
+        },
+        {
+          "id": "bias",
+          "op": {
+            "kind": "const",
+            "value": "9223372036854775807"
+          }
+        },
+        {
+          "id": "shared",
+          "op": {
+            "kind": "add",
+            "left": "x",
+            "right": "bias"
+          }
+        },
+        {
+          "id": "scale",
+          "op": {
+            "kind": "const",
+            "value": "9007199254740993"
+          }
+        },
+        {
+          "id": "scaled",
+          "op": {
+            "kind": "mul",
+            "left": "shared",
+            "right": "scale"
+          }
+        },
+        {
+          "id": "difference",
+          "op": {
+            "kind": "sub",
+            "left": "shared",
+            "right": "x"
+          }
+        }
+      ],
+      "outputs": [
+        "scaled",
+        "difference",
+        "shared"
+      ],
+      "scope": "first",
+      "template": "arithmetic/1"
+    },
+    {
+      "inputs": [
+        "x"
+      ],
+      "nodes": [
+        {
+          "id": "x",
+          "op": {
+            "kind": "input"
+          }
+        },
+        {
+          "id": "bias",
+          "op": {
+            "kind": "const",
+            "value": "-9223372036854775808"
+          }
+        },
+        {
+          "id": "shared",
+          "op": {
+            "kind": "add",
+            "left": "x",
+            "right": "bias"
+          }
+        },
+        {
+          "id": "scale",
+          "op": {
+            "kind": "const",
+            "value": "-2"
+          }
+        },
+        {
+          "id": "scaled",
+          "op": {
+            "kind": "mul",
+            "left": "shared",
+            "right": "scale"
+          }
+        },
+        {
+          "id": "difference",
+          "op": {
+            "kind": "sub",
+            "left": "shared",
+            "right": "x"
+          }
+        }
+      ],
+      "outputs": [
+        "scaled",
+        "difference",
+        "shared"
+      ],
+      "scope": "second",
+      "template": "arithmetic/1"
+    }
+  ],
+  "library_version": "noble-ngraph-nickel/1",
+  "outputs": [
+    {
+      "id": "scaled",
+      "scope": "first"
+    },
+    {
+      "id": "difference",
+      "scope": "first"
+    },
+    {
+      "id": "scaled",
+      "scope": "second"
+    },
+    {
+      "id": "difference",
+      "scope": "second"
+    },
+    {
+      "id": "shared",
+      "scope": "first"
+    },
+    {
+      "id": "shared",
+      "scope": "second"
+    },
+    {
+      "id": "scaled",
+      "scope": "first"
+    }
+  ],
+  "parameters": [
+    {
+      "name": "first.bias",
+      "value": "9223372036854775807"
+    },
+    {
+      "name": "first.scale",
+      "value": "9007199254740993"
+    },
+    {
+      "name": "second.bias",
+      "value": "-9223372036854775808"
+    },
+    {
+      "name": "second.scale",
+      "value": "-2"
+    }
+  ],
+  "profile": "ngraph-i64/0",
+  "schema": "noble-ngraph-nickel/v1",
+  "wires": [
+    {
+      "from": {
+        "id": "shared",
+        "scope": "first"
+      },
+      "to": {
+        "id": "x",
+        "scope": "second"
+      }
+    }
+  ]
+}

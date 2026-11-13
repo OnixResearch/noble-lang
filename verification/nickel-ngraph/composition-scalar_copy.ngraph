@@ -1,0 +1,6 @@
+ngraph-ir/0 ngraph-i64/0
+subject authored-nickel d45a55f0106d66a35d25cf1f90d42b32c0111b076ca29ce80ddcf097a764452f closure -
+slot input i64
+%0 = input 0
+out %0
+out %0

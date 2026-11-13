@@ -1,0 +1,62 @@
+{
+  "schema": "noble-ngraph-nickel-consumer/v1",
+  "receipt_sha256": "4480202311c239a99d313f832202b4adb45d21f7fda8e4274b58774437e45d2d",
+  "bindings": {
+    "source_commit": "36275357a066d4fbd317751c48fbc13f9edcac01",
+    "source_bytes_sha256": "4f248775679cff08ca6024774f686e15fcafe31eb352298256659b7bd9ce52b4",
+    "import_bytes_sha256": "98aa76836b509b8ad09418a68d504a68d9d0639074665501462261e691e70254",
+    "import_closures_sha256": "66d23e0108b71eeb1fb19797c4c20e2f77822d08394ca90440725528560eb20b",
+    "construction_parameters_sha256": "853c291408d732ac17b711b2033a1c267bec109ba738c6659197f4913ec128bb",
+    "versions_sha256": "8c776d5680290b97ff4006514d985628db4c3c9848e8b63ec1545b07397b2b39",
+    "evaluator_identity_sha256": "79eb3118dc2035b3c5097b050978d1a33037d3cd68f3fb70aad15295febbd66a",
+    "exported_constructor_bytes_sha256": "0409745d5278a21e86c52e60bc30738725dcd185cd67461f4a9fe313856a0f8a",
+    "lowerer_revision": "noble-ngraph-nickel-lowerer/1",
+    "lowerer_source_sha256": "0bd093c2fb416902a82f695f09458965d079b621054fa980fbcf0b7b7223e8b3",
+    "profile": "ngraph-i64/0",
+    "graphs": [
+      {
+        "label": "arithmetic",
+        "sha256": "5955b93597dc8f999bb018e2f1e52ba97b8df2ef6b4b1d390d7cf84cc6055a4f",
+        "checked_identity": "4b7fe3283b800ba9cf2a53000d6ca520a8cf748a7775e8002652b82c85f64b60",
+        "profile": "ngraph-i64/0"
+      },
+      {
+        "label": "composition-identity",
+        "sha256": "447648d2b1913561a612e1639590640846a4a004d351762eea8854a0abe03b91",
+        "checked_identity": "6bb9454d1124381eea264b0e38d40508276d08fbc166a07efda6edcb4ad0a9a0",
+        "profile": "ngraph-i64/0"
+      },
+      {
+        "label": "composition-scalar_copy",
+        "sha256": "ba7fb6fa7cae3f7a456298524090753820e5f120833ee833ff47b5ace89248d9",
+        "checked_identity": "51eeb831d85710f771fc991468e2959a57ecde985706c324a2e2fb93f5584a3b",
+        "profile": "ngraph-i64/0"
+      },
+      {
+        "label": "composition-product",
+        "sha256": "c5fa2f7e0beac10aa53776d0ddf9b961d3617a84c395c220698b747247624af5",
+        "checked_identity": "2df75a94f9df819d5cbae5fd7a26e8d8959b08a3772dbb34449705216f7f71ed",
+        "profile": "ngraph-i64/0"
+      },
+      {
+        "label": "composition-permutation",
+        "sha256": "357413660701df6387074e7afb6d03538f310600f08130efa4c67990c7771736",
+        "checked_identity": "86e9fbe545fd26177056c55ac0010e65957ae26365f1c50273579f02d677c5e4",
+        "profile": "ngraph-i64/0"
+      },
+      {
+        "label": "composition-reassociation_left",
+        "sha256": "694df136aea82825992c44660ca04482084f4f2c79f23e8636719a31006e80a3",
+        "checked_identity": "5453ebedb905bcd583f44b7ceeb39fd3643ee323a9431c1eb37e931ad786b677",
+        "profile": "ngraph-i64/0"
+      },
+      {
+        "label": "composition-reassociation_right",
+        "sha256": "162b3f15a8ba872ad3e2cce5f7cf2b368f079aad11f6c81c96f268be884f8683",
+        "checked_identity": "8904d243c3415e45f56c6647a5e9b92456eeec71a4bfb814a30738c22d3a89d0",
+        "profile": "ngraph-i64/0"
+      }
+    ]
+  },
+  "sha256": "53c126663d3805b49b7191e9984db5dad236fd4accbc2f19531a77d2508854a1"
+}

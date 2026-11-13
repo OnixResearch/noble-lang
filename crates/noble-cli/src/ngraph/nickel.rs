@@ -12,7 +12,7 @@ const CONTRACT_VERSION: &str = "noble-ngraph-nickel-contracts/1";
 pub(super) const LOWERER_REVISION: &str = "noble-ngraph-nickel-lowerer/1";
 
 #[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(crate = "::serde", deny_unknown_fields)]
 struct Envelope {
     schema: String,
     library_version: String,
@@ -27,14 +27,14 @@ struct Envelope {
 }
 
 #[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(crate = "::serde", deny_unknown_fields)]
 struct Parameter {
     name: String,
     value: String,
 }
 
 #[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(crate = "::serde", deny_unknown_fields)]
 struct Instance {
     scope: String,
     template: String,
@@ -44,14 +44,19 @@ struct Instance {
 }
 
 #[derive(Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(crate = "::serde", deny_unknown_fields)]
 struct Node {
     id: String,
     op: Operation,
 }
 
 #[derive(Clone, Deserialize)]
-#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+#[serde(
+    crate = "::serde",
+    tag = "kind",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 enum Operation {
     Input,
     Const { value: String },
@@ -61,14 +66,14 @@ enum Operation {
 }
 
 #[derive(Clone, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-#[serde(deny_unknown_fields)]
+#[serde(crate = "::serde", deny_unknown_fields)]
 struct Handle {
     scope: String,
     id: String,
 }
 
 #[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(crate = "::serde", deny_unknown_fields)]
 struct Wire {
     from: Handle,
     to: Handle,
