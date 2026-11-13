@@ -17,17 +17,14 @@ This evidence does **not** promote any canonical `LSLOT-01..09` implementation/e
 
 ## Export and verify
 
-Build the selected CLI with the pinned wrapper, then export from a clean committed source tree to a new directory outside the repository. Use the assigned private scratch directory for temporary files:
+Build the CLI with the pinned toolchain (`cargo build -p noble-cli --offline --locked`), then export from a clean committed source tree to a new directory outside the repository, with a private (not world-writable) temporary directory:
 
 ```sh
-wt="$HOME/.cache/noble-iss/wt/live-corpus-119"
-NOBLE_ROOT="$wt" NOBLE_TARGET="$HOME/.cache/noble-iss/target/live-corpus-119" \
-  "$HOME/.cache/noble-iss/cargo.sh" build -p noble-cli --offline --locked
-TMPDIR="$HOME/.cache/noble-iss/tmp" \
+TMPDIR=<private temporary directory> \
   /nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node \
-  "$wt/verification/live-update-corpus/export.mjs" \
-  "$HOME/.cache/noble-iss/target/live-corpus-119/debug/noble" \
-  "$HOME/.cache/noble-iss/scratch/live-corpus-119/fresh-export"
+  verification/live-update-corpus/export.mjs \
+  <absolute path of the built noble CLI> \
+  <new directory outside the repository>
 ```
 
 The export directory must not already exist. The exporter invokes the existing nested-root, coherent-map, relocation-witness, typed-case, ownership, package-retention, module-root-retention and program-capacity lanes. The exporter's final JSON summary reports scenario classes, control results and self-verification failures; a successful export has zero failures and all controls passing.
@@ -35,7 +32,7 @@ The export directory must not already exist. The exporter invokes the existing n
 After placing a clean-commit export under `evidence/`, run:
 
 ```sh
-TMPDIR="$HOME/.cache/noble-iss/tmp" \
+TMPDIR=<private temporary directory> \
   /nix/store/7py3q3rn0qbcyzwqk6mdbyd8r1m9x54r-bun-1.4.4/bin/bun \
   test verification/live-update-corpus/
 ```
