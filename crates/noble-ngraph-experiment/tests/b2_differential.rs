@@ -1721,6 +1721,9 @@ fn issue125_structured_interaction_matrix() {
             "all-refused or unreached campaign cannot pass semantic acceptance"
         );
     } else {
+        // An implementation mutant may change results outside its declared
+        // target cell; mutation runs judge that target's retained witness,
+        // while only the clean baseline is required to reach every cell.
         assert_eq!(
             mutation_probe
                 .as_ref()

@@ -720,7 +720,8 @@ try {
     controls: controls.map(c => `${c.id}:${c.demonstrably_fails}`),
     checker_property_lanes: receipt.checker_property_lanes.summary ?? 'skipped' }, null, 2));
 } catch (error) {
-  writeFileSync(join(out, 'differential-failure.json'), JSON.stringify({ ...receipt, error: error.message }, null, 2) + '\n');
+  writeFileSync(join(out, 'differential-failure.json'), JSON.stringify({ ...receipt, error: error.message }, null, 2,
+    (_key, value) => typeof value === 'bigint' ? value.toString() : value) + '\n');
   console.error(`[differential] FAIL ${error.message}`);
   process.exitCode = 1;
 }
