@@ -14,15 +14,14 @@ does and does not buy:
   derivation;
 * a rule token outside the modelled set refuses decoding, so the codec cannot smuggle a rule
   the checker does not know past the envelope;
-* the encoded revision token is exactly what the decoder re-checks, so a stale token is
-  refused at transport rather than at acceptance only.
+* the encoded revision and model tokens are exactly what the decoder re-checks, so a stale
+  format or semantic-model token is refused at transport rather than at acceptance only.
 
 What this is not: tokens are modelled as `String`s and no byte-level envelope is modelled at
 all, so nothing here binds the `serde`/binary bytes the Rust encoder writes to these
 structures; no statement covers envelope digests, replay-budget accounting or the identity
 rules.
 -/
-import Std.Data.String.ToNat
 import NobleFoundation.Certificate
 
 namespace NobleFoundation.CertificateCodec
@@ -36,6 +35,26 @@ def bitToken (value : BitVec 64) : String := Nat.repr value.toNat
 
 /-- Render one numbered field as its decimal token. -/
 def natToken (value : Nat) : String := Nat.repr value
+
+/-- The value of a decimal token: at least one character and every character an ASCII digit.
+A sign, a prefix, an underscore, a non-digit or an empty token has no value. Unlike the
+standard library's `String.toNat?`, this parser is a plain structural recursion, so the
+kernel can evaluate it on literal tokens. -/
+def decimal (token : String) : Option Nat :=
+  if token.toList ≠ [] ∧ token.toList.all Char.isDigit then
+    some (Nat.ofDigitChars 10 token.toList 0)
+  else none
+
+/-- A rendered `Nat` is a decimal token of exactly its value, so the encoder cannot produce a
+token the parser reads differently. -/
+theorem decimal_repr (value : Nat) : decimal (Nat.repr value) = some value := by
+  unfold decimal
+  rw [Nat.repr_eq_ofList_toDigits, String.toList_ofList]
+  have hne : (Nat.toDigits 10 value) ≠ [] := Nat.toDigits_ne_nil
+  have hdigits : (Nat.toDigits 10 value).all Char.isDigit = true :=
+    List.all_eq_true.mpr fun character member =>
+      Nat.isDigit_of_mem_toDigits (by decide) (by decide) member
+  rw [ite_eq_left ⟨hne, hdigits⟩, Nat.ofDigitChars_ten_toDigits]
 
 /-- The tokens of one step, in wire order: rule, index, first, second, first bits, second
 bits, claimed. Exactly seven tokens, never fewer. -/
@@ -52,12 +71,14 @@ def decodeRule (value : Nat) : Option Nat :=
   if value ≤ 2 then some value else none
 
 /-- Decode one step from exactly seven tokens. A rule token outside the modelled set, or a
-bit token outside the 64-bit range, refuses the whole step. -/
+bit token outside the 64-bit range, refuses the whole step. Node and operand tokens are
+modelled as `Nat`s: the Rust decoder additionally refuses an index that is not a `u32`,
+which no graph of this model can name, and this file claims nothing about that bound. -/
 def decodeStep (tokens : List String) : Option Step :=
   match tokens with
   | [rule, index, first, second, firstBits, secondBits, claimed] =>
-      match (rule.toNat?).bind decodeRule, index.toNat?, first.toNat?, second.toNat?,
-          firstBits.toNat?, secondBits.toNat?, claimed.toNat? with
+      match (decimal rule).bind decodeRule, decimal index, decimal first, decimal second,
+          decimal firstBits, decimal secondBits, decimal claimed with
       | some ruleValue, some indexValue, some firstValue, some secondValue,
           some firstBitsValue, some secondBitsValue, some claimedValue =>
           if h : firstBitsValue < 2 ^ 64 ∧ secondBitsValue < 2 ^ 64 ∧
@@ -79,14 +100,16 @@ def decodeSteps : List (List String) → Option (List Step)
       | some step, some tail => some (step :: tail)
       | _, _ => none
 
-/-- Decode a whole envelope, re-checking the revision token and the declared step count
-before any step is decoded. A chunk list whose length differs from the declared count is
-refused, so dropping a chunk cannot shorten the derivation. -/
-def decode (revisionToken : String) (declaredSteps : Nat) (chunks : List (List String)) :
-    Option Derivation :=
+/-- Decode a whole envelope, re-checking the revision token, the model token and the declared
+step count before any step is decoded. A chunk list whose length differs from the declared
+count is refused, so dropping a chunk cannot shorten the derivation. -/
+def decode (revisionToken modelToken : String) (declaredSteps : Nat)
+    (chunks : List (List String)) : Option Derivation :=
   if revisionToken = revision then
-    if chunks.length = declaredSteps then
-      (decodeSteps chunks).map (fun steps => ⟨revisionToken, steps⟩)
+    if modelToken = modelRevision then
+      if chunks.length = declaredSteps then
+        (decodeSteps chunks).map (fun steps => ⟨revisionToken, modelToken, steps⟩)
+      else none
     else none
   else none
 
@@ -100,7 +123,7 @@ theorem decode_encode_step_replays (step : Step) (hrule : step.rule ≤ 2) :
       step.claimed.toNat < 2 ^ 64 :=
     ⟨step.firstBits.isLt, step.secondBits.isLt, step.claimed.isLt⟩
   unfold decodeStep encodeStep bitToken natToken
-  simp only [Nat.toNat?_repr]
+  simp only [decimal_repr]
   have hdecoded : (some step.rule).bind decodeRule = some step.rule := by
     simp [decodeRule, hrule]
   rw [hdecoded]
@@ -108,9 +131,10 @@ theorem decode_encode_step_replays (step : Step) (hrule : step.rule ≤ 2) :
 
 /-- Decoding an encoded derivation returns the derivation itself. -/
 theorem decode_encode_replays (derivation : Derivation) (hrev : derivation.revision = revision)
+    (hmodel : derivation.model = modelRevision)
     (hall : ∀ step ∈ derivation.steps, step.rule ≤ 2) :
-    decode derivation.revision derivation.steps.length (encodeSteps derivation) =
-      some derivation := by
+    decode derivation.revision derivation.model derivation.steps.length
+        (encodeSteps derivation) = some derivation := by
   have hsteps : ∀ (steps : List Step), (∀ member ∈ steps, member.rule ≤ 2) →
       decodeSteps (steps.map encodeStep) = some steps := by
     intro steps hallSteps
@@ -125,7 +149,7 @@ theorem decode_encode_replays (derivation : Derivation) (hrev : derivation.revis
   have hcount : (encodeSteps derivation).length = derivation.steps.length := by
     simp [encodeSteps]
   unfold decode
-  rw [ite_eq_left hrev, ite_eq_left hcount]
+  rw [ite_eq_left hrev, ite_eq_left hmodel, ite_eq_left hcount]
   rw [show encodeSteps derivation = derivation.steps.map encodeStep from rfl]
   rw [hsteps derivation.steps hall]
   rfl
@@ -143,31 +167,42 @@ theorem truncated_step_refused (rule index first second firstBits secondBits : S
 /-- A rule token outside the modelled set refuses the step, so an unknown rule cannot travel
 through the codec at all. -/
 theorem unknown_rule_token_refused (rule index first second firstBits secondBits claimed : String)
-    (ruleValue : Nat) (hdecode : rule.toNat? = some ruleValue) (hbound : ¬ ruleValue ≤ 2) :
+    (ruleValue : Nat) (hdecode : decimal rule = some ruleValue) (hbound : ¬ ruleValue ≤ 2) :
     decodeStep [rule, index, first, second, firstBits, secondBits, claimed] = none := by
   have hrule : decodeRule ruleValue = none := by simp [decodeRule, hbound]
   simp [decodeStep, hdecode, hrule]
 
 /-- A stale revision token refuses decoding before any step is inspected. -/
 theorem stale_revision_token_refused (tokens : List (List String)) (declaredSteps : Nat)
-    (token : String) (hstale : token ≠ revision) :
-    decode token declaredSteps tokens = none := by
+    (token modelToken : String) (hstale : token ≠ revision) :
+    decode token modelToken declaredSteps tokens = none := by
+  simp [decode, hstale]
+
+/-- A stale model token refuses decoding before any step is inspected: a certificate produced
+for another semantic model does not silently travel as this one. -/
+theorem stale_model_token_refused (tokens : List (List String)) (declaredSteps : Nat)
+    (token : String) (hstale : token ≠ modelRevision) :
+    decode revision token declaredSteps tokens = none := by
   simp [decode, hstale]
 
 /-- A chunk list whose length differs from the declared step count refuses, whatever its
 chunks contain. -/
-theorem chunk_count_refused (token : String) (declaredSteps : Nat) (chunks : List (List String))
-    (hcount : chunks.length ≠ declaredSteps) : decode token declaredSteps chunks = none := by
+theorem chunk_count_refused (token modelToken : String) (declaredSteps : Nat)
+    (chunks : List (List String)) (hcount : chunks.length ≠ declaredSteps) :
+    decode token modelToken declaredSteps chunks = none := by
   by_cases hrev : token = revision
   · rw [decode, ite_eq_left hrev]
-    simp [hcount]
+    by_cases hmodel : modelToken = modelRevision
+    · rw [ite_eq_left hmodel]
+      simp [hcount]
+    · rw [ite_eq_right hmodel]
   · rw [decode, ite_eq_right hrev]
 
 /-- Dropping a chunk refuses rather than shortening the derivation: the encoded count is
 the derivation's own step count, and a shorter chunk list disagrees with it. -/
 theorem dropped_chunk_refused (derivation : Derivation) (chunks : List (List String))
     (hchunks : chunks.length < derivation.steps.length) :
-    decode revision derivation.steps.length chunks = none := by
+    decode revision modelRevision derivation.steps.length chunks = none := by
   apply chunk_count_refused
   exact Nat.ne_of_lt hchunks
 
@@ -177,11 +212,12 @@ theorem dropped_chunk_refused (derivation : Derivation) (chunks : List (List Str
 derivation, not about the envelope that carried it. -/
 theorem acceptance_preserved_by_codec (graph : NobleFoundation.PackedSchedule.Graph)
     (derivation : Derivation) (hrev : derivation.revision = revision)
+    (hmodel : derivation.model = modelRevision)
     (hall : ∀ step ∈ derivation.steps, step.rule ≤ 2) :
-    (decode derivation.revision derivation.steps.length (encodeSteps derivation)).map
-        (accepted graph) =
+    (decode derivation.revision derivation.model derivation.steps.length
+        (encodeSteps derivation)).map (accepted graph) =
       some (accepted graph derivation) := by
-  rw [decode_encode_replays derivation hrev hall]
+  rw [decode_encode_replays derivation hrev hmodel hall]
   rfl
 
 end NobleFoundation.CertificateCodec

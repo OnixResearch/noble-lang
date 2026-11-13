@@ -34,6 +34,7 @@ import NobleFoundation.SymbolicPairCertified
 import NobleFoundation.SymbolicSolverReplay
 import NobleFoundation.Certificate
 import NobleFoundation.CertificateCodec
+import NobleFoundation.CertificateCorpus
 import NobleFoundation.PackedLayout
 import NobleFoundation.Regressions
 import NobleFoundation.Helper
