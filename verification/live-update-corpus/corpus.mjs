@@ -346,6 +346,11 @@ function expectation(id, options) {
 }
 const fromCanonical = (ref, text) => ({ kind: 'canonical', ref, text });
 const fromTable = (ref, text) => ({ kind: 'exporter-table', ref, text });
+const fromOwnership = (ref, text) => ({
+  kind: 'canonical',
+  ref: `.cairn/changes/ownership-lifetime-contract/design.md#${ref}`,
+  text,
+});
 
 // ---------------------------------------------------------------------------------------------
 // The declared scenarios. Every declared number below is derived in the comment beside it from a
@@ -597,7 +602,7 @@ export const SCENARIOS = [
         mapping: 'the same publication succeeds once the saved owner is gone and retires the span',
       }),
       expectation('retention.module-root-survives-supersession', {
-        origin: ownership('OWN-CASE-06#expected-saved-named-caller',
+        origin: fromOwnership('OWN-CASE-06#expected-saved-named-caller',
           'either the invocation returns the correct value, or retirement is refused while the owner lives; a stale-handle trap is a failure'),
         declared: { outcome: 'executed', stack: [{ kind: 1, value: '42' }] },
         extract: observed => ({
@@ -608,7 +613,7 @@ export const SCENARIOS = [
         mapping: 'the saved Program calls g, whose body reads h through M\'s module global, after M\'s root was superseded',
       }),
       expectation('retention.module-root-retires-at-zero-owners', {
-        origin: ownership('OWN-CASE-06#expected-release-order',
+        origin: fromOwnership('OWN-CASE-06#expected-release-order',
           'M\'s code retires only after the last saved owner is released'),
         declared: { spans: 1, generation: 1, start: 4, length: 6 },
         extract: observed => {
@@ -618,7 +623,7 @@ export const SCENARIOS = [
         mapping: 'the module-root session records one span of M, the compiler\'s own start and length',
       }),
       expectation('retention.module-root-last-run-refused', {
-        origin: ownership('OWN-CASE-06#expected-refusal-after-release',
+        origin: fromOwnership('OWN-CASE-06#expected-refusal-after-release',
           'a released owner is refused'),
         declared: 'refused',
         extract: observed => observed.module_root.final_run.outcome,
@@ -860,7 +865,7 @@ export const SCENARIOS = [
     unsupported: ['owner tokens surviving a host process restart'],
     expectations: [
       expectation('ownership.duplicates-released-in-both-orders', {
-        origin: ownership('OWN-CASE-02#expected-shared-duplicates',
+        origin: fromOwnership('OWN-CASE-02#expected-shared-duplicates',
           'the remaining owner runs after the first release; both are refused after the second'),
         declared: [
           { order: 'A-then-B', owners: 2, survivor: [{ kind: 1, value: '42' }], exit: 0,
@@ -872,7 +877,7 @@ export const SCENARIOS = [
         mapping: 'run(41) through the survivor returns 42 in both release orders; the released owner and the double release are refused',
       }),
       expectation('ownership.balanced-tree-ownership', {
-        origin: ownership('OWN-CASE-03#expected-nested-composition',
+        origin: fromOwnership('OWN-CASE-03#expected-nested-composition',
           'results are equal and no leaf is freed while the root lives'),
         declared: { leaves: 8, intermediates: 7, released_before_root: 14,
           before: [{ kind: 1, value: '8' }], after: [{ kind: 1, value: '8' }], exit: 0 },
@@ -887,7 +892,7 @@ export const SCENARIOS = [
         mapping: 'the refusal is a declared bound, not a defect: the session terminates as every failed root does',
       }),
       expectation('ownership.cross-module-alias', {
-        origin: ownership('OWN-CASE-02#expected-distinct-owners',
+        origin: fromOwnership('OWN-CASE-02#expected-distinct-owners',
           'a duplicate made by a second module gets its own owner and releases independently'),
         declared: { owners: 3, exit: 0 },
         extract: observed => observed.ownership.cross_module,
