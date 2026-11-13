@@ -153,7 +153,6 @@ fn allocation_lane() {
         run_fuel: None,
     };
     let operands = rows(count);
-    let inputs = values(&operands);
     let mut outputs: usize = 0;
     match lane.as_str() {
         "reference" => {
@@ -173,6 +172,7 @@ fn allocation_lane() {
             }
         }
         "batch" => {
+            let inputs = values(&operands);
             let outcome = prepared.run(count, &inputs, limits, None);
             assert_eq!(outcome.stop, None, "an unbounded batch run completes");
             for report in &outcome.reports {

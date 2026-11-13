@@ -29,14 +29,14 @@ type Outputs = Vec<Value>;
 /// Timed repetitions per lane and size.
 const RUNS: usize = 5;
 
-fn per_row(total_ns: u128, size: usize) -> u128 {
-    total_ns.checked_div(size.max(1) as u128).unwrap_or(0)
+fn per_row(total_ns: u128, size: usize) -> f64 {
+    total_ns as f64 / size.max(1) as f64
 }
 
 /// Every timing sample of one lane at one size, plus first and second run resident growth.
 struct Samples {
     totals_ns: Vec<u128>,
-    first_row_ns: Vec<u128>,
+    first_row_ns: Vec<f64>,
     growth_first: u64,
     growth_second: u64,
 }
@@ -51,7 +51,7 @@ impl Samples {
         }
     }
 
-    fn record(&mut self, run: usize, total_ns: u128, first_row_ns: u128, grown: u64) {
+    fn record(&mut self, run: usize, total_ns: u128, first_row_ns: f64, grown: u64) {
         match run {
             0 => self.growth_first = grown,
             1 => self.growth_second = grown,
@@ -66,7 +66,7 @@ fn report(lane: &str, size: usize, samples: &Samples) {
     let mut totals = samples.totals_ns.clone();
     totals.sort_unstable();
     let mut firsts = samples.first_row_ns.clone();
-    firsts.sort_unstable();
+    firsts.sort_by(f64::total_cmp);
     println!(
         "MEASURE {{\"lane\":\"{lane}\",\"rows\":{size},\"runs\":{RUNS},\"total_ns\":{},\"best_total_ns\":{},\"ns_per_row\":{},\"best_ns_per_row\":{},\"first_row_ns\":{},\"resident_growth_bytes\":{},\"resident_growth_second_bytes\":{}}}",
         totals[RUNS / 2],
@@ -122,7 +122,7 @@ fn reference_lane(
         samples.record(
             run,
             start.elapsed().as_nanos(),
-            first,
+            first as f64,
             growth(before, resident_bytes()),
         );
     }
@@ -157,7 +157,7 @@ fn single_lane(
         samples.record(
             run,
             start.elapsed().as_nanos(),
-            first,
+            first as f64,
             growth(before, resident_bytes()),
         );
     }
@@ -207,7 +207,12 @@ fn native_lane(rows: &[Row]) -> (Samples, Option<Outputs>) {
             Value::Bool(native_result.1),
         ]);
         black_box(checksum);
-        samples.record(run, total, first_row_ns, growth(before, resident_bytes()));
+        samples.record(
+            run,
+            total,
+            first_row_ns as f64,
+            growth(before, resident_bytes()),
+        );
     }
     (samples, last)
 }
