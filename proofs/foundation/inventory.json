@@ -10754,6 +10754,36 @@
       "phase": 2,
       "role": "capture",
       "claim": "capture admits a permission only when both the duplicate and discard bits are set"
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutEncoded.decodeInput_encodeInput",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "The total decoder round-trips every canonical finite graph and layout-table encoding."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutEncoded.encodeInput_injective",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "Distinct finite graph and layout-table inputs have distinct canonical bit encodings."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutEncoded.validateEncoded_agrees",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "Encoded validation agrees with PackedLayout.accepted on the decoded finite graph and table representation."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutEncoded.encodedSize_is_bit_length",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "The encoded-size measure is exactly the number of bits emitted by the chosen encoding."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutEncoded.decodeNatPrefix_encodeNat_append",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "The unary natural decoder consumes exactly one canonical natural code and preserves the remaining suffix."
     }
   ],
   "private_theorems": [
@@ -10842,6 +10872,23 @@
     "NobleFoundation.NetLabelled.op1NumberWF",
     "NobleFoundation.NetLabelled.op2SupWF",
     "NobleFoundation.NetLabelled.op1SupWF",
-    "NobleFoundation.NetLabelled.ruleDataSlots"
+    "NobleFoundation.NetLabelled.ruleDataSlots",
+    "NobleFoundation.PackedLayoutEncoded.decodeBoolPrefix_encodeBool_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeFixedBitsPrefix_encodeFixedBits_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeWordPrefix_encodeWord_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeListFrom_encodeList_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeListPrefix_encodeList_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeNodePrefix_encodeNode_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeRegisterPrefix_encodeRegister_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeNatPairPrefix_encodeNatPair_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeConstantPrefix_encodeConstant_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeListNodes_encode_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeListNats_encode_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeListRegisters_encode_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeListConstants_encode_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeListPairs_encode_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeTablesPrefix_encodeTables_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeInputPrefix_encodeInput_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeInputPrefix_encodeInput"
   ]
 }
