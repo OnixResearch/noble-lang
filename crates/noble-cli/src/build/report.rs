@@ -78,9 +78,9 @@ pub(super) fn artifact_correspondence(
 }
 
 pub(super) struct Document {
-    /// Set only by `--report-schema v2`; v1 output keeps its exact field set.
-    pub(super) schema_v2: bool,
-    /// Present exactly when `schema_v2` is set.
+    /// Set only by `--report-schema v3`; v1 output keeps its exact field set.
+    pub(super) schema_v3: bool,
+    /// Present exactly when `schema_v3` is set.
     pub(super) selected_toolchain: Option<toolchain::Selected>,
     pub(super) outcome: crate::workflow::output::Outcome,
     pub(super) require_proof: bool,
@@ -123,7 +123,7 @@ impl Document {
 
     pub(super) fn new() -> Self {
         Self {
-            schema_v2: false,
+            schema_v3: false,
             selected_toolchain: None,
             outcome: crate::workflow::output::Outcome::NotRun,
             require_proof: false,
@@ -156,8 +156,8 @@ impl Document {
         let base = crate::workflow::encoding::object([
             (
                 "schema",
-                crate::workflow::encoding::string(if self.schema_v2 {
-                    "noble-mc2-build/v2"
+                crate::workflow::encoding::string(if self.schema_v3 {
+                    "noble-mc2-build/v3"
                 } else {
                     "noble-mc2-build/v1"
                 }),
@@ -320,7 +320,7 @@ mod tests {
             lean_sha256: "00".into(),
             lean_version: "v",
             lean_commit: "c",
-            library_sha256: "11".into(),
+            library_blake3: "11".into(),
             library_files: 2,
             library_bytes: 9,
         }
@@ -331,11 +331,11 @@ mod tests {
         let v1 = Document::new().json().encode();
         assert!(v1.contains("\"noble-mc2-build/v1\""));
         assert!(!v1.contains("selected_toolchain"));
-        let mut v2 = Document::new();
-        v2.schema_v2 = true;
-        v2.selected_toolchain = Some(selected());
-        let text = v2.json().encode();
-        assert!(text.contains("\"noble-mc2-build/v2\""));
+        let mut v3 = Document::new();
+        v3.schema_v3 = true;
+        v3.selected_toolchain = Some(selected());
+        let text = v3.json().encode();
+        assert!(text.contains("\"noble-mc2-build/v3\""));
         assert!(text.contains("\"selected_toolchain\""));
         assert!(text.contains("\"library_tree\""));
         assert!(text.contains("\"files\":2"));
