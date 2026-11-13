@@ -385,8 +385,16 @@ admitted only by the graph checker (decision B0(b)); there is no kernel `F32`.
 Implementation proofs of Rust code that computes with floats wait on Aeneas
 float support; the [foundation README](proofs/foundation/README.md) records that
 blocker (issue #92) and its non-claims.
-Extraction from Core source produces `ngraph-i64/0` graphs only. Facts with
-`evidence` provenance are refused (`E-FACT-UNCHECKED`) until issue #8 supplies
+Extraction from Core source produces `ngraph-i64/0` graphs only. The existing
+`noble ngraph check` command also accepts versioned Nickel constructor JSON and
+lowers it into the same `ngraph-ir/0` format before native `check_with`
+admission; no command or runtime IR is added. Nickel-authored graphs use a
+distinct `authored-nickel` producer identity and are limited to finite acyclic
+I64 graphs with concrete ordered `Input`s, exact I64 constants, wrapping
+Add/Sub/Mul, explicit scoped sharing and ordered (including repeated) outputs.
+Unsupported operations and profiles are rejected before graph simplification.
+For constructor JSON, the check report also carries `lowerer_revision`.
+Facts with `evidence` provenance are refused (`E-FACT-UNCHECKED`) until issue #8 supplies
 witness binding. The subcommands run no Node, Wasm, `wasm-opt` or other
 process, so they need none of the pinned runtime tools. The contract is the
 [numeric-graph-v1 design](.cairn/changes/numeric-graph-v1/design.md), which
@@ -398,7 +406,7 @@ Each subcommand prints JSON report lines with the schema
 
 | Command | Arguments and main options | Report |
 |---|---|---|
-| `noble ngraph check GRAPH` | Checker budgets. | One line: `graph` (the `GraphLogicalId`), `profile`, `subject`, `closure`, `inputs` and `outputs` (types), `params` (count), `live_nodes`, `layers`, `facts`, `param_layout`. |
+| `noble ngraph check GRAPH_OR_CONSTRUCTOR [--graph-out GRAPH]` | Checker budgets; constructor JSON also charges `--budget-work` and `--budget-expansion`. | One line: `graph` (the `GraphLogicalId`), `profile`, `subject`, `closure`, `inputs` and `outputs` (types), `params` (count), `live_nodes`, `layers`, `facts`, `param_layout`; constructor JSON additionally reports `lowerer_revision`. |
 | `noble ngraph extract SOURCE --inputs T[,T…] --out GRAPH` | `SOURCE` holds newline-separated submissions as in `noble session`, definitions first and the root last (`--framed` selects session framing). Every submission before the root must be a definition. `--inputs` lists the root's input types (`i64` or `bool`), bottom of the stack first. `--profile ngraph-i64/0` is the only accepted profile. Extraction and checker budgets. | One line: the `check` fields plus `work_units`, `expanded_nodes`, `pruned_nodes`, `inline_depth`. |
 | `noble ngraph eval GRAPH VECTORS` | `--reference` (the compiled evaluator is the default), `--snapshot FILE`, `--snapshot-id HEX`, `--fuel N`, checker budgets, `--budget-forward-scratch N`. | A header line (`graph`, `snapshot` or null), then one line per vector: `vector`, `outcome`, and `outputs` or `code` and `site`. |
 | `noble ngraph train MODEL --loss LOSS --data DATA --policy ngraph-deriv-real/0 --optimizer adam/0 --seed U64 --steps N --out SNAPSHOT` | `--from PARENT`, repeated `--opt-in`, `--adam-lr`, `--adam-beta1`, `--adam-beta2`, `--adam-eps`, checker budgets, `--budget-backward-scratch`, `--budget-snapshot-bytes`, `--budget-steps`. | One line: `snapshot`, `graph`, `parent`, `steps`, `loss_initial`, `loss_final` (binary64 bits). |
@@ -409,6 +417,55 @@ Report values are typed strings. An `F32` value is its exact binary32 encoding,
 `"f32:nan"`; `I64` and `Bool` values render as `"i64:<decimal>"` and
 `"bool:true"` or `"bool:false"`. An unknown, duplicated, missing or
 inapplicable flag is a usage error. Run `noble --help` for the complete usage.
+
+### Staged Nickel construction (`noble-ngraph-nickel/v1`)
+
+Nickel functions in `nickel/ngraph/library.ncl` build finite graph data; they
+are not arbitrary functions compiled into Noble or LLVM. The pinned replay
+lane runs full `nickel export --format json` through the repository's pinned
+Node and Nickel tools, checks the exact ordered relative import closure, binds
+the resulting constructor data, then invokes the existing `ngraph check`
+command with explicit construction and graph budgets. A demanded delayed
+contract failure aborts at export, before the lowerer can create a graph.
+Nickel contract success is only authoring feedback: native graph admission is
+still mandatory.
+
+The three parameter concepts are distinct:
+
+1. A **construction parameter** selects graph shape or supplies an exact
+   constant. I64 constants cross the JSON boundary as canonical signed-decimal
+   strings, never as Nickel numbers or binary64 values.
+2. A **runtime numeric argument** becomes an ordered I64 `Input` slot in the
+   graph and is supplied later through the normal vector-file interface.
+3. Noble's F32 `Op::Param` is trainable snapshot state; it is not a Nickel
+   construction parameter or a runtime argument in this I64 profile.
+
+From a clean committed checkout, replay the retained finite fixture into a new
+directory outside the checkout with the pinned Node executable selected by
+`policy/tool-selection.json` and a built CLI:
+
+```sh
+node tools/nickel-ngraph.mjs replay \
+  --noble <absolute path of the built noble CLI> \
+  --out <new directory outside the repository>
+```
+
+**Model.** The observer is ordered outputs under exact wrapping-I64
+evaluation. The composition fixtures cover identity, reassociation, product,
+explicit output permutation and scalar copy. No correspondence theorem binds
+these Nickel source bytes, exported data, lowerer or evaluator results to the
+composition laws.
+
+**Implementation-tested.** [`verification/nickel-ngraph/`](verification/nickel-ngraph/)
+retains the pinned arithmetic export and admitted graph, independently
+calculated ordered outputs from both evaluators, composition-law matrix,
+demanded-contract and import-closure refusals, provenance receipt and consumer
+record, and independent stale-binding controls.
+
+**Open.** These finite observations are not a source-to-implementation
+correspondence proof. They establish no effect independence, resource
+permission, general composition theorem, or arbitrary output reordering.
+Hashes and receipts bind bytes but are neither proofs nor permission grants.
 
 For example, to extract `x·x + y·y` from Core source and evaluate it:
 
