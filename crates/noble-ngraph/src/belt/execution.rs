@@ -1,14 +1,10 @@
-use alloc::vec::Vec;
-
-use super::types::{CheckedArtifact, Instruction, Refusal};
-
 /// Check and execute an artifact, publishing values only after the entire run succeeds.
 pub fn execute(
     ids: &dyn crate::identity::IdentityScheme,
     checked: &crate::check::CheckedGraph,
     bytes: &[u8],
     inputs: &[crate::sem::Value],
-) -> Result<Vec<crate::sem::Value>, Refusal> {
+) -> Result<alloc::vec::Vec<crate::sem::Value>, crate::belt::types::Refusal> {
     let accepted = super::validate::check(ids, checked, bytes)?;
     execute_checked(ids, checked, accepted, inputs)
 }
@@ -17,102 +13,94 @@ pub fn execute(
 pub fn execute_checked(
     ids: &dyn crate::identity::IdentityScheme,
     checked: &crate::check::CheckedGraph,
-    accepted: CheckedArtifact<'_>,
+    accepted: crate::belt::types::CheckedArtifact<'_>,
     inputs: &[crate::sem::Value],
-) -> Result<Vec<crate::sem::Value>, Refusal> {
+) -> Result<alloc::vec::Vec<crate::sem::Value>, crate::belt::types::Refusal> {
     super::support::admit_graph(checked)?;
     let view = super::codec::decode(ids, accepted.bytes)?;
     if view.graph_id != accepted.graph_id || view.graph_id != checked.id() {
-        return Err(Refusal::GraphIdentity);
+        return Err(crate::belt::types::Refusal::GraphIdentity);
     }
-    if view.capacity != accepted.capacity || view.save_slots != accepted.save_slots {
-        return Err(Refusal::ArtifactBinding);
+    if view.belt_slots != accepted.belt_slots || view.save_slots != accepted.save_slots {
+        return Err(crate::belt::types::Refusal::ArtifactBinding);
     }
     if view.instruction_count != accepted.instruction_count
         || view.instruction_digest != accepted.instruction_digest
     {
-        return Err(Refusal::InstructionDigest);
+        return Err(crate::belt::types::Refusal::InstructionDigest);
     }
     if view.artifact_binding != accepted.artifact_binding {
-        return Err(Refusal::ArtifactBinding);
+        return Err(crate::belt::types::Refusal::ArtifactBinding);
     }
-    let slot_values = crate::eval::preflight(checked, inputs, None).map_err(|_| Refusal::Inputs)?;
+    let slot_values = crate::eval::preflight(checked, inputs, None)
+        .map_err(|_| crate::belt::types::Refusal::Inputs)?;
     interpret(checked, &view, &slot_values)
 }
 
 fn interpret(
     checked: &crate::check::CheckedGraph,
-    artifact: &super::types::ArtifactView<'_>,
+    artifact: &crate::belt::types::ArtifactView<'_>,
     inputs: &[crate::sem::Value],
-) -> Result<Vec<crate::sem::Value>, Refusal> {
-    let mut belt = Vec::with_capacity(usize::from(artifact.capacity));
+) -> Result<alloc::vec::Vec<crate::sem::Value>, crate::belt::types::Refusal> {
+    let mut belt = RuntimeValues::new(usize::from(artifact.belt_slots));
     let mut slots = alloc::vec![None; usize::from(artifact.save_slots)];
-    let mut outputs = Vec::with_capacity(checked.graph().outputs.len());
+    let mut outputs = alloc::vec::Vec::with_capacity(checked.graph().outputs.len());
     let mut cursor = 0usize;
     while cursor < artifact.instruction_bytes.len() {
-        let instruction = super::codec::next_instruction(
+        let instruction = crate::belt::codec::instructions::next_instruction(
             artifact.instruction_bytes,
             &mut cursor,
         )?;
         match instruction {
-            Instruction::Input(slot) => {
-                let index = usize::try_from(slot).map_err(|_| Refusal::RuntimeFault)?;
-                let value = *inputs.get(index).ok_or(Refusal::RuntimeFault)?;
-                insert(&mut belt, artifact.capacity, value);
+            crate::belt::types::Instruction::Input(slot) => {
+                let index =
+                    usize::try_from(slot).map_err(|_| crate::belt::types::Refusal::RuntimeFault)?;
+                let value = *inputs
+                    .get(index)
+                    .ok_or(crate::belt::types::Refusal::RuntimeFault)?;
+                belt.insert(value);
             }
-            Instruction::Constant(bits) => {
+            crate::belt::types::Instruction::Constant(bits) => {
                 let value = i64::from_le_bytes(bits.to_le_bytes());
-                insert(&mut belt, artifact.capacity, crate::sem::Value::I64(value));
+                belt.insert(crate::sem::Value::I64(value));
             }
-            Instruction::Add(left, right) => {
+            crate::belt::types::Instruction::Add(left, right) => {
                 let (a, b) = operands(&belt, left, right)?;
-                insert(
-                    &mut belt,
-                    artifact.capacity,
-                    crate::sem::Value::I64(a.wrapping_add(b)),
-                );
+                belt.insert(crate::sem::Value::I64(a.wrapping_add(b)));
             }
-            Instruction::Sub(left, right) => {
+            crate::belt::types::Instruction::Sub(left, right) => {
                 let (a, b) = operands(&belt, left, right)?;
-                insert(
-                    &mut belt,
-                    artifact.capacity,
-                    crate::sem::Value::I64(a.wrapping_sub(b)),
-                );
+                belt.insert(crate::sem::Value::I64(a.wrapping_sub(b)));
             }
-            Instruction::Mul(left, right) => {
+            crate::belt::types::Instruction::Mul(left, right) => {
                 let (a, b) = operands(&belt, left, right)?;
-                insert(
-                    &mut belt,
-                    artifact.capacity,
-                    crate::sem::Value::I64(a.wrapping_mul(b)),
-                );
+                belt.insert(crate::sem::Value::I64(a.wrapping_mul(b)));
             }
-            Instruction::Eq(left, right) => {
+            crate::belt::types::Instruction::Eq(left, right) => {
                 let (a, b) = operands(&belt, left, right)?;
-                insert(&mut belt, artifact.capacity, crate::sem::Value::Bool(a == b));
+                belt.insert(crate::sem::Value::Bool(a == b));
             }
-            Instruction::Save(age, slot) => {
+            crate::belt::types::Instruction::Save(age, slot) => {
                 let value = *belt
-                    .get(usize::from(age))
-                    .ok_or(Refusal::RuntimeFault)?;
+                    .get(age)
+                    .ok_or(crate::belt::types::Refusal::RuntimeFault)?;
                 let target = slots
                     .get_mut(usize::from(slot))
-                    .ok_or(Refusal::RuntimeFault)?;
+                    .ok_or(crate::belt::types::Refusal::RuntimeFault)?;
                 *target = Some(value);
             }
-            Instruction::Load(slot) => {
+            crate::belt::types::Instruction::Load(slot) => {
                 let value = slots
                     .get(usize::from(slot))
                     .copied()
-                    .ok_or(Refusal::RuntimeFault)?
-                    .ok_or(Refusal::RuntimeFault)?;
-                insert(&mut belt, artifact.capacity, value);
+                    .ok_or(crate::belt::types::Refusal::RuntimeFault)?
+                    .ok_or(crate::belt::types::Refusal::RuntimeFault)?;
+                belt.insert(value);
             }
-            Instruction::Output(age) => outputs.push(
+            crate::belt::types::Instruction::Output(age) => outputs.push(
                 *belt
-                    .get(usize::from(age))
-                    .ok_or(Refusal::RuntimeFault)?,
+                    .get(age)
+                    .ok_or(crate::belt::types::Refusal::RuntimeFault)?,
             ),
         }
     }
@@ -120,31 +108,45 @@ fn interpret(
 }
 
 fn operands(
-    belt: &[crate::sem::Value],
+    belt: &RuntimeValues,
     left: u8,
     right: u8,
-) -> Result<(i64, i64), Refusal> {
+) -> Result<(i64, i64), crate::belt::types::Refusal> {
     let left = belt
-        .get(usize::from(left))
+        .get(left)
         .copied()
-        .ok_or(Refusal::RuntimeFault)?;
+        .ok_or(crate::belt::types::Refusal::RuntimeFault)?;
     let right = belt
-        .get(usize::from(right))
+        .get(right)
         .copied()
-        .ok_or(Refusal::RuntimeFault)?;
+        .ok_or(crate::belt::types::Refusal::RuntimeFault)?;
     match (left, right) {
         (crate::sem::Value::I64(a), crate::sem::Value::I64(b)) => Ok((a, b)),
-        _ => Err(Refusal::RuntimeFault),
+        _ => Err(crate::belt::types::Refusal::RuntimeFault),
     }
 }
 
-fn insert(
-    belt: &mut Vec<crate::sem::Value>,
-    capacity: u8,
-    value: crate::sem::Value,
-) {
-    if belt.len() == usize::from(capacity) {
-        belt.pop();
+struct RuntimeValues {
+    values: alloc::vec::Vec<crate::sem::Value>,
+    belt_slots: usize,
+}
+
+impl RuntimeValues {
+    fn new(belt_slots: usize) -> Self {
+        Self {
+            values: alloc::vec::Vec::with_capacity(belt_slots),
+            belt_slots,
+        }
     }
-    belt.insert(0, value);
+
+    fn get(&self, age: u8) -> Option<&crate::sem::Value> {
+        self.values.get(usize::from(age))
+    }
+
+    fn insert(&mut self, value: crate::sem::Value) {
+        if self.values.len() == self.belt_slots {
+            self.values.pop();
+        }
+        self.values.insert(0, value);
+    }
 }

@@ -8,14 +8,15 @@
 
 mod codec;
 mod execution;
-mod lower;
+#[path = "belt/lower.rs"]
+mod lowering;
 mod support;
 mod types;
 mod validate;
 
 pub use codec::{decode, encode, MAX_ARTIFACT_BYTES};
 pub use execution::{execute, execute_checked};
-pub use lower::lower;
+pub use lowering::lower;
 pub use types::{ArtifactView, CheckedArtifact, Lowered, Refusal};
 
 /// Artifact format and semantic revision.
@@ -43,7 +44,6 @@ pub const MAX_INSTRUCTIONS: usize = 65_536;
 ///
 /// The returned token borrows the exact bytes checked. Its private fields
 /// prevent construction without running the checker.
-#[must_use]
 pub fn check<'a>(
     ids: &dyn crate::identity::IdentityScheme,
     checked: &crate::check::CheckedGraph,
@@ -102,8 +102,8 @@ mod tests {
         let one = builder.i64_const(1);
         let result = builder.op(crate::ir::Op::I64Add(input, one));
         builder.output(result);
-        let checked = crate::check::check(&ids, builder.finish())
-            .expect("the small I64 graph checks");
+        let checked =
+            crate::check::check(&ids, builder.finish()).expect("the small I64 graph checks");
         let lowered = lower(&ids, &checked, 2, 1).expect("the graph lowers");
         let accepted = check(&ids, &checked, &lowered.bytes)
             .expect("the lowerer's bytes pass the independent checker");
@@ -113,7 +113,7 @@ mod tests {
         let rebound = encode(
             &ids,
             &checked,
-            accepted.capacity,
+            accepted.belt_slots,
             accepted.save_slots,
             &changed_body,
         )
@@ -121,7 +121,7 @@ mod tests {
         let changed_token = CheckedArtifact {
             bytes: &rebound,
             graph_id: accepted.graph_id,
-            capacity: accepted.capacity,
+            belt_slots: accepted.belt_slots,
             save_slots: accepted.save_slots,
             instruction_digest: accepted.instruction_digest,
             artifact_binding: accepted.artifact_binding,
@@ -129,12 +129,7 @@ mod tests {
         };
 
         assert_eq!(
-            execute_checked(
-                &ids,
-                &checked,
-                changed_token,
-                &[crate::sem::Value::I64(1)],
-            ),
+            execute_checked(&ids, &checked, changed_token, &[crate::sem::Value::I64(1)],),
             Err(Refusal::InstructionDigest)
         );
     }

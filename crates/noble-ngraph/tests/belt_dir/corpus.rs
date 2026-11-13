@@ -118,6 +118,85 @@ fn lean_value(value: Value) -> String {
     }
 }
 
+fn append_graph_definition(
+    text: &mut impl std::fmt::Write,
+    checked: &CheckedGraph,
+    belt_slots: u8,
+    save_slots: u8,
+) {
+    let graph = checked.graph();
+    let first_output = graph.outputs.first().map_or(0, |id| id.index());
+    writeln!(
+        text,
+        "def graph : Graph := {{\n  arity := {},\n  output := {first_output},\n  node := fun index =>",
+        graph.nodes.len()
+    )
+    .expect("writing to a string succeeds");
+    for index in 0..graph.nodes.len() {
+        let prefix = if index == 0 { "    if" } else { "    else if" };
+        writeln!(
+            text,
+            "{prefix} index = {index} then {}",
+            node_term(checked, index)
+        )
+        .expect("writing to a string succeeds");
+    }
+    text.write_str("    else .input 0\n}\n\n")
+        .expect("writing to a string succeeds");
+    writeln!(
+        text,
+        "def outputs : List Nat := {:?}",
+        graph
+            .outputs
+            .iter()
+            .map(|id| id.index())
+            .collect::<Vec<_>>()
+    )
+    .expect("writing to a string succeeds");
+    writeln!(text, "def capacity : Nat := {belt_slots}").expect("writing to a string succeeds");
+    writeln!(text, "def saveSlots : Nat := {save_slots}").expect("writing to a string succeeds");
+}
+
+fn append_program(text: &mut impl std::fmt::Write, instructions: &[String]) {
+    text.write_str("def program : List NobleFoundation.Belt.Instr := [\n")
+        .expect("writing to a string succeeds");
+    for instruction in instructions {
+        writeln!(text, "  {instruction},").expect("writing to a string succeeds");
+    }
+    text.write_str("]\n\n")
+        .expect("writing to a string succeeds");
+}
+
+fn append_vectors(text: &mut impl std::fmt::Write, vectors: &[([Value; 2], [Value; 7])]) {
+    for (index, (inputs, expected)) in vectors.iter().enumerate() {
+        writeln!(
+            text,
+            "def inputs{index} (slot : Nat) : BitVec 64 := match slot with"
+        )
+        .expect("writing to a string succeeds");
+        for (slot, value) in inputs.iter().enumerate() {
+            writeln!(
+                text,
+                "  | {slot} => {}",
+                lean_i64(match value {
+                    Value::I64(value) => *value,
+                    _ => panic!("the inputs are I64"),
+                })
+            )
+            .expect("writing to a string succeeds");
+        }
+        text.write_str("  | _ => 0\n")
+            .expect("writing to a string succeeds");
+        let expected_terms = expected.iter().copied().map(lean_value).collect::<Vec<_>>();
+        writeln!(
+            text,
+            "example : runOutputs graph inputs{index} outputs capacity saveSlots program =\n  some [{}] := by\n    rw [validate_sound graph inputs{index} outputs capacity saveSlots program (by decide)]\n    decide\n",
+            expected_terms.join(", ")
+        )
+        .expect("writing to a string succeeds");
+    }
+}
+
 fn render() -> String {
     let checked = super::belt_fixtures::checked(super::belt_fixtures::graph());
     let lowered = belt::lower(&super::common::IDS, &checked, CAPACITY, SAVE_SLOTS)
@@ -137,61 +216,27 @@ fn render() -> String {
          open NobleFoundation.PackedSchedule\n\
          open NobleFoundation.Belt\n\n",
     );
-    let graph = checked.graph();
-    let first_output = graph.outputs.first().map_or(0, |id| id.index());
+    append_graph_definition(
+        &mut text,
+        &checked,
+        accepted.capacity_values(),
+        accepted.save_slots(),
+    );
+    append_program(&mut text, &instructions);
     writeln!(
         text,
-        "def graph : Graph := {{\n  arity := {},\n  output := {first_output},\n  node := fun index =>",
-        graph.nodes.len()
+        "example : validate graph outputs capacity saveSlots program = true := by decide\n"
     )
     .expect("writing to a string succeeds");
-    for index in 0..graph.nodes.len() {
-        let prefix = if index == 0 { "    if" } else { "    else if" };
-        writeln!(text, "{prefix} index = {index} then {}", node_term(&checked, index))
-            .expect("writing to a string succeeds");
-    }
-    text.push_str("    else .input 0\n}\n\n");
-    writeln!(text, "def outputs : List Nat := {:?}", graph.outputs.iter().map(|id| id.index()).collect::<Vec<_>>())
-        .expect("writing to a string succeeds");
-    writeln!(text, "def capacity : Nat := {}", accepted.capacity())
-        .expect("writing to a string succeeds");
-    writeln!(text, "def saveSlots : Nat := {}", accepted.save_slots())
-        .expect("writing to a string succeeds");
-    text.push_str("def program : List NobleFoundation.Belt.Instr := [\n");
-    for instruction in instructions {
-        writeln!(text, "  {instruction},").expect("writing to a string succeeds");
-    }
-    text.push_str("]\n\n");
-    writeln!(text, "example : validate graph outputs capacity saveSlots program = true := by decide\n")
-        .expect("writing to a string succeeds");
-
-    for (index, (inputs, expected)) in super::belt_fixtures::vectors().into_iter().enumerate() {
-        writeln!(text, "def inputs{index} (slot : Nat) : BitVec 64 := match slot with")
-            .expect("writing to a string succeeds");
-        for (slot, value) in inputs.iter().enumerate() {
-            writeln!(text, "  | {slot} => {}", lean_i64(match value {
-                Value::I64(value) => *value,
-                _ => panic!("the inputs are I64"),
-            }))
-            .expect("writing to a string succeeds");
-        }
-        text.push_str("  | _ => 0\n");
-        let expected_terms = expected.iter().copied().map(lean_value).collect::<Vec<_>>();
-        writeln!(
-            text,
-            "example : runOutputs graph inputs{index} outputs capacity saveSlots program =\n  some [{}] := by\n    rw [validate_sound graph inputs{index} outputs capacity saveSlots program (by decide)]\n    decide\n",
-            expected_terms.join(", ")
-        )
-        .expect("writing to a string succeeds");
-    }
+    append_vectors(&mut text, &super::belt_fixtures::vectors());
     text.push_str("end NobleFoundation.BeltCorpus\n");
     text
 }
 
 #[test]
-fn committed_lean_corpus_matches_real_lowered_programs() {
-    let committed = std::fs::read_to_string(committed_path())
-        .expect("the generated foundation corpus exists");
+fn committed_lean_file_matches_real_lowered_programs() {
+    let committed =
+        std::fs::read_to_string(committed_path()).expect("the generated foundation corpus exists");
     assert_eq!(render(), committed);
 }
 

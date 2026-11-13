@@ -13,8 +13,8 @@
 //! existing warm `Compiled` and a direct scalar baseline. The output-copy stage is an
 //! explicit consumer readback copy; normal belt execution already materializes outputs.
 //!
-//! Run with `cargo test --release -p noble-ngraph --test schedule_correspondence --
-//! --ignored --nocapture belt_cost_report`.
+//! Run with `cargo test --release -p noble-ngraph --test schedule_correspondence
+//! -- --ignored --nocapture cost_report`.
 
 use std::time::Instant;
 
@@ -67,8 +67,8 @@ fn report() {
     let compiled_workspace_bytes = compiled.scratch_bytes();
 
     let started = Instant::now();
-    let lowered = belt::lower(&ids, &checked, CAPACITY, SAVE_SLOTS)
-        .expect("the bounded graph lowers");
+    let lowered =
+        belt::lower(&ids, &checked, CAPACITY, SAVE_SLOTS).expect("the bounded graph lowers");
     let lowering_ns = started.elapsed().as_nanos();
     let started = Instant::now();
     let accepted = belt::check(&ids, &checked, &lowered.bytes)
@@ -79,12 +79,7 @@ fn report() {
     let artifact_bytes = lowered.bytes.len();
 
     let expected = reference_vector();
-    let reference = noble_ngraph::eval::reference(
-        &checked,
-        &INPUTS,
-        None,
-        &mut Control::default(),
-    );
+    let reference = noble_ngraph::eval::reference(&checked, &INPUTS, None, &mut Control::default());
     assert_eq!(reference.obs, Obs::Normal(expected.clone()));
     let belt_cold_started = Instant::now();
     let cold_belt = belt::execute_checked(&ids, &checked, accepted, &INPUTS)
@@ -118,7 +113,7 @@ fn report() {
         assert_eq!(scalar, expected);
 
         let started = Instant::now();
-        let readback = std::hint::black_box(outputs.iter().copied().collect::<Vec<_>>());
+        let readback = std::hint::black_box(outputs.to_vec());
         readback_times.push(started.elapsed().as_nanos());
         assert_eq!(readback, expected);
     }
@@ -138,8 +133,7 @@ fn report() {
         + usize::from(SAVE_SLOTS) * core::mem::size_of::<Option<noble_ngraph::ir::NodeId>>();
     let compiled_peak_payload_bytes = usize::try_from(compiled_retained_bytes)
         .expect("the fixed compiled-code bound fits usize")
-        + usize::try_from(compiled_workspace_bytes)
-            .expect("the fixed workspace bound fits usize")
+        + usize::try_from(compiled_workspace_bytes).expect("the fixed workspace bound fits usize")
         + output_count * value_bytes;
 
     println!(
@@ -158,7 +152,7 @@ fn report() {
 \"compiled_retained_code_bytes\":{compiled_retained_bytes},\
 \"compiled_workspace_scratch_bytes\":{compiled_workspace_bytes},\
 \"compiled_peak_logical_payload_bytes\":{compiled_peak_payload_bytes},\"warm_runs\":{RUNS}}}",
-        accepted.capacity(),
+        accepted.capacity_values(),
         accepted.save_slots(),
         median(belt_times),
         median(compiled_times),
@@ -172,6 +166,6 @@ fn report() {
 
 #[test]
 #[ignore = "release-mode bounded-cost report; run the command documented in this module"]
-fn belt_cost_report() {
+fn cost_report() {
     report();
 }

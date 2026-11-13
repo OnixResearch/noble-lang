@@ -1,3 +1,4 @@
+// justification: adversarial wire mutations assert the checker’s fail-closed refusal classes.
 #![allow(
     clippy::unwrap_used,
     tigerstyle::assertion_density,
@@ -33,22 +34,16 @@ fn stream(operands: [u8; 2], operation: u8, output: bool) -> Vec<u8> {
 
 fn check_stream(
     checked: &noble_ngraph::check::CheckedGraph,
-    capacity: u8,
+    belt_slots: u8,
     slots: u8,
     bytes: &[u8],
 ) -> Result<(), Refusal> {
-    let artifact = belt::encode(
-        &super::common::IDS,
-        checked,
-        capacity,
-        slots,
-        bytes,
-    )?;
+    let artifact = belt::encode(&super::common::IDS, checked, belt_slots, slots, bytes)?;
     belt::check(&super::common::IDS, checked, &artifact).map(|_| ())
 }
 
 #[test]
-fn rejects_instruction_semantic_order_and_completion_mutations() {
+fn rejects_instruction_order_and_completion_errors() {
     let checked = asymmetric();
     assert!(check_stream(&checked, 2, 0, &stream([0, 1], 3, true)).is_ok());
     assert_eq!(
@@ -144,7 +139,7 @@ fn rejects_invalid_machine_bounds_and_wire_data() {
         Refusal::InstructionDigest
     );
 
-    let capacity_offset = 4
+    let belt_slots_offset_bytes = 4
         + 1
         + belt::FORMAT_REVISION.len()
         + 1
@@ -153,12 +148,12 @@ fn rejects_invalid_machine_bounds_and_wire_data() {
         + belt::CHECKER_REVISION.len()
         + 32;
     let mut invalid_capacity = artifact.clone();
-    invalid_capacity[capacity_offset] = 1;
+    invalid_capacity[belt_slots_offset_bytes] = 1;
     assert_eq!(
         belt::check(&super::common::IDS, &checked, &invalid_capacity).unwrap_err(),
         Refusal::Capacity
     );
-    artifact[capacity_offset] = 3;
+    artifact[belt_slots_offset_bytes] = 3;
     assert_eq!(
         belt::check(&super::common::IDS, &checked, &artifact).unwrap_err(),
         Refusal::ArtifactBinding
@@ -205,8 +200,7 @@ fn rejects_wrong_graph_identity_and_live_value_loss() {
     builder.output(result);
     let live = super::belt_fixtures::checked(builder.finish());
     assert_eq!(
-        check_stream(&live, 2, 0, &[0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 0, 0, 0])
-            .unwrap_err(),
+        check_stream(&live, 2, 0, &[0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 0, 0, 0]).unwrap_err(),
         Refusal::LiveValueLost
     );
 }
@@ -215,13 +209,11 @@ fn rejects_wrong_graph_identity_and_live_value_loss() {
 fn rejects_uninitialized_and_live_overwritten_slots() {
     let checked = asymmetric();
     assert_eq!(
-        check_stream(&checked, 2, 1, &[0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 7, 0])
-            .unwrap_err(),
+        check_stream(&checked, 2, 1, &[0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 7, 0]).unwrap_err(),
         Refusal::UninitializedSlot
     );
     assert_eq!(
-        check_stream(&checked, 2, 0, &[0, 0, 0, 0, 0, 6, 0, 1])
-            .unwrap_err(),
+        check_stream(&checked, 2, 0, &[0, 0, 0, 0, 0, 6, 0, 1]).unwrap_err(),
         Refusal::SlotBound
     );
 
@@ -254,8 +246,7 @@ fn rejects_a_rebound_constant_mutation() {
     let checked = super::belt_fixtures::checked(super::belt_fixtures::graph());
     let lowered = belt::lower(&super::common::IDS, &checked, 2, 8)
         .expect("the exact-constant fixture lowers");
-    let view = belt::decode(&super::common::IDS, &lowered.bytes)
-        .expect("fresh artifact decodes");
+    let view = belt::decode(&super::common::IDS, &lowered.bytes).expect("fresh artifact decodes");
     let mut body = view.instruction_bytes().to_vec();
     let minimum = i64::MIN.to_le_bytes();
     let constant_low_byte = body
@@ -266,7 +257,7 @@ fn rejects_a_rebound_constant_mutation() {
     let rebound = belt::encode(
         &super::common::IDS,
         &checked,
-        view.capacity(),
+        view.capacity_values(),
         view.save_slots(),
         &body,
     )
@@ -280,10 +271,8 @@ fn rejects_a_rebound_constant_mutation() {
 #[test]
 fn refuses_facts_f32_and_parameters_before_lowering() {
     let ids = super::common::IDS;
-    let mut guarded_builder = GraphBuilder::new(
-        SubProfile::I64,
-        Subject::authored(&ids, "belt-113-guarded"),
-    );
+    let mut guarded_builder =
+        GraphBuilder::new(SubProfile::I64, Subject::authored(&ids, "belt-113-guarded"));
     let input = guarded_builder.input(ScalarType::I64);
     let three = guarded_builder.i64_const(3);
     let guarded_value = guarded_builder.op(Op::I64Add(input, three));
@@ -295,10 +284,8 @@ fn refuses_facts_f32_and_parameters_before_lowering() {
         Err(Refusal::UnsupportedGraph)
     );
 
-    let mut f32_builder = GraphBuilder::new(
-        SubProfile::F32,
-        Subject::authored(&ids, "belt-113-f32"),
-    );
+    let mut f32_builder =
+        GraphBuilder::new(SubProfile::F32, Subject::authored(&ids, "belt-113-f32"));
     let f32_value = f32_builder.param();
     f32_builder.output(f32_value);
     let f32_graph = super::belt_fixtures::checked(f32_builder.finish());

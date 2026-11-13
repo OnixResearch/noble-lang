@@ -19,7 +19,7 @@
 )]
 //! Issue #14 Phase B evidence harness for the `I64` extraction leg: B1
 //! (I1–I4 lowering), B2 (L1 real CLI `--opt off|on`, L2 Node BigInt oracle,
-//! L3, L4) and B3 (source-level controls with their ordinary-path runs).
+//! L3, L4, L5 checked belt) and B3 (source-level controls with their ordinary-path runs).
 //! Writes one JSON receipt with EV-STATE-01 fields per record and the
 //! BE-CONFIG-01 run fields.
 //!
@@ -50,7 +50,7 @@ use noble_ngraph_experiment::bench::{cpu_model, read, sha256};
 const TRUSTED: [&str; 7] = [
     "noble_kernel::acceptance::check as the independent subject checker (PO-09/10/11 accepted for bootstrap fragment v1 only)",
     "the extractor's unpruned compose/run expansion accounting (inside the trusted extraction boundary until NG-PO-A)",
-    "this crate's graph checker and L3/L4 evaluators (NG-PO-B/C open)",
+    "this crate's graph checker, L3/L4 evaluators and independently checked L5 belt interpreter; finite agreement is not a proof (NG-PO-B/C open)",
     "the pinned noble release CLI, its Node/V8 runtime and wasm-opt (--opt on) as the ordinary path (PO-17/18 open)",
     "the pinned Node BigInt implementation as the L2 oracle runtime",
     "rustc/LLVM of the pinned nightly toolchain",
@@ -328,12 +328,12 @@ fn run() -> Result<bool, String> {
     records.push(record(
         "B2-I64-differential",
         &["NGRAPH-EXTRACT-01", "NGRAPH-PROOF-01"],
-        "L1 (real CLI, --opt off and on), L2 (Node BigInt mod 2^64), L3 and L4 agree under ≡obs on the named vectors (5 3 - = 2, MAX 1 + = MIN, MIN -1 * = MIN, I1–I4), the I4 host-step chain and seeded random Core I64 programs",
+        "L1 (real CLI, --opt off and on), L2 (Node BigInt mod 2^64), L3, L4 and independently checked L5 belt agree under ≡obs on the named vectors (5 3 - = 2, MAX 1 + = MIN, MIN -1 * = MIN, I1–I4), the I4 host-step chain and seeded random Core I64 programs",
         k,
         &["NG-PO-A", "NG-PO-B", "NG-PO-C", "PO-17", "PO-18"],
         &[
             "L2 evaluates the extracted graph, so L1 is the only leg that observes the source independently of extraction",
-            "L1 covers a recorded sample; L2–L4 cover every vector",
+            "L1 covers a recorded sample; L2–L5 cover every vector",
         ],
         b2,
         &cfg,
@@ -365,9 +365,9 @@ fn run() -> Result<bool, String> {
         "schema": "noble-ngraph-phase-b-extract-evidence/v1",
         "issue": "OnixResearch/noble-lang#14",
         "change": ".cairn/archive/2026-10-16-numeric-graph-profile",
-        "scope": "Phase B I64 extraction leg: D7 admission/extraction from Core source (B0(b): I64 only), B1 I1-I4, B2 L1/L2/L3/L4 for I64, B3 source-level controls",
+        "scope": "Phase B I64 extraction leg: D7 admission/extraction from Core source (B0(b): I64 only), B1 I1-I4, B2 L1/L2/L3/L4/L5 for I64, B3 source-level controls",
         "non_claims": [
-            "Finite differential agreement does not prove extraction (NG-PO-A), the checker (NG-PO-B) or the evaluators (NG-PO-C).",
+            "Finite differential agreement does not prove extraction (NG-PO-A), the checker (NG-PO-B), evaluators (NG-PO-C), or checked belt correspondence.",
             "The subject digest is a producer digest over the kernel's Debug rendering; it is not independent validation.",
             "NG-PO-A..H remain open; no obligation is added to obligations.json. No performance claim (Phase C).",
         ],

@@ -291,8 +291,9 @@ fn legs(
     for (i, v) in vectors.iter().enumerate() {
         let l3 = lowered.l3(v)?;
         let l4 = lowered.l4(v)?;
-        let l5 = noble_ngraph::belt::execute_checked(&BLAKE3, checked, belt_accepted, v)
-            .map_err(|refusal| format!("{name} v{i}: checked belt execution refused: {refusal:?}"))?;
+        let l5 = noble_ngraph::belt::execute_checked(&BLAKE3, checked, belt_accepted, v).map_err(
+            |refusal| format!("{name} v{i}: checked belt execution refused: {refusal:?}"),
+        )?;
         t.check(
             || format!("{name} v{i}: L3 {l3:?} ≢ L4 {l4:?}"),
             sem::obs_eq_all(&l3, &l4),
@@ -419,7 +420,7 @@ fn legs(
         "l3_l5_belt_vectors": vectors.len(),
         "l2_l5_belt_vectors": vectors.len(),
         "belt": {
-            "capacity": belt_accepted.capacity(),
+            "capacity": belt_accepted.capacity_values(),
             "save_slots": belt_accepted.save_slots(),
             "instruction_count": belt_accepted.instruction_count(),
             "preservation_saves": belt.preservation_saves,

@@ -1,5 +1,3 @@
-use alloc::vec::Vec;
-
 /// A refused belt artifact or execution.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Refusal {
@@ -53,7 +51,7 @@ pub enum Refusal {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Lowered {
     /// Canonically encoded artifact bytes.
-    pub bytes: Vec<u8>,
+    pub bytes: alloc::vec::Vec<u8>,
     /// Number of decoded instructions, including storage and output operations.
     pub instruction_count: usize,
     /// Explicit save operations emitted to preserve values before eviction.
@@ -67,7 +65,7 @@ pub struct Lowered {
 pub struct CheckedArtifact<'a> {
     pub(crate) bytes: &'a [u8],
     pub(crate) graph_id: crate::ir::Digest,
-    pub(crate) capacity: u8,
+    pub(crate) belt_slots: u8,
     pub(crate) save_slots: u8,
     pub(crate) instruction_digest: crate::ir::Digest,
     pub(crate) artifact_binding: crate::ir::Digest,
@@ -79,7 +77,7 @@ pub struct CheckedArtifact<'a> {
 pub struct ArtifactView<'a> {
     pub(crate) bytes: &'a [u8],
     pub(crate) graph_id: crate::ir::Digest,
-    pub(crate) capacity: u8,
+    pub(crate) belt_slots: u8,
     pub(crate) save_slots: u8,
     pub(crate) instruction_bytes: &'a [u8],
     pub(crate) instruction_digest: crate::ir::Digest,
@@ -96,8 +94,8 @@ impl ArtifactView<'_> {
 
     /// Selected belt capacity.
     #[must_use]
-    pub const fn capacity(&self) -> u8 {
-        self.capacity
+    pub const fn capacity_values(&self) -> u8 {
+        self.belt_slots
     }
 
     /// Explicit preservation-slot count.
@@ -128,8 +126,8 @@ impl CheckedArtifact<'_> {
 
     /// Selected belt capacity.
     #[must_use]
-    pub const fn capacity(&self) -> u8 {
-        self.capacity
+    pub const fn capacity_values(&self) -> u8 {
+        self.belt_slots
     }
 
     /// Declared explicit preservation-slot count.
@@ -151,4 +149,3 @@ pub(crate) enum Instruction {
     Load(u8),
     Output(u8),
 }
-

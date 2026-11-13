@@ -19,7 +19,7 @@ NOBLE_NODE="<pinned Node installation directory>" cargo test -p noble-ngraph-exp
   --test extract_b2 --offline --locked -- --ignored l2_node_bigint_oracle_agrees_with_l3
 cargo test --release -p noble-ngraph \
   --test schedule_correspondence --offline --locked -- --ignored --nocapture \
-  belt_measure::belt_cost_report
+  belt_measure::cost_report
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --all-features --offline --locked -- -D warnings
 ```
@@ -50,7 +50,7 @@ subtraction, equality, fanout, repeated/multiple outputs, and preservation at
 capacities 2–4. It has no Wasm source run. The extracted-source B2 lane is the
 Wasm/BigInt comparison; no claim is inferred from the hand-built controls.
 
-The ignored `belt_cost_report` reports admission, cold compiled construction,
+The ignored `cost_report` reports admission, cold compiled construction,
 belt lowering, independent checking, first and warm execution, consumer output
 copy, instruction and artifact bytes, save/load traffic, logical belt payload,
 checker auxiliary payload, and warm `Compiled` retained-code plus workspace

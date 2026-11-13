@@ -1,35 +1,32 @@
-use alloc::vec;
-use alloc::vec::Vec;
-
-use super::types::Refusal;
-
-pub(crate) fn admit_graph(checked: &crate::check::CheckedGraph) -> Result<(), Refusal> {
+pub(crate) fn admit_graph(
+    checked: &crate::check::CheckedGraph,
+) -> Result<(), crate::belt::types::Refusal> {
     let graph = checked.graph();
-    if graph.profile != crate::ir::SubProfile::I64
-        || !graph.facts.is_empty()
-        || graph.nodes.len() > super::MAX_NODES
-        || graph.outputs.len() > super::MAX_OUTPUTS
-        || graph.slots.len() > super::MAX_NODES
-    {
-        return Err(if graph.nodes.len() > super::MAX_NODES
-            || graph.outputs.len() > super::MAX_OUTPUTS
-            || graph.slots.len() > super::MAX_NODES
-        {
-            Refusal::GraphBound
-        } else {
-            Refusal::UnsupportedGraph
-        });
+    if graph.profile != crate::ir::SubProfile::I64 {
+        return Err(crate::belt::types::Refusal::UnsupportedGraph);
     }
-    if graph
-        .slots
-        .iter()
-        .any(|slot| slot.kind != crate::ir::SlotKind::Input || slot.ty != crate::ir::ScalarType::I64)
-    {
-        return Err(Refusal::UnsupportedGraph);
+    if !graph.facts.is_empty() {
+        return Err(crate::belt::types::Refusal::UnsupportedGraph);
+    }
+    if graph.nodes.len() > super::MAX_NODES {
+        return Err(crate::belt::types::Refusal::GraphBound);
+    }
+    if graph.outputs.len() > super::MAX_OUTPUTS {
+        return Err(crate::belt::types::Refusal::GraphBound);
+    }
+    if graph.slots.len() > super::MAX_NODES {
+        return Err(crate::belt::types::Refusal::GraphBound);
+    }
+    if graph.slots.iter().any(|slot| {
+        slot.kind != crate::ir::SlotKind::Input || slot.ty != crate::ir::ScalarType::I64
+    }) {
+        return Err(crate::belt::types::Refusal::UnsupportedGraph);
     }
     for (index, node) in graph.nodes.iter().enumerate() {
-        let id = crate::ir::NodeId(u32::try_from(index).map_err(|_| Refusal::GraphBound)?);
-        let valid = match &node.op {
+        let id = crate::ir::NodeId(
+            u32::try_from(index).map_err(|_| crate::belt::types::Refusal::GraphBound)?,
+        );
+        let is_valid = match &node.op {
             crate::ir::Op::Input(slot) => {
                 usize::try_from(*slot)
                     .ok()
@@ -54,16 +51,18 @@ pub(crate) fn admit_graph(checked: &crate::check::CheckedGraph) -> Result<(), Re
             }
             _ => false,
         };
-        if !valid {
-            return Err(Refusal::UnsupportedGraph);
+        if !is_valid {
+            return Err(crate::belt::types::Refusal::UnsupportedGraph);
         }
     }
     Ok(())
 }
 
-pub(crate) fn remaining_uses(checked: &crate::check::CheckedGraph) -> Result<Vec<u32>, Refusal> {
+pub(crate) fn remaining_uses(
+    checked: &crate::check::CheckedGraph,
+) -> Result<alloc::vec::Vec<u32>, crate::belt::types::Refusal> {
     let graph = checked.graph();
-    let mut remaining = vec![0u32; graph.nodes.len()];
+    let mut remaining = alloc::vec![0u32; graph.nodes.len()];
     for node in &graph.nodes {
         match &node.op {
             crate::ir::Op::I64Add(a, b)
@@ -74,7 +73,7 @@ pub(crate) fn remaining_uses(checked: &crate::check::CheckedGraph) -> Result<Vec
                 increment(&mut remaining, *b)?;
             }
             crate::ir::Op::Input(_) | crate::ir::Op::Const(_) => {}
-            _ => return Err(Refusal::UnsupportedGraph),
+            _ => return Err(crate::belt::types::Refusal::UnsupportedGraph),
         }
     }
     for &output in &graph.outputs {
@@ -83,18 +82,28 @@ pub(crate) fn remaining_uses(checked: &crate::check::CheckedGraph) -> Result<Vec
     Ok(remaining)
 }
 
-fn increment(remaining: &mut [u32], node: crate::ir::NodeId) -> Result<(), Refusal> {
+fn increment(
+    remaining: &mut [u32],
+    node: crate::ir::NodeId,
+) -> Result<(), crate::belt::types::Refusal> {
     let count = remaining
         .get_mut(node.index())
-        .ok_or(Refusal::UnsupportedGraph)?;
-    *count = count.checked_add(1).ok_or(Refusal::GraphBound)?;
+        .ok_or(crate::belt::types::Refusal::UnsupportedGraph)?;
+    *count = count
+        .checked_add(1)
+        .ok_or(crate::belt::types::Refusal::GraphBound)?;
     Ok(())
 }
 
-pub(crate) fn consume(remaining: &mut [u32], node: crate::ir::NodeId) -> Result<(), Refusal> {
+pub(crate) fn consume(
+    remaining: &mut [u32],
+    node: crate::ir::NodeId,
+) -> Result<(), crate::belt::types::Refusal> {
     let count = remaining
         .get_mut(node.index())
-        .ok_or(Refusal::OperandMismatch)?;
-    *count = count.checked_sub(1).ok_or(Refusal::OperandMismatch)?;
+        .ok_or(crate::belt::types::Refusal::OperandMismatch)?;
+    *count = count
+        .checked_sub(1)
+        .ok_or(crate::belt::types::Refusal::OperandMismatch)?;
     Ok(())
 }

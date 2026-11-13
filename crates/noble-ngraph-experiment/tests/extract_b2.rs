@@ -117,9 +117,7 @@ fn l2_node_bigint_oracle_agrees_with_l3() {
             })
         })
         .expect("NOBLE_NODE or the pinned Node on PATH");
-    let oracle = Oracle {
-        node,
-    };
+    let oracle = Oracle { node };
     let seed = 0x1404_b202;
     let mut rng = SplitMix64::new(seed);
     for i in 0..8 {
@@ -148,16 +146,12 @@ fn l2_node_bigint_oracle_agrees_with_l3() {
                 .map(noble_ngraph_experiment::b2i64::cell)
                 .collect();
             assert_eq!(&l3, cells, "program {i} on {v:?}");
-            let l5: Vec<String> = noble_ngraph::belt::execute_checked(
-                &BLAKE3,
-                checked,
-                accepted,
-                v,
-            )
-            .expect("the checked belt runs")
-            .into_iter()
-            .map(noble_ngraph_experiment::b2i64::cell)
-            .collect();
+            let l5: Vec<String> =
+                noble_ngraph::belt::execute_checked(&BLAKE3, checked, accepted, v)
+                    .expect("the checked belt runs")
+                    .into_iter()
+                    .map(noble_ngraph_experiment::b2i64::cell)
+                    .collect();
             assert_eq!(&l5, cells, "belt program {i} on {v:?}");
         }
     }
