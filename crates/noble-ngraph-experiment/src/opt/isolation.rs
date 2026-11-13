@@ -301,9 +301,9 @@ fn check_finite(values: &[u32], base: &str) -> Result<(), Refusal> {
 
 fn dataset_id(rows: &[FrozenRow]) -> Digest {
     let mut encoded = Vec::new();
-    append_len(&mut encoded, rows.len());
+    append_count(&mut encoded, rows.len());
     for row in rows {
-        append_len(&mut encoded, row.gradients.len());
+        append_count(&mut encoded, row.gradients.len());
         for bits in &row.gradients {
             encoded.extend_from_slice(&bits.to_le_bytes());
         }
@@ -314,13 +314,13 @@ fn dataset_id(rows: &[FrozenRow]) -> Digest {
 
 fn evaluation_id(rows: &[EvaluationRow]) -> Digest {
     let mut encoded = Vec::new();
-    append_len(&mut encoded, rows.len());
+    append_count(&mut encoded, rows.len());
     for row in rows {
-        append_len(&mut encoded, row.parameters.len());
+        append_count(&mut encoded, row.parameters.len());
         for bits in &row.parameters {
             encoded.extend_from_slice(&bits.to_le_bytes());
         }
-        append_len(&mut encoded, row.gradients.len());
+        append_count(&mut encoded, row.gradients.len());
         for bits in &row.gradients {
             encoded.extend_from_slice(&bits.to_le_bytes());
         }
@@ -330,8 +330,8 @@ fn evaluation_id(rows: &[EvaluationRow]) -> Digest {
     digest(b"frozen-evaluation-data", &[&encoded])
 }
 
-fn append_len(encoded: &mut Vec<u8>, length: usize) {
-    encoded.extend_from_slice(&u64::try_from(length).unwrap_or(u64::MAX).to_le_bytes());
+fn append_count(encoded: &mut Vec<u8>, item_count: usize) {
+    encoded.extend_from_slice(&u64::try_from(item_count).unwrap_or(u64::MAX).to_le_bytes());
 }
 
 #[cfg(test)]
