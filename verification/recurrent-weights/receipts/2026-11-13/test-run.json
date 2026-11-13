@@ -1,0 +1,9 @@
+{
+  "schema": "noble.recurrent-weights.test-run.v0",
+  "source_commit": "5adf7db14af0c26b50a86399d8a2a7e8c67aa93c",
+  "command": ["cargo", "test", "-p", "noble-ngraph", "--test", "layout_differential", "--", "recurrent_wrapping_adder"],
+  "exit_code": 0,
+  "stdout": "\nrunning 1 test\ntest recurrent::recurrent_wrapping_adder_matches_reference_and_source_boundaries ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.07s\n\n",
+  "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.25s\n     Running tests/layout_differential.rs (/home/brittonr/.cache/noble-iss/target/recurrent-78/debug/deps/layout_differential-3d112e4dd8e61c18)\n",
+  "note": "Correctness test output only; no performance or runtime claim."
+}
