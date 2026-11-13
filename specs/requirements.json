@@ -2400,7 +2400,8 @@
         "REC-03",
         "REC-04",
         "REC-05",
-        "REC-07"
+        "REC-07",
+        "REC-08"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -2551,7 +2552,8 @@
       ],
       "scenarios": [
         "REC-01",
-        "REC-04"
+        "REC-04",
+        "REC-08"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -2659,7 +2661,11 @@
       ],
       "scenarios": [
         "REC-05",
-        "REC-06"
+        "REC-06",
+        "REC-08",
+        "REC-09",
+        "REC-10",
+        "REC-11"
       ],
       "test_design": "scenario-described-not-executed"
     },

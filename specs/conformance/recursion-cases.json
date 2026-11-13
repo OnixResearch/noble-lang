@@ -428,6 +428,270 @@
           ]
         }
       ]
+    },
+    {
+      "id": "REC-08",
+      "profile": "Signed-Declared-Text-v1",
+      "kind": "runtime",
+      "requirements": [
+        "K-CHECK-02",
+        "K-DEF-03",
+        "K-ERROR-03"
+      ],
+      "input": {
+        "submissions": [
+          "module deep@1 [ signature down forall<S:stack> [ S I64 -- S I64 ! pure ] export down def down [ dup 0 swap < [ 1 - down ] [ ] if ] ]",
+          "5000 deep@1.down"
+        ],
+        "session_flags": [
+          "--framed",
+          "--declared-modules",
+          "--text-byte-cursor",
+          "--signed-self-recursion",
+          "--retained-source-bytes",
+          "262144"
+        ]
+      },
+      "expected": {
+        "stage": "wasm",
+        "outcome": "normal",
+        "stack": [
+          {
+            "type": "I64",
+            "value": "0"
+          }
+        ],
+        "metrics": {
+          "continuation_peak_bytes": 8
+        },
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "REC-08",
+          "claim": "The positivity-guarded signed countdown `def down [ dup 0 swap < [ 1 - down ] [ ] if ]`, declared `S I64 -- S I64 ! pure`, returns `normal` with `I64 0` when invoked at 5000 — about 9.8 times the 512-slot continuation budget — at a peak of 8 continuation bytes of the 4096-byte budget and 50034 of the 100000 execution steps. A call that is the final operation of its program, including the final branch of an `if`, enqueues no continuation, so the depth stays constant.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:315191252d10f80c4ad687dbbde1e653980bd2a5",
+          "configuration": {
+            "profile": "Signed-Declared-Text-v1",
+            "receipt": "../../verification/signed-self/scenarios-ebf3a877.json",
+            "receipt_sha256": "91e314f6ade7a19d67193d08d3c539d119865fa60df571c09711e36507adf866",
+            "gate": "../../verification/signed-self/scenarios.mjs",
+            "session": "signed-deep",
+            "report_index": 1,
+            "model": "../../verification/signed-self/receipt.json"
+          },
+          "assumptions": [
+            "One report of a production framed session of the CLI built from the clean commit ebf3a877; evidence about that execution only.",
+            "The K-CHECK-02 reference-model theorem (verification/signed-self/receipt.json) is a model theorem with no correspondence to the Rust kernel, so proof stays open.",
+            "The fixture guards on positivity (`0 < counter`) rather than REC-01's equality guard, so the recursion descends only while the counter is positive."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "REC-09",
+      "profile": "Signed-Declared-Text-v1",
+      "kind": "runtime",
+      "requirements": [
+        "K-ERROR-03"
+      ],
+      "input": {
+        "submissions": [
+          "module bound@1 [ signature up forall<S:stack> [ S I64 -- S I64 ! pure ] export up def up [ dup 0 swap < [ 1 - up 0 + ] [ ] if ] ]",
+          "5000 bound@1.up"
+        ],
+        "session_flags": [
+          "--framed",
+          "--declared-modules",
+          "--text-byte-cursor",
+          "--signed-self-recursion",
+          "--retained-source-bytes",
+          "262144"
+        ]
+      },
+      "expected": {
+        "stage": "wasm",
+        "outcome": "runtime-exhausted",
+        "quota_reason": "continuation bytes",
+        "stack": [],
+        "metrics": {
+          "continuation_peak_bytes": 4096
+        },
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "REC-09",
+          "claim": "The REC-08 countdown made non-tail by `0 +` after the call (`def up [ dup 0 swap < [ 1 - up 0 + ] [ ] if ]`) ends `runtime-exhausted` on the `continuation bytes` quota at a peak of 4096 bytes when invoked at the same 5000: it never returns an ordinary result, and the session process exits 5.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:315191252d10f80c4ad687dbbde1e653980bd2a5",
+          "configuration": {
+            "profile": "Signed-Declared-Text-v1",
+            "receipt": "../../verification/signed-self/scenarios-ebf3a877.json",
+            "receipt_sha256": "91e314f6ade7a19d67193d08d3c539d119865fa60df571c09711e36507adf866",
+            "gate": "../../verification/signed-self/scenarios.mjs",
+            "session": "signed-deep-control",
+            "report_index": 1
+          },
+          "assumptions": [
+            "One report of a production framed session of the CLI built from the clean commit ebf3a877; evidence about that execution only.",
+            "The invocation is the non-tail control paired with REC-08 at the same start depth; the continuation and step budgets are reset per submission and fixed by the runtime configuration at 4096 bytes and 100000 steps."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "REC-10",
+      "profile": "Signed-Declared-Text-v1",
+      "kind": "runtime",
+      "requirements": [
+        "K-ERROR-03"
+      ],
+      "input": {
+        "submissions": [
+          "module deep@1 [ signature down forall<S:stack> [ S I64 -- S I64 ! pure ] export down def down [ dup 0 swap < [ 1 - down ] [ ] if ] ]",
+          "5000 deep@1.down",
+          "drop",
+          "module bound@1 [ signature up forall<S:stack> [ S I64 -- S I64 ! pure ] export up def up [ dup 0 swap < [ 1 - up 0 + ] [ ] if ] ]",
+          "511 bound@1.up"
+        ],
+        "session_flags": [
+          "--framed",
+          "--declared-modules",
+          "--text-byte-cursor",
+          "--signed-self-recursion",
+          "--retained-source-bytes",
+          "262144"
+        ]
+      },
+      "expected": {
+        "stage": "wasm",
+        "outcome": "normal",
+        "stack": [
+          {
+            "type": "I64",
+            "value": "0"
+          }
+        ],
+        "metrics": {
+          "continuation_peak_bytes": 4096
+        },
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "REC-10",
+          "claim": "The non-tail countdown at 511, the deepest start of this shape that fits the continuation budget, returns `normal` with `I64 0` at a peak of exactly 4096 continuation bytes — the whole budget, 512 slots of 8 bytes.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:315191252d10f80c4ad687dbbde1e653980bd2a5",
+          "configuration": {
+            "profile": "Signed-Declared-Text-v1",
+            "receipt": "../../verification/signed-self/scenarios-ebf3a877.json",
+            "receipt_sha256": "91e314f6ade7a19d67193d08d3c539d119865fa60df571c09711e36507adf866",
+            "gate": "../../verification/signed-self/scenarios.mjs",
+            "session": "signed-deep",
+            "report_index": 4
+          },
+          "assumptions": [
+            "One report of a production framed session of the CLI built from the clean commit ebf3a877; evidence about that execution only.",
+            "The case reads report 4 of the `signed-deep` session, whose earlier submissions run REC-08 and clear its result with `drop`; the continuation budget is per submission.",
+            "This shape retains one slot per level, so 511 levels plus the entering frame fill the budget exactly; REC-11 shows the next level exceeding it."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "REC-11",
+      "profile": "Signed-Declared-Text-v1",
+      "kind": "runtime",
+      "requirements": [
+        "K-ERROR-03"
+      ],
+      "input": {
+        "submissions": [
+          "module deep@1 [ signature down forall<S:stack> [ S I64 -- S I64 ! pure ] export down def down [ dup 0 swap < [ 1 - down ] [ ] if ] ]",
+          "5000 deep@1.down",
+          "drop",
+          "module bound@1 [ signature up forall<S:stack> [ S I64 -- S I64 ! pure ] export up def up [ dup 0 swap < [ 1 - up 0 + ] [ ] if ] ]",
+          "511 bound@1.up",
+          "512 bound@1.up"
+        ],
+        "session_flags": [
+          "--framed",
+          "--declared-modules",
+          "--text-byte-cursor",
+          "--signed-self-recursion",
+          "--retained-source-bytes",
+          "262144"
+        ]
+      },
+      "expected": {
+        "stage": "wasm",
+        "outcome": "runtime-exhausted",
+        "quota_reason": "continuation bytes",
+        "stack": [],
+        "metrics": {
+          "continuation_peak_bytes": 4096
+        },
+        "guest_requests": 0,
+        "protected_operations": 0
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "explicit"
+      },
+      "evidence": [
+        {
+          "kind": "test",
+          "subject": "REC-11",
+          "claim": "One more level — the non-tail countdown at 512, read with REC-10 — ends `runtime-exhausted` on the `continuation bytes` quota at a peak of 4096 bytes, so the bound for this shape is exactly 512 retained frames. The session process exits 5.",
+          "revision": "0.1.0-draft.5",
+          "result": "passed",
+          "source_revision": "git-tree:315191252d10f80c4ad687dbbde1e653980bd2a5",
+          "configuration": {
+            "profile": "Signed-Declared-Text-v1",
+            "receipt": "../../verification/signed-self/scenarios-ebf3a877.json",
+            "receipt_sha256": "91e314f6ade7a19d67193d08d3c539d119865fa60df571c09711e36507adf866",
+            "gate": "../../verification/signed-self/scenarios.mjs",
+            "session": "signed-deep",
+            "report_index": 5
+          },
+          "assumptions": [
+            "One report of a production framed session of the CLI built from the clean commit ebf3a877; evidence about that execution only.",
+            "The case reads report 5, the submission after REC-10 in the same session; the quota ends the session, which exits 5."
+          ]
+        }
+      ]
     }
   ]
 }
