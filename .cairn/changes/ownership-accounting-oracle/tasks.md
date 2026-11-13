@@ -36,8 +36,8 @@
 - [x] [serial] Drive 28 accepted and 17 rejected cases through `noble_kernel::acceptance::check` one word prefix at a time, compare the production stack with every model trace entry and pin each rejection class. r[VC-OWN-02]
 - [x] [serial] Compare a test-local shadow checker against every row, with the unmutated control agreeing everywhere and each of six rule mutations caught by a retained expectation. r[VC-OWN-02]
 - [x] [serial] Minimise any differential failure into a reproducible fixture; exercise the deterministic prefix/operand minimiser with a synthetic probe when the lane has no natural divergence. r[VC-OWN-02]
-- [ ] [serial] Retain `verification/ownership/differential-<commit8>.json`: clean commit, toolchain, host, source/corpus/lane digests, coverage counts, model-only counts by reason and the open Rust-to-model edge. r[VC-OWN-03]
-- [ ] [serial] Mutate production ownership rules in scratch copies and retain `verification/ownership/production-mutants-<commit8>.json`: the unmutated lane passes, five mutants are caught and the quotation mutant survives because it has no executable control. r[VC-OWN-03]
+- [x] [serial] Retain `verification/ownership/differential-d6e6f99a.json` (source commit `d6e6f99a08d00fc3d723f32dcfb5d0fc837955ec`): clean commit, toolchain, host, source/corpus/lane digests, coverage counts, model-only counts by reason and the open Rust-to-model edge. r[VC-OWN-03]
+- [x] [serial] Mutate production ownership rules in scratch copies and retain `verification/ownership/production-mutants-d6e6f99a.json`: the unmutated lane passes, five mutants are caught and the quotation mutant survives because it has no executable control. r[VC-OWN-03]
 
 ## Phase 3: Promotion (not selected)
 
@@ -66,8 +66,9 @@ failing comparison writes the shortest failing word prefix and trims trailing
 operands while the divergence persists to `verification/ownership/minimised.txt`;
 leading operands stay because they may be the head a word inspects. The minimiser
 is exercised by a synthetic probe, and an accepted-case guard prevents shrinking
-into a model-only arity refusal. The current comparison receipt is dated
-`verification/ownership/differential-<commit8>.json`. The immutable legacy
+into a model-only arity refusal. The current comparison receipt is
+`verification/ownership/differential-d6e6f99a.json`; its paired production-mutation
+receipt is `verification/ownership/production-mutants-d6e6f99a.json`. The immutable legacy
 `differential.json` remains byte-for-byte unchanged; its `419c0144` source/model
 binding is stale and it is not current evidence.
 

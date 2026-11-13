@@ -136,9 +136,12 @@ handwritten, kernel-decided corpus comparison.
   derivation, a re-audited axiom set and a clean-source receipt for that route.
   None of that exists in this change, and manufacturing it would be a new change
   with its own reviewed subject list.
-- Nothing in the lane needs the refinement to be useful: the differential fails
-  when a production rule changes (the production-mutants receipt) and when the
-  model changes (the kernel build and the freshness check).
+- Nothing in the lane needs the refinement to be useful: the clean-source
+  differential receipt records agreement at 60 production prefixes, and the
+  source-bound production mutation receipt records five caught mutants and the
+  one expected quotation survivor. These finite results do not close the
+  refinement edge. See `verification/ownership/differential-d6e6f99a.json` and
+  `verification/ownership/production-mutants-d6e6f99a.json`.
 
 **Criteria a future refinement route would have to meet.** (1) Name the extraction
 subject covering `crates/noble-kernel/src/acceptance`; (2) keep every theorem
