@@ -43,7 +43,19 @@ impl super::Session {
         retained_bytes: u32,
     ) -> Result<super::Prepared, super::Error> {
         let mut meter = crate::Meter::pooled(limits, self.request_work());
-        self.prepare_signed_metered(source_bytes, inputs, signature, retained_bytes, &mut meter)
+        let mut result = self.prepare_signed_metered(
+            source_bytes,
+            inputs,
+            signature,
+            retained_bytes,
+            &mut meter,
+        );
+        let work_used = meter.spent();
+        match &mut result {
+            Ok(prepared) => prepared.work_used = work_used,
+            Err(failure) => failure.work_used = work_used,
+        }
+        result
     }
 
     /// Remaining work of the host-selected request this session shares
@@ -325,6 +337,7 @@ impl super::Session {
             addition,
             submission,
             checked,
+            work_used: 0,
             output,
         })
     }

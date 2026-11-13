@@ -57,7 +57,21 @@ pub fn check(
     request: &crate::untrusted::Request,
     candidate: &crate::untrusted::Candidate,
 ) -> crate::untrusted::Outcome {
-    outcome(run(env, request, candidate, None))
+    check_with_work(env, request, candidate).0
+}
+
+/// Run ordinary acceptance and return the work units it consumed.
+///
+/// The count is exact on acceptance and on body-check refusal. A refusal during
+/// request preflight conservatively reports the full declared allowance because
+/// the preflight error does not retain its local remaining counter.
+pub fn check_with_work(
+    env: &crate::contracts::Env,
+    request: &crate::untrusted::Request,
+    candidate: &crate::untrusted::Candidate,
+) -> (crate::untrusted::Outcome, u32) {
+    let (result, work_used) = run(env, request, candidate, None);
+    (outcome(result), work_used)
 }
 
 /// Type and effect derivation for a signed owner. This publicly callable
@@ -70,7 +84,22 @@ pub fn check_signed_structure(
     owner: crate::contracts::Definition,
     owner_inst: &crate::words::Inst,
 ) -> crate::untrusted::Outcome {
-    outcome(run(env, request, candidate, Some((owner, owner_inst))))
+    check_signed_structure_with_work(env, request, candidate, owner, owner_inst).0
+}
+
+/// Run signed-owner structural checking and return the work units it consumed.
+///
+/// A request-preflight refusal conservatively reports the full declared
+/// allowance, matching [`check_with_work`].
+pub fn check_signed_structure_with_work(
+    env: &crate::contracts::Env,
+    request: &crate::untrusted::Request,
+    candidate: &crate::untrusted::Candidate,
+    owner: crate::contracts::Definition,
+    owner_inst: &crate::words::Inst,
+) -> (crate::untrusted::Outcome, u32) {
+    let (result, work_used) = run(env, request, candidate, Some((owner, owner_inst)));
+    (outcome(result), work_used)
 }
 
 #[expect(
@@ -96,13 +125,11 @@ fn run(
     request: &crate::untrusted::Request,
     candidate: &crate::untrusted::Candidate,
     signed_owner: Option<(crate::contracts::Definition, &crate::words::Inst)>,
-) -> Result<crate::untrusted::Checked, Fail> {
-    let remaining = attempt!(preflight::check_request(
-        env,
-        request,
-        candidate,
-        signed_owner
-    ));
+) -> (Result<crate::untrusted::Checked, Fail>, u32) {
+    let remaining = match preflight::check_request(env, request, candidate, signed_owner) {
+        Ok(remaining) => remaining,
+        Err(problem) => return (Err(problem), request.limits.work),
+    };
     let context = parts::Ctx {
         request,
         env,
@@ -125,7 +152,8 @@ fn run(
     while machine.outcome.is_none() {
         machine = step(machine, candidate, &context);
     }
-    match machine.outcome {
+    let work_used = request.limits.work.saturating_sub(machine.state.work);
+    let result = match machine.outcome {
         Some(Ok(interface)) => Ok(crate::untrusted::Checked {
             interface,
             derivations: machine.state.derivations,
@@ -133,7 +161,8 @@ fn run(
         }),
         Some(Err(problem)) => Err(problem),
         None => Err(Fail::Internal),
-    }
+    };
+    (result, work_used)
 }
 
 /// Take one machine step: fold the current frame's next node.

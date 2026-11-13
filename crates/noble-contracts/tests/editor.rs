@@ -158,3 +158,15 @@ fn editor_hole_free_source_uses_ordinary_kernel_preparation() -> Result<(), Stri
     assert!(nested.admitted_source(tiny).is_err());
     Ok(())
 }
+
+#[path = "editor/chunks.rs"]
+mod chunks;
+
+#[path = "editor/chunks-completion.rs"]
+mod chunks_completion;
+
+fn monotonic_now_ns() -> u64 {
+    static START: std::sync::LazyLock<std::time::Instant> =
+        std::sync::LazyLock::new(std::time::Instant::now);
+    u64::try_from(START.elapsed().as_nanos()).unwrap_or(u64::MAX)
+}

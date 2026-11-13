@@ -4,6 +4,7 @@
 //! are instantiated afresh at each named use, while a first-class Program has
 //! one shared inference term. Every executable specialization is subsequently
 //! checked by the kernel against its exact concrete environment contract.
+pub mod chunks;
 mod declared;
 pub mod editor;
 mod emission;
@@ -84,6 +85,7 @@ pub enum Stage {
 pub struct Error {
     stage: Stage,
     diagnostic: crate::Diagnostic,
+    work_used: u32,
 }
 
 impl Error {
@@ -93,14 +95,25 @@ impl Error {
     pub const fn diagnostic(&self) -> &crate::Diagnostic {
         &self.diagnostic
     }
+    pub(crate) const fn work_used(&self) -> u32 {
+        self.work_used
+    }
     /// Wrap a captured diagnostic with its original source stage so a transport
     /// re-emits it rather than flattening it to prose.
     pub const fn reported(stage: Stage, diagnostic: crate::Diagnostic) -> Self {
-        Self { stage, diagnostic }
+        Self {
+            stage,
+            diagnostic,
+            work_used: 0,
+        }
     }
 
     const fn at(stage: Stage, diagnostic: crate::Diagnostic) -> Self {
-        Self { stage, diagnostic }
+        Self {
+            stage,
+            diagnostic,
+            work_used: 0,
+        }
     }
 }
 
@@ -465,10 +478,14 @@ pub struct Prepared {
     addition: alloc::vec::Vec<u8>,
     submission: Option<noble_kernel::execution::Submission>,
     checked: Option<noble_kernel::untrusted::Checked>,
+    work_used: u32,
     output: alloc::vec::Vec<noble_kernel::types::Ty>,
 }
 
 impl Prepared {
+    pub(crate) const fn work_used(&self) -> u32 {
+        self.work_used
+    }
     pub const fn submission(&self) -> Option<&noble_kernel::execution::Submission> {
         self.submission.as_ref()
     }

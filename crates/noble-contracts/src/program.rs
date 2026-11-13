@@ -220,15 +220,27 @@ pub(crate) fn check(
     spans: &[crate::Span],
     span: crate::Span,
 ) -> Result<noble_kernel::untrusted::Checked, crate::Diagnostic> {
+    check_with_work(env, candidate, request, spans, span).0
+}
+
+pub(crate) fn check_with_work(
+    env: &noble_kernel::contracts::Env,
+    candidate: &noble_kernel::untrusted::Candidate,
+    request: &noble_kernel::untrusted::Request,
+    spans: &[crate::Span],
+    span: crate::Span,
+) -> (
+    Result<noble_kernel::untrusted::Checked, crate::Diagnostic>,
+    u32,
+) {
     check_with_owner(env, candidate, request, spans, span, None)
 }
 
-/// This remains a structural check, not a source-authorizing entry point.
 #[expect(
     tigerstyle::too_many_parameters,
     reason = "Owner: noble-contracts; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
 )]
-pub(crate) fn check_signed_structure(
+pub(crate) fn check_signed_structure_with_work(
     env: &noble_kernel::contracts::Env,
     candidate: &noble_kernel::untrusted::Candidate,
     request: &noble_kernel::untrusted::Request,
@@ -236,7 +248,10 @@ pub(crate) fn check_signed_structure(
     span: crate::Span,
     owner: noble_kernel::contracts::Definition,
     owner_inst: &noble_kernel::words::Inst,
-) -> Result<noble_kernel::untrusted::Checked, crate::Diagnostic> {
+) -> (
+    Result<noble_kernel::untrusted::Checked, crate::Diagnostic>,
+    u32,
+) {
     check_with_owner(
         env,
         candidate,
@@ -263,19 +278,28 @@ fn check_with_owner(
         noble_kernel::contracts::Definition,
         &noble_kernel::words::Inst,
     )>,
-) -> Result<noble_kernel::untrusted::Checked, crate::Diagnostic> {
-    let outcome = match owner {
-        Some((owner, owner_inst)) => noble_kernel::acceptance::check_signed_structure(
-            env, request, candidate, owner, owner_inst,
-        ),
-        None => noble_kernel::acceptance::check(env, request, candidate),
+) -> (
+    Result<noble_kernel::untrusted::Checked, crate::Diagnostic>,
+    u32,
+) {
+    let (outcome, work_used) = match owner {
+        Some((owner, owner_inst)) => {
+            let (outcome, work_used) = noble_kernel::acceptance::check_signed_structure_with_work(
+                env, request, candidate, owner, owner_inst,
+            );
+            (outcome, work_used)
+        }
+        None => noble_kernel::acceptance::check_with_work(env, request, candidate),
     };
-    match outcome {
+    let result = match outcome {
         noble_kernel::untrusted::Outcome::Accepted(checked) => Ok(checked),
         noble_kernel::untrusted::Outcome::Invalid(diagnostic) => {
             let at = match diagnostic.node {
                 Some(node) => {
-                    let index = attempt!(crate::offset(node.0, span));
+                    let index = match crate::offset(node.0, span) {
+                        Ok(index) => index,
+                        Err(problem) => return (Err(problem), work_used),
+                    };
                     match spans.get(index) {
                         Some(at) => *at,
                         None => span,
@@ -357,7 +381,8 @@ fn check_with_owner(
             "ordinary typing exhausted a declared kernel limit",
         )),
         noble_kernel::untrusted::Outcome::InternalFailure => Err(crate::internal(span)),
-    }
+    };
+    (result, work_used)
 }
 
 fn rejection_shapes(

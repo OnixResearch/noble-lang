@@ -2,7 +2,7 @@
 
 mod admit;
 mod core;
-mod digest;
+pub(crate) mod digest;
 mod guard;
 mod registry;
 mod release;

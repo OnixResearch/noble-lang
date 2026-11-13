@@ -46,6 +46,15 @@ lookup aids only: admission recomputes canonical bytes and independently checks
 the retained body. Two chunks with the same interface remain separate entries,
 even when their behavior differs.
 
+`Library::new(revision)` stores the host-supplied 32-byte snapshot generation;
+it does not derive a digest from the entries or make that revision an admission
+credential. The host MUST issue a fresh revision and build a fresh library
+snapshot whenever its contents change, and MUST keep a published snapshot
+unchanged while requests use that revision. Every request carries the exact
+generation pin, and a mismatch is `Invalid` before enumeration. This leaves
+revision assignment with the host rather than duplicating the separate
+content-addressed procedure-library design.
+
 ### Decision: selected profile and chunk envelope
 
 The only initial profile is `pure-i64-bool/1`, with envelope format
@@ -70,30 +79,79 @@ value: exact scalar}` and is an immutable closed value, never a resource,
 reference or host capability. There are at most 8 captures, ordinals are
 contiguous from zero, and a recipe may use only a retained capture with
 `Capture { index: u16 }`. `Instantiation` is an ordered list of at most 16
-exact type-variable bindings; each binding records variable id, kind and target
-(`I64` or `Bool`). The binding list is retained, not regenerated from a
+exact value-variable bindings; each binding records variable id, kind and
+target (`I64` or `Bool`). Stack/effect-variable witnesses are unsupported in
+this scalar profile. The binding list is retained, not regenerated from a
 signature.
 
-`RecipeNode` is exactly one of `I64Literal(i64)`, `BoolLiteral(bool)`,
-`Capture { index: u16 }`, `Invoke { dependency: u16, instantiation: u16 }`, or
-`Quotation { body: [NodeId], instantiation: u16 }`. Node IDs are unique `u32`
-values; a recipe is canonical only when every reference is to an earlier node,
-entry is nonempty and every quotation body is finite. `SignedSelf`, `SlotInvoke`,
-text/unit literals, live references, reflection, dynamic lookup and unresolved
-calls are outside the profile. The dependency index is into the retained,
-resolved dependency list and MUST match its full `DefinitionRef`.
+`RecipeNode` is one of `I64Literal(i64)`, `BoolLiteral(bool)`,
+`Capture { index: u16 }`, `Operation { op, instantiation: u16 }`,
+`Invoke { dependency: u16, instantiation: u16 }`, or `Quotation { body:
+[NodeId], instantiation: u16 }`. Node IDs are unique `u32` values; a recipe is
+canonical only when every reference is to an earlier node, entry is nonempty
+and every quotation body is finite. `Operation` is a closed enum, never an
+untrusted source spelling. Its witness is checked against the concrete ordered
+stack before the emitted word is independently prepared and kernel-checked.
+`SignedSelf`, `SlotInvoke`, text/unit literals, live references, reflection,
+dynamic lookup and unresolved calls are outside the profile. The dependency
+index is into the retained, resolved dependency list and MUST match its full
+`DefinitionRef`.
 
 The semantic whitelist is pure ordered-stack routing plus these resolved
 operations: `I64` and `Bool` literals and immutable scalar captures; `dup`,
-`drop`, `swap` and `over` over
-`I64`/`Bool`; `+`, `-`, `*`, `=`, `<` over `I64`; `not`, `and`, `or` over
-`Bool`; and finite quotations executed only by an explicit `run` recipe. The
-source spelling is resolved in the selected namespace; a spelling alone does
-not admit a node. Every operation and every transitive dependency MUST derive
-`EffSet::empty`. The profile permits no host capability, resource, text,
-unit, syntax, live, reflection or dynamic dispatch. A dependency index MUST
-refer to an earlier library entry, making the retained dependency graph
+`drop` and `swap` over `I64`/`Bool`; `+`, `-`, `*` and `=` over `I64`; and finite
+quotations executed only by an explicit `run` recipe. This is the exact
+bootstrap stack-word surface that the current source resolver can re-admit.
+The originally proposed `over`, I64 `<`, and Bool `not`/`and`/`or` are not
+stack words in this worktree: `over` has no bootstrap definition, `<` is only
+available in the declared-text path, and the Boolean operations belong to the
+predicate grammar. Adding those words would require changing the source/kernel
+language contract, not merely widening this opt-in library, so this slice
+refuses them rather than weakening the normal `Session::prepare` boundary.
+The source spelling is resolved in the selected namespace; a spelling alone
+does not admit a node. Every operation and every transitive dependency MUST
+derive `EffSet::empty`. The profile permits no host capability, resource,
+text, unit, syntax, live, reflection or dynamic dispatch. A dependency index
+MUST refer to an earlier library entry, making the retained dependency graph
 acyclic. Quotation nesting is bounded at 8.
+
+#### Implementation adjustment: closed operation leaves and concrete witnesses
+
+The original recipe-node list had no leaf capable of representing a primitive
+stack word: `Invoke` only names an earlier retained library entry, so seeding a
+primitive through `Invoke` would require an already-retained primitive chunk.
+The implementation therefore adds the closed `Operation { op, instantiation }`
+leaf above. The operation enum maps only to the bootstrap spellings in the
+fixed whitelist; it adds no parser syntax or dynamic name lookup. Its retained
+value-variable witness is checked against the replayed ordered stack, while
+ordinary source preparation and `acceptance::check` remain the acceptance
+authority.
+
+The envelope stores exact `I64`/`Bool` stack interfaces rather than open
+schemes, so a single retained entry cannot be instantiated at multiple type
+interfaces. Fresh-instantiation evidence is therefore a single source recipe
+(`dup`) admitted and rechecked under both concrete value types, with distinct
+retained witnesses and identities; it is not evidence for polymorphic chunk
+substitution.
+
+#### Implementation adjustment: shared checking-work accounting
+
+The first implementation charged source bytes while passing a fresh compiler
+work allowance to every admission. That did not make the design's 4,096
+checking-work counter cumulative across source-aware editor analysis, source
+preparation and independent kernel rechecks. The implementation passes the
+remaining ledger allowance to `editor::Candidate::analyze_editor` and
+`Session::prepare`, and debits their reported consumed work. Ordinary and
+signed-owner source-path kernel checks report their consumed work, which the
+source meter charges instead of reserving twice the declared checker
+allowance. A kernel request-preflight refusal conservatively charges its full
+declared allowance, because that path does not expose its local remaining
+counter. Each independent chunk recheck then receives the ledger's new
+remainder and debits its reported work; ordered-stack task replay debits the
+same ledger, keeping the fixed 4,096 maximum cumulative so no chunk or checker
+boundary can restart it. The
+reported unit is a bounded checker-work charge, not a CPU-time or
+instruction-count measurement.
 
 ### Decision: completion request and response
 
@@ -177,16 +235,38 @@ one, consumes its accounting; chunk boundaries never reset meters.
 | emitted source bytes | 4,096 | canonical completed source bytes |
 | candidates | 128 | proposals enumerated and checked, accepted included |
 | diagnostics | 64 | retained refusal entries, first offending location each |
-| checking work | 4,096 | shared source plus kernel admission work units |
+| checking work | 4,096 | shared compiler-meter charges (including its kernel-work reservation), independent kernel recheck work and ordered-stack replay steps |
 | evaluation steps | 256 | optional host fixture execution steps; no test run is unbounded |
 | request/retained bytes | 262,144 | request, library snapshot and retained proposal evidence |
 
+Diagnostics retain only the first refusal for each `(class, exact location)`;
+repeated refusals still increment candidate and rejection counts but consume no
+additional diagnostic or retained-byte entries. The two independent limits
+otherwise conflict: storing a diagnostic for each refused proposal would
+exhaust the 64-entry diagnostic budget before a high-count candidate-budget
+control could run, making the candidate counter's own boundary untestable.
+
+The 128-candidate value is an upper bound, not a guaranteed stopping point:
+every selected chunk is independently re-admitted through source preparation
+and kernel acceptance, and its work shares the 4,096 checking-work limit. A
+request can therefore exhaust checking work before reaching 128 candidates. The
+integration control lowers only the candidate budget to isolate that counter;
+it does not claim that a default-budget search can always reach candidate 128.
+The no-result witness uses one literal chunk repeated five times, so its five
+bounded proposals fit within the shared work limit while a valid completion
+still exists outside the four-chunk search.
+
 Library admission additionally applies the normal `Limits` supplied to
-`Session::prepare` and `Request` supplied to `acceptance::check`; the smaller
-remaining shared counter wins. Over-budget results are `Exhausted`, never
-truncation or partial publication. The service reports candidate count,
-expanded node count, dependency and instantiation work, checking work,
-execution steps, total monotonic latency and retained bytes.
+`Session::prepare` and `Request` supplied to the independent kernel check. For
+completion, each stage receives only the remaining shared `CheckingWork`
+allowance; its reported work is charged before the next admission stage or
+candidate begins. The compiler meter's existing reservation for its internal
+kernel check is included, and the independent kernel recheck reports its
+consumed work. Over-budget results are `Exhausted`, never truncation or partial
+publication. The service reports candidate count, expanded node count,
+dependency and instantiation work, checking work, execution steps, total
+monotonic latency and retained bytes. This is bounded checker-work accounting,
+not a CPU-time or instruction-count measurement.
 
 ### Mutation and freshness controls
 
@@ -211,7 +291,7 @@ execution steps, total monotonic latency and retained bytes.
 
 ## Fixtures and verification plan
 
-Future implementation work must include the following host-retained fixtures.
+The implementation test target retains the following host-supplied fixtures.
 They are expected behavior checks, not proofs:
 
 1. Primitive literal/stack-routing chunks and fixed `I64` chunks, with one
@@ -252,7 +332,30 @@ show that source preparation and `acceptance::check` are invoked for each final
 candidate, that counters are shared rather than reset by expansion, and that
 reported fixture agreement is not promoted to behavioral equivalence or a
 universal correctness claim. Any Lean theorem, finite Rust comparison and
-executed-artifact correspondence must be labelled as its own obligation.
+obligation.
+
+## Addenda decisions and #74 exclusion
+
+The Re-Pair/Sequitur discovery report proposed in the 10-31 issue comment is a
+separate follow-up, not part of this fixed baseline. Reconsider it only after
+all Phase 2 acceptance controls and the retained baseline measurement are
+complete. That follow-up must remain report-only, exclude the synthetic stress
+inputs, report per-module candidates and refusal reasons, and independently
+prepare/check each rewritten candidate. A recurring candidate must show
+positive token savings on checked real source before it is proposed for the
+fixed library; no source rewrite or library adoption follows from frequency
+alone.
+
+Agent-cost word scoring from the 10-31 addendum is deferred. It requires a
+separate LLM agent harness, a pinned model/sampling setup, a frozen train/held-out
+task split and an explicit model/compute budget. Revisit only if the report-only
+miner surfaces checked candidates worth evaluating. Any later claim of a useful
+word must lower median held-out task cost without reducing pass rate, across
+multiple seeds, and report variance; this slice ran no model task evaluation.
+
+#74's learned ranking, learned discovery and leakage evaluation remain outside
+this package. This implementation reports neither #74 progress nor a ranking
+signal; #74 stays dependent on this completed fixed baseline.
 
 ## Non-claims
 
