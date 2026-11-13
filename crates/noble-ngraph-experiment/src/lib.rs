@@ -138,6 +138,7 @@ pub mod evidence;
 pub mod fixtures;
 pub mod json;
 pub mod l1;
+pub mod opt;
 pub mod oracle;
 pub mod random;
 pub mod rejections;

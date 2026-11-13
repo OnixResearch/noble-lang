@@ -2907,9 +2907,25 @@ This model checks `n`, the budget and the gradient shape before any value, and t
 order (`p`, `g`, `eta`) before the outputs; that order is the model's reading, and a checker that
 reports a different first location for a multiply-refused envelope is not contradicted by it.
 
-Open, and deliberately not closed: the candidate envelope checker and its controls, the empty
-`State0` and `StepDescriptor` handling, immutable snapshots, rollback, evaluation isolation, the CPU
-comparison, and any Rust correspondence.
+`noble-ngraph-experiment/src/opt/` implements the strict typed `ngraph-opt/1` JSON envelope and
+exact-bit evaluator. The existing `b3_rejections` Rust target emits eight finite candidate rows into
+[`NobleFoundation/SgdReferenceCorpus.lean`](NobleFoundation/SgdReferenceCorpus.lean); each row is a
+Lean-kernel-decided `checkStep` result, including signed zero, subnormal and ties-to-even values,
+overflow refusal, and nonfinite input refusals. This finite cross-language corpus is not a proof of
+the Rust implementation or compiler/executed-artifact correspondence.
+
+The experiment crate also binds immutable parameter/state snapshots to candidate bytes, parent
+identities, graph/loss/derivative/data identities, seed, numeric semantics and tools; its host-owned
+trial checkpoint restores parameters, state, RNG, data cursor and counters on early/late faults,
+while retaining append-only attempt records. Frozen-candidate and frozen-data tampering controls
+refuse before evaluation. This is an in-process closed interpreter, not an OS sandbox; caller-supplied
+graph/loss/derivative digests are identities, not independently verified artifact proofs.
+
+The stop decision is in [`verification/opt-kernel/decision.md`](../../verification/opt-kernel/decision.md):
+the conditional CPU performance comparison was not run because the current stateless per-lane
+polynomial envelope does not add a distinct learning mechanism beyond the tuned fixed optimizer plus
+schedule search. A future trace-monomial rule is a separately versioned, design-first reopen route;
+no performance, convergence, numerical-stability, descent or generalization claim follows.
 
 The clean-source receipt for the SGD reference is
 [`verification/foundation/receipts/620b43395/`](../../verification/foundation/receipts/620b43395/foundation-check.json)

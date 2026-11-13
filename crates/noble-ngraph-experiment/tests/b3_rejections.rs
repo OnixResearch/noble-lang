@@ -44,3 +44,6 @@ fn guard_failure_stops_before_the_dependent_node() {
     // Nodes: %0 input, %1 add, %2 guard (fails); %3 select never runs.
     assert_eq!(r.l3_evaluated, 3);
 }
+
+#[path = "opt_kernel.rs"]
+mod opt_kernel;

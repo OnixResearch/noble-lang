@@ -50,6 +50,7 @@ import NobleFoundation.Isop
 import NobleFoundation.CacheLookup
 import NobleFoundation.ConstructorReuse
 import NobleFoundation.SgdReference
+import NobleFoundation.SgdReferenceCorpus
 import NobleFoundation.FirstProjection
 import NobleFoundation.OperandForwarding
 import NobleFoundation.Binary32Scale

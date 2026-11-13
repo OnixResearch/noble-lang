@@ -5782,6 +5782,54 @@
       "claim": "the two-rounding reference differs from a fused multiply-add on a chosen lane"
     },
     {
+      "name": "NobleFoundation.Binary32.Sgd.Corpus.rust_candidate_normal",
+      "phase": 2,
+      "role": "optimizer-rust-lean-corpus",
+      "claim": "the Rust candidate's normal two-lane result is decided by the Lean checkStep model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.Corpus.rust_candidate_signed_zero",
+      "phase": 2,
+      "role": "optimizer-rust-lean-corpus",
+      "claim": "the Rust candidate's signed-zero result is decided by the Lean checkStep model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.Corpus.rust_candidate_subnormal",
+      "phase": 2,
+      "role": "optimizer-rust-lean-corpus",
+      "claim": "the Rust candidate's subnormal result is decided by the Lean checkStep model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.Corpus.rust_candidate_boundary_tie",
+      "phase": 2,
+      "role": "optimizer-rust-lean-corpus",
+      "claim": "the Rust candidate's halfway rounding result is decided by the Lean checkStep model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.Corpus.rust_candidate_overflow_output",
+      "phase": 2,
+      "role": "optimizer-rust-lean-corpus",
+      "claim": "the Rust candidate refuses a nonfinite output at the same lane as the Lean checkStep model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.Corpus.rust_candidate_nan_parameter",
+      "phase": 2,
+      "role": "optimizer-rust-lean-corpus",
+      "claim": "the Rust candidate refuses a NaN parameter at the same lane as the Lean checkStep model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.Corpus.rust_candidate_infinite_gradient",
+      "phase": 2,
+      "role": "optimizer-rust-lean-corpus",
+      "claim": "the Rust candidate refuses an infinite gradient at the same lane as the Lean checkStep model"
+    },
+    {
+      "name": "NobleFoundation.Binary32.Sgd.Corpus.rust_candidate_infinite_eta",
+      "phase": 2,
+      "role": "optimizer-rust-lean-corpus",
+      "claim": "the Rust candidate refuses an infinite learning-rate input as the Lean checkStep model does"
+    },
+    {
       "name": "NobleFoundation.FirstProjection.ofList_wellFormed",
       "phase": 1,
       "role": "first-projection",
