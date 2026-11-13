@@ -193,11 +193,11 @@ multiplicity. The cost lane checks that all three graphs pass source admission a
 evaluation returns the corresponding exact output vectors. Other v1 node declarations and targets
 are retained and pinned by the cost test.
 
-[rewrite-cost-v3.txt](rewrite-cost-v3.txt) preregisters the eight-fixture/four-proposer workload
-(32 attempts), inherited 50 µs/step checker ceiling, execution and cost eligibility criteria,
-coverage denominators, and unmeasured stages before the v3 measurement. The runner
-([rewrite-cost.mjs](rewrite-cost.mjs)) binds the v3 plan and v2 corpus and rejects missing rows or
-changed output vectors. Historical v1/v2 plans and receipts remain unchanged.
+[rewrite-cost-v3.txt](rewrite-cost-v3.txt) was pre-registered and committed as `d9b62eaf` before
+measurement. It fixes the eight-fixture/four-proposer workload (32 attempts), inherited 50 µs/step
+checker ceiling, execution and cost eligibility criteria, coverage denominators, and unmeasured
+stages. The runner ([rewrite-cost.mjs](rewrite-cost.mjs)) binds the v3 plan and v2 corpus and rejects
+missing rows or changed output vectors. Historical v1/v2 plans and receipts remain unchanged.
 
 The certificate decision is to adopt `ngraph-cert/1` as a new revision with certified dead-node
 removal (an explicit old-to-new node map) and sequential premises, while retaining
@@ -222,6 +222,45 @@ all of these hold:
 
 Training and circuit search remain in RSI Lab #73; the optional LLVM comparison in compiler-lab
 #176 is outside Noble's scope. This deferral is not an implementation of either consumer.
+
+### Issue #64 v3 clean-source measurement
+
+The [v3 receipt](rewrite-cost-2026-11-13.json) binds the clean source and plan commit
+`d9b62eaf64091c26808eb21592c346d9fa9c4c98`; its source tree is `0bfb0e47cf20e8db6ad2e349859eb5595fbae7ce`.
+The sibling `.evidence` directory retains matching [source-before](rewrite-cost-2026-11-13.json.evidence/source-before.json)
+and [source-after](rewrite-cost-2026-11-13.json.evidence/source-after.json) snapshots, the
+[process record](rewrite-cost-2026-11-13.json.evidence/process.json), [raw stdout](rewrite-cost-2026-11-13.json.evidence/raw/stdout),
+[raw stderr](rewrite-cost-2026-11-13.json.evidence/raw/stderr) and selected Cargo config; the receipt
+records their hashes. The runner completed all 32 fixture/proposer rows (64 unrecorded priming
+iterations and 200 samples per row).
+
+| Observation | Result |
+|---|---|
+| Source admission | All 8 fixture graphs admitted; explicit-output reference results include `[12,7]` for `independent-folds`, `[12,5]` for `ordered-outputs` and `[12,12]` for `repeated-outputs`. |
+| Raw certificate coverage | 32 attempts, 31 accepted, 1 refused, 19 residual targets reached. |
+| Integrated pipeline | 0 input refusals, 1 certificate refusal (`chained-folds`/`fixed-point`), 23 candidate-admission refusals, 0 layout/execution refusals, 8 executed rows. |
+| Executed candidates | All 8 are `identity`; no non-identity candidate executed. The 23 candidate refusals are `E-GRAPH-MALFORMED` for dead operand nodes reaching no output and no guard (`NodeId(0)` or `NodeId(1)`). |
+| Execution calls | 16,896 baseline calls; 4,224 certified calls; refused candidates receive zero execution calls. Calls include priming and measured fresh/warm execution. |
+| Fresh full-attempt medians across executed identity rows | Baseline 33.262–45.165 µs; certified 105.486–145.221 µs. |
+| Warm-execution medians across executed identity rows | Baseline 0.421–0.752 µs; certified 0.431–0.761 µs. |
+| Certificate-check cost per step | 10.54–33.14 µs for step-bearing rows, below the 50 µs/step informational ceiling. |
+| Break-even / optimization benefit | Unmeasured: no executed non-identity candidate reaches the residual target; the raw target-reaching proposals were refused at candidate admission. |
+
+The source, baseline and certified outputs agree exactly on all 8 executed identity rows, including
+wrapping `-9223372036854775808` and the ordered/repeated output vectors. Timings are debug-build,
+shared-host medians after priming, not OS-cache-cold; they do not establish a production speedup.
+Wire encoding and retained memory (allocator/RSS) remain unmeasured.
+
+Reproduce from a clean committed checkout, using the selected Node executable in
+`policy/tool-selection.json`:
+
+```text
+node verification/ngraph/rewrite-cost.mjs --output /absolute/outside-checkout/receipt.json
+```
+
+The runner refuses dirty source or pre-existing output/evidence paths and retains the raw process
+streams and source snapshots beside the receipt. This v3 result leaves the executable-optimization
+item open pending #42's `ngraph-cert/1`; it does not close #64.
 
 ### Issue #64 effects-as-laws controls
 
