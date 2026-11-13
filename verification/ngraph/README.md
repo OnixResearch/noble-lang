@@ -737,7 +737,9 @@ assume sufficient execution budgets and no cancellation.
   implies observation equality for every input. Its observations distinguish the first failed
   guard. [`GuardedRewriteCorpus.lean`](../../proofs/foundation/NobleFoundation/GuardedRewriteCorpus.lean)
   is generated from the Rust proposer's two accepted pilot certificates; the model checker accepts
-  each encoded certificate by `decide`.
+  each encoded certificate by `decide`. The clean-source theorem audit is retained in
+  [`foundation-check.json`](../foundation/receipts/ae4650016/foundation-check.json), bound to source
+  commit `ae46500167d424a062e590db7fff89254998b1df` (1312 theorem statements, no implementation theorem).
 - **Concrete tests.** [`cert_scoped.rs`](../../crates/noble-ngraph/src/cert/scoped.rs) checks and
   re-derives scoped evidence in Rust. The tests in
   [`tests/cert/scoped.rs`](../../crates/noble-ngraph/tests/cert/scoped.rs) exercise the guard- and

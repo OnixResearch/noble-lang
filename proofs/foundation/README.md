@@ -3481,3 +3481,9 @@ The four evidence layers remain separate:
   the recorded finite inputs, including first-failure cases. These tests are not universal proofs.
 - **Packed-schedule proof:** `PackedSchedule.lean` / `PackedScheduleCorpus.lean` remains the
   independent issue #43 claim; its model has no guards and is not extended by #108.
+
+The clean-source audit receipt is
+[`verification/foundation/receipts/ae4650016/foundation-check.json`](../../verification/foundation/receipts/ae4650016/foundation-check.json)
+(1312 inventoried theorems, `clean_source: true`, `allow_dirty: false`, and
+`implementation_theorem: false`; theorem axioms are within the foundation allow-list).
+It binds the proof and inventory state at source commit `ae46500167d424a062e590db7fff89254998b1df`.
