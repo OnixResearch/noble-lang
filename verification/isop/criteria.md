@@ -43,6 +43,24 @@ only semantic observation in scope. The Lean model proves the interval
 property; Rust tests show finite agreement between the core and this independent
 checker. Neither implies source, compiler, runtime, or Wasm correspondence.
 
+The recurrence is the binary interval algorithm (not the earlier Shannon
+cover): return the empty cover when `L = 0`; return the universal cube when
+`U = 1`; otherwise split the fixed top variable into cofactors and compute
+`R0 = ISOP(L0 ∧ ¬U1, U0)`, `R1 = ISOP(L1 ∧ ¬U0, U1)`, and
+`R2 = ISOP((L0 ∧ ¬Bdd(R0)) ∨ (L1 ∧ ¬Bdd(R1)), U0 ∧ U1)`. Return the
+negative-literal lift of `R0`, the positive-literal lift of `R1`, and the
+unlabelled lift of `R2`. This is the published lower/upper interval recurrence
+(Figure 3, [Mishchenko, Brayton and Sasao, 2003](http://www-cad.eecs.berkeley.edu/~alanmi/publications/2003/iwls03_sop.pdf)); `Bdd(R)` means the union of the cubes in `R`. The old `shannonCover` remains a
+control and MUST NOT be substituted for this recurrence.
+
+### Premeasurement correction
+
+After the initial criteria commit, a primary algorithm reference was checked
+to pin the three recursive cofactors and their upper bounds exactly. This is a
+premeasurement specification correction, not a change made in response to a
+result. No benchmark had been run when this correction was committed; the
+amended criteria commit in the slice history is the operative freeze.
+
 ## Frozen synthetic comparison
 
 The benchmark corpus is fixed in the Rust test producer and consists of five
