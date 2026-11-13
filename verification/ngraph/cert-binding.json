@@ -1,0 +1,15 @@
+{
+  "schema": "noble-cert-binding/v1",
+  "source_commit": "9ed4c66b7965d0c6c88310a321b6076b62752bd6",
+  "note": "Binds the Rust certificate bytes to the Lean format, codec and generated corpus modules. `node verification/ngraph/cert-binding.mjs --verify` additionally requires a clean-source foundation receipt that hashes the current module bytes and retains the named theorems.",
+  "files": {
+    "crates/noble-ngraph/src/cert.rs": "810c4f5a8656829949bd331b0d10b80f349cf02aee73ad75bf3f660345d2e1e3",
+    "crates/noble-ngraph/tests/cert/differential.rs": "24252d49f1202feb550f57626b8311c6c0c8fb1b7b448b2fd860eb813aa1fa88",
+    "crates/noble-ngraph/tests/cert/corpus.rs": "69b1375f07a9fc5905d13fb5d5f6b75554205666c4218903367f428db99a47d9"
+  },
+  "model_files": [
+    "proofs/foundation/NobleFoundation/Certificate.lean",
+    "proofs/foundation/NobleFoundation/CertificateCodec.lean",
+    "proofs/foundation/NobleFoundation/CertificateCorpus.lean"
+  ]
+}
