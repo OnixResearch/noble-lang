@@ -26,7 +26,7 @@ by hand.
 | `separate` | twelve candidate graphs, each evaluated over all 8192 frozen rows | 12 |
 | `merged` | one multi-output graph holding all twelve candidates, the shared value computed once | 1 |
 | `merged-duplicated` | the same candidates in one graph, the shared value recomputed per candidate | 1 |
-| `floor` | the merged graph over a single row — attribution only, never gated | 1 |
+| `floor` | the merged graph over a single row — attribution only, but it does take part in d4 (see the note below) | 1 |
 
 Two twelve-candidate families over `ngraph-i64/0` with one `i64` input: `shared-prefix` (every
 candidate is one common 18-node prefix value followed by its own tail, so a value is genuinely
@@ -111,6 +111,13 @@ families from run to run (`separate` +1180 in a, `merged` +1088 and `floor` +696
 16 MiB peak RSS varies by about a megabyte with dynamic-loader and page-cache state. The bound is
 reported as it fell rather than explained away; it is an instrument defect of this lane, not a
 sharing result, and it is not adjusted after seeing numbers.
+
+One wording conflict is worth quoting rather than smoothing over: `criteria.md` calls the one-row
+`floor` arm "not gated", while `criteria.json`'s d4 says "every arm". The runner follows the
+machine-readable half, so `floor` is included in d4. Both readings give the same verdict on both
+runs — run a fails d4 on `separate` (+1180 KiB) and run b on `merged` (+1088 KiB), while `floor` on
+its own stays inside the bound (a: +128 and −1036 KiB; b: −332 and +696 KiB) — and neither frozen
+file was edited after the numbers existed.
 
 ## What the numbers do and do not say
 
