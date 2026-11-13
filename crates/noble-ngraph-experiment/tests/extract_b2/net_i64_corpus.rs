@@ -272,7 +272,47 @@ fn lean_value(value: Value) -> String {
 }
 
 fn lean_corpus_preamble() -> &'static str {
-    "import InteractionNets\nimport NobleFoundation.NetI64\nimport NobleFoundation.PackedSchedule\n\nnamespace NobleFoundation.NetI64Corpus\n\nopen NobleFoundation.NetI64\nopen NobleFoundation.PackedSchedule\n\nprivate def compareId : List Nat → List Nat → Ordering\n  | [], [] => .eq\n  | [], _ :: _ => .lt\n  | _ :: _, [] => .gt\n  | left :: leftTail, right :: rightTail =>\n      match compare left right with\n      | .eq => compareId leftTail rightTail\n      | order => order\n\nprivate def comparePort (left right : INet.Port) : Ordering :=\n  match compareId left.1 right.1 with\n  | .eq => compare left.2 right.2\n  | order => order\n\nprivate def compareWire (left right : INet.Port × INet.Port) : Ordering :=\n  match comparePort left.1 right.1 with\n  | .eq => comparePort left.2 right.2\n  | order => order\n\nprivate def canonicalNet (net : INet.XNet NetSym) : INet.XNet NetSym :=\n  { agents := net.agents.mergeSort (fun left right => compareId left.1 right.1 == .lt)\n    free := net.free.mergeSort (fun left right => comparePort left right == .lt)\n    wires := net.wires.mergeSort (fun left right => compareWire left right == .lt) }\n\nprivate def normalizeReadBack (program : Program) (inputs : List (BitVec 64)) :=\n  (Program.normalize program inputs).map fun (net, steps) =>\n    (Program.readBack program net, steps)\n\n-- Rust-produced input nets, differential outputs and interaction counts follow.\n\n"
+    r#"import InteractionNets
+import NobleFoundation.NetI64
+import NobleFoundation.PackedSchedule
+
+namespace NobleFoundation.NetI64Corpus
+
+open NobleFoundation.NetI64
+open NobleFoundation.PackedSchedule
+
+private def compareId : List Nat → List Nat → Ordering
+  | [], [] => .eq
+  | [], _ :: _ => .lt
+  | _ :: _, [] => .gt
+  | left :: leftTail, right :: rightTail =>
+      match compare left right with
+      | .eq => compareId leftTail rightTail
+      | order => order
+
+private def comparePort (left right : INet.Port) : Ordering :=
+  match compareId left.1 right.1 with
+  | .eq => compare left.2 right.2
+  | order => order
+
+private def compareWire (left right : INet.Port × INet.Port) : Ordering :=
+  match comparePort left.1 right.1 with
+  | .eq => comparePort left.2 right.2
+  | order => order
+
+private def canonicalNet (net : INet.XNet NetSym) : INet.XNet NetSym :=
+  { agents := net.agents.mergeSort (fun left right => compareId left.1 right.1 == .lt)
+    free := net.free.mergeSort (fun left right => comparePort left right == .lt)
+    wires := net.wires.mergeSort (fun left right => compareWire left right == .lt) }
+
+private def normalizeReadBack (program : Program) (inputs : List (BitVec 64)) :=
+  (Program.translateChecked program inputs).bind fun source =>
+    (XNet.normalize xsys (Program.interactionCount program) source).map fun (net, steps) =>
+      (Program.readBack program net, steps)
+
+-- Rust-produced input nets, differential outputs and interaction counts follow.
+
+"#
 }
 
 fn corpus_path() -> PathBuf {

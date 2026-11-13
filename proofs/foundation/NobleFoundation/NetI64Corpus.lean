@@ -32,8 +32,9 @@ private def canonicalNet (net : INet.XNet NetSym) : INet.XNet NetSym :=
     wires := net.wires.mergeSort (fun left right => compareWire left right == .lt) }
 
 private def normalizeReadBack (program : Program) (inputs : List (BitVec 64)) :=
-  (Program.normalize program inputs).map fun (net, steps) =>
-    (Program.readBack program net, steps)
+  (Program.translateChecked program inputs).bind fun source =>
+    (XNet.normalize xsys (Program.interactionCount program) source).map fun (net, steps) =>
+      (Program.readBack program net, steps)
 
 -- Rust-produced input nets, differential outputs and interaction counts follow.
 
