@@ -497,7 +497,6 @@ function controls(binary, work, criteria, familyState) {
 // ---------------------------------------------------------------------------
 
 function armCommands(familyState) {
-  const count = candidateCount(familyState.family);
   return {
     separate: familyState.candidates.map((info) => ['ngraph', 'eval', info.graph, familyState.mergedRun.vectorsPath]),
     merged: [['ngraph', 'eval', familyState.merged.graph, familyState.mergedRun.vectorsPath]],
@@ -511,21 +510,21 @@ function measureFamily(binary, work, criteria, familyState) {
   const arms = criteria.arms.map((a) => a.name);
   const rounds = criteria.timing.warmup_rounds + criteria.timing.warm_rounds;
   const series = Object.fromEntries(arms.map((arm) => [arm, []]));
-  for (let round = 0; round < rounds; round += 1) {
-    const rotation = round % arms.length;
+  for (let turn = 0; turn < rounds; turn += 1) {
+    const rotation = turn % arms.length;
     const order = arms.slice(rotation).concat(arms.slice(0, rotation));
     for (const arm of order) {
       let wallMs = 0;
       let cpuMs = 0;
       let rssKib = 0;
       commands[arm].forEach((args, index) => {
-        const run = runMeasured(binary, args, work, `${familyState.family.name}-${arm}-${round}-${index}`);
+        const run = runMeasured(binary, args, work, `${familyState.family.name}-${arm}-${turn}-${index}`);
         if (run.status !== 0) fail(`${familyState.family.name}/${arm} exited ${run.status}`);
         wallMs += run.wallMs;
         cpuMs += run.cpuMs;
         rssKib = Math.max(rssKib, run.rssKib);
       });
-      series[arm].push({ round, wall_ms: round(wallMs), cpu_ms: round(cpuMs), rss_kib: rssKib });
+      series[arm].push({ round: turn, wall_ms: round(wallMs), cpu_ms: round(cpuMs), rss_kib: rssKib });
     }
   }
   const warm = (arm) => series[arm].slice(criteria.timing.warmup_rounds);
@@ -555,22 +554,22 @@ function measureExtraction(binary, work, criteria, familyState) {
     ['merged', familyState.merged],
     ['merged-duplicated', familyState.duplicated],
   ];
-  const rounds = 3;
+  const turns = 3;
   const series = [];
-  for (let round = 0; round < rounds; round += 1) {
+  for (let turn = 0; turn < turns; turn += 1) {
     let wallMs = 0;
     let rssKib = 0;
     const perProgram = {};
     for (const [label, info] of programs) {
       const out = path.join(work, `extract-timing-${label}.ngraph`);
       fs.rmSync(out, { force: true });
-      const run = runMeasured(binary, ['ngraph', 'extract', info.source, '--inputs', 'i64', '--out', out], work, `extract-${label}-${round}`);
+      const run = runMeasured(binary, ['ngraph', 'extract', info.source, '--inputs', 'i64', '--out', out], work, `extract-${label}-${turn}`);
       if (run.status !== 0) fail(`extract ${label} exited ${run.status} during the extraction measurement`);
       wallMs += run.wallMs;
       rssKib = Math.max(rssKib, run.rssKib);
       perProgram[label] = round(run.wallMs);
     }
-    series.push({ round, wall_ms: round(wallMs), rss_kib: rssKib, per_program_ms: perProgram });
+    series.push({ round: turn, wall_ms: round(wallMs), rss_kib: rssKib, per_program_ms: perProgram });
   }
   return {
     invocations_per_round: programs.length,
