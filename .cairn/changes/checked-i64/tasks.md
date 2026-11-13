@@ -1,0 +1,6 @@
+## Phase 1: Implementation
+
+- [x] [serial] Select D-03 and publish the `checked-i64` API, `noble-checked-i64/v1` error codes, complete operation/error matrix, operand order and truncating `div-rem` policy in the native language requirement and this decision record. Evidence: issue #39 and the existing universal `CheckedI64.lean` model theorems; Cairn proposal/design/tasks gates and `validate` (unit 1). r[K-NUM-01]
+- [ ] [serial] Implement the opt-in kernel/source/Wasm/CLI environment, exact checked builtin schemes and runtime, and update all exhaustive consumers while leaving existing profiles unchanged. Evidence: focused tests and Rust gates (unit 2). r[K-NUM-01]
+- [ ] [serial] Generate boundary expectations from Lean and replay source→Wasm cases at optimization off and on, retaining the full operation/prefix/order coverage. Evidence: foundation audit and runtime execution records (unit 3). r[K-NUM-01]
+- [ ] [serial] Retain implementation mutant controls, refusal/resource-limit tests with zero unintended host requests, and split model-proved / implementation-tested / refinement / open evidence; run final workspace and Cairn gates. Evidence: source-bound implementation and verification records (unit 4). r[K-NUM-01]
