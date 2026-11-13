@@ -431,16 +431,27 @@ const packagesMutated = before.vec_olean_mtime_ms !== after.vec_olean_mtime_ms
 // ---------------------------------------------------------------------------
 // Verdict.
 // ---------------------------------------------------------------------------
+// A *refused* cell only has to be refused for the right reasons; what the rest of the
+// pipeline did with it is an observation, not a criterion. An *admitted* cell is the
+// positive control, so it has to clear every stage: a baseline that fails somewhere is not
+// evidence that the baseline works.
+const blockedStages = cell => Object.entries(cell.stages)
+  .filter(([, stage]) => stage && typeof stage === 'object' && stage.status === 'blocked')
+  .map(([stage]) => stage);
+const missingCodes = cell => (cell.required_codes ?? [])
+  .filter(code => !cell.stages.admission?.refusal_codes?.includes(code));
 const mismatches = operational.filter(cell => {
-  const failedStages = Object.entries(cell.stages)
-    .filter(([, stage]) => stage && typeof stage === 'object' && stage.status === 'blocked')
-    .map(([stage]) => stage);
-  const missingCodes = (cell.required_codes ?? []).filter(code => !cell.stages.admission?.refusal_codes?.includes(code));
-  return cell.stages.admission?.status !== cell.expectation || failedStages.length > 0 || missingCodes.length > 0;
+  const admitted = cell.expectation === 'admitted';
+  if (admitted) {
+    return cell.stages.admission?.status !== 'admitted' || blockedStages(cell).length > 0
+      || (cell.stages.admission?.refusal_codes ?? []).length > 0;
+  }
+  return cell.stages.admission?.status !== 'refused' || missingCodes(cell).length > 0;
 }).map(cell => ({ root: cell.root, expectation: cell.expectation,
   observed: cell.stages.admission?.status ?? 'no-admission',
-  blocked_stages: Object.entries(cell.stages).filter(([, stage]) => stage?.status === 'blocked').map(([name]) => name),
-  missing_codes: (cell.required_codes ?? []).filter(code => !cell.stages.admission?.refusal_codes?.includes(code)) }));
+  blocked_stages: blockedStages(cell), missing_codes: missingCodes(cell) }));
+const observedBlockedStages = operational.flatMap(cell =>
+  blockedStages(cell).map(stage => ({ root: cell.root, stage })));
 
 const tree = spawnSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' });
 const treeCleanAfter = tree.stdout.trim() === '';
@@ -482,6 +493,7 @@ const evidence = {
     required_codes: cell.required_codes, observed: cell.stages.admission?.status ?? null,
     stages: cell.stages })),
   controls: { results: controls, unchanged_receipt_revalidates: liveControl },
+  observed_blocked_stages: observedBlockedStages,
   matrix: {
     row: 'fixture root', column: 'pipeline stage',
     columns: ['source_compile', 'charon', 'aeneas', 'lean', 'admission'],
@@ -507,6 +519,7 @@ const summary = {
   cells: Object.fromEntries(operational.map(cell => [cell.root, cell.stages.admission?.status ?? 'no-admission'])),
   controls: Object.fromEntries(controls.map(item => [item.name, item.result])),
   mismatches: mismatches.length,
+  blocked_stages: observedBlockedStages,
   packages_mutated: packagesMutated,
   artifacts: normalize(artifacts),
 };

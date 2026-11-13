@@ -66,22 +66,29 @@ pub fn global_box(value: u32) -> Box<u32, Global> {
 // Generic and borrowed allocators.
 // ---------------------------------------------------------------------------
 
+// The allocator parameters are deliberately not named `alloc`. Aeneas keeps the erased
+// allocator as a local and emits the migrated collection operations in field notation
+// (`alloc.vec.Vec.push xs input`). When the local is called `alloc`, Lean parses that as a
+// projection on the local instead of the `alloc` namespace, so elaboration fails for a
+// reason that has nothing to do with the allocator. `custom` keeps the matrix's Lean column
+// about the allocator and nothing else.
+
 /// Generic `A: Allocator`.
-pub fn generic_vec<A: Allocator>(alloc: A, input: u8) -> usize {
-    let mut xs: Vec<u8, A> = Vec::new_in(alloc);
+pub fn generic_vec<A: Allocator>(custom: A, input: u8) -> usize {
+    let mut xs: Vec<u8, A> = Vec::new_in(custom);
     xs.push(input);
     xs.len()
 }
 
 /// Generic `A: Allocator` `Box`.
-pub fn generic_box<A: Allocator>(alloc: A, value: u32) -> u32 {
-    let boxed: Box<u32, A> = Box::new_in(value, alloc);
+pub fn generic_box<A: Allocator>(custom: A, value: u32) -> u32 {
+    let boxed: Box<u32, A> = Box::new_in(value, custom);
     *boxed
 }
 
 /// Generic allocator with growth and clone (both require `A: Clone`).
-pub fn generic_vec_growth_clone<A: Allocator + Clone>(alloc: A, input: u8, extra: usize) -> usize {
-    let mut xs: Vec<u8, A> = Vec::new_in(alloc);
+pub fn generic_vec_growth_clone<A: Allocator + Clone>(custom: A, input: u8, extra: usize) -> usize {
+    let mut xs: Vec<u8, A> = Vec::new_in(custom);
     xs.push(input);
     xs.reserve(extra);
     let copied = xs.clone();
@@ -89,8 +96,8 @@ pub fn generic_vec_growth_clone<A: Allocator + Clone>(alloc: A, input: u8, extra
 }
 
 /// Borrowed allocator: `Vec<u8, &A>` over `impl Allocator for &A`.
-pub fn borrowed_vec<A: Allocator>(alloc: &A, input: u8) -> usize {
-    let mut xs: Vec<u8, &A> = Vec::new_in(alloc);
+pub fn borrowed_vec<A: Allocator>(custom: &A, input: u8) -> usize {
+    let mut xs: Vec<u8, &A> = Vec::new_in(custom);
     xs.push(input);
     xs.len()
 }
@@ -108,8 +115,8 @@ pub fn system_vec(input: u8) -> usize {
 
 /// Concrete stateful allocator from the `stateful-alloc` dependency.
 pub fn stateful_vec(input: u8) -> usize {
-    let alloc = stateful_alloc::CountingAllocator::new();
-    let mut xs: Vec<u8, stateful_alloc::CountingAllocator> = Vec::new_in(alloc);
+    let counter = stateful_alloc::CountingAllocator::new();
+    let mut xs: Vec<u8, stateful_alloc::CountingAllocator> = Vec::new_in(counter);
     xs.push(input);
     xs.len()
 }

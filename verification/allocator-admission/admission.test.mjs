@@ -122,7 +122,7 @@ test('an explicit Global constructor is refused at the call site, not only at th
 });
 
 test('a generic Allocator bound is refused with the bound position, even before any call', () => {
-  const text = 'pub fn generic_vec<A: Allocator>(alloc: A, input: u8) -> usize {\n'
+  const text = 'pub fn generic_vec<A: Allocator>(custom: A, input: u8) -> usize {\n'
     + '    let mut xs: Vec<u8, A> = Vec::new_in(alloc);\n    xs.push(input);\n    xs.len()\n}';
   const report = admit(document({
     root: 'probes::generic_vec',
@@ -136,7 +136,7 @@ test('a generic Allocator bound is refused with the bound position, even before 
 });
 
 test('a borrowed allocator is refused at the reference parameter', () => {
-  const text = 'pub fn borrowed_vec<A: Allocator>(alloc: &A, input: u8) -> usize {\n'
+  const text = 'pub fn borrowed_vec<A: Allocator>(custom: &A, input: u8) -> usize {\n'
     + '    let mut xs: Vec<u8, &A> = Vec::new_in(alloc);\n    xs.push(input);\n    xs.len()\n}';
   const report = admit(document({
     root: 'probes::borrowed_vec',
