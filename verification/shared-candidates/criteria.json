@@ -1,0 +1,114 @@
+{
+  "schema": "noble-shared-candidates-criteria/v1",
+  "issue": 117,
+  "frozen": "2026-11-13",
+  "profile": "ngraph-i64/0",
+  "inputs": "i64",
+  "families": [
+    {
+      "name": "shared-prefix",
+      "sharing": "shared",
+      "why": "Every candidate is the same prefix value followed by its own tail, so the merged source computes the prefix once and duplicates the value with `dup`: extraction emits one node per shared value. This family is where a content-sharing saving is possible at all.",
+      "prefix": "dup dup dup * * swap 5 * + dup * 3 - dup 7 * + 11 + dup dup * 13 - +",
+      "tails": [
+        "5 +",
+        "dup *",
+        "7 -",
+        "dup dup * *",
+        "2 * 3 +",
+        "dup 1 + *",
+        "4 - dup *",
+        "10 + dup *",
+        "dup 2 * +",
+        "3 * 5 - dup +",
+        "dup dup * 6 * 1 + +",
+        "9 - 2 *"
+      ]
+    },
+    {
+      "name": "distinct-prefix",
+      "sharing": "none",
+      "why": "Every candidate is an independent program over the one input, with no value common to two candidates beyond the input node itself. Merging cannot remove work here, so the two merged arms are the same program: their difference measures the host's timing noise floor.",
+      "fragments": [
+        "dup dup * + 5 +",
+        "3 * 7 -",
+        "dup 4 * dup * +",
+        "1 + dup 2 - *",
+        "dup dup dup * * 9 - +",
+        "6 swap - dup 3 * +",
+        "2 * dup dup * -",
+        "dup 11 * 4 + dup + +",
+        "5 - dup dup * +",
+        "dup 8 * swap 2 * -",
+        "13 + dup 3 - *",
+        "dup 10 swap - *"
+      ]
+    }
+  ],
+  "vectors": {
+    "rows": 8192,
+    "seed": "0x5edca11d3f1b7a29",
+    "prng": "splitmix64 on the seed, each draw folded to its absolute value modulo (range + 1)",
+    "range": 2097152,
+    "boundary": [
+      "0",
+      "1",
+      "-1",
+      "2",
+      "-2",
+      "4611686018427387904",
+      "-4611686018427387905",
+      "9223372036854775807",
+      "-9223372036854775808"
+    ]
+  },
+  "arms": [
+    {
+      "name": "separate",
+      "programs": "one candidate graph per process",
+      "processes": "one per candidate"
+    },
+    {
+      "name": "merged",
+      "programs": "one multi-output graph holding every candidate",
+      "processes": "one"
+    },
+    {
+      "name": "merged-duplicated",
+      "programs": "the same candidates with every reuse of the shared value replaced by a recomputation",
+      "processes": "one"
+    },
+    {
+      "name": "floor",
+      "programs": "the merged graph over one row",
+      "processes": "one, attribution only"
+    }
+  ],
+  "timing": {
+    "warmup_rounds": 1,
+    "warm_rounds": 9,
+    "order": "arms are run in the frozen order rotated by the round index, so no arm always runs first",
+    "cold": "the warmup round is reported as `first`; this host cannot drop page caches without root, so `first` only means `not previously executed by this run`",
+    "reference_rows": 256
+  },
+  "thresholds": {
+    "d1_separate_wall_ratio_max": 0.75,
+    "d2_sharing_wall_ratio_max": 0.9,
+    "d3_noise_band": 0.1,
+    "d4_rss_growth_kib_max": 1024
+  },
+  "decisions": {
+    "d1": "on `shared-prefix`, the merged arm's warm median wall time is at most 0.75x the separate arm's, i.e. evaluating one merged graph saves at least a quarter of the family's end-to-end evaluation time",
+    "d2": "on `shared-prefix`, the merged arm is at most 0.90x the merged-duplicated arm, i.e. sharing one value is measurably cheaper than recomputing it inside one process",
+    "d3": "on `distinct-prefix` the two merged arms are the same program, so their relative difference must stay inside the declared noise band; a larger difference invalidates the measurement instead of supporting d2",
+    "d4": "every arm's peak resident set in its second warm round exceeds its first warm round by at most the declared bound",
+    "go": "GO for further merged-execution work needs every correctness gate, d1, d2, d3 and d4. d1 without d2 records process amortisation only and is not a common-subexpression-elimination result. No outcome licenses an optimal-runtime claim."
+  },
+  "not_measured": [
+    "net arm: no interaction-net entry point exists in `crates/`; pending #37",
+    "labelled-SUP arm: no labelled DUP/SUP contract exists; pending #105",
+    "allocation counts: the workspace forbids `unsafe`, so no counting allocator can exist; only process peak RSS is reported",
+    "interaction counts: only the net reducer would report them; the graph evaluator reports nodes, layers and extraction counters instead",
+    "in-process CSE: the graph evaluator has no memoising pass, so a `merged` arm that repeats a subterm pays for it twice — this lane shares by construction and measures the difference"
+  ]
+}
