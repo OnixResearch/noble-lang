@@ -1,4 +1,4 @@
-// Execute the K-CHECK-02 and K-ERROR-03 conformance scenarios REC-01…REC-07 (#99) through the
+// Execute the K-CHECK-02 and K-ERROR-03 conformance scenarios REC-01…REC-11 (#99) through the
 // production framed session of the CLI built from the checked-out commit, and retain a receipt with
 // every report. A scenario's observation is evidence about that execution only.
 import { createHash } from 'node:crypto';
@@ -16,6 +16,11 @@ const stable = value => JSON.stringify(value);
 
 const signed = ['--signed-self-recursion', '--retained-source-bytes', '262144'];
 const countdown = 'module count@1 [ signature down forall<S:stack> [ S I64 -- S I64 ! pure ] export down def down [ dup 0 = [ ] [ 1 - down ] if ] ]';
+// The deep fixtures guard on positivity (`0 < counter`) instead of REC-01's equality guard. A call
+// that is the final operation of its body enqueues no continuation; `1 - up 0 +` makes the same
+// countdown non-tail by leaving an operation after the call.
+const deepTail = 'module deep@1 [ signature down forall<S:stack> [ S I64 -- S I64 ! pure ] export down def down [ dup 0 swap < [ 1 - down ] [ ] if ] ]';
+const deepNonTail = 'module bound@1 [ signature up forall<S:stack> [ S I64 -- S I64 ! pure ] export up def up [ dup 0 swap < [ 1 - up 0 + ] [ ] if ] ]';
 // Each session's submissions, in order, with the report index each scenario reads.
 const sessions = [
   {
@@ -38,6 +43,24 @@ const sessions = [
       'deep@1.grow',
     ],
   },
+  {
+    id: 'signed-deep', flags: signed, exit: 5,
+    submissions: [
+      deepTail,
+      '5000 deep@1.down',
+      'drop',
+      deepNonTail,
+      '511 bound@1.up',
+      '512 bound@1.up',
+    ],
+  },
+  {
+    id: 'signed-deep-control', flags: signed, exit: 5,
+    submissions: [
+      deepNonTail,
+      '5000 bound@1.up',
+    ],
+  },
   { id: 'ordinary', flags: [], exit: 2, submissions: [countdown] },
 ];
 const signedProfile = 'Signed-Declared-Text-v1';
@@ -56,6 +79,14 @@ const scenarios = [
     expected: { stage: 'wasm', outcome: 'runtime-exhausted', quota_reason: 'continuation bytes', stack: [] } },
   { id: 'REC-07', session: 'ordinary', report: 0, profile: 'Declared-Text-v1',
     expected: { stage: 'resolve', outcome: 'unbound-word', diagnostic: 'cyclic local module definitions' } },
+  { id: 'REC-08', session: 'signed-deep', report: 1, profile: signedProfile,
+    expected: { stage: 'wasm', outcome: 'normal', stack: [{ type: 'I64', value: '0' }], metrics: { continuation_peak_bytes: 8 } } },
+  { id: 'REC-09', session: 'signed-deep-control', report: 1, profile: signedProfile,
+    expected: { stage: 'wasm', outcome: 'runtime-exhausted', quota_reason: 'continuation bytes', stack: [], metrics: { continuation_peak_bytes: 4096 } } },
+  { id: 'REC-10', session: 'signed-deep', report: 4, profile: signedProfile,
+    expected: { stage: 'wasm', outcome: 'normal', stack: [{ type: 'I64', value: '0' }], metrics: { continuation_peak_bytes: 4096 } } },
+  { id: 'REC-11', session: 'signed-deep', report: 5, profile: signedProfile,
+    expected: { stage: 'wasm', outcome: 'runtime-exhausted', quota_reason: 'continuation bytes', stack: [], metrics: { continuation_peak_bytes: 4096 } } },
 ];
 
 let out = null;
@@ -100,6 +131,9 @@ function observe(report, expected) {
   for (const key of Object.keys(expected)) {
     if (key === 'stack') {
       observed.stack = (report.stack ?? []).map(entry => ({ type: entry.type, value: entry.value }));
+    } else if (key === 'metrics') {
+      observed.metrics = Object.fromEntries(Object.keys(expected.metrics)
+        .map(name => [name, report.metrics?.[name]]));
     } else {
       observed[key] = report[key];
     }
