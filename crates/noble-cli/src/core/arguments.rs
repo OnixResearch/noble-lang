@@ -8,6 +8,10 @@ pub(super) struct Options {
     pub declared_modules: bool,
     pub retained_source_bytes: Option<u32>,
     pub signed_self_recursion: bool,
+    pub size_change_evidence: bool,
+    pub size_change_certificate: Option<std::path::PathBuf>,
+    pub size_change_lean: Option<std::path::PathBuf>,
+    pub size_change_lean_library: Option<std::path::PathBuf>,
     pub text_byte_cursor: bool,
     pub bindings: Option<std::path::PathBuf>,
     pub manifest: Option<bindings::Manifest>,
@@ -59,6 +63,10 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
         declared_modules: false,
         retained_source_bytes: None,
         signed_self_recursion: false,
+        size_change_evidence: false,
+        size_change_certificate: None,
+        size_change_lean: None,
+        size_change_lean_library: None,
         text_byte_cursor: false,
         bindings: None,
         manifest: None,
@@ -74,7 +82,7 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
             .ok_or_else(usage))));
         at = attempt!(at.checked_add(1).ok_or_else(usage));
     }
-    let mut seen = [""; 13];
+    let mut seen = [""; 16];
     let mut seen_count = 0_usize;
     while at < arguments.len() {
         let name = attempt!(arguments[at].to_str().ok_or_else(usage));
@@ -96,6 +104,10 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
         }
         if name == "--signed-self-recursion" {
             options.signed_self_recursion = true;
+            continue;
+        }
+        if name == "--size-change-evidence" {
+            options.size_change_evidence = true;
             continue;
         }
         if name == "--text-byte-cursor" {
@@ -120,6 +132,24 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
             || is_session && !options.framed
             || !is_session && !options.compile_only)
     {
+        return Err(usage());
+    }
+    // Size-change evidence is a session-only, signed-profile report: it carries a Lean certificate
+    // and never changes what ordinary execution accepts.
+    if options.size_change_evidence
+        && (!is_session
+            || !options.declared_text()
+            || !options.signed_self_recursion
+            || options.size_change_certificate.is_none())
+    {
+        return Err(usage());
+    }
+    if !options.size_change_evidence
+        && (options.size_change_certificate.is_some() || options.size_change_lean.is_some())
+    {
+        return Err(usage());
+    }
+    if options.size_change_lean.is_some() != options.size_change_lean_library.is_some() {
         return Err(usage());
     }
     if !options.declared_modules && !options.modules.is_empty() {
@@ -192,6 +222,15 @@ fn set(
         },
         "--emit" => options.emit = Some(std::path::PathBuf::from(value)),
         "--bindings" => options.bindings = Some(std::path::PathBuf::from(value)),
+        "--size-change-certificate" => {
+            options.size_change_certificate = Some(std::path::PathBuf::from(value));
+        }
+        "--size-change-lean" => {
+            options.size_change_lean = Some(std::path::PathBuf::from(value));
+        }
+        "--size-change-lean-library" => {
+            options.size_change_lean_library = Some(std::path::PathBuf::from(value));
+        }
         "--source-bytes" => options.limits.bytes = attempt!(limit(value, maximum.bytes)),
         "--retained-source-bytes" => {
             let bytes = attempt!(limit(
@@ -414,6 +453,121 @@ mod tests {
             flagged.is_err(),
             "retained opt-in must not extend declared run"
         );
+        Ok(())
+    }
+
+    #[test]
+    fn size_change_evidence_is_an_opt_in_signed_session() -> Result<(), std::string::String> {
+        let ordinary = flags(&["session", "--framed"])?;
+        assert!(!ordinary.size_change_evidence);
+        assert!(ordinary.size_change_certificate.is_none());
+        assert!(ordinary.size_change_lean.is_none());
+        assert!(ordinary.size_change_lean_library.is_none());
+
+        let selected = flags(&[
+            "session",
+            "--framed",
+            "--declared-modules",
+            "--text-byte-cursor",
+            "--signed-self-recursion",
+            "--size-change-evidence",
+            "--size-change-certificate",
+            "new-evidence-directory",
+            "--size-change-lean",
+            "lean",
+            "--size-change-lean-library",
+            "lean-library",
+        ])?;
+        assert!(selected.size_change_evidence);
+        assert_eq!(
+            selected.size_change_certificate.as_deref(),
+            Some(std::path::Path::new("new-evidence-directory"))
+        );
+        assert_eq!(
+            selected.size_change_lean.as_deref(),
+            Some(std::path::Path::new("lean"))
+        );
+        assert_eq!(
+            selected.size_change_lean_library.as_deref(),
+            Some(std::path::Path::new("lean-library"))
+        );
+
+        for arguments in [
+            &[
+                "session",
+                "--framed",
+                "--declared-modules",
+                "--text-byte-cursor",
+                "--signed-self-recursion",
+                "--size-change-certificate",
+                "new-evidence-directory",
+            ][..],
+            &[
+                "session",
+                "--framed",
+                "--declared-modules",
+                "--text-byte-cursor",
+                "--size-change-evidence",
+                "--size-change-certificate",
+                "new-evidence-directory",
+            ][..],
+            &[
+                "session",
+                "--framed",
+                "--declared-modules",
+                "--text-byte-cursor",
+                "--signed-self-recursion",
+                "--size-change-evidence",
+            ][..],
+            &[
+                "session",
+                "--framed",
+                "--declared-modules",
+                "--text-byte-cursor",
+                "--signed-self-recursion",
+                "--size-change-evidence",
+                "--size-change-certificate",
+                "new-evidence-directory",
+                "--size-change-lean-library",
+                "lean-library",
+            ][..],
+            &[
+                "session",
+                "--framed",
+                "--declared-modules",
+                "--text-byte-cursor",
+                "--signed-self-recursion",
+                "--size-change-evidence",
+                "--size-change-evidence",
+                "--size-change-certificate",
+                "new-evidence-directory",
+            ][..],
+            &[
+                "session",
+                "--framed",
+                "--declared-modules",
+                "--signed-self-recursion",
+                "--size-change-evidence",
+                "--size-change-certificate",
+                "new-evidence-directory",
+            ][..],
+            &[
+                "compile",
+                "expression.noble",
+                "--declared-modules",
+                "--text-byte-cursor",
+                "--signed-self-recursion",
+                "--size-change-evidence",
+                "--size-change-certificate",
+                "new-evidence-directory",
+            ][..],
+        ] {
+            if flags(arguments).is_ok() {
+                return Err(std::format!(
+                    "accepted invalid size-change flags: {arguments:?}"
+                ));
+            }
+        }
         Ok(())
     }
 }

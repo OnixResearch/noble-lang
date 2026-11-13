@@ -1284,6 +1284,29 @@ impl ModulePrepared {
     pub const fn proof_obligations(&self) -> Option<&crate::intrinsic::ProofBatch> {
         self.pending.as_ref()
     }
+    /// Size-change evidence for every self-recursive definition this unit
+    /// installed (issue #101). A definition with no lexical self call carries
+    /// none; a definition outside the bounded classifier carries an
+    /// `Unsupported` verdict rather than an assumed one.
+    pub fn size_change_evidence(&self) -> alloc::vec::Vec<crate::source::Evidence> {
+        let definitions = &self.staged.source.definitions;
+        let start = self.previous_source_definitions_len.min(definitions.len());
+        let environment = match self.staged.source.declared.as_ref() {
+            Some(context) => &context.environment,
+            None => return alloc::vec::Vec::new(),
+        };
+        let recursive_count = definitions[start..]
+            .iter()
+            .filter(|definition| crate::source::sizechange::calls_self(definition))
+            .count();
+        let mut evidence = alloc::vec::Vec::with_capacity(recursive_count);
+        for definition in &definitions[start..] {
+            if crate::source::sizechange::calls_self(definition) {
+                evidence.push(crate::source::sizechange::evidence(definition, environment));
+            }
+        }
+        evidence
+    }
     /// Typed, non-executable contract metadata for the newly staged module,
     /// including modules with no proof; this is not a proof receipt.
     pub fn contract_goals(&self) -> impl Iterator<Item = &crate::intrinsic::ContractGoal> {

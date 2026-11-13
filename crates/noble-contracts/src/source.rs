@@ -16,6 +16,7 @@ mod preparation;
 pub mod proof;
 mod replacement;
 mod resolution;
+mod sizechange;
 
 #[expect(
     tigerstyle::non_trait_imports,
@@ -28,6 +29,9 @@ pub use declared::{
     BoundOperation, CheckedNominal, CheckedProgramInterface, CheckedProgramOwner,
     DeclaredTextSourceOwner, ModuleKind, ModulePrepared, ModuleSession, ProgramClosureError,
     RebuiltImportDefinition, SignedSourceOwner,
+};
+pub use sizechange::{
+    certificate, Argument, Evidence, Measure, Site, Unsupported, Verdict, Witness,
 };
 
 /// Core vocabulary resolved by the same checker as a worker's pure source.

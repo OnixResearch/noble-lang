@@ -1,5 +1,7 @@
 //! Declared-Modules-v1 namespace transactions and selected-worker expression execution.
 
+mod sizechange;
+
 impl super::Session {
     pub(super) fn commit_declared(
         &mut self,
@@ -258,6 +260,23 @@ impl super::Session {
             contract_reports.push(crate::workflow::encoding::Json::Object(fields));
         }
         let contracts = crate::workflow::encoding::Json::Array(contract_reports);
+        // The opt-in size-change field is computed from the checked unit before it commits: a
+        // definition outside the classifier reports why, never an assumed verdict.
+        let size_change_evidence = if options.size_change_evidence {
+            Some(prepared.size_change_evidence())
+        } else {
+            None
+        };
+        // The caller-requested Lean check is part of this opt-in link operation. Run it before
+        // committing so a rejected certificate cannot leave an unreported namespace transition.
+        let size_change = match size_change_evidence {
+            Some(evidence) => Some(attempt!(sizechange::report(
+                &evidence,
+                self.submissions,
+                options
+            ))),
+            None => None,
+        };
         let (committed, proof_report) = if has_proofs {
             attempt!(self.commit_declared_proofs(prepared, source, options.limits))
         } else {
@@ -276,6 +295,7 @@ impl super::Session {
                 binding,
                 contracts,
                 proof_report,
+                size_change,
             )),
             Err(error) => Ok(super::output::Report::declared_source_error(
                 &error,
