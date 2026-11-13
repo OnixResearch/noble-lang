@@ -1139,24 +1139,31 @@ signature-checked recursive definitions: it classifies the arguments a definitio
 its self-call sites, turns them into a call graph, and reports a shared decreasing measure.
 
 The verdict is exact (`certifiedAll_iff_shared`) and acceptance is a Lean-checked certificate, but
-the certificate is about the *classified relations*, not about an execution: the termination
-theorems rule out infinite runs that respect those relations. They do not evaluate arguments, and
-the classifier's `decrease` claim needs the site's positivity guard (`0 < value`) while `Sites` and
-`Run` have no guard at all, so nothing here proves that a guarded call actually drops. Supplying
-that connection is the front end's obligation.
+the certificate is about the *classified relations*, not about an arbitrary execution: the
+termination theorems rule out infinite runs that respect those relations. The guarded execution
+model (`SizeChangeGuarded`) supplies the connection the classifier needs — a step is the chosen
+site's argument evaluation, a site whose argument is the predecessor is taken only while that
+measure is positive, and `guarded_terminates` proves an accepted family admits no such run. What
+remains a front-end obligation is that a checked body's evaluation agrees with the classification.
 
-A refusal states exactly what failed: no measure decreases at every site. It does not name a call
-cycle. **A refusal means "not shown terminating", not "diverges"**: the analysis is deliberately
-incomplete, so a non-decreasing self-call, a measure passed through unchanged, or wrapping `I64`
-arithmetic used as a measure are all refused without any claim that the program loops.
+A refusal now names what failed: for every measure, a self-call site at which that measure does not
+decrease (`certifiedAll_refusal_site`), and a family is refused exactly when every measure has such
+a site (`certifiedAll_refusal_iff`). **A refusal means "not shown terminating", not "diverges"**:
+the analysis is deliberately incomplete, so a non-decreasing self-call, a measure passed through
+unchanged, or wrapping `I64` arithmetic used as a measure are all refused without any claim that the
+program loops.
+
+The closed theorem inventory and strict axiom audit are in
+`proofs/m3/size-change-inventory.json` and `verification/size-change/check.mjs`. This section
+describes the model, not yet an executable front end: a checked body's evaluation must still be
+classified and its evidence attached to an ordinary report only when explicitly requested. A
+definition outside the bounded profile must report `unsupported`, and ordinary execution must not
+require a certificate.
 
 The matrix and call-program lane (`SizeChangeMatrix*`, `SizeChangeCallProgram`) proves termination
 only for runs whose node sequence is periodic, with the period and a strict diagonal of the period
 product supplied as hypotheses. Periodicity is not derived from the call graph, so that lane is not
 a termination proof for a program either.
-
-There is no CLI integration yet; the specification, decision procedure and conformance fixtures are
-in `proofs/m3`.
 
 ## What works today
 
