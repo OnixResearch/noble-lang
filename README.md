@@ -168,7 +168,7 @@ With the existing pinned Lake package cache and selected Nix tools available:
 ```sh
 NODE=/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node
 env -i "$NODE" verification/mathlib-i64/compare.mjs \
-  --output "$HOME/.cache/noble-i64-comparison-$(date +%s)"
+  --output "<new directory outside the repository>"
 ```
 
 For another checkout, select `tool_paths.node.output` from
@@ -1138,25 +1138,52 @@ see the [active change](.cairn/changes/live-wasm-reload/tasks.md) and
 signature-checked recursive definitions: it classifies the arguments a definition passes at each of
 its self-call sites, turns them into a call graph, and reports a shared decreasing measure.
 
-The verdict is exact (`certifiedAll_iff_shared`) and acceptance is a Lean-checked certificate, but
-the certificate is about the *classified relations*, not about an execution: the termination
-theorems rule out infinite runs that respect those relations. They do not evaluate arguments, and
-the classifier's `decrease` claim needs the site's positivity guard (`0 < value`) while `Sites` and
-`Run` have no guard at all, so nothing here proves that a guarded call actually drops. Supplying
-that connection is the front end's obligation.
+The verdict is exact (`certifiedAll_iff_shared`) within that model. The checker can emit a Lean
+certificate and optionally ask the selected Lean binary to re-check it, but the certificate is
+about the *classified relations*, not an arbitrary execution: the termination theorems rule out
+infinite runs that respect those relations. The guarded execution model (`SizeChangeGuarded`)
+supplies the connection the classifier needs — a step is the chosen site's argument evaluation, a
+site whose argument is the predecessor is taken only while that measure is positive, and
+`guarded_terminates` proves an accepted family admits no such run. What remains a front-end
+obligation is that a checked body's evaluation agrees with the classification.
 
-A refusal states exactly what failed: no measure decreases at every site. It does not name a call
-cycle. **A refusal means "not shown terminating", not "diverges"**: the analysis is deliberately
-incomplete, so a non-decreasing self-call, a measure passed through unchanged, or wrapping `I64`
-arithmetic used as a measure are all refused without any claim that the program loops.
+A refusal now names what failed: for every measure, a self-call site at which that measure does not
+decrease (`certifiedAll_refusal_site`), and a family is refused exactly when every measure has such
+a site (`certifiedAll_refusal_iff`). **A refusal means "not shown terminating", not "diverges"**:
+the analysis is deliberately incomplete, so a non-decreasing self-call, a measure passed through
+unchanged, or wrapping `I64` arithmetic used as a measure are all refused without any claim that the
+program loops.
+
+The closed theorem inventory and strict axiom audit are in
+`proofs/m3/size-change-inventory.json` and `verification/size-change/check.mjs`. This section
+describes the reference model and its bounded Rust front end. In a framed
+`Signed-Declared-Text-v1` session, `--size-change-evidence` adds a `size_change` field to each module
+link report and `--size-change-certificate <new directory outside the repository>` writes one Lean
+certificate per report. The CLI creates that directory if absent (its parent must exist)
+and never overwrites an existing certificate file. Adding
+`--size-change-lean <Lean executable>` and
+`--size-change-lean-library <Lean library directory>` checks each certificate before its namespace
+transition commits and records the binary digest, version, and library path. A definition outside
+the bounded profile reports `unsupported`; ordinary execution does not carry the field or require a
+certificate. The checker implements the shared-measure criterion, not general size-change closure.
+
+The executable model and conformance lanes can be reproduced with the repository-selected Node:
+
+```sh
+SELECTED_NODE verification/size-change/check.mjs --output "<new directory outside the repository>"
+SELECTED_NODE verification/size-change/scenarios.mjs "<new directory outside the repository>"
+```
+
+The lane builds the CLI and isolated Lean library from the selected toolchains, verifies the four
+registered cases, checks the generated certificates independently and through the CLI, and records
+receipts bound to the clean source commit. The model theorem remains separate from the front end's
+classification: no theorem currently proves that a checked body's execution matches that
+classification.
 
 The matrix and call-program lane (`SizeChangeMatrix*`, `SizeChangeCallProgram`) proves termination
 only for runs whose node sequence is periodic, with the period and a strict diagonal of the period
 product supplied as hypotheses. Periodicity is not derived from the call graph, so that lane is not
 a termination proof for a program either.
-
-There is no CLI integration yet; the specification, decision procedure and conformance fixtures are
-in `proofs/m3`.
 
 ## What works today
 

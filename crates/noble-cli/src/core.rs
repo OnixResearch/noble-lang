@@ -187,6 +187,9 @@ pub const USAGE: &str = "usage:
   noble session --framed --declared-modules --bindings HOST_FILE [--opt off|on] [--emit NEW_DIR]
   noble session --framed --declared-modules --signed-self-recursion --bindings HOST_FILE [--opt off|on] [--emit NEW_DIR]
   noble session --framed --declared-modules --text-byte-cursor [--signed-self-recursion] [--opt off|on] [--emit NEW_DIR]
+  noble session --framed --declared-modules --text-byte-cursor --signed-self-recursion --size-change-evidence
+                --size-change-certificate NEW_DIRECTORY [--size-change-lean BINARY
+                --size-change-lean-library LEAN_LIBRARY_DIR]
   Signed-Declared-Text-v1 framed control: :release-observed-roots STORE_UUID OBSERVATION_ID
   sends no source submission; after the caller has compared an observed aggregate,
   submit a checked `drop` expression first, then release that report's exact
@@ -211,6 +214,15 @@ new pure declared-text profile with text.byte, signed I64 <, and no host
 bindings or ambient test effects. --signed-self-recursion also requires
 --declared-modules, an exported self word and an explicit fixed signature.
 Existing ordinary declared modules retain their explicit --bindings file.
+--size-change-evidence (session only, with --text-byte-cursor and
+--signed-self-recursion) adds a
+size_change field to each module link report and writes that report's Lean
+certificate into --size-change-certificate (one new directory, one file per
+report): for every recursive definition, the shared-measure
+verdict, the self-call sites and, on refusal, the site that fails each measure.
+Ordinary execution never requires it. --size-change-lean additionally re-checks
+the certificate with that exact binary and LEAN_PATH set to
+--size-change-lean-library, and refuses the report if Lean rejects it.
 run checks one complete file before executing any of it.
 session reads one source submission per line; --framed reads a decimal byte count,
 newline, then exactly that many source bytes (permits multiline and invalid UTF-8).
@@ -257,6 +269,20 @@ impl Session {
         } else {
             None
         };
+        if let Some(directory) = &options.size_change_certificate {
+            std::fs::create_dir(directory).map_err(|error| {
+                output::Failure::new(
+                    output::ErrorContext {
+                        stage: "arguments",
+                        outcome: "invalid-input",
+                    },
+                    std::format!(
+                        "cannot create size-change certificate directory {}: {error}",
+                        directory.display()
+                    ),
+                )
+            })?;
+        }
         Ok(Self {
             frontend: if options.text_byte_cursor {
                 noble_contracts::source::Session::new_text_cursor()

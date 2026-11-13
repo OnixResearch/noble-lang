@@ -1309,6 +1309,38 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: REC-SC-01 for K-CHECK-02
+
+- GIVEN the `Signed-Declared-Text-v1` profile and every field of `input` in [REC-SC-01](../../../specs/conformance/recursion-cases.json)
+- WHEN the `static` procedure for case `REC-SC-01` runs against those inputs
+- THEN the observations match every field of `expected` in case `REC-SC-01`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: REC-SC-02 for K-CHECK-02
+
+- GIVEN the `Signed-Declared-Text-v1` profile and every field of `input` in [REC-SC-02](../../../specs/conformance/recursion-cases.json)
+- WHEN the `static` procedure for case `REC-SC-02` runs against those inputs
+- THEN the observations match every field of `expected` in case `REC-SC-02`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: REC-SC-03 for K-CHECK-02
+
+- GIVEN the `Signed-Declared-Text-v1` profile and every field of `input` in [REC-SC-03](../../../specs/conformance/recursion-cases.json)
+- WHEN the `static` procedure for case `REC-SC-03` runs against those inputs
+- THEN the observations match every field of `expected` in case `REC-SC-03`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: REC-SC-04 for K-CHECK-02
+
+- GIVEN the `Signed-Declared-Text-v1` profile and every field of `input` in [REC-SC-04](../../../specs/conformance/recursion-cases.json)
+- WHEN the `static` procedure for case `REC-SC-04` runs against those inputs
+- THEN the observations match every field of `expected` in case `REC-SC-04`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: K-CHECK-03

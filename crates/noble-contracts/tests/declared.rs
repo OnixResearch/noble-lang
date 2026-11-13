@@ -23,6 +23,9 @@ mod origin;
 #[path = "declared/signatures.rs"]
 mod signatures;
 
+#[path = "declared/sizechange.rs"]
+mod sizechange;
+
 const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
     bytes: 65_536,
     nodes: 16_384,

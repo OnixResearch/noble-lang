@@ -692,6 +692,154 @@
           ]
         }
       ]
+    },
+    {
+      "id": "REC-SC-01",
+      "profile": "Signed-Declared-Text-v1",
+      "kind": "static",
+      "requirements": ["K-CHECK-02"],
+      "input": {
+        "submissions": [
+          "module list@1 [ signature go forall<S:stack> [ S List<I64> -- S I64 ! pure ] export go def go [ [ 0 ] [ swap drop go ] list.case ] ]"
+        ],
+        "session_flags": [
+          "--framed", "--declared-modules", "--text-byte-cursor", "--signed-self-recursion",
+          "--retained-source-bytes", "262144", "--size-change-evidence",
+          "--size-change-certificate", "<new-directory>"
+        ]
+      },
+      "expected": {
+        "stage": "link",
+        "outcome": "linked",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "size_change": {
+          "schema": "noble-size-change/v1",
+          "criterion": "shared-measure: one declared measure decreases at every self-call site",
+          "profile": "list structure and guarded i64 counters under one stack prefix",
+          "definitions": [{
+            "definition": "go",
+            "measures": ["structural"],
+            "verdict": "accepted",
+            "measure": 0,
+            "sites": [{"arguments": ["tail"], "guarded": [false]}]
+          }],
+          "lean_check": null
+        }
+      },
+      "state": {"implementation": "implemented", "execution": "not-run", "proof": "open", "trust": "unassessed"},
+      "evidence": []
+    },
+    {
+      "id": "REC-SC-02",
+      "profile": "Signed-Declared-Text-v1",
+      "kind": "static",
+      "requirements": ["K-CHECK-02"],
+      "input": {
+        "submissions": [
+          "module down@1 [ signature down forall<S:stack> [ S I64 -- S I64 ! pure ] export down def down [ dup 0 swap < [ 1 - down ] [ ] if ] ]"
+        ],
+        "session_flags": [
+          "--framed", "--declared-modules", "--text-byte-cursor", "--signed-self-recursion",
+          "--retained-source-bytes", "262144", "--size-change-evidence",
+          "--size-change-certificate", "<new-directory>"
+        ]
+      },
+      "expected": {
+        "stage": "link",
+        "outcome": "linked",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "size_change": {
+          "schema": "noble-size-change/v1",
+          "criterion": "shared-measure: one declared measure decreases at every self-call site",
+          "profile": "list structure and guarded i64 counters under one stack prefix",
+          "definitions": [{
+            "definition": "down",
+            "measures": ["counter"],
+            "verdict": "accepted",
+            "measure": 0,
+            "sites": [{"arguments": ["predecessor"], "guarded": [true]}]
+          }],
+          "lean_check": null
+        }
+      },
+      "state": {"implementation": "implemented", "execution": "not-run", "proof": "open", "trust": "unassessed"},
+      "evidence": []
+    },
+    {
+      "id": "REC-SC-03",
+      "profile": "Signed-Declared-Text-v1",
+      "kind": "static",
+      "requirements": ["K-CHECK-02"],
+      "input": {
+        "submissions": [
+          "module same@1 [ signature same forall<S:stack> [ S I64 -- S I64 ! pure ] export same def same [ same ] ]"
+        ],
+        "session_flags": [
+          "--framed", "--declared-modules", "--text-byte-cursor", "--signed-self-recursion",
+          "--retained-source-bytes", "262144", "--size-change-evidence",
+          "--size-change-certificate", "<new-directory>"
+        ]
+      },
+      "expected": {
+        "stage": "link",
+        "outcome": "linked",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "size_change": {
+          "schema": "noble-size-change/v1",
+          "criterion": "shared-measure: one declared measure decreases at every self-call site",
+          "profile": "list structure and guarded i64 counters under one stack prefix",
+          "definitions": [{
+            "definition": "same",
+            "measures": ["counter"],
+            "verdict": "refused",
+            "sites": [{"arguments": ["same"], "guarded": [false]}],
+            "witnesses": [{"measure": 0, "site": 0, "argument": "same"}]
+          }],
+          "lean_check": null
+        }
+      },
+      "state": {"implementation": "implemented", "execution": "not-run", "proof": "open", "trust": "unassessed"},
+      "evidence": []
+    },
+    {
+      "id": "REC-SC-04",
+      "profile": "Signed-Declared-Text-v1",
+      "kind": "static",
+      "requirements": ["K-CHECK-02"],
+      "input": {
+        "submissions": [
+          "module wrap@1 [ signature wrap forall<S:stack> [ S I64 -- S I64 ! pure ] export wrap def wrap [ 1 + wrap ] ]"
+        ],
+        "session_flags": [
+          "--framed", "--declared-modules", "--text-byte-cursor", "--signed-self-recursion",
+          "--retained-source-bytes", "262144", "--size-change-evidence",
+          "--size-change-certificate", "<new-directory>"
+        ]
+      },
+      "expected": {
+        "stage": "link",
+        "outcome": "linked",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "size_change": {
+          "schema": "noble-size-change/v1",
+          "criterion": "shared-measure: one declared measure decreases at every self-call site",
+          "profile": "list structure and guarded i64 counters under one stack prefix",
+          "definitions": [{
+            "definition": "wrap",
+            "measures": ["counter"],
+            "verdict": "refused",
+            "sites": [{"arguments": ["opaque"], "guarded": [false]}],
+            "witnesses": [{"measure": 0, "site": 0, "argument": "opaque"}]
+          }],
+          "lean_check": null
+        }
+      },
+      "state": {"implementation": "implemented", "execution": "not-run", "proof": "open", "trust": "unassessed"},
+      "evidence": []
     }
   ]
 }

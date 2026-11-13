@@ -1,0 +1,1158 @@
+{
+  "schema": "noble-size-change-inventory/v1",
+  "issue": 101,
+  "modules": [
+    "NobleM2.SizeChange",
+    "NobleM2.SizeChangeBounded",
+    "NobleM2.SizeChangeCallGraph",
+    "NobleM2.SizeChangeCallProgram",
+    "NobleM2.SizeChangeChecker",
+    "NobleM2.SizeChangeClosure",
+    "NobleM2.SizeChangeClosureSound",
+    "NobleM2.SizeChangeCounting",
+    "NobleM2.SizeChangeCriterion",
+    "NobleM2.SizeChangeDecEq",
+    "NobleM2.SizeChangeEnumeration",
+    "NobleM2.SizeChangeExact",
+    "NobleM2.SizeChangeFixtures",
+    "NobleM2.SizeChangeGuarded",
+    "NobleM2.SizeChangeIdempotent",
+    "NobleM2.SizeChangeMatrix",
+    "NobleM2.SizeChangeMatrixAssoc",
+    "NobleM2.SizeChangeMatrixCycle",
+    "NobleM2.SizeChangeMatrixDecEq",
+    "NobleM2.SizeChangeMatrixEnumeration",
+    "NobleM2.SizeChangeMatrixExponent",
+    "NobleM2.SizeChangeMatrixExtract",
+    "NobleM2.SizeChangeMatrixJoinFold",
+    "NobleM2.SizeChangeMatrixMonotone",
+    "NobleM2.SizeChangeMatrixPath",
+    "NobleM2.SizeChangeMatrixPathProduct",
+    "NobleM2.SizeChangeMatrixPeriod",
+    "NobleM2.SizeChangeMatrixPigeonhole",
+    "NobleM2.SizeChangeMatrixPrefix",
+    "NobleM2.SizeChangeMatrixPreserve",
+    "NobleM2.SizeChangeMatrixRepeat",
+    "NobleM2.SizeChangeMatrixScan",
+    "NobleM2.SizeChangeMatrixSemantics",
+    "NobleM2.SizeChangeMatrixShortening",
+    "NobleM2.SizeChangeMatrixSplice",
+    "NobleM2.SizeChangeMatrixStrict",
+    "NobleM2.SizeChangeMonoid",
+    "NobleM2.SizeChangePowers",
+    "NobleM2.SizeChangeRefusal",
+    "NobleM2.SizeChangeRepeat",
+    "NobleM2.SizeChangeSites",
+    "NobleM2.SizeChangeTightness",
+    "NobleM2.SizeChangeUniverse"
+  ],
+  "policy": {
+    "axioms": [
+      "propext",
+      "Quot.sound"
+    ],
+    "basis": "Every size-change theorem must stay constructive; Classical.choice in this family fails the lane."
+  },
+  "theorems": [
+    {
+      "name": "NobleM2.SizeChange.Rel.compose_unknown_left",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.compose_unknown_right",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.compose_decrease_left",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.compose_decrease_right",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.known_of_decrease",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.known_compose",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.allowed_compose",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.compose_decrease_unknown_raises",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.eq_decrease_of_compose",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.certified_sound",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.certified_refusal",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_self_decrease",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.certified_closure",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.no_decreasing_chain",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.certified_terminates",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.tail_accepted",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.countdown_accepted",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.same_refused",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.wrapping_refused",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.wrapping_reports_no_decrease",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.grow_refused",
+      "module": "NobleM2.SizeChange"
+    },
+    {
+      "name": "NobleM2.SizeChange.decreasesWithin_sound",
+      "module": "NobleM2.SizeChangeBounded"
+    },
+    {
+      "name": "NobleM2.SizeChange.decreasesWithin_mono",
+      "module": "NobleM2.SizeChangeBounded"
+    },
+    {
+      "name": "NobleM2.SizeChange.power_one_apply",
+      "module": "NobleM2.SizeChangeBounded"
+    },
+    {
+      "name": "NobleM2.SizeChange.decreasesWithin_zero",
+      "module": "NobleM2.SizeChangeBounded"
+    },
+    {
+      "name": "NobleM2.SizeChange.decreasesWithin_complete_zero",
+      "module": "NobleM2.SizeChangeBounded"
+    },
+    {
+      "name": "NobleM2.SizeChange.decreasingOne_found",
+      "module": "NobleM2.SizeChangeBounded"
+    },
+    {
+      "name": "NobleM2.SizeChange.reaches_trans",
+      "module": "NobleM2.SizeChangeCallGraph"
+    },
+    {
+      "name": "NobleM2.SizeChange.sameSCC_refl",
+      "module": "NobleM2.SizeChangeCallGraph"
+    },
+    {
+      "name": "NobleM2.SizeChange.sameSCC_symm",
+      "module": "NobleM2.SizeChangeCallGraph"
+    },
+    {
+      "name": "NobleM2.SizeChange.sameSCC_trans",
+      "module": "NobleM2.SizeChangeCallGraph"
+    },
+    {
+      "name": "NobleM2.SizeChange.onCycleEdge_sameSCC",
+      "module": "NobleM2.SizeChangeCallGraph"
+    },
+    {
+      "name": "NobleM2.SizeChange.twoCycle_twoCycleEdges",
+      "module": "NobleM2.SizeChangeCallGraph"
+    },
+    {
+      "name": "NobleM2.SizeChange.twoCycle_sameSCC",
+      "module": "NobleM2.SizeChangeCallGraph"
+    },
+    {
+      "name": "NobleM2.SizeChange.lasso_follows",
+      "module": "NobleM2.SizeChangeCallGraph"
+    },
+    {
+      "name": "NobleM2.SizeChange.not_every_sequence_periodic",
+      "module": "NobleM2.SizeChangeCallGraph"
+    },
+    {
+      "name": "NobleM2.SizeChange.step_periodic",
+      "module": "NobleM2.SizeChangeCallProgram"
+    },
+    {
+      "name": "NobleM2.SizeChange.call_run_terminates",
+      "module": "NobleM2.SizeChangeCallProgram"
+    },
+    {
+      "name": "NobleM2.SizeChange.classify_equal_sound",
+      "module": "NobleM2.SizeChangeChecker"
+    },
+    {
+      "name": "NobleM2.SizeChange.classify_decrease_sound",
+      "module": "NobleM2.SizeChangeChecker"
+    },
+    {
+      "name": "NobleM2.SizeChange.graphOf_decrease_sound",
+      "module": "NobleM2.SizeChangeChecker"
+    },
+    {
+      "name": "NobleM2.SizeChange.graphOf_equal_sound",
+      "module": "NobleM2.SizeChangeChecker"
+    },
+    {
+      "name": "NobleM2.SizeChange.checked_family_certified",
+      "module": "NobleM2.SizeChangeChecker"
+    },
+    {
+      "name": "NobleM2.SizeChange.checked_family_terminates",
+      "module": "NobleM2.SizeChangeChecker"
+    },
+    {
+      "name": "NobleM2.SizeChange.tailArgs_graph",
+      "module": "NobleM2.SizeChangeChecker"
+    },
+    {
+      "name": "NobleM2.SizeChange.tailArgs_certified",
+      "module": "NobleM2.SizeChangeChecker"
+    },
+    {
+      "name": "NobleM2.SizeChange.identityArgs_classified",
+      "module": "NobleM2.SizeChangeChecker"
+    },
+    {
+      "name": "NobleM2.SizeChange.identityArgs_not_decreasing",
+      "module": "NobleM2.SizeChangeChecker"
+    },
+    {
+      "name": "NobleM2.SizeChange.composeGraph_decrease_left",
+      "module": "NobleM2.SizeChangeClosure"
+    },
+    {
+      "name": "NobleM2.SizeChange.composeGraph_decrease_right",
+      "module": "NobleM2.SizeChangeClosure"
+    },
+    {
+      "name": "NobleM2.SizeChange.closure_decreases_at",
+      "module": "NobleM2.SizeChangeClosure"
+    },
+    {
+      "name": "NobleM2.SizeChange.closure_decreases",
+      "module": "NobleM2.SizeChangeClosure"
+    },
+    {
+      "name": "NobleM2.SizeChange.allEqual_no_decrease",
+      "module": "NobleM2.SizeChangeClosure"
+    },
+    {
+      "name": "NobleM2.SizeChange.composeGraph_allEqual",
+      "module": "NobleM2.SizeChangeClosure"
+    },
+    {
+      "name": "NobleM2.SizeChange.composeGraph_allEqual_no_decrease",
+      "module": "NobleM2.SizeChangeClosure"
+    },
+    {
+      "name": "NobleM2.SizeChange.closure_refuses_allEqual_site",
+      "module": "NobleM2.SizeChangeClosure"
+    },
+    {
+      "name": "NobleM2.SizeChange.pairDecreasing_closure",
+      "module": "NobleM2.SizeChangeClosure"
+    },
+    {
+      "name": "NobleM2.SizeChange.pairMixed_refused_by_closure",
+      "module": "NobleM2.SizeChangeClosure"
+    },
+    {
+      "name": "NobleM2.SizeChange.closure_uniform_terminates",
+      "module": "NobleM2.SizeChangeClosureSound"
+    },
+    {
+      "name": "NobleM2.SizeChange.closure_uniform_iff_sites",
+      "module": "NobleM2.SizeChangeClosureSound"
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_no_uniform",
+      "module": "NobleM2.SizeChangeClosureSound"
+    },
+    {
+      "name": "NobleM2.SizeChange.nodup_map_of_injective",
+      "module": "NobleM2.SizeChangeCounting"
+    },
+    {
+      "name": "NobleM2.SizeChange.decompose_of_mem",
+      "module": "NobleM2.SizeChangeCounting"
+    },
+    {
+      "name": "NobleM2.SizeChange.mem_of_ne_of_mem_append_cons",
+      "module": "NobleM2.SizeChangeCounting"
+    },
+    {
+      "name": "NobleM2.SizeChange.length_le_of_subset",
+      "module": "NobleM2.SizeChangeCounting"
+    },
+    {
+      "name": "NobleM2.SizeChange.injective_bound",
+      "module": "NobleM2.SizeChangeCounting"
+    },
+    {
+      "name": "NobleM2.SizeChange.certified_hasStrict",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.closure_hasStrict_of_certified",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.closure_criterion_refused_of_site",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_each",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_no_shared",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_product_unknown",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_compose_zero",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_compose_zero_ne_decrease",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_product_no_strict",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_zero_iff",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_one_iff",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.cycle_respects",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.cycleRun_state_returns",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.splitSites_refused_but_runs",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.fin_two_cases",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.alternate_zero_iff",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.alternate_one_iff",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.alternate_closed",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.alternate_closure_strict",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.alternate_respects",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.alternate_criterion_unsound",
+      "module": "NobleM2.SizeChangeCriterion"
+    },
+    {
+      "name": "NobleM2.SizeChange.pointwiseEq_true_iff",
+      "module": "NobleM2.SizeChangeDecEq"
+    },
+    {
+      "name": "NobleM2.SizeChange.pointwiseEq_same",
+      "module": "NobleM2.SizeChangeDecEq"
+    },
+    {
+      "name": "NobleM2.SizeChange.pointwiseEq_differs",
+      "module": "NobleM2.SizeChangeDecEq"
+    },
+    {
+      "name": "NobleM2.SizeChange.decEq_differs",
+      "module": "NobleM2.SizeChangeDecEq"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.mem_all",
+      "module": "NobleM2.SizeChangeEnumeration"
+    },
+    {
+      "name": "NobleM2.SizeChange.graphsAux_zero",
+      "module": "NobleM2.SizeChangeEnumeration"
+    },
+    {
+      "name": "NobleM2.SizeChange.graphsAux_length",
+      "module": "NobleM2.SizeChangeEnumeration"
+    },
+    {
+      "name": "NobleM2.SizeChange.mem_succ_of_mem",
+      "module": "NobleM2.SizeChangeEnumeration"
+    },
+    {
+      "name": "NobleM2.SizeChange.graphsAux_complete",
+      "module": "NobleM2.SizeChangeEnumeration"
+    },
+    {
+      "name": "NobleM2.SizeChange.certifiedAll_iff_shared",
+      "module": "NobleM2.SizeChangeExact"
+    },
+    {
+      "name": "NobleM2.SizeChange.listRecursionFixture_accepted",
+      "module": "NobleM2.SizeChangeFixtures"
+    },
+    {
+      "name": "NobleM2.SizeChange.countdownFixture_accepted",
+      "module": "NobleM2.SizeChangeFixtures"
+    },
+    {
+      "name": "NobleM2.SizeChange.nonDecreasingFixture_refused",
+      "module": "NobleM2.SizeChangeFixtures"
+    },
+    {
+      "name": "NobleM2.SizeChange.nonDecreasingFixture_no_shared",
+      "module": "NobleM2.SizeChangeFixtures"
+    },
+    {
+      "name": "NobleM2.SizeChange.wrappingFixture_refused",
+      "module": "NobleM2.SizeChangeFixtures"
+    },
+    {
+      "name": "NobleM2.SizeChange.wrappingFixture_no_shared",
+      "module": "NobleM2.SizeChangeFixtures"
+    },
+    {
+      "name": "NobleM2.SizeChange.arg_pred_of_classify_decrease",
+      "module": "NobleM2.SizeChangeGuarded"
+    },
+    {
+      "name": "NobleM2.SizeChange.arg_ne_pred_of_graph_ne_decrease",
+      "module": "NobleM2.SizeChangeGuarded"
+    },
+    {
+      "name": "NobleM2.SizeChange.guarded_run_drops",
+      "module": "NobleM2.SizeChangeGuarded"
+    },
+    {
+      "name": "NobleM2.SizeChange.guarded_terminates",
+      "module": "NobleM2.SizeChangeGuarded"
+    },
+    {
+      "name": "NobleM2.SizeChange.guarded_checked_family_terminates",
+      "module": "NobleM2.SizeChangeGuarded"
+    },
+    {
+      "name": "NobleM2.SizeChange.guarded_bridge_terminates",
+      "module": "NobleM2.SizeChangeGuarded"
+    },
+    {
+      "name": "NobleM2.SizeChange.countdownArgs_drops",
+      "module": "NobleM2.SizeChangeGuarded"
+    },
+    {
+      "name": "NobleM2.SizeChange.countdown_no_guarded_run",
+      "module": "NobleM2.SizeChangeGuarded"
+    },
+    {
+      "name": "NobleM2.SizeChange.countdown_guard_necessary",
+      "module": "NobleM2.SizeChangeGuarded"
+    },
+    {
+      "name": "NobleM2.SizeChange.staticArgs_not_certified",
+      "module": "NobleM2.SizeChangeGuarded"
+    },
+    {
+      "name": "NobleM2.SizeChange.staticArgs_no_shared",
+      "module": "NobleM2.SizeChangeGuarded"
+    },
+    {
+      "name": "NobleM2.SizeChange.idGraph_idempotent",
+      "module": "NobleM2.SizeChangeIdempotent"
+    },
+    {
+      "name": "NobleM2.SizeChange.idempotent_powers",
+      "module": "NobleM2.SizeChangeIdempotent"
+    },
+    {
+      "name": "NobleM2.SizeChange.idempotent_power_two_eq",
+      "module": "NobleM2.SizeChangeIdempotent"
+    },
+    {
+      "name": "NobleM2.SizeChange.idempotent_closure_powers",
+      "module": "NobleM2.SizeChangeIdempotent"
+    },
+    {
+      "name": "NobleM2.SizeChange.idempotent_compose_power",
+      "module": "NobleM2.SizeChangeIdempotent"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.compose_self",
+      "module": "NobleM2.SizeChangeIdempotent"
+    },
+    {
+      "name": "NobleM2.SizeChange.every_graph_idempotent",
+      "module": "NobleM2.SizeChangeIdempotent"
+    },
+    {
+      "name": "NobleM2.SizeChange.every_graph_powers",
+      "module": "NobleM2.SizeChangeIdempotent"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.compose_self",
+      "module": "NobleM2.SizeChangeMatrix"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.join_loses_same",
+      "module": "NobleM2.SizeChangeMatrix"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.compose_strict_left",
+      "module": "NobleM2.SizeChangeMatrix"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.compose_strict_right",
+      "module": "NobleM2.SizeChangeMatrix"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.join_unknown",
+      "module": "NobleM2.SizeChangeMatrix"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.join_comm_strict",
+      "module": "NobleM2.SizeChangeMatrix"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.join_assoc",
+      "module": "NobleM2.SizeChangeMatrix"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.join_comm",
+      "module": "NobleM2.SizeChangeMatrix"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.join_idem",
+      "module": "NobleM2.SizeChangeMatrix"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.join_unknown_right",
+      "module": "NobleM2.SizeChangeMatrix"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.compose_join_left",
+      "module": "NobleM2.SizeChangeMatrix"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.compose_join_right",
+      "module": "NobleM2.SizeChangeMatrix"
+    },
+    {
+      "name": "NobleM2.SizeChange.foldr_join_unknown_of_all_unknown",
+      "module": "NobleM2.SizeChangeMatrix"
+    },
+    {
+      "name": "NobleM2.SizeChange.join_unknown_left",
+      "module": "NobleM2.SizeChangeMatrix"
+    },
+    {
+      "name": "NobleM2.SizeChange.foldr_join_of_single",
+      "module": "NobleM2.SizeChangeMatrix"
+    },
+    {
+      "name": "NobleM2.SizeChange.composeMatrix_id_right",
+      "module": "NobleM2.SizeChangeMatrix"
+    },
+    {
+      "name": "NobleM2.SizeChange.same_compose_left",
+      "module": "NobleM2.SizeChangeMatrix"
+    },
+    {
+      "name": "NobleM2.SizeChange.composeMatrix_id_left",
+      "module": "NobleM2.SizeChangeMatrix"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.compose_assoc",
+      "module": "NobleM2.SizeChangeMatrixAssoc"
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_fold_join_left",
+      "module": "NobleM2.SizeChangeMatrixAssoc"
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_fold_join_right",
+      "module": "NobleM2.SizeChangeMatrixAssoc"
+    },
+    {
+      "name": "NobleM2.SizeChange.cycle_pair_drops",
+      "module": "NobleM2.SizeChangeMatrixCycle"
+    },
+    {
+      "name": "NobleM2.SizeChange.cycle_terminates",
+      "module": "NobleM2.SizeChangeMatrixCycle"
+    },
+    {
+      "name": "NobleM2.SizeChange.funEq_true_iff",
+      "module": "NobleM2.SizeChangeMatrixDecEq"
+    },
+    {
+      "name": "NobleM2.SizeChange.rel4Eq_true_iff",
+      "module": "NobleM2.SizeChangeMatrixDecEq"
+    },
+    {
+      "name": "NobleM2.SizeChange.rowEq_true_iff",
+      "module": "NobleM2.SizeChangeMatrixDecEq"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixEq_true_iff",
+      "module": "NobleM2.SizeChangeMatrixDecEq"
+    },
+    {
+      "name": "NobleM2.SizeChange.mem_foldr_append",
+      "module": "NobleM2.SizeChangeMatrixEnumeration"
+    },
+    {
+      "name": "NobleM2.SizeChange.mem_of_mem_foldr_append",
+      "module": "NobleM2.SizeChangeMatrixEnumeration"
+    },
+    {
+      "name": "NobleM2.SizeChange.funAux_extend",
+      "module": "NobleM2.SizeChangeMatrixEnumeration"
+    },
+    {
+      "name": "NobleM2.SizeChange.funAux_complete",
+      "module": "NobleM2.SizeChangeMatrixEnumeration"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.mem_all",
+      "module": "NobleM2.SizeChangeMatrixEnumeration"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixAux_complete",
+      "module": "NobleM2.SizeChangeMatrixEnumeration"
+    },
+    {
+      "name": "NobleM2.SizeChange.foldr_length_const",
+      "module": "NobleM2.SizeChangeMatrixEnumeration"
+    },
+    {
+      "name": "NobleM2.SizeChange.funAux_length",
+      "module": "NobleM2.SizeChangeMatrixEnumeration"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.all_length",
+      "module": "NobleM2.SizeChangeMatrixEnumeration"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixAux_length",
+      "module": "NobleM2.SizeChangeMatrixEnumeration"
+    },
+    {
+      "name": "NobleM2.SizeChange.powerMatrix_add",
+      "module": "NobleM2.SizeChangeMatrixExponent"
+    },
+    {
+      "name": "NobleM2.SizeChange.join_eq_of_ne_unknown",
+      "module": "NobleM2.SizeChangeMatrixExtract"
+    },
+    {
+      "name": "NobleM2.SizeChange.foldr_join_eq_of_ne_unknown",
+      "module": "NobleM2.SizeChangeMatrixExtract"
+    },
+    {
+      "name": "NobleM2.SizeChange.join_fold_left",
+      "module": "NobleM2.SizeChangeMatrixJoinFold"
+    },
+    {
+      "name": "NobleM2.SizeChange.join_fold_right",
+      "module": "NobleM2.SizeChangeMatrixJoinFold"
+    },
+    {
+      "name": "NobleM2.SizeChange.join_swap",
+      "module": "NobleM2.SizeChangeMatrixJoinFold"
+    },
+    {
+      "name": "NobleM2.SizeChange.join_fold_zip",
+      "module": "NobleM2.SizeChangeMatrixJoinFold"
+    },
+    {
+      "name": "NobleM2.SizeChange.fold_unknown",
+      "module": "NobleM2.SizeChangeMatrixJoinFold"
+    },
+    {
+      "name": "NobleM2.SizeChange.fold_join_comm",
+      "module": "NobleM2.SizeChangeMatrixJoinFold"
+    },
+    {
+      "name": "NobleM2.SizeChange.composeMatrix_assoc",
+      "module": "NobleM2.SizeChangeMatrixJoinFold"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.weakerEq_refl",
+      "module": "NobleM2.SizeChangeMatrixMonotone"
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_weaker_left",
+      "module": "NobleM2.SizeChangeMatrixMonotone"
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_weaker_right",
+      "module": "NobleM2.SizeChangeMatrixMonotone"
+    },
+    {
+      "name": "NobleM2.SizeChange.MatrixSatisfies.strict",
+      "module": "NobleM2.SizeChangeMatrixPath"
+    },
+    {
+      "name": "NobleM2.SizeChange.MatrixSatisfies.nonIncrease",
+      "module": "NobleM2.SizeChangeMatrixPath"
+    },
+    {
+      "name": "NobleM2.SizeChange.MatrixSatisfies.sameEq",
+      "module": "NobleM2.SizeChangeMatrixPath"
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_strict_steps",
+      "module": "NobleM2.SizeChangeMatrixPath"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_stepList",
+      "module": "NobleM2.SizeChangeMatrixPathProduct"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_singleton",
+      "module": "NobleM2.SizeChangeMatrixPathProduct"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_stepList_const",
+      "module": "NobleM2.SizeChangeMatrixPathProduct"
+    },
+    {
+      "name": "NobleM2.SizeChange.nat_le_induction",
+      "module": "NobleM2.SizeChangeMatrixPeriod"
+    },
+    {
+      "name": "NobleM2.SizeChange.power_shift_usable",
+      "module": "NobleM2.SizeChangeMatrixPeriod"
+    },
+    {
+      "name": "NobleM2.SizeChange.power_recurrence",
+      "module": "NobleM2.SizeChangeMatrixPeriod"
+    },
+    {
+      "name": "NobleM2.SizeChange.power_iterate",
+      "module": "NobleM2.SizeChangeMatrixPeriod"
+    },
+    {
+      "name": "NobleM2.SizeChange.power_idempotent",
+      "module": "NobleM2.SizeChangeMatrixPeriod"
+    },
+    {
+      "name": "NobleM2.SizeChange.idempotent_power_stable",
+      "module": "NobleM2.SizeChangeMatrixPeriod"
+    },
+    {
+      "name": "NobleM2.SizeChange.idempotent_power_nodup_length",
+      "module": "NobleM2.SizeChangeMatrixPeriod"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrix_sequence_not_injective",
+      "module": "NobleM2.SizeChangeMatrixPigeonhole"
+    },
+    {
+      "name": "NobleM2.SizeChange.powerMatrix_collision",
+      "module": "NobleM2.SizeChangeMatrixPigeonhole"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrix_composites_bounded",
+      "module": "NobleM2.SizeChangeMatrixPigeonhole"
+    },
+    {
+      "name": "NobleM2.SizeChange.prefixProducts_length",
+      "module": "NobleM2.SizeChangeMatrixPrefix"
+    },
+    {
+      "name": "NobleM2.SizeChange.prefixProducts_not_nodup",
+      "module": "NobleM2.SizeChangeMatrixPrefix"
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_eq_nonIncrease",
+      "module": "NobleM2.SizeChangeMatrixPreserve"
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_eq_same",
+      "module": "NobleM2.SizeChangeMatrixPreserve"
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_nonIncrease_steps",
+      "module": "NobleM2.SizeChangeMatrixPreserve"
+    },
+    {
+      "name": "NobleM2.SizeChange.compose_same_steps",
+      "module": "NobleM2.SizeChangeMatrixPreserve"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixSatisfies_compose",
+      "module": "NobleM2.SizeChangeMatrixPreserve"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixSatisfies_id",
+      "module": "NobleM2.SizeChangeMatrixPreserve"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixSatisfies_power",
+      "module": "NobleM2.SizeChangeMatrixPreserve"
+    },
+    {
+      "name": "NobleM2.SizeChange.power_cycle_terminates",
+      "module": "NobleM2.SizeChangeMatrixPreserve"
+    },
+    {
+      "name": "NobleM2.SizeChange.pathMatrix_const",
+      "module": "NobleM2.SizeChangeMatrixPreserve"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixSatisfies_path",
+      "module": "NobleM2.SizeChangeMatrixPreserve"
+    },
+    {
+      "name": "NobleM2.SizeChange.pathMatrix_shift",
+      "module": "NobleM2.SizeChangeMatrixPreserve"
+    },
+    {
+      "name": "NobleM2.SizeChange.pathMatrix_period_blocks",
+      "module": "NobleM2.SizeChangeMatrixPreserve"
+    },
+    {
+      "name": "NobleM2.SizeChange.periodic_cycle_terminates",
+      "module": "NobleM2.SizeChangeMatrixPreserve"
+    },
+    {
+      "name": "NobleM2.SizeChange.repeatSearch_sound",
+      "module": "NobleM2.SizeChangeMatrixRepeat"
+    },
+    {
+      "name": "NobleM2.SizeChange.repeatSearch_complete",
+      "module": "NobleM2.SizeChangeMatrixRepeat"
+    },
+    {
+      "name": "NobleM2.SizeChange.any_eq_false_of_eq_false",
+      "module": "NobleM2.SizeChangeMatrixRepeat"
+    },
+    {
+      "name": "NobleM2.SizeChange.repeatSearch_false_injective",
+      "module": "NobleM2.SizeChangeMatrixRepeat"
+    },
+    {
+      "name": "NobleM2.SizeChange.repeatSearch_true",
+      "module": "NobleM2.SizeChangeMatrixRepeat"
+    },
+    {
+      "name": "NobleM2.SizeChange.repeatSearch_witness",
+      "module": "NobleM2.SizeChangeMatrixRepeat"
+    },
+    {
+      "name": "NobleM2.SizeChange.hasRepeatPrefix_sound",
+      "module": "NobleM2.SizeChangeMatrixScan"
+    },
+    {
+      "name": "NobleM2.SizeChange.any_of_mem_eq_true",
+      "module": "NobleM2.SizeChangeMatrixScan"
+    },
+    {
+      "name": "NobleM2.SizeChange.hasRepeatPrefix_true",
+      "module": "NobleM2.SizeChangeMatrixScan"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_shorten",
+      "module": "NobleM2.SizeChangeMatrixScan"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_short_representative",
+      "module": "NobleM2.SizeChangeMatrixScan"
+    },
+    {
+      "name": "NobleM2.SizeChange.strict_diagonal_drops",
+      "module": "NobleM2.SizeChangeMatrixSemantics"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrix_strict_diagonal_terminates",
+      "module": "NobleM2.SizeChangeMatrixSemantics"
+    },
+    {
+      "name": "NobleM2.SizeChange.nonIncrease_diagonal_bounded",
+      "module": "NobleM2.SizeChangeMatrixSemantics"
+    },
+    {
+      "name": "NobleM2.SizeChange.same_diagonal_preserved",
+      "module": "NobleM2.SizeChangeMatrixSemantics"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_append",
+      "module": "NobleM2.SizeChangeMatrixShortening"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_idempotent_shorten",
+      "module": "NobleM2.SizeChangeMatrixShortening"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_all_same",
+      "module": "NobleM2.SizeChangeMatrixShortening"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_splice",
+      "module": "NobleM2.SizeChangeMatrixSplice"
+    },
+    {
+      "name": "NobleM2.SizeChange.splice_length_lt",
+      "module": "NobleM2.SizeChangeMatrixSplice"
+    },
+    {
+      "name": "NobleM2.SizeChange.splice_sublist",
+      "module": "NobleM2.SizeChangeMatrixSplice"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_shorten_of_repeat",
+      "module": "NobleM2.SizeChangeMatrixSplice"
+    },
+    {
+      "name": "NobleM2.SizeChange.splice_three_entries",
+      "module": "NobleM2.SizeChangeMatrixSplice"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.join_eq_strict",
+      "module": "NobleM2.SizeChangeMatrixStrict"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel4.compose_eq_strict",
+      "module": "NobleM2.SizeChangeMatrixStrict"
+    },
+    {
+      "name": "NobleM2.SizeChange.foldr_join_strict",
+      "module": "NobleM2.SizeChangeMatrixStrict"
+    },
+    {
+      "name": "NobleM2.SizeChange.composeMatrix_strict_exists",
+      "module": "NobleM2.SizeChangeMatrixStrict"
+    },
+    {
+      "name": "NobleM2.SizeChange.composeGraph_assoc",
+      "module": "NobleM2.SizeChangeMonoid"
+    },
+    {
+      "name": "NobleM2.SizeChange.composeGraph_left_identity",
+      "module": "NobleM2.SizeChangeMonoid"
+    },
+    {
+      "name": "NobleM2.SizeChange.power_one",
+      "module": "NobleM2.SizeChangeMonoid"
+    },
+    {
+      "name": "NobleM2.SizeChange.power_two",
+      "module": "NobleM2.SizeChangeMonoid"
+    },
+    {
+      "name": "NobleM2.SizeChange.closure_compose_assoc",
+      "module": "NobleM2.SizeChangeMonoid"
+    },
+    {
+      "name": "NobleM2.SizeChange.Rel.compose_equal_right",
+      "module": "NobleM2.SizeChangePowers"
+    },
+    {
+      "name": "NobleM2.SizeChange.composeGraph_id",
+      "module": "NobleM2.SizeChangePowers"
+    },
+    {
+      "name": "NobleM2.SizeChange.composeGraph_id_left",
+      "module": "NobleM2.SizeChangePowers"
+    },
+    {
+      "name": "NobleM2.SizeChange.closure_power_succ",
+      "module": "NobleM2.SizeChangePowers"
+    },
+    {
+      "name": "NobleM2.SizeChange.power_decreases",
+      "module": "NobleM2.SizeChangePowers"
+    },
+    {
+      "name": "NobleM2.SizeChange.powers_of_certified_decrease",
+      "module": "NobleM2.SizeChangePowers"
+    },
+    {
+      "name": "NobleM2.SizeChange.decreasingGraph_powers",
+      "module": "NobleM2.SizeChangePowers"
+    },
+    {
+      "name": "NobleM2.SizeChange.ne_decrease_of_beq_not_true",
+      "module": "NobleM2.SizeChangeRefusal"
+    },
+    {
+      "name": "NobleM2.SizeChange.exists_of_all_eq_false",
+      "module": "NobleM2.SizeChangeRefusal"
+    },
+    {
+      "name": "NobleM2.SizeChange.false_of_any_eq_false",
+      "module": "NobleM2.SizeChangeRefusal"
+    },
+    {
+      "name": "NobleM2.SizeChange.certifiedAll_refusal_site",
+      "module": "NobleM2.SizeChangeRefusal"
+    },
+    {
+      "name": "NobleM2.SizeChange.certifiedAll_refusal_iff",
+      "module": "NobleM2.SizeChangeRefusal"
+    },
+    {
+      "name": "NobleM2.SizeChange.checked_family_refusal_site",
+      "module": "NobleM2.SizeChangeRefusal"
+    },
+    {
+      "name": "NobleM2.SizeChange.nonDecreasingFixture_cycle",
+      "module": "NobleM2.SizeChangeRefusal"
+    },
+    {
+      "name": "NobleM2.SizeChange.nonDecreasingFixture_names_site",
+      "module": "NobleM2.SizeChangeRefusal"
+    },
+    {
+      "name": "NobleM2.SizeChange.wrappingFixture_cycle",
+      "module": "NobleM2.SizeChangeRefusal"
+    },
+    {
+      "name": "NobleM2.SizeChange.wrappingFixture_names_argument",
+      "module": "NobleM2.SizeChangeRefusal"
+    },
+    {
+      "name": "NobleM2.SizeChange.staticArgs_names_argument",
+      "module": "NobleM2.SizeChangeRefusal"
+    },
+    {
+      "name": "NobleM2.SizeChange.graphsAux_length_succ",
+      "module": "NobleM2.SizeChangeRepeat"
+    },
+    {
+      "name": "NobleM2.SizeChange.powers_not_injective",
+      "module": "NobleM2.SizeChangeRepeat"
+    },
+    {
+      "name": "NobleM2.SizeChange.powers_not_injective_card",
+      "module": "NobleM2.SizeChangeRepeat"
+    },
+    {
+      "name": "NobleM2.SizeChange.three_graphs",
+      "module": "NobleM2.SizeChangeRepeat"
+    },
+    {
+      "name": "NobleM2.SizeChange.decreasing_repeats",
+      "module": "NobleM2.SizeChangeRepeat"
+    },
+    {
+      "name": "NobleM2.SizeChange.certifiedAll_implies_certified",
+      "module": "NobleM2.SizeChangeSites"
+    },
+    {
+      "name": "NobleM2.SizeChange.certifiedAll_sound",
+      "module": "NobleM2.SizeChangeSites"
+    },
+    {
+      "name": "NobleM2.SizeChange.certifiedAll_refusal",
+      "module": "NobleM2.SizeChangeSites"
+    },
+    {
+      "name": "NobleM2.SizeChange.certifiedAll_terminates",
+      "module": "NobleM2.SizeChangeSites"
+    },
+    {
+      "name": "NobleM2.SizeChange.twoSitesAccepted_ok",
+      "module": "NobleM2.SizeChangeSites"
+    },
+    {
+      "name": "NobleM2.SizeChange.twoSitesMixed_refused",
+      "module": "NobleM2.SizeChangeSites"
+    },
+    {
+      "name": "NobleM2.SizeChange.twoSitesMixed_reports_no_shared",
+      "module": "NobleM2.SizeChangeSites"
+    },
+    {
+      "name": "NobleM2.SizeChange.twoSitesSecond_each",
+      "module": "NobleM2.SizeChangeSites"
+    },
+    {
+      "name": "NobleM2.SizeChange.allEqual_refused",
+      "module": "NobleM2.SizeChangeTightness"
+    },
+    {
+      "name": "NobleM2.SizeChange.allEqual_refused_and_stalls",
+      "module": "NobleM2.SizeChangeTightness"
+    },
+    {
+      "name": "NobleM2.SizeChange.allEqual_no_sites_accepted",
+      "module": "NobleM2.SizeChangeTightness"
+    },
+    {
+      "name": "NobleM2.SizeChange.stallingSites_refused",
+      "module": "NobleM2.SizeChangeTightness"
+    },
+    {
+      "name": "NobleM2.SizeChange.stallingSites_stalls",
+      "module": "NobleM2.SizeChangeTightness"
+    },
+    {
+      "name": "NobleM2.SizeChange.everyoneDecreases_sound",
+      "module": "NobleM2.SizeChangeUniverse"
+    },
+    {
+      "name": "NobleM2.SizeChange.everyoneDecreases_false",
+      "module": "NobleM2.SizeChangeUniverse"
+    },
+    {
+      "name": "NobleM2.SizeChange.decreasingSite_certified",
+      "module": "NobleM2.SizeChangeUniverse"
+    }
+  ]
+}

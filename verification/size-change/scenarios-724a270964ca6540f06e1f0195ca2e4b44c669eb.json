@@ -1,0 +1,1111 @@
+{
+  "schema": "noble-size-change-scenarios/v1",
+  "issue": 101,
+  "requirement": "K-CHECK-02",
+  "source_commit": "724a270964ca6540f06e1f0195ca2e4b44c669eb",
+  "source_tree": "ed9de514215693dc5542b06ce0cae48c398bc405",
+  "clean_source": true,
+  "case_registry_sha256": "90fb005246ce6a56ae03004e9b69f49c584c27a642459f016683bdaa4fcc0e5a",
+  "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+  "lean_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+  "library": {
+    "project": ".",
+    "path": "lean/.lake/build/lib/lean",
+    "closure": [
+      "NobleM2.SizeChange",
+      "NobleM2.SizeChangeBounded",
+      "NobleM2.SizeChangeChecker",
+      "NobleM2.SizeChangeClosure",
+      "NobleM2.SizeChangeCounting",
+      "NobleM2.SizeChangeCriterion",
+      "NobleM2.SizeChangeDecEq",
+      "NobleM2.SizeChangeEnumeration",
+      "NobleM2.SizeChangeFixtures",
+      "NobleM2.SizeChangeIdempotent",
+      "NobleM2.SizeChangeMonoid",
+      "NobleM2.SizeChangePowers",
+      "NobleM2.SizeChangeRepeat",
+      "NobleM2.SizeChangeSites",
+      "NobleM2.SizeChangeTightness",
+      "NobleM2.SizeChangeUniverse"
+    ],
+    "sources_sha256": {
+      "proofs/m3/NobleM2/SizeChange.lean": "4980fe948c8c0e057f0a6e584bacb7423b3cee012d96e0e2a81884dc6bdb057e",
+      "proofs/m3/NobleM2/SizeChangeBounded.lean": "45b0559330a9d509aa51c452e507a4505f1a258188398d9f1427967b99fc70fa",
+      "proofs/m3/NobleM2/SizeChangeChecker.lean": "9d3b7b74b176c1112ac32f9bd1e9afc1fd243140b5c0b94c0ef1d0100572e565",
+      "proofs/m3/NobleM2/SizeChangeClosure.lean": "ac6e0e1509a9ec5034517f6b28bdf56a8fcf31faf7491402b8e8039d85f450ae",
+      "proofs/m3/NobleM2/SizeChangeCounting.lean": "b5126231cdefa874cd4d27e172a9a4c6f9b9c05a83da3a26ce061de302c21124",
+      "proofs/m3/NobleM2/SizeChangeCriterion.lean": "54d2513c3b7794adb8abb4b2d69ede198eb2cba608d1f377d01fa785e2d2c15f",
+      "proofs/m3/NobleM2/SizeChangeDecEq.lean": "fd7b4f8c36ab2c9979c39ad129025e60c0729c376236577010baaea7f7bb4727",
+      "proofs/m3/NobleM2/SizeChangeEnumeration.lean": "3ef62bcbc1be754f97d6e6fad4e975a1006cf2305cce057325c4a8b615e69a5d",
+      "proofs/m3/NobleM2/SizeChangeFixtures.lean": "519989090d6fd385c79352344384b5c500750f431fd541c9d1ab04695be9d162",
+      "proofs/m3/NobleM2/SizeChangeIdempotent.lean": "172587f496fc470e312ed355cc88a6c7a76e376f057829ea37bc3b3f0635a42a",
+      "proofs/m3/NobleM2/SizeChangeMonoid.lean": "21a8c3aecbb0207cef60963cd13a861f1253c3dc4b3508faca00f2fa344efded",
+      "proofs/m3/NobleM2/SizeChangePowers.lean": "c18374bb13ded6cf11b83b334ab0cdcf0da56eee427c7ac85a491d63176ad617",
+      "proofs/m3/NobleM2/SizeChangeRepeat.lean": "d126fa153f662b17809bd0592a4d8d896edd0744f6956903c883173f2750c281",
+      "proofs/m3/NobleM2/SizeChangeSites.lean": "56c7000f74a3a1ecf8e9b073d29c05138c9f9fdf45830ab55e3d2a385409eb76",
+      "proofs/m3/NobleM2/SizeChangeTightness.lean": "e7f95e8ef5895bbbaa4fc978a035457062bb91b4469b47f70480f924880338d7",
+      "proofs/m3/NobleM2/SizeChangeUniverse.lean": "a4c0849fb68ef530ee2f1ff0517dcb31484f539e3480c3157b207434b459927b"
+    }
+  },
+  "implementation_sources_sha256": {
+    "crates/noble-cli/src/core.rs": "d2f43a495742c52f3759d186490575f0b61259812861174f08360f40daa58b3b",
+    "crates/noble-cli/src/core/arguments.rs": "a3d1e23e701942335af8999d4658a6a63c473c0f6bfe8caf1e9b6a76e9d21412",
+    "crates/noble-cli/src/core/companions/session.rs": "5cc05c160e479daf323da19908442ff37e88c4c42b539824ca4b90c7b8413288",
+    "crates/noble-cli/src/core/declared/mod.rs": "03cd876ea836e12ba361d11b2ab7a06e5224ca8cf865a61c1845a3ed92f5e395",
+    "crates/noble-cli/src/core/declared/sizechange.rs": "ed40e2791bde814262e9282fc11c3a59a3a34d3be29427607983b09a98b530a4",
+    "crates/noble-cli/src/core/output/declared.rs": "6ace4412583cde7ac27d9fa1f680dc6c235db96deef966b5abb59356781f693a",
+    "crates/noble-cli/src/core/worker/assembly.rs": "f678031f0f1c493c5b1080a0a6b12e1f98b128e28e8570c78c6e77624f6aad35",
+    "crates/noble-contracts/src/source.rs": "63fe1745e0e6f9e8566b81b9f7abfd65ac24f7be8ab973f0d5294a95a549a002",
+    "crates/noble-contracts/src/source/declared/state.rs": "e28ab09eeb98ee1a9d2fc2086372a09f8293498f2f869305ba9558a563709b4c",
+    "crates/noble-contracts/src/source/sizechange.rs": "1f5e05ce54b4048e2c6d2ed4ac1f0c9309a42ed43f473fb60737aec6e3ef98db",
+    "crates/noble-contracts/tests/declared.rs": "305a4a67af0ae9a937c60b114476d1350994060026cadaf0fe49ce4045110f09",
+    "crates/noble-contracts/tests/declared/sizechange.rs": "b456233e0c496c1d5981477f2bf344b7094b52d86606a97e8cba8a8df928367d",
+    "specs/conformance/recursion-cases.json": "e58ef76e00a95a12d93f3a922b3093b012d69acbaeeb3ac64ddb10517bf11261",
+    "verification/size-change/README.md": "7f3b80a660f66e1ab00ffc73e2663dd1e0fccc9cef01e719740b3130cd08f924",
+    "verification/size-change/scenarios.mjs": "5da6974ad2c9cef99e2c7af692ea2a8b2397a7e2e3404852be3fbaed20b3f4a4"
+  },
+  "toolchain": {
+    "cargo": "cargo 1.96.0-nightly (cbb9bb8bd 2026-03-13)",
+    "cargo_sha256": "862f9dd92f6d1065dbda15da68138db4432ad85581bceadf568ba2749171ddd4",
+    "vendor_nar_hash": "sha256-APDZUCJCimbMM32b1rJcNGn5mt2jYfUxgbwO4CxsGhQ=",
+    "cli_sha256": "2e40bf255f4d956f859501b472de70279f97758c4c9126cdf6c3e7d8c2161f66"
+  },
+  "cases": [
+    {
+      "id": "REC-SC-01",
+      "status": "passed",
+      "module": "module list@1 [ signature go forall<S:stack> [ S List<I64> -- S I64 ! pure ] export go def go [ [ 0 ] [ swap drop go ] list.case ] ]",
+      "submission": 1,
+      "expected": {
+        "definition": "go",
+        "measures": [
+          "structural"
+        ],
+        "verdict": "accepted",
+        "measure": 0,
+        "sites": [
+          {
+            "arguments": [
+              "tail"
+            ],
+            "guarded": [
+              false
+            ]
+          }
+        ]
+      },
+      "observed": {
+        "definition": "go",
+        "measures": [
+          "structural"
+        ],
+        "verdict": "accepted",
+        "measure": 0,
+        "sites": [
+          {
+            "arguments": [
+              "tail"
+            ],
+            "guarded": [
+              false
+            ]
+          }
+        ]
+      },
+      "certificate": {
+        "path": "evidence/REC-SC-01/submission-1.lean",
+        "sha256": "14945ff722dcdb4ee6b987b37873ce3be3f4d37f42d195bf4c69f0181faea000",
+        "bytes": 979,
+        "independent_check": "pinned Lean accepted the certificate with LEAN_PATH at the isolated library",
+        "reported_lean_check": {
+          "passed": true,
+          "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+          "binary_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+          "version": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+          "library": "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/lean/.lake/build/lib/lean",
+          "basis": "checked by this exact binary with LEAN_PATH set to this library path; the library's sources are bound by digest in the verification lane, not here"
+        }
+      },
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Signed-Declared-Text-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "link",
+        "outcome": "linked",
+        "diagnostic": "module registered without guest execution",
+        "resolved_module": {
+          "identity": "1",
+          "name": "list",
+          "version": 1
+        },
+        "binding": null,
+        "contracts": [],
+        "intrinsic_proof": null,
+        "guest_requests": 0,
+        "host_requests": 0,
+        "protected_operations": 0,
+        "ambient_fallback_calls": 0,
+        "acquired_authority": false,
+        "candidate_prepare_requests": 0,
+        "prior_stack": "unchanged",
+        "prior_namespace": "extended",
+        "size_change": {
+          "schema": "noble-size-change/v1",
+          "criterion": "shared-measure: one declared measure decreases at every self-call site",
+          "profile": "list structure and guarded i64 counters under one stack prefix",
+          "definitions": [
+            {
+              "definition": "go",
+              "measures": [
+                "structural"
+              ],
+              "sites": [
+                {
+                  "span": {
+                    "start": 27,
+                    "end": 29
+                  },
+                  "arguments": [
+                    "tail"
+                  ],
+                  "guarded": [
+                    false
+                  ]
+                }
+              ],
+              "verdict": "accepted",
+              "measure": 0
+            }
+          ],
+          "certificate": {
+            "path": "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/evidence/REC-SC-01/submission-1.lean",
+            "sha256": "14945ff722dcdb4ee6b987b37873ce3be3f4d37f42d195bf4c69f0181faea000",
+            "bytes": 979
+          },
+          "lean_check": null
+        }
+      }
+    },
+    {
+      "id": "REC-SC-02",
+      "status": "passed",
+      "module": "module down@1 [ signature down forall<S:stack> [ S I64 -- S I64 ! pure ] export down def down [ dup 0 swap < [ 1 - down ] [ ] if ] ]",
+      "submission": 1,
+      "expected": {
+        "definition": "down",
+        "measures": [
+          "counter"
+        ],
+        "verdict": "accepted",
+        "measure": 0,
+        "sites": [
+          {
+            "arguments": [
+              "predecessor"
+            ],
+            "guarded": [
+              true
+            ]
+          }
+        ]
+      },
+      "observed": {
+        "definition": "down",
+        "measures": [
+          "counter"
+        ],
+        "verdict": "accepted",
+        "measure": 0,
+        "sites": [
+          {
+            "arguments": [
+              "predecessor"
+            ],
+            "guarded": [
+              true
+            ]
+          }
+        ]
+      },
+      "certificate": {
+        "path": "evidence/REC-SC-02/submission-1.lean",
+        "sha256": "14945ff722dcdb4ee6b987b37873ce3be3f4d37f42d195bf4c69f0181faea000",
+        "bytes": 979,
+        "independent_check": "pinned Lean accepted the certificate with LEAN_PATH at the isolated library",
+        "reported_lean_check": {
+          "passed": true,
+          "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+          "binary_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+          "version": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+          "library": "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/lean/.lake/build/lib/lean",
+          "basis": "checked by this exact binary with LEAN_PATH set to this library path; the library's sources are bound by digest in the verification lane, not here"
+        }
+      },
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Signed-Declared-Text-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "link",
+        "outcome": "linked",
+        "diagnostic": "module registered without guest execution",
+        "resolved_module": {
+          "identity": "1",
+          "name": "down",
+          "version": 1
+        },
+        "binding": null,
+        "contracts": [],
+        "intrinsic_proof": null,
+        "guest_requests": 0,
+        "host_requests": 0,
+        "protected_operations": 0,
+        "ambient_fallback_calls": 0,
+        "acquired_authority": false,
+        "candidate_prepare_requests": 0,
+        "prior_stack": "unchanged",
+        "prior_namespace": "extended",
+        "size_change": {
+          "schema": "noble-size-change/v1",
+          "criterion": "shared-measure: one declared measure decreases at every self-call site",
+          "profile": "list structure and guarded i64 counters under one stack prefix",
+          "definitions": [
+            {
+              "definition": "down",
+              "measures": [
+                "counter"
+              ],
+              "sites": [
+                {
+                  "span": {
+                    "start": 30,
+                    "end": 34
+                  },
+                  "arguments": [
+                    "predecessor"
+                  ],
+                  "guarded": [
+                    true
+                  ]
+                }
+              ],
+              "verdict": "accepted",
+              "measure": 0
+            }
+          ],
+          "certificate": {
+            "path": "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/evidence/REC-SC-02/submission-1.lean",
+            "sha256": "14945ff722dcdb4ee6b987b37873ce3be3f4d37f42d195bf4c69f0181faea000",
+            "bytes": 979
+          },
+          "lean_check": null
+        }
+      }
+    },
+    {
+      "id": "REC-SC-03",
+      "status": "passed",
+      "module": "module same@1 [ signature same forall<S:stack> [ S I64 -- S I64 ! pure ] export same def same [ same ] ]",
+      "submission": 1,
+      "expected": {
+        "definition": "same",
+        "measures": [
+          "counter"
+        ],
+        "verdict": "refused",
+        "sites": [
+          {
+            "arguments": [
+              "same"
+            ],
+            "guarded": [
+              false
+            ]
+          }
+        ],
+        "witnesses": [
+          {
+            "measure": 0,
+            "site": 0,
+            "argument": "same"
+          }
+        ]
+      },
+      "observed": {
+        "definition": "same",
+        "measures": [
+          "counter"
+        ],
+        "verdict": "refused",
+        "sites": [
+          {
+            "arguments": [
+              "same"
+            ],
+            "guarded": [
+              false
+            ]
+          }
+        ],
+        "witnesses": [
+          {
+            "measure": 0,
+            "site": 0,
+            "argument": "same"
+          }
+        ]
+      },
+      "certificate": {
+        "path": "evidence/REC-SC-03/submission-1.lean",
+        "sha256": "3f89aa1c11dbfc4fd46030e72320455f6592e719ccb60c187fa1b3f8b2eca886",
+        "bytes": 461,
+        "independent_check": "pinned Lean accepted the certificate with LEAN_PATH at the isolated library",
+        "reported_lean_check": {
+          "passed": true,
+          "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+          "binary_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+          "version": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+          "library": "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/lean/.lake/build/lib/lean",
+          "basis": "checked by this exact binary with LEAN_PATH set to this library path; the library's sources are bound by digest in the verification lane, not here"
+        }
+      },
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Signed-Declared-Text-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "link",
+        "outcome": "linked",
+        "diagnostic": "module registered without guest execution",
+        "resolved_module": {
+          "identity": "1",
+          "name": "same",
+          "version": 1
+        },
+        "binding": null,
+        "contracts": [],
+        "intrinsic_proof": null,
+        "guest_requests": 0,
+        "host_requests": 0,
+        "protected_operations": 0,
+        "ambient_fallback_calls": 0,
+        "acquired_authority": false,
+        "candidate_prepare_requests": 0,
+        "prior_stack": "unchanged",
+        "prior_namespace": "extended",
+        "size_change": {
+          "schema": "noble-size-change/v1",
+          "criterion": "shared-measure: one declared measure decreases at every self-call site",
+          "profile": "list structure and guarded i64 counters under one stack prefix",
+          "definitions": [
+            {
+              "definition": "same",
+              "measures": [
+                "counter"
+              ],
+              "sites": [
+                {
+                  "span": {
+                    "start": 11,
+                    "end": 15
+                  },
+                  "arguments": [
+                    "same"
+                  ],
+                  "guarded": [
+                    false
+                  ]
+                }
+              ],
+              "verdict": "refused",
+              "witnesses": [
+                {
+                  "measure": 0,
+                  "site": 0,
+                  "argument": "same"
+                }
+              ]
+            }
+          ],
+          "certificate": {
+            "path": "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/evidence/REC-SC-03/submission-1.lean",
+            "sha256": "3f89aa1c11dbfc4fd46030e72320455f6592e719ccb60c187fa1b3f8b2eca886",
+            "bytes": 461
+          },
+          "lean_check": null
+        }
+      }
+    },
+    {
+      "id": "REC-SC-04",
+      "status": "passed",
+      "module": "module wrap@1 [ signature wrap forall<S:stack> [ S I64 -- S I64 ! pure ] export wrap def wrap [ 1 + wrap ] ]",
+      "submission": 1,
+      "expected": {
+        "definition": "wrap",
+        "measures": [
+          "counter"
+        ],
+        "verdict": "refused",
+        "sites": [
+          {
+            "arguments": [
+              "opaque"
+            ],
+            "guarded": [
+              false
+            ]
+          }
+        ],
+        "witnesses": [
+          {
+            "measure": 0,
+            "site": 0,
+            "argument": "opaque"
+          }
+        ]
+      },
+      "observed": {
+        "definition": "wrap",
+        "measures": [
+          "counter"
+        ],
+        "verdict": "refused",
+        "sites": [
+          {
+            "arguments": [
+              "opaque"
+            ],
+            "guarded": [
+              false
+            ]
+          }
+        ],
+        "witnesses": [
+          {
+            "measure": 0,
+            "site": 0,
+            "argument": "opaque"
+          }
+        ]
+      },
+      "certificate": {
+        "path": "evidence/REC-SC-04/submission-1.lean",
+        "sha256": "3f89aa1c11dbfc4fd46030e72320455f6592e719ccb60c187fa1b3f8b2eca886",
+        "bytes": 461,
+        "independent_check": "pinned Lean accepted the certificate with LEAN_PATH at the isolated library",
+        "reported_lean_check": {
+          "passed": true,
+          "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+          "binary_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+          "version": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+          "library": "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/lean/.lake/build/lib/lean",
+          "basis": "checked by this exact binary with LEAN_PATH set to this library path; the library's sources are bound by digest in the verification lane, not here"
+        }
+      },
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Signed-Declared-Text-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "link",
+        "outcome": "linked",
+        "diagnostic": "module registered without guest execution",
+        "resolved_module": {
+          "identity": "1",
+          "name": "wrap",
+          "version": 1
+        },
+        "binding": null,
+        "contracts": [],
+        "intrinsic_proof": null,
+        "guest_requests": 0,
+        "host_requests": 0,
+        "protected_operations": 0,
+        "ambient_fallback_calls": 0,
+        "acquired_authority": false,
+        "candidate_prepare_requests": 0,
+        "prior_stack": "unchanged",
+        "prior_namespace": "extended",
+        "size_change": {
+          "schema": "noble-size-change/v1",
+          "criterion": "shared-measure: one declared measure decreases at every self-call site",
+          "profile": "list structure and guarded i64 counters under one stack prefix",
+          "definitions": [
+            {
+              "definition": "wrap",
+              "measures": [
+                "counter"
+              ],
+              "sites": [
+                {
+                  "span": {
+                    "start": 15,
+                    "end": 19
+                  },
+                  "arguments": [
+                    "opaque"
+                  ],
+                  "guarded": [
+                    false
+                  ]
+                }
+              ],
+              "verdict": "refused",
+              "witnesses": [
+                {
+                  "measure": 0,
+                  "site": 0,
+                  "argument": "opaque"
+                }
+              ]
+            }
+          ],
+          "certificate": {
+            "path": "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/evidence/REC-SC-04/submission-1.lean",
+            "sha256": "3f89aa1c11dbfc4fd46030e72320455f6592e719ccb60c187fa1b3f8b2eca886",
+            "bytes": 461
+          },
+          "lean_check": null
+        }
+      }
+    }
+  ],
+  "controls": {
+    "ordinary": {
+      "status": "passed",
+      "size_change_field_absent": true,
+      "report": {
+        "schema": "noble-core-report/v1",
+        "profile": "Signed-Declared-Text-v1",
+        "backend": "managed-linear-memory",
+        "submission": 1,
+        "stage": "link",
+        "outcome": "linked",
+        "diagnostic": "module registered without guest execution",
+        "resolved_module": {
+          "identity": "1",
+          "name": "down",
+          "version": 1
+        },
+        "binding": null,
+        "contracts": [],
+        "intrinsic_proof": null,
+        "guest_requests": 0,
+        "host_requests": 0,
+        "protected_operations": 0,
+        "ambient_fallback_calls": 0,
+        "acquired_authority": false,
+        "candidate_prepare_requests": 0,
+        "prior_stack": "unchanged",
+        "prior_namespace": "extended"
+      }
+    },
+    "multi_report": {
+      "status": "passed",
+      "reports": [
+        {
+          "schema": "noble-core-report/v1",
+          "profile": "Signed-Declared-Text-v1",
+          "backend": "managed-linear-memory",
+          "submission": 1,
+          "stage": "link",
+          "outcome": "linked",
+          "diagnostic": "module registered without guest execution",
+          "resolved_module": {
+            "identity": "1",
+            "name": "list",
+            "version": 1
+          },
+          "binding": null,
+          "contracts": [],
+          "intrinsic_proof": null,
+          "guest_requests": 0,
+          "host_requests": 0,
+          "protected_operations": 0,
+          "ambient_fallback_calls": 0,
+          "acquired_authority": false,
+          "candidate_prepare_requests": 0,
+          "prior_stack": "unchanged",
+          "prior_namespace": "extended",
+          "size_change": {
+            "schema": "noble-size-change/v1",
+            "criterion": "shared-measure: one declared measure decreases at every self-call site",
+            "profile": "list structure and guarded i64 counters under one stack prefix",
+            "definitions": [
+              {
+                "definition": "go",
+                "measures": [
+                  "structural"
+                ],
+                "sites": [
+                  {
+                    "span": {
+                      "start": 27,
+                      "end": 29
+                    },
+                    "arguments": [
+                      "tail"
+                    ],
+                    "guarded": [
+                      false
+                    ]
+                  }
+                ],
+                "verdict": "accepted",
+                "measure": 0
+              }
+            ],
+            "certificate": {
+              "path": "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/evidence/multi/submission-1.lean",
+              "sha256": "14945ff722dcdb4ee6b987b37873ce3be3f4d37f42d195bf4c69f0181faea000",
+              "bytes": 979
+            },
+            "lean_check": null
+          }
+        },
+        {
+          "schema": "noble-core-report/v1",
+          "profile": "Signed-Declared-Text-v1",
+          "backend": "managed-linear-memory",
+          "submission": 2,
+          "stage": "link",
+          "outcome": "linked",
+          "diagnostic": "module registered without guest execution",
+          "resolved_module": {
+            "identity": "2",
+            "name": "down",
+            "version": 1
+          },
+          "binding": null,
+          "contracts": [],
+          "intrinsic_proof": null,
+          "guest_requests": 0,
+          "host_requests": 0,
+          "protected_operations": 0,
+          "ambient_fallback_calls": 0,
+          "acquired_authority": false,
+          "candidate_prepare_requests": 0,
+          "prior_stack": "unchanged",
+          "prior_namespace": "extended",
+          "size_change": {
+            "schema": "noble-size-change/v1",
+            "criterion": "shared-measure: one declared measure decreases at every self-call site",
+            "profile": "list structure and guarded i64 counters under one stack prefix",
+            "definitions": [
+              {
+                "definition": "down",
+                "measures": [
+                  "counter"
+                ],
+                "sites": [
+                  {
+                    "span": {
+                      "start": 30,
+                      "end": 34
+                    },
+                    "arguments": [
+                      "predecessor"
+                    ],
+                    "guarded": [
+                      true
+                    ]
+                  }
+                ],
+                "verdict": "accepted",
+                "measure": 0
+              }
+            ],
+            "certificate": {
+              "path": "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/evidence/multi/submission-2.lean",
+              "sha256": "14945ff722dcdb4ee6b987b37873ce3be3f4d37f42d195bf4c69f0181faea000",
+              "bytes": 979
+            },
+            "lean_check": null
+          }
+        }
+      ],
+      "certificates": [
+        {
+          "id": "REC-SC-01",
+          "submission": 1,
+          "path": "evidence/multi/submission-1.lean",
+          "sha256": "14945ff722dcdb4ee6b987b37873ce3be3f4d37f42d195bf4c69f0181faea000"
+        },
+        {
+          "id": "REC-SC-02",
+          "submission": 2,
+          "path": "evidence/multi/submission-2.lean",
+          "sha256": "14945ff722dcdb4ee6b987b37873ce3be3f4d37f42d195bf4c69f0181faea000"
+        }
+      ]
+    }
+  },
+  "commands": [
+    {
+      "label": "source-head",
+      "executable": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "3b84947d357d3a92607ee5edaf94951f8070a4f9a40deee1d4f17b62f802404d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "source-tree",
+      "executable": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD^{tree}"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "e91469dd4a4c252da678874c1003b75c0633831fd9894669d3e9a7ec0021f4ab",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "source-status",
+      "executable": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "lean-version",
+      "executable": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+      "argv": [
+        "--version"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "eb22144228dd41cd51a0c84af4f976cd0cef473102dcf99b60be756b11f2b95a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "lean-library-build",
+      "executable": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "argv": [
+        "build"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "1bddf3bacb176a1ff52dec13636e4f5a0d49777c81bba650d9d5f0cc4fff05f2",
+      "stderr_sha256": "686a81622d608933d34d054c8ce52221d96e2332a28413e2cccefe6f32be407d"
+    },
+    {
+      "label": "source-cli-build",
+      "executable": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/cargo",
+      "argv": [
+        "build",
+        "--locked",
+        "--offline",
+        "-j",
+        "4",
+        "-p",
+        "noble-cli"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "732186322402325172940531d8d6d7cfac85dc902585b2bef6715ad6839dacfd"
+    },
+    {
+      "label": "session-REC-SC-01",
+      "executable": "/home/brittonr/.cache/noble-iss/target/sizechange-101/debug/noble",
+      "argv": [
+        "session",
+        "--framed",
+        "--declared-modules",
+        "--text-byte-cursor",
+        "--signed-self-recursion",
+        "--retained-source-bytes",
+        "262144",
+        "--size-change-evidence",
+        "--size-change-certificate",
+        "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/evidence/REC-SC-01"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "416121b7fc3d0f0d4f9fbef5b50c0ce8bf063c854330da224591c98217bdfa73",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "lean-certificate-REC-SC-01",
+      "executable": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+      "argv": [
+        "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/evidence/REC-SC-01/submission-1.lean"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "session-REC-SC-01-lean",
+      "executable": "/home/brittonr/.cache/noble-iss/target/sizechange-101/debug/noble",
+      "argv": [
+        "session",
+        "--framed",
+        "--declared-modules",
+        "--text-byte-cursor",
+        "--signed-self-recursion",
+        "--retained-source-bytes",
+        "262144",
+        "--size-change-evidence",
+        "--size-change-certificate",
+        "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/evidence/REC-SC-01-lean",
+        "--size-change-lean",
+        "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+        "--size-change-lean-library",
+        "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/lean/.lake/build/lib/lean"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "b6868a428ba573aa7a85604fb2ee00b70be316603176438527f0be3607b0303f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "session-REC-SC-02",
+      "executable": "/home/brittonr/.cache/noble-iss/target/sizechange-101/debug/noble",
+      "argv": [
+        "session",
+        "--framed",
+        "--declared-modules",
+        "--text-byte-cursor",
+        "--signed-self-recursion",
+        "--retained-source-bytes",
+        "262144",
+        "--size-change-evidence",
+        "--size-change-certificate",
+        "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/evidence/REC-SC-02"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "bb321b668e811c970d33861f7c9336979f4d6c04a3703ec42a97f26b72653a95",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "lean-certificate-REC-SC-02",
+      "executable": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+      "argv": [
+        "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/evidence/REC-SC-02/submission-1.lean"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "session-REC-SC-02-lean",
+      "executable": "/home/brittonr/.cache/noble-iss/target/sizechange-101/debug/noble",
+      "argv": [
+        "session",
+        "--framed",
+        "--declared-modules",
+        "--text-byte-cursor",
+        "--signed-self-recursion",
+        "--retained-source-bytes",
+        "262144",
+        "--size-change-evidence",
+        "--size-change-certificate",
+        "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/evidence/REC-SC-02-lean",
+        "--size-change-lean",
+        "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+        "--size-change-lean-library",
+        "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/lean/.lake/build/lib/lean"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "7fae50d983405d6b1900be0060ae1f0f806db3417fae030a4e31d62b53fade93",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "session-REC-SC-03",
+      "executable": "/home/brittonr/.cache/noble-iss/target/sizechange-101/debug/noble",
+      "argv": [
+        "session",
+        "--framed",
+        "--declared-modules",
+        "--text-byte-cursor",
+        "--signed-self-recursion",
+        "--retained-source-bytes",
+        "262144",
+        "--size-change-evidence",
+        "--size-change-certificate",
+        "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/evidence/REC-SC-03"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "f8e535ca2f2619bc8323262584c5e6ec5d835996765033a6c2df5a02d55d75a7",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "lean-certificate-REC-SC-03",
+      "executable": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+      "argv": [
+        "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/evidence/REC-SC-03/submission-1.lean"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "session-REC-SC-03-lean",
+      "executable": "/home/brittonr/.cache/noble-iss/target/sizechange-101/debug/noble",
+      "argv": [
+        "session",
+        "--framed",
+        "--declared-modules",
+        "--text-byte-cursor",
+        "--signed-self-recursion",
+        "--retained-source-bytes",
+        "262144",
+        "--size-change-evidence",
+        "--size-change-certificate",
+        "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/evidence/REC-SC-03-lean",
+        "--size-change-lean",
+        "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+        "--size-change-lean-library",
+        "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/lean/.lake/build/lib/lean"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "f86af66dccd15c541019a2ee1e1d7c2f8db53e2acddd0b4205c6065980e7749a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "session-REC-SC-04",
+      "executable": "/home/brittonr/.cache/noble-iss/target/sizechange-101/debug/noble",
+      "argv": [
+        "session",
+        "--framed",
+        "--declared-modules",
+        "--text-byte-cursor",
+        "--signed-self-recursion",
+        "--retained-source-bytes",
+        "262144",
+        "--size-change-evidence",
+        "--size-change-certificate",
+        "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/evidence/REC-SC-04"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "743f36f569111af304fefb3d2fdfc01c6f5d5b4da948aa7bad465b896c8be6e9",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "lean-certificate-REC-SC-04",
+      "executable": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+      "argv": [
+        "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/evidence/REC-SC-04/submission-1.lean"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "session-REC-SC-04-lean",
+      "executable": "/home/brittonr/.cache/noble-iss/target/sizechange-101/debug/noble",
+      "argv": [
+        "session",
+        "--framed",
+        "--declared-modules",
+        "--text-byte-cursor",
+        "--signed-self-recursion",
+        "--retained-source-bytes",
+        "262144",
+        "--size-change-evidence",
+        "--size-change-certificate",
+        "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/evidence/REC-SC-04-lean",
+        "--size-change-lean",
+        "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+        "--size-change-lean-library",
+        "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/lean/.lake/build/lib/lean"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "f09c0c9584ef6e59468128d2d047d6564c2da8e85586e7f3d24696e103a76f90",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "session-without-size-change-flag",
+      "executable": "/home/brittonr/.cache/noble-iss/target/sizechange-101/debug/noble",
+      "argv": [
+        "session",
+        "--framed",
+        "--declared-modules",
+        "--text-byte-cursor",
+        "--signed-self-recursion",
+        "--retained-source-bytes",
+        "262144"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "df36365f9063ba8fc66d79bdcf1ecceaf610a52f5ae884f9941d6d75f14840f5",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "session-two-size-change-reports",
+      "executable": "/home/brittonr/.cache/noble-iss/target/sizechange-101/debug/noble",
+      "argv": [
+        "session",
+        "--framed",
+        "--declared-modules",
+        "--text-byte-cursor",
+        "--signed-self-recursion",
+        "--retained-source-bytes",
+        "262144",
+        "--size-change-evidence",
+        "--size-change-certificate",
+        "/home/brittonr/.cache/noble-iss/scratch/sizechange-101/scenarios-final/evidence/multi"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "54c42e6fbc1fb4b1fbfbffe4c28a4ae17e7cb403940f7e7cde7f01f2472cf9a4",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "source-head",
+      "executable": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "3b84947d357d3a92607ee5edaf94951f8070a4f9a40deee1d4f17b62f802404d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "source-tree",
+      "executable": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "rev-parse",
+        "HEAD^{tree}"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "e91469dd4a4c252da678874c1003b75c0633831fd9894669d3e9a7ec0021f4ab",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "source-status",
+      "executable": "/nix/store/xgw813vgzl2q0696sq45adpj0xd690jq-git-2.56.0/bin/git",
+      "argv": [
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "cargo-version",
+      "executable": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/cargo",
+      "argv": [
+        "--version"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "ed1e191111470ccb6b7332ce8b0dd7864b769259f156ad7811322738ddf446a9",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "assumptions": [
+    "Each case is one link report of a production framed session of the CLI built from this commit.",
+    "The unflagged signed-recursion control carries no size_change field; the multi-report control proves one fresh certificate directory serves distinct reports in one session.",
+    "The verdict is the front end classification of the checked body; it is not a theorem about an execution. The model soundness, exactness and refusal-completeness theorems are verification/size-change/check.mjs.",
+    "The certificate is accepted by the pinned Lean against an isolated library built from these sources; the CLI records the binary digest, its version line and the library path, and the library sources are bound by digest above."
+  ]
+}

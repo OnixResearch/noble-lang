@@ -13,6 +13,7 @@ impl super::Report {
         binding: Option<(std::string::String, u32)>,
         contracts: crate::workflow::encoding::Json,
         intrinsic_proof: crate::workflow::encoding::Json,
+        size_change: Option<crate::workflow::encoding::Json>,
     ) -> Self {
         let module = match module {
             Some((identity, name, version)) => crate::workflow::encoding::object([
@@ -41,7 +42,7 @@ impl super::Report {
             ]),
             None => crate::workflow::encoding::Json::Null,
         };
-        let json = crate::workflow::encoding::object([
+        let mut fields = std::vec::Vec::from([
             (
                 "schema",
                 crate::workflow::encoding::string("noble-core-report/v1"),
@@ -91,8 +92,11 @@ impl super::Report {
                 "prior_namespace",
                 crate::workflow::encoding::string("extended"),
             ),
-        ])
-        .encode();
+        ]);
+        if let Some(size_change) = size_change {
+            fields.push(("size_change", size_change));
+        }
+        let json = crate::workflow::encoding::Json::Object(fields).encode();
         Self {
             outcome: "linked".into(),
             json,
