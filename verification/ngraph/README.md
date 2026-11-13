@@ -294,6 +294,10 @@ These are differences between the design text and what the extraction leg execut
 ## Non-claims
 
 - Finite tests and evaluator agreement do not prove the compiler, the graph checker (NG-PO-B), the compiled evaluator (NG-PO-C), the binary32 model (NG-PO-D), fact transfer (NG-PO-E), the derivative policy (NG-PO-F) or snapshot binding (NG-PO-G). NG-PO-A..H remain open and are not added to `obligations.json`.
+- **Established slices, not discharges.** Three obligations now carry a recorded slice while staying open (`specs/STATUS.json` → `numeric_graph.proof_slices`):
+  - **NG-PO-C** — the Lean validator is checked: `PackedSchedule.validate` with `validate_sound` over every well-formed graph, the kernel checking two real packed emissions in `PackedScheduleCorpus.lean`, and `schedule::check` tested in `crates/noble-ngraph`. No theorem relates the Rust packed executor to `run`, so the compiled-evaluator obligation stays open.
+  - **NG-PO-D** — `NobleFoundation.Binary32` is a proved kernel-reducible model, the 26 retained expectations replay through the packed reference and the compiled legs, and the `sem.rs` correspondence is a reviewed trusted, tested assumption on `x86_64-unknown-linux-gnu` (issue #38). Correspondence is not proved; the obligation stays open.
+  - **NG-PO-F** — the real-valued reverse-AD model is proved (transpose, adjoint), the ordered binary32 model is proved, and `grad.rs` is tested against it on 306 generated cases. No refinement of `grad.rs` exists; the obligation stays open.
 - B5's threshold is a smoke test, not a convergence claim. Replay is shown on this platform only.
 - No performance, GPU or backend-selection claim; that is Phase C.
 
@@ -709,6 +713,16 @@ node verification/ngraph/schedule-receipt.mjs \
 The retained receipt is [`schedule-receipt-29fc1e17.json`](schedule-receipt-29fc1e17.json), from the clean
 commit `29fc1e17`. It covers the two artifacts (`interleaved`, `lateInput`) and all 23 corpus theorems,
 taken from the foundation receipt of `a41435fd`. Both claims report only `propext` and `Quot.sound`.
+
+**Erratum (2026-11-13, issue #43).** The retained receipt's `open_edges` entry reads "the kernel
+extraction that could carry it predates these sources (#97)". That dependency is **wrong**, and the
+receipt is immutable, so the correction is recorded here rather than edited into it. #97 is the
+re-extraction of the existing Aeneas subjects (`noble-contracts`, `noble-kernel`, `noble-wasm`) at
+Aeneas `1238879f` to end the VT-PIN-02 library exception; it adds no subject and never covers
+`crates/noble-ngraph`. No extraction subject includes `crates/noble-ngraph/src/schedule.rs`, so the
+packed executor's correspondence is not blocked by #97 and does not depend on it. What is open is
+that no executor theorem exists and no extraction of the executor is planned; a future refinement
+would need its own extraction subject and its own obligation, not #97's re-extraction.
 
 # CPU batch continuation decision (2026-11-01, issue #41)
 
