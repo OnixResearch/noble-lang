@@ -30,6 +30,8 @@ use noble_ngraph::sem::Value;
 mod common;
 #[path = "layout_differential/parameters.rs"]
 mod parameters;
+#[path = "models/recurrent.rs"]
+mod recurrent;
 
 fn f32_chain() -> Graph {
     let scheme = common::IDS;
