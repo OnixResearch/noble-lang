@@ -248,7 +248,7 @@ fn opt_checkpoint(candidate: &Candidate, dataset: &FrozenDataset) -> Checkpoint 
     };
     let snapshot = OptSnapshot::root(candidate, &[0x3f80_0000, 0x4000_0000], &[], context)
         .expect("initial immutable snapshot");
-    let checkpoint = Checkpoint::new(
+    Checkpoint::new(
         snapshot,
         RngCheckpoint {
             seed: 0x0058_2026,
@@ -257,8 +257,7 @@ fn opt_checkpoint(candidate: &Candidate, dataset: &FrozenDataset) -> Checkpoint 
         0,
         Counters::default(),
     )
-    .expect("whole-trial checkpoint");
-    checkpoint
+    .expect("whole-trial checkpoint")
 }
 
 fn run_faulted_trial(
