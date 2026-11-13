@@ -270,9 +270,9 @@ const expected = {
     extraction_rust: { version: tools.extraction_rust.version.split('\n')[0] } },
 };
 
-// The Lean stage reuses the proof projects' Aeneas Lean library: the packages tree stays
-// read-only (its build directory is the prebuilt one), and only the generated file is
-// elaborated into the artifact project.
+// The Lean stage reuses the proof projects' Aeneas Lean library in an isolated copy. Some
+// package oleans are absent from the shared prebuilt cache; Lake must be able to build those
+// dependencies without writing through the shared package symlink.
 const packages = fs.realpathSync(path.join(root, 'proofs/mc1/.lake/packages'));
 const libraryMarker = path.join(packages, 'aeneas/backends/lean/.lake/build/lib/lean/Aeneas/Std/Vec.olean');
 if (!fs.existsSync(libraryMarker)) throw Error(`no prebuilt Aeneas Lean library at ${normalize(packages)}`);
@@ -289,15 +289,7 @@ fs.mkdirSync(leanProject);
 fs.mkdirSync(path.join(leanProject, '.lake'));
 fs.copyFileSync(path.join(root, 'proofs/m1/lake-manifest.json'), path.join(leanProject, 'lake-manifest.json'));
 fs.copyFileSync(path.join(root, 'proofs/m1/lean-toolchain'), path.join(leanProject, 'lean-toolchain'));
-fs.symlinkSync(packages, path.join(leanProject, '.lake/packages'), 'dir');
-// The project's own lakefile never builds the shared packages: the stage runs
-// `lake env lean <file>`, which only sets LEAN_PATH and elaborates the one generated file into
-// nothing. A `lake build` here could write rebuilt oleans through the `.lake/packages` symlink
-// into the prebuilt library the proof projects share.
-fs.writeFileSync(path.join(leanProject, 'lakefile.toml'),
-  'name = "noble-allocator-admission"\n\n[[require]]\nname = "aeneas"\n'
-  + 'git = { url = "https://github.com/AeneasVerif/aeneas", subDir = "backends/lean" }\n'
-  + `rev = "${tools.aeneas.lean_library_rev}"\n`);
+fs.cpSync(packages, path.join(leanProject, '.lake/packages'), { recursive: true });
 
 const operational = [];
 for (const cell of cells) {
@@ -341,7 +333,12 @@ for (const cell of cells) {
     ?? produced[0];
   const library = entry.replace(/\.lean$/, '');
   fs.copyFileSync(path.join(generated, entry), path.join(leanProject, entry));
-  const leanRun = run(`${name}-lean`, tool('lean', 'lake'), ['env', 'lean', entry],
+  fs.writeFileSync(path.join(leanProject, 'lakefile.toml'),
+    `name = "noble-allocator-admission-${name}"\ndefaultTargets = ["${library}"]\n\n`
+    + "[[require]]\nname = \"aeneas\"\ngit = { url = \"https://github.com/AeneasVerif/aeneas\", "
+    + 'subDir = "backends/lean" }\n'
+    + `rev = "${tools.aeneas.lean_library_rev}"\n\n[[lean_lib]]\nname = "${library}"\n`);
+  const leanRun = run(`${name}-lean`, tool('lean', 'lake'), ['build', library],
     { ...fakeUser, PATH: `${path.dirname(tool('lean', 'lake'))}:${systemPath}` }, 1_800_000, leanProject);
   stages.lean = { status: leanRun.exit === 0 ? 'checked' : 'blocked', exit: leanRun.exit,
     module: library, entry_sha256: fileSha(path.join(leanProject, entry)),
@@ -444,8 +441,8 @@ const liveControl = (() => {
 
 const after = packagesSnapshot();
 // Observed, not asserted: the prebuilt Aeneas Lean library is shared with every proof project
-// and other lanes work against it concurrently. This lane's own commands are `lake env lean`,
-// which cannot write it, so a change here is another lane's build and is reported as such.
+// and other lanes work against it concurrently. This lane builds only in its private artifact
+// copy, so a change here is another lane's build and is reported as such.
 const packageCacheChanged = before.vec_olean_mtime_ms !== after.vec_olean_mtime_ms
   || before.aeneas_std_dir_mtime_ms !== after.aeneas_std_dir_mtime_ms;
 
@@ -507,7 +504,7 @@ const evidence = {
   stable_toolchain: stable,
   lean_library: { packages: normalize(packages), manifest_sha256: sha(leanLibrary), rev: leanLibraryRev,
     marker: normalize(libraryMarker), shared_cache_changed_during_run: packageCacheChanged,
-    lane_commands_can_write_cache: false, lane_stage: 'lake env lean <generated file>',
+    lane_commands_can_write_cache: false, lane_stage: 'lake build <generated module> in isolated package copy',
     snapshot_before: before, snapshot_after: after },
   source_stage: { expectations: sourceExpectations, stages: sourceStages, failures: sourceFailures,
     ungated_unstable_feature_errors: sourceStages.extraction_nightly_ungated.unstable_feature_errors ?? 0 },
