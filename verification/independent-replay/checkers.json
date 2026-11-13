@@ -1,0 +1,112 @@
+{
+  "schema": "noble-independent-replay-checkers/v1",
+  "description": "Pinned external checkers for the issue #62 multi-checker lane. Every checker is a binary bundled with the policy-selected Lean 4.35.0 release, so its identity is pinned twice: by the release's store path (policy/tool-selection.json) and by the binary's own SHA-256 below. No checker is built from source by this lane; the nanoda-from-source receipts of 2026-10-29/30 stay as history.",
+  "toolchain": {
+    "lean": "4.35.0",
+    "githash": "eb6cafb7290e8bd5f2937522d8d804f58f02bafc",
+    "output": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0",
+    "derivation": "/nix/store/54871l591i8ji049ffyyjh3qkrdikh9h-noble-lean-release-4.35.0.drv",
+    "policy": "policy/tool-selection.json (tools.lean)",
+    "lean_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+    "lake_sha256": "f6b0733782cb24932ed45979f88eccfb0e466f966a578c9f35e70ea468ee67ad",
+    "leanexport_sha256": "beb75c89dab5e6e40e781a006fe4340dcca81d5896e61f305e858fea491fc57f",
+    "licenses": "The release bundles its libraries under the terms in its LICENSES file; each checker's upstream is named below."
+  },
+  "checker_interface": {
+    "accepted": "exit 0 and a positive checked-declaration count parsed from the checker's own output",
+    "unsupported": "exit 2 (the Lean Kernel Arena's 'declined'), recorded as a refusal class and never as success",
+    "checker-error": "every other nonzero exit or signal, or exit 0 without a parseable positive count; rejection-shaped diagnostics are recorded but never promoted to mathematical refutations",
+    "source": "https://github.com/leanprover/lean-kernel-arena checkers/*.yaml (run: 0 accept, 1 reject, 2 decline)"
+  },
+  "independence_dimensions": {
+    "independent_implementation": "A separately authored executable implementation, not compiled from another listed checker.",
+    "independent_checker_design": "A checker design that is not a port/twin of another listed checker and is not derived from the official Lean C++ kernel."
+  },
+  "export_format": {
+    "version": "3.1.0",
+    "producer": "lean4export bundled with Lean 4.35.0",
+    "rule": "the lane audits the export's declared meta format version itself: three of the four bundled checkers accepted a 3.2.0 export that nanoda refuses, so a format mismatch is a lane refusal (`unsupported-format`), not a checker verdict"
+  },
+  "checkers": [
+    {
+      "id": "nanoda",
+      "binary": "nanoda_bin",
+      "sha256": "42c552c48618da739861c1b807240df6b83587ab38b015b69dff0d850ed95770",
+      "version": "0.4.19 (--help banner)",
+      "language": "Rust",
+      "language_marker": "cargo/registry|/rustc/",
+      "implementation_family": "nanoda-rust",
+      "source_evidence": "https://github.com/ammkrn/nanoda_lib#about",
+      "binary_source_revision": "not exposed by the prebuilt Lean release; the release store path and binary digest are the executable identity",
+      "upstream": "ammkrn/nanoda_lib (Apache-2.0), bundled with Lean 4.35.0",
+      "independent_of_lean_kernel": true,
+      "independent_implementation": true,
+      "independent_checker_design": true,
+      "independence": "A separately authored Rust implementation of a Lean export type checker. Its README calls it an external checker; it is not a port of another listed checker and shares no implementation code with Lean's C++ kernel. Its source revision is not exposed by the bundled release, and it still shares the export format and permitted Lean axioms with the other checkers.",
+      "run": { "kind": "nanoda-config", "threads": 1 },
+      "accept_pattern": "Checked (\\d+) declarations with no errors",
+      "declined_exit": [2],
+      "note": "Rejections surface as an assertion panic (src/tc.rs) with exit 101; configuration and parse failures exit 1."
+    },
+    {
+      "id": "con-leche",
+      "binary": "con-leche",
+      "sha256": "d85f0b78e91d0ac421df172fa6dc1582d9fadc6428aee746c1d945d6ef5f2631",
+      "version": "bundled with Lean 4.35.0 (no --version flag)",
+      "language": "Lean",
+      "language_marker": "lean_apply_|_lean_main|Lean\\.[A-Z]",
+      "implementation_family": "con-leche-lean",
+      "source_evidence": "https://github.com/leanprover/con-leche#design-of-the-checker-implementation",
+      "binary_source_revision": "not exposed by the prebuilt Lean release; the release store path and binary digest are the executable identity",
+      "upstream": "leanprover/con-leche, bundled with Lean 4.35.0",
+      "independent_of_lean_kernel": true,
+      "independent_implementation": true,
+      "independent_checker_design": true,
+      "independence": "A separately authored Lean checker with its own term representation (the upstream design explicitly says it does not rely on Lean.Expr or unverified C++ routines) and a machine-checked consistency theorem for --verified. It is not a copy of the official kernel. Its soundness theorem is checked by Lean, and its Nat acceleration uses Lean's runtime Nat operations, so it is not independent of the Lean toolchain/runtime.",
+      "run": { "argv": ["--verified", "--jobs=1", "FILE"], "jobs": 1 },
+      "accept_pattern": "accepted (\\d+) declarations",
+      "declined_exit": [2],
+      "note": "Exit 3 is an NDJSON parse failure (observed: 'expected ':' after a key'). It accepted a meta format version 3.2.0 export that nanoda refuses, so the format audit stays the lane's job."
+    },
+    {
+      "id": "con-ron",
+      "binary": "con-ron",
+      "sha256": "6a546cccd55ca70f1b1337baaa1424fab6a98542491b09ab816fcb7b6882db73",
+      "version": "bundled with Lean 4.35.0 (no --version flag)",
+      "language": "Rust",
+      "language_marker": "/rustc/",
+      "implementation_family": "con-leche-family",
+      "source_evidence": "https://github.com/leanprover/con-ron#method",
+      "binary_source_revision": "not exposed by the prebuilt Lean release; the release store path and binary digest are the executable identity",
+      "upstream": "con-leche's Rust arena checker, bundled with Lean 4.35.0",
+      "independent_of_lean_kernel": true,
+      "independent_implementation": true,
+      "independent_checker_design": false,
+      "independence": "A separate Rust implementation. Its upstream README calls it a Rust port of con-leche and describes a checked refinement relationship to a Lean twin of con-leche's pure algorithm; it is a distinct implementation but not an independent checker design. Count it as a related implementation, never as a second independent design.",
+      "run": { "argv": ["--verified", "--jobs=1", "FILE"], "jobs": 1 },
+      "accept_pattern": "accepted (\\d+) declarations",
+      "declined_exit": [2],
+      "note": "Reported beside con-leche, never instead of it: a shared design bug would show in both."
+    },
+    {
+      "id": "lean4lean",
+      "binary": "lean4lean",
+      "sha256": "a7cfbc8a45d2bd0ad1793f60e5640813f584ca88ca962a0b91128305c36883fa",
+      "version": "bundled with Lean 4.35.0",
+      "language": "Lean",
+      "language_marker": "Lean4Lean\\.",
+      "implementation_family": "lean4lean-derived-cpp",
+      "source_evidence": "https://github.com/digama0/lean4lean#lean-for-lean",
+      "binary_source_revision": "not exposed by the prebuilt Lean release; the release store path and binary digest are the executable identity",
+      "upstream": "leanprover/lean4lean, bundled with Lean 4.35.0",
+      "independent_of_lean_kernel": false,
+      "independent_implementation": false,
+      "independent_checker_design": false,
+      "independence": "The upstream README states this Lean kernel implementation is derived directly from the C++ kernel and likely shares implementation bugs. It is kept only as a lower-diversity kernel-derived cross-check.",
+      "run": { "argv": ["--import", "FILE"] },
+      "accept_pattern": "checked (\\d+) declarations",
+      "declined_exit": [2],
+      "note": "Rejections print 'uncaught exception: at <decl>: (kernel) ...' on stderr and exit 1, the same status as an internal error; the rejection-shaped message is recorded."
+    }
+  ]
+}

@@ -9,10 +9,16 @@
 // while the small export is accepted under the same bounds, so a refusal is the bound acting on
 // checker work rather than a bound that refuses everything. A bound that does not bind, or a bounded
 // run classified as accepted, fails the control. This is pilot evidence, not a gate.
+//
+// Acceptance is the strict rule `refusals.mjs` established, not the status-only one this lane used
+// first: the checker must exit zero with a positive checked-declaration count, the export must
+// declare the subject root, and every axiom it declares must be a standard one.
 import { spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { foreignAxioms, inspectExport } from './ndjson.mjs';
+import { pinGuard } from './pins.mjs';
 
 const argv = process.argv.slice(2);
 const value = (name) => {
@@ -30,13 +36,30 @@ const pins = {
   large: value('--large-sha256'),
   small: value('--small-sha256'),
 };
+// Where the small export is retained, recorded in the receipt; the file itself is any pinned copy.
+const smallRetainedAt = argv.includes('--small-retained-at') ? value('--small-retained-at') : null;
+const toolchain = argv.includes('--toolchain') ? value('--toolchain') : null;
 
 const sha256 = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 // Refuse before any checker process runs when a pinned input changed.
-for (const [name, file] of [['nanoda', nanoda], ['large', large], ['small', small]]) {
-  const actual = sha256(file);
-  if (actual !== pins[name]) throw new Error(`${name} digest ${actual} differs from the pin ${pins[name]}`);
-}
+pinGuard([
+  { role: 'checker', file: nanoda, sha256: pins.nanoda, pinClass: 'tool-pin-mismatch' },
+  { role: 'large export', file: large, sha256: pins.large, pinClass: 'export-pin-mismatch' },
+  { role: 'small export', file: small, sha256: pins.small, pinClass: 'export-pin-mismatch' },
+]);
+
+const LARGE_ROOT = 'NobleFoundation.toInt_add';
+const SMALL_ROOT = 'NobleFoundation.LinkBoundary.vertical_simulation_compose';
+const roots = { large: LARGE_ROOT, small: SMALL_ROOT };
+const inspections = { large: inspectExport(large), small: inspectExport(small) };
+// A root the export does not declare, or a non-standard axiom it does declare, refuses every run of
+// that subject regardless of status; the checks below cannot pass in that state.
+const artifactProblem = (subject) => {
+  const inspection = inspections[subject];
+  if (!inspection.declared.has(roots[subject])) return `root-absent:${roots[subject]}`;
+  const foreign = foreignAxioms(inspection);
+  return foreign.length > 0 ? `forbidden-axiom:${foreign.join(',')}` : null;
+};
 
 fs.mkdirSync(work, { recursive: true });
 function config(exportPath) {
@@ -56,16 +79,21 @@ function config(exportPath) {
 }
 const configs = { large: config(large), small: config(small) };
 
-function classify(result) {
+function classify(result, subject) {
   if (result.error?.code === 'ETIMEDOUT') return 'timeout';
   const text = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
-  if (result.status === 0 && /Checked \d+ declarations with no errors/u.test(result.stdout ?? '')) {
-    return 'accepted';
+  const checked = (result.stdout ?? '').match(/Checked (\d+) declarations with no errors/u);
+  if (result.status === 0 && checked) {
+    const problem = artifactProblem(subject);
+    if (problem) return problem;
+    return Number(checked[1]) > 0 ? 'accepted' : 'empty-check';
   }
   if (result.signal === 'SIGABRT' || result.status === 134
+      || result.signal === 'SIGKILL' || result.status === 137
       || /memory allocation of \d+ bytes failed|Cannot allocate memory|out of memory/iu.test(text)) {
     return 'resource-exhausted';
   }
+  if (/Checked 0 declarations/u.test(result.stdout ?? '')) return 'empty-check';
   return 'refused-other';
 }
 
@@ -89,7 +117,7 @@ function run(name, subject, { timeoutMs = 0, addressSpaceBytes = 0 } = {}) {
     exit_code: result.status,
     signal: result.signal,
     elapsed_ms: elapsedMs,
-    classification: classify(result),
+    classification: classify(result, subject),
     stdout: (result.stdout ?? '').trim().slice(0, 300),
     stderr_excerpt: (result.stderr ?? '').trim().slice(-300),
   };
@@ -124,11 +152,12 @@ const find = (name, subject) => runs.find((entry) => entry.name === name && entr
 const checks = {
   large_unbounded_accepted: find('unbounded', 'large')?.classification === 'accepted',
   small_unbounded_accepted: find('unbounded', 'small')?.classification === 'accepted',
+  large_artifact_clean: artifactProblem('large') === null,
+  small_artifact_clean: artifactProblem('small') === null,
   large_time_bound_refused: find('time-bound', 'large')?.classification === 'timeout',
   small_time_bound_accepted: find('time-bound', 'small')?.classification === 'accepted',
   address_space_bound_found: addressSpaceBytes > 0,
-  large_address_space_bound_refused: ['resource-exhausted', 'refused-other']
-    .includes(find('address-space-bound', 'large')?.classification),
+  large_address_space_bound_refused: find('address-space-bound', 'large')?.classification === 'resource-exhausted',
   no_bounded_large_run_accepted: runs
     .filter((entry) => entry.subject === 'large' && (entry.timeout_ms || entry.address_space_bytes))
     .every((entry) => entry.classification !== 'accepted'),
@@ -136,22 +165,35 @@ const checks = {
 const holds = Object.values(checks).every(Boolean);
 
 const host = spawnSync('uname', ['-srm'], { encoding: 'utf8' }).stdout.trim();
+const source = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: process.cwd(), encoding: 'utf8' });
+if (source.status !== 0 || source.stdout.trim() === '') {
+  throw new Error(`cannot identify receipt source commit: ${source.stderr.trim()}`);
+}
 const receipt = {
   schema: 'noble-independent-replay-limits/v1',
   measured_on: new Date().toISOString().slice(0, 10),
   host,
+  source_commit: source.stdout.trim(),
   assertion: 'under a wall-clock bound and an address-space bound the pinned nanoda checker run on the pinned large export ends in a refusal class, never acceptance, while the small retained export is accepted under the same bounds',
   holds,
   checks,
+  acceptance_rule: [
+    'checker exit status zero with a positive number of checked declarations',
+    'every subject root declared in the export',
+    'every declared axiom in propext, Classical.choice, Quot.sound',
+  ],
+  toolchain,
   tools: { nanoda: { binary_sha256: pins.nanoda, num_threads: 1 } },
   exports: {
-    large: { root: 'NobleFoundation.toInt_add', sha256: pins.large, size_bytes: fs.statSync(large).size, retained: false },
+    large: {
+      root: LARGE_ROOT, sha256: pins.large, size_bytes: fs.statSync(large).size, retained: false,
+      records: inspections.large.records, declared_axioms: inspections.large.axioms,
+    },
     small: {
-      root: 'NobleFoundation.LinkBoundary.vertical_simulation_compose',
-      sha256: pins.small,
-      size_bytes: fs.statSync(small).size,
-      retained: true,
-      path: 'verification/independent-replay/receipts/2026-10-29/vertical_simulation_compose.ndjson',
+      root: SMALL_ROOT, sha256: pins.small, size_bytes: fs.statSync(small).size,
+      retained: smallRetainedAt !== null,
+      path: smallRetainedAt, records: inspections.small.records,
+      declared_axioms: inspections.small.axioms,
     },
   },
   bounds: { timeout_ms: timeoutMs, address_space_bytes: addressSpaceBytes || null, address_space_search: search },

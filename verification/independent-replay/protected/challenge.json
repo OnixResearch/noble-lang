@@ -1,0 +1,28 @@
+{
+  "challenge_id": "noble-issue-62-protected-bound/v1",
+  "model": {
+    "name": "bounded-natural-allowance",
+    "version": "1",
+    "semantic_root": "Protected.threshold",
+    "predicate": "allowed n iff n < threshold",
+    "parameters": { "threshold": 32 }
+  },
+  "external_contracts": [
+    {
+      "name": "Lean.Init/Nat",
+      "version": "4.35.0",
+      "source": "The policy-pinned Lean 4.35.0 Init environment; imported declarations reachable from the roots are included in the exported semantic closure."
+    }
+  ],
+  "challenge_module": "Challenge",
+  "solution_module": "Solution",
+  "theorem_names": [
+    "Protected.zero_allowed",
+    "Protected.succ_of_lt",
+    "Protected.add_allowed"
+  ],
+  "assumption_policy": {
+    "definition_holes": [],
+    "permitted_axioms": ["propext", "Classical.choice", "Quot.sound"]
+  }
+}

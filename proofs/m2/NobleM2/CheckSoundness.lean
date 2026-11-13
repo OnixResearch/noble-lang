@@ -360,13 +360,15 @@ theorem ce_accepted : check bootstrapEnv ceRequest ceCandidate
     = .accepted ceChecked := by
   native_decide
 
+set_option maxHeartbeats 1000000 in
+set_option maxRecDepth 4096 in
 /-- And its acceptance is derivable: the node derives its own `[] -- [i64]`
 interface, joined onto `[bool]` by segment replacement. -/
 theorem ce_derives : Derives bootstrapEnv ceCandidate ceCandidate.body
     ceRequest.expected.stackIn ceRequest.expected.stackOut
     ceChecked.interface.effects := by
   have h0 : (litScheme (.i64 41)).instantiate ⟨[.stack .nil]⟩
-      = some (.nil, .cons .i64 .nil, EffSet.empty) := by native_decide
+      = some (.nil, .cons .i64 .nil, EffSet.empty) := by decide +kernel
   have hseq : Derives bootstrapEnv ceCandidate [0] (.cons .bool .nil)
       (.cons .bool (.cons .i64 .nil)) (EffSet.empty.union EffSet.empty) :=
     Derives.sequence rfl (NodeDerives.literal h0) rfl rfl

@@ -3,8 +3,8 @@
   "description": "Roots selected for the issue #62 binding lane and the statements Noble compiled for them. Each statement is printed by verification/independent-replay/statements.lean from the compiled foundation environment through Lean's own Expr, never from a lean4export file.",
   "canonical_form": "(stmt [level params] type); binder names and mdata dropped, binder kinds kept (d default, i implicit, s strict implicit, c instance), dotted unescaped names, string literals as UTF-8 hex, levels as 0, (s l), (max a b), (imax a b), (u name)",
   "source": {
-    "foundation_commit": "b95bfb8f",
-    "lean": "4.31.0"
+    "foundation_commit": "fed77835",
+    "lean": "4.35.0"
   },
   "claims": [
     {

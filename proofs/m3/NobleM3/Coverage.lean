@@ -156,45 +156,50 @@ private def u : Nat → EffSet
   | 0 => EffSet.empty
   | n + 1 => EffSet.empty.union (u n)
 
+set_option maxHeartbeats 1000000 in
+set_option maxRecDepth 4096 in
 theorem ee_derives : Derives bootstrapEnv eeCandidate eeCandidate.body
     eeRequest.expected.stackIn eeRequest.expected.stackOut
     eeChecked.interface.effects := by
   have hlit0 : (litScheme (.i64 7)).instantiate ⟨[.stack .nil]⟩
-      = some (.nil, tl [.i64], EffSet.empty) := by native_decide
+      = some (.nil, tl [.i64], EffSet.empty) := by decide +kernel
   have hlit1 : (litScheme (.i64 1)).instantiate ⟨[.stack (tl [.i64])]⟩
-      = some (tl [.i64], tl [.i64, .i64], EffSet.empty) := by native_decide
+      = some (tl [.i64], tl [.i64, .i64], EffSet.empty) := by decide +kernel
   have hlit2 : (litScheme (.i64 2)).instantiate ⟨[.stack (tl [.i64, eeSum])]⟩
-      = some (tl [.i64, eeSum], tl [.i64, eeSum, .i64], EffSet.empty) := by native_decide
+      = some (tl [.i64, eeSum], tl [.i64, eeSum, .i64], EffSet.empty) := by decide +kernel
   have hlit3 : (litScheme (.i64 3)).instantiate ⟨[.stack (tl [.i64, eeSum, eeProg])]⟩
-      = some (tl [.i64, eeSum, eeProg], tl [.i64, eeSum, eeProg, .i64], EffSet.empty) := by
-    native_decide
+      = some (tl [.i64, eeSum, eeProg], tl [.i64, eeSum, eeProg, .i64], EffSet.empty) :=
+    by decide +kernel
   have hinl : inlScheme.instantiate ⟨[.stack (tl [.i64]), .value .i64, .value .i64]⟩
-      = some (tl [.i64, .i64], tl [.i64, eeSum], EffSet.empty) := by native_decide
+      = some (tl [.i64, .i64], tl [.i64, eeSum], EffSet.empty) := by decide +kernel
   have hq4 : quoteScheme.instantiate
       ⟨[.stack (tl [.i64, eeSum]), .value .i64, .stack (tl [.i64, .i64])]⟩
-      = some (tl [.i64, eeSum, .i64], tl [.i64, eeSum, eeProg], EffSet.empty) := by
-    native_decide
+      = some (tl [.i64, eeSum, .i64], tl [.i64, eeSum, eeProg], EffSet.empty) :=
+    by decide +kernel
   have hq6 : quoteScheme.instantiate
       ⟨[.stack (tl [.i64, eeSum, eeProg]), .value .i64, .stack (tl [.i64, .i64])]⟩
       = some (tl [.i64, eeSum, eeProg, .i64], tl [.i64, eeSum, eeProg, eeProg],
-        EffSet.empty) := by native_decide
+        EffSet.empty) := by decide +kernel
   have hcase : caseScheme.instantiate
       ⟨[.stack (tl [.i64]), .value .i64, .value .i64, .stack (tl [.i64, .i64, .i64]),
         .effect EffSet.empty, .effect EffSet.empty]⟩
       = some (tl [.i64, eeSum, eeProg, eeProg], tl [.i64, .i64, .i64], EffSet.empty) := by
-    native_decide
+    simp [caseScheme, Scheme.instantiate, Scheme.substStack, Scheme.substPattern,
+      Scheme.substSignature, Scheme.substEffects, PartList.ofList, SlotList.ofList,
+      Inst.stack, Inst.value, Inst.effects, append_nil, union_empty_right,
+      tl, eeSum, eeProg, TyList.append]
   have e7 : Derives bootstrapEnv eeCandidate [7] (tl [.i64, eeSum, eeProg, eeProg])
       (tl [.i64, .i64, .i64]) (u 1) :=
     Derives.sequence rfl
-      (NodeDerives.word (by native_decide : bootstrapEnv.scheme 17 = some caseScheme)
-        (resolvesTo_refl _ (by native_decide)) hcase trivial)
+      (NodeDerives.word (by decide +kernel : bootstrapEnv.scheme 17 = some caseScheme)
+        (resolvesTo_refl _ (by decide +kernel)) hcase trivial)
       (tailEquals_self _) replaceTail_self (Derives.empty _)
   have e67 : Derives bootstrapEnv eeCandidate [6, 7] (tl [.i64, eeSum, eeProg, .i64])
       (tl [.i64, .i64, .i64]) (u 2) :=
     Derives.sequence rfl
-      (NodeDerives.word (by native_decide : bootstrapEnv.scheme 8 = some quoteScheme)
-        (resolvesTo_refl _ (by native_decide)) hq6
-        ⟨.i64, by native_decide, by native_decide⟩)
+      (NodeDerives.word (by decide +kernel : bootstrapEnv.scheme 8 = some quoteScheme)
+        (resolvesTo_refl _ (by decide +kernel)) hq6
+        ⟨.i64, by decide +kernel, by decide +kernel⟩)
       (tailEquals_self _) replaceTail_self e7
   have e567 : Derives bootstrapEnv eeCandidate [5, 6, 7] (tl [.i64, eeSum, eeProg])
       (tl [.i64, .i64, .i64]) (u 3) :=
@@ -204,9 +209,9 @@ theorem ee_derives : Derives bootstrapEnv eeCandidate eeCandidate.body
   have e4567 : Derives bootstrapEnv eeCandidate [4, 5, 6, 7] (tl [.i64, eeSum, .i64])
       (tl [.i64, .i64, .i64]) (u 4) :=
     Derives.sequence rfl
-      (NodeDerives.word (by native_decide : bootstrapEnv.scheme 8 = some quoteScheme)
-        (resolvesTo_refl _ (by native_decide)) hq4
-        ⟨.i64, by native_decide, by native_decide⟩)
+      (NodeDerives.word (by decide +kernel : bootstrapEnv.scheme 8 = some quoteScheme)
+        (resolvesTo_refl _ (by decide +kernel)) hq4
+        ⟨.i64, by decide +kernel, by decide +kernel⟩)
       (tailEquals_self _) replaceTail_self e567
   have e34567 : Derives bootstrapEnv eeCandidate [3, 4, 5, 6, 7] (tl [.i64, eeSum])
       (tl [.i64, .i64, .i64]) (u 5) :=
@@ -216,8 +221,8 @@ theorem ee_derives : Derives bootstrapEnv eeCandidate eeCandidate.body
   have e234567 : Derives bootstrapEnv eeCandidate [2, 3, 4, 5, 6, 7] (tl [.i64, .i64])
       (tl [.i64, .i64, .i64]) (u 6) :=
     Derives.sequence rfl
-      (NodeDerives.word (by native_decide : bootstrapEnv.scheme 15 = some inlScheme)
-        (resolvesTo_refl _ (by native_decide)) hinl trivial)
+      (NodeDerives.word (by decide +kernel : bootstrapEnv.scheme 15 = some inlScheme)
+        (resolvesTo_refl _ (by decide +kernel)) hinl trivial)
       (tailEquals_self _) replaceTail_self e34567
   have e1234567 : Derives bootstrapEnv eeCandidate [1, 2, 3, 4, 5, 6, 7] (tl [.i64])
       (tl [.i64, .i64, .i64]) (u 7) :=
@@ -229,7 +234,8 @@ theorem ee_derives : Derives bootstrapEnv eeCandidate eeCandidate.body
     Derives.sequence rfl
       (NodeDerives.literal (resolvesTo_refl _ (by decide)) hlit0)
       (tailEquals_self _) replaceTail_self e1234567
-  have hu : u 8 = EffSet.empty := by native_decide
+  have hu : u 8 = EffSet.empty := by
+    simp only [u, union_empty_left]
   rw [hu] at e0
   exact e0
 

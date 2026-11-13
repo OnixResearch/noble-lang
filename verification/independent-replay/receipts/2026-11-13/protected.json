@@ -1,0 +1,2714 @@
+{
+  "schema": "noble-independent-replay-protected/v2",
+  "measured_on": "2026-11-13",
+  "host": "Linux 6.18.60 x86_64",
+  "source_commit": "c4d69258200ebb48f65ab82e7fa4be4747737262",
+  "toolchain": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0",
+  "assertion": "separately built real and alternate proofs preserve all challenge statements and protected semantic definitions; a weakened predicate and changed imported threshold are refused by per-definition exported-closure comparison with dependency paths; wrong statements and a forbidden axiom have distinct refusal classes; a solution export missing a protected definition is refused by exact name",
+  "holds": true,
+  "checks": {
+    "challenge_configuration_is_explicit": true,
+    "challenge_declares_all_targets": true,
+    "challenge_semantic_closure_complete": true,
+    "every_valid_fixture_builds_and_exports": true,
+    "invalid_proof_is_rejected_by_the_lean_kernel": true,
+    "every_legitimate_export_has_only_permitted_axioms": true,
+    "real_solution_accepted": true,
+    "alternate_proof_accepted": true,
+    "weakened_predicate_refused_on_its_definition": true,
+    "changed_imported_semantics_refused_on_its_definition": true,
+    "wrong_statement_refused_as_statement_mismatch": true,
+    "forbidden_assumption_refused_as_axiom": true,
+    "missing_definition_refused_by_name": true,
+    "every_statement_preserving_solution_matches_the_challenge": true,
+    "honest_solutions_reproduce_the_challenge_semantic_closure": true,
+    "mutated_semantics_do_not_reproduce_the_challenge_digest": true,
+    "proof_and_semantic_closures_are_distinctly_recorded": true,
+    "proof_closure_distinguishes_all_three_proof_terms": true,
+    "diagnostic_classes_remain_distinct": true,
+    "semantic_mismatch_reports_dependency_paths": true,
+    "missing_definition_reports_dependency_path": true
+  },
+  "comparison": {
+    "method": "exported-definition-closure/v1",
+    "comparator": "lake comparator was not run: bwrap is absent from the execution PATH; this lane uses the exported-closure fallback instead",
+    "bwrap_on_execution_path": false,
+    "execution_path": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:/run/current-system/sw/bin:/usr/bin:/bin",
+    "definition_holes": [],
+    "model": {
+      "name": "bounded-natural-allowance",
+      "version": "1",
+      "semantic_root": "Protected.threshold",
+      "predicate": "allowed n iff n < threshold",
+      "parameters": {
+        "threshold": 32
+      }
+    },
+    "external_contracts": [
+      {
+        "name": "Lean.Init/Nat",
+        "version": "4.35.0",
+        "source": "The policy-pinned Lean 4.35.0 Init environment; imported declarations reachable from the roots are included in the exported semantic closure."
+      }
+    ]
+  },
+  "harness": {
+    "protected": {
+      "path": "verification/independent-replay/protected.mjs",
+      "sha256": "14bec8034c4ff8159612907aad04770233b2ab095567a0cd6af03f47188485ad"
+    },
+    "challenge_config": {
+      "path": "verification/independent-replay/protected/challenge.json",
+      "sha256": "01611d9fd87eb8bd63f5d4ec38463b27270bb6ac6358c21c50fdb94a4a09258c"
+    },
+    "checker_manifest": {
+      "path": "verification/independent-replay/checkers.json",
+      "sha256": "b51824dd84168a8adb6424ac83d0bf928ecd2a40d024c6462e717b3561a37720"
+    },
+    "sources": [
+      {
+        "path": "verification/independent-replay/protected/challenge/Challenge.lean",
+        "sha256": "ec19efc7538e20381bc4db5d473a5ca94d5b1982a3226e2ac7277dbd0c0c1ef3"
+      },
+      {
+        "path": "verification/independent-replay/protected/challenge/Protected/Semantics.lean",
+        "sha256": "5641e7e90be1205f5b3101a07ce09931c1ee27f1a67e8c9ed7d9a8bb0866c45f"
+      },
+      {
+        "path": "verification/independent-replay/protected/challenge/lake-manifest.json",
+        "sha256": "f509d7723dc1f040069ae7cf8b786c4b4a4d13139061956d14e150d8b1599e84"
+      },
+      {
+        "path": "verification/independent-replay/protected/challenge/lakefile.toml",
+        "sha256": "d2ae0c94306fdc19d7ffc0e2193ca689d95db632cc6c5e1e1ce4ff770574c223"
+      },
+      {
+        "path": "verification/independent-replay/protected/challenge/lean-toolchain",
+        "sha256": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/alternate/Protected/Semantics.lean",
+        "sha256": "5641e7e90be1205f5b3101a07ce09931c1ee27f1a67e8c9ed7d9a8bb0866c45f"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/alternate/Solution.lean",
+        "sha256": "98f2ef7ddef18de79d69d39294e85e9a8d20b5b98e2b2e9e890f2f431358b24a"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/alternate/lake-manifest.json",
+        "sha256": "f509d7723dc1f040069ae7cf8b786c4b4a4d13139061956d14e150d8b1599e84"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/alternate/lakefile.toml",
+        "sha256": "15d09bffa77b8adb31c27e0e5fd65835299a48612e55bb0277821600a0086cf3"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/alternate/lean-toolchain",
+        "sha256": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/changed-semantics/Protected/Semantics.lean",
+        "sha256": "046baf4d7f5dc73e4b37b2170b7e70ffb74ed0c1f47bdc33fec46cf08fd07b34"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/changed-semantics/Solution.lean",
+        "sha256": "18280612ec4b41da34a8c1f96247116c29f98c972dbabc6a8a56232b18e2c2c7"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/changed-semantics/lake-manifest.json",
+        "sha256": "f509d7723dc1f040069ae7cf8b786c4b4a4d13139061956d14e150d8b1599e84"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/changed-semantics/lakefile.toml",
+        "sha256": "a72cf1be782d9fb6f1e1b685697a0c6735248621a3b17905ac2d14a1ce4a58fe"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/changed-semantics/lean-toolchain",
+        "sha256": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/forbidden-assumption/Protected/Axiom.lean",
+        "sha256": "f3a317758ab5061270db799a760bde42f7513e0c871c4684a89564b08b58fbd5"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/forbidden-assumption/Protected/Semantics.lean",
+        "sha256": "3afca3ae5e0c5b52d26f9cace997801b5e904c42f44814891bd85c81488a52ab"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/forbidden-assumption/Solution.lean",
+        "sha256": "4dfff2d5e2a95a558018bcb415d403caec95efb6995979c2f45a4415dff5ce2b"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/forbidden-assumption/lake-manifest.json",
+        "sha256": "6e3126d4364ea034b4cd46204a855ef354f11b83171a668ade9673be63b143a6"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/forbidden-assumption/lakefile.toml",
+        "sha256": "19f8f4a1841fdda24a889b553f9db06982b36f2434f1bd36d9aa26e0d4812d96"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/forbidden-assumption/lean-toolchain",
+        "sha256": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/kernel-rejection/Protected/Semantics.lean",
+        "sha256": "c9ba0bec6892b943173f26a5b493a78534cefd7f01f939cdf9606d88559ab0bc"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/kernel-rejection/Solution.lean",
+        "sha256": "267763ad780a81af6d24c5c43f894599523a0e4d6380d72e626c2ff170d6f80e"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/kernel-rejection/lake-manifest.json",
+        "sha256": "f509d7723dc1f040069ae7cf8b786c4b4a4d13139061956d14e150d8b1599e84"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/kernel-rejection/lakefile.toml",
+        "sha256": "34c56c34e734191c61cb14b716ca85311f98226ce496b049161ec061eaccd2f4"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/kernel-rejection/lean-toolchain",
+        "sha256": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/real/Protected/Semantics.lean",
+        "sha256": "5641e7e90be1205f5b3101a07ce09931c1ee27f1a67e8c9ed7d9a8bb0866c45f"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/real/Solution.lean",
+        "sha256": "b285713d989865a51f224499fe3dd6bcf3f484087ce4d68fec492f09305f522e"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/real/lake-manifest.json",
+        "sha256": "f509d7723dc1f040069ae7cf8b786c4b4a4d13139061956d14e150d8b1599e84"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/real/lakefile.toml",
+        "sha256": "3292461226326b8a6e4d0c401eaa3efe9f076ae48d33220e4bef935cfa885d4c"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/real/lean-toolchain",
+        "sha256": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/weakened/Protected/Semantics.lean",
+        "sha256": "75b79da20b1b3959248bdf4f318c99955612043e7c816b74954b87d13adbdd6b"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/weakened/Solution.lean",
+        "sha256": "37fe156e43430f0b1303e582548b61a5346fc5eab14af56f5e26a34236ae1054"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/weakened/lake-manifest.json",
+        "sha256": "f509d7723dc1f040069ae7cf8b786c4b4a4d13139061956d14e150d8b1599e84"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/weakened/lakefile.toml",
+        "sha256": "0fa857f511d717c49f9a328000648f9a702cb44d3bb6dbe07a722fb536065b31"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/weakened/lean-toolchain",
+        "sha256": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/wrong-statement/Protected/Semantics.lean",
+        "sha256": "3afca3ae5e0c5b52d26f9cace997801b5e904c42f44814891bd85c81488a52ab"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/wrong-statement/Solution.lean",
+        "sha256": "9c67078bcda77316ae4a305b1cddf12698dc4a0375891c7f505265590b7911a4"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/wrong-statement/lake-manifest.json",
+        "sha256": "6e3126d4364ea034b4cd46204a855ef354f11b83171a668ade9673be63b143a6"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/wrong-statement/lakefile.toml",
+        "sha256": "600837f63b8276c927594b6942c4f124584e0f657b1f0bf21a1152b9ab465012"
+      },
+      {
+        "path": "verification/independent-replay/protected/solutions/wrong-statement/lean-toolchain",
+        "sha256": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c"
+      }
+    ]
+  },
+  "tools": {
+    "lean": {
+      "binary_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c"
+    },
+    "lake": {
+      "binary_sha256": "f6b0733782cb24932ed45979f88eccfb0e466f966a578c9f35e70ea468ee67ad"
+    },
+    "leanexport": {
+      "binary_sha256": "beb75c89dab5e6e40e781a006fe4340dcca81d5896e61f305e858fea491fc57f"
+    },
+    "release": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0",
+    "derivation": "/nix/store/54871l591i8ji049ffyyjh3qkrdikh9h-noble-lean-release-4.35.0.drv"
+  },
+  "configuration": {
+    "challenge_id": "noble-issue-62-protected-bound/v1",
+    "model": {
+      "name": "bounded-natural-allowance",
+      "version": "1",
+      "semantic_root": "Protected.threshold",
+      "predicate": "allowed n iff n < threshold",
+      "parameters": {
+        "threshold": 32
+      }
+    },
+    "external_contracts": [
+      {
+        "name": "Lean.Init/Nat",
+        "version": "4.35.0",
+        "source": "The policy-pinned Lean 4.35.0 Init environment; imported declarations reachable from the roots are included in the exported semantic closure."
+      }
+    ],
+    "challenge_module": "Challenge",
+    "solution_module": "Solution",
+    "theorem_names": [
+      "Protected.zero_allowed",
+      "Protected.succ_of_lt",
+      "Protected.add_allowed"
+    ],
+    "assumption_policy": {
+      "definition_holes": [],
+      "permitted_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    }
+  },
+  "challenge": {
+    "build": {
+      "argv": [
+        "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+        "build"
+      ],
+      "project": "verification/independent-replay/protected/challenge",
+      "exit_code": 0,
+      "signal": null,
+      "elapsed_ms": 188,
+      "stdout": "Build completed successfully (4 jobs).",
+      "stderr": "",
+      "timed_out": false
+    },
+    "export": {
+      "argv": [
+        "lake",
+        "env",
+        "leanexport",
+        "Challenge",
+        "--",
+        "Protected.zero_allowed",
+        "Protected.succ_of_lt",
+        "Protected.add_allowed"
+      ],
+      "exit_code": 0,
+      "signal": null,
+      "timed_out": false,
+      "panic": false,
+      "stderr_excerpt": ""
+    },
+    "export_record": {
+      "sha256": "edb9ff5fa5160397d57d36d75eaeee2186a16e4b64981a6ae752410a0e4136c6",
+      "size_bytes": 4235961,
+      "records": 83228,
+      "format": "3.1.0",
+      "declarations": 1501,
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "foreign_axioms": []
+    },
+    "root_statement_sha256": {
+      "Protected.zero_allowed": "e43bfa9d66cf17cd764f070189ef5130c753ea79885e2a07ca3485edff79b63f",
+      "Protected.succ_of_lt": "7b74e6a62a1a67ac8ae4f40e0e428b9495764f781fb9addd61b0a059ac9a57cd",
+      "Protected.add_allowed": "d1d44851fd9edded72e48941f06af5bc6e91fe26325f3f9db690bef8ccea5c71"
+    },
+    "semantic_closure": {
+      "declarations": 39,
+      "names": [
+        "Add",
+        "Add.add",
+        "Add.mk",
+        "HAdd",
+        "HAdd.hAdd",
+        "HAdd.mk",
+        "LT",
+        "LT.lt",
+        "LT.mk",
+        "Nat",
+        "Nat.add",
+        "Nat.add._f",
+        "Nat.add.match_1",
+        "Nat.below",
+        "Nat.brecOn",
+        "Nat.brecOn.go",
+        "Nat.casesOn",
+        "Nat.le",
+        "Nat.le.rec",
+        "Nat.le.refl",
+        "Nat.le.step",
+        "Nat.lt",
+        "Nat.rec",
+        "Nat.succ",
+        "Nat.zero",
+        "OfNat",
+        "OfNat.mk",
+        "OfNat.ofNat",
+        "PProd",
+        "PProd.mk",
+        "PUnit",
+        "PUnit.unit",
+        "Protected.allowed",
+        "Protected.threshold",
+        "instAddNat",
+        "instHAdd",
+        "instLTNat",
+        "instOfNatNat",
+        "outParam"
+      ],
+      "missing": [],
+      "digest": {
+        "declarations": 39,
+        "sha256": "7cc25479566cb12a3192812f4cd789da4e9f6ed4d8030b854fb9b228fb8ae605"
+      },
+      "declaration_digests": {
+        "Add": "d829cda54bb3dad979c9590151bc37745b0ecfef0690bd00c70a86c409b80124",
+        "Add.add": "72935e7b10ab6857bc8e338f6c4ff1e6d7d71aca9afe182923ddc41e75d6cdd5",
+        "Add.mk": "ffd2321d4047acb06faf28e6032ea2a56375b6a1750f2e12dc3909c0f2224656",
+        "HAdd": "e9a97184d69034af6b0b89ae8306854e3ae0b4a4a5fef9ffcbe5999977fffd34",
+        "HAdd.hAdd": "43bed8cabd2528ee0e4df902a5446a6c4059efdf5b2cf0053e1d89a3f240439a",
+        "HAdd.mk": "4d3ac96549d47418f25012612eca3a8e1bcc9d5f181147051966a936b0254871",
+        "LT": "defb593bc7d11dedc908b4fd841b6825ecdbe29d7db4901d1a1986fb13f390c9",
+        "LT.lt": "b6c9f13180772b3ea38ee3ca85ad1eb434aedd15fbb5f8ec863f462e8553019f",
+        "LT.mk": "862af11dd27aa7dffee37739ae80cf79f1e090d6bcde300c406a31080d697616",
+        "Nat": "5cd488e5664d466d2a8b3b9ea30243e6966014e159d754a7d95a4926ee6d9472",
+        "Nat.add": "81a7457f075c81d722d98d25ed86b168ab02450e5dcaddac690ce7a5769ea4f3",
+        "Nat.add._f": "f8567a35e01839045ee1fee7bb5e33a9851ae49eee3c2d71963dbd900785fe70",
+        "Nat.add.match_1": "ef986b44a828cb1f10dd0aadc28668b5d0de30243acf0d47345cb5a360a8751b",
+        "Nat.below": "82ac0e7ef838bb3b02581051521c2c5ea50fa4581beb23f3db0fd8c960548498",
+        "Nat.brecOn": "784d50aea73f26c23d89259be835f44c61aef04c4e9601ecf996e04408e9e08d",
+        "Nat.brecOn.go": "ce59bb25233e5700bb527ac8471f4dc4cbf5b4f82980f5d543d9b02f2a0d8e7e",
+        "Nat.casesOn": "d33f48abfe312d731ce1a33d160ece68e68c23b57024dcf9d2f404b48d103234",
+        "Nat.le": "e35f7e97c3af408fd85d6df81144839740539d5511ac6cd7f3ae46bd1a126b2e",
+        "Nat.le.rec": "91e37a367186b419292fa352c1eed6bb1f8a9180cff714522835b1814a07d273",
+        "Nat.le.refl": "762985276c40c0e0a9d202d9ceb679ebc8c8a353c9adac9cbc6d96ce15701f3d",
+        "Nat.le.step": "4f63eb86b6591fbad5da33ea942a81c40cee665125c1f33091cd3b388d093d25",
+        "Nat.lt": "513cfe9db2944a92292d8cf324e8c5fa1fd0d04b7ee0819f56ae7d36e20f130b",
+        "Nat.rec": "fa3658314fb6cb1b8690c5ee0e67098dd58761b50d7ea3b4b1cd915181e1e0b6",
+        "Nat.succ": "3e7171b7a8b3b8b0064bd84fe528109408c4748b0f59b87b1691f281fd9489c4",
+        "Nat.zero": "b853267f44d7791d3450d5aef7af7b6fd44c85c2f5bc9c7944bf60736ae991a1",
+        "OfNat": "394daea755beff6ef6d0078de8ddcedf58bbcc914a6d98c2bd0df54ea97fb00e",
+        "OfNat.mk": "effaba349832e1fd9c3a20a4452b141673f1ebde1f5419f409273b7064cc2573",
+        "OfNat.ofNat": "f842feccb04296d14d1cc6b43339181f59589ca6e5eacd7cea05050565896e83",
+        "PProd": "174649ca3847708b1eecbebfb068242215759815b1b8cf59b6fde595c894adec",
+        "PProd.mk": "4c0c5bb0a4179afb6f3823acad38395e1956a1852833997e8de39f49893d4b96",
+        "PUnit": "9b5d7f994744a79e70d77e8eb8256c93f8daa62fd1c62b3cef49d6d480f85500",
+        "PUnit.unit": "af58f3db600e724cff8e70dec1b1615da22784f6588d33600c7c4ab8e1285cd2",
+        "Protected.allowed": "6c2f13611afefd961b8774d881c326adf260f3e1b6ef893d0a169a68e4e68922",
+        "Protected.threshold": "9b9a8811e601224721b5d89c1f1432a9e05f766c1247153ff908ffcfa6b1cb6e",
+        "instAddNat": "77f57120c86856dc319dfe5ff5b97b4158847e4ada895b78acf1fd3b6c3252a5",
+        "instHAdd": "4b91c20e6f930c8a34cf6a55d50f1fed9bfa249c65c3216429a196efe9c8964a",
+        "instLTNat": "14675087537a40646759d8b6c7938a949ede9630242fe1189e008fd1adcc61d3",
+        "instOfNatNat": "ef48c9bb5fb1ff389098a232806819229197c217345077c0976703e33772bdc3",
+        "outParam": "285379bdf4a1c25f00c520b5ee44c9568d030fb28a56c092c7a2774d884cb711"
+      },
+      "dependency_paths": {
+        "Add": [
+          "Protected.add_allowed",
+          "instAddNat",
+          "Add"
+        ],
+        "Add.add": [
+          "Protected.add_allowed",
+          "instHAdd",
+          "Add.add"
+        ],
+        "Add.mk": [
+          "Protected.add_allowed",
+          "instAddNat",
+          "Add.mk"
+        ],
+        "HAdd": [
+          "Protected.add_allowed",
+          "HAdd.hAdd",
+          "HAdd"
+        ],
+        "HAdd.hAdd": [
+          "Protected.add_allowed",
+          "HAdd.hAdd"
+        ],
+        "HAdd.mk": [
+          "Protected.add_allowed",
+          "instHAdd",
+          "HAdd.mk"
+        ],
+        "LT": [
+          "Protected.add_allowed",
+          "LT.lt",
+          "LT"
+        ],
+        "LT.lt": [
+          "Protected.add_allowed",
+          "LT.lt"
+        ],
+        "LT.mk": [
+          "Protected.add_allowed",
+          "instLTNat",
+          "LT.mk"
+        ],
+        "Nat": [
+          "Protected.add_allowed",
+          "Nat"
+        ],
+        "Nat.add": [
+          "Protected.add_allowed",
+          "instAddNat",
+          "Nat.add"
+        ],
+        "Nat.add._f": [
+          "Protected.add_allowed",
+          "instAddNat",
+          "Nat.add",
+          "Nat.add._f"
+        ],
+        "Nat.add.match_1": [
+          "Protected.add_allowed",
+          "instAddNat",
+          "Nat.add",
+          "Nat.add._f",
+          "Nat.add.match_1"
+        ],
+        "Nat.below": [
+          "Protected.add_allowed",
+          "instAddNat",
+          "Nat.add",
+          "Nat.add._f",
+          "Nat.below"
+        ],
+        "Nat.brecOn": [
+          "Protected.add_allowed",
+          "instAddNat",
+          "Nat.add",
+          "Nat.brecOn"
+        ],
+        "Nat.brecOn.go": [
+          "Protected.add_allowed",
+          "instAddNat",
+          "Nat.add",
+          "Nat.brecOn",
+          "Nat.brecOn.go"
+        ],
+        "Nat.casesOn": [
+          "Protected.add_allowed",
+          "instAddNat",
+          "Nat.add",
+          "Nat.add._f",
+          "Nat.add.match_1",
+          "Nat.casesOn"
+        ],
+        "Nat.le": [
+          "Protected.add_allowed",
+          "instLTNat",
+          "Nat.lt",
+          "Nat.le"
+        ],
+        "Nat.le.rec": [
+          "Protected.add_allowed",
+          "instLTNat",
+          "Nat.lt",
+          "Nat.le",
+          "Nat.le.rec"
+        ],
+        "Nat.le.refl": [
+          "Protected.add_allowed",
+          "instLTNat",
+          "Nat.lt",
+          "Nat.le",
+          "Nat.le.refl"
+        ],
+        "Nat.le.step": [
+          "Protected.add_allowed",
+          "instLTNat",
+          "Nat.lt",
+          "Nat.le",
+          "Nat.le.step"
+        ],
+        "Nat.lt": [
+          "Protected.add_allowed",
+          "instLTNat",
+          "Nat.lt"
+        ],
+        "Nat.rec": [
+          "Protected.add_allowed",
+          "Nat",
+          "Nat.rec"
+        ],
+        "Nat.succ": [
+          "Protected.add_allowed",
+          "Nat",
+          "Nat.succ"
+        ],
+        "Nat.zero": [
+          "Protected.add_allowed",
+          "Nat",
+          "Nat.zero"
+        ],
+        "OfNat": [
+          "Protected.add_allowed",
+          "OfNat.ofNat",
+          "OfNat"
+        ],
+        "OfNat.mk": [
+          "Protected.add_allowed",
+          "instOfNatNat",
+          "OfNat.mk"
+        ],
+        "OfNat.ofNat": [
+          "Protected.add_allowed",
+          "OfNat.ofNat"
+        ],
+        "PProd": [
+          "Protected.add_allowed",
+          "instAddNat",
+          "Nat.add",
+          "Nat.add._f",
+          "PProd"
+        ],
+        "PProd.mk": [
+          "Protected.add_allowed",
+          "instAddNat",
+          "Nat.add",
+          "Nat.add._f",
+          "PProd",
+          "PProd.mk"
+        ],
+        "PUnit": [
+          "Protected.add_allowed",
+          "instAddNat",
+          "Nat.add",
+          "Nat.add._f",
+          "Nat.below",
+          "PUnit"
+        ],
+        "PUnit.unit": [
+          "Protected.add_allowed",
+          "instAddNat",
+          "Nat.add",
+          "Nat.brecOn",
+          "Nat.brecOn.go",
+          "PUnit.unit"
+        ],
+        "Protected.allowed": [
+          "Protected.add_allowed",
+          "Protected.allowed"
+        ],
+        "Protected.threshold": [
+          "Protected.add_allowed",
+          "Protected.allowed",
+          "Protected.threshold"
+        ],
+        "instAddNat": [
+          "Protected.add_allowed",
+          "instAddNat"
+        ],
+        "instHAdd": [
+          "Protected.add_allowed",
+          "instHAdd"
+        ],
+        "instLTNat": [
+          "Protected.add_allowed",
+          "instLTNat"
+        ],
+        "instOfNatNat": [
+          "Protected.add_allowed",
+          "instOfNatNat"
+        ],
+        "outParam": [
+          "Protected.add_allowed",
+          "HAdd.hAdd",
+          "outParam"
+        ]
+      }
+    }
+  },
+  "proof_closures": {
+    "challenge": {
+      "declarations": 1500,
+      "missing": [],
+      "digest": {
+        "declarations": 1500,
+        "sha256": "6b50440ec50a1771ffb7ce3b674bd17102c703dcd99854eb084cd2b1aa20081a"
+      }
+    },
+    "real": {
+      "declarations": 1499,
+      "missing": [],
+      "digest": {
+        "declarations": 1499,
+        "sha256": "2f6bef7d451955e29bac7911a6478f69898725632ec2b9aeaaf7802bd73ac8b7"
+      }
+    },
+    "alternate": {
+      "declarations": 135,
+      "missing": [],
+      "digest": {
+        "declarations": 135,
+        "sha256": "8e8edf90c8e1c14c91a5a07d3bed48e9f3509c9bff4c4208cafa280b7b86fb27"
+      }
+    },
+    "weakened-predicate": {
+      "declarations": 55,
+      "missing": [],
+      "digest": {
+        "declarations": 55,
+        "sha256": "1cb0c6004c979180e554b27455175b8f1d5889b82eed44a544bc9a1699d15c5e"
+      }
+    },
+    "changed-semantics": {
+      "declarations": 1499,
+      "missing": [],
+      "digest": {
+        "declarations": 1499,
+        "sha256": "42253e34f137df83ce020af2146a5036716b9c22c93dcf87388b977ecf3adde6"
+      }
+    },
+    "wrong-statement": {
+      "declarations": 1499,
+      "missing": [],
+      "digest": {
+        "declarations": 1499,
+        "sha256": "d110843d14bd6bd3090c8bee0ca94b3782da6dceab4aadf72dc20890716308a9"
+      }
+    },
+    "forbidden-assumption": {
+      "declarations": 1500,
+      "missing": [],
+      "digest": {
+        "declarations": 1500,
+        "sha256": "bbd4afc646a0b44868fa501befbe2ad1a0741debadd13e9ede8f7275c6b1c10c"
+      }
+    }
+  },
+  "missing_definition_control": {
+    "sha256": "efa8de8569af760a7d303e1caee0ab64eeb2d3ba2247447e6abc327f1c0b2f9b",
+    "size_bytes": 4233671,
+    "records": 83157,
+    "format": "3.1.0",
+    "declarations": 1499,
+    "removed": "Protected.threshold",
+    "axioms": [
+      "propext",
+      "Quot.sound"
+    ]
+  },
+  "runs": [
+    {
+      "id": "real",
+      "project": "verification/independent-replay/protected/solutions/real",
+      "build": {
+        "argv": [
+          "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+          "build"
+        ],
+        "project": "verification/independent-replay/protected/solutions/real",
+        "exit_code": 0,
+        "signal": null,
+        "elapsed_ms": 287,
+        "stdout": "Build completed successfully (4 jobs).",
+        "stderr": "",
+        "timed_out": false
+      },
+      "export": {
+        "sha256": "f3a1737fc664ce4f42348296b6d58ea047dea029afe42da853903002cb989aaa",
+        "size_bytes": 4233778,
+        "records": 83158,
+        "format": "3.1.0",
+        "declarations": 1500,
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ],
+        "foreign_axioms": []
+      },
+      "export_stage": {
+        "argv": [
+          "lake",
+          "env",
+          "leanexport",
+          "Solution",
+          "--",
+          "Protected.zero_allowed",
+          "Protected.succ_of_lt",
+          "Protected.add_allowed"
+        ],
+        "exit_code": 0,
+        "signal": null,
+        "timed_out": false,
+        "panic": false,
+        "stderr_excerpt": ""
+      },
+      "root_statement_sha256": {
+        "Protected.zero_allowed": "e43bfa9d66cf17cd764f070189ef5130c753ea79885e2a07ca3485edff79b63f",
+        "Protected.succ_of_lt": "7b74e6a62a1a67ac8ae4f40e0e428b9495764f781fb9addd61b0a059ac9a57cd",
+        "Protected.add_allowed": "d1d44851fd9edded72e48941f06af5bc6e91fe26325f3f9db690bef8ccea5c71"
+      },
+      "foreign_axioms": [],
+      "semantic_closure": {
+        "declarations": 39,
+        "names": [
+          "Add",
+          "Add.add",
+          "Add.mk",
+          "HAdd",
+          "HAdd.hAdd",
+          "HAdd.mk",
+          "LT",
+          "LT.lt",
+          "LT.mk",
+          "Nat",
+          "Nat.add",
+          "Nat.add._f",
+          "Nat.add.match_1",
+          "Nat.below",
+          "Nat.brecOn",
+          "Nat.brecOn.go",
+          "Nat.casesOn",
+          "Nat.le",
+          "Nat.le.rec",
+          "Nat.le.refl",
+          "Nat.le.step",
+          "Nat.lt",
+          "Nat.rec",
+          "Nat.succ",
+          "Nat.zero",
+          "OfNat",
+          "OfNat.mk",
+          "OfNat.ofNat",
+          "PProd",
+          "PProd.mk",
+          "PUnit",
+          "PUnit.unit",
+          "Protected.allowed",
+          "Protected.threshold",
+          "instAddNat",
+          "instHAdd",
+          "instLTNat",
+          "instOfNatNat",
+          "outParam"
+        ],
+        "missing": [],
+        "digest": {
+          "declarations": 39,
+          "sha256": "7cc25479566cb12a3192812f4cd789da4e9f6ed4d8030b854fb9b228fb8ae605"
+        },
+        "declaration_digests": {
+          "Add": "d829cda54bb3dad979c9590151bc37745b0ecfef0690bd00c70a86c409b80124",
+          "Add.add": "72935e7b10ab6857bc8e338f6c4ff1e6d7d71aca9afe182923ddc41e75d6cdd5",
+          "Add.mk": "ffd2321d4047acb06faf28e6032ea2a56375b6a1750f2e12dc3909c0f2224656",
+          "HAdd": "e9a97184d69034af6b0b89ae8306854e3ae0b4a4a5fef9ffcbe5999977fffd34",
+          "HAdd.hAdd": "43bed8cabd2528ee0e4df902a5446a6c4059efdf5b2cf0053e1d89a3f240439a",
+          "HAdd.mk": "4d3ac96549d47418f25012612eca3a8e1bcc9d5f181147051966a936b0254871",
+          "LT": "defb593bc7d11dedc908b4fd841b6825ecdbe29d7db4901d1a1986fb13f390c9",
+          "LT.lt": "b6c9f13180772b3ea38ee3ca85ad1eb434aedd15fbb5f8ec863f462e8553019f",
+          "LT.mk": "862af11dd27aa7dffee37739ae80cf79f1e090d6bcde300c406a31080d697616",
+          "Nat": "5cd488e5664d466d2a8b3b9ea30243e6966014e159d754a7d95a4926ee6d9472",
+          "Nat.add": "81a7457f075c81d722d98d25ed86b168ab02450e5dcaddac690ce7a5769ea4f3",
+          "Nat.add._f": "f8567a35e01839045ee1fee7bb5e33a9851ae49eee3c2d71963dbd900785fe70",
+          "Nat.add.match_1": "ef986b44a828cb1f10dd0aadc28668b5d0de30243acf0d47345cb5a360a8751b",
+          "Nat.below": "82ac0e7ef838bb3b02581051521c2c5ea50fa4581beb23f3db0fd8c960548498",
+          "Nat.brecOn": "784d50aea73f26c23d89259be835f44c61aef04c4e9601ecf996e04408e9e08d",
+          "Nat.brecOn.go": "ce59bb25233e5700bb527ac8471f4dc4cbf5b4f82980f5d543d9b02f2a0d8e7e",
+          "Nat.casesOn": "d33f48abfe312d731ce1a33d160ece68e68c23b57024dcf9d2f404b48d103234",
+          "Nat.le": "e35f7e97c3af408fd85d6df81144839740539d5511ac6cd7f3ae46bd1a126b2e",
+          "Nat.le.rec": "91e37a367186b419292fa352c1eed6bb1f8a9180cff714522835b1814a07d273",
+          "Nat.le.refl": "762985276c40c0e0a9d202d9ceb679ebc8c8a353c9adac9cbc6d96ce15701f3d",
+          "Nat.le.step": "4f63eb86b6591fbad5da33ea942a81c40cee665125c1f33091cd3b388d093d25",
+          "Nat.lt": "513cfe9db2944a92292d8cf324e8c5fa1fd0d04b7ee0819f56ae7d36e20f130b",
+          "Nat.rec": "fa3658314fb6cb1b8690c5ee0e67098dd58761b50d7ea3b4b1cd915181e1e0b6",
+          "Nat.succ": "3e7171b7a8b3b8b0064bd84fe528109408c4748b0f59b87b1691f281fd9489c4",
+          "Nat.zero": "b853267f44d7791d3450d5aef7af7b6fd44c85c2f5bc9c7944bf60736ae991a1",
+          "OfNat": "394daea755beff6ef6d0078de8ddcedf58bbcc914a6d98c2bd0df54ea97fb00e",
+          "OfNat.mk": "effaba349832e1fd9c3a20a4452b141673f1ebde1f5419f409273b7064cc2573",
+          "OfNat.ofNat": "f842feccb04296d14d1cc6b43339181f59589ca6e5eacd7cea05050565896e83",
+          "PProd": "174649ca3847708b1eecbebfb068242215759815b1b8cf59b6fde595c894adec",
+          "PProd.mk": "4c0c5bb0a4179afb6f3823acad38395e1956a1852833997e8de39f49893d4b96",
+          "PUnit": "9b5d7f994744a79e70d77e8eb8256c93f8daa62fd1c62b3cef49d6d480f85500",
+          "PUnit.unit": "af58f3db600e724cff8e70dec1b1615da22784f6588d33600c7c4ab8e1285cd2",
+          "Protected.allowed": "6c2f13611afefd961b8774d881c326adf260f3e1b6ef893d0a169a68e4e68922",
+          "Protected.threshold": "9b9a8811e601224721b5d89c1f1432a9e05f766c1247153ff908ffcfa6b1cb6e",
+          "instAddNat": "77f57120c86856dc319dfe5ff5b97b4158847e4ada895b78acf1fd3b6c3252a5",
+          "instHAdd": "4b91c20e6f930c8a34cf6a55d50f1fed9bfa249c65c3216429a196efe9c8964a",
+          "instLTNat": "14675087537a40646759d8b6c7938a949ede9630242fe1189e008fd1adcc61d3",
+          "instOfNatNat": "ef48c9bb5fb1ff389098a232806819229197c217345077c0976703e33772bdc3",
+          "outParam": "285379bdf4a1c25f00c520b5ee44c9568d030fb28a56c092c7a2774d884cb711"
+        },
+        "dependency_paths": {
+          "Add": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Add"
+          ],
+          "Add.add": [
+            "Protected.add_allowed",
+            "instHAdd",
+            "Add.add"
+          ],
+          "Add.mk": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Add.mk"
+          ],
+          "HAdd": [
+            "Protected.add_allowed",
+            "HAdd.hAdd",
+            "HAdd"
+          ],
+          "HAdd.hAdd": [
+            "Protected.add_allowed",
+            "HAdd.hAdd"
+          ],
+          "HAdd.mk": [
+            "Protected.add_allowed",
+            "instHAdd",
+            "HAdd.mk"
+          ],
+          "LT": [
+            "Protected.add_allowed",
+            "LT.lt",
+            "LT"
+          ],
+          "LT.lt": [
+            "Protected.add_allowed",
+            "LT.lt"
+          ],
+          "LT.mk": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "LT.mk"
+          ],
+          "Nat": [
+            "Protected.add_allowed",
+            "Nat"
+          ],
+          "Nat.add": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add"
+          ],
+          "Nat.add._f": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f"
+          ],
+          "Nat.add.match_1": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.add.match_1"
+          ],
+          "Nat.below": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.below"
+          ],
+          "Nat.brecOn": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.brecOn"
+          ],
+          "Nat.brecOn.go": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.brecOn",
+            "Nat.brecOn.go"
+          ],
+          "Nat.casesOn": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.add.match_1",
+            "Nat.casesOn"
+          ],
+          "Nat.le": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le"
+          ],
+          "Nat.le.rec": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le",
+            "Nat.le.rec"
+          ],
+          "Nat.le.refl": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le",
+            "Nat.le.refl"
+          ],
+          "Nat.le.step": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le",
+            "Nat.le.step"
+          ],
+          "Nat.lt": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt"
+          ],
+          "Nat.rec": [
+            "Protected.add_allowed",
+            "Nat",
+            "Nat.rec"
+          ],
+          "Nat.succ": [
+            "Protected.add_allowed",
+            "Nat",
+            "Nat.succ"
+          ],
+          "Nat.zero": [
+            "Protected.add_allowed",
+            "Nat",
+            "Nat.zero"
+          ],
+          "OfNat": [
+            "Protected.add_allowed",
+            "OfNat.ofNat",
+            "OfNat"
+          ],
+          "OfNat.mk": [
+            "Protected.add_allowed",
+            "instOfNatNat",
+            "OfNat.mk"
+          ],
+          "OfNat.ofNat": [
+            "Protected.add_allowed",
+            "OfNat.ofNat"
+          ],
+          "PProd": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "PProd"
+          ],
+          "PProd.mk": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "PProd",
+            "PProd.mk"
+          ],
+          "PUnit": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.below",
+            "PUnit"
+          ],
+          "PUnit.unit": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.brecOn",
+            "Nat.brecOn.go",
+            "PUnit.unit"
+          ],
+          "Protected.allowed": [
+            "Protected.add_allowed",
+            "Protected.allowed"
+          ],
+          "Protected.threshold": [
+            "Protected.add_allowed",
+            "Protected.allowed",
+            "Protected.threshold"
+          ],
+          "instAddNat": [
+            "Protected.add_allowed",
+            "instAddNat"
+          ],
+          "instHAdd": [
+            "Protected.add_allowed",
+            "instHAdd"
+          ],
+          "instLTNat": [
+            "Protected.add_allowed",
+            "instLTNat"
+          ],
+          "instOfNatNat": [
+            "Protected.add_allowed",
+            "instOfNatNat"
+          ],
+          "outParam": [
+            "Protected.add_allowed",
+            "HAdd.hAdd",
+            "outParam"
+          ]
+        }
+      },
+      "verdict": {
+        "class": "accepted",
+        "detail": null
+      }
+    },
+    {
+      "id": "alternate",
+      "project": "verification/independent-replay/protected/solutions/alternate",
+      "build": {
+        "argv": [
+          "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+          "build"
+        ],
+        "project": "verification/independent-replay/protected/solutions/alternate",
+        "exit_code": 0,
+        "signal": null,
+        "elapsed_ms": 162,
+        "stdout": "Build completed successfully (4 jobs).",
+        "stderr": "",
+        "timed_out": false
+      },
+      "export": {
+        "sha256": "eea2f28effee69d3779870ce9eea4f6e41cf4d185b4f44ccf846c2868e97528e",
+        "size_bytes": 248755,
+        "records": 4745,
+        "format": "3.1.0",
+        "declarations": 135,
+        "axioms": [],
+        "foreign_axioms": []
+      },
+      "export_stage": {
+        "argv": [
+          "lake",
+          "env",
+          "leanexport",
+          "Solution",
+          "--",
+          "Protected.zero_allowed",
+          "Protected.succ_of_lt",
+          "Protected.add_allowed"
+        ],
+        "exit_code": 0,
+        "signal": null,
+        "timed_out": false,
+        "panic": false,
+        "stderr_excerpt": ""
+      },
+      "root_statement_sha256": {
+        "Protected.zero_allowed": "e43bfa9d66cf17cd764f070189ef5130c753ea79885e2a07ca3485edff79b63f",
+        "Protected.succ_of_lt": "7b74e6a62a1a67ac8ae4f40e0e428b9495764f781fb9addd61b0a059ac9a57cd",
+        "Protected.add_allowed": "d1d44851fd9edded72e48941f06af5bc6e91fe26325f3f9db690bef8ccea5c71"
+      },
+      "foreign_axioms": [],
+      "semantic_closure": {
+        "declarations": 39,
+        "names": [
+          "Add",
+          "Add.add",
+          "Add.mk",
+          "HAdd",
+          "HAdd.hAdd",
+          "HAdd.mk",
+          "LT",
+          "LT.lt",
+          "LT.mk",
+          "Nat",
+          "Nat.add",
+          "Nat.add._f",
+          "Nat.add.match_1",
+          "Nat.below",
+          "Nat.brecOn",
+          "Nat.brecOn.go",
+          "Nat.casesOn",
+          "Nat.le",
+          "Nat.le.rec",
+          "Nat.le.refl",
+          "Nat.le.step",
+          "Nat.lt",
+          "Nat.rec",
+          "Nat.succ",
+          "Nat.zero",
+          "OfNat",
+          "OfNat.mk",
+          "OfNat.ofNat",
+          "PProd",
+          "PProd.mk",
+          "PUnit",
+          "PUnit.unit",
+          "Protected.allowed",
+          "Protected.threshold",
+          "instAddNat",
+          "instHAdd",
+          "instLTNat",
+          "instOfNatNat",
+          "outParam"
+        ],
+        "missing": [],
+        "digest": {
+          "declarations": 39,
+          "sha256": "7cc25479566cb12a3192812f4cd789da4e9f6ed4d8030b854fb9b228fb8ae605"
+        },
+        "declaration_digests": {
+          "Add": "d829cda54bb3dad979c9590151bc37745b0ecfef0690bd00c70a86c409b80124",
+          "Add.add": "72935e7b10ab6857bc8e338f6c4ff1e6d7d71aca9afe182923ddc41e75d6cdd5",
+          "Add.mk": "ffd2321d4047acb06faf28e6032ea2a56375b6a1750f2e12dc3909c0f2224656",
+          "HAdd": "e9a97184d69034af6b0b89ae8306854e3ae0b4a4a5fef9ffcbe5999977fffd34",
+          "HAdd.hAdd": "43bed8cabd2528ee0e4df902a5446a6c4059efdf5b2cf0053e1d89a3f240439a",
+          "HAdd.mk": "4d3ac96549d47418f25012612eca3a8e1bcc9d5f181147051966a936b0254871",
+          "LT": "defb593bc7d11dedc908b4fd841b6825ecdbe29d7db4901d1a1986fb13f390c9",
+          "LT.lt": "b6c9f13180772b3ea38ee3ca85ad1eb434aedd15fbb5f8ec863f462e8553019f",
+          "LT.mk": "862af11dd27aa7dffee37739ae80cf79f1e090d6bcde300c406a31080d697616",
+          "Nat": "5cd488e5664d466d2a8b3b9ea30243e6966014e159d754a7d95a4926ee6d9472",
+          "Nat.add": "81a7457f075c81d722d98d25ed86b168ab02450e5dcaddac690ce7a5769ea4f3",
+          "Nat.add._f": "f8567a35e01839045ee1fee7bb5e33a9851ae49eee3c2d71963dbd900785fe70",
+          "Nat.add.match_1": "ef986b44a828cb1f10dd0aadc28668b5d0de30243acf0d47345cb5a360a8751b",
+          "Nat.below": "82ac0e7ef838bb3b02581051521c2c5ea50fa4581beb23f3db0fd8c960548498",
+          "Nat.brecOn": "784d50aea73f26c23d89259be835f44c61aef04c4e9601ecf996e04408e9e08d",
+          "Nat.brecOn.go": "ce59bb25233e5700bb527ac8471f4dc4cbf5b4f82980f5d543d9b02f2a0d8e7e",
+          "Nat.casesOn": "d33f48abfe312d731ce1a33d160ece68e68c23b57024dcf9d2f404b48d103234",
+          "Nat.le": "e35f7e97c3af408fd85d6df81144839740539d5511ac6cd7f3ae46bd1a126b2e",
+          "Nat.le.rec": "91e37a367186b419292fa352c1eed6bb1f8a9180cff714522835b1814a07d273",
+          "Nat.le.refl": "762985276c40c0e0a9d202d9ceb679ebc8c8a353c9adac9cbc6d96ce15701f3d",
+          "Nat.le.step": "4f63eb86b6591fbad5da33ea942a81c40cee665125c1f33091cd3b388d093d25",
+          "Nat.lt": "513cfe9db2944a92292d8cf324e8c5fa1fd0d04b7ee0819f56ae7d36e20f130b",
+          "Nat.rec": "fa3658314fb6cb1b8690c5ee0e67098dd58761b50d7ea3b4b1cd915181e1e0b6",
+          "Nat.succ": "3e7171b7a8b3b8b0064bd84fe528109408c4748b0f59b87b1691f281fd9489c4",
+          "Nat.zero": "b853267f44d7791d3450d5aef7af7b6fd44c85c2f5bc9c7944bf60736ae991a1",
+          "OfNat": "394daea755beff6ef6d0078de8ddcedf58bbcc914a6d98c2bd0df54ea97fb00e",
+          "OfNat.mk": "effaba349832e1fd9c3a20a4452b141673f1ebde1f5419f409273b7064cc2573",
+          "OfNat.ofNat": "f842feccb04296d14d1cc6b43339181f59589ca6e5eacd7cea05050565896e83",
+          "PProd": "174649ca3847708b1eecbebfb068242215759815b1b8cf59b6fde595c894adec",
+          "PProd.mk": "4c0c5bb0a4179afb6f3823acad38395e1956a1852833997e8de39f49893d4b96",
+          "PUnit": "9b5d7f994744a79e70d77e8eb8256c93f8daa62fd1c62b3cef49d6d480f85500",
+          "PUnit.unit": "af58f3db600e724cff8e70dec1b1615da22784f6588d33600c7c4ab8e1285cd2",
+          "Protected.allowed": "6c2f13611afefd961b8774d881c326adf260f3e1b6ef893d0a169a68e4e68922",
+          "Protected.threshold": "9b9a8811e601224721b5d89c1f1432a9e05f766c1247153ff908ffcfa6b1cb6e",
+          "instAddNat": "77f57120c86856dc319dfe5ff5b97b4158847e4ada895b78acf1fd3b6c3252a5",
+          "instHAdd": "4b91c20e6f930c8a34cf6a55d50f1fed9bfa249c65c3216429a196efe9c8964a",
+          "instLTNat": "14675087537a40646759d8b6c7938a949ede9630242fe1189e008fd1adcc61d3",
+          "instOfNatNat": "ef48c9bb5fb1ff389098a232806819229197c217345077c0976703e33772bdc3",
+          "outParam": "285379bdf4a1c25f00c520b5ee44c9568d030fb28a56c092c7a2774d884cb711"
+        },
+        "dependency_paths": {
+          "Add": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Add"
+          ],
+          "Add.add": [
+            "Protected.add_allowed",
+            "instHAdd",
+            "Add.add"
+          ],
+          "Add.mk": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Add.mk"
+          ],
+          "HAdd": [
+            "Protected.add_allowed",
+            "HAdd.hAdd",
+            "HAdd"
+          ],
+          "HAdd.hAdd": [
+            "Protected.add_allowed",
+            "HAdd.hAdd"
+          ],
+          "HAdd.mk": [
+            "Protected.add_allowed",
+            "instHAdd",
+            "HAdd.mk"
+          ],
+          "LT": [
+            "Protected.add_allowed",
+            "LT.lt",
+            "LT"
+          ],
+          "LT.lt": [
+            "Protected.add_allowed",
+            "LT.lt"
+          ],
+          "LT.mk": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "LT.mk"
+          ],
+          "Nat": [
+            "Protected.add_allowed",
+            "Nat"
+          ],
+          "Nat.add": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add"
+          ],
+          "Nat.add._f": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f"
+          ],
+          "Nat.add.match_1": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.add.match_1"
+          ],
+          "Nat.below": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.below"
+          ],
+          "Nat.brecOn": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.brecOn"
+          ],
+          "Nat.brecOn.go": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.brecOn",
+            "Nat.brecOn.go"
+          ],
+          "Nat.casesOn": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.add.match_1",
+            "Nat.casesOn"
+          ],
+          "Nat.le": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le"
+          ],
+          "Nat.le.rec": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le",
+            "Nat.le.rec"
+          ],
+          "Nat.le.refl": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le",
+            "Nat.le.refl"
+          ],
+          "Nat.le.step": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le",
+            "Nat.le.step"
+          ],
+          "Nat.lt": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt"
+          ],
+          "Nat.rec": [
+            "Protected.add_allowed",
+            "Nat",
+            "Nat.rec"
+          ],
+          "Nat.succ": [
+            "Protected.add_allowed",
+            "Nat",
+            "Nat.succ"
+          ],
+          "Nat.zero": [
+            "Protected.add_allowed",
+            "Nat",
+            "Nat.zero"
+          ],
+          "OfNat": [
+            "Protected.add_allowed",
+            "OfNat.ofNat",
+            "OfNat"
+          ],
+          "OfNat.mk": [
+            "Protected.add_allowed",
+            "instOfNatNat",
+            "OfNat.mk"
+          ],
+          "OfNat.ofNat": [
+            "Protected.add_allowed",
+            "OfNat.ofNat"
+          ],
+          "PProd": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "PProd"
+          ],
+          "PProd.mk": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "PProd",
+            "PProd.mk"
+          ],
+          "PUnit": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.below",
+            "PUnit"
+          ],
+          "PUnit.unit": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.brecOn",
+            "Nat.brecOn.go",
+            "PUnit.unit"
+          ],
+          "Protected.allowed": [
+            "Protected.add_allowed",
+            "Protected.allowed"
+          ],
+          "Protected.threshold": [
+            "Protected.add_allowed",
+            "Protected.allowed",
+            "Protected.threshold"
+          ],
+          "instAddNat": [
+            "Protected.add_allowed",
+            "instAddNat"
+          ],
+          "instHAdd": [
+            "Protected.add_allowed",
+            "instHAdd"
+          ],
+          "instLTNat": [
+            "Protected.add_allowed",
+            "instLTNat"
+          ],
+          "instOfNatNat": [
+            "Protected.add_allowed",
+            "instOfNatNat"
+          ],
+          "outParam": [
+            "Protected.add_allowed",
+            "HAdd.hAdd",
+            "outParam"
+          ]
+        }
+      },
+      "verdict": {
+        "class": "accepted",
+        "detail": null
+      }
+    },
+    {
+      "id": "weakened-predicate",
+      "project": "verification/independent-replay/protected/solutions/weakened",
+      "build": {
+        "argv": [
+          "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+          "build"
+        ],
+        "project": "verification/independent-replay/protected/solutions/weakened",
+        "exit_code": 0,
+        "signal": null,
+        "elapsed_ms": 174,
+        "stdout": "Build completed successfully (4 jobs).",
+        "stderr": "",
+        "timed_out": false
+      },
+      "export": {
+        "sha256": "cb4a556dfbd84bd990801e2d7c623e9b67742685c6957aeb2e89ba41a1ee10ea",
+        "size_bytes": 49998,
+        "records": 864,
+        "format": "3.1.0",
+        "declarations": 55,
+        "axioms": [],
+        "foreign_axioms": []
+      },
+      "export_stage": {
+        "argv": [
+          "lake",
+          "env",
+          "leanexport",
+          "Solution",
+          "--",
+          "Protected.zero_allowed",
+          "Protected.succ_of_lt",
+          "Protected.add_allowed"
+        ],
+        "exit_code": 0,
+        "signal": null,
+        "timed_out": false,
+        "panic": false,
+        "stderr_excerpt": ""
+      },
+      "root_statement_sha256": {
+        "Protected.zero_allowed": "e43bfa9d66cf17cd764f070189ef5130c753ea79885e2a07ca3485edff79b63f",
+        "Protected.succ_of_lt": "7b74e6a62a1a67ac8ae4f40e0e428b9495764f781fb9addd61b0a059ac9a57cd",
+        "Protected.add_allowed": "d1d44851fd9edded72e48941f06af5bc6e91fe26325f3f9db690bef8ccea5c71"
+      },
+      "foreign_axioms": [],
+      "semantic_closure": {
+        "declarations": 44,
+        "names": [
+          "Add",
+          "Add.add",
+          "Add.mk",
+          "HAdd",
+          "HAdd.hAdd",
+          "HAdd.mk",
+          "LT",
+          "LT.lt",
+          "LT.mk",
+          "Nat",
+          "Nat.add",
+          "Nat.add._f",
+          "Nat.add.match_1",
+          "Nat.below",
+          "Nat.brecOn",
+          "Nat.brecOn.go",
+          "Nat.casesOn",
+          "Nat.le",
+          "Nat.le.rec",
+          "Nat.le.refl",
+          "Nat.le.step",
+          "Nat.lt",
+          "Nat.rec",
+          "Nat.succ",
+          "Nat.zero",
+          "OfNat",
+          "OfNat.mk",
+          "OfNat.ofNat",
+          "Or",
+          "Or.inl",
+          "Or.inr",
+          "PProd",
+          "PProd.mk",
+          "PUnit",
+          "PUnit.unit",
+          "Protected.allowed",
+          "Protected.threshold",
+          "True",
+          "True.intro",
+          "instAddNat",
+          "instHAdd",
+          "instLTNat",
+          "instOfNatNat",
+          "outParam"
+        ],
+        "missing": [],
+        "digest": {
+          "declarations": 44,
+          "sha256": "ec614c4144972c5eeb17460e68b2df7fa58977fae11c2786187364919c821c4f"
+        },
+        "declaration_digests": {
+          "Add": "d829cda54bb3dad979c9590151bc37745b0ecfef0690bd00c70a86c409b80124",
+          "Add.add": "72935e7b10ab6857bc8e338f6c4ff1e6d7d71aca9afe182923ddc41e75d6cdd5",
+          "Add.mk": "ffd2321d4047acb06faf28e6032ea2a56375b6a1750f2e12dc3909c0f2224656",
+          "HAdd": "e9a97184d69034af6b0b89ae8306854e3ae0b4a4a5fef9ffcbe5999977fffd34",
+          "HAdd.hAdd": "43bed8cabd2528ee0e4df902a5446a6c4059efdf5b2cf0053e1d89a3f240439a",
+          "HAdd.mk": "4d3ac96549d47418f25012612eca3a8e1bcc9d5f181147051966a936b0254871",
+          "LT": "defb593bc7d11dedc908b4fd841b6825ecdbe29d7db4901d1a1986fb13f390c9",
+          "LT.lt": "b6c9f13180772b3ea38ee3ca85ad1eb434aedd15fbb5f8ec863f462e8553019f",
+          "LT.mk": "862af11dd27aa7dffee37739ae80cf79f1e090d6bcde300c406a31080d697616",
+          "Nat": "5cd488e5664d466d2a8b3b9ea30243e6966014e159d754a7d95a4926ee6d9472",
+          "Nat.add": "81a7457f075c81d722d98d25ed86b168ab02450e5dcaddac690ce7a5769ea4f3",
+          "Nat.add._f": "f8567a35e01839045ee1fee7bb5e33a9851ae49eee3c2d71963dbd900785fe70",
+          "Nat.add.match_1": "ef986b44a828cb1f10dd0aadc28668b5d0de30243acf0d47345cb5a360a8751b",
+          "Nat.below": "82ac0e7ef838bb3b02581051521c2c5ea50fa4581beb23f3db0fd8c960548498",
+          "Nat.brecOn": "784d50aea73f26c23d89259be835f44c61aef04c4e9601ecf996e04408e9e08d",
+          "Nat.brecOn.go": "ce59bb25233e5700bb527ac8471f4dc4cbf5b4f82980f5d543d9b02f2a0d8e7e",
+          "Nat.casesOn": "d33f48abfe312d731ce1a33d160ece68e68c23b57024dcf9d2f404b48d103234",
+          "Nat.le": "e35f7e97c3af408fd85d6df81144839740539d5511ac6cd7f3ae46bd1a126b2e",
+          "Nat.le.rec": "91e37a367186b419292fa352c1eed6bb1f8a9180cff714522835b1814a07d273",
+          "Nat.le.refl": "762985276c40c0e0a9d202d9ceb679ebc8c8a353c9adac9cbc6d96ce15701f3d",
+          "Nat.le.step": "4f63eb86b6591fbad5da33ea942a81c40cee665125c1f33091cd3b388d093d25",
+          "Nat.lt": "513cfe9db2944a92292d8cf324e8c5fa1fd0d04b7ee0819f56ae7d36e20f130b",
+          "Nat.rec": "fa3658314fb6cb1b8690c5ee0e67098dd58761b50d7ea3b4b1cd915181e1e0b6",
+          "Nat.succ": "3e7171b7a8b3b8b0064bd84fe528109408c4748b0f59b87b1691f281fd9489c4",
+          "Nat.zero": "b853267f44d7791d3450d5aef7af7b6fd44c85c2f5bc9c7944bf60736ae991a1",
+          "OfNat": "394daea755beff6ef6d0078de8ddcedf58bbcc914a6d98c2bd0df54ea97fb00e",
+          "OfNat.mk": "effaba349832e1fd9c3a20a4452b141673f1ebde1f5419f409273b7064cc2573",
+          "OfNat.ofNat": "f842feccb04296d14d1cc6b43339181f59589ca6e5eacd7cea05050565896e83",
+          "Or": "04531904f426d2251368b5c147ae103eb395b5b3c704a7cc7496e0d0421b2cae",
+          "Or.inl": "f35856473b95871298fd53ffc1a565adf6c5ead78b50315892a843b87b52f2fe",
+          "Or.inr": "00f1d94271034c0543ebdb8118c406471d9724a5f3056fe92194ad1c93203853",
+          "PProd": "174649ca3847708b1eecbebfb068242215759815b1b8cf59b6fde595c894adec",
+          "PProd.mk": "4c0c5bb0a4179afb6f3823acad38395e1956a1852833997e8de39f49893d4b96",
+          "PUnit": "9b5d7f994744a79e70d77e8eb8256c93f8daa62fd1c62b3cef49d6d480f85500",
+          "PUnit.unit": "af58f3db600e724cff8e70dec1b1615da22784f6588d33600c7c4ab8e1285cd2",
+          "Protected.allowed": "70b13930ec7c8f930c5d1fe54e618b7a9725fdbea722088724847e4cdf95c80a",
+          "Protected.threshold": "9b9a8811e601224721b5d89c1f1432a9e05f766c1247153ff908ffcfa6b1cb6e",
+          "True": "766a634903b7b29997615de7c36b595eeec43cab08e5e5ca525868dcdc4df4ae",
+          "True.intro": "ba74a78965d39d7eaba7244537b48c7c726f44d5e6e876154d8f155610ce61dc",
+          "instAddNat": "77f57120c86856dc319dfe5ff5b97b4158847e4ada895b78acf1fd3b6c3252a5",
+          "instHAdd": "4b91c20e6f930c8a34cf6a55d50f1fed9bfa249c65c3216429a196efe9c8964a",
+          "instLTNat": "14675087537a40646759d8b6c7938a949ede9630242fe1189e008fd1adcc61d3",
+          "instOfNatNat": "ef48c9bb5fb1ff389098a232806819229197c217345077c0976703e33772bdc3",
+          "outParam": "285379bdf4a1c25f00c520b5ee44c9568d030fb28a56c092c7a2774d884cb711"
+        },
+        "dependency_paths": {
+          "Add": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Add"
+          ],
+          "Add.add": [
+            "Protected.add_allowed",
+            "instHAdd",
+            "Add.add"
+          ],
+          "Add.mk": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Add.mk"
+          ],
+          "HAdd": [
+            "Protected.add_allowed",
+            "HAdd.hAdd",
+            "HAdd"
+          ],
+          "HAdd.hAdd": [
+            "Protected.add_allowed",
+            "HAdd.hAdd"
+          ],
+          "HAdd.mk": [
+            "Protected.add_allowed",
+            "instHAdd",
+            "HAdd.mk"
+          ],
+          "LT": [
+            "Protected.add_allowed",
+            "LT.lt",
+            "LT"
+          ],
+          "LT.lt": [
+            "Protected.add_allowed",
+            "LT.lt"
+          ],
+          "LT.mk": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "LT.mk"
+          ],
+          "Nat": [
+            "Protected.add_allowed",
+            "Nat"
+          ],
+          "Nat.add": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add"
+          ],
+          "Nat.add._f": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f"
+          ],
+          "Nat.add.match_1": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.add.match_1"
+          ],
+          "Nat.below": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.below"
+          ],
+          "Nat.brecOn": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.brecOn"
+          ],
+          "Nat.brecOn.go": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.brecOn",
+            "Nat.brecOn.go"
+          ],
+          "Nat.casesOn": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.add.match_1",
+            "Nat.casesOn"
+          ],
+          "Nat.le": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le"
+          ],
+          "Nat.le.rec": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le",
+            "Nat.le.rec"
+          ],
+          "Nat.le.refl": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le",
+            "Nat.le.refl"
+          ],
+          "Nat.le.step": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le",
+            "Nat.le.step"
+          ],
+          "Nat.lt": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt"
+          ],
+          "Nat.rec": [
+            "Protected.add_allowed",
+            "Nat",
+            "Nat.rec"
+          ],
+          "Nat.succ": [
+            "Protected.add_allowed",
+            "Nat",
+            "Nat.succ"
+          ],
+          "Nat.zero": [
+            "Protected.add_allowed",
+            "Nat",
+            "Nat.zero"
+          ],
+          "OfNat": [
+            "Protected.add_allowed",
+            "OfNat.ofNat",
+            "OfNat"
+          ],
+          "OfNat.mk": [
+            "Protected.add_allowed",
+            "instOfNatNat",
+            "OfNat.mk"
+          ],
+          "OfNat.ofNat": [
+            "Protected.add_allowed",
+            "OfNat.ofNat"
+          ],
+          "Or": [
+            "Protected.add_allowed",
+            "Protected.allowed",
+            "Or"
+          ],
+          "Or.inl": [
+            "Protected.add_allowed",
+            "Protected.allowed",
+            "Or",
+            "Or.inl"
+          ],
+          "Or.inr": [
+            "Protected.add_allowed",
+            "Protected.allowed",
+            "Or",
+            "Or.inr"
+          ],
+          "PProd": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "PProd"
+          ],
+          "PProd.mk": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "PProd",
+            "PProd.mk"
+          ],
+          "PUnit": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.below",
+            "PUnit"
+          ],
+          "PUnit.unit": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.brecOn",
+            "Nat.brecOn.go",
+            "PUnit.unit"
+          ],
+          "Protected.allowed": [
+            "Protected.add_allowed",
+            "Protected.allowed"
+          ],
+          "Protected.threshold": [
+            "Protected.add_allowed",
+            "Protected.allowed",
+            "Protected.threshold"
+          ],
+          "True": [
+            "Protected.add_allowed",
+            "Protected.allowed",
+            "True"
+          ],
+          "True.intro": [
+            "Protected.add_allowed",
+            "Protected.allowed",
+            "True",
+            "True.intro"
+          ],
+          "instAddNat": [
+            "Protected.add_allowed",
+            "instAddNat"
+          ],
+          "instHAdd": [
+            "Protected.add_allowed",
+            "instHAdd"
+          ],
+          "instLTNat": [
+            "Protected.add_allowed",
+            "instLTNat"
+          ],
+          "instOfNatNat": [
+            "Protected.add_allowed",
+            "instOfNatNat"
+          ],
+          "outParam": [
+            "Protected.add_allowed",
+            "HAdd.hAdd",
+            "outParam"
+          ]
+        }
+      },
+      "verdict": {
+        "class": "definition-mismatch",
+        "detail": "Protected.allowed",
+        "changed": [
+          "Protected.allowed"
+        ],
+        "dependency_paths": {
+          "Protected.allowed": [
+            "Protected.add_allowed",
+            "Protected.allowed"
+          ]
+        }
+      }
+    },
+    {
+      "id": "changed-semantics",
+      "project": "verification/independent-replay/protected/solutions/changed-semantics",
+      "build": {
+        "argv": [
+          "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+          "build"
+        ],
+        "project": "verification/independent-replay/protected/solutions/changed-semantics",
+        "exit_code": 0,
+        "signal": null,
+        "elapsed_ms": 160,
+        "stdout": "Build completed successfully (4 jobs).",
+        "stderr": "",
+        "timed_out": false
+      },
+      "export": {
+        "sha256": "71406076d82d9a1a212761417be6206b8d42e51f890791c9fd6f0a38277ce03d",
+        "size_bytes": 4233912,
+        "records": 83161,
+        "format": "3.1.0",
+        "declarations": 1500,
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ],
+        "foreign_axioms": []
+      },
+      "export_stage": {
+        "argv": [
+          "lake",
+          "env",
+          "leanexport",
+          "Solution",
+          "--",
+          "Protected.zero_allowed",
+          "Protected.succ_of_lt",
+          "Protected.add_allowed"
+        ],
+        "exit_code": 0,
+        "signal": null,
+        "timed_out": false,
+        "panic": false,
+        "stderr_excerpt": ""
+      },
+      "root_statement_sha256": {
+        "Protected.zero_allowed": "e43bfa9d66cf17cd764f070189ef5130c753ea79885e2a07ca3485edff79b63f",
+        "Protected.succ_of_lt": "7b74e6a62a1a67ac8ae4f40e0e428b9495764f781fb9addd61b0a059ac9a57cd",
+        "Protected.add_allowed": "d1d44851fd9edded72e48941f06af5bc6e91fe26325f3f9db690bef8ccea5c71"
+      },
+      "foreign_axioms": [],
+      "semantic_closure": {
+        "declarations": 39,
+        "names": [
+          "Add",
+          "Add.add",
+          "Add.mk",
+          "HAdd",
+          "HAdd.hAdd",
+          "HAdd.mk",
+          "LT",
+          "LT.lt",
+          "LT.mk",
+          "Nat",
+          "Nat.add",
+          "Nat.add._f",
+          "Nat.add.match_1",
+          "Nat.below",
+          "Nat.brecOn",
+          "Nat.brecOn.go",
+          "Nat.casesOn",
+          "Nat.le",
+          "Nat.le.rec",
+          "Nat.le.refl",
+          "Nat.le.step",
+          "Nat.lt",
+          "Nat.rec",
+          "Nat.succ",
+          "Nat.zero",
+          "OfNat",
+          "OfNat.mk",
+          "OfNat.ofNat",
+          "PProd",
+          "PProd.mk",
+          "PUnit",
+          "PUnit.unit",
+          "Protected.allowed",
+          "Protected.threshold",
+          "instAddNat",
+          "instHAdd",
+          "instLTNat",
+          "instOfNatNat",
+          "outParam"
+        ],
+        "missing": [],
+        "digest": {
+          "declarations": 39,
+          "sha256": "16ef779b7065d1c52003674bc9626c3574249922be625916c499a3d6d3523aae"
+        },
+        "declaration_digests": {
+          "Add": "d829cda54bb3dad979c9590151bc37745b0ecfef0690bd00c70a86c409b80124",
+          "Add.add": "72935e7b10ab6857bc8e338f6c4ff1e6d7d71aca9afe182923ddc41e75d6cdd5",
+          "Add.mk": "ffd2321d4047acb06faf28e6032ea2a56375b6a1750f2e12dc3909c0f2224656",
+          "HAdd": "e9a97184d69034af6b0b89ae8306854e3ae0b4a4a5fef9ffcbe5999977fffd34",
+          "HAdd.hAdd": "43bed8cabd2528ee0e4df902a5446a6c4059efdf5b2cf0053e1d89a3f240439a",
+          "HAdd.mk": "4d3ac96549d47418f25012612eca3a8e1bcc9d5f181147051966a936b0254871",
+          "LT": "defb593bc7d11dedc908b4fd841b6825ecdbe29d7db4901d1a1986fb13f390c9",
+          "LT.lt": "b6c9f13180772b3ea38ee3ca85ad1eb434aedd15fbb5f8ec863f462e8553019f",
+          "LT.mk": "862af11dd27aa7dffee37739ae80cf79f1e090d6bcde300c406a31080d697616",
+          "Nat": "5cd488e5664d466d2a8b3b9ea30243e6966014e159d754a7d95a4926ee6d9472",
+          "Nat.add": "81a7457f075c81d722d98d25ed86b168ab02450e5dcaddac690ce7a5769ea4f3",
+          "Nat.add._f": "f8567a35e01839045ee1fee7bb5e33a9851ae49eee3c2d71963dbd900785fe70",
+          "Nat.add.match_1": "ef986b44a828cb1f10dd0aadc28668b5d0de30243acf0d47345cb5a360a8751b",
+          "Nat.below": "82ac0e7ef838bb3b02581051521c2c5ea50fa4581beb23f3db0fd8c960548498",
+          "Nat.brecOn": "784d50aea73f26c23d89259be835f44c61aef04c4e9601ecf996e04408e9e08d",
+          "Nat.brecOn.go": "ce59bb25233e5700bb527ac8471f4dc4cbf5b4f82980f5d543d9b02f2a0d8e7e",
+          "Nat.casesOn": "d33f48abfe312d731ce1a33d160ece68e68c23b57024dcf9d2f404b48d103234",
+          "Nat.le": "e35f7e97c3af408fd85d6df81144839740539d5511ac6cd7f3ae46bd1a126b2e",
+          "Nat.le.rec": "91e37a367186b419292fa352c1eed6bb1f8a9180cff714522835b1814a07d273",
+          "Nat.le.refl": "762985276c40c0e0a9d202d9ceb679ebc8c8a353c9adac9cbc6d96ce15701f3d",
+          "Nat.le.step": "4f63eb86b6591fbad5da33ea942a81c40cee665125c1f33091cd3b388d093d25",
+          "Nat.lt": "513cfe9db2944a92292d8cf324e8c5fa1fd0d04b7ee0819f56ae7d36e20f130b",
+          "Nat.rec": "fa3658314fb6cb1b8690c5ee0e67098dd58761b50d7ea3b4b1cd915181e1e0b6",
+          "Nat.succ": "3e7171b7a8b3b8b0064bd84fe528109408c4748b0f59b87b1691f281fd9489c4",
+          "Nat.zero": "b853267f44d7791d3450d5aef7af7b6fd44c85c2f5bc9c7944bf60736ae991a1",
+          "OfNat": "394daea755beff6ef6d0078de8ddcedf58bbcc914a6d98c2bd0df54ea97fb00e",
+          "OfNat.mk": "effaba349832e1fd9c3a20a4452b141673f1ebde1f5419f409273b7064cc2573",
+          "OfNat.ofNat": "f842feccb04296d14d1cc6b43339181f59589ca6e5eacd7cea05050565896e83",
+          "PProd": "174649ca3847708b1eecbebfb068242215759815b1b8cf59b6fde595c894adec",
+          "PProd.mk": "4c0c5bb0a4179afb6f3823acad38395e1956a1852833997e8de39f49893d4b96",
+          "PUnit": "9b5d7f994744a79e70d77e8eb8256c93f8daa62fd1c62b3cef49d6d480f85500",
+          "PUnit.unit": "af58f3db600e724cff8e70dec1b1615da22784f6588d33600c7c4ab8e1285cd2",
+          "Protected.allowed": "6c2f13611afefd961b8774d881c326adf260f3e1b6ef893d0a169a68e4e68922",
+          "Protected.threshold": "5e98b7cd8322bcd48af8d1ba320b9221ab0867b4d770b3c1166f826e0cd4705d",
+          "instAddNat": "77f57120c86856dc319dfe5ff5b97b4158847e4ada895b78acf1fd3b6c3252a5",
+          "instHAdd": "4b91c20e6f930c8a34cf6a55d50f1fed9bfa249c65c3216429a196efe9c8964a",
+          "instLTNat": "14675087537a40646759d8b6c7938a949ede9630242fe1189e008fd1adcc61d3",
+          "instOfNatNat": "ef48c9bb5fb1ff389098a232806819229197c217345077c0976703e33772bdc3",
+          "outParam": "285379bdf4a1c25f00c520b5ee44c9568d030fb28a56c092c7a2774d884cb711"
+        },
+        "dependency_paths": {
+          "Add": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Add"
+          ],
+          "Add.add": [
+            "Protected.add_allowed",
+            "instHAdd",
+            "Add.add"
+          ],
+          "Add.mk": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Add.mk"
+          ],
+          "HAdd": [
+            "Protected.add_allowed",
+            "HAdd.hAdd",
+            "HAdd"
+          ],
+          "HAdd.hAdd": [
+            "Protected.add_allowed",
+            "HAdd.hAdd"
+          ],
+          "HAdd.mk": [
+            "Protected.add_allowed",
+            "instHAdd",
+            "HAdd.mk"
+          ],
+          "LT": [
+            "Protected.add_allowed",
+            "LT.lt",
+            "LT"
+          ],
+          "LT.lt": [
+            "Protected.add_allowed",
+            "LT.lt"
+          ],
+          "LT.mk": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "LT.mk"
+          ],
+          "Nat": [
+            "Protected.add_allowed",
+            "Nat"
+          ],
+          "Nat.add": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add"
+          ],
+          "Nat.add._f": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f"
+          ],
+          "Nat.add.match_1": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.add.match_1"
+          ],
+          "Nat.below": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.below"
+          ],
+          "Nat.brecOn": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.brecOn"
+          ],
+          "Nat.brecOn.go": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.brecOn",
+            "Nat.brecOn.go"
+          ],
+          "Nat.casesOn": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.add.match_1",
+            "Nat.casesOn"
+          ],
+          "Nat.le": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le"
+          ],
+          "Nat.le.rec": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le",
+            "Nat.le.rec"
+          ],
+          "Nat.le.refl": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le",
+            "Nat.le.refl"
+          ],
+          "Nat.le.step": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le",
+            "Nat.le.step"
+          ],
+          "Nat.lt": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt"
+          ],
+          "Nat.rec": [
+            "Protected.add_allowed",
+            "Nat",
+            "Nat.rec"
+          ],
+          "Nat.succ": [
+            "Protected.add_allowed",
+            "Nat",
+            "Nat.succ"
+          ],
+          "Nat.zero": [
+            "Protected.add_allowed",
+            "Nat",
+            "Nat.zero"
+          ],
+          "OfNat": [
+            "Protected.add_allowed",
+            "OfNat.ofNat",
+            "OfNat"
+          ],
+          "OfNat.mk": [
+            "Protected.add_allowed",
+            "instOfNatNat",
+            "OfNat.mk"
+          ],
+          "OfNat.ofNat": [
+            "Protected.add_allowed",
+            "OfNat.ofNat"
+          ],
+          "PProd": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "PProd"
+          ],
+          "PProd.mk": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "PProd",
+            "PProd.mk"
+          ],
+          "PUnit": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.below",
+            "PUnit"
+          ],
+          "PUnit.unit": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.brecOn",
+            "Nat.brecOn.go",
+            "PUnit.unit"
+          ],
+          "Protected.allowed": [
+            "Protected.add_allowed",
+            "Protected.allowed"
+          ],
+          "Protected.threshold": [
+            "Protected.add_allowed",
+            "Protected.allowed",
+            "Protected.threshold"
+          ],
+          "instAddNat": [
+            "Protected.add_allowed",
+            "instAddNat"
+          ],
+          "instHAdd": [
+            "Protected.add_allowed",
+            "instHAdd"
+          ],
+          "instLTNat": [
+            "Protected.add_allowed",
+            "instLTNat"
+          ],
+          "instOfNatNat": [
+            "Protected.add_allowed",
+            "instOfNatNat"
+          ],
+          "outParam": [
+            "Protected.add_allowed",
+            "HAdd.hAdd",
+            "outParam"
+          ]
+        }
+      },
+      "verdict": {
+        "class": "definition-mismatch",
+        "detail": "Protected.threshold",
+        "changed": [
+          "Protected.threshold"
+        ],
+        "dependency_paths": {
+          "Protected.threshold": [
+            "Protected.add_allowed",
+            "Protected.allowed",
+            "Protected.threshold"
+          ]
+        }
+      }
+    },
+    {
+      "id": "wrong-statement",
+      "project": "verification/independent-replay/protected/solutions/wrong-statement",
+      "build": {
+        "argv": [
+          "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+          "build"
+        ],
+        "project": "verification/independent-replay/protected/solutions/wrong-statement",
+        "exit_code": 0,
+        "signal": null,
+        "elapsed_ms": 166,
+        "stdout": "Build completed successfully (4 jobs).",
+        "stderr": "",
+        "timed_out": false
+      },
+      "export": {
+        "sha256": "c62c36eda84ba9be04243a77b53e72c248206a9d63a1ebefb237989cf4b1a562",
+        "size_bytes": 4233823,
+        "records": 83159,
+        "format": "3.1.0",
+        "declarations": 1500,
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ],
+        "foreign_axioms": []
+      },
+      "export_stage": {
+        "argv": [
+          "lake",
+          "env",
+          "leanexport",
+          "Solution",
+          "--",
+          "Protected.zero_allowed",
+          "Protected.succ_of_lt",
+          "Protected.add_allowed"
+        ],
+        "exit_code": 0,
+        "signal": null,
+        "timed_out": false,
+        "panic": false,
+        "stderr_excerpt": ""
+      },
+      "root_statement_sha256": {
+        "Protected.zero_allowed": "bf1561afe7381a5ec478fddc5ebba2364961c6f502d71997a983d78fa58e74ee",
+        "Protected.succ_of_lt": "7b74e6a62a1a67ac8ae4f40e0e428b9495764f781fb9addd61b0a059ac9a57cd",
+        "Protected.add_allowed": "d1d44851fd9edded72e48941f06af5bc6e91fe26325f3f9db690bef8ccea5c71"
+      },
+      "foreign_axioms": [],
+      "verdict": {
+        "class": "statement-mismatch",
+        "detail": "Protected.zero_allowed",
+        "path": [
+          "Protected.zero_allowed"
+        ]
+      }
+    },
+    {
+      "id": "forbidden-assumption",
+      "project": "verification/independent-replay/protected/solutions/forbidden-assumption",
+      "build": {
+        "argv": [
+          "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+          "build"
+        ],
+        "project": "verification/independent-replay/protected/solutions/forbidden-assumption",
+        "exit_code": 0,
+        "signal": null,
+        "elapsed_ms": 168,
+        "stdout": "Build completed successfully (5 jobs).",
+        "stderr": "",
+        "timed_out": false
+      },
+      "export": {
+        "sha256": "10434bc6a3603f3166c3af78062c8f12a3846f5a8021b263df8f429b6c9a65a6",
+        "size_bytes": 4231396,
+        "records": 83144,
+        "format": "3.1.0",
+        "declarations": 1501,
+        "axioms": [
+          "Protected.external_zero",
+          "propext",
+          "Quot.sound"
+        ],
+        "foreign_axioms": [
+          "Protected.external_zero"
+        ]
+      },
+      "export_stage": {
+        "argv": [
+          "lake",
+          "env",
+          "leanexport",
+          "Solution",
+          "--",
+          "Protected.zero_allowed",
+          "Protected.succ_of_lt",
+          "Protected.add_allowed"
+        ],
+        "exit_code": 0,
+        "signal": null,
+        "timed_out": false,
+        "panic": false,
+        "stderr_excerpt": ""
+      },
+      "root_statement_sha256": {
+        "Protected.zero_allowed": "e43bfa9d66cf17cd764f070189ef5130c753ea79885e2a07ca3485edff79b63f",
+        "Protected.succ_of_lt": "7b74e6a62a1a67ac8ae4f40e0e428b9495764f781fb9addd61b0a059ac9a57cd",
+        "Protected.add_allowed": "d1d44851fd9edded72e48941f06af5bc6e91fe26325f3f9db690bef8ccea5c71"
+      },
+      "foreign_axioms": [
+        "Protected.external_zero"
+      ],
+      "verdict": {
+        "class": "forbidden-axiom",
+        "detail": "Protected.external_zero",
+        "forbidden": [
+          "Protected.external_zero"
+        ]
+      }
+    },
+    {
+      "id": "kernel-rejection",
+      "project": "verification/independent-replay/protected/solutions/kernel-rejection",
+      "build": {
+        "argv": [
+          "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+          "build"
+        ],
+        "project": "verification/independent-replay/protected/solutions/kernel-rejection",
+        "exit_code": 1,
+        "signal": null,
+        "elapsed_ms": 454,
+        "stdout": "✖ [3/4] Building Solution (324ms)\ntrace: .> LEAN_PATH=/home/brittonr/.cache/noble-iss/wt/replay-62/verification/independent-replay/protected/solutions/kernel-rejection/.lake/build/lib/lean /nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean /home/brittonr/.cache/noble-iss/wt/replay-62/verification/independent-replay/protected/solutions/kernel-rejection/Solution.lean -o /home/brittonr/.cache/noble-iss/wt/replay-62/verification/independent-replay/protected/solutions/kernel-rejection/.lake/build/lib/lean/Solution.olean -i /home/brittonr/.cache/noble-iss/wt/replay-62/verification/independent-replay/protected/solutions/kernel-rejection/.lake/build/lib/lean/Solution.ilean -c /home/brittonr/.cache/noble-iss/wt/replay-62/verification/independent-replay/protected/solutions/kernel-rejection/.lake/build/ir/Solution.c --setup /home/brittonr/.cache/noble-iss/wt/replay-62/verification/independent-replay/protected/solutions/kernel-rejection/.lake/build/ir/Solution.setup.json --json\nerror: Solution.lean:6:36: Type mismatch\n  True.intro\nhas type\n  True\nbut is expected to have type\n  allowed 0\nSome required targets logged failures:\n- Solution",
+        "stderr": "error: build failed",
+        "timed_out": false
+      },
+      "export": null,
+      "export_stage": null,
+      "verdict": {
+        "class": "kernel-rejection",
+        "detail": "✖ [3/4] Building Solution (324ms)\ntrace: .> LEAN_PATH=/home/brittonr/.cache/noble-iss/wt/replay-62/verification/independent-replay/protected/solutions/kernel-rejection/.lake/build/lib/lean /nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean /home/brittonr/.cache/noble-iss/wt/replay-62/verification/independent-replay/protected/solutions/kernel-rejection/Solution.lean -o /home/brittonr/.cache/noble-iss/wt/replay-62/verification/independent-replay/protected/solutions/kernel-rejection/.lake/build/lib/lean/Solution.olean -i /home/brittonr/.cache/noble-iss/wt/replay-62/verification/independent-replay/protected/solutions/kernel-rejection/.lake/build/lib/lean/Solution.ilean -c /home/brittonr/.cache/noble-iss/wt/replay-62/verification/independent-replay/protected/solutions/kernel-rejection/.lake/build/ir/Solution.c --setup /home/brittonr/.cache/noble-iss/wt/replay-62/verification/independent-replay/protected/solutions/kernel-rejection/.lake/build/ir/Solution.setup.json --json\nerror: Solution.lean:6:36: Type mismatch\n  True.intro\nhas type\n  True\nbut is expected to have type\n  allowed 0\nSome required targets logged failures:\n- Solution\nerror: build failed"
+      }
+    },
+    {
+      "id": "missing-definition",
+      "project": "verification/independent-replay/protected/solutions/real",
+      "build": {
+        "project": "verification/independent-replay/protected/solutions/real",
+        "from_export": "f3a1737fc664ce4f42348296b6d58ea047dea029afe42da853903002cb989aaa"
+      },
+      "export": {
+        "sha256": "efa8de8569af760a7d303e1caee0ab64eeb2d3ba2247447e6abc327f1c0b2f9b",
+        "size_bytes": 4233671,
+        "records": 83157,
+        "format": "3.1.0",
+        "declarations": 1499,
+        "removed": "Protected.threshold",
+        "axioms": [
+          "propext",
+          "Quot.sound"
+        ]
+      },
+      "export_stage": null,
+      "root_statement_sha256": {
+        "Protected.zero_allowed": "e43bfa9d66cf17cd764f070189ef5130c753ea79885e2a07ca3485edff79b63f",
+        "Protected.succ_of_lt": "7b74e6a62a1a67ac8ae4f40e0e428b9495764f781fb9addd61b0a059ac9a57cd",
+        "Protected.add_allowed": "d1d44851fd9edded72e48941f06af5bc6e91fe26325f3f9db690bef8ccea5c71"
+      },
+      "foreign_axioms": [],
+      "semantic_closure": {
+        "declarations": 38,
+        "names": [
+          "Add",
+          "Add.add",
+          "Add.mk",
+          "HAdd",
+          "HAdd.hAdd",
+          "HAdd.mk",
+          "LT",
+          "LT.lt",
+          "LT.mk",
+          "Nat",
+          "Nat.add",
+          "Nat.add._f",
+          "Nat.add.match_1",
+          "Nat.below",
+          "Nat.brecOn",
+          "Nat.brecOn.go",
+          "Nat.casesOn",
+          "Nat.le",
+          "Nat.le.rec",
+          "Nat.le.refl",
+          "Nat.le.step",
+          "Nat.lt",
+          "Nat.rec",
+          "Nat.succ",
+          "Nat.zero",
+          "OfNat",
+          "OfNat.mk",
+          "OfNat.ofNat",
+          "PProd",
+          "PProd.mk",
+          "PUnit",
+          "PUnit.unit",
+          "Protected.allowed",
+          "instAddNat",
+          "instHAdd",
+          "instLTNat",
+          "instOfNatNat",
+          "outParam"
+        ],
+        "missing": [
+          "Protected.threshold"
+        ],
+        "digest": {
+          "declarations": 38,
+          "sha256": "0c0f4e4956741b767a00d13d6addf083a7eaa69e16a233913862b2eb78215443"
+        },
+        "declaration_digests": {
+          "Add": "d829cda54bb3dad979c9590151bc37745b0ecfef0690bd00c70a86c409b80124",
+          "Add.add": "72935e7b10ab6857bc8e338f6c4ff1e6d7d71aca9afe182923ddc41e75d6cdd5",
+          "Add.mk": "ffd2321d4047acb06faf28e6032ea2a56375b6a1750f2e12dc3909c0f2224656",
+          "HAdd": "e9a97184d69034af6b0b89ae8306854e3ae0b4a4a5fef9ffcbe5999977fffd34",
+          "HAdd.hAdd": "43bed8cabd2528ee0e4df902a5446a6c4059efdf5b2cf0053e1d89a3f240439a",
+          "HAdd.mk": "4d3ac96549d47418f25012612eca3a8e1bcc9d5f181147051966a936b0254871",
+          "LT": "defb593bc7d11dedc908b4fd841b6825ecdbe29d7db4901d1a1986fb13f390c9",
+          "LT.lt": "b6c9f13180772b3ea38ee3ca85ad1eb434aedd15fbb5f8ec863f462e8553019f",
+          "LT.mk": "862af11dd27aa7dffee37739ae80cf79f1e090d6bcde300c406a31080d697616",
+          "Nat": "5cd488e5664d466d2a8b3b9ea30243e6966014e159d754a7d95a4926ee6d9472",
+          "Nat.add": "81a7457f075c81d722d98d25ed86b168ab02450e5dcaddac690ce7a5769ea4f3",
+          "Nat.add._f": "f8567a35e01839045ee1fee7bb5e33a9851ae49eee3c2d71963dbd900785fe70",
+          "Nat.add.match_1": "ef986b44a828cb1f10dd0aadc28668b5d0de30243acf0d47345cb5a360a8751b",
+          "Nat.below": "82ac0e7ef838bb3b02581051521c2c5ea50fa4581beb23f3db0fd8c960548498",
+          "Nat.brecOn": "784d50aea73f26c23d89259be835f44c61aef04c4e9601ecf996e04408e9e08d",
+          "Nat.brecOn.go": "ce59bb25233e5700bb527ac8471f4dc4cbf5b4f82980f5d543d9b02f2a0d8e7e",
+          "Nat.casesOn": "d33f48abfe312d731ce1a33d160ece68e68c23b57024dcf9d2f404b48d103234",
+          "Nat.le": "e35f7e97c3af408fd85d6df81144839740539d5511ac6cd7f3ae46bd1a126b2e",
+          "Nat.le.rec": "91e37a367186b419292fa352c1eed6bb1f8a9180cff714522835b1814a07d273",
+          "Nat.le.refl": "762985276c40c0e0a9d202d9ceb679ebc8c8a353c9adac9cbc6d96ce15701f3d",
+          "Nat.le.step": "4f63eb86b6591fbad5da33ea942a81c40cee665125c1f33091cd3b388d093d25",
+          "Nat.lt": "513cfe9db2944a92292d8cf324e8c5fa1fd0d04b7ee0819f56ae7d36e20f130b",
+          "Nat.rec": "fa3658314fb6cb1b8690c5ee0e67098dd58761b50d7ea3b4b1cd915181e1e0b6",
+          "Nat.succ": "3e7171b7a8b3b8b0064bd84fe528109408c4748b0f59b87b1691f281fd9489c4",
+          "Nat.zero": "b853267f44d7791d3450d5aef7af7b6fd44c85c2f5bc9c7944bf60736ae991a1",
+          "OfNat": "394daea755beff6ef6d0078de8ddcedf58bbcc914a6d98c2bd0df54ea97fb00e",
+          "OfNat.mk": "effaba349832e1fd9c3a20a4452b141673f1ebde1f5419f409273b7064cc2573",
+          "OfNat.ofNat": "f842feccb04296d14d1cc6b43339181f59589ca6e5eacd7cea05050565896e83",
+          "PProd": "174649ca3847708b1eecbebfb068242215759815b1b8cf59b6fde595c894adec",
+          "PProd.mk": "4c0c5bb0a4179afb6f3823acad38395e1956a1852833997e8de39f49893d4b96",
+          "PUnit": "9b5d7f994744a79e70d77e8eb8256c93f8daa62fd1c62b3cef49d6d480f85500",
+          "PUnit.unit": "af58f3db600e724cff8e70dec1b1615da22784f6588d33600c7c4ab8e1285cd2",
+          "Protected.allowed": "6c2f13611afefd961b8774d881c326adf260f3e1b6ef893d0a169a68e4e68922",
+          "instAddNat": "77f57120c86856dc319dfe5ff5b97b4158847e4ada895b78acf1fd3b6c3252a5",
+          "instHAdd": "4b91c20e6f930c8a34cf6a55d50f1fed9bfa249c65c3216429a196efe9c8964a",
+          "instLTNat": "14675087537a40646759d8b6c7938a949ede9630242fe1189e008fd1adcc61d3",
+          "instOfNatNat": "ef48c9bb5fb1ff389098a232806819229197c217345077c0976703e33772bdc3",
+          "outParam": "285379bdf4a1c25f00c520b5ee44c9568d030fb28a56c092c7a2774d884cb711"
+        },
+        "dependency_paths": {
+          "Add": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Add"
+          ],
+          "Add.add": [
+            "Protected.add_allowed",
+            "instHAdd",
+            "Add.add"
+          ],
+          "Add.mk": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Add.mk"
+          ],
+          "HAdd": [
+            "Protected.add_allowed",
+            "HAdd.hAdd",
+            "HAdd"
+          ],
+          "HAdd.hAdd": [
+            "Protected.add_allowed",
+            "HAdd.hAdd"
+          ],
+          "HAdd.mk": [
+            "Protected.add_allowed",
+            "instHAdd",
+            "HAdd.mk"
+          ],
+          "LT": [
+            "Protected.add_allowed",
+            "LT.lt",
+            "LT"
+          ],
+          "LT.lt": [
+            "Protected.add_allowed",
+            "LT.lt"
+          ],
+          "LT.mk": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "LT.mk"
+          ],
+          "Nat": [
+            "Protected.add_allowed",
+            "Nat"
+          ],
+          "Nat.add": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add"
+          ],
+          "Nat.add._f": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f"
+          ],
+          "Nat.add.match_1": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.add.match_1"
+          ],
+          "Nat.below": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.below"
+          ],
+          "Nat.brecOn": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.brecOn"
+          ],
+          "Nat.brecOn.go": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.brecOn",
+            "Nat.brecOn.go"
+          ],
+          "Nat.casesOn": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.add.match_1",
+            "Nat.casesOn"
+          ],
+          "Nat.le": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le"
+          ],
+          "Nat.le.rec": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le",
+            "Nat.le.rec"
+          ],
+          "Nat.le.refl": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le",
+            "Nat.le.refl"
+          ],
+          "Nat.le.step": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt",
+            "Nat.le",
+            "Nat.le.step"
+          ],
+          "Nat.lt": [
+            "Protected.add_allowed",
+            "instLTNat",
+            "Nat.lt"
+          ],
+          "Nat.rec": [
+            "Protected.add_allowed",
+            "Nat",
+            "Nat.rec"
+          ],
+          "Nat.succ": [
+            "Protected.add_allowed",
+            "Nat",
+            "Nat.succ"
+          ],
+          "Nat.zero": [
+            "Protected.add_allowed",
+            "Nat",
+            "Nat.zero"
+          ],
+          "OfNat": [
+            "Protected.add_allowed",
+            "OfNat.ofNat",
+            "OfNat"
+          ],
+          "OfNat.mk": [
+            "Protected.add_allowed",
+            "instOfNatNat",
+            "OfNat.mk"
+          ],
+          "OfNat.ofNat": [
+            "Protected.add_allowed",
+            "OfNat.ofNat"
+          ],
+          "PProd": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "PProd"
+          ],
+          "PProd.mk": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "PProd",
+            "PProd.mk"
+          ],
+          "PUnit": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.add._f",
+            "Nat.below",
+            "PUnit"
+          ],
+          "PUnit.unit": [
+            "Protected.add_allowed",
+            "instAddNat",
+            "Nat.add",
+            "Nat.brecOn",
+            "Nat.brecOn.go",
+            "PUnit.unit"
+          ],
+          "Protected.allowed": [
+            "Protected.add_allowed",
+            "Protected.allowed"
+          ],
+          "Protected.threshold": [
+            "Protected.add_allowed",
+            "Protected.allowed",
+            "Protected.threshold"
+          ],
+          "instAddNat": [
+            "Protected.add_allowed",
+            "instAddNat"
+          ],
+          "instHAdd": [
+            "Protected.add_allowed",
+            "instHAdd"
+          ],
+          "instLTNat": [
+            "Protected.add_allowed",
+            "instLTNat"
+          ],
+          "instOfNatNat": [
+            "Protected.add_allowed",
+            "instOfNatNat"
+          ],
+          "outParam": [
+            "Protected.add_allowed",
+            "HAdd.hAdd",
+            "outParam"
+          ]
+        }
+      },
+      "verdict": {
+        "class": "const-missing-in-solution",
+        "detail": "Protected.threshold",
+        "missing": [
+          "Protected.threshold"
+        ],
+        "dependency_paths": {
+          "Protected.threshold": [
+            "Protected.add_allowed",
+            "Protected.allowed",
+            "Protected.threshold"
+          ]
+        }
+      }
+    }
+  ],
+  "non_claims": [
+    "This exported-closure fallback is not lake comparator and does not inherit all of its sandbox or comparison guarantees.",
+    "Valid solutions are checked by Lean 4.35.0; the invalid-proof control demonstrates kernel rejection, but no independent proof checker result is claimed for these protected-semantic fixture packages.",
+    "The challenge is authored in this lane and is not an independent specification of any Noble theorem.",
+    "The missing-definition case removes one declaration from a valid export; a source package omitting a definition it uses would not typecheck.",
+    "No CI, flake, policy or gate change; promotion is an owner decision."
+  ]
+}

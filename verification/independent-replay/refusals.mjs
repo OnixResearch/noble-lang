@@ -19,6 +19,8 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { foreignAxioms, inspectExport, STANDARD_AXIOMS } from './ndjson.mjs';
+import { pinGuard } from './pins.mjs';
 
 const argv = process.argv.slice(2);
 const value = (name) => {
@@ -31,6 +33,7 @@ const exporter = path.resolve(value('--exporter'));
 const leanBin = path.resolve(value('--lean-bin'));
 const large = path.resolve(value('--large-export'));
 const small = path.resolve(value('--small-export'));
+const smallRetainedAt = argv.includes('--small-retained-at') ? value('--small-retained-at') : null;
 const work = path.resolve(value('--work'));
 const output = path.resolve(value('--output'));
 const pins = {
@@ -43,59 +46,24 @@ const pins = {
 
 const sha256 = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 // Refuse before any process runs when a pinned input changed.
-for (const [name, file] of [['nanoda', nanoda], ['exporter', exporter], ['lean', path.join(leanBin, 'lean')],
-  ['large', large], ['small', small]]) {
-  const actual = sha256(file);
-  if (actual !== pins[name]) throw new Error(`${name} digest ${actual} differs from the pin ${pins[name]}`);
-}
+pinGuard([
+  { role: 'checker', file: nanoda, sha256: pins.nanoda, pinClass: 'tool-pin-mismatch' },
+  { role: 'exporter', file: exporter, sha256: pins.exporter, pinClass: 'tool-pin-mismatch' },
+  { role: 'lean', file: path.join(leanBin, 'lean'), sha256: pins.lean, pinClass: 'tool-pin-mismatch' },
+  { role: 'large export', file: large, sha256: pins.large, pinClass: 'export-pin-mismatch' },
+  { role: 'small export', file: small, sha256: pins.small, pinClass: 'export-pin-mismatch' },
+]);
 if (fs.existsSync(work)) throw new Error(`work directory exists: ${work}`);
 fs.mkdirSync(work, { recursive: true });
 
-const STANDARD_AXIOMS = ['propext', 'Classical.choice', 'Quot.sound'];
 const SMALL_ROOT = 'NobleFoundation.LinkBoundary.vertical_simulation_compose';
 const LARGE_ROOT = 'NobleFoundation.toInt_add';
 const CUSTOM_AXIOM = 'NobleReplayControl.customAxiom';
 const childEnv = {
   HOME: process.env.HOME ?? '/', LANG: 'C.UTF-8',
   PATH: [leanBin, '/run/current-system/sw/bin', '/usr/bin', '/bin'].join(':'),
+  TMPDIR: process.env.TMPDIR,
 };
-
-/** Declared names, declared axioms and format version of an NDJSON export, from its own records. */
-function inspectExport(file) {
-  const names = new Map([[0, '']]);
-  const declared = new Set();
-  const axioms = [];
-  let format = null;
-  let records = 0;
-  const nameOf = (index) => {
-    if (!names.has(index)) throw new Error(`name index ${index} used before it is defined`);
-    return names.get(index);
-  };
-  for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
-    if (line === '') continue;
-    records++;
-    const record = JSON.parse(line);
-    if (record.meta) format = record.meta.format?.version ?? null;
-    if (record.str && 'in' in record) {
-      const prefix = nameOf(record.str.pre);
-      names.set(record.in, prefix ? `${prefix}.${record.str.str}` : record.str.str);
-    }
-    if (record.num && 'in' in record) {
-      const prefix = nameOf(record.num.pre);
-      names.set(record.in, prefix ? `${prefix}.${record.num.i}` : String(record.num.i));
-    }
-    for (const kind of ['axiom', 'def', 'thm', 'opaque', 'quot']) {
-      if (record[kind]) declared.add(nameOf(record[kind].name));
-    }
-    if (record.axiom) axioms.push(nameOf(record.axiom.name));
-    if (record.inductive) {
-      for (const group of ['types', 'ctors', 'recs']) {
-        for (const entry of record.inductive[group] ?? []) declared.add(nameOf(entry.name));
-      }
-    }
-  }
-  return { records, format, declared, axioms };
-}
 
 function classifyChecker(result) {
   if (result.error?.code === 'ETIMEDOUT') return 'timeout';
@@ -247,7 +215,7 @@ function replay(control) {
     return entry;
   }
   entry.checker = runChecker(control.id, exportPath, control.config ?? {});
-  const foreign = inspection.axioms.filter((axiom) => !STANDARD_AXIOMS.includes(axiom));
+  const foreign = foreignAxioms(inspection);
   if (entry.checker.classification === 'accepted' && foreign.length > 0) {
     entry.verdict = 'forbidden-axiom';
     entry.reasons = [`checker accepted, but the export declares non-standard axioms: ${foreign.join(', ')}`];
@@ -308,10 +276,15 @@ const observations = {
 };
 
 const host = spawnSync('uname', ['-srm'], { encoding: 'utf8' }).stdout.trim();
+const source = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: process.cwd(), encoding: 'utf8' });
+if (source.status !== 0 || source.stdout.trim() === '') {
+  throw new Error(`cannot identify receipt source commit: ${source.stderr.trim()}`);
+}
 const receipt = {
   schema: 'noble-independent-replay-refusals/v1',
   measured_on: new Date().toISOString().slice(0, 10),
   host,
+  source_commit: source.stdout.trim(),
   assertion: 'every control lands in its stated refusal class and no non-baseline control is accepted: an unsupported export format, a disabled literal extension, an exporter failure (including a missing root the exporter reports only by a panic), a checker-refused axiom and a custom axiom the checker was told to permit',
   holds,
   checks,
@@ -333,8 +306,8 @@ const receipt = {
   inputs: {
     large: { root: LARGE_ROOT, sha256: pins.large, retained: false },
     small: {
-      root: SMALL_ROOT, sha256: pins.small, retained: true,
-      path: 'verification/independent-replay/receipts/2026-10-29/vertical_simulation_compose.ndjson',
+      root: SMALL_ROOT, sha256: pins.small, retained: smallRetainedAt !== null,
+      path: smallRetainedAt,
     },
   },
   controls: entries,

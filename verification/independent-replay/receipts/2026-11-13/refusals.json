@@ -1,0 +1,506 @@
+{
+  "schema": "noble-independent-replay-refusals/v1",
+  "measured_on": "2026-11-13",
+  "host": "Linux 6.18.60 x86_64",
+  "source_commit": "24fbb6f6334471608fb53213ba77bcf30634b3e4",
+  "assertion": "every control lands in its stated refusal class and no non-baseline control is accepted: an unsupported export format, a disabled literal extension, an exporter failure (including a missing root the exporter reports only by a panic), a checker-refused axiom and a custom axiom the checker was told to permit",
+  "holds": true,
+  "checks": {
+    "every_control_in_its_expected_class": true,
+    "baselines_accepted": true,
+    "no_other_control_accepted": true,
+    "checker_accepts_permitted_custom_axiom": true
+  },
+  "harness": {
+    "path": "verification/independent-replay/refusals.mjs",
+    "sha256": "8cb47cb4ed49c37218de37d54f6a33a3dcdf89452d3f6294f9223a913ddfb1db"
+  },
+  "acceptance_rule": [
+    "exporter exit status zero and no exporter panic",
+    "every requested root declared in the export",
+    "checker exit status zero with a positive number of checked declarations",
+    "every declared axiom in propext, Classical.choice, Quot.sound, whatever the checker permits"
+  ],
+  "tools": {
+    "nanoda": {
+      "binary_sha256": "42c552c48618da739861c1b807240df6b83587ab38b015b69dff0d850ed95770",
+      "num_threads": 1
+    },
+    "lean4export": {
+      "binary_sha256": "beb75c89dab5e6e40e781a006fe4340dcca81d5896e61f305e858fea491fc57f"
+    },
+    "lean": {
+      "binary_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c"
+    }
+  },
+  "inputs": {
+    "large": {
+      "root": "NobleFoundation.toInt_add",
+      "sha256": "6bf49d7871d537afc125467c5467bf9211e0bb22ae988f093efb3e1d609597ab",
+      "retained": false
+    },
+    "small": {
+      "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+      "sha256": "7cfd9a6559ed8d30ba3cd620bac6d373cf3829771b3a04f9066328ff1ddba9fb",
+      "retained": false,
+      "path": null
+    }
+  },
+  "controls": [
+    {
+      "id": "baseline-exported",
+      "changes": "none: Init export of Nat.add_comm",
+      "expected": "accepted",
+      "roots": [
+        "Nat.add_comm"
+      ],
+      "export_stage": {
+        "argv": [
+          "Init",
+          "--",
+          "Nat.add_comm"
+        ],
+        "exit_code": 0,
+        "signal": null,
+        "panic": false,
+        "stderr_excerpt": ""
+      },
+      "export": {
+        "sha256": "6aa6de21984e6c060d8d7c5e674ced9766553089c0568783753564bbf4f2617f",
+        "size_bytes": 60699,
+        "records": 1138,
+        "format_version": "3.1.0",
+        "declared": 52,
+        "axioms": []
+      },
+      "checker": {
+        "config_overrides": {},
+        "exit_code": 0,
+        "signal": null,
+        "elapsed_ms": 4,
+        "classification": "accepted",
+        "stdout": "Checked 52 declarations with no errors",
+        "stderr_excerpt": ""
+      },
+      "verdict": "accepted",
+      "baseline": true
+    },
+    {
+      "id": "baseline-retained",
+      "changes": "none: retained export",
+      "expected": "accepted",
+      "roots": [
+        "NobleFoundation.LinkBoundary.vertical_simulation_compose"
+      ],
+      "export": {
+        "sha256": "7cfd9a6559ed8d30ba3cd620bac6d373cf3829771b3a04f9066328ff1ddba9fb",
+        "size_bytes": 56585,
+        "records": 1157,
+        "format_version": "3.1.0",
+        "declared": 16,
+        "axioms": []
+      },
+      "checker": {
+        "config_overrides": {},
+        "exit_code": 0,
+        "signal": null,
+        "elapsed_ms": 2,
+        "classification": "accepted",
+        "stdout": "Checked 16 declarations with no errors",
+        "stderr_excerpt": ""
+      },
+      "verdict": "accepted",
+      "baseline": true
+    },
+    {
+      "id": "baseline-large",
+      "changes": "none: pinned large export",
+      "expected": "accepted",
+      "roots": [
+        "NobleFoundation.toInt_add"
+      ],
+      "export": {
+        "sha256": "6bf49d7871d537afc125467c5467bf9211e0bb22ae988f093efb3e1d609597ab",
+        "size_bytes": 7697669,
+        "records": 149829,
+        "format_version": "3.1.0",
+        "declared": 2780,
+        "axioms": [
+          "propext",
+          "Quot.sound",
+          "Classical.choice"
+        ]
+      },
+      "checker": {
+        "config_overrides": {},
+        "exit_code": 0,
+        "signal": null,
+        "elapsed_ms": 469,
+        "classification": "accepted",
+        "stdout": "Checked 2780 declarations with no errors",
+        "stderr_excerpt": ""
+      },
+      "verdict": "accepted",
+      "baseline": true
+    },
+    {
+      "id": "export-missing-module",
+      "changes": "the exported module does not exist",
+      "expected": "export-failure",
+      "roots": [
+        "Nat.add_comm"
+      ],
+      "export_stage": {
+        "argv": [
+          "NoSuchModule",
+          "--",
+          "Nat.add_comm"
+        ],
+        "exit_code": 1,
+        "signal": null,
+        "panic": false,
+        "stderr_excerpt": "uncaught exception: unknown module prefix 'NoSuchModule'\n\nNo directory 'NoSuchModule' or file 'NoSuchModule.olean' in the search path entries:\n/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/lib/lean"
+      },
+      "export": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0,
+        "records": 0,
+        "format_version": null,
+        "declared": 0,
+        "axioms": []
+      },
+      "verdict": "export-failure",
+      "reasons": [
+        "exporter exited 1",
+        "roots absent from the export: Nat.add_comm"
+      ],
+      "baseline": false
+    },
+    {
+      "id": "export-missing-root",
+      "changes": "the requested root does not exist",
+      "expected": "export-failure",
+      "roots": [
+        "Nat.no_such_declaration"
+      ],
+      "export_stage": {
+        "argv": [
+          "Init",
+          "--",
+          "Nat.no_such_declaration"
+        ],
+        "exit_code": 0,
+        "signal": null,
+        "panic": true,
+        "stderr_excerpt": "PANIC at LeanExport.dumpConstant LeanExport.Basic:254:48: Constant Nat.no_such_declaration not found in environment."
+      },
+      "export": {
+        "sha256": "7da7c771f6988291409fd4664a350ddc76b76488b7e95f14c4fb7035b72af539",
+        "size_bytes": 173,
+        "records": 1,
+        "format_version": "3.1.0",
+        "declared": 0,
+        "axioms": []
+      },
+      "verdict": "export-failure",
+      "reasons": [
+        "exporter panicked",
+        "roots absent from the export: Nat.no_such_declaration"
+      ],
+      "status_only_view": {
+        "exporter_exit": 0,
+        "checker_exit": 0,
+        "checker_stdout": "Checked 0 declarations with no errors",
+        "strict_classification": "empty-check"
+      },
+      "baseline": false
+    },
+    {
+      "id": "export-partial-roots",
+      "changes": "one of two requested roots does not exist",
+      "expected": "export-failure",
+      "roots": [
+        "Nat.add_comm",
+        "Nat.no_such_declaration"
+      ],
+      "export_stage": {
+        "argv": [
+          "Init",
+          "--",
+          "Nat.add_comm",
+          "Nat.no_such_declaration"
+        ],
+        "exit_code": 0,
+        "signal": null,
+        "panic": true,
+        "stderr_excerpt": "PANIC at LeanExport.dumpConstant LeanExport.Basic:254:48: Constant Nat.no_such_declaration not found in environment."
+      },
+      "export": {
+        "sha256": "6aa6de21984e6c060d8d7c5e674ced9766553089c0568783753564bbf4f2617f",
+        "size_bytes": 60699,
+        "records": 1138,
+        "format_version": "3.1.0",
+        "declared": 52,
+        "axioms": []
+      },
+      "verdict": "export-failure",
+      "reasons": [
+        "exporter panicked",
+        "roots absent from the export: Nat.no_such_declaration"
+      ],
+      "status_only_view": {
+        "exporter_exit": 0,
+        "checker_exit": 0,
+        "checker_stdout": "Checked 52 declarations with no errors",
+        "strict_classification": "accepted"
+      },
+      "baseline": false
+    },
+    {
+      "id": "unsupported-format-above",
+      "changes": "meta format version 3.2.0, above the supported range",
+      "expected": "unsupported-format",
+      "roots": [
+        "NobleFoundation.LinkBoundary.vertical_simulation_compose"
+      ],
+      "export": {
+        "sha256": "2bcfe4a8b6f19df6e0d8dd47e58b62b7f932d54669e695e0316448931281fda2",
+        "size_bytes": 56585,
+        "records": 1157,
+        "format_version": "3.2.0",
+        "declared": 16,
+        "axioms": []
+      },
+      "checker": {
+        "config_overrides": {},
+        "exit_code": 1,
+        "signal": null,
+        "elapsed_ms": 2,
+        "classification": "unsupported-format",
+        "stdout": "",
+        "stderr_excerpt": "Error: export format version is greater than the maximum supported version. Found 3.2.0, but max (exclusive) supported is 3.2.0\n\nrun with `-h` or `--help` for help"
+      },
+      "verdict": "unsupported-format",
+      "baseline": false
+    },
+    {
+      "id": "unsupported-format-below",
+      "changes": "meta format version 3.0.0, below the supported range",
+      "expected": "unsupported-format",
+      "roots": [
+        "NobleFoundation.LinkBoundary.vertical_simulation_compose"
+      ],
+      "export": {
+        "sha256": "c76c478d35579396ea07357cc9602992e7015685bf461c1cb0e9f0a5b5c58188",
+        "size_bytes": 56585,
+        "records": 1157,
+        "format_version": "3.0.0",
+        "declared": 16,
+        "axioms": []
+      },
+      "checker": {
+        "config_overrides": {},
+        "exit_code": 1,
+        "signal": null,
+        "elapsed_ms": 3,
+        "classification": "unsupported-format",
+        "stdout": "",
+        "stderr_excerpt": "Error: export format version is less than the minimum supported version. Found 3.0.0, but min supported is 3.1.0\n\nrun with `-h` or `--help` for help"
+      },
+      "verdict": "unsupported-format",
+      "baseline": false
+    },
+    {
+      "id": "unsupported-nat-literal",
+      "changes": "checker run with the nat literal extension off",
+      "expected": "unsupported-extension",
+      "roots": [
+        "NobleFoundation.toInt_add"
+      ],
+      "export": {
+        "sha256": "6bf49d7871d537afc125467c5467bf9211e0bb22ae988f093efb3e1d609597ab",
+        "size_bytes": 7697669,
+        "records": 149829,
+        "format_version": "3.1.0",
+        "declared": 2780,
+        "axioms": [
+          "propext",
+          "Quot.sound",
+          "Classical.choice"
+        ]
+      },
+      "checker": {
+        "config_overrides": {
+          "nat_extension": false
+        },
+        "exit_code": 1,
+        "signal": null,
+        "elapsed_ms": 4,
+        "classification": "unsupported-extension",
+        "stdout": "",
+        "stderr_excerpt": "Error: Nat lit extension disallowed by checker execution config, but export file contains a nat literal \"{\\\"ie\\\":544,\\\"natVal\\\":\\\"0\\\"}\\n\"\n\nrun with `-h` or `--help` for help"
+      },
+      "verdict": "unsupported-extension",
+      "baseline": false
+    },
+    {
+      "id": "unsupported-string-literal",
+      "changes": "checker run with the string literal extension off",
+      "expected": "unsupported-extension",
+      "roots": [
+        "NobleFoundation.toInt_add"
+      ],
+      "export": {
+        "sha256": "6bf49d7871d537afc125467c5467bf9211e0bb22ae988f093efb3e1d609597ab",
+        "size_bytes": 7697669,
+        "records": 149829,
+        "format_version": "3.1.0",
+        "declared": 2780,
+        "axioms": [
+          "propext",
+          "Quot.sound",
+          "Classical.choice"
+        ]
+      },
+      "checker": {
+        "config_overrides": {
+          "string_extension": false
+        },
+        "exit_code": 1,
+        "signal": null,
+        "elapsed_ms": 8,
+        "classification": "unsupported-extension",
+        "stdout": "",
+        "stderr_excerpt": "Error: String lit extension disallowed by checker execution config, but export file contains a string literal \"{\\\"ie\\\":9390,\\\"strVal\\\":\\\"Lean\\\"}\\n\"\n\nrun with `-h` or `--help` for help"
+      },
+      "verdict": "unsupported-extension",
+      "baseline": false
+    },
+    {
+      "id": "checker-forbidden-axiom",
+      "changes": "checker permits only Classical.choice and Quot.sound",
+      "expected": "forbidden-axiom",
+      "roots": [
+        "NobleFoundation.toInt_add"
+      ],
+      "export": {
+        "sha256": "6bf49d7871d537afc125467c5467bf9211e0bb22ae988f093efb3e1d609597ab",
+        "size_bytes": 7697669,
+        "records": 149829,
+        "format_version": "3.1.0",
+        "declared": 2780,
+        "axioms": [
+          "propext",
+          "Quot.sound",
+          "Classical.choice"
+        ]
+      },
+      "checker": {
+        "config_overrides": {
+          "permitted_axioms": [
+            "Classical.choice",
+            "Quot.sound"
+          ]
+        },
+        "exit_code": 1,
+        "signal": null,
+        "elapsed_ms": 14,
+        "classification": "forbidden-axiom",
+        "stdout": "",
+        "stderr_excerpt": "Error: export file declares unpermitted axiom \"propext\"\n\nrun with `-h` or `--help` for help"
+      },
+      "verdict": "forbidden-axiom",
+      "baseline": false
+    },
+    {
+      "id": "custom-axiom-checker-refuses",
+      "changes": "export declares NobleReplayControl.customAxiom; checker permits the standard axioms",
+      "expected": "forbidden-axiom",
+      "roots": [
+        "NobleFoundation.LinkBoundary.vertical_simulation_compose"
+      ],
+      "export": {
+        "sha256": "19e368afbdbca022f51452ac07bf081c92ffe70e80ee1ec6f600b4dc4ffa868a",
+        "size_bytes": 56755,
+        "records": 1160,
+        "format_version": "3.1.0",
+        "declared": 17,
+        "axioms": [
+          "NobleReplayControl.customAxiom"
+        ]
+      },
+      "checker": {
+        "config_overrides": {},
+        "exit_code": 1,
+        "signal": null,
+        "elapsed_ms": 4,
+        "classification": "forbidden-axiom",
+        "stdout": "",
+        "stderr_excerpt": "Error: export file declares unpermitted axiom \"NobleReplayControl.customAxiom\"\n\nrun with `-h` or `--help` for help"
+      },
+      "verdict": "forbidden-axiom",
+      "baseline": false
+    },
+    {
+      "id": "custom-axiom-checker-permits",
+      "changes": "export declares NobleReplayControl.customAxiom; checker also permits it",
+      "expected": "forbidden-axiom",
+      "roots": [
+        "NobleFoundation.LinkBoundary.vertical_simulation_compose"
+      ],
+      "export": {
+        "sha256": "19e368afbdbca022f51452ac07bf081c92ffe70e80ee1ec6f600b4dc4ffa868a",
+        "size_bytes": 56755,
+        "records": 1160,
+        "format_version": "3.1.0",
+        "declared": 17,
+        "axioms": [
+          "NobleReplayControl.customAxiom"
+        ]
+      },
+      "checker": {
+        "config_overrides": {
+          "permitted_axioms": [
+            "propext",
+            "Classical.choice",
+            "Quot.sound",
+            "NobleReplayControl.customAxiom"
+          ]
+        },
+        "exit_code": 0,
+        "signal": null,
+        "elapsed_ms": 5,
+        "classification": "accepted",
+        "stdout": "Checked 17 declarations with no errors",
+        "stderr_excerpt": ""
+      },
+      "verdict": "forbidden-axiom",
+      "reasons": [
+        "checker accepted, but the export declares non-standard axioms: NobleReplayControl.customAxiom"
+      ],
+      "baseline": false
+    }
+  ],
+  "observations": {
+    "missing_root_exporter_exit": 0,
+    "missing_root_status_only_view": {
+      "exporter_exit": 0,
+      "checker_exit": 0,
+      "checker_stdout": "Checked 0 declarations with no errors",
+      "strict_classification": "empty-check"
+    },
+    "partial_roots_status_only_view": {
+      "exporter_exit": 0,
+      "checker_exit": 0,
+      "checker_stdout": "Checked 52 declarations with no errors",
+      "strict_classification": "accepted"
+    }
+  },
+  "non_claims": [
+    "Pilot evidence on one host with locally built pinned tools; no CI, flake, policy or gate change.",
+    "A refusal class names why a run did not succeed; it is never a mathematical refutation of the subject.",
+    "The custom-axiom export is a constructed control, not a Noble declaration.",
+    "No claim about nanoda or lean4export correctness, completeness or equivalence to the Lean kernel.",
+    "Root presence binds names, not statements: exact claim binding beyond declared names stays open."
+  ]
+}

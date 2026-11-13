@@ -200,13 +200,12 @@ run_cmd do
   -- per-declaration native_decide axiom family (the M2 policy).
   let evalClosed : List Name :=
     [``NobleM2.coverage_positive,
-     ``NobleM2.Coverage.accepted, ``NobleM2.Coverage.derives,
-     ``NobleM2.Regression.ce_accepted, ``NobleM2.Regression.ce_derives,
+     ``NobleM2.Coverage.accepted,
+     ``NobleM2.Regression.ce_accepted,
      ``NobleM2.WordCoverage.coverage_positive_word,
      ``NobleM2.WordCoverage.coverage_eliminator_exercise,
-     ``NobleM2.WordCoverage.ee_accepted, ``NobleM2.WordCoverage.ee_derives,
-     ``NobleM2.rule_case_sound, ``NobleM2.rule_if_sound,
-     ``NobleM2.rule_listcase_sound, ``NobleM2.fresh_instantiation,
+     ``NobleM2.WordCoverage.ee_accepted,
+     ``NobleM2.fresh_instantiation,
      ``NobleM2.Refinement.table_refines, ``NobleM2.Refinement.apply_refines,
      ``NobleM2.WordRefinement.word_refinements,
      ``NobleM3.Refine.refinement_words,
@@ -245,14 +244,11 @@ run_cmd do
       let bad := axs.filter (fun a => !(okAxiom isStrict a))
       if !bad.isEmpty then
         logError m!"m3-gate: forbidden axioms on {n}: {bad}"
-  -- Theorems outside the required v1 contract that are reviewed to carry the
-  -- per-declaration native_decide family: the four Coverage fixture runs
-  -- (Termination.lean) and the four SignedSelf acceptance runs. Every other
+  -- The only unrequired declarations reviewed to carry the per-declaration
+  -- native_decide family are the four SignedSelf acceptance runs. Every other
   -- declared theorem must stay within the strict set.
   let nativeUnrequired : List Name :=
-    [``NobleM2.Coverage.addInst, ``NobleM2.Coverage.addLook,
-     ``NobleM2.Coverage.lit1, ``NobleM2.Coverage.lit41,
-     ``NobleM2.SignedSelf.forever_accepted,
+    [``NobleM2.SignedSelf.forever_accepted,
      ``NobleM2.SignedSelf.forever_signed_derives,
      ``NobleM2.SignedSelf.monomorphic_accepted,
      ``NobleM2.SignedSelf.polymorphic_ordinary_check_accepts]
