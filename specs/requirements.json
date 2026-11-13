@@ -6352,6 +6352,18 @@
       "test_design": "test-design-open"
     },
     {
+      "id": "VT-ALLOC-01",
+      "document": "../.cairn/specs/verification-toolchain/spec.md",
+      "document_id": "IMPL-V001",
+      "evidence_routes": [
+        "proof-or-explicit-assumption",
+        "implementation-test",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
       "id": "VT-BRIDGE-01",
       "document": "../.cairn/specs/verification-toolchain/spec.md",
       "document_id": "IMPL-V001",

@@ -1,0 +1,3214 @@
+{
+  "schema": "noble-allocator-admission-receipt/v1",
+  "lane": "verification/allocator-admission",
+  "issue": 121,
+  "role": "extraction and admission evidence only: not a refinement proof, not a model-to-implementation correspondence, not M1 acceptance",
+  "source": {
+    "commit": "f800f8074f086e0df6b47d164fdbb70237cd0b8e",
+    "tree_clean_before": true,
+    "tree_clean_after": true,
+    "files": {
+      "verification/allocator-admission/fixtures/probes/Cargo.toml": "8bfb72bd7479b32876afc55d971e87507e5a7c3f053638f872524117be9f50b2",
+      "verification/allocator-admission/fixtures/probes/src/lib.rs": "71e08428479ec7763573010539505aab5675211eac27381b6d568b6412e86418",
+      "verification/allocator-admission/fixtures/stateful-alloc/Cargo.toml": "58ac1a7db55e4b9428b1c8cd143207b6d1648d37efd349af332e9f71a8c4256a",
+      "verification/allocator-admission/fixtures/stateful-alloc/src/lib.rs": "1e1ba64d7b933a9b53e3b30f0b75bcaff1f9146d3bb2bd620de7eeffb82a670d",
+      "verification/allocator-admission/run.mjs": "15b004b9b962fed98c6ce08c6519d6212f819eb6edf316b88be5a79adc566bc0",
+      "verification/allocator-admission/admission.mjs": "d7d500a8f0134854f2be75bf31aa99ee9eca86c25b441a53954ed2d5f4ad59fb",
+      "verification/allocator-admission/admission.test.mjs": "1bed9b87342372296e5406576267f84ba8b106c2364c72932c2609afbdd42bed"
+    },
+    "fixture_isolation": {
+      "workspace_members": [
+        "crates/noble-kernel",
+        "crates/noble-contracts",
+        "crates/noble-wasm",
+        "crates/noble-cli",
+        "crates/noble-syndicate",
+        "crates/noble-ngraph",
+        "crates/noble-ngraph-experiment"
+      ],
+      "probes_is_own_workspace": true,
+      "stateful_is_own_workspace": true,
+      "unsafe_code_forbid_in_probes": true,
+      "unsafe_in_stateful_only": true
+    }
+  },
+  "tools": {
+    "charon": {
+      "path": "/nix/store/ka61j6d6zy8zg91ynlbd6nmjssyynrpl-charon/bin/charon",
+      "sha256": "30180681e63aeb42f96e2d88bd11df06078dbefa562a33b92a1505e4b94b4a11",
+      "version": "0.1.254 (b104e24fea7d721b71e6c39fd70f26ff20bc0980)",
+      "rev": "b104e24fea7d721b71e6c39fd70f26ff20bc0980"
+    },
+    "aeneas": {
+      "path": "/nix/store/q3hsccq1s53aa85vh3mmc3b0k31pnyl2-ocaml5.2.1-aeneas-0.1.0/bin/aeneas",
+      "sha256": "70faaa0ec1449fb8231057e1d395d84715da1ce365a180913c2c26f7fd0665ee",
+      "version": "aeneas 505b6ca",
+      "rev": "505b6ca35217e7be5c96c3e2f8045edfbdf47291",
+      "lean_library_rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef"
+    },
+    "extraction_rust": {
+      "path": "/nix/store/wq92i79ivn1w1nrdhmzl1mqx0wcyrawi-rust-default-1.100.0-nightly-2026-08-18/bin/rustc",
+      "sha256": "5b89fbb87df48ce774fa379f66823e3fcb6066bcef9b5a057514ee37e058a0e9",
+      "version": "rustc 1.100.0-nightly (8fa1c96cf 2026-08-17)\nbinary: rustc\ncommit-hash: 8fa1c96cfd489e4c27654c144ae871ce2c4db6c6\ncommit-date: 2026-08-17\nhost: x86_64-unknown-linux-gnu\nrelease: 1.100.0-nightly\nLLVM version: 23.1.0",
+      "nightly": "nightly-2026-08-18"
+    },
+    "lean": {
+      "path": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+      "sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+      "version": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)"
+    },
+    "lake": {
+      "path": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "sha256": "f6b0733782cb24932ed45979f88eccfb0e466f966a578c9f35e70ea468ee67ad",
+      "version": "Lake version 5.0.0-src+eb6cafb (Lean version 4.35.0)"
+    }
+  },
+  "selection": {
+    "sha256": "813abda695dcfec6bc3e26025e15a7f286e72c2d5b79f767f35b091fa8e5fc81",
+    "charon_args": [
+      "--preset=aeneas",
+      "--error-on-warnings"
+    ],
+    "aeneas_args": [
+      "-backend",
+      "lean",
+      "-abort-on-error",
+      "-warnings-as-errors",
+      "-no-progress-bar",
+      "-emit-json"
+    ],
+    "cargo_args": [
+      "--lib",
+      "--all-features",
+      "--target",
+      "x86_64-unknown-linux-gnu",
+      "--locked",
+      "--offline"
+    ],
+    "extraction_profile": "dev"
+  },
+  "stable_toolchain": {
+    "status": "installed",
+    "prefix": "<campaign>/scratch/alloc-121/rust-1.100.0",
+    "rustc_sha256": "5073422953727c9427a76b7fce03aa9404da46315e5a1e4965389512a41e8db0",
+    "cargo_sha256": "84d55d77232a921da96bcf2e1f78532ef5c5221803aae4448d9e220d48ebd808",
+    "version": "rustc 1.100.0 (0ef1bc386 2026-11-09)\nbinary: rustc\ncommit-hash: 0ef1bc386059596dada8fb65b50425aab2ea637a\ncommit-date: 2026-11-09\nhost: x86_64-unknown-linux-gnu\nrelease: 1.100.0\nLLVM version: 23.1.5",
+    "tarball": {
+      "status": "match",
+      "file": "rust-1.100.0-x86_64-unknown-linux-gnu.tar.xz",
+      "bytes": 211225068,
+      "sha256": "98ee6bec240e1cfe944f17e7092412dc5ef6e008484bb668c6936d35a7d15acd",
+      "published_sha256": "98ee6bec240e1cfe944f17e7092412dc5ef6e008484bb668c6936d35a7d15acd"
+    },
+    "installer": "install.sh --prefix <dir> --components=rustc,cargo,rust-std-x86_64-unknown-linux-gnu"
+  },
+  "lean_library": {
+    "packages": "~/git/noble/proofs/mc1/.lake/packages",
+    "manifest_sha256": "7b0ec9c6609ec6f055252a0eefda4d0eeec1e49cd20f340b3c8213eca36fc30e",
+    "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+    "marker": "~/git/noble/proofs/mc1/.lake/packages/aeneas/backends/lean/.lake/build/lib/lean/Aeneas/Std/Vec.olean",
+    "shared_cache_changed_during_run": false,
+    "lane_commands_can_write_cache": false,
+    "lane_stage": "lake build <generated module> in isolated package copy",
+    "snapshot_before": {
+      "vec_olean_mtime_ms": 1794544942182.7083,
+      "aeneas_std_dir_mtime_ms": 1794547874235.894,
+      "newest_entry": [
+        {
+          "entry": "Scalar",
+          "mtime_ms": 1794547893913.833
+        },
+        {
+          "entry": "Core",
+          "mtime_ms": 1794547879658.8772
+        },
+        {
+          "entry": "PrimitivesLemmas.trace",
+          "mtime_ms": 1794547874238.894
+        }
+      ]
+    },
+    "snapshot_after": {
+      "vec_olean_mtime_ms": 1794544942182.7083,
+      "aeneas_std_dir_mtime_ms": 1794547874235.894,
+      "newest_entry": [
+        {
+          "entry": "Scalar",
+          "mtime_ms": 1794547893913.833
+        },
+        {
+          "entry": "Core",
+          "mtime_ms": 1794547879658.8772
+        },
+        {
+          "entry": "PrimitivesLemmas.trace",
+          "mtime_ms": 1794547874238.894
+        }
+      ]
+    }
+  },
+  "source_stage": {
+    "expectations": {
+      "stable_1_100_ungated": "compiled",
+      "stable_1_100_gated": "blocked",
+      "extraction_nightly_ungated": "blocked",
+      "extraction_nightly_gated": "compiled"
+    },
+    "stages": {
+      "stable_1_100_ungated": {
+        "status": "compiled",
+        "variant": "stable",
+        "exit": 0,
+        "diagnostic": null,
+        "unstable_feature_errors": 0,
+        "stable_feature_errors": 0,
+        "first_error_lines": [],
+        "log": "logs/source-stable-ungated.log"
+      },
+      "stable_1_100_gated": {
+        "status": "blocked",
+        "variant": "extraction-nightly",
+        "exit": 101,
+        "diagnostic": "error[E0554]: `#![feature]` may not be used on the stable release channel",
+        "unstable_feature_errors": 0,
+        "stable_feature_errors": 1,
+        "first_error_lines": [
+          "error[E0554]: `#![feature]` may not be used on the stable release channel",
+          "For more information about this error, try `rustc --explain E0554`.",
+          "error: could not compile `stateful-alloc` (lib) due to 1 previous error; 1 warning emitted"
+        ],
+        "log": "logs/source-stable-gated.log"
+      },
+      "extraction_nightly_ungated": {
+        "status": "blocked",
+        "variant": "stable",
+        "exit": 101,
+        "diagnostic": "error[E0658]: use of unstable library feature `allocator_api`",
+        "unstable_feature_errors": 11,
+        "stable_feature_errors": 0,
+        "first_error_lines": [
+          "error[E0658]: use of unstable library feature `allocator_api`",
+          "error[E0658]: use of unstable library feature `allocator_api`",
+          "error[E0658]: use of unstable library feature `allocator_api`",
+          "error[E0658]: use of unstable library feature `allocator_api`"
+        ],
+        "log": "logs/source-nightly-ungated.log"
+      },
+      "extraction_nightly_gated": {
+        "status": "compiled",
+        "variant": "extraction-nightly",
+        "exit": 0,
+        "diagnostic": null,
+        "unstable_feature_errors": 0,
+        "stable_feature_errors": 0,
+        "first_error_lines": [],
+        "log": "logs/source-nightly-gated.log"
+      }
+    },
+    "failures": [],
+    "ungated_unstable_feature_errors": 11
+  },
+  "cells": [
+    {
+      "root": "vec_baseline",
+      "family": "implicit-global",
+      "expectation": "admitted",
+      "required_codes": [],
+      "observed": "admitted",
+      "stages": {
+        "charon": {
+          "status": "extracted",
+          "exit": 0,
+          "diagnostic": null,
+          "llbc_sha256": "a905868d39d94c3156c4211067c6041d5bbf7a1aadbf7afbc643f8dc620a2d34",
+          "log": "logs/vec_baseline-charon.log",
+          "options": {
+            "hide_allocator": true,
+            "treat_box_as_builtin": true,
+            "preset": "Aeneas",
+            "start_from": [
+              "probes::vec_baseline"
+            ],
+            "monomorphize": false,
+            "opaque": [],
+            "exclude": []
+          }
+        },
+        "aeneas": {
+          "status": "translated",
+          "exit": 0,
+          "diagnostic": null,
+          "translation_sha256": "ec526ec8c9d2a9adc5526aef4cf1b0e196b1daed30eec0447fae969361533c52",
+          "generated_files": {
+            "VecBaseline.lean": "d08574c8960a5d59b05bbd4b1e67e4fbe20b768626e870c12218edf6004bb143"
+          },
+          "log": "logs/vec_baseline-aeneas.log"
+        },
+        "lean": {
+          "status": "checked",
+          "exit": 0,
+          "module": "VecBaseline",
+          "entry_sha256": "d08574c8960a5d59b05bbd4b1e67e4fbe20b768626e870c12218edf6004bb143",
+          "diagnostic": null,
+          "log": "logs/vec_baseline-lean.log"
+        },
+        "admission": {
+          "status": "admitted",
+          "schema": "noble-allocator-admission/v1",
+          "refusal_codes": [],
+          "refusals": [],
+          "observables": {
+            "reachable_declarations": 25,
+            "local_declarations": [
+              "probes::vec_baseline"
+            ],
+            "root_span": {
+              "file": "src/lib.rs",
+              "begin": {
+                "line": 27,
+                "col": 0
+              },
+              "end": {
+                "line": 31,
+                "col": 1
+              }
+            },
+            "allocator_erased": true,
+            "vec_model_type_parameters": [
+              "T"
+            ],
+            "allocator_type_declarations": [
+              "alloc::alloc::Global"
+            ],
+            "opaque_externals": [],
+            "translation_versions": {
+              "aeneas": "505b6ca",
+              "charon": "0.1.254"
+            }
+          }
+        },
+        "root_in_translation": true,
+        "binding": {
+          "schema": "noble-allocator-admission/v1",
+          "source": {
+            "fixture": "verification/allocator-admission/fixtures/probes/src/lib.rs",
+            "sha256": "71e08428479ec7763573010539505aab5675211eac27381b6d568b6412e86418"
+          },
+          "selection_sha256": "813abda695dcfec6bc3e26025e15a7f286e72c2d5b79f767f35b091fa8e5fc81",
+          "tools": {
+            "charon": {
+              "rev": "b104e24fea7d721b71e6c39fd70f26ff20bc0980"
+            },
+            "aeneas": {
+              "rev": "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+            },
+            "aeneas_lean": {
+              "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef"
+            },
+            "extraction_rust": {
+              "version": "rustc 1.100.0-nightly (8fa1c96cf 2026-08-17)"
+            }
+          },
+          "options": {
+            "hide_allocator": true,
+            "start_from": [
+              "probes::vec_baseline"
+            ],
+            "preset": "Aeneas"
+          },
+          "root": "probes::vec_baseline"
+        }
+      }
+    },
+    {
+      "root": "box_baseline",
+      "family": "implicit-global",
+      "expectation": "admitted",
+      "required_codes": [],
+      "observed": "admitted",
+      "stages": {
+        "charon": {
+          "status": "extracted",
+          "exit": 0,
+          "diagnostic": null,
+          "llbc_sha256": "fd4ac14417e2760596fd5513f9614f89574fb458c6027831d89292d42b23107c",
+          "log": "logs/box_baseline-charon.log",
+          "options": {
+            "hide_allocator": true,
+            "treat_box_as_builtin": true,
+            "preset": "Aeneas",
+            "start_from": [
+              "probes::box_baseline"
+            ],
+            "monomorphize": false,
+            "opaque": [],
+            "exclude": []
+          }
+        },
+        "aeneas": {
+          "status": "translated",
+          "exit": 0,
+          "diagnostic": null,
+          "translation_sha256": "4a5f60bb2b16193e4b83f0b5de25815edbd2892ac4b9737d0148d555380bfdea",
+          "generated_files": {
+            "BoxBaseline.lean": "3b51c6c6dad4143c0521312a77f71a6f5e594e5800110fdec2c7add8a79c5951"
+          },
+          "log": "logs/box_baseline-aeneas.log"
+        },
+        "lean": {
+          "status": "checked",
+          "exit": 0,
+          "module": "BoxBaseline",
+          "entry_sha256": "3b51c6c6dad4143c0521312a77f71a6f5e594e5800110fdec2c7add8a79c5951",
+          "diagnostic": null,
+          "log": "logs/box_baseline-lean.log"
+        },
+        "admission": {
+          "status": "admitted",
+          "schema": "noble-allocator-admission/v1",
+          "refusal_codes": [],
+          "refusals": [],
+          "observables": {
+            "reachable_declarations": 22,
+            "local_declarations": [
+              "probes::box_baseline"
+            ],
+            "root_span": {
+              "file": "src/lib.rs",
+              "begin": {
+                "line": 34,
+                "col": 0
+              },
+              "end": {
+                "line": 37,
+                "col": 1
+              }
+            },
+            "allocator_erased": true,
+            "vec_model_type_parameters": null,
+            "allocator_type_declarations": [
+              "alloc::alloc::Global"
+            ],
+            "opaque_externals": [],
+            "translation_versions": {
+              "aeneas": "505b6ca",
+              "charon": "0.1.254"
+            }
+          }
+        },
+        "root_in_translation": true,
+        "binding": {
+          "schema": "noble-allocator-admission/v1",
+          "source": {
+            "fixture": "verification/allocator-admission/fixtures/probes/src/lib.rs",
+            "sha256": "71e08428479ec7763573010539505aab5675211eac27381b6d568b6412e86418"
+          },
+          "selection_sha256": "813abda695dcfec6bc3e26025e15a7f286e72c2d5b79f767f35b091fa8e5fc81",
+          "tools": {
+            "charon": {
+              "rev": "b104e24fea7d721b71e6c39fd70f26ff20bc0980"
+            },
+            "aeneas": {
+              "rev": "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+            },
+            "aeneas_lean": {
+              "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef"
+            },
+            "extraction_rust": {
+              "version": "rustc 1.100.0-nightly (8fa1c96cf 2026-08-17)"
+            }
+          },
+          "options": {
+            "hide_allocator": true,
+            "start_from": [
+              "probes::box_baseline"
+            ],
+            "preset": "Aeneas"
+          },
+          "root": "probes::box_baseline"
+        }
+      }
+    },
+    {
+      "root": "vec_growth_clone_baseline",
+      "family": "implicit-global",
+      "expectation": "admitted",
+      "required_codes": [],
+      "observed": "admitted",
+      "stages": {
+        "charon": {
+          "status": "extracted",
+          "exit": 0,
+          "diagnostic": null,
+          "llbc_sha256": "cd67bbb0e4d8b2d2795fbd109d7e2fe37337637d25e48643d799a6945c39a154",
+          "log": "logs/vec_growth_clone_baseline-charon.log",
+          "options": {
+            "hide_allocator": true,
+            "treat_box_as_builtin": true,
+            "preset": "Aeneas",
+            "start_from": [
+              "probes::vec_growth_clone_baseline"
+            ],
+            "monomorphize": false,
+            "opaque": [],
+            "exclude": []
+          }
+        },
+        "aeneas": {
+          "status": "translated",
+          "exit": 0,
+          "diagnostic": null,
+          "translation_sha256": "c5ea1ba84c9314f174693d253623fc6bf24363ff99cfc1bab5e7879ad9bb3cd1",
+          "generated_files": {
+            "VecGrowthCloneBaseline.lean": "a4e7a20b5fbc2c06050720fb9e699bc7862b5097e26e4874bdd0323ceff26d0e"
+          },
+          "log": "logs/vec_growth_clone_baseline-aeneas.log"
+        },
+        "lean": {
+          "status": "checked",
+          "exit": 0,
+          "module": "VecGrowthCloneBaseline",
+          "entry_sha256": "a4e7a20b5fbc2c06050720fb9e699bc7862b5097e26e4874bdd0323ceff26d0e",
+          "diagnostic": null,
+          "log": "logs/vec_growth_clone_baseline-lean.log"
+        },
+        "admission": {
+          "status": "admitted",
+          "schema": "noble-allocator-admission/v1",
+          "refusal_codes": [],
+          "refusals": [],
+          "observables": {
+            "reachable_declarations": 29,
+            "local_declarations": [
+              "probes::vec_growth_clone_baseline"
+            ],
+            "root_span": {
+              "file": "src/lib.rs",
+              "begin": {
+                "line": 40,
+                "col": 0
+              },
+              "end": {
+                "line": 46,
+                "col": 1
+              }
+            },
+            "allocator_erased": true,
+            "vec_model_type_parameters": [
+              "T"
+            ],
+            "allocator_type_declarations": [
+              "alloc::alloc::Global"
+            ],
+            "opaque_externals": [
+              "alloc::vec::{alloc::vec::Vec<T>}::reserve"
+            ],
+            "translation_versions": {
+              "aeneas": "505b6ca",
+              "charon": "0.1.254"
+            }
+          }
+        },
+        "root_in_translation": true,
+        "binding": {
+          "schema": "noble-allocator-admission/v1",
+          "source": {
+            "fixture": "verification/allocator-admission/fixtures/probes/src/lib.rs",
+            "sha256": "71e08428479ec7763573010539505aab5675211eac27381b6d568b6412e86418"
+          },
+          "selection_sha256": "813abda695dcfec6bc3e26025e15a7f286e72c2d5b79f767f35b091fa8e5fc81",
+          "tools": {
+            "charon": {
+              "rev": "b104e24fea7d721b71e6c39fd70f26ff20bc0980"
+            },
+            "aeneas": {
+              "rev": "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+            },
+            "aeneas_lean": {
+              "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef"
+            },
+            "extraction_rust": {
+              "version": "rustc 1.100.0-nightly (8fa1c96cf 2026-08-17)"
+            }
+          },
+          "options": {
+            "hide_allocator": true,
+            "start_from": [
+              "probes::vec_growth_clone_baseline"
+            ],
+            "preset": "Aeneas"
+          },
+          "root": "probes::vec_growth_clone_baseline"
+        }
+      }
+    },
+    {
+      "root": "global_vec",
+      "family": "explicit-global",
+      "expectation": "refused",
+      "required_codes": [
+        "ALLOCATOR-SOURCE",
+        "ALLOCATOR-CONSTRUCTOR",
+        "ALLOCATOR-AXIOM"
+      ],
+      "observed": "refused",
+      "stages": {
+        "charon": {
+          "status": "extracted",
+          "exit": 0,
+          "diagnostic": null,
+          "llbc_sha256": "8253405f93b8e3552901d528fda432ae1ac9d5b42915c5dfe90f6a96e49348d6",
+          "log": "logs/global_vec-charon.log",
+          "options": {
+            "hide_allocator": true,
+            "treat_box_as_builtin": true,
+            "preset": "Aeneas",
+            "start_from": [
+              "probes::global_vec"
+            ],
+            "monomorphize": false,
+            "opaque": [],
+            "exclude": []
+          }
+        },
+        "aeneas": {
+          "status": "translated",
+          "exit": 0,
+          "diagnostic": null,
+          "translation_sha256": "1383db596fc62fd4e6ab6c8d092910b2ee7b24d949ef131d9f406efecf1f4765",
+          "generated_files": {
+            "GlobalVec.lean": "88e199dfb381f0ad3482eaaac1df3ae24704da0a84204f71caac2e994696d171"
+          },
+          "log": "logs/global_vec-aeneas.log"
+        },
+        "lean": {
+          "status": "checked",
+          "exit": 0,
+          "module": "GlobalVec",
+          "entry_sha256": "88e199dfb381f0ad3482eaaac1df3ae24704da0a84204f71caac2e994696d171",
+          "diagnostic": null,
+          "log": "logs/global_vec-lean.log"
+        },
+        "admission": {
+          "status": "refused",
+          "schema": "noble-allocator-admission/v1",
+          "refusal_codes": [
+            "ALLOCATOR-AXIOM",
+            "ALLOCATOR-CONSTRUCTOR",
+            "ALLOCATOR-SOURCE"
+          ],
+          "refusals": [
+            {
+              "code": "ALLOCATOR-SOURCE",
+              "message": "probes::global_vec names an explicit allocator (new_in); the admitted model is implicit-global only",
+              "span": {
+                "construct": "new_in",
+                "begin": {
+                  "line": 55,
+                  "col": 39
+                },
+                "file": "src/lib.rs",
+                "excerpt": "new_in("
+              },
+              "evidence": {
+                "construct": "new_in",
+                "excerpt": "new_in("
+              }
+            },
+            {
+              "code": "ALLOCATOR-CONSTRUCTOR",
+              "message": "probes::global_vec reaches alloc::vec::<Impl>::new_in, which takes an explicit allocator argument",
+              "span": {
+                "file": "src/lib.rs",
+                "begin": {
+                  "line": 54,
+                  "col": 0
+                },
+                "end": {
+                  "line": 58,
+                  "col": 1
+                }
+              },
+              "evidence": {
+                "rendered": "alloc::vec::<Impl>::new_in",
+                "def_id": 20
+              }
+            },
+            {
+              "code": "ALLOCATOR-AXIOM",
+              "message": "probes::global_vec translates alloc::vec::{alloc::vec::Vec<T>}::new_in as an opaque external, so its allocator argument and failure are unmodelled",
+              "span": {
+                "file": "src/lib.rs",
+                "begin": {
+                  "line": 54,
+                  "col": 0
+                },
+                "end": {
+                  "line": 58,
+                  "col": 1
+                }
+              },
+              "evidence": {
+                "rust_name": "alloc::vec::{alloc::vec::Vec<T>}::new_in",
+                "lean_name": "probes.alloc.vec.Vec.new_in",
+                "is_opaque": true
+              }
+            }
+          ],
+          "observables": {
+            "reachable_declarations": 25,
+            "local_declarations": [
+              "probes::global_vec"
+            ],
+            "root_span": {
+              "file": "src/lib.rs",
+              "begin": {
+                "line": 54,
+                "col": 0
+              },
+              "end": {
+                "line": 58,
+                "col": 1
+              }
+            },
+            "allocator_erased": true,
+            "vec_model_type_parameters": [
+              "T"
+            ],
+            "allocator_type_declarations": [
+              "alloc::alloc::Global"
+            ],
+            "opaque_externals": [
+              "alloc::vec::{alloc::vec::Vec<T>}::new_in"
+            ],
+            "translation_versions": {
+              "aeneas": "505b6ca",
+              "charon": "0.1.254"
+            }
+          }
+        },
+        "root_in_translation": true,
+        "binding": {
+          "schema": "noble-allocator-admission/v1",
+          "source": {
+            "fixture": "verification/allocator-admission/fixtures/probes/src/lib.rs",
+            "sha256": "71e08428479ec7763573010539505aab5675211eac27381b6d568b6412e86418"
+          },
+          "selection_sha256": "813abda695dcfec6bc3e26025e15a7f286e72c2d5b79f767f35b091fa8e5fc81",
+          "tools": {
+            "charon": {
+              "rev": "b104e24fea7d721b71e6c39fd70f26ff20bc0980"
+            },
+            "aeneas": {
+              "rev": "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+            },
+            "aeneas_lean": {
+              "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef"
+            },
+            "extraction_rust": {
+              "version": "rustc 1.100.0-nightly (8fa1c96cf 2026-08-17)"
+            }
+          },
+          "options": {
+            "hide_allocator": true,
+            "start_from": [
+              "probes::global_vec"
+            ],
+            "preset": "Aeneas"
+          },
+          "root": "probes::global_vec"
+        }
+      }
+    },
+    {
+      "root": "global_box",
+      "family": "explicit-global",
+      "expectation": "refused",
+      "required_codes": [
+        "ALLOCATOR-SOURCE",
+        "ALLOCATOR-CONSTRUCTOR",
+        "ALLOCATOR-AXIOM"
+      ],
+      "observed": "refused",
+      "stages": {
+        "charon": {
+          "status": "extracted",
+          "exit": 0,
+          "diagnostic": null,
+          "llbc_sha256": "f07acc2c911ec951f3624af40fa68899c8ea287a38d72b4d7d47599215262424",
+          "log": "logs/global_box-charon.log",
+          "options": {
+            "hide_allocator": true,
+            "treat_box_as_builtin": true,
+            "preset": "Aeneas",
+            "start_from": [
+              "probes::global_box"
+            ],
+            "monomorphize": false,
+            "opaque": [],
+            "exclude": []
+          }
+        },
+        "aeneas": {
+          "status": "translated",
+          "exit": 0,
+          "diagnostic": null,
+          "translation_sha256": "483b669569a6e678f7545dcfead7a9d55c557eb4be8169512576792a8cca8bd0",
+          "generated_files": {
+            "GlobalBox.lean": "21196b3aff77ec425754ff78868e6c4c180475cd38ae7604e767341edfa5b117"
+          },
+          "log": "logs/global_box-aeneas.log"
+        },
+        "lean": {
+          "status": "checked",
+          "exit": 0,
+          "module": "GlobalBox",
+          "entry_sha256": "21196b3aff77ec425754ff78868e6c4c180475cd38ae7604e767341edfa5b117",
+          "diagnostic": null,
+          "log": "logs/global_box-lean.log"
+        },
+        "admission": {
+          "status": "refused",
+          "schema": "noble-allocator-admission/v1",
+          "refusal_codes": [
+            "ALLOCATOR-AXIOM",
+            "ALLOCATOR-CONSTRUCTOR",
+            "ALLOCATOR-SOURCE"
+          ],
+          "refusals": [
+            {
+              "code": "ALLOCATOR-SOURCE",
+              "message": "probes::global_box names an explicit allocator (new_in); the admitted model is implicit-global only",
+              "span": {
+                "construct": "new_in",
+                "begin": {
+                  "line": 62,
+                  "col": 9
+                },
+                "file": "src/lib.rs",
+                "excerpt": "new_in("
+              },
+              "evidence": {
+                "construct": "new_in",
+                "excerpt": "new_in("
+              }
+            },
+            {
+              "code": "ALLOCATOR-CONSTRUCTOR",
+              "message": "probes::global_box reaches alloc::boxed::<Impl>::new_in, which takes an explicit allocator argument",
+              "span": {
+                "file": "src/lib.rs",
+                "begin": {
+                  "line": 61,
+                  "col": 0
+                },
+                "end": {
+                  "line": 63,
+                  "col": 1
+                }
+              },
+              "evidence": {
+                "rendered": "alloc::boxed::<Impl>::new_in",
+                "def_id": 20
+              }
+            },
+            {
+              "code": "ALLOCATOR-AXIOM",
+              "message": "probes::global_box translates alloc::boxed::{alloc::boxed::Box<T>}::new_in as an opaque external, so its allocator argument and failure are unmodelled",
+              "span": {
+                "file": "src/lib.rs",
+                "begin": {
+                  "line": 61,
+                  "col": 0
+                },
+                "end": {
+                  "line": 63,
+                  "col": 1
+                }
+              },
+              "evidence": {
+                "rust_name": "alloc::boxed::{alloc::boxed::Box<T>}::new_in",
+                "lean_name": "probes.alloc.boxed.Box.new_in",
+                "is_opaque": true
+              }
+            }
+          ],
+          "observables": {
+            "reachable_declarations": 21,
+            "local_declarations": [
+              "probes::global_box"
+            ],
+            "root_span": {
+              "file": "src/lib.rs",
+              "begin": {
+                "line": 61,
+                "col": 0
+              },
+              "end": {
+                "line": 63,
+                "col": 1
+              }
+            },
+            "allocator_erased": true,
+            "vec_model_type_parameters": null,
+            "allocator_type_declarations": [
+              "alloc::alloc::Global"
+            ],
+            "opaque_externals": [
+              "alloc::boxed::{alloc::boxed::Box<T>}::new_in"
+            ],
+            "translation_versions": {
+              "aeneas": "505b6ca",
+              "charon": "0.1.254"
+            }
+          }
+        },
+        "root_in_translation": true,
+        "binding": {
+          "schema": "noble-allocator-admission/v1",
+          "source": {
+            "fixture": "verification/allocator-admission/fixtures/probes/src/lib.rs",
+            "sha256": "71e08428479ec7763573010539505aab5675211eac27381b6d568b6412e86418"
+          },
+          "selection_sha256": "813abda695dcfec6bc3e26025e15a7f286e72c2d5b79f767f35b091fa8e5fc81",
+          "tools": {
+            "charon": {
+              "rev": "b104e24fea7d721b71e6c39fd70f26ff20bc0980"
+            },
+            "aeneas": {
+              "rev": "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+            },
+            "aeneas_lean": {
+              "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef"
+            },
+            "extraction_rust": {
+              "version": "rustc 1.100.0-nightly (8fa1c96cf 2026-08-17)"
+            }
+          },
+          "options": {
+            "hide_allocator": true,
+            "start_from": [
+              "probes::global_box"
+            ],
+            "preset": "Aeneas"
+          },
+          "root": "probes::global_box"
+        }
+      }
+    },
+    {
+      "root": "generic_vec",
+      "family": "generic-allocator",
+      "expectation": "refused",
+      "required_codes": [
+        "ALLOCATOR-SOURCE",
+        "ALLOCATOR-CONSTRUCTOR",
+        "ALLOCATOR-AXIOM"
+      ],
+      "observed": "refused",
+      "stages": {
+        "charon": {
+          "status": "extracted",
+          "exit": 0,
+          "diagnostic": null,
+          "llbc_sha256": "b0cc2fa9d9fce367d2aef34b89fd321946a19883e4754c3015d2870af4dcb520",
+          "log": "logs/generic_vec-charon.log",
+          "options": {
+            "hide_allocator": true,
+            "treat_box_as_builtin": true,
+            "preset": "Aeneas",
+            "start_from": [
+              "probes::generic_vec"
+            ],
+            "monomorphize": false,
+            "opaque": [],
+            "exclude": []
+          }
+        },
+        "aeneas": {
+          "status": "translated",
+          "exit": 0,
+          "diagnostic": null,
+          "translation_sha256": "3ae60d5fa32deed8d8cb51c7949cdcd24bcd480d4390c70394726cdf314b854a",
+          "generated_files": {
+            "GenericVec.lean": "b0795903b44064ddd7d205ac27efd171689740dcf9efa0f80824757977a86411"
+          },
+          "log": "logs/generic_vec-aeneas.log"
+        },
+        "lean": {
+          "status": "checked",
+          "exit": 0,
+          "module": "GenericVec",
+          "entry_sha256": "b0795903b44064ddd7d205ac27efd171689740dcf9efa0f80824757977a86411",
+          "diagnostic": null,
+          "log": "logs/generic_vec-lean.log"
+        },
+        "admission": {
+          "status": "refused",
+          "schema": "noble-allocator-admission/v1",
+          "refusal_codes": [
+            "ALLOCATOR-AXIOM",
+            "ALLOCATOR-CONSTRUCTOR",
+            "ALLOCATOR-SOURCE"
+          ],
+          "refusals": [
+            {
+              "code": "ALLOCATOR-SOURCE",
+              "message": "probes::generic_vec names an explicit allocator (Allocator); the admitted model is implicit-global only",
+              "span": {
+                "construct": "Allocator",
+                "begin": {
+                  "line": 77,
+                  "col": 22
+                },
+                "file": "src/lib.rs",
+                "excerpt": "Allocator"
+              },
+              "evidence": {
+                "construct": "Allocator",
+                "excerpt": "Allocator"
+              }
+            },
+            {
+              "code": "ALLOCATOR-CONSTRUCTOR",
+              "message": "probes::generic_vec reaches alloc::vec::<Impl>::new_in, which takes an explicit allocator argument",
+              "span": {
+                "file": "src/lib.rs",
+                "begin": {
+                  "line": 77,
+                  "col": 0
+                },
+                "end": {
+                  "line": 81,
+                  "col": 1
+                }
+              },
+              "evidence": {
+                "rendered": "alloc::vec::<Impl>::new_in",
+                "def_id": 20
+              }
+            },
+            {
+              "code": "ALLOCATOR-AXIOM",
+              "message": "probes::generic_vec translates alloc::vec::{alloc::vec::Vec<T>}::new_in as an opaque external, so its allocator argument and failure are unmodelled",
+              "span": {
+                "file": "src/lib.rs",
+                "begin": {
+                  "line": 77,
+                  "col": 0
+                },
+                "end": {
+                  "line": 81,
+                  "col": 1
+                }
+              },
+              "evidence": {
+                "rust_name": "alloc::vec::{alloc::vec::Vec<T>}::new_in",
+                "lean_name": "probes.alloc.vec.Vec.new_in",
+                "is_opaque": true
+              }
+            }
+          ],
+          "observables": {
+            "reachable_declarations": 24,
+            "local_declarations": [
+              "probes::generic_vec"
+            ],
+            "root_span": {
+              "file": "src/lib.rs",
+              "begin": {
+                "line": 77,
+                "col": 0
+              },
+              "end": {
+                "line": 81,
+                "col": 1
+              }
+            },
+            "allocator_erased": true,
+            "vec_model_type_parameters": [
+              "T"
+            ],
+            "allocator_type_declarations": [],
+            "opaque_externals": [
+              "alloc::vec::{alloc::vec::Vec<T>}::new_in"
+            ],
+            "translation_versions": {
+              "aeneas": "505b6ca",
+              "charon": "0.1.254"
+            }
+          }
+        },
+        "root_in_translation": true,
+        "binding": {
+          "schema": "noble-allocator-admission/v1",
+          "source": {
+            "fixture": "verification/allocator-admission/fixtures/probes/src/lib.rs",
+            "sha256": "71e08428479ec7763573010539505aab5675211eac27381b6d568b6412e86418"
+          },
+          "selection_sha256": "813abda695dcfec6bc3e26025e15a7f286e72c2d5b79f767f35b091fa8e5fc81",
+          "tools": {
+            "charon": {
+              "rev": "b104e24fea7d721b71e6c39fd70f26ff20bc0980"
+            },
+            "aeneas": {
+              "rev": "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+            },
+            "aeneas_lean": {
+              "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef"
+            },
+            "extraction_rust": {
+              "version": "rustc 1.100.0-nightly (8fa1c96cf 2026-08-17)"
+            }
+          },
+          "options": {
+            "hide_allocator": true,
+            "start_from": [
+              "probes::generic_vec"
+            ],
+            "preset": "Aeneas"
+          },
+          "root": "probes::generic_vec"
+        }
+      }
+    },
+    {
+      "root": "generic_box",
+      "family": "generic-allocator",
+      "expectation": "refused",
+      "required_codes": [
+        "ALLOCATOR-SOURCE",
+        "ALLOCATOR-CONSTRUCTOR",
+        "ALLOCATOR-AXIOM"
+      ],
+      "observed": "refused",
+      "stages": {
+        "charon": {
+          "status": "extracted",
+          "exit": 0,
+          "diagnostic": null,
+          "llbc_sha256": "e877d021d42139b5e3d69c2f9654d1f235de972602f8eed73f96a9dbcc4bdac4",
+          "log": "logs/generic_box-charon.log",
+          "options": {
+            "hide_allocator": true,
+            "treat_box_as_builtin": true,
+            "preset": "Aeneas",
+            "start_from": [
+              "probes::generic_box"
+            ],
+            "monomorphize": false,
+            "opaque": [],
+            "exclude": []
+          }
+        },
+        "aeneas": {
+          "status": "translated",
+          "exit": 0,
+          "diagnostic": null,
+          "translation_sha256": "d76a1296d3d3ebcec493a97edf670d944149687ffd5bc1d1aa2e126f4c746943",
+          "generated_files": {
+            "GenericBox.lean": "a6d128bcbf7c1ba329efc1261b8d91dae5f55697c3ae30794a454fddb1bc90cb"
+          },
+          "log": "logs/generic_box-aeneas.log"
+        },
+        "lean": {
+          "status": "checked",
+          "exit": 0,
+          "module": "GenericBox",
+          "entry_sha256": "a6d128bcbf7c1ba329efc1261b8d91dae5f55697c3ae30794a454fddb1bc90cb",
+          "diagnostic": null,
+          "log": "logs/generic_box-lean.log"
+        },
+        "admission": {
+          "status": "refused",
+          "schema": "noble-allocator-admission/v1",
+          "refusal_codes": [
+            "ALLOCATOR-AXIOM",
+            "ALLOCATOR-CONSTRUCTOR",
+            "ALLOCATOR-SOURCE"
+          ],
+          "refusals": [
+            {
+              "code": "ALLOCATOR-SOURCE",
+              "message": "probes::generic_box names an explicit allocator (Allocator); the admitted model is implicit-global only",
+              "span": {
+                "construct": "Allocator",
+                "begin": {
+                  "line": 84,
+                  "col": 22
+                },
+                "file": "src/lib.rs",
+                "excerpt": "Allocator"
+              },
+              "evidence": {
+                "construct": "Allocator",
+                "excerpt": "Allocator"
+              }
+            },
+            {
+              "code": "ALLOCATOR-CONSTRUCTOR",
+              "message": "probes::generic_box reaches alloc::boxed::<Impl>::new_in, which takes an explicit allocator argument",
+              "span": {
+                "file": "src/lib.rs",
+                "begin": {
+                  "line": 84,
+                  "col": 0
+                },
+                "end": {
+                  "line": 87,
+                  "col": 1
+                }
+              },
+              "evidence": {
+                "rendered": "alloc::boxed::<Impl>::new_in",
+                "def_id": 20
+              }
+            },
+            {
+              "code": "ALLOCATOR-AXIOM",
+              "message": "probes::generic_box translates alloc::boxed::{alloc::boxed::Box<T>}::new_in as an opaque external, so its allocator argument and failure are unmodelled",
+              "span": {
+                "file": "src/lib.rs",
+                "begin": {
+                  "line": 84,
+                  "col": 0
+                },
+                "end": {
+                  "line": 87,
+                  "col": 1
+                }
+              },
+              "evidence": {
+                "rust_name": "alloc::boxed::{alloc::boxed::Box<T>}::new_in",
+                "lean_name": "probes.alloc.boxed.Box.new_in",
+                "is_opaque": true
+              }
+            }
+          ],
+          "observables": {
+            "reachable_declarations": 22,
+            "local_declarations": [
+              "probes::generic_box"
+            ],
+            "root_span": {
+              "file": "src/lib.rs",
+              "begin": {
+                "line": 84,
+                "col": 0
+              },
+              "end": {
+                "line": 87,
+                "col": 1
+              }
+            },
+            "allocator_erased": true,
+            "vec_model_type_parameters": null,
+            "allocator_type_declarations": [],
+            "opaque_externals": [
+              "alloc::boxed::{alloc::boxed::Box<T>}::new_in"
+            ],
+            "translation_versions": {
+              "aeneas": "505b6ca",
+              "charon": "0.1.254"
+            }
+          }
+        },
+        "root_in_translation": true,
+        "binding": {
+          "schema": "noble-allocator-admission/v1",
+          "source": {
+            "fixture": "verification/allocator-admission/fixtures/probes/src/lib.rs",
+            "sha256": "71e08428479ec7763573010539505aab5675211eac27381b6d568b6412e86418"
+          },
+          "selection_sha256": "813abda695dcfec6bc3e26025e15a7f286e72c2d5b79f767f35b091fa8e5fc81",
+          "tools": {
+            "charon": {
+              "rev": "b104e24fea7d721b71e6c39fd70f26ff20bc0980"
+            },
+            "aeneas": {
+              "rev": "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+            },
+            "aeneas_lean": {
+              "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef"
+            },
+            "extraction_rust": {
+              "version": "rustc 1.100.0-nightly (8fa1c96cf 2026-08-17)"
+            }
+          },
+          "options": {
+            "hide_allocator": true,
+            "start_from": [
+              "probes::generic_box"
+            ],
+            "preset": "Aeneas"
+          },
+          "root": "probes::generic_box"
+        }
+      }
+    },
+    {
+      "root": "generic_vec_growth_clone",
+      "family": "generic-allocator",
+      "expectation": "refused",
+      "required_codes": [
+        "ALLOCATOR-SOURCE",
+        "ALLOCATOR-CONSTRUCTOR",
+        "ALLOCATOR-AXIOM"
+      ],
+      "observed": "refused",
+      "stages": {
+        "charon": {
+          "status": "extracted",
+          "exit": 0,
+          "diagnostic": null,
+          "llbc_sha256": "253a9269e503abaab591060005699431d79c0bdc40bab65a0b3f4af0e804ccab",
+          "log": "logs/generic_vec_growth_clone-charon.log",
+          "options": {
+            "hide_allocator": true,
+            "treat_box_as_builtin": true,
+            "preset": "Aeneas",
+            "start_from": [
+              "probes::generic_vec_growth_clone"
+            ],
+            "monomorphize": false,
+            "opaque": [],
+            "exclude": []
+          }
+        },
+        "aeneas": {
+          "status": "translated",
+          "exit": 0,
+          "diagnostic": null,
+          "translation_sha256": "0a7aea84522fedad7613424b93b5e880a5153aedaa56935c1c0bb3c52ab8e7fc",
+          "generated_files": {
+            "GenericVecGrowthClone.lean": "cc6eda7fba46d4e0a6965ba7fe75b3c0ba0d016a43793f074682003884cf34c9"
+          },
+          "log": "logs/generic_vec_growth_clone-aeneas.log"
+        },
+        "lean": {
+          "status": "checked",
+          "exit": 0,
+          "module": "GenericVecGrowthClone",
+          "entry_sha256": "cc6eda7fba46d4e0a6965ba7fe75b3c0ba0d016a43793f074682003884cf34c9",
+          "diagnostic": null,
+          "log": "logs/generic_vec_growth_clone-lean.log"
+        },
+        "admission": {
+          "status": "refused",
+          "schema": "noble-allocator-admission/v1",
+          "refusal_codes": [
+            "ALLOCATOR-AXIOM",
+            "ALLOCATOR-CONSTRUCTOR",
+            "ALLOCATOR-SOURCE"
+          ],
+          "refusals": [
+            {
+              "code": "ALLOCATOR-SOURCE",
+              "message": "probes::generic_vec_growth_clone names an explicit allocator (Allocator); the admitted model is implicit-global only",
+              "span": {
+                "construct": "Allocator",
+                "begin": {
+                  "line": 90,
+                  "col": 35
+                },
+                "file": "src/lib.rs",
+                "excerpt": "Allocator"
+              },
+              "evidence": {
+                "construct": "Allocator",
+                "excerpt": "Allocator"
+              }
+            },
+            {
+              "code": "ALLOCATOR-CONSTRUCTOR",
+              "message": "probes::generic_vec_growth_clone reaches alloc::vec::<Impl>::new_in, which takes an explicit allocator argument",
+              "span": {
+                "file": "src/lib.rs",
+                "begin": {
+                  "line": 90,
+                  "col": 0
+                },
+                "end": {
+                  "line": 96,
+                  "col": 1
+                }
+              },
+              "evidence": {
+                "rendered": "alloc::vec::<Impl>::new_in",
+                "def_id": 20
+              }
+            },
+            {
+              "code": "ALLOCATOR-AXIOM",
+              "message": "probes::generic_vec_growth_clone translates alloc::vec::{alloc::vec::Vec<T>}::new_in as an opaque external, so its allocator argument and failure are unmodelled",
+              "span": {
+                "file": "src/lib.rs",
+                "begin": {
+                  "line": 90,
+                  "col": 0
+                },
+                "end": {
+                  "line": 96,
+                  "col": 1
+                }
+              },
+              "evidence": {
+                "rust_name": "alloc::vec::{alloc::vec::Vec<T>}::new_in",
+                "lean_name": "probes.alloc.vec.Vec.new_in",
+                "is_opaque": true
+              }
+            }
+          ],
+          "observables": {
+            "reachable_declarations": 27,
+            "local_declarations": [
+              "probes::generic_vec_growth_clone"
+            ],
+            "root_span": {
+              "file": "src/lib.rs",
+              "begin": {
+                "line": 90,
+                "col": 0
+              },
+              "end": {
+                "line": 96,
+                "col": 1
+              }
+            },
+            "allocator_erased": true,
+            "vec_model_type_parameters": [
+              "T"
+            ],
+            "allocator_type_declarations": [],
+            "opaque_externals": [
+              "alloc::vec::{alloc::vec::Vec<T>}::new_in",
+              "alloc::vec::{alloc::vec::Vec<T>}::reserve"
+            ],
+            "translation_versions": {
+              "aeneas": "505b6ca",
+              "charon": "0.1.254"
+            }
+          }
+        },
+        "root_in_translation": true,
+        "binding": {
+          "schema": "noble-allocator-admission/v1",
+          "source": {
+            "fixture": "verification/allocator-admission/fixtures/probes/src/lib.rs",
+            "sha256": "71e08428479ec7763573010539505aab5675211eac27381b6d568b6412e86418"
+          },
+          "selection_sha256": "813abda695dcfec6bc3e26025e15a7f286e72c2d5b79f767f35b091fa8e5fc81",
+          "tools": {
+            "charon": {
+              "rev": "b104e24fea7d721b71e6c39fd70f26ff20bc0980"
+            },
+            "aeneas": {
+              "rev": "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+            },
+            "aeneas_lean": {
+              "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef"
+            },
+            "extraction_rust": {
+              "version": "rustc 1.100.0-nightly (8fa1c96cf 2026-08-17)"
+            }
+          },
+          "options": {
+            "hide_allocator": true,
+            "start_from": [
+              "probes::generic_vec_growth_clone"
+            ],
+            "preset": "Aeneas"
+          },
+          "root": "probes::generic_vec_growth_clone"
+        }
+      }
+    },
+    {
+      "root": "borrowed_vec",
+      "family": "borrowed-allocator",
+      "expectation": "refused",
+      "required_codes": [
+        "ALLOCATOR-SOURCE",
+        "ALLOCATOR-CONSTRUCTOR",
+        "ALLOCATOR-AXIOM"
+      ],
+      "observed": "refused",
+      "stages": {
+        "charon": {
+          "status": "extracted",
+          "exit": 0,
+          "diagnostic": null,
+          "llbc_sha256": "1f04a05b31a571f146f6000f7f1dc8521ac899a201519be34072dad2c9972cc5",
+          "log": "logs/borrowed_vec-charon.log",
+          "options": {
+            "hide_allocator": true,
+            "treat_box_as_builtin": true,
+            "preset": "Aeneas",
+            "start_from": [
+              "probes::borrowed_vec"
+            ],
+            "monomorphize": false,
+            "opaque": [],
+            "exclude": []
+          }
+        },
+        "aeneas": {
+          "status": "translated",
+          "exit": 0,
+          "diagnostic": null,
+          "translation_sha256": "2992fc1be18d5cf62b1272f3d4460b43078df46ee0104298a61f41c82ed651fa",
+          "generated_files": {
+            "BorrowedVec.lean": "a8a833876b4be743db63269e8c71f1d491bfa0b6a24736930dc68bf9d0979308"
+          },
+          "log": "logs/borrowed_vec-aeneas.log"
+        },
+        "lean": {
+          "status": "checked",
+          "exit": 0,
+          "module": "BorrowedVec",
+          "entry_sha256": "a8a833876b4be743db63269e8c71f1d491bfa0b6a24736930dc68bf9d0979308",
+          "diagnostic": null,
+          "log": "logs/borrowed_vec-lean.log"
+        },
+        "admission": {
+          "status": "refused",
+          "schema": "noble-allocator-admission/v1",
+          "refusal_codes": [
+            "ALLOCATOR-AXIOM",
+            "ALLOCATOR-CONSTRUCTOR",
+            "ALLOCATOR-SOURCE"
+          ],
+          "refusals": [
+            {
+              "code": "ALLOCATOR-SOURCE",
+              "message": "probes::borrowed_vec names an explicit allocator (Allocator); the admitted model is implicit-global only",
+              "span": {
+                "construct": "Allocator",
+                "begin": {
+                  "line": 99,
+                  "col": 23
+                },
+                "file": "src/lib.rs",
+                "excerpt": "Allocator"
+              },
+              "evidence": {
+                "construct": "Allocator",
+                "excerpt": "Allocator"
+              }
+            },
+            {
+              "code": "ALLOCATOR-CONSTRUCTOR",
+              "message": "probes::borrowed_vec reaches alloc::vec::<Impl>::new_in, which takes an explicit allocator argument",
+              "span": {
+                "file": "src/lib.rs",
+                "begin": {
+                  "line": 99,
+                  "col": 0
+                },
+                "end": {
+                  "line": 103,
+                  "col": 1
+                }
+              },
+              "evidence": {
+                "rendered": "alloc::vec::<Impl>::new_in",
+                "def_id": 20
+              }
+            },
+            {
+              "code": "ALLOCATOR-AXIOM",
+              "message": "probes::borrowed_vec translates alloc::vec::{alloc::vec::Vec<T>}::new_in as an opaque external, so its allocator argument and failure are unmodelled",
+              "span": {
+                "file": "src/lib.rs",
+                "begin": {
+                  "line": 99,
+                  "col": 0
+                },
+                "end": {
+                  "line": 103,
+                  "col": 1
+                }
+              },
+              "evidence": {
+                "rust_name": "alloc::vec::{alloc::vec::Vec<T>}::new_in",
+                "lean_name": "probes.alloc.vec.Vec.new_in",
+                "is_opaque": true
+              }
+            }
+          ],
+          "observables": {
+            "reachable_declarations": 24,
+            "local_declarations": [
+              "probes::borrowed_vec"
+            ],
+            "root_span": {
+              "file": "src/lib.rs",
+              "begin": {
+                "line": 99,
+                "col": 0
+              },
+              "end": {
+                "line": 103,
+                "col": 1
+              }
+            },
+            "allocator_erased": true,
+            "vec_model_type_parameters": [
+              "T"
+            ],
+            "allocator_type_declarations": [],
+            "opaque_externals": [
+              "alloc::vec::{alloc::vec::Vec<T>}::new_in"
+            ],
+            "translation_versions": {
+              "aeneas": "505b6ca",
+              "charon": "0.1.254"
+            }
+          }
+        },
+        "root_in_translation": true,
+        "binding": {
+          "schema": "noble-allocator-admission/v1",
+          "source": {
+            "fixture": "verification/allocator-admission/fixtures/probes/src/lib.rs",
+            "sha256": "71e08428479ec7763573010539505aab5675211eac27381b6d568b6412e86418"
+          },
+          "selection_sha256": "813abda695dcfec6bc3e26025e15a7f286e72c2d5b79f767f35b091fa8e5fc81",
+          "tools": {
+            "charon": {
+              "rev": "b104e24fea7d721b71e6c39fd70f26ff20bc0980"
+            },
+            "aeneas": {
+              "rev": "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+            },
+            "aeneas_lean": {
+              "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef"
+            },
+            "extraction_rust": {
+              "version": "rustc 1.100.0-nightly (8fa1c96cf 2026-08-17)"
+            }
+          },
+          "options": {
+            "hide_allocator": true,
+            "start_from": [
+              "probes::borrowed_vec"
+            ],
+            "preset": "Aeneas"
+          },
+          "root": "probes::borrowed_vec"
+        }
+      }
+    },
+    {
+      "root": "system_vec",
+      "family": "system-allocator",
+      "expectation": "refused",
+      "required_codes": [
+        "ALLOCATOR-SOURCE",
+        "ALLOCATOR-CONSTRUCTOR",
+        "ALLOCATOR-AXIOM"
+      ],
+      "observed": "refused",
+      "stages": {
+        "charon": {
+          "status": "extracted",
+          "exit": 0,
+          "diagnostic": null,
+          "llbc_sha256": "8f980fccb7f079a8dfd4fcc116c9fda38e43c8f9014ba78b23e17a0c16fdfae5",
+          "log": "logs/system_vec-charon.log",
+          "options": {
+            "hide_allocator": true,
+            "treat_box_as_builtin": true,
+            "preset": "Aeneas",
+            "start_from": [
+              "probes::system_vec"
+            ],
+            "monomorphize": false,
+            "opaque": [],
+            "exclude": []
+          }
+        },
+        "aeneas": {
+          "status": "translated",
+          "exit": 0,
+          "diagnostic": null,
+          "translation_sha256": "6872987cbba2d9174f8a816c6de36ba3702980cda047e5202a3e02f18e04a38f",
+          "generated_files": {
+            "SystemVec.lean": "09139f01ec850c109fa31f199324d6cdd60024b8ada7c70f20979beb8cf6d4d7"
+          },
+          "log": "logs/system_vec-aeneas.log"
+        },
+        "lean": {
+          "status": "checked",
+          "exit": 0,
+          "module": "SystemVec",
+          "entry_sha256": "09139f01ec850c109fa31f199324d6cdd60024b8ada7c70f20979beb8cf6d4d7",
+          "diagnostic": null,
+          "log": "logs/system_vec-lean.log"
+        },
+        "admission": {
+          "status": "refused",
+          "schema": "noble-allocator-admission/v1",
+          "refusal_codes": [
+            "ALLOCATOR-AXIOM",
+            "ALLOCATOR-CONSTRUCTOR",
+            "ALLOCATOR-SOURCE"
+          ],
+          "refusals": [
+            {
+              "code": "ALLOCATOR-SOURCE",
+              "message": "probes::system_vec names an explicit allocator (System); the admitted model is implicit-global only",
+              "span": {
+                "construct": "System",
+                "begin": {
+                  "line": 111,
+                  "col": 24
+                },
+                "file": "src/lib.rs",
+                "excerpt": "System"
+              },
+              "evidence": {
+                "construct": "System",
+                "excerpt": "System"
+              }
+            },
+            {
+              "code": "ALLOCATOR-CONSTRUCTOR",
+              "message": "probes::system_vec reaches alloc::vec::<Impl>::new_in, which takes an explicit allocator argument",
+              "span": {
+                "file": "src/lib.rs",
+                "begin": {
+                  "line": 110,
+                  "col": 0
+                },
+                "end": {
+                  "line": 114,
+                  "col": 1
+                }
+              },
+              "evidence": {
+                "rendered": "alloc::vec::<Impl>::new_in",
+                "def_id": 20
+              }
+            },
+            {
+              "code": "ALLOCATOR-AXIOM",
+              "message": "probes::system_vec translates alloc::vec::{alloc::vec::Vec<T>}::new_in as an opaque external, so its allocator argument and failure are unmodelled",
+              "span": {
+                "file": "src/lib.rs",
+                "begin": {
+                  "line": 110,
+                  "col": 0
+                },
+                "end": {
+                  "line": 114,
+                  "col": 1
+                }
+              },
+              "evidence": {
+                "rust_name": "alloc::vec::{alloc::vec::Vec<T>}::new_in",
+                "lean_name": "probes.alloc.vec.Vec.new_in",
+                "is_opaque": true
+              }
+            }
+          ],
+          "observables": {
+            "reachable_declarations": 25,
+            "local_declarations": [
+              "probes::system_vec"
+            ],
+            "root_span": {
+              "file": "src/lib.rs",
+              "begin": {
+                "line": 110,
+                "col": 0
+              },
+              "end": {
+                "line": 114,
+                "col": 1
+              }
+            },
+            "allocator_erased": true,
+            "vec_model_type_parameters": [
+              "T"
+            ],
+            "allocator_type_declarations": [
+              "std::alloc::System"
+            ],
+            "opaque_externals": [
+              "alloc::vec::{alloc::vec::Vec<T>}::new_in"
+            ],
+            "translation_versions": {
+              "aeneas": "505b6ca",
+              "charon": "0.1.254"
+            }
+          }
+        },
+        "root_in_translation": true,
+        "binding": {
+          "schema": "noble-allocator-admission/v1",
+          "source": {
+            "fixture": "verification/allocator-admission/fixtures/probes/src/lib.rs",
+            "sha256": "71e08428479ec7763573010539505aab5675211eac27381b6d568b6412e86418"
+          },
+          "selection_sha256": "813abda695dcfec6bc3e26025e15a7f286e72c2d5b79f767f35b091fa8e5fc81",
+          "tools": {
+            "charon": {
+              "rev": "b104e24fea7d721b71e6c39fd70f26ff20bc0980"
+            },
+            "aeneas": {
+              "rev": "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+            },
+            "aeneas_lean": {
+              "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef"
+            },
+            "extraction_rust": {
+              "version": "rustc 1.100.0-nightly (8fa1c96cf 2026-08-17)"
+            }
+          },
+          "options": {
+            "hide_allocator": true,
+            "start_from": [
+              "probes::system_vec"
+            ],
+            "preset": "Aeneas"
+          },
+          "root": "probes::system_vec"
+        }
+      }
+    },
+    {
+      "root": "stateful_vec",
+      "family": "stateful-allocator",
+      "expectation": "refused",
+      "required_codes": [
+        "ALLOCATOR-SOURCE",
+        "ALLOCATOR-CONSTRUCTOR",
+        "ALLOCATOR-AXIOM"
+      ],
+      "observed": "refused",
+      "stages": {
+        "charon": {
+          "status": "extracted",
+          "exit": 0,
+          "diagnostic": null,
+          "llbc_sha256": "7dea236d090b1eb0898bd220c15b47f1306b0a06e17549e17c03f9909cbd7990",
+          "log": "logs/stateful_vec-charon.log",
+          "options": {
+            "hide_allocator": true,
+            "treat_box_as_builtin": true,
+            "preset": "Aeneas",
+            "start_from": [
+              "probes::stateful_vec"
+            ],
+            "monomorphize": false,
+            "opaque": [],
+            "exclude": []
+          }
+        },
+        "aeneas": {
+          "status": "translated",
+          "exit": 0,
+          "diagnostic": null,
+          "translation_sha256": "a4dac8d9abc6b7ddd81cf4eee18cff8f02b2aeaccfec8f271b1a764f92913415",
+          "generated_files": {
+            "StatefulVec.lean": "3f2adc6d3fccb1413e776c94e7aaaeeecb4e8f79262a43132d722aebb6d58090"
+          },
+          "log": "logs/stateful_vec-aeneas.log"
+        },
+        "lean": {
+          "status": "checked",
+          "exit": 0,
+          "module": "StatefulVec",
+          "entry_sha256": "3f2adc6d3fccb1413e776c94e7aaaeeecb4e8f79262a43132d722aebb6d58090",
+          "diagnostic": null,
+          "log": "logs/stateful_vec-lean.log"
+        },
+        "admission": {
+          "status": "refused",
+          "schema": "noble-allocator-admission/v1",
+          "refusal_codes": [
+            "ALLOCATOR-AXIOM",
+            "ALLOCATOR-CONSTRUCTOR",
+            "ALLOCATOR-SOURCE"
+          ],
+          "refusals": [
+            {
+              "code": "ALLOCATOR-SOURCE",
+              "message": "probes::stateful_vec names an explicit allocator (new_in); the admitted model is implicit-global only",
+              "span": {
+                "construct": "new_in",
+                "begin": {
+                  "line": 119,
+                  "col": 66
+                },
+                "file": "src/lib.rs",
+                "excerpt": "new_in("
+              },
+              "evidence": {
+                "construct": "new_in",
+                "excerpt": "new_in("
+              }
+            },
+            {
+              "code": "ALLOCATOR-CONSTRUCTOR",
+              "message": "probes::stateful_vec reaches alloc::vec::<Impl>::new_in, which takes an explicit allocator argument",
+              "span": {
+                "file": "src/lib.rs",
+                "begin": {
+                  "line": 117,
+                  "col": 0
+                },
+                "end": {
+                  "line": 122,
+                  "col": 1
+                }
+              },
+              "evidence": {
+                "rendered": "alloc::vec::<Impl>::new_in",
+                "def_id": 21
+              }
+            },
+            {
+              "code": "ALLOCATOR-AXIOM",
+              "message": "probes::stateful_vec translates alloc::vec::{alloc::vec::Vec<T>}::new_in as an opaque external, so its allocator argument and failure are unmodelled",
+              "span": {
+                "file": "src/lib.rs",
+                "begin": {
+                  "line": 117,
+                  "col": 0
+                },
+                "end": {
+                  "line": 122,
+                  "col": 1
+                }
+              },
+              "evidence": {
+                "rust_name": "alloc::vec::{alloc::vec::Vec<T>}::new_in",
+                "lean_name": "probes.alloc.vec.Vec.new_in",
+                "is_opaque": true
+              }
+            }
+          ],
+          "observables": {
+            "reachable_declarations": 26,
+            "local_declarations": [
+              "probes::stateful_vec"
+            ],
+            "root_span": {
+              "file": "src/lib.rs",
+              "begin": {
+                "line": 117,
+                "col": 0
+              },
+              "end": {
+                "line": 122,
+                "col": 1
+              }
+            },
+            "allocator_erased": true,
+            "vec_model_type_parameters": [
+              "T"
+            ],
+            "allocator_type_declarations": [
+              "stateful_alloc::CountingAllocator"
+            ],
+            "opaque_externals": [
+              "alloc::vec::{alloc::vec::Vec<T>}::new_in",
+              "stateful_alloc::{stateful_alloc::CountingAllocator}::new"
+            ],
+            "translation_versions": {
+              "aeneas": "505b6ca",
+              "charon": "0.1.254"
+            }
+          }
+        },
+        "root_in_translation": true,
+        "binding": {
+          "schema": "noble-allocator-admission/v1",
+          "source": {
+            "fixture": "verification/allocator-admission/fixtures/probes/src/lib.rs",
+            "sha256": "71e08428479ec7763573010539505aab5675211eac27381b6d568b6412e86418"
+          },
+          "selection_sha256": "813abda695dcfec6bc3e26025e15a7f286e72c2d5b79f767f35b091fa8e5fc81",
+          "tools": {
+            "charon": {
+              "rev": "b104e24fea7d721b71e6c39fd70f26ff20bc0980"
+            },
+            "aeneas": {
+              "rev": "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+            },
+            "aeneas_lean": {
+              "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef"
+            },
+            "extraction_rust": {
+              "version": "rustc 1.100.0-nightly (8fa1c96cf 2026-08-17)"
+            }
+          },
+          "options": {
+            "hide_allocator": true,
+            "start_from": [
+              "probes::stateful_vec"
+            ],
+            "preset": "Aeneas"
+          },
+          "root": "probes::stateful_vec"
+        }
+      }
+    },
+    {
+      "root": "stateful_vec_growth_clone",
+      "family": "stateful-allocator",
+      "expectation": "refused",
+      "required_codes": [
+        "ALLOCATOR-SOURCE",
+        "ALLOCATOR-CONSTRUCTOR",
+        "ALLOCATOR-AXIOM"
+      ],
+      "observed": "refused",
+      "stages": {
+        "charon": {
+          "status": "extracted",
+          "exit": 0,
+          "diagnostic": null,
+          "llbc_sha256": "a8d8d48d03b09a81e04782e71069ab9e9b97202a9800310e424118e077524e69",
+          "log": "logs/stateful_vec_growth_clone-charon.log",
+          "options": {
+            "hide_allocator": true,
+            "treat_box_as_builtin": true,
+            "preset": "Aeneas",
+            "start_from": [
+              "probes::stateful_vec_growth_clone"
+            ],
+            "monomorphize": false,
+            "opaque": [],
+            "exclude": []
+          }
+        },
+        "aeneas": {
+          "status": "translated",
+          "exit": 0,
+          "diagnostic": null,
+          "translation_sha256": "c1e530128f00fd7a7dc91752d28b26759145d54d42dc4d929c47b92c83c9443f",
+          "generated_files": {
+            "StatefulVecGrowthClone.lean": "d1b6300cf36a15839681e7eb565579655975b359e0616a528d43f12b2000236f"
+          },
+          "log": "logs/stateful_vec_growth_clone-aeneas.log"
+        },
+        "lean": {
+          "status": "checked",
+          "exit": 0,
+          "module": "StatefulVecGrowthClone",
+          "entry_sha256": "d1b6300cf36a15839681e7eb565579655975b359e0616a528d43f12b2000236f",
+          "diagnostic": null,
+          "log": "logs/stateful_vec_growth_clone-lean.log"
+        },
+        "admission": {
+          "status": "refused",
+          "schema": "noble-allocator-admission/v1",
+          "refusal_codes": [
+            "ALLOCATOR-AXIOM",
+            "ALLOCATOR-CONSTRUCTOR",
+            "ALLOCATOR-SOURCE"
+          ],
+          "refusals": [
+            {
+              "code": "ALLOCATOR-SOURCE",
+              "message": "probes::stateful_vec_growth_clone names an explicit allocator (new_in); the admitted model is implicit-global only",
+              "span": {
+                "construct": "new_in",
+                "begin": {
+                  "line": 126,
+                  "col": 66
+                },
+                "file": "src/lib.rs",
+                "excerpt": "new_in("
+              },
+              "evidence": {
+                "construct": "new_in",
+                "excerpt": "new_in("
+              }
+            },
+            {
+              "code": "ALLOCATOR-CONSTRUCTOR",
+              "message": "probes::stateful_vec_growth_clone reaches alloc::vec::<Impl>::new_in, which takes an explicit allocator argument",
+              "span": {
+                "file": "src/lib.rs",
+                "begin": {
+                  "line": 125,
+                  "col": 0
+                },
+                "end": {
+                  "line": 131,
+                  "col": 1
+                }
+              },
+              "evidence": {
+                "rendered": "alloc::vec::<Impl>::new_in",
+                "def_id": 21
+              }
+            },
+            {
+              "code": "ALLOCATOR-AXIOM",
+              "message": "probes::stateful_vec_growth_clone translates alloc::vec::{alloc::vec::Vec<T>}::new_in as an opaque external, so its allocator argument and failure are unmodelled",
+              "span": {
+                "file": "src/lib.rs",
+                "begin": {
+                  "line": 125,
+                  "col": 0
+                },
+                "end": {
+                  "line": 131,
+                  "col": 1
+                }
+              },
+              "evidence": {
+                "rust_name": "alloc::vec::{alloc::vec::Vec<T>}::new_in",
+                "lean_name": "probes.alloc.vec.Vec.new_in",
+                "is_opaque": true
+              }
+            }
+          ],
+          "observables": {
+            "reachable_declarations": 30,
+            "local_declarations": [
+              "probes::stateful_vec_growth_clone"
+            ],
+            "root_span": {
+              "file": "src/lib.rs",
+              "begin": {
+                "line": 125,
+                "col": 0
+              },
+              "end": {
+                "line": 131,
+                "col": 1
+              }
+            },
+            "allocator_erased": true,
+            "vec_model_type_parameters": [
+              "T"
+            ],
+            "allocator_type_declarations": [
+              "stateful_alloc::CountingAllocator"
+            ],
+            "opaque_externals": [
+              "alloc::vec::{alloc::vec::Vec<T>}::new_in",
+              "alloc::vec::{alloc::vec::Vec<T>}::reserve",
+              "stateful_alloc::{impl core::clone::Clone for stateful_alloc::CountingAllocator}::clone",
+              "stateful_alloc::{stateful_alloc::CountingAllocator}::new"
+            ],
+            "translation_versions": {
+              "aeneas": "505b6ca",
+              "charon": "0.1.254"
+            }
+          }
+        },
+        "root_in_translation": true,
+        "binding": {
+          "schema": "noble-allocator-admission/v1",
+          "source": {
+            "fixture": "verification/allocator-admission/fixtures/probes/src/lib.rs",
+            "sha256": "71e08428479ec7763573010539505aab5675211eac27381b6d568b6412e86418"
+          },
+          "selection_sha256": "813abda695dcfec6bc3e26025e15a7f286e72c2d5b79f767f35b091fa8e5fc81",
+          "tools": {
+            "charon": {
+              "rev": "b104e24fea7d721b71e6c39fd70f26ff20bc0980"
+            },
+            "aeneas": {
+              "rev": "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+            },
+            "aeneas_lean": {
+              "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef"
+            },
+            "extraction_rust": {
+              "version": "rustc 1.100.0-nightly (8fa1c96cf 2026-08-17)"
+            }
+          },
+          "options": {
+            "hide_allocator": true,
+            "start_from": [
+              "probes::stateful_vec_growth_clone"
+            ],
+            "preset": "Aeneas"
+          },
+          "root": "probes::stateful_vec_growth_clone"
+        }
+      }
+    }
+  ],
+  "controls": {
+    "results": [
+      {
+        "name": "unreached-root",
+        "expected_codes": [
+          "BINDING-ROOT",
+          "ROOT-MISSING"
+        ],
+        "observed_codes": [
+          "BINDING-ROOT",
+          "ROOT-MISSING"
+        ],
+        "exact": true,
+        "result": "refused-as-required",
+        "missing_codes": [],
+        "unexpected_codes": [],
+        "accepted": false,
+        "root": "probes::global_vec",
+        "schema": "noble-allocator-admission/v1",
+        "refusals": [
+          {
+            "code": "BINDING-ROOT",
+            "message": "the LLBC was not produced for probes::global_vec: start_from [\"probes::box_baseline\"]",
+            "span": null
+          },
+          {
+            "code": "ROOT-MISSING",
+            "message": "probes::global_vec is not in the translation: the extraction root is unreached, so no allocator evidence exists",
+            "span": null
+          }
+        ]
+      },
+      {
+        "name": "borrowed-extraction",
+        "expected_codes": [
+          "ALLOCATOR-AXIOM",
+          "ALLOCATOR-CONSTRUCTOR",
+          "BINDING-ROOT",
+          "ROOT-MISSING"
+        ],
+        "observed_codes": [
+          "ALLOCATOR-AXIOM",
+          "ALLOCATOR-CONSTRUCTOR",
+          "BINDING-ROOT",
+          "ROOT-MISSING"
+        ],
+        "exact": true,
+        "result": "refused-as-required",
+        "missing_codes": [],
+        "unexpected_codes": [],
+        "accepted": false,
+        "root": "probes::vec_baseline",
+        "schema": "noble-allocator-admission/v1",
+        "refusals": [
+          {
+            "code": "BINDING-ROOT",
+            "message": "the LLBC was not produced for probes::vec_baseline: start_from [\"probes::global_vec\"]",
+            "span": null
+          },
+          {
+            "code": "ROOT-MISSING",
+            "message": "probes::vec_baseline is not in the translation: the extraction root is unreached, so no allocator evidence exists",
+            "span": null
+          },
+          {
+            "code": "ALLOCATOR-CONSTRUCTOR",
+            "message": "probes::vec_baseline reaches alloc::vec::<Impl>::new_in, which takes an explicit allocator argument",
+            "span": null
+          },
+          {
+            "code": "ALLOCATOR-AXIOM",
+            "message": "probes::vec_baseline translates alloc::vec::{alloc::vec::Vec<T>}::new_in as an opaque external, so its allocator argument and failure are unmodelled",
+            "span": null
+          }
+        ]
+      },
+      {
+        "name": "omitted-body",
+        "expected_codes": [
+          "ROOT-OPAQUE"
+        ],
+        "observed_codes": [
+          "ROOT-OPAQUE"
+        ],
+        "exact": false,
+        "result": "refused-as-required",
+        "missing_codes": [],
+        "unexpected_codes": [],
+        "accepted": false,
+        "root": "probes::vec_baseline",
+        "schema": "noble-allocator-admission/v1",
+        "refusals": [
+          {
+            "code": "ROOT-OPAQUE",
+            "message": "probes::vec_baseline has no transparent body (opacity Transparent), so the operations it reaches cannot be audited",
+            "span": {
+              "file": "src/lib.rs",
+              "begin": {
+                "line": 27,
+                "col": 0
+              },
+              "end": {
+                "line": 31,
+                "col": 1
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "changed-allocator-identity",
+        "expected_codes": [
+          "BINDING-IDENTITY"
+        ],
+        "observed_codes": [
+          "BINDING-IDENTITY"
+        ],
+        "exact": false,
+        "result": "refused-as-required",
+        "missing_codes": [],
+        "unexpected_codes": [],
+        "accepted": false,
+        "root": "probes::vec_baseline",
+        "schema": "noble-allocator-admission/v1",
+        "refusals": [
+          {
+            "code": "BINDING-IDENTITY",
+            "message": "aeneas_lean_rev differs from the bound identity: \"1238879f9ea550512096e9bf8bd6fe7407b3eaef\" != \"ffffffffffffffffffffffffffffffffffffffff\"",
+            "span": null
+          }
+        ]
+      },
+      {
+        "name": "changed-source-identity",
+        "expected_codes": [
+          "BINDING-IDENTITY"
+        ],
+        "observed_codes": [
+          "BINDING-IDENTITY"
+        ],
+        "exact": false,
+        "result": "refused-as-required",
+        "missing_codes": [],
+        "unexpected_codes": [],
+        "accepted": false,
+        "root": "probes::vec_baseline",
+        "schema": "noble-allocator-admission/v1",
+        "refusals": [
+          {
+            "code": "BINDING-IDENTITY",
+            "message": "source_sha256 differs from the bound identity: \"71e08428479ec7763573010539505aab5675211eac27381b6d568b6412e86418\" != \"0000000000000000000000000000000000000000000000000000000000000000\"",
+            "span": null
+          }
+        ]
+      },
+      {
+        "name": "stale-receipt",
+        "expected_codes": [
+          "STALE-RECEIPT"
+        ],
+        "observed_codes": [
+          "STALE-RECEIPT"
+        ],
+        "exact": false,
+        "result": "refused-as-required",
+        "missing_codes": [],
+        "unexpected_codes": [],
+        "accepted": false,
+        "root": "probes::vec_baseline",
+        "schema": "noble-allocator-admission/v1",
+        "refusals": [
+          {
+            "code": "STALE-RECEIPT",
+            "message": "stale decision: source_sha256 differs from the bound identity: \"71e08428479ec7763573010539505aab5675211eac27381b6d568b6412e86418\" != \"1111111111111111111111111111111111111111111111111111111111111111\"",
+            "span": null
+          }
+        ]
+      }
+    ],
+    "unchanged_receipt_revalidates": {
+      "name": "unchanged-receipt-revalidates",
+      "refusals": 0,
+      "result": "accepted"
+    }
+  },
+  "observed_blocked_stages": [],
+  "matrix": {
+    "row": "fixture root",
+    "column": "pipeline stage",
+    "columns": [
+      "source_compile",
+      "charon",
+      "aeneas",
+      "lean",
+      "admission"
+    ],
+    "source_scope": "crate: the fixture crate is compiled as one unit, so the source column is a crate verdict"
+  },
+  "assumptions": [
+    "the source column measures the Rust language surface only",
+    "charon/aeneas/lean success measures translation type-checking only; the selected preset erases the allocator",
+    "admission is Noble's refusal boundary, not a proof about allocators",
+    "the extraction-nightly fixture variant is not a stable-1.100 subject"
+  ],
+  "commands": [
+    {
+      "label": "version-charon",
+      "binary": "/nix/store/ka61j6d6zy8zg91ynlbd6nmjssyynrpl-charon/bin/charon",
+      "args": [
+        "version"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "1c25d1e1a4516aaecd3be3f84e16bff58542b873f15d173b7e044390be94a160",
+      "log": "logs/version-charon.log"
+    },
+    {
+      "label": "version-aeneas",
+      "binary": "/nix/store/q3hsccq1s53aa85vh3mmc3b0k31pnyl2-ocaml5.2.1-aeneas-0.1.0/bin/aeneas",
+      "args": [
+        "-version"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "5d4e00f825b530eb24aceff01b148415d605d68862b241b8f80d19b3b85087c4",
+      "log": "logs/version-aeneas.log"
+    },
+    {
+      "label": "version-extraction_rust",
+      "binary": "/nix/store/wq92i79ivn1w1nrdhmzl1mqx0wcyrawi-rust-default-1.100.0-nightly-2026-08-18/bin/rustc",
+      "args": [
+        "--version",
+        "--verbose"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "a61441460f382bd21f15db5c10eb4472cdba5d5de8dda429142ea837ecbdfaa5",
+      "log": "logs/version-extraction_rust.log"
+    },
+    {
+      "label": "version-lean",
+      "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+      "args": [
+        "--version"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "eb22144228dd41cd51a0c84af4f976cd0cef473102dcf99b60be756b11f2b95a",
+      "log": "logs/version-lean.log"
+    },
+    {
+      "label": "version-lake",
+      "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "args": [
+        "--version"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "165f92ed239a8c7db772bf5ee9d58c59357b489951582a12c86dc9d8e06b23a2",
+      "log": "logs/version-lake.log"
+    },
+    {
+      "label": "version-stable",
+      "binary": "<campaign>/scratch/alloc-121/rust-1.100.0/bin/rustc",
+      "args": [
+        "--version",
+        "--verbose"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "be69adad9137eaa0bdac1dd07e2fe286b1831fc8bad193ea27806ca0c7c8e7c6",
+      "log": "logs/version-stable.log"
+    },
+    {
+      "label": "source-stable-ungated",
+      "binary": "<campaign>/scratch/alloc-121/rust-1.100.0/bin/cargo",
+      "args": [
+        "build",
+        "--manifest-path",
+        "verification/allocator-admission/fixtures/probes/Cargo.toml",
+        "--lib",
+        "--offline",
+        "--locked"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "71d4ac21d31608724c03e3a3edb858880f17455a5cc62972459bc84a407d01c1",
+      "log": "logs/source-stable-ungated.log"
+    },
+    {
+      "label": "source-stable-gated",
+      "binary": "<campaign>/scratch/alloc-121/rust-1.100.0/bin/cargo",
+      "args": [
+        "build",
+        "--manifest-path",
+        "verification/allocator-admission/fixtures/probes/Cargo.toml",
+        "--lib",
+        "--offline",
+        "--locked",
+        "--features",
+        "nightly-allocator-api"
+      ],
+      "exit": 101,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "547666524e08676e87345dc487d66bb2c8aadddc6a5310e666aad03140117a3d",
+      "log": "logs/source-stable-gated.log"
+    },
+    {
+      "label": "source-nightly-ungated",
+      "binary": "/nix/store/wq92i79ivn1w1nrdhmzl1mqx0wcyrawi-rust-default-1.100.0-nightly-2026-08-18/bin/cargo",
+      "args": [
+        "build",
+        "--manifest-path",
+        "verification/allocator-admission/fixtures/probes/Cargo.toml",
+        "--lib",
+        "--offline",
+        "--locked"
+      ],
+      "exit": 101,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "dfdd41a2ba37e683caa49ae11afd3910990421dc1f95c8c8b1da96d5947323fa",
+      "log": "logs/source-nightly-ungated.log"
+    },
+    {
+      "label": "source-nightly-gated",
+      "binary": "/nix/store/wq92i79ivn1w1nrdhmzl1mqx0wcyrawi-rust-default-1.100.0-nightly-2026-08-18/bin/cargo",
+      "args": [
+        "build",
+        "--manifest-path",
+        "verification/allocator-admission/fixtures/probes/Cargo.toml",
+        "--lib",
+        "--offline",
+        "--locked",
+        "--all-features"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "da02d0576fac9e923f23a9f30fa39092f8c0871f39b5682caaca52256c7ba986",
+      "log": "logs/source-nightly-gated.log"
+    },
+    {
+      "label": "vec_baseline-charon",
+      "binary": "/nix/store/ka61j6d6zy8zg91ynlbd6nmjssyynrpl-charon/bin/charon",
+      "args": [
+        "cargo",
+        "--preset=aeneas",
+        "--error-on-warnings",
+        "--start-from",
+        "probes::vec_baseline",
+        "--dest-file",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/vec_baseline/vec_baseline.llbc",
+        "--",
+        "--manifest-path",
+        "verification/allocator-admission/fixtures/probes/Cargo.toml",
+        "--lib",
+        "--all-features",
+        "--target",
+        "x86_64-unknown-linux-gnu",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "c4494b1be5bee6a140059716c27ea81b3531235aba0064415605ac4fff2dffbe",
+      "log": "logs/vec_baseline-charon.log"
+    },
+    {
+      "label": "vec_baseline-aeneas",
+      "binary": "/nix/store/q3hsccq1s53aa85vh3mmc3b0k31pnyl2-ocaml5.2.1-aeneas-0.1.0/bin/aeneas",
+      "args": [
+        "-backend",
+        "lean",
+        "-abort-on-error",
+        "-warnings-as-errors",
+        "-no-progress-bar",
+        "-emit-json",
+        "-dest",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/vec_baseline/generated",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/vec_baseline/vec_baseline.llbc"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "7a42cf754cdc5c634e2558de7ac31bfbaa7c771ca8fbf3b10aeca83b04265919",
+      "log": "logs/vec_baseline-aeneas.log"
+    },
+    {
+      "label": "vec_baseline-lean",
+      "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "args": [
+        "build",
+        "VecBaseline"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "b7527f2268ae96476247389c9bae1782959f4c421c28895395b68259d0a5070c",
+      "log": "logs/vec_baseline-lean.log"
+    },
+    {
+      "label": "box_baseline-charon",
+      "binary": "/nix/store/ka61j6d6zy8zg91ynlbd6nmjssyynrpl-charon/bin/charon",
+      "args": [
+        "cargo",
+        "--preset=aeneas",
+        "--error-on-warnings",
+        "--start-from",
+        "probes::box_baseline",
+        "--dest-file",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/box_baseline/box_baseline.llbc",
+        "--",
+        "--manifest-path",
+        "verification/allocator-admission/fixtures/probes/Cargo.toml",
+        "--lib",
+        "--all-features",
+        "--target",
+        "x86_64-unknown-linux-gnu",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "ed7c7a7dd9dfe29f1be3e7974c8c247cfc3d992c3bc852cfe06de37111ad332f",
+      "log": "logs/box_baseline-charon.log"
+    },
+    {
+      "label": "box_baseline-aeneas",
+      "binary": "/nix/store/q3hsccq1s53aa85vh3mmc3b0k31pnyl2-ocaml5.2.1-aeneas-0.1.0/bin/aeneas",
+      "args": [
+        "-backend",
+        "lean",
+        "-abort-on-error",
+        "-warnings-as-errors",
+        "-no-progress-bar",
+        "-emit-json",
+        "-dest",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/box_baseline/generated",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/box_baseline/box_baseline.llbc"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "7e2a62bd675901ab272f3f074d8f15b6660c43df560f6f03c63bb32b5f89033c",
+      "log": "logs/box_baseline-aeneas.log"
+    },
+    {
+      "label": "box_baseline-lean",
+      "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "args": [
+        "build",
+        "BoxBaseline"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "830954695c0ad2d6e8c29737834d9fd448a245d3d02635016d9b67eb9a9a5189",
+      "log": "logs/box_baseline-lean.log"
+    },
+    {
+      "label": "vec_growth_clone_baseline-charon",
+      "binary": "/nix/store/ka61j6d6zy8zg91ynlbd6nmjssyynrpl-charon/bin/charon",
+      "args": [
+        "cargo",
+        "--preset=aeneas",
+        "--error-on-warnings",
+        "--start-from",
+        "probes::vec_growth_clone_baseline",
+        "--dest-file",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/vec_growth_clone_baseline/vec_growth_clone_baseline.llbc",
+        "--",
+        "--manifest-path",
+        "verification/allocator-admission/fixtures/probes/Cargo.toml",
+        "--lib",
+        "--all-features",
+        "--target",
+        "x86_64-unknown-linux-gnu",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "d5d6b33d52eaf193943c5726ba54f7269b6f79bc4d85202dc15d60f78d78ec9e",
+      "log": "logs/vec_growth_clone_baseline-charon.log"
+    },
+    {
+      "label": "vec_growth_clone_baseline-aeneas",
+      "binary": "/nix/store/q3hsccq1s53aa85vh3mmc3b0k31pnyl2-ocaml5.2.1-aeneas-0.1.0/bin/aeneas",
+      "args": [
+        "-backend",
+        "lean",
+        "-abort-on-error",
+        "-warnings-as-errors",
+        "-no-progress-bar",
+        "-emit-json",
+        "-dest",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/vec_growth_clone_baseline/generated",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/vec_growth_clone_baseline/vec_growth_clone_baseline.llbc"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "236613955c83ccd78e674edc27e6b00be1af93266a4f7c929aa658cae7a4401d",
+      "log": "logs/vec_growth_clone_baseline-aeneas.log"
+    },
+    {
+      "label": "vec_growth_clone_baseline-lean",
+      "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "args": [
+        "build",
+        "VecGrowthCloneBaseline"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "43d8c3152d94ec861cf7580b8976caa8b2f78225680ee0d2378100c615b619e6",
+      "log": "logs/vec_growth_clone_baseline-lean.log"
+    },
+    {
+      "label": "global_vec-charon",
+      "binary": "/nix/store/ka61j6d6zy8zg91ynlbd6nmjssyynrpl-charon/bin/charon",
+      "args": [
+        "cargo",
+        "--preset=aeneas",
+        "--error-on-warnings",
+        "--start-from",
+        "probes::global_vec",
+        "--dest-file",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/global_vec/global_vec.llbc",
+        "--",
+        "--manifest-path",
+        "verification/allocator-admission/fixtures/probes/Cargo.toml",
+        "--lib",
+        "--all-features",
+        "--target",
+        "x86_64-unknown-linux-gnu",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "3be9f4c65a7522d89e8f527d0cfb072fc06a66da94f0d6aeec6a27223522b2a6",
+      "log": "logs/global_vec-charon.log"
+    },
+    {
+      "label": "global_vec-aeneas",
+      "binary": "/nix/store/q3hsccq1s53aa85vh3mmc3b0k31pnyl2-ocaml5.2.1-aeneas-0.1.0/bin/aeneas",
+      "args": [
+        "-backend",
+        "lean",
+        "-abort-on-error",
+        "-warnings-as-errors",
+        "-no-progress-bar",
+        "-emit-json",
+        "-dest",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/global_vec/generated",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/global_vec/global_vec.llbc"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "4fe5d71ec3f82d9f8c3376859a10a0bd73c52fed66f3f3033de2adc22c4df463",
+      "log": "logs/global_vec-aeneas.log"
+    },
+    {
+      "label": "global_vec-lean",
+      "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "args": [
+        "build",
+        "GlobalVec"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "b750aef260cbf01804d33c1d4ca0544267c81b8712bffb43ce7e65fa36765ec8",
+      "log": "logs/global_vec-lean.log"
+    },
+    {
+      "label": "global_box-charon",
+      "binary": "/nix/store/ka61j6d6zy8zg91ynlbd6nmjssyynrpl-charon/bin/charon",
+      "args": [
+        "cargo",
+        "--preset=aeneas",
+        "--error-on-warnings",
+        "--start-from",
+        "probes::global_box",
+        "--dest-file",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/global_box/global_box.llbc",
+        "--",
+        "--manifest-path",
+        "verification/allocator-admission/fixtures/probes/Cargo.toml",
+        "--lib",
+        "--all-features",
+        "--target",
+        "x86_64-unknown-linux-gnu",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "da02d0576fac9e923f23a9f30fa39092f8c0871f39b5682caaca52256c7ba986",
+      "log": "logs/global_box-charon.log"
+    },
+    {
+      "label": "global_box-aeneas",
+      "binary": "/nix/store/q3hsccq1s53aa85vh3mmc3b0k31pnyl2-ocaml5.2.1-aeneas-0.1.0/bin/aeneas",
+      "args": [
+        "-backend",
+        "lean",
+        "-abort-on-error",
+        "-warnings-as-errors",
+        "-no-progress-bar",
+        "-emit-json",
+        "-dest",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/global_box/generated",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/global_box/global_box.llbc"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "ef5022642942cb10aaa28f1abf0109fc354616db7fb7e9d6ac85d1c7a4e76976",
+      "log": "logs/global_box-aeneas.log"
+    },
+    {
+      "label": "global_box-lean",
+      "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "args": [
+        "build",
+        "GlobalBox"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "62135b742e9fd5fb1196a6b46e7fbdcd5b477f1a136650a0a7621170c5f0f409",
+      "log": "logs/global_box-lean.log"
+    },
+    {
+      "label": "generic_vec-charon",
+      "binary": "/nix/store/ka61j6d6zy8zg91ynlbd6nmjssyynrpl-charon/bin/charon",
+      "args": [
+        "cargo",
+        "--preset=aeneas",
+        "--error-on-warnings",
+        "--start-from",
+        "probes::generic_vec",
+        "--dest-file",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/generic_vec/generic_vec.llbc",
+        "--",
+        "--manifest-path",
+        "verification/allocator-admission/fixtures/probes/Cargo.toml",
+        "--lib",
+        "--all-features",
+        "--target",
+        "x86_64-unknown-linux-gnu",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "da02d0576fac9e923f23a9f30fa39092f8c0871f39b5682caaca52256c7ba986",
+      "log": "logs/generic_vec-charon.log"
+    },
+    {
+      "label": "generic_vec-aeneas",
+      "binary": "/nix/store/q3hsccq1s53aa85vh3mmc3b0k31pnyl2-ocaml5.2.1-aeneas-0.1.0/bin/aeneas",
+      "args": [
+        "-backend",
+        "lean",
+        "-abort-on-error",
+        "-warnings-as-errors",
+        "-no-progress-bar",
+        "-emit-json",
+        "-dest",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/generic_vec/generated",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/generic_vec/generic_vec.llbc"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "03225ec7b81d87fc3337c7438ca73db27f606915d279b41bd3dcb846ea446969",
+      "log": "logs/generic_vec-aeneas.log"
+    },
+    {
+      "label": "generic_vec-lean",
+      "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "args": [
+        "build",
+        "GenericVec"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "b633dda7744bede7270b57ea7a91a28753b22293a13773a2e62ee5ee9ee281ec",
+      "log": "logs/generic_vec-lean.log"
+    },
+    {
+      "label": "generic_box-charon",
+      "binary": "/nix/store/ka61j6d6zy8zg91ynlbd6nmjssyynrpl-charon/bin/charon",
+      "args": [
+        "cargo",
+        "--preset=aeneas",
+        "--error-on-warnings",
+        "--start-from",
+        "probes::generic_box",
+        "--dest-file",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/generic_box/generic_box.llbc",
+        "--",
+        "--manifest-path",
+        "verification/allocator-admission/fixtures/probes/Cargo.toml",
+        "--lib",
+        "--all-features",
+        "--target",
+        "x86_64-unknown-linux-gnu",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "fbc0436c45ffeea4409b8c903b5cfb5b4bd3e504a00017a764922d734fecefd2",
+      "log": "logs/generic_box-charon.log"
+    },
+    {
+      "label": "generic_box-aeneas",
+      "binary": "/nix/store/q3hsccq1s53aa85vh3mmc3b0k31pnyl2-ocaml5.2.1-aeneas-0.1.0/bin/aeneas",
+      "args": [
+        "-backend",
+        "lean",
+        "-abort-on-error",
+        "-warnings-as-errors",
+        "-no-progress-bar",
+        "-emit-json",
+        "-dest",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/generic_box/generated",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/generic_box/generic_box.llbc"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "287ae5a2b970ffdc741340bd09f3300fb212a54eab8603dc6e0f5c4ffe0ca063",
+      "log": "logs/generic_box-aeneas.log"
+    },
+    {
+      "label": "generic_box-lean",
+      "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "args": [
+        "build",
+        "GenericBox"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "cba259c3384a71fb8ddba181c69b3c1d2096565c044deaca9f4ea4742cb24e61",
+      "log": "logs/generic_box-lean.log"
+    },
+    {
+      "label": "generic_vec_growth_clone-charon",
+      "binary": "/nix/store/ka61j6d6zy8zg91ynlbd6nmjssyynrpl-charon/bin/charon",
+      "args": [
+        "cargo",
+        "--preset=aeneas",
+        "--error-on-warnings",
+        "--start-from",
+        "probes::generic_vec_growth_clone",
+        "--dest-file",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/generic_vec_growth_clone/generic_vec_growth_clone.llbc",
+        "--",
+        "--manifest-path",
+        "verification/allocator-admission/fixtures/probes/Cargo.toml",
+        "--lib",
+        "--all-features",
+        "--target",
+        "x86_64-unknown-linux-gnu",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "d7e781bf5306955ffc809a8b88c2a42200b0fa887e85a90fbcc8e7bd6b13e717",
+      "log": "logs/generic_vec_growth_clone-charon.log"
+    },
+    {
+      "label": "generic_vec_growth_clone-aeneas",
+      "binary": "/nix/store/q3hsccq1s53aa85vh3mmc3b0k31pnyl2-ocaml5.2.1-aeneas-0.1.0/bin/aeneas",
+      "args": [
+        "-backend",
+        "lean",
+        "-abort-on-error",
+        "-warnings-as-errors",
+        "-no-progress-bar",
+        "-emit-json",
+        "-dest",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/generic_vec_growth_clone/generated",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/generic_vec_growth_clone/generic_vec_growth_clone.llbc"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "2a3c335f67c55abc046ad29a32b0455cf1acc47a6b9ed8a3759a01a1b2547667",
+      "log": "logs/generic_vec_growth_clone-aeneas.log"
+    },
+    {
+      "label": "generic_vec_growth_clone-lean",
+      "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "args": [
+        "build",
+        "GenericVecGrowthClone"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "41c06828d3a8ef78927fea199dc244309f20667866e35cd17e130a6e4dfdd923",
+      "log": "logs/generic_vec_growth_clone-lean.log"
+    },
+    {
+      "label": "borrowed_vec-charon",
+      "binary": "/nix/store/ka61j6d6zy8zg91ynlbd6nmjssyynrpl-charon/bin/charon",
+      "args": [
+        "cargo",
+        "--preset=aeneas",
+        "--error-on-warnings",
+        "--start-from",
+        "probes::borrowed_vec",
+        "--dest-file",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/borrowed_vec/borrowed_vec.llbc",
+        "--",
+        "--manifest-path",
+        "verification/allocator-admission/fixtures/probes/Cargo.toml",
+        "--lib",
+        "--all-features",
+        "--target",
+        "x86_64-unknown-linux-gnu",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "fbc0436c45ffeea4409b8c903b5cfb5b4bd3e504a00017a764922d734fecefd2",
+      "log": "logs/borrowed_vec-charon.log"
+    },
+    {
+      "label": "borrowed_vec-aeneas",
+      "binary": "/nix/store/q3hsccq1s53aa85vh3mmc3b0k31pnyl2-ocaml5.2.1-aeneas-0.1.0/bin/aeneas",
+      "args": [
+        "-backend",
+        "lean",
+        "-abort-on-error",
+        "-warnings-as-errors",
+        "-no-progress-bar",
+        "-emit-json",
+        "-dest",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/borrowed_vec/generated",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/borrowed_vec/borrowed_vec.llbc"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "3b5b5dcbbe32d175285c34835bf9d43931dbcc98f75f5f4e74101618f8f03103",
+      "log": "logs/borrowed_vec-aeneas.log"
+    },
+    {
+      "label": "borrowed_vec-lean",
+      "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "args": [
+        "build",
+        "BorrowedVec"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "d6c1c60b1e3afa72dc8282e62ccb42f5dd0b1dd3682c9fb8e823913299fe986c",
+      "log": "logs/borrowed_vec-lean.log"
+    },
+    {
+      "label": "system_vec-charon",
+      "binary": "/nix/store/ka61j6d6zy8zg91ynlbd6nmjssyynrpl-charon/bin/charon",
+      "args": [
+        "cargo",
+        "--preset=aeneas",
+        "--error-on-warnings",
+        "--start-from",
+        "probes::system_vec",
+        "--dest-file",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/system_vec/system_vec.llbc",
+        "--",
+        "--manifest-path",
+        "verification/allocator-admission/fixtures/probes/Cargo.toml",
+        "--lib",
+        "--all-features",
+        "--target",
+        "x86_64-unknown-linux-gnu",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "0f0d1325ba8142fda582141f17d074710475bd3110518f1ff9a402f07a719640",
+      "log": "logs/system_vec-charon.log"
+    },
+    {
+      "label": "system_vec-aeneas",
+      "binary": "/nix/store/q3hsccq1s53aa85vh3mmc3b0k31pnyl2-ocaml5.2.1-aeneas-0.1.0/bin/aeneas",
+      "args": [
+        "-backend",
+        "lean",
+        "-abort-on-error",
+        "-warnings-as-errors",
+        "-no-progress-bar",
+        "-emit-json",
+        "-dest",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/system_vec/generated",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/system_vec/system_vec.llbc"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "e8f548dc09b00ad27d59d55e148c992190288474d30f0379ef0e7a60356cccee",
+      "log": "logs/system_vec-aeneas.log"
+    },
+    {
+      "label": "system_vec-lean",
+      "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "args": [
+        "build",
+        "SystemVec"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "bffd6e50e6a5f440ac067e429ccfa7f449fe38ef82756f087940ec1eb5b45dcf",
+      "log": "logs/system_vec-lean.log"
+    },
+    {
+      "label": "stateful_vec-charon",
+      "binary": "/nix/store/ka61j6d6zy8zg91ynlbd6nmjssyynrpl-charon/bin/charon",
+      "args": [
+        "cargo",
+        "--preset=aeneas",
+        "--error-on-warnings",
+        "--start-from",
+        "probes::stateful_vec",
+        "--dest-file",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/stateful_vec/stateful_vec.llbc",
+        "--",
+        "--manifest-path",
+        "verification/allocator-admission/fixtures/probes/Cargo.toml",
+        "--lib",
+        "--all-features",
+        "--target",
+        "x86_64-unknown-linux-gnu",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "c4494b1be5bee6a140059716c27ea81b3531235aba0064415605ac4fff2dffbe",
+      "log": "logs/stateful_vec-charon.log"
+    },
+    {
+      "label": "stateful_vec-aeneas",
+      "binary": "/nix/store/q3hsccq1s53aa85vh3mmc3b0k31pnyl2-ocaml5.2.1-aeneas-0.1.0/bin/aeneas",
+      "args": [
+        "-backend",
+        "lean",
+        "-abort-on-error",
+        "-warnings-as-errors",
+        "-no-progress-bar",
+        "-emit-json",
+        "-dest",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/stateful_vec/generated",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/stateful_vec/stateful_vec.llbc"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "bf0293961eaa84188ff225bc00f2c613d3165752dbba52309ecd15f67278cc4d",
+      "log": "logs/stateful_vec-aeneas.log"
+    },
+    {
+      "label": "stateful_vec-lean",
+      "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "args": [
+        "build",
+        "StatefulVec"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "f03409a371899a9e53d38e4b8e55ce0de274addc9bc315d2063c0e650a7b7c1f",
+      "log": "logs/stateful_vec-lean.log"
+    },
+    {
+      "label": "stateful_vec_growth_clone-charon",
+      "binary": "/nix/store/ka61j6d6zy8zg91ynlbd6nmjssyynrpl-charon/bin/charon",
+      "args": [
+        "cargo",
+        "--preset=aeneas",
+        "--error-on-warnings",
+        "--start-from",
+        "probes::stateful_vec_growth_clone",
+        "--dest-file",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/stateful_vec_growth_clone/stateful_vec_growth_clone.llbc",
+        "--",
+        "--manifest-path",
+        "verification/allocator-admission/fixtures/probes/Cargo.toml",
+        "--lib",
+        "--all-features",
+        "--target",
+        "x86_64-unknown-linux-gnu",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "9868d23ee5d6091525eb141dc8430946216e60880d7296115501c9584b011e34",
+      "log": "logs/stateful_vec_growth_clone-charon.log"
+    },
+    {
+      "label": "stateful_vec_growth_clone-aeneas",
+      "binary": "/nix/store/q3hsccq1s53aa85vh3mmc3b0k31pnyl2-ocaml5.2.1-aeneas-0.1.0/bin/aeneas",
+      "args": [
+        "-backend",
+        "lean",
+        "-abort-on-error",
+        "-warnings-as-errors",
+        "-no-progress-bar",
+        "-emit-json",
+        "-dest",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/stateful_vec_growth_clone/generated",
+        "<campaign>/scratch/alloc-121/receipt-f800f80/cells/stateful_vec_growth_clone/stateful_vec_growth_clone.llbc"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "f23865d845bd883208ecc1e443d15bf916bf04badafdaabf724b95d5fdfaac53",
+      "log": "logs/stateful_vec_growth_clone-aeneas.log"
+    },
+    {
+      "label": "stateful_vec_growth_clone-lean",
+      "binary": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+      "args": [
+        "build",
+        "StatefulVecGrowthClone"
+      ],
+      "exit": 0,
+      "signal": null,
+      "timed_out": false,
+      "output_sha256": "fe4b1d2f03e825df0f62f41ce2d6a85a538c2b83094da0ec41538b1e84906045",
+      "log": "logs/stateful_vec_growth_clone-lean.log"
+    }
+  ],
+  "mismatches": [],
+  "result": "passed"
+}

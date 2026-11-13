@@ -1,0 +1,29 @@
+[package]
+name = "noble-allocator-probes"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# A standalone fixture crate: it is deliberately NOT a member of the workspace in the
+# repository root Cargo.toml, so it adds no compilation unit and no source-inventory
+# subject. The empty `[workspace]` table makes it its own workspace.
+[workspace]
+
+[lib]
+name = "probes"
+path = "src/lib.rs"
+
+# The extraction-nightly variant of this fixture. The language surface this exercise
+# audits (`allocator_api`) is unstable on the selected extraction nightly and stable on
+# released Rust 1.100.0, so the crate-level feature attribute is conditional: the stable
+# variant compiles with no feature gate, and the extraction variant adds exactly
+# `#![feature(allocator_api)]`.
+[features]
+default = []
+nightly-allocator-api = ["stateful-alloc/nightly-allocator-api"]
+
+[dependencies]
+stateful-alloc = { path = "../stateful-alloc" }
+
+[lints.rust]
+unsafe_code = "forbid"

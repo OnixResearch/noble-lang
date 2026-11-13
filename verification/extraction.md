@@ -90,6 +90,31 @@ The entry point always regenerates Charon and Aeneas output into a fresh artifac
 Freshness rejection, unsupported-body rejection, edited-output rejection, and proof-required rejection belong to task 3.2.
 The generated Lean module compiles against the pinned backend; this does not establish refinement, Wasm correspondence, or cache authenticity.
 
+## Allocators at this boundary (#121)
+
+This route erases the allocator, so it cannot report on one. Charon sets `hide_allocator: true` under
+`--preset=aeneas`; the pinned Aeneas Lean library keeps only the element type in `alloc::vec::Vec` and
+drops the allocator parameter and its trait clauses at its `rust_fun` bindings; `alloc::alloc::Global`
+is a marker it documents as filtered; and Noble's external `Vec`/`Box` models take an allocator type and
+ignore it. An explicit `Vec::new_in(Global)` subject therefore becomes an unmodelled allocator axiom
+(`axiom alloc.vec.Vec.new_in (T : Type) {A : Type} : A → Result (alloc.vec.Vec T)`, called with `()`),
+and a concrete stateful allocator becomes an uninterpreted type with its state absent. Charon, Aeneas
+and Lean all accept that; a successful extraction of such a subject is **not** allocator acceptance and
+**not** refinement evidence, exactly as a successful `cargo build` of an admitted subject is not.
+
+The boundary is therefore Noble's, stated by VT-ALLOC-01: the admitted allocator is the implicit global
+one, and every allocator the subject *names* — explicit `Global`, generic `A: Allocator`, borrowed `&A`,
+`System`, or a concrete custom or stateful allocator — is refused with the Rust source position. A
+nightly-only feature-gated fixture is not a stable-1.100 subject and cannot certify explicit `Global`.
+Adoption requires a selected extraction toolchain in which the allocator API is stable (a VT-PIN-02 pin
+change) **and** an allocator-aware model reviewed under VT-AENEAS-05; neither exists today.
+
+The measurements, the admission rules, the model audit and the receipt are in
+[`allocator-admission/README.md`](allocator-admission/README.md), and the decision with its reopen
+conditions is [`allocator-admission/decision.md`](allocator-admission/decision.md). The extraction
+subject, the pins and this document's own gates are unchanged by that lane; it adds standalone fixture
+crates that are not workspace members.
+
 ## Aeneas acceptance of kernel loops (measured 2026-10-27)
 
 The extraction route above was attempted end to end on this host: the pinned toolchain is
