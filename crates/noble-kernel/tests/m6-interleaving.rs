@@ -1,4 +1,5 @@
 #![feature(register_tool)]
+#![register_tool(octet)]
 #![register_tool(tigerstyle)]
 //! Issue #46 negative controls: each control drives the real M6 async table and
 //! asserts the exact observation a dropped guard would change.
@@ -11,16 +12,38 @@
 //! are stated independently of the table, so removing or weakening one of those
 //! guards makes the corresponding expectation fail.
 //!
-//! What this is not: no mutant rule is re-implemented or compared here — a local
-//! restatement of a rule cannot detect anything. No correspondence claim is made
-//! between these controls and the Lean `TaskInterleaving` model, and a caught
-//! mutation is not a theorem.
+//! What the four negative controls do not claim: no mutant rule is re-implemented
+//! or compared here — a local restatement cannot detect anything. They make no
+//! correspondence claim with the Lean model, and a caught mutation is not a theorem.
+//! The separate #115 scope modules below exercise finite, explicitly generated
+//! table traces; those tests do not establish a Rust-to-Lean refinement theorem.
 
 #[path = "m6_interleaving/capacity.rs"]
 mod capacity;
 
 #[path = "m6_interleaving/support.rs"]
 mod support;
+
+#[path = "m6_interleaving/scope/manager.rs"]
+mod manager;
+
+#[path = "m6_interleaving/scope/registry.rs"]
+mod registry;
+
+#[path = "m6_interleaving/scope/support.rs"]
+mod scope_support;
+
+#[path = "m6_interleaving/scope/traces.rs"]
+mod traces;
+
+#[path = "m6_interleaving/scope/corpus/retirement.rs"]
+mod retirement;
+
+#[path = "m6_interleaving/scope/controls.rs"]
+mod controls;
+
+#[path = "m6_interleaving/scope/corpus.rs"]
+mod corpus;
 
 #[test]
 fn an_early_pin_release_is_detected_by_the_settlement_guard() -> Result<(), String> {

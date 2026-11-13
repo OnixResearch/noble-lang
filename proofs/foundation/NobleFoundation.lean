@@ -53,6 +53,8 @@ import NobleFoundation.Laws
 import NobleFoundation.Effects
 import NobleFoundation.LinkBoundary
 import NobleFoundation.TaskInterleaving
+import NobleFoundation.TaskScope
+import NobleFoundation.TaskScopeCorpus
 import NobleFoundation.BatchRows
 import NobleFoundation.InteractionNet
 import NobleFoundation.InteractionNetOrientation
