@@ -15,6 +15,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { inRange, refRun } from '../foundation/arithmetic.mjs';
+import { differentialImport } from '../differential-interactions/p1-cases.mjs';
 
 // The input layout of `crates/noble-wasm/tests/fuzz/oracles.rs`.
 const HEADER = 5;
@@ -162,13 +163,18 @@ function main() {
     if (seen.has(key)) { counts.duplicate += 1; continue; }
     seen.add(key);
     counts.imported += 1;
-    cases.push({ ...plain(parsed), origin: { unit: name, sha256: digest(data), profile,
+    cases.push({ ...plain(parsed), origin: { unit: name, sha256: digest(data),
+      text_sha256: digest(Buffer.from(text)), profile,
       budget: (data[0] & DEFAULT_LIMITS) === DEFAULT_LIMITS ? 'default' : 'tiny', text } });
   }
+  const interactionCases = differentialImport();
   const exported = {
     schema: 'noble-fuzz-differential-cases/v1',
-    corpus: { units: names.length, names_sha256: digest(Buffer.from(names.join('\n'))) },
-    counts, cases,
+    corpus: { units: names.length, names_sha256: digest(Buffer.from(names.join('\n'))),
+      interaction_profile: interactionCases.corpus },
+    counts: { ...counts, structured_p1_cells: interactionCases.counts.structured_p1_cells,
+      one_premise_invalid_variants: interactionCases.counts.one_premise_invalid_variants },
+    cases: [...cases, ...interactionCases.cases], invalid_cases: interactionCases.invalid_cases,
   };
   writeFileSync(resolve(output), `${JSON.stringify(exported, null, 2)}\n`);
   process.stdout.write(`${JSON.stringify({ output: resolve(output), counts })}\n`);

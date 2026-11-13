@@ -340,6 +340,66 @@ runner then uses `bubblewrap-0.12.0` and records that path in the receipt.
 Unsupported modes: none. Both `off` and `on` are supported by
 `Core-Bootstrap`.
 
+### Bounded interaction coverage and semantic mutants (issue #125)
+
+[`verification/differential-interactions/matrix-v1.json`](../../verification/differential-interactions/matrix-v1.json)
+freezes two disjoint finite test profiles before their campaign: P1 Core source
+through managed Wasm, and P2 numeric-graph F32 through the experiment lane.
+P1 expectations are independently computed and Lean-kernel-checked per case;
+its execution witness is the exact admitted source, positive runtime steps and
+the observed ordered outputs. The observer has no per-operator trace, so source
+operator labels are reported separately and do not claim direct tracing. P2
+retains the #38 observation relation and compares APFloat, binary64-per-operation,
+reference and compiled legs. Its reach witness includes the actual checked graph
+operands, runtime-selected branch/table entry and a full-node L3 execution; L4
+has no per-node trace. P2 has no Lean or source-to-Wasm claim, and immutable
+parameter snapshots are explicitly unsupported on this seeded path.
+
+The fixed matrix reports reached and unreached cells plus accepted, refused,
+exhausted and unsupported outcomes separately; a refused-only run cannot pass.
+The frozen implementation-side mutants are test artifacts in a single detached
+scratch worktree, applied in place and restored after each run. Only an intended
+property failure on the same fully executed case is a kill. The retained report
+also distinguishes divergence-unreached, executed-survived, invalid/equivalent
+and incomplete outcomes. Shrinking retains the complete source or graph/input
+witness, rechecks feature eligibility, expectation and failure identity, and
+reports its bounded stopping reason without claiming a global minimum. Fresh
+processes replay original and minimized bytes without regenerating the corpus;
+changed bytes are rebuilt and receive fresh expectations, while historical
+receipts are rejected for the changed candidate.
+
+Example commands (all outputs and targets are new paths outside the repository):
+
+```sh
+NODE=<absolute path of the policy-selected Node>
+OUT=<new directory outside the repository>
+FOUNDATION=<clean foundation-check.json for the source commit>
+CORPUS=<minimized source-corpus directory>
+mkdir -p "$OUT"
+$NODE verification/fuzz/export-differential.mjs --corpus "$CORPUS" \
+  --output "$OUT/cases.json"
+$NODE verification/foundation/differential.mjs --seed 125 --count 18 \
+  --foundation "$FOUNDATION" --output "$OUT/p1" --import "$OUT/cases.json"
+$NODE verification/foundation/differential.mjs --verify "$OUT/p1/differential.json"
+cargo test --locked --offline -p noble-ngraph-experiment \
+  --test b2_differential issue125_structured_interaction_matrix -- --nocapture
+$NODE verification/differential-interactions/mutant-runner.mjs \
+  --root <detached clean source worktree> --output <new external report directory> \
+  --target-dir <one external Cargo target directory> \
+  --cargo <absolute path of the selected offline Cargo command> --node "$NODE" \
+  --foundation "$FOUNDATION" --corpus "$CORPUS"
+```
+
+These are finite implementation tests, not theorems about the source frontend,
+Wasm compiler, optimizer, loader or runtime. The Lean results remain model
+theorems; the execution/correspondence boundary is tested only for the recorded
+finite cases. The lane reuses #38's pinned F32 reference and does not promote its
+remaining correspondence obligation. Certificate before/after endpoint and
+malformed-certificate checks remain owned by #42; this lane does not claim them.
+Resource equivalence remains owned by #64 and is only asserted there under its
+explicit sufficient-budget relation; this matrix makes no resource-equivalence
+claim.
+
 ### Input-specific branch EMI (issue #53)
 
 `differential.mjs --emi` reuses the arithmetic reference, renderers, CLI

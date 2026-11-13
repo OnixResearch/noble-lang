@@ -11,7 +11,7 @@ const requireThat = (condition, message) => { if (!condition) throw Error(messag
 
 // Both differential lanes build the checkout, without ambient Cargo wrappers,
 // linker flags or unreviewed registry inputs. The output directory is private.
-export function buildCli({ root, out, selection, childBase, run }) {
+export function buildCli({ root, out, selection, childBase, run, targetDir }) {
   const vendor = selectedVendor(selection.component_sync);
   const cargoHome = join(out, 'cargo-home');
   mkdirSync(cargoHome);
@@ -22,14 +22,14 @@ export function buildCli({ root, out, selection, childBase, run }) {
     PATH: `${selection.component_sync.linker_bin}:${childBase.PATH}`,
     RUSTC_WRAPPER: '', RUSTC_WORKSPACE_WRAPPER: '', CARGO_BUILD_RUSTC_WRAPPER: '',
     RUSTFLAGS: '', CARGO_ENCODED_RUSTFLAGS: '', CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS: '',
-    CARGO_TARGET_DIR: join(root, 'target') };
+    CARGO_TARGET_DIR: targetDir ?? join(root, 'target') };
   const cargo = join(selection.tool_paths.quality_rust.output, 'bin/cargo');
   const built = run(cargo, ['build', '--locked', '--offline', '-j', '4', '-p', 'noble-cli'],
     { cwd: root, env, allowFailure: true });
   writeFileSync(join(out, 'cargo-build.stdout'), built.stdout);
   writeFileSync(join(out, 'cargo-build.stderr'), built.stderr);
   requireThat(built.status === 0, `CLI build failed: ${built.stderr}`);
-  return { cli: join(root, 'target/debug/noble'), env, vendor };
+  return { cli: join(targetDir ?? join(root, 'target'), 'debug/noble'), env, vendor };
 }
 
 export function observation(report) {
