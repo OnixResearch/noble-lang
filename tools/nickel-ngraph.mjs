@@ -276,6 +276,45 @@ function compositionExpected(name, row) {
   throw new Error(`unknown composition case ${name}`);
 }
 
+function expectedGraphSkeleton(name) {
+  const input = ["ngraph-ir/0 ngraph-i64/0", "slot input i64", "%0 = input 0"];
+  if (name === "identity") return [...input, "out %0"];
+  if (name === "scalar_copy") return [...input, "out %0", "out %0"];
+  if (name === "product") return [
+    "ngraph-ir/0 ngraph-i64/0",
+    "slot input i64",
+    "slot input i64",
+    "%0 = input 0",
+    "%1 = input 1",
+    "%2 = const i64 5",
+    "%3 = i64.add %0 %2",
+    "%4 = const i64 2",
+    "%5 = i64.sub %1 %4",
+    "out %3",
+    "out %5",
+  ];
+  if (name === "permutation") return [
+    "ngraph-ir/0 ngraph-i64/0",
+    "slot input i64",
+    "slot input i64",
+    "%0 = input 0",
+    "%1 = input 1",
+    "out %1",
+    "out %0",
+  ];
+  if (name === "reassociation_left" || name === "reassociation_right") return [
+    ...input,
+    "%1 = const i64 5",
+    "%2 = i64.add %0 %1",
+    "%3 = const i64 2",
+    "%4 = i64.mul %2 %3",
+    "%5 = const i64 3",
+    "%6 = i64.sub %4 %5",
+    "out %6",
+  ];
+  throw new Error(`unknown composition graph ${name}`);
+}
+
 function runCompositionLaws(noble, evaluator, out) {
   const closure = observeClosure(COMPOSITION_SOURCE, COMPOSITION_CLOSURE);
   const source = readFileSync(path.join(ROOT, COMPOSITION_SOURCE));
@@ -305,6 +344,15 @@ function runCompositionLaws(noble, evaluator, out) {
       exportSha: sha256(exportedBytes),
     }, out, `composition-${name}`);
     admitted[name] = constructor;
+    const graphLines = constructor.graphBytes.toString("utf8").trimEnd().split(/\r?\n/);
+    if (!graphLines[1]?.startsWith("subject authored-nickel ")) {
+      throw new Error(`${name}: admitted graph lacks the distinct Nickel subject`);
+    }
+    const observedGraph = [graphLines[0], ...graphLines.slice(2)];
+    const expectedGraph = expectedGraphSkeleton(name);
+    if (stable(observedGraph) !== stable(expectedGraph)) {
+      throw new Error(`${name}: admitted graph differs from independent expected graph skeleton`);
+    }
     const vectorsPath = path.join(out, `composition-${name}.vectors`);
     writeFileSync(vectorsPath, vectorFile(rows));
     const expected = rows.map((row) => compositionExpected(name, row));
@@ -315,6 +363,9 @@ function runCompositionLaws(noble, evaluator, out) {
     cases[name] = {
       graph_identity: constructor.checked.graph,
       graph_sha256: constructor.graphSha,
+      expected_graph_skeleton: expectedGraph,
+      observed_graph_skeleton: observedGraph,
+      graph_structure_matches: true,
       construction_parameters: constructor.bound.parameters,
       input_rows: rows,
       expected,
