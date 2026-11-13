@@ -12,7 +12,7 @@
 +      (fun parsed module_spec ->
 +        let* parsed = parsed in
 +        match String.split_on_char '=' module_spec with
-+        | [ name; path ] when name <> "" && path <> "" ->
++        | [ name; path ] when not (String.equal name "") && not (String.equal path "") ->
 +          let+ path = Fpath.of_string path in
 +          (name, path) :: parsed
 +        | _ -> Fmt.error_msg "invalid OWI_REGISTER_MODULES entry: %s" module_spec )
