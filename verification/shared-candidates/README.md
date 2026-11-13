@@ -41,7 +41,8 @@ shared) and `distinct-prefix` (each candidate is an independent program over the
 but the input node is shared). Each candidate, the merged source and the recomputing source are Core
 text generated from `criteria.json` and turned into graphs by the CLI's own extractor.
 
-The packed and net arms all produce the same 12 expected outputs for every frozen row; agreement is
+The full-row packed and net arms (`separate`, `merged`, and `merged-duplicated`) produce the same 12
+expected outputs for every frozen row; the one-row `floor` arms are attribution-only. Agreement is
 a gate, not a finding.
 
 ## What did not run
@@ -278,6 +279,7 @@ arity. Candidate identity therefore comes from the harness's bindings, not from 
 | File | Role |
 | --- | --- |
 | `criteria.md`, `criteria.json` | the frozen protocol, committed before measurement |
+| `../ngraph/net-continuation-criteria.md` | the frozen #37 net speed and full-row correctness rule, committed before run c |
 | `oracle.mjs` | the independent JS stack machine and the frozen program assembly |
 | `run.mjs` | the runner: gates, negative controls, measurement, receipt |
 | `oracle.test.mjs` | hand-derived unit tests for the oracle, the programs and the comparator |
