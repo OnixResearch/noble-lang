@@ -17,7 +17,7 @@ const SGD_ENVELOPE: &str = r#"{
 }"#;
 
 const COMMITTED: &str =
-    include_str!("../../../proofs/foundation/NobleFoundation/SgdReferenceCorpus.lean");
+    include_str!("../../../../proofs/foundation/NobleFoundation/SgdReferenceCorpus.lean");
 
 struct Case {
     name: &'static str,
@@ -218,6 +218,19 @@ fn parser_controls_refuse_at_the_first_offending_field() {
     let opcode = SGD_ENVELOPE.replace("Binary32.mul", "Binary32.add");
     assert_refusal(&opcode, RefusalClass::Unsupported, "$.nodes[1].op");
 
+    let step_metadata = SGD_ENVELOPE.replace("[\"$eta\"]", "[\"$step\"]");
+    assert_refusal(
+        &step_metadata,
+        RefusalClass::Unsupported,
+        "$.nodes[0].operands[0]",
+    );
+    let state_metadata = SGD_ENVELOPE.replace("[\"$eta\"]", "[\"$state\"]");
+    assert_refusal(
+        &state_metadata,
+        RefusalClass::Unsupported,
+        "$.nodes[0].operands[0]",
+    );
+
     let duplicate = SGD_ENVELOPE.replace(
         "\"id\":1,\"op\":\"Binary32.mul\"",
         "\"id\":0,\"op\":\"Binary32.mul\"",
@@ -308,6 +321,28 @@ fn step_descriptor_version_is_fixed() {
     let refusal = StepDescriptor::new(2, 0, 0).expect_err("descriptor version refuses");
     assert_eq!(refusal.class, RefusalClass::Malformed);
     assert_eq!(refusal.location, "$.inputs.step.version");
+}
+
+#[test]
+fn step_descriptor_values_do_not_change_the_candidate_transition() {
+    let candidate = Candidate::parse(SGD_ENVELOPE.as_bytes()).expect("fixed candidate admits");
+    let parameters = [0x3f80_0000, 0x4000_0000];
+    let gradients = [0x3f80_0000, 0xc000_0000];
+    let first = TransitionInput {
+        parameters: &parameters,
+        gradients: &gradients,
+        eta: 0x3f00_0000,
+        step: StepDescriptor::new(1, 0, 0).expect("first descriptor"),
+        state: &[],
+    };
+    let later = TransitionInput {
+        parameters: &parameters,
+        gradients: &gradients,
+        eta: 0x3f00_0000,
+        step: StepDescriptor::new(1, 17, 9).expect("later descriptor"),
+        state: &[],
+    };
+    assert_eq!(candidate.evaluate(&first), candidate.evaluate(&later));
 }
 
 fn evaluation_rows() -> Vec<EvaluationRow> {
