@@ -228,7 +228,7 @@ fn v2_refuses_an_empty_library_tree_before_binding_it() -> std::io::Result<()> {
         "--contract".as_ref(),
         fixture("increment.noble-contract").as_os_str(),
         "--report-schema".as_ref(),
-        "v2".as_ref(),
+        "v3".as_ref(),
         "--lean-binary".as_ref(),
         lean.as_os_str(),
         "--library-tree".as_ref(),
@@ -236,7 +236,7 @@ fn v2_refuses_an_empty_library_tree_before_binding_it() -> std::io::Result<()> {
     ])?;
     assert_eq!(outcome.status, Some(4), "stdout: {}", outcome.stdout);
     assert!(
-        outcome.stdout.contains("\"schema\":\"noble-mc2-build/v2\""),
+        outcome.stdout.contains("\"schema\":\"noble-mc2-build/v3\""),
         "{}",
         outcome.stdout
     );

@@ -15,8 +15,8 @@ pub(super) struct Options {
     pub(super) is_refutation: bool,
     pub(super) out: Option<std::path::PathBuf>,
     pub(super) timeout_ms: u64,
-    /// `--report-schema v2` binds the selected Lean binary and library tree.
-    pub(super) schema_v2: bool,
+    /// `--report-schema v3` binds the selected Lean binary and library tree.
+    pub(super) schema_v3: bool,
     pub(super) lean_binary: Option<std::path::PathBuf>,
     pub(super) library_tree: Option<std::path::PathBuf>,
 }
@@ -68,7 +68,7 @@ pub(super) fn parse(
     let mut out: Option<std::path::PathBuf> = None;
     let mut timeout_ms = crate::workflow::DEFAULT_TIMEOUT;
     let mut has_timeout = false;
-    let mut schema_v2 = false;
+    let mut schema_v3 = false;
     let mut has_schema = false;
     let mut lean_binary: Option<std::path::PathBuf> = None;
     let mut library_tree: Option<std::path::PathBuf> = None;
@@ -97,9 +97,9 @@ pub(super) fn parse(
             }
             Some("--report-schema") if !has_schema => {
                 let value = attempt!(option_value(arguments, index));
-                schema_v2 = match value.to_str() {
+                schema_v3 = match value.to_str() {
                     Some("v1") => false,
-                    Some("v2") => true,
+                    Some("v3") => true,
                     _ => return Err(usage()),
                 };
                 has_schema = true;
@@ -129,9 +129,9 @@ pub(super) fn parse(
             },
         }
     }
-    // v2 exists to bind both selections; asking for it without them, or passing them for v1,
+    // v3 exists to bind both selections; asking for it without them, or passing them for v1,
     // would report a schema whose extra fields either lie or are silently dropped.
-    if schema_v2 != (lean_binary.is_some() && library_tree.is_some()) {
+    if schema_v3 != (lean_binary.is_some() && library_tree.is_some()) {
         return Err(usage());
     }
     // The usage grammar shows `--require-proof` without brackets and the docs
@@ -147,7 +147,7 @@ pub(super) fn parse(
         is_refutation,
         out,
         timeout_ms,
-        schema_v2,
+        schema_v3,
         lean_binary,
         library_tree,
     })
@@ -173,20 +173,20 @@ mod tests {
         ]));
         assert!(parsed.is_ok(), "v1 parses");
         let Ok(options) = parsed else { return };
-        assert!(!options.schema_v2);
+        assert!(!options.schema_v3);
         assert!(options.lean_binary.is_none());
         assert!(options.library_tree.is_none());
     }
 
     #[test]
-    fn v2_requires_both_selections_and_v1_refuses_them() {
+    fn v3_requires_both_selections_and_v1_refuses_them() {
         assert!(parse(&argv(&[
             "--require-proof",
             "x.noble",
             "--contract",
             "c.json",
             "--report-schema",
-            "v2"
+            "v3"
         ]))
         .is_err());
         assert!(parse(&argv(&[
@@ -195,7 +195,7 @@ mod tests {
             "--contract",
             "c.json",
             "--report-schema",
-            "v2",
+            "v3",
             "--lean-binary",
             "/l"
         ]))
@@ -217,15 +217,15 @@ mod tests {
             "--contract",
             "c.json",
             "--report-schema",
-            "v2",
+            "v3",
             "--lean-binary",
             "/l",
             "--library-tree",
             "/t",
         ]));
-        assert!(parsed.is_ok(), "v2 parses");
+        assert!(parsed.is_ok(), "v3 parses");
         let Ok(both) = parsed else { return };
-        assert!(both.schema_v2);
+        assert!(both.schema_v3);
         assert_eq!(
             both.lean_binary.as_deref(),
             Some(std::path::Path::new("/l"))

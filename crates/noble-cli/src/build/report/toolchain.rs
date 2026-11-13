@@ -1,8 +1,8 @@
-//! Caller-selected build toolchain binding (`noble-mc2-build/v2`).
+//! Caller-selected build toolchain binding (`noble-mc2-build/v3`).
 //!
 //! The v1 report binds the Lean producer and consumer recheck through
 //! [`super::Document::toolchain`](super::Document), but not the frozen Lean
-//! binary or the contract library it compiled against. `--report-schema v2`
+//! binary or the contract library it compiled against. `--report-schema v3`
 //! additionally binds both from the caller's exact paths: the binary's bytes
 //! and every file of the library tree, sorted by relative path. [`select`]
 //! then refuses that binding unless the bytes are the ones this build actually
@@ -29,7 +29,7 @@ pub(crate) struct Selected {
     pub(super) lean_sha256: std::string::String,
     pub(super) lean_version: &'static str,
     pub(super) lean_commit: &'static str,
-    pub(super) library_sha256: std::string::String,
+    pub(super) library_blake3: std::string::String,
     pub(super) library_files: u64,
     pub(super) library_bytes: u64,
 }
@@ -64,8 +64,8 @@ impl Selected {
                 "library_tree",
                 crate::workflow::encoding::object([
                     (
-                        "sha256",
-                        crate::workflow::encoding::string(&self.library_sha256),
+                        "blake3",
+                        crate::workflow::encoding::string(&self.library_blake3),
                     ),
                     (
                         "files",
@@ -283,7 +283,7 @@ fn bind(
         lean_sha256: crate::workflow::intrinsic::sha256(&binary),
         lean_version: crate::sandbox::PIN,
         lean_commit: crate::sandbox::COMMIT,
-        library_sha256: tree.hash,
+        library_blake3: tree.hash,
         library_files: tree.files as u64,
         library_bytes: tree.bytes,
     })
@@ -292,7 +292,7 @@ fn bind(
 /// Refuse a binding whose bytes are not the bytes this build uses.
 fn verify_used(selected: &Selected) -> Result<(), crate::workflow::output::Failure> {
     debug_assert!(!selected.lean_sha256.is_empty());
-    debug_assert!(!selected.library_sha256.is_empty());
+    debug_assert!(!selected.library_blake3.is_empty());
     let lean = attempt!(crate::sandbox::release_binary());
     let used_binary = attempt!(read_bounded(&lean, MAX_BYTES));
     if crate::workflow::intrinsic::sha256(&used_binary) != selected.lean_sha256 {
@@ -304,7 +304,7 @@ fn verify_used(selected: &Selected) -> Result<(), crate::workflow::output::Failu
     let root = attempt!(crate::workflow::contract_library_root());
     let files = attempt!(walk(&root, MAX_FILES, MAX_DIRECTORIES));
     let used = attempt!(tree_digest(&files));
-    if used.hash != selected.library_sha256 {
+    if used.hash != selected.library_blake3 {
         return Err(refused(std::format!(
             "--library-tree content differs from the contract library this build compiles ({})",
             root.display()
@@ -334,6 +334,62 @@ pub(crate) fn select(
 #[cfg(test)]
 mod tests {
     use super::{bind, select, walk};
+
+    #[test]
+    fn report_labels_library_digest_as_blake3_and_keeps_lean_sha256() {
+        let root = scratch("algorithm-label");
+        let library = root.join("lib");
+        std::fs::create_dir_all(&library).expect("create tree");
+        let lean = root.join("lean");
+        let lean_bytes = b"lean-binary";
+        std::fs::write(&lean, lean_bytes).expect("write binary");
+        let path = "A.olean";
+        let contents = b"module";
+        std::fs::write(library.join(path), contents).expect("write library");
+        let selected = match bind(&lean, &library) {
+            Ok(selected) => selected,
+            Err(_) => std::panic!("bind tree"),
+        };
+        let mut expected = blake3::Hasher::new();
+        expected.update(&(path.len() as u64).to_le_bytes());
+        expected.update(path.as_bytes());
+        expected.update(&(contents.len() as u64).to_le_bytes());
+        expected.update(contents);
+        let crate::workflow::encoding::Json::Object(entries) = selected.json() else {
+            std::panic!("selected toolchain is an object");
+        };
+        let Some((_, crate::workflow::encoding::Json::Object(library_entries))) =
+            entries.iter().find(|(key, _)| *key == "library_tree")
+        else {
+            std::panic!("library tree is an object");
+        };
+        assert_eq!(library_entries.len(), 4);
+        let library_keys: std::vec::Vec<_> = library_entries.iter().map(|(key, _)| *key).collect();
+        assert_eq!(library_keys, ["blake3", "files", "bytes", "basis"]);
+        let Some((_, crate::workflow::encoding::Json::String(library_hash))) =
+            library_entries.iter().find(|(key, _)| *key == "blake3")
+        else {
+            std::panic!("library tree carries a BLAKE3 digest");
+        };
+        assert_eq!(library_hash, &expected.finalize().to_hex().to_string());
+        assert!(!library_entries.iter().any(|(key, _)| *key == "sha256"));
+        let Some((_, crate::workflow::encoding::Json::Object(lean_entries))) =
+            entries.iter().find(|(key, _)| *key == "lean")
+        else {
+            std::panic!("Lean binary is an object");
+        };
+        let Some((_, crate::workflow::encoding::Json::String(lean_hash))) =
+            lean_entries.iter().find(|(key, _)| *key == "binary_sha256")
+        else {
+            std::panic!("Lean binary carries a SHA-256 digest");
+        };
+        assert_eq!(lean_hash, &crate::workflow::intrinsic::sha256(lean_bytes));
+        let mut document = crate::build::report::Document::new();
+        document.schema_v3 = true;
+        document.selected_toolchain = Some(selected);
+        assert!(document.json().encode().contains("noble-mc2-build/v3"));
+        std::fs::remove_dir_all(&root).expect("clean up");
+    }
 
     fn scratch(name: &str) -> std::path::PathBuf {
         std::env::temp_dir().join(format!("noble-toolchain-{name}-{}", std::process::id()))
@@ -374,20 +430,20 @@ mod tests {
         assert_eq!(first.library_files, 3);
         assert_eq!(first.library_bytes, 13);
         assert_eq!(
-            first.library_sha256,
+            first.library_blake3,
             expected.finalize().to_hex().to_string(),
             "the digest is over sorted relative paths"
         );
         let result = bind(&lean, &library);
         assert!(result.is_ok(), "bind again");
         let Ok(again) = result else { return };
-        assert_eq!(first.library_sha256, again.library_sha256);
+        assert_eq!(first.library_blake3, again.library_blake3);
         assert_eq!(first.lean_sha256, again.lean_sha256);
         std::fs::write(library.join("sub/b.olean"), b"gamma").expect("rewrite b");
         let result = bind(&lean, &library);
         assert!(result.is_ok(), "bind changed");
         let Ok(changed) = result else { return };
-        assert_ne!(first.library_sha256, changed.library_sha256);
+        assert_ne!(first.library_blake3, changed.library_blake3);
         assert_eq!(first.lean_sha256, changed.lean_sha256);
         std::fs::write(&lean, b"other").expect("rewrite binary");
         let result = bind(&lean, &library);
@@ -492,7 +548,7 @@ mod tests {
             std::fs::create_dir_all(&library).expect("create tree");
             std::fs::write(library.join(std::ffi::OsString::from_vec(name)), b"same")
                 .expect("write file");
-            digests.push(bind(&lean, &library).map(|selected| selected.library_sha256));
+            digests.push(bind(&lean, &library).map(|selected| selected.library_blake3));
         }
         for refused in &digests[..2] {
             let Err(failure) = refused else {
