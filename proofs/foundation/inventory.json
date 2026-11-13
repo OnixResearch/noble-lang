@@ -7,7 +7,7 @@
     "Classical.choice",
     "Quot.sound"
   ],
-  "scope": "Lean model statements only (MC1 model, Mathlib oracle, transcribed literal accumulator and runtime helpers, plus the pinned NamedV1 normal-return linking and operand/continuation ABI model). No implementation theorem. The private_theorems list names every private or protected helper theorem: those are existence-checked by name, and their axioms are audited transitively through every inventoried theorem that depends on them, because Lean private names are not addressable from another module.",
+  "scope": "Lean model statements only (MC1 model, Mathlib oracle, transcribed literal accumulator and runtime helpers, pinned NamedV1 normal-return linking and operand/continuation ABI model, and the selected v3 labelled interaction-net model). No implementation theorem. The private_theorems list names every private or protected helper theorem: those are existence-checked by name, and their axioms are audited transitively through every inventoried theorem that depends on them, because Lean private names are not addressable from another module.",
   "theorems": [
     {
       "name": "NobleFoundation.toZ_ofZ",
@@ -4930,6 +4930,216 @@
       "claim": "the direct y - x net is refused while the same subtraction through additions of 0 is accepted"
     },
     {
+      "name": "NobleFoundation.NetLabelled.labelledStrongConfluent",
+      "phase": 1,
+      "role": "confluence",
+      "claim": "the labelled DUP/SUP interaction system is strongly confluent on well-formed nets"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.labelled_confluence",
+      "phase": 1,
+      "role": "confluence",
+      "claim": "two finite reductions from one well-formed net can be joined with equal total lengths"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.labelled_normal_form_unique",
+      "phase": 1,
+      "role": "confluence",
+      "claim": "normal forms reached from one well-formed net are equal and reached in equal path lengths"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.labelled_reduction_bounded",
+      "phase": 1,
+      "role": "reduction-bound",
+      "claim": "a reduction from a well-formed net with a normal form is bounded by and joins to that normalizing path"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.validate_sound",
+      "phase": 1,
+      "role": "validator-soundness",
+      "claim": "accepted labelled nets are well formed, within structural caps, and use only declared duplicate-free bounded labels"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.validateReadback_sound",
+      "phase": 1,
+      "role": "readback-soundness",
+      "claim": "accepted readback is complete across the boundary, each tree validates, and total collapsed values stay bounded"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.validateTree_sound",
+      "phase": 1,
+      "role": "readback-soundness",
+      "claim": "a valid readback tree uses declared labels and stays within nesting and scalar-count limits"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.declared_label_limit_accepted",
+      "phase": 1,
+      "role": "resource-boundary",
+      "claim": "a net with exactly the maximum declared labels is accepted"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.declared_label_limit_exceeded_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a net with one more than the maximum declared labels is refused"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.nesting_limit_accepted",
+      "phase": 1,
+      "role": "resource-boundary",
+      "claim": "a readback tree at the maximum SUP nesting depth is accepted"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.nesting_limit_exceeded_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a readback tree one level beyond the maximum SUP nesting depth is refused"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.rewrite_fuel_limit_at_completes_empty_net",
+      "phase": 1,
+      "role": "resource-boundary",
+      "claim": "the maximum permitted rewrite fuel is accepted for an already-normal empty net"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.rewrite_fuel_limit_exceeded_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "requested rewrite fuel above the frozen maximum is refused"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.wrong_label_equality_seed_caught",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the wrong label-equality mutant differs from the labelled DUP oracle"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.swapped_branches_seed_caught",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the swapped-branches mutant differs from the labelled DUP oracle"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.missing_nest_seed_caught",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the missing-nest mutant differs from the labelled DUP oracle"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.erased_sup_seed_caught",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the erased-SUP mutant differs from the ordered collapse oracle"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.sup_free_rule_table_exact",
+      "phase": 1,
+      "role": "contract-analysis",
+      "claim": "the labelled interaction system uses exactly the plain v3 scalar rules on SUP-free symbols"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.validated_net_reduction_bound",
+      "phase": 1,
+      "role": "reduction-bound",
+      "claim": "an accepted input net inherits inets' reduction bound conditional on reaching a normal form"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.equal_label_fixture_validates",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the equal-label projection fixture passes labelled net validation"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.different_label_fixture_validates",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the different-label nesting fixture passes labelled net validation"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.op_sup_fixture_validates",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the OP1-SUP fixture passes labelled net validation"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.op2_sup_fixture_validates",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the OP2-SUP fixture passes labelled net validation"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.plain_v3_fixture_validates",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the SUP-free v3 scalar fixture passes labelled net validation"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.partial_boundary_fixture_validates",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the two-output fixture with one non-value normal-form boundary passes structural validation"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.equal_label_projection_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "equal-label DUP projects a SUP into its left and right scalar branches in port order"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.different_label_nesting_fixture",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "different-label DUP nests the SUP value in both ordered output trees"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.op_sup_fixture_ordered_result",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "OP1-SUP rewrites to the ordered SUP with scalar branches 5 and 7"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.op_sup_fixture_fuel_exhaustion_refuses",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "insufficient fuel for the OP1-SUP fixture refuses rather than returning a partial observation"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.op_sup_fixture_ordered_collapse",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "complete ordered OP1-SUP collapse returns scalar branches [5,7]"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.op2_sup_fixture_ordered_result",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "OP2-SUP rewrites to the ordered SUP with scalar branches 13 and 15"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.op2_sup_fixture_ordered_collapse",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "complete ordered OP2-SUP collapse returns scalar branches [13,15]"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.plain_v3_fixture_matches_scalar_rule_table",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the plain v3 addition fixture normalizes to scalar 9 under the SUP-free rule table"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.incomplete_boundary_readback_refuses_without_prefix",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a non-value in one boundary position makes complete readback refuse instead of returning the preceding value"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.validate_rejects_unknown_labels",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a labelled agent absent from the declared label set is refused"
+    },
+    {
       "name": "NobleFoundation.Isop.valuation_mem",
       "phase": 1,
       "role": "enumeration",
@@ -8895,6 +9105,18 @@
     "NobleFoundation.UsePermissions.signatureStep_quote",
     "NobleFoundation.UsePermissions.signatureStep_compose",
     "NobleFoundation.UsePermissions.signatureStep_run",
-    "NobleFoundation.UsePermissions.signatureRun_eq"
+    "NobleFoundation.UsePermissions.signatureRun_eq",
+    "NobleFoundation.NetLabelled.rhsSwapInvolutive",
+    "NobleFoundation.NetLabelled.duplicateNumberWF",
+    "NobleFoundation.NetLabelled.duplicateEraseWF",
+    "NobleFoundation.NetLabelled.eraseNumberWF",
+    "NobleFoundation.NetLabelled.eraseSupWF",
+    "NobleFoundation.NetLabelled.projectWF",
+    "NobleFoundation.NetLabelled.differentLabelsWF",
+    "NobleFoundation.NetLabelled.op2NumberWF",
+    "NobleFoundation.NetLabelled.op1NumberWF",
+    "NobleFoundation.NetLabelled.op2SupWF",
+    "NobleFoundation.NetLabelled.op1SupWF",
+    "NobleFoundation.NetLabelled.ruleDataSlots"
   ]
 }
