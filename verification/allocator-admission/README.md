@@ -175,7 +175,66 @@ that the prebuilt Aeneas Lean library was not modified. `<OUTSIDE>/run/evidence.
 
 ## Results
 
-The measured matrix, per root and stage, is `receipt-<commit>.json` beside this file; `cells[].stages`
-holds each stage result, `controls.results` the executed controls, `source_stage` the four crate-level
-compilations, and `tools`/`lean_library`/`selection` the bound identities. Every Rust fixture source,
-the runner, the admission module and its tests are digested into `source.files`.
+Measured 2026-11-13 on the described pins. `receipt-<commit>.json` beside this file is the machine record
+(`cells[].stages`, `controls.results`, `source_stage`, `tools`, `lean_library`, `selection`,
+`source.files`).
+
+### Source stage (crate-level)
+
+| Stage | Expected | Observed | Diagnostic |
+|---|---|---|---|
+| `stable_1_100_ungated` — released 1.100.0, stable variant | `compiled` | **compiled** | — |
+| `stable_1_100_gated` — released 1.100.0, extraction variant | `blocked` | **blocked** | `E0554: #![feature] may not be used on the stable release channel` |
+| `extraction_nightly_ungated` — pinned extraction nightly, stable variant | `blocked` | **blocked** | 11 × `E0658: use of unstable library feature 'allocator_api'` |
+| `extraction_nightly_gated` — pinned extraction nightly, extraction variant | `compiled` | **compiled** | — |
+
+The stable column is the official `rust-1.100.0-x86_64-unknown-linux-gnu` distribution: `rustc 1.100.0
+(0ef1bc386 2026-11-09)`, tarball SHA-256 `98ee6bec…5acd` matching the published digest, installed with
+`install.sh --components=rustc,cargo,rust-std-x86_64-unknown-linux-gnu`.
+
+### Per-root matrix
+
+| Root | Family | Charon | Aeneas | Lean | Admission | Refusals |
+|---|---|---|---|---|---|---|
+| `vec_baseline` | implicit-global | extracted | translated | built | **admitted** | — |
+| `box_baseline` | implicit-global | extracted | translated | built | **admitted** | — |
+| `vec_growth_clone_baseline` | implicit-global | extracted | translated | built | **admitted** | — |
+| `global_vec` | explicit-global | extracted | translated | built | refused | `ALLOCATOR-SOURCE`, `ALLOCATOR-CONSTRUCTOR`, `ALLOCATOR-AXIOM` |
+| `global_box` | explicit-global | extracted | translated | built | refused | `ALLOCATOR-SOURCE`, `ALLOCATOR-CONSTRUCTOR`, `ALLOCATOR-AXIOM` |
+| `generic_vec` | generic-allocator | extracted | translated | built | refused | `ALLOCATOR-SOURCE`, `ALLOCATOR-CONSTRUCTOR`, `ALLOCATOR-AXIOM` |
+| `generic_box` | generic-allocator | extracted | translated | built | refused | `ALLOCATOR-SOURCE`, `ALLOCATOR-CONSTRUCTOR`, `ALLOCATOR-AXIOM` |
+| `generic_vec_growth_clone` | generic-allocator | extracted | translated | built | refused | `ALLOCATOR-SOURCE`, `ALLOCATOR-CONSTRUCTOR`, `ALLOCATOR-AXIOM` |
+| `borrowed_vec` | borrowed-allocator | extracted | translated | built | refused | `ALLOCATOR-SOURCE`, `ALLOCATOR-CONSTRUCTOR`, `ALLOCATOR-AXIOM` |
+| `system_vec` | system-allocator | extracted | translated | built | refused | `ALLOCATOR-SOURCE`, `ALLOCATOR-CONSTRUCTOR`, `ALLOCATOR-AXIOM` |
+| `stateful_vec` | stateful-allocator | extracted | translated | built | refused | `ALLOCATOR-SOURCE`, `ALLOCATOR-CONSTRUCTOR`, `ALLOCATOR-AXIOM` |
+| `stateful_vec_growth_clone` | stateful-allocator | extracted | translated | built | refused | `ALLOCATOR-SOURCE`, `ALLOCATOR-CONSTRUCTOR`, `ALLOCATOR-AXIOM` |
+
+Every root appears in its own translation (`root_in_translation: true` for all twelve) and every cell's
+`translated.options` reports `hide_allocator: true` and `treat_box_as_builtin: true`.
+
+**The pipeline discriminates nothing; the admission boundary is the only stage that refuses.** That is the
+measured justification for VT-ALLOC-01: a `compiled`, `extracted`, `translated` or `built` cell is not
+acceptance, and the positive controls are the three implicit-global roots that pass every stage and are
+admitted with no refusal.
+
+### Executed controls
+
+| Control | Required | Observed |
+|---|---|---|
+| unreached root | `ROOT-MISSING`, `BINDING-ROOT` | refused with exactly those two: a real `box_baseline` extraction cannot stand in for `global_vec` |
+| omitted / opaque body | `ROOT-OPAQUE` | refused with `ROOT-OPAQUE` |
+| changed allocator identity (Aeneas Lean library revision) | `BINDING-IDENTITY` | refused with `BINDING-IDENTITY` |
+| changed source identity | `BINDING-IDENTITY` | refused with `BINDING-IDENTITY` |
+| stale receipt | `STALE-RECEIPT` | refused with `STALE-RECEIPT` |
+| unchanged receipt revalidated | no refusal | no refusal |
+
+### One diagnosed non-finding
+
+A first fixture revision named the allocator parameter and the stateful local `alloc`. Aeneas emits the
+erased allocator as a local and migrates the collection operations into field notation
+(`alloc.vec.Vec.push xs input`), so Lean parsed that expression as a projection on the *local* rather than
+the `alloc` namespace, and five roots failed elaboration with
+`Invalid field notation: Field projection operates on types of the form 'C ...'`. That failure was a
+fixture defect, not an allocator property; the parameters are now `custom` and `counter`, and the table
+above is the post-rename run. It is recorded here because it would otherwise have been reported as an
+allocator finding.

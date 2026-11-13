@@ -360,14 +360,15 @@ for (const cell of cells) {
 // Negative controls: each is a mutation of real evidence and must not admit.
 // ---------------------------------------------------------------------------
 const controls = [];
-function control(name, expectedCodes, action) {
+function control(name, expectedCodes, action, { exact = false } = {}) {
   const { record, document } = action();
   const codes = [...new Set(record.refusals.map(refusal => refusal.code))].sort();
   const missing = expectedCodes.filter(code => !codes.includes(code));
+  const unexpected = exact ? codes.filter(code => !expectedCodes.includes(code)) : [];
   const accepted = record.result === 'admitted' && expectedCodes.length > 0;
-  controls.push({ name, expected_codes: expectedCodes, observed_codes: codes,
-    result: missing.length === 0 && !accepted ? 'refused-as-required' : 'failed',
-    missing_codes: missing, accepted, root: document.root, schema: record.schema,
+  controls.push({ name, expected_codes: expectedCodes, observed_codes: codes, exact,
+    result: missing.length === 0 && unexpected.length === 0 && !accepted ? 'refused-as-required' : 'failed',
+    missing_codes: missing, unexpected_codes: unexpected, accepted, root: document.root, schema: record.schema,
     refusals: record.refusals.map(refusal => ({ code: refusal.code, message: normalize(refusal.message),
       span: refusal.span })) });
 }
@@ -377,13 +378,24 @@ function readCell(name) {
   return { llbc: JSON.parse(fs.readFileSync(llbc, 'utf8')),
     translation: JSON.parse(fs.readFileSync(translation, 'utf8')) };
 }
-control('unreached-root', ['ROOT-MISSING', 'BINDING-ROOT'], () => {
-  // `generic_box` never reaches `global_vec`; its LLBC is real, the claim is not.
-  const { llbc, translation } = readCell('generic_box');
+control('unreached-root', ['BINDING-ROOT', 'ROOT-MISSING'], () => {
+  // A real extraction of `box_baseline` cannot stand in for `global_vec`: the root is
+  // absent from that LLBC, so the only refusals are the missing root and the wrong
+  // `start_from`. The extraction itself is genuine evidence for `box_baseline`.
+  const { llbc, translation } = readCell('box_baseline');
   const document = { root: 'probes::global_vec', llbc, translation,
     binding: bindingFor('probes::global_vec', llbc.translated.options), expected };
   return { record: admit(document), document };
-});
+}, { exact: true });
+control('borrowed-extraction', ['ALLOCATOR-AXIOM', 'ALLOCATOR-CONSTRUCTOR', 'BINDING-ROOT', 'ROOT-MISSING'], () => {
+  // The mirror image: an explicit-allocator subject's extraction cannot certify an
+  // implicit-Global baseline, because the baseline is not in it and the allocator evidence
+  // it does carry is refusable on its own.
+  const { llbc, translation } = readCell('global_vec');
+  const document = { root: 'probes::vec_baseline', llbc, translation,
+    binding: bindingFor('probes::vec_baseline', llbc.translated.options), expected };
+  return { record: admit(document), document };
+}, { exact: true });
 control('omitted-body', ['ROOT-OPAQUE'], () => {
   const { llbc, translation } = readCell('vec_baseline');
   const mutated = structuredClone(llbc);
