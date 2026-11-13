@@ -2,8 +2,10 @@
 
 This records the decisions the lane implements, the evidence for them, the criteria they were
 frozen with, and what would reopen them. The frozen benchmark set they govern is
-[`benchmarks-v1.txt`](benchmarks-v1.txt); the run that reports against it is
-[`receipts/2026-11-13/synthesis.json`](receipts/2026-11-13/synthesis.json).
+[`benchmarks-v1.txt`](benchmarks-v1.txt); the corrected run that reports against it is
+[`receipts/2026-11-13/synthesis-v2.json`](receipts/2026-11-13/synthesis-v2.json). The earlier
+`synthesis.json` is retained as superseded historical evidence after the first foundation gate
+found an emitter tactic following a simplifier-closed goal.
 
 ## D1 — Grammar `synth-i64/0`
 

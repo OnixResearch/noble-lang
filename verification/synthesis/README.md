@@ -3,7 +3,10 @@
 [`cegis.mjs`](cegis.mjs) is a deterministic, finite search and counterexample-guided refinement
 lane over Noble's existing CLI. The benchmark set is frozen in [`benchmarks-v1.txt`](benchmarks-v1.txt);
 [`decision.md`](decision.md) records the grammar, proof boundary, criteria and reopen conditions.
-The retained run is [`receipts/2026-11-13/synthesis.json`](receipts/2026-11-13/synthesis.json).
+The canonical corrected run is [`receipts/2026-11-13/synthesis-v2.json`](receipts/2026-11-13/synthesis-v2.json).
+The earlier [`synthesis.json`](receipts/2026-11-13/synthesis.json) is retained as historical
+evidence; its generated control theorem exposed the emitter's `simp`-closed-goal issue in the
+foundation gate and was superseded by this corrected run.
 
 ## Grammar and trust boundary
 
@@ -70,15 +73,26 @@ candidate of each bitwise task. These are negative model controls, not certifica
 candidates. The four positive certificates cover the three affine arithmetic winners and the
 bound-7 control. No theorem is emitted for a solver `UNSAT` alone.
 
+## Shared symbolic solver regression
+
+After moving the shared query core to `verification/symbolic/qfbv.mjs`, the clean reproduction at
+the same source commit retained the outcomes: 12 distinct models replayed as `refutes`, 8 models
+were rejected, and 9/11 mutated queries were detected. The seven corpus pairs retained three
+kernel-certified equalities and four refutations; solver `UNSAT` remained inconclusive. This is
+the issue #56 lane's model-level evidence, separate from the synthesis certificates above.
+
 ## Provenance and resource report
 
 The receipt was produced by pinned Node 24 from clean source commit
-`9d99d1a62554a087dafcec4f075eb8839595f71a` (`clean: true`); it binds the frozen manifest,
+`7add60d54abaaf8f7d48f15d3de1ac2635bc1fe6` (`clean: true`); it binds the frozen manifest,
 `cegis.mjs`, and `qfbv.mjs` hashes. Its Lean-emission freshness check is true: both the generated
-and committed module are 7,442 bytes with SHA-256
-`c0c1b0f4d2520bef8b891cff37c2b21e8337c98e9df6a93f800d53eb2df4e4c4` (9 theorem emissions).
-The final CEGIS process reported 41.878 s wall, 8.469 s user CPU, 0.897 s system CPU,
-4,100,824 KiB process peak RSS, 22 solver runs and 48,264 KiB solver peak RSS. Per-task search,
+and committed module are 7,482 bytes with SHA-256
+`ba6c03baef3e1f497bf87334c1a04f72fb962ef4e55661bc178d89e868d7a64f` (9 theorem emissions).
+The strict `slot.sh lean 3 verification/ci/lean-proofs.sh --allow-dirty ...` run passed
+`m3-build=0`, `m3-gate=0`, `foundation-build=0`, and `foundation-check=0`; a separate clean
+foundation receipt recorded `allow_dirty: false` for the solver-lane reproduction. The corrected
+CEGIS process reported 62.521 s wall, 11.938 s user CPU, 1.555 s system CPU, 4,100,824 KiB
+process peak RSS, 22 solver runs and 47,236 KiB solver peak RSS. Per-task search,
 baseline, solver and CLI timings/hashes are retained in the receipt.
 
 Reproduce from a clean tree after building the CLI with the pinned `cargo.sh`; use new output paths

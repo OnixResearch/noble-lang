@@ -2178,8 +2178,9 @@ directory is named for the reachable commit that retains those bytes.
 [`benchmarks-v1.txt`](../../verification/synthesis/benchmarks-v1.txt) and the programs the lane
 found. The four `_certified` theorems prove that the named candidate graph and reference graph
 agree for **every** input in the model, after the lane establishes equal affine forms modulo
-`2^64`; the proofs close with `bv_omega`. They do not prove that the synthesis search is complete,
-that the CLI-to-model translation is correct, or that the CLI preserves extracted graphs.
+`2^64`. The proofs unfold the model; `bv_omega` closes remaining bitvector goals, while `simp`
+closes the normalized size-7 control directly. They do not prove that the synthesis search is
+complete, that the CLI-to-model translation is correct, or that the CLI preserves extracted graphs.
 
 The `bitOr` and `bitXor` first-refusal controls include the candidate pair and exact solver witness:
 `*_refused_witness_refutes` is kernel-decided, and `*_refused_not_certifiable` follows from that
