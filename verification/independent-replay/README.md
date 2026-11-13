@@ -68,7 +68,7 @@ historical artifacts.
 
 ## Kernel-checked proof conversions
 
-Kernel conversion trials used at most 1,000,000 heartbeats and recursion depth 4,096. Fifteen theorem
+Kernel conversion trials used at most 1,000,000 heartbeats and recursion depth 4,096. Sixteen theorem
 declarations now have only the strict axiom set:
 
 - `NobleM2.rule_case_sound`, `rule_if_sound`, and `rule_listcase_sound` in
@@ -78,12 +78,14 @@ declarations now have only the strict axiom set:
 - `NobleM2.WordCoverage.ee_derives` in `proofs/m3/NobleM3/Coverage.lean`;
 - `NobleM2.Regression.ce_derives` in `proofs/m3/NobleM2/CheckSoundness.lean`;
 - `NobleM2.Coverage.derives`, `lit41`, `lit1`, `addLook`, and `addInst` in
-  `proofs/m2/NobleM2/Termination.lean`.
+  `proofs/m2/NobleM2/Termination.lean`;
+- `NobleM2.Regression.ce_derives` in `proofs/m2/NobleM2/CheckSoundness.lean`.
 
 The M3 gate removes the three rule theorems and the two converted derivation theorems from its
 reviewed native list, and removes the four converted Termination helper theorems from its
 unrequired-native list; no names are added. The M2 `addLook` helper has no reviewed-native
-allowance.
+allowance. In the M2 gate, `Coverage.derives` and `Regression.ce_derives` move from the evaluation
+allowance to the strict-required list.
 
 The per-word coverage family in `proofs/m3/NobleM3/CoverageWords.lean` also now kernel-checks 15 of
 its 23 canonical scheme-instantiation premises, along with the finite scheme lookups, witness
@@ -103,7 +105,7 @@ The other native proofs in the requested sources remain deliberately classified 
 |---|---|
 | `Rules.lean::fresh_instantiation`; `Coverage.lean::ee_accepted`; `CoverageWords.lean` word fixtures | Their acceptance conclusions ask the reference `NobleM2.check` to reduce a full checker result. Bounded `decide +kernel` trials on `fresh_instantiation`, `ee_accepted`, and the word-fixture acceptance conclusions did not reduce that result. For the per-word instantiation premises, 15 of 23 reduce under the declared budget; the eight remaining cases listed above stop at well-founded `Scheme.instantiate` reduction. |
 | `proofs/m3/NobleM2/Refinement.lean`, `proofs/m3/NobleM3/{Refinement,RefinementWords,Refine}.lean`, and `proofs/m2/NobleM2/Refinement.lean` | These are finite comparisons involving the extracted checker or instantiator. The refinement sources document the extracted checker's fuel-driven `partial_fixpoint` loops; kernel reduction cannot unfold those loops. |
-| Other M2 checker fixtures in `CheckSoundness.lean`, `SignedSelf.lean`, and `Termination.lean` | Their remaining acceptance equations evaluate `NobleM2.check`; in M3, `Regression.ce_derives` is strict while `ce_accepted` remains native. `Coverage.derives` and the finite Termination instance/lookups are strict in both projects, while `Coverage.accepted` remains native. The M2 `Regression.ce_derives` fixture remains native. `SignedSelf` acceptance fixtures remain native. |
+| Other M2 checker fixtures in `CheckSoundness.lean`, `SignedSelf.lean`, and `Termination.lean` | Their remaining acceptance equations evaluate `NobleM2.check`; in both M2 and M3, `Regression.ce_derives` and `Coverage.derives` are strict while `ce_accepted` and `Coverage.accepted` remain native. The finite Termination instance/lookups are strict in both projects. `SignedSelf` acceptance fixtures remain native. |
 | `proofs/mc1/NobleContractImpl/Statement.lean` | The source-bound equations evaluate the extracted frontend and Lean-statement exporter; the module explicitly records these as native-evaluation evidence, not universal proofs. |
 | `proofs/mc2/NobleCertificates/SourceAdmission.lean` and `SourceReplay.lean` | These evaluate the actual extracted admission/release APIs. A bounded kernel trial for `composition_replay_retains_certification` in `SourceReplay.lean` remained stuck while reducing the `Result` match at `compositionReplay`; the proof was restored. |
 

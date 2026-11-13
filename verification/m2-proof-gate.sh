@@ -116,13 +116,13 @@ run_cmd do
     [``NobleM2.applyScheme_ok,
      ``NobleM2.check_soundness,
      ``NobleM2.check_total,
-     ``NobleM2.foldBody_work_bounded]
+     ``NobleM2.foldBody_work_bounded,
+     ``NobleM2.Coverage.derives,
+     ``NobleM2.Regression.ce_derives]
   let evalRequired : List Name :=
     [``NobleM2.coverage_positive,
      ``NobleM2.Coverage.accepted,
-     ``NobleM2.Coverage.derives,
-     ``NobleM2.Regression.ce_accepted,
-     ``NobleM2.Regression.ce_derives]
+     ``NobleM2.Regression.ce_accepted]
   let required :=
     strictRequired.map (fun n => (n, true)) ++ evalRequired.map (fun n => (n, false))
   for (n, isStrict) in required do
