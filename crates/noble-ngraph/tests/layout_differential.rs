@@ -1,5 +1,6 @@
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
+#![register_tool(octet)]
 #![allow(
     tigerstyle::explicit_defaults,
     tigerstyle::no_panic,
@@ -10,7 +11,12 @@
     tigerstyle::ambiguous_params,
     tigerstyle::fallible_int_fallback,
     tigerstyle::raw_arithmetic_overflow,
-    reason = "Owner: noble-maintainers; this integration harness builds checked graphs and asserts their layout and execution outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+    tigerstyle::ambient_clock,
+    tigerstyle::contradictory_time,
+    tigerstyle::excessive_file_length,
+    tigerstyle::function_length,
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the test-only integration target builds checked graph fixtures and contains an ignored, report-only five-repetition cost protocol that reads the monotonic clock, emits timing/RSS rows, and keeps the complete lane setup together."
 )]
 //! Differential execution of a compiled, layout-validated endpoint (issue #43).
 //!

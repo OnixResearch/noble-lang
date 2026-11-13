@@ -3,6 +3,7 @@ use noble_ngraph::ir::{
 };
 
 #[derive(Clone, Copy, Debug)]
+#[octet::sealed_enum]
 pub enum Program {
     Accumulator,
     StackSwap,
@@ -64,7 +65,7 @@ pub fn one_step_adder() -> Graph {
     builder.finish()
 }
 
-pub fn unrolled_adder(steps: usize) -> Graph {
+pub fn unrolled_adder(steps: u32) -> Graph {
     assert!((1..=4).contains(&steps), "unrolled cap is four transitions");
     let mut builder = GraphBuilder::new(
         SubProfile::F32,
@@ -92,7 +93,7 @@ pub fn unrolled_adder(steps: usize) -> Graph {
     builder.finish()
 }
 
-pub fn unrolled_swap(steps: usize) -> Graph {
+pub fn unrolled_swap(steps: u32) -> Graph {
     assert!((1..=4).contains(&steps), "unrolled cap is four transitions");
     let mut builder = GraphBuilder::new(
         SubProfile::F32,
@@ -138,22 +139,20 @@ pub fn swap_graph() -> Graph {
 
 pub fn source_transition(program: Program, state: &[u64], input: &[u64]) -> Option<Vec<u64>> {
     match program {
-        Program::Accumulator if state.len() == 1 && input.len() == 1 => {
-            Some(vec![state[0].wrapping_add(input[0])])
+        Program::Accumulator => {
+            (state.len() == 1 && input.len() == 1).then(|| vec![state[0].wrapping_add(input[0])])
         }
-        Program::StackSwap if state.len() == 2 && input.is_empty() => {
-            Some(vec![state[1], state[0]])
+        Program::StackSwap => {
+            (state.len() == 2 && input.is_empty()).then(|| vec![state[1], state[0]])
         }
-        _ => None,
     }
 }
 
 pub fn inputs_for(program: Program, state: &[u64], input: &[u64]) -> Option<Vec<u64>> {
     match program {
-        Program::Accumulator if state.len() == 1 && input.len() == 1 => {
-            Some(vec![state[0], input[0]])
+        Program::Accumulator => {
+            (state.len() == 1 && input.len() == 1).then(|| vec![state[0], input[0]])
         }
-        Program::StackSwap if state.len() == 2 && input.is_empty() => Some(state.to_vec()),
-        _ => None,
+        Program::StackSwap => (state.len() == 2 && input.is_empty()).then(|| state.to_vec()),
     }
 }

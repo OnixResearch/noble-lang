@@ -11,7 +11,7 @@ use programs::Program;
 
 #[test]
 fn wrapping_adder_matches_reference_and_source_boundaries() {
-    let checker = checker::CandidateChecker::new(
+    let checker = checker::Candidate::new(
         Program::Accumulator,
         programs::one_step_adder(),
         &[0.0, 1.0],
@@ -44,7 +44,7 @@ fn wrapping_adder_matches_reference_and_source_boundaries() {
 
 #[test]
 fn stack_routing_is_exhaustive_over_the_tiny_domain() {
-    let checker = checker::CandidateChecker::new(Program::StackSwap, programs::swap_graph(), &[])
+    let checker = checker::Candidate::new(Program::StackSwap, programs::swap_graph(), &[])
         .expect("checker accepts routing graph");
     for left in 0..4 {
         for right in 0..4 {
@@ -60,21 +60,21 @@ fn stack_routing_is_exhaustive_over_the_tiny_domain() {
 
 #[test]
 fn both_target_programs_emit_stable_artifact_manifest_rows() {
-    let adder_a = checker::CandidateChecker::new(
+    let adder_a = checker::Candidate::new(
         Program::Accumulator,
         programs::one_step_adder(),
         &[0.0, 1.0],
     )
     .expect("adder checker");
-    let adder_b = checker::CandidateChecker::new(
+    let adder_b = checker::Candidate::new(
         Program::Accumulator,
         programs::one_step_adder(),
         &[0.0, 1.0],
     )
     .expect("same adder checker");
-    let swap_a = checker::CandidateChecker::new(Program::StackSwap, programs::swap_graph(), &[])
+    let swap_a = checker::Candidate::new(Program::StackSwap, programs::swap_graph(), &[])
         .expect("swap checker");
-    let swap_b = checker::CandidateChecker::new(Program::StackSwap, programs::swap_graph(), &[])
+    let swap_b = checker::Candidate::new(Program::StackSwap, programs::swap_graph(), &[])
         .expect("same swap checker");
     assert_eq!(adder_a.identities(), adder_b.identities());
     assert_eq!(swap_a.identities(), swap_b.identities());
@@ -95,7 +95,7 @@ fn both_target_programs_emit_stable_artifact_manifest_rows() {
 
 #[test]
 fn host_loop_trajectory_reports_teacher_forced_and_free_running_separately() {
-    let checker = checker::CandidateChecker::new(
+    let checker = checker::Candidate::new(
         Program::Accumulator,
         programs::one_step_adder(),
         &[0.0, 1.0],
@@ -138,7 +138,7 @@ fn host_loop_trajectory_reports_teacher_forced_and_free_running_separately() {
 
 #[test]
 fn stack_swap_trajectory_reports_teacher_forced_and_free_running_separately() {
-    let candidate = checker::CandidateChecker::new(Program::StackSwap, programs::swap_graph(), &[])
+    let candidate = checker::Candidate::new(Program::StackSwap, programs::swap_graph(), &[])
         .expect("stack-swap checker");
     let (mut teacher_left, mut teacher_right) = (1u64, 2u64);
     for _ in 0..1_000 {
@@ -174,7 +174,7 @@ fn hex(bytes: &[u8]) -> String {
 
 #[test]
 fn malformed_state_input_and_decoder_values_are_refused() {
-    let candidate = checker::CandidateChecker::new(
+    let candidate = checker::Candidate::new(
         Program::Accumulator,
         programs::one_step_adder(),
         &[0.0, 1.0],
@@ -193,7 +193,7 @@ fn malformed_state_input_and_decoder_values_are_refused() {
 
 #[test]
 fn corrupted_weights_and_seeded_wrong_transition_are_detected() {
-    let corrupted = checker::CandidateChecker::new(
+    let corrupted = checker::Candidate::new(
         Program::Accumulator,
         programs::one_step_adder(),
         &[1.0, 0.0],
@@ -213,7 +213,7 @@ fn corrupted_weights_and_seeded_wrong_transition_are_detected() {
     for _ in 0..64 {
         builder.output(zero);
     }
-    let incorrect = checker::CandidateChecker::new(Program::Accumulator, builder.finish(), &[])
+    let incorrect = checker::Candidate::new(Program::Accumulator, builder.finish(), &[])
         .expect("seeded wrong candidate passes structural admission");
     assert!(incorrect.one_step(&[0], &[1]).is_err());
 }
@@ -221,10 +221,10 @@ fn corrupted_weights_and_seeded_wrong_transition_are_detected() {
 #[test]
 fn wrong_program_configuration_and_little_endian_decoder_are_detected() {
     let wrong_program =
-        checker::CandidateChecker::new(Program::StackSwap, programs::one_step_adder(), &[0.0, 1.0])
+        checker::Candidate::new(Program::StackSwap, programs::one_step_adder(), &[0.0, 1.0])
             .expect("shape-compatible graph with wrong declared program");
     assert!(wrong_program.one_step(&[1, 2], &[]).is_err());
-    let candidate = checker::CandidateChecker::new(Program::StackSwap, programs::swap_graph(), &[])
+    let candidate = checker::Candidate::new(Program::StackSwap, programs::swap_graph(), &[])
         .expect("stack-swap checker");
     let reversed = [1u64, 2]
         .into_iter()
@@ -244,7 +244,7 @@ fn wrong_program_configuration_and_little_endian_decoder_are_detected() {
 
 #[test]
 fn insufficient_budget_cancellation_and_resume_are_explicit() {
-    let candidate = checker::CandidateChecker::new(
+    let candidate = checker::Candidate::new(
         Program::Accumulator,
         programs::one_step_adder(),
         &[0.0, 1.0],

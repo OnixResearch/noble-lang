@@ -9,7 +9,7 @@ use noble_ngraph::snapshot::ParamSnapshot;
 use std::time::Instant;
 
 const CYCLES: u64 = 100;
-const STEPS: usize = 4;
+const STEPS: u32 = 4;
 const REPS: usize = 5;
 
 struct Lane {

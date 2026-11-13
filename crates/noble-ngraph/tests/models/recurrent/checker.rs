@@ -7,14 +7,14 @@ use noble_ngraph::ir::Graph;
 use noble_ngraph::sem::Value;
 use noble_ngraph::snapshot::ParamSnapshot;
 
-pub struct CandidateChecker {
+pub struct Candidate {
     program: Program,
     checked: CheckedGraph,
     compiled: Compiled,
     weights: ParamSnapshot,
 }
 
-impl CandidateChecker {
+impl Candidate {
     /// Creates an emitter-independent checker from a candidate graph and its weights.
     pub fn new(program: Program, graph: Graph, weight_values: &[f32]) -> Result<Self, String> {
         let checked =
