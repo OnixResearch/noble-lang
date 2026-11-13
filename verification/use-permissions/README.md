@@ -78,12 +78,12 @@ All four source forms are executed with the real selected-profile CLI. They use 
 unrestricted I64 Data; the two-bit alternatives and all Resource/must-use, affine, must-handle,
 branch, and error-return cases remain model-only.
 
-| Case | Existing source | Observed value / stack | What it shows |
-|---|---|---|---|
-| shared configuration | `3 dup 4 + swap -` | `I64 4` | One value must feed two calculations. Today's Data already allows the explicit `dup`; a Resource would correctly refuse it. A split adds no useful permission. |
-| discarded intermediate | `1 2 drop 3 +` | `I64 4` | An unused value is explicitly dropped before continuing. Today's Data already allows that structural discard; it does not invoke a host release. |
-| harmless duplication control | `7 dup +` | `I64 14` | The value is duplicated and consumed, with no discard or capture policy question. The split does not change admission. |
-| must-handle counterfactual | `5 1 + drop` | empty stack | The selected Data profile permits explicit drop. A hypothetical must-handle type would refuse this, but no real source-level value or requirement has been found that should be protected this way; this is not evidence for adoption. |
+| Case | Existing source | Observed value / stack | Compile median / module bytes | Steps / allocated bytes | What it shows |
+|---|---|---|---:|---:|---|
+| shared configuration | `3 dup 4 + swap -` | `I64 4` | 4.560 ms / 58,218 B | 18 / 576 B | One value must feed two calculations. Today's Data already allows the explicit `dup`; a Resource would correctly refuse it. A split adds no useful permission. |
+| discarded intermediate | `1 2 drop 3 +` | `I64 4` | 5.104 ms / 57,324 B | 15 / 480 B | An unused value is explicitly dropped before continuing. Today's Data already allows that structural discard; it does not invoke a host release. |
+| harmless duplication control | `7 dup +` | `I64 14` | 4.405 ms / 56,121 B | 11 / 288 B | The value is duplicated and consumed, with no discard or capture policy question. The split does not change admission. |
+| must-handle counterfactual | `5 1 + drop` | empty stack | 6.069 ms / 56,354 B | 13 / 384 B | The selected Data profile permits explicit drop. A hypothetical must-handle type would refuse this, but no real source-level value or requirement has been found that should be protected this way; this is not evidence for adoption. |
 
 The explicit Resource comparison is spec-anchored but **not** a Core-Bootstrap `.noble` form:
 the bounded-region adapter contract says `region.read` restores the borrowed owner on both normal
@@ -107,7 +107,9 @@ ordered-stack evaluator before `cases.txt` is emitted. The Lean module has a sep
 control matrix proved by `decide`; neither side derives its expected outcomes from the Rust
 checker. The source measurement runner fails on any compile error, non-normal REPL report, wrong
 stack, missing form, or dirty tree. Its clean-source receipt is
-`receipts/2026-11-13/measure.json`.
+`receipts/2026-11-13/measure.json`; the receipt records its own clean source commit/tree. Compile
+times are the median of seven runs after one warm-up, `noble compile --opt off`; they price this
+existing profile only, not a four-way checker.
 
 Reproduce the local finite artifacts and source-profile measurements with the pinned tools:
 

@@ -1,9 +1,10 @@
 //! Independent expectation generator for the four-way duplicate/discard permission model
 //! (issue #112).
 //!
-//! The expectations below are written from the Lean model in
-//! `proofs/foundation/NobleFoundation/UsePermissions.lean` — its permission table, its
-//! ordered-stack rules and its retained control matrix — never from the Rust acceptance machine.
+//! This Node model independently transcribes the bounded proposal also represented in
+//! `proofs/foundation/NobleFoundation/UsePermissions.lean`. Its fixed expected-decision rows are
+//! stated separately from the evaluator below, never derived from Lean or the Rust acceptance
+//! machine.
 //! The production kernel has one `is_data` predicate and no separate duplicate or discard
 //! permission, so each case also records whether the selected *source* profile can express it:
 //!
