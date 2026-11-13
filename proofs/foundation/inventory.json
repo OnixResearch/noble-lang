@@ -8140,6 +8140,552 @@
       "claim": "a duplicated slot table passes the count and every row, and is refused only by slot uniqueness"
     },
     {
+      "name": "NobleFoundation.PackedScheduleGuard.holdsRegister_eq_false",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "A node holds no register exactly when it is a guard."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.wellFormed_operands",
+      "phase": 1,
+      "role": "premise",
+      "claim": "Every in-range node's operands are earlier and hold registers under the graph well-formedness premise."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.wellFormed_operand_lt",
+      "phase": 1,
+      "role": "premise",
+      "claim": "Every operand of an in-range node has a smaller canonical index."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.wellFormed_operand_holds",
+      "phase": 1,
+      "role": "premise",
+      "claim": "Every operand of an in-range node is a register-holding node, not a guard."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.valuesUpTo_eq_value",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "Adding later nodes does not change the reference value of an earlier node."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.guardFailsInRegisters_isGuard",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "A failure read from a packed register can only belong to a guard node."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.minNat_comm",
+      "phase": 1,
+      "role": "helper-model",
+      "claim": "The Option-valued minimum helper minNat_comm preserves the least canonical index."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.minNat_assoc",
+      "phase": 1,
+      "role": "helper-model",
+      "claim": "The Option-valued minimum helper minNat_assoc preserves the least canonical index."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.minNat_none_left",
+      "phase": 1,
+      "role": "helper-model",
+      "claim": "The Option-valued minimum helper minNat_none_left preserves the least canonical index."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.minNat_none_right",
+      "phase": 1,
+      "role": "helper-model",
+      "claim": "The Option-valued minimum helper minNat_none_right preserves the least canonical index."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.minNat_some_some",
+      "phase": 1,
+      "role": "helper-model",
+      "claim": "The Option-valued minimum helper minNat_some_some preserves the least canonical index."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.foldl_minNat",
+      "phase": 1,
+      "role": "helper-model",
+      "claim": "The Option-valued minimum helper foldl_minNat preserves the least canonical index."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.minimum_cons",
+      "phase": 1,
+      "role": "helper-model",
+      "claim": "The Option-valued minimum helper minimum_cons preserves the least canonical index."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.minimum_none_iff",
+      "phase": 1,
+      "role": "helper-model",
+      "claim": "The Option-valued minimum helper minimum_none_iff preserves the least canonical index."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.minimum_append",
+      "phase": 1,
+      "role": "helper-model",
+      "claim": "The Option-valued minimum helper minimum_append preserves the least canonical index."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.minimum_singleton",
+      "phase": 1,
+      "role": "helper-model",
+      "claim": "The Option-valued minimum helper minimum_singleton preserves the least canonical index."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.minimum_mem",
+      "phase": 1,
+      "role": "helper-model",
+      "claim": "The Option-valued minimum helper minimum_mem preserves the least canonical index."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.minimum_le",
+      "phase": 1,
+      "role": "helper-model",
+      "claim": "The Option-valued minimum helper minimum_le preserves the least canonical index."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.minNat_some_of_gt",
+      "phase": 1,
+      "role": "helper-model",
+      "claim": "The Option-valued minimum helper minNat_some_of_gt preserves the least canonical index."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.guardFails_isGuard",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "A failing guard observation can only come from a guard node."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.guardFails_guard",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "A guard node fails exactly when its operand does not satisfy Fact::Bit."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.guardFails_of_holdsRegister",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "A register-holding node is never a failing guard."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.failingFrom_lt",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "The bounded failure-list traversal lemma failingFrom_lt characterizes guard nodes found in its interval."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.failingFrom_ge",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "The bounded failure-list traversal lemma failingFrom_ge characterizes guard nodes found in its interval."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.failingFrom_fails",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "The bounded failure-list traversal lemma failingFrom_fails characterizes guard nodes found in its interval."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.failingFrom_isGuard",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "The bounded failure-list traversal lemma failingFrom_isGuard characterizes guard nodes found in its interval."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.failingFrom_mem",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "The bounded failure-list traversal lemma failingFrom_mem characterizes guard nodes found in its interval."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.failingGraph_mem",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "Every in-range failing guard occurs in the canonical failing-guard list."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.failingGraph_lt",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "Every node in the canonical failing-guard list is in range."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.failingGraph_fails",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "Every node in the canonical failing-guard list actually fails its guard."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.failingGraph_isGuard",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "Every node in the canonical failing-guard list is a guard."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.failingFrom_cons_of_fails",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "The bounded failure-list traversal lemma failingFrom_cons_of_fails characterizes guard nodes found in its interval."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.failingFrom_cons_of_holds",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "The bounded failure-list traversal lemma failingFrom_cons_of_holds characterizes guard nodes found in its interval."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.firstFailureFrom_cons_of_fails",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "The canonical scan lemma firstFailureFrom_cons_of_fails gives the one-step behavior at the current node."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.firstFailureFrom_cons_of_holds",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "The canonical scan lemma firstFailureFrom_cons_of_holds gives the one-step behavior at the current node."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.firstFailureFrom_eq_minimum",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "The bounded canonical scan returns the minimum index among its failing guards."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.firstFailure_eq_minimum",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "The graph's canonical first-failure observation is the minimum failing-guard index."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.soundnessReg_injective",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "The theorem soundnessReg_injective proves its stated property of the guarded I64/Bool schedule model."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.soundnessStep_relation",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "A real-register machine step agrees with the unguarded proof machine under the even-register renaming."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.soundnessRun_relation",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "Executing a stream preserves the relation between real and renamed register files."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.soundnessRun_eq_machineRun",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "The renamed unguarded proof machine computes the same real-register stream outputs."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.soundnessNode_operands",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "The proof translation removes guard operands while preserving every non-guard operand list."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.soundnessRegOf_nonGuard",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "A register-holding node maps to its packed register in the even-register namespace."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.soundnessRegOf_guard",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "A guard node maps to its unique odd ghost register."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.soundnessGuardReg_injective",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "Distinct guard nodes receive distinct odd ghost registers."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.soundnessRegOf_injective",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "The renaming keeps scheduled nodes' registers distinct, including guard ghost registers."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.soundnessRegistersInjective",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "The guarded register-injection check implies injection in the unguarded proof machine."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.soundnessOutputsMatch",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "A guarded positional output map remains valid after renaming register identities."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.soundnessOutputRegisters",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "The supplied output registers equal the renamed registers of the requested graph outputs."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.soundnessGraph_wellFormed",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "A well-formed guarded graph translates to a well-formed unguarded proof graph for a bounded output."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.soundnessValue_eq_value",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "Every register-holding guarded node has the same reference value in the translated graph."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.soundnessOutputValues",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "The translated proof graph and guarded graph agree on every matched output value."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.soundnessEmitNode",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "Each guarded node's supplied instruction translates to the proof graph's emitted instruction."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.soundnessBodiesMatch",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "A valid guarded instruction-body stream translates to a matching unguarded proof stream."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.soundnessOperandsDefined",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "Definition-before-use for guarded operands transfers to the translated proof graph."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.soundnessValidateBase",
+      "phase": 1,
+      "role": "packed-validator",
+      "claim": "The guarded validator's non-completeness obligations imply acceptance by the unguarded proof validator."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.validate_machineOutputs_sound",
+      "phase": 1,
+      "role": "validator-soundness",
+      "claim": "An accepted guarded stream returns the reference values of all requested outputs for every input."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.validate_machineValue_sound",
+      "phase": 1,
+      "role": "validator-soundness",
+      "claim": "An accepted guarded stream computes every in-order register-holding node in its declared register."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.guardFailsInRegisters_eq_reference",
+      "phase": 1,
+      "role": "validator-soundness",
+      "claim": "An accepted guard reads the same operand value from the packed register file as the graph reference."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.minimum_eq_of_mem_iff",
+      "phase": 1,
+      "role": "helper-model",
+      "claim": "The Option-valued minimum helper minimum_eq_of_mem_iff preserves the least canonical index."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.failingGraph_mem_iff",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "Membership in the canonical failing-guard list is equivalent to being an in-range failing guard."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.scheduledFailures_mem_iff",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "Given matching packed-register and reference guard results, a bounded complete order observes exactly the graph's failing guards."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.validate_sound",
+      "phase": 1,
+      "role": "validator-soundness",
+      "claim": "An accepted guarded schedule has the same canonical first-failure-or-output observation as the reference for every input."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.minNat_of_earlier",
+      "phase": 1,
+      "role": "helper-model",
+      "claim": "The Option-valued minimum helper minNat_of_earlier preserves the least canonical index."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.runLayersWithTable_correct",
+      "phase": 1,
+      "role": "helper-model",
+      "claim": "The suffix-aware layered loop returns the minimum failure over all layers."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.example_smoothed_suffix_reports_the_later_guard",
+      "phase": 1,
+      "role": "packed-validator-negative-control",
+      "claim": "A smoothed suffix table can stop early and report a canonically later guard than the full layer set contains."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.filter_append_bool",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "The list transformation lemma filter_append_bool preserves the corresponding filtered failure sequence."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.flatMap_filter_eq_filter_flatten",
+      "phase": 1,
+      "role": "packed-schedule",
+      "claim": "The list transformation lemma flatMap_filter_eq_filter_flatten preserves the corresponding filtered failure sequence."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.graphGuardLayers_failures",
+      "phase": 1,
+      "role": "packed-validator-fixture",
+      "claim": "Flattening per-layer guard failures yields the failures observed over the flattened schedule."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleGuard.layeredObs_sound",
+      "phase": 1,
+      "role": "validator-soundness",
+      "claim": "For an accepted schedule, the suffix-aware layer loop and canonical reference have the same observation."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_validated",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "The Lean kernel accepts the real emitted non-layer-sorted, two-guard I64 artifact under the guarded validator."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_wellFormed",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "The exported guarded graph satisfies the model's well-formedness premise, including earlier register-holding operands."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_suffix_table_matches",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "The artifact's exported fail_suffix_min tail equals the graph-derived suffix minima for its packed layers."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_sound",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "For every input, the accepted guarded instruction stream reports the same canonical first guard failure or output values as the graph reference."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_layered_sound",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "For every input, the fail_suffix_min-aware packed layer loop reports the same canonical first guard failure or output values as the graph reference."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_wrong_operation_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "The guarded validator refuses the real artifact after its first addition is emitted as a subtraction."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_swapped_operands_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "The guarded validator refuses the real artifact after the first subtraction's ordered operands are swapped."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_reordered_within_layer_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "The guarded validator refuses the real artifact after two instructions in one packed layer are exchanged."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_dropped_instruction_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "The guarded validator refuses the real artifact after its last instruction is dropped."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_reordered_guards_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "The guarded validator refuses the artifact after the two guard bodies are exchanged, which would change their first observation in layer order."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_missing_guard_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "The guarded validator refuses the artifact after a required guard instruction is removed."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_guard_after_use_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "The guarded validator refuses the artifact after its sum guard is moved past the subtraction that uses the sum."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_swapped_outputs_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "The guarded validator refuses the artifact after its first two output registers are swapped."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_execution_0_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "At inputs (0, -5) and the normal output values, the kernel evaluates the emitted guarded machine observation recorded from the packed evaluator, which the generator checked against the graph reference interpreter."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_execution_1_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "At inputs (1, -5) and the normal output values, the kernel evaluates the emitted guarded machine observation recorded from the packed evaluator, which the generator checked against the graph reference interpreter."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_execution_2_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "At inputs (0, -4) and the normal output values, the kernel evaluates the emitted guarded machine observation recorded from the packed evaluator, which the generator checked against the graph reference interpreter."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_execution_3_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "At inputs (2, -5) and failing guard node 3, the kernel evaluates the emitted guarded machine observation recorded from the packed evaluator, which the generator checked against the graph reference interpreter."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_execution_4_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "At inputs (0, 0) and failing guard node 7, the kernel evaluates the emitted guarded machine observation recorded from the packed evaluator, which the generator checked against the graph reference interpreter."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_execution_5_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "At inputs (2, 0) and failing guard node 3, the kernel evaluates the emitted guarded machine observation recorded from the packed evaluator, which the generator checked against the graph reference interpreter."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_execution_6_agrees",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "At inputs (i64::MAX, -4) and failing guard node 3, the kernel evaluates the emitted guarded machine observation recorded from the packed evaluator, which the generator checked against the graph reference interpreter."
+    },
+    {
+      "name": "NobleFoundation.PackedScheduleCorpus.nonLayerSortedGuarded_layer_guard_witness",
+      "phase": 1,
+      "role": "real-artifact",
+      "claim": "When both guards fail, the layer order encounters node 7 first but the suffix-aware loop returns canonical-first guard node 3."
+    },
+    {
       "name": "NobleFoundation.GuardedRewrite.accepted_preserves_observations",
       "phase": 2,
       "role": "scoped-rewrite-semantic",

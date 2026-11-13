@@ -200,7 +200,8 @@ Status words:
 | Propositions and sorts of implicit proof arguments: encoding and rebasing (issue #12, `implicit-proof-arguments` task 13) | `PropT.enc_injective`, `SortT.enc_injective`, `PropT.enc_ne_mvar`, `PropT.head_enc`, `PropT.shift_comp`, `PropT.shift_id`, `PropT.levels_shift` | the encoding of the design's `Pi`/`Eq` propositions and `Type0`/`Value` sorts into the solver's tree algebra, and rebasal of their levels; no Rust representation of these trees exists | model **proved**: structural identity is exactly tree equality, encoded propositions never collide with a code or value meta, and rebasal acts on exactly the level occurrences and composes. Rust elaborator refinement **open** |
 | Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `closers_below_zero_depth_do_not_reduce_the_reached_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
 | Packed I64/Bool schedule: result equivalence and independent instruction validation | `validate_sound`, `bodiesMatch_eq_emitNodes`, `operandsDefined_sound`, `registersInjectiveOn_sound`, `outputsMatch_runOutputs`, `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleSchedule_validated`, `reordered_order_not_layer_sorted`, `reorderedGraph_wellFormed`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `reordered_stream_validated_with_repeated_output`, `reordered_stream_sound`, `validate_refuses_operand_before_definition`, `validate_refuses_live_register_alias`, `validate_refuses_wrong_operation`, `validate_refuses_wrong_output_register`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved**. The Rust stream is exported (`Compiled::i64_instructions()`); a general Lean↔Rust correspondence is **open** |
-| Real packed I64/Bool artifacts, validated one at a time (issue #43) | `interleaved_validated`, `interleaved_sound`, `interleaved_wellFormed`, `lateInput_validated`, `lateInput_sound`, `lateInput_wellFormed`, the seven `*_refused` mutated copies and the ten `*_execution_*_agrees` runs in the generated PackedScheduleCorpus module | two artifacts `Compiled::new` emits, written into Lean by an untrusted exporter and bound by `the_lean_file_is_the_real_emission`; the slot and constant preload translation is trusted | **proved** for those two artifacts; the Rust executor agrees at ten inputs, a **tested** fact, not a theorem about it |
+| Guarded I64/Bool schedule: first-failure semantics and `fail_suffix_min` loop | `firstFailure_eq_minimum`, `validate_sound`, `runLayersWithTable_correct`, `example_smoothed_suffix_reports_the_later_guard`, `graphGuardLayers_failures`, `layeredObs_sound` | `PackedScheduleGuard` models `Fact::Bit` guards, a supplied stream, canonical failure selection and the strict per-layer suffix values the packed loop reads | model **proved**; Rust executor correspondence **open** |
+| Real packed I64/Bool artifacts, validated one at a time (issue #43) | the `interleaved`, `lateInput` and `nonLayerSortedGuarded` acceptance/soundness/well-formedness theorems, the refused mutations and the 17 `*_execution_*_agrees` runs in the generated corpus modules | three artifacts `Compiled::new` emits, written into Lean by an untrusted exporter and pinned by both generated-corpus freshness tests; the slot and constant preload translation is trusted | **proved** for those three artifacts; the Rust executor agrees at 17 inputs, a **tested** fact, not a theorem about it |
 | Explicit exact and RNE decimal import | `decimalRatio_den_pos`, `isNegative_eq_msb`, `rne_negative_sign`, `zero_spelling`, `outcomeClass_overflow_iff`, `exactImport_some_iff`, `exactImport_agrees_with_rne`, `exactImport_exactValue`, `negative_zero_fixture`, `decimal_point_one_fixture`, `decimal_point_five_fixture`, `decimal_one_e39_overflow_fixture`, `decimal_least_subnormal_fixture`, `decimal_tie_fixture`, `decimal_just_above_tie_fixture` | decimal syntax/resource bounds, overflow response policy, and correspondence to `crates/noble-ngraph/src/sem.rs` | model **proved**. Implementation and owner-policy obligations remain **open** |
 | Packed I64/Bool schedule: result equivalence and missing-register behavior | `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved** (schedule soundness and the handwritten `Option Val` machine's empty-register behavior). Actual emitted-artifact binding, the Rust transcription, graph guards/`fail_suffix_min`, `F32` and end-to-end checker execution **open** |
 | Pure I64 graph rewrite certificates: rule, congruence, lifting, checker, replay endpoint, token codec and the generated fixture corpus | `fold_add_constants`, `add_wraps_at_the_boundary`, `neutral_add_left`, `neutral_mul_right`, `evalStep_congr`, `congruence`, `replacement_lift`, `checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`, `constant_value`, `foldGraph_wellFormed`, `foldGraph_reference`, `fold_certificate_accepted`, `wrong_constant_refused`, `swapped_operands_refused`, `wrong_rule_identity_refused`, `wrong_bits_refused`, `accepted_endpoint_equivalence`, `stale_model_refused`, `stale_model_kills_acceptance`, `multiFold_endpoint`, `substituted_result_differs`, `decode_encode_step_replays`, `decode_encode_replays`, `acceptance_preserved_by_codec`, `encodeStep_length`, `truncated_step_refused`, `unknown_rule_token_refused`, `stale_revision_token_refused`, `stale_model_token_refused`, `chunk_count_refused`, `dropped_chunk_refused`, and the nine `Certificate.Corpus.*` statements | `crates/noble-ngraph/src/ir.rs` graph producer, `crates/noble-ngraph/src/cert.rs` encoder/checker and any future untrusted transformation | model **proved** (rules, lifting, checker soundness, the Lean replay endpoint and the token codec). One fixed fixture's exact tokens are **kernel-decided** against the model end to end. Correspondence to the `cert.rs` code (as opposed to that fixture's output), derivation replay budget and every other graph's endpoint decoding **open** |
@@ -1651,16 +1652,20 @@ Open, and deliberately not closed:
   `layout::Refusal`'s own classes. That validator is **tested, not proved equal** to
   these definitions, it covers I64/Bool only, and no versioned serialization or
   decoder lets this Lean validator consume an arbitrary stream.
-  `NobleFoundation/PackedScheduleCorpus.lean` is generated from two real artifacts
-  (`crates/noble-ngraph/tests/schedule_lean_dir/corpus.rs`):
+  `NobleFoundation/PackedScheduleCorpus.lean` is generated from the two unguarded real artifacts
+  (`corpus.rs`); `PackedScheduleGuardCorpus.lean` adds the guarded artifact generated by
+  `corpus_guard.rs`:
   - The kernel decides `validate` on each (`interleaved_validated`, `lateInput_validated`).
   - `validate_sound` gives `*_sound`: the exported stream returns the graph reference at
     every output for every input.
-  - Seven mutated copies are refused (`*_refused`).
+  - Seven mutated copies of the two unguarded artifacts are refused (`*_refused`); the guarded
+    artifact has its own refused operation, ordering, output, guard-removal and guard-placement
+    mutations.
   - Ten `*_execution_*_agrees` theorems state the outputs the Rust packed machine computed at five
     boundary inputs per artifact, including wrap-around. The generator checked them against the
     Rust reference interpreter, and the kernel evaluates `run` to the same outputs.
-  - `the_lean_file_is_the_real_emission` fails when the emission changes.
+  - `the_lean_file_is_the_real_emission` and `the_guarded_lean_file_is_the_real_emission` fail
+    when either generated corpus changes.
   - The exporter's node claims are checked, not trusted. Writing the slot and constant
     preload as `setInput`/`setConst` is the one trusted translation.
 - **Definition-before-use and single-writer registers are implied in the Rust slice,
@@ -1670,11 +1675,11 @@ Open, and deliberately not closed:
 - **No Lean↔Rust correspondence theorem.** The result is a proof about the
   definitions in this file, not a theorem that the Rust evaluator's instruction
   bodies equal these `Instr` values or that its graph matches this `Graph`. The corpus
-  establishes that for its two artifacts only, up to the trusted preload translation,
+  establishes that for its three artifacts only, up to the trusted preload translation,
   and nothing here proves that the Rust executor runs a stream the way `run` does.
-- The selected fragment excludes guards, failure-suffix ordering, F32/affine
-  instructions, effects, resources, register reuse after last use, and dynamic
-  multi-output reconstruction. The graph well-formedness premise and all
+- The selected unguarded fragment excludes F32/affine instructions, effects, resources,
+  register reuse after last use, and dynamic multi-output reconstruction. `Fact::Bit`
+  guard observations and suffix ordering are now covered separately below. The graph well-formedness premise and all
   unsupported Rust behaviours remain explicit rather than inferred from the
   finite fixtures.
 
@@ -1692,6 +1697,40 @@ The real-artifact corpus was first retained at
 constant/slot, layer, count and failure-suffix obligations do not export or
 validate instruction bodies, and no correspondence theorem joins that layout
 model to Rust bytes or to this validator.
+
+## Guarded packed-schedule model (issue #43, deliverable 6)
+
+`NobleFoundation/PackedScheduleGuard.lean` adds one `guard` node and `Instr.guard` to the I64/Bool
+fragment. Its guard is the current `Fact::Bit` contract: an I64 passes exactly at `0` or `1`, and
+any Boolean passes. `referenceObs` scans guard nodes in canonical order and returns the first
+failing node, otherwise the ordered output values. `machineObs` executes the supplied stream,
+reads each guard operand from its packed register, and reports the minimum failing canonical index
+(never just the first scheduled failure). `validate_machineValue_sound` proves those register reads
+match the graph values; `validate_sound` proves the observations equal for every accepted schedule.
+
+The packed evaluator is layer ordered and uses the declared `fail_suffix_min` for its early exit.
+The model's `failSuffixMin` is the strict suffix sequence checked after each layer. Rust stores the
+inclusive minimum beginning at each layer and reads index `layer + 1` after that layer; therefore
+the artifact theorem checks that `RustFailSuffixMin.drop 1`, truncated to the number of layers,
+equals the model sequence. `runLayersWithTable_correct` proves this exact suffix rule preserves the
+minimum failure over all layers, and `layeredObs_sound` composes it with `validate_sound` over the
+packed-register guard results. The control `example_smoothed_suffix_reports_the_later_guard` shows why smoothing the suffix table is unsound:
+the layer-first failure can be canonically later than a failure in a remaining layer.
+
+`PackedScheduleGuardCorpus.lean` exports the actual two-guard schedule and suffix table, separately
+from the two unguarded artifacts in `PackedScheduleCorpus.lean`. At input `(2, 0)`, the sum guard at
+canonical node `7` fails in an earlier layer than the cube guard at canonical node `3`, but the
+canonical-first observation is `3`. The kernel checks
+the real artifact's guard order, this layer-vs-canonical witness, and the suffix-table offset. It
+also refuses exchanged guard bodies, a missing guard, and moving the sum guard after the output
+subtraction that uses its value. The Rust generator checks all seven packed observations against
+`eval::reference`; these concrete comparisons are tests, not a proof of the Rust executor.
+
+The guard model covers `Fact::Bit` on this total I64/Bool path only; it does not model other guard
+facts, F32, cancellation, budget equivalence, or a Lean↔Rust instruction decoder. The base corpus
+declares versioned export vocabulary tag `ngraph-packed-export/0`, which the guarded corpus imports.
+A source-bound receipt for the tagged artifact, model, theorem statements and open edges is retained
+under `verification/ngraph/`.
 
 ## Graph rewrite certificates model (issue #42, phase 1)
 

@@ -31,13 +31,15 @@
 //! that write, would have to check them explicitly; this is stated so a future slice cannot
 //! inherit the implication by accident.
 //!
-//! Not covered: F32 (it needs #38's expectations and its own semantics), guard ordering beyond the
-//! bodies, any byte-level decoding (there is no decoder here), and anything about the Rust
-//! compiler, the host or the engine.
+//! Guard ordering and `fail_suffix_min` behavior have a separate Lean model and a checked real
+//! artifact, but there is no general Lean-to-Rust correspondence theorem. Not covered: F32 (it
+//! needs #38's expectations and its own semantics), byte-level decoding (there is no decoder here),
+//! and anything about the Rust compiler, the host or the engine.
 
-/// One instruction of the packed I64/Bool stream. The instruction carries no node identity of its
-/// own: the stream is in layer order and each layer's instruction-emitting nodes are in canonical
-/// order, so the graph supplies the identity the validator compares against.
+/// One instruction of the packed I64/Bool stream. Computation instructions carry no node identity:
+/// the stream is in layer order and each layer's instruction-emitting nodes are in canonical order,
+/// so the graph supplies the identity the validator compares against. A guard carries its node
+/// identity because it has no destination register to identify that node.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum I64Instruction {
     /// Wrapping `a + b` into `d`.
