@@ -5,7 +5,7 @@
 //   NODE verification/shared-candidates/run.mjs measure --binary NOBLE --work DIR --receipt FILE
 //
 // `verify` generates the frozen candidate families, extracts them through
-// `noble ngraph extract`, evaluates every arm through `noble ngraph eval`, and
+// `noble ngraph extract`, evaluates the packed and opt-in net arms through `noble ngraph eval`, and
 // checks the results against the independent oracle of `oracle.mjs`, the
 // normative reference interpreter and each other. It runs the negative
 // controls too. It writes no receipt and may run on a dirty tree.
@@ -236,7 +236,23 @@ function evaluate(binary, work, label, graphPath, values, extra = []) {
   fs.writeFileSync(vectorsPath, vectorsText(values));
   const { status, stdout } = runOnce(binary, ['ngraph', 'eval', graphPath, vectorsPath, ...extra]);
   if (status !== 0) fail(`eval ${label} exited ${status}`);
-  return { vectorsPath, outputs: evalOutputs(stdout, `eval ${label}`), stdout };
+  const outputs = evalOutputs(stdout, `eval ${label}`);
+  const net = extra.includes('--net') ? netMetrics(stdout, `eval ${label}`) : null;
+  return { vectorsPath, outputs, stdout, net };
+}
+
+function netMetrics(stdout, label) {
+  const reports = stdout.trim().split('\n').map((line) => JSON.parse(line));
+  assert.ok(reports.length > 1, `${label}: net report has a header and rows`);
+  assert.equal(reports[0].backend, 'net', `${label}: selected net backend`);
+  const rows = reports.slice(1);
+  assert.ok(rows.every((row) => row.outcome === 'normal' && row.backend === 'net'), `${label}: every net row is normal`);
+  return {
+    rows: rows.length,
+    interactions: rows.reduce((sum, row) => sum + row.interactions, 0),
+    peak_live_agents: Math.max(...rows.map((row) => row.peak_live_agents)),
+    retained_bytes_max: Math.max(...rows.map((row) => row.retained_bytes)),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -350,12 +366,88 @@ function verifyFamily(binary, work, criteria, family, rowValues) {
   assert.equal(crossDisagreement, null, `merged vs duplicated: ${crossDisagreement?.detail}`);
   gate('merged-oracle', 'the merged graph and its recomputing twin reproduce the oracle on every row, and each other');
 
+  const netSeparate = candidates.map((info, index) => evaluate(
+    binary,
+    work,
+    `${family.name}-net-candidate-${index}`,
+    info.graph,
+    rowValues,
+    ['--net'],
+  ));
+  netSeparate.forEach((arm, index) => {
+    const disagreement = firstDisagreement(
+      arm.outputs,
+      candidateValues[index].values.map((value) => [value]),
+      `${family.name}/net-separate-${index}`,
+    );
+    assert.equal(disagreement, null, `net separate ${index}: ${disagreement?.detail}`);
+    const packedDisagreement = firstDisagreement(
+      arm.outputs,
+      separate[index].outputs,
+      `${family.name}/net vs packed separate-${index}`,
+    );
+    assert.equal(packedDisagreement, null, `net vs packed separate ${index}: ${packedDisagreement?.detail}`);
+  });
+  const netMerged = evaluate(binary, work, `${family.name}-net-merged`, merged.graph, rowValues, ['--net']);
+  const netDuplicated = evaluate(binary, work, `${family.name}-net-merged-duplicated`, duplicated.graph, rowValues, ['--net']);
+  assert.equal(firstDisagreement(netMerged.outputs, sharedOracle, `${family.name}/net-merged`), null,
+    `${family.name}: net merged differs from the oracle`);
+  assert.equal(firstDisagreement(netDuplicated.outputs, duplicatedOracle, `${family.name}/net-duplicated`), null,
+    `${family.name}: net recomputing differs from the oracle`);
+  assert.equal(firstDisagreement(netMerged.outputs, mergedRun.outputs, `${family.name}/net vs packed merged`), null,
+    `${family.name}: net merged differs from packed`);
+  assert.equal(firstDisagreement(netDuplicated.outputs, duplicatedRun.outputs, `${family.name}/net vs packed duplicated`), null,
+    `${family.name}: net recomputing differs from packed`);
+  gate('net-oracle', 'every net candidate and both merged forms agree with the independent oracle and packed evaluator on every frozen row');
+
   // The normative reference interpreter over a frozen prefix of the rows.
   const referenceRows = criteria.timing.reference_rows;
   const referenceRun = evaluate(binary, work, `${family.name}-reference`, merged.graph, rowValues.slice(0, referenceRows), ['--reference']);
   const referenceDisagreement = firstDisagreement(referenceRun.outputs, sharedOracle.slice(0, referenceRows), `${family.name}/reference`);
   assert.equal(referenceDisagreement, null, `reference: ${referenceDisagreement?.detail}`);
   gate('reference', `the reference interpreter agrees with the oracle on the first ${referenceRows} rows`);
+
+  // The #37 continuation criterion requires the normative reference on every
+  // frozen row for every separately evaluated, merged and recomputing graph.
+  const referenceSeparate = candidates.map((info, index) => evaluate(
+    binary,
+    work,
+    `${family.name}-reference-candidate-${index}`,
+    info.graph,
+    rowValues,
+    ['--reference'],
+  ));
+  referenceSeparate.forEach((arm, index) => {
+    assert.equal(firstDisagreement(
+      arm.outputs,
+      candidateValues[index].values.map((value) => [value]),
+      `${family.name}/reference-separate-${index}`,
+    ), null, `reference candidate ${index} differs from the oracle`);
+    assert.equal(firstDisagreement(
+      arm.outputs,
+      separate[index].outputs,
+      `${family.name}/reference vs packed separate-${index}`,
+    ), null, `reference candidate ${index} differs from packed`);
+    assert.equal(firstDisagreement(
+      arm.outputs,
+      netSeparate[index].outputs,
+      `${family.name}/reference vs net separate-${index}`,
+    ), null, `reference candidate ${index} differs from its net`);
+  });
+  const referenceMerged = evaluate(binary, work, `${family.name}-reference-merged`, merged.graph, rowValues, ['--reference']);
+  const referenceDuplicated = evaluate(binary, work, `${family.name}-reference-merged-duplicated`, duplicated.graph, rowValues, ['--reference']);
+  for (const [label, reference, oracle, packed, net] of [
+    ['merged', referenceMerged, sharedOracle, mergedRun, netMerged],
+    ['merged-duplicated', referenceDuplicated, duplicatedOracle, duplicatedRun, netDuplicated],
+  ]) {
+    assert.equal(firstDisagreement(reference.outputs, oracle, `${family.name}/reference-${label}`), null,
+      `reference ${label} differs from the oracle`);
+    assert.equal(firstDisagreement(reference.outputs, packed.outputs, `${family.name}/reference vs packed-${label}`), null,
+      `reference ${label} differs from packed`);
+    assert.equal(firstDisagreement(reference.outputs, net.outputs, `${family.name}/reference vs net-${label}`), null,
+      `reference ${label} differs from net`);
+  }
+  gate('reference-all-net', 'reference, packed, net and oracle agree on all frozen rows for every separate, merged and recomputing graph');
 
   // Determinism: a second extraction and a second evaluation of one program.
   const again = extract(binary, work, `${family.name}-merged-again`, mergedInfo.source);
@@ -376,6 +468,9 @@ function verifyFamily(binary, work, criteria, family, rowValues) {
     duplicatedInfo,
     mergedRun,
     duplicatedRun,
+    netSeparate,
+    netMerged,
+    netDuplicated,
     separate,
     rowValues,
   };
@@ -474,8 +569,17 @@ function controls(binary, work, criteria, familyState) {
   fs.writeFileSync(noTypes, `${VECTORS_SCHEMA}\nv 5\n`);
   result.push(expectRefusal(binary, work, 'control-no-types', ['ngraph', 'eval', familyState.merged.graph, noTypes], { exit: 2, code: 'E-FORMAT' }));
 
-  // 7. The backend gate: no interaction-net arm exists, so nothing is being
-  //    preserved here and the net and labelled-SUP arms stay pending #37/#105.
+  // 7. The net backend is available only as an explicit eval selection; it
+  //    cannot be combined with the reference backend or selected by default.
+  const netDefault = runOnce(binary, ['ngraph', 'eval', familyState.merged.graph, familyState.mergedRun.vectorsPath]);
+  assert.equal(netDefault.status, 0, 'the ordinary packed backend remains the default');
+  const defaultHeader = JSON.parse(netDefault.stdout.trim().split('\n')[0]);
+  assert.equal(defaultHeader.backend, undefined, 'the default does not silently select the net arm');
+  const netConflict = runOnce(binary, [
+    'ngraph', 'eval', familyState.merged.graph, familyState.mergedRun.vectorsPath, '--net', '--reference',
+  ]);
+  assert.equal(netConflict.status, 2, 'the two explicit backends are mutually exclusive');
+  assert.match(netConflict.stderr, /different evaluation backends/);
   const noNet = runOnce(binary, ['ngraph', 'net', 'x']);
   assert.equal(noNet.status, 2, 'noble ngraph net is a usage error');
   assert.match(noNet.stderr, /expected check, extract, eval, train or verify/, 'the dispatch names its arms');
@@ -484,8 +588,8 @@ function controls(binary, work, criteria, familyState) {
   assert.doesNotMatch(ngraphCargo, /^\[features\]/m, 'noble-ngraph declares no features');
   result.push({
     control: 'backend-gate',
-    expected: 'no net arm: usage exits 2 and names no net subcommand; `noble-ngraph` has no feature gate to preserve',
-    observed: { exit: noNet.status, features: false },
+    expected: 'the packed backend remains default; eval --net works only as an exclusive selection; no standalone net subcommand or feature gate',
+    observed: { default_exit: netDefault.status, conflict_exit: netConflict.status, no_subcommand_exit: noNet.status, features: false },
   });
 
   assert.ok(criteria !== undefined);
@@ -502,29 +606,56 @@ function armCommands(familyState) {
     merged: [['ngraph', 'eval', familyState.merged.graph, familyState.mergedRun.vectorsPath]],
     'merged-duplicated': [['ngraph', 'eval', familyState.duplicated.graph, familyState.duplicatedRun.vectorsPath]],
     floor: [['ngraph', 'eval', familyState.merged.graph, familyState.floorVectors]],
+    'net-separate': familyState.candidates.map((info) => [
+      'ngraph', 'eval', info.graph, familyState.mergedRun.vectorsPath, '--net',
+    ]),
+    'net-merged': [['ngraph', 'eval', familyState.merged.graph, familyState.mergedRun.vectorsPath, '--net']],
+    'net-merged-duplicated': [
+      ['ngraph', 'eval', familyState.duplicated.graph, familyState.duplicatedRun.vectorsPath, '--net'],
+    ],
+    'net-floor': [['ngraph', 'eval', familyState.merged.graph, familyState.floorVectors, '--net']],
   };
 }
 
 function measureFamily(binary, work, criteria, familyState) {
   const commands = armCommands(familyState);
-  const arms = criteria.arms.map((a) => a.name);
+  const packedArms = criteria.arms.map((a) => a.name);
+  const arms = [...packedArms, ...packedArms.map((arm) => `net-${arm}`)];
   const rounds = criteria.timing.warmup_rounds + criteria.timing.warm_rounds;
   const series = Object.fromEntries(arms.map((arm) => [arm, []]));
   for (let turn = 0; turn < rounds; turn += 1) {
-    const rotation = turn % arms.length;
-    const order = arms.slice(rotation).concat(arms.slice(0, rotation));
+    const rotation = turn % packedArms.length;
+    const packedOrder = packedArms.slice(rotation).concat(packedArms.slice(0, rotation));
+    const order = packedOrder.flatMap((arm) => turn % 2 === 0 ? [arm, `net-${arm}`] : [`net-${arm}`, arm]);
     for (const arm of order) {
       let wallMs = 0;
       let cpuMs = 0;
       let rssKib = 0;
+      let netInteractions = 0;
+      let netPeakLiveAgents = 0;
+      let netRetainedBytesMax = 0;
       commands[arm].forEach((args, index) => {
         const run = runMeasured(binary, args, work, `${familyState.family.name}-${arm}-${turn}-${index}`);
         if (run.status !== 0) fail(`${familyState.family.name}/${arm} exited ${run.status}`);
         wallMs += run.wallMs;
         cpuMs += run.cpuMs;
         rssKib = Math.max(rssKib, run.rssKib);
+        if (arm.startsWith('net-')) {
+          const metrics = netMetrics(run.stdout, `${familyState.family.name}/${arm}/${turn}/${index}`);
+          netInteractions += metrics.interactions;
+          netPeakLiveAgents = Math.max(netPeakLiveAgents, metrics.peak_live_agents);
+          netRetainedBytesMax = Math.max(netRetainedBytesMax, metrics.retained_bytes_max);
+        }
       });
-      series[arm].push({ round: turn, wall_ms: round(wallMs), cpu_ms: round(cpuMs), rss_kib: rssKib });
+      series[arm].push({
+        round: turn,
+        wall_ms: round(wallMs),
+        cpu_ms: round(cpuMs),
+        rss_kib: rssKib,
+        net_interactions: arm.startsWith('net-') ? netInteractions : null,
+        net_peak_live_agents: arm.startsWith('net-') ? netPeakLiveAgents : null,
+        net_retained_bytes_max: arm.startsWith('net-') ? netRetainedBytesMax : null,
+      });
     }
   }
   const warm = (arm) => series[arm].slice(criteria.timing.warmup_rounds);
@@ -543,6 +674,9 @@ function measureFamily(binary, work, criteria, familyState) {
       first_warm_rss_kib: warm(arm)[0].rss_kib,
       second_warm_rss_kib: Math.min(warm(arm).length, 2) === 2 ? warm(arm)[1].rss_kib : null,
       processes_per_round: commands[arm].length,
+      net_interactions: series[arm][0].net_interactions,
+      net_peak_live_agents: series[arm][0].net_peak_live_agents,
+      net_retained_bytes_max: series[arm][0].net_retained_bytes_max,
     };
   }
   return { series, summary };
@@ -587,6 +721,7 @@ function measureExtraction(binary, work, criteria, familyState) {
 function structure(familyState) {
   const family = familyState.family;
   const nodes = familyState.candidates.map((info) => info.report.live_nodes);
+  const netSeparateInteractions = familyState.netSeparate.reduce((sum, run) => sum + run.net.interactions, 0);
   return {
     name: family.name,
     sharing: family.sharing,
@@ -620,6 +755,18 @@ function structure(familyState) {
       merged: sha256(familyState.merged.bytes),
       merged_duplicated: sha256(familyState.duplicated.bytes),
     },
+    net_correctness: {
+      interactions: {
+        separate_total: netSeparateInteractions,
+        merged_total: familyState.netMerged.net.interactions,
+        merged_duplicated_total: familyState.netDuplicated.net.interactions,
+      },
+      peak_live_agents: {
+        separate_max: Math.max(...familyState.netSeparate.map((run) => run.net.peak_live_agents)),
+        merged: familyState.netMerged.net.peak_live_agents,
+        merged_duplicated: familyState.netDuplicated.net.peak_live_agents,
+      },
+    },
   };
 }
 
@@ -633,6 +780,17 @@ function decide(criteria, families) {
   const d3Pairs = distinct.measurement.summary;
   const d3 = Math.abs(d3Pairs.merged.warm_median_wall_ms - d3Pairs['merged-duplicated'].warm_median_wall_ms)
     / Math.max(d3Pairs.merged.warm_median_wall_ms, d3Pairs['merged-duplicated'].warm_median_wall_ms);
+  const netD1 = ratio(shared.measurement.summary['net-merged'].warm_median_wall_ms,
+    shared.measurement.summary['net-separate'].warm_median_wall_ms);
+  const netD2 = ratio(shared.measurement.summary['net-merged'].warm_median_wall_ms,
+    shared.measurement.summary['net-merged-duplicated'].warm_median_wall_ms);
+  const netDistinct = distinct.measurement.summary;
+  const netD3Denominator = Math.max(netDistinct['net-merged'].warm_median_wall_ms,
+    netDistinct['net-merged-duplicated'].warm_median_wall_ms);
+  const netD3 = netD3Denominator === 0 ? null : Math.abs(
+    netDistinct['net-merged'].warm_median_wall_ms
+      - netDistinct['net-merged-duplicated'].warm_median_wall_ms,
+  ) / netD3Denominator;
   const growth = [];
   for (const state of families) {
     for (const [arm, values] of Object.entries(state.measurement.summary)) {
@@ -691,6 +849,14 @@ function decide(criteria, families) {
       threshold: `<= ${thresholds.d4_rss_growth_kib_max} KiB`,
       holds: d4,
       rows: growth,
+    },
+    net_comparison: {
+      shared_prefix_net_merged_over_separate: netD1 === null ? null : round(netD1, 4),
+      shared_prefix_net_merged_over_recomputing: netD2 === null ? null : round(netD2, 4),
+      distinct_prefix_identical_program_noise: netD3 === null ? null : round(netD3, 4),
+      construction_cost: 'every measured net evaluation includes graph-to-net lowering and validation for every input row; no cross-input net cache exists',
+      construction_accounting_runs: 1,
+      note: 'descriptive only under frozen #117 criteria; the separate #37 continuation rule decides whether net merits more work',
     },
     go,
     statement,
@@ -784,7 +950,13 @@ function main() {
     })),
     controls: controlResults,
     decision: decide(criteria, families),
-    not_measured: criteria.not_measured,
+    criteria_not_measured_at_freeze: criteria.not_measured,
+    not_measured: [
+      'labelled-SUP arm: no labelled DUP/SUP contract exists; pending #105',
+      'allocation counts: the workspace forbids unsafe; only process RSS and net retained-byte estimates are reported',
+      'net graph construction and reduction are timed end-to-end, not separated into an independently reusable compilation cache',
+      'in-process CSE: the graph evaluator has no memoising pass, so merged sharing remains construction-driven',
+    ],
   };
 
   fs.writeFileSync(options.receipt, `${JSON.stringify(receipt, null, 2)}\n`);
