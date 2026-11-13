@@ -1,12 +1,12 @@
 use crate::common;
-use noble_ngraph::check;
-use noble_ngraph::compiled::Compiled;
-use noble_ngraph::eval::{self, Control, Obs};
+#[path = "recurrent/checker.rs"]
+mod checker;
+#[path = "recurrent/programs.rs"]
+mod programs;
 use noble_ngraph::ir::{
     Fact, Graph, GraphBuilder, NodeId, Op, Provenance, ScalarType, SubProfile, Subject,
 };
-use noble_ngraph::sem::Value;
-use noble_ngraph::snapshot::ParamSnapshot;
+use programs::Program;
 
 const WIDTH: usize = 64;
 
@@ -52,53 +52,11 @@ fn exact_adder() -> Graph {
     builder.finish()
 }
 
-fn encode_word(word: u64) -> Vec<Value> {
-    (0..WIDTH)
-        .map(|bit| Value::f32(((word >> bit) & 1) as f32))
-        .collect()
-}
-
-fn decode_word(values: &[Value]) -> u64 {
-    assert_eq!(values.len(), WIDTH);
-    values.iter().enumerate().fold(0, |word, (bit, value)| {
-        let Value::F32(bits) = value else {
-            panic!("non-F32 output: {value:?}")
-        };
-        let cell = f32::from_bits(*bits);
-        match cell {
-            0.0 | 1.0 => {}
-            _ => panic!("non-bit output: {cell:?}"),
-        }
-        word | ((cell as u64) << bit)
-    })
-}
-
 fn run(graph: &Graph, a: u64, b: u64) -> u64 {
-    let checked = check::check(&common::IDS, graph.clone()).expect("adder graph checks");
-    let weights = ParamSnapshot::new(&common::IDS, &checked, &[0.0, 1.0]).expect("weight snapshot");
-    let left = encode_word(a);
-    let right = encode_word(b);
-    let inputs = left
-        .into_iter()
-        .zip(right)
-        .flat_map(|(a, b)| [a, b])
-        .collect::<Vec<_>>();
-    let compiled = Compiled::new(&common::IDS, &checked);
-    let mut compiled_control = Control::default();
-    let mut reference_control = Control::default();
-    let compiled_result = compiled.evaluate(&inputs, Some(&weights), &mut compiled_control);
-    let reference_result =
-        eval::reference(&checked, &inputs, Some(&weights), &mut reference_control);
-    let (Obs::Normal(compiled_values), Obs::Normal(reference_values)) =
-        (compiled_result.obs, reference_result.obs)
-    else {
-        panic!("bit-adder evaluator refused a valid word")
-    };
-    assert_eq!(
-        compiled_values, reference_values,
-        "compiled/reference disagreement"
-    );
-    decode_word(&compiled_values)
+    checker::CandidateChecker::new(Program::Accumulator, graph.clone(), &[0.0, 1.0])
+        .expect("checker accepts emitted graph")
+        .one_step(&[a], &[b])
+        .expect("checker verifies transition")[0]
 }
 
 #[test]
@@ -119,4 +77,86 @@ fn wrapping_adder_matches_reference_and_source_boundaries() {
     ] {
         assert_eq!(run(&graph, a, b), a.wrapping_add(b));
     }
+}
+
+#[test]
+fn stack_routing_is_exhaustive_over_the_tiny_domain() {
+    let checker = checker::CandidateChecker::new(Program::StackSwap, programs::swap_graph(), &[])
+        .expect("checker accepts routing graph");
+    for left in 0..4 {
+        for right in 0..4 {
+            assert_eq!(
+                checker
+                    .one_step(&[left, right], &[])
+                    .expect("swap transition"),
+                [right, left]
+            );
+        }
+    }
+}
+
+#[test]
+fn both_target_programs_emit_stable_artifact_manifest_rows() {
+    let adder_a = checker::CandidateChecker::new(Program::Accumulator, exact_adder(), &[0.0, 1.0])
+        .expect("adder checker");
+    let adder_b = checker::CandidateChecker::new(Program::Accumulator, exact_adder(), &[0.0, 1.0])
+        .expect("same adder checker");
+    let swap_a = checker::CandidateChecker::new(Program::StackSwap, programs::swap_graph(), &[])
+        .expect("swap checker");
+    let swap_b = checker::CandidateChecker::new(Program::StackSwap, programs::swap_graph(), &[])
+        .expect("same swap checker");
+    assert_eq!(adder_a.identities(), adder_b.identities());
+    assert_eq!(swap_a.identities(), swap_b.identities());
+    for (name, checker) in [("accumulator", adder_a), ("stack-swap", swap_a)] {
+        let (graph, snapshot, bytes) = checker.identities();
+        println!(
+            "RECURRENT_MANIFEST\t{name}\t{}\t{}\t{}",
+            hex(&graph),
+            hex(&snapshot),
+            hex(&bytes)
+        );
+    }
+}
+
+#[test]
+fn host_loop_trajectory_reports_teacher_forced_and_free_running_separately() {
+    let checker = checker::CandidateChecker::new(Program::Accumulator, exact_adder(), &[0.0, 1.0])
+        .expect("adder checker");
+    let mut teacher_source = 0u64;
+    let mut teacher_steps = 0usize;
+    for step in 0..1_000u64 {
+        let input = step.wrapping_mul(0x9e37_79b9_7f4a_7c15);
+        let expected =
+            programs::source_transition(Program::Accumulator, &[teacher_source], &[input])
+                .expect("source domain")[0];
+        assert_eq!(
+            checker
+                .one_step(&[teacher_source], &[input])
+                .expect("teacher-forced step"),
+            [expected]
+        );
+        teacher_source = expected;
+        teacher_steps += 1;
+    }
+
+    let mut free_state = 0u64;
+    let mut free_steps = 0usize;
+    for step in 0..1_000u64 {
+        let input = step.wrapping_mul(0xd6e8_feb8_6659_fd93);
+        let target_next = checker
+            .one_step(&[free_state], &[input])
+            .expect("free-running step")[0];
+        let source_next =
+            programs::source_transition(Program::Accumulator, &[free_state], &[input])
+                .expect("source domain")[0];
+        assert_eq!(target_next, source_next, "free-running step {step}");
+        free_state = target_next;
+        free_steps += 1;
+    }
+    println!("RECURRENT_TRAJECTORY\tteacher_forced\t{teacher_steps}");
+    println!("RECURRENT_TRAJECTORY\tfree_running\t{free_steps}");
+}
+
+fn hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }
