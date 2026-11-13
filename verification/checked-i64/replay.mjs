@@ -21,7 +21,7 @@ if (!cargo) throw new Error('NOBLE_CARGO must name the repository Rust test comm
 const testName = 'checked_i64::retained_checked_i64_expectations_match_lean_and_real_source_wasm';
 const args = [
   'test', '-p', 'noble-cli', '--test', 'smoke',
-  'retained_checked_i64_expectations_match_lean_and_real_source_wasm',
+  testName,
   '--offline', '--locked', '--', '--exact',
 ];
 

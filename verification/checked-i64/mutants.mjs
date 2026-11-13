@@ -23,7 +23,7 @@ const original = fs.readFileSync(target, 'utf8');
 const testName = 'checked_i64::retained_checked_i64_expectations_match_lean_and_real_source_wasm';
 const cargoArgs = [
   'test', '-p', 'noble-cli', '--test', 'smoke',
-  'retained_checked_i64_expectations_match_lean_and_real_source_wasm',
+  testName,
   '--offline', '--locked', '--', '--exact',
 ];
 const mutants = [
