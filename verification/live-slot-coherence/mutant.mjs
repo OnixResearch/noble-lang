@@ -58,7 +58,9 @@ const run = (command, argv, options = {}) => {
   const result = spawnSync(command, argv, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, ...options });
   return { status: result.status, stdout: result.stdout ?? '', stderr: result.stderr ?? '' };
 };
-const tail = text => text.split('\n').filter(Boolean).slice(-6).join('\n');
+// A failing lane prints the assertion message first and its diff afterwards, so the retained
+// excerpt keeps the head of the failure report rather than the tail of the value diff.
+const excerpt = text => text.split('\n').filter(Boolean).slice(0, 24).join('\n');
 
 // The control is only meaningful over committed source: the archive below must equal the review.
 const status = run('git', ['-C', repository, 'status', '--porcelain']);
@@ -115,7 +117,7 @@ const build = (root, which) => {
     env: { ...process.env, NOBLE_ROOT: root, NOBLE_TARGET: path.join(target, which),
       CARGO_BUILD_JOBS: jobs },
   });
-  assert.equal(result.status, 0, `clean source build ${which} failed: ${tail(result.stderr)}`);
+  assert.equal(result.status, 0, `clean source build ${which} failed: ${excerpt(result.stderr)}`);
   const binary = path.join(target, which, 'debug', 'noble');
   assert.ok(fs.existsSync(binary), `build ${which} produced no selected CLI`);
   return { binary, sha256: sha(fs.readFileSync(binary)), seconds: Math.round((Date.now() - started) / 1000) };
@@ -147,7 +149,7 @@ const runLane = (binary, lane, direction = null) => {
   let observed = null;
   try { observed = lines.length ? JSON.parse(lines.at(-1)) : null; } catch { observed = null; }
   return { lane, direction, status: result.status, observed,
-    failure: result.status === 0 ? null : tail(result.stderr) };
+    failure: result.status === 0 ? null : excerpt(result.stderr), stderr: result.stderr };
 };
 
 let cleanCoherence;
@@ -171,7 +173,8 @@ try {
   mutantCoherence = runLane(mutant.binary, 'live_slot_coherent_maps.mjs');
   assert.notEqual(mutantCoherence.status, 0,
     'the current-map CLI must fail the coherence lane it previously passed');
-  assert.match(mutantCoherence.failure, /held root must dispatch to and emit from the version it was pinned on/,
+  assert.match(mutantCoherence.stderr,
+    /held root must dispatch to and emit from the version it was pinned on/,
     `the coherence failure must be the pinned-version assertion: ${mutantCoherence.failure}`);
 
   mutantDirections = ['emitting-old', 'inert-old'].map(direction =>
@@ -179,7 +182,7 @@ try {
   const expected = { 'emitting-old': { pinned: 2, mutant: 1 }, 'inert-old': { pinned: 0, mutant: 1 } };
   for (const row of mutantDirections) {
     assert.notEqual(row.status, 0, `the current-map CLI must fail the two-selection lane (${row.direction})`);
-    assert.match(row.failure, /both selections of one root must name the same pinned Program/,
+    assert.match(row.stderr, /both selections of one root must name the same pinned Program/,
       `the two-selection failure must be the pinned-Program assertion: ${row.failure}`);
     assert.ok(row.observed?.variants?.length === 1,
       `the mutant run must report its measured variant (${row.direction})`);
