@@ -129,14 +129,15 @@ run_case() {
     # A probe theorem proved by `sorry` added to an m3 proof source (the
     # file is replaced through mv: the scratch copy's sources share
     # inodes with the repository's).
-    cat > "$SCRATCH/proof-hole.lean" <<'HOLE'
+    cat "$PROOF_ROOT/NobleM3/Rules.lean" > "$SCRATCH/proof-hole.lean"
+    cat >> "$SCRATCH/proof-hole.lean" <<'HOLE'
+
 /-- Refusal-mutation probe: a proof hole. Written into a scratch copy by
     verification/m3-proof-gate-refusals.sh; not part of the repository. -/
 theorem mutation_probe : False := by sorry
 HOLE
-    cat "$PROOF_ROOT/NobleM3/CheckV1.lean" >> "$SCRATCH/proof-hole.lean"
     grep -qw sorry "$SCRATCH/proof-hole.lean" || { echo "APPLY FAILED"; return 1; }
-    mv "$SCRATCH/proof-hole.lean" "$copy/NobleM3/CheckV1.lean"
+    mv "$SCRATCH/proof-hole.lean" "$copy/NobleM3/Rules.lean"
     out="$("$GATE" "$copy" 2>&1)"; rc=$?
     ;;
 
