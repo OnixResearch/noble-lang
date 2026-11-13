@@ -194,7 +194,7 @@ if (options['stable-prefix']) {
     stable = { status: 'installed', prefix: normalize(prefix), rustc_sha256: fileSha(rustc),
       cargo_sha256: fileSha(cargo), version: version.output.trim(), tarball,
       installer: 'install.sh --prefix <dir> --components=rustc,cargo,rust-std-x86_64-unknown-linux-gnu' };
-    if (/\bnightly\b/.test(stable.version) || !/release: 1\.100\.0$/.test(stable.version)) {
+    if (/\bnightly\b/.test(stable.version) || !/^release: 1\.100\.0$/m.test(stable.version)) {
       throw Error(`the stable column requires released 1.100.0, got: ${stable.version}`);
     }
   }
