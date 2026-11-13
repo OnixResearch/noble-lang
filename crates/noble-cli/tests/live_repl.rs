@@ -4246,9 +4246,49 @@ fn preview_binds_the_next_installation_to_exact_bytes_and_base(
         ),
         0
     );
+    // Both ordered interfaces are printed, each under its own identity: the
+    // installed definition under the installed identity and the candidate under
+    // a prospective identity that is not installed and is not authority.
     assert_eq!(
-        text_field(&preview["comparison"], "interface"),
-        "unavailable-not-exposed-by-this-preview"
+        text_field(&preview["comparison"]["installed"], "identity_scope"),
+        "installed-at-base-generation"
+    );
+    assert_eq!(
+        preview["comparison"]["installed"]["installed_identity"],
+        preview["base"]["installed_identity"],
+        "the interface names the identity it was read from"
+    );
+    assert!(preview["base"]["installed_identity"].is_u64(), "{preview}");
+    assert!(
+        preview["comparison"]["candidate"]["prospective_identity"].is_u64(),
+        "{preview}"
+    );
+    assert_eq!(
+        preview["comparison"]["installed"]["interface"]["stack_in"]["values"],
+        serde_json::json!(["I64"])
+    );
+    assert_eq!(
+        text_field(
+            &preview["comparison"]["installed"]["interface"],
+            "stack_in_tail"
+        ),
+        "unconstrained"
+    );
+    assert!(preview["comparison"]["installed"]["interface"]["effects"]
+        .as_array()
+        .ok_or("ordered installed effects")?
+        .is_empty());
+    assert_eq!(
+        text_field(&preview["comparison"]["candidate"], "identity_scope"),
+        "prospective-not-installed"
+    );
+    assert_eq!(
+        preview["comparison"]["candidate"]["interface"]["stack_in"]["values"],
+        serde_json::json!(["I64"])
+    );
+    assert_eq!(
+        preview["comparison"]["interface_equal"], true,
+        "the unchanged candidate has the same ordered interface: {preview}"
     );
     assert_eq!(
         text_field(&preview["comparison"], "equivalence"),
@@ -4272,30 +4312,51 @@ fn preview_binds_the_next_installation_to_exact_bytes_and_base(
         text_field(&preview["token"], "authority"),
         "comparison-reference-not-publication-authority"
     );
+    // The installed-state block is derived from two measured points, not from
+    // constants: generation, submissions, grant and live-code entries are equal
+    // before and after, so every derived counter is zero.
+    let measured = &preview["installed_state"];
+    for field in ["generation", "submissions", "live_code_entries"] {
+        assert_eq!(
+            number_field(&measured[field], "before"),
+            number_field(&measured[field], "after"),
+            "{field} before and after the preview"
+        );
+    }
+    assert_eq!(measured["grant"]["before"], Value::Null);
+    assert_eq!(measured["grant"]["after"], Value::Null);
+    assert_eq!(measured["namespace_changed"], false);
     for field in [
         "staged_binaries",
         "grants_consumed",
+        "submissions_charged",
         "guest_requests",
         "protected_operations",
     ] {
-        assert_eq!(
-            number_field(&preview["installed_state"], field),
-            0,
-            "{field}"
-        );
+        assert_eq!(number_field(measured, field), 0, "{field}");
     }
+    assert_eq!(
+        text_field(measured, "selected_source_acknowledgement"),
+        "unchanged"
+    );
+    assert_eq!(
+        measured["unreachable"]["fields"],
+        serde_json::json!(["guest_requests", "protected_operations"]),
+        "the two structural constants name their own scope"
+    );
     let candidate_sha256 = text_field(&preview["candidate"], "sha256").to_owned();
 
     // Repeating and cancelling a preview installs, stages and executes nothing.
     let repeated = live.submit(&format!(":preview {}", fixture.source.display()))?;
     assert_eq!(text_field(&repeated, "outcome"), "previewed");
     assert_eq!(repeated["discarded_previous"], true);
+    assert_preview_did_not_mutate_installed_state(&repeated);
     let cancelled = live.submit(":preview cancel")?;
     assert_eq!(text_field(&cancelled, "outcome"), "cancelled");
-    assert_eq!(
-        text_field(&live.submit(":preview cancel")?, "outcome"),
-        "nothing-retained"
-    );
+    assert_preview_did_not_mutate_installed_state(&cancelled);
+    let empty_cancel = live.submit(":preview cancel")?;
+    assert_eq!(text_field(&empty_cancel, "outcome"), "nothing-retained");
+    assert_preview_did_not_mutate_installed_state(&empty_cancel);
     let after_cancel = live.submit(":generation")?;
     assert_eq!(number_field(&after_cancel, "generation"), 1);
     assert_eq!(after_cancel["stack"], stack_before);
@@ -4328,9 +4389,51 @@ fn preview_binds_the_next_installation_to_exact_bytes_and_base(
         "{stale_bytes}"
     );
     assert_eq!(number_field(&stale_bytes, "generation"), 2);
+    assert_eq!(
+        text_field(&stale_bytes, "preview_state"),
+        "stale-retained-reference"
+    );
+    assert_eq!(stale_bytes["preview_repeated"], false);
+
+    // The refusal keeps the reference as a stale marker instead of clearing it.
+    // Restoring the exact previewed bytes still cannot install: only a new
+    // preview or an explicit cancel clears the marker.
+    fixture.replace("def addone [ 1 + ]")?;
+    let stale_again = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&stale_again, "outcome"),
+        "reload-refused",
+        "{stale_again}"
+    );
+    assert!(
+        text_field(&stale_again, "diagnostic")
+            .contains("candidate bytes changed after the preview"),
+        "{stale_again}"
+    );
+    assert_eq!(
+        text_field(&stale_again, "preview_state"),
+        "stale-retained-reference"
+    );
+    assert_eq!(
+        stale_again["preview_repeated"], true,
+        "the recorded stale reason is the one re-reported"
+    );
+    assert_eq!(number_field(&stale_again, "generation"), 2);
+
+    // An explicit cancel discards the stale marker; the next plain reload then
+    // takes the ordinary guarded path and claims no preview authority.
+    assert_eq!(
+        text_field(&live.submit(":preview cancel")?, "outcome"),
+        "cancelled"
+    );
+    let ordinary = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&ordinary, "outcome"), "reload-committed");
+    assert!(ordinary.get("preview_token").is_none(), "{ordinary}");
+    assert_eq!(number_field(&ordinary, "generation"), 3);
 
     // The next preview is over the changed bytes; it installs them explicitly and
     // reports the exact committed generation.
+    fixture.replace("def addone [ 2 + ]")?;
     let reviewed = live.submit(&format!(":preview {}", fixture.source.display()))?;
     assert_eq!(text_field(&reviewed, "outcome"), "previewed", "{reviewed}");
     let committed = live.submit(&format!(":reload {}", fixture.source.display()))?;
@@ -4340,13 +4443,16 @@ fn preview_binds_the_next_installation_to_exact_bytes_and_base(
         "{committed}"
     );
     assert_eq!(text_field(&committed, "preview_token"), "consumed");
-    assert_eq!(number_field(&committed, "generation"), 3);
+    assert_eq!(number_field(&committed, "generation"), 4);
     // Without a retained reference the ordinary guarded path claims no preview
     // authority, so a token is never reused.
-    let ordinary = live.submit(&format!(":reload {}", fixture.source.display()))?;
-    assert_eq!(text_field(&ordinary, "outcome"), "reload-committed");
-    assert!(ordinary.get("preview_token").is_none(), "{ordinary}");
-    assert_eq!(number_field(&ordinary, "generation"), 4);
+    let repeated_install = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&repeated_install, "outcome"), "reload-committed");
+    assert!(
+        repeated_install.get("preview_token").is_none(),
+        "{repeated_install}"
+    );
+    assert_eq!(number_field(&repeated_install, "generation"), 5);
 
     // A same-interface, different-behaviour candidate stays visibly different and is
     // never labelled equivalent.
@@ -4358,20 +4464,388 @@ fn preview_binds_the_next_installation_to_exact_bytes_and_base(
         "{different}"
     );
     assert_eq!(
-        different["candidate"]["reload_submission"], preview["candidate"]["reload_submission"],
-        "same ordered arities and effect count"
+        different["checks"]["inert_submission"]["expectation"],
+        reviewed["checks"]["inert_submission"]["expectation"],
+        "same ordered arities and effect count, truly compared"
+    );
+    assert_eq!(
+        different["comparison"]["interface_equal"], true,
+        "the ordered interface really is unchanged: {different}"
+    );
+    assert_eq!(
+        different["comparison"]["installed"]["interface"],
+        different["comparison"]["candidate"]["interface"],
+        "complete ordered stack tails and effects agree"
     );
     assert_ne!(
         text_field(&different["candidate"], "sha256"),
-        candidate_sha256
+        text_field(&reviewed["candidate"], "sha256"),
+        "different source bytes have the same inferred interface"
     );
     assert_eq!(
         text_field(&different["comparison"], "equivalence"),
         "not-established"
     );
+    live.finish()
+}
+
+/// Issue #77 item 1: the preview names the changed target and both current
+/// transitive dependents while a saved old Program stays bound to its original
+/// dependency, and the explicit installation then rebuilds the dependents.
+#[test]
+fn preview_reports_transitive_dependents_before_installation(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    live_ack(&live.report()?, &[]);
+    for line in [
+        "def twice [ addone addone ]",
+        "def four [ twice twice ]",
+        "def unrelated [ 10 + ]",
+    ] {
+        assert_eq!(
+            text_field(&live.submit(line)?, "outcome"),
+            "defined",
+            "{line}"
+        );
+    }
+    let saved = live.submit("[ addone ]")?;
+    assert_eq!(saved["stack"][0]["type"], "Program");
+    let before = live.submit(":generation")?;
+    let generation = number_field(&before, "generation");
+    let stack_before = before["stack"].clone();
+
+    fixture.replace("def addone [ 2 + ]")?;
+    let preview = live.submit(&format!(":preview {}", fixture.source.display()))?;
+    assert_eq!(text_field(&preview, "outcome"), "previewed", "{preview}");
     assert_eq!(
-        text_field(&different["comparison"], "equivalence"),
-        "not-established"
+        preview["dependents"]["rebuild"],
+        serde_json::json!(["twice", "four"]),
+        "every current transitive dependent is named: {preview}"
     );
+    assert_eq!(number_field(&preview["base"], "generation"), generation);
+    assert_eq!(
+        preview["comparison"]["interface_equal"], true,
+        "the replacement keeps the ordered interface: {preview}"
+    );
+
+    // The preview itself installs, stages and executes nothing.
+    let after_preview = live.submit(":generation")?;
+    assert_eq!(number_field(&after_preview, "generation"), generation);
+    assert_eq!(after_preview["stack"], stack_before);
+
+    // The explicit installation consumes the reference and rebuilds both
+    // dependents; the saved Program keeps its original dependency.
+    let installed = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&installed, "outcome"),
+        "reload-committed",
+        "{installed}"
+    );
+    assert_eq!(text_field(&installed, "preview_token"), "consumed");
+    assert_eq!(number_field(&installed, "generation"), generation + 1);
+    assert_eq!(
+        installed["stack"], stack_before,
+        "the saved Program is untouched"
+    );
+    normal(&live.submit("20 swap run")?, &["21"]);
+    normal(&live.submit("20 four")?, &["21", "28"]);
+    normal(&live.submit("20 unrelated")?, &["21", "28", "30"]);
+    live.finish()
+}
+
+/// Issue #77 item 5: a changed base namespace refuses the installation with its
+/// own message, the reference stays stale, and only a new preview binds the new
+/// base.
+#[test]
+fn preview_binds_its_base_namespace_and_refuses_after_the_base_moved(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    live_ack(&live.report()?, &[]);
+    fixture.replace("def addone [ 2 + ]")?;
+    let preview = live.submit(&format!(":preview {}", fixture.source.display()))?;
+    assert_eq!(text_field(&preview, "outcome"), "previewed", "{preview}");
+    assert_eq!(number_field(&preview["base"], "generation"), 1);
+
+    // A direct definition install advances the base namespace generation.
+    assert_eq!(
+        text_field(&live.submit("def other [ 5 + ]")?, "outcome"),
+        "defined"
+    );
+    let refused = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&refused, "outcome"),
+        "reload-refused",
+        "{refused}"
+    );
+    assert!(
+        text_field(&refused, "diagnostic")
+            .contains("base namespace changed after the preview; preview again"),
+        "{refused}"
+    );
+    assert_eq!(
+        text_field(&refused, "preview_state"),
+        "stale-retained-reference"
+    );
+    assert_eq!(number_field(&refused, "generation"), 2);
+
+    // The stale marker keeps refusing the same bytes, even in the new base.
+    let again = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(text_field(&again, "outcome"), "reload-refused", "{again}");
+    assert_eq!(again["preview_repeated"], true);
+    assert_eq!(number_field(&again, "generation"), 2);
+
+    // A new preview binds the moved base and the installation then commits.
+    let reviewed = live.submit(&format!(":preview {}", fixture.source.display()))?;
+    assert_eq!(text_field(&reviewed, "outcome"), "previewed", "{reviewed}");
+    assert_eq!(number_field(&reviewed["base"], "generation"), 2);
+    let committed = live.submit(&format!(":reload {}", fixture.source.display()))?;
+    assert_eq!(
+        text_field(&committed, "outcome"),
+        "reload-committed",
+        "{committed}"
+    );
+    assert_eq!(text_field(&committed, "preview_token"), "consumed");
+    assert_eq!(number_field(&committed, "generation"), 3);
+    live.finish()
+}
+
+/// Issue #77 item 3: every refusal class keeps its own typed kind, its unchanged
+/// diagnostic and the measured installed state.
+#[test]
+fn preview_refusals_keep_their_own_classes() -> Result<(), Box<dyn std::error::Error>> {
+    // An interface change.
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    live_ack(&live.report()?, &[]);
+    fixture.replace("def addone [ 1 + 1 ]")?;
+    let refused = live.submit(&format!(":preview {}", fixture.source.display()))?;
+    assert_preview_refusal(&refused, "interface-change");
+    assert!(
+        text_field(&refused["refusal"], "reason").contains("stack interface"),
+        "{refused}"
+    );
+    assert_eq!(text_field(&refused["refusal"], "stage"), "acceptance");
+    assert_eq!(text_field(&refused["refusal"], "category"), "invalid");
+    assert_eq!(number_field(&refused["base"], "generation"), 1);
+    assert_eq!(refused["installed_state"]["namespace_changed"], false);
+    live.finish()
+}
+
+#[test]
+fn preview_reports_effect_growth_as_its_own_refusal_class() -> Result<(), Box<dyn std::error::Error>>
+{
+    let fixture = Fixture::new("def evolve [ self.generation drop 1 + ]")?;
+    let mut live = LiveChild::start_with_grant(&fixture.source, "evolve", 1)?;
+    live_ack(&live.report()?, &[]);
+    assert_grant(&live, 1)?;
+    fixture.replace(EVOLVE)?;
+
+    let refused = live.submit(&format!(":preview {}", fixture.source.display()))?;
+    assert_preview_refusal(&refused, "effect-growth");
+    assert!(
+        text_field(&refused["refusal"], "reason").contains("increases effects"),
+        "the class keeps its source diagnostic: {refused}"
+    );
+    assert_eq!(text_field(&refused["refusal"], "stage"), "acceptance");
+    assert_eq!(text_field(&refused["refusal"], "category"), "invalid");
+    assert_eq!(refused["installed_state"]["grant"]["before"], "evolve");
+    assert_eq!(refused["installed_state"]["grant"]["after"], "evolve");
+    live.finish()
+}
+
+#[test]
+fn preview_refuses_a_self_rebind_and_a_declared_profile() -> Result<(), Box<dyn std::error::Error>>
+{
+    let rebound = Fixture::new("def f [ 1 + ]")?;
+    let mut live = LiveChild::start(&rebound.source)?;
+    live_ack(&live.report()?, &[]);
+    assert_eq!(
+        text_field(&live.submit("def g [ f ]")?, "outcome"),
+        "defined"
+    );
+    assert_eq!(
+        text_field(&live.submit("def h [ g ]")?, "outcome"),
+        "defined"
+    );
+    rebound.replace("def f [ h ]")?;
+    let refused = live.submit(&format!(":preview {}", rebound.source.display()))?;
+    assert_preview_refusal(&refused, "self-rebind");
+    assert!(
+        text_field(&refused["refusal"], "reason").contains("previous identity"),
+        "{refused}"
+    );
+    live.finish()?;
+
+    // A declared-modules session has immutable module roots, not replaceable
+    // Core definitions, so its preview is an unsupported profile, not a guess.
+    let declared = Fixture::new("module Definitions@5 [ export step def step [ 1 + ] ]")?;
+    let bindings = declared.directory.join("bindings.txt");
+    fs::write(&bindings, "")?;
+    let mut declared_live = LiveChild::start_declared(&declared.source, &bindings)?;
+    live_ack(&declared_live.report()?, &[]);
+    let refused = declared_live.submit(&format!(":preview {}", declared.source.display()))?;
+    assert_preview_refusal(&refused, "unsupported-profile");
+    assert!(
+        text_field(&refused["refusal"], "reason").contains("declared-modules"),
+        "{refused}"
+    );
+    declared_live.finish()
+}
+
+#[test]
+fn preview_refuses_a_non_definition_candidate_as_unsupported_profile(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    live_ack(&live.report()?, &[]);
+    fixture.replace("1")?;
+
+    let refused = live.submit(&format!(":preview {}", fixture.source.display()))?;
+    assert_preview_refusal(&refused, "unsupported-profile");
+    assert_eq!(refused["refusal"]["stage"], Value::Null);
+    assert!(
+        text_field(&refused["refusal"], "reason").contains("one checked definition"),
+        "a candidate that is an expression has no source-stage provenance: {refused}"
+    );
+    live.finish()
+}
+
+/// Issue #77 item 3: an exhausted dependent replay is its own class and the
+/// unchanged budget diagnostic stays beside it.
+#[test]
+fn preview_refuses_an_exhausted_dependent_replay() -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new("def addone [ 1 + ]")?;
+    let mut live = LiveChild::start(&fixture.source)?;
+    live_ack(&live.report()?, &[]);
+    let dependent = format!(
+        "def twice [ addone addone \"{}\" drop ]",
+        "x".repeat(33_000)
+    );
+    assert_eq!(text_field(&live.submit(&dependent)?, "outcome"), "defined");
+    normal(&live.submit("20 twice")?, &["22"]);
+    let generation = live.submit(":generation")?;
+    fixture.replace("def addone [ 2 + ]")?;
+    let refused = live.submit(&format!(":preview {}", fixture.source.display()))?;
+    assert_preview_refusal(&refused, "work-exhausted");
+    assert!(
+        text_field(&refused["refusal"], "reason").contains("byte limit"),
+        "{refused}"
+    );
+    assert_eq!(text_field(&refused["refusal"], "category"), "exhausted");
+    assert_eq!(
+        number_field(&refused["base"], "generation"),
+        number_field(&generation, "generation")
+    );
+    normal(&live.submit("20 twice")?, &["22", "22"]);
+    live.finish()
+}
+
+fn assert_preview_refusal(report: &Value, kind: &str) {
+    assert_eq!(text_field(report, "schema"), "noble-live-preview/v1");
+    assert_eq!(text_field(report, "outcome"), "refused", "{report}");
+    assert_eq!(text_field(&report["refusal"], "kind"), kind, "{report}");
+    assert!(
+        !text_field(&report["refusal"], "reason").is_empty(),
+        "every refusal keeps its diagnostic: {report}"
+    );
+    assert_eq!(report["installed_state"]["staged_binaries"], 0, "{report}");
+    assert_eq!(report["installed_state"]["grants_consumed"], 0, "{report}");
+}
+
+fn assert_preview_did_not_mutate_installed_state(report: &Value) {
+    let state = &report["installed_state"];
+    for field in ["generation", "submissions", "live_code_entries"] {
+        assert_eq!(
+            state[field]["before"], state[field]["after"],
+            "{field} changed: {report}"
+        );
+    }
+    assert_eq!(
+        state["grant"]["before"], state["grant"]["after"],
+        "{report}"
+    );
+    assert_eq!(state["namespace_changed"], false, "{report}");
+    for field in [
+        "staged_binaries",
+        "grants_consumed",
+        "submissions_charged",
+        "guest_requests",
+        "protected_operations",
+    ] {
+        assert_eq!(number_field(state, field), 0, "{field}: {report}");
+    }
+    assert_eq!(
+        text_field(state, "selected_source_acknowledgement"),
+        "unchanged",
+        "{report}"
+    );
+}
+
+/// Issue #77 item 4: the installed-state counters are measured before and after
+/// the operation, and an active `:grant-self-edit` grant survives preview and
+/// cancel.
+#[test]
+fn preview_measures_installed_state_and_preserves_an_active_grant(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = Fixture::new(EVOLVE)?;
+    let mut live = LiveChild::start_with_grant(&fixture.source, "evolve", 1)?;
+    live_ack(&live.report()?, &[]);
+    assert_grant(&live, 1)?;
+
+    let preview = live.submit(&format!(":preview {}", fixture.source.display()))?;
+    assert_eq!(text_field(&preview, "outcome"), "previewed", "{preview}");
+    assert_preview_did_not_mutate_installed_state(&preview);
+    let measured = &preview["installed_state"];
+    assert_eq!(text_field(&measured["grant"], "before"), "evolve");
+    assert_eq!(text_field(&measured["grant"], "after"), "evolve");
+    assert_eq!(number_field(measured, "grants_consumed"), 0);
+    assert_eq!(number_field(&measured["generation"], "before"), 1);
+    assert_eq!(number_field(&measured["generation"], "after"), 1);
+    assert!(
+        preview["comparison"]["installed"]["installed_identity"].is_u64(),
+        "a session grant names the definition, so its installed identity is reported: {preview}"
+    );
+    let effects = preview["comparison"]["installed"]["interface"]["effects"]
+        .as_array()
+        .ok_or("ordered effect list")?;
+    assert!(
+        effects.contains(&serde_json::json!("live.propose")),
+        "the rendered ordered interface names its effects: {preview}"
+    );
+    assert!(
+        effects.contains(&serde_json::json!("live.observe-generation")),
+        "{preview}"
+    );
+
+    let cancelled = live.submit(":preview cancel")?;
+    assert_eq!(
+        text_field(&cancelled, "outcome"),
+        "cancelled",
+        "{cancelled}"
+    );
+    assert_preview_did_not_mutate_installed_state(&cancelled);
+    assert_eq!(
+        text_field(&cancelled["installed_state"]["grant"], "after"),
+        "evolve"
+    );
+    assert_eq!(
+        number_field(&cancelled["installed_state"], "grants_consumed"),
+        0
+    );
+    assert_eq!(
+        text_field(
+            &cancelled["installed_state"],
+            "selected_source_acknowledgement"
+        ),
+        "unchanged"
+    );
+
+    // The grant is still active: the guest proposal runs and commits.
+    normal(&live.submit("20 evolve")?, &["21"]);
+    assert_eq!(text_field(&live.report()?, "outcome"), "proposal-pending");
+    let committed = live.report()?;
+    assert_eq!(text_field(&committed, "outcome"), "proposal-committed");
     live.finish()
 }

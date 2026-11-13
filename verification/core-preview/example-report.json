@@ -2,18 +2,18 @@
   "base": {
     "generation": 1,
     "installed_definition": "addone",
-    "installed_identity": null,
-    "installed_identity_scope": "unavailable when the session grant names no definition",
+    "installed_identity": 1,
+    "installed_identity_scope": "session-local identity from the installed namespace at the base generation; not portable or authority",
     "path": "math.noble",
     "submissions": 1
   },
   "candidate": {
-    "bytes": 19,
+    "bytes": 18,
     "definition": "addone",
     "identity_scope": "prospective-not-installed",
     "path": "math.noble",
     "prospective_identity": 1,
-    "sha256": "552a03e51b581c4598dbc9f9e8588221c3544fe9809b19aca6322238c11b5499"
+    "sha256": "53cc6e3c29882e66faef3ef6c1890b22348bffa07722c8270565df5dd4a3905b"
   },
   "checks": {
     "backend_admission": "not-run",
@@ -29,16 +29,66 @@
         "stack_in": 0,
         "stack_out": 0
       },
-      "scope": "the empty-body submission this preview prepared; it is not either definition's interface"
+      "scope": "the empty-body submission this preview prepared against the current session stack; it describes that stack, not either definition's interface"
     },
     "publication": "not-run",
     "source_preparation": "passed"
   },
   "comparison": {
     "behaviour": "not-compared",
+    "candidate": {
+      "identity_scope": "prospective-not-installed",
+      "interface": {
+        "effects": [],
+        "effects_scope": "session-declared host-effect identities, by reserved spelling where one exists",
+        "effects_unresolved": false,
+        "source": "ordered static inference over the retained source; not a runtime observation",
+        "stack_in": {
+          "depth": 1,
+          "values": [
+            "I64"
+          ]
+        },
+        "stack_in_tail": "unconstrained",
+        "stack_out": {
+          "depth": 1,
+          "values": [
+            "I64"
+          ]
+        },
+        "stack_out_tail": "unconstrained"
+      },
+      "prospective_identity": 1,
+      "subject": "prospective"
+    },
+    "equality_scope": "the ordered inferred input/output types and admitted effects only; equal descriptions are not behavioural equivalence and not acceptance",
     "equivalence": "not-established",
-    "interface": "unavailable-not-exposed-by-this-preview",
-    "interface_reason": "the preview checks replacement compatibility and exposes neither definition's ordered interface",
+    "installed": {
+      "identity_scope": "installed-at-base-generation",
+      "installed_identity": 1,
+      "interface": {
+        "effects": [],
+        "effects_scope": "session-declared host-effect identities, by reserved spelling where one exists",
+        "effects_unresolved": false,
+        "source": "ordered static inference over the retained source; not a runtime observation",
+        "stack_in": {
+          "depth": 1,
+          "values": [
+            "I64"
+          ]
+        },
+        "stack_in_tail": "unconstrained",
+        "stack_out": {
+          "depth": 1,
+          "values": [
+            "I64"
+          ]
+        },
+        "stack_out_tail": "unconstrained"
+      },
+      "subject": "installed"
+    },
+    "interface_equal": true,
     "reason": "behaviour is not compared by a preview, and passed structural checks establish neither equivalence nor termination"
   },
   "dependents": {
@@ -46,15 +96,38 @@
     "scope": "current named dependents whose resolved calls reach the replaced definition"
   },
   "discarded_previous": false,
-  "installed": {
-    "identity_scope": "installed-at-base-generation"
-  },
   "installed_state": {
+    "generation": {
+      "after": 1,
+      "before": 1
+    },
+    "grant": {
+      "after": null,
+      "before": null
+    },
     "grants_consumed": 0,
     "guest_requests": 0,
+    "live_code_entries": {
+      "after": 1,
+      "before": 1
+    },
+    "measurement_scope": "before and after the operation, from the session's own generation, submission count, grant selection, live-code registry and selected-file acknowledgement",
     "namespace_changed": false,
     "protected_operations": 0,
-    "staged_binaries": 0
+    "selected_source_acknowledgement": "unchanged",
+    "staged_binaries": 0,
+    "submissions": {
+      "after": 1,
+      "before": 1
+    },
+    "submissions_charged": 0,
+    "unreachable": {
+      "fields": [
+        "guest_requests",
+        "protected_operations"
+      ],
+      "reason": "this path holds no worker and issues no guest request; those two counters are structural constants here"
+    }
   },
   "outcome": "previewed",
   "schema": "noble-live-preview/v1",
@@ -62,6 +135,6 @@
   "token": {
     "authority": "comparison-reference-not-publication-authority",
     "base_generation": 1,
-    "sha256": "552a03e51b581c4598dbc9f9e8588221c3544fe9809b19aca6322238c11b5499"
+    "sha256": "53cc6e3c29882e66faef3ef6c1890b22348bffa07722c8270565df5dd4a3905b"
   }
 }

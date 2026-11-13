@@ -135,6 +135,118 @@ impl DefinitionInterface {
     }
 }
 
+/// Whether one inferred stack side ends in a concrete stack or still admits an
+/// unconstrained tail variable. An open side is reported as open rather than
+/// padded with invented entries.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[octet::sealed_enum]
+pub enum InterfaceTail {
+    Closed,
+    Unconstrained,
+}
+
+impl InterfaceTail {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Closed => "closed",
+            Self::Unconstrained => "unconstrained",
+        }
+    }
+}
+
+/// The ordered, statically inferred interface of one definition: both stack
+/// sides in source order (bottom first), whether each still ends in an
+/// unconstrained stack variable, and the finite host-effect identities its
+/// latent bound admits. `unresolved_effects` says the effect set is not finite
+/// and therefore not fully reported.
+///
+/// This is an inference result over one checked definition. It is not a runtime
+/// observation, not evidence of behavioural equivalence and never acceptance.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct OrderedInterface {
+    pub stack_in: alloc::vec::Vec<alloc::string::String>,
+    pub stack_in_tail: InterfaceTail,
+    pub stack_out: alloc::vec::Vec<alloc::string::String>,
+    pub stack_out_tail: InterfaceTail,
+    pub effects: alloc::vec::Vec<u32>,
+    pub unresolved_effects: bool,
+}
+
+/// Why a live Core replacement preview was refused, as a typed class.
+///
+/// The class names the contract that refused, so a caller never infers a cause
+/// from a checking stage. The diagnostics of each class stay distinct and are
+/// carried unchanged by [`PreviewError`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[octet::sealed_enum]
+pub enum PreviewRefusal {
+    /// The session profile or the candidate is not one replaceable checked
+    /// definition: a bindings or declared-modules session, another namespace
+    /// snapshot, or a candidate that is not a definition.
+    UnsupportedProfile,
+    /// The replacement's ordered stack interface differs.
+    InterfaceChanged,
+    /// The replacement admits an effect the installed definition does not.
+    EffectGrowth,
+    /// The replacement transitively depends on its own previous identity.
+    SelfRebind,
+    /// A retained dependent no longer rebuilds to its own name, effects or
+    /// resolved call targets.
+    DependentRebuild,
+    /// The dependency walk, comparison or dependent replay exhausted its work or
+    /// source budget.
+    WorkExhausted,
+    /// A retained dependent's own retained source is missing or malformed.
+    RetainedSource,
+    /// The comparison itself returned a diagnostic this class cannot name; the
+    /// original diagnostic is preserved.
+    ComparisonFailed,
+}
+
+impl PreviewRefusal {
+    /// Stable machine-facing spelling of this class.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::UnsupportedProfile => "unsupported-profile",
+            Self::InterfaceChanged => "interface-change",
+            Self::EffectGrowth => "effect-growth",
+            Self::SelfRebind => "self-rebind",
+            Self::DependentRebuild => "dependent-rebuild",
+            Self::WorkExhausted => "work-exhausted",
+            Self::RetainedSource => "retained-source",
+            Self::ComparisonFailed => "comparison-failed",
+        }
+    }
+}
+
+/// A refused live Core preview: the typed class that refused and the unchanged
+/// diagnostic that was decided on.
+#[derive(Clone, Debug)]
+pub struct PreviewError {
+    kind: PreviewRefusal,
+    error: Error,
+}
+
+impl PreviewError {
+    const fn new(kind: PreviewRefusal, error: Error) -> Self {
+        Self { kind, error }
+    }
+    pub const fn kind(&self) -> PreviewRefusal {
+        self.kind
+    }
+    pub const fn error(&self) -> &Error {
+        &self.error
+    }
+    pub const fn diagnostic(&self) -> &crate::Diagnostic {
+        self.error.diagnostic()
+    }
+    /// The stage the interrupted check stopped in. It is provenance beside the
+    /// class, never a substitute for it.
+    pub const fn stage(&self) -> Stage {
+        self.error.stage()
+    }
+}
+
 /// Parse host-selected Core interface words with the source type parser.
 /// The C source-only caller separately checks this against kernel acceptance
 /// and still refuses value forms its emitter cannot lower.
@@ -746,6 +858,12 @@ impl Session {
         if self.live_selected.as_deref() != Some(name) {
             return None;
         }
+        self.installed_definition_identity(name)
+    }
+
+    /// Immutable identity of the current definition named `name`, independent
+    /// of whether the live self-edit grant selects it.
+    pub fn installed_definition_identity(&self, name: &str) -> Option<u64> {
         self.definitions
             .iter()
             .rev()
@@ -847,22 +965,28 @@ impl Session {
     /// Build one private successor containing a replacement and every current
     /// definition whose immutable resolved calls reach its previous identity.
     /// Historical definitions stay in place for already captured Programs.
-    pub fn preview_core_rebuild(&self, prepared: &Prepared) -> Result<Self, Error> {
+    pub fn preview_core_rebuild(&self, prepared: &Prepared) -> Result<Self, PreviewError> {
         let span = crate::Span { start: 0, end: 0 };
         if !prepared.is_definition()
             || self.bindings.is_some()
             || self.declared.is_some()
             || !self.is_current_namespace(prepared)
         {
-            return Err(Error::at(
-                Stage::Acceptance,
-                crate::invalid(span, "live Core preview requires a checked definition"),
+            return Err(classify(
+                PreviewRefusal::UnsupportedProfile,
+                Error::at(
+                    Stage::Acceptance,
+                    crate::invalid(span, "live Core preview requires a checked definition"),
+                ),
             ));
         }
         let Some(replacement) = prepared.definition.as_ref() else {
-            return Err(Error::at(
-                Stage::Acceptance,
-                crate::invalid(span, "live Core preview requires a definition"),
+            return Err(classify(
+                PreviewRefusal::UnsupportedProfile,
+                Error::at(
+                    Stage::Acceptance,
+                    crate::invalid(span, "live Core preview requires a definition"),
+                ),
             ));
         };
         let name = &replacement.name;
@@ -871,33 +995,61 @@ impl Session {
             .iter()
             .rposition(|definition| definition.name == *name);
         if let Some(index) = original {
-            let is_compatible = replacement::compatible(
+            let compatibility = replacement::compatible(
                 self,
                 &self.definitions[index],
                 replacement,
                 prepared.limits,
             )
-            .map_err(|diagnostic| Error::at(Stage::Check, diagnostic))?;
-            if !is_compatible {
-                return Err(Error::at(
-                    Stage::Acceptance,
-                    crate::invalid(
-                        span,
-                        "live replacement changes the checked stack interface or increases effects",
-                    ),
-                ));
+            .map_err(|diagnostic| {
+                classify_diagnostic(
+                    PreviewRefusal::ComparisonFailed,
+                    Error::at(Stage::Check, diagnostic),
+                )
+            })?;
+            match compatibility {
+                replacement::Compatibility::Compatible => {}
+                replacement::Compatibility::InterfaceChanged => {
+                    return Err(classify(
+                        PreviewRefusal::InterfaceChanged,
+                        Error::at(
+                            Stage::Acceptance,
+                            crate::invalid(
+                                span,
+                                "live replacement changes the checked stack interface",
+                            ),
+                        ),
+                    ));
+                }
+                replacement::Compatibility::EffectGrowth => {
+                    return Err(classify(
+                        PreviewRefusal::EffectGrowth,
+                        Error::at(
+                            Stage::Acceptance,
+                            crate::invalid(
+                                span,
+                                "live replacement increases effects beyond the installed bound",
+                            ),
+                        ),
+                    ));
+                }
             }
-            if reaches_index(
+            let is_self_rebind = reaches_index(
                 &replacement.tree,
                 &self.definitions,
                 index,
                 prepared.limits.work,
-            )? {
-                return Err(Error::at(
-                    Stage::Acceptance,
-                    crate::invalid(
-                        span,
-                        "live replacement transitively depends on its previous identity",
+            )
+            .map_err(|error| classify_diagnostic(PreviewRefusal::ComparisonFailed, error))?;
+            if is_self_rebind {
+                return Err(classify(
+                    PreviewRefusal::SelfRebind,
+                    Error::at(
+                        Stage::Acceptance,
+                        crate::invalid(
+                            span,
+                            "live replacement transitively depends on its previous identity",
+                        ),
                     ),
                 ));
             }
@@ -916,7 +1068,9 @@ impl Session {
             bindings: None,
             declared: None,
         };
-        successor.commit(prepared.clone())?;
+        successor
+            .commit(prepared.clone())
+            .map_err(|error| classify_diagnostic(PreviewRefusal::UnsupportedProfile, error))?;
         let mut replacements = alloc::vec![None; self.definitions.len()];
         if let Some(index) = original {
             replacements[index] = Some(self.definitions.len());
@@ -924,32 +1078,45 @@ impl Session {
         let replay_work =
             prepared.limits.work / u32::try_from(dependents.len().max(1)).unwrap_or(u32::MAX);
         if replay_work == 0 {
-            return Err(Error::at(
-                Stage::Acceptance,
-                exhausted(span, "live dependent rebuild work limit exceeded"),
+            return Err(classify(
+                PreviewRefusal::WorkExhausted,
+                Error::at(
+                    Stage::Acceptance,
+                    exhausted(span, "live dependent rebuild work limit exceeded"),
+                ),
             ));
         }
         for index in dependents {
-            let bytes = self.definition_source(index)?;
+            let bytes = self
+                .definition_source(index)
+                .map_err(|error| classify_diagnostic(PreviewRefusal::RetainedSource, error))?;
             let limits = crate::Limits {
                 work: replay_work,
                 ..prepared.limits
             };
-            let dependent = successor.prepare(bytes, &[], limits)?;
+            let dependent = successor
+                .prepare(bytes, &[], limits)
+                .map_err(|error| classify_diagnostic(PreviewRefusal::DependentRebuild, error))?;
             let Some(rebuilt) = dependent.definition.as_ref() else {
-                return Err(Error::at(
-                    Stage::Acceptance,
-                    crate::invalid(span, "retained dependent source is not a definition"),
+                return Err(classify(
+                    PreviewRefusal::DependentRebuild,
+                    Error::at(
+                        Stage::Acceptance,
+                        crate::invalid(span, "retained dependent source is not a definition"),
+                    ),
                 ));
             };
             if rebuilt.name != self.definitions[index].name
                 || successor.core_definition_requires_host_effects(&dependent)
             {
-                return Err(Error::at(
-                    Stage::Acceptance,
-                    crate::invalid(
-                        span,
-                        "retained dependent changed name or requires unavailable host effects",
+                return Err(classify(
+                    PreviewRefusal::DependentRebuild,
+                    Error::at(
+                        Stage::Acceptance,
+                        crate::invalid(
+                            span,
+                            "retained dependent changed name or requires unavailable host effects",
+                        ),
                     ),
                 ));
             }
@@ -958,26 +1125,76 @@ impl Session {
                 &rebuilt.tree,
                 &replacements,
             ) {
-                return Err(Error::at(
-                    Stage::Acceptance,
-                    crate::invalid(
-                        span,
-                        "retained dependent changed an unapproved resolved call target",
+                return Err(classify(
+                    PreviewRefusal::DependentRebuild,
+                    Error::at(
+                        Stage::Acceptance,
+                        crate::invalid(
+                            span,
+                            "retained dependent changed an unapproved resolved call target",
+                        ),
                     ),
                 ));
             }
-            let is_compatible =
+            let compatibility =
                 replacement::compatible(&successor, &self.definitions[index], rebuilt, limits)
-                    .map_err(|diagnostic| Error::at(Stage::Check, diagnostic))?;
-            if !is_compatible {
-                return Err(Error::at(Stage::Acceptance, crate::invalid(
-                    span, "rebuilt dependent changes the checked stack interface or increases effects",
-                )));
+                    .map_err(|diagnostic| {
+                        classify_diagnostic(
+                            PreviewRefusal::DependentRebuild,
+                            Error::at(Stage::Check, diagnostic),
+                        )
+                    })?;
+            if compatibility != replacement::Compatibility::Compatible {
+                return Err(classify(
+                    PreviewRefusal::DependentRebuild,
+                    Error::at(
+                        Stage::Acceptance,
+                        crate::invalid(
+                            span,
+                            "rebuilt dependent changes the checked stack interface or increases effects",
+                        ),
+                    ),
+                ));
             }
             replacements[index] = Some(successor.definitions.len());
-            successor.commit(dependent)?;
+            successor
+                .commit(dependent)
+                .map_err(|error| classify_diagnostic(PreviewRefusal::DependentRebuild, error))?;
         }
         Ok(successor)
+    }
+
+    /// The ordered, statically inferred interface of the current definition
+    /// named `name`, if this namespace holds one.
+    pub fn installed_ordered_interface(
+        &self,
+        name: &str,
+        limits: crate::Limits,
+    ) -> Result<Option<OrderedInterface>, Error> {
+        let Some(definition) = self
+            .definitions
+            .iter()
+            .rfind(|definition| definition.name == name)
+        else {
+            return Ok(None);
+        };
+        replacement::ordered(self, definition, limits)
+            .map(Some)
+            .map_err(|diagnostic| Error::at(Stage::Check, diagnostic))
+    }
+
+    /// The ordered, statically inferred interface of one prepared candidate
+    /// definition, checked against this namespace's environment.
+    pub fn candidate_ordered_interface(
+        &self,
+        prepared: &Prepared,
+    ) -> Result<Option<OrderedInterface>, Error> {
+        let Some(definition) = prepared.definition.as_ref() else {
+            return Ok(None);
+        };
+        replacement::ordered(self, definition, prepared.limits)
+            .map(Some)
+            .map_err(|diagnostic| Error::at(Stage::Check, diagnostic))
     }
 
     /// Never reconstruct a dependent from its already-resolved tree: the
@@ -1220,6 +1437,21 @@ fn exhausted(span: crate::Span, message: &str) -> crate::Diagnostic {
     crate::Diagnostic::new(crate::DiagnosticKind::Exhausted, span, message)
 }
 
+const fn classify(kind: PreviewRefusal, error: Error) -> PreviewError {
+    classify_diagnostic(kind, error)
+}
+
+/// A budget refusal is always the same class wherever it is met, so an exhausted
+/// diagnostic overrides the class its call site would otherwise name. Every
+/// other diagnostic keeps the class of the contract that refused.
+const fn classify_diagnostic(kind: PreviewRefusal, error: Error) -> PreviewError {
+    let kind = match error.diagnostic().kind {
+        crate::DiagnosticKind::Exhausted => PreviewRefusal::WorkExhausted,
+        _ => kind,
+    };
+    PreviewError::new(kind, error)
+}
+
 /// The source test environment is explicit, resource-free, and fixed. The old
 /// checker's Text--Unit host contract remains unchanged outside source.
 #[expect(
@@ -1315,7 +1547,7 @@ fn live_environment() -> Result<noble_kernel::contracts::Env, crate::Diagnostic>
 )]
 #[cfg(test)]
 mod tests {
-    use super::{DefinitionInterface, Session};
+    use super::{DefinitionInterface, PreviewRefusal, Session};
 
     fn live_limits() -> crate::Limits {
         crate::Limits {
@@ -1665,6 +1897,204 @@ mod tests {
         );
         assert_eq!(session.current_dependent_names("addone"), ["twice", "four"]);
         assert_eq!(preview.current_dependent_names("addone"), ["twice", "four"]);
+    }
+
+    #[test]
+    fn ordered_interfaces_are_reported_for_installed_and_candidate_definitions() {
+        let limits = crate::Limits {
+            bytes: 65_536,
+            nodes: 16_384,
+            depth: 64,
+            work: 2_000_000,
+        };
+        let mut session = Session::new();
+        for source in [
+            b"def addone [ 1 + ]".as_slice(),
+            b"def twice [ addone addone ]",
+        ] {
+            let prepared = session.prepare(source, &[], limits).unwrap();
+            session.commit(prepared).unwrap();
+        }
+        // One ordered I64 in and one ordered I64 out, with the unconstrained
+        // stack tail the checker inferred left explicit rather than padded.
+        let installed = session
+            .installed_ordered_interface("addone", limits)
+            .unwrap()
+            .unwrap();
+        assert_eq!(installed.stack_in, ["I64"]);
+        assert_eq!(installed.stack_in_tail, super::InterfaceTail::Unconstrained);
+        assert_eq!(installed.stack_out, ["I64"]);
+        assert_eq!(
+            installed.stack_out_tail,
+            super::InterfaceTail::Unconstrained
+        );
+        assert!(installed.effects.is_empty());
+        assert!(!installed.unresolved_effects);
+        let installed_identity = session
+            .installed_definition_identity("addone")
+            .expect("the current definition has an installed identity");
+
+        // A same-name candidate that consumes one more operand has a different
+        // ordered interface, so the prose "same arities" claim is not assumed.
+        let reordered = session
+            .prepare(b"def addone [ 1 + 1 ]", &[], limits)
+            .unwrap();
+        let prospective = session
+            .candidate_ordered_interface(&reordered)
+            .unwrap()
+            .unwrap();
+        assert_eq!(prospective.stack_in, ["I64"]);
+        assert_eq!(prospective.stack_out, ["I64", "I64"]);
+        assert_ne!(
+            installed.stack_out, prospective.stack_out,
+            "an extra result is an interface change"
+        );
+        // The candidate's identity is prospective and distinct from the
+        // installed definition's; neither accessor publishes anything.
+        assert_ne!(reordered.definition_identity(), Some(installed_identity));
+
+        assert!(session
+            .installed_ordered_interface("absent", limits)
+            .unwrap()
+            .is_none());
+        assert_eq!(session.installed_definition_identity("absent"), None);
+        let submission = session
+            .prepare(b"1 +", &[noble_kernel::types::Ty::I64], limits)
+            .unwrap();
+        assert!(session
+            .candidate_ordered_interface(&submission)
+            .unwrap()
+            .is_none());
+    }
+
+    #[test]
+    fn preview_classifies_interface_changes() {
+        let limits = live_limits();
+        let mut session = Session::new();
+        let prepared = session.prepare(b"def addone [ 1 + ]", &[], limits).unwrap();
+        session.commit(prepared).unwrap();
+        let replacement = session
+            .prepare(b"def addone [ 1 + 1 ]", &[], limits)
+            .unwrap();
+        let failure = session.preview_core_rebuild(&replacement).unwrap_err();
+        assert_eq!(failure.kind(), PreviewRefusal::InterfaceChanged);
+        assert_eq!(failure.kind().as_str(), "interface-change");
+        assert!(
+            failure.diagnostic().message.contains("stack interface"),
+            "{failure:?}"
+        );
+    }
+
+    #[test]
+    fn preview_classifies_effect_growth_before_interface_drift() {
+        let limits = live_limits();
+        let mut live = Session::new_live("evolve");
+        let prepared = live
+            .prepare(b"def evolve [ self.generation drop 1 + ]", &[], limits)
+            .unwrap();
+        live.commit(prepared).unwrap();
+        let growth = live
+            .prepare(
+                b"def evolve [ dup 18 - quote [ + ] compose self.generation \
+                  swap self.propose drop 1 + ]",
+                &[],
+                limits,
+            )
+            .unwrap();
+        let failure = live.preview_core_rebuild(&growth).unwrap_err();
+        assert_eq!(failure.kind(), PreviewRefusal::EffectGrowth);
+        assert!(
+            failure
+                .diagnostic()
+                .message
+                .contains("increases effects beyond the installed bound"),
+            "{failure:?}"
+        );
+    }
+
+    #[test]
+    fn preview_refuses_a_transitive_self_rebind() {
+        let limits = live_limits();
+        let mut rebound = Session::new();
+        for source in [b"def f [ 1 + ]".as_slice(), b"def g [ f ]", b"def h [ g ]"] {
+            let prepared = rebound.prepare(source, &[], limits).unwrap();
+            rebound.commit(prepared).unwrap();
+        }
+        let replacement = rebound.prepare(b"def f [ h ]", &[], limits).unwrap();
+        let failure = rebound.preview_core_rebuild(&replacement).unwrap_err();
+        assert_eq!(failure.kind(), PreviewRefusal::SelfRebind);
+        assert!(
+            failure.diagnostic().message.contains("previous identity"),
+            "{failure:?}"
+        );
+    }
+
+    #[test]
+    fn preview_refuses_dependent_rebuild_drift() {
+        let limits = live_limits();
+        let mut drift = Session::new();
+        for source in [
+            b"def x [ 1 + ]".as_slice(),
+            b"def h [ x ]",
+            b"def c [ h ]",
+            b"def h [ 2 + ]",
+        ] {
+            let prepared = drift.prepare(source, &[], limits).unwrap();
+            drift.commit(prepared).unwrap();
+        }
+        let replacement = drift.prepare(b"def x [ 3 + ]", &[], limits).unwrap();
+        let failure = drift.preview_core_rebuild(&replacement).unwrap_err();
+        assert_eq!(failure.kind(), PreviewRefusal::DependentRebuild);
+        assert!(
+            failure
+                .diagnostic()
+                .message
+                .contains("resolved call target"),
+            "{failure:?}"
+        );
+    }
+
+    #[test]
+    fn preview_classifies_exhausted_replay_as_work_exhausted() {
+        let limits = live_limits();
+        let mut budget = Session::new();
+        let prepared = budget.prepare(b"def addone [ 1 + ]", &[], limits).unwrap();
+        budget.commit(prepared).unwrap();
+        let dependent = alloc::format!(
+            "def twice [ addone addone \"{}\" drop ]",
+            "x".repeat(40_000)
+        );
+        let prepared = budget.prepare(dependent.as_bytes(), &[], limits).unwrap();
+        budget.commit(prepared).unwrap();
+        let replacement = budget.prepare(b"def addone [ 2 + ]", &[], limits).unwrap();
+        let failure = budget.preview_core_rebuild(&replacement).unwrap_err();
+        assert_eq!(failure.kind(), PreviewRefusal::WorkExhausted);
+        assert_eq!(
+            failure.diagnostic().kind,
+            crate::DiagnosticKind::Exhausted,
+            "{failure:?}"
+        );
+        assert!(
+            failure.diagnostic().message.contains("byte limit"),
+            "{failure:?}"
+        );
+    }
+
+    #[test]
+    fn preview_rejects_a_preparation_from_a_stale_namespace() {
+        let limits = live_limits();
+        let mut snapshot = Session::new();
+        let prepared = snapshot
+            .prepare(b"def addone [ 1 + ]", &[], limits)
+            .unwrap();
+        snapshot.commit(prepared).unwrap();
+        let stale = snapshot
+            .prepare(b"def addone [ 2 + ]", &[], limits)
+            .unwrap();
+        let prepared = snapshot.prepare(b"def other [ 5 + ]", &[], limits).unwrap();
+        snapshot.commit(prepared).unwrap();
+        let failure = snapshot.preview_core_rebuild(&stale).unwrap_err();
+        assert_eq!(failure.kind(), PreviewRefusal::UnsupportedProfile);
     }
 
     #[test]

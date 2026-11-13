@@ -492,6 +492,9 @@ impl Live {
                         &error, number, false, false,
                     ))
                 }
+                ReloadDecision::PreviewStale { reason, .. } => {
+                    Ok(self.admission_refusal(&reason, "declared-refused"))
+                }
             };
         }
         self.execute_declared(prepared, source, number)
