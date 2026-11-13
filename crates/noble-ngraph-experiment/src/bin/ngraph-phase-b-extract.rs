@@ -329,7 +329,7 @@ fn run() -> Result<bool, String> {
     records.push(record(
         "B2-I64-differential",
         &["NGRAPH-EXTRACT-01", "NGRAPH-PROOF-01"],
-        "L1 (real CLI, --opt off and on), L2 (Node BigInt mod 2^64), L3 reference, L4 packed and L5 bounded revision-3 net agree under ≡obs on the named vectors (5 3 - = 2, MAX 1 + = MIN, MIN -1 * = MIN, I1–I4) and seeded random Core I64 programs; L2–L4 also agree on the I4 host-step chain",
+        "L1 (real CLI, --opt off and on), L2 (Node BigInt mod 2^64), L3 reference, L4 packed and L5 bounded revision-3 net agree under ≡obs on I1–I4, operand-order and overflow boundaries, Bool equality, Unit/empty output, repeated outputs, nested pairs, fanout, captured recipes, rebound definitions and seeded random Core I64 programs; L2–L4 also agree on the I4 host-step chain",
         k,
         &["NG-PO-A", "NG-PO-B", "NG-PO-C", "PO-17", "PO-18"],
         &[
