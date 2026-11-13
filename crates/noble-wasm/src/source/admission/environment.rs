@@ -122,7 +122,7 @@ pub(super) fn check(
                 || env.live_slots))
         || env.calculator != calculator
         || (calculator && (!env.declared_modules || !env.bound_adapters.is_empty()))
-        || env.checked_i64 != checked_i64
+        || env.has_checked_i64() != checked_i64
         || (checked_i64
             && (live
                 || live_slots

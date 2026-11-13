@@ -407,7 +407,7 @@ fn start(
         live_sites: alloc::vec::Vec::new(),
         text_cursor: submission.environment.text_cursor,
         calculator: submission.environment.calculator,
-        checked_i64: submission.environment.checked_i64,
+        checked_i64: submission.environment.has_checked_i64(),
         has_nominals: !submission.environment.nominals.is_empty()
             || !submission.environment.generic_variants.is_empty(),
         has_core_emit: false,

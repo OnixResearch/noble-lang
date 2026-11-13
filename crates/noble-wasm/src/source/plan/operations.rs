@@ -290,7 +290,7 @@ impl Input<'_> {
                 _ => {}
             }
         }
-        if self.submission.environment.checked_i64 {
+        if self.submission.environment.has_checked_i64() {
             match def.0 {
                 23 => return Ok(super::Action::CheckedI64Add),
                 24 => return Ok(super::Action::CheckedI64Sub),

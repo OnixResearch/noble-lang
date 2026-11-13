@@ -377,7 +377,7 @@ impl Env {
 
     /// The checked-I64 profile is identified by its host-selected builtin
     /// table, keeping legacy environment debug identities unchanged.
-    pub(crate) fn has_checked_i64(&self) -> bool {
+    pub fn has_checked_i64(&self) -> bool {
         self.kinds.contains(&Behavior::CheckedI64Add)
     }
 

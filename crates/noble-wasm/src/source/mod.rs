@@ -66,7 +66,7 @@ pub(super) const CALCULATOR_COMPILER_WORK_LIMIT: u64 = 2_000_000_000;
 // Core live sessions reserve 24/25 for their two checked operations.
 // Ordinary and declared sessions retain their original fixed prefixes.
 fn builtin_count(env: &noble_kernel::contracts::Env) -> u32 {
-    if env.checked_i64 {
+    if env.has_checked_i64() {
         return 30;
     }
     if env.calculator && env.declared_modules {
@@ -851,7 +851,7 @@ impl Compiler {
         if self.declared_text || (self.declared_live && !submission.environment.declared_modules) {
             return Err(crate::Diagnostic::Unsupported);
         }
-        if submission.environment.checked_i64 != self.checked_i64 {
+        if submission.environment.has_checked_i64() != self.checked_i64 {
             return Err(crate::Diagnostic::Invalid);
         }
         self.prepare_from(submission, None, self.functions, false, false, false)
