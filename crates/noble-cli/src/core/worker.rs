@@ -33,9 +33,13 @@ const SLOT_HOST: &str = concat!(
 #[cfg(feature = "live-test-current-map")]
 fn slot_host() -> std::borrow::Cow<'static, str> {
     const BEFORE: &str = "const selected = root.state.map.get(ref.slotId);";
-    const AFTER: &str = "const selected = this.#current.map.get(ref.slotId); /* noble-test-current-map-seam/v1 */";
-    assert_eq!(SLOT_HOST.matches(BEFORE).count(), 1,
-        "the test-only current-map patch anchor must occur exactly once");
+    const AFTER: &str =
+        "const selected = this.#current.map.get(ref.slotId); /* noble-test-current-map-seam/v1 */";
+    assert_eq!(
+        SLOT_HOST.matches(BEFORE).count(),
+        1,
+        "the test-only current-map patch anchor must occur exactly once"
+    );
     std::borrow::Cow::Owned(SLOT_HOST.replacen(BEFORE, AFTER, 1))
 }
 #[cfg(not(feature = "live-test-current-map"))]

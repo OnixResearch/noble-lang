@@ -109,8 +109,10 @@ fn sequential_publications_expose_a_mixed_compatible_pair() {
 fn shipped_cli_does_not_contain_the_test_only_current_map_seam() {
     const MARKER: &[u8] = b"noble-test-current-map-seam/v1";
     let binary = std::fs::read(env!("CARGO_BIN_EXE_noble")).expect("read selected noble binary");
-    assert!(!binary.windows(MARKER.len()).any(|window| window == MARKER),
-        "default noble binary must not contain the test-only current-map seam");
+    assert!(
+        !binary.windows(MARKER.len()).any(|window| window == MARKER),
+        "default noble binary must not contain the test-only current-map seam"
+    );
 }
 
 #[cfg(feature = "live-test-current-map")]
