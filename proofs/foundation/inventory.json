@@ -3250,6 +3250,12 @@
       "claim": "Decoding an encoded step whose rule identity is modelled returns the same step."
     },
     {
+      "name": "NobleFoundation.CertificateCodec.decimal_repr",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "A decimal natural-number token parses back to the value rendered by Nat.repr."
+    },
+    {
       "name": "NobleFoundation.CertificateCodec.decode_encode_replays",
       "phase": 2,
       "role": "certificate-codec",
