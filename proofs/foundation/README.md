@@ -3456,3 +3456,51 @@ The clean-source receipt for the cache-lookup model is
 [`verification/foundation/receipts/d23d0c485/`](../../verification/foundation/receipts/d23d0c485/foundation-check.json)
 (728 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
+
+## Separate duplicate and discard permissions (issue #112; phase 1)
+
+`NobleFoundation/UsePermissions.lean` is a bounded evaluation model, not a change to Noble's
+selected profile. `Permission` is the pair `(dup, drop)`: `(1,1)` is unrestricted Data, `(0,0)` is
+the existing exactly-once Resource class, `(0,1)` is at-most-once/affine, and `(1,0)` is
+at-least-once/must-handle. A resource or live authorization witness is never reclassified into
+either newly named data-only cell. `Permission.combine` is pointwise conjunction: Pair and Sum
+require both payloads to satisfy the relevant operation, List and opaque wrappers inherit the
+payload, and variant wrappers combine both possible arms. The retained nested proof
+`nested_pair_sum_list_must_use` plus the Pair, Sum and List controls checks that wrapping cannot
+launder a must-use payload.
+
+Capture in the model requires both bits, so `capturable_iff_unrestricted` and
+`capturable_iff_bits` prove that the four-cell algebra adds no fifth Capture class. This is not a
+claim that Noble's specification predicates are identical: SPEC-0001 defines Capture as Data plus
+a portable semantic representation, while the current kernel routes `Dup`, `Drop` and `Quote`
+through the same `Ty::is_data` check. In particular, `is_data` accepts Contract, Evidence and
+Certified, while `valid_generic_argument` rejects those three types; this implementation asymmetry
+is preserved and explicitly outside the model.
+
+The model's stack notation is **top-first**: the head is the position the next word constrains.
+Its examples include `dup [data(x)] → [data(x), data(x)]`,
+`drop [affine(x)] → []`, `quote [data(x)] → [Program(x)]`,
+`swap [resource(x), data(y)] → [data(y), resource(x)]`, and
+`dip [resource(x), Program] → [resource(x)]`. `compose [Program(f), Program(g)]` leaves one
+unrestricted Program; `run [Program(f), x]` consumes the Program position in this accounting
+model. The branch rule requires both arms to succeed with the same ordered stack, including
+identity tags; a missing or duplicated obligation is refused. The modeled ordinary Result-error
+edge may discard only positions whose `drop` bit is set. This is a structural accounting rule, not
+a destructor or host release: abnormal host cleanup remains separate. It is intentionally not
+identified with the stricter `Ownership.fail`, which accepts only the empty operand stack.
+
+`matrix_holds` kernel-checks the retained positive and negative decisions. The `seeded_*_refuted`
+theorems reject wrong always-allow rules, one-bit Capture rules, a one-arm join, an error return
+that ignores obligations, and a Program that inherits a constrained environment permission.
+`forbidden_capture_then_program_duplication` records the must-handle leak chain and shows the
+reference refuses at Capture. `program_is_unrestricted` and
+`captured_environment_is_capturable` keep Program-value use separate from payload use: Programs
+remain unrestricted values only because every captured environment member must itself be
+capturable. A Program's input interface naming a resource does not mean the Program owns it; this
+unit does not add one-shot closures or resource-bearing captures.
+
+Every theorem in the module is registered in `inventory.json`. These are kernel-checked claims
+about this finite model. The finite Node corpus and selected-profile CLI runs are in
+[`verification/use-permissions/README.md`](../../verification/use-permissions/README.md); neither is an
+implementation theorem. No Rust checker, elaborator, backend, or change to #59's retained oracle
+is claimed.

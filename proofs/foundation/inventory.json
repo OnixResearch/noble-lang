@@ -7766,6 +7766,426 @@
       "phase": 2,
       "role": "packed-layout",
       "claim": "a duplicated slot table passes the count and every row, and is refused only by slot uniqueness"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.combine_commutative",
+      "phase": 2,
+      "role": "permission-algebra",
+      "claim": "combine is commutative"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.combine_associative",
+      "phase": 2,
+      "role": "permission-algebra",
+      "claim": "combine is associative"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.combine_idempotent",
+      "phase": 2,
+      "role": "permission-algebra",
+      "claim": "combining a permission with itself returns the permission"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.combine_unrestricted_left",
+      "phase": 2,
+      "role": "permission-algebra",
+      "claim": "the unrestricted permission is the left identity of combine"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.combine_unrestricted_right",
+      "phase": 2,
+      "role": "permission-algebra",
+      "claim": "the unrestricted permission is the right identity of combine"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.combine_must_use_left",
+      "phase": 2,
+      "role": "permission-algebra",
+      "claim": "a must-use payload makes a left combination must-use, so no wrapper launders it"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.combine_must_use_right",
+      "phase": 2,
+      "role": "permission-algebra",
+      "claim": "a must-use payload makes a right combination must-use"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.combine_unrestricted_iff",
+      "phase": 2,
+      "role": "permission-algebra",
+      "claim": "a compound is unrestricted exactly when both payloads are unrestricted"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.cases_of_permission",
+      "phase": 2,
+      "role": "permission-algebra",
+      "claim": "the four declared permissions, and only those four, exist"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.split_adds_no_permission",
+      "phase": 2,
+      "role": "permission-algebra",
+      "claim": "no permission grants an operation the unrestricted permission does not, so the split can only withhold an operation and never add one"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.capturable_iff_unrestricted",
+      "phase": 2,
+      "role": "capture",
+      "claim": "capture eligibility is exactly the unrestricted permission on the two-bit lattice, so a separate capture predicate adds no cell beyond Data"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.capturable_iff_bits",
+      "phase": 2,
+      "role": "capture",
+      "claim": "capture eligibility is the conjunction of the duplicate and discard bits"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.must_use_not_capturable",
+      "phase": 2,
+      "role": "capture",
+      "claim": "the must-use permission is not capturable"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.at_most_once_not_capturable",
+      "phase": 2,
+      "role": "capture",
+      "claim": "an affine permission is not capturable"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.at_least_once_not_capturable",
+      "phase": 2,
+      "role": "capture",
+      "claim": "a must-handle permission is not capturable"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.opaque_wrapper_preserves",
+      "phase": 2,
+      "role": "recursive-eligibility",
+      "claim": "an opaque nominal wrapper exposes exactly its payload's permission"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.variant_wrapper_of_must_use",
+      "phase": 2,
+      "role": "recursive-eligibility",
+      "claim": "a two-arm nominal wrapper containing a must-use payload is must-use"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.pair_of_must_use_is_must_use",
+      "phase": 2,
+      "role": "recursive-eligibility",
+      "claim": "a Pair containing a must-use payload is must-use"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.sum_of_must_use_is_must_use",
+      "phase": 2,
+      "role": "recursive-eligibility",
+      "claim": "a Sum containing a must-use payload is must-use"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.list_of_must_use_is_must_use",
+      "phase": 2,
+      "role": "recursive-eligibility",
+      "claim": "a list of a must-use payload is must-use, as List<a> inherits the predicate from a"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.nested_pair_sum_list_must_use",
+      "phase": 2,
+      "role": "recursive-eligibility",
+      "claim": "a must-use payload remains must-use through nested Pair, Sum, nominal and List wrappers"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.wrap_depth_preserves",
+      "phase": 2,
+      "role": "recursive-eligibility",
+      "claim": "no wrapping depth changes a permission (K-TYPE-02 in the permission model)"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.wrapped_must_use_is_must_use",
+      "phase": 2,
+      "role": "recursive-eligibility",
+      "claim": "a must-use payload stays must-use at every wrapping depth"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.wrapped_must_use_not_capturable",
+      "phase": 2,
+      "role": "recursive-eligibility",
+      "claim": "a wrapped must-use payload is not capturable at any depth"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.signatureStack_nil",
+      "phase": 2,
+      "role": "signature",
+      "claim": "the signature of the empty stack is empty"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.signatureStack_cons",
+      "phase": 2,
+      "role": "signature",
+      "claim": "the signature of a stack is its head's signature and the signature of its tail"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.program_is_unrestricted",
+      "phase": 2,
+      "role": "program-semantics",
+      "claim": "every program value carries the unrestricted permission, whatever its interface names (SPEC 4.3)"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.program_is_capturable",
+      "phase": 2,
+      "role": "program-semantics",
+      "claim": "every program value is capturable"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.step_signature",
+      "phase": 2,
+      "role": "signature",
+      "claim": "a step depends only on each position's permission and kind, never on its tag"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.step_admission_agrees",
+      "phase": 2,
+      "role": "join",
+      "claim": "one word is admitted on two stacks whose signatures agree in both or in neither"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.run_admission_agrees",
+      "phase": 2,
+      "role": "join",
+      "claim": "a straight-line sequence is admitted on two signature-agreeing stacks in both or in neither"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.run_results_agree",
+      "phase": 2,
+      "role": "join",
+      "claim": "admitted runs of signature-agreeing stacks leave signature-agreeing results"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.merge_represents_each_arm",
+      "phase": 2,
+      "role": "join",
+      "claim": "a position-wise join never loses either arm's position"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.distinct_positions_are_not_merged",
+      "phase": 2,
+      "role": "join",
+      "claim": "distinct positions are recorded as conflicting rather than merged"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.one_armed_join_is_refuted",
+      "phase": 2,
+      "role": "join",
+      "claim": "a join that keeps only the first arm is refuted wherever the arms differ"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.same_count_different_identity_is_conflicting",
+      "phase": 2,
+      "role": "join",
+      "claim": "equal counts with different owner tags are conflicting, so a count is not an identity"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.same_permission_different_tag_is_conflicting",
+      "phase": 2,
+      "role": "join",
+      "claim": "two positions with the same permission and different tags are conflicting, so a permission join cannot stand in for an owner join"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.unequal_arms_cannot_be_joined",
+      "phase": 2,
+      "role": "join",
+      "claim": "arms of different lengths cannot form a branch join, so a missing position is never padded"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.duplicated_obligation_cannot_be_joined",
+      "phase": 2,
+      "role": "join",
+      "claim": "a duplicated obligation in one arm has no counterpart and cannot be joined"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.dup_requires_dup_bit",
+      "phase": 2,
+      "role": "word-rule",
+      "claim": "dup is admitted when the head carries the duplicate bit and duplicates that position"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.dup_refused_without_dup_bit",
+      "phase": 2,
+      "role": "word-rule",
+      "claim": "dup is refused when the head lacks the duplicate bit"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.drop_requires_drop_bit",
+      "phase": 2,
+      "role": "word-rule",
+      "claim": "drop is admitted when the head carries the discard bit and consumes it"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.drop_refused_without_drop_bit",
+      "phase": 2,
+      "role": "word-rule",
+      "claim": "drop is refused when the head lacks the discard bit"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.swap_permutes_two",
+      "phase": 2,
+      "role": "word-rule",
+      "claim": "swap reorders two positions without an eligibility check"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.dip_restores_and_consumes_program",
+      "phase": 2,
+      "role": "word-rule",
+      "claim": "dip restores the held position and consumes a program position without constraining a permission"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.dip_requires_a_program",
+      "phase": 2,
+      "role": "word-rule",
+      "claim": "dip refuses a position that is not a program in the program slot"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.quote_replaces_the_permission",
+      "phase": 2,
+      "role": "word-rule",
+      "claim": "quote admits only a capturable position and produces an unrestricted program position, replacing rather than carrying the captured permission"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.quote_refused_without_capture",
+      "phase": 2,
+      "role": "word-rule",
+      "claim": "quote is refused when the position is not capturable"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.compose_produces_a_program",
+      "phase": 2,
+      "role": "word-rule",
+      "claim": "compose joins two program positions into one unrestricted program position"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.run_consumes_the_program",
+      "phase": 2,
+      "role": "word-rule",
+      "claim": "run consumes a program position without constraining a permission"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.program_dup_accepted",
+      "phase": 2,
+      "role": "program-semantics",
+      "claim": "a program position is duplicable, so duplicating a program value is accepted"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.fail_requires_discardable",
+      "phase": 2,
+      "role": "error-return",
+      "claim": "the ordinary error return is admitted only when every position on the stack is discardable"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.fail_refuses_must_use",
+      "phase": 2,
+      "role": "error-return",
+      "claim": "the ordinary error return is refused while a must-use position is outstanding"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.fail_refuses_must_handle",
+      "phase": 2,
+      "role": "error-return",
+      "claim": "the ordinary error return is refused while a must-handle position is outstanding"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.fail_discharges_at_most_once",
+      "phase": 2,
+      "role": "error-return",
+      "claim": "the ordinary error return discharges an affine position, which is what its discard bit grants"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.fail_accepts_data_stack",
+      "phase": 2,
+      "role": "error-return",
+      "claim": "the ordinary error return discards a stack of plain data positions"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.ownership_fail_refuses_data_stack",
+      "phase": 2,
+      "role": "compatibility",
+      "claim": "the ownership oracle's error return is deliberately stricter than the permission model's and refuses a non-empty duplicable stack, so the two models are not identified"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.step_program_positions_are_unrestricted",
+      "phase": 2,
+      "role": "program-semantics",
+      "claim": "an admitted step never produces a program position with a constrained permission"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.captured_environment_is_capturable",
+      "phase": 2,
+      "role": "program-semantics",
+      "claim": "every permission in a capturable program environment is unrestricted, so duplicating or dropping a program never multiplies or discards a constrained payload"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.matrix_holds",
+      "phase": 2,
+      "role": "control-matrix",
+      "claim": "the retained control matrix is kernel-checked: every row's decision is the model's decision"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.seeded_drop_always_refuted_by_must_use",
+      "phase": 2,
+      "role": "seeded-rule",
+      "claim": "the rule that discards regardless of the discard bit is refuted by a must-use position"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.seeded_dup_always_refuted_by_must_use",
+      "phase": 2,
+      "role": "seeded-rule",
+      "claim": "the rule that duplicates regardless of the duplicate bit is refuted by a must-use position"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.seeded_quote_dup_only_refuted_by_must_handle",
+      "phase": 2,
+      "role": "seeded-rule",
+      "claim": "the rule that captures with only the duplicate bit is refuted by a must-handle position"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.seeded_quote_drop_only_refuted_by_at_most_once",
+      "phase": 2,
+      "role": "seeded-rule",
+      "claim": "the rule that captures with only the discard bit is refuted by an affine position"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.seeded_quote_always_refuted_by_must_use",
+      "phase": 2,
+      "role": "seeded-rule",
+      "claim": "the rule that captures regardless of permission is refuted by a must-use position"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.seeded_fail_always_refuted_by_must_use",
+      "phase": 2,
+      "role": "seeded-rule",
+      "claim": "the error return that ignores outstanding obligations is refuted by a must-use position"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.seeded_join_keeping_one_arm_refuted",
+      "phase": 2,
+      "role": "seeded-rule",
+      "claim": "the join that keeps only the first arm is refuted by two arms that leave different stacks"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.seeded_program_inherits_refuted",
+      "phase": 2,
+      "role": "seeded-rule",
+      "claim": "the rule that lets a program inherit its environment's permission is refuted by the selected profile's invariant that a valid program is duplicable and discardable"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.forbidden_capture_then_program_duplication",
+      "phase": 2,
+      "role": "seeded-rule",
+      "claim": "the duplicate-only capture rule admits quoting a must-handle payload, duplicating the program and dropping both copies, which the reference refuses at the quotation"
+    },
+    {
+      "name": "NobleFoundation.UsePermissions.capture_requires_both_bits",
+      "phase": 2,
+      "role": "capture",
+      "claim": "capture admits a permission only when both the duplicate and discard bits are set"
     }
   ],
   "private_theorems": [
@@ -7814,6 +8234,15 @@
     "NobleFoundation.ofInt_wrap_mul",
     "NobleFoundation.rep_succ",
     "NobleFoundation.rep_succ_succ",
-    "NobleFoundation.ConstructorReuse.filter_beq_eq_singleton"
+    "NobleFoundation.ConstructorReuse.filter_beq_eq_singleton",
+    "NobleFoundation.UsePermissions.isSome_map",
+    "NobleFoundation.UsePermissions.signatureStep_dup",
+    "NobleFoundation.UsePermissions.signatureStep_drop",
+    "NobleFoundation.UsePermissions.signatureStep_swap",
+    "NobleFoundation.UsePermissions.signatureStep_dip",
+    "NobleFoundation.UsePermissions.signatureStep_quote",
+    "NobleFoundation.UsePermissions.signatureStep_compose",
+    "NobleFoundation.UsePermissions.signatureStep_run",
+    "NobleFoundation.UsePermissions.signatureRun_eq"
   ]
 }
