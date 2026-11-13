@@ -43,8 +43,8 @@ measurements. `wasm-merge` output is never treated as an unmodified emitted modu
   `receipts/2026-11-13/owi-build.json`.
 - Unit 3: NOT DONE. No `--opt on` I64-input emitted artifact or `-`, `swap -`, `+` symbolic fixtures
   were produced.
-- Unit 4: IN PROGRESS. The registration patch is being implemented; it must register both the host
-  and unchanged subject before the driver is tried.
+- Unit 4: IN PROGRESS. The second patch adds validated, ordered auxiliary-module registration via
+  `OWI_REGISTER_MODULES`; the patched recipe build and real host+subject+driver run remain pending.
 - Unit 5: NOT DONE. Required refusal controls, symbolic measurements, and a complete bound receipt
   do not exist. No final go/no-go is recorded yet.
 

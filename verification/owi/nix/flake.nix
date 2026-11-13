@@ -9,7 +9,10 @@
       pkgs = import nixpkgs { inherit system; };
     in {
       packages.${system}.default = pkgs.owi.overrideAttrs (old: {
-        patches = (old.patches or [ ]) ++ [ ../../../nix/owi-memory-init-decode.patch ];
+        patches = (old.patches or [ ]) ++ [
+          ../../../nix/owi-memory-init-decode.patch
+          ../../../nix/owi-register-modules.patch
+        ];
       });
     };
 }

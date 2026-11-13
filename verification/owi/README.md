@@ -143,10 +143,13 @@ The retained run is
 
 ## Reproduction and support status
 
-`nix/flake.nix` is a standalone locked build recipe applying the decoder patch to the pinned
-nixpkgs Owi package. Its package output is separate from the repository flake and policy pins.
+`nix/flake.nix` is a standalone locked build recipe applying the decoder and symbolic module
+registration patches to the pinned nixpkgs Owi package. The registration patch is opt-in through
+`OWI_REGISTER_MODULES=NAME=<module.wasm>,NAME=<module.wasm>`; modules are validated and linked in
+the listed order before the positional `owi sym` source module. This preserves subject bytes and
+allows a host then a subject module to be registered before a driver.
 `nix build --no-link --print-out-paths --option min-free 0 --option max-free 0 --option
 connect-timeout 10 --option fallback true -L ./verification/owi/nix` builds the package; the
 successful clean-commit output identity is retained in `receipts/2026-11-13/owi-build.json`.
-The artifact matrix and symbolic link/driver remain incomplete. Continue with the separate-module
-registration patch in `decision.md`; do not treat `wasm-merge` output as an unmodified subject.
+The artifact matrix, driver, and symbolic run remain incomplete. Do not treat `wasm-merge` output
+as an unmodified subject.
