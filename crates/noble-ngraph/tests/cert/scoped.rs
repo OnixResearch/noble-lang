@@ -207,11 +207,11 @@ fn check(graph: &Graph, result: &Graph, derivation: &Derivation) -> Outcome {
 
 #[path = "scoped/bounds.rs"]
 mod bounds;
+#[path = "scoped/corpus.rs"]
+mod corpus;
 #[path = "scoped/endpoint_controls.rs"]
 mod endpoint_controls;
 #[path = "scoped/pilots.rs"]
 mod pilots;
 #[path = "scoped/scope_controls.rs"]
 mod scope_controls;
-#[path = "scoped/corpus.rs"]
-mod corpus;
