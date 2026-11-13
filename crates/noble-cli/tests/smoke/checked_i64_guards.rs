@@ -32,34 +32,49 @@ fn assert_refusal(
 #[test]
 fn checked_i64_rejections_and_resource_exhaustion_start_no_guest(
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let cases: &[(&str, &[&str], &str, &str, &str, &str)] = &[
-        (
-            "wrong operand type",
-            &["session", "--framed", "--checked-i64"],
-            "1 true i64.checked-add",
-            "Checked-I64-v1",
-            "type-reject",
-            "check",
-        ),
-        (
-            "builtin without profile",
-            &["session", "--framed"],
-            "1 2 i64.checked-add",
-            "Core-Bootstrap",
-            "unbound-word",
-            "resolve",
-        ),
-        (
-            "zero source-work limit",
-            &["session", "--framed", "--checked-i64", "--source-work", "0"],
-            "1 2 i64.checked-add",
-            "Checked-I64-v1",
-            "exhausted",
-            "parse",
-        ),
+    struct Case {
+        name: &'static str,
+        arguments: &'static [&'static str],
+        source: &'static str,
+        profile: &'static str,
+        outcome: &'static str,
+        stage: &'static str,
+    }
+    let cases = [
+        Case {
+            name: "wrong operand type",
+            arguments: &["session", "--framed", "--checked-i64"],
+            source: "1 true i64.checked-add",
+            profile: "Checked-I64-v1",
+            outcome: "type-reject",
+            stage: "check",
+        },
+        Case {
+            name: "builtin without profile",
+            arguments: &["session", "--framed"],
+            source: "1 2 i64.checked-add",
+            profile: "Core-Bootstrap",
+            outcome: "unbound-word",
+            stage: "resolve",
+        },
+        Case {
+            name: "zero source-work limit",
+            arguments: &["session", "--framed", "--checked-i64", "--source-work", "0"],
+            source: "1 2 i64.checked-add",
+            profile: "Checked-I64-v1",
+            outcome: "exhausted",
+            stage: "parse",
+        },
     ];
-    for (name, arguments, source, profile, outcome, stage) in cases {
-        assert_refusal(name, arguments, source, profile, outcome, stage)?;
+    for case in cases {
+        assert_refusal(
+            case.name,
+            case.arguments,
+            case.source,
+            case.profile,
+            case.outcome,
+            case.stage,
+        )?;
     }
     Ok(())
 }
