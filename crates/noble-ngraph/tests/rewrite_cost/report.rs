@@ -27,6 +27,7 @@ pub(super) fn format_row(
             "\"check_iqr_us\": {:.2}, ",
             "\"check_per_step_us\": {}, ",
             "\"in_memory_footprint_bytes\": {}, ",
+            "\"wire_bytes\": {}, ",
             "\"check_threshold_met\": {}, ",
             "\"pipeline\": {}",
             "}}"
@@ -42,6 +43,7 @@ pub(super) fn format_row(
         row.check_iqr_us,
         per_step,
         row.footprint_bytes,
+        row.wire_bytes,
         is_threshold_met,
         row.pipeline.json,
     )

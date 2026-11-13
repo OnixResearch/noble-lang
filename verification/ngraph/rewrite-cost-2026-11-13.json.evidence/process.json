@@ -1,0 +1,75 @@
+{
+  "executable": {
+    "path": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/cargo",
+    "sha256": "862f9dd92f6d1065dbda15da68138db4432ad85581bceadf568ba2749171ddd4",
+    "bytes": 566,
+    "mode": 365
+  },
+  "argv": [
+    "test",
+    "-p",
+    "noble-ngraph",
+    "--test",
+    "rewrite_cost",
+    "--offline",
+    "--locked",
+    "--",
+    "--nocapture"
+  ],
+  "full_argv": [
+    "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/cargo",
+    "test",
+    "-p",
+    "noble-ngraph",
+    "--test",
+    "rewrite_cost",
+    "--offline",
+    "--locked",
+    "--",
+    "--nocapture"
+  ],
+  "cwd": "/home/brittonr/.cache/noble-iss/wt/cert-42",
+  "environment": {
+    "HOME": "/home/brittonr/.cache/noble-iss/scratch/cert-42/rewrite-cost-2026-11-13.json.evidence/home",
+    "USER": "noble-rewrite-cost",
+    "LOGNAME": "noble-rewrite-cost",
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "CI": "1",
+    "GIT_TERMINAL_PROMPT": "0",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "PATH": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin:/nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin:/run/current-system/sw/bin:/usr/bin:/bin",
+    "TMPDIR": "/home/brittonr/.cache/noble-iss/scratch/cert-42/rewrite-cost-2026-11-13.json.evidence/tmp",
+    "CARGO_HOME": "/home/brittonr/.cache/noble-iss/scratch/cert-42/rewrite-cost-2026-11-13.json.evidence/cargo-home",
+    "CARGO_TARGET_DIR": "/home/brittonr/.cache/noble-iss/scratch/cert-42/rewrite-cost-2026-11-13.json.evidence/target",
+    "CARGO_NET_OFFLINE": "true",
+    "CARGO_BUILD_JOBS": "4",
+    "CARGO_INCREMENTAL": "0",
+    "RUSTC": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/rustc",
+    "RUSTDOC": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/rustdoc",
+    "RUSTC_WRAPPER": "",
+    "RUSTC_WORKSPACE_WRAPPER": "",
+    "CARGO_BUILD_RUSTC_WRAPPER": "",
+    "RUSTFLAGS": "",
+    "CARGO_ENCODED_RUSTFLAGS": "",
+    "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS": "",
+    "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER": "/nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin/cc",
+    "CARGO_TERM_COLOR": "never"
+  },
+  "exit": 0,
+  "status": 0,
+  "signal": null,
+  "error": null,
+  "ok": true,
+  "stdout": {
+    "path": "raw/stdout",
+    "bytes": 193729,
+    "sha256": "ded69aaf1c891f96360f05532cefa7b5f250a8f3466f7d371e2e42a5af0918f4"
+  },
+  "stderr": {
+    "path": "raw/stderr",
+    "bytes": 544,
+    "sha256": "66c69c500224eb0409b746d741c385bbb2b7e4c8f7032b6b8c79d52a0491e9d7"
+  }
+}

@@ -90,10 +90,12 @@ pub(super) struct RefusalInfo {
 #[derive(Clone)]
 pub(super) struct CertificateInfo {
     pub(super) revision: String,
+    pub(super) model: String,
     pub(super) steps: usize,
     pub(super) left: String,
     pub(super) right: String,
     pub(super) in_memory_bytes: usize,
+    pub(super) wire_bytes: usize,
 }
 
 #[derive(Clone, Copy)]
@@ -242,13 +244,16 @@ pub(super) fn agreement(observation: &Obs, expected: Option<&Obs>) -> bool {
 fn certificate_info(derivation: &cert::Derivation) -> CertificateInfo {
     let in_memory_bytes = std::mem::size_of::<cert::Derivation>()
         .saturating_add(std::mem::size_of::<cert::Step>().saturating_mul(derivation.steps.len()))
-        .saturating_add(derivation.revision.capacity());
+        .saturating_add(derivation.revision.capacity())
+        .saturating_add(derivation.model.capacity());
     CertificateInfo {
         revision: derivation.revision.clone(),
+        model: derivation.model.clone(),
         steps: derivation.steps.len(),
         left: hex(&derivation.left),
         right: hex(&derivation.right),
         in_memory_bytes,
+        wire_bytes: cert::encode(derivation).len(),
     }
 }
 

@@ -9,21 +9,57 @@
 //! producer named, not the result the steps produce, so the replay is what refuses a
 //! substituted result. Refusals are typed rather than folded into one failure.
 //!
+//! A derivation also binds the semantic model revision it was produced against
+//! ([`MODEL_REVISION`], the IR's `ngraph-sem/0`), so a checker for another model refuses
+//! it instead of silently applying rules proved under different arithmetic. [`encode`]
+//! and [`decode`] transport a derivation as the token envelope modelled in
+//! `proofs/foundation/NobleFoundation/CertificateCodec.lean`: a revision token, a model
+//! token, a declared step count and then exactly seven decimal tokens per step. The
+//! decoder refuses a stale revision or model token, an over-bound declared count before it
+//! allocates the step list, and truncated, dropped, extra, unknown-rule, out-of-range and
+//! non-decimal tokens.
+//!
+//! [`check`] is stated over **admitted** endpoints. Admission (`crate::check`) is what
+//! establishes the graph premise the Lean soundness theorems take as a hypothesis:
+//! operands are defined strictly before their node (a forward reference is
+//! `Malformed::ForwardReference`, a dependency cycle `Malformed::Cycle`), every slot is
+//! defined once, and no node is dangling. The checker additionally refuses any step whose
+//! premise reads a node at or after the rewritten node, so a cyclic or forward-referencing
+//! step is malformed even when the caller skipped admission.
+//!
 //! This is the Rust side of the lane modelled in
 //! `proofs/foundation/NobleFoundation/GraphRewrite.lean`; the model's rule,
 //! congruence and checker-soundness theorems are stated over the Lean graph
-//! denotation, and **no correspondence theorem binds these bytes to that model**
-//! yet. Budgets, replay work, derivation depth and retained evidence sizes are
-//! likewise still open, as is every `F32`, guard, effect or resource rewrite.
+//! denotation, and the fixed fixture is kernel-checked in the generated
+//! `CertificateCorpus.lean`. No correspondence theorem binds this module's code (as
+//! opposed to that fixture) to the model. Chained derivations, budgets, retained
+//! evidence sizes and every `F32`, guard, effect or resource rewrite remain open.
 
 use crate::identity::IdentityScheme;
 
 /// Certificate format revision bound into every accepted derivation.
 pub const CERT_REVISION: &str = "ngraph-cert/0";
 
+/// Semantic model revision bound into every accepted derivation: the rules are
+/// sound for `ngraph-sem/0`'s wrapping `I64` arithmetic and for no other reading.
+pub const MODEL_REVISION: &str = crate::ir::SEMANTIC_REVISION;
+
 /// Declared bound on derivation steps: a certificate larger than this is refused
 /// before any node is inspected.
 pub const MAX_STEPS: usize = 64;
+
+/// Tokens per step in the wire envelope: rule, index, first, second, first bits,
+/// second bits and claimed.
+pub const STEP_TOKENS: usize = 7;
+
+/// Tokens before the step chunks: revision, model and declared step count.
+pub const ENVELOPE_TOKENS: usize = 3;
+
+/// Radix of every numeric token.
+const DECIMAL_RADIX: u32 = 10;
+
+/// Digits a `u64` decimal token can occupy.
+const DECIMAL_DIGITS: usize = 20;
 
 /// One accepted rewrite rule.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -83,6 +119,8 @@ pub struct Step {
 pub struct Derivation {
     /// Format revision.
     pub revision: alloc::string::String,
+    /// Semantic model revision the rules were proved against.
+    pub model: alloc::string::String,
     /// Ordered steps; node identities strictly increase.
     pub steps: alloc::vec::Vec<Step>,
     /// Digest of the original graph.
@@ -91,11 +129,43 @@ pub struct Derivation {
     pub right: crate::ir::Digest,
 }
 
+/// A transported certificate: exactly what the wire envelope carries.
+///
+/// The envelope names no endpoint digests, because endpoint identity is not part of
+/// the modelled token format (`CertificateCodec.lean` decodes a revision, a model and
+/// a step list). A receiver binds the transported steps to the endpoints it holds with
+/// [`Envelope::bind`], and [`check`] then verifies those digests like any other.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Envelope {
+    /// Format revision, already refused if stale.
+    pub revision: alloc::string::String,
+    /// Semantic model revision, already refused if stale.
+    pub model: alloc::string::String,
+    /// Ordered steps exactly as transported.
+    pub steps: alloc::vec::Vec<Step>,
+}
+
+impl Envelope {
+    /// Binds the transported steps to the endpoint digests the receiver will check.
+    #[must_use]
+    pub fn bind(self, left: crate::ir::Digest, right: crate::ir::Digest) -> Derivation {
+        Derivation {
+            revision: self.revision,
+            model: self.model,
+            steps: self.steps,
+            left,
+            right,
+        }
+    }
+}
+
 /// Why a certificate was refused.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Refusal {
     /// The format revision is not the current one.
     StaleRevision,
+    /// The semantic model revision is not the one the rules were proved against.
+    StaleModel,
     /// The derivation exceeds the declared step bound.
     TooManySteps,
     /// A step is malformed, unsupported or names a node of another kind.
@@ -110,6 +180,165 @@ pub enum Refusal {
     EndpointMismatch,
     /// The resulting graph is not the original with the derivation's folds applied.
     ResultMismatch,
+}
+
+/// The wire numbering of a rule identity, matching the modelled rule set.
+const fn rule_token(rule: Rule) -> u64 {
+    match rule {
+        Rule::FoldAddConstants => 0,
+        Rule::NeutralAddLeft => 1,
+        Rule::NeutralMulRight => 2,
+    }
+}
+
+/// The rule identity a wire token names: a token outside the modelled set is unknown.
+const fn decode_rule(token: u64) -> Option<Rule> {
+    match token {
+        0 => Some(Rule::FoldAddConstants),
+        1 => Some(Rule::NeutralAddLeft),
+        2 => Some(Rule::NeutralMulRight),
+        _ => None,
+    }
+}
+
+/// Appends `value` as its decimal token.
+// justification: appending to an owned String is the required operation; slices and str cannot
+// provide this mutation API, and a generic formatting sink would make an infallible write fallible.
+#[allow(tigerstyle::borrowed_argument_types)]
+fn push_decimal(out: &mut alloc::string::String, value: u64) {
+    let mut digits = ['0'; DECIMAL_DIGITS];
+    let mut at = DECIMAL_DIGITS;
+    let mut rest = value;
+    let radix = u64::from(DECIMAL_RADIX);
+    assert!(radix != 0);
+    loop {
+        at -= 1;
+        let digit = u32::try_from(rest % radix).unwrap_or(0);
+        digits[at] = char::from_digit(digit, DECIMAL_RADIX).unwrap_or('0');
+        rest /= radix;
+        if rest == 0 {
+            break;
+        }
+    }
+    for &digit in &digits[at..] {
+        out.push(digit);
+    }
+}
+
+/// Parses one decimal token: digits only, no sign, no prefix, no overflow.
+fn decimal(token: &str) -> Option<u64> {
+    if token.is_empty() {
+        return None;
+    }
+    let mut value: u64 = 0;
+    for character in token.chars() {
+        let digit = character.to_digit(DECIMAL_RADIX)?;
+        value = value
+            .checked_mul(u64::from(DECIMAL_RADIX))?
+            .checked_add(u64::from(digit))?;
+    }
+    Some(value)
+}
+
+/// Encodes a derivation as the token envelope the modelled codec reads: the revision
+/// token, the model token, the declared step count and then exactly seven decimal
+/// tokens per step, separated by single spaces.
+///
+/// The envelope carries no endpoint digests, exactly like the modelled format; a
+/// receiver binds the decoded steps to the endpoints it holds
+/// ([`Envelope::bind`]) before calling [`check`].
+#[must_use]
+pub fn encode(derivation: &Derivation) -> alloc::string::String {
+    let mut wire = alloc::string::String::new();
+    wire.push_str(&derivation.revision);
+    wire.push(' ');
+    wire.push_str(&derivation.model);
+    wire.push(' ');
+    push_decimal(
+        &mut wire,
+        u64::try_from(derivation.steps.len()).unwrap_or(u64::MAX),
+    );
+    for step in &derivation.steps {
+        for value in [
+            rule_token(step.rule),
+            u64::from(step.node.0),
+            u64::from(step.operands[0].0),
+            u64::from(step.operands[1].0),
+            step.first_bits,
+            step.second_bits,
+            step.claimed,
+        ] {
+            wire.push(' ');
+            push_decimal(&mut wire, value);
+        }
+    }
+    wire
+}
+
+fn next_token<'wire>(tokens: &mut core::str::Split<'wire, char>) -> Result<&'wire str, Refusal> {
+    tokens.next().ok_or(Refusal::Malformed)
+}
+
+fn decimal_token(tokens: &mut core::str::Split<'_, char>) -> Result<u64, Refusal> {
+    decimal(next_token(tokens)?).ok_or(Refusal::Malformed)
+}
+
+fn node_token(tokens: &mut core::str::Split<'_, char>) -> Result<crate::ir::NodeId, Refusal> {
+    let index = u32::try_from(decimal_token(tokens)?).map_err(|_| Refusal::Malformed)?;
+    Ok(crate::ir::NodeId(index))
+}
+
+/// Decodes one step from exactly seven tokens.
+fn decode_step(tokens: &mut core::str::Split<'_, char>) -> Result<Step, Refusal> {
+    let rule = decode_rule(decimal_token(tokens)?).ok_or(Refusal::Malformed)?;
+    Ok(Step {
+        rule,
+        node: node_token(tokens)?,
+        operands: [node_token(tokens)?, node_token(tokens)?],
+        first_bits: decimal_token(tokens)?,
+        second_bits: decimal_token(tokens)?,
+        claimed: decimal_token(tokens)?,
+    })
+}
+
+/// Decodes the token envelope [`encode`] writes.
+///
+/// Refusals follow the modelled order: a stale revision token ([`Refusal::StaleRevision`]),
+/// a stale model token ([`Refusal::StaleModel`]), a non-decimal or out-of-range declared
+/// count ([`Refusal::Malformed`]), a declared count over [`MAX_STEPS`]
+/// ([`Refusal::TooManySteps`], refused before the step list is allocated) and per-step
+/// non-decimal, out-of-range or unknown-rule tokens, truncated steps, dropped steps and
+/// extra tokens ([`Refusal::Malformed`]).
+pub fn decode(wire: &str) -> Result<Envelope, Refusal> {
+    if wire.is_empty() {
+        return Err(Refusal::Malformed);
+    }
+    let mut tokens = wire.split(' ');
+    let revision = next_token(&mut tokens)?;
+    if revision != CERT_REVISION {
+        return Err(Refusal::StaleRevision);
+    }
+    let model = next_token(&mut tokens)?;
+    if model != MODEL_REVISION {
+        return Err(Refusal::StaleModel);
+    }
+    let declared = decimal_token(&mut tokens)?;
+    let count = usize::try_from(declared).map_err(|_| Refusal::TooManySteps)?;
+    if count > MAX_STEPS {
+        return Err(Refusal::TooManySteps);
+    }
+    let mut steps = alloc::vec::Vec::with_capacity(count);
+    for _ in 0..count {
+        steps.push(decode_step(&mut tokens)?);
+    }
+    if tokens.next().is_some() {
+        return Err(Refusal::Malformed);
+    }
+    Ok(Envelope {
+        revision: alloc::string::String::from(revision),
+        model: alloc::string::String::from(model),
+        steps,
+    })
 }
 
 fn bits(lit: crate::ir::Literal) -> Option<u64> {
@@ -214,6 +443,7 @@ pub fn emit(ids: &dyn IdentityScheme, graph: &crate::ir::Graph) -> (Derivation, 
     }
     let derivation = Derivation {
         revision: alloc::string::String::from(CERT_REVISION),
+        model: alloc::string::String::from(MODEL_REVISION),
         steps,
         left: graph.logical_id(ids),
         right: result.logical_id(ids),
@@ -320,6 +550,7 @@ pub fn propose(
     steps.sort_by_key(|step| step.node.0);
     let derivation = Derivation {
         revision: alloc::string::String::from(CERT_REVISION),
+        model: alloc::string::String::from(MODEL_REVISION),
         steps,
         left: graph.logical_id(ids),
         right: result.logical_id(ids),
@@ -378,6 +609,12 @@ fn replay(graph: &crate::ir::Graph, derivation: &Derivation) -> Result<crate::ir
 /// recorded bit field and claim must be the canonical one for its rule (see
 /// [`Step`]), and the resulting graph must equal the original with the folds
 /// replayed.
+///
+/// The derivation premise is exactly the modelled `wellFormed`: the format revision,
+/// the semantic model revision, the declared step bound and strictly increasing node
+/// order. The graph premise is assumed from admission, and the checker independently
+/// refuses a step whose premise reads a node at or after the rewritten node, so a
+/// cyclic or forward-referencing certificate is malformed even on an unadmitted graph.
 pub fn check(
     ids: &dyn IdentityScheme,
     graph: &crate::ir::Graph,
@@ -386,6 +623,9 @@ pub fn check(
 ) -> Result<(), Refusal> {
     if derivation.revision != CERT_REVISION {
         return Err(Refusal::StaleRevision);
+    }
+    if derivation.model != MODEL_REVISION {
+        return Err(Refusal::StaleModel);
     }
     if derivation.steps.len() > MAX_STEPS {
         return Err(Refusal::TooManySteps);
@@ -399,11 +639,13 @@ pub fn check(
             return Err(Refusal::Order);
         }
         previous = Some(step.node.0);
-        let op = &graph
-            .nodes
-            .get(usize::try_from(step.node.0).map_err(|_| Refusal::Malformed)?)
-            .ok_or(Refusal::Malformed)?
-            .op;
+        let index = usize::try_from(step.node.0).map_err(|_| Refusal::Malformed)?;
+        for operand in step.operands {
+            if usize::try_from(operand.0).map_err(|_| Refusal::Malformed)? >= index {
+                return Err(Refusal::Malformed);
+            }
+        }
+        let op = &graph.nodes.get(index).ok_or(Refusal::Malformed)?.op;
         match (step.rule, op) {
             (Rule::FoldAddConstants, &crate::ir::Op::I64Add(first, second)) => {
                 if step.operands != [first, second] {
@@ -516,6 +758,7 @@ mod tests {
         let scheme = TestIds;
         let (derivation, result) = super::emit(&scheme, &graph);
         assert_eq!(derivation.revision, super::CERT_REVISION);
+        assert_eq!(derivation.model, super::MODEL_REVISION);
         assert!(derivation.steps.len() <= super::MAX_STEPS);
         assert!(super::check(&scheme, &graph, &result, &derivation).is_ok());
         assert_ne!(
@@ -569,6 +812,13 @@ mod tests {
         assert_eq!(
             super::check(&scheme, &graph, &result, &stale),
             Err(super::Refusal::StaleRevision)
+        );
+
+        let mut stale_model = derivation.clone();
+        stale_model.model = alloc::string::String::from("ngraph-sem/1");
+        assert_eq!(
+            super::check(&scheme, &graph, &result, &stale_model),
+            Err(super::Refusal::StaleModel)
         );
 
         let mut unrelated = derivation.clone();
@@ -680,6 +930,7 @@ mod tests {
         let scheme = TestIds;
         super::Derivation {
             revision: alloc::string::String::from(super::CERT_REVISION),
+            model: alloc::string::String::from(super::MODEL_REVISION),
             steps,
             left: graph.logical_id(&scheme),
             right: graph.logical_id(&scheme),
@@ -934,5 +1185,201 @@ mod tests {
             "a recorded identity does not change the graph"
         );
         assert_eq!(super::check(&scheme, &graph, &result, &derivation), Ok(()));
+    }
+
+    /// The tokens of `wire`, so a control can replace exactly one of them.
+    fn tokens(wire: &str) -> alloc::vec::Vec<alloc::string::String> {
+        wire.split(' ').map(alloc::string::String::from).collect()
+    }
+
+    fn join(tokens: &[alloc::string::String]) -> alloc::string::String {
+        tokens.join(" ")
+    }
+
+    #[test]
+    fn the_wire_envelope_round_trips_a_derivation() {
+        let graph = sample();
+        let scheme = TestIds;
+        let (derivation, result) = super::emit(&scheme, &graph);
+        let wire = super::encode(&derivation);
+        let envelope = super::decode(&wire).expect("the emitted envelope decodes");
+        assert_eq!(envelope.revision, derivation.revision);
+        assert_eq!(envelope.model, derivation.model);
+        assert_eq!(envelope.steps, derivation.steps);
+        assert_eq!(
+            wire.split(' ').count(),
+            super::ENVELOPE_TOKENS + super::STEP_TOKENS * derivation.steps.len(),
+            "one token per envelope field and exactly seven per step"
+        );
+        let bound = envelope.bind(derivation.left, derivation.right);
+        assert_eq!(
+            bound, derivation,
+            "binding the endpoints recovers it exactly"
+        );
+        assert_eq!(super::encode(&bound), wire, "re-encoding is byte-identical");
+        assert_eq!(super::check(&scheme, &graph, &result, &bound), Ok(()));
+    }
+
+    #[test]
+    fn a_stale_revision_or_model_token_is_refused_by_the_codec() {
+        let graph = sample();
+        let scheme = TestIds;
+        let (derivation, _) = super::emit(&scheme, &graph);
+        let wire = super::encode(&derivation);
+        let revision = wire.replacen(super::CERT_REVISION, "ngraph-cert/1", 1);
+        assert_eq!(
+            super::decode(&revision),
+            Err(super::Refusal::StaleRevision),
+            "a stale format token is refused before any step"
+        );
+        let model = wire.replacen(super::MODEL_REVISION, "ngraph-sem/1", 1);
+        assert_eq!(
+            super::decode(&model),
+            Err(super::Refusal::StaleModel),
+            "a stale semantic model token is refused before any step"
+        );
+    }
+
+    #[test]
+    fn malformed_envelopes_are_refused() {
+        let graph = sample();
+        let scheme = TestIds;
+        let (derivation, _) = super::emit(&scheme, &graph);
+        let wire = super::encode(&derivation);
+        let fields = tokens(&wire);
+        assert_eq!(
+            super::decode(""),
+            Err(super::Refusal::Malformed),
+            "an empty envelope carries no revision"
+        );
+        assert_eq!(
+            super::decode(super::CERT_REVISION),
+            Err(super::Refusal::Malformed),
+            "a revision alone carries no model token"
+        );
+        // A declared count over the bound is refused before the steps are allocated.
+        let over_bound = [
+            alloc::string::String::from(super::CERT_REVISION),
+            alloc::string::String::from(super::MODEL_REVISION),
+            alloc::format!("{}", super::MAX_STEPS + 1),
+        ];
+        assert_eq!(
+            super::decode(&join(&over_bound)),
+            Err(super::Refusal::TooManySteps),
+            "the over-bound count is refused with no step token present"
+        );
+        let mut non_decimal_count = fields.clone();
+        non_decimal_count[2] = alloc::string::String::from("two");
+        assert_eq!(
+            super::decode(&join(&non_decimal_count)),
+            Err(super::Refusal::Malformed)
+        );
+        let truncated = &fields[..fields.len() - 1];
+        assert_eq!(
+            super::decode(&join(truncated)),
+            Err(super::Refusal::Malformed),
+            "a truncated final step is refused"
+        );
+        let dropped = &fields[..fields.len() - super::STEP_TOKENS];
+        assert_eq!(
+            super::decode(&join(dropped)),
+            Err(super::Refusal::Malformed),
+            "dropping a chunk disagrees with the declared count"
+        );
+        let mut extra = fields.clone();
+        extra.push(alloc::string::String::from("0"));
+        assert_eq!(
+            super::decode(&join(&extra)),
+            Err(super::Refusal::Malformed),
+            "a token after the declared steps is refused"
+        );
+        let mut unknown_rule = fields.clone();
+        unknown_rule[super::ENVELOPE_TOKENS] = alloc::string::String::from("3");
+        assert_eq!(
+            super::decode(&join(&unknown_rule)),
+            Err(super::Refusal::Malformed),
+            "a rule token outside the modelled set is refused"
+        );
+        let mut non_decimal_bits = fields.clone();
+        non_decimal_bits[super::ENVELOPE_TOKENS + 4] = alloc::string::String::from("5x");
+        assert_eq!(
+            super::decode(&join(&non_decimal_bits)),
+            Err(super::Refusal::Malformed)
+        );
+        let mut negative = fields.clone();
+        negative[super::ENVELOPE_TOKENS + 4] = alloc::string::String::from("-5");
+        assert_eq!(
+            super::decode(&join(&negative)),
+            Err(super::Refusal::Malformed),
+            "a signed token is not a decimal token"
+        );
+        let mut out_of_range = fields.clone();
+        out_of_range[super::ENVELOPE_TOKENS + 4] =
+            alloc::string::String::from("18446744073709551616");
+        assert_eq!(
+            super::decode(&join(&out_of_range)),
+            Err(super::Refusal::Malformed),
+            "a token at 2^64 is outside the 64-bit range"
+        );
+        // The unmodified envelope still decodes, so the controls above are the mutations.
+        assert!(super::decode(&wire).is_ok());
+    }
+
+    /// A graph whose fold node reads two constants defined *after* it: the forward
+    /// reference admission refuses.
+    fn forward_reference() -> (crate::ir::Graph, super::Step) {
+        let scheme = TestIds;
+        let mut builder = crate::ir::GraphBuilder::new(
+            crate::ir::SubProfile::I64,
+            crate::ir::Subject::authored(&scheme, "cert-forward-reference"),
+        );
+        let folded = builder.op(crate::ir::Op::I64Add(
+            crate::ir::NodeId(1),
+            crate::ir::NodeId(2),
+        ));
+        let three = builder.i64_const(3);
+        let five = builder.i64_const(5);
+        builder.output(folded);
+        builder.output(three);
+        builder.output(five);
+        let step = super::Step {
+            rule: super::Rule::FoldAddConstants,
+            node: folded,
+            operands: [three, five],
+            first_bits: 3,
+            second_bits: 5,
+            claimed: 8,
+        };
+        (builder.finish(), step)
+    }
+
+    #[test]
+    fn a_step_may_not_premise_on_a_later_node() {
+        let (graph, step) = forward_reference();
+        let scheme = TestIds;
+        let mut result = graph.clone();
+        result.nodes[usize::try_from(step.node.0).expect("node index fits")].op =
+            crate::ir::Op::Const(crate::ir::Literal::I64(8));
+        assert_eq!(
+            crate::check::check(&scheme, graph.clone())
+                .err()
+                .map(|diagnostic| diagnostic.code),
+            Some(crate::diag::Code::GraphMalformed(
+                crate::diag::Malformed::ForwardReference
+            )),
+            "admission refuses the forward-reference endpoint"
+        );
+        let derivation = super::Derivation {
+            revision: alloc::string::String::from(super::CERT_REVISION),
+            model: alloc::string::String::from(super::MODEL_REVISION),
+            steps: alloc::vec![step],
+            left: graph.logical_id(&scheme),
+            right: result.logical_id(&scheme),
+        };
+        assert_eq!(
+            super::check(&scheme, &graph, &result, &derivation),
+            Err(super::Refusal::Malformed),
+            "the checker refuses a premise on a node at or after the rewritten node"
+        );
     }
 }

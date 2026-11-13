@@ -32,7 +32,7 @@ pub(super) struct SumOperands {
 }
 
 /// An empty `I64` graph builder whose subject is authored under the test scheme.
-fn i64_builder(subject: &str) -> noble_ngraph::ir::GraphBuilder {
+pub(super) fn i64_builder(subject: &str) -> noble_ngraph::ir::GraphBuilder {
     noble_ngraph::ir::GraphBuilder::new(
         noble_ngraph::ir::SubProfile::I64,
         noble_ngraph::ir::Subject::authored(&TestIds, subject),
@@ -63,12 +63,23 @@ pub(super) fn symbolic_sum() -> noble_ngraph::ir::Graph {
     builder.finish()
 }
 
-/// Two independent folds, one of which wraps, and a recorded `x * 1` identity, so the emitted
-/// derivation has three steps over the original graph. The folded-away operand constants stay
-/// outputs, so the folded endpoint has no dangling node and is admitted.
+/// Two independent folds, one of which wraps, a recorded `x * 1` identity, a subtraction consumer
+/// of both folds and a repeated output, so the emitted derivation has three steps over the original
+/// graph and the endpoints exercise ordering, sharing and a duplicated output slot. The
+/// folded-away operand constants stay outputs, so the folded endpoint has no dangling node and is
+/// admitted.
+///
+/// Node order: `%0` and `%1` are the two program inputs, `%2`/`%3`/`%5`/`%6` the constants, `%4`
+/// the folded small sum, `%7` the folded wrapping sum, `%8` the scaling product, `%9` the recorded
+/// `x * 1` product, `%10` the shifted sum and `%11` the subtraction consuming both products.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; this fixture builder constructs the admitted graph used by independent tests; assertions belong at the consumers that check its graph and certificate properties."
+)]
 pub(super) fn independent_folds() -> noble_ngraph::ir::Graph {
     let mut builder = i64_builder("cert-multi-step");
     let input = builder.input(noble_ngraph::ir::ScalarType::I64);
+    let other = builder.input(noble_ngraph::ir::ScalarType::I64);
     let three = builder.i64_const(3);
     let five = builder.i64_const(5);
     let small = builder.op(noble_ngraph::ir::Op::I64Add(three, five));
@@ -76,12 +87,15 @@ pub(super) fn independent_folds() -> noble_ngraph::ir::Graph {
     let one = builder.i64_const(1);
     let wrapped = builder.op(noble_ngraph::ir::Op::I64Add(max, one));
     let scaled = builder.op(noble_ngraph::ir::Op::I64Mul(input, small));
-    let kept = builder.op(noble_ngraph::ir::Op::I64Mul(input, one));
+    let kept = builder.op(noble_ngraph::ir::Op::I64Mul(other, one));
     let shifted = builder.op(noble_ngraph::ir::Op::I64Add(scaled, wrapped));
+    let difference = builder.op(noble_ngraph::ir::Op::I64Sub(shifted, kept));
     builder.output(three);
     builder.output(five);
     builder.output(max);
     builder.output(shifted);
+    builder.output(difference);
+    builder.output(difference);
     builder.output(kept);
     builder.finish()
 }

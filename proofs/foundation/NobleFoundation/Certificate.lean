@@ -7,6 +7,9 @@ operands, the exact constant bits the rule consumed and the claimed value. This
 file models that *format* and proves what its acceptance does and does not buy:
 
 * the format revision and the step bound are refusals, not warnings;
+* a derivation binds the *semantic model revision* its rules were proved against, so a
+  certificate produced for another reading of `I64` arithmetic is refused rather than
+  silently applied;
 * a rule identity outside the modelled set cannot decode to a claim at all;
 * a step is accepted only when the graph's own node shapes and constant bits match
   the declared ones *and* the claim passes the graph checker, so acceptance of a
@@ -35,6 +38,10 @@ open NobleFoundation.GraphRewrite
 /-- The format revision this model accepts. -/
 def revision : String := "ngraph-cert/0"
 
+/-- The semantic model revision the rules are proved against. The `ngraph-sem/0` reading of
+`I64` arithmetic is the only one these rules are stated for. -/
+def modelRevision : String := "ngraph-sem/0"
+
 /-- The declared step bound: larger derivations are refused before any node is
 inspected. -/
 def maxSteps : Nat := 64
@@ -49,11 +56,14 @@ structure Step where
   firstBits : BitVec 64
   secondBits : BitVec 64
   claimed : BitVec 64
+deriving DecidableEq, Repr
 
 /-- A declared derivation. -/
 structure Derivation where
   revision : String
+  model : String
   steps : List Step
+deriving DecidableEq, Repr
 
 /-- Decode a step to the graph checker's claim. An unknown rule identity decodes to
 nothing, so a certificate cannot smuggle a rule the checker does not know. -/
@@ -95,11 +105,11 @@ def stepAccepted (graph : Graph) (step : Step) : Bool :=
     | some claim => Checked graph claim
     | none => false
 
-/-- A derivation is well formed when it names this revision within the step bound
-and its steps are ordered. -/
+/-- A derivation is well formed when it names this revision and this model revision,
+stays within the step bound and its steps are ordered. -/
 def wellFormed (derivation : Derivation) : Bool :=
-  (derivation.revision = revision) && derivation.steps.length ≤ maxSteps &&
-    strictlyIncreasing derivation.steps
+  (derivation.revision = revision) && (derivation.model = modelRevision) &&
+    derivation.steps.length ≤ maxSteps && strictlyIncreasing derivation.steps
 
 /-- Acceptance of a whole derivation. -/
 def accepted (graph : Graph) (derivation : Derivation) : Bool :=
@@ -134,12 +144,19 @@ def applyDerivation (graph : Graph) (derivation : Derivation) : Graph :=
 
 /-- A certificate that names another revision is refused. -/
 theorem stale_revision_refused (steps : List Step) :
-    wellFormed ⟨"ngraph-cert/1", steps⟩ = false := by
+    wellFormed ⟨"ngraph-cert/1", modelRevision, steps⟩ = false := by
   simp [wellFormed, revision]
+
+/-- A certificate produced for another semantic model revision is refused. The rules are
+stated for `ngraph-sem/0`'s wrapping arithmetic, so a derivation naming another reading
+does not apply. -/
+theorem stale_model_refused (steps : List Step) :
+    wellFormed ⟨revision, "ngraph-sem/1", steps⟩ = false := by
+  simp [wellFormed, modelRevision]
 
 /-- A certificate over the declared step bound is refused. -/
 theorem over_bound_refused (steps : List Step) (hbound : maxSteps < steps.length) :
-    wellFormed ⟨revision, steps⟩ = false := by
+    wellFormed ⟨revision, modelRevision, steps⟩ = false := by
   have hfalse : steps.length ≤ maxSteps ↔ False :=
     ⟨Nat.not_le.mpr hbound, False.elim⟩
   unfold wellFormed
@@ -249,9 +266,15 @@ theorem neutral_mul_right_claim_refused :
 
 /-- A stale revision kills acceptance even when every step would be accepted. -/
 theorem stale_revision_kills_acceptance (graph : Graph) (steps : List Step) :
-    accepted graph ⟨"ngraph-cert/1", steps⟩ = false := by
+    accepted graph ⟨"ngraph-cert/1", modelRevision, steps⟩ = false := by
   unfold accepted
   simp [wellFormed, revision]
+
+/-- A stale model revision kills acceptance even when every step would be accepted. -/
+theorem stale_model_kills_acceptance (graph : Graph) (steps : List Step) :
+    accepted graph ⟨revision, "ngraph-sem/1", steps⟩ = false := by
+  unfold accepted
+  simp [wellFormed, modelRevision]
 
 /-! ### Acceptance implies the rule theorem -/
 
@@ -383,6 +406,7 @@ def multiFoldGraph : Graph where
 /-- The two folds are checked against the original graph, as in `cert.rs`. -/
 def multiFoldDerivation : Derivation where
   revision := revision
+  model := modelRevision
   steps := [
     ⟨0, 2, 0, 1, 3, 5, 8⟩,
      ⟨0, 5, 3, 4, 7, 9, 16⟩]

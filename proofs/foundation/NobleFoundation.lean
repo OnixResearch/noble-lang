@@ -37,6 +37,7 @@ import NobleFoundation.SymbolicRefusalsReplay
 import NobleFoundation.SymbolicEncoderCorpus
 import NobleFoundation.Certificate
 import NobleFoundation.CertificateCodec
+import NobleFoundation.CertificateCorpus
 import NobleFoundation.PackedLayout
 import NobleFoundation.Regressions
 import NobleFoundation.Helper

@@ -1,0 +1,5 @@
+   Compiling noble-kernel v0.0.0 (/home/brittonr/.cache/noble-iss/wt/cert-42/crates/noble-kernel)
+   Compiling noble-contracts v0.0.0 (/home/brittonr/.cache/noble-iss/wt/cert-42/crates/noble-contracts)
+   Compiling noble-ngraph v0.0.0 (/home/brittonr/.cache/noble-iss/wt/cert-42/crates/noble-ngraph)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 8.00s
+     Running tests/rewrite_cost.rs (/home/brittonr/.cache/noble-iss/scratch/cert-42/rewrite-cost-2026-11-13.json.evidence/target/debug/deps/rewrite_cost-de0940107f21480a)

@@ -3010,6 +3010,12 @@
       "claim": "A certificate naming another revision is refused."
     },
     {
+      "name": "NobleFoundation.Certificate.stale_model_refused",
+      "phase": 2,
+      "role": "certificate",
+      "claim": "A certificate produced for another semantic model revision is refused."
+    },
+    {
       "name": "NobleFoundation.Certificate.over_bound_refused",
       "phase": 2,
       "role": "certificate",
@@ -3094,6 +3100,12 @@
       "claim": "A stale revision kills acceptance even when every step would be accepted."
     },
     {
+      "name": "NobleFoundation.Certificate.stale_model_kills_acceptance",
+      "phase": 2,
+      "role": "certificate",
+      "claim": "A stale semantic model revision kills acceptance even when every step would be accepted."
+    },
+    {
       "name": "NobleFoundation.Certificate.accepted_implies_checked",
       "phase": 2,
       "role": "certificate",
@@ -3148,6 +3160,12 @@
       "claim": "Decoding an encoded step whose rule identity is modelled returns the same step."
     },
     {
+      "name": "NobleFoundation.CertificateCodec.decimal_repr",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "A decimal natural-number token parses back to the value rendered by Nat.repr."
+    },
+    {
       "name": "NobleFoundation.CertificateCodec.decode_encode_replays",
       "phase": 2,
       "role": "certificate-codec",
@@ -3178,6 +3196,12 @@
       "claim": "A stale revision token refuses decoding before any step is inspected."
     },
     {
+      "name": "NobleFoundation.CertificateCodec.stale_model_token_refused",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "A stale model token refuses decoding before any step is inspected."
+    },
+    {
       "name": "NobleFoundation.CertificateCodec.chunk_count_refused",
       "phase": 2,
       "role": "certificate-codec",
@@ -3194,6 +3218,60 @@
       "phase": 2,
       "role": "certificate-codec",
       "claim": "A transport round trip preserves acceptance of a derivation."
+    },
+    {
+      "name": "NobleFoundation.Certificate.Corpus.certGraph_wellFormed",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "The multi-step Rust certificate fixture, transcribed as nodes, is a well-formed graph."
+    },
+    {
+      "name": "NobleFoundation.Certificate.Corpus.wire_envelope_decodes",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "The exact seven-token chunks cert::encode wrote decode to the modelled derivation."
+    },
+    {
+      "name": "NobleFoundation.Certificate.Corpus.stale_model_token_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "The fixture's chunks under another model token decode to nothing."
+    },
+    {
+      "name": "NobleFoundation.Certificate.Corpus.stale_revision_token_refused",
+      "phase": 2,
+      "role": "negative-control",
+      "claim": "The fixture's chunks under another revision token decode to nothing."
+    },
+    {
+      "name": "NobleFoundation.Certificate.Corpus.derivation_is_accepted",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "The modelled checker accepts the fixture's decoded derivation."
+    },
+    {
+      "name": "NobleFoundation.Certificate.Corpus.replay_matches_the_rust_result",
+      "phase": 2,
+      "role": "implementation-agreement",
+      "claim": "applyDerivation produces, node by node, the shapes the Rust result graph has."
+    },
+    {
+      "name": "NobleFoundation.Certificate.Corpus.reference_outputs_at_zero",
+      "phase": 2,
+      "role": "implementation-agreement",
+      "claim": "At the all-zero input the model's reference outputs at the fixture's declared slots are the values both Rust evaluators returned."
+    },
+    {
+      "name": "NobleFoundation.Certificate.Corpus.reference_outputs_at_boundary",
+      "phase": 2,
+      "role": "implementation-agreement",
+      "claim": "At a negative input pair around the I64 boundary the model's reference outputs are the values both Rust evaluators returned."
+    },
+    {
+      "name": "NobleFoundation.Certificate.Corpus.accepted_endpoint_agreement",
+      "phase": 2,
+      "role": "fixture",
+      "claim": "The model's replay endpoint theorem applies to the fixture: every node's denotation is preserved."
     },
     {
       "name": "NobleFoundation.PackedLayout.count_inflated_refused",
