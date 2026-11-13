@@ -1,7 +1,7 @@
 // Issue #41 item 4: allocation counts per lane and row count, measured out of process.
 //
 // The workspace forbids `unsafe_code`, so no counting global allocator can exist in any target.
-// This runner therefore profiles the ignored lane `crates/noble-ngraph/tests/batch_rows/alloc.rs`
+// This runner therefore profiles the ignored `allocation_lane` in `batch_rows/measure.rs`
 // with Valgrind's DHAT, pinned by store path, and records the process allocation totals. Each lane
 // is measured at 0 rows (the fixed cost of building, checking and preparing the graph) and at the
 // reported sizes, so the difference is the lane's own cost for those rows. DHAT's program-point
@@ -18,7 +18,7 @@ import { archiveWorkspace, gitText, pinnedCargo, runCargo, systemBinary } from '
 import { spawnSync } from 'node:child_process';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const harness = 'crates/noble-ngraph/tests/batch_rows/alloc.rs';
+const harness = 'crates/noble-ngraph/tests/batch_rows/measure.rs';
 // Pinned by store path: DHAT is the tool that makes allocation counts possible without `unsafe`.
 const VALGRIND = '/nix/store/39iybd55afmpqlgf979ra06wj3q3wapa-valgrind-3.27.1/bin/valgrind';
 const VALGRIND_VERSION = 'valgrind-3.27.1';
