@@ -17,6 +17,7 @@ const TOOLS = JSON.parse(readFileSync(path.join(ROOT, "policy/tool-selection.jso
 const NICKEL = path.join(TOOLS.nickel.output, "bin/nickel");
 const PINNED_NODE = path.join(TOOLS.node.output, "bin/node");
 const SOURCE = "nickel/ngraph/fixtures/arithmetic.ncl";
+const DELAYED_SOURCE = "nickel/ngraph/fixtures/delayed-contract-failure.ncl";
 const LIBRARY = "nickel/ngraph/library.ncl";
 const CONTRACT = "nickel/ngraph/contract.ncl";
 const DECLARED_CLOSURE = [SOURCE, LIBRARY, CONTRACT];
@@ -116,6 +117,34 @@ function exportNickel(source) {
   return Buffer.from(result.stdout, "utf8");
 }
 
+function closureRefusal() {
+  try {
+    observeClosure(SOURCE, [SOURCE, CONTRACT]);
+  } catch (error) {
+    if (!String(error.message).includes("undeclared import in constructor closure")) throw error;
+    return { refused: true, code: "E-IMPORT-CLOSURE", declared: [SOURCE, CONTRACT] };
+  }
+  throw new Error("import-closure control unexpectedly accepted an undeclared import");
+}
+
+function delayedContractRefusal(graphPath) {
+  const result = run(NICKEL, ["export", "--format", "json", path.join(ROOT, DELAYED_SOURCE)]);
+  if (result.status === 0 || !result.stderr.includes("contract broken by a value")) {
+    throw new Error(`delayed-contract control did not fail at its demanded contract: ${result.stderr}`);
+  }
+  if (result.stdout.length !== 0 || existsSync(graphPath)) {
+    throw new Error("delayed-contract control produced export bytes or an admitted graph");
+  }
+  return {
+    fixture: DELAYED_SOURCE,
+    evaluator_exit: result.status,
+    contract_failure: "contract broken by a value",
+    exported_bytes: 0,
+    lowerer_invoked: false,
+    admitted_graph_created: false,
+  };
+}
+
 function jsonLines(text, label) {
   return text.split(/\r?\n/).filter(Boolean).map((line) => {
     try {
@@ -188,6 +217,12 @@ function replay(noblePath, outPath) {
   const importClosure = observeClosure(SOURCE, DECLARED_CLOSURE);
   const sourceBytes = readFileSync(path.join(ROOT, SOURCE));
   const rawExport = exportNickel(SOURCE);
+  const closureControl = closureRefusal();
+  const delayedGraphPath = path.join(out, "delayed-contract-admission.ngraph");
+  const delayedControl = delayedContractRefusal(delayedGraphPath);
+  const delayedClosure = observeClosure(DELAYED_SOURCE, [DELAYED_SOURCE, SOURCE, LIBRARY, CONTRACT]);
+  writeFileSync(path.join(out, "import-closure-control.json"), `${JSON.stringify(closureControl, null, 2)}\n`);
+  writeFileSync(path.join(out, "delayed-contract-control.json"), `${JSON.stringify({ ...delayedControl, import_closure: delayedClosure }, null, 2)}\n`);
   const exported = JSON.parse(rawExport.toString("utf8"));
   const parameters = exported.parameters;
   const versions = {
@@ -247,6 +282,8 @@ function replay(noblePath, outPath) {
     source: { path: SOURCE, sha256: sha256(sourceBytes), bytes: sourceBytes.length },
     import_closure: { policy: "exact ordered relative paths", declared: DECLARED_CLOSURE, observed: importClosure },
     evaluator,
+    import_closure_control: closureControl,
+    delayed_contract_control: delayedControl,
     exported: { sha256: exportSha, bytes: rawExport.length },
     constructor: { sha256: sha256(boundBytes), bundle_sha256: bundleSha, bytes: boundBytes.length },
     admission: {
