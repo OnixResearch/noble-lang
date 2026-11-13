@@ -13,7 +13,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = realpathSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."));
-const TOOLS = JSON.parse(readFileSync(path.join(ROOT, "policy/tool-selection.json"), "utf8")).tools;
+const TOOLS = JSON.parse(readFileSync(path.join(ROOT, "policy/tool-selection.json"), "utf8")).tool_paths;
 const NICKEL = path.join(TOOLS.nickel.output, "bin/nickel");
 const PINNED_NODE = path.join(TOOLS.node.output, "bin/node");
 const SOURCE = "nickel/ngraph/fixtures/arithmetic.ncl";
