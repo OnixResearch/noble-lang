@@ -470,6 +470,47 @@ mod tests {
         std::fs::remove_dir_all(&root).expect("clean up");
     }
 
+    /// Issue #120's counterexample: before the fix, `contract-\x80.olean` and
+    /// `contract-\x81.olean` decoded to the same lossy name, so two different
+    /// trees with equal contents bound to one digest. Both must now be refused,
+    /// while two distinct UTF-8 names keep distinct identities.
+    #[test]
+    fn distinct_non_utf8_names_never_share_a_tree_identity() {
+        use std::os::unix::ffi::OsStringExt;
+        let root = scratch("lossy-pair");
+        let lean = root.join("lean");
+        std::fs::create_dir_all(&root).expect("create root");
+        std::fs::write(&lean, b"binary").expect("write binary");
+        let mut digests = std::vec::Vec::new();
+        for (tree, name) in [
+            ("a", b"contract-\x80.olean".to_vec()),
+            ("b", b"contract-\x81.olean".to_vec()),
+            ("c", b"contract-a.olean".to_vec()),
+            ("d", b"contract-b.olean".to_vec()),
+        ] {
+            let library = root.join(tree);
+            std::fs::create_dir_all(&library).expect("create tree");
+            std::fs::write(library.join(std::ffi::OsString::from_vec(name)), b"same")
+                .expect("write file");
+            digests.push(bind(&lean, &library).map(|selected| selected.library_sha256));
+        }
+        for refused in &digests[..2] {
+            let Err(failure) = refused else {
+                std::panic!("a non-UTF-8 name must be refused, not digested");
+            };
+            assert!(
+                failure.message.contains("must be UTF-8"),
+                "{}",
+                failure.message
+            );
+        }
+        let (Ok(first), Ok(second)) = (&digests[2], &digests[3]) else {
+            std::panic!("UTF-8 names must bind");
+        };
+        assert_ne!(first, second, "distinct names keep distinct identities");
+        std::fs::remove_dir_all(&root).expect("clean up");
+    }
+
     #[test]
     fn a_symlink_in_the_tree_is_refused() {
         let root = scratch("link");
