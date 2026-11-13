@@ -492,3 +492,13 @@ retained `claims.json`, the Phase 3 slice with its helper-transcription pin, the
 EMI, linking and host-locality lanes and their verifiers; the stale-receipt control refused, as
 required. The check audits 1293 inventoried theorems with `clean_source: true` under Lean 4.35.0.
 The receipt is evidence for that commit and tree only.
+
+## 8f1fad196 — campaign batch 2
+
+`8f1fad196/` records the clean run of `verification/foundation/ci.sh` after batch 2 merged
+issues #47, #119, #112, #121, #56, #42, #77, #64 and #116 and vendored `OnixResearch/inets`
+(`proofs/inets/`) as the `InteractionNets` library. Every stage reported 0 (`overall=0`): the
+check, the claims audit and its comparison with the retained `claims.json`, the Phase 3 slice,
+the differential, EMI, linking and host-locality lanes and their verifiers; the stale-receipt
+control refused, as required. The check audits 1450 inventoried theorems (55 private helpers)
+with `clean_source: true` under Lean 4.35.0. The receipt is evidence for that commit and tree only.
