@@ -22,28 +22,29 @@ to, and carries the machine-readable markers `measure.mjs` costs it from.
 
 | Example | Form | authored tokens | of which stack words | quotations | compile median (min/max) | module bytes / lines | execution steps | allocated bytes | value | reported height / `stack_length` |
 |---|---|---|---|---|---|---|---|---|---|---|
-| nested-product | explicit | 9 | 6 | 0 | 9.896 ms (4.923–11.959) | 61 094 B / 1057 | 25 | 1152 B | `Pair(2, 5)` | 1/1 |
-| nested-product | `dip` | 10 | 5 | 1 | 5.26 ms (4.364–6.076) | 61 653 B / 1063 | 27 | 1200 B | `Pair(2, 5)` | 1/1 |
-| nested-product | `dip`-library | 19 | 8 | 4 | 4.905 ms (4.086–5.245) | 68 686 B / 1173 | 48 | 1968 B | `Pair(2, 5)` | 1/1 |
-| nested-product | library | 18 | 9 | 3 | 7.416 ms (6.489–9.661) | 68 127 B / 1167 | 46 | 1920 B | `Pair(2, 5)` | 1/1 |
-| type-changing-nested | explicit | 9 | 6 | 0 | 4.882 ms (3.624–5.893) | 62 328 B / 1077 | 28 | 1152 B | `Pair(Bool false, 5)` | 1/1 |
-| type-changing-nested | `dip` | 10 | 5 | 1 | 6.192 ms (5.322–10.74) | 62 876 B / 1083 | 30 | 1200 B | `Pair(Bool false, 5)` | 1/1 |
-| type-changing-nested | `dip`-library | 19 | 8 | 4 | 6.296 ms (5.992–7.226) | 70 386 B / 1198 | 52 | 1968 B | `Pair(Bool false, 5)` | 1/1 |
-| type-changing-nested | library | 18 | 9 | 3 | 6.458 ms (5.287–8.359) | 69 839 B / 1192 | 50 | 1920 B | `Pair(Bool false, 5)` | 1/1 |
-| type-changing-step | explicit | 3 | 1 | 0 | 5.003 ms (3.936–7.409) | 56 472 B / 970 | 12 | 288 B | `Bool false` | 1/1 |
-| type-changing-step | library | 9 | 3 | 2 | 5.264 ms (4.2–7.563) | 61 043 B / 1045 | 26 | 768 B | `Bool false` | 1/1 |
+| nested-product | explicit | 9 | 6 | 0 | 7.601 ms (4.823–9.761) | 61 094 B / 1057 | 25 | 1152 B | `Pair(2, 5)` | 1/1 |
+| nested-product | `dip` | 10 | 5 | 1 | 6.972 ms (5.333–11.388) | 61 653 B / 1063 | 27 | 1200 B | `Pair(2, 5)` | 1/1 |
+| nested-product | `dip`-library | 19 | 8 | 4 | 6.886 ms (4.031–9.428) | 68 686 B / 1173 | 48 | 1968 B | `Pair(2, 5)` | 1/1 |
+| nested-product | library | 18 | 9 | 3 | 8.159 ms (5.765–12.211) | 68 127 B / 1167 | 46 | 1920 B | `Pair(2, 5)` | 1/1 |
+| type-changing-nested | explicit | 9 | 6 | 0 | 4.087 ms (3.299–6.957) | 62 328 B / 1077 | 28 | 1152 B | `Pair(Bool false, 5)` | 1/1 |
+| type-changing-nested | `dip` | 10 | 5 | 1 | 4.93 ms (3.434–5.905) | 62 876 B / 1083 | 30 | 1200 B | `Pair(Bool false, 5)` | 1/1 |
+| type-changing-nested | `dip`-library | 19 | 8 | 4 | 6.441 ms (5.205–6.984) | 70 386 B / 1198 | 52 | 1968 B | `Pair(Bool false, 5)` | 1/1 |
+| type-changing-nested | library | 18 | 9 | 3 | 5.931 ms (5.503–7.158) | 69 839 B / 1192 | 50 | 1920 B | `Pair(Bool false, 5)` | 1/1 |
+| type-changing-step | explicit | 3 | 1 | 0 | 8.332 ms (7.054–9.889) | 56 472 B / 970 | 12 | 288 B | `Bool false` | 1/1 |
+| type-changing-step | library | 9 | 3 | 2 | 6.288 ms (5.022–8.619) | 61 043 B / 1045 | 26 | 768 B | `Bool false` | 1/1 |
 
 Seven runs after a warm-up per form on one `noble` binary — the receipt records its SHA-256
 (`4c432d62…`), its cargo profile (`release`) and the source commit it was produced from
-(`d5a2437`, clean tree) — with `compile --opt off`, and the executed shape from `noble live repl`
+(`adffa9d`, clean tree) — with `compile --opt off`, and the executed shape from `noble live repl`
 on the same source. `type-changing-nested` in every form is the pair the first revision of this
 lane was missing: a nested update whose inner operation turns an `I64` into a `Bool`, so the
 reconstruction type differs from the input type.
 
 **Read the timing column per receipt, not across receipts.** Wall time belongs to the binary and the
 host. The 2026-10-31 receipt measured a packaged release CLI (medians near 1.5 ms); this one
-measured the release build of this worktree, and its own min/max spreads (for example explicit
-4.923–11.959 ms) overlap between forms. At this scale the medians establish no ordering of checking
+measured the release build of this worktree, and its own min/max spreads (for example `nested-product` explicit
+4.823–9.761 ms, and 8.159 ms for the library form against 7.601 ms for the explicit one) overlap and
+reverse between forms. At this scale the medians establish no ordering of checking
 cost, so this lane makes no checking-cost claim from them. Module bytes, line counts and execution
 steps are properties of the emitted programs and of the checked work, and those are stable across
 both receipts: the explicit and library forms reproduce the 2026-10-31 values byte for byte in their
