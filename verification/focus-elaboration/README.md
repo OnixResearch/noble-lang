@@ -1,47 +1,93 @@
-# Three authoring forms for focused, move-threaded updates (issue #79)
+# Authoring forms for focused, move-threaded updates (issue #79)
 
-This lane answers issue #79: compare the **same bounded examples** in three authoring forms —
-explicit stack code, a derived wiring-library form, and proposed focus sugar — with numbers, and
-say which examples run in today's selected source profile and which are model-only.
+This lane answers issue #79: compare the **same bounded examples** in the authoring forms today's
+selected source profile actually offers — explicit stack code, the `dip` form, and a derived
+wiring-library form — against a proposed focus sugar, with numbers, and say which examples run in
+the profile and which are model-only.
 
 ## Forms
 
 | Form | What it is | Status here |
 |---|---|---|
 | explicit | the word sequence written out by hand at the use site (`pair`, `unpair`, `swap`, `+`) | compiled, timed and executed |
+| `dip` | the same update using the profile's own word for reaching the cell *under* the top one (`x y [q] dip` applies `q` to `x`), so the update needs no swap pair and captures no residual | compiled, timed and executed |
 | library | the same checked operations factored into quotations and composed (`compose`, `run`), which is what a derived wiring library would supply instead of the idiom at each use | compiled, timed and executed |
-| sugar | a proposed finite focus surface (`focus` over a product path, exactly one active focus) that elaborates into the library form | **model-only**: no such syntax exists in the selected profile, so its numbers are authored-source sizes of the expansion, never a compile time or a step count |
+| sugar | a proposed finite focus surface (`focus` over a product path, exactly one active focus) that elaborates into a compiled form | **model-only**: no such syntax exists in the selected profile, so its numbers are authored-source sizes, never a compile time or a step count |
 
 Timing a form that cannot be compiled would be inventing data, so sugar has no compile or execution
-row. `forms/proposed-sugar.md` states what the two snippets would be and which compiled form each
-expands to.
+row. `forms/proposed-sugar.md` states what each snippet would be, which compiled form it expands
+to, and carries the machine-readable markers `measure.mjs` costs it from.
 
-## Examples and results (2026-10-31, `receipts/2026-10-31/measure.json`)
+## Examples and results (2026-11-13, `receipts/2026-11-13/measure.json`)
 
-Both compiled forms of each example produce the **same value**, so the comparison is on identical
-checked work rather than on plausibility:
+| Example | Form | authored tokens | of which stack words | quotations | compile median (min/max) | module bytes / lines | execution steps | allocated bytes | value | reported height / `stack_length` |
+|---|---|---|---|---|---|---|---|---|---|---|
+| nested-product | explicit | 9 | 6 | 0 | 9.896 ms (4.923–11.959) | 61 094 B / 1057 | 25 | 1152 B | `Pair(2, 5)` | 1/1 |
+| nested-product | `dip` | 10 | 5 | 1 | 5.26 ms (4.364–6.076) | 61 653 B / 1063 | 27 | 1200 B | `Pair(2, 5)` | 1/1 |
+| nested-product | `dip`-library | 19 | 8 | 4 | 4.905 ms (4.086–5.245) | 68 686 B / 1173 | 48 | 1968 B | `Pair(2, 5)` | 1/1 |
+| nested-product | library | 18 | 9 | 3 | 7.416 ms (6.489–9.661) | 68 127 B / 1167 | 46 | 1920 B | `Pair(2, 5)` | 1/1 |
+| type-changing-nested | explicit | 9 | 6 | 0 | 4.882 ms (3.624–5.893) | 62 328 B / 1077 | 28 | 1152 B | `Pair(Bool false, 5)` | 1/1 |
+| type-changing-nested | `dip` | 10 | 5 | 1 | 6.192 ms (5.322–10.74) | 62 876 B / 1083 | 30 | 1200 B | `Pair(Bool false, 5)` | 1/1 |
+| type-changing-nested | `dip`-library | 19 | 8 | 4 | 6.296 ms (5.992–7.226) | 70 386 B / 1198 | 52 | 1968 B | `Pair(Bool false, 5)` | 1/1 |
+| type-changing-nested | library | 18 | 9 | 3 | 6.458 ms (5.287–8.359) | 69 839 B / 1192 | 50 | 1920 B | `Pair(Bool false, 5)` | 1/1 |
+| type-changing-step | explicit | 3 | 1 | 0 | 5.003 ms (3.936–7.409) | 56 472 B / 970 | 12 | 288 B | `Bool false` | 1/1 |
+| type-changing-step | library | 9 | 3 | 2 | 5.264 ms (4.2–7.563) | 61 043 B / 1045 | 26 | 768 B | `Bool false` | 1/1 |
 
-| Example | Form | authored tokens | of which stack words | quotations | compile median (min/max) | module bytes / lines | execution steps | allocated bytes | value |
-|---|---|---|---|---|---|---|---|---|
-| nested-product | explicit | 9 | 6 | 0 | 1.567 ms (1.419–2.234) | 61 094 / 1057 | 25 | 1152 | `Pair(2, 5)` |
-| nested-product | library | 18 | 9 | 3 | 1.829 ms (1.728–2.134) | 68 127 / 1167 | 46 | 1920 | `Pair(2, 5)` |
-| nested-product | sugar | 6 | 2 | 1 | — not compilable — | — | — | — | model-only |
-| type-changing-step | explicit | 3 | 1 | 0 | 1.499 ms (1.291–1.768) | 56 472 / 970 | 12 | 288 | `Bool false` |
-| type-changing-step | library | 9 | 3 | 2 | 1.510 ms (1.408–1.698) | 61 043 / 1045 | 26 | 768 | `Bool false` |
-| type-changing-step | sugar | 4 | 1 | 1 | — not compilable — | — | — | — | model-only |
+Seven runs after a warm-up per form on one `noble` binary — the receipt records its SHA-256
+(`4c432d62…`), its cargo profile (`release`) and the source commit it was produced from
+(`d5a2437`, clean tree) — with `compile --opt off`, and the executed shape from `noble live repl`
+on the same source. `type-changing-nested` in every form is the pair the first revision of this
+lane was missing: a nested update whose inner operation turns an `I64` into a `Bool`, so the
+reconstruction type differs from the input type.
 
-Seven runs after a warm-up per form, `noble compile --opt off`; the executed shape is
-`noble live repl` on the same source. The receipt records the binary's SHA-256
-(`980ed0e1…`), so these numbers belong to one checked CLI build rather than to a moving target.
+**Read the timing column per receipt, not across receipts.** Wall time belongs to the binary and the
+host. The 2026-10-31 receipt measured a packaged release CLI (medians near 1.5 ms); this one
+measured the release build of this worktree, and its own min/max spreads (for example explicit
+4.923–11.959 ms) overlap between forms. At this scale the medians establish no ordering of checking
+cost, so this lane makes no checking-cost claim from them. Module bytes, line counts and execution
+steps are properties of the emitted programs and of the checked work, and those are stable across
+both receipts: the explicit and library forms reproduce the 2026-10-31 values byte for byte in their
+module sizes and step counts.
 
-**What the numbers say.** At this scale the composed library form is *more* expensive on every
-axis measured — more authored tokens, more execution steps (46 vs 25, 26 vs 12), a larger
-generated module and more allocation — because composition pays one captured-quotation dispatch
-per boundary. A wiring library earns its keep only when the same factored operation is reused
-several times; two examples of one use each cannot show that, and this lane does not pretend
-they do. The sugar's authored size is closest to the explicit form while keeping the checked
-composition, which is the only direction in which sugar is cheaper than the library form it
-expands to.
+**What the numbers do say.** Every form of every example family produces the same value, so the
+comparison is on identical checked work. The composed library form is more expensive on every
+program-property axis measured — more authored tokens, more execution steps (46 vs 25, 50 vs 28,
+26 vs 12), a larger generated module (+11.5 %, +12.1 %, +8.1 %) and more allocation — because each
+composition boundary pays one captured-quotation dispatch. The `dip` form removes the swap pair from
+the source (5 stack-manipulation words against 6) but is *not* cheaper overall at this size: it adds
+one quotation and one captured dispatch per update (27 steps against 25, 30 against 28; 61 653 B
+against 61 094 B; 1200 B allocated against 1152 B). Its case is structural — no swap pair to get
+wrong, and no residual captured as a first-class Program — not lexical or runtime cost.
+
+## What the receipt observes, and what the profile does not expose
+
+Per form the receipt records the observations issue item 3 asks for, and names the one the profile
+cannot give:
+
+| Axis | What is recorded | How it is obtained |
+|---|---|---|
+| value | the typed top-of-stack cell, unmodified as the CLI reports it (`topOfStack`, `value`) | `noble live repl` report `stack` |
+| stack order | the whole ordered typed stack; `stackOrder` is its type sequence, so a differential sees a swap of two same-typed cells | `readStack` enumerates the bottom of the stack first, and the receipt establishes that direction with its own `1 5` probe (`stackOrderProbe.bottomToTop: true`) instead of asserting it |
+| stack height | `metrics.stack_length` cross-checked against the number of reported cells (`stackHeightConsistent`); 1/1 for every form here | the CLI's own metric, not a count derived from the array |
+| effect trace | `guest_requests` and `request_trace` (`effectTrace`); `0` and empty for every pure form here | `noble live repl` report |
+| resource obligations | **not observable in this profile**, recorded as `{"observable": false}` with the reason | no must-use resource word exists in source, so no form here owns an obligation to observe; that axis is #59's fragment (`proofs/foundation/NobleFoundation/Ownership.lean`) |
+
+The `1 5` probe is a measurement of the reporting surface, not a form: it is excluded from the form
+rows and recorded once at the top of the receipt.
+
+## Proposed sugar
+
+| Sugar | authored tokens | tokens with parentheses stripped | expands to (tokens) | inlined explicit form (tokens) | composed library form (tokens) |
+|---|---|---|---|---|---|
+| nested-product | 7 | 7 | `nested-product.dip` (10) | `nested-product.explicit` (9) | `nested-product.library` (18) |
+| type-changing-nested | 7 | 7 | `type-changing-nested.dip` (10) | `type-changing-nested.explicit` (9) | `type-changing-nested.library` (18) |
+| type-changing-step | 4 | 4 | `type-changing-step.library` (9) | `type-changing-step.explicit` (3) | `type-changing-step.library` (9) |
+
+`measure.mjs` costs each sugar snippet by the same whitespace-token rule it applies to the `.noble`
+files, marks it `"compilable": false` and records the compiled form it expands to. It also refuses a
+run in which a `role=expansion` block in `forms/proposed-sugar.md` no longer equals the form file it
+restates, so those two documents cannot drift apart. The sugar never gets a compile time, a module
+size or a step count here.
 
 ## The third example is model-only, with the reason named
 
@@ -53,26 +99,36 @@ expands to.
 
 ```sh
 node verification/focus-elaboration/measure.mjs \
-  --noble <noble-cli> --output verification/focus-elaboration/receipts/<date>/measure.json
+  --noble <noble-cli> --output <scratch>/measure.json
 ```
+
+The script refuses a dirty working tree with exit 3 and the offending paths named, because a receipt
+that cites a commit must have been produced from that commit; `--allow-dirty` downgrades that to a
+recorded `"cleanTreeEvidence": false` for a deliberate exploratory run. It exits non-zero if a form
+fails to compile or execute, if a sugar expansion block stops matching its form, if a comparison
+names a form that was not measured, or if the stack-order probe does not establish the report
+direction — a receipt is never written past those silently. Run it with a release build for numbers
+comparable to the packaged CLI; a debug build's wall times are not.
 
 ## Where the rest of the issue lives
 
 | Document | Answers |
 |---|---|
-| `decision.md` | the written go/no-go: no new focus syntax now, library-form composition selected, and what would reopen it |
-| `differential-plan.md` | the oracle, vectors and rules for later differential tests of values, stack order, resource obligations and effect traces, with every unexecuted vector marked `not-run` |
+| `decision.md` | the written go/no-go: no new focus syntax now, library-form composition selected, the recomputed sugar-against-inlining comparison, and what would reopen it |
+| `differential-plan.md` | the oracle, vectors and rules for later differential tests of values, stack order, resource obligations and effect traces; every item 4–5 control mapped to a #59 theorem or to "not expressible"; every unexecuted vector marked `not-run` |
 | `obligations.md` | the five obligations kept formally separate, each asserted as *none* today |
-| `forms/proposed-sugar.md` | the sugar snippets and the compiled form each expands to |
+| `forms/proposed-sugar.md` | the sugar snippets, the compiled form each expands to, and what a selectable design would still need |
 
 ## Non-claims
 
-- Compile wall time is a frontend measurement on one host, not a proof-cost claim; the checker's
-  cost is roughly the same per program, and the module sizes differ because the authored programs
-  differ.
+- Compile wall time is a frontend measurement on one host and one binary, not a proof-cost claim.
+  Do not compare medians across receipts; compare module sizes and step counts, or re-measure.
 - No form is claimed to produce identical recipe or hash identities. Different elaboration may
-  produce different Programs; only the checked *value* is compared above.
-- The sugar is neither implemented nor proposed as selected syntax here. Whether to select it is
-  the owner's decision, and the issue comment records these numbers as the input to that decision.
+  produce different Programs; only the checked value, the ordered typed stack, the reported height
+  and the effect trace are compared.
+- The sugar is neither implemented nor proposed as selected syntax here. Whether to select it is the
+  owner's decision, and these numbers are the input to that decision.
+- Agreement between hand-authored forms on one build is not a theorem about an elaborator; the five
+  obligations in `obligations.md` remain unasserted.
 - Nothing here proves the move-threaded example in Lean beyond the ownership fragment that already
   exists, and no correspondence between the model and the selected profile is implied.
