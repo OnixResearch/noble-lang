@@ -284,7 +284,7 @@ fn assert_restored(result: &noble_ngraph_experiment::opt::TrialResult, parent: &
     assert_eq!(result.checkpoint.counters, parent.counters);
 }
 
-fn assert_fault_events(records: &[noble_ngraph_experiment::opt::AttemptRecord], after_steps: u64) {
+fn assert_fault_events(records: &[noble_ngraph_experiment::opt::AttemptRecord], after_steps: usize) {
     assert!(matches!(&records[0].event, AttemptEvent::StepStaged { .. }));
     assert!(
         matches!(&records[1].event, AttemptEvent::FaultInjected { after_steps: observed } if *observed == after_steps)
@@ -338,7 +338,7 @@ fn opt_snapshot_provenance_binds_artifacts_and_keeps_parents_stable() {
     assert_eq!(parent.snapshot.id(), parent_id);
     assert_eq!(parent.snapshot.parameter_bytes(), parent_bytes);
     assert_eq!(parent.snapshot.state_bytes(), &parent_state);
-    assert_eq!(result.checkpoint.snapshot.state_bytes(), &[]);
+    assert!(result.checkpoint.snapshot.state_bytes().is_empty());
     assert_eq!(
         result.checkpoint.counters,
         Counters {
