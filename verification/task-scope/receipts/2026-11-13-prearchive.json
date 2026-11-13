@@ -1,0 +1,182 @@
+{
+  "schema": "noble-task-scope-receipt/v1",
+  "issue": 115,
+  "clean_source": true,
+  "source_commit": "f0c983b97b5c43aa10ac3b258c4a4eba96972598",
+  "source_tree": "bac74a0119d99ca8917c39d49962e901748efb0a",
+  "change_package": {
+    "path": ".cairn/changes/m6-task-scope",
+    "revision_sha256": "fcac80276c33dd2cdc761487880af4831e11193fca974ce50329222197575f28",
+    "files_sha256": {
+      "proposal.md": "07d1dd4c1c9478457e037c9ebe9840184427dcbf558e83e63ea480cdcdba2569",
+      "design.md": "467157a26ae2c74d6d3f98057273d2b1b6e09fa86d2a6026a30f9e0c4378c614",
+      "tasks.md": "c96cb85108719f18f9abdfc1808cbf42a2637332567e47757f02b30d09c022be",
+      "metadata.json": "a6fd5ca231a3bb7b2746437ddfeea40804e0b37172b383ad5cf5ca2bf064d0a9",
+      "specs/resource-adapters/spec.md": "251d06f8aea3ca72d42fb8164a6745578529065a019d0ac660a0467d27119ee4"
+    }
+  },
+  "foundation_module": {
+    "model": "proofs/foundation/NobleFoundation/TaskScope.lean",
+    "generated_adapter_corpus": "proofs/foundation/NobleFoundation/TaskScopeCorpus.lean",
+    "files_sha256": {
+      "proofs/foundation/NobleFoundation/TaskScope.lean": "07d99947405cd9c166d38d8801ccfdfa53df801d016e45831e26b9f7e3024157",
+      "proofs/foundation/NobleFoundation/TaskScopeCorpus.lean": "13ac3e59c35719f069a3bdd834847752126cb728222487026b54826124701052",
+      "proofs/foundation/NobleFoundation.lean": "d526879dc174c3277a7460dbf68e1f0b5913b43b6a095e2d3c679529967066d9",
+      "proofs/foundation/README.md": "bafd29462e98b7eb77bd0cbed43ef562a5834181baf2ecbd32c10c6c88d9943d",
+      "proofs/foundation/inventory.json": "aceabf2aa8ea3c718af1e5e9cf0870428e9dbf1d60493018b76440821ac4f445"
+    },
+    "proof_receipt": {
+      "path": "foundation/foundation-check.json",
+      "sha256": "f3a209c6fd7992f443a7f2a16bba39ddc5621c7282d32ddaedebeb6a8cb86291",
+      "source_commit": "f0c983b97b5c43aa10ac3b258c4a4eba96972598",
+      "source_tree": "bac74a0119d99ca8917c39d49962e901748efb0a",
+      "theorem_count": 1338,
+      "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+      "lean_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+      "allowed_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    }
+  },
+  "declared_bounds": {
+    "children": 2,
+    "alphabet": [
+      "admission left1",
+      "attach left1",
+      "admission right2",
+      "attach right2",
+      "succeed left1",
+      "fail left1",
+      "deliver left1",
+      "cancel left1",
+      "succeed right2",
+      "deliver right2",
+      "cancel right2",
+      "wake left1",
+      "takeWake left1",
+      "stopped left1",
+      "settlePins left1"
+    ],
+    "depth": 3,
+    "bounded_sequences_including_empty": 3616
+  },
+  "evidence": {
+    "model_proofs": {
+      "status": "passed",
+      "command": {
+        "argv": [
+          "/home/brittonr/.cache/noble-iss/slot.sh",
+          "lean",
+          "3",
+          "verification/ci/lean-proofs.sh",
+          "--allow-dirty",
+          "/home/brittonr/.cache/noble-iss/scratch/scope-115/receipt-prearchive-f0c983b/lean-proofs"
+        ],
+        "exit_code": 0,
+        "result_lines": [
+          "[lean-proofs] m3-build rc=0",
+          "[lean-proofs] m3-gate rc=0",
+          "[lean-proofs] foundation-build rc=0",
+          "[lean-proofs] foundation-check rc=0"
+        ],
+        "stdout_sha256": "1b9407c411db716587229d20c1ae7d54f1b5996d2ddfde4050bc905306d45f84",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "scope": "The whole-tree pinned Lean proof lane passed; TaskScope and TaskScopeCorpus are included in the foundation project."
+    },
+    "adapter_runtime": {
+      "status": "passed",
+      "commands": [
+        {
+          "argv": [
+            "/home/brittonr/.cache/noble-iss/cargo.sh",
+            "test",
+            "-p",
+            "noble-kernel",
+            "--test",
+            "m6-interleaving",
+            "--test",
+            "m6-async",
+            "--offline",
+            "--locked"
+          ],
+          "exit_code": 0,
+          "result_lines": [
+            "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+            "test result: ok. 19 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+            "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.10s"
+          ],
+          "stdout_sha256": "fceac88636097a7c528b1798961e9c94d6a483557b205c6a49680cf87141dddf",
+          "stderr_sha256": "89b2310da2da2f401ece704b4ad4ffb866fd9d74ffb7378a636efb06077a0c79"
+        },
+        {
+          "argv": [
+            "/home/brittonr/.cache/noble-iss/cargo.sh",
+            "test",
+            "-p",
+            "noble-cli",
+            "--bin",
+            "noble",
+            "--all-features",
+            "--offline",
+            "--locked",
+            "--",
+            "worker_program_guest"
+          ],
+          "exit_code": 0,
+          "result_lines": [
+            "test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 8.65s",
+            "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s"
+          ],
+          "stdout_sha256": "05d10ec727288b0bcb8f438e9e8a7fd27f1b42fa9d44256be91eb27226e97eb4",
+          "stderr_sha256": "680e803cea32dc18cce2f24f6e02effcd4af8b413242caca265850a03b306335"
+        }
+      ]
+    }
+  },
+  "host_assumptions": [
+    "One serialized host owner and unique host-issued scope identities.",
+    "The host authenticates native-stop observation and keeps the retirement registry alive to perform inherited cleanup.",
+    "The adapter exercises finite traces and the existing M6 Table; it does not provide production ExecutionScope integration."
+  ],
+  "non_claims": [
+    "No Rust-to-Lean refinement theorem or universal correspondence is established.",
+    "No nesting, more than two children, fairness, liveness, native authenticity, eventual native completion, or cleanup after host death is claimed.",
+    "The existing ExecutionScope tests are regressions only, not an implementation of task groups."
+  ],
+  "files_sha256": {
+    "proofs/foundation/NobleFoundation/TaskScope.lean": "07d99947405cd9c166d38d8801ccfdfa53df801d016e45831e26b9f7e3024157",
+    "proofs/foundation/NobleFoundation/TaskScopeCorpus.lean": "13ac3e59c35719f069a3bdd834847752126cb728222487026b54826124701052",
+    "proofs/foundation/NobleFoundation.lean": "d526879dc174c3277a7460dbf68e1f0b5913b43b6a095e2d3c679529967066d9",
+    "proofs/foundation/README.md": "bafd29462e98b7eb77bd0cbed43ef562a5834181baf2ecbd32c10c6c88d9943d",
+    "proofs/foundation/inventory.json": "aceabf2aa8ea3c718af1e5e9cf0870428e9dbf1d60493018b76440821ac4f445",
+    "crates/noble-kernel/tests/m6-interleaving.rs": "98e885b78f3c39903da9f0e7935e6c70563153e51e0cc42263050386cf3fda5b",
+    "crates/noble-kernel/tests/m6_interleaving/support.rs": "8a6d975f5b78c6a4cacad8130bace11d770b5392c4a1d7e72c4e33cf1b420ff8",
+    "crates/noble-kernel/tests/m6_interleaving/capacity.rs": "a64069d6413893b6a15e183468b350d70922833a156aa3edf16635ddfbffe992",
+    "crates/noble-kernel/tests/m6_interleaving/scope/manager.rs": "1f46afa83ed34a6e09a75adc759411f93ae7ff681245133ea733d6fc09808550",
+    "crates/noble-kernel/tests/m6_interleaving/scope/lifecycle.rs": "a7f868638acf58f4fec154682f47d423d7506e4bde19b644fa2c06e90e3afd3c",
+    "crates/noble-kernel/tests/m6_interleaving/scope/controls/drop.rs": "72e254867922f19f298668359cf28a8302f7ba15623a6b9137c546e4b5017724",
+    "crates/noble-kernel/tests/m6_interleaving/scope/registry.rs": "d3c3b85d72158bffb983cf78907b799c08c8333c8524b8f851c68bc778c99ccb",
+    "crates/noble-kernel/tests/m6_interleaving/scope/support.rs": "ad3d161c8aae6990d7c4b69a0e6bf101fa10ed8650bb60de05e5a5a3279a2d78",
+    "crates/noble-kernel/tests/m6_interleaving/scope/traces.rs": "7edc136bcea770ecaa1cd5a2e8d8c4ef782642d9783f4b86226b04981df4bf07",
+    "crates/noble-kernel/tests/m6_interleaving/scope/corpus/retirement.rs": "3e2a0738b1411f1abb479203a8fed3e117c544f3f8011c044b89bc5054c136ae",
+    "crates/noble-kernel/tests/m6_interleaving/scope/controls.rs": "bc130850d59ae3dae5c932d5f235de0bb4ec1c0f735297e450f1dcffeb5e0623",
+    "crates/noble-kernel/tests/m6_interleaving/scope/controls/ownership.rs": "2d5f3894d39a9758e8b5a0e9fae6c190c99121b070a5f846555fc181aeffb9ed",
+    "crates/noble-kernel/tests/m6_interleaving/scope/controls/ownership/cleanup.rs": "5b02e3f8e79500636b20fd88ece10ed4a64681f3e2508c3056f8757990bd29f5",
+    "crates/noble-kernel/tests/m6_interleaving/scope/controls/foreign.rs": "649c6b16a2dc6ed94b8ad52893a86b7a6eca25c722cc0d6fe3af13819d661389",
+    "crates/noble-kernel/tests/m6_interleaving/scope/corpus.rs": "90b1bc41374634ba746fb07a1563714e1c8540d0236e17a1bb8a4ad47b09e92e",
+    "crates/noble-kernel/tests/m6_interleaving/scope/corpus/completion.rs": "5efffcc16b5102ef4b27540a775a8d5143319d7bbcb3f4a52dd32b00e2bdf540",
+    "crates/noble-kernel/tests/m6_interleaving/scope/corpus/sequence.rs": "558d9ed9d74d0ac56b01cebe869ce67ff11e79aaa132e3ee5da259ee18429cc5",
+    "crates/noble-kernel/tests/m6_interleaving/scope/corpus/cancel.rs": "6cdc53f3c98f3105c670c62d075d54d9995adcd8d6132623c6231211ef22a53b",
+    "crates/noble-kernel/tests/m6_interleaving/scope/corpus/emission.rs": "c7293a4bfae6ee8daac064e920a1ea5b329147f00de486b48c0c2cec2581ec2e",
+    "verification/task-scope/README.md": "0de148ac1c236ce616345aa5218c81224adcfabdf173230bb84e21f58a7a8de0",
+    "verification/task-scope/run.mjs": "9d33a929f9513f9b43ac1759d6a26c39bfaefb5b55b8a914db346bcc9f70939f",
+    ".cairn/changes/m6-task-scope/proposal.md": "07d1dd4c1c9478457e037c9ebe9840184427dcbf558e83e63ea480cdcdba2569",
+    ".cairn/changes/m6-task-scope/design.md": "467157a26ae2c74d6d3f98057273d2b1b6e09fa86d2a6026a30f9e0c4378c614",
+    ".cairn/changes/m6-task-scope/tasks.md": "c96cb85108719f18f9abdfc1808cbf42a2637332567e47757f02b30d09c022be",
+    ".cairn/changes/m6-task-scope/metadata.json": "a6fd5ca231a3bb7b2746437ddfeea40804e0b37172b383ad5cf5ca2bf064d0a9",
+    ".cairn/changes/m6-task-scope/specs/resource-adapters/spec.md": "251d06f8aea3ca72d42fb8164a6745578529065a019d0ac660a0467d27119ee4"
+  }
+}
