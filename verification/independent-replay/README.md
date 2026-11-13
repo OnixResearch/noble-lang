@@ -17,7 +17,10 @@ checked-declaration count must all pass.
 
 Clean-source Lean 4.35.0 receipts for binding, refusal classification, resource
 limits, executed pin controls, multi-checker replay, and protected semantics are
-retained under [`receipts/2026-11-13/`](receipts/2026-11-13/). Every receipt has
+retained in the [binding](receipts/2026-11-13/binding.json),
+[refusal](receipts/2026-11-13/refusals.json), [limit](receipts/2026-11-13/limits.json),
+[pin-control](receipts/2026-11-13/pin-controls.json), [multi-checker](receipts/2026-11-13/multi.json),
+and [protected-semantics](receipts/2026-11-13/protected.json) receipts. Every receipt has
 `holds: true`; each binds the clean source commit used by its run. The binding,
 refusal, and limit receipts use `24fbb6f`; the pin-control, multi-checker, and
 protected-semantics receipts use `c4d6925`. The separately implemented checker
