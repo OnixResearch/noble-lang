@@ -78,6 +78,8 @@ fn both_target_programs_emit_stable_artifact_manifest_rows() {
         .expect("same swap checker");
     assert_eq!(adder_a.identities(), adder_b.identities());
     assert_eq!(swap_a.identities(), swap_b.identities());
+    assert_eq!(adder_a.graph_bytes(), adder_b.graph_bytes());
+    assert_eq!(swap_a.graph_bytes(), swap_b.graph_bytes());
     for (name, checker) in [("accumulator", adder_a), ("stack-swap", swap_a)] {
         let (graph, snapshot, bytes) = checker.identities();
         let graph_bytes = checker.graph_bytes();
