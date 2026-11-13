@@ -69,7 +69,7 @@ function git(...args) {
 }
 
 function replaceFunction(source, mutant) {
-  const start = source.indexOf(`(func ${mutant.function} `);
+  const start = source.indexOf(`(func ${mutant.function}`);
   if (start < 0) throw new Error(`missing function ${mutant.function}`);
   const next = /\n[ \t]*\(func /.exec(source.slice(start + 1));
   const end = next ? start + 1 + next.index : source.length;
