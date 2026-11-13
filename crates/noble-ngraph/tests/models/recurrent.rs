@@ -2,7 +2,9 @@ use crate::common;
 use noble_ngraph::check;
 use noble_ngraph::compiled::Compiled;
 use noble_ngraph::eval::{self, Control, Obs};
-use noble_ngraph::ir::{Fact, Graph, GraphBuilder, NodeId, Op, Provenance, ScalarType, SubProfile, Subject};
+use noble_ngraph::ir::{
+    Fact, Graph, GraphBuilder, NodeId, Op, Provenance, ScalarType, SubProfile, Subject,
+};
 use noble_ngraph::sem::Value;
 use noble_ngraph::snapshot::ParamSnapshot;
 
@@ -59,7 +61,9 @@ fn encode_word(word: u64) -> Vec<Value> {
 fn decode_word(values: &[Value]) -> u64 {
     assert_eq!(values.len(), WIDTH);
     values.iter().enumerate().fold(0, |word, (bit, value)| {
-        let Value::F32(bits) = value else { panic!("non-F32 output: {value:?}") };
+        let Value::F32(bits) = value else {
+            panic!("non-F32 output: {value:?}")
+        };
         let cell = f32::from_bits(*bits);
         assert!(cell == 0.0 || cell == 1.0, "non-bit output: {cell:?}");
         word | ((cell as u64) << bit)
@@ -80,13 +84,17 @@ fn run(graph: &Graph, a: u64, b: u64) -> u64 {
     let mut compiled_control = Control::default();
     let mut reference_control = Control::default();
     let compiled_result = compiled.evaluate(&inputs, Some(&weights), &mut compiled_control);
-    let reference_result = eval::reference(&checked, &inputs, Some(&weights), &mut reference_control);
+    let reference_result =
+        eval::reference(&checked, &inputs, Some(&weights), &mut reference_control);
     let (Obs::Normal(compiled_values), Obs::Normal(reference_values)) =
         (compiled_result.obs, reference_result.obs)
     else {
         panic!("bit-adder evaluator refused a valid word")
     };
-    assert_eq!(compiled_values, reference_values, "compiled/reference disagreement");
+    assert_eq!(
+        compiled_values, reference_values,
+        "compiled/reference disagreement"
+    );
     decode_word(&compiled_values)
 }
 
