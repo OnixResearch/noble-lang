@@ -155,9 +155,15 @@ export function simulate(tools, solver, pair, query, slots) {
   return solve(tools, solver, { text, names: [] }).answer;
 }
 
-/** The outputs a query's claim compares, read back from its text. */
+/**
+ * The outputs a query's claim compares, read back from its text: the assertion immediately
+ * before `(check-sat)`. A query with declared `assumptions` asserts them first, so the claim is
+ * the last assertion, never the first.
+ */
 export function claimedOutputs(text) {
-  const line = text.split('\n').find(candidate => candidate.startsWith('(assert '));
+  const lines = text.split('\n');
+  const check = lines.indexOf('(check-sat)');
+  const line = lines.slice(0, check < 0 ? lines.length : check).filter(candidate => candidate.startsWith('(assert ')).at(-1);
   const compared = [...line.matchAll(/\(not \(= L(\d+) R(\d+)\)\)/g)].map(([, left, right]) => {
     assert.equal(left, right, 'a claim compares the same output index on both sides');
     return Number(left);
@@ -203,9 +209,11 @@ export function parseModel(output, names) {
 export function solve(tools, solver, query, { timeoutMs = BUDGET.solver_ms, watchdogMs = BUDGET.solver_ms + 5000 } = {}) {
   const args = solver === 'bitwuzla' ? ['--produce-models', '-t', String(timeoutMs)] : ['-in', '-smt2', `-t:${timeoutMs}`];
   const started = process.hrtime.bigint();
-  const run = spawnSync(tools.time, ['-f', 'noble-time rss_kb=%M', tools[solver], ...args],
+  const run = spawnSync(tools.time, ['-f', 'noble-time rss_kb=%M user_s=%U system_s=%S', tools[solver], ...args],
     { input: query.text, encoding: 'utf8', timeout: watchdogMs, maxBuffer: 1 << 20, env: {} });
-  const measured = { solver, wall_ns: elapsed(started), peak_rss_kb: Number((run.stderr ?? '').match(/noble-time rss_kb=(\d+)/)?.[1] ?? NaN) };
+  const timed = (run.stderr ?? '').match(/noble-time rss_kb=(\d+) user_s=([\d.]+) system_s=([\d.]+)/);
+  const measured = { solver, wall_ns: elapsed(started), peak_rss_kb: Number(timed?.[1] ?? NaN),
+    cpu_user_ns: timed ? Number(timed[2]) * 1e9 : null, cpu_system_ns: timed ? Number(timed[3]) * 1e9 : null };
   if (run.error?.code === 'ETIMEDOUT' || run.signal) return { ...measured, answer: 'timeout' };
   const [first, ...rest] = (run.stdout ?? '').split('\n');
   if (first === 'unsat' || first === 'unknown') return { ...measured, answer: first };
