@@ -156,7 +156,7 @@ const classify = (stderr) => {
 };
 
 const entries = controls.map((control) => {
-  const laneArgv = lanes[control.lane](control.options);
+  const laneArgv = lanes[control.lane]({ ...control.options, id: control.id });
   const receiptPath = path.join(work, `${control.id}.json`);
   const started = process.hrtime.bigint();
   const result = spawnSync(node, laneArgv, {
