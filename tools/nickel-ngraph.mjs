@@ -464,14 +464,18 @@ function alterAt(value, keys) {
 function staleBindingControls(receipt, consumer) {
   const mutations = [
     { field: "source bytes", receipt: ["source_bytes", 0, "sha256"], consumer: ["bindings", "source_bytes_sha256"] },
-    { field: "import bytes", receipt: ["import_bytes", 0, "sha256"], consumer: ["bindings", "import_bytes_sha256"] },
+    { field: "library import bytes", receipt: ["import_bytes", 0, "sha256"], consumer: ["bindings", "import_bytes_sha256"] },
+    { field: "contract import bytes", receipt: ["import_bytes", 1, "sha256"], consumer: ["bindings", "import_bytes_sha256"] },
     { field: "construction parameters", receipt: ["construction_parameters", 0, "parameters", 0, "value"], consumer: ["bindings", "construction_parameters_sha256"] },
     { field: "library version", receipt: ["versions", "library"], consumer: ["bindings", "versions_sha256"] },
     { field: "contract version", receipt: ["versions", "contract"], consumer: ["bindings", "versions_sha256"] },
     { field: "evaluator identity", receipt: ["evaluator_identity", "node", "sha256"], consumer: ["bindings", "evaluator_identity_sha256"] },
+    { field: "Nickel evaluator identity", receipt: ["evaluator_identity", "nickel", "sha256"], consumer: ["bindings", "evaluator_identity_sha256"] },
     { field: "import closure", receipt: ["import_closures", 0, "declared", 1], consumer: ["bindings", "import_closures_sha256"] },
+    { field: "observed import closure", receipt: ["import_closures", 0, "observed", 1, "sha256"], consumer: ["bindings", "import_closures_sha256"] },
     { field: "exported constructor bytes", receipt: ["exported_constructor_bytes", 0, "sha256"], consumer: ["bindings", "exported_constructor_bytes_sha256"] },
     { field: "lowerer revision", receipt: ["lowerer", "revision"], consumer: ["bindings", "lowerer_revision"] },
+    { field: "lowerer source bytes", receipt: ["lowerer", "sha256"], consumer: ["bindings", "lowerer_source_sha256"] },
     { field: "profile", receipt: ["profile"], consumer: ["bindings", "profile"] },
     { field: "graph bytes", receipt: ["graphs", 0, "sha256"], consumer: ["bindings", "graphs", 0, "sha256"] },
     { field: "checked identity", receipt: ["graphs", 0, "checked_identity"], consumer: ["bindings", "graphs", 0, "checked_identity"] },
@@ -738,7 +742,7 @@ function main(args) {
     graph_identity: result.admission.graph_identity,
     evaluators_match: true,
     composition_laws_match: result.composition.reassociation_equal,
-    provenance_bindings_match: result.provenance.stale_controls === 12,
+    provenance_bindings_match: result.provenance.stale_controls === 16,
   })}\n`);
 }
 
