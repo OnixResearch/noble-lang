@@ -693,7 +693,7 @@ def Program.wellTypedCheck (program : Program) : Bool :=
 
 /-- Executable admission check for exact input arity and the selected graph
 fragment's well-formedness and type premises. -/
-def Program.admissionCheck (program : Program) (inputs : List (BitVec 64)) : Bool :=
+def Program.acceptanceCheck (program : Program) (inputs : List (BitVec 64)) : Bool :=
   decide (inputs.length = program.inputArity) &&
     program.wellFormedCheck && program.wellTypedCheck
 
@@ -739,10 +739,10 @@ theorem Program.wellTypedCheck_iff (program : Program) :
   simp [Program.wellTypedCheck, Program.WellTyped, Program.nodeTypedCheck_iff,
     Program.nodeTyped, List.all_eq_true, List.mem_range]
 
-theorem Program.admissionCheck_iff (program : Program) (inputs : List (BitVec 64)) :
-    program.admissionCheck inputs = true ↔
+theorem Program.acceptanceCheck_iff (program : Program) (inputs : List (BitVec 64)) :
+    program.acceptanceCheck inputs = true ↔
       program.InputsOk inputs ∧ program.WellFormed ∧ program.WellTyped := by
-  simp [Program.admissionCheck, Program.InputsOk, Program.wellFormedCheck_iff,
+  simp [Program.acceptanceCheck, Program.InputsOk, Program.wellFormedCheck_iff,
     Program.wellTypedCheck_iff, Bool.and_eq_true, decide_eq_true_eq, and_assoc]
 
 /-- Input lookup used by the total graph evaluator. -/
@@ -785,12 +785,33 @@ private def outputConsumers : List Nat → Nat → Nat → List Consumer
   | output :: rest, source, slot =>
       (if output == source then [.output slot] else []) ++ outputConsumers rest source (slot + 1)
 
+private def nodeUses (source : Nat) : Nat → List Node → List Consumer
+  | _, [] => []
+  | index, node :: rest =>
+      nodeConsumers index source node ++ nodeUses source (index + 1) rest
+
+private theorem nodeUses_append (source index : Nat) (left right : List Node) :
+    nodeUses source index (left ++ right) =
+      nodeUses source index left ++ nodeUses source (index + left.length) right := by
+  induction left generalizing index with
+  | nil => simp [nodeUses]
+  | cons node rest ih =>
+      simp only [List.cons_append, nodeUses]
+      rw [ih, ← List.append_assoc]
+      simp only [List.length_cons]
+      rw [show (index + 1) + rest.length = index + (rest.length + 1) by omega]
+
 /-- Canonical order: node index, argument one before argument two, then output
 position. -/
 def Program.usesOf (program : Program) (source : Nat) : List Consumer :=
-  ((List.range program.nodes.length).flatMap fun nodeIndex =>
-    nodeConsumers nodeIndex source (program.nodeAt nodeIndex)) ++
+  nodeUses source 0 program.nodes ++
       outputConsumers program.outputs source 0
+
+private theorem Program.usesOf_length (program : Program) (source : Nat) :
+    (program.usesOf source).length =
+      (nodeUses source 0 program.nodes).length +
+        (outputConsumers program.outputs source 0).length := by
+  simp [Program.usesOf]
 
 private def fanoutWires (source : Nat) : Nat → Port → List Consumer → List (Port × Port)
   | _, _, [] => []
@@ -841,7 +862,7 @@ def Program.translate (program : Program) (inputs : List (BitVec 64)) : XNet Net
 Refusal means the lowering was not established, not that the graph diverges. -/
 def Program.translateChecked (program : Program) (inputs : List (BitVec 64)) :
     Option (XNet NetSym) :=
-  if program.admissionCheck inputs then
+  if program.acceptanceCheck inputs then
     let net := program.translate inputs
     if net.check arity then some net else none
   else none
@@ -948,6 +969,12 @@ def chainNodes : Nat → List PackedSchedule.Node
   | 0 => []
   | count + 1 => chainNodes count ++ [.add count 0]
 
+private theorem chainNodes_length (operations : Nat) :
+    (chainNodes operations).length = operations := by
+  induction operations with
+  | zero => rfl
+  | succ operations ih => simp [chainNodes, ih]
+
 /-- A growing, definition-before-use operation chain over an arbitrary I64 input. -/
 def chainProgram (operations : Nat) : Program where
   inputArity := 1
@@ -968,6 +995,149 @@ theorem chainProgram_opCount (operations : Nat) :
     (chainProgram operations).opCount = operations := by
   simp [Program.opCount, chainProgram, chainNodes_opCount]
 
+private theorem chainNodes_uses_length (operations source : Nat) :
+    (nodeUses source 1 (chainNodes operations)).length =
+      if source = 0 then (if operations = 0 then 0 else operations + 1)
+      else if source < operations then 1 else 0 := by
+  induction operations with
+  | zero => simp [chainNodes, nodeUses]
+  | succ operations ih =>
+      rw [chainNodes, nodeUses_append]
+      simp [ih, chainNodes_length, nodeUses, nodeConsumers]
+      by_cases hzero : source = 0
+      · subst source
+        cases operations with
+        | zero => simp
+        | succ operations => simp
+      · by_cases hlt : source < operations
+        · have hne : operations ≠ source := by omega
+          have hne0 : 0 ≠ source := by omega
+          simp [hzero, hlt, hne, hne0] <;> omega
+        · by_cases heq : source = operations
+          · subst source
+            simp [hzero] <;> omega
+          · have hgt : operations < source := by omega
+            have hne : operations ≠ source := by omega
+            have hnotlt : ¬ source < operations + 1 := by omega
+            have hne0 : 0 ≠ source := by omega
+            simp [hzero, hlt, hne, hnotlt, hne0]
+
+theorem chainProgram_uses_count (operations source : Nat) :
+    ((chainProgram operations).usesOf source).length =
+      if source = 0 then operations + 1 else if source ≤ operations then 1 else 0 := by
+  rw [Program.usesOf_length]
+  simp [chainProgram, nodeUses, nodeConsumers, outputConsumers,
+    chainNodes_uses_length]
+  by_cases hzero : source = 0
+  · subst source
+    by_cases hops : operations = 0
+    · simp [hops]
+    · have hpos : 0 < operations := Nat.pos_of_ne_zero hops
+      simp [hops] <;> omega
+  · by_cases heq : source = operations
+    · subst source
+      simp [hzero]
+    · by_cases hlt : source < operations
+      · have hne : operations ≠ source := by omega
+        simp [hzero, hlt, hne] <;> omega
+      · have hgt : operations < source := by omega
+        have hne : operations ≠ source := by omega
+        simp [hzero, hlt, hgt, hne] <;> omega
+
+private theorem range_fold_zero (length weight : Nat) :
+    (List.range length).foldl
+        (fun total source => total + if source = 0 then weight else 0) 0 =
+      if length = 0 then 0 else weight := by
+  induction length with
+  | zero => simp
+  | succ length ih =>
+      rw [List.range_succ]
+      by_cases hzero : length = 0
+      · subst length
+        simp
+      · have hprefix :
+            (List.range length).foldl
+              (fun total source => total + if source = 0 then weight else 0) 0 = weight := by
+          simpa [hzero] using ih
+        simp [hzero, hprefix]
+
+private theorem range_countP_zero (predicate : Nat → Bool) :
+    ∀ length, (∀ source, source < length → predicate source = false) →
+      (List.range length).countP predicate = 0 := by
+  intro length
+  induction length with
+  | zero => intro _; simp
+  | succ length ih =>
+      intro hfalse
+      rw [List.range_succ, List.countP_append]
+      have hprefix : (List.range length).countP predicate = 0 := by
+        apply ih
+        intro source hsource
+        exact hfalse source (by omega)
+      rw [hprefix]
+      simp [hfalse length (by omega)]
+
+theorem chainProgram_dupCount (operations : Nat) :
+    (chainProgram operations).dupCount = operations := by
+  unfold Program.dupCount
+  have hlength : (chainProgram operations).nodes.length = operations + 1 := by
+    simp [chainProgram, chainNodes_length]
+  rw [hlength]
+  simp only [chainProgram_uses_count]
+  have hcost (source : Nat) :
+      (if (if source = 0 then operations + 1
+        else if source ≤ operations then 1 else 0) < 2 then 0
+        else (if source = 0 then operations + 1
+          else if source ≤ operations then 1 else 0) - 1) =
+        if source = 0 then operations else 0 := by
+    by_cases hzero : source = 0
+    · subst source
+      cases operations with
+      | zero => simp
+      | succ operations => simp <;> omega
+    · by_cases hwithin : source ≤ operations <;> simp [hzero, hwithin]
+  simp only [hcost]
+  simpa using range_fold_zero (operations + 1) operations
+
+private theorem chainProgram_use_isEmpty (operations source : Nat)
+    (hsource : source ≤ operations) :
+    ((chainProgram operations).usesOf source).isEmpty = false := by
+  have hlength := chainProgram_uses_count operations source
+  have hpositive : 0 < ((chainProgram operations).usesOf source).length := by
+    rw [hlength]
+    by_cases hzero : source = 0
+    · subst source
+      simp
+    · simp [hzero, hsource]
+  cases huses : (chainProgram operations).usesOf source with
+  | nil => simp [huses] at hpositive
+  | cons first rest => rfl
+
+theorem chainProgram_eraCount (operations : Nat) :
+    (chainProgram operations).eraCount = 0 := by
+  unfold Program.eraCount
+  have hlength : (chainProgram operations).nodes.length = operations + 1 := by
+    simp [chainProgram, chainNodes_length]
+  rw [hlength]
+  apply range_countP_zero
+  intro source hsource
+  have hwithin : source ≤ operations := by omega
+  exact chainProgram_use_isEmpty operations source hwithin
+
+theorem chainProgram_interactionCount (operations : Nat) :
+    (chainProgram operations).interactionCount = 3 * operations := by
+  rw [Program.interactionCount, chainProgram_opCount,
+    chainProgram_dupCount, chainProgram_eraCount]
+  omega
+
+theorem chainProgram_agentBound (operations : Nat) :
+    (chainProgram operations).agentBound = 2 * operations + 1 := by
+  rw [Program.agentBound, chainProgram_dupCount, chainProgram_eraCount]
+  have hlength : (chainProgram operations).nodes.length = operations + 1 := by
+    simp [chainProgram, chainNodes_length]
+  rw [hlength]
+  omega
+
 /-- Build a perfect balanced add tree in postorder, returning its appended
 nodes, next free node index and root. -/
 def balancedSubtree : Nat → Nat → Nat → List PackedSchedule.Node × Nat × Nat
@@ -985,6 +1155,390 @@ def balancedProgram (depth : Nat) : Program :=
   { inputArity := leaves
     nodes := (List.range leaves).map Node.input ++ operations
     outputs := [root] }
+
+private theorem balancedSubtree_length_add_one (depth firstLeaf next : Nat) :
+    ((balancedSubtree depth firstLeaf next).1).length + 1 = 2 ^ depth := by
+  induction depth generalizing firstLeaf next with
+  | zero => simp [balancedSubtree]
+  | succ depth ih =>
+      have hleft := ih firstLeaf next
+      have hright := ih (firstLeaf + 2 ^ depth)
+        ((balancedSubtree depth firstLeaf next).2.1)
+      simp [balancedSubtree, hright, List.length_append, Nat.pow_succ,
+        Nat.add_assoc]
+      omega
+
+private theorem balancedSubtree_length (depth firstLeaf next : Nat) :
+    ((balancedSubtree depth firstLeaf next).1).length = 2 ^ depth - 1 := by
+  have h := balancedSubtree_length_add_one depth firstLeaf next
+  omega
+
+private theorem balancedSubtree_opCount_add_one (depth firstLeaf next : Nat) :
+    ((balancedSubtree depth firstLeaf next).1).countP (fun node =>
+      match node with
+      | .add _ _ | .sub _ _ | .mul _ _ | .eq _ _ => true
+      | _ => false) + 1 = 2 ^ depth := by
+  induction depth generalizing firstLeaf next with
+  | zero => simp [balancedSubtree]
+  | succ depth ih =>
+      have hleft := ih firstLeaf next
+      have hright := ih (firstLeaf + 2 ^ depth)
+        ((balancedSubtree depth firstLeaf next).2.1)
+      simp [balancedSubtree, hright, List.countP_append, Nat.pow_succ]
+      omega
+
+private theorem balancedSubtree_opCount (depth firstLeaf next : Nat) :
+    ((balancedSubtree depth firstLeaf next).1).countP (fun node =>
+      match node with
+      | .add _ _ | .sub _ _ | .mul _ _ | .eq _ _ => true
+      | _ => false) = 2 ^ depth - 1 := by
+  have h := balancedSubtree_opCount_add_one depth firstLeaf next
+  omega
+
+private theorem inputNodes_opCount (leaves : Nat) :
+    ((List.range leaves).map Node.input).countP (fun node =>
+      match node with
+      | .add _ _ | .sub _ _ | .mul _ _ | .eq _ _ => true
+      | _ => false) = 0 := by
+  induction leaves with
+  | zero => simp
+  | succ leaves ih => simp [List.range_succ, List.countP_append, ih]
+
+private theorem balancedSubtree_next_eq (depth firstLeaf next : Nat) :
+    (balancedSubtree depth firstLeaf next).2.1 =
+      next + ((balancedSubtree depth firstLeaf next).1).length := by
+  induction depth generalizing firstLeaf next with
+  | zero => simp [balancedSubtree]
+  | succ depth ih =>
+      have hleft := ih firstLeaf next
+      have hright := ih (firstLeaf + 2 ^ depth)
+        ((balancedSubtree depth firstLeaf next).2.1)
+      rw [hleft] at hright
+      simp [balancedSubtree, hleft, hright, List.length_append, Nat.add_assoc]
+
+private theorem balancedSubtree_root_next_eq (depth firstLeaf next : Nat)
+    (hdepth : 0 < depth) :
+    (balancedSubtree depth firstLeaf next).2.2 + 1 =
+      next + ((balancedSubtree depth firstLeaf next).1).length := by
+  cases depth with
+  | zero => omega
+  | succ depth =>
+      have hnext := balancedSubtree_next_eq (depth + 1) firstLeaf next
+      have hroot : (balancedSubtree (depth + 1) firstLeaf next).2.1 =
+          (balancedSubtree (depth + 1) firstLeaf next).2.2 + 1 := by
+        simp [balancedSubtree]
+      exact hroot.symm.trans hnext
+
+private theorem balancedSubtree_root_data (depth firstLeaf next : Nat) :
+    (depth = 0 → (balancedSubtree depth firstLeaf next).2.2 = firstLeaf) ∧
+    (0 < depth → (balancedSubtree depth firstLeaf next).2.2 + 1 =
+      next + ((balancedSubtree depth firstLeaf next).1).length) := by
+  constructor
+  · intro hzero
+    subst depth
+    simp [balancedSubtree]
+  · intro hpositive
+    exact balancedSubtree_root_next_eq depth firstLeaf next hpositive
+
+private theorem balanced_leaf_range_partition (first width source : Nat) :
+    (if first ≤ source ∧ source < first + width then 1 else 0) +
+      (if first + width ≤ source ∧ source < first + width + width then 1 else 0) =
+        if first ≤ source ∧ source < first + (width + width) then 1 else 0 := by
+  by_cases hstart : first ≤ source
+  · by_cases hleft : source < first + width
+    · have hwhole : source < first + (width + width) := by omega
+      have hright : ¬(first + width ≤ source ∧ source < first + width + width) := by omega
+      simp [hstart, hleft, hwhole, hright]
+    · by_cases hrightEnd : source < first + width + width
+      · have hrightStart : first + width ≤ source := by omega
+        have hwhole : source < first + (width + width) := by omega
+        simp [hstart, hleft, hrightStart, hrightEnd, hwhole]
+      · have hwhole : ¬source < first + (width + width) := by omega
+        simp [hstart, hleft, hwhole, hrightEnd]
+  · have hright : ¬(first + width ≤ source ∧ source < first + width + width) := by omega
+    simp [hstart, hright]
+
+private theorem balanced_op_range_partition
+    (start leftLen rightLen parentLen leftRoot rightRoot source : Nat)
+    (hleftPositive : 0 < leftLen) (hrightPositive : 0 < rightLen)
+    (hleftRoot : leftRoot + 1 = start + leftLen)
+    (hrightRoot : rightRoot + 1 = start + leftLen + rightLen)
+    (hparentLength : parentLen = leftLen + rightLen + 1) :
+    (if start ≤ source ∧ source + 1 < start + leftLen then 1 else 0) +
+      (if start + leftLen ≤ source ∧ source + 1 < start + leftLen + rightLen
+        then 1 else 0) +
+      (if leftRoot = source then 1 else 0) +
+      (if rightRoot = source then 1 else 0) =
+        if start ≤ source ∧ source + 1 < start + parentLen then 1 else 0 := by
+  rw [hparentLength]
+  by_cases hstart : start ≤ source
+  · by_cases hparent : source + 1 < start + (leftLen + rightLen + 1)
+    · by_cases hleftInternal : source + 1 < start + leftLen
+      · have hnotRightStart : ¬(start + leftLen ≤ source) := by omega
+        have hnotLeftRoot : leftRoot ≠ source := by omega
+        have hnotRightRoot : rightRoot ≠ source := by omega
+        simp [hstart, hparent, hleftInternal, hnotRightStart,
+          hnotLeftRoot, hnotRightRoot] <;> omega
+      · by_cases hrightStart : start + leftLen ≤ source
+        · by_cases hrightInternal : source + 1 < start + leftLen + rightLen
+          · have hnotLeftRoot : leftRoot ≠ source := by omega
+            have hnotRightRoot : rightRoot ≠ source := by omega
+            simp [hstart, hparent, hleftInternal, hrightStart,
+              hrightInternal, hnotLeftRoot, hnotRightRoot] <;> omega
+          · have hrightAt : rightRoot = source := by omega
+            have hnotLeftRoot : leftRoot ≠ source := by omega
+            simp [hstart, hparent, hleftInternal, hrightStart,
+              hrightInternal, hrightAt, hnotLeftRoot] <;> omega
+        · have hleftAt : leftRoot = source := by omega
+          have hnotRightRoot : rightRoot ≠ source := by omega
+          simp [hstart, hparent, hleftInternal, hrightStart,
+            hleftAt, hnotRightRoot] <;> omega
+    · have hnotLeftRange :
+          ¬(source + 1 < start + leftLen) := by omega
+      have hnotRightRange :
+          ¬(start + leftLen ≤ source ∧ source + 1 < start + leftLen + rightLen) := by omega
+      have hnotLeftRoot : leftRoot ≠ source := by omega
+      have hnotRightRoot : rightRoot ≠ source := by omega
+      simp [hstart, hparent, hnotRightRange,
+        hnotLeftRoot, hnotRightRoot] <;> omega
+  · have hnotLeftRoot : leftRoot ≠ source := by omega
+    have hnotRightRoot : rightRoot ≠ source := by omega
+    have hnotRightRange :
+        ¬(start + leftLen ≤ source ∧ source + 1 < start + leftLen + rightLen) := by omega
+    simp [hstart, hnotRightRange, hnotLeftRoot, hnotRightRoot] <;> omega
+
+private def balancedSubtree_uses_expected
+    (depth firstLeaf next source : Nat) : Nat :=
+  (if 0 < depth ∧ firstLeaf ≤ source ∧ source < firstLeaf + 2 ^ depth
+    then 1 else 0) +
+  (if next ≤ source ∧ source + 1 < next +
+      ((balancedSubtree depth firstLeaf next).1).length then 1 else 0)
+
+private theorem balancedSubtree_uses_length (depth firstLeaf next source : Nat) :
+    (nodeUses source next (balancedSubtree depth firstLeaf next).1).length =
+      balancedSubtree_uses_expected depth firstLeaf next source := by
+  induction depth generalizing firstLeaf next source with
+  | zero =>
+      by_cases hnext : next ≤ source
+      · have hinner : ¬ source + 1 < next := by omega
+        simp [balancedSubtree_uses_expected, balancedSubtree, nodeUses, hnext, hinner]
+      · simp [balancedSubtree_uses_expected, balancedSubtree, nodeUses, hnext]
+  | succ depth ih =>
+      let left := balancedSubtree depth firstLeaf next
+      let right := balancedSubtree depth (firstLeaf + 2 ^ depth) left.2.1
+      by_cases hdepthZero : depth = 0
+      · subst depth
+        by_cases hfirst : source = firstLeaf
+        · subst source
+          simp [balancedSubtree_uses_expected, balancedSubtree, nodeUses, nodeConsumers]
+        · by_cases hsecond : source = firstLeaf + 1
+          · subst source
+            simp [balancedSubtree_uses_expected, balancedSubtree, nodeUses, nodeConsumers]
+          · have hnotRange : ¬ (firstLeaf ≤ source ∧ source < firstLeaf + 2) := by omega
+            have hleft : firstLeaf ≠ source := by omega
+            have hright : firstLeaf + 1 ≠ source := by omega
+            simp [balancedSubtree_uses_expected, balancedSubtree, nodeUses, nodeConsumers,
+              hnotRange, hleft, hright]
+      · have hdepthPositive : 0 < depth := by omega
+        have hleftNext : left.2.1 = next + left.1.length := by
+          simpa [left] using balancedSubtree_next_eq depth firstLeaf next
+        have hleft :
+            (nodeUses source next left.1).length =
+              balancedSubtree_uses_expected depth firstLeaf next source := by
+          simpa [left] using ih firstLeaf next source
+        have hright :
+            (nodeUses source left.2.1 right.1).length =
+              balancedSubtree_uses_expected depth (firstLeaf + 2 ^ depth) left.2.1 source := by
+          simpa [left, right] using ih (firstLeaf + 2 ^ depth) left.2.1 source
+        have hleftLen : left.1.length = 2 ^ depth - 1 := by
+          simpa [left] using balancedSubtree_length depth firstLeaf next
+        have hrightLen : right.1.length = 2 ^ depth - 1 := by
+          simpa [right] using balancedSubtree_length depth (firstLeaf + 2 ^ depth) left.2.1
+        have hparentLen :
+            ((balancedSubtree (depth + 1) firstLeaf next).1).length =
+              left.1.length + right.1.length + 1 := by
+          change (left.1 ++ right.1 ++
+            [PackedSchedule.Node.add left.2.2 right.2.2]).length = _
+          simp [List.length_append, Nat.add_assoc, right]
+        have hleftRootNext : left.2.2 + 1 = next + left.1.length := by
+          simpa [left] using
+            balancedSubtree_root_next_eq depth firstLeaf next hdepthPositive
+        have hrightRootNext : right.2.2 + 1 = next + left.1.length + right.1.length := by
+          rw [← hleftNext]
+          simpa [right] using
+            balancedSubtree_root_next_eq depth (firstLeaf + 2 ^ depth) left.2.1
+              hdepthPositive
+        have hleftPositive : 0 < left.1.length := by
+          rw [hleftLen]
+          cases depth with
+          | zero => omega
+          | succ depth =>
+              rw [Nat.pow_succ]
+              have hpow : 0 < 2 ^ depth := Nat.pow_pos (by decide : 0 < (2 : Nat))
+              omega
+        have hrightPositive : 0 < right.1.length := by
+          rw [hrightLen]
+          cases depth with
+          | zero => omega
+          | succ depth =>
+              rw [Nat.pow_succ]
+              have hpow : 0 < 2 ^ depth := Nat.pow_pos (by decide : 0 < (2 : Nat))
+              omega
+        have hpower : 2 ^ (depth + 1) = 2 ^ depth + 2 ^ depth := by
+          simp [Nat.pow_succ]
+          omega
+        change (nodeUses source next
+          (left.1 ++ right.1 ++ [PackedSchedule.Node.add left.2.2 right.2.2])).length =
+            balancedSubtree_uses_expected (depth + 1) firstLeaf next source
+        rw [nodeUses_append, nodeUses_append]
+        simp only [List.length_append]
+        have hrootUses :
+            (nodeUses source (next + (left.1.length + right.1.length))
+              [PackedSchedule.Node.add left.2.2 right.2.2]).length =
+              (if left.2.2 = source then 1 else 0) +
+                (if right.2.2 = source then 1 else 0) := by
+          by_cases hleftRoot : left.2.2 = source <;>
+            by_cases hrightRoot : right.2.2 = source <;>
+            simp [nodeUses, nodeConsumers, hleftRoot, hrightRoot]
+        rw [hleft, ← hleftNext, hright, hleftNext, hrootUses]
+        simp [balancedSubtree_uses_expected, hdepthPositive]
+        rw [hpower]
+        rw [balancedSubtree_length depth firstLeaf next]
+        rw [← hleftLen]
+        rw [balancedSubtree_length depth (firstLeaf + 2 ^ depth)
+          (next + left.1.length)]
+        rw [← hrightLen]
+        rw [hparentLen]
+        have hleaf := balanced_leaf_range_partition firstLeaf (2 ^ depth) source
+        have hop := balanced_op_range_partition next left.1.length right.1.length
+          (left.1.length + right.1.length + 1)
+          left.2.2 right.2.2 source hleftPositive hrightPositive hleftRootNext
+          hrightRootNext rfl
+        omega
+
+theorem balancedProgram_opCount (depth : Nat) :
+    (balancedProgram depth).opCount = 2 ^ depth - 1 := by
+  simp only [Program.opCount, balancedProgram, List.countP_append]
+  rw [inputNodes_opCount, balancedSubtree_opCount]
+  omega
+
+private theorem inputNodes_uses_empty (count source : Nat) :
+    nodeUses source 0 ((List.range count).map Node.input) = [] := by
+  induction count with
+  | zero => rfl
+  | succ count ih =>
+      rw [List.range_succ, List.map_append, List.map_singleton, nodeUses_append]
+      simp [nodeUses, nodeConsumers, ih]
+
+private theorem balancedProgram_uses_once (depth source : Nat)
+    (hsource : source < (balancedProgram depth).nodes.length) :
+    ((balancedProgram depth).usesOf source).length = 1 := by
+  cases depth with
+  | zero =>
+      have hsource0 : source = 0 := by
+        have hlt : source < 1 := by simpa [balancedProgram, balancedSubtree] using hsource
+        omega
+      subst source
+      simp [balancedProgram, Program.usesOf_length, outputConsumers,
+        nodeUses, nodeConsumers, balancedSubtree]
+  | succ depth =>
+      let leaves := 2 ^ (depth + 1)
+      let tree := balancedSubtree (depth + 1) 0 leaves
+      have hsourceBound : source < leaves + tree.1.length := by
+        simpa [balancedProgram, leaves, tree] using hsource
+      have htreeUses := balancedSubtree_uses_length (depth + 1) 0 leaves source
+      have htreeUses' : (nodeUses source leaves tree.1).length =
+          balancedSubtree_uses_expected (depth + 1) 0 leaves source := by
+        simpa [tree] using htreeUses
+      have htreeLen := balancedSubtree_length (depth + 1) 0 leaves
+      have htreeRoot : tree.2.2 + 1 = leaves + tree.1.length := by
+        simpa [tree] using
+          balancedSubtree_root_next_eq (depth + 1) 0 leaves (by omega)
+      have htreeRootRaw : tree.2.2 + 1 = leaves +
+          ((balancedSubtree (depth + 1) 0 leaves).1).length := by
+        simpa [tree] using htreeRoot
+      have htreeLenPositive : 0 < tree.1.length := by
+        rw [htreeLen]
+        have hpow : 0 < 2 ^ (depth + 1) := Nat.pow_pos (by decide : 0 < (2 : Nat))
+        omega
+      have hrootAtOrAfterLeaves : leaves ≤ tree.2.2 := by omega
+      rw [Program.usesOf_length]
+      change (nodeUses source 0 ((List.range leaves).map Node.input ++ tree.1)).length +
+          (outputConsumers [tree.2.2] source 0).length = 1
+      rw [nodeUses_append]
+      simp only [inputNodes_uses_empty, List.nil_append, Nat.zero_add,
+        List.length_map, List.length_range]
+      rw [htreeUses']
+      simp only [outputConsumers]
+      by_cases hleaf : source < leaves
+      · have hnotRoot : tree.2.2 ≠ source := by omega
+        have hnotAfter : ¬leaves ≤ source := by omega
+        simp [balancedSubtree_uses_expected, leaves, hleaf, hnotAfter, hnotRoot]
+      · have hleafFalse : ¬source < leaves := hleaf
+        have hafterLeaves : leaves ≤ source := by omega
+        by_cases hbelowRoot : source < tree.2.2
+        · have hnotRoot : tree.2.2 ≠ source := by omega
+          have hbeforeEnd : source + 1 < leaves +
+              ((balancedSubtree (depth + 1) 0 leaves).1).length := by
+            rw [← htreeRootRaw]
+            omega
+          simp [balancedSubtree_uses_expected, leaves, hleafFalse, hafterLeaves,
+            hbeforeEnd, hnotRoot]
+        · by_cases hroot : source = tree.2.2
+          · simp [balancedSubtree_uses_expected, hroot]
+            constructor
+            · simpa [leaves] using hrootAtOrAfterLeaves
+            · intro _
+              rw [← htreeRootRaw]
+              exact Nat.le_refl _
+          · have haboveRoot : tree.2.2 < source := by omega
+            rw [← htreeRoot] at hsourceBound
+            omega
+
+private theorem range_fold_uses_once_zero (length : Nat) (uses : Nat → Nat)
+    (huses : ∀ source, source < length → uses source = 1) :
+    (List.range length).foldl
+        (fun total source => total + if uses source < 2 then 0 else uses source - 1) 0 = 0 := by
+  induction length with
+  | zero => rfl
+  | succ length ih =>
+      rw [List.range_succ, List.foldl_append]
+      have hprefix := ih (fun source hsource => huses source (by omega))
+      rw [hprefix]
+      simp [huses length (by omega)]
+
+theorem balancedProgram_dupCount (depth : Nat) :
+    (balancedProgram depth).dupCount = 0 := by
+  unfold Program.dupCount
+  apply range_fold_uses_once_zero
+  intro source hsource
+  exact balancedProgram_uses_once depth source hsource
+
+theorem balancedProgram_eraCount (depth : Nat) :
+    (balancedProgram depth).eraCount = 0 := by
+  unfold Program.eraCount
+  apply range_countP_zero
+  intro source hsource
+  have hlength := balancedProgram_uses_once depth source hsource
+  have hnotEmpty : ((balancedProgram depth).usesOf source).isEmpty = false := by
+    cases huses : (balancedProgram depth).usesOf source with
+    | nil => simp [huses] at hlength
+    | cons first rest => rfl
+  exact hnotEmpty
+
+theorem balancedProgram_interactionCount (depth : Nat) :
+    (balancedProgram depth).interactionCount = 2 * (2 ^ depth - 1) := by
+  rw [Program.interactionCount, balancedProgram_opCount,
+    balancedProgram_dupCount, balancedProgram_eraCount]
+  omega
+
+theorem balancedProgram_agentBound (depth : Nat) :
+    (balancedProgram depth).agentBound = 2 ^ (depth + 1) - 1 := by
+  rw [Program.agentBound, balancedProgram_dupCount, balancedProgram_eraCount]
+  simp only [balancedProgram, List.length_append, List.length_map, List.length_range,
+    balancedSubtree_length]
+  simp [Nat.pow_succ]
+  omega
 
 private theorem outputConsumers_replicate_length (count slot : Nat) :
     (outputConsumers (List.replicate count 0) 0 slot).length = count := by
@@ -1211,6 +1765,53 @@ theorem parallel_sub_schedules_agree :
         some (4, [.i64 4, .i64 (3 - 7)], [.i64 4, .i64 (3 - 7)]) := by
   decide
 
+/-- A deliberately rejected FIFO control: two producers deliver the operands
+to one subtraction port, and queue order is the delivery schedule. -/
+inductive FifoControlState where
+  | start
+  | receivedSeven
+  | receivedThree
+  | queuedSevenThree
+  | queuedThreeSeven
+  | result (value : BitVec 64)
+  deriving DecidableEq, Repr
+
+inductive fifoControlStep : FifoControlState → FifoControlState → Prop
+  | deliverSeven : fifoControlStep .start .receivedSeven
+  | deliverThree : fifoControlStep .start .receivedThree
+  | deliverThreeAfterSeven : fifoControlStep .receivedSeven .queuedSevenThree
+  | deliverSevenAfterThree : fifoControlStep .receivedThree .queuedThreeSeven
+  | consumeSevenThree :
+      fifoControlStep .queuedSevenThree (.result ((7 : BitVec 64) - 3))
+  | consumeThreeSeven :
+      fifoControlStep .queuedThreeSeven (.result ((3 : BitVec 64) - 7))
+
+/-- The FIFO variant's two producer-delivery steps have no one-step join, so
+this explicit control fails the diamond property. It is not the selected system. -/
+theorem fifo_control_fork_not_diamond :
+    fifoControlStep .start .receivedSeven ∧
+      fifoControlStep .start .receivedThree ∧
+      ¬ ∃ join, fifoControlStep .receivedSeven join ∧
+        fifoControlStep .receivedThree join := by
+  refine ⟨.deliverSeven, .deliverThree, ?_⟩
+  rintro ⟨join, hleft, hright⟩
+  cases hleft
+  cases hright
+
+/-- Completing each FIFO schedule produces its respective ordered subtraction;
+the results differ, unlike the selected inets schedule fixture. -/
+theorem fifo_control_schedules_differ :
+    fifoControlStep .start .receivedSeven ∧
+      fifoControlStep .receivedSeven .queuedSevenThree ∧
+      fifoControlStep .queuedSevenThree (.result ((7 : BitVec 64) - 3)) ∧
+      fifoControlStep .start .receivedThree ∧
+      fifoControlStep .receivedThree .queuedThreeSeven ∧
+      fifoControlStep .queuedThreeSeven (.result ((3 : BitVec 64) - 7)) ∧
+      ((7 : BitVec 64) - 3) ≠ ((3 : BitVec 64) - 7) := by
+  refine ⟨.deliverSeven, .deliverThreeAfterSeven, .consumeSevenThree,
+    .deliverThree, .deliverSevenAfterThree, .consumeThreeSeven, ?_⟩
+  decide
+
 /-- Exact executable properties included in a certificate's resource-function
 table. The interaction potential and agent bound are graph-derived; wire count
 is the exact two-orientation `XNet` representation size. -/
@@ -1300,20 +1901,20 @@ def checkCertificate (program : Program) (inputs : List (BitVec 64))
 /-- The checker is complete and sound for the declared certificate predicate. -/
 private theorem Program.translateChecked_parts {program : Program} {inputs : List (BitVec 64)}
     {net : XNet NetSym} (h : program.translateChecked inputs = some net) :
-    program.admissionCheck inputs = true ∧
+    program.acceptanceCheck inputs = true ∧
       program.translate inputs = net ∧ net.check arity = true := by
-  by_cases hadmission : program.admissionCheck inputs = true
+  by_cases haccepted : program.acceptanceCheck inputs = true
   · by_cases hcheck : (program.translate inputs).check arity = true
     · have heq : program.translate inputs = net := by
-        simpa [Program.translateChecked, hadmission, hcheck] using h
-      exact ⟨hadmission, heq, by simpa [heq] using hcheck⟩
-    · simp [Program.translateChecked, hadmission, hcheck] at h
-  · simp [Program.translateChecked, hadmission] at h
+        simpa [Program.translateChecked, haccepted, hcheck] using h
+      exact ⟨haccepted, heq, by simpa [heq] using hcheck⟩
+    · simp [Program.translateChecked, haccepted, hcheck] at h
+  · simp [Program.translateChecked, haccepted] at h
 
-theorem Program.translateChecked_admitted {program : Program} {inputs : List (BitVec 64)}
+theorem Program.translateChecked_accepted {program : Program} {inputs : List (BitVec 64)}
     {net : XNet NetSym} (h : program.translateChecked inputs = some net) :
     program.InputsOk inputs ∧ program.WellFormed ∧ program.WellTyped :=
-  (Program.admissionCheck_iff program inputs).1 (Program.translateChecked_parts h).1
+  (Program.acceptanceCheck_iff program inputs).1 (Program.translateChecked_parts h).1
 
 theorem checkCertificate_iff (program : Program) (inputs : List (BitVec 64))
     (certificate : Certificate) :

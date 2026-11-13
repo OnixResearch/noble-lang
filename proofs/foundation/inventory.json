@@ -8770,16 +8770,76 @@
       "claim": "the finite type checker is equivalent to the I64 operand typing predicate"
     },
     {
-      "name": "NobleFoundation.NetI64.Program.admissionCheck_iff",
+      "name": "NobleFoundation.NetI64.Program.acceptanceCheck_iff",
       "phase": 1,
       "role": "translation-admission",
-      "claim": "checked translation admission is exactly input arity, graph well-formedness and typing"
+      "claim": "checked translation acceptance is exactly input arity, graph well-formedness and typing"
     },
     {
       "name": "NobleFoundation.NetI64.chainProgram_opCount",
       "phase": 1,
       "role": "family-formula",
       "claim": "the chain family has exactly one arithmetic operation per requested link"
+    },
+    {
+      "name": "NobleFoundation.NetI64.chainProgram_uses_count",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "the chain family has the exact ordered-use multiplicity for every value"
+    },
+    {
+      "name": "NobleFoundation.NetI64.chainProgram_dupCount",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "the chain family has one duplicator per operation"
+    },
+    {
+      "name": "NobleFoundation.NetI64.chainProgram_eraCount",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "the chain family has no unused graph values"
+    },
+    {
+      "name": "NobleFoundation.NetI64.chainProgram_interactionCount",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "the chain family has exactly three interactions per arithmetic operation"
+    },
+    {
+      "name": "NobleFoundation.NetI64.chainProgram_agentBound",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "the chain family initial live-agent bound is two times its operation count plus one"
+    },
+    {
+      "name": "NobleFoundation.NetI64.balancedProgram_opCount",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "a balanced tree of depth d has exactly 2^d minus one operation nodes"
+    },
+    {
+      "name": "NobleFoundation.NetI64.balancedProgram_dupCount",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "every value in a balanced tree has one use, so the family has no duplicators"
+    },
+    {
+      "name": "NobleFoundation.NetI64.balancedProgram_eraCount",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "every value in a balanced tree has a use, so the family has no erasers"
+    },
+    {
+      "name": "NobleFoundation.NetI64.balancedProgram_interactionCount",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "a balanced tree of depth d has exactly two times its operation count interactions"
+    },
+    {
+      "name": "NobleFoundation.NetI64.balancedProgram_agentBound",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "a balanced tree of depth d has initial agent bound 2^(d+1) minus one"
     },
     {
       "name": "NobleFoundation.NetI64.binaryProgram_interactionCount",
@@ -8866,7 +8926,19 @@
       "claim": "two explicit schedules for compiled independent subtractions agree on positive and wrapping read-back and exact count four"
     },
     {
-      "name": "NobleFoundation.NetI64.Program.translateChecked_admitted",
+      "name": "NobleFoundation.NetI64.fifo_control_fork_not_diamond",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the rejected FIFO operand-order variant has a producer-delivery fork with no one-step join"
+    },
+    {
+      "name": "NobleFoundation.NetI64.fifo_control_schedules_differ",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the rejected FIFO variant returns different subtraction values under opposite delivery orders"
+    },
+    {
+      "name": "NobleFoundation.NetI64.Program.translateChecked_accepted",
       "phase": 1,
       "role": "translation-admission",
       "claim": "checked lowering acceptance implies exact input arity, well-formed graph and valid I64 operands"
@@ -9050,60 +9122,6 @@
       "phase": 1,
       "role": "translation-interface",
       "claim": "checked lowering preserves the exact ordered output interface"
-    },
-    {
-      "name": "NobleFoundation.NetI64Corpus.fanout_overflow_translation",
-      "phase": 1,
-      "role": "lowering-corpus",
-      "claim": "the finite overflow and fanout input graph lowers to the independently retained canonical inets net"
-    },
-    {
-      "name": "NobleFoundation.NetI64Corpus.fanout_overflow_normalization",
-      "phase": 1,
-      "role": "lowering-corpus",
-      "claim": "the finite overflow and fanout input normalizes to the retained Rust outputs and step count"
-    },
-    {
-      "name": "NobleFoundation.NetI64Corpus.fanout_overflow_interaction_count",
-      "phase": 1,
-      "role": "lowering-corpus",
-      "claim": "the finite overflow and fanout graph has the retained exact interaction count"
-    },
-    {
-      "name": "NobleFoundation.NetI64Corpus.discarded_unit_translation",
-      "phase": 1,
-      "role": "lowering-corpus",
-      "claim": "the finite discarded-unit graph lowers to the independently retained canonical inets net"
-    },
-    {
-      "name": "NobleFoundation.NetI64Corpus.discarded_unit_normalization",
-      "phase": 1,
-      "role": "lowering-corpus",
-      "claim": "the finite discarded-unit input normalizes to the retained empty output and step count"
-    },
-    {
-      "name": "NobleFoundation.NetI64Corpus.discarded_unit_interaction_count",
-      "phase": 1,
-      "role": "lowering-corpus",
-      "claim": "the finite discarded-unit graph has the retained exact interaction count"
-    },
-    {
-      "name": "NobleFoundation.NetI64Corpus.empty_translation",
-      "phase": 1,
-      "role": "lowering-corpus",
-      "claim": "the empty finite graph lowers to the independently retained empty inets net"
-    },
-    {
-      "name": "NobleFoundation.NetI64Corpus.empty_normalization",
-      "phase": 1,
-      "role": "lowering-corpus",
-      "claim": "the empty finite graph normalizes to empty outputs in zero interactions"
-    },
-    {
-      "name": "NobleFoundation.NetI64Corpus.empty_interaction_count",
-      "phase": 1,
-      "role": "lowering-corpus",
-      "claim": "the empty finite graph has the retained exact interaction count"
     }
   ],
   "private_theorems": [
@@ -9183,7 +9201,28 @@
     "NobleFoundation.NetI64.rule_to_xRule",
     "NobleFoundation.NetI64.Program.nodeInputCheck_iff",
     "NobleFoundation.NetI64.Program.nodeTypedCheck_iff",
+    "NobleFoundation.NetI64.nodeUses_append",
+    "NobleFoundation.NetI64.Program.usesOf_length",
+    "NobleFoundation.NetI64.chainNodes_length",
     "NobleFoundation.NetI64.chainNodes_opCount",
+    "NobleFoundation.NetI64.chainNodes_uses_length",
+    "NobleFoundation.NetI64.range_fold_zero",
+    "NobleFoundation.NetI64.range_countP_zero",
+    "NobleFoundation.NetI64.chainProgram_use_isEmpty",
+    "NobleFoundation.NetI64.balancedSubtree_length_add_one",
+    "NobleFoundation.NetI64.balancedSubtree_length",
+    "NobleFoundation.NetI64.balancedSubtree_opCount_add_one",
+    "NobleFoundation.NetI64.balancedSubtree_opCount",
+    "NobleFoundation.NetI64.inputNodes_opCount",
+    "NobleFoundation.NetI64.balancedSubtree_next_eq",
+    "NobleFoundation.NetI64.balancedSubtree_root_next_eq",
+    "NobleFoundation.NetI64.balancedSubtree_root_data",
+    "NobleFoundation.NetI64.balanced_leaf_range_partition",
+    "NobleFoundation.NetI64.balanced_op_range_partition",
+    "NobleFoundation.NetI64.balancedSubtree_uses_length",
+    "NobleFoundation.NetI64.inputNodes_uses_empty",
+    "NobleFoundation.NetI64.balancedProgram_uses_once",
+    "NobleFoundation.NetI64.range_fold_uses_once_zero",
     "NobleFoundation.NetI64.outputConsumers_replicate_length",
     "NobleFoundation.NetI64.fanoutProgram_uses_length",
     "NobleFoundation.NetI64.fanoutProgram_uses_empty",
