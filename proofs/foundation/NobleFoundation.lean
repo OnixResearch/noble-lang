@@ -33,6 +33,8 @@ import NobleFoundation.SymbolicPairCorpus
 import NobleFoundation.SymbolicShrinkCorpus
 import NobleFoundation.SymbolicPairCertified
 import NobleFoundation.SymbolicSolverReplay
+import NobleFoundation.SymbolicRefusalsReplay
+import NobleFoundation.SymbolicEncoderCorpus
 import NobleFoundation.Certificate
 import NobleFoundation.CertificateCodec
 import NobleFoundation.PackedLayout

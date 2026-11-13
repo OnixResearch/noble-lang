@@ -7958,6 +7958,204 @@
       "phase": 2,
       "role": "symbolic-refusal",
       "claim": "Accepting external UNSAT as agreement changes an inconclusive row."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.receipt_rows_decide",
+      "phase": 2,
+      "role": "symbolic-receipt-replay",
+      "claim": "The kernel decides that classify reproduces every solver and endpoint receipt row from its recorded observation tuple."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.certified_rows_decide",
+      "phase": 2,
+      "role": "symbolic-receipt-replay",
+      "claim": "Every receipt row recorded as certified is classified certified."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.refuted_rows_decide",
+      "phase": 2,
+      "role": "symbolic-receipt-replay",
+      "claim": "Every receipt row recorded as refuted is classified refuted."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.inconclusive_rows_decide",
+      "phase": 2,
+      "role": "symbolic-receipt-replay",
+      "claim": "Every receipt row recorded as inconclusive is classified inconclusive."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.unsupported_rows_decide",
+      "phase": 2,
+      "role": "symbolic-receipt-replay",
+      "claim": "Every receipt row recorded as unsupported is classified unsupported."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.claims_decide",
+      "phase": 2,
+      "role": "symbolic-receipt-replay",
+      "claim": "The kernel decides the aggregate status of every recorded claim from its certificate and row statuses."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.mutation_binding_first_killed",
+      "phase": 2,
+      "role": "symbolic-verdict-mutation",
+      "claim": "The binding-before-refusal mutation changes the recorded node-budget refusal."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.mutation_answer_first_killed",
+      "phase": 2,
+      "role": "symbolic-verdict-mutation",
+      "claim": "The answer-before-certificate mutation changes a recorded bound certificate row."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.mutation_encoding_checked_killed",
+      "phase": 2,
+      "role": "symbolic-verdict-mutation",
+      "claim": "Using the encoder check as a status input changes a recorded corrupted-query row whose model replays."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.mutation_sat_refutes_killed",
+      "phase": 2,
+      "role": "symbolic-verdict-mutation",
+      "claim": "Treating every SAT answer as a counterexample changes a recorded malformed-witness row."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.RefusalsReplay.mutation_unsat_certifies_killed",
+      "phase": 2,
+      "role": "symbolic-verdict-mutation",
+      "claim": "Treating unproved external UNSAT as certification changes a recorded inconclusive row."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.sharedInput_query_text",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The sliced sharedInput query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.sharedInput_query_text_unsliced",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The unsliced sharedInput query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.subtractionOrder_query_text",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The sliced subtractionOrder query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.subtractionOrder_query_text_unsliced",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The unsliced subtractionOrder query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.wrapOnlyEquivalent_query_text",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The sliced wrapOnlyEquivalent query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.wrapOnlyEquivalent_query_text_unsliced",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The unsliced wrapOnlyEquivalent query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.wrapBoundary_query_text",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The sliced wrapBoundary query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.wrapBoundary_query_text_unsliced",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The unsliced wrapBoundary query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.boolOutput_query_text",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The sliced boolOutput query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.boolOutput_query_text_unsliced",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The unsliced boolOutput query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.repeatedOutputs_query_text",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The sliced repeatedOutputs query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.repeatedOutputs_query_text_unsliced",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The unsliced repeatedOutputs query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.negation_query_text",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The sliced negation query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.negation_query_text_unsliced",
+      "phase": 2,
+      "role": "symbolic-encoder-text",
+      "claim": "The unsliced negation query text equals the Lean rendering byte for byte."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.sharedInput_claim_simulates",
+      "phase": 2,
+      "role": "symbolic-encoder-simulation",
+      "claim": "The sharedInput encoded claim matches the graph-model refutation predicate for every 64-bit input."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.subtractionOrder_claim_simulates",
+      "phase": 2,
+      "role": "symbolic-encoder-simulation",
+      "claim": "The subtractionOrder encoded claim matches the graph-model refutation predicate for every 64-bit input."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.wrapOnlyEquivalent_claim_simulates",
+      "phase": 2,
+      "role": "symbolic-encoder-simulation",
+      "claim": "The wrapOnlyEquivalent encoded claim matches the graph-model refutation predicate for every 64-bit input."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.wrapBoundary_claim_simulates",
+      "phase": 2,
+      "role": "symbolic-encoder-simulation",
+      "claim": "The wrapBoundary encoded claim matches the graph-model refutation predicate for every 64-bit input."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.boolOutput_claim_simulates",
+      "phase": 2,
+      "role": "symbolic-encoder-simulation",
+      "claim": "The boolOutput encoded claim matches the graph-model refutation predicate for every 64-bit input."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.repeatedOutputs_claim_simulates",
+      "phase": 2,
+      "role": "symbolic-encoder-simulation",
+      "claim": "The repeatedOutputs encoded claim matches the graph-model refutation predicate for every 64-bit input."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.negation_claim_simulates",
+      "phase": 2,
+      "role": "symbolic-encoder-simulation",
+      "claim": "The negation encoded claim matches the graph-model refutation predicate for every 64-bit input."
+    },
+    {
+      "name": "NobleFoundation.SymbolicSolver.EncoderCorpus.subtractionOrder_sub_swap_fault_not_simulated",
+      "phase": 2,
+      "role": "symbolic-encoder-mutation",
+      "claim": "Swapping subtraction operands in the encoder fails simulation at the checked subtractionOrder input."
     }
   ],
   "private_theorems": [

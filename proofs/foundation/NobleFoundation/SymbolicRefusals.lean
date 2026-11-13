@@ -57,14 +57,16 @@ inductive Answer where
   | notRun
 deriving DecidableEq, Repr
 
-/-- What `verification/symbolic/solver.mjs` observed about one query row. Every field mirrors a
-fact the lane can see; none of them is a status. -/
+/-- What the solver or endpoint lane observed about one query or byte-binding control row. Every
+field mirrors a fact the lane can see; none of them is a status. -/
 structure Observation where
   /-- The row stayed inside the lane's node, slot and formula budget and inside the parsed
-  fragment, so it ran. A refused row has `withinBudget = false` and no other fact was examined. -/
+fragment, so it ran. A row refused before execution (including the endpoint lane's fixed module
+argument boundary) has `withinBudget = false` and no other fact was examined. -/
   withinBudget : Bool
   /-- Every byte and revision binding is current: encoder version, semantic revision, I64
-  profile and pair bytes. A Wasm-endpoint row also binds the loaded module's digest. -/
+  profile and pair bytes. A source-backed endpoint control also binds its source bytes and loaded
+  module digest. -/
   bound : Bool
   /-- The row's claim has a kernel certificate accepted from a clean, bound foundation receipt. -/
   certificate : Bool

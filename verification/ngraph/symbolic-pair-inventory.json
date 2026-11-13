@@ -45,7 +45,10 @@
     {
       "step": "generator reads checked noble-ngraph nodes as model nodes",
       "why_not_checked_here": "the reading is the corpus generator's, recorded as the corpus statement",
-      "bounded_by": "verification/ngraph/README.md corpus decision record"
+      "bounded_by": {
+        "record": "proofs/foundation/README.md",
+        "heading": "### Strict-kernel certified pairs (issue #56, acceptance item 3)"
+      }
     }
   ],
   "not_subjects": [
@@ -89,71 +92,148 @@
   },
   "hazards": {
     "statement": "Acceptance item 5: hazards that must not produce certified or replayed-counterexample status.",
+    "named": [
+      "stale semantic revision",
+      "stale I64 profile",
+      "other encoder binding",
+      "altered graph-pair bytes",
+      "malformed solver witness",
+      "malformed kernel certificate",
+      "forced UNKNOWN",
+      "watchdog timeout",
+      "exhausted query budget",
+      "unsupported graph fragment",
+      "altered endpoint module digest",
+      "altered endpoint source digest",
+      "arbitrary loaded-module substitution unavailable"
+    ],
     "covered": [
       {
-        "hazard": "altered witness bytes",
-        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
-        "theorem": "unreplayed_witness_not_refuted"
-      },
-      {
-        "hazard": "replay of an encoded witness",
-        "module": "proofs/foundation/NobleFoundation/SymbolicSolver.lean",
-        "theorem": "decode_encode_replays"
-      },
-      {
-        "hazard": "no witness found is not agreement",
-        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
-        "theorem": "no_witness_inconclusive"
-      },
-      {
-        "hazard": "shrink replay refutes every step",
-        "module": "proofs/foundation/NobleFoundation/SymbolicShrinkCorpus.lean",
-        "theorem": "subtractionOrder_every_shrink_refutes"
-      },
-      {
-        "hazard": "shrunk witness is a local minimum",
-        "module": "proofs/foundation/NobleFoundation/SymbolicShrinkCorpus.lean",
-        "theorem": "subtractionOrder_shrunk_is_a_local_minimum"
-      },
-      {
         "hazard": "stale semantic revision",
-        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
-        "theorem": "stale_revision_inconclusive"
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusalsReplay.lean",
+        "theorem": "inconclusive_rows_decide",
+        "receipt": {
+          "file": "verification/symbolic/receipts/2026-11-13/solver.json",
+          "path": ["controls", "bindings"],
+          "label": "stale semantic revision"
+        }
       },
       {
-        "hazard": "malformed certificate",
-        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
-        "theorem": "malformed_certificate_inconclusive"
+        "hazard": "stale I64 profile",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusalsReplay.lean",
+        "theorem": "inconclusive_rows_decide",
+        "receipt": {
+          "file": "verification/symbolic/receipts/2026-11-13/solver.json",
+          "path": ["controls", "bindings"],
+          "label": "other I64 profile"
+        }
       },
       {
-        "hazard": "forced UNKNOWN is inconclusive, not a refusal of the pair",
-        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
-        "theorem": "unfinished_query_inconclusive"
+        "hazard": "other encoder binding",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusalsReplay.lean",
+        "theorem": "inconclusive_rows_decide",
+        "receipt": {
+          "file": "verification/symbolic/receipts/2026-11-13/solver.json",
+          "path": ["controls", "bindings"],
+          "label": "other encoder"
+        }
       },
       {
-        "hazard": "forced UNKNOWN is not certification",
-        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
-        "theorem": "unfinished_query_not_certified"
+        "hazard": "altered graph-pair bytes",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusalsReplay.lean",
+        "theorem": "inconclusive_rows_decide",
+        "receipt": {
+          "file": "verification/symbolic/receipts/2026-11-13/solver.json",
+          "path": ["controls", "bindings"],
+          "label": "altered pair bytes"
+        }
       },
       {
-        "hazard": "an exhausted budget is unsupported, not inconclusive",
-        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
-        "theorem": "exhausted_budget_unsupported"
+        "hazard": "malformed solver witness",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusalsReplay.lean",
+        "theorem": "inconclusive_rows_decide",
+        "receipt": {
+          "file": "verification/symbolic/receipts/2026-11-13/solver.json",
+          "path": ["controls", "witnesses"],
+          "label": "missing slot"
+        }
       },
       {
-        "hazard": "a corrupted encoding is inconclusive",
-        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
-        "theorem": "corrupted_encoding_inconclusive"
+        "hazard": "malformed kernel certificate",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusalsReplay.lean",
+        "theorem": "inconclusive_rows_decide",
+        "receipt": {
+          "file": "verification/symbolic/receipts/2026-11-13/solver.json",
+          "path": ["controls", "certificates"],
+          "label": "disallowed axiom"
+        }
       },
       {
-        "hazard": "counterexample status requires a replayed witness",
-        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
-        "theorem": "refuted_requires_replay"
+        "hazard": "forced UNKNOWN",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusalsReplay.lean",
+        "theorem": "inconclusive_rows_decide",
+        "receipt": {
+          "file": "verification/symbolic/receipts/2026-11-13/solver.json",
+          "path": ["controls", "forced"],
+          "label": "injected UNKNOWN"
+        }
       },
       {
-        "hazard": "acceptance control: a clean query certifies",
-        "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
-        "theorem": "clean_query_certifies"
+        "hazard": "watchdog timeout",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusalsReplay.lean",
+        "theorem": "inconclusive_rows_decide",
+        "receipt": {
+          "file": "verification/symbolic/receipts/2026-11-13/solver.json",
+          "path": ["controls", "forced"],
+          "label": "watchdog timeout"
+        }
+      },
+      {
+        "hazard": "exhausted query budget",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusalsReplay.lean",
+        "theorem": "unsupported_rows_decide",
+        "receipt": {
+          "file": "verification/symbolic/receipts/2026-11-13/solver.json",
+          "path": ["controls", "refusals"],
+          "label": "formula budget"
+        }
+      },
+      {
+        "hazard": "unsupported graph fragment",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusalsReplay.lean",
+        "theorem": "unsupported_rows_decide",
+        "receipt": {
+          "file": "verification/symbolic/receipts/2026-11-13/solver.json",
+          "path": ["controls", "refusals"],
+          "label": "arithmetic on Bool"
+        }
+      },
+      {
+        "hazard": "altered endpoint module digest",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusalsReplay.lean",
+        "theorem": "inconclusive_rows_decide",
+        "receipt": {
+          "file": "verification/symbolic/receipts/2026-11-12/endpoints.json",
+          "path": ["controls", "altered_loaded_bytes", "rows", 0]
+        }
+      },
+      {
+        "hazard": "altered endpoint source digest",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusalsReplay.lean",
+        "theorem": "inconclusive_rows_decide",
+        "receipt": {
+          "file": "verification/symbolic/receipts/2026-11-12/endpoints.json",
+          "path": ["controls", "altered_loaded_bytes", "rows", 2]
+        }
+      },
+      {
+        "hazard": "arbitrary loaded-module substitution unavailable",
+        "module": "proofs/foundation/NobleFoundation/SymbolicRefusalsReplay.lean",
+        "theorem": "unsupported_rows_decide",
+        "receipt": {
+          "file": "verification/symbolic/receipts/2026-11-12/endpoints.json",
+          "path": ["controls", "altered_loaded_bytes"]
+        }
       }
     ],
     "open": [],
@@ -165,7 +245,30 @@
         "inconclusive",
         "unsupported"
       ],
-      "note": "certified comes only from a bound kernel certificate; refuted only from a witness that replays on the original graphs; inconclusive from a stale or altered binding, a malformed witness, a corrupted encoding, UNKNOWN, an error or a timeout; unsupported from an exhausted budget or fragment violation. QueryOutcome is supplied by the caller: no lane constructs one, so these are the decision rules, not the lane's observed results."
+      "note": "certified comes only from a bound kernel certificate; refuted only from a parsed witness that replays on the original graphs; inconclusive from a stale binding, malformed witness or certificate, UNKNOWN, an error or a timeout; unsupported from an exhausted budget or fragment violation. The solver and endpoint lanes record observation tuples; generated Lean replays their recorded statuses. Encoder-check results are deliberately not status inputs."
     }
+  },
+  "acceptance_controls": [
+    {
+      "control": "a bound certificate still certifies when the solver reports UNKNOWN",
+      "module": "proofs/foundation/NobleFoundation/SymbolicRefusals.lean",
+      "theorem": "certificate_with_unknown_fixture",
+      "expect": "certified",
+      "receipt": {
+        "file": "verification/symbolic/receipts/2026-11-13/solver.json",
+        "path": ["controls", "forced"],
+        "label": "bound certificate with an injected UNKNOWN"
+      }
+    }
+  ],
+  "generated": {
+    "generator": "verification/symbolic/solver-lean.mjs",
+    "solver_receipt": "verification/symbolic/receipts/2026-11-13/solver.json",
+    "queries": "verification/symbolic/receipts/2026-11-13/queries.json",
+    "endpoints_receipt": "verification/symbolic/receipts/2026-11-12/endpoints.json",
+    "modules": [
+      "proofs/foundation/NobleFoundation/SymbolicRefusalsReplay.lean",
+      "proofs/foundation/NobleFoundation/SymbolicEncoderCorpus.lean"
+    ]
   }
 }

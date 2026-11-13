@@ -64,18 +64,6 @@ const node = value => {
 
 const nodeList = values => `[${values.map(node).join(', ')}]`;
 
-/** One Lean identifier per row, unique, ASCII, and stable across runs. */
-const namesOf = rows => {
-  const taken = new Set();
-  return rows.map(row => {
-    const base = `row_${row.name.replace(/[^A-Za-z0-9]+/gu, '_').replace(/^_+|_+$/gu, '')}`;
-    let name = base;
-    for (let at = 2; taken.has(name); at += 1) name = `${base}_${at}`;
-    taken.add(name);
-    return name;
-  });
-};
-
 /* ---------- Rows, from the receipts ---------- */
 
 /** Every recorded row of the solver receipt, in receipt order, with its tuple and status. */
@@ -145,7 +133,6 @@ function renderRefusals(receipts) {
   const { solver, endpoints, digests } = receipts;
   const rows = [...solverRows(solver), ...endpointRows(endpoints)];
   assert.ok(rows.length > 0, 'the receipts record rows');
-  const names = namesOf(rows);
   const claims = solverClaims(solver);
   const killers = MUTANTS.map(entry => {
     const row = entry.pick(rows);
@@ -229,14 +216,6 @@ function renderRefusals(receipts) {
   push('    (receiptClaims.all fun claim => claimStatus claim.certificate claim.runs == claim.status) = true := by');
   push('  decide');
   push('');
-  push('/-! ### Each recorded row, one theorem, so a failure names its row -/');
-  push('');
-  rows.forEach((row, at) => {
-    push(`/-- \`${row.name}\` (${row.status}). -/`);
-    push(`private theorem ${names[at]} : classify ${observation(row.observation)} = ${verdict(row.status)} := by`);
-    push('  decide');
-    push('');
-  });
   push('/-! ### Seeded mutations of `classify`, killed by named recorded rows -/');
   push('');
   for (const entry of killers) {
