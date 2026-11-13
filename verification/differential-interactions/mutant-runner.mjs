@@ -146,7 +146,6 @@ try {
   requireThat(exportResult.status === 0, `P1 corpus export failed: ${exportResult.stderr}`);
 
   const p1BaseDir = join(output, 'p1-baseline');
-  mkdirSync(p1BaseDir);
   const p1BaseResult = runNode([join(root, 'verification/foundation/differential.mjs'),
     '--seed', '125', '--count', '18', '--foundation', foundation, '--output', p1BaseDir,
     '--import', casesPath, '--target-dir', targetDir, '--skip-checker-lanes'], 'p1-baseline', tmp);
