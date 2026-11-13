@@ -1,0 +1,6190 @@
+{
+  "schema": "noble-synthesis-receipt/v1",
+  "claim": "bounded typed synthesis with counterexample-guided refinement over the frozen benchmark set; discovery, refinement, kernel-certificate emission and command-line re-admission kept separate",
+  "source": {
+    "commit": "9d99d1a62554a087dafcec4f075eb8839595f71a",
+    "tree": "b6f521246338f7f2a73918637d4409a3e10b10b1",
+    "clean": true,
+    "lane_sha256": "f1ffbd4c5c471271f6509967ca3f714d041fca3ac0c2b296509a8e5311832783",
+    "qfbv_sha256": "2f779f76b8da98613c34034c4ca3a743b0c494aec579693188dfb6feb51c6d20",
+    "manifest_sha256": "f2950f224530f9ae221bf520ec4cea8ccc6e2b83cce84ec4a5f62a0aa36cee38",
+    "semantic_revision": "ngraph-sem/0",
+    "profile": "ngraph-i64/0",
+    "encoder": "noble-symbolic-qfbv/v1"
+  },
+  "cli_sha256": "b58b8fb2ebbff41c10632cd9668ecc82be5a0f5509871a109c3278b11ed66092",
+  "grammar": {
+    "i64": {
+      "name": "synth-i64/0",
+      "words": [
+        "dup",
+        "swap",
+        "+",
+        "-",
+        "*",
+        "="
+      ],
+      "constants": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "5",
+        "7"
+      ],
+      "wiring": "dup and swap only; no arithmetic beyond + - * ="
+    },
+    "list": {
+      "name": "synth-list/0",
+      "words": [
+        "dup",
+        "swap",
+        "nil",
+        "cons",
+        "+",
+        "-"
+      ],
+      "constants": [
+        "1",
+        "2",
+        "3"
+      ]
+    }
+  },
+  "budget": {
+    "seed": "0x9e3779b97f4a7c15",
+    "size": 8,
+    "max_stack": 4,
+    "max_candidates": 400000,
+    "max_rounds": 4,
+    "solver_ms": 10000,
+    "list_max_stack": 4
+  },
+  "tools": {
+    "bitwuzla": {
+      "path": "/nix/store/5i2dxw5dxqx73sb235zgb904yc3jlh49-bitwuzla-0.8.2/bin/bitwuzla",
+      "sha256": "81c9f5366b900b5abc853c4c16542d9ca35eb1eabc97e048e56fa40a5c0215dc"
+    },
+    "z3": {
+      "path": "/nix/store/qzngzax9x0f84g5iapqr3xjc4vg1a2sz-z3-4.15.8/bin/z3",
+      "sha256": "eab6da7c7964354e24bb0a29613d8ef26ba62e95e3d3d4fe57f9dfd980a9201a"
+    },
+    "time": {
+      "path": "/nix/store/mqldjw98f2f4w2glz0f12qdnvv8m4aq9-time-1.9/bin/time",
+      "sha256": "7869c0b0bd5d5657ed3eb73eded1cfe7d95f3bc484f5677cb7c1ac610c20ccee"
+    }
+  },
+  "measurement": {
+    "wall_ns": 41878281027,
+    "cpu_user_ns": 8469271000,
+    "cpu_system_ns": 897160000,
+    "node_cpu_user_ns": 8059271000,
+    "node_cpu_system_ns": 827160000,
+    "solver_cpu_user_ns": 410000000,
+    "solver_cpu_system_ns": 70000000,
+    "process_peak_rss_kb": 4100824,
+    "solver_peak_rss_kb": 48264,
+    "peak_rss_kb": 4100824,
+    "solver_runs": 22
+  },
+  "lean": {
+    "path": "proofs/foundation/NobleFoundation/SynthesisCertified.lean",
+    "emission_sha256": "c0c1b0f4d2520bef8b891cff37c2b21e8337c98e9df6a93f800d53eb2df4e4c4",
+    "theorems": [
+      {
+        "name": "NobleFoundation.Synthesis.not_certifiable_of_refuted",
+        "phase": 2,
+        "role": "symbolic-solver",
+        "claim": "a pair with a refuting input has no certificate for every input"
+      },
+      {
+        "name": "NobleFoundation.Synthesis.arithCommuted_certified",
+        "phase": 1,
+        "role": "real-artifact",
+        "claim": "the synthesized program `7 + +` and its reference `(+ (+ x 7) y)` agree on every input, a graph-model theorem"
+      },
+      {
+        "name": "NobleFoundation.Synthesis.arithSubtract_certified",
+        "phase": 1,
+        "role": "real-artifact",
+        "claim": "the synthesized program `- 7 +` and its reference `(- (+ x 7) y)` agree on every input, a graph-model theorem"
+      },
+      {
+        "name": "NobleFoundation.Synthesis.arithScaled_certified",
+        "phase": 1,
+        "role": "real-artifact",
+        "claim": "the synthesized program `7 + 5 * +` and its reference `(+ x (* 5 (+ 7 y)))` agree on every input, a graph-model theorem"
+      },
+      {
+        "name": "NobleFoundation.Synthesis.overBoundControl_certified",
+        "phase": 1,
+        "role": "real-artifact",
+        "claim": "the synthesized program `3 + 7 3 - * +` and its reference `(+ x (* (+ y 3) 4))` agree on every input, a graph-model theorem"
+      },
+      {
+        "name": "NobleFoundation.Synthesis.bitOr_refused_witness_refutes",
+        "phase": 1,
+        "role": "negative-control",
+        "claim": "the refused candidate `-` really refutes `bitOr`'s reference at the recorded bits"
+      },
+      {
+        "name": "NobleFoundation.Synthesis.bitOr_refused_not_certifiable",
+        "phase": 1,
+        "role": "negative-control",
+        "claim": "the refused candidate for `bitOr` has no certificate, from its kernel-checked witness"
+      },
+      {
+        "name": "NobleFoundation.Synthesis.bitXor_refused_witness_refutes",
+        "phase": 1,
+        "role": "negative-control",
+        "claim": "the refused candidate `-` really refutes `bitXor`'s reference at the recorded bits"
+      },
+      {
+        "name": "NobleFoundation.Synthesis.bitXor_refused_not_certifiable",
+        "phase": 1,
+        "role": "negative-control",
+        "claim": "the refused candidate for `bitXor` has no certificate, from its kernel-checked witness"
+      }
+    ],
+    "freshness": {
+      "committed": "proofs/foundation/NobleFoundation/SynthesisCertified.lean",
+      "bytes": 7442,
+      "committed_sha256": "c0c1b0f4d2520bef8b891cff37c2b21e8337c98e9df6a93f800d53eb2df4e4c4",
+      "emission_sha256": "c0c1b0f4d2520bef8b891cff37c2b21e8337c98e9df6a93f800d53eb2df4e4c4",
+      "matches": true
+    },
+    "kernel": "the emitted theorems are proved only once verification/foundation/check.mjs accepts them; this lane does not check the kernel"
+  },
+  "tasks": [
+    {
+      "name": "arithCommuted",
+      "family": "arithmetic",
+      "out": "i64",
+      "reference": "(+ (+ x 7) y)",
+      "declaration": {
+        "inputs": 2,
+        "bound": 8,
+        "control_bound": null,
+        "precondition": null
+      },
+      "examples": {
+        "train": 3,
+        "heldout": 2,
+        "counterexamples": 0
+      },
+      "search": {
+        "grammar": "synth-i64/0",
+        "words": [
+          "-",
+          "7",
+          "0",
+          "=",
+          "2",
+          "1",
+          "5",
+          "+",
+          "3",
+          "*",
+          "swap",
+          "dup"
+        ],
+        "rounds": 1,
+        "candidates": 235,
+        "program": "7 + +",
+        "size": 3,
+        "sizes": [
+          {
+            "size": 0,
+            "states": 1,
+            "complete": 0
+          },
+          {
+            "size": 1,
+            "states": 11,
+            "complete": 3
+          },
+          {
+            "size": 2,
+            "states": 94,
+            "complete": 1
+          },
+          {
+            "size": 3,
+            "states": 88,
+            "complete": 1,
+            "partial": true
+          }
+        ],
+        "measurement": {
+          "wall_ns": 136976491,
+          "cpu_user_ns": 12368000,
+          "cpu_system_ns": 8261000,
+          "process_peak_rss_kb": 4100824
+        }
+      },
+      "lean": {
+        "pair": {
+          "name": "arithCommuted",
+          "left": [
+            {
+              "op": "input",
+              "slot": 0
+            },
+            {
+              "op": "input",
+              "slot": 1
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000007"
+            },
+            {
+              "op": "add",
+              "a": 1,
+              "b": 2
+            },
+            {
+              "op": "add",
+              "a": 0,
+              "b": 3
+            }
+          ],
+          "right": [
+            {
+              "op": "input",
+              "slot": 0
+            },
+            {
+              "op": "input",
+              "slot": 1
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000007"
+            },
+            {
+              "op": "add",
+              "a": 0,
+              "b": 2
+            },
+            {
+              "op": "add",
+              "a": 3,
+              "b": 1
+            }
+          ],
+          "outputs": [
+            4
+          ],
+          "digest": "8ad740e87375b5a2f18b8d04e1472dc240f5a593577aa0bef886c1da18d10f47"
+        },
+        "refused": null
+      },
+      "status": "proved",
+      "certificate": {
+        "theorem": "NobleFoundation.Synthesis.arithCommuted_certified",
+        "form": {
+          "coef": [
+            "0x0000000000000001",
+            "0x0000000000000001"
+          ],
+          "constant": "0x0000000000000007"
+        },
+        "kernel": "checked by verification/foundation/check.mjs, not by this lane"
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "program": "7 + +",
+          "size": 3,
+          "candidates": 235,
+          "solver": [
+            "unsat",
+            "unsat"
+          ],
+          "verdict": "proved",
+          "affine": {
+            "certifiable": true,
+            "reason": null
+          },
+          "query": {
+            "bytes": 618,
+            "nodes": 10,
+            "sha256": "f07ac72c59900dd270f11f9044ea7ba74c3085ec7f387fa75afbf5bceead3f32",
+            "assumptions": 0
+          },
+          "answers": [
+            {
+              "solver": "bitwuzla",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof",
+              "wall_ns": 21339269,
+              "cpu_user_ns": 0,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 4236,
+              "witness": null,
+              "replay_ns": null
+            },
+            {
+              "solver": "z3",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof",
+              "wall_ns": 43091318,
+              "cpu_user_ns": 0,
+              "cpu_system_ns": 10000000,
+              "peak_rss_kb": 20364,
+              "witness": null,
+              "replay_ns": null
+            }
+          ],
+          "encoder_checks": {
+            "simulation_points": 4,
+            "claim_outputs": [
+              4
+            ],
+            "simulation": [
+              {
+                "point": {
+                  "s0": "0x0000000000000000",
+                  "s1": "0x0000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0xffffffffffffffff",
+                  "s1": "0xffffffffffffffff"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x8000000000000000",
+                  "s1": "0x8000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0123456789abcdef",
+                  "s1": "0x123456789abcdf00"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              }
+            ]
+          },
+          "readmission": {
+            "points": [
+              [
+                "0",
+                "0"
+              ],
+              [
+                "1",
+                "2"
+              ],
+              [
+                "-1",
+                "3"
+              ],
+              [
+                "5",
+                "-5"
+              ],
+              [
+                "2147483647",
+                "-2147483648"
+              ],
+              [
+                "-9223372036854775808",
+                "0"
+              ],
+              [
+                "9223372036854775807",
+                "1"
+              ],
+              [
+                "0",
+                "-9223372036854775808"
+              ],
+              [
+                "-7",
+                "7"
+              ]
+            ],
+            "outputs": [
+              "7",
+              "10",
+              "9",
+              "7",
+              "6",
+              "-9223372036854775801",
+              "-9223372036854775801",
+              "-9223372036854775801",
+              "7"
+            ],
+            "graph": {
+              "outcome": "normal",
+              "graph": "6f82cc8f885a5e4f84365c1fb3a3fdd40d1568d92732393a34f06f0f29687bf5",
+              "graph_sha256": "4bfe6055f5b4f6ea27b8a75455fb93927c15f53747d91bc31fe45c9fd330cdf0",
+              "points": 9,
+              "evaluators_agree": true,
+              "reference_ns": 5789225,
+              "packed_ns": 4281191
+            },
+            "scalar": {
+              "interface": "I64 I64 -- I64 ! {}",
+              "points": 9,
+              "wasm_sha256": [
+                "864aa4e88f2e52c3338b384d97353339bf433089f7d5b873723a6df7ef5702d0"
+              ]
+            }
+          }
+        }
+      ],
+      "solver_check": {
+        "query": {
+          "bytes": 618,
+          "nodes": 10,
+          "sha256": "f07ac72c59900dd270f11f9044ea7ba74c3085ec7f387fa75afbf5bceead3f32",
+          "assumptions": 0
+        },
+        "answers": [
+          {
+            "solver": "bitwuzla",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof",
+            "wall_ns": 21339269,
+            "cpu_user_ns": 0,
+            "cpu_system_ns": 0,
+            "peak_rss_kb": 4236,
+            "witness": null,
+            "replay_ns": null
+          },
+          {
+            "solver": "z3",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof",
+            "wall_ns": 43091318,
+            "cpu_user_ns": 0,
+            "cpu_system_ns": 10000000,
+            "peak_rss_kb": 20364,
+            "witness": null,
+            "replay_ns": null
+          }
+        ],
+        "encoder_checks": {
+          "simulation_points": 4,
+          "claim_outputs": [
+            4
+          ],
+          "simulation": [
+            {
+              "point": {
+                "s0": "0x0000000000000000",
+                "s1": "0x0000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0xffffffffffffffff",
+                "s1": "0xffffffffffffffff"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x8000000000000000",
+                "s1": "0x8000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x0123456789abcdef",
+                "s1": "0x123456789abcdf00"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            }
+          ]
+        }
+      },
+      "baseline": {
+        "candidates": 360180,
+        "program": "7 - 7 7 + + +",
+        "size": 7,
+        "exhausted": null,
+        "measurement": {
+          "wall_ns": 702573302,
+          "cpu_user_ns": 745105000,
+          "cpu_system_ns": 12427000,
+          "process_peak_rss_kb": 4100824
+        },
+        "readmission": {
+          "points": [
+            [
+              "0",
+              "0"
+            ],
+            [
+              "1",
+              "2"
+            ],
+            [
+              "-1",
+              "3"
+            ],
+            [
+              "-9223372036854775808",
+              "0"
+            ],
+            [
+              "9223372036854775807",
+              "1"
+            ],
+            [
+              "0",
+              "-9223372036854775808"
+            ],
+            [
+              "-7",
+              "7"
+            ]
+          ],
+          "outputs": [
+            "7",
+            "10",
+            "9",
+            "-9223372036854775801",
+            "-9223372036854775801",
+            "-9223372036854775801",
+            "7"
+          ],
+          "graph": {
+            "outcome": "normal",
+            "graph": "032e7c90da031721a48ba8ea4fa0a52a2efbca27714778fefcc0cab5b1d96423",
+            "graph_sha256": "49d18df050ed7352d3679ead5f08b0cfa1a5667fff5beaa0bdbc2d50a4b8283c",
+            "points": 7,
+            "evaluators_agree": true,
+            "reference_ns": 3993544,
+            "packed_ns": 3664058
+          },
+          "scalar": {
+            "interface": "I64 I64 -- I64 ! {}",
+            "points": 7,
+            "wasm_sha256": [
+              "9ed5e6d35ad76732a0d0dbe3170c48bea1420db3c8ae49472e004a2dc0479975"
+            ]
+          }
+        }
+      },
+      "heldout": {
+        "status": "pass",
+        "passed": 2,
+        "total": 2,
+        "entries": [
+          {
+            "inputs": [
+              "5",
+              "-5"
+            ],
+            "expected": "7",
+            "observed": "7",
+            "agrees": true
+          },
+          {
+            "inputs": [
+              "2147483647",
+              "-2147483648"
+            ],
+            "expected": "6",
+            "observed": "6",
+            "agrees": true
+          }
+        ]
+      },
+      "readmission": {
+        "points": [
+          [
+            "0",
+            "0"
+          ],
+          [
+            "1",
+            "2"
+          ],
+          [
+            "-1",
+            "3"
+          ],
+          [
+            "5",
+            "-5"
+          ],
+          [
+            "2147483647",
+            "-2147483648"
+          ],
+          [
+            "-9223372036854775808",
+            "0"
+          ],
+          [
+            "9223372036854775807",
+            "1"
+          ],
+          [
+            "0",
+            "-9223372036854775808"
+          ],
+          [
+            "-7",
+            "7"
+          ]
+        ],
+        "outputs": [
+          "7",
+          "10",
+          "9",
+          "7",
+          "6",
+          "-9223372036854775801",
+          "-9223372036854775801",
+          "-9223372036854775801",
+          "7"
+        ],
+        "graph": {
+          "outcome": "normal",
+          "graph": "6f82cc8f885a5e4f84365c1fb3a3fdd40d1568d92732393a34f06f0f29687bf5",
+          "graph_sha256": "4bfe6055f5b4f6ea27b8a75455fb93927c15f53747d91bc31fe45c9fd330cdf0",
+          "points": 9,
+          "evaluators_agree": true,
+          "reference_ns": 5789225,
+          "packed_ns": 4281191
+        },
+        "scalar": {
+          "interface": "I64 I64 -- I64 ! {}",
+          "points": 9,
+          "wasm_sha256": [
+            "864aa4e88f2e52c3338b384d97353339bf433089f7d5b873723a6df7ef5702d0"
+          ]
+        }
+      }
+    },
+    {
+      "name": "arithSubtract",
+      "family": "arithmetic",
+      "out": "i64",
+      "reference": "(- (+ x 7) y)",
+      "declaration": {
+        "inputs": 2,
+        "bound": 8,
+        "control_bound": null,
+        "precondition": null
+      },
+      "examples": {
+        "train": 3,
+        "heldout": 2,
+        "counterexamples": 0
+      },
+      "search": {
+        "grammar": "synth-i64/0",
+        "words": [
+          "-",
+          "7",
+          "0",
+          "=",
+          "2",
+          "1",
+          "5",
+          "+",
+          "3",
+          "*",
+          "swap",
+          "dup"
+        ],
+        "rounds": 1,
+        "candidates": 127,
+        "program": "- 7 +",
+        "size": 3,
+        "sizes": [
+          {
+            "size": 0,
+            "states": 1,
+            "complete": 0
+          },
+          {
+            "size": 1,
+            "states": 11,
+            "complete": 3
+          },
+          {
+            "size": 2,
+            "states": 94,
+            "complete": 1
+          },
+          {
+            "size": 3,
+            "states": 7,
+            "complete": 1,
+            "partial": true
+          }
+        ],
+        "measurement": {
+          "wall_ns": 80840797,
+          "cpu_user_ns": 1024000,
+          "cpu_system_ns": 12844000,
+          "process_peak_rss_kb": 4100824
+        }
+      },
+      "lean": {
+        "pair": {
+          "name": "arithSubtract",
+          "left": [
+            {
+              "op": "input",
+              "slot": 0
+            },
+            {
+              "op": "input",
+              "slot": 1
+            },
+            {
+              "op": "sub",
+              "a": 0,
+              "b": 1
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000007"
+            },
+            {
+              "op": "add",
+              "a": 2,
+              "b": 3
+            }
+          ],
+          "right": [
+            {
+              "op": "input",
+              "slot": 0
+            },
+            {
+              "op": "input",
+              "slot": 1
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000007"
+            },
+            {
+              "op": "add",
+              "a": 0,
+              "b": 2
+            },
+            {
+              "op": "sub",
+              "a": 3,
+              "b": 1
+            }
+          ],
+          "outputs": [
+            4
+          ],
+          "digest": "6022a4ab26091d00f8b935783ff9f7a853519a49b6dd94cfaaee8bcabad4ad31"
+        },
+        "refused": null
+      },
+      "status": "proved",
+      "certificate": {
+        "theorem": "NobleFoundation.Synthesis.arithSubtract_certified",
+        "form": {
+          "coef": [
+            "0x0000000000000001",
+            "0xffffffffffffffff"
+          ],
+          "constant": "0x0000000000000007"
+        },
+        "kernel": "checked by verification/foundation/check.mjs, not by this lane"
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "program": "- 7 +",
+          "size": 3,
+          "candidates": 127,
+          "solver": [
+            "unsat",
+            "unsat"
+          ],
+          "verdict": "proved",
+          "affine": {
+            "certifiable": true,
+            "reason": null
+          },
+          "query": {
+            "bytes": 618,
+            "nodes": 10,
+            "sha256": "31e39e1ab7231a0a061f0e0be5b372b3c85623210ce3b48435ed50c2aaa0def1",
+            "assumptions": 0
+          },
+          "answers": [
+            {
+              "solver": "bitwuzla",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof",
+              "wall_ns": 6852790,
+              "cpu_user_ns": 0,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 4928,
+              "witness": null,
+              "replay_ns": null
+            },
+            {
+              "solver": "z3",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof",
+              "wall_ns": 10862144,
+              "cpu_user_ns": 0,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 22012,
+              "witness": null,
+              "replay_ns": null
+            }
+          ],
+          "encoder_checks": {
+            "simulation_points": 4,
+            "claim_outputs": [
+              4
+            ],
+            "simulation": [
+              {
+                "point": {
+                  "s0": "0x0000000000000000",
+                  "s1": "0x0000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0xffffffffffffffff",
+                  "s1": "0xffffffffffffffff"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x8000000000000000",
+                  "s1": "0x8000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0123456789abcdef",
+                  "s1": "0x123456789abcdf00"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              }
+            ]
+          },
+          "readmission": {
+            "points": [
+              [
+                "0",
+                "0"
+              ],
+              [
+                "1",
+                "2"
+              ],
+              [
+                "-1",
+                "3"
+              ],
+              [
+                "5",
+                "-5"
+              ],
+              [
+                "-2147483648",
+                "2147483647"
+              ],
+              [
+                "-9223372036854775808",
+                "0"
+              ],
+              [
+                "9223372036854775807",
+                "1"
+              ],
+              [
+                "0",
+                "-9223372036854775808"
+              ],
+              [
+                "-7",
+                "7"
+              ]
+            ],
+            "outputs": [
+              "7",
+              "6",
+              "3",
+              "17",
+              "-4294967288",
+              "-9223372036854775801",
+              "-9223372036854775803",
+              "-9223372036854775801",
+              "-7"
+            ],
+            "graph": {
+              "outcome": "normal",
+              "graph": "37a45f1a052e1f1f468fb592428bc8682d1ae668d7ea4a6a29dd3b3d4f3705a3",
+              "graph_sha256": "7dbe3feb4abce9a7c73911ccd5a0ffb23728f3bda5c4b1720880c69332afb71f",
+              "points": 9,
+              "evaluators_agree": true,
+              "reference_ns": 4592752,
+              "packed_ns": 4930052
+            },
+            "scalar": {
+              "interface": "I64 I64 -- I64 ! {}",
+              "points": 9,
+              "wasm_sha256": [
+                "e9f3f4ed5ec27079bf5ea883e2b4c8d8b3038662533e0fdae541f04599ea60b2"
+              ]
+            }
+          }
+        }
+      ],
+      "solver_check": {
+        "query": {
+          "bytes": 618,
+          "nodes": 10,
+          "sha256": "31e39e1ab7231a0a061f0e0be5b372b3c85623210ce3b48435ed50c2aaa0def1",
+          "assumptions": 0
+        },
+        "answers": [
+          {
+            "solver": "bitwuzla",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof",
+            "wall_ns": 6852790,
+            "cpu_user_ns": 0,
+            "cpu_system_ns": 0,
+            "peak_rss_kb": 4928,
+            "witness": null,
+            "replay_ns": null
+          },
+          {
+            "solver": "z3",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof",
+            "wall_ns": 10862144,
+            "cpu_user_ns": 0,
+            "cpu_system_ns": 0,
+            "peak_rss_kb": 22012,
+            "witness": null,
+            "replay_ns": null
+          }
+        ],
+        "encoder_checks": {
+          "simulation_points": 4,
+          "claim_outputs": [
+            4
+          ],
+          "simulation": [
+            {
+              "point": {
+                "s0": "0x0000000000000000",
+                "s1": "0x0000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0xffffffffffffffff",
+                "s1": "0xffffffffffffffff"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x8000000000000000",
+                "s1": "0x8000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x0123456789abcdef",
+                "s1": "0x123456789abcdf00"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            }
+          ]
+        }
+      },
+      "baseline": {
+        "candidates": 73,
+        "program": "- 7 - 7 7 + +",
+        "size": 7,
+        "exhausted": null,
+        "measurement": {
+          "wall_ns": 577648,
+          "cpu_user_ns": 547000,
+          "cpu_system_ns": 0,
+          "process_peak_rss_kb": 4100824
+        },
+        "readmission": {
+          "points": [
+            [
+              "0",
+              "0"
+            ],
+            [
+              "1",
+              "2"
+            ],
+            [
+              "-1",
+              "3"
+            ],
+            [
+              "-9223372036854775808",
+              "0"
+            ],
+            [
+              "9223372036854775807",
+              "1"
+            ],
+            [
+              "0",
+              "-9223372036854775808"
+            ],
+            [
+              "-7",
+              "7"
+            ]
+          ],
+          "outputs": [
+            "7",
+            "6",
+            "3",
+            "-9223372036854775801",
+            "-9223372036854775803",
+            "-9223372036854775801",
+            "-7"
+          ],
+          "graph": {
+            "outcome": "normal",
+            "graph": "2c47c2dbb099cb3d42572701167612678487d9ba07909dac19e00f0dbce98915",
+            "graph_sha256": "9be4ec89f83b61141b7e753b98b2db856985617cc008b5a1f9afe6345f81cda2",
+            "points": 7,
+            "evaluators_agree": true,
+            "reference_ns": 4886511,
+            "packed_ns": 3987963
+          },
+          "scalar": {
+            "interface": "I64 I64 -- I64 ! {}",
+            "points": 7,
+            "wasm_sha256": [
+              "1a94d74400c48f38c64352be1447687316c3c661225d3e919a5d205c7913dccb"
+            ]
+          }
+        }
+      },
+      "heldout": {
+        "status": "pass",
+        "passed": 2,
+        "total": 2,
+        "entries": [
+          {
+            "inputs": [
+              "5",
+              "-5"
+            ],
+            "expected": "17",
+            "observed": "17",
+            "agrees": true
+          },
+          {
+            "inputs": [
+              "-2147483648",
+              "2147483647"
+            ],
+            "expected": "-4294967288",
+            "observed": "-4294967288",
+            "agrees": true
+          }
+        ]
+      },
+      "readmission": {
+        "points": [
+          [
+            "0",
+            "0"
+          ],
+          [
+            "1",
+            "2"
+          ],
+          [
+            "-1",
+            "3"
+          ],
+          [
+            "5",
+            "-5"
+          ],
+          [
+            "-2147483648",
+            "2147483647"
+          ],
+          [
+            "-9223372036854775808",
+            "0"
+          ],
+          [
+            "9223372036854775807",
+            "1"
+          ],
+          [
+            "0",
+            "-9223372036854775808"
+          ],
+          [
+            "-7",
+            "7"
+          ]
+        ],
+        "outputs": [
+          "7",
+          "6",
+          "3",
+          "17",
+          "-4294967288",
+          "-9223372036854775801",
+          "-9223372036854775803",
+          "-9223372036854775801",
+          "-7"
+        ],
+        "graph": {
+          "outcome": "normal",
+          "graph": "37a45f1a052e1f1f468fb592428bc8682d1ae668d7ea4a6a29dd3b3d4f3705a3",
+          "graph_sha256": "7dbe3feb4abce9a7c73911ccd5a0ffb23728f3bda5c4b1720880c69332afb71f",
+          "points": 9,
+          "evaluators_agree": true,
+          "reference_ns": 4592752,
+          "packed_ns": 4930052
+        },
+        "scalar": {
+          "interface": "I64 I64 -- I64 ! {}",
+          "points": 9,
+          "wasm_sha256": [
+            "e9f3f4ed5ec27079bf5ea883e2b4c8d8b3038662533e0fdae541f04599ea60b2"
+          ]
+        }
+      }
+    },
+    {
+      "name": "arithScaled",
+      "family": "arithmetic",
+      "out": "i64",
+      "reference": "(+ x (* 5 (+ 7 y)))",
+      "declaration": {
+        "inputs": 2,
+        "bound": 8,
+        "control_bound": null,
+        "precondition": null
+      },
+      "examples": {
+        "train": 3,
+        "heldout": 2,
+        "counterexamples": 0
+      },
+      "search": {
+        "grammar": "synth-i64/0",
+        "words": [
+          "-",
+          "7",
+          "0",
+          "=",
+          "2",
+          "1",
+          "5",
+          "+",
+          "3",
+          "*",
+          "swap",
+          "dup"
+        ],
+        "rounds": 1,
+        "candidates": 9906,
+        "program": "7 + 5 * +",
+        "size": 5,
+        "sizes": [
+          {
+            "size": 0,
+            "states": 1,
+            "complete": 0
+          },
+          {
+            "size": 1,
+            "states": 11,
+            "complete": 3
+          },
+          {
+            "size": 2,
+            "states": 94,
+            "complete": 1
+          },
+          {
+            "size": 3,
+            "states": 502,
+            "complete": 68
+          },
+          {
+            "size": 4,
+            "states": 3229,
+            "complete": 58
+          },
+          {
+            "size": 5,
+            "states": 2521,
+            "complete": 1,
+            "partial": true
+          }
+        ],
+        "measurement": {
+          "wall_ns": 139877948,
+          "cpu_user_ns": 111694000,
+          "cpu_system_ns": 27977000,
+          "process_peak_rss_kb": 4100824
+        }
+      },
+      "lean": {
+        "pair": {
+          "name": "arithScaled",
+          "left": [
+            {
+              "op": "input",
+              "slot": 0
+            },
+            {
+              "op": "input",
+              "slot": 1
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000007"
+            },
+            {
+              "op": "add",
+              "a": 1,
+              "b": 2
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000005"
+            },
+            {
+              "op": "mul",
+              "a": 3,
+              "b": 4
+            },
+            {
+              "op": "add",
+              "a": 0,
+              "b": 5
+            }
+          ],
+          "right": [
+            {
+              "op": "input",
+              "slot": 0
+            },
+            {
+              "op": "input",
+              "slot": 1
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000005"
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000007"
+            },
+            {
+              "op": "add",
+              "a": 3,
+              "b": 1
+            },
+            {
+              "op": "mul",
+              "a": 2,
+              "b": 4
+            },
+            {
+              "op": "add",
+              "a": 0,
+              "b": 5
+            }
+          ],
+          "outputs": [
+            6
+          ],
+          "digest": "ebfb36106fc9d6079fb00c8a768e4ddcc8e39d1113edc25909bc77d0070a75c7"
+        },
+        "refused": null
+      },
+      "status": "proved",
+      "certificate": {
+        "theorem": "NobleFoundation.Synthesis.arithScaled_certified",
+        "form": {
+          "coef": [
+            "0x0000000000000001",
+            "0x0000000000000005"
+          ],
+          "constant": "0x0000000000000023"
+        },
+        "kernel": "checked by verification/foundation/check.mjs, not by this lane"
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "program": "7 + 5 * +",
+          "size": 5,
+          "candidates": 9906,
+          "solver": [
+            "unsat",
+            "unsat"
+          ],
+          "verdict": "proved",
+          "affine": {
+            "certifiable": true,
+            "reason": null
+          },
+          "query": {
+            "bytes": 816,
+            "nodes": 14,
+            "sha256": "b683d424430404d74ad688e1e63add1dc2a14cf3b3bf0896eb5b74f84bf10eb4",
+            "assumptions": 0
+          },
+          "answers": [
+            {
+              "solver": "bitwuzla",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof",
+              "wall_ns": 7282783,
+              "cpu_user_ns": 0,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 4964,
+              "witness": null,
+              "replay_ns": null
+            },
+            {
+              "solver": "z3",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof",
+              "wall_ns": 12087691,
+              "cpu_user_ns": 0,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 21940,
+              "witness": null,
+              "replay_ns": null
+            }
+          ],
+          "encoder_checks": {
+            "simulation_points": 4,
+            "claim_outputs": [
+              6
+            ],
+            "simulation": [
+              {
+                "point": {
+                  "s0": "0x0000000000000000",
+                  "s1": "0x0000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0xffffffffffffffff",
+                  "s1": "0xffffffffffffffff"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x8000000000000000",
+                  "s1": "0x8000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0123456789abcdef",
+                  "s1": "0x123456789abcdf00"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              }
+            ]
+          },
+          "readmission": {
+            "points": [
+              [
+                "0",
+                "0"
+              ],
+              [
+                "1",
+                "2"
+              ],
+              [
+                "-1",
+                "3"
+              ],
+              [
+                "5",
+                "-5"
+              ],
+              [
+                "3037000499",
+                "3037000499"
+              ],
+              [
+                "-9223372036854775808",
+                "0"
+              ],
+              [
+                "9223372036854775807",
+                "1"
+              ],
+              [
+                "0",
+                "-9223372036854775808"
+              ],
+              [
+                "-7",
+                "7"
+              ]
+            ],
+            "outputs": [
+              "35",
+              "46",
+              "49",
+              "15",
+              "18222003029",
+              "-9223372036854775773",
+              "-9223372036854775769",
+              "-9223372036854775773",
+              "63"
+            ],
+            "graph": {
+              "outcome": "normal",
+              "graph": "a290123547174969cef2c78054de4f1e7813249e5a8124d40c6573983b262821",
+              "graph_sha256": "9686efc2129db10d09deea12df7bced64f8f88149cba1c5e9166bba8b50e1098",
+              "points": 9,
+              "evaluators_agree": true,
+              "reference_ns": 5627353,
+              "packed_ns": 6166309
+            },
+            "scalar": {
+              "interface": "I64 I64 -- I64 ! {}",
+              "points": 9,
+              "wasm_sha256": [
+                "a89a7c7524a4432990590390d47d2ee06199e5da332d768bf9f0151ba36fdb15"
+              ]
+            }
+          }
+        }
+      ],
+      "solver_check": {
+        "query": {
+          "bytes": 816,
+          "nodes": 14,
+          "sha256": "b683d424430404d74ad688e1e63add1dc2a14cf3b3bf0896eb5b74f84bf10eb4",
+          "assumptions": 0
+        },
+        "answers": [
+          {
+            "solver": "bitwuzla",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof",
+            "wall_ns": 7282783,
+            "cpu_user_ns": 0,
+            "cpu_system_ns": 0,
+            "peak_rss_kb": 4964,
+            "witness": null,
+            "replay_ns": null
+          },
+          {
+            "solver": "z3",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof",
+            "wall_ns": 12087691,
+            "cpu_user_ns": 0,
+            "cpu_system_ns": 0,
+            "peak_rss_kb": 21940,
+            "witness": null,
+            "replay_ns": null
+          }
+        ],
+        "encoder_checks": {
+          "simulation_points": 4,
+          "claim_outputs": [
+            6
+          ],
+          "simulation": [
+            {
+              "point": {
+                "s0": "0x0000000000000000",
+                "s1": "0x0000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0xffffffffffffffff",
+                "s1": "0xffffffffffffffff"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x8000000000000000",
+                "s1": "0x8000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x0123456789abcdef",
+                "s1": "0x123456789abcdf00"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            }
+          ]
+        }
+      },
+      "baseline": {
+        "candidates": 400000,
+        "program": null,
+        "size": null,
+        "exhausted": "candidate fuel",
+        "measurement": {
+          "wall_ns": 961358583,
+          "cpu_user_ns": 961323000,
+          "cpu_system_ns": 10584000,
+          "process_peak_rss_kb": 4100824
+        }
+      },
+      "heldout": {
+        "status": "pass",
+        "passed": 2,
+        "total": 2,
+        "entries": [
+          {
+            "inputs": [
+              "5",
+              "-5"
+            ],
+            "expected": "15",
+            "observed": "15",
+            "agrees": true
+          },
+          {
+            "inputs": [
+              "3037000499",
+              "3037000499"
+            ],
+            "expected": "18222003029",
+            "observed": "18222003029",
+            "agrees": true
+          }
+        ]
+      },
+      "readmission": {
+        "points": [
+          [
+            "0",
+            "0"
+          ],
+          [
+            "1",
+            "2"
+          ],
+          [
+            "-1",
+            "3"
+          ],
+          [
+            "5",
+            "-5"
+          ],
+          [
+            "3037000499",
+            "3037000499"
+          ],
+          [
+            "-9223372036854775808",
+            "0"
+          ],
+          [
+            "9223372036854775807",
+            "1"
+          ],
+          [
+            "0",
+            "-9223372036854775808"
+          ],
+          [
+            "-7",
+            "7"
+          ]
+        ],
+        "outputs": [
+          "35",
+          "46",
+          "49",
+          "15",
+          "18222003029",
+          "-9223372036854775773",
+          "-9223372036854775769",
+          "-9223372036854775773",
+          "63"
+        ],
+        "graph": {
+          "outcome": "normal",
+          "graph": "a290123547174969cef2c78054de4f1e7813249e5a8124d40c6573983b262821",
+          "graph_sha256": "9686efc2129db10d09deea12df7bced64f8f88149cba1c5e9166bba8b50e1098",
+          "points": 9,
+          "evaluators_agree": true,
+          "reference_ns": 5627353,
+          "packed_ns": 6166309
+        },
+        "scalar": {
+          "interface": "I64 I64 -- I64 ! {}",
+          "points": 9,
+          "wasm_sha256": [
+            "a89a7c7524a4432990590390d47d2ee06199e5da332d768bf9f0151ba36fdb15"
+          ]
+        }
+      }
+    },
+    {
+      "name": "arithProduct",
+      "family": "arithmetic",
+      "out": "i64",
+      "reference": "(+ x (* (+ y 5) (+ y 3)))",
+      "declaration": {
+        "inputs": 2,
+        "bound": 9,
+        "control_bound": null,
+        "precondition": null
+      },
+      "examples": {
+        "train": 3,
+        "heldout": 2,
+        "counterexamples": 0
+      },
+      "search": {
+        "grammar": "synth-i64/0",
+        "words": [
+          "-",
+          "7",
+          "0",
+          "=",
+          "2",
+          "1",
+          "5",
+          "+",
+          "3",
+          "*",
+          "swap",
+          "dup"
+        ],
+        "rounds": 1,
+        "candidates": 318345,
+        "program": "5 + dup 2 - * +",
+        "size": 7,
+        "sizes": [
+          {
+            "size": 0,
+            "states": 1,
+            "complete": 0
+          },
+          {
+            "size": 1,
+            "states": 11,
+            "complete": 3
+          },
+          {
+            "size": 2,
+            "states": 94,
+            "complete": 1
+          },
+          {
+            "size": 3,
+            "states": 502,
+            "complete": 68
+          },
+          {
+            "size": 4,
+            "states": 3229,
+            "complete": 58
+          },
+          {
+            "size": 5,
+            "states": 13466,
+            "complete": 1022
+          },
+          {
+            "size": 6,
+            "states": 72749,
+            "complete": 1203
+          },
+          {
+            "size": 7,
+            "states": 86828,
+            "complete": 1,
+            "partial": true
+          }
+        ],
+        "measurement": {
+          "wall_ns": 1409422086,
+          "cpu_user_ns": 1739325000,
+          "cpu_system_ns": 210644000,
+          "process_peak_rss_kb": 4100824
+        }
+      },
+      "status": "unproven",
+      "certificate": {
+        "reason": "a product of two input-dependent values",
+        "solver": "both solvers answered UNSAT; UNSAT never certifies"
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "program": "5 + dup 2 - * +",
+          "size": 7,
+          "candidates": 318345,
+          "solver": [
+            "unsat",
+            "unsat"
+          ],
+          "verdict": "unproven",
+          "affine": {
+            "certifiable": false,
+            "reason": "a product of two input-dependent values"
+          },
+          "query": {
+            "bytes": 910,
+            "nodes": 16,
+            "sha256": "e592130ebaf7b7e8c2561022456e818dcf6a36162364ce18a06c371874789b0f",
+            "assumptions": 0
+          },
+          "answers": [
+            {
+              "solver": "bitwuzla",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof",
+              "wall_ns": 10015243,
+              "cpu_user_ns": 0,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 4924,
+              "witness": null,
+              "replay_ns": null
+            },
+            {
+              "solver": "z3",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof",
+              "wall_ns": 13513482,
+              "cpu_user_ns": 0,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 21764,
+              "witness": null,
+              "replay_ns": null
+            }
+          ],
+          "encoder_checks": {
+            "simulation_points": 4,
+            "claim_outputs": [
+              7
+            ],
+            "simulation": [
+              {
+                "point": {
+                  "s0": "0x0000000000000000",
+                  "s1": "0x0000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0xffffffffffffffff",
+                  "s1": "0xffffffffffffffff"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x8000000000000000",
+                  "s1": "0x8000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0123456789abcdef",
+                  "s1": "0x123456789abcdf00"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              }
+            ]
+          },
+          "readmission": {
+            "points": [
+              [
+                "0",
+                "0"
+              ],
+              [
+                "1",
+                "2"
+              ],
+              [
+                "-1",
+                "3"
+              ],
+              [
+                "5",
+                "-5"
+              ],
+              [
+                "7",
+                "7"
+              ],
+              [
+                "-9223372036854775808",
+                "0"
+              ],
+              [
+                "9223372036854775807",
+                "1"
+              ],
+              [
+                "0",
+                "-9223372036854775808"
+              ],
+              [
+                "-7",
+                "7"
+              ]
+            ],
+            "outputs": [
+              "15",
+              "36",
+              "47",
+              "5",
+              "127",
+              "-9223372036854775793",
+              "-9223372036854775785",
+              "15",
+              "113"
+            ],
+            "graph": {
+              "outcome": "normal",
+              "graph": "472280a2126e4195daf4cf94c4cc0ed6c77e1800f7e09d0b99fd1d5b903f8d9f",
+              "graph_sha256": "40c61e201372cd3d8f134ed9d174c8ab26dfc525291df3504d9d1347a2c97f5a",
+              "points": 9,
+              "evaluators_agree": true,
+              "reference_ns": 6829016,
+              "packed_ns": 7240905
+            },
+            "scalar": {
+              "interface": "I64 I64 -- I64 ! {}",
+              "points": 9,
+              "wasm_sha256": [
+                "36ae55ebb13f798dc02aa3839588e7834abaa45968ca1d120243a8f64eab3b88"
+              ]
+            }
+          }
+        }
+      ],
+      "solver_check": {
+        "query": {
+          "bytes": 910,
+          "nodes": 16,
+          "sha256": "e592130ebaf7b7e8c2561022456e818dcf6a36162364ce18a06c371874789b0f",
+          "assumptions": 0
+        },
+        "answers": [
+          {
+            "solver": "bitwuzla",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof",
+            "wall_ns": 10015243,
+            "cpu_user_ns": 0,
+            "cpu_system_ns": 0,
+            "peak_rss_kb": 4924,
+            "witness": null,
+            "replay_ns": null
+          },
+          {
+            "solver": "z3",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof",
+            "wall_ns": 13513482,
+            "cpu_user_ns": 0,
+            "cpu_system_ns": 0,
+            "peak_rss_kb": 21764,
+            "witness": null,
+            "replay_ns": null
+          }
+        ],
+        "encoder_checks": {
+          "simulation_points": 4,
+          "claim_outputs": [
+            7
+          ],
+          "simulation": [
+            {
+              "point": {
+                "s0": "0x0000000000000000",
+                "s1": "0x0000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0xffffffffffffffff",
+                "s1": "0xffffffffffffffff"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x8000000000000000",
+                "s1": "0x8000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x0123456789abcdef",
+                "s1": "0x123456789abcdf00"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            }
+          ]
+        }
+      },
+      "baseline": {
+        "candidates": 400000,
+        "program": null,
+        "size": null,
+        "exhausted": "candidate fuel",
+        "measurement": {
+          "wall_ns": 764205448,
+          "cpu_user_ns": 786473000,
+          "cpu_system_ns": 7706000,
+          "process_peak_rss_kb": 4100824
+        }
+      },
+      "heldout": {
+        "status": "pass",
+        "passed": 2,
+        "total": 2,
+        "entries": [
+          {
+            "inputs": [
+              "5",
+              "-5"
+            ],
+            "expected": "5",
+            "observed": "5",
+            "agrees": true
+          },
+          {
+            "inputs": [
+              "7",
+              "7"
+            ],
+            "expected": "127",
+            "observed": "127",
+            "agrees": true
+          }
+        ]
+      },
+      "readmission": {
+        "points": [
+          [
+            "0",
+            "0"
+          ],
+          [
+            "1",
+            "2"
+          ],
+          [
+            "-1",
+            "3"
+          ],
+          [
+            "5",
+            "-5"
+          ],
+          [
+            "7",
+            "7"
+          ],
+          [
+            "-9223372036854775808",
+            "0"
+          ],
+          [
+            "9223372036854775807",
+            "1"
+          ],
+          [
+            "0",
+            "-9223372036854775808"
+          ],
+          [
+            "-7",
+            "7"
+          ]
+        ],
+        "outputs": [
+          "15",
+          "36",
+          "47",
+          "5",
+          "127",
+          "-9223372036854775793",
+          "-9223372036854775785",
+          "15",
+          "113"
+        ],
+        "graph": {
+          "outcome": "normal",
+          "graph": "472280a2126e4195daf4cf94c4cc0ed6c77e1800f7e09d0b99fd1d5b903f8d9f",
+          "graph_sha256": "40c61e201372cd3d8f134ed9d174c8ab26dfc525291df3504d9d1347a2c97f5a",
+          "points": 9,
+          "evaluators_agree": true,
+          "reference_ns": 6829016,
+          "packed_ns": 7240905
+        },
+        "scalar": {
+          "interface": "I64 I64 -- I64 ! {}",
+          "points": 9,
+          "wasm_sha256": [
+            "36ae55ebb13f798dc02aa3839588e7834abaa45968ca1d120243a8f64eab3b88"
+          ]
+        }
+      }
+    },
+    {
+      "name": "arithEquality",
+      "family": "arithmetic",
+      "out": "bool",
+      "reference": "(= (+ x 1) (+ y 1))",
+      "declaration": {
+        "inputs": 2,
+        "bound": 8,
+        "control_bound": null,
+        "precondition": null
+      },
+      "examples": {
+        "train": 3,
+        "heldout": 2,
+        "counterexamples": 0
+      },
+      "search": {
+        "grammar": "synth-i64/0",
+        "words": [
+          "-",
+          "7",
+          "0",
+          "=",
+          "2",
+          "1",
+          "5",
+          "+",
+          "3",
+          "*",
+          "swap",
+          "dup"
+        ],
+        "rounds": 1,
+        "candidates": 4,
+        "program": "=",
+        "size": 1,
+        "sizes": [
+          {
+            "size": 0,
+            "states": 1,
+            "complete": 0
+          },
+          {
+            "size": 1,
+            "states": 4,
+            "complete": 1,
+            "partial": true
+          }
+        ],
+        "measurement": {
+          "wall_ns": 101435396,
+          "cpu_user_ns": 31978000,
+          "cpu_system_ns": 24996000,
+          "process_peak_rss_kb": 4100824
+        }
+      },
+      "status": "unproven",
+      "certificate": {
+        "reason": "a Bool output is not a linear equivalence",
+        "solver": "both solvers answered UNSAT; UNSAT never certifies"
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "program": "=",
+          "size": 1,
+          "candidates": 4,
+          "solver": [
+            "unsat",
+            "unsat"
+          ],
+          "verdict": "unproven",
+          "affine": {
+            "certifiable": false,
+            "reason": "a Bool output is not a linear equivalence"
+          },
+          "query": {
+            "bytes": 592,
+            "nodes": 10,
+            "sha256": "6beff20d1cc85fc217daf47371393e6b7f470834f89082835acb245129b012dd",
+            "assumptions": 0
+          },
+          "answers": [
+            {
+              "solver": "bitwuzla",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof",
+              "wall_ns": 9096208,
+              "cpu_user_ns": 0,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 4700,
+              "witness": null,
+              "replay_ns": null
+            },
+            {
+              "solver": "z3",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof",
+              "wall_ns": 12616819,
+              "cpu_user_ns": 0,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 22612,
+              "witness": null,
+              "replay_ns": null
+            }
+          ],
+          "encoder_checks": {
+            "simulation_points": 4,
+            "claim_outputs": [
+              6
+            ],
+            "simulation": [
+              {
+                "point": {
+                  "s0": "0x0000000000000000",
+                  "s1": "0x0000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0xffffffffffffffff",
+                  "s1": "0xffffffffffffffff"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x8000000000000000",
+                  "s1": "0x8000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0123456789abcdef",
+                  "s1": "0x123456789abcdf00"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              }
+            ]
+          },
+          "readmission": {
+            "points": [
+              [
+                "0",
+                "0"
+              ],
+              [
+                "2",
+                "1"
+              ],
+              [
+                "-3",
+                "-2"
+              ],
+              [
+                "7",
+                "7"
+              ],
+              [
+                "1",
+                "-1"
+              ],
+              [
+                "-9223372036854775808",
+                "0"
+              ],
+              [
+                "9223372036854775807",
+                "1"
+              ],
+              [
+                "0",
+                "-9223372036854775808"
+              ],
+              [
+                "-7",
+                "7"
+              ]
+            ],
+            "outputs": [
+              "true",
+              "false",
+              "false",
+              "true",
+              "false",
+              "false",
+              "false",
+              "false",
+              "false"
+            ],
+            "graph": {
+              "outcome": "normal",
+              "graph": "7c13c7f0bd5645e16bef690c26b0ee74a0fd09e82f3847717e52626fc4c61a61",
+              "graph_sha256": "514a68dd99cb614889eccc026a148ea38bad00f822ea3a4b72e1ac60c4b193cf",
+              "points": 9,
+              "evaluators_agree": true,
+              "reference_ns": 7788968,
+              "packed_ns": 6114262
+            }
+          }
+        }
+      ],
+      "solver_check": {
+        "query": {
+          "bytes": 592,
+          "nodes": 10,
+          "sha256": "6beff20d1cc85fc217daf47371393e6b7f470834f89082835acb245129b012dd",
+          "assumptions": 0
+        },
+        "answers": [
+          {
+            "solver": "bitwuzla",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof",
+            "wall_ns": 9096208,
+            "cpu_user_ns": 0,
+            "cpu_system_ns": 0,
+            "peak_rss_kb": 4700,
+            "witness": null,
+            "replay_ns": null
+          },
+          {
+            "solver": "z3",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof",
+            "wall_ns": 12616819,
+            "cpu_user_ns": 0,
+            "cpu_system_ns": 0,
+            "peak_rss_kb": 22612,
+            "witness": null,
+            "replay_ns": null
+          }
+        ],
+        "encoder_checks": {
+          "simulation_points": 4,
+          "claim_outputs": [
+            6
+          ],
+          "simulation": [
+            {
+              "point": {
+                "s0": "0x0000000000000000",
+                "s1": "0x0000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0xffffffffffffffff",
+                "s1": "0xffffffffffffffff"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x8000000000000000",
+                "s1": "0x8000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x0123456789abcdef",
+                "s1": "0x123456789abcdf00"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            }
+          ]
+        }
+      },
+      "baseline": {
+        "candidates": 69,
+        "program": "- 7 - 7 0 swap - =",
+        "size": 8,
+        "exhausted": null,
+        "measurement": {
+          "wall_ns": 615739,
+          "cpu_user_ns": 738000,
+          "cpu_system_ns": 0,
+          "process_peak_rss_kb": 4100824
+        },
+        "readmission": {
+          "points": [
+            [
+              "0",
+              "0"
+            ],
+            [
+              "2",
+              "1"
+            ],
+            [
+              "-3",
+              "-2"
+            ],
+            [
+              "-9223372036854775808",
+              "0"
+            ],
+            [
+              "9223372036854775807",
+              "1"
+            ],
+            [
+              "0",
+              "-9223372036854775808"
+            ],
+            [
+              "-7",
+              "7"
+            ]
+          ],
+          "outputs": [
+            "true",
+            "false",
+            "false",
+            "false",
+            "false",
+            "false",
+            "false"
+          ],
+          "graph": {
+            "outcome": "normal",
+            "graph": "36ea5c064cb672b88f73ecf77cd37866a6db2c889922b1a84c8fb73aeb35d91a",
+            "graph_sha256": "1dd17a93e68f5b24230ff272abb3f6d2b307d1d682bbe6ae70c836876b1872a4",
+            "points": 7,
+            "evaluators_agree": true,
+            "reference_ns": 6185776,
+            "packed_ns": 6199291
+          }
+        }
+      },
+      "heldout": {
+        "status": "pass",
+        "passed": 2,
+        "total": 2,
+        "entries": [
+          {
+            "inputs": [
+              "7",
+              "7"
+            ],
+            "expected": "true",
+            "observed": "true",
+            "agrees": true
+          },
+          {
+            "inputs": [
+              "1",
+              "-1"
+            ],
+            "expected": "false",
+            "observed": "false",
+            "agrees": true
+          }
+        ]
+      },
+      "readmission": {
+        "points": [
+          [
+            "0",
+            "0"
+          ],
+          [
+            "2",
+            "1"
+          ],
+          [
+            "-3",
+            "-2"
+          ],
+          [
+            "7",
+            "7"
+          ],
+          [
+            "1",
+            "-1"
+          ],
+          [
+            "-9223372036854775808",
+            "0"
+          ],
+          [
+            "9223372036854775807",
+            "1"
+          ],
+          [
+            "0",
+            "-9223372036854775808"
+          ],
+          [
+            "-7",
+            "7"
+          ]
+        ],
+        "outputs": [
+          "true",
+          "false",
+          "false",
+          "true",
+          "false",
+          "false",
+          "false",
+          "false",
+          "false"
+        ],
+        "graph": {
+          "outcome": "normal",
+          "graph": "7c13c7f0bd5645e16bef690c26b0ee74a0fd09e82f3847717e52626fc4c61a61",
+          "graph_sha256": "514a68dd99cb614889eccc026a148ea38bad00f822ea3a4b72e1ac60c4b193cf",
+          "points": 9,
+          "evaluators_agree": true,
+          "reference_ns": 7788968,
+          "packed_ns": 6114262
+        }
+      }
+    },
+    {
+      "name": "bitAnd",
+      "family": "bitwise-0/1",
+      "out": "i64",
+      "reference": "(* x y)",
+      "declaration": {
+        "inputs": 2,
+        "bound": 8,
+        "control_bound": null,
+        "precondition": "0/1 on every slot the query reads"
+      },
+      "examples": {
+        "train": 2,
+        "heldout": 2,
+        "counterexamples": 0
+      },
+      "search": {
+        "grammar": "synth-i64/0",
+        "words": [
+          "-",
+          "7",
+          "0",
+          "=",
+          "2",
+          "1",
+          "5",
+          "+",
+          "3",
+          "*",
+          "swap",
+          "dup"
+        ],
+        "rounds": 1,
+        "candidates": 9,
+        "program": "*",
+        "size": 1,
+        "sizes": [
+          {
+            "size": 0,
+            "states": 1,
+            "complete": 0
+          },
+          {
+            "size": 1,
+            "states": 9,
+            "complete": 1,
+            "partial": true
+          }
+        ],
+        "measurement": {
+          "wall_ns": 101489568,
+          "cpu_user_ns": 5599000,
+          "cpu_system_ns": 21650000,
+          "process_peak_rss_kb": 4100824
+        }
+      },
+      "status": "unproven",
+      "certificate": {
+        "reason": "a product of two input-dependent values",
+        "solver": "both solvers answered UNSAT; UNSAT never certifies"
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "program": "*",
+          "size": 1,
+          "candidates": 9,
+          "solver": [
+            "unsat",
+            "unsat"
+          ],
+          "verdict": "unproven",
+          "affine": {
+            "certifiable": false,
+            "reason": "a product of two input-dependent values"
+          },
+          "query": {
+            "bytes": 552,
+            "nodes": 6,
+            "sha256": "67e7e91ec08a30b7853a5599fe0e75b2d01fbababc78f529d1515473bf179c58",
+            "assumptions": 2
+          },
+          "answers": [
+            {
+              "solver": "bitwuzla",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof",
+              "wall_ns": 7186163,
+              "cpu_user_ns": 0,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 5192,
+              "witness": null,
+              "replay_ns": null
+            },
+            {
+              "solver": "z3",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof",
+              "wall_ns": 12695306,
+              "cpu_user_ns": 0,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 22544,
+              "witness": null,
+              "replay_ns": null
+            }
+          ],
+          "encoder_checks": {
+            "simulation_points": 4,
+            "claim_outputs": [
+              2
+            ],
+            "simulation": [
+              {
+                "point": {
+                  "s0": "0x0000000000000000",
+                  "s1": "0x0000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0000000000000001",
+                  "s1": "0x0000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0000000000000000",
+                  "s1": "0x0000000000000001"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0000000000000001",
+                  "s1": "0x0000000000000001"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              }
+            ]
+          },
+          "readmission": {
+            "points": [
+              [
+                "0",
+                "0"
+              ],
+              [
+                "1",
+                "1"
+              ],
+              [
+                "1",
+                "0"
+              ],
+              [
+                "0",
+                "1"
+              ],
+              [
+                "-9223372036854775808",
+                "0"
+              ],
+              [
+                "9223372036854775807",
+                "1"
+              ],
+              [
+                "0",
+                "-9223372036854775808"
+              ],
+              [
+                "-7",
+                "7"
+              ]
+            ],
+            "outputs": [
+              "0",
+              "1",
+              "0",
+              "0",
+              "0",
+              "9223372036854775807",
+              "0",
+              "-49"
+            ],
+            "graph": {
+              "outcome": "normal",
+              "graph": "6f75df7d196ea22a21067ef93f35dae2ccf8740facec28535c69e586e87e6ede",
+              "graph_sha256": "a1c4e588a0f97e08affbf334de1a8dae67114546d579991f18bb91fe5fbf222f",
+              "points": 8,
+              "evaluators_agree": true,
+              "reference_ns": 5858915,
+              "packed_ns": 6990999
+            },
+            "scalar": {
+              "interface": "I64 I64 -- I64 ! {}",
+              "points": 8,
+              "wasm_sha256": [
+                "ff96e4abb1da66b0716b04903c22ae9b58de3a3c5fcd77789b5d3d3ddff80dbb"
+              ]
+            }
+          }
+        }
+      ],
+      "solver_check": {
+        "query": {
+          "bytes": 552,
+          "nodes": 6,
+          "sha256": "67e7e91ec08a30b7853a5599fe0e75b2d01fbababc78f529d1515473bf179c58",
+          "assumptions": 2
+        },
+        "answers": [
+          {
+            "solver": "bitwuzla",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof",
+            "wall_ns": 7186163,
+            "cpu_user_ns": 0,
+            "cpu_system_ns": 0,
+            "peak_rss_kb": 5192,
+            "witness": null,
+            "replay_ns": null
+          },
+          {
+            "solver": "z3",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof",
+            "wall_ns": 12695306,
+            "cpu_user_ns": 0,
+            "cpu_system_ns": 0,
+            "peak_rss_kb": 22544,
+            "witness": null,
+            "replay_ns": null
+          }
+        ],
+        "encoder_checks": {
+          "simulation_points": 4,
+          "claim_outputs": [
+            2
+          ],
+          "simulation": [
+            {
+              "point": {
+                "s0": "0x0000000000000000",
+                "s1": "0x0000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x0000000000000001",
+                "s1": "0x0000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x0000000000000000",
+                "s1": "0x0000000000000001"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x0000000000000001",
+                "s1": "0x0000000000000001"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            }
+          ]
+        }
+      },
+      "baseline": {
+        "candidates": 359619,
+        "program": "7 - 7 - 0 * -",
+        "size": 7,
+        "exhausted": null,
+        "measurement": {
+          "wall_ns": 674721371,
+          "cpu_user_ns": 723375000,
+          "cpu_system_ns": 2254000,
+          "process_peak_rss_kb": 4100824
+        },
+        "readmission": {
+          "points": [
+            [
+              "0",
+              "0"
+            ],
+            [
+              "1",
+              "1"
+            ],
+            [
+              "-9223372036854775808",
+              "0"
+            ],
+            [
+              "9223372036854775807",
+              "1"
+            ],
+            [
+              "0",
+              "-9223372036854775808"
+            ],
+            [
+              "-7",
+              "7"
+            ]
+          ],
+          "outputs": [
+            "0",
+            "1",
+            "-9223372036854775808",
+            "9223372036854775807",
+            "0",
+            "-7"
+          ],
+          "graph": {
+            "outcome": "normal",
+            "graph": "4798bf2b2f70895c2da972b63acb7e0acfe6801b2057f9c4ca9de153fd4d95f2",
+            "graph_sha256": "006fc89198c3cfbc9d9b1a1fca4b3404b7c5d9e2b04b2f97fd6485521c0b50b5",
+            "points": 6,
+            "evaluators_agree": true,
+            "reference_ns": 6953168,
+            "packed_ns": 6635024
+          },
+          "scalar": {
+            "interface": "I64 I64 -- I64 ! {}",
+            "points": 6,
+            "wasm_sha256": [
+              "961e394294b1f844e3e4d3d4377e750595189c298ec39a2fb2b73ae52d57db2b"
+            ]
+          }
+        }
+      },
+      "heldout": {
+        "status": "pass",
+        "passed": 2,
+        "total": 2,
+        "entries": [
+          {
+            "inputs": [
+              "1",
+              "0"
+            ],
+            "expected": "0",
+            "observed": "0",
+            "agrees": true
+          },
+          {
+            "inputs": [
+              "0",
+              "1"
+            ],
+            "expected": "0",
+            "observed": "0",
+            "agrees": true
+          }
+        ]
+      },
+      "readmission": {
+        "points": [
+          [
+            "0",
+            "0"
+          ],
+          [
+            "1",
+            "1"
+          ],
+          [
+            "1",
+            "0"
+          ],
+          [
+            "0",
+            "1"
+          ],
+          [
+            "-9223372036854775808",
+            "0"
+          ],
+          [
+            "9223372036854775807",
+            "1"
+          ],
+          [
+            "0",
+            "-9223372036854775808"
+          ],
+          [
+            "-7",
+            "7"
+          ]
+        ],
+        "outputs": [
+          "0",
+          "1",
+          "0",
+          "0",
+          "0",
+          "9223372036854775807",
+          "0",
+          "-49"
+        ],
+        "graph": {
+          "outcome": "normal",
+          "graph": "6f75df7d196ea22a21067ef93f35dae2ccf8740facec28535c69e586e87e6ede",
+          "graph_sha256": "a1c4e588a0f97e08affbf334de1a8dae67114546d579991f18bb91fe5fbf222f",
+          "points": 8,
+          "evaluators_agree": true,
+          "reference_ns": 5858915,
+          "packed_ns": 6990999
+        },
+        "scalar": {
+          "interface": "I64 I64 -- I64 ! {}",
+          "points": 8,
+          "wasm_sha256": [
+            "ff96e4abb1da66b0716b04903c22ae9b58de3a3c5fcd77789b5d3d3ddff80dbb"
+          ]
+        }
+      }
+    },
+    {
+      "name": "bitOr",
+      "family": "bitwise-0/1",
+      "out": "i64",
+      "reference": "(- (+ x y) (* x y))",
+      "declaration": {
+        "inputs": 2,
+        "bound": 8,
+        "control_bound": null,
+        "precondition": "0/1 on every slot the query reads"
+      },
+      "examples": {
+        "train": 2,
+        "heldout": 2,
+        "counterexamples": 2
+      },
+      "search": {
+        "grammar": "synth-i64/0",
+        "words": [
+          "-",
+          "7",
+          "0",
+          "=",
+          "2",
+          "1",
+          "5",
+          "+",
+          "3",
+          "*",
+          "swap",
+          "dup"
+        ],
+        "rounds": 3,
+        "candidates": 258284,
+        "program": null,
+        "size": null,
+        "sizes": [
+          {
+            "size": 0,
+            "states": 1,
+            "complete": 0
+          },
+          {
+            "size": 1,
+            "states": 11,
+            "complete": 3
+          },
+          {
+            "size": 2,
+            "states": 93,
+            "complete": 1
+          },
+          {
+            "size": 3,
+            "states": 488,
+            "complete": 64
+          },
+          {
+            "size": 4,
+            "states": 3091,
+            "complete": 55
+          },
+          {
+            "size": 5,
+            "states": 12540,
+            "complete": 890
+          },
+          {
+            "size": 6,
+            "states": 26829,
+            "complete": 1075
+          },
+          {
+            "size": 7,
+            "states": 36533,
+            "complete": 11143
+          },
+          {
+            "size": 8,
+            "states": 15825,
+            "complete": 15825
+          }
+        ],
+        "measurement": {
+          "wall_ns": 1529253525,
+          "cpu_user_ns": 1524996000,
+          "cpu_system_ns": 67068000,
+          "process_peak_rss_kb": 4100824
+        }
+      },
+      "reason": "no program within the declared size bound satisfies the examples after 2 refinements",
+      "lean": {
+        "refused": {
+          "name": "bitOr",
+          "left": [
+            {
+              "op": "input",
+              "slot": 0
+            },
+            {
+              "op": "input",
+              "slot": 1
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000000"
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000000"
+            },
+            {
+              "op": "sub",
+              "a": 0,
+              "b": 1
+            }
+          ],
+          "right": [
+            {
+              "op": "input",
+              "slot": 0
+            },
+            {
+              "op": "input",
+              "slot": 1
+            },
+            {
+              "op": "add",
+              "a": 0,
+              "b": 1
+            },
+            {
+              "op": "mul",
+              "a": 0,
+              "b": 1
+            },
+            {
+              "op": "sub",
+              "a": 2,
+              "b": 3
+            }
+          ],
+          "outputs": [
+            4
+          ],
+          "digest": "c68dbc3378312b06ef824681bfce5a13b99c20c2c72a294b008e37b0021eab7c"
+        }
+      },
+      "status": "exhausted",
+      "certificate": null,
+      "rounds": [
+        {
+          "round": 1,
+          "program": "-",
+          "size": 1,
+          "candidates": 1,
+          "solver": [
+            "sat",
+            "sat"
+          ],
+          "verdict": "refuted",
+          "witness": {
+            "s0": "0x0000000000000001",
+            "s1": "0x0000000000000001"
+          },
+          "counterexample": {
+            "inputs": [
+              "1",
+              "1"
+            ],
+            "candidate": "0",
+            "reference": "1"
+          },
+          "reason": "model replays on the original graphs",
+          "query": {
+            "bytes": 646,
+            "nodes": 8,
+            "sha256": "7316a10964ef8fcf6e629d0fbb8bc897f6bfc8309208a295439a878b6190a8e3",
+            "assumptions": 2
+          },
+          "answers": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "wall_ns": 19255250,
+              "cpu_user_ns": 10000000,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 9296,
+              "witness": {
+                "s0": "0x0000000000000001",
+                "s1": "0x0000000000000001"
+              },
+              "replay_ns": 176179
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "wall_ns": 87823120,
+              "cpu_user_ns": 50000000,
+              "cpu_system_ns": 20000000,
+              "peak_rss_kb": 39436,
+              "witness": {
+                "s0": "0x0000000000000000",
+                "s1": "0x0000000000000001"
+              },
+              "replay_ns": 4909
+            }
+          ],
+          "encoder_checks": {
+            "simulation_points": 4,
+            "claim_outputs": [
+              4
+            ],
+            "simulation": [
+              {
+                "point": {
+                  "s0": "0x0000000000000000",
+                  "s1": "0x0000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0000000000000001",
+                  "s1": "0x0000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0000000000000000",
+                  "s1": "0x0000000000000001"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0000000000000001",
+                  "s1": "0x0000000000000001"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "round": 2,
+          "program": "0 * -",
+          "size": 3,
+          "candidates": 290,
+          "solver": [
+            "sat",
+            "sat"
+          ],
+          "verdict": "refuted",
+          "witness": {
+            "s0": "0x0000000000000000",
+            "s1": "0x0000000000000001"
+          },
+          "counterexample": {
+            "inputs": [
+              "0",
+              "1"
+            ],
+            "candidate": "0",
+            "reference": "1"
+          },
+          "reason": "model replays on the original graphs",
+          "query": {
+            "bytes": 745,
+            "nodes": 10,
+            "sha256": "30769802e033fd1aa4a4dfd8edc7e8f62a9554e3ac43337d2f1f16d08cc68d1a",
+            "assumptions": 2
+          },
+          "answers": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "wall_ns": 9968326,
+              "cpu_user_ns": 0,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 5424,
+              "witness": {
+                "s0": "0x0000000000000000",
+                "s1": "0x0000000000000001"
+              },
+              "replay_ns": 14427
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "wall_ns": 70859678,
+              "cpu_user_ns": 50000000,
+              "cpu_system_ns": 10000000,
+              "peak_rss_kb": 40276,
+              "witness": {
+                "s0": "0x0000000000000000",
+                "s1": "0x0000000000000001"
+              },
+              "replay_ns": 1232
+            }
+          ],
+          "encoder_checks": {
+            "simulation_points": 4,
+            "claim_outputs": [
+              4
+            ],
+            "simulation": [
+              {
+                "point": {
+                  "s0": "0x0000000000000000",
+                  "s1": "0x0000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0000000000000001",
+                  "s1": "0x0000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0000000000000000",
+                  "s1": "0x0000000000000001"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0000000000000001",
+                  "s1": "0x0000000000000001"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "round": 3,
+          "exhausted": "size bound",
+          "candidates": 257993,
+          "states": {
+            "size": 8,
+            "states": 15825,
+            "complete": 15825
+          }
+        }
+      ],
+      "solver_check": {
+        "query": {
+          "bytes": 745,
+          "nodes": 10,
+          "sha256": "30769802e033fd1aa4a4dfd8edc7e8f62a9554e3ac43337d2f1f16d08cc68d1a",
+          "assumptions": 2
+        },
+        "answers": [
+          {
+            "solver": "bitwuzla",
+            "answer": "sat",
+            "status": "refuted",
+            "reason": "model replays on the original graphs",
+            "wall_ns": 9968326,
+            "cpu_user_ns": 0,
+            "cpu_system_ns": 0,
+            "peak_rss_kb": 5424,
+            "witness": {
+              "s0": "0x0000000000000000",
+              "s1": "0x0000000000000001"
+            },
+            "replay_ns": 14427
+          },
+          {
+            "solver": "z3",
+            "answer": "sat",
+            "status": "refuted",
+            "reason": "model replays on the original graphs",
+            "wall_ns": 70859678,
+            "cpu_user_ns": 50000000,
+            "cpu_system_ns": 10000000,
+            "peak_rss_kb": 40276,
+            "witness": {
+              "s0": "0x0000000000000000",
+              "s1": "0x0000000000000001"
+            },
+            "replay_ns": 1232
+          }
+        ],
+        "encoder_checks": {
+          "simulation_points": 4,
+          "claim_outputs": [
+            4
+          ],
+          "simulation": [
+            {
+              "point": {
+                "s0": "0x0000000000000000",
+                "s1": "0x0000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x0000000000000001",
+                "s1": "0x0000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x0000000000000000",
+                "s1": "0x0000000000000001"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x0000000000000001",
+                "s1": "0x0000000000000001"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            }
+          ]
+        }
+      },
+      "baseline": {
+        "candidates": 1,
+        "program": "-",
+        "size": 1,
+        "exhausted": null,
+        "measurement": {
+          "wall_ns": 62457,
+          "cpu_user_ns": 55000,
+          "cpu_system_ns": 5000,
+          "process_peak_rss_kb": 4100824
+        },
+        "readmission": {
+          "points": [
+            [
+              "0",
+              "0"
+            ],
+            [
+              "1",
+              "0"
+            ],
+            [
+              "-9223372036854775808",
+              "0"
+            ],
+            [
+              "9223372036854775807",
+              "1"
+            ],
+            [
+              "0",
+              "-9223372036854775808"
+            ],
+            [
+              "-7",
+              "7"
+            ]
+          ],
+          "outputs": [
+            "0",
+            "1",
+            "-9223372036854775808",
+            "9223372036854775806",
+            "-9223372036854775808",
+            "-14"
+          ],
+          "graph": {
+            "outcome": "normal",
+            "graph": "ba6a3328f5c03b3b9086bb2d95ff63114bd9d8540591767876f4dcef60f1ef16",
+            "graph_sha256": "9170e8d3cec3ef0b35f7b06b773ecc5e9b7d0840bd00395e4bff943e2f85e608",
+            "points": 6,
+            "evaluators_agree": true,
+            "reference_ns": 9757512,
+            "packed_ns": 6574421
+          },
+          "scalar": {
+            "interface": "I64 I64 -- I64 ! {}",
+            "points": 6,
+            "wasm_sha256": [
+              "e3e8870d4d8c59b7ca5e2613db55ae51aa0e5ffd2313b78990867e76dc56b97b"
+            ]
+          }
+        }
+      },
+      "heldout": {
+        "status": "not-run",
+        "passed": 0,
+        "total": 0,
+        "entries": [],
+        "reason": "no program was emitted"
+      },
+      "readmission": null
+    },
+    {
+      "name": "bitXor",
+      "family": "bitwise-0/1",
+      "out": "i64",
+      "reference": "(- (+ x y) (* 2 (* x y)))",
+      "declaration": {
+        "inputs": 2,
+        "bound": 8,
+        "control_bound": null,
+        "precondition": "0/1 on every slot the query reads"
+      },
+      "examples": {
+        "train": 2,
+        "heldout": 2,
+        "counterexamples": 2
+      },
+      "search": {
+        "grammar": "synth-i64/0",
+        "words": [
+          "-",
+          "7",
+          "0",
+          "=",
+          "2",
+          "1",
+          "5",
+          "+",
+          "3",
+          "*",
+          "swap",
+          "dup"
+        ],
+        "rounds": 3,
+        "candidates": 203,
+        "program": "- dup *",
+        "size": 3,
+        "sizes": [
+          {
+            "size": 0,
+            "states": 1,
+            "complete": 0
+          },
+          {
+            "size": 1,
+            "states": 11,
+            "complete": 3
+          },
+          {
+            "size": 2,
+            "states": 93,
+            "complete": 1
+          },
+          {
+            "size": 3,
+            "states": 64,
+            "complete": 1,
+            "partial": true
+          }
+        ],
+        "measurement": {
+          "wall_ns": 654750813,
+          "cpu_user_ns": 16981000,
+          "cpu_system_ns": 63163000,
+          "process_peak_rss_kb": 4100824
+        }
+      },
+      "lean": {
+        "refused": {
+          "name": "bitXor",
+          "left": [
+            {
+              "op": "input",
+              "slot": 0
+            },
+            {
+              "op": "input",
+              "slot": 1
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000000"
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000000"
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000000"
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000000"
+            },
+            {
+              "op": "sub",
+              "a": 0,
+              "b": 1
+            }
+          ],
+          "right": [
+            {
+              "op": "input",
+              "slot": 0
+            },
+            {
+              "op": "input",
+              "slot": 1
+            },
+            {
+              "op": "add",
+              "a": 0,
+              "b": 1
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000002"
+            },
+            {
+              "op": "mul",
+              "a": 0,
+              "b": 1
+            },
+            {
+              "op": "mul",
+              "a": 3,
+              "b": 4
+            },
+            {
+              "op": "sub",
+              "a": 2,
+              "b": 5
+            }
+          ],
+          "outputs": [
+            6
+          ],
+          "digest": "136abc75ec635858d31e97d06bf72b42ba0b212721f927487216af3b3921e362"
+        }
+      },
+      "status": "unproven",
+      "certificate": {
+        "reason": "a product of two input-dependent values",
+        "solver": "both solvers answered UNSAT; UNSAT never certifies"
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "program": "-",
+          "size": 1,
+          "candidates": 1,
+          "solver": [
+            "sat",
+            "sat"
+          ],
+          "verdict": "refuted",
+          "witness": {
+            "s0": "0x0000000000000000",
+            "s1": "0x0000000000000001"
+          },
+          "counterexample": {
+            "inputs": [
+              "0",
+              "1"
+            ],
+            "candidate": "-1",
+            "reference": "1"
+          },
+          "reason": "model replays on the original graphs",
+          "query": {
+            "bytes": 745,
+            "nodes": 10,
+            "sha256": "dc400d7469cbfaa8e6f3e3640492b7bbcd1b4ebc94d26ece38c598cd6e909fc7",
+            "assumptions": 2
+          },
+          "answers": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "wall_ns": 25072578,
+              "cpu_user_ns": 10000000,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 9512,
+              "witness": {
+                "s0": "0x0000000000000000",
+                "s1": "0x0000000000000001"
+              },
+              "replay_ns": 22883
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "wall_ns": 86453374,
+              "cpu_user_ns": 70000000,
+              "cpu_system_ns": 10000000,
+              "peak_rss_kb": 40096,
+              "witness": {
+                "s0": "0x0000000000000000",
+                "s1": "0x0000000000000001"
+              },
+              "replay_ns": 2535
+            }
+          ],
+          "encoder_checks": {
+            "simulation_points": 4,
+            "claim_outputs": [
+              6
+            ],
+            "simulation": [
+              {
+                "point": {
+                  "s0": "0x0000000000000000",
+                  "s1": "0x0000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0000000000000001",
+                  "s1": "0x0000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0000000000000000",
+                  "s1": "0x0000000000000001"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0000000000000001",
+                  "s1": "0x0000000000000001"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              }
+            ]
+          },
+          "readmission": {
+            "points": [
+              [
+                "0",
+                "0"
+              ],
+              [
+                "1",
+                "0"
+              ],
+              [
+                "-9223372036854775808",
+                "0"
+              ],
+              [
+                "9223372036854775807",
+                "1"
+              ],
+              [
+                "0",
+                "-9223372036854775808"
+              ],
+              [
+                "-7",
+                "7"
+              ]
+            ],
+            "outputs": [
+              "0",
+              "1",
+              "-9223372036854775808",
+              "9223372036854775806",
+              "-9223372036854775808",
+              "-14"
+            ],
+            "graph": {
+              "outcome": "normal",
+              "graph": "ba6a3328f5c03b3b9086bb2d95ff63114bd9d8540591767876f4dcef60f1ef16",
+              "graph_sha256": "9170e8d3cec3ef0b35f7b06b773ecc5e9b7d0840bd00395e4bff943e2f85e608",
+              "points": 6,
+              "evaluators_agree": true,
+              "reference_ns": 5786540,
+              "packed_ns": 6545548
+            },
+            "scalar": {
+              "interface": "I64 I64 -- I64 ! {}",
+              "points": 6,
+              "wasm_sha256": [
+                "e3e8870d4d8c59b7ca5e2613db55ae51aa0e5ffd2313b78990867e76dc56b97b"
+              ]
+            }
+          }
+        },
+        {
+          "round": 2,
+          "program": "+",
+          "size": 1,
+          "candidates": 7,
+          "solver": [
+            "sat",
+            "sat"
+          ],
+          "verdict": "refuted",
+          "witness": {
+            "s0": "0x0000000000000001",
+            "s1": "0x0000000000000001"
+          },
+          "counterexample": {
+            "inputs": [
+              "1",
+              "1"
+            ],
+            "candidate": "2",
+            "reference": "0"
+          },
+          "reason": "model replays on the original graphs",
+          "query": {
+            "bytes": 745,
+            "nodes": 10,
+            "sha256": "85a53390e35d5b145f10bdfd75fc4766265a77c54e17a4d0cc9a157e322ad8ef",
+            "assumptions": 2
+          },
+          "answers": [
+            {
+              "solver": "bitwuzla",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "wall_ns": 18704322,
+              "cpu_user_ns": 10000000,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 9060,
+              "witness": {
+                "s0": "0x0000000000000001",
+                "s1": "0x0000000000000001"
+              },
+              "replay_ns": 22222
+            },
+            {
+              "solver": "z3",
+              "answer": "sat",
+              "status": "refuted",
+              "reason": "model replays on the original graphs",
+              "wall_ns": 84074063,
+              "cpu_user_ns": 60000000,
+              "cpu_system_ns": 10000000,
+              "peak_rss_kb": 40392,
+              "witness": {
+                "s0": "0x0000000000000001",
+                "s1": "0x0000000000000001"
+              },
+              "replay_ns": 1803
+            }
+          ],
+          "encoder_checks": {
+            "simulation_points": 4,
+            "claim_outputs": [
+              6
+            ],
+            "simulation": [
+              {
+                "point": {
+                  "s0": "0x0000000000000000",
+                  "s1": "0x0000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0000000000000001",
+                  "s1": "0x0000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0000000000000000",
+                  "s1": "0x0000000000000001"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0000000000000001",
+                  "s1": "0x0000000000000001"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              }
+            ]
+          },
+          "readmission": {
+            "points": [
+              [
+                "0",
+                "0"
+              ],
+              [
+                "1",
+                "0"
+              ],
+              [
+                "0",
+                "1"
+              ],
+              [
+                "-9223372036854775808",
+                "0"
+              ],
+              [
+                "9223372036854775807",
+                "1"
+              ],
+              [
+                "0",
+                "-9223372036854775808"
+              ],
+              [
+                "-7",
+                "7"
+              ]
+            ],
+            "outputs": [
+              "0",
+              "1",
+              "1",
+              "-9223372036854775808",
+              "-9223372036854775808",
+              "-9223372036854775808",
+              "0"
+            ],
+            "graph": {
+              "outcome": "normal",
+              "graph": "ef72991c8667e5dfdc1b6d95d42c4575cc63554169c018b174718e8aab6fbccc",
+              "graph_sha256": "6c1211c44d7fd83a6947e21562c1aaa066b6b202c54e6c9645d094d01c2585c0",
+              "points": 7,
+              "evaluators_agree": true,
+              "reference_ns": 6677012,
+              "packed_ns": 5529471
+            },
+            "scalar": {
+              "interface": "I64 I64 -- I64 ! {}",
+              "points": 7,
+              "wasm_sha256": [
+                "83fd3e009198765b480e3dd5934c0a76d007b1366e0cdbc2460354619f7f9d97"
+              ]
+            }
+          }
+        },
+        {
+          "round": 3,
+          "program": "- dup *",
+          "size": 3,
+          "candidates": 195,
+          "solver": [
+            "unsat",
+            "unsat"
+          ],
+          "verdict": "unproven",
+          "affine": {
+            "certifiable": false,
+            "reason": "a product of two input-dependent values"
+          },
+          "query": {
+            "bytes": 792,
+            "nodes": 11,
+            "sha256": "d35afffd8cbf0f5cc00b46c3b64749a375e00ff540247d4b5f88830568f2b0f6",
+            "assumptions": 2
+          },
+          "answers": [
+            {
+              "solver": "bitwuzla",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof",
+              "wall_ns": 21317469,
+              "cpu_user_ns": 10000000,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 11596,
+              "witness": null,
+              "replay_ns": null
+            },
+            {
+              "solver": "z3",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof",
+              "wall_ns": 164993418,
+              "cpu_user_ns": 140000000,
+              "cpu_system_ns": 10000000,
+              "peak_rss_kb": 48264,
+              "witness": null,
+              "replay_ns": null
+            }
+          ],
+          "encoder_checks": {
+            "simulation_points": 4,
+            "claim_outputs": [
+              6
+            ],
+            "simulation": [
+              {
+                "point": {
+                  "s0": "0x0000000000000000",
+                  "s1": "0x0000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0000000000000001",
+                  "s1": "0x0000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0000000000000000",
+                  "s1": "0x0000000000000001"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0000000000000001",
+                  "s1": "0x0000000000000001"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              }
+            ]
+          },
+          "readmission": {
+            "points": [
+              [
+                "0",
+                "0"
+              ],
+              [
+                "1",
+                "0"
+              ],
+              [
+                "0",
+                "1"
+              ],
+              [
+                "1",
+                "1"
+              ],
+              [
+                "-9223372036854775808",
+                "0"
+              ],
+              [
+                "9223372036854775807",
+                "1"
+              ],
+              [
+                "0",
+                "-9223372036854775808"
+              ],
+              [
+                "-7",
+                "7"
+              ]
+            ],
+            "outputs": [
+              "0",
+              "1",
+              "1",
+              "0",
+              "0",
+              "4",
+              "0",
+              "196"
+            ],
+            "graph": {
+              "outcome": "normal",
+              "graph": "791376a1caf472720bdb5db84dced9ae0e248733e8e0705049b55b8ebe3cc812",
+              "graph_sha256": "f27f98163a680d9224c1a085608c3972623bc4521cf229c4ff4911052af255d7",
+              "points": 8,
+              "evaluators_agree": true,
+              "reference_ns": 6017381,
+              "packed_ns": 6066954
+            },
+            "scalar": {
+              "interface": "I64 I64 -- I64 ! {}",
+              "points": 8,
+              "wasm_sha256": [
+                "64a35c04df2670cfcdde9212da7ffa207ee24bf4f2a49c570b12a602a0968ecb"
+              ]
+            }
+          }
+        }
+      ],
+      "solver_check": {
+        "query": {
+          "bytes": 792,
+          "nodes": 11,
+          "sha256": "d35afffd8cbf0f5cc00b46c3b64749a375e00ff540247d4b5f88830568f2b0f6",
+          "assumptions": 2
+        },
+        "answers": [
+          {
+            "solver": "bitwuzla",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof",
+            "wall_ns": 21317469,
+            "cpu_user_ns": 10000000,
+            "cpu_system_ns": 0,
+            "peak_rss_kb": 11596,
+            "witness": null,
+            "replay_ns": null
+          },
+          {
+            "solver": "z3",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof",
+            "wall_ns": 164993418,
+            "cpu_user_ns": 140000000,
+            "cpu_system_ns": 10000000,
+            "peak_rss_kb": 48264,
+            "witness": null,
+            "replay_ns": null
+          }
+        ],
+        "encoder_checks": {
+          "simulation_points": 4,
+          "claim_outputs": [
+            6
+          ],
+          "simulation": [
+            {
+              "point": {
+                "s0": "0x0000000000000000",
+                "s1": "0x0000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x0000000000000001",
+                "s1": "0x0000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x0000000000000000",
+                "s1": "0x0000000000000001"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x0000000000000001",
+                "s1": "0x0000000000000001"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            }
+          ]
+        }
+      },
+      "baseline": {
+        "candidates": 1,
+        "program": "-",
+        "size": 1,
+        "exhausted": null,
+        "measurement": {
+          "wall_ns": 50785,
+          "cpu_user_ns": 45000,
+          "cpu_system_ns": 5000,
+          "process_peak_rss_kb": 4100824
+        },
+        "readmission": {
+          "points": [
+            [
+              "0",
+              "0"
+            ],
+            [
+              "1",
+              "0"
+            ],
+            [
+              "-9223372036854775808",
+              "0"
+            ],
+            [
+              "9223372036854775807",
+              "1"
+            ],
+            [
+              "0",
+              "-9223372036854775808"
+            ],
+            [
+              "-7",
+              "7"
+            ]
+          ],
+          "outputs": [
+            "0",
+            "1",
+            "-9223372036854775808",
+            "9223372036854775806",
+            "-9223372036854775808",
+            "-14"
+          ],
+          "graph": {
+            "outcome": "normal",
+            "graph": "ba6a3328f5c03b3b9086bb2d95ff63114bd9d8540591767876f4dcef60f1ef16",
+            "graph_sha256": "9170e8d3cec3ef0b35f7b06b773ecc5e9b7d0840bd00395e4bff943e2f85e608",
+            "points": 6,
+            "evaluators_agree": true,
+            "reference_ns": 6261848,
+            "packed_ns": 6309296
+          },
+          "scalar": {
+            "interface": "I64 I64 -- I64 ! {}",
+            "points": 6,
+            "wasm_sha256": [
+              "e3e8870d4d8c59b7ca5e2613db55ae51aa0e5ffd2313b78990867e76dc56b97b"
+            ]
+          }
+        }
+      },
+      "heldout": {
+        "status": "pass",
+        "passed": 2,
+        "total": 2,
+        "entries": [
+          {
+            "inputs": [
+              "1",
+              "1"
+            ],
+            "expected": "0",
+            "observed": "0",
+            "agrees": true
+          },
+          {
+            "inputs": [
+              "0",
+              "1"
+            ],
+            "expected": "1",
+            "observed": "1",
+            "agrees": true
+          }
+        ]
+      },
+      "readmission": {
+        "points": [
+          [
+            "0",
+            "0"
+          ],
+          [
+            "1",
+            "0"
+          ],
+          [
+            "0",
+            "1"
+          ],
+          [
+            "1",
+            "1"
+          ],
+          [
+            "-9223372036854775808",
+            "0"
+          ],
+          [
+            "9223372036854775807",
+            "1"
+          ],
+          [
+            "0",
+            "-9223372036854775808"
+          ],
+          [
+            "-7",
+            "7"
+          ]
+        ],
+        "outputs": [
+          "0",
+          "1",
+          "1",
+          "0",
+          "0",
+          "4",
+          "0",
+          "196"
+        ],
+        "graph": {
+          "outcome": "normal",
+          "graph": "791376a1caf472720bdb5db84dced9ae0e248733e8e0705049b55b8ebe3cc812",
+          "graph_sha256": "f27f98163a680d9224c1a085608c3972623bc4521cf229c4ff4911052af255d7",
+          "points": 8,
+          "evaluators_agree": true,
+          "reference_ns": 6017381,
+          "packed_ns": 6066954
+        },
+        "scalar": {
+          "interface": "I64 I64 -- I64 ! {}",
+          "points": 8,
+          "wasm_sha256": [
+            "64a35c04df2670cfcdde9212da7ffa207ee24bf4f2a49c570b12a602a0968ecb"
+          ]
+        }
+      }
+    },
+    {
+      "name": "listSingleton",
+      "family": "list-run",
+      "out": "list",
+      "reference": "(list n)",
+      "declaration": {
+        "inputs": 1,
+        "bound": 8,
+        "control_bound": null,
+        "precondition": null
+      },
+      "examples": {
+        "train": 2,
+        "heldout": 2,
+        "counterexamples": 0
+      },
+      "search": {
+        "grammar": "synth-list/0",
+        "words": [
+          "1",
+          "cons",
+          "nil",
+          "-",
+          "3",
+          "swap",
+          "+",
+          "2",
+          "dup"
+        ],
+        "rounds": 1,
+        "candidates": 15,
+        "program": "nil cons",
+        "size": 2,
+        "sizes": [
+          {
+            "size": 0,
+            "states": 1,
+            "complete": 0
+          },
+          {
+            "size": 1,
+            "states": 5,
+            "complete": 0
+          },
+          {
+            "size": 2,
+            "states": 9,
+            "complete": 1,
+            "partial": true
+          }
+        ],
+        "measurement": {
+          "wall_ns": 411578,
+          "cpu_user_ns": 519000,
+          "cpu_system_ns": 0,
+          "process_peak_rss_kb": 4100824
+        }
+      },
+      "status": "run-only",
+      "certificate": null,
+      "rounds": [
+        {
+          "round": 1,
+          "program": "nil cons",
+          "size": 2,
+          "candidates": 15,
+          "readmission": {
+            "points": [
+              [
+                "2"
+              ],
+              [
+                "7"
+              ],
+              [
+                "0"
+              ],
+              [
+                "-3"
+              ],
+              [
+                "-9223372036854775808"
+              ],
+              [
+                "9223372036854775807"
+              ],
+              [
+                "-7"
+              ]
+            ],
+            "outputs": [
+              [
+                "2"
+              ],
+              [
+                "7"
+              ],
+              [
+                "0"
+              ],
+              [
+                "-3"
+              ],
+              [
+                "-9223372036854775808"
+              ],
+              [
+                "9223372036854775807"
+              ],
+              [
+                "-7"
+              ]
+            ],
+            "run": {
+              "interface": "I64 -- List<I64>",
+              "runs": [
+                {
+                  "instance": "2",
+                  "source": "2 nil cons",
+                  "stack": {
+                    "handle": 9,
+                    "type": "List",
+                    "value": [
+                      {
+                        "handle": 8,
+                        "type": "I64",
+                        "value": "2"
+                      }
+                    ]
+                  },
+                  "execution_steps": 12
+                },
+                {
+                  "instance": "7",
+                  "source": "7 nil cons",
+                  "stack": {
+                    "handle": 9,
+                    "type": "List",
+                    "value": [
+                      {
+                        "handle": 8,
+                        "type": "I64",
+                        "value": "7"
+                      }
+                    ]
+                  },
+                  "execution_steps": 12
+                },
+                {
+                  "instance": "0",
+                  "source": "0 nil cons",
+                  "stack": {
+                    "handle": 9,
+                    "type": "List",
+                    "value": [
+                      {
+                        "handle": 8,
+                        "type": "I64",
+                        "value": "0"
+                      }
+                    ]
+                  },
+                  "execution_steps": 12
+                },
+                {
+                  "instance": "-3",
+                  "source": "-3 nil cons",
+                  "stack": {
+                    "handle": 9,
+                    "type": "List",
+                    "value": [
+                      {
+                        "handle": 8,
+                        "type": "I64",
+                        "value": "-3"
+                      }
+                    ]
+                  },
+                  "execution_steps": 12
+                },
+                {
+                  "instance": "-9223372036854775808",
+                  "source": "-9223372036854775808 nil cons",
+                  "stack": {
+                    "handle": 9,
+                    "type": "List",
+                    "value": [
+                      {
+                        "handle": 8,
+                        "type": "I64",
+                        "value": "-9223372036854775808"
+                      }
+                    ]
+                  },
+                  "execution_steps": 12
+                },
+                {
+                  "instance": "9223372036854775807",
+                  "source": "9223372036854775807 nil cons",
+                  "stack": {
+                    "handle": 9,
+                    "type": "List",
+                    "value": [
+                      {
+                        "handle": 8,
+                        "type": "I64",
+                        "value": "9223372036854775807"
+                      }
+                    ]
+                  },
+                  "execution_steps": 12
+                },
+                {
+                  "instance": "-7",
+                  "source": "-7 nil cons",
+                  "stack": {
+                    "handle": 9,
+                    "type": "List",
+                    "value": [
+                      {
+                        "handle": 8,
+                        "type": "I64",
+                        "value": "-7"
+                      }
+                    ]
+                  },
+                  "execution_steps": 12
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "solver_check": null,
+      "baseline": {
+        "candidates": 137,
+        "program": "1 1 - - nil cons",
+        "size": 6,
+        "exhausted": null,
+        "measurement": {
+          "wall_ns": 836371,
+          "cpu_user_ns": 1593000,
+          "cpu_system_ns": 0,
+          "process_peak_rss_kb": 4100824
+        },
+        "readmission": {
+          "points": [
+            [
+              "2"
+            ],
+            [
+              "7"
+            ],
+            [
+              "-9223372036854775808"
+            ],
+            [
+              "9223372036854775807"
+            ],
+            [
+              "-7"
+            ]
+          ],
+          "outputs": [
+            [
+              "2"
+            ],
+            [
+              "7"
+            ],
+            [
+              "-9223372036854775808"
+            ],
+            [
+              "9223372036854775807"
+            ],
+            [
+              "-7"
+            ]
+          ],
+          "run": {
+            "interface": "I64 -- List<I64>",
+            "runs": [
+              {
+                "instance": "2",
+                "source": "2 1 1 - - nil cons",
+                "stack": {
+                  "handle": 17,
+                  "type": "List",
+                  "value": [
+                    {
+                      "handle": 16,
+                      "type": "I64",
+                      "value": "2"
+                    }
+                  ]
+                },
+                "execution_steps": 22
+              },
+              {
+                "instance": "7",
+                "source": "7 1 1 - - nil cons",
+                "stack": {
+                  "handle": 17,
+                  "type": "List",
+                  "value": [
+                    {
+                      "handle": 16,
+                      "type": "I64",
+                      "value": "7"
+                    }
+                  ]
+                },
+                "execution_steps": 22
+              },
+              {
+                "instance": "-9223372036854775808",
+                "source": "-9223372036854775808 1 1 - - nil cons",
+                "stack": {
+                  "handle": 17,
+                  "type": "List",
+                  "value": [
+                    {
+                      "handle": 16,
+                      "type": "I64",
+                      "value": "-9223372036854775808"
+                    }
+                  ]
+                },
+                "execution_steps": 22
+              },
+              {
+                "instance": "9223372036854775807",
+                "source": "9223372036854775807 1 1 - - nil cons",
+                "stack": {
+                  "handle": 17,
+                  "type": "List",
+                  "value": [
+                    {
+                      "handle": 16,
+                      "type": "I64",
+                      "value": "9223372036854775807"
+                    }
+                  ]
+                },
+                "execution_steps": 22
+              },
+              {
+                "instance": "-7",
+                "source": "-7 1 1 - - nil cons",
+                "stack": {
+                  "handle": 17,
+                  "type": "List",
+                  "value": [
+                    {
+                      "handle": 16,
+                      "type": "I64",
+                      "value": "-7"
+                    }
+                  ]
+                },
+                "execution_steps": 22
+              }
+            ]
+          }
+        }
+      },
+      "heldout": {
+        "status": "pass",
+        "passed": 2,
+        "total": 2,
+        "entries": [
+          {
+            "inputs": [
+              "0"
+            ],
+            "expected": [
+              "0"
+            ],
+            "observed": [
+              "0"
+            ],
+            "agrees": true
+          },
+          {
+            "inputs": [
+              "-3"
+            ],
+            "expected": [
+              "-3"
+            ],
+            "observed": [
+              "-3"
+            ],
+            "agrees": true
+          }
+        ]
+      },
+      "readmission": {
+        "points": [
+          [
+            "2"
+          ],
+          [
+            "7"
+          ],
+          [
+            "0"
+          ],
+          [
+            "-3"
+          ],
+          [
+            "-9223372036854775808"
+          ],
+          [
+            "9223372036854775807"
+          ],
+          [
+            "-7"
+          ]
+        ],
+        "outputs": [
+          [
+            "2"
+          ],
+          [
+            "7"
+          ],
+          [
+            "0"
+          ],
+          [
+            "-3"
+          ],
+          [
+            "-9223372036854775808"
+          ],
+          [
+            "9223372036854775807"
+          ],
+          [
+            "-7"
+          ]
+        ],
+        "run": {
+          "interface": "I64 -- List<I64>",
+          "runs": [
+            {
+              "instance": "2",
+              "source": "2 nil cons",
+              "stack": {
+                "handle": 9,
+                "type": "List",
+                "value": [
+                  {
+                    "handle": 8,
+                    "type": "I64",
+                    "value": "2"
+                  }
+                ]
+              },
+              "execution_steps": 12
+            },
+            {
+              "instance": "7",
+              "source": "7 nil cons",
+              "stack": {
+                "handle": 9,
+                "type": "List",
+                "value": [
+                  {
+                    "handle": 8,
+                    "type": "I64",
+                    "value": "7"
+                  }
+                ]
+              },
+              "execution_steps": 12
+            },
+            {
+              "instance": "0",
+              "source": "0 nil cons",
+              "stack": {
+                "handle": 9,
+                "type": "List",
+                "value": [
+                  {
+                    "handle": 8,
+                    "type": "I64",
+                    "value": "0"
+                  }
+                ]
+              },
+              "execution_steps": 12
+            },
+            {
+              "instance": "-3",
+              "source": "-3 nil cons",
+              "stack": {
+                "handle": 9,
+                "type": "List",
+                "value": [
+                  {
+                    "handle": 8,
+                    "type": "I64",
+                    "value": "-3"
+                  }
+                ]
+              },
+              "execution_steps": 12
+            },
+            {
+              "instance": "-9223372036854775808",
+              "source": "-9223372036854775808 nil cons",
+              "stack": {
+                "handle": 9,
+                "type": "List",
+                "value": [
+                  {
+                    "handle": 8,
+                    "type": "I64",
+                    "value": "-9223372036854775808"
+                  }
+                ]
+              },
+              "execution_steps": 12
+            },
+            {
+              "instance": "9223372036854775807",
+              "source": "9223372036854775807 nil cons",
+              "stack": {
+                "handle": 9,
+                "type": "List",
+                "value": [
+                  {
+                    "handle": 8,
+                    "type": "I64",
+                    "value": "9223372036854775807"
+                  }
+                ]
+              },
+              "execution_steps": 12
+            },
+            {
+              "instance": "-7",
+              "source": "-7 nil cons",
+              "stack": {
+                "handle": 9,
+                "type": "List",
+                "value": [
+                  {
+                    "handle": 8,
+                    "type": "I64",
+                    "value": "-7"
+                  }
+                ]
+              },
+              "execution_steps": 12
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "listDouble",
+      "family": "list-run",
+      "out": "list",
+      "reference": "(list n n)",
+      "declaration": {
+        "inputs": 1,
+        "bound": 8,
+        "control_bound": null,
+        "precondition": null
+      },
+      "examples": {
+        "train": 2,
+        "heldout": 2,
+        "counterexamples": 0
+      },
+      "search": {
+        "grammar": "synth-list/0",
+        "words": [
+          "1",
+          "cons",
+          "nil",
+          "-",
+          "3",
+          "swap",
+          "+",
+          "2",
+          "dup"
+        ],
+        "rounds": 1,
+        "candidates": 798,
+        "program": "dup nil cons cons",
+        "size": 4,
+        "sizes": [
+          {
+            "size": 0,
+            "states": 1,
+            "complete": 0
+          },
+          {
+            "size": 1,
+            "states": 5,
+            "complete": 0
+          },
+          {
+            "size": 2,
+            "states": 33,
+            "complete": 1
+          },
+          {
+            "size": 3,
+            "states": 160,
+            "complete": 0
+          },
+          {
+            "size": 4,
+            "states": 355,
+            "complete": 1,
+            "partial": true
+          }
+        ],
+        "measurement": {
+          "wall_ns": 2449332,
+          "cpu_user_ns": 4329000,
+          "cpu_system_ns": 0,
+          "process_peak_rss_kb": 4100824
+        }
+      },
+      "status": "run-only",
+      "certificate": null,
+      "rounds": [
+        {
+          "round": 1,
+          "program": "dup nil cons cons",
+          "size": 4,
+          "candidates": 798,
+          "readmission": {
+            "points": [
+              [
+                "2"
+              ],
+              [
+                "7"
+              ],
+              [
+                "0"
+              ],
+              [
+                "-3"
+              ],
+              [
+                "-9223372036854775808"
+              ],
+              [
+                "9223372036854775807"
+              ],
+              [
+                "-7"
+              ]
+            ],
+            "outputs": [
+              [
+                "2",
+                "2"
+              ],
+              [
+                "7",
+                "7"
+              ],
+              [
+                "0",
+                "0"
+              ],
+              [
+                "-3",
+                "-3"
+              ],
+              [
+                "-9223372036854775808",
+                "-9223372036854775808"
+              ],
+              [
+                "9223372036854775807",
+                "9223372036854775807"
+              ],
+              [
+                "-7",
+                "-7"
+              ]
+            ],
+            "run": {
+              "interface": "I64 -- List<I64>",
+              "runs": [
+                {
+                  "instance": "2",
+                  "source": "2 dup nil cons cons",
+                  "stack": {
+                    "handle": 15,
+                    "type": "List",
+                    "value": [
+                      {
+                        "handle": 14,
+                        "type": "I64",
+                        "value": "2"
+                      },
+                      {
+                        "handle": 12,
+                        "type": "I64",
+                        "value": "2"
+                      }
+                    ]
+                  },
+                  "execution_steps": 18
+                },
+                {
+                  "instance": "7",
+                  "source": "7 dup nil cons cons",
+                  "stack": {
+                    "handle": 15,
+                    "type": "List",
+                    "value": [
+                      {
+                        "handle": 14,
+                        "type": "I64",
+                        "value": "7"
+                      },
+                      {
+                        "handle": 12,
+                        "type": "I64",
+                        "value": "7"
+                      }
+                    ]
+                  },
+                  "execution_steps": 18
+                },
+                {
+                  "instance": "0",
+                  "source": "0 dup nil cons cons",
+                  "stack": {
+                    "handle": 15,
+                    "type": "List",
+                    "value": [
+                      {
+                        "handle": 14,
+                        "type": "I64",
+                        "value": "0"
+                      },
+                      {
+                        "handle": 12,
+                        "type": "I64",
+                        "value": "0"
+                      }
+                    ]
+                  },
+                  "execution_steps": 18
+                },
+                {
+                  "instance": "-3",
+                  "source": "-3 dup nil cons cons",
+                  "stack": {
+                    "handle": 15,
+                    "type": "List",
+                    "value": [
+                      {
+                        "handle": 14,
+                        "type": "I64",
+                        "value": "-3"
+                      },
+                      {
+                        "handle": 12,
+                        "type": "I64",
+                        "value": "-3"
+                      }
+                    ]
+                  },
+                  "execution_steps": 18
+                },
+                {
+                  "instance": "-9223372036854775808",
+                  "source": "-9223372036854775808 dup nil cons cons",
+                  "stack": {
+                    "handle": 15,
+                    "type": "List",
+                    "value": [
+                      {
+                        "handle": 14,
+                        "type": "I64",
+                        "value": "-9223372036854775808"
+                      },
+                      {
+                        "handle": 12,
+                        "type": "I64",
+                        "value": "-9223372036854775808"
+                      }
+                    ]
+                  },
+                  "execution_steps": 18
+                },
+                {
+                  "instance": "9223372036854775807",
+                  "source": "9223372036854775807 dup nil cons cons",
+                  "stack": {
+                    "handle": 15,
+                    "type": "List",
+                    "value": [
+                      {
+                        "handle": 14,
+                        "type": "I64",
+                        "value": "9223372036854775807"
+                      },
+                      {
+                        "handle": 12,
+                        "type": "I64",
+                        "value": "9223372036854775807"
+                      }
+                    ]
+                  },
+                  "execution_steps": 18
+                },
+                {
+                  "instance": "-7",
+                  "source": "-7 dup nil cons cons",
+                  "stack": {
+                    "handle": 15,
+                    "type": "List",
+                    "value": [
+                      {
+                        "handle": 14,
+                        "type": "I64",
+                        "value": "-7"
+                      },
+                      {
+                        "handle": 12,
+                        "type": "I64",
+                        "value": "-7"
+                      }
+                    ]
+                  },
+                  "execution_steps": 18
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "solver_check": null,
+      "baseline": {
+        "candidates": 169,
+        "program": "1 1 - - dup nil cons cons",
+        "size": 8,
+        "exhausted": null,
+        "measurement": {
+          "wall_ns": 547211,
+          "cpu_user_ns": 1061000,
+          "cpu_system_ns": 61000,
+          "process_peak_rss_kb": 4100824
+        },
+        "readmission": {
+          "points": [
+            [
+              "2"
+            ],
+            [
+              "7"
+            ],
+            [
+              "-9223372036854775808"
+            ],
+            [
+              "9223372036854775807"
+            ],
+            [
+              "-7"
+            ]
+          ],
+          "outputs": [
+            [
+              "2",
+              "2"
+            ],
+            [
+              "7",
+              "7"
+            ],
+            [
+              "-9223372036854775808",
+              "-9223372036854775808"
+            ],
+            [
+              "9223372036854775807",
+              "9223372036854775807"
+            ],
+            [
+              "-7",
+              "-7"
+            ]
+          ],
+          "run": {
+            "interface": "I64 -- List<I64>",
+            "runs": [
+              {
+                "instance": "2",
+                "source": "2 1 1 - - dup nil cons cons",
+                "stack": {
+                  "handle": 23,
+                  "type": "List",
+                  "value": [
+                    {
+                      "handle": 22,
+                      "type": "I64",
+                      "value": "2"
+                    },
+                    {
+                      "handle": 20,
+                      "type": "I64",
+                      "value": "2"
+                    }
+                  ]
+                },
+                "execution_steps": 27
+              },
+              {
+                "instance": "7",
+                "source": "7 1 1 - - dup nil cons cons",
+                "stack": {
+                  "handle": 23,
+                  "type": "List",
+                  "value": [
+                    {
+                      "handle": 22,
+                      "type": "I64",
+                      "value": "7"
+                    },
+                    {
+                      "handle": 20,
+                      "type": "I64",
+                      "value": "7"
+                    }
+                  ]
+                },
+                "execution_steps": 27
+              },
+              {
+                "instance": "-9223372036854775808",
+                "source": "-9223372036854775808 1 1 - - dup nil cons cons",
+                "stack": {
+                  "handle": 23,
+                  "type": "List",
+                  "value": [
+                    {
+                      "handle": 22,
+                      "type": "I64",
+                      "value": "-9223372036854775808"
+                    },
+                    {
+                      "handle": 20,
+                      "type": "I64",
+                      "value": "-9223372036854775808"
+                    }
+                  ]
+                },
+                "execution_steps": 27
+              },
+              {
+                "instance": "9223372036854775807",
+                "source": "9223372036854775807 1 1 - - dup nil cons cons",
+                "stack": {
+                  "handle": 23,
+                  "type": "List",
+                  "value": [
+                    {
+                      "handle": 22,
+                      "type": "I64",
+                      "value": "9223372036854775807"
+                    },
+                    {
+                      "handle": 20,
+                      "type": "I64",
+                      "value": "9223372036854775807"
+                    }
+                  ]
+                },
+                "execution_steps": 27
+              },
+              {
+                "instance": "-7",
+                "source": "-7 1 1 - - dup nil cons cons",
+                "stack": {
+                  "handle": 23,
+                  "type": "List",
+                  "value": [
+                    {
+                      "handle": 22,
+                      "type": "I64",
+                      "value": "-7"
+                    },
+                    {
+                      "handle": 20,
+                      "type": "I64",
+                      "value": "-7"
+                    }
+                  ]
+                },
+                "execution_steps": 27
+              }
+            ]
+          }
+        }
+      },
+      "heldout": {
+        "status": "pass",
+        "passed": 2,
+        "total": 2,
+        "entries": [
+          {
+            "inputs": [
+              "0"
+            ],
+            "expected": [
+              "0",
+              "0"
+            ],
+            "observed": [
+              "0",
+              "0"
+            ],
+            "agrees": true
+          },
+          {
+            "inputs": [
+              "-3"
+            ],
+            "expected": [
+              "-3",
+              "-3"
+            ],
+            "observed": [
+              "-3",
+              "-3"
+            ],
+            "agrees": true
+          }
+        ]
+      },
+      "readmission": {
+        "points": [
+          [
+            "2"
+          ],
+          [
+            "7"
+          ],
+          [
+            "0"
+          ],
+          [
+            "-3"
+          ],
+          [
+            "-9223372036854775808"
+          ],
+          [
+            "9223372036854775807"
+          ],
+          [
+            "-7"
+          ]
+        ],
+        "outputs": [
+          [
+            "2",
+            "2"
+          ],
+          [
+            "7",
+            "7"
+          ],
+          [
+            "0",
+            "0"
+          ],
+          [
+            "-3",
+            "-3"
+          ],
+          [
+            "-9223372036854775808",
+            "-9223372036854775808"
+          ],
+          [
+            "9223372036854775807",
+            "9223372036854775807"
+          ],
+          [
+            "-7",
+            "-7"
+          ]
+        ],
+        "run": {
+          "interface": "I64 -- List<I64>",
+          "runs": [
+            {
+              "instance": "2",
+              "source": "2 dup nil cons cons",
+              "stack": {
+                "handle": 15,
+                "type": "List",
+                "value": [
+                  {
+                    "handle": 14,
+                    "type": "I64",
+                    "value": "2"
+                  },
+                  {
+                    "handle": 12,
+                    "type": "I64",
+                    "value": "2"
+                  }
+                ]
+              },
+              "execution_steps": 18
+            },
+            {
+              "instance": "7",
+              "source": "7 dup nil cons cons",
+              "stack": {
+                "handle": 15,
+                "type": "List",
+                "value": [
+                  {
+                    "handle": 14,
+                    "type": "I64",
+                    "value": "7"
+                  },
+                  {
+                    "handle": 12,
+                    "type": "I64",
+                    "value": "7"
+                  }
+                ]
+              },
+              "execution_steps": 18
+            },
+            {
+              "instance": "0",
+              "source": "0 dup nil cons cons",
+              "stack": {
+                "handle": 15,
+                "type": "List",
+                "value": [
+                  {
+                    "handle": 14,
+                    "type": "I64",
+                    "value": "0"
+                  },
+                  {
+                    "handle": 12,
+                    "type": "I64",
+                    "value": "0"
+                  }
+                ]
+              },
+              "execution_steps": 18
+            },
+            {
+              "instance": "-3",
+              "source": "-3 dup nil cons cons",
+              "stack": {
+                "handle": 15,
+                "type": "List",
+                "value": [
+                  {
+                    "handle": 14,
+                    "type": "I64",
+                    "value": "-3"
+                  },
+                  {
+                    "handle": 12,
+                    "type": "I64",
+                    "value": "-3"
+                  }
+                ]
+              },
+              "execution_steps": 18
+            },
+            {
+              "instance": "-9223372036854775808",
+              "source": "-9223372036854775808 dup nil cons cons",
+              "stack": {
+                "handle": 15,
+                "type": "List",
+                "value": [
+                  {
+                    "handle": 14,
+                    "type": "I64",
+                    "value": "-9223372036854775808"
+                  },
+                  {
+                    "handle": 12,
+                    "type": "I64",
+                    "value": "-9223372036854775808"
+                  }
+                ]
+              },
+              "execution_steps": 18
+            },
+            {
+              "instance": "9223372036854775807",
+              "source": "9223372036854775807 dup nil cons cons",
+              "stack": {
+                "handle": 15,
+                "type": "List",
+                "value": [
+                  {
+                    "handle": 14,
+                    "type": "I64",
+                    "value": "9223372036854775807"
+                  },
+                  {
+                    "handle": 12,
+                    "type": "I64",
+                    "value": "9223372036854775807"
+                  }
+                ]
+              },
+              "execution_steps": 18
+            },
+            {
+              "instance": "-7",
+              "source": "-7 dup nil cons cons",
+              "stack": {
+                "handle": 15,
+                "type": "List",
+                "value": [
+                  {
+                    "handle": 14,
+                    "type": "I64",
+                    "value": "-7"
+                  },
+                  {
+                    "handle": 12,
+                    "type": "I64",
+                    "value": "-7"
+                  }
+                ]
+              },
+              "execution_steps": 18
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "contradictory",
+      "family": "arithmetic",
+      "out": "i64",
+      "reference": "(+ x y)",
+      "declaration": {
+        "inputs": 2,
+        "bound": 8,
+        "control_bound": null,
+        "precondition": null
+      },
+      "examples": {
+        "train": 2,
+        "heldout": 0,
+        "counterexamples": 0
+      },
+      "search": {
+        "grammar": "synth-i64/0",
+        "words": [
+          "-",
+          "7",
+          "0",
+          "=",
+          "2",
+          "1",
+          "5",
+          "+",
+          "3",
+          "*",
+          "swap",
+          "dup"
+        ],
+        "rounds": 0,
+        "candidates": 0,
+        "program": null,
+        "size": null,
+        "sizes": null,
+        "measurement": {
+          "wall_ns": 0,
+          "cpu_user_ns": 0,
+          "cpu_system_ns": 0,
+          "process_peak_rss_kb": 4100824
+        }
+      },
+      "status": "unsatisfiable",
+      "reason": "the examples give one input two output values, and no program is a function there",
+      "rounds": [],
+      "solver_check": null,
+      "heldout": {
+        "status": "not-run",
+        "passed": 0,
+        "total": 0,
+        "entries": [],
+        "reason": "unsatisfiable examples; no program is emitted"
+      },
+      "readmission": null,
+      "baseline": {
+        "candidates": 400000,
+        "program": null,
+        "size": null,
+        "exhausted": "candidate fuel",
+        "measurement": {
+          "wall_ns": 700793944,
+          "cpu_user_ns": 760768000,
+          "cpu_system_ns": 8319000,
+          "process_peak_rss_kb": 4100824
+        }
+      }
+    },
+    {
+      "name": "overBound",
+      "family": "arithmetic",
+      "out": "i64",
+      "reference": "(+ x (* (+ y 3) 4))",
+      "declaration": {
+        "inputs": 2,
+        "bound": 6,
+        "control_bound": 7,
+        "precondition": null
+      },
+      "examples": {
+        "train": 3,
+        "heldout": 2,
+        "counterexamples": 0
+      },
+      "search": {
+        "grammar": "synth-i64/0",
+        "words": [
+          "-",
+          "7",
+          "0",
+          "=",
+          "2",
+          "1",
+          "5",
+          "+",
+          "3",
+          "*",
+          "swap",
+          "dup"
+        ],
+        "rounds": 1,
+        "candidates": 13584,
+        "program": null,
+        "size": null,
+        "sizes": [
+          {
+            "size": 0,
+            "states": 1,
+            "complete": 0
+          },
+          {
+            "size": 1,
+            "states": 11,
+            "complete": 3
+          },
+          {
+            "size": 2,
+            "states": 94,
+            "complete": 1
+          },
+          {
+            "size": 3,
+            "states": 502,
+            "complete": 68
+          },
+          {
+            "size": 4,
+            "states": 1449,
+            "complete": 58
+          },
+          {
+            "size": 5,
+            "states": 2630,
+            "complete": 1022
+          },
+          {
+            "size": 6,
+            "states": 1203,
+            "complete": 1203
+          }
+        ],
+        "measurement": {
+          "wall_ns": 56802973,
+          "cpu_user_ns": 75885000,
+          "cpu_system_ns": 87000,
+          "process_peak_rss_kb": 4100824
+        }
+      },
+      "reason": "no program within the declared size bound satisfies the examples after 0 refinements",
+      "status": "exhausted",
+      "certificate": null,
+      "rounds": [
+        {
+          "round": 1,
+          "exhausted": "size bound",
+          "candidates": 13584,
+          "states": {
+            "size": 6,
+            "states": 1203,
+            "complete": 1203
+          }
+        }
+      ],
+      "solver_check": null,
+      "baseline": {
+        "candidates": 50731,
+        "program": null,
+        "size": null,
+        "exhausted": "size bound",
+        "measurement": {
+          "wall_ns": 88401441,
+          "cpu_user_ns": 88445000,
+          "cpu_system_ns": 11000,
+          "process_peak_rss_kb": 4100824
+        }
+      },
+      "heldout": {
+        "status": "not-run",
+        "passed": 0,
+        "total": 0,
+        "entries": [],
+        "reason": "no program was emitted"
+      },
+      "readmission": null,
+      "controls": {
+        "control_bound": {
+          "bound": 7,
+          "program": "3 + 7 3 - * +",
+          "size": 7,
+          "candidates": 83144,
+          "sizes": [
+            {
+              "size": 0,
+              "states": 1,
+              "complete": 0
+            },
+            {
+              "size": 1,
+              "states": 11,
+              "complete": 3
+            },
+            {
+              "size": 2,
+              "states": 94,
+              "complete": 1
+            },
+            {
+              "size": 3,
+              "states": 502,
+              "complete": 68
+            },
+            {
+              "size": 4,
+              "states": 3229,
+              "complete": 58
+            },
+            {
+              "size": 5,
+              "states": 9154,
+              "complete": 1022
+            },
+            {
+              "size": 6,
+              "states": 14212,
+              "complete": 1203
+            },
+            {
+              "size": 7,
+              "states": 10187,
+              "complete": 1,
+              "partial": true
+            }
+          ],
+          "affine": {
+            "coef": [
+              "0x0000000000000001",
+              "0x0000000000000004"
+            ],
+            "constant": "0x000000000000000c"
+          },
+          "pair": {
+            "name": "overBound",
+            "left": [
+              {
+                "op": "input",
+                "slot": 0
+              },
+              {
+                "op": "input",
+                "slot": 1
+              },
+              {
+                "op": "constant",
+                "bits": "0x0000000000000003"
+              },
+              {
+                "op": "add",
+                "a": 1,
+                "b": 2
+              },
+              {
+                "op": "constant",
+                "bits": "0x0000000000000007"
+              },
+              {
+                "op": "constant",
+                "bits": "0x0000000000000003"
+              },
+              {
+                "op": "sub",
+                "a": 4,
+                "b": 5
+              },
+              {
+                "op": "mul",
+                "a": 3,
+                "b": 6
+              },
+              {
+                "op": "add",
+                "a": 0,
+                "b": 7
+              }
+            ],
+            "right": [
+              {
+                "op": "input",
+                "slot": 0
+              },
+              {
+                "op": "input",
+                "slot": 1
+              },
+              {
+                "op": "constant",
+                "bits": "0x0000000000000003"
+              },
+              {
+                "op": "add",
+                "a": 1,
+                "b": 2
+              },
+              {
+                "op": "constant",
+                "bits": "0x0000000000000004"
+              },
+              {
+                "op": "mul",
+                "a": 3,
+                "b": 4
+              },
+              {
+                "op": "constant",
+                "bits": "0x0000000000000000"
+              },
+              {
+                "op": "constant",
+                "bits": "0x0000000000000000"
+              },
+              {
+                "op": "add",
+                "a": 0,
+                "b": 5
+              }
+            ],
+            "outputs": [
+              8
+            ],
+            "digest": "20246b68d95bc0955ca6e8480fbff7a958b4c7c7caa08cd2cea321487c0ffaae"
+          },
+          "certificate": {
+            "theorem": "NobleFoundation.Synthesis.overBoundControl_certified",
+            "status": "emitted; kernel check is separate"
+          },
+          "readmission": {
+            "points": [
+              [
+                "0",
+                "0"
+              ],
+              [
+                "1",
+                "2"
+              ],
+              [
+                "-1",
+                "3"
+              ],
+              [
+                "-9223372036854775808",
+                "0"
+              ],
+              [
+                "9223372036854775807",
+                "1"
+              ],
+              [
+                "0",
+                "-9223372036854775808"
+              ],
+              [
+                "-7",
+                "7"
+              ]
+            ],
+            "outputs": [
+              "12",
+              "21",
+              "23",
+              "-9223372036854775796",
+              "-9223372036854775793",
+              "12",
+              "33"
+            ],
+            "graph": {
+              "outcome": "normal",
+              "graph": "8c63f9c0e4ad8413ffa7b51900e90c523020b24da46ef91c66b7c5df66351931",
+              "graph_sha256": "59e697c769ac945b33adec9140b2e906ff9f403c2ba762b67b67757daf65f01f",
+              "points": 7,
+              "evaluators_agree": true,
+              "reference_ns": 6391169,
+              "packed_ns": 5476201
+            },
+            "scalar": {
+              "interface": "I64 I64 -- I64 ! {}",
+              "points": 7,
+              "wasm_sha256": [
+                "b694dd54973328d47dd881774b0fc14c052e62e38ebd60cc1ce3bd652ce0b59b"
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "summary": {
+    "arithCommuted": "proved",
+    "arithSubtract": "proved",
+    "arithScaled": "proved",
+    "arithProduct": "unproven",
+    "arithEquality": "unproven",
+    "bitAnd": "unproven",
+    "bitOr": "exhausted",
+    "bitXor": "unproven",
+    "listSingleton": "run-only",
+    "listDouble": "run-only",
+    "contradictory": "unsatisfiable",
+    "overBound": "exhausted"
+  },
+  "non_claims": [
+    "a status is about the declared model graphs, the declared examples and the declared bounds; nothing outside them is claimed",
+    "proved means a generated bv_omega theorem over the pair was emitted; the kernel is checked by the foundation lane, not here",
+    "solver UNSAT is recorded and never certifies; every solver is untrusted",
+    "the list family is run only: no solver and no certificate covers it",
+    "re-admission shows the selected CLI accepts the program and its evaluators agree on the listed points; that is finite evidence, and extraction preservation (NG-PO-A) stays open",
+    "timings and peak memory are one run on one host, not a performance claim"
+  ]
+}
