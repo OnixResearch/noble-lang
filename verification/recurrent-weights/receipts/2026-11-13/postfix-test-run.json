@@ -1,0 +1,9 @@
+{
+  "schema": "noble.recurrent-weights.test-run.v0",
+  "source_commit": "0dffd3fc47fa5ec5398a56553f0b00cb80a6d9cf",
+  "command": ["cargo", "test", "-p", "noble-ngraph", "--test", "layout_differential", "--", "wrapping_adder_matches_reference_and_source_boundaries"],
+  "exit_code": 0,
+  "stdout": "\nrunning 1 test\ntest recurrent::wrapping_adder_matches_reference_and_source_boundaries ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.03s\n\n",
+  "stderr": "[slot] all 5 'rust' build slots busy (other slices are building); waiting... 0s\n[slot] rust slot 1 acquired after 5s\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.09s\n     Running tests/layout_differential.rs (/home/brittonr/.cache/noble-iss/target/recurrent-78/debug/deps/layout_differential-3d112e4dd8e61c18)\n",
+  "note": "Correctness test output only; no performance or runtime claim."
+}
