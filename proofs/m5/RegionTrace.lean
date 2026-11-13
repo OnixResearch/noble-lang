@@ -384,16 +384,16 @@ theorem erase_preserves_commit_authority (registered decided : List Nat) (steps 
           simp [erase, eraseStep, commitAuthorityInOrder, List.filterMap_cons,
             tailAuthority registered decided]
       | importCrossing op offset length =>
-          simp [erase, eraseStep, commitAuthorityInOrder, List.filterMap_cons,
+          simp [erase, eraseStep, commitAuthorityInOrder,
             tailAuthority registered decided]
       | hostDecision op accepted identity =>
-          simp [erase, eraseStep, commitAuthorityInOrder, List.filterMap_cons,
+          simp [erase, eraseStep, commitAuthorityInOrder,
             tailAuthority registered (if accepted then identity :: decided else decided)]
       | protectedCopy length =>
-          simp [erase, eraseStep, commitAuthorityInOrder, List.filterMap_cons,
+          simp [erase, eraseStep, commitAuthorityInOrder,
             tailAuthority registered decided]
       | returned op value reason =>
-          simp [erase, eraseStep, commitAuthorityInOrder, List.filterMap_cons,
+          simp [erase, eraseStep, commitAuthorityInOrder,
             tailAuthority registered decided]
       | normalReturn =>
           simp [erase, eraseStep, commitAuthorityInOrder, List.filterMap_cons,
