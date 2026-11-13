@@ -201,7 +201,7 @@ run_cmd do
   let evalClosed : List Name :=
     [``NobleM2.coverage_positive,
      ``NobleM2.Coverage.accepted, ``NobleM2.Coverage.derives,
-     ``NobleM2.Regression.ce_accepted, ``NobleM2.Regression.ce_derives,
+     ``NobleM2.Regression.ce_accepted,
      ``NobleM2.WordCoverage.coverage_positive_word,
      ``NobleM2.WordCoverage.coverage_eliminator_exercise,
      ``NobleM2.WordCoverage.ee_accepted,
