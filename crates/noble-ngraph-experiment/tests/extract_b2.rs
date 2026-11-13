@@ -187,7 +187,8 @@ fn l2_node_bigint_oracle_agrees_with_l3_l4_l5() {
         }
     }
 
-    let fixtures: &[(&[&str], &str, usize, &[&[i64]])] = &[
+    type DifferentialFixture<'a> = (&'a [&'a str], &'a str, usize, &'a [&'a [i64]]);
+    let fixtures: &[DifferentialFixture<'_>] = &[
         (&[], "=", 2, &[&[i64::MIN, i64::MAX], &[i64::MAX, i64::MAX]]),
         (&[], "drop", 1, &[&[91], &[i64::MIN]]),
         (

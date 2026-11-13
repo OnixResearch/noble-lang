@@ -651,9 +651,7 @@ fn outcome_class(code: &str) -> &'static str {
         "reject"
     } else if UNSUPPORTED_CODES.contains(&code) {
         "unsupported"
-    } else if BUDGET_CODES.contains(&code) {
-        "exhausted"
-    } else if code.starts_with("E-NET-BUDGET-") {
+    } else if BUDGET_CODES.contains(&code) || code.starts_with("E-NET-BUDGET-") {
         "exhausted"
     } else {
         panic!("{code} is not a D8 code")

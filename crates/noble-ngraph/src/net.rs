@@ -164,9 +164,7 @@ impl Net {
         ] {
             let element_bytes = u64::try_from(element).unwrap_or(u64::MAX);
             let capacity = u64::try_from(capacity).unwrap_or(u64::MAX);
-            bytes = bytes
-                .checked_add(capacity.saturating_mul(element_bytes))
-                .unwrap_or(u64::MAX);
+            bytes = bytes.saturating_add(capacity.saturating_mul(element_bytes));
         }
         bytes
     }
@@ -645,17 +643,15 @@ pub fn reduce(
                 );
             }
         };
-        for changed_agent in changed {
-            if let Some(index) = changed_agent {
-                if let Err(invalid) = enqueue_active(&mut slots, &mut worklist, index as usize) {
-                    return report(
-                        Obs::InternalInvalid(invalid),
-                        interactions,
-                        initial_agents,
-                        Some(live_wires),
-                        retained_bytes,
-                    );
-                }
+        for index in changed.into_iter().flatten() {
+            if let Err(invalid) = enqueue_active(&mut slots, &mut worklist, index as usize) {
+                return report(
+                    Obs::InternalInvalid(invalid),
+                    interactions,
+                    initial_agents,
+                    Some(live_wires),
+                    retained_bytes,
+                );
             }
         }
     }
@@ -1625,9 +1621,7 @@ fn fire_pair(
             pair.first,
             pair.second,
             first,
-            op,
-            first_value,
-            second_value,
+            apply(op, first_value, second_value),
         ),
         (Symbol::Num(second_value), Symbol::Op1(op, first_value)) => fire_op1(
             slots,
@@ -1635,9 +1629,7 @@ fn fire_pair(
             pair.second,
             pair.first,
             second,
-            op,
-            first_value,
-            second_value,
+            apply(op, first_value, second_value),
         ),
         (Symbol::Dup, Symbol::Num(value)) => {
             fire_dup(slots, outputs, pair.first, pair.second, first, value)
@@ -1706,12 +1698,9 @@ fn fire_op1(
     op1_id: u32,
     num_id: u32,
     op1: RuntimeAgent,
-    operation: Op,
-    first: u64,
-    second: u64,
+    value: u64,
 ) -> Result<([Option<u32>; 2], u64), Invalid> {
     let target = op1.ports[1].ok_or(Invalid::PortArity)?;
-    let value = apply(operation, first, second);
     let new = RuntimeAgent {
         origin: op1.origin,
         symbol: Symbol::Num(value),
