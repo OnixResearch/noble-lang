@@ -1,0 +1,35 @@
+{
+  "schema": "noble-ngraph-batch-mutations/v1",
+  "issue": 41,
+  "result": "passed",
+  "source_commit": "77d3f353ae8572dc37e3719400451be96bfeb56d",
+  "source_tree": "4f1a4dba28ee1254430d1948e66f74bc5076c051",
+  "clean_source": true,
+  "file": "crates/noble-ngraph/src/batch.rs",
+  "file_sha256": "245f18603e260161a79d212c412840ab420e72f7c4efb486275ce577d1a2ea06",
+  "harness": {
+    "target": "batch_row_reference",
+    "command": ["/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/cargo", "test", "--message-format=json", "--locked", "--offline", "-p", "noble-ngraph", "--test", "batch_row_reference"]
+  },
+  "toolchain": {
+    "rustc": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+    "vendor_nar_hash": "sha256-APDZUCJCimbMM32b1rJcNGn5mt2jYfUxgbwO4CxsGhQ="
+  },
+  "timeout_seconds": 900,
+  "unmutated_passed": ["batch_cases::i64_graphs_refuse_parameter_slots", "budgets::cancellation_names_the_first_row_that_never_ran", "batch_cases::interface_pair_layout_stays_flat", "budgets::run_fuel_stops_inside_the_row_that_needed_more", "graph::empty_and_single_row_runs_are_exact", "budgets::a_preparation_is_reusable_after_failed_and_stopped_runs", "graph::every_row_of_a_run_is_its_independent_single_row_run", "batch_cases::model_rows_run_via_prepared", "graph::shape_and_limits_refuse_the_run_before_any_row", "the_cpu_batch_agrees_with_the_lean_reference_on_every_boundary_row", "repeated_workload_staging_is_reported"],
+  "mutations": [
+    {"name":"row swap","category":"row order","anchor":"        let mut rest = inputs;\n        for row in 0..rows {","replacement":"        let mut rest = inputs;\n        for row in (0..rows).map(|index| if index == 0 && rows > 1 {\n            1\n        } else if index == 1 {\n            0\n        } else {\n            index\n        }) {","compiled":true,"timed_out":false,"exit_status":101,"failed":["budgets::run_fuel_stops_inside_the_row_that_needed_more","graph::shape_and_limits_refuse_the_run_before_any_row","budgets::cancellation_names_the_first_row_that_never_ran"],"passed_count":8,"detected":true},
+    {"name":"stale report reuse","category":"stale state","anchor":"            reports.push(report);","replacement":"            let report = if matches!(&report.obs, crate::eval::Obs::Refused(_)) {\n                reports.last().cloned().unwrap_or(report)\n            } else {\n                report\n            };\n            reports.push(report);","compiled":true,"timed_out":false,"exit_status":101,"failed":["graph::every_row_of_a_run_is_its_independent_single_row_run"],"passed_count":10,"detected":true},
+    {"name":"shared inputs","category":"stale state","anchor":"            let (row_inputs, tail) = rest.split_at(self.width);\n            rest = tail;","replacement":"            let (row_inputs, tail) = rest.split_at(self.width);\n            rest = if row >= 1 { rest } else { tail };","compiled":true,"timed_out":false,"exit_status":101,"failed":["batch_cases::interface_pair_layout_stays_flat","budgets::cancellation_names_the_first_row_that_never_ran","graph::every_row_of_a_run_is_its_independent_single_row_run","batch_cases::model_rows_run_via_prepared"],"passed_count":7,"detected":true},
+    {"name":"operand order","category":"arithmetic order","anchor":"            RowOp::Sub => crate::sem::i64_sub(self.deeper, self.top),","replacement":"            RowOp::Sub => crate::sem::i64_sub(self.top, self.deeper),","compiled":true,"timed_out":false,"exit_status":101,"failed":["the_cpu_batch_agrees_with_the_lean_reference_on_every_boundary_row"],"passed_count":10,"detected":true},
+    {"name":"run fuel uncharged","category":"accounting","anchor":"            remaining = remaining.map(|left| left.saturating_sub(report.evaluated_nodes));","replacement":"            remaining = remaining.map(|left| left.saturating_sub(0));","compiled":true,"timed_out":false,"exit_status":101,"failed":["budgets::run_fuel_stops_inside_the_row_that_needed_more","budgets::a_preparation_is_reusable_after_failed_and_stopped_runs"],"passed_count":9,"detected":true},
+    {"name":"row exhaustion stops the run","category":"exhaustion","anchor":"            if is_exhausted && is_run_bound {","replacement":"            if is_exhausted {","compiled":true,"timed_out":false,"exit_status":101,"failed":["budgets::run_fuel_stops_inside_the_row_that_needed_more"],"passed_count":10,"detected":true},
+    {"name":"row limit ignored","category":"limits","anchor":"        if rows > limits.max_rows {","replacement":"        if false && rows > limits.max_rows {","compiled":true,"timed_out":false,"exit_status":101,"failed":["graph::shape_and_limits_refuse_the_run_before_any_row"],"passed_count":10,"detected":true},
+    {"name":"output limit refuses at equality","category":"limits","anchor":"            .is_none_or(|total| total > limits.max_output_values)","replacement":"            .is_none_or(|total| total >= limits.max_output_values)","compiled":true,"timed_out":false,"exit_status":101,"failed":["graph::shape_and_limits_refuse_the_run_before_any_row"],"passed_count":10,"detected":true},
+    {"name":"cancellation ignored","category":"cancellation","anchor":"            if cancel_row.is_some_and(|cancel| cancel(row)) {","replacement":"            if false && cancel_row.is_some_and(|cancel| cancel(row)) {","compiled":true,"timed_out":false,"exit_status":101,"failed":["budgets::cancellation_names_the_first_row_that_never_ran","graph::shape_and_limits_refuse_the_run_before_any_row"],"passed_count":9,"detected":true},
+    {"name":"row work charged twice","category":"accounting","anchor":"            remaining = remaining.map(|left| left.saturating_sub(report.evaluated_nodes));","replacement":"            remaining = remaining.map(|left| left.saturating_sub(report.evaluated_nodes.saturating_mul(2)));","compiled":true,"timed_out":false,"exit_status":101,"failed":["budgets::run_fuel_stops_inside_the_row_that_needed_more"],"passed_count":10,"detected":true},
+    {"name":"reports reversed","category":"result association","anchor":"        Outcome {\n            reports,\n            stop: None,\n        }","replacement":"        reports.reverse();\n        Outcome {\n            reports,\n            stop: None,\n        }","compiled":true,"timed_out":false,"exit_status":101,"failed":["batch_cases::interface_pair_layout_stays_flat","batch_cases::model_rows_run_via_prepared","graph::every_row_of_a_run_is_its_independent_single_row_run"],"passed_count":8,"detected":true}
+  ],
+  "undetected": [],
+  "note": "Each mutant is one textual edit of the archived batch.rs; the tests must fail. A mutant that still compiles and passes every test is a failed fault control and is reported in undetected."
+}
