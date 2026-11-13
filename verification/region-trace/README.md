@@ -147,14 +147,18 @@ The fixtures are finite tests of recorded traces. The region-trace receipt binds
 receipt and the component, helper and engine revisions; neither that binding nor these finite tests
 proves emitted-step correspondence.
 
-The current clean replay receipt `verification/region-trace/receipt-20261113-01cbe814.json` was
-produced from clean commit `01cbe814f9b69d3ea3587c47450a9fcaa6776808` with Lean 4.35.0. It records
+The current clean replay receipt `verification/region-trace/receipt-20261113-b7984635.json` was
+produced from clean commit `b798463548bdf72563ac7f0d16281b1984cf1a4c` with Lean 4.35.0. It records
 **135** kernel-audited theorem declarations: 93 relation/model theorems and 42 generated runtime
 fixture theorems; implementation theorems remain 0. The runtime fixtures comprise 18 related traces
 and 2 related under registration. The receipt reports `propext` and `Quot.sound`, both within the
 standard allow-list. It binds the effect-protocol observation receipt and the component, helper and
 engine selections; all eight stale-binding controls and the refused-retirement fixture control have
-their expected refusal result. The correspondence route is named, not proved.
+their expected refusal result. The correspondence route is named, not proved. Receipt SHA-256:
+`dc5898b36048ebb8909d70fbf5e4db672b3d7c8bdd9bb894081b5f55e4fa895a`.
+
+The immutable receipt `receipt-20261113-01cbe814.json` is an earlier clean replay from before the
+proof-only removal of unused simp arguments; it remains valid evidence for that prior source revision.
 
 The immutable historical receipt `verification/region-trace/receipt.json` is from the clean commit
 `109ac318` with Lean 4.35.0: **116** theorems, 74 model theorems and 42 runtime fixtures. Of
