@@ -727,7 +727,7 @@ function leanForTask(result) {
   lines.push(`/-- **\`${name}\` agrees with its reference graph on every input.** -/`);
   lines.push(`theorem ${name}_certified (inputs : Nat → BitVec 64) : agreesOn ${name} inputs := by`);
   lines.push('  intro out hout', `  simp [${name}] at hout`, '  subst hout');
-  lines.push(`  simp [${name}, value, valuesUpTo, evalStep, NobleFoundation.FirstProjection.ofList]`, '  bv_omega', '');
+  lines.push(`  simp [${name}, value, valuesUpTo, evalStep, NobleFoundation.FirstProjection.ofList]`, '  all_goals bv_omega', '');
   const theorems = [{ name: `${NAMESPACE}.${name}_certified`, phase: 1, role: 'real-artifact',
     claim: `the synthesized program \`${result.search.program}\` and its reference \`${result.reference}\` agree on every input, a graph-model theorem` }];
   const refusal = leanRefusalForTask(result);

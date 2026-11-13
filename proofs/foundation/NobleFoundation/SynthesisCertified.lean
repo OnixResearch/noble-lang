@@ -48,7 +48,7 @@ theorem arithCommuted_certified (inputs : Nat → BitVec 64) : agreesOn arithCom
   simp [arithCommuted] at hout
   subst hout
   simp [arithCommuted, value, valuesUpTo, evalStep, NobleFoundation.FirstProjection.ofList]
-  bv_omega
+  all_goals bv_omega
 
 /-! ## `arithSubtract`: `- 7 +` against `(- (+ x 7) y)` -/
 
@@ -64,7 +64,7 @@ theorem arithSubtract_certified (inputs : Nat → BitVec 64) : agreesOn arithSub
   simp [arithSubtract] at hout
   subst hout
   simp [arithSubtract, value, valuesUpTo, evalStep, NobleFoundation.FirstProjection.ofList]
-  bv_omega
+  all_goals bv_omega
 
 /-! ## `arithScaled`: `7 + 5 * +` against `(+ x (* 5 (+ 7 y)))` -/
 
@@ -80,7 +80,7 @@ theorem arithScaled_certified (inputs : Nat → BitVec 64) : agreesOn arithScale
   simp [arithScaled] at hout
   subst hout
   simp [arithScaled, value, valuesUpTo, evalStep, NobleFoundation.FirstProjection.ofList]
-  bv_omega
+  all_goals bv_omega
 
 /-! ## `overBoundControl`: `3 + 7 3 - * +` against `(+ x (* (+ y 3) 4))` -/
 
@@ -96,7 +96,7 @@ theorem overBoundControl_certified (inputs : Nat → BitVec 64) : agreesOn overB
   simp [overBoundControl] at hout
   subst hout
   simp [overBoundControl, value, valuesUpTo, evalStep, NobleFoundation.FirstProjection.ofList]
-  bv_omega
+  all_goals bv_omega
 
 /-! ### `bitOr`: the candidate the examples alone admitted, refused -/
 
