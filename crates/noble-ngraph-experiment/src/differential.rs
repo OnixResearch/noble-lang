@@ -42,7 +42,10 @@ impl Legs {
 pub fn run_legs(c: &Compiled, inputs: &[Value], snapshot: Option<&ParamSnapshot>) -> Legs {
     let checked: &CheckedGraph = c.checked();
     let mut l3_evaluated_nodes = 0;
-    let mut control = Control { evaluated_nodes: Some(&mut l3_evaluated_nodes), ..Control::default() };
+    let mut control = Control {
+        evaluated_nodes: Some(&mut l3_evaluated_nodes),
+        ..Control::default()
+    };
     let l3_reference = eval::reference(checked, inputs, snapshot, &mut control).obs;
     Legs {
         l2_apfloat: oracle::apfloat(checked, inputs, snapshot),
@@ -132,10 +135,15 @@ pub fn campaign(seed: u64, ops: usize, vectors: u64) -> Campaign {
         {
             out.full_normal_executions += 1;
             if out.full_normal_input_bits.is_none() {
-                out.full_normal_input_bits = Some(inputs.iter().filter_map(|value| match value {
-                    Value::F32(bits) => Some(*bits),
-                    _ => None,
-                }).collect());
+                out.full_normal_input_bits = Some(
+                    inputs
+                        .iter()
+                        .filter_map(|value| match value {
+                            Value::F32(bits) => Some(*bits),
+                            _ => None,
+                        })
+                        .collect(),
+                );
             }
         }
         match &legs.l3_reference {
@@ -159,7 +167,10 @@ pub fn campaign(seed: u64, ops: usize, vectors: u64) -> Campaign {
             out.disagreements += 1;
             for (class, agrees) in [
                 ("L2-vs-L3", legs.l3_reference.obs_eq(&legs.l2_apfloat)),
-                ("B2-oracle-vs-L3", legs.l3_reference.obs_eq(&legs.b2_oracle_f64)),
+                (
+                    "B2-oracle-vs-L3",
+                    legs.l3_reference.obs_eq(&legs.b2_oracle_f64),
+                ),
                 ("L3-vs-L4", legs.l3_reference.obs_eq(&legs.l4_compiled)),
             ] {
                 if !agrees && !out.failure_classes.contains(&class) {

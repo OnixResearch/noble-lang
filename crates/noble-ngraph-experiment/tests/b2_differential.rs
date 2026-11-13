@@ -777,22 +777,22 @@ fn issue125_values(family: &str, fp_class: &str) -> [f32; 6] {
     let (special, secondary, third, safe) = match fp_class {
         "signed_zero" => (-0.0, -0.0, 0.0, -0.0),
         "nan" => (f32::from_bits(0x7fc0_0000), 0.0, 0.0, 1.0),
-        "subnormal_normal_boundary" => (
-            f32::from_bits(1),
-            f32::MIN_POSITIVE,
-            0.0,
-            0.0,
-        ),
+        "subnormal_normal_boundary" => (f32::from_bits(1), f32::MIN_POSITIVE, 0.0, 0.0),
         "overflow_infinity" => (f32::MAX, 0.0, 0.0, 1.0),
         "cancellation" => (1.0e20, -1.0e20, 3.0, 2.0e20),
-        "rounding_tie" => (1.0, f32::from_bits(0x3380_0000), f32::from_bits(0x3380_0000), 2.0),
+        "rounding_tie" => (
+            1.0,
+            f32::from_bits(0x3380_0000),
+            f32::from_bits(0x3380_0000),
+            2.0,
+        ),
         _ => unreachable!("matrix-v1 FP class"),
     };
     if matches!(family, "index_affine" | "guard_affine") && fp_class == "cancellation" {
         return [-1.0e20, secondary, third, 1.0, 1.0, 1.0e20];
     }
     if matches!(family, "index_affine" | "guard_affine") && fp_class == "rounding_tie" {
-        return [special, secondary, third, 1.0, 1.0, 1.0];
+        return [special, secondary, -1.0, 1.0, 1.0, 1.0];
     }
     [special, secondary, third, 1.0, 1.0, safe]
 }
@@ -819,23 +819,31 @@ fn issue125_cell(family: &'static str, fp_class: &'static str) -> Issue125Cell {
         Provenance::InputValidated,
     );
     b.fact(bit, Fact::Bit, Provenance::InputValidated);
-    let mut output = special;
-    match family {
+    let output = match family {
         "guard_select" => {
-            let selected = b.op(Op::F32Select { bit, off: safe, on: special });
-            output = issue125_post_select(&mut b, fp_class, selected, secondary, third);
+            let selected = b.op(Op::F32Select {
+                bit,
+                off: safe,
+                on: special,
+            });
+            let output = issue125_post_select(&mut b, fp_class, selected, secondary, third);
             b.guard(Fact::Finite, safe);
+            output
         }
         "select_index" => {
             let zero = b.f32_const(0.0);
-            let selected = b.op(Op::F32Select { bit, off: zero, on: index });
+            let selected = b.op(Op::F32Select {
+                bit,
+                off: zero,
+                on: index,
+            });
             let indexed = b.op(Op::F32Index {
                 index: selected,
                 table: vec![safe, special],
                 below: OutOfRange::Refuse,
                 above: OutOfRange::Refuse,
             });
-            output = issue125_post_select(&mut b, fp_class, indexed, secondary, third);
+            issue125_post_select(&mut b, fp_class, indexed, secondary, third)
         }
         "index_affine" => {
             let indexed = b.op(Op::F32Index {
@@ -844,14 +852,15 @@ fn issue125_cell(family: &'static str, fp_class: &'static str) -> Issue125Cell {
                 below: OutOfRange::Refuse,
                 above: OutOfRange::Refuse,
             });
-            output = issue125_affine(&mut b, fp_class, indexed, secondary, third, safe);
+            issue125_affine(&mut b, fp_class, indexed, secondary, third, safe)
         }
         "guard_affine" => {
-            output = issue125_affine(&mut b, fp_class, special, secondary, third, safe);
+            let output = issue125_affine(&mut b, fp_class, special, secondary, third, safe);
             b.guard(Fact::Finite, safe);
+            output
         }
         _ => unreachable!("matrix-v1 interaction family"),
-    }
+    };
     b.output(output);
     Issue125Cell {
         family,
@@ -868,7 +877,11 @@ fn issue125_input_slot(graph: &noble_ngraph::Graph, node: NodeId) -> Option<u32>
     }
 }
 
-fn issue125_input_value(graph: &noble_ngraph::Graph, node: NodeId, inputs: &[f32; 6]) -> Option<f32> {
+fn issue125_input_value(
+    graph: &noble_ngraph::Graph,
+    node: NodeId,
+    inputs: &[f32; 6],
+) -> Option<f32> {
     match &graph.nodes.get(node.index())?.op {
         Op::Input(slot) => inputs.get(*slot as usize).copied(),
         Op::Const(Literal::F32(bits)) => Some(f32::from_bits(*bits)),
@@ -947,7 +960,11 @@ fn issue125_index_input_slot(
     let selected_node = match &graph.nodes.get(index_node.index())?.op {
         Op::F32Select { off, on, .. } => {
             let branch = issue125_runtime_selected_branch(graph, "select_index", inputs)?;
-            if branch == "on" { *on } else { *off }
+            if branch == "on" {
+                *on
+            } else {
+                *off
+            }
         }
         _ => index_node,
     };
@@ -976,8 +993,10 @@ fn issue125_random_interaction_families(graph: &noble_ngraph::Graph) -> Vec<&'st
     for node in &graph.nodes {
         match &node.op {
             Op::F32Select { off, on, .. } => {
-                if graph.nodes.iter().any(|candidate| matches!(&candidate.op,
-                    Op::Guard { value, .. } if *value == *off || *value == *on)) {
+                if graph.nodes.iter().any(|candidate| {
+                    matches!(&candidate.op,
+                    Op::Guard { value, .. } if *value == *off || *value == *on)
+                }) {
                     record("guard_select");
                 }
             }
@@ -988,17 +1007,23 @@ fn issue125_random_interaction_families(graph: &noble_ngraph::Graph) -> Vec<&'st
             }
             Op::F32Affine { terms, .. } => {
                 for term in terms {
-                    if !matches!(&graph.nodes[match &term.operand {
-                        AffineOperand::Node(value) => value.index(),
-                        AffineOperand::One => continue,
-                    }].op, Op::F32Index { .. }) {
+                    if !matches!(
+                        &graph.nodes[match &term.operand {
+                            AffineOperand::Node(value) => value.index(),
+                            AffineOperand::One => continue,
+                        }]
+                        .op,
+                        Op::F32Index { .. }
+                    ) {
                         continue;
                     }
                     record("index_affine");
                 }
-                if graph.nodes.iter().any(|candidate| matches!(&candidate.op,
+                if graph.nodes.iter().any(|candidate| {
+                    matches!(&candidate.op,
                     Op::Guard { value, .. } if terms.iter().any(|term|
-                        matches!(&term.operand, AffineOperand::Node(input) if *input == *value)))) {
+                        matches!(&term.operand, AffineOperand::Node(input) if *input == *value)))
+                }) {
                     record("guard_affine");
                 }
             }
@@ -1039,8 +1064,14 @@ fn issue125_affine(
 ) -> NodeId {
     let bias = if fp_class == "signed_zero" { -0.0 } else { 0.0 };
     let terms = match fp_class {
-        "signed_zero" => vec![(1.0, AffineOperand::Node(safe)), (1.0, AffineOperand::Node(selected))],
-        "nan" => vec![(1.0, AffineOperand::Node(safe)), (1.0, AffineOperand::Node(selected))],
+        "signed_zero" => vec![
+            (1.0, AffineOperand::Node(safe)),
+            (1.0, AffineOperand::Node(selected)),
+        ],
+        "nan" => vec![
+            (1.0, AffineOperand::Node(safe)),
+            (1.0, AffineOperand::Node(selected)),
+        ],
         "subnormal_normal_boundary" => vec![
             (0.0, AffineOperand::Node(safe)),
             (1.0, AffineOperand::Node(selected)),
@@ -1056,7 +1087,8 @@ fn issue125_affine(
             (1.0, AffineOperand::Node(third)),
         ],
         "rounding_tie" => vec![
-            (1.0, AffineOperand::Node(safe)),
+            (0.0, AffineOperand::Node(safe)),
+            (1.0, AffineOperand::Node(selected)),
             (1.0, AffineOperand::Node(secondary)),
             (1.0, AffineOperand::Node(third)),
         ],
@@ -1075,6 +1107,9 @@ fn issue125_expected(family: &str, fp_class: &str) -> Option<u32> {
             Some(3.0f32.to_bits())
         }
         "cancellation" => Some(0.0f32.to_bits()),
+        "rounding_tie" if family == "index_affine" || family == "guard_affine" => {
+            Some(0.0f32.to_bits())
+        }
         "rounding_tie" => Some(1.0f32.to_bits()),
         _ => unreachable!("matrix-v1 FP class"),
     }
@@ -1091,10 +1126,13 @@ fn issue125_property(obs: &Obs, expected: Option<u32>) -> bool {
 
 fn issue125_output_bits(obs: &Obs) -> Vec<u32> {
     match obs {
-        Obs::Normal(values) => values.iter().filter_map(|value| match value {
-            Value::F32(bits) => Some(*bits),
-            _ => None,
-        }).collect(),
+        Obs::Normal(values) => values
+            .iter()
+            .filter_map(|value| match value {
+                Value::F32(bits) => Some(*bits),
+                _ => None,
+            })
+            .collect(),
         _ => Vec::new(),
     }
 }
@@ -1109,7 +1147,9 @@ fn issue125_observation_code(obs: &Obs) -> u32 {
     }
 }
 
-fn issue125_mismatch_class(legs: &noble_ngraph_experiment::differential::Legs) -> Option<&'static str> {
+fn issue125_mismatch_class(
+    legs: &noble_ngraph_experiment::differential::Legs,
+) -> Option<&'static str> {
     if legs.agree() {
         return None;
     }
@@ -1192,7 +1232,8 @@ fn issue125_shrink_inputs(
     minimized_inputs[0] = f32::from_bits(witness.left);
     minimized_inputs[1] = f32::from_bits(witness.right);
     let legs = run_pair(witness.left, witness.right);
-    if !issue125_shrink_candidate_allowed(case, &minimized_inputs, &legs, expected, mismatch_class) {
+    if !issue125_shrink_candidate_allowed(case, &minimized_inputs, &legs, expected, mismatch_class)
+    {
         return None;
     }
     let required = match case.family {
@@ -1229,9 +1270,15 @@ fn issue125_shrink_inputs(
 
 #[test]
 fn issue125_structured_interaction_matrix() {
-    const MATRIX: &str = include_str!("../../../verification/differential-interactions/matrix-v1.json");
+    const MATRIX: &str =
+        include_str!("../../../verification/differential-interactions/matrix-v1.json");
     let matrix_sha256 = blake3::hash(MATRIX.as_bytes()).to_hex().to_string();
-    let families = ["guard_select", "select_index", "index_affine", "guard_affine"];
+    let families = [
+        "guard_select",
+        "select_index",
+        "index_affine",
+        "guard_affine",
+    ];
     let classes = [
         "signed_zero",
         "nan",
@@ -1274,8 +1321,11 @@ fn issue125_structured_interaction_matrix() {
             all_reached &= reached;
             let mismatch_class = issue125_mismatch_class(&legs);
             let cell_name = format!("P2/{family}/{fp_class}");
-            let minimized_witness = if !shrunk &&
-                mutation_target.as_deref().is_none_or(|target| target == cell_name) {
+            let minimized_witness = if !shrunk
+                && mutation_target
+                    .as_deref()
+                    .is_none_or(|target| target == cell_name)
+            {
                 mismatch_class.and_then(|class| {
                     let witness = issue125_shrink_inputs(&case, &compiled, expected, class);
                     shrunk = witness.is_some();
@@ -1328,9 +1378,14 @@ fn issue125_structured_interaction_matrix() {
         }
     }
 
-    let structured_node_budget: u64 = cells.iter().map(|cell| {
-        cell["l3_nodes_evaluated"].as_u64().expect("structured node-work receipt")
-    }).sum();
+    let structured_node_budget: u64 = cells
+        .iter()
+        .map(|cell| {
+            cell["l3_nodes_evaluated"]
+                .as_u64()
+                .expect("structured node-work receipt")
+        })
+        .sum();
     let comparison_seed = 125_u64;
     let mut current_ops = 48_usize;
     let (current_random_graph, current_random_checked) = loop {
@@ -1390,26 +1445,43 @@ fn issue125_structured_interaction_matrix() {
     let mut invalid = issue125_cell("guard_select", "nan");
     invalid.inputs[5] = f32::NAN;
     let invalid_checked = check(&BLAKE3, invalid.graph.clone()).expect("valid guard-failure graph");
-    let invalid_legs = run_legs(&Compiled::new(&BLAKE3, &invalid_checked), &f32_inputs(&invalid.inputs), None);
-    let invalid_refused = matches!(invalid_legs.l3_reference, Obs::GuardFailed { .. }) && invalid_legs.agree();
+    let invalid_legs = run_legs(
+        &Compiled::new(&BLAKE3, &invalid_checked),
+        &f32_inputs(&invalid.inputs),
+        None,
+    );
+    let invalid_refused =
+        matches!(invalid_legs.l3_reference, Obs::GuardFailed { .. }) && invalid_legs.agree();
 
     let mut invalid_index = issue125_cell("index_affine", "subnormal_normal_boundary");
     invalid_index.inputs[3] = f32::NAN;
     let invalid_index_checked = check(&BLAKE3, invalid_index.graph.clone())
         .expect("input-fact mutation keeps the graph admitted");
-    let invalid_index_legs = run_legs(&Compiled::new(&BLAKE3, &invalid_index_checked),
-        &f32_inputs(&invalid_index.inputs), None);
+    let invalid_index_legs = run_legs(
+        &Compiled::new(&BLAKE3, &invalid_index_checked),
+        &f32_inputs(&invalid_index.inputs),
+        None,
+    );
     let invalid_index_refused = matches!(invalid_index_legs.l2_apfloat, Obs::Refused(_))
         && matches!(invalid_index_legs.b2_oracle_f64, Obs::Refused(_))
         && matches!(invalid_index_legs.l3_reference, Obs::Refused(_))
         && matches!(invalid_index_legs.l4_compiled, Obs::Refused(_))
         && invalid_index_legs.agree();
     let earlier_refusal_rejected_by_shrinker = !issue125_shrink_candidate_allowed(
-        &invalid_index, &invalid_index.inputs, &invalid_index_legs,
+        &invalid_index,
+        &invalid_index.inputs,
+        &invalid_index_legs,
         issue125_expected("index_affine", "subnormal_normal_boundary"),
-        "normal-value-mismatch");
-    let target_failure_class = mutation_target.as_ref().and_then(|target| cells.iter()
-        .find(|cell| cell["cell"] == target).and_then(|cell| cell["mismatch_class"].as_str()))
+        "normal-value-mismatch",
+    );
+    let target_failure_class = mutation_target
+        .as_ref()
+        .and_then(|target| {
+            cells
+                .iter()
+                .find(|cell| cell["cell"].as_str() == Some(target.as_str()))
+                .and_then(|cell| cell["mismatch_class"].as_str())
+        })
         .unwrap_or("normal-value-mismatch");
     let substitute_class = if target_failure_class == "normal-value-mismatch" {
         "normal-outcome-mismatch"
@@ -1418,7 +1490,10 @@ fn issue125_structured_interaction_matrix() {
     };
     let expected_value = noble_ngraph::sem::Value::f32(f32::from_bits(1));
     let substituted_l3 = if substitute_class == "normal-outcome-mismatch" {
-        Obs::GuardFailed { node: noble_ngraph::ir::NodeId(0), fact: noble_ngraph::ir::Fact::Finite }
+        Obs::GuardFailed {
+            node: noble_ngraph::ir::NodeId(0),
+            fact: noble_ngraph::ir::Fact::Finite,
+        }
     } else {
         Obs::Normal(vec![noble_ngraph::sem::Value::f32(2.0)])
     };
@@ -1431,8 +1506,12 @@ fn issue125_structured_interaction_matrix() {
     };
     let different_failure_case = issue125_cell("index_affine", "subnormal_normal_boundary");
     let different_failure_rejected_by_shrinker = !issue125_shrink_candidate_allowed(
-        &different_failure_case, &different_failure_case.inputs, &substituted_failure,
-        Some(1), target_failure_class);
+        &different_failure_case,
+        &different_failure_case.inputs,
+        &substituted_failure,
+        Some(1),
+        target_failure_class,
+    );
     let different_failure_control = serde_json::json!({
         "target_failure_class": target_failure_class,
         "substituted_failure_class": substitute_class,
@@ -1443,27 +1522,63 @@ fn issue125_structured_interaction_matrix() {
     let quota = issue125_cell("guard_select", "signed_zero");
     let quota_checked = check(&BLAKE3, quota.graph).expect("valid quota graph");
     let quota_inputs = f32_inputs(&quota.inputs);
-    let mut reference_control = Control { fuel: Some(0), ..Control::default() };
-    let reference_quota = noble_ngraph::eval::reference(&quota_checked, &quota_inputs, None, &mut reference_control).obs;
-    let mut compiled_control = Control { fuel: Some(0), ..Control::default() };
+    let mut reference_control = Control {
+        fuel: Some(0),
+        ..Control::default()
+    };
+    let reference_quota =
+        noble_ngraph::eval::reference(&quota_checked, &quota_inputs, None, &mut reference_control)
+            .obs;
+    let mut compiled_control = Control {
+        fuel: Some(0),
+        ..Control::default()
+    };
     let compiled_quota = Compiled::new(&BLAKE3, &quota_checked)
-        .evaluate(&quota_inputs, None, &mut compiled_control).obs;
-    let exhausted = matches!(reference_quota, Obs::Exhausted(noble_ngraph::BudgetKind::Fuel))
-        && matches!(compiled_quota, Obs::Exhausted(noble_ngraph::BudgetKind::Fuel));
-    let mut reference_boundary_control = Control { fuel: Some(1), ..Control::default() };
-    let reference_boundary = noble_ngraph::eval::reference(&quota_checked, &quota_inputs, None,
-        &mut reference_boundary_control).obs;
-    let mut compiled_boundary_control = Control { fuel: Some(1), ..Control::default() };
+        .evaluate(&quota_inputs, None, &mut compiled_control)
+        .obs;
+    let exhausted = matches!(
+        reference_quota,
+        Obs::Exhausted(noble_ngraph::BudgetKind::Fuel)
+    ) && matches!(
+        compiled_quota,
+        Obs::Exhausted(noble_ngraph::BudgetKind::Fuel)
+    );
+    let mut reference_boundary_control = Control {
+        fuel: Some(1),
+        ..Control::default()
+    };
+    let reference_boundary = noble_ngraph::eval::reference(
+        &quota_checked,
+        &quota_inputs,
+        None,
+        &mut reference_boundary_control,
+    )
+    .obs;
+    let mut compiled_boundary_control = Control {
+        fuel: Some(1),
+        ..Control::default()
+    };
     let compiled_boundary = Compiled::new(&BLAKE3, &quota_checked)
-        .evaluate(&quota_inputs, None, &mut compiled_boundary_control).obs;
-    let exhausted_at_one = matches!(reference_boundary, Obs::Exhausted(noble_ngraph::BudgetKind::Fuel))
-        && matches!(compiled_boundary, Obs::Exhausted(noble_ngraph::BudgetKind::Fuel));
+        .evaluate(&quota_inputs, None, &mut compiled_boundary_control)
+        .obs;
+    let exhausted_at_one = matches!(
+        reference_boundary,
+        Obs::Exhausted(noble_ngraph::BudgetKind::Fuel)
+    ) && matches!(
+        compiled_boundary,
+        Obs::Exhausted(noble_ngraph::BudgetKind::Fuel)
+    );
 
-    let ftz = fixtures::b2_vectors().into_iter()
+    let ftz = fixtures::b2_vectors()
+        .into_iter()
         .find(|vector| vector.name.starts_with("subnormal: 2^-126"))
         .expect("retained #38 subnormal vector");
     let ftz_checked = check(&BLAKE3, ftz.graph).expect("retained #38 vector checks");
-    let ftz_legs = run_legs(&Compiled::new(&BLAKE3, &ftz_checked), &f32_inputs(&ftz.inputs), None);
+    let ftz_legs = run_legs(
+        &Compiled::new(&BLAKE3, &ftz_checked),
+        &f32_inputs(&ftz.inputs),
+        None,
+    );
     let weak_ftz = fixtures::ftz_mul(f32::MIN_POSITIVE, 0.5);
     let independent_oracle_control = ftz_legs.agree()
         && issue125_output_bits(&ftz_legs.l2_apfloat) == vec![ftz.expected[0]]
@@ -1568,22 +1683,52 @@ fn issue125_structured_interaction_matrix() {
     });
     println!("ISSUE125_INTERACTION_RECEIPT={receipt}");
     assert_eq!(cells.len(), 24, "matrix-v1 P2 cell count");
-    assert!(current_potential_node_work <= structured_node_budget,
-        "current P2 generator exceeded the frozen node-work budget");
+    assert!(
+        current_potential_node_work <= structured_node_budget,
+        "current P2 generator exceeded the frozen node-work budget"
+    );
     if mutation_id.is_none() {
-        assert_eq!(accepted, 24, "all selected P2 cells must be accepted executions");
-        assert!(all_reached, "all-refused or unreached campaign cannot pass semantic acceptance");
+        assert_eq!(
+            accepted, 24,
+            "all selected P2 cells must be accepted executions"
+        );
+        assert!(
+            all_reached,
+            "all-refused or unreached campaign cannot pass semantic acceptance"
+        );
     } else {
-        assert_eq!(mutation_probe.as_ref().map(|probe| probe["outcome"].as_str()), Some("killed"),
-            "semantic mutant must fail its selected property after reaching the divergence");
+        assert_eq!(
+            mutation_probe
+                .as_ref()
+                .and_then(|probe| probe["outcome"].as_str()),
+            Some("killed"),
+            "semantic mutant must fail its selected property after reaching the divergence"
+        );
     }
-    assert!(invalid_refused, "one-premise guard refusal control must be observed by every leg");
-    assert!(invalid_index_refused, "one-premise index-fact refusal must be observed by every leg");
-    assert!(earlier_refusal_rejected_by_shrinker, "shrinker accepted an earlier input-fact refusal");
-    assert!(different_failure_rejected_by_shrinker,
-        "shrinker accepted a different mismatch class for the retained failure");
-    assert!(exhausted && exhausted_at_one, "zero- and one-fuel controls must remain exhausted outcomes");
-    assert!(independent_oracle_control, "independent control must catch the deliberate FTZ oracle weakness");
+    assert!(
+        invalid_refused,
+        "one-premise guard refusal control must be observed by every leg"
+    );
+    assert!(
+        invalid_index_refused,
+        "one-premise index-fact refusal must be observed by every leg"
+    );
+    assert!(
+        earlier_refusal_rejected_by_shrinker,
+        "shrinker accepted an earlier input-fact refusal"
+    );
+    assert!(
+        different_failure_rejected_by_shrinker,
+        "shrinker accepted a different mismatch class for the retained failure"
+    );
+    assert!(
+        exhausted && exhausted_at_one,
+        "zero- and one-fuel controls must remain exhausted outcomes"
+    );
+    assert!(
+        independent_oracle_control,
+        "independent control must catch the deliberate FTZ oracle weakness"
+    );
 }
 
 #[test]
@@ -1591,87 +1736,172 @@ fn issue125_structured_interaction_matrix() {
 fn issue125_replay_retained_witness() {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../verification/differential-interactions/replay.json");
-    let retained: serde_json::Value = serde_json::from_slice(
-        &std::fs::read(&path).expect("retained replay witness must exist"),
-    )
-    .expect("retained witness JSON");
+    let retained: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&path).expect("retained replay witness must exist"))
+            .expect("retained witness JSON");
     let graph_text = retained["graph_text"].as_str().expect("graph bytes");
     let graph = noble_ngraph::format::graph::parse(&BLAKE3, graph_text)
         .unwrap_or_else(|diagnostic| panic!("retained graph refused: {diagnostic}"));
     let checked = check(&BLAKE3, graph).expect("retained graph checks");
     let graph_id = noble_ngraph::ir::hex(&checked.id());
     let executable = std::env::current_exe().expect("current test executable");
-    let executable_hash = blake3::hash(&std::fs::read(&executable).expect("read current executable"))
-        .to_hex().to_string();
-    assert_eq!(graph_id, retained["graph_id"].as_str().expect("graph identity"));
+    let executable_hash =
+        blake3::hash(&std::fs::read(&executable).expect("read current executable"))
+            .to_hex()
+            .to_string();
+    assert_eq!(
+        graph_id,
+        retained["graph_id"].as_str().expect("graph identity")
+    );
     assert_eq!(
         blake3::hash(graph_text.as_bytes()).to_hex().as_str(),
-        retained["graph_text_blake3"].as_str().expect("graph byte digest")
+        retained["graph_text_blake3"]
+            .as_str()
+            .expect("graph byte digest")
     );
     assert!(retained["snapshot"].is_null(), "P2 matrix has no snapshot");
-    let family = retained["interaction_family"].as_str().expect("interaction family");
+    let family = retained["interaction_family"]
+        .as_str()
+        .expect("interaction family");
     let fp_class = retained["fp_class"].as_str().expect("FP class");
     let expected = issue125_expected(family, fp_class);
     let expected_mismatch = retained["expected_mismatch_class"].as_str();
     let input_bits = |key: &str| -> [u32; 6] {
-        let bits: Vec<u32> = retained[key].as_array().expect("retained input bits")
-            .iter().map(|value| u32::try_from(value.as_u64().expect("u32 input bits"))
-                .expect("u32 input bits")).collect();
+        let bits: Vec<u32> = retained[key]
+            .as_array()
+            .expect("retained input bits")
+            .iter()
+            .map(|value| {
+                u32::try_from(value.as_u64().expect("u32 input bits")).expect("u32 input bits")
+            })
+            .collect();
         bits.try_into().expect("six retained F32 input bits")
     };
     let original_bits = input_bits("original_input_bits");
     let minimized_bits = input_bits("minimized_input_bits");
-    assert_eq!(original_bits[3], minimized_bits[3], "shrinking changed the index input");
-    assert_eq!(original_bits[4], minimized_bits[4], "shrinking changed the select branch");
+    assert_eq!(
+        original_bits[3], minimized_bits[3],
+        "shrinking changed the index input"
+    );
+    assert_eq!(
+        original_bits[4], minimized_bits[4],
+        "shrinking changed the select branch"
+    );
     let original_values = original_bits.map(f32::from_bits);
     let minimized_values = minimized_bits.map(f32::from_bits);
-    let original_branch = issue125_runtime_selected_branch(checked.graph(), family, &original_values);
-    let minimized_branch = issue125_runtime_selected_branch(checked.graph(), family, &minimized_values);
-    assert_eq!(original_branch, minimized_branch, "shrinking changed the selected branch");
-    assert_eq!(original_branch, retained["selected_branch"].as_str(), "retained branch witness changed");
+    let original_branch =
+        issue125_runtime_selected_branch(checked.graph(), family, &original_values);
+    let minimized_branch =
+        issue125_runtime_selected_branch(checked.graph(), family, &minimized_values);
+    assert_eq!(
+        original_branch, minimized_branch,
+        "shrinking changed the selected branch"
+    );
+    assert_eq!(
+        original_branch,
+        retained["selected_branch"].as_str(),
+        "retained branch witness changed"
+    );
     let branch_slot = issue125_selected_branch_input_slot(checked.graph(), family);
-    assert_eq!(branch_slot.map(u64::from), retained["selected_branch_input_slot"].as_u64(),
-        "retained branch operand slot changed");
-    assert_eq!(branch_slot.map(|slot| original_values[slot as usize].to_bits()),
-        retained["selected_branch_input_bits"].as_u64().map(|bits| bits as u32),
-        "retained branch operand bits changed");
+    assert_eq!(
+        branch_slot.map(u64::from),
+        retained["selected_branch_input_slot"].as_u64(),
+        "retained branch operand slot changed"
+    );
+    assert_eq!(
+        branch_slot.map(|slot| original_values[slot as usize].to_bits()),
+        retained["selected_branch_input_bits"]
+            .as_u64()
+            .map(|bits| bits as u32),
+        "retained branch operand bits changed"
+    );
     let original_index_slot = issue125_index_input_slot(checked.graph(), family, &original_values);
-    let minimized_index_slot = issue125_index_input_slot(checked.graph(), family, &minimized_values);
-    assert_eq!(original_index_slot, minimized_index_slot, "shrinking changed the index operand slot");
-    assert_eq!(original_index_slot.map(u64::from), retained["index_input_slot"].as_u64(),
-        "retained index operand slot changed");
-    assert_eq!(original_index_slot.map(|slot| original_values[slot as usize].to_bits()),
-        retained["index_input_bits"].as_u64().map(|bits| bits as u32),
-        "retained index operand bits changed");
+    let minimized_index_slot =
+        issue125_index_input_slot(checked.graph(), family, &minimized_values);
+    assert_eq!(
+        original_index_slot, minimized_index_slot,
+        "shrinking changed the index operand slot"
+    );
+    assert_eq!(
+        original_index_slot.map(u64::from),
+        retained["index_input_slot"].as_u64(),
+        "retained index operand slot changed"
+    );
+    assert_eq!(
+        original_index_slot.map(|slot| original_values[slot as usize].to_bits()),
+        retained["index_input_bits"]
+            .as_u64()
+            .map(|bits| bits as u32),
+        "retained index operand bits changed"
+    );
     let original_index = issue125_runtime_table_index(checked.graph(), family, &original_values);
     let minimized_index = issue125_runtime_table_index(checked.graph(), family, &minimized_values);
-    assert_eq!(original_index, minimized_index, "shrinking changed the selected table index");
-    assert_eq!(original_index.map(u64::from), retained["selected_table_index"].as_u64(),
-        "retained table-index witness changed");
-    let original_table_node = issue125_selected_table_node(checked.graph(), family, &original_values);
-    let minimized_table_node = issue125_selected_table_node(checked.graph(), family, &minimized_values);
-    assert_eq!(original_table_node, minimized_table_node, "shrinking changed the table operand");
-    assert_eq!(original_table_node.map(|node| u64::from(node.0)), retained["selected_table_node"].as_u64(),
-        "retained table operand changed");
-    assert_eq!(executable_hash, retained["candidate_test_executable_blake3"].as_str()
-        .expect("candidate binary identity"), "replay binary differs from the candidate receipt");
-    let historical_hash = retained["historical_test_executable_blake3"].as_str()
+    assert_eq!(
+        original_index, minimized_index,
+        "shrinking changed the selected table index"
+    );
+    assert_eq!(
+        original_index.map(u64::from),
+        retained["selected_table_index"].as_u64(),
+        "retained table-index witness changed"
+    );
+    let original_table_node =
+        issue125_selected_table_node(checked.graph(), family, &original_values);
+    let minimized_table_node =
+        issue125_selected_table_node(checked.graph(), family, &minimized_values);
+    assert_eq!(
+        original_table_node, minimized_table_node,
+        "shrinking changed the table operand"
+    );
+    assert_eq!(
+        original_table_node.map(|node| u64::from(node.0)),
+        retained["selected_table_node"].as_u64(),
+        "retained table operand changed"
+    );
+    assert_eq!(
+        executable_hash,
+        retained["candidate_test_executable_blake3"]
+            .as_str()
+            .expect("candidate binary identity"),
+        "replay binary differs from the candidate receipt"
+    );
+    let historical_hash = retained["historical_test_executable_blake3"]
+        .as_str()
         .expect("historical binary identity");
-    assert_ne!(executable_hash, historical_hash,
-        "historical baseline executable must be refused as evidence for changed bytes");
+    assert_ne!(
+        executable_hash, historical_hash,
+        "historical baseline executable must be refused as evidence for changed bytes"
+    );
     let replay_variant = |name: &str, key: &str| {
         let input_bits = input_bits(key);
         let inputs = input_bits.map(f32::from_bits);
-        let legs = run_legs(&Compiled::new(&BLAKE3, &checked), &f32_inputs(&inputs), None);
+        let legs = run_legs(
+            &Compiled::new(&BLAKE3, &checked),
+            &f32_inputs(&inputs),
+            None,
+        );
         let mismatch = issue125_mismatch_class(&legs);
-        assert!(issue125_property(&legs.l2_apfloat, expected),
-            "independent property no longer engaged for {name}");
-        assert!(!issue125_property(&legs.l3_reference, expected),
-            "retained mutant no longer violates its intended property for {name}");
-        assert_eq!(mismatch, expected_mismatch, "retained failure identity changed for {name}");
-        assert!(!legs.agree(), "mutated retained failure unexpectedly agrees for {name}");
-        assert_eq!(legs.l3_evaluated_nodes, checked.node_count() as u64,
-            "retained graph did not evaluate every node for {name}");
+        assert!(
+            issue125_property(&legs.l2_apfloat, expected),
+            "independent property no longer engaged for {name}"
+        );
+        assert!(
+            !issue125_property(&legs.l3_reference, expected),
+            "retained mutant no longer violates its intended property for {name}"
+        );
+        assert_eq!(
+            mismatch, expected_mismatch,
+            "retained failure identity changed for {name}"
+        );
+        assert!(
+            !legs.agree(),
+            "mutated retained failure unexpectedly agrees for {name}"
+        );
+        assert_eq!(
+            legs.l3_evaluated_nodes,
+            checked.node_count() as u64,
+            "retained graph did not evaluate every node for {name}"
+        );
         serde_json::json!({
             "variant": name,
             "input_bits": input_bits,

@@ -176,7 +176,8 @@ fn issue125_composed_prefix_reaches_fuzz_oracles() -> Result<(), String> {
         header[super::oracles::SELECT] = profile;
         let data = super::oracles::encode(header, source);
         for (target, oracle) in TARGETS.iter().take(3) {
-            oracle(&data).map_err(|violation| format!("{target}, profile {profile}: {violation}"))?;
+            oracle(&data)
+                .map_err(|violation| format!("{target}, profile {profile}: {violation}"))?;
         }
         let emitted = super::oracles::check_prepare_to_wasm(&data)?.len();
         assert!(emitted > 0, "profile {profile} did not reach WAT emission");
