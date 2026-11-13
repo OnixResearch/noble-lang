@@ -14,9 +14,14 @@ const NODE: &str = "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/b
 
 /// Run one selected-CLI lane with the real binary and require exit 0.
 fn run_lane(lane: &str) {
+    run_lane_args(lane, &[]);
+}
+
+fn run_lane_args(lane: &str, arguments: &[&str]) {
     let output = std::process::Command::new(NODE)
         .arg(std::format!("{}/tests/{lane}", env!("CARGO_MANIFEST_DIR")))
         .arg(env!("CARGO_BIN_EXE_noble"))
+        .args(arguments)
         .output()
         .expect("launch selected Node/V8 lane child");
     assert!(
@@ -90,4 +95,26 @@ fn a_held_root_selects_the_same_leaf_twice_from_its_pinned_map() {
 #[test]
 fn an_event_relocates_from_the_caller_version_into_the_callee() {
     run_lane("live_slot_caller_emits.mjs");
+}
+
+/// A root pinned between two compatible slot publications observes the mixed pair rather than an
+/// all-old or all-new pair; the lane also checks old/new caller-to-callee relocation.
+#[test]
+fn sequential_publications_expose_a_mixed_compatible_pair() {
+    run_lane("live_slot_relocation_controls.mjs");
+}
+
+#[cfg(not(feature = "live-test-current-map"))]
+#[test]
+fn shipped_cli_does_not_contain_the_test_only_current_map_seam() {
+    const MARKER: &[u8] = b"noble-test-current-map-seam/v1";
+    let binary = std::fs::read(env!("CARGO_BIN_EXE_noble")).expect("read selected noble binary");
+    assert!(!binary.windows(MARKER.len()).any(|window| window == MARKER),
+        "default noble binary must not contain the test-only current-map seam");
+}
+
+#[cfg(feature = "live-test-current-map")]
+#[test]
+fn current_map_mutant_duplicates_and_omits_relocated_events() {
+    run_lane_args("live_slot_relocation_controls.mjs", &["current-map"]);
 }

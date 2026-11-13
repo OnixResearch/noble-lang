@@ -30,6 +30,18 @@ const SLOT_HOST: &str = concat!(
     include_str!("runtime/slot-engine.mjs"),
     include_str!("runtime/protocol.mjs"),
 );
+#[cfg(feature = "live-test-current-map")]
+fn slot_host() -> std::borrow::Cow<'static, str> {
+    const BEFORE: &str = "const selected = root.state.map.get(ref.slotId);";
+    const AFTER: &str = "const selected = this.#current.map.get(ref.slotId); /* noble-test-current-map-seam/v1 */";
+    assert_eq!(SLOT_HOST.matches(BEFORE).count(), 1,
+        "the test-only current-map patch anchor must occur exactly once");
+    std::borrow::Cow::Owned(SLOT_HOST.replacen(BEFORE, AFTER, 1))
+}
+#[cfg(not(feature = "live-test-current-map"))]
+fn slot_host() -> std::borrow::Cow<'static, str> {
+    std::borrow::Cow::Borrowed(SLOT_HOST)
+}
 const SELECTION: &str = include_str!("runtime/config.json");
 const ABI: &str = include_str!("runtime/abi.json");
 const DECLARED_ABI: &str = include_str!("runtime/declared-abi.json");
@@ -129,7 +141,7 @@ impl Engine {
     }
 
     pub fn start_slot() -> Result<Self, super::output::Failure> {
-        Self::start_with_host(&configuration::slot(), SLOT_HOST, true, false)
+        Self::start_with_host(&configuration::slot(), slot_host().as_ref(), true, false)
     }
 
     /// `trace` asks the worker for per-module preparation timings in its

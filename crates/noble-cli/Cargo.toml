@@ -13,9 +13,12 @@ path = "src/main.rs"
 # Explicit evidence build only; the ordinary binary never reads observer env.
 safety-observe = []
 # Test-only synchronization of real CLI/worker safepoints; never shipped by
-# the default binary. Production host-only revocation is available without
+# this feature. Production host-only revocation is available without
 # this feature and does not change guest bytes.
 live-test-barrier = []
+# Test-only counterfactual: dispatch from the registry's current map instead
+# of the root pin. Never enable this feature in a shipped `noble` binary.
+live-test-current-map = []
 
 [dependencies]
 noble-kernel = { path = "../noble-kernel" }
