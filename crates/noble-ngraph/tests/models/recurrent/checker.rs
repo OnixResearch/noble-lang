@@ -10,6 +10,7 @@ use noble_ngraph::snapshot::ParamSnapshot;
 pub struct CandidateChecker {
     program: Program,
     checked: CheckedGraph,
+    compiled: Compiled,
     weights: ParamSnapshot,
 }
 
@@ -20,9 +21,11 @@ impl CandidateChecker {
             check::check(&common::IDS, graph).map_err(|error| format!("graph: {error:?}"))?;
         let weights = ParamSnapshot::new(&common::IDS, &checked, weight_values)
             .map_err(|error| format!("weights: {error:?}"))?;
+        let compiled = Compiled::new(&common::IDS, &checked);
         Ok(Self {
             program,
             checked,
+            compiled,
             weights,
         })
     }
@@ -48,10 +51,10 @@ impl CandidateChecker {
                 .collect(),
             Program::StackSwap => words.iter().flat_map(|word| encode_word(*word)).collect(),
         };
-        let compiled = Compiled::new(&common::IDS, &self.checked);
         let mut compiled_control = Control::default();
         let mut reference_control = Control::default();
-        let compiled_obs = compiled
+        let compiled_obs = self
+            .compiled
             .evaluate(&encoded, Some(&self.weights), &mut compiled_control)
             .obs;
         let reference_obs = eval::reference(

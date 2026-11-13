@@ -52,19 +52,18 @@ fn exact_adder() -> Graph {
     builder.finish()
 }
 
-fn run(graph: &Graph, a: u64, b: u64) -> u64 {
-    checker::CandidateChecker::new(Program::Accumulator, graph.clone(), &[0.0, 1.0])
-        .expect("checker accepts emitted graph")
-        .one_step(&[a], &[b])
-        .expect("checker verifies transition")[0]
-}
-
 #[test]
 fn wrapping_adder_matches_reference_and_source_boundaries() {
-    let graph = exact_adder();
+    let checker = checker::CandidateChecker::new(Program::Accumulator, exact_adder(), &[0.0, 1.0])
+        .expect("checker accepts emitted graph");
     for a in 0..4 {
         for b in 0..4 {
-            assert_eq!(run(&graph, a, b), a.wrapping_add(b));
+            assert_eq!(
+                checker
+                    .one_step(&[a], &[b])
+                    .expect("accumulator transition"),
+                [a.wrapping_add(b)]
+            );
         }
     }
     for (a, b) in [
@@ -75,7 +74,10 @@ fn wrapping_adder_matches_reference_and_source_boundaries() {
         (0x5555_5555_5555_5555, 0xaaaa_aaaa_aaaa_aaaa),
         (0x0000_0000_ffff_ffff, 1),
     ] {
-        assert_eq!(run(&graph, a, b), a.wrapping_add(b));
+        assert_eq!(
+            checker.one_step(&[a], &[b]).expect("boundary transition"),
+            [a.wrapping_add(b)]
+        );
     }
 }
 

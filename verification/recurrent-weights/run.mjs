@@ -40,6 +40,15 @@ if (test.status === 0 && (artifacts.length !== 2 || trajectories.length !== 2
 const receipt = {
   schema: 'noble.recurrent-weights.test-run.v0',
   source_commit: sourceCommit,
+  manifest: {
+    compiler_revision: 'ngraph-layered/0',
+    target_format: 'ngraph-f32/0 exact-bit threshold graph',
+    state_codec: 'unsigned 64-bit words, little-endian, one exact +0/1 F32 per bit',
+    numeric_contract: 'bit-exact binary32 values only; accumulator wraps modulo 2^64; no I64-to-F32 casts',
+    runtime: 'noble-ngraph reference and compiled CPU evaluators; no exported or stock runtime',
+    execution_limits: { max_semantic_steps: 1000, max_unrolled_steps: 4 },
+    identity_scheme: 'test-only common::TestScheme; stable for the pinned test toolchain, not a production digest',
+  },
   command: ['cargo', 'test', '-p', 'noble-ngraph', '--test', 'layout_differential', '--', '--nocapture', 'recurrent'],
   exit_code: test.status,
   artifacts,
