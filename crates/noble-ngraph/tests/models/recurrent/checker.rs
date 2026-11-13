@@ -119,7 +119,7 @@ fn encode_word(word: u64) -> [Value; 64] {
 }
 
 pub(super) fn decode_words(values: &[Value]) -> Result<Vec<u64>, String> {
-    if values.len() % 64 != 0 {
+    if !values.len().is_multiple_of(64) {
         return Err(format!(
             "decoder length {} is not a multiple of 64",
             values.len()
