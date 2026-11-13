@@ -83,6 +83,14 @@ evidence on one host and target, not proof:
   predates the Lean 4.35 bump and the later correction of one retained tie
   expectation, so it binds older lane and model bytes and reports staleness
   after its own evidence commit.
+- Both replay lanes were re-run at commit `2dd3da3` with the pinned toolchain
+  and the current lane and expectation bytes:
+  `cargo test -p noble-ngraph-experiment --test b2_differential lean_retained_binary32 -- --nocapture`
+  reported `test result: ok. 2 passed; 0 failed; 0 ignored`. That is an
+  observation, not a receipt: `replay.json` was not regenerated, because its
+  producer drives `nix develop` and writes to `/var/tmp`, both excluded in this
+  environment. The follow-up is to re-record it from a clean commit with a
+  producer that can run here, so the retained receipt binds current bytes.
 - A bounded deterministic shrinker that minimizes one operation discrepancy and
   reports a documented local minimum: `verification/binary32/shrinker.json`
   (flush-to-zero witness `0x00800000 × 0x3f000000`).
