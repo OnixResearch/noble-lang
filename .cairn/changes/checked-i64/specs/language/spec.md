@@ -1,3 +1,5 @@
+## MODIFIED Requirements
+
 ### Requirement: K-NUM-01
 r[K-NUM-01]
 
@@ -9,9 +11,9 @@ For a mathematical result `z`, the signed result is:
 ((z + 2^63) mod 2^64) - 2^63
 ```
 
-`=` in the bootstrap numeric vocabulary compares two `I64` values and returns `Bool`. It is not an implicit generic equality operator for every type. Division, floating point, and the detailed checked-arithmetic library are not selected in this revision.
+`=` in the bootstrap numeric vocabulary compares two `I64` values and returns `Bool`. It is not an implicit generic equality operator for every type. Division and floating point are not selected in the Core-Bootstrap profile; checked arithmetic is available only in the separate opt-in environment specified below.
 
-**Draft decision D-03.** Wrapping arithmetic selects a candidate from the RFC. Checked operations returning `Result` remain the intended library complement; their names and full contract are deferred.
+**Draft decision D-03.** Wrapping arithmetic selects a candidate from the RFC for Core-Bootstrap. The checked library complement is selected only for the opt-in `checked-i64` environment below; it does not change the bootstrap operators, other profiles, or saved program identities.
 
 For the `checked-i64` environment only, select version `noble-checked-i64/v1`. Its exact words and stack signatures (where `S` is an untouched stack prefix and binary operands are deeper then top) are:
 

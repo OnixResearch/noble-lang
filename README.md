@@ -245,6 +245,19 @@ Ordinary `run` and the live REPL cannot select a byte-cursor profile, and neithe
 flag alone reaches the combined profile. Managed-Wasm reports identify
 `Text-Byte-Cursor-v1` or `Declared-Text-v1`.
 
+Use `noble session --checked-i64` or `noble compile SOURCE --checked-i64` to
+select the opt-in **Checked-I64-v1** profile. It adds checked add, subtract,
+multiply, negate, absolute value, signed less-than, and truncating combined
+quotient/remainder. Checked arithmetic returns tagged `Sum` values, with
+versioned error code `1` for overflow and `2` for division by zero; the
+combined division returns overflow for `MIN / -1` without exposing a partial
+result. Domain errors are values, distinct from resource exhaustion. This
+profile is exclusive with declared modules, the byte cursor, and ordinary
+`run`; existing Core-Bootstrap operators and program identities are unchanged.
+The selected signatures and complete error table are in
+[`K-NUM-01`](.cairn/specs/language/spec.md#requirement-k-num-01). Its finite
+source-to-Wasm test evidence is not a compiler refinement proof.
+
 
 ### Persistent sessions
 
