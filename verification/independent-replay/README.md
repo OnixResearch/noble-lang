@@ -15,10 +15,13 @@ export bytes, required roots, complete reference closures, compiled-environment
 statement binding, supported format, allowed axioms, and a checker's positive
 checked-declaration count must all pass.
 
-The bounded multi-checker and protected-semantics implementations are present,
-but no clean-tree receipts for the 4.35.0 run have yet been retained. Until those
-receipts are present, this README makes no claim that the new runs passed. The
-separately implemented checker designs in this set are nanoda and con-leche.
+Clean-source Lean 4.35.0 receipts for binding, refusal classification, resource
+limits, executed pin controls, multi-checker replay, and protected semantics are
+retained under [`receipts/2026-11-13/`](receipts/2026-11-13/). Every receipt has
+`holds: true`; each binds the clean source commit used by its run. The binding,
+refusal, and limit receipts use `24fbb6f`; the pin-control, multi-checker, and
+protected-semantics receipts use `c4d6925`. The separately implemented checker
+designs in this set are nanoda and con-leche.
 Con-ron is a distinct Rust implementation but a close port/refinement of
 con-leche, not a second independent checker design. Lean4Lean is derived from
 the C++ kernel and is only a lower-diversity cross-check. Per-checker source
@@ -42,16 +45,23 @@ implementation. `lean4checker` is deprecated and merged into Lean itself.
 
 ## 4.35.0 multi-checker and protected-semantics lanes
 
-`multi.mjs` exercises the bundled checkers over the selected foundation closures and a fresh `Init`
-export; `protected.mjs` builds a caller-owned challenge and separately built solution packages, with
-an exported-closure fallback when `lake comparator` cannot run. Their source describes the acceptance
-rules and controls, but their 4.35.0 results are not yet backed by retained clean-tree receipts. No
-checker verdict or comparator result is asserted here. The source pins bind each tool to the
-policy-selected release and binary digest; the lane does not rebuild these binaries from source.
+`multi.mjs` exercised the bundled checkers over the selected foundation closures and a fresh `Init`
+export. All four checkers accepted each baseline; none accepted the proof mutation; the lane's
+statement binding refused the substituted claim even though every checker accepted it. The receipt
+records per-checker time and RSS and distinguishes nanoda/con-leche as separate checker designs from
+con-ron (a close con-leche port) and Lean4Lean (derived from Lean's C++ kernel).
+
+`protected.mjs` built a caller-owned challenge and separate solution packages. The real and alternate
+proofs passed; the weakened predicate, changed imported semantics, wrong statement, forbidden axiom,
+invalid proof, and missing-definition controls were classified separately. `lake comparator` was not
+run because `bwrap` is absent from the execution path; the receipt records that the lane used its
+exported-definition-closure fallback, which is not a claim of comparator parity. The source pins bind
+each tool to the policy-selected release and binary digest; the lane does not rebuild checker binaries
+from source.
 
 Each older dated section is a historical observation at its named source/toolchain revision. New
-clean-tree receipts will be recorded under `receipts/<date>/` after the final lane source is committed;
-they will supplement, not rewrite, retained historical artifacts.
+clean-tree runs are recorded under `receipts/<date>/`; they supplement, rather than rewrite, retained
+historical artifacts.
 
 ## Kernel-checked proof conversions
 
