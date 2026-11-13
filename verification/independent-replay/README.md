@@ -1,51 +1,69 @@
-# Independent replay of Lean declarations (issue #62, evaluation unit)
+# Independent replay of Lean declarations (issue #62)
 
-Bounded evaluation of a separately implemented Lean proof checker against Noble's
-foundation corpus. Opt-in evidence only: nothing here replaces the current
-consumer, changes MC1 admission, or claims compiler/runtime correspondence.
+Bounded evaluation of external Lean proof checkers and protected-definition
+comparison. Opt-in evidence only: nothing here replaces the current consumer,
+changes MC1 admission, or claims compiler/runtime correspondence.
 
-## Decision
+## Current decision
 
-**A bounded independent-kernel replay is available and was measured as an
-opt-in pilot.** The pinned `leanprover/lean4export` revision
-`8554815c2dc6b7abe99ec1f08849c9759ba77947` builds with Noble's Lean `4.31.0`
-toolchain and emits NDJSON format `3.1.0`. The Rust `nanoda_lib` checker at
-`d0a02cc5defadd683f62f9d078f41688314fa31f` accepts that format (its parser
-range is `>=3.1.0,<3.2.0`). Its `nanoda_bin` CLI accepted the separately
-exported closures of exactly `NobleFoundation.toInt_add` and
-`NobleFoundation.LinkBoundary.vertical_simulation_compose`, with exit status
-zero and no type-checker errors. The complete receipt is
-[`receipts/2026-10-29/receipt.json`](receipts/2026-10-29/receipt.json), and the
-small retained export is
-[`receipts/2026-10-29/vertical_simulation_compose.ndjson`](receipts/2026-10-29/vertical_simulation_compose.ndjson).
+The replay lanes use the policy-selected Lean 4.35.0 package and its bundled
+`leanexport`, `nanoda_bin`, `con-leche`, `con-ron`, and `lean4lean` binaries.
+Their exact store path, derivation and binary SHA-256 digests are in
+[`checkers.json`](checkers.json). The toolchain's `leanexport` emits NDJSON
+format 3.1.0. Current sources enforce a strict acceptance rule: pinned tool and
+export bytes, required roots, complete reference closures, compiled-environment
+statement binding, supported format, allowed axioms, and a checker's positive
+checked-declaration count must all pass.
 
-This is evidence that a separately implemented checker can consume this
-Lean 4.31.0 export format and accept these two closures; it is not evidence
-that the checker is correct or complete. The earlier reference workflow also
-changed underneath the issue: `lean4checker` is deprecated and merged into
-Lean itself, distributed as `leanchecker` with every toolchain since v4.28.0,
-and its own documentation states that it "is not an external verifier, as it
-uses the Lean kernel itself".
+The bounded multi-checker and protected-semantics implementations are present,
+but no clean-tree receipts for the 4.35.0 run have yet been retained. Until those
+receipts are present, this README makes no claim that the new runs passed. The
+separately implemented checker designs in this set are nanoda and con-leche.
+Con-ron is a distinct Rust implementation but a close port/refinement of
+con-leche, not a second independent checker design. Lean4Lean is derived from
+the C++ kernel and is only a lower-diversity cross-check. Per-checker source
+evidence and caveats are recorded in `checkers.json`.
 
-What Noble *can* do today is a **producer-independent replay**: run the pinned
-toolchain's `leanchecker` over the foundation's compiled `.olean` files, which
-replays every declaration through the kernel in a fresh environment. That detects
-environment hacking and non-kernel-checked declarations; it does not establish an
-independent implementation. It is recorded here as an opt-in lane, not a gate.
+The earlier 4.31.0 export/checker receipts below are immutable history; they do
+not establish current-toolchain behavior. The bundled `leanchecker` remains a
+producer-independent replay through Lean's kernel, not an independent kernel
+implementation. `lean4checker` is deprecated and merged into Lean itself.
 
-## Pinned subjects
+## Current pinned subjects
 
 | Item | Value |
 |---|---|
-| `leanprover/lean4checker` revision inspected | `91a7f0e8e9dffe927089f5a6edcfeeb8a0e07709` (README: deprecated, merged into Lean, `lean-toolchain` `v4.29.0-rc8`) |
-| `leanprover/lean4export` revision built | `8554815c2dc6b7abe99ec1f08849c9759ba77947`, `lean-toolchain` `leanprover/lean4:v4.31.0`, NDJSON format `3.1.0`, Apache-2.0 |
-| `ammkrn/nanoda_lib` revision built | `d0a02cc5defadd683f62f9d078f41688314fa31f`, crate `0.4.30`, binary `nanoda_bin`, Apache-2.0 |
-| Independent checker actually used | `/var/tmp/.../nanoda_bin` (release binary SHA-256 is retained in the receipt) |
-| Producer-independent checker also retained | `leanchecker` shipped with Noble's pinned Lean **4.31.0** |
-| Fresh foundation source | `25276acd370e56a12ed491865f02f0a7ff1704d9`, clean build; latest retained foundation receipt is `1d4113e6c` |
-| Pilot roots | exactly `NobleFoundation.toInt_add` and `NobleFoundation.LinkBoundary.vertical_simulation_compose` |
+| Lean release | policy-selected `4.35.0`, output and derivation in `checkers.json` |
+| Exporter | bundled `leanexport`, binary digest in `checkers.json` |
+| External checkers | bundled nanoda, con-leche, con-ron, and lean4lean; separate implementation/design classifications in `checkers.json` |
+| Export format | NDJSON `3.1.0`; other versions are lane-level `unsupported-format` refusals |
+| Bound foundation roots | `NobleFoundation.toInt_add`, `NobleFoundation.LinkBoundary.vertical_simulation_compose`, and `Nat.add_comm` for the fresh `Init` baseline |
+| Binding source | `statements.json`, regenerated from the compiled foundation environment at `fed77835` |
 
-## Measured
+## 4.35.0 multi-checker and protected-semantics lanes
+
+`multi.mjs` exercises the bundled checkers over the selected foundation closures and a fresh `Init`
+export; `protected.mjs` builds a caller-owned challenge and separately built solution packages, with
+an exported-closure fallback when `lake comparator` cannot run. Their source describes the acceptance
+rules and controls, but their 4.35.0 results are not yet backed by retained clean-tree receipts. No
+checker verdict or comparator result is asserted here. The source pins bind each tool to the
+policy-selected release and binary digest; the lane does not rebuild these binaries from source.
+
+Each older dated section is a historical observation at its named source/toolchain revision. New
+clean-tree receipts will be recorded under `receipts/<date>/` after the final lane source is committed;
+they will supplement, not rewrite, retained historical artifacts.
+
+## Kernel-checked proof conversions
+
+The `Rules.lean` change converts `NobleM2.rule_case_sound`, `rule_if_sound`, and
+`rule_listcase_sound` from `native_decide` to `decide +kernel`. The file declares a maximum of
+1,000,000 heartbeats and recursion depth 4,096 for these bounded reductions. The m3 proof gate no
+longer admits those three theorem names under its reviewed `native_decide` list. In this source
+snapshot, `fresh_instantiation` still uses `native_decide` for the checker result; the broader
+per-file conversion work is not complete yet. The strict m3 proof gate and its refusal matrix pass
+with the converted declarations.
+
+## Historical measurements (4.31.0; 2026-10-26 through 2026-10-30)
 
 | Lane | Command | Result |
 |---|---|---|
@@ -178,9 +196,9 @@ abort. The receipt also records what a pipeline reading exit statuses alone woul
 
 So a run whose second requested theorem does not exist would have been reported as a success. The
 panic check and the root-presence check refuse both runs, and the positive-count rule alone already
-refuses the empty one. `limits.mjs` uses the weaker acceptance pattern, which matches
-`Checked 0 declarations`. Its retained receipt is unaffected, because its two inputs are
-digest-pinned exports of 2,773 and 16 declarations. A gate must use the strict rule.
+refuses the empty one. This paragraph records the 2026-10-30 implementation: the current
+`limits.mjs` now uses the same strict positive-count, root, format, and axiom rules as the replay
+lanes, and its new dated receipt records the result.
 
 **The custom axiom.** The checker accepts the custom axiom once it is told to permit it, and the
 lane still refuses it. This meets the issue's requirement that forbidden or custom axioms stay
@@ -244,23 +262,27 @@ The receipt is [`receipts/2026-10-30/binding.json`](receipts/2026-10-30/binding.
 ## Requirements before this becomes a gate
 
 1. ~~A checker implemented independently of Lean's kernel with a compatible
-   declaration-export format~~ — satisfied for this bounded pilot by the
-   pinned `nanoda_lib`/`lean4export` pair. A gate would still need to freeze
-   and rebuild both tools rather than relying on these local binaries.
-2. Exact claim binding — **partly met**. `binding.mjs` binds each selected root's statement to the
-   one Noble compiled and audits its complete reference closure, refusing a substituted valid claim
-   and a dropped dependency. It covers only the roots committed in `statements.json`, and it binds
-   what Lean elaborated, not the meaning of the source text. A gate would still need to select its
-   roots from the claims it serves and keep the manifest in step with the foundation.
+   declaration-export format~~ — satisfied for this bounded pilot by the separately implemented
+   nanoda and con-leche designs. Con-ron is a related Rust port and lean4lean is C++-kernel-derived,
+   not additional independent designs. The 4.35.0 binary revisions are not exposed by the bundled
+   release; receipts pin the policy-selected release output/derivation and each binary digest. A gate
+   would need to make the source/build provenance independently auditable.
+2. Exact claim binding — **partly met**. `binding.mjs` and `multi.mjs` bind each selected root's
+   statement to the one Noble compiled and audit its complete reference closure, refusing a
+   substituted valid claim and dropped dependencies. The protected-semantics fixture separately
+   compares the semantic closure of its fixed challenge package with separately built solutions. The
+   lanes cover only the roots/models explicitly selected in their manifests and fixtures; they bind
+   what Lean elaborated, not the meaning of arbitrary source text. A gate would need to select roots
+   from the claims it serves and keep the challenge/manifest in step with the foundation.
 3. ~~Artifact integrity for the replayed `.olean` set~~ — implemented above: the frozen digest
    manifest refuses a corrupted, removed or extra artifact before the checker runs.
 4. ~~Explicit refusal classes for unsupported constructs, timeout, export failure
-   and rejection — none of which may be reported as success~~ — all exercised by
-   pilot controls:
-   - timeout and resource exhaustion by `limits.mjs`;
-   - rejection and parse refusal by the 2026-10-29 controls;
-   - unsupported format versions, disabled literal extensions, export failure and
-     forbidden or custom axioms by `refusals.mjs`.
+   and rejection — none of which may be reported as success~~ — exercised by the
+   dated controls: timeout and resource exhaustion by `limits.mjs`; export, parse,
+   unsupported format/extension, axiom and proof-term refusals by `refusals.mjs` and
+   `multi.mjs`; and statement, definition, incomplete-closure, assumption and kernel
+   rejection by the protected-semantics fixture. These are pilot classifications, not
+   mathematical refutations; the protected fallback is not `lake comparator`.
 
    A gate would run these classes under its own frozen tools.
 5. Owner review before promotion to CI, a flake check, or a policy/tool-selection
@@ -268,21 +290,21 @@ The receipt is [`receipts/2026-10-30/binding.json`](receipts/2026-10-30/binding.
 
 ## Non-claims
 
-- Nanoda is a separately implemented checker, but this two-root observation is
-  not an audit of its implementation or a second-kernel correctness result.
-- No complete independent-kernel replay of the foundation corpus was run; only
-  the two named roots and their exported closures were exercised.
-- The semantic and parse controls here are minimal pilot controls, not a complete
-  declaration-level negative-control suite. `binding.mjs` adds statement-level claim binding and
-  dropped-dependency controls for three roots only.
+- Nanoda and con-leche are separately implemented checker designs, but these three-subject results
+  are not an audit of either implementation or a second-kernel correctness result. Con-ron is related
+  to con-leche; lean4lean is derived from the official C++ kernel.
+- No complete independent-kernel replay of the foundation corpus was run; only the three named
+  subjects and their exported closures were exercised.
+- The semantic and parse controls are bounded pilot controls, not an exhaustive declaration-level
+  negative-control suite. `binding.mjs` and `multi.mjs` bind the selected foundation roots; the
+  protected-semantics lane binds only its frozen challenge fixture.
   The broader declaration-level equivalents
   exist in the producer-consumer lane (`verification/mc1/gate.mjs`: duplicate/
   missing/cyclic dependency, forbidden axiom, free variable, wrong-theorem-type,
   trusted-name override, erased forbidden axiom) and are not evidence about a
   separately implemented checker.
-- Nanoda's acceptance does not establish source authenticity, exact claim
-  semantics, or implementation correspondence; it is an observed checker
-  result for two named closures.
+- Checker acceptance does not establish source authenticity, arbitrary claim semantics, or
+  implementation correspondence; it is an observed result for the selected closures.
 - A passing replay is not a correctness claim about any Rust, Wasm or engine
   subject, and it says nothing about the retained Mathlib `.olean` trust
   assumption.

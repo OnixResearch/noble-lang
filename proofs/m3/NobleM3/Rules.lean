@@ -17,6 +17,9 @@ import NobleM2.CheckSoundness
 import NobleM3.Inv
 import NobleM3.CoverageWords
 
+set_option maxHeartbeats 1000000
+set_option maxRecDepth 4096
+
 namespace NobleM2
 
 /-! ## Head inversion -/
@@ -227,14 +230,14 @@ theorem rule_case_sound {request : Request} {cand : Candidate} {checked : Checke
   · rw [hnode] at hnode'
     cases hnode'
     obtain ⟨resolved, scheme, hlook, hres, hinst, hdata⟩ := invocation_word hnd
-    have htab : bootstrapEnv.scheme caseDef = some caseScheme := by native_decide
+    have htab : bootstrapEnv.scheme caseDef = some caseScheme := by decide +kernel
     rw [hlook] at htab
     injection htab with hcase
     rw [hcase] at hinst
     obtain ⟨x0, x1, x2, x3, x4, x5, hl0, hl1, hl2, hl3, hl4, hl5, hout, hunion⟩ :=
       caseScheme_inv hinst
     exact ⟨resolved, a, b, head, mid, tail, x0, x1, x2, x3, x4, x5, hres, hinst, hdata,
-      NodeDerives.caseRule (by native_decide) (by native_decide) hres hinst hdata
+      NodeDerives.caseRule (by decide +kernel) (by decide +kernel) hres hinst hdata
         hl0 hl1 hl2 hl3 hl4 hl5 hout hunion,
       htail, hreplace, hrest, heff, hl0, hl1, hl2, hl3, hl4, hl5, hout, hunion⟩
   · rw [hnode] at hnode'
@@ -269,13 +272,13 @@ theorem rule_if_sound {request : Request} {cand : Candidate} {checked : Checked}
   · rw [hnode] at hnode'
     cases hnode'
     obtain ⟨resolved, scheme, hlook, hres, hinst, hdata⟩ := invocation_word hnd
-    have htab : bootstrapEnv.scheme ifDef = some ifScheme := by native_decide
+    have htab : bootstrapEnv.scheme ifDef = some ifScheme := by decide +kernel
     rw [hlook] at htab
     injection htab with hif
     rw [hif] at hinst
     obtain ⟨x0, x1, x2, x3, hl0, hl1, hl2, hl3, hout, hunion⟩ := ifScheme_inv hinst
     exact ⟨resolved, a, b, head, mid, tail, x0, x1, x2, x3, hres, hinst, hdata,
-      NodeDerives.ifRule (by native_decide) (by native_decide) hres hinst hdata
+      NodeDerives.ifRule (by decide +kernel) (by decide +kernel) hres hinst hdata
         hl0 hl1 hl2 hl3 hout hunion,
       htail, hreplace, hrest, heff, hl0, hl1, hl2, hl3, hout, hunion⟩
   · rw [hnode] at hnode'
@@ -311,14 +314,14 @@ theorem rule_listcase_sound {request : Request} {cand : Candidate} {checked : Ch
   · rw [hnode] at hnode'
     cases hnode'
     obtain ⟨resolved, scheme, hlook, hres, hinst, hdata⟩ := invocation_word hnd
-    have htab : bootstrapEnv.scheme listCaseDef = some listCaseScheme := by native_decide
+    have htab : bootstrapEnv.scheme listCaseDef = some listCaseScheme := by decide +kernel
     rw [hlook] at htab
     injection htab with hlc
     rw [hlc] at hinst
     obtain ⟨x0, x1, x2, x3, x4, hl0, hl1, hl2, hl3, hl4, hout, hunion⟩ :=
       listCaseScheme_inv hinst
     exact ⟨resolved, a, b, head, mid, tail, x0, x1, x2, x3, x4, hres, hinst, hdata,
-      NodeDerives.listCaseRule (by native_decide) (by native_decide) hres hinst hdata
+      NodeDerives.listCaseRule (by decide +kernel) (by decide +kernel) hres hinst hdata
         hl0 hl1 hl2 hl3 hl4 hout hunion,
       htail, hreplace, hrest, heff, hl0, hl1, hl2, hl3, hl4, hout, hunion⟩
   · rw [hnode] at hnode'
@@ -385,28 +388,28 @@ theorem fresh_instantiation :
     by native_decide, rfl, rfl, by decide, ?_⟩
   have h1 : unitScheme.instantiate ⟨[.stack (WordCoverage.tl [.i64, .unit])]⟩
       = some (WordCoverage.tl [.i64, .unit], WordCoverage.tl [.i64, .unit, .unit],
-        EffSet.empty) := by native_decide
+        EffSet.empty) := by decide +kernel
   have h2 : Derives bootstrapEnv freshCandidate [1] (WordCoverage.tl [.i64, .unit])
       (WordCoverage.tl [.i64, .unit, .unit]) (EffSet.empty.union EffSet.empty) :=
     Derives.sequence
-      (by native_decide : (freshCandidate.nodes)[1]? =
+      (by decide +kernel : (freshCandidate.nodes)[1]? =
         some (Node.invocation 12 ⟨[.stack (WordCoverage.tl [.i64, .unit])]⟩))
-      (NodeDerives.word (by native_decide : bootstrapEnv.scheme 12 = some unitScheme)
-        (resolvesTo_refl _ (by native_decide)) h1 trivial)
+      (NodeDerives.word (by decide +kernel : bootstrapEnv.scheme 12 = some unitScheme)
+        (resolvesTo_refl _ (by decide +kernel)) h1 trivial)
       (WordCoverage.tailEquals_self _) WordCoverage.replaceTail_self (Derives.empty _)
   have h0 : Derives bootstrapEnv freshCandidate [0, 1] (WordCoverage.tl [.i64])
       (WordCoverage.tl [.i64, .unit, .unit])
       (EffSet.empty.union (EffSet.empty.union EffSet.empty)) :=
     Derives.sequence
-      (by native_decide : (freshCandidate.nodes)[0]? =
+      (by decide +kernel : (freshCandidate.nodes)[0]? =
         some (Node.invocation 12 ⟨[.stack (WordCoverage.tl [.i64])]⟩))
-      (NodeDerives.word (by native_decide : bootstrapEnv.scheme 12 = some unitScheme)
-        (resolvesTo_refl _ (by native_decide))
-        (by native_decide : unitScheme.instantiate ⟨[.stack (WordCoverage.tl [.i64])]⟩ =
+      (NodeDerives.word (by decide +kernel : bootstrapEnv.scheme 12 = some unitScheme)
+        (resolvesTo_refl _ (by decide +kernel))
+        (by decide +kernel : unitScheme.instantiate ⟨[.stack (WordCoverage.tl [.i64])]⟩ =
           some (WordCoverage.tl [.i64], WordCoverage.tl [.i64, .unit], EffSet.empty)) trivial)
       (WordCoverage.tailEquals_self _) WordCoverage.replaceTail_self h2
   have hu : EffSet.empty.union (EffSet.empty.union EffSet.empty) = EffSet.empty := by
-    native_decide
+    rw [union_empty_left, union_empty_left]
   rw [hu] at h0
   exact h0
 
