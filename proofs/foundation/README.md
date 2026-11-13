@@ -36,11 +36,11 @@ any difference: Lean `v4.35.0`, Aeneas Lean library `1238879f`, Mathlib4 `56a005
 
 ```sh
 cd proofs/foundation
-PATH=/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:$PATH \
+PATH="<directory containing the policy-selected Lean 4.35.0 executable>:$PATH" \
   lake exe cache get        # downloads Mathlib .oleans (not rebuilt)
 cd ../..
-NODE=/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node
-OUT=$HOME/.cache/noble-foundation-$(date +%s); mkdir -p "$OUT"
+NODE='<Node executable selected by policy>'
+OUT='<private temporary directory>'; mkdir -p "$OUT"
 # 1. proofs, axioms, inventory -> foundation-check.json
 env -i "$NODE" verification/foundation/check.mjs --output "$OUT/check"
 # 2. Phase 3 slice (needs the user systemd manager for the sandboxed Lean consumer)
@@ -434,7 +434,7 @@ The recipe is **not** a `flake.nix` `checks` entry, for these reasons:
   - The repository's offline route, `nix/offline-inputs.nix` with
     `nix/lean-backend.nix`, names host-captured `nix store add-path`
     sources. On the checking host those store paths are absent, for example
-    `/nix/store/mfpq85q33s4hyqy7c5x4prinz45d0341-mathlib`, so a check built
+    `<host-captured Mathlib source path>`, so a check built
     on them cannot be realised or exercised here.
   - That route also contains sources only. A sandbox check would have to
     compile the imported part of Mathlib from source. The cost has not been
@@ -517,8 +517,8 @@ response; they are not adversarial malformed host `Val` returns.
 From a clean committed checkout with the existing foundation dependency cache:
 
 ```sh
-NODE=/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node
-OUT="$HOME/.cache/noble-host-locality-$(date +%s)"
+NODE='<Node executable selected by policy>'
+OUT='<private temporary directory>'
 env -i "$NODE" verification/host-locality/run.mjs --output "$OUT"
 env -i "$NODE" verification/host-locality/run.mjs --verify "$OUT/locality.json"
 ```
@@ -1159,7 +1159,7 @@ resource-consuming word; `swap` can move a resource, while `dup`, `drop` and
 `resource_carry_run` and `resource_carry_accounts` fixture demonstrates
 carry-through with `dup` followed by `drop` on a data head and a resource tail,
 and `swap_moves_resource_conservation` demonstrates a resource changing
-position. Sixty-five public ownership theorems are inventoried in total (58 in
+position. Fifty-seven public ownership theorems are inventoried in total (50 in
 `NobleFoundation.Ownership.*`, including eight per-word trace theorems, and seven in
 `NobleFoundation.OwnershipConservation.*`), plus the 116 kernel-decided corpus rows below.
 `OwnershipTrace.lean` also has two private helpers, inventoried and checked transitively.

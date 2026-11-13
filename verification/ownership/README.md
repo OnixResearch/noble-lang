@@ -54,21 +54,25 @@ model-only.
 ## Commands
 
 ```sh
-NODE=/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node
-RUSTC=/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/rustc
-CARGO="$HOME/.cache/noble-iss/cargo.sh"
-SCRATCH="$HOME/.cache/noble-iss/scratch/ownership-59"
+NODE=node
+RUSTC=rustc
+CARGO=cargo
+OUT='<new absolute directory outside the repository>'
+SCRATCH='<private temporary directory>'
+TARGET='<new absolute directory outside the repository>'
+umask 077
+mkdir -p "$OUT" "$SCRATCH" "$TARGET"
 
 # Regenerate the corpus and its kernel-check module (fails --check on drift).
 "$NODE" verification/ownership/cases.mjs
 "$NODE" verification/ownership/cases.mjs --check
 
-# The lane. Any pinned cargo works; the campaign wrapper supplies the offline vendor.
-NOBLE_ROOT="$PWD" NOBLE_TARGET="$HOME/.cache/noble-iss/target/ownership-59" \
-  "$CARGO" test -p noble-kernel --test acceptance ownership --offline --locked -- --nocapture
+# Run with the repository's pinned Rust toolchain and offline dependencies.
+CARGO_TARGET_DIR="$TARGET/acceptance" "$CARGO" \
+  test -p noble-kernel --test acceptance ownership --offline --locked -- --nocapture
 
 # After committing the source changes, retain a clean-source foundation receipt.
-"$HOME/.cache/noble-iss/slot.sh" lean 3 verification/ci/lean-proofs.sh "$SCRATCH/lean-proofs"
+verification/ci/lean-proofs.sh "$SCRATCH/lean-proofs"
 SOURCE_COMMIT=$(git rev-parse --short=8 HEAD)
 mkdir -p "verification/foundation/receipts/$SOURCE_COMMIT"
 cp "$SCRATCH/lean-proofs/foundation/foundation-check.json" \
@@ -77,22 +81,20 @@ cp "$SCRATCH/lean-proofs/foundation/foundation-check.json" \
 
 # Run both at the same clean commit after retaining the matching foundation receipt.
 SOURCE_COMMIT=$(git rev-parse --short=8 HEAD)
-NOBLE_ROOT="$PWD" NOBLE_TARGET="$HOME/.cache/noble-iss/target/ownership-59-differential" \
-  "$NODE" verification/ownership/differential.mjs \
-    --root "$PWD" --output "$SCRATCH/differential.json" \
+CARGO_TARGET_DIR="$TARGET/differential" "$NODE" verification/ownership/differential.mjs \
+    --root "$PWD" --output "$OUT/differential.json" \
     --cargo "$CARGO" --rustc "$RUSTC"
 
 # Retain a production-mutation receipt at the current clean commit.
-NOBLE_ROOT="$PWD" NOBLE_TARGET="$HOME/.cache/noble-iss/target/ownership-59-mutants" \
-  "$NODE" verification/ownership/production-mutants.mjs \
-  --root "$PWD" --output "$SCRATCH/production-mutants.json" \
+CARGO_TARGET_DIR="$TARGET/production-mutants" "$NODE" verification/ownership/production-mutants.mjs \
+  --root "$PWD" --output "$OUT/production-mutants.json" \
   --scratch "$SCRATCH/mutant-copies" \
-  --target "$HOME/.cache/noble-iss/target/ownership-59-mutants" \
+  --target "$TARGET/production-mutants" \
   --cargo "$CARGO" --rustc "$RUSTC"
 
 # Retain receipts under the commit they name; commit them as an evidence-only change.
-cp "$SCRATCH/differential.json" "verification/ownership/differential-$SOURCE_COMMIT.json"
-cp "$SCRATCH/production-mutants.json" \
+cp "$OUT/differential.json" "verification/ownership/differential-$SOURCE_COMMIT.json"
+cp "$OUT/production-mutants.json" \
   "verification/ownership/production-mutants-$SOURCE_COMMIT.json"
 ```
 
@@ -107,9 +109,9 @@ reports drift, and the Rust lane compares every corpus row with its kernel-check
 twin, so a receipt cannot describe a corpus that the kernel did not decide.
 Producer outputs and mutation copies stay outside the repository until copied into
 their retained paths after a successful clean-source run. `production-mutants.mjs`
-allocates a separate Cargo target directory for the baseline and every mutant under the
-specified target base; the campaign wrapper supplies the private offline vendor and
-sets `TMPDIR` to its owned cache directory.
+allocates a separate Cargo target directory for the baseline and every mutant under
+the specified target base. These commands assume the repository's pinned Rust
+toolchain and offline dependency configuration are active.
 
 ## The mutation lanes
 

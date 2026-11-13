@@ -13,17 +13,15 @@
 //
 // Usage:
 //   node verification/ownership/production-mutants.mjs \
-//     [--root .] [--output FILE] [--scratch DIR] \
-//     [--cargo CMD] [--rustc CMD] [--target DIR]
+//     --output FILE --scratch DIR --target DIR [--root .] \
+//     [--cargo cargo] [--rustc rustc]
 //
-// `--cargo` names the cargo executable; the campaign passes its pinned wrapper,
-// which supplies the offline vendor, the toolchain and the build slot. The runner
-// sets NOBLE_ROOT and NOBLE_TARGET for every copy so the wrapper can key its
-// target directory per tree.
+// Output, scratch and target paths are required absolute paths outside the
+// repository. Choose Cargo and Rustc from a toolchain matching the repository's
+// lockfile and build settings.
 import { spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 
 const args = process.argv.slice(2);
@@ -34,14 +32,24 @@ const option = (name, fallback) => {
 const root = path.resolve(option('root', '.'));
 const cargo = option('cargo', 'cargo');
 const rustc = option('rustc', 'rustc');
-const scratchBase = path.resolve(option(
-  'scratch',
-  path.join(os.homedir(), '.cache/noble-iss/scratch/ownership-production-mutants'),
-));
-const target = path.resolve(option(
-  'target',
-  path.join(os.homedir(), '.cache/noble-iss/target/ownership-production-mutants'),
-));
+const outputArg = option('output');
+const scratchArg = option('scratch');
+const targetArg = option('target');
+const externalPath = (name, value) => {
+  if (typeof value !== 'string' || value.length === 0 || !path.isAbsolute(value)) {
+    throw new Error(`--${name} must be an absolute path outside the repository`);
+  }
+  const resolved = path.resolve(value);
+  const relative = path.relative(root, resolved);
+  if (relative === ''
+    || (relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative))) {
+    throw new Error(`--${name} must be outside the repository`);
+  }
+  return resolved;
+};
+const output = externalPath('output', outputArg);
+const scratchBase = externalPath('scratch', scratchArg);
+const target = externalPath('target', targetArg);
 
 const lane = 'cargo test -p noble-kernel --test acceptance ownership --offline --locked -- --nocapture';
 
@@ -148,6 +156,7 @@ const toolchain = {
         ...process.env,
         NOBLE_ROOT: root,
         NOBLE_TARGET: path.join(target, 'baseline'),
+        CARGO_TARGET_DIR: path.join(target, 'baseline'),
       },
     });
     return result.status === 0 ? result.stdout.trim() : null;
@@ -169,10 +178,6 @@ const dirt = must(['git', '-C', root, 'status', '--porcelain'])
 if (dirt.length > 0) {
   throw new Error(`production-mutants requires a clean tracked tree: ${dirt.join('; ')}`);
 }
-const output = path.resolve(
-  option('output', path.join(scratchBase, `production-mutants-${head.slice(0, 8)}.json`)),
-);
-
 fs.mkdirSync(scratchBase, { recursive: true });
 const scratch = fs.mkdtempSync(path.join(scratchBase, 'run-'));
 const archive = path.join(scratch, 'head.tar');
@@ -188,6 +193,7 @@ const environmentOf = copy => ({
   ...process.env,
   NOBLE_ROOT: copy,
   NOBLE_TARGET: path.join(target, path.basename(copy)),
+  CARGO_TARGET_DIR: path.join(target, path.basename(copy)),
 });
 
 function corpusHasMinimisedCase(copy, fixture) {

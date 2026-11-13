@@ -15,14 +15,14 @@
 //
 // Usage:
 //   node verification/ownership/differential.mjs \
-//     [--root .] [--output FILE] [--cargo CMD] [--rustc CMD]
+//     --output FILE [--root .] [--cargo cargo] [--rustc rustc]
 //
-// `--cargo` names the cargo executable; the campaign passes its pinned wrapper,
-// which supplies the offline vendor, the toolchain and the build slot.
+// `--output` is required and must be an absolute path outside the repository.
+// Choose Cargo and Rustc from a toolchain matching the repository's lockfile
+// and build settings.
 import { spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { receiptsBindingModel } from '../foundation/model-receipts.mjs';
 
@@ -34,6 +34,16 @@ const option = (name, fallback) => {
 const root = path.resolve(option('root', '.'));
 const cargo = option('cargo', 'cargo');
 const rustc = option('rustc', 'rustc');
+const outputArg = option('output');
+if (typeof outputArg !== 'string' || outputArg.length === 0 || !path.isAbsolute(outputArg)) {
+  throw new Error('usage: differential.mjs --output <absolute path outside the repository> [--root DIR] [--cargo CMD] [--rustc CMD]');
+}
+const output = path.resolve(outputArg);
+const outputRelative = path.relative(root, output);
+if (outputRelative === ''
+  || (outputRelative !== '..' && !outputRelative.startsWith(`..${path.sep}`) && !path.isAbsolute(outputRelative))) {
+  throw new Error('--output must be outside the repository');
+}
 
 const caseFile = 'verification/ownership/cases.txt';
 const referenceFile = 'verification/ownership/cases.mjs';
@@ -76,13 +86,6 @@ const dirt = run(['git', 'status', '--porcelain'], root)
 if (dirt.length > 0) {
   throw new Error(`differential receipt requires a clean tracked tree: ${dirt.join('; ')}`);
 }
-const output = path.resolve(
-  option(
-    'output',
-    path.join(os.homedir(), '.cache/noble-iss/scratch/ownership-59', `differential-${head.slice(0, 8)}.json`),
-  ),
-);
-
 const freshness = (() => {
   const result = spawnSync(process.execPath, ['verification/ownership/cases.mjs', '--check'], {
     cwd: root, encoding: 'utf8', timeout: 600_000, env: process.env,
