@@ -1,0 +1,1 @@
+7 5 pair [ unpair ] [ [ 0 = ] dip ] compose [ pair ] compose run
