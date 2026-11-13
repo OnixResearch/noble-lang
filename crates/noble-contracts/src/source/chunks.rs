@@ -1270,10 +1270,7 @@ fn byte_budget_refusal(observed: u64, at: Location) -> Refusal {
         "emitted source exceeds the fixed byte bound",
     );
     refusal.resource = Some(Resource::SourceBytes);
-    refusal.observed = match u32::try_from(observed) {
-        Ok(observed) => observed,
-        Err(_) => u32::MAX,
-    };
+    refusal.observed = observed.min(u64::from(u32::MAX)) as u32;
     refusal.limit = MAX_SOURCE_BYTES;
     refusal
 }
@@ -2004,10 +2001,7 @@ fn add_encoded_size(total: &mut u64, amount: u64, at: Location) -> Result<(), Re
             "canonical encoded size exceeds the finite retained-byte bound",
         );
         refusal.resource = Some(Resource::RetainedBytes);
-        refusal.observed = match u32::try_from(next) {
-            Ok(observed) => observed,
-            Err(_) => u32::MAX,
-        };
+        refusal.observed = next.min(u64::from(u32::MAX)) as u32;
         refusal.limit = MAX_RETAINED_BYTES;
         return Err(refusal);
     }
