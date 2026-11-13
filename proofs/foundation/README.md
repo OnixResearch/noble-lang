@@ -2252,6 +2252,11 @@ standard reading of the rendered text — that the bytes denote the terms `bodyV
 not mechanized; the text is bound to the rendering, and the terms are proved against the graph.
 Nothing here covers `extract/symbolic.rs`, guards, `F32`, effects, live slots or emitted Wasm.
 
+The strict clean-source foundation receipt is
+[`verification/foundation/receipts/0631f1ce2/`](../../verification/foundation/receipts/0631f1ce2/foundation-check.json)
+(`source_commit: 0631f1ce2ac2a04cc907f6ef345accae21b04986`, `clean_source: true`,
+`allow_dirty: false`, 1358 theorems, Lean 4.35.0).
+
 ## Specification-quality obligations (issue #65)
 
 `NobleFoundation/SpecQuality.lean` separates three questions about a retained
