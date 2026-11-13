@@ -1,0 +1,141 @@
+{
+  "schema": "noble-ownership-production-mutants/v1",
+  "assertion": "each declared mutant of the production ownership rules makes the ownership corpus lane fail, except the mutants listed as survivors, which the corpus has no executable control for; the unmutated copy passes in the same runner. Finite evidence on one host and target, not a refinement proof.",
+  "source_commit": "d6e6f99a08d00fc3d723f32dcfb5d0fc837955ec",
+  "source_tree": "c3f561880d93fd172078b917e2ec070b929208b7",
+  "clean_source": true,
+  "toolchain": {
+    "cargo": "cargo 1.96.0-nightly (cbb9bb8bd 2026-03-13)",
+    "rustc": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0",
+    "host": "Linux 6.18.60 x86_64"
+  },
+  "cargo": "/home/brittonr/.cache/noble-iss/cargo.sh",
+  "rustc": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21/bin/rustc",
+  "host": "Linux 6.18.60 x86_64",
+  "lane": "cargo test -p noble-kernel --test acceptance ownership --offline --locked -- --nocapture",
+  "cargo_target_base": "/home/brittonr/.cache/noble-iss/target/ownership-59-mutants",
+  "materialisation": "git archive HEAD unpacked into a scratch directory per mutant; the mutant is one exact byte replacement in a tracked production file",
+  "baseline": {
+    "outcome": "passed",
+    "summary": "ownership-differential cases=116 accepted=28 rejected=17 model-only=71 prefixes=60 categories=eligibility:17 stack-join:0 other:0 model-only-reasons=branch-accounting:6 error-return:2 operand-arity:18 quotation-program-value:24 wrapped-payload:21 first-divergence=none",
+    "mutations": "ownership-mutations cases=116 caught=[None=0 ResourceOperandDuplicated=16 ResourceOperandReleased=12 SwapDropsOperand=16 QuoteConsumesOperand=12 BranchPicksThenArm=2 FailAllowsOutstandingOperand=1]"
+  },
+  "mutants": [
+    {
+      "name": "drop-unconstrained",
+      "file": "crates/noble-kernel/src/acceptance/parts/instantiate.rs",
+      "mutation": "the data slot stops constraining `Drop`, so a must-use resource becomes droppable",
+      "expectation": "killed",
+      "verdict": "killed",
+      "exit": 101,
+      "first_failure": "Error: \"drop-one-resource was refused as StackJoin, expected Eligibility\\nreproducer: /home/brittonr/.cache/noble-iss/scratch/ownership-59/mutant-copies-final/run-0l46tn/drop-unconstrained/crates/noble-kernel/../../verification/ownership/minimised.txt: minimised-drop-one-resource ops=drop in=r:1 divergence=drop-one-resource: refusal class Some(StackJoin), expected Some(Eligibility)\"",
+      "lane_summary": null,
+      "lane_mutations": "ownership-mutations cases=116 caught=[None=0 ResourceOperandDuplicated=16 ResourceOperandReleased=12 SwapDropsOperand=16 QuoteConsumesOperand=12 BranchPicksThenArm=2 FailAllowsOutstandingOperand=1]",
+      "minimised_fixture": "minimised-drop-one-resource ops=drop in=r:1 divergence=drop-one-resource: refusal class Some(StackJoin), expected Some(Eligibility)",
+      "file_sha256_before": "87524e78f19c8ff2ecc54307dd76b41f2188be00e2aba3c6ef1d6878635f860e",
+      "file_sha256_after": "100b221e1693c230d2c859243a2c4e2f611a729575b93d9a74a1bb2ad2bb6a13"
+    },
+    {
+      "name": "dup-unconstrained",
+      "file": "crates/noble-kernel/src/acceptance/parts/instantiate.rs",
+      "mutation": "the data slot stops constraining `Dup`, so a must-use resource becomes duplicable",
+      "expectation": "killed",
+      "verdict": "killed",
+      "exit": 101,
+      "first_failure": "Error: \"dup-one-resource was refused as StackJoin, expected Eligibility\\nreproducer: /home/brittonr/.cache/noble-iss/scratch/ownership-59/mutant-copies-final/run-0l46tn/dup-unconstrained/crates/noble-kernel/../../verification/ownership/minimised.txt: minimised-dup-one-resource ops=dup in=r:1 divergence=dup-one-resource: refusal class Some(StackJoin), expected Some(Eligibility)\"",
+      "lane_summary": null,
+      "lane_mutations": "ownership-mutations cases=116 caught=[None=0 ResourceOperandDuplicated=16 ResourceOperandReleased=12 SwapDropsOperand=16 QuoteConsumesOperand=12 BranchPicksThenArm=2 FailAllowsOutstandingOperand=1]",
+      "minimised_fixture": "minimised-dup-one-resource ops=dup in=r:1 divergence=dup-one-resource: refusal class Some(StackJoin), expected Some(Eligibility)",
+      "file_sha256_before": "87524e78f19c8ff2ecc54307dd76b41f2188be00e2aba3c6ef1d6878635f860e",
+      "file_sha256_after": "7295cfbf584e7d29bc51b5eeda65659405ac0a41f290512e98295b081fb493ed"
+    },
+    {
+      "name": "quote-unconstrained",
+      "file": "crates/noble-kernel/src/acceptance/parts/instantiate.rs",
+      "mutation": "every `quote` case is model-only (the production quotation constructor produces a program value), so no executable control exists",
+      "expectation": "survived",
+      "verdict": "survived",
+      "exit": 0,
+      "first_failure": null,
+      "lane_summary": "ownership-differential cases=116 accepted=28 rejected=17 model-only=71 prefixes=60 categories=eligibility:17 stack-join:0 other:0 model-only-reasons=branch-accounting:6 error-return:2 operand-arity:18 quotation-program-value:24 wrapped-payload:21 first-divergence=none",
+      "lane_mutations": "ownership-mutations cases=116 caught=[None=0 ResourceOperandDuplicated=16 ResourceOperandReleased=12 SwapDropsOperand=16 QuoteConsumesOperand=12 BranchPicksThenArm=2 FailAllowsOutstandingOperand=1]",
+      "minimised_fixture": null,
+      "file_sha256_before": "87524e78f19c8ff2ecc54307dd76b41f2188be00e2aba3c6ef1d6878635f860e",
+      "file_sha256_after": "64fb233f8ce09ba700b1c2499a063765fa33f8d0db05d2e5772c8ae43408b5cb"
+    },
+    {
+      "name": "swap-discards-operand",
+      "file": "crates/noble-kernel/src/contracts/bootstrap.rs",
+      "mutation": "the swap scheme silently drops one operand instead of reordering two",
+      "expectation": "killed",
+      "verdict": "killed",
+      "exit": 101,
+      "first_failure": "Error: \"the production control diverged from its accepted model trace\"",
+      "lane_summary": null,
+      "lane_mutations": "ownership-mutations cases=116 caught=[None=0 ResourceOperandDuplicated=16 ResourceOperandReleased=12 SwapDropsOperand=16 QuoteConsumesOperand=12 BranchPicksThenArm=2 FailAllowsOutstandingOperand=1]",
+      "minimised_fixture": "minimised-swap-pair-i64-text ops=swap in=d:0,d:1 divergence=swap-pair-i64-text: prefix swap was refused (StackJoin) at word 1",
+      "file_sha256_before": "e89181ecf00623d6bb366c13e6e705eb704ee66f8fde8aaa18bc7808364cecd4",
+      "file_sha256_after": "d72f00aef2d35d118c0810c1ef93f01b50e6c078dbfc5b71d8cd926283f23931"
+    },
+    {
+      "name": "swap-identity",
+      "file": "crates/noble-kernel/src/contracts/bootstrap.rs",
+      "mutation": "the swap scheme stops reordering its operands",
+      "expectation": "killed",
+      "verdict": "killed",
+      "exit": 101,
+      "first_failure": "Error: \"the production control diverged from its accepted model trace\"",
+      "lane_summary": null,
+      "lane_mutations": "ownership-mutations cases=116 caught=[None=0 ResourceOperandDuplicated=16 ResourceOperandReleased=12 SwapDropsOperand=16 QuoteConsumesOperand=12 BranchPicksThenArm=2 FailAllowsOutstandingOperand=1]",
+      "minimised_fixture": "minimised-swap-pair-i64-text ops=swap in=d:0,d:1 divergence=swap-pair-i64-text: prefix swap was refused (StackOrder) at word 1",
+      "file_sha256_before": "e89181ecf00623d6bb366c13e6e705eb704ee66f8fde8aaa18bc7808364cecd4",
+      "file_sha256_after": "2f677daf44782d1750976dc036d9b201824a6e75af386d9fee419ee4abb6c805"
+    },
+    {
+      "name": "dup-duplicates-nothing",
+      "file": "crates/noble-kernel/src/contracts/bootstrap.rs",
+      "mutation": "the dup scheme stops producing the second copy of its operand",
+      "expectation": "killed",
+      "verdict": "killed",
+      "exit": 101,
+      "first_failure": "Error: \"dup-one-i64: prefix dup was refused (StackJoin) at word 1\\nreproducer: /home/brittonr/.cache/noble-iss/scratch/ownership-59/mutant-copies-final/run-0l46tn/dup-duplicates-nothing/crates/noble-kernel/../../verification/ownership/minimised.txt: minimised-dup-one-i64 ops=dup in=d:0 divergence=dup-one-i64: prefix dup was refused (StackJoin) at word 1\"",
+      "lane_summary": null,
+      "lane_mutations": "ownership-mutations cases=116 caught=[None=0 ResourceOperandDuplicated=16 ResourceOperandReleased=12 SwapDropsOperand=16 QuoteConsumesOperand=12 BranchPicksThenArm=2 FailAllowsOutstandingOperand=1]",
+      "minimised_fixture": "minimised-dup-one-i64 ops=dup in=d:0 divergence=dup-one-i64: prefix dup was refused (StackJoin) at word 1",
+      "file_sha256_before": "e89181ecf00623d6bb366c13e6e705eb704ee66f8fde8aaa18bc7808364cecd4",
+      "file_sha256_after": "9fb16188d7487d5ace2297cf4545f49f59046fddf7896d9ee012e791089c2834"
+    }
+  ],
+  "totals": {
+    "mutants": 6,
+    "killed": 5,
+    "survived": 1
+  },
+  "survivors": [
+    {
+      "name": "quote-unconstrained",
+      "file": "crates/noble-kernel/src/acceptance/parts/instantiate.rs",
+      "mutation": "every `quote` case is model-only (the production quotation constructor produces a program value), so no executable control exists",
+      "expectation": "survived",
+      "verdict": "survived",
+      "exit": 0,
+      "first_failure": null,
+      "lane_summary": "ownership-differential cases=116 accepted=28 rejected=17 model-only=71 prefixes=60 categories=eligibility:17 stack-join:0 other:0 model-only-reasons=branch-accounting:6 error-return:2 operand-arity:18 quotation-program-value:24 wrapped-payload:21 first-divergence=none",
+      "lane_mutations": "ownership-mutations cases=116 caught=[None=0 ResourceOperandDuplicated=16 ResourceOperandReleased=12 SwapDropsOperand=16 QuoteConsumesOperand=12 BranchPicksThenArm=2 FailAllowsOutstandingOperand=1]",
+      "minimised_fixture": null,
+      "file_sha256_before": "87524e78f19c8ff2ecc54307dd76b41f2188be00e2aba3c6ef1d6878635f860e",
+      "file_sha256_after": "64fb233f8ce09ba700b1c2499a063765fa33f8d0db05d2e5772c8ae43408b5cb"
+    }
+  ],
+  "survivor_accounting": [
+    {
+      "name": "quote-unconstrained",
+      "why": "every `quote` case is model-only (the production quotation constructor produces a program value), so no executable control exists"
+    }
+  ],
+  "claims": [
+    "The ownership lane fails on a real production rule change, not only on a test-local shadow checker change.",
+    "`quote` has no executable production control: every quote case is model-only because the production quotation constructor produces a program value instead of retaining the operand. That mutant therefore survives and is recorded, not hidden.",
+    "The mutants are applied to scratch copies of one commit; no production source file is changed by this lane."
+  ]
+}
