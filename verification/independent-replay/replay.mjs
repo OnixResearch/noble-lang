@@ -10,10 +10,10 @@
 //
 // The digest set is exactly what `lake env` puts on `LEAN_PATH` for the foundation, because replay
 // resolves imports through that same search path. Directories inside the repository are frozen file
-// by file. Directories outside it (the `.lake/packages` dependency artifacts, and the pinned
-// toolchain's own `lib/lean`) are frozen as one aggregate per directory — count, total bytes and a
-// Merkle digest over sorted `<sha256> <bytes> <relative path>` rows — because they are read-only
-// dependency closures the lane never builds and never copies.
+// by file. Shared `.lake/packages` dependencies and the pinned toolchain's own `lib/lean` are frozen
+// as one aggregate per directory — count, total bytes and a Merkle digest over sorted
+// `<sha256> <bytes> <relative path>` rows — because they are read-only dependency closures the lane
+// never builds or mutates.
 //
 // The lane runs the policy-selected Lean 4.35.0 release by default; the toolchain's `leanchecker` is
 // the producer-independent replay of issue #62 (it is Lean's own kernel, so it is not an independent
@@ -59,13 +59,16 @@ function lake(...args) {
   return text;
 }
 
-/// Every existing directory `lake env` puts on `LEAN_PATH`, and whether it is inside the repository.
+/// Every existing directory `lake env` puts on `LEAN_PATH`, and whether the lane treats it as internal.
 function searchPath() {
+  const sharedPackages = `${path.join(project, '.lake', 'packages')}${path.sep}`;
   return lake('env', 'printenv', 'LEAN_PATH').split(':').map((entry) => entry.trim())
     .filter((entry) => entry.length > 0)
     .map((entry) => path.resolve(entry))
     .filter((entry) => fs.existsSync(entry))
-    .map((entry) => ({ path: entry, internal: entry === root || entry.startsWith(`${root}${path.sep}`) }));
+    .map((entry) => ({ path: entry,
+      internal: (entry === root || entry.startsWith(`${root}${path.sep}`))
+        && !entry.startsWith(sharedPackages) }));
 }
 
 /// Stable name for a directory outside the repository: the dependency path after `.lake/packages`,
@@ -136,11 +139,11 @@ function freeze() {
     '# through `lake env`\'s LEAN_PATH.',
     '#',
     '# Directories inside the repository are frozen file by file: <sha256> <bytes> <path>.',
-    "# Directories outside it are frozen as one aggregate per directory:",
+    '# Shared dependency paths and directories outside it are frozen as one aggregate per directory:',
     '#   external-path <label> <files> <bytes> <merkle sha256>',
     '# where the Merkle digest is over the sorted rows "<sha256> <bytes> <path relative to the file>".',
-    '# The `.lake/packages` dependency artifacts and the pinned toolchain itself are',
-    '# covered this way because the lane never rebuilds them; it only replays through them.',
+    '# Shared `.lake/packages` dependency artifacts and the pinned toolchain itself are',
+    '# aggregated because the lane never builds or mutates them; it only replays through them.',
     '#',
     '# The checker does not consult `.olean.hash`, so this manifest is the digest step the replay',
     '# depends on: a corrupted, substituted, removed or extra artifact is an `artifact-integrity`',
@@ -317,8 +320,9 @@ function controls() {
   fs.rmSync(path.join(copies[0].path, 'Extra.olean'));
   // Smallest external directory, copied and damaged: the aggregate digest must catch it.
   const smallest = external
-    .map((entry) => ({ entry, bytes: aggregate(entry.path).bytes }))
-    .sort((left, right) => left.bytes - right.bytes)[0];
+    .map((entry) => ({ entry, snapshot: aggregate(entry.path) }))
+    .filter(({ snapshot }) => snapshot.files > 0)
+    .sort((left, right) => left.snapshot.bytes - right.snapshot.bytes)[0];
   let externalControl = { name: 'external-aggregate-flip', skipped: 'no external directory' };
   if (smallest !== undefined) {
     const copy = path.join(temporary, 'external');
@@ -342,7 +346,22 @@ function controls() {
     };
   }
   fs.rmSync(temporary, { recursive: true, force: true });
+  const checks = {
+    intact_copy_accepted:
+      intact.integrity === 'artifact-intact' && intact.checker_invoked === false,
+    single_byte_flip_refused:
+      flipped.integrity === 'artifact-integrity' && flipped.checker_invoked === false,
+    removed_artifact_refused:
+      removed.integrity === 'artifact-integrity' && removed.checker_invoked === false,
+    extra_artifact_refused:
+      extra.integrity === 'artifact-integrity' && extra.checker_invoked === false,
+    external_aggregate_flip_refused:
+      externalControl.result?.integrity === 'artifact-integrity'
+        && externalControl.result.checker_invoked === false,
+  };
   return {
+    holds: Object.values(checks).every(Boolean),
+    checks,
     intact,
     coverage: {
       internal: internal.map((entry) => path.relative(root, entry.path)),
@@ -360,14 +379,24 @@ function controls() {
 if (flag('--freeze')) {
   console.log(JSON.stringify(freeze()));
 } else if (flag('--controls')) {
-  console.log(JSON.stringify(controls(), null, 2));
-} else {
+  const result = controls();
   console.log(JSON.stringify({
-    ...replay(searchPath()),
+    ...result,
+    source_commit: spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim(),
+    project: path.relative(root, project),
+    manifest: path.relative(root, manifestPath),
+    host: `${os.type()} ${os.release()} ${os.arch()}`,
+  }, null, 2));
+  process.exitCode = result.holds ? 0 : 1;
+} else {
+  const result = replay(searchPath());
+  console.log(JSON.stringify({
+    ...result,
     source_commit: spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim(),
     project: path.relative(root, project),
     module: moduleName,
     manifest: path.relative(root, manifestPath),
     host: `${os.type()} ${os.release()} ${os.arch()}`,
   }));
+  process.exitCode = result.outcome === 'kernel-accepted' ? 0 : 1;
 }

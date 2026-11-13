@@ -188,6 +188,22 @@ So the previously silent corruption is now a named refusal class rather than an 
 does **not** do: it does not make the checker independent (it still uses the Lean kernel), and it does
 not bind a claim to a declaration — it binds *bytes* to a replayed environment.
 
+### Current Lean 4.35.0 replay integrity (2026-11-13)
+
+The current [manifest](olean-integrity.txt) freezes the 79 foundation `.olean` files individually
+and ten dependency aggregates (nine `.lake/packages` paths and the pinned release library), covering
+the exact existing entries on `lake env`'s `LEAN_PATH`. Treating package paths as aggregates keeps
+the replay read-only: it hashes them but neither builds nor copies the dependency tree. The current
+default replay and corruption-control results are retained in
+[`receipts/2026-11-13/integrity.json`](receipts/2026-11-13/integrity.json) and
+[`receipts/2026-11-13/integrity-controls.json`](receipts/2026-11-13/integrity-controls.json).
+
+Both commands fail closed. The default replay exits nonzero for any integrity refusal or checker
+rejection. `replay.mjs --controls` exits nonzero unless the intact copy verifies and the byte-flip,
+removed-artifact, extra-artifact, and external-aggregate controls all refuse before invoking the
+checker. The retained controls exercise one foundation artifact and the smallest nonempty external
+aggregate; every other frozen directory is still included in the intact-path verification.
+
 ## Limit controls (2026-10-30)
 
 `limits.mjs` runs the pinned `nanoda_bin` (sha256 `27388e46…`, one thread) on the pinned

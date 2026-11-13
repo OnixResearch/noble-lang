@@ -3,11 +3,11 @@
 # through `lake env`'s LEAN_PATH.
 #
 # Directories inside the repository are frozen file by file: <sha256> <bytes> <path>.
-# Directories outside it are frozen as one aggregate per directory:
+# Shared dependency paths and directories outside it are frozen as one aggregate per directory:
 #   external-path <label> <files> <bytes> <merkle sha256>
 # where the Merkle digest is over the sorted rows "<sha256> <bytes> <path relative to the file>".
-# The `.lake/packages` dependency artifacts and the pinned toolchain itself are
-# covered this way because the lane never rebuilds them; it only replays through them.
+# Shared `.lake/packages` dependency artifacts and the pinned toolchain itself are
+# aggregated because the lane never builds or mutates them; it only replays through them.
 #
 # The checker does not consult `.olean.hash`, so this manifest is the digest step the replay
 # depends on: a corrupted, substituted, removed or extra artifact is an `artifact-integrity`
