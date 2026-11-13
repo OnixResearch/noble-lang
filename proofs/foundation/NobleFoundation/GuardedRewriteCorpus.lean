@@ -10,13 +10,13 @@ namespace NobleFoundation.GuardedRewriteCorpus
 
 open NobleFoundation.GuardedRewrite
 
-def rustGuardedGuard2 : GuardBefore := ⟨2, .constant 0x0000000000000000, 0x0000000000000000⟩
-def rustGuardedGuard3 : GuardBefore := ⟨3, .input 0, 0x0000000000000000⟩
+def rustGuardedGuard2 : GuardBefore := ⟨2, (.constant 0x0000000000000000), 0x0000000000000000⟩
+def rustGuardedGuard3 : GuardBefore := ⟨3, (.input 0), 0x0000000000000000⟩
 def rustGuardedLeft : Graph :=
   { inputCount := 1
     inputFacts := []
     target := 4
-    node := .binary .add .input 0 .constant 0x0000000000000000
+    node := .binary .add (.input 0) (.constant 0x0000000000000000)
     before := [rustGuardedGuard2, rustGuardedGuard3]
     after := []
     outputs := [.result] }
@@ -28,7 +28,7 @@ def rustGuardedRight : Graph :=
     before := [rustGuardedGuard2, rustGuardedGuard3]
     after := []
     outputs := [.result] }
-def rustGuardedCertificate : Derivation := { revision := 0, relation := .equality, steps := [{ rule := .scoped, node := 4, first := .input 0, second := .constant 0x0000000000000000, firstScope := .guard rustGuardedGuard3, secondScope := .constant, firstValue := 0x0000000000000000, secondValue := 0x0000000000000000, claimed := 0x0000000000000000 }] }
+def rustGuardedCertificate : Derivation := { revision := 0, relation := .equality, steps := [{ rule := .scoped, node := 4, first := (.input 0), second := (.constant 0x0000000000000000), firstScope := .guard rustGuardedGuard3, secondScope := .constant, firstValue := 0x0000000000000000, secondValue := 0x0000000000000000, claimed := 0x0000000000000000 }] }
 theorem rustGuarded_accepted : check rustGuardedLeft rustGuardedRight rustGuardedCertificate = .accepted := by
   decide
 
@@ -37,12 +37,12 @@ theorem rustGuarded_preserves_all_inputs (inputs : Nat → Bits) :
   accepted_preserves_observations rustGuardedLeft rustGuardedRight rustGuardedCertificate inputs rustGuarded_accepted
 
 def rustPreflightInputFact0 : InputFact := ⟨0, 0x0000000000000003⟩
-def rustPreflightGuard2 : GuardBefore := ⟨2, .constant 0x0000000000000009, 0x0000000000000009⟩
+def rustPreflightGuard2 : GuardBefore := ⟨2, (.constant 0x0000000000000009), 0x0000000000000009⟩
 def rustPreflightLeft : Graph :=
   { inputCount := 1
     inputFacts := [rustPreflightInputFact0]
     target := 3
-    node := .binary .sub .constant 0x0000000000000009 .input 0
+    node := .binary .sub (.constant 0x0000000000000009) (.input 0)
     before := [rustPreflightGuard2]
     after := []
     outputs := [.result] }
@@ -54,7 +54,7 @@ def rustPreflightRight : Graph :=
     before := [rustPreflightGuard2]
     after := []
     outputs := [.result] }
-def rustPreflightCertificate : Derivation := { revision := 0, relation := .equality, steps := [{ rule := .preflight, node := 3, first := .constant 0x0000000000000009, second := .input 0, firstScope := .constant, secondScope := .inputFact rustPreflightInputFact0, firstValue := 0x0000000000000009, secondValue := 0x0000000000000003, claimed := 0x0000000000000006 }] }
+def rustPreflightCertificate : Derivation := { revision := 0, relation := .equality, steps := [{ rule := .preflight, node := 3, first := (.constant 0x0000000000000009), second := (.input 0), firstScope := .constant, secondScope := .inputFact rustPreflightInputFact0, firstValue := 0x0000000000000009, secondValue := 0x0000000000000003, claimed := 0x0000000000000006 }] }
 theorem rustPreflight_accepted : check rustPreflightLeft rustPreflightRight rustPreflightCertificate = .accepted := by
   decide
 

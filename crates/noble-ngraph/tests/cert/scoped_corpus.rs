@@ -34,8 +34,10 @@ fn node(graph: &Graph, id: NodeId) -> &noble_ngraph::ir::Node {
 
 fn operand_term(graph: &Graph, id: NodeId) -> String {
     match &node(graph, id).op {
-        Op::Input(slot) => format!(".input {slot}"),
-        Op::Const(Literal::I64(value)) => format!(".constant {}", bits(value.cast_unsigned())),
+        Op::Input(slot) => format!("(.input {slot})"),
+        Op::Const(Literal::I64(value)) => {
+            format!("(.constant {})", bits(value.cast_unsigned()))
+        }
         other => panic!(
             "the model exporter only admits input/constant operands, got {}",
             other.name()
