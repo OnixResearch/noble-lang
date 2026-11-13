@@ -484,6 +484,8 @@ pub struct Node {
 pub enum SubjectKind {
     /// Authored directly in `ngraph-ir/0` (approval P2, option B0(b)).
     Authored,
+    /// Authored by the bounded, staged Nickel constructor route.
+    AuthoredNickel,
     /// Extracted from a kernel-accepted definition or closed Program (`I64`).
     Extracted,
     /// A new subject created by capturing snapshot values (D11 "Capture").
@@ -496,6 +498,7 @@ impl SubjectKind {
     pub const fn name(self) -> &'static str {
         match self {
             Self::Authored => "authored",
+            Self::AuthoredNickel => "authored-nickel",
             Self::Extracted => "extracted",
             Self::Captured => "captured",
         }
@@ -545,6 +548,16 @@ impl Subject {
             &[name.as_bytes()],
             alloc::vec::Vec::new(),
         )
+    }
+
+    /// A Nickel-authored subject bound to the exact construction-bundle digest.
+    #[must_use]
+    pub const fn authored_nickel(bundle_digest: [u8; 32]) -> Self {
+        Self {
+            kind: SubjectKind::AuthoredNickel,
+            identity: bundle_digest,
+            closure: alloc::vec::Vec::new(),
+        }
     }
 }
 

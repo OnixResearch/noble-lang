@@ -20,7 +20,7 @@
 //! out %3
 //! ```
 //!
-//! - `subject <authored|extracted|captured> <64 hex> closure <ids|->` is
+//! - `subject <authored|authored-nickel|extracted|captured> <64 hex> closure <ids|->` is
 //!   required exactly once; `subject authored-name NAME` (one or more tokens,
 //!   joined by single spaces) is authoring sugar for
 //!   [`crate::ir::Subject::authored`], and [`print`] always writes the hex form.
@@ -234,6 +234,7 @@ fn fact(
 fn subject_kind(t: &str) -> Option<crate::ir::SubjectKind> {
     match t {
         "authored" => Some(crate::ir::SubjectKind::Authored),
+        "authored-nickel" => Some(crate::ir::SubjectKind::AuthoredNickel),
         "extracted" => Some(crate::ir::SubjectKind::Extracted),
         "captured" => Some(crate::ir::SubjectKind::Captured),
         _ => None,

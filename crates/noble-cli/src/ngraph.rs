@@ -11,6 +11,7 @@
 
 mod arguments;
 mod files;
+mod nickel;
 mod report;
 
 use crate::workflow::encoding::{string, Json};
@@ -20,7 +21,8 @@ use noble_ngraph::{CheckedGraph, Code, Diagnostic, IdentityHasher, IdentitySchem
 use report::Line;
 
 pub(crate) const USAGE: &str = "usage:
-  noble ngraph check GRAPH [--budget-KIND N]...
+  noble ngraph check GRAPH_OR_CONSTRUCTOR [--graph-out GRAPH] [--budget-work N] [--budget-expansion N]
+      [--budget-KIND N]...
   noble ngraph extract SOURCE --inputs T[,T...] --out GRAPH [--framed] [--profile ngraph-i64/0]
       [--budget-KIND N]...
   noble ngraph eval GRAPH VECTORS [--reference] [--snapshot FILE [--snapshot-id HEX]] [--fuel N]
@@ -204,6 +206,10 @@ fn load_graph(
         what,
         Code::GraphMalformed(noble_ngraph::Malformed::Syntax)
     ));
+    if source.trim_start().starts_with('{') {
+        return nickel::admit(source.as_bytes(), budgets)
+            .map_err(|d| Line::diagnostic(command, "check", &about(d, what)));
+    }
     let graph = attempt!(noble_ngraph::format::graph::parse(&IDS, &source)
         .map_err(|d| Line::diagnostic(command, "input", &about(d, what))));
     noble_ngraph::check_with(&IDS, graph, budgets)
@@ -280,7 +286,7 @@ fn check(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop> 
     let args = attempt!(arguments::parse(
         &Spec {
             positional: &["GRAPH"],
-            values: &[],
+            values: &["--graph-out"],
             repeated: &[],
             switches: &[],
             budgets: &arguments::CHECKER,
@@ -290,6 +296,10 @@ fn check(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop> 
     .map_err(Stop::Usage));
     attempt!(policy(C, &args.budgets));
     let graph = attempt!(load_graph(C, &args.path(0), &args.budgets, "graph file"));
+    if let Some(out) = args.path_value("--graph-out") {
+        let text = noble_ngraph::format::graph::print(graph.graph());
+        attempt!(publish(C, &out, text.as_bytes()));
+    }
     Ok(std::vec![check_fields(Line::normal(C, "check"), &graph)])
 }
 
