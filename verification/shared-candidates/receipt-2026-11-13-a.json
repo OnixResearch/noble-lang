@@ -1,0 +1,1141 @@
+{
+  "schema": "noble-shared-candidates-receipt/v1",
+  "issue": 117,
+  "produced": "2026-11-13T05:24:13.834Z",
+  "source_revision": "4654cd35688ecc141e851f0a7795aa1c735145e4",
+  "clean_tree": true,
+  "criteria": {
+    "path": "verification/shared-candidates/criteria.json",
+    "sha256": "054944e2e8c66461213b38e5779f2180792425ad510a0af94ae9f73ff521f551",
+    "frozen": "2026-11-13",
+    "committed_blob": "4b9559916be062c52d55797ff8c8df6391c48ed9"
+  },
+  "binary": {
+    "path": "/home/brittonr/.cache/noble-iss/target/shared-117/debug/noble",
+    "sha256": "bfa9f25478eec8ffecc3af5ba0939944452c40434266a0d0194222450aa3531a",
+    "arms": "noble ngraph: expected check, extract, eval, train or verify"
+  },
+  "instrument": {
+    "wall": "process.hrtime.bigint around spawnSync",
+    "cpu_and_rss": "/run/current-system/sw/bin/time -f '%U %S %M'",
+    "time_version": "time (GNU Time) 1.10",
+    "node": "v24.13.0",
+    "node_path": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+    "rows": 8192,
+    "row_source": "boundary rows 9 then splitmix64 seed 0x5edca11d3f1b7a29 in [0, 2097152]",
+    "rows_sha256": "09ef1611a1b87dd428abfea2cc8433f005ac480889db5bd9976230134148e7be",
+    "rounds": 9,
+    "warmup_rounds": 1,
+    "cold": "the warmup round is reported as `first`; this host cannot drop page caches without root, so `first` only means `not previously executed by this run`"
+  },
+  "host": {
+    "kernel": "6.18.60",
+    "arch": "x64",
+    "cpus": 32,
+    "load1": 81.66,
+    "note": "shared host: medians of interleaved rounds, no CPU pinning and no cache drop"
+  },
+  "families": [
+    {
+      "name": "shared-prefix",
+      "sharing": "shared",
+      "why": "Every candidate is the same prefix value followed by its own tail, so the merged source computes the prefix once and duplicates the value with `dup`: extraction emits one node per shared value. This family is where a content-sharing saving is possible at all.",
+      "candidates": 12,
+      "rows": 8192,
+      "live_nodes": {
+        "candidate_min": 19,
+        "candidate_max": 24,
+        "candidate_sum": 254,
+        "merged": 56,
+        "merged_duplicated": 243
+      },
+      "extraction": {
+        "merged": {
+          "graph": "7ddc54d673050a6112fdcf58259417ddba546ef665ad04d9128316a6ca74d928",
+          "work_units": 96,
+          "expanded_nodes": 56,
+          "pruned_nodes": 0,
+          "layers": 16
+        },
+        "duplicated": {
+          "graph": "5670bfcb7ecf8307427d6dbaf190f2117155e5f43820f118b67bd2913da8ac42",
+          "work_units": 382,
+          "expanded_nodes": 243,
+          "pruned_nodes": 0,
+          "layers": 16
+        }
+      },
+      "graph_sha256": {
+        "merged": "19fc5ab9473cd3124c429c77480fcf0a8109c1400db7a012e74090ebf9810d8f",
+        "merged_duplicated": "a7aeb3df547d48cb546b7f5980a7106096fbab4e9d7747a2355b5fe6fed36902"
+      },
+      "gates": [
+        {
+          "gate": "oracle-construction",
+          "holds": true,
+          "detail": "the oracle gives every candidate the same value in the merged and separate programs"
+        },
+        {
+          "gate": "interface",
+          "holds": true,
+          "detail": "12 candidate outputs and one input in every merged graph"
+        },
+        {
+          "gate": "structure",
+          "holds": true,
+          "detail": "shared 56 live nodes = prefix 18 + tails 38; recomputed 243 live nodes = prefix + 11 further prefix copies + tails"
+        },
+        {
+          "gate": "separate-oracle",
+          "holds": true,
+          "detail": "every candidate graph reproduces the oracle value on every row"
+        },
+        {
+          "gate": "merged-oracle",
+          "holds": true,
+          "detail": "the merged graph and its recomputing twin reproduce the oracle on every row, and each other"
+        },
+        {
+          "gate": "reference",
+          "holds": true,
+          "detail": "the reference interpreter agrees with the oracle on the first 256 rows"
+        },
+        {
+          "gate": "determinism",
+          "holds": true,
+          "detail": "the extraction is byte-identical and the evaluation text is identical when repeated"
+        }
+      ],
+      "measurement": {
+        "series": {
+          "separate": [
+            {
+              "round": 0,
+              "wall_ms": 2629.736,
+              "cpu_ms": 1260,
+              "rss_kib": 12640
+            },
+            {
+              "round": 1,
+              "wall_ms": 2451.056,
+              "cpu_ms": 1200,
+              "rss_kib": 12356
+            },
+            {
+              "round": 2,
+              "wall_ms": 1966.129,
+              "cpu_ms": 1130,
+              "rss_kib": 13536
+            },
+            {
+              "round": 3,
+              "wall_ms": 2008.197,
+              "cpu_ms": 1140,
+              "rss_kib": 12668
+            },
+            {
+              "round": 4,
+              "wall_ms": 1720.92,
+              "cpu_ms": 1080,
+              "rss_kib": 13244
+            },
+            {
+              "round": 5,
+              "wall_ms": 1555.978,
+              "cpu_ms": 1090,
+              "rss_kib": 13188
+            },
+            {
+              "round": 6,
+              "wall_ms": 1453.981,
+              "cpu_ms": 1010,
+              "rss_kib": 13700
+            },
+            {
+              "round": 7,
+              "wall_ms": 1456.78,
+              "cpu_ms": 1020,
+              "rss_kib": 13468
+            },
+            {
+              "round": 8,
+              "wall_ms": 1605.457,
+              "cpu_ms": 1060,
+              "rss_kib": 13728
+            },
+            {
+              "round": 9,
+              "wall_ms": 1593.2,
+              "cpu_ms": 1070,
+              "rss_kib": 13256
+            }
+          ],
+          "merged": [
+            {
+              "round": 0,
+              "wall_ms": 349.435,
+              "cpu_ms": 210,
+              "rss_kib": 16948
+            },
+            {
+              "round": 1,
+              "wall_ms": 416.552,
+              "cpu_ms": 220,
+              "rss_kib": 15504
+            },
+            {
+              "round": 2,
+              "wall_ms": 328.932,
+              "cpu_ms": 200,
+              "rss_kib": 16052
+            },
+            {
+              "round": 3,
+              "wall_ms": 319.873,
+              "cpu_ms": 210,
+              "rss_kib": 16844
+            },
+            {
+              "round": 4,
+              "wall_ms": 266.635,
+              "cpu_ms": 190,
+              "rss_kib": 17012
+            },
+            {
+              "round": 5,
+              "wall_ms": 272.155,
+              "cpu_ms": 200,
+              "rss_kib": 16676
+            },
+            {
+              "round": 6,
+              "wall_ms": 217.243,
+              "cpu_ms": 180,
+              "rss_kib": 17232
+            },
+            {
+              "round": 7,
+              "wall_ms": 332.951,
+              "cpu_ms": 210,
+              "rss_kib": 17220
+            },
+            {
+              "round": 8,
+              "wall_ms": 244.701,
+              "cpu_ms": 190,
+              "rss_kib": 16716
+            },
+            {
+              "round": 9,
+              "wall_ms": 296.165,
+              "cpu_ms": 200,
+              "rss_kib": 16860
+            }
+          ],
+          "merged-duplicated": [
+            {
+              "round": 0,
+              "wall_ms": 503.54,
+              "cpu_ms": 250,
+              "rss_kib": 14884
+            },
+            {
+              "round": 1,
+              "wall_ms": 457.865,
+              "cpu_ms": 250,
+              "rss_kib": 15936
+            },
+            {
+              "round": 2,
+              "wall_ms": 418.688,
+              "cpu_ms": 250,
+              "rss_kib": 16196
+            },
+            {
+              "round": 3,
+              "wall_ms": 354.599,
+              "cpu_ms": 240,
+              "rss_kib": 15516
+            },
+            {
+              "round": 4,
+              "wall_ms": 352.953,
+              "cpu_ms": 230,
+              "rss_kib": 16008
+            },
+            {
+              "round": 5,
+              "wall_ms": 372.223,
+              "cpu_ms": 230,
+              "rss_kib": 16612
+            },
+            {
+              "round": 6,
+              "wall_ms": 304.786,
+              "cpu_ms": 230,
+              "rss_kib": 17064
+            },
+            {
+              "round": 7,
+              "wall_ms": 305.765,
+              "cpu_ms": 230,
+              "rss_kib": 17212
+            },
+            {
+              "round": 8,
+              "wall_ms": 520.822,
+              "cpu_ms": 250,
+              "rss_kib": 16212
+            },
+            {
+              "round": 9,
+              "wall_ms": 261.585,
+              "cpu_ms": 210,
+              "rss_kib": 17296
+            }
+          ],
+          "floor": [
+            {
+              "round": 0,
+              "wall_ms": 23.638,
+              "cpu_ms": 0,
+              "rss_kib": 9828
+            },
+            {
+              "round": 1,
+              "wall_ms": 21.466,
+              "cpu_ms": 0,
+              "rss_kib": 9816
+            },
+            {
+              "round": 2,
+              "wall_ms": 16.614,
+              "cpu_ms": 0,
+              "rss_kib": 9944
+            },
+            {
+              "round": 3,
+              "wall_ms": 20.889,
+              "cpu_ms": 0,
+              "rss_kib": 10128
+            },
+            {
+              "round": 4,
+              "wall_ms": 19.524,
+              "cpu_ms": 0,
+              "rss_kib": 9792
+            },
+            {
+              "round": 5,
+              "wall_ms": 14.78,
+              "cpu_ms": 0,
+              "rss_kib": 9804
+            },
+            {
+              "round": 6,
+              "wall_ms": 14.149,
+              "cpu_ms": 0,
+              "rss_kib": 9596
+            },
+            {
+              "round": 7,
+              "wall_ms": 14.214,
+              "cpu_ms": 0,
+              "rss_kib": 9844
+            },
+            {
+              "round": 8,
+              "wall_ms": 28.792,
+              "cpu_ms": 0,
+              "rss_kib": 9568
+            },
+            {
+              "round": 9,
+              "wall_ms": 15.785,
+              "cpu_ms": 0,
+              "rss_kib": 9732
+            }
+          ]
+        },
+        "summary": {
+          "separate": {
+            "first_wall_ms": 2629.736,
+            "warm_median_wall_ms": 1605.457,
+            "warm_quartile_wall_ms": 410.151,
+            "warm_min_wall_ms": 1453.981,
+            "warm_median_cpu_ms": 1080,
+            "warm_median_rss_kib": 13256,
+            "warm_max_rss_kib": 13728,
+            "first_warm_rss_kib": 12356,
+            "second_warm_rss_kib": 13536,
+            "processes_per_round": 12
+          },
+          "merged": {
+            "first_wall_ms": 349.435,
+            "warm_median_wall_ms": 296.165,
+            "warm_quartile_wall_ms": 62.297,
+            "warm_min_wall_ms": 217.243,
+            "warm_median_cpu_ms": 200,
+            "warm_median_rss_kib": 16844,
+            "warm_max_rss_kib": 17232,
+            "first_warm_rss_kib": 15504,
+            "second_warm_rss_kib": 16052,
+            "processes_per_round": 1
+          },
+          "merged-duplicated": {
+            "first_wall_ms": 503.54,
+            "warm_median_wall_ms": 354.599,
+            "warm_quartile_wall_ms": 112.923,
+            "warm_min_wall_ms": 261.585,
+            "warm_median_cpu_ms": 230,
+            "warm_median_rss_kib": 16212,
+            "warm_max_rss_kib": 17296,
+            "first_warm_rss_kib": 15936,
+            "second_warm_rss_kib": 16196,
+            "processes_per_round": 1
+          },
+          "floor": {
+            "first_wall_ms": 23.638,
+            "warm_median_wall_ms": 16.614,
+            "warm_quartile_wall_ms": 6.109,
+            "warm_min_wall_ms": 14.149,
+            "warm_median_cpu_ms": 0,
+            "warm_median_rss_kib": 9804,
+            "warm_max_rss_kib": 10128,
+            "first_warm_rss_kib": 9816,
+            "second_warm_rss_kib": 9944,
+            "processes_per_round": 1
+          }
+        }
+      },
+      "extraction_timing": {
+        "invocations_per_round": 14,
+        "median_wall_ms": 387.519,
+        "max_rss_kib": 10664,
+        "series": [
+          {
+            "round": 0,
+            "wall_ms": 352.122,
+            "rss_kib": 10664,
+            "per_program_ms": {
+              "candidate-0": 19.861,
+              "candidate-1": 19.79,
+              "candidate-2": 16.836,
+              "candidate-3": 19.125,
+              "candidate-4": 21.399,
+              "candidate-5": 21.537,
+              "candidate-6": 22.285,
+              "candidate-7": 18.491,
+              "candidate-8": 22.293,
+              "candidate-9": 19.601,
+              "candidate-10": 21.074,
+              "candidate-11": 23.949,
+              "merged": 35.729,
+              "merged-duplicated": 70.153
+            }
+          },
+          {
+            "round": 1,
+            "wall_ms": 412.049,
+            "rss_kib": 10568,
+            "per_program_ms": {
+              "candidate-0": 18.482,
+              "candidate-1": 25.799,
+              "candidate-2": 24.489,
+              "candidate-3": 27.753,
+              "candidate-4": 22.174,
+              "candidate-5": 30.385,
+              "candidate-6": 29.27,
+              "candidate-7": 24.61,
+              "candidate-8": 27.731,
+              "candidate-9": 25.603,
+              "candidate-10": 35.852,
+              "candidate-11": 21.967,
+              "merged": 35.927,
+              "merged-duplicated": 62.006
+            }
+          },
+          {
+            "round": 2,
+            "wall_ms": 387.519,
+            "rss_kib": 10464,
+            "per_program_ms": {
+              "candidate-0": 25.351,
+              "candidate-1": 21.471,
+              "candidate-2": 19.353,
+              "candidate-3": 21.646,
+              "candidate-4": 22.973,
+              "candidate-5": 24.757,
+              "candidate-6": 28.167,
+              "candidate-7": 22.142,
+              "candidate-8": 28.523,
+              "candidate-9": 24.903,
+              "candidate-10": 25.761,
+              "candidate-11": 32.197,
+              "merged": 28.942,
+              "merged-duplicated": 61.335
+            }
+          }
+        ],
+        "note": "reported only; extraction is producer work and is not part of any evaluation arm"
+      }
+    },
+    {
+      "name": "distinct-prefix",
+      "sharing": "none",
+      "why": "Every candidate is an independent program over the one input, with no value common to two candidates beyond the input node itself. Merging cannot remove work here, so the two merged arms are the same program: their difference measures the host's timing noise floor.",
+      "candidates": 12,
+      "rows": 8192,
+      "live_nodes": {
+        "candidate_min": 4,
+        "candidate_max": 7,
+        "candidate_sum": 66,
+        "merged": 55,
+        "merged_duplicated": 55
+      },
+      "extraction": {
+        "merged": {
+          "graph": "bc6c7f1522c22d010564e8564cf10b85808756f9354618c62f00094635236ab0",
+          "work_units": 97,
+          "expanded_nodes": 55,
+          "pruned_nodes": 0,
+          "layers": 5
+        },
+        "duplicated": {
+          "graph": "bc6c7f1522c22d010564e8564cf10b85808756f9354618c62f00094635236ab0",
+          "work_units": 97,
+          "expanded_nodes": 55,
+          "pruned_nodes": 0,
+          "layers": 5
+        }
+      },
+      "graph_sha256": {
+        "merged": "d7cb34bfffb3e5999fa1d760b098f7e8839b7620e3d6abf3cc3a1f5244559ce0",
+        "merged_duplicated": "d7cb34bfffb3e5999fa1d760b098f7e8839b7620e3d6abf3cc3a1f5244559ce0"
+      },
+      "gates": [
+        {
+          "gate": "oracle-construction",
+          "holds": true,
+          "detail": "the oracle gives every candidate the same value in the merged and separate programs"
+        },
+        {
+          "gate": "interface",
+          "holds": true,
+          "detail": "12 candidate outputs and one input in every merged graph"
+        },
+        {
+          "gate": "structure",
+          "holds": true,
+          "detail": "no candidate shares a value: merged 55 live nodes = the input plus every candidate's own nodes"
+        },
+        {
+          "gate": "separate-oracle",
+          "holds": true,
+          "detail": "every candidate graph reproduces the oracle value on every row"
+        },
+        {
+          "gate": "merged-oracle",
+          "holds": true,
+          "detail": "the merged graph and its recomputing twin reproduce the oracle on every row, and each other"
+        },
+        {
+          "gate": "reference",
+          "holds": true,
+          "detail": "the reference interpreter agrees with the oracle on the first 256 rows"
+        },
+        {
+          "gate": "determinism",
+          "holds": true,
+          "detail": "the extraction is byte-identical and the evaluation text is identical when repeated"
+        }
+      ],
+      "measurement": {
+        "series": {
+          "separate": [
+            {
+              "round": 0,
+              "wall_ms": 5040.279,
+              "cpu_ms": 1090,
+              "rss_kib": 12724
+            },
+            {
+              "round": 1,
+              "wall_ms": 6756.771,
+              "cpu_ms": 1160,
+              "rss_kib": 11892
+            },
+            {
+              "round": 2,
+              "wall_ms": 4227.995,
+              "cpu_ms": 1140,
+              "rss_kib": 12168
+            },
+            {
+              "round": 3,
+              "wall_ms": 4629.726,
+              "cpu_ms": 1120,
+              "rss_kib": 12608
+            },
+            {
+              "round": 4,
+              "wall_ms": 4544.499,
+              "cpu_ms": 1120,
+              "rss_kib": 12384
+            },
+            {
+              "round": 5,
+              "wall_ms": 4008.685,
+              "cpu_ms": 1140,
+              "rss_kib": 12180
+            },
+            {
+              "round": 6,
+              "wall_ms": 4366.834,
+              "cpu_ms": 1130,
+              "rss_kib": 11980
+            },
+            {
+              "round": 7,
+              "wall_ms": 3784.538,
+              "cpu_ms": 1080,
+              "rss_kib": 12676
+            },
+            {
+              "round": 8,
+              "wall_ms": 3718.082,
+              "cpu_ms": 1120,
+              "rss_kib": 12472
+            },
+            {
+              "round": 9,
+              "wall_ms": 3829.614,
+              "cpu_ms": 1110,
+              "rss_kib": 12440
+            }
+          ],
+          "merged": [
+            {
+              "round": 0,
+              "wall_ms": 848.78,
+              "cpu_ms": 200,
+              "rss_kib": 16340
+            },
+            {
+              "round": 1,
+              "wall_ms": 742.543,
+              "cpu_ms": 200,
+              "rss_kib": 16180
+            },
+            {
+              "round": 2,
+              "wall_ms": 1073.969,
+              "cpu_ms": 200,
+              "rss_kib": 16380
+            },
+            {
+              "round": 3,
+              "wall_ms": 1091.491,
+              "cpu_ms": 200,
+              "rss_kib": 17544
+            },
+            {
+              "round": 4,
+              "wall_ms": 616.875,
+              "cpu_ms": 200,
+              "rss_kib": 16244
+            },
+            {
+              "round": 5,
+              "wall_ms": 870.738,
+              "cpu_ms": 190,
+              "rss_kib": 14976
+            },
+            {
+              "round": 6,
+              "wall_ms": 585.68,
+              "cpu_ms": 190,
+              "rss_kib": 16544
+            },
+            {
+              "round": 7,
+              "wall_ms": 550.572,
+              "cpu_ms": 200,
+              "rss_kib": 16788
+            },
+            {
+              "round": 8,
+              "wall_ms": 582.525,
+              "cpu_ms": 200,
+              "rss_kib": 16228
+            },
+            {
+              "round": 9,
+              "wall_ms": 632.536,
+              "cpu_ms": 200,
+              "rss_kib": 15596
+            }
+          ],
+          "merged-duplicated": [
+            {
+              "round": 0,
+              "wall_ms": 850.104,
+              "cpu_ms": 200,
+              "rss_kib": 16212
+            },
+            {
+              "round": 1,
+              "wall_ms": 1108.166,
+              "cpu_ms": 200,
+              "rss_kib": 15564
+            },
+            {
+              "round": 2,
+              "wall_ms": 1113.019,
+              "cpu_ms": 200,
+              "rss_kib": 15464
+            },
+            {
+              "round": 3,
+              "wall_ms": 1033.78,
+              "cpu_ms": 190,
+              "rss_kib": 16504
+            },
+            {
+              "round": 4,
+              "wall_ms": 676.061,
+              "cpu_ms": 200,
+              "rss_kib": 16748
+            },
+            {
+              "round": 5,
+              "wall_ms": 749.753,
+              "cpu_ms": 200,
+              "rss_kib": 15748
+            },
+            {
+              "round": 6,
+              "wall_ms": 735.319,
+              "cpu_ms": 200,
+              "rss_kib": 14692
+            },
+            {
+              "round": 7,
+              "wall_ms": 520.121,
+              "cpu_ms": 190,
+              "rss_kib": 15880
+            },
+            {
+              "round": 8,
+              "wall_ms": 550.34,
+              "cpu_ms": 190,
+              "rss_kib": 16216
+            },
+            {
+              "round": 9,
+              "wall_ms": 785.21,
+              "cpu_ms": 200,
+              "rss_kib": 15224
+            }
+          ],
+          "floor": [
+            {
+              "round": 0,
+              "wall_ms": 22.768,
+              "cpu_ms": 0,
+              "rss_kib": 9016
+            },
+            {
+              "round": 1,
+              "wall_ms": 30.478,
+              "cpu_ms": 0,
+              "rss_kib": 9584
+            },
+            {
+              "round": 2,
+              "wall_ms": 33.563,
+              "cpu_ms": 0,
+              "rss_kib": 8548
+            },
+            {
+              "round": 3,
+              "wall_ms": 43.523,
+              "cpu_ms": 0,
+              "rss_kib": 9356
+            },
+            {
+              "round": 4,
+              "wall_ms": 24.211,
+              "cpu_ms": 0,
+              "rss_kib": 9568
+            },
+            {
+              "round": 5,
+              "wall_ms": 23.726,
+              "cpu_ms": 0,
+              "rss_kib": 9412
+            },
+            {
+              "round": 6,
+              "wall_ms": 33.809,
+              "cpu_ms": 0,
+              "rss_kib": 9072
+            },
+            {
+              "round": 7,
+              "wall_ms": 35.531,
+              "cpu_ms": 0,
+              "rss_kib": 9648
+            },
+            {
+              "round": 8,
+              "wall_ms": 26.067,
+              "cpu_ms": 0,
+              "rss_kib": 8832
+            },
+            {
+              "round": 9,
+              "wall_ms": 33.426,
+              "cpu_ms": 0,
+              "rss_kib": 9296
+            }
+          ]
+        },
+        "summary": {
+          "separate": {
+            "first_wall_ms": 5040.279,
+            "warm_median_wall_ms": 4227.995,
+            "warm_quartile_wall_ms": 714.885,
+            "warm_min_wall_ms": 3718.082,
+            "warm_median_cpu_ms": 1120,
+            "warm_median_rss_kib": 12384,
+            "warm_max_rss_kib": 12676,
+            "first_warm_rss_kib": 11892,
+            "second_warm_rss_kib": 12168,
+            "processes_per_round": 12
+          },
+          "merged": {
+            "first_wall_ms": 848.78,
+            "warm_median_wall_ms": 632.536,
+            "warm_quartile_wall_ms": 285.058,
+            "warm_min_wall_ms": 550.572,
+            "warm_median_cpu_ms": 200,
+            "warm_median_rss_kib": 16244,
+            "warm_max_rss_kib": 17544,
+            "first_warm_rss_kib": 16180,
+            "second_warm_rss_kib": 16380,
+            "processes_per_round": 1
+          },
+          "merged-duplicated": {
+            "first_wall_ms": 850.104,
+            "warm_median_wall_ms": 749.753,
+            "warm_quartile_wall_ms": 357.719,
+            "warm_min_wall_ms": 520.121,
+            "warm_median_cpu_ms": 200,
+            "warm_median_rss_kib": 15748,
+            "warm_max_rss_kib": 16748,
+            "first_warm_rss_kib": 15564,
+            "second_warm_rss_kib": 15464,
+            "processes_per_round": 1
+          },
+          "floor": {
+            "first_wall_ms": 22.768,
+            "warm_median_wall_ms": 33.426,
+            "warm_quartile_wall_ms": 7.742,
+            "warm_min_wall_ms": 23.726,
+            "warm_median_cpu_ms": 0,
+            "warm_median_rss_kib": 9356,
+            "warm_max_rss_kib": 9648,
+            "first_warm_rss_kib": 9584,
+            "second_warm_rss_kib": 8548,
+            "processes_per_round": 1
+          }
+        }
+      },
+      "extraction_timing": {
+        "invocations_per_round": 14,
+        "median_wall_ms": 524.505,
+        "max_rss_kib": 9928,
+        "series": [
+          {
+            "round": 0,
+            "wall_ms": 477.418,
+            "rss_kib": 9856,
+            "per_program_ms": {
+              "candidate-0": 34.816,
+              "candidate-1": 34.509,
+              "candidate-2": 33.802,
+              "candidate-3": 31.009,
+              "candidate-4": 30.459,
+              "candidate-5": 33.275,
+              "candidate-6": 31.389,
+              "candidate-7": 35.764,
+              "candidate-8": 26.559,
+              "candidate-9": 31.822,
+              "candidate-10": 30.615,
+              "candidate-11": 33.725,
+              "merged": 44.968,
+              "merged-duplicated": 44.708
+            }
+          },
+          {
+            "round": 1,
+            "wall_ms": 524.505,
+            "rss_kib": 9928,
+            "per_program_ms": {
+              "candidate-0": 33.818,
+              "candidate-1": 39.692,
+              "candidate-2": 38.673,
+              "candidate-3": 34.598,
+              "candidate-4": 31.636,
+              "candidate-5": 33.689,
+              "candidate-6": 36.12,
+              "candidate-7": 37.225,
+              "candidate-8": 31.717,
+              "candidate-9": 40.211,
+              "candidate-10": 42.976,
+              "candidate-11": 31.659,
+              "merged": 46.731,
+              "merged-duplicated": 45.761
+            }
+          },
+          {
+            "round": 2,
+            "wall_ms": 596.663,
+            "rss_kib": 9868,
+            "per_program_ms": {
+              "candidate-0": 37.461,
+              "candidate-1": 33.599,
+              "candidate-2": 36.71,
+              "candidate-3": 47.086,
+              "candidate-4": 38.105,
+              "candidate-5": 37.437,
+              "candidate-6": 36.932,
+              "candidate-7": 36.565,
+              "candidate-8": 42.733,
+              "candidate-9": 38.631,
+              "candidate-10": 41.246,
+              "candidate-11": 47.911,
+              "merged": 61.72,
+              "merged-duplicated": 60.527
+            }
+          }
+        ],
+        "note": "reported only; extraction is producer work and is not part of any evaluation arm"
+      }
+    }
+  ],
+  "controls": [
+    {
+      "control": "permuted-outputs",
+      "expected": "the CLI admits the graph and the oracle comparison refuses it",
+      "observed": {
+        "exit": 0,
+        "caught": "control/permuted row 0 candidate 0: 20449 != 148"
+      }
+    },
+    {
+      "control": "truncated-family",
+      "expected": "12 outputs; the truncated graph has fewer and is refused by the interface gate",
+      "observed": {
+        "exit": 0,
+        "outputs": 11
+      }
+    },
+    {
+      "control": "control-if",
+      "expected": "4 E-CONTROL",
+      "observed": {
+        "exit": 4,
+        "outcome": "unsupported",
+        "code": "E-CONTROL",
+        "published": false
+      }
+    },
+    {
+      "control": "control-effect",
+      "expected": "4 E-EFFECT",
+      "observed": {
+        "exit": 4,
+        "outcome": "unsupported",
+        "code": "E-EFFECT",
+        "published": false
+      }
+    },
+    {
+      "control": "control-program-output",
+      "expected": "4 E-PROGRAM-OUTPUT",
+      "observed": {
+        "exit": 4,
+        "outcome": "unsupported",
+        "code": "E-PROGRAM-OUTPUT",
+        "published": false
+      }
+    },
+    {
+      "control": "control-unbound",
+      "expected": "2 E-SUBJECT",
+      "observed": {
+        "exit": 2,
+        "outcome": "reject",
+        "code": "E-SUBJECT",
+        "published": false
+      }
+    },
+    {
+      "control": "control-profile",
+      "expected": "2 E-PROFILE",
+      "observed": {
+        "exit": 2,
+        "outcome": "reject",
+        "code": "E-PROFILE"
+      }
+    },
+    {
+      "control": "control-raised-budget",
+      "expected": "2 E-PROFILE",
+      "observed": {
+        "exit": 2,
+        "outcome": "reject",
+        "code": "E-PROFILE"
+      }
+    },
+    {
+      "control": "control-unknown-op",
+      "expected": "2 E-GRAPH-MALFORMED",
+      "observed": {
+        "exit": 2,
+        "outcome": "reject",
+        "code": "E-GRAPH-MALFORMED"
+      }
+    },
+    {
+      "control": "control-dangling-operand",
+      "expected": "2 E-GRAPH-MALFORMED",
+      "observed": {
+        "exit": 2,
+        "outcome": "reject",
+        "code": "E-GRAPH-MALFORMED"
+      }
+    },
+    {
+      "control": "control-wrong-types",
+      "expected": "2 E-INTERFACE",
+      "observed": {
+        "exit": 2,
+        "outcome": "reject",
+        "code": "E-INTERFACE"
+      }
+    },
+    {
+      "control": "control-no-types",
+      "expected": "2 E-FORMAT",
+      "observed": {
+        "exit": 2,
+        "outcome": "reject",
+        "code": "E-FORMAT"
+      }
+    },
+    {
+      "control": "backend-gate",
+      "expected": "no net arm: usage exits 2 and names no net subcommand; `noble-ngraph` has no feature gate to preserve",
+      "observed": {
+        "exit": 2,
+        "features": false
+      }
+    }
+  ],
+  "decision": {
+    "gates_hold": true,
+    "d1": {
+      "quantity": "merged warm median wall / separate warm median wall on shared-prefix",
+      "ratio": 0.1845,
+      "threshold": "<= 0.75",
+      "holds": true
+    },
+    "d2": {
+      "quantity": "merged warm median wall / merged-duplicated warm median wall on shared-prefix",
+      "ratio": 0.8352,
+      "threshold": "<= 0.9",
+      "holds": true
+    },
+    "d3": {
+      "quantity": "relative difference of the two identical merged programs on distinct-prefix",
+      "value": 0.1563,
+      "threshold": "<= 0.1",
+      "holds": false
+    },
+    "d4": {
+      "quantity": "peak resident growth from the first to the second warm round, every arm",
+      "threshold": "<= 1024 KiB",
+      "holds": false,
+      "rows": [
+        {
+          "family": "shared-prefix",
+          "arm": "separate",
+          "first_warm_rss_kib": 12356,
+          "second_warm_rss_kib": 13536,
+          "growth_kib": 1180
+        },
+        {
+          "family": "shared-prefix",
+          "arm": "merged",
+          "first_warm_rss_kib": 15504,
+          "second_warm_rss_kib": 16052,
+          "growth_kib": 548
+        },
+        {
+          "family": "shared-prefix",
+          "arm": "merged-duplicated",
+          "first_warm_rss_kib": 15936,
+          "second_warm_rss_kib": 16196,
+          "growth_kib": 260
+        },
+        {
+          "family": "shared-prefix",
+          "arm": "floor",
+          "first_warm_rss_kib": 9816,
+          "second_warm_rss_kib": 9944,
+          "growth_kib": 128
+        },
+        {
+          "family": "distinct-prefix",
+          "arm": "separate",
+          "first_warm_rss_kib": 11892,
+          "second_warm_rss_kib": 12168,
+          "growth_kib": 276
+        },
+        {
+          "family": "distinct-prefix",
+          "arm": "merged",
+          "first_warm_rss_kib": 16180,
+          "second_warm_rss_kib": 16380,
+          "growth_kib": 200
+        },
+        {
+          "family": "distinct-prefix",
+          "arm": "merged-duplicated",
+          "first_warm_rss_kib": 15564,
+          "second_warm_rss_kib": 15464,
+          "growth_kib": -100
+        },
+        {
+          "family": "distinct-prefix",
+          "arm": "floor",
+          "first_warm_rss_kib": 9584,
+          "second_warm_rss_kib": 8548,
+          "growth_kib": -1036
+        }
+      ]
+    },
+    "go": false,
+    "statement": "INVALID: the identical-program control on `distinct-prefix` exceeded the noise band, so d2 cannot be read."
+  },
+  "not_measured": [
+    "net arm: no interaction-net entry point exists in `crates/`; pending #37",
+    "labelled-SUP arm: no labelled DUP/SUP contract exists; pending #105",
+    "allocation counts: the workspace forbids `unsafe`, so no counting allocator can exist; only process peak RSS is reported",
+    "interaction counts: only the net reducer would report them; the graph evaluator reports nodes, layers and extraction counters instead",
+    "in-process CSE: the graph evaluator has no memoising pass, so a `merged` arm that repeats a subterm pays for it twice — this lane shares by construction and measures the difference"
+  ]
+}
