@@ -689,7 +689,35 @@ function leanWitness(witness, inputs) {
   return `fun slot => ${parts.length ? `${parts.join(' else ')} else ${ZERO}` : ZERO}`;
 }
 
-/** The certificate fragments for one proved task; `refused` is its first refused round, if any. */
+/** Exact witness and negative certificate for a candidate the CEGIS loop actually refused. */
+function leanRefusalForTask(result) {
+  const refused = result.rounds.find(round => round.verdict === 'refuted');
+  if (!refused || !result.lean?.refused) return { lines: [], theorems: [] };
+  const { name } = result;
+  const lines = [
+    `/-! ### \`${name}\`: the candidate the examples alone admitted, refused -/`, '',
+    '/-- The program the examples alone admitted, whose refinement found a counterexample. -/',
+    `def ${name}_refused : Pair :=`, ...leanPair(result.lean.refused), '',
+    '/-- The counterexample, as exact bits: the kernel decides `refuted` on them. -/',
+    `def ${name}_refusedWitness : Nat → BitVec 64 :=`,
+    `  ${leanWitness(refused.witness, result.declaration.inputs)}`, '',
+    `theorem ${name}_refused_witness_refutes :`,
+    `    refuted ${name}_refused ${name}_refusedWitness = true := by`, '  decide', '',
+    '/-- **The refused candidate has no certificate**, from its kernel-checked witness. -/',
+    `theorem ${name}_refused_not_certifiable :`,
+    `    ¬ ∀ inputs, agreesOn ${name}_refused inputs :=`,
+    `  not_certifiable_of_refuted ${name}_refused _ ${name}_refused_witness_refutes`, '',
+  ];
+  const theorems = [
+    { name: `${NAMESPACE}.${name}_refused_witness_refutes`, phase: 1, role: 'negative-control',
+      claim: `the refused candidate \`${refused.program}\` really refutes \`${name}\`'s reference at the recorded bits` },
+    { name: `${NAMESPACE}.${name}_refused_not_certifiable`, phase: 1, role: 'negative-control',
+      claim: `the refused candidate for \`${name}\` has no certificate, from its kernel-checked witness` },
+  ];
+  return { lines, theorems };
+}
+
+/** The certificate fragment for one proved task, plus its first refused round when present. */
 function leanForTask(result) {
   const lines = [];
   const { name } = result;
@@ -702,23 +730,9 @@ function leanForTask(result) {
   lines.push(`  simp [${name}, value, valuesUpTo, evalStep, NobleFoundation.FirstProjection.ofList]`, '  bv_omega', '');
   const theorems = [{ name: `${NAMESPACE}.${name}_certified`, phase: 1, role: 'real-artifact',
     claim: `the synthesized program \`${result.search.program}\` and its reference \`${result.reference}\` agree on every input, a graph-model theorem` }];
-  const refused = result.rounds.find(round => round.verdict === 'refuted');
-  if (refused) {
-    lines.push(`/-! ### \`${name}\`: the candidate the examples alone admitted, refused -/`, '');
-    lines.push('/-- The program the examples alone admitted, whose refinement found a counterexample. -/');
-    lines.push(`def ${name}_refused : Pair :=`, ...leanPair(result.lean.refused), '');
-    lines.push("/-- The counterexample, as exact bits: the kernel decides `refuted` on them. -/");
-    lines.push(`def ${name}_refusedWitness : Nat → BitVec 64 :=`);
-    lines.push(`  ${leanWitness(refused.witness, result.declaration.inputs)}`, '');
-    lines.push(`theorem ${name}_refused_witness_refutes :`, `    refuted ${name}_refused ${name}_refusedWitness = true := by`, '  decide', '');
-    lines.push('/-- **The refused candidate has no certificate**, from its kernel-checked witness. -/');
-    lines.push(`theorem ${name}_refused_not_certifiable :`, `    ¬ ∀ inputs, agreesOn ${name}_refused inputs :=`);
-    lines.push(`  not_certifiable_of_refuted ${name}_refused _ ${name}_refused_witness_refutes`, '');
-    theorems.push({ name: `${NAMESPACE}.${name}_refused_witness_refutes`, phase: 1, role: 'negative-control',
-      claim: `the refused candidate \`${refused.program}\` really refutes \`${name}\`'s reference at the recorded bits` });
-    theorems.push({ name: `${NAMESPACE}.${name}_refused_not_certifiable`, phase: 1, role: 'negative-control',
-      claim: `the refused candidate for \`${name}\` has no certificate, from its kernel-checked witness` });
-  }
+  const refusal = leanRefusalForTask(result);
+  lines.push(...refusal.lines);
+  theorems.push(...refusal.theorems);
   return { lines, theorems };
 }
 
@@ -746,10 +760,9 @@ function emitLean(results) {
     'not cover. The proofs unfold the model and close with `bv_omega`, whose proof terms the kernel',
     'checks; no native evaluation is involved, and the foundation lane audits the axioms.',
     '',
-    'Each `_refused` pair is the program the examples alone admitted at the round the refinement',
-    'refused it: its witness is exact bits, the kernel decides `refuted` on them, and',
-    '`_refused_not_certifiable` states that no certificate covers that pair. So a certificate here is',
-    'not vacuous, and the refinement step was necessary.',
+    'For each task with a refused candidate, its first refused pair and exact witness are emitted;',
+    'the kernel decides `refuted` on that witness, and `_refused_not_certifiable` derives that the',
+    'pair cannot agree on every input. These are negative controls, not claims about later candidates.',
     '',
     'These are graph-model theorems: no encoder, formula, solver, emitted Wasm or Rust evaluator is a',
     "subject. Reading the synthesized words as this model's nodes is the one trusted translation, and",
@@ -775,6 +788,11 @@ function emitLean(results) {
     claim: 'a pair with a refuting input has no certificate for every input' }];
   for (const result of certified) {
     const fragment = leanForTask(result);
+    lines.push(...fragment.lines);
+    theorems.push(...fragment.theorems);
+  }
+  for (const result of results.filter(result => result.status !== 'proved' && result.lean?.refused)) {
+    const fragment = leanRefusalForTask(result);
     lines.push(...fragment.lines);
     theorems.push(...fragment.theorems);
   }
@@ -988,6 +1006,7 @@ function runTask(task, context) {
       query: check.query, answers: check.answers, encoder_checks: check.encoder_checks });
     break;
   }
+  if (refusedPair) record.lean = { ...record.lean, refused: refusedPair };
   record.status = status ?? 'inconclusive';
   record.certificate = certificate;
   record.rounds = rounds;

@@ -90,7 +90,7 @@ code the solver lane decides its own claims with.
 | Step | Trusted? | How it is reported |
 |---|---|---|
 | discovery (bottom-up enumeration with observational-equivalence pruning) | no | candidate counts and states per size |
-| refinement (a solver model becomes a counterexample) | no — the model must replay through this lane's evaluator | the witness's exact bits, per round |
+| refinement (a solver model becomes a counterexample) | no — the model must replay through this lane's evaluator | the witness's exact bits, per round; the first refused candidate per task also receives a separate kernel-replayed witness theorem when available |
 | proof | yes, kernel-checked, and only after the foundation lane runs | the theorem name and the emitted module's SHA-256 |
 | re-admission (`noble ngraph extract`, `noble ngraph eval` both evaluators, `noble worker scalar`, `noble live repl`) | the CLI's own paths | per program, per point |
 
