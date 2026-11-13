@@ -560,7 +560,7 @@ const STAGES: [&str; 10] = [
 
 const TRAP_CODES: [&str; 3] = ["G-FACT-FALSE", "E-NONFINITE-UPDATE", "C-CANCELLED"];
 
-const REJECT_CODES: [&str; 17] = [
+const REJECT_CODES: [&str; 20] = [
     "E-GRAPH-MALFORMED",
     "E-FORMAT",
     "E-LITERAL-INEXACT",
@@ -578,9 +578,12 @@ const REJECT_CODES: [&str; 17] = [
     "E-SNAPSHOT-ID",
     "E-SNAPSHOT-INTEGRITY",
     "E-SNAPSHOT-REPLAY",
+    "E-NET-REFUSED",
+    "E-NET-INTERFACE",
+    "E-NET-INTERNAL-INVALID",
 ];
 
-const UNSUPPORTED_CODES: [&str; 12] = [
+const UNSUPPORTED_CODES: [&str; 13] = [
     "E-EFFECT",
     "E-RESOURCE",
     "E-DYNAMIC-RUN",
@@ -593,6 +596,7 @@ const UNSUPPORTED_CODES: [&str; 12] = [
     "E-DERIV-BOOLEAN",
     "E-DERIV-INDEX",
     "E-DERIV-I64",
+    "E-NET-UNSUPPORTED",
 ];
 
 // `E-BUDGET-<kind>` for every D9 kind, plus the runtime `FUEL`.
@@ -648,6 +652,8 @@ fn outcome_class(code: &str) -> &'static str {
     } else if UNSUPPORTED_CODES.contains(&code) {
         "unsupported"
     } else if BUDGET_CODES.contains(&code) {
+        "exhausted"
+    } else if code.starts_with("E-NET-BUDGET-") {
         "exhausted"
     } else {
         panic!("{code} is not a D8 code")
@@ -864,10 +870,10 @@ fn check_envelope(line: &Value, command: &str) {
     }
     if let Some(code) = line["code"].as_str() {
         assert_eq!(outcome, outcome_class(code), "D8 class of {code}: {line}");
-        // Runtime fuel exhaustion is an observation, not a diagnosed refusal,
-        // so its site may be null.
+        // Runtime fuel exhaustion and backend-specific net reports have no
+        // source graph site, so their site may be null.
         assert!(
-            line["site"].is_string() || code == "E-BUDGET-FUEL",
+            line["site"].is_string() || code == "E-BUDGET-FUEL" || code.starts_with("E-NET-"),
             "NGRAPH-CLI-01: a refusal carries a stable site: {line}"
         );
     } else {
@@ -1886,6 +1892,22 @@ fn extract_i1_to_i4_round_trip_through_check_and_eval() -> TestResult {
                 "{vector}"
             );
         }
+        let net = scratch.run(&Ngraph::new("eval").arg(&out).arg(&vectors).arg("--net"))?;
+        let (net_header, net_lines) = eval_lines(&net)?;
+        assert_eq!(net_header["graph"], line["graph"]);
+        assert_eq!(net_header["backend"], "net");
+        assert_eq!(net_lines.len(), case.vectors.len());
+        for (vector, (_, expected)) in net_lines.iter().zip(case.vectors) {
+            assert_eq!(vector["backend"], "net", "{vector}");
+            assert!(vector["interactions"].is_u64(), "{vector}");
+            assert!(vector["peak_live_agents"].is_u64(), "{vector}");
+            assert!(vector["retained_bytes"].is_u64(), "{vector}");
+            assert_eq!(
+                vector["outputs"],
+                Value::from(expected.to_vec()),
+                "{vector}"
+            );
+        }
         reports.push((line, run.stdout));
     }
     let (i1, i3) = (&reports[0].0, &reports[2].0);
@@ -1950,6 +1972,85 @@ fn extract_i1_to_i4_round_trip_through_check_and_eval() -> TestResult {
         "E-FORMAT",
         false,
     )?;
+    Ok(())
+}
+
+#[test]
+fn net_cli_is_opt_in_exclusive_and_reports_exhaustion_without_outputs() -> TestResult {
+    let scratch = Scratch::new("net-cli-controls")?;
+    let source = scratch.write("i1.noble", I1)?;
+    let graph = scratch.path("i1.ngraph");
+    expect_normal(
+        &scratch.run(&extract_command(&source, "i64,i64", &graph))?,
+        "extract",
+    )?;
+    let vectors = scratch.write("i1.vectors", &vector_file("i64 i64", &["v 5 4", "v 8 3"]))?;
+    let default = scratch.run(&Ngraph::new("eval").arg(&graph).arg(&vectors))?;
+    let (default_header, default_rows) = eval_lines(&default)?;
+    assert!(
+        default_header["backend"].is_null(),
+        "the ordinary backend stays default"
+    );
+
+    let conflict = scratch.run(
+        &Ngraph::new("eval")
+            .arg(&graph)
+            .arg(&vectors)
+            .arg("--net")
+            .arg("--reference"),
+    )?;
+    assert_eq!(conflict.exit, Some(2));
+    assert!(conflict.stdout.is_empty(), "{}", conflict.describe());
+    assert!(String::from_utf8_lossy(&conflict.stderr).contains("different evaluation backends"));
+    let missing_snapshot = scratch.path("missing.snapshot");
+    let snapshot = scratch.run(
+        &Ngraph::new("eval")
+            .arg(&graph)
+            .arg(&vectors)
+            .arg("--net")
+            .arg("--snapshot")
+            .arg(&missing_snapshot),
+    )?;
+    assert_eq!(snapshot.exit, Some(2));
+    assert!(snapshot.stdout.is_empty(), "{}", snapshot.describe());
+    assert!(
+        String::from_utf8_lossy(&snapshot.stderr).contains("does not accept a parameter snapshot")
+    );
+
+    let exhausted = scratch.run(
+        &Ngraph::new("eval")
+            .arg(&graph)
+            .arg(&vectors)
+            .arg("--net")
+            .arg("--fuel")
+            .arg("0"),
+    )?;
+    assert_eq!(exhausted.exit, Some(5), "{}", exhausted.describe());
+    let rows = exhausted.reports()?;
+    assert_eq!(
+        rows.len(),
+        1,
+        "no header or partial prefix: {}",
+        exhausted.describe()
+    );
+    check_envelope(&rows[0], "eval");
+    assert_eq!(rows[0]["outcome"], "exhausted");
+    assert_eq!(rows[0]["code"], "E-NET-BUDGET-fuel");
+    assert_eq!(rows[0]["observation"], "exhausted");
+    assert!(rows[0]["outputs"].is_null());
+    assert_eq!(rows[0]["vector"], 0);
+
+    let f32_graph = scratch.write("f32.ngraph", PROBE_GRAPH)?;
+    let f32_vectors = scratch.write("f32.vectors", PROBE_VECTORS)?;
+    let unsupported = scratch.run(
+        &Ngraph::new("eval")
+            .arg(&f32_graph)
+            .arg(&f32_vectors)
+            .arg("--net"),
+    )?;
+    let refusal = eval_refusal(&unsupported, "E-NET-UNSUPPORTED", true)?;
+    assert_eq!(refusal["outcome"], "unsupported");
+    assert_eq!(default_rows.len(), 2);
     Ok(())
 }
 
