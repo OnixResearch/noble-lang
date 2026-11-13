@@ -162,29 +162,32 @@ theorem ee_derives : Derives bootstrapEnv eeCandidate eeCandidate.body
     eeRequest.expected.stackIn eeRequest.expected.stackOut
     eeChecked.interface.effects := by
   have hlit0 : (litScheme (.i64 7)).instantiate ⟨[.stack .nil]⟩
-      = some (.nil, tl [.i64], EffSet.empty) := by native_decide
+      = some (.nil, tl [.i64], EffSet.empty) := by decide +kernel
   have hlit1 : (litScheme (.i64 1)).instantiate ⟨[.stack (tl [.i64])]⟩
-      = some (tl [.i64], tl [.i64, .i64], EffSet.empty) := by native_decide
+      = some (tl [.i64], tl [.i64, .i64], EffSet.empty) := by decide +kernel
   have hlit2 : (litScheme (.i64 2)).instantiate ⟨[.stack (tl [.i64, eeSum])]⟩
-      = some (tl [.i64, eeSum], tl [.i64, eeSum, .i64], EffSet.empty) := by native_decide
+      = some (tl [.i64, eeSum], tl [.i64, eeSum, .i64], EffSet.empty) := by decide +kernel
   have hlit3 : (litScheme (.i64 3)).instantiate ⟨[.stack (tl [.i64, eeSum, eeProg])]⟩
-      = some (tl [.i64, eeSum, eeProg], tl [.i64, eeSum, eeProg, .i64], EffSet.empty) := by
-    native_decide
+      = some (tl [.i64, eeSum, eeProg], tl [.i64, eeSum, eeProg, .i64], EffSet.empty) :=
+    by decide +kernel
   have hinl : inlScheme.instantiate ⟨[.stack (tl [.i64]), .value .i64, .value .i64]⟩
-      = some (tl [.i64, .i64], tl [.i64, eeSum], EffSet.empty) := by native_decide
+      = some (tl [.i64, .i64], tl [.i64, eeSum], EffSet.empty) := by decide +kernel
   have hq4 : quoteScheme.instantiate
       ⟨[.stack (tl [.i64, eeSum]), .value .i64, .stack (tl [.i64, .i64])]⟩
-      = some (tl [.i64, eeSum, .i64], tl [.i64, eeSum, eeProg], EffSet.empty) := by
-    native_decide
+      = some (tl [.i64, eeSum, .i64], tl [.i64, eeSum, eeProg], EffSet.empty) :=
+    by decide +kernel
   have hq6 : quoteScheme.instantiate
       ⟨[.stack (tl [.i64, eeSum, eeProg]), .value .i64, .stack (tl [.i64, .i64])]⟩
       = some (tl [.i64, eeSum, eeProg, .i64], tl [.i64, eeSum, eeProg, eeProg],
-        EffSet.empty) := by native_decide
+        EffSet.empty) := by decide +kernel
   have hcase : caseScheme.instantiate
       ⟨[.stack (tl [.i64]), .value .i64, .value .i64, .stack (tl [.i64, .i64, .i64]),
         .effect EffSet.empty, .effect EffSet.empty]⟩
       = some (tl [.i64, eeSum, eeProg, eeProg], tl [.i64, .i64, .i64], EffSet.empty) := by
-    native_decide
+    simp [caseScheme, Scheme.instantiate, Scheme.substStack, Scheme.substPattern,
+      Scheme.substSignature, Scheme.substEffects, PartList.ofList, SlotList.ofList,
+      Inst.stack, Inst.value, Inst.effects, append_nil, union_empty_right,
+      tl, eeSum, eeProg, TyList.append]
   have e7 : Derives bootstrapEnv eeCandidate [7] (tl [.i64, eeSum, eeProg, eeProg])
       (tl [.i64, .i64, .i64]) (u 1) :=
     Derives.sequence rfl

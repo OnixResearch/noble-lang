@@ -72,9 +72,10 @@ Kernel conversion trials used at most 1,000,000 heartbeats and recursion depth 4
 theorem proofs now use `decide +kernel`: `NobleM2.rule_case_sound`, `rule_if_sound`, and
 `rule_listcase_sound` in `proofs/m3/NobleM3/Rules.lean`, plus the finite table lookup
 `NobleM2.Coverage.addLook` in `proofs/m2/NobleM2/Termination.lean`. The M3 gate's reviewed native
-list removed exactly the three converted rule theorem names; no names were added. Thus three
-gate-reviewed declarations moved to the strict axiom set (and one additional M2 helper was
-converted).
+list removed exactly the three converted rule theorem names; no names were added. In addition,
+`NobleM2.WordCoverage.ee_derives` in `proofs/m3/NobleM3/Coverage.lean` now uses kernel-checked
+instantiation premises and has only the strict axiom set. Thus four gate-reviewed declarations
+moved to the strict axiom set (and one additional M2 helper was converted).
 
 The per-word coverage family in `proofs/m3/NobleM3/CoverageWords.lean` also now kernel-checks 15 of
 its 23 canonical scheme-instantiation premises, along with the finite scheme lookups, witness
@@ -82,9 +83,11 @@ resolutions and canonical-data premises. The other eight canonical instantiation
 well-founded `Scheme.instantiate` reduction and remain `native_decide`: `dip`, `compose`, `run`,
 `reflect`, `case`, `if`, `listCase`, and `emit`. The root `NobleM2.check` acceptance premises remain
 native for all 23 words; they ask for full checker reduction rather than only a finite instance.
-These local premise conversions do not change their parent theorem axiom sets. No converted
-declaration became a new issue #62 replay root: `statements.json` remains bound to the existing
-foundation roots.
+These local premise conversions do not change their parent theorem axiom sets. The separate
+eliminator exercise in `Coverage.lean` kernel-checks all eight scheme-instantiation premises in
+`ee_derives`, so that theorem is now strict; its checker acceptance theorem `ee_accepted` remains
+native. No converted declaration became a new issue #62 replay root: `statements.json` remains
+bound to the existing foundation roots.
 
 The other native proofs in the requested sources remain deliberately classified as follows:
 

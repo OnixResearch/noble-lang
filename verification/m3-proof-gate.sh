@@ -204,7 +204,7 @@ run_cmd do
      ``NobleM2.Regression.ce_accepted, ``NobleM2.Regression.ce_derives,
      ``NobleM2.WordCoverage.coverage_positive_word,
      ``NobleM2.WordCoverage.coverage_eliminator_exercise,
-     ``NobleM2.WordCoverage.ee_accepted, ``NobleM2.WordCoverage.ee_derives,
+     ``NobleM2.WordCoverage.ee_accepted,
      ``NobleM2.fresh_instantiation,
      ``NobleM2.Refinement.table_refines, ``NobleM2.Refinement.apply_refines,
      ``NobleM2.WordRefinement.word_refinements,
