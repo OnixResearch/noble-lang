@@ -1,4 +1,4 @@
-//! Phase B B2 for `ngraph-i64/0`: the four differential legs over extracted
+//! Phase B B2 for `ngraph-i64/0`: the five differential legs over extracted
 //! graphs.
 //!
 //! - L1 ordinary Noble Wasm/V8 through the real CLI ([`crate::l1`]), `--opt
@@ -7,6 +7,7 @@
 //!   ([`Oracle`]);
 //! - L3 the reference interpreter ([`noble_ngraph::eval::reference`]);
 //! - L4 the compiled layered evaluator ([`noble_ngraph::compiled::Compiled`]).
+//! - L5 the bounded revision-3 interaction-net reducer.
 //!
 //! Agreement is `≡obs` (for `I64`/`Bool`: equality of every output). It is
 //! finite differential evidence; it proves neither extraction (NG-PO-A) nor
@@ -114,6 +115,25 @@ impl Lowered {
                 .evaluate(inputs, None, &mut Control::default())
                 .obs,
         )
+    }
+
+    /// L5 net construction, independent validation and full reduction.
+    ///
+    /// # Errors
+    /// A refusal to lower the checked graph. Runtime refusals are retained in
+    /// the returned report so a differential records them as disagreements.
+    pub fn l5(&self, inputs: &[Value]) -> Result<noble_ngraph::net::Report, String> {
+        let limits = noble_ngraph::net::Limits::default();
+        let net = noble_ngraph::net::lower(&BLAKE3, &self.extraction.checked, inputs, &limits)
+            .map_err(|refusal| format!("net lowering refused: {refusal:?}"))?;
+        Ok(noble_ngraph::net::reduce(
+            &BLAKE3,
+            &self.extraction.checked,
+            &net,
+            inputs,
+            &limits,
+            &noble_ngraph::net::Plan::default(),
+        ))
     }
 }
 
@@ -265,7 +285,7 @@ impl Tally {
     }
 }
 
-/// Runs L2–L4 on `vectors` (and L1 on the first `l1` of them, both `--opt`
+/// Runs L2–L5 on `vectors` (and L1 on the first `l1` of them, both `--opt`
 /// modes); returns the per-graph record.
 fn legs(
     cfg: &Config,
@@ -281,17 +301,40 @@ fn legs(
     let l2 = oracle.evaluate(lowered.extraction.checked.graph(), vectors)?;
     let mut digest = blake3::Hasher::new();
     let mut l3_all = Vec::with_capacity(vectors.len());
+    let mut l5_interactions = Vec::with_capacity(vectors.len());
+    let mut l5_normal = 0usize;
     for (i, v) in vectors.iter().enumerate() {
         let l3 = lowered.l3(v)?;
         let l4 = lowered.l4(v)?;
+        let l5_report = lowered.l5(v)?;
+        let l5 = match l5_report.obs {
+            noble_ngraph::net::Obs::Normal(values) => {
+                l5_normal += 1;
+                values
+            }
+            other => {
+                t.check(|| format!("{name} v{i}: L5 net returned {other:?}"), false);
+                Vec::new()
+            }
+        };
+        l5_interactions.push(l5_report.interactions);
         t.check(
             || format!("{name} v{i}: L3 {l3:?} ≢ L4 {l4:?}"),
             sem::obs_eq_all(&l3, &l4),
+        );
+        t.check(
+            || format!("{name} v{i}: L3 {l3:?} ≢ L5 net {l5:?}"),
+            sem::obs_eq_all(&l3, &l5),
         );
         let l3_cells: Vec<String> = l3.iter().map(|x| cell(*x)).collect();
         t.check(
             || format!("{name} v{i}: L3 {l3_cells:?} ≢ L2 {:?}", l2[i]),
             l3_cells == l2[i],
+        );
+        let l5_cells: Vec<String> = l5.iter().map(|x| cell(*x)).collect();
+        t.check(
+            || format!("{name} v{i}: L5 net {l5_cells:?} ≢ L2 {:?}", l2[i]),
+            l5_cells == l2[i],
         );
         for c in &l3_cells {
             digest.update(c.as_bytes());
@@ -393,6 +436,11 @@ fn legs(
         "work_units": lowered.extraction.stats.work_units,
         "max_inline_depth": lowered.extraction.stats.max_inline_depth,
         "l2_l3_l4_vectors": vectors.len(),
+        "l5_net": {
+            "vectors": vectors.len(),
+            "normal": l5_normal,
+            "interaction_counts": l5_interactions,
+        },
         "l1": l1_record,
         "l3_output_digest": digest.finalize().to_hex().to_string(),
     }))
@@ -452,6 +500,31 @@ pub fn campaign(cfg: &Config) -> Result<serde_json::Value, String> {
         record["design_expected"] = json!(n.expected);
         named.push(record);
     }
+    let equality = Lowered::new(&[], "=", 2)?;
+    let equality_vectors = seeded_vectors(
+        &mut rng,
+        equality.inputs,
+        cfg.vectors,
+        &[i64::MIN, i64::MAX],
+    );
+    named.push(legs(
+        cfg,
+        &mut t,
+        "boolean-equality-boundaries",
+        &equality,
+        &equality_vectors,
+        cfg.l1_vectors.min(equality_vectors.len()),
+    )?);
+    let unit = Lowered::new(&[], "drop", 1)?;
+    let unit_vectors = seeded_vectors(&mut rng, unit.inputs, cfg.vectors, &[i64::MIN]);
+    named.push(legs(
+        cfg,
+        &mut t,
+        "unit-empty-output",
+        &unit,
+        &unit_vectors,
+        cfg.l1_vectors.min(unit_vectors.len()),
+    )?);
     let transition = transition(cfg, &mut t, &mut rng)?;
     let mut random_records = Vec::new();
     for i in 0..cfg.programs {
