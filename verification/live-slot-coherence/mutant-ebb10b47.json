@@ -1,0 +1,444 @@
+{
+  "schema": "noble-live-slot-current-map-mutant/v1",
+  "claim": "one committed-source patch makes both retained lanes fail; the unpatched source passes them. Not a proof, not a correspondence claim, not a case promotion.",
+  "source_commit": "ebb10b47de8acc25951e2df46c49c878458553c9",
+  "patch": {
+    "file": "crates/noble-cli/src/core/runtime/slot-registry.mjs",
+    "what": "dispatch selects from the registry's current map instead of the root's pinned map",
+    "before": "const selected = root.state.map.get(ref.slotId);",
+    "after": "const selected = this.#current.map.get(ref.slotId);",
+    "diff": "--- a/crates/noble-cli/src/core/runtime/slot-registry.mjs\n+++ b/crates/noble-cli/src/core/runtime/slot-registry.mjs\n@@ const selected = root.state.map.get(ref.slotId); @@\n-const selected = root.state.map.get(ref.slotId);\n+const selected = this.#current.map.get(ref.slotId);\n",
+    "sha256": "0e6be28f18ade3543285be0e4f1131ecb91ceec17ffa44a964d4597e77090687",
+    "only_difference": "the clean and mutated source trees are the same git archive plus this one substitution"
+  },
+  "build": {
+    "recipe": [
+      "cargo",
+      "build",
+      "-p",
+      "noble-cli",
+      "--bin",
+      "noble",
+      "--offline",
+      "--locked"
+    ],
+    "cargo": "/home/brittonr/.cache/noble-iss/cargo.sh",
+    "jobs": "6",
+    "clean": {
+      "seconds": 14,
+      "binary_sha256": "1371b67faed24d49dd7b1f343c0a0216ac6dbb5fa658248173c7e9b7efce9ebf"
+    },
+    "mutant": {
+      "seconds": 14,
+      "binary_sha256": "79180039a46b3df0a64efe5d5ec68af0dcf1dee3c9112c71fa168dd6153650ad"
+    },
+    "target_root": "/home/brittonr/.cache/noble-iss/scratch/live-47/mt-target"
+  },
+  "lanes": {
+    "digests": [
+      {
+        "path": "crates/noble-cli/tests/live_slot_coherent_maps.mjs",
+        "sha256": "ca050321563c2ede42372689036ce29f6843fbcdb32f958a1d26b9bed4d18f70"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_two_selections.mjs",
+        "sha256": "8324c3dc474349eb46fb6406ece879165742ec1e30a167f7adeebdcf4df2fa92"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_resource_ref_cli.mjs",
+        "sha256": "8f55ed81c5570a98789c9756fed345c707c19b38b60cb208cc9053cecf904046"
+      }
+    ],
+    "node": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+    "clean": {
+      "coherent_maps": {
+        "lane": "live_slot_coherent_maps.mjs",
+        "direction": null,
+        "status": 0,
+        "observed": {
+          "leafFirstCounts": {
+            "dispatches": 1,
+            "effects": 1
+          },
+          "callerFirstCounts": {
+            "dispatches": 1,
+            "effects": 1
+          },
+          "pinnedEpoch": "2",
+          "heldPublicationOutcome": "published",
+          "publishedEpoch": "3",
+          "heldRootCounts": {
+            "dispatches": 1,
+            "effects": 1
+          },
+          "heldRootDefinition": "checked:0:1:2",
+          "freshRootCounts": {
+            "dispatches": 1,
+            "effects": 1
+          },
+          "freshRootDefinition": "checked:2:1:5",
+          "withoutCompareAndSetOutcome": "stale-reject",
+          "halfPublishedOutcome": "execution-failed",
+          "halfPublishedRows": 0,
+          "halfPublishedSessionState": "terminated-after-guest-failure",
+          "omissionCounts": {
+            "dispatches": 1,
+            "effects": 0
+          }
+        },
+        "failure": null,
+        "stderr": ""
+      },
+      "two_selections": {
+        "lane": "live_slot_two_selections.mjs",
+        "direction": null,
+        "status": 0,
+        "observed": {
+          "variants": [
+            {
+              "variant": "emitting-old",
+              "pinnedDefinition": "tracedLeaf",
+              "nextDefinition": "inertLeaf",
+              "pinnedEpoch": "1",
+              "publicationEpoch": "2",
+              "entered": {
+                "import": "live_select",
+                "ordinal": 0,
+                "site": 0
+              },
+              "committed": {
+                "epoch": "2",
+                "root": true,
+                "checkpoint": true,
+                "controlId": "1"
+              },
+              "heldEpoch": "1",
+              "heldCounts": {
+                "leafSelections": 2,
+                "effects": 2
+              },
+              "heldPrograms": [
+                "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4108"
+              ],
+              "heldDefinitions": [
+                null
+              ],
+              "heldEffects": [
+                "E"
+              ],
+              "heldRowEpochs": [
+                "1"
+              ],
+              "heldSlotOrder": [
+                "A",
+                "E",
+                "E"
+              ],
+              "heldControls": [
+                [
+                  "1",
+                  "publish",
+                  "E",
+                  "2",
+                  "published"
+                ]
+              ],
+              "nextEpoch": "2",
+              "nextCounts": {
+                "leafSelections": 2,
+                "effects": 0
+              },
+              "nextPrograms": [
+                "artifact:4fd76558794327b10497d9fab53f281e9a1a75ac37fa1281f6ee326e5b62b162:cell:4112"
+              ],
+              "nextDefinitions": [
+                "checked:2:3:4"
+              ],
+              "nextEffects": [],
+              "nextRowEpochs": [
+                "2"
+              ],
+              "expectedHeldEffects": 2,
+              "expectedNextEffects": 0,
+              "exit": 0
+            },
+            {
+              "variant": "inert-old",
+              "pinnedDefinition": "inertLeaf",
+              "nextDefinition": "tracedLeafNext",
+              "pinnedEpoch": "1",
+              "publicationEpoch": "2",
+              "entered": {
+                "import": "live_select",
+                "ordinal": 0,
+                "site": 0
+              },
+              "committed": {
+                "epoch": "2",
+                "root": true,
+                "checkpoint": true,
+                "controlId": "1"
+              },
+              "heldEpoch": "1",
+              "heldCounts": {
+                "leafSelections": 2,
+                "effects": 0
+              },
+              "heldPrograms": [
+                "artifact:30fba92f1aa791a389ae40b369e79b3f8dba38dfbde3e92db21ae5b6831ca5f3:cell:4101"
+              ],
+              "heldDefinitions": [
+                null
+              ],
+              "heldEffects": [],
+              "heldRowEpochs": [
+                "1"
+              ],
+              "heldSlotOrder": [
+                "A",
+                "E",
+                "E"
+              ],
+              "heldControls": [
+                [
+                  "1",
+                  "publish",
+                  "E",
+                  "2",
+                  "published"
+                ]
+              ],
+              "nextEpoch": "2",
+              "nextCounts": {
+                "leafSelections": 2,
+                "effects": 2
+              },
+              "nextPrograms": [
+                "artifact:281c6051fbeec08effaa9fcbff1c14aaef234ba81edcba0639a22329fc68654e:cell:4112"
+              ],
+              "nextDefinitions": [
+                "checked:1:1:4"
+              ],
+              "nextEffects": [
+                "E"
+              ],
+              "nextRowEpochs": [
+                "2"
+              ],
+              "expectedHeldEffects": 0,
+              "expectedNextEffects": 2,
+              "exit": 0
+            }
+          ]
+        },
+        "failure": null,
+        "stderr": ""
+      }
+    },
+    "mutant": {
+      "coherent_maps": {
+        "lane": "live_slot_coherent_maps.mjs",
+        "direction": null,
+        "status": 1,
+        "observed": null,
+        "failure": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\nAssertionError [ERR_ASSERTION]: the held root must dispatch to and emit from the version it was pinned on\n+ actual - expected\n+ 'checked:2:1:5'\n- 'checked:0:1:2'\n           ^\n    at run (file:///home/brittonr/.cache/noble-iss/wt/live-47/crates/noble-cli/tests/live_slot_coherent_maps.mjs:167:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async file:///home/brittonr/.cache/noble-iss/wt/live-47/crates/noble-cli/tests/live_slot_coherent_maps.mjs:274:19 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: 'checked:2:1:5',\n  expected: 'checked:0:1:2',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\nNode.js v24.13.0",
+        "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: the held root must dispatch to and emit from the version it was pinned on\n+ actual - expected\n\n+ 'checked:2:1:5'\n- 'checked:0:1:2'\n           ^\n\n    at run (file:///home/brittonr/.cache/noble-iss/wt/live-47/crates/noble-cli/tests/live_slot_coherent_maps.mjs:167:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async file:///home/brittonr/.cache/noble-iss/wt/live-47/crates/noble-cli/tests/live_slot_coherent_maps.mjs:274:19 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: 'checked:2:1:5',\n  expected: 'checked:0:1:2',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v24.13.0\n"
+      },
+      "two_selections": [
+        {
+          "lane": "live_slot_two_selections.mjs",
+          "direction": "emitting-old",
+          "status": 1,
+          "observed": {
+            "variants": [
+              {
+                "variant": "emitting-old",
+                "pinnedDefinition": "tracedLeaf",
+                "nextDefinition": "inertLeaf",
+                "pinnedEpoch": "1",
+                "publicationEpoch": "2",
+                "entered": {
+                  "import": "live_select",
+                  "ordinal": 0,
+                  "site": 0
+                },
+                "committed": {
+                  "epoch": "2",
+                  "root": true,
+                  "checkpoint": true,
+                  "controlId": "1"
+                },
+                "heldEpoch": "1",
+                "heldCounts": {
+                  "leafSelections": 2,
+                  "effects": 0
+                },
+                "heldPrograms": [
+                  "artifact:4fd76558794327b10497d9fab53f281e9a1a75ac37fa1281f6ee326e5b62b162:cell:4112"
+                ],
+                "heldDefinitions": [
+                  "checked:2:3:4"
+                ],
+                "heldEffects": [],
+                "heldRowEpochs": [
+                  "1"
+                ],
+                "heldSlotOrder": [
+                  "A",
+                  "E",
+                  "E"
+                ],
+                "heldControls": [
+                  [
+                    "1",
+                    "publish",
+                    "E",
+                    "2",
+                    "published"
+                  ]
+                ],
+                "nextEpoch": "2",
+                "nextCounts": {
+                  "leafSelections": 2,
+                  "effects": 0
+                },
+                "nextPrograms": [
+                  "artifact:4fd76558794327b10497d9fab53f281e9a1a75ac37fa1281f6ee326e5b62b162:cell:4112"
+                ],
+                "nextDefinitions": [
+                  "checked:2:3:4"
+                ],
+                "nextEffects": [],
+                "nextRowEpochs": [
+                  "2"
+                ],
+                "expectedHeldEffects": 2,
+                "expectedNextEffects": 0,
+                "exit": 0
+              }
+            ]
+          },
+          "failure": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\nAssertionError [ERR_ASSERTION]: the held root must perform the pinned version's event exactly 2 times\n0 !== 2\n    at verify (file:///home/brittonr/.cache/noble-iss/wt/live-47/crates/noble-cli/tests/live_slot_two_selections.mjs:169:10)\n    at file:///home/brittonr/.cache/noble-iss/wt/live-47/crates/noble-cli/tests/live_slot_two_selections.mjs:212:31\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: 0,\n  expected: 2,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\nNode.js v24.13.0",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: the held root must perform the pinned version's event exactly 2 times\n\n0 !== 2\n\n    at verify (file:///home/brittonr/.cache/noble-iss/wt/live-47/crates/noble-cli/tests/live_slot_two_selections.mjs:169:10)\n    at file:///home/brittonr/.cache/noble-iss/wt/live-47/crates/noble-cli/tests/live_slot_two_selections.mjs:212:31\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: 0,\n  expected: 2,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v24.13.0\n"
+        },
+        {
+          "lane": "live_slot_two_selections.mjs",
+          "direction": "inert-old",
+          "status": 1,
+          "observed": {
+            "variants": [
+              {
+                "variant": "inert-old",
+                "pinnedDefinition": "inertLeaf",
+                "nextDefinition": "tracedLeafNext",
+                "pinnedEpoch": "1",
+                "publicationEpoch": "2",
+                "entered": {
+                  "import": "live_select",
+                  "ordinal": 0,
+                  "site": 0
+                },
+                "committed": {
+                  "epoch": "2",
+                  "root": true,
+                  "checkpoint": true,
+                  "controlId": "1"
+                },
+                "heldEpoch": "1",
+                "heldCounts": {
+                  "leafSelections": 2,
+                  "effects": 2
+                },
+                "heldPrograms": [
+                  "artifact:281c6051fbeec08effaa9fcbff1c14aaef234ba81edcba0639a22329fc68654e:cell:4112"
+                ],
+                "heldDefinitions": [
+                  "checked:1:1:4"
+                ],
+                "heldEffects": [
+                  "E"
+                ],
+                "heldRowEpochs": [
+                  "1"
+                ],
+                "heldSlotOrder": [
+                  "A",
+                  "E",
+                  "E"
+                ],
+                "heldControls": [
+                  [
+                    "1",
+                    "publish",
+                    "E",
+                    "2",
+                    "published"
+                  ]
+                ],
+                "nextEpoch": "2",
+                "nextCounts": {
+                  "leafSelections": 2,
+                  "effects": 2
+                },
+                "nextPrograms": [
+                  "artifact:281c6051fbeec08effaa9fcbff1c14aaef234ba81edcba0639a22329fc68654e:cell:4112"
+                ],
+                "nextDefinitions": [
+                  "checked:1:1:4"
+                ],
+                "nextEffects": [
+                  "E"
+                ],
+                "nextRowEpochs": [
+                  "2"
+                ],
+                "expectedHeldEffects": 0,
+                "expectedNextEffects": 2,
+                "exit": 0
+              }
+            ]
+          },
+          "failure": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\nAssertionError [ERR_ASSERTION]: the held root must perform the pinned version's event exactly 0 times\n2 !== 0\n    at verify (file:///home/brittonr/.cache/noble-iss/wt/live-47/crates/noble-cli/tests/live_slot_two_selections.mjs:169:10)\n    at file:///home/brittonr/.cache/noble-iss/wt/live-47/crates/noble-cli/tests/live_slot_two_selections.mjs:212:31\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: 2,\n  expected: 0,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\nNode.js v24.13.0",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: the held root must perform the pinned version's event exactly 0 times\n\n2 !== 0\n\n    at verify (file:///home/brittonr/.cache/noble-iss/wt/live-47/crates/noble-cli/tests/live_slot_two_selections.mjs:169:10)\n    at file:///home/brittonr/.cache/noble-iss/wt/live-47/crates/noble-cli/tests/live_slot_two_selections.mjs:212:31\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: 2,\n  expected: 0,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v24.13.0\n"
+        }
+      ]
+    }
+  },
+  "observed": {
+    "clean_held_events": [
+      {
+        "variant": "emitting-old",
+        "held": 2,
+        "next": 0
+      },
+      {
+        "variant": "inert-old",
+        "held": 0,
+        "next": 2
+      }
+    ],
+    "mutant_held_events": [
+      {
+        "variant": "emitting-old",
+        "held": 0,
+        "pinned_expected": 2,
+        "held_programs": 1,
+        "held_ran_republished": true
+      },
+      {
+        "variant": "inert-old",
+        "held": 2,
+        "pinned_expected": 0,
+        "held_programs": 1,
+        "held_ran_republished": true
+      }
+    ],
+    "omitted_event": "emitting-old: the pinned version emits twice in the held root; the current-map CLI ran the republished inert version for both selections and emitted 0 times",
+    "extra_event": "inert-old: the pinned version never emits; the current-map CLI ran the republished emitting version for both selections and emitted 2 times"
+  },
+  "does_not_establish": [
+    "that the model theorems hold (they are kernel-checked separately)",
+    "any correspondence between NobleFoundation/LiveDispatch.lean and slot-registry.mjs",
+    "anything about a differently built CLI or a different fixture"
+  ]
+}
