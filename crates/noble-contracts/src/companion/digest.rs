@@ -23,6 +23,16 @@ pub(crate) const DOMAIN_COMPOSE: u64 = 0x43_4f_4d_50_4f_53_45_00;
 pub(crate) const DOMAIN_TEMPLATE: u64 = 0x54_45_4d_50_4c_41_54_45;
 pub(crate) const DOMAIN_GUARD: u64 = 0x47_55_41_52_44_00_00_00;
 
+/// Domain for a typed-chunk envelope's canonical body fold. The typed-chunk
+/// library recomputes every chunk identity and source revision in this domain
+/// from retained bytes; the value is a lookup aid, never admission authority
+/// (TCHUNK-01).
+pub(crate) const DOMAIN_CHUNK: u64 = 0x43_48_55_4e_4b_00_00_01;
+
+/// Domain for a typed-chunk emitted-source fold, kept distinct from the
+/// envelope domain so an identity can never collide with a source revision.
+pub(crate) const DOMAIN_CHUNK_SOURCE: u64 = 0x43_48_55_4e_4b_00_00_02;
+
 const OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
 const PRIME: u64 = 0x0000_0100_0000_01b3;
 

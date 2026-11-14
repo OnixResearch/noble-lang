@@ -309,6 +309,7 @@ pub fn prepare(source: &[u8], limits: Limits) -> Result<Prepared, Diagnostic> {
 )]
 pub(crate) struct Meter {
     pub limits: Limits,
+    initial_work: u32,
     work: u32,
     nodes: u32,
     /// Remaining work of one shared request. When present, every charge also

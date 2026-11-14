@@ -322,86 +322,109 @@ impl super::Session {
         inputs: &[noble_kernel::types::Ty],
         limits: crate::Limits,
     ) -> Result<Analysis, super::Error> {
+        self.analyze_editor_metered(candidate, inputs, limits)
+            .map(|(analysis, _)| analysis)
+    }
+
+    /// Analyze an editor tree and report its consumed frontend work so a
+    /// caller-owned bounded service can debit the same cumulative budget.
+    pub(crate) fn analyze_editor_metered(
+        &self,
+        candidate: &Candidate,
+        inputs: &[noble_kernel::types::Ty],
+        limits: crate::Limits,
+    ) -> Result<(Analysis, u32), super::Error> {
         let (mut builder, mut meter) = attempt!(candidate.build(limits));
-        if let Err(error) =
-            super::resolution::resolve(&mut builder.tree, None, self, false, &mut meter)
-        {
-            return Err(super::Error::at(super::Stage::Resolve, error));
-        }
-        if let Err(error) = super::preflight::check(inputs, self, builder.tree.span, &mut meter) {
-            return Err(super::Error::at(super::Stage::Check, error));
-        }
-        let environment = attempt!(self
-            .environment()
+        let result = (|| {
+            if let Err(error) =
+                super::resolution::resolve(&mut builder.tree, None, self, false, &mut meter)
+            {
+                return Err(super::Error::at(super::Stage::Resolve, error));
+            }
+            if let Err(error) = super::preflight::check(inputs, self, builder.tree.span, &mut meter)
+            {
+                return Err(super::Error::at(super::Stage::Check, error));
+            }
+            let environment = attempt!(self
+                .environment()
+                .map_err(|error| super::Error::at(super::Stage::Check, error)));
+            let scope = super::inference::Scope {
+                root: &builder.tree,
+                session: self,
+                environment: &environment,
+                root_signature: None,
+                prospective_owner: None,
+            };
+            let state = attempt!(super::inference::infer(
+                scope,
+                super::inference::Mode::EditorAnalysis,
+                inputs,
+                &mut meter
+            )
             .map_err(|error| super::Error::at(super::Stage::Check, error)));
-        let scope = super::inference::Scope {
-            root: &builder.tree,
-            session: self,
-            environment: &environment,
-            root_signature: None,
-            prospective_owner: None,
-        };
-        let state = attempt!(super::inference::infer(
-            scope,
-            super::inference::Mode::EditorAnalysis,
-            inputs,
-            &mut meter
-        )
-        .map_err(|error| super::Error::at(super::Stage::Check, error)));
-        let mut holes = Vec::with_capacity(state.holes.len());
-        for hole in &state.holes {
-            let input_stack = attempt!(state
-                .arena
-                .describe_stack(hole.input, hole.span, &mut meter)
-                .map_err(|error| super::Error::at(super::Stage::Check, error)));
-            let output_stack = attempt!(state
-                .arena
-                .describe_stack(hole.output, hole.span, &mut meter)
-                .map_err(|error| super::Error::at(super::Stage::Check, error)));
-            let incoming = attempt!(state
-                .arena
-                .editor_stack_suffix(hole.input, hole.span, &mut meter)
-                .map_err(|error| super::Error::at(super::Stage::Check, error)));
-            let outgoing = attempt!(state
-                .arena
-                .editor_stack_suffix(hole.output, hole.span, &mut meter)
-                .map_err(|error| super::Error::at(super::Stage::Check, error)));
-            let common = incoming
-                .iter()
-                .zip(&outgoing)
-                .take_while(|(left, right)| left == right)
-                .count();
-            let required_output_suffix = outgoing[common..].to_vec();
+            let mut holes = Vec::with_capacity(state.holes.len());
+            for hole in &state.holes {
+                let input_stack = attempt!(state
+                    .arena
+                    .describe_stack(hole.input, hole.span, &mut meter)
+                    .map_err(|error| super::Error::at(super::Stage::Check, error)));
+                let output_stack = attempt!(state
+                    .arena
+                    .describe_stack(hole.output, hole.span, &mut meter)
+                    .map_err(|error| super::Error::at(super::Stage::Check, error)));
+                let incoming = attempt!(state
+                    .arena
+                    .editor_stack_suffix(hole.input, hole.span, &mut meter)
+                    .map_err(|error| super::Error::at(super::Stage::Check, error)));
+                let outgoing = attempt!(state
+                    .arena
+                    .editor_stack_suffix(hole.output, hole.span, &mut meter)
+                    .map_err(|error| super::Error::at(super::Stage::Check, error)));
+                let common = incoming
+                    .iter()
+                    .zip(&outgoing)
+                    .take_while(|(left, right)| left == right)
+                    .count();
+                let required_output_suffix = outgoing[common..].to_vec();
+                let (known_effects, unresolved_effect) = attempt!(state
+                    .arena
+                    .editor_effect(hole.effect, hole.span, &mut meter)
+                    .map_err(|error| super::Error::at(super::Stage::Check, error)));
+                holes.push(HoleConstraint {
+                    input_stack,
+                    output_stack,
+                    required_output_suffix,
+                    known_effects,
+                    unresolved_effect,
+                });
+            }
+            let root = match state.bodies.first() {
+                Some(root) => root,
+                None => {
+                    return Err(super::Error::at(
+                        super::Stage::Check,
+                        crate::internal(builder.tree.span),
+                    ))
+                }
+            };
             let (known_effects, unresolved_effect) = attempt!(state
                 .arena
-                .editor_effect(hole.effect, hole.span, &mut meter)
+                .editor_effect(root.effect, root.span, &mut meter)
                 .map_err(|error| super::Error::at(super::Stage::Check, error)));
-            holes.push(HoleConstraint {
-                input_stack,
-                output_stack,
-                required_output_suffix,
+            Ok(Analysis {
+                holes,
                 known_effects,
                 unresolved_effect,
-            });
-        }
-        let root = match state.bodies.first() {
-            Some(root) => root,
-            None => {
-                return Err(super::Error::at(
-                    super::Stage::Check,
-                    crate::internal(builder.tree.span),
-                ))
+            })
+        })();
+        let work_used = meter.spent();
+        match result {
+            Ok(analysis) => Ok((analysis, work_used)),
+            Err(mut error) => {
+                error.work_used = work_used;
+                Err(error)
             }
-        };
-        let (known_effects, unresolved_effect) = attempt!(state
-            .arena
-            .editor_effect(root.effect, root.span, &mut meter)
-            .map_err(|error| super::Error::at(super::Stage::Check, error)));
-        Ok(Analysis {
-            holes,
-            known_effects,
-            unresolved_effect,
-        })
+        }
     }
 }
 

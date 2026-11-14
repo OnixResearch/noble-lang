@@ -11,6 +11,7 @@ impl crate::Meter {
     pub const fn new(limits: crate::Limits) -> Self {
         Self {
             limits,
+            initial_work: limits.work,
             work: limits.work,
             nodes: 0,
             pool: None,
@@ -25,7 +26,9 @@ impl crate::Meter {
     ) -> Self {
         let mut meter = Self::new(limits);
         if let Some(pool) = pool {
-            meter.work = meter.work.min(pool.get());
+            let available = meter.work.min(pool.get());
+            meter.initial_work = available;
+            meter.work = available;
             meter.pool = Some(alloc::rc::Rc::clone(pool));
         }
         meter
@@ -42,6 +45,11 @@ impl crate::Meter {
         self.pool
             .as_ref()
             .map_or(self.work, |pool| self.work.min(pool.get()))
+    }
+
+    /// Work charged to this meter, excluding any other meters in its pool.
+    pub const fn spent(&self) -> u32 {
+        self.initial_work.saturating_sub(self.work)
     }
 
     pub fn charge(&mut self, amount: u32, span: crate::Span) -> Result<(), crate::Diagnostic> {

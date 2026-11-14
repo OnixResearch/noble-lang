@@ -1,3 +1,18 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; editor integration tests use their domain names directly so independent fixtures and expected interfaces stay readable"
+)]
+#![expect(
+    tigerstyle::renamed_imports,
+    reason = "Owner: noble-contracts; test-only aliases distinguish the typed-chunk API from the editor API while implementation paths remain canonical"
+)]
+#![expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; #[test] functions exercise runtime sessions and the standard test harness"
+)]
+
 fn limits() -> noble_contracts::Limits {
     noble_contracts::Limits {
         bytes: 65_536,
@@ -157,4 +172,20 @@ fn editor_hole_free_source_uses_ordinary_kernel_preparation() -> Result<(), Stri
     };
     assert!(nested.admitted_source(tiny).is_err());
     Ok(())
+}
+
+#[path = "editor/chunks.rs"]
+mod chunks;
+
+#[path = "editor/chunks-completion.rs"]
+mod chunks_completion;
+
+fn monotonic_now_ns() -> u64 {
+    static START: std::sync::LazyLock<std::time::Instant> =
+        std::sync::LazyLock::new(std::time::Instant::now);
+    let mut elapsed_ns = u64::MAX;
+    if let Ok(representable_ns) = u64::try_from(START.elapsed().as_nanos()) {
+        elapsed_ns = representable_ns;
+    }
+    elapsed_ns
 }

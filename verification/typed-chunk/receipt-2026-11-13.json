@@ -1,0 +1,19 @@
+{
+  "schema": "typed-chunk-measurement/1",
+  "source_commit": "037d93a06a186e93c4f3a81a723e0d804147d613",
+  "scenario": "two-chunk-stack-tail",
+  "outcome": "accepted",
+  "enumerated_candidates": 6,
+  "checked_candidates": 1,
+  "rejected_candidates": 5,
+  "expanded_nodes": 6,
+  "dependency_steps": 0,
+  "instantiation_bindings": 8,
+  "checking_work": 1760,
+  "evaluation_steps": 0,
+  "source_bytes": 9,
+  "retained_bytes": 713,
+  "completed_source_bytes": 9,
+  "selected_chunks": 2,
+  "total_latency_ns": 1484444
+}

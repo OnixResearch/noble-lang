@@ -9,12 +9,19 @@ semantic revision `0`, a 16-byte chunk identity, a 32-byte source revision,
 exact ordered `I64`/`Bool` input and output stacks, an empty effect set, zero
 through eight immutable scalar captures, resolved definition/dependency identities, ordered
 instantiation witnesses, and a finite canonical recipe. The recipe MUST be
-acyclic, with only I64/Bool literals, pure ordered-stack routing, the published
-I64/Bool arithmetic/Boolean operations and bounded quotations. Text, Unit,
-Syntax, resources, live references, reflection, dynamic calls, recursion,
-`SignedSelf` and `SlotInvoke` MUST be unsupported. A digest or index MUST NOT
-be acceptance authority. Every chunk and transitive dependency MUST be checked
-by ordinary source preparation and kernel acceptance.
+acyclic and its nodes MUST be I64/Bool literals, immutable captures, closed
+primitive-operation tags with retained instantiation witnesses, exact earlier
+dependency invocations, or bounded quotations. The source worktree's
+re-admittable pure stack operations are `dup`, `drop`, `swap`, `+`, `-`, `*`,
+I64 `=`, and explicit `run`; Boolean values are literals or results of I64
+equality. `over`, I64 `<`, and Boolean `not`/`and`/`or` are not stack words in
+this source resolver (`over` has no bootstrap entry, `<` is only in the
+declared-text path, and the Boolean operations belong to predicate syntax), so
+the typed-chunk profile MUST reject them rather than add language operations.
+Text, Unit, Syntax, resources, live references, reflection, dynamic calls,
+recursion, `SignedSelf` and `SlotInvoke` MUST be unsupported. A digest or index
+MUST NOT be acceptance authority. Every chunk and transitive dependency MUST
+be checked by ordinary source preparation and kernel acceptance.
 
 #### Scenario: exact envelope is admitted only as a pure recipe
 
@@ -24,6 +31,14 @@ by ordinary source preparation and kernel acceptance.
 - WHEN the library admits it
 - THEN it MUST retain the body, dependencies and instantiations and MUST
   independently derive the interface rather than trust the supplied metadata
+
+#### Scenario: primitive-operation witnesses are not authority
+
+- GIVEN a closed primitive operation node with an instantiation witness that
+  disagrees with its concrete ordered stack
+- WHEN the library admits the recipe
+- THEN it MUST reject the witness before retaining the entry, and the normal
+  source-preparation/kernel-check path MUST still gate every valid recipe
 
 #### Scenario: unsupported capability is not a chunk
 
@@ -101,6 +116,22 @@ first exact envelope/editor location and observed/limit values. Exhaustion MUST
 never truncate or partially publish a proposal, and no-result MUST never be
 reported as exhaustion.
 
+The diagnostic report MUST retain only the first refusal for each `(class,
+exact location)`. Repeated refusals with that key MUST still contribute to
+candidate and rejection counts but MUST NOT consume another diagnostic or
+retained-byte entry.
+
+Checking work MUST share one cumulative counter across source-aware editor
+analysis, ordered-stack task replay, `Session::prepare` and its source-path
+kernel checker, the independent kernel recheck, and every selected-chunk
+revalidation. Each stage MUST receive only
+the remaining counter; its charged work MUST be debited before a later stage or
+candidate begins. Source-path kernel checks MUST debit their reported consumed
+work instead of reserving twice their declared allowance. A request-preflight
+refusal MAY conservatively debit its full declared allowance when the checker
+does not expose its local remaining counter. This counter measures bounded
+checker-work charges, not elapsed CPU time or machine instructions.
+
 #### Scenario: each budget boundary has its own exhaustion
 
 - GIVEN a request whose retained library, dependency walk, expansion, source,
@@ -117,13 +148,13 @@ reported as exhaustion.
 - THEN malformed structure or stale metadata MUST be `Invalid`, an out-of-profile
   construct MUST be `Unsupported`, and neither MUST be relabeled `NoResult`
 
-#### Scenario: an exhausted search is not no-result
+#### Scenario: candidate exhaustion is distinct from no-result
 
-- GIVEN the 128th candidate has been charged and a 129th candidate would be
-  required
+- GIVEN the host lowers the candidate budget to `N`, `N` candidates have been
+  charged, and another candidate would be required
 - WHEN enumeration would continue
 - THEN the API MUST return `Exhausted(candidates)` rather than `NoResult`, with
-  the report retaining the 128 attempted-candidate count
+  the report retaining exactly `N` attempted candidates
 
 ### Requirement: TCHUNK-04
 r[TCHUNK-04]

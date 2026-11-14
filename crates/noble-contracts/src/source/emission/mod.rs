@@ -260,13 +260,17 @@ fn assemble(
     }
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; allowance divides the current runtime meter remainder by each admitted body count, so it is request-state-dependent and cannot be a constant expression"
+)]
 fn allowance(
     body_count: usize,
     span: crate::Span,
     meter: &crate::Meter,
 ) -> Result<noble_kernel::untrusted::Limits, crate::Diagnostic> {
-    // Reserve at most half the remaining frontend work for all independent
-    // dependency and node checks. Unused checker work is not reclaimed.
+    // Bound aggregate kernel checker work to at most one quarter of the
+    // remaining source meter; the exact work used is charged after each check.
     let body_count = attempt!(crate::index(body_count, span));
     let work = match body_count
         .checked_mul(4)
@@ -351,9 +355,6 @@ fn checked(
     };
     // Every concrete body derives independently: the root invocation contract
     // alone is not evidence for any definition's implementation.
-    if let Err(error) = meter.charge(admission.limits.work.saturating_mul(2), span) {
-        return Err(super::Error::at(crate::source::Stage::Acceptance, error));
-    }
     let mut caller_environment = admission.environment.clone();
     caller_environment.caller_module = draft_owner;
     let self_owner = if body
@@ -382,8 +383,8 @@ fn checked(
     } else {
         None
     };
-    let result = match self_owner {
-        Some(owner) => crate::program::check_signed_structure(
+    let (result, work_used) = match self_owner {
+        Some(owner) => crate::program::check_signed_structure_with_work(
             &caller_environment,
             &body.candidate,
             &request,
@@ -394,8 +395,17 @@ fn checked(
                 super::Error::at(crate::source::Stage::Check, crate::internal(span))
             })?,
         ),
-        None => crate::program::check(&caller_environment, &body.candidate, &request, &spans, span),
+        None => crate::program::check_with_work(
+            &caller_environment,
+            &body.candidate,
+            &request,
+            &spans,
+            span,
+        ),
     };
+    if let Err(error) = meter.charge(work_used, span) {
+        return Err(super::Error::at(crate::source::Stage::Acceptance, error));
+    }
     let checked = match result {
         Ok(checked) => checked,
         Err(error) => return Err(super::Error::at(crate::source::Stage::Acceptance, error)),
