@@ -4,7 +4,7 @@
 use super::{eval_lines, vector_file, Ngraph, Scratch, TestResult};
 use noble_ngraph::identity::{IdentityHasher, IdentityScheme};
 use noble_ngraph::{net, resource, GraphBuilder, ScalarType, SubProfile, Value};
-use serde_json::{json, Value as Json};
+use serde_json::json;
 
 struct Blake3;
 struct Running(blake3::Hasher);
@@ -35,12 +35,14 @@ fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
-fn unhex(text: &str) -> Vec<u8> {
-    assert_eq!(text.len() % 2, 0);
+fn unhex(text: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    if text.len() % 2 != 0 {
+        return Err("retained hex field has odd length".into());
+    }
     text.as_bytes()
         .chunks_exact(2)
-        .map(|pair| {
-            u8::from_str_radix(std::str::from_utf8(pair).expect("ASCII hex"), 16).expect("hex byte")
+        .map(|pair| -> Result<u8, Box<dyn std::error::Error>> {
+            Ok(u8::from_str_radix(std::str::from_utf8(pair)?, 16)?)
         })
         .collect()
 }
@@ -57,7 +59,9 @@ fn chain(count: usize) -> (noble_ngraph::ir::Graph, Vec<Value>) {
     (builder.finish(), vec![Value::I64(i64::MAX)])
 }
 
-fn balanced(depth: usize) -> (noble_ngraph::ir::Graph, Vec<Value>) {
+fn balanced(
+    depth: usize,
+) -> Result<(noble_ngraph::ir::Graph, Vec<Value>), std::num::TryFromIntError> {
     let subject = noble_ngraph::ir::Subject::authored(&IDS, &format!("resource-tree-{depth}"));
     let mut builder = GraphBuilder::new(SubProfile::I64, subject);
     let count = 1usize << depth;
@@ -65,9 +69,7 @@ fn balanced(depth: usize) -> (noble_ngraph::ir::Graph, Vec<Value>) {
     let mut nodes = Vec::with_capacity(count);
     for index in 0..count {
         nodes.push(builder.input(ScalarType::I64));
-        row.push(Value::I64(
-            i64::try_from(index).expect("bounded test depth") - 4,
-        ));
+        row.push(Value::I64(i64::try_from(index)? - 4));
     }
     while nodes.len() > 1 {
         nodes = nodes
@@ -76,7 +78,7 @@ fn balanced(depth: usize) -> (noble_ngraph::ir::Graph, Vec<Value>) {
             .collect();
     }
     builder.output(nodes[0]);
-    (builder.finish(), row)
+    Ok((builder.finish(), row))
 }
 
 fn fanout_erase(copies: usize) -> (noble_ngraph::ir::Graph, Vec<Value>) {
@@ -94,7 +96,7 @@ fn controls(
     checked: &noble_ngraph::CheckedGraph,
     row: &[Value],
     artifact: &resource::Artifact,
-) -> Json {
+) -> serde_json::Value {
     let certificate = &artifact.certificate_bytes;
     let net = &artifact.net_bytes;
     let count_at = certificate.len() - IDS.name().len() - 1 - 16;
@@ -148,13 +150,13 @@ fn controls(
 }
 
 #[test]
-fn byte_certificates_replay_against_cli_net_traces() -> TestResult {
+fn byte_certificates_replay_against_cli_traces() -> TestResult {
     let scratch = Scratch::new("resource-replay")?;
     let cases = [
         ("chain-3", chain(3), 9, 7),
         ("chain-5", chain(5), 15, 11),
-        ("balanced-2", balanced(2), 6, 7),
-        ("balanced-3", balanced(3), 14, 15),
+        ("balanced-2", balanced(2)?, 6, 7),
+        ("balanced-3", balanced(3)?, 14, 15),
         ("fanout-4-erase", fanout_erase(4), 4, 6),
         ("fanout-6-erase", fanout_erase(6), 6, 8),
     ];
@@ -163,10 +165,17 @@ fn byte_certificates_replay_against_cli_net_traces() -> TestResult {
     for (name, (graph, row), count, agents) in cases {
         let printed = noble_ngraph::format::graph::print(&graph);
         let graph_path = scratch.write(&format!("{name}.ngraph"), &printed)?;
-        let checked = noble_ngraph::check(&IDS, graph).expect("admitted graph");
-        let net = net::lower(&IDS, &checked, &row, &net::Limits::default())
-            .expect("admitted lowerable net");
-        let artifact = resource::issue(&IDS, &checked, &net, &row).expect("issued certificate");
+        let checked = noble_ngraph::check(&IDS, graph)
+            .map_err(|error| format!("graph admission: {error:?}"))?;
+        let limits = net::Limits {
+            max_agent_slots: 1_048_576,
+            max_wires: 2_097_152,
+            interaction_fuel: 2_097_152,
+        };
+        let net = net::lower(&IDS, &checked, &row, &limits)
+            .map_err(|error| format!("lowering: {error:?}"))?;
+        let artifact = resource::issue(&IDS, &checked, &net, &row)
+            .map_err(|error| format!("issuance: {error:?}"))?;
         let verified = resource::check(
             &IDS,
             &checked,
@@ -177,7 +186,7 @@ fn byte_certificates_replay_against_cli_net_traces() -> TestResult {
                 rules: resource::RULE_TABLE_BYTES,
             },
         )
-        .expect("independent byte decoder and checker");
+        .map_err(|error| format!("independent checker: {error:?}"))?;
         assert_eq!(
             (verified.interactions, verified.live_agent_bound),
             (count, agents),
@@ -212,7 +221,7 @@ fn byte_certificates_replay_against_cli_net_traces() -> TestResult {
         assert!(
             trace["peak_live_agents"]
                 .as_u64()
-                .expect("peak live agents")
+                .ok_or("missing peak live agents")?
                 <= agents,
             "{name}: {trace}"
         );
@@ -228,10 +237,11 @@ fn byte_certificates_replay_against_cli_net_traces() -> TestResult {
                     checked: &checked,
                     candidate: &net,
                     inputs: &row,
-                    limits: &net::Limits::default(),
+                    limits: &limits,
                     plan: net::Plan {
                         schedule: Some(schedule),
-                        ..net::Plan::default()
+                        interaction_fuel: None,
+                        cancel: None,
                     },
                 },
             );
@@ -273,7 +283,7 @@ fn byte_certificates_replay_against_cli_net_traces() -> TestResult {
     let receipt = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../verification/ngraph/resource-receipt.json");
     if receipt.exists() {
-        let retained: Json = serde_json::from_slice(&std::fs::read(&receipt)?)?;
+        let retained: serde_json::Value = serde_json::from_slice(&std::fs::read(&receipt)?)?;
         assert_eq!(
             retained["families"],
             json!(&families),
@@ -281,25 +291,27 @@ fn byte_certificates_replay_against_cli_net_traces() -> TestResult {
         );
         for (entry, (checked, row)) in retained["families"]
             .as_array()
-            .expect("retained families")
+            .ok_or("missing retained families")?
             .iter()
             .zip(&replay_inputs)
         {
+            let certificate = unhex(
+                entry["certificate_bytes"]
+                    .as_str()
+                    .ok_or("missing certificate bytes")?,
+            )?;
+            let net_bytes = unhex(entry["net_bytes"].as_str().ok_or("missing net bytes")?)?;
             let verified = resource::check(
                 &IDS,
                 checked,
                 row,
                 resource::CheckBytes {
-                    certificate: &unhex(
-                        entry["certificate_bytes"]
-                            .as_str()
-                            .expect("certificate bytes"),
-                    ),
-                    net: &unhex(entry["net_bytes"].as_str().expect("net bytes")),
+                    certificate: &certificate,
+                    net: &net_bytes,
                     rules: resource::RULE_TABLE_BYTES,
                 },
             )
-            .expect("retained independent replay");
+            .map_err(|error| format!("retained checker replay: {error:?}"))?;
             assert_eq!(verified.interactions, entry["certified_interactions"]);
             assert_eq!(verified.live_agent_bound, entry["certified_live_agents"]);
         }
