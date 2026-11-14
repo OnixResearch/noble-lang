@@ -10,6 +10,8 @@ pub(super) struct Base {
     checked_i64: bool,
     worker_inputs: bool,
     worker_interruption: bool,
+    type_directed_experimental: bool,
+    experimental_cleanup: bool,
     generation: u32,
     functions: u32,
     text_end_bytes: u32,
@@ -47,6 +49,8 @@ impl Base {
             checked_i64: compiler.checked_i64,
             worker_inputs: compiler.worker_inputs,
             worker_interruption: compiler.worker_interruption,
+            type_directed_experimental: compiler.type_directed_experimental,
+            experimental_cleanup: compiler.experimental_cleanup,
             generation: compiler.generation,
             functions: compiler.functions,
             text_end_bytes: compiler.text_end,
@@ -92,6 +96,10 @@ impl Base {
             && self.worker_inputs == next.worker_inputs
             && self.worker_interruption == current.worker_interruption
             && self.worker_interruption == next.worker_interruption
+            && self.type_directed_experimental == current.type_directed_experimental
+            && self.type_directed_experimental == next.type_directed_experimental
+            && self.experimental_cleanup == current.experimental_cleanup
+            && self.experimental_cleanup == next.experimental_cleanup
             && self.generation == current.generation
             && self.functions == current.functions
             && self.text_end_bytes == current.text_end

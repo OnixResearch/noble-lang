@@ -1127,7 +1127,7 @@
     "lane": "selected-result-library-and-finite-oracle-methodology-review-other-lanes-open-not-milestone-acceptance",
     "implementation": "partial",
     "execution": "passed",
-    "execution_scope": "DX-04 Result-Library-Draft passed its source-bound runtime gate; DX-13 separately passed a pinned-source methodology review of ten controls and five exclusions, without executing a Noble oracle or establishing model agreement. CONTRACT-16, ADAPT-17 and ADAPT-18 remain unexecuted; the owner-approved pre-edit law and independent host selection are absent. This does not complete the bend/qcue change or renew Octet source coverage.",
+    "execution_scope": "DX-04 Result-Library-Draft passed its source-bound runtime gate; DX-13 separately passed a pinned-source methodology review of ten controls and five exclusions, without executing a Noble oracle or establishing model agreement. ADAPT-17's finite compiled-Wasm trial passed its gate with a NO-GO performance decision and remains proof-open; CONTRACT-16 and ADAPT-18 remain unexecuted. The owner-approved pre-edit law and independent host selection are absent. This does not complete the bend/qcue change or renew Octet source coverage.",
     "proof": "open",
     "trust": "explicit",
     "owner_law_release_case": "CONTRACT-16",
@@ -1140,7 +1140,6 @@
     "pure_fork_join_case": "ADAPT-18",
     "unexecuted_cases": [
       "CONTRACT-16",
-      "ADAPT-17",
       "ADAPT-18"
     ],
     "existing_m3_m6_mc2_completion_changed": false,

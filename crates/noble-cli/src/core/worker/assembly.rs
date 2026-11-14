@@ -30,6 +30,8 @@ pub(crate) fn assemble_wat(
         manifest: None,
         framed: false,
         optimized: false,
+        type_directed_experimental: false,
+        lowering_selected: false,
         emit: Some(directory.to_path_buf()),
         limits: super::super::SOURCE_LIMITS,
     };

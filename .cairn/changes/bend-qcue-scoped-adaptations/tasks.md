@@ -12,7 +12,7 @@
 ## Phase 3: Optional research, not a milestone dependency
 
 - [x] [serial] Select and review DX-13's independent pure-model methodology, finite vocabulary, replay/shrinking and negative/preservation controls. The pinned-source review passed; no Noble oracle ran, and any future measured model agreement requires separate execution evidence, never universal proof. r[DX-PROPERTY-02]
-- [ ] [serial] If the post-M3 layout trial is selected, execute ADAPT-17 over pinned managed-memory candidates, real input/recipe/alloc/quota/trap observations and honest unsupported measurements. Otherwise record an explicit unexecuted disposition; neither path changes completed M3. r[BE-LAYOUT-01]
+- [x] [serial] Selected and executed the optional post-M3 ADAPT-17 layout trial with the baseline-first pinned harness, post-compilation values, observable recipes/identities, allocation/quota/trap controls, and explicit unsupported process-memory reporting. The final source-bound receipt records all finite observations; the frozen result is NO-GO because one runtime-captured-quote/opt-off cell regressed 20.00%, above the 5% ceiling. No default backend or completed M3 change follows. Constructor reuse was dropped because available reachability evidence is not transitive. r[BE-LAYOUT-01]
 - [ ] [serial] Only after required branch/schema and DX-04 Result-error gates close, decide whether to run deferred ADAPT-18; if selected, execute finite pure admissibility/precharge, join/failure ordering and retirement-accounting controls. Otherwise retain an explicit deferred unexecuted disposition. r[DX-PURE-PAR-01]
 
 ## Phase 4: Evidence and closeout pending

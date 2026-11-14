@@ -1,0 +1,1 @@
+7 quote [ 1 + ] dup inl [ drop 1 ] [ drop 2 ] case pair

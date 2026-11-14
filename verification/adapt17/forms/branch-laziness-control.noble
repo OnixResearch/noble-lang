@@ -1,0 +1,3 @@
+0 inl [ drop 11 ] [ drop test.abort 21 ] case
+0 inr [ drop test.abort 21 ] [ drop 22 ] case
+pair

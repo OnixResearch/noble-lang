@@ -220,6 +220,15 @@ pub(in crate::source::emit) fn runtime(
         out,
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/source.wat"))
     ));
+    if plan.experimental_cleanup {
+        attempt!(super::fragment(
+            out,
+            include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/runtime/experiment-cleanup.wat"
+            ))
+        ));
+    }
     if plan.live_slots {
         attempt!(super::fragment(
             out,

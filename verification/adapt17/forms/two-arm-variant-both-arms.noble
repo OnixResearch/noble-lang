@@ -1,0 +1,2 @@
+dup 10 inl [ drop swap 1 + ] [ drop swap 2 + ] case
+20 inr [ drop 3 + ] [ drop 4 + ] case pair

@@ -37,6 +37,8 @@ impl crate::core::companions::Driver {
             manifest: None,
             framed: false,
             optimized: self.optimized,
+            type_directed_experimental: false,
+            lowering_selected: false,
             emit: None,
             limits: crate::core::SOURCE_LIMITS,
         }

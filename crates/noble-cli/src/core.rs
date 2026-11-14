@@ -179,7 +179,7 @@ pub const USAGE: &str = "usage:
   --source and --allow-effects are selected by the host invoker, never by candidate claims.
   Admission rebuilds selected source and compares final Wasm bytes before fresh isolated execution.
   noble run SOURCE [--opt off|on] [--emit NEW_DIR]
-  noble compile SOURCE [--text-byte-cursor | --checked-i64] [--input-type I64|Bool|Text|Unit ...]
+  noble compile SOURCE [--text-byte-cursor | --checked-i64] [--lowering baseline|type-directed-experimental] [--input-type I64|Bool|Text|Unit ...]
   noble compile SOURCE --declared-modules --bindings HOST_FILE [--module MODULE_FILE ...] [--input-type MODULE@VERSION.TYPE ...]
   noble compile SOURCE --declared-modules --signed-self-recursion --bindings HOST_FILE [--module MODULE_FILE ...]
   noble compile SOURCE --declared-modules --text-byte-cursor [--signed-self-recursion] [--module MODULE_FILE ...]
