@@ -91,10 +91,10 @@ node order. Statically known values are computed over the **original** node indi
 canonical order, so a fold can use a folded ancestor's value but a fold never feeds a later
 node unless the later node's own operands are also static.
 
-`E` (eq) folding is an extension beyond the model: `specialize_sound` does not fold `eq`.
-Its soundness argument is direct (`I64` equality is pure, total and exact on wrapping
-values), and it is exercised by differential tests, but it is recorded here as an unproved
-extension, not as model-covered.
+The original `specialize_sound` theorem does not fold `eq`; D12's
+`foldEqualities_sound` covers exact equality folding in the extended graph model.
+The Rust fold is exercised by differential tests, but Rust/model correspondence
+remains unproved.
 
 **Rationale:** the issue asks for a simple static-or-residual baseline first, and the model
 fixes the substitution order. Algebraic identities are where "fold more" becomes a proof
@@ -113,12 +113,11 @@ charges the `RESIDUAL-NODES` cap once before pruning; pruning does not refund.
 (`E-GRAPH-MALFORMED`/`dangling-node`), and folding creates exactly such computed nodes. The
 checker permits unused `Input` nodes but still requires one node for each interface slot, so
 dynamic input nodes are retained even when no output uses them; statically substituted inputs
-become constants and can be pruned when unreachable. The observation argument is short
-because D1 refused every node whose evaluation can *fail* or have a fact: the remaining ops
-(`Input`, `Const`, `I64Add/Sub/Mul/Eq`) are pure and total, so an unreachable computation
-cannot change any output or any failure. This argument is not in the Lean model (which keeps
-indices fixed); it is a separate, documented step backed by the whitelist restriction and by
-differential tests, not by a theorem.
+become constants and can be pruned when unreachable. D1 refuses nodes whose evaluation can
+*fail* or carry a fact; the remaining ops (`Input`, `Const`, `I64Add/Sub/Mul/Eq`) are pure and
+total. D12 proves ordered-output preservation for the model's pruning/renumbering step,
+conditional on a valid survivor map. Rust's map construction and its evaluator remain
+finite-test evidence, not theorem-covered implementation.
 
 ### D5 — The residual is a new identity, never a mutated original
 
@@ -371,12 +370,17 @@ The frozen protocol (committed before any measurement it governs) is:
 
 ## Risks / Trade-offs
 
-- **The `eq` fold is unproved (D3).** Mitigated by keeping it in the same "all operands
-  static" rule as the proved folds and by differential tests; reopen if a future obligation
-  requires model coverage — the fix is to remove the fold or extend `Specialize.lean`.
-- **Pruning is not in the model (D4).** Mitigated by refusing guards and facts, which are the
-  only failure points, so the remaining ops are pure and total; reopen if a guard-preserving
-  residual is required (it needs fact re-derivation, a separate change).
+- **The model proves the equality-fold step but not Rust correspondence.** The residual model
+  folds `eq` only when its two operands are exact I64 constants, and its evaluator uses exact
+  BitVec equality. The paired Rust/Lean fixture covers both outcomes. The implementation's
+  static-value table and the model definitions remain separate; no Rust-to-model or backend
+  theorem follows.
+- **Pruning is conditional on a valid survivor map.** The model proves preservation under
+  explicit closure, output-retention, dynamic-input-retention, order and inverse-map premises.
+  It does not derive those premises from the Rust keep-walk/map-building loops. The checked
+  graph verifier and pinned fixtures remain finite implementation evidence. Reopen if the
+  requirement is to establish the Rust map builder's universal validity or if a failing/effectful
+  node enters the admitted slice; the latter also needs observation/fact preservation.
 - **Declared-Text-v1 dependency (D9).** The residual rides a profile whose `let` lowering is
   itself an ordinary checked frontend transform; if that profile's limits
   (65,536 bytes per declared input) are exceeded the residual is refused, not truncated. A
@@ -392,8 +396,53 @@ The frozen protocol (committed before any measurement it governs) is:
 
 1. The accounting revision string `ngraph-pe/0` and the two budget-kind names are this
    change's proposal; a different naming convention is a textual change to D7 and the delta.
-2. Whether a future revision should preserve the original node indices in the residual
-   (making it a literal instance of `specialize_sound`) at the cost of carrying dangling
-   nodes in a supergraph instead of a pruned graph.
-3. Whether `I64Eq` folding should be added to `Specialize.lean` (with a Bool-valued static
-   map) rather than remaining an implementation extension.
+
+## Remaining issue #32 boundary decisions (2026-11-14)
+
+### D12 — Prove equality folding and pruning under an explicit survivor-map contract
+
+**Choice:** `NobleFoundation.SpecializeResidual` models the post-substitution graph. It extends
+the existing graph semantics with a Boolean constant, folds `eq` only when both source
+operands are exact I64 constants, and defines dead-node removal plus dense renumbering from a
+`PruneMap`. The map premises require output and operand closure, retention of every dynamic
+input node, dense two-way index correspondence and topological operand order. The theorem
+`residualize_outputs_sound` proves the ordered output values after the composition agree with
+the original values under `merge`; it reuses the existing theorem for static input mapping and
+wrapping add/sub/mul folding.
+
+**Boundary:** this is a model theorem conditional on a valid `PruneMap`. It does not prove that
+the Rust reachability and numbering loops construct a map satisfying every premise for every
+admitted graph, nor does it establish Rust/backend correspondence. The frozen true/false Rust
+fixture and the Lean fixture pin the same graph, static maps, live-node set, output order and
+renumbered operands as finite evidence only.
+
+**Reopen criteria:** extend the bridge only when #32 requires universal Rust-map construction
+or actual backend refinement. A change that introduces guards/facts/effects must also prove
+preservation of their observations before pruning; the current total I64/Bool whitelist does
+not grant that claim.
+
+### D13 — Keep the Program residual contract opt-in and graph-scoped
+
+**Choice:** the `noble ngraph specialize` operation remains an explicit, opt-in graph command.
+It produces a new graph subject and a new Declared-Text-v1 residual source, then independently
+re-admits that source before publication. Its recorded graph identities, static map, source
+digest and re-admitted graph id identify this derivation; they do not claim that the residual
+has the original Program's exact dependency set or identity. The ordinary `noble compile` path
+is not automatically rewritten and remains the ordinary path that accepts the residual source.
+
+**Scoped decision:** an arbitrary preserved stack tail is outside the current graph interface,
+which contains only typed input slots and an ordered output vector. Exact source dependency
+preservation is also outside the graph derivation record; the residual's graph identity is
+deliberately new. Therefore this change does not define or prove a Program-to-Program relation
+for stack prefixes or dependency sets. The copied checked-graph closure is an input to the
+graph identity derivation, not a claim that the emitted residual Program has precisely that
+transitive dependency closure. This avoids inferring invisible source observations from graph
+values. The full Program-to-Program acceptance requirement remains open; this scoped graph
+decision must not be presented as implementing it.
+
+**Reopen criteria:** to claim the original Program residual contract, select a checked Program
+subject whose stack-tail and dependency closure can be represented, specify reconstruction
+and an exact new dependency/identity derivation, then add model, implementation and ordinary-path
+controls before changing behavior. Any request for transparent/default specialization requires
+an additional explicit observation and adoption decision; it is not implied by this graph
+command or by the ordinary `compile` path.
