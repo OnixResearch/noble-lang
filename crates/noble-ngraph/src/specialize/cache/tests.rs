@@ -118,5 +118,7 @@ fn evaluate(
 
 #[path = "tests/identity.rs"]
 mod identity;
+#[path = "tests/matrix.rs"]
+mod matrix;
 #[path = "tests/reuse.rs"]
 mod reuse;

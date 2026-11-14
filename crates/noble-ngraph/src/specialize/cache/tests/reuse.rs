@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn identical_request_hits_dynamic_inputs_reuse_and_rebinding_keeps_old_owner() {
+fn identical_request_hits_dynamic_inputs_and_rebinding_keeps_old_owner() {
     let original = graph(&TestIds, false, 7, &[11, 12], false, false, false);
     let mut session = Session::default();
     let first =
