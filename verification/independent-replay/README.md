@@ -175,7 +175,8 @@ was killed by the **global OOM killer** (status 137, 42,432,012 kB anonymous RSS
 resource refusal, not a kernel verdict. The same pinned artifacts and runner were copied to a
 high-memory machine: the manifest digest matched, all artifact checks passed, and the full-root
 replay returned silent `kernel-accepted` with exit 0. That remote run did not have Git metadata, so
-its raw output has an empty `source_commit`; the scoped receipt states the local source commit and
+its raw output has an empty `source_commit`; the
+[scoped receipt](receipts/2026-11-14/compiled-replay.json) states the local source commit and
 manifest digest separately rather than pretending the runner reported one. This remains Lean's
 own kernel replay, not independent-checker acceptance or proof of source/runtime correspondence.
 

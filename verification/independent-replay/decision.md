@@ -81,9 +81,10 @@ Reproduce the bounded candidate run by temporarily replacing only the named theo
 `lake build` command under the policy-selected Lean:
 
 - `cd proofs/m2 && lake build NobleM2 NobleM2.Refinement NobleKernel` — exit 1 after all 12
-  candidates failed to reduce (module build completed in 29.12 s).
+  candidates failed to reduce (11.78 s command wall time with warm dependencies).
 - `cd proofs/m3 && lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel` — exit 1 after all
-  14 candidates failed to reduce (module build completed in 23.63 s).
+  14 candidates failed to reduce (156.96 s command wall time including dependent builds under
+  concurrent load).
 
 | Strength-flagged theorem | Trial source location | Measured result |
 |---|---|---|
