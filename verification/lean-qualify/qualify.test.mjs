@@ -7,7 +7,8 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { bisectRegression, classifyChanges, compareDirectToManifest, compareManifests,
   dependencyToolchainMismatches, directDependencies, linearScan } from './core.mjs';
-import { planQualification, profileDefinitions, requestCancellation, runProcess } from './qualify.mjs';
+import { buildCacheInventory, compareBuildCaches, planQualification, profileDefinitions,
+  requestCancellation, runProcess, seedProjectCaches } from './qualify.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const policy = JSON.parse(readFileSync(join(root, 'policy/tool-selection.json'), 'utf8'));
@@ -230,6 +231,72 @@ test('exporter profile refuses qualification without an explicitly pinned requir
 test('core profile keeps all existing proof, inventory, axiom, and replay checks mandatory', () => {
   assert.deepEqual(profileDefinitions['core-bootstrap'].requiredCheckers,
     ['verification/ci/lean-proofs.sh', 'verification/foundation/differential.mjs']);
+});
+
+test('foundation compatibility profile does not build M3/Aeneas but retains its pin evidence', () => {
+  const profile = profileDefinitions['inets-foundation'];
+  assert.deepEqual(profile.projects, ['proofs/foundation']);
+  assert.deepEqual(profile.companionProjects, ['proofs/m3']);
+  assert.equal(profile.proofMode, 'foundation-only');
+  assert.ok(!profile.projects.includes('proofs/m3'));
+  assert.deepEqual(profile.requiredCheckers,
+    ['verification/foundation/check.mjs', 'verification/foundation/differential.mjs']);
+  assert.match(profile.explanation, /rebuilding Aeneas is forbidden/);
+});
+
+test('package build cache copies are private and cache changes are reported', () => {
+  const sourceRoot = join(testRoot, 'private-cache-source');
+  const candidateRoot = join(testRoot, 'private-cache-candidate');
+  const sourceProject = join(sourceRoot, 'proofs/foundation');
+  const candidateProject = join(candidateRoot, 'proofs/foundation');
+  const sourcePackage = join(sourceProject, '.lake/packages/tiny');
+  const sourcePackageBuild = join(sourcePackage, '.lake/build/lib/lean');
+  mkdirSync(sourcePackageBuild, { recursive: true });
+  initRepo(sourcePackage);
+  write(sourcePackage, '.gitignore', '/.lake/\n');
+  write(sourcePackage, 'lean-toolchain', 'leanprover/lean4:v4.35.0\n');
+  write(sourcePackage, 'lakefile.toml', 'name = "tiny"\n[[lean_lib]]\nname = "Tiny"\n');
+  write(sourcePackage, 'Tiny.lean', 'def tinyValue : Nat := 1\n');
+  const packageRevision = commit(sourcePackage, 'fixture package');
+  const sourceArtifact = join(sourcePackageBuild, 'Tiny.olean');
+  writeFileSync(sourceArtifact, 'original-cache-bytes');
+
+  const manifest = JSON.stringify({ packages: [{ name: 'tiny', type: 'path', dir: 'tiny',
+    subDir: '.', rev: packageRevision }] }) + '\n';
+  for (const path of [sourceProject, candidateProject]) {
+    mkdirSync(join(path, '.lake'), { recursive: true });
+    write(path, 'lean-toolchain', 'leanprover/lean4:v4.35.0\n');
+    write(path, 'lake-manifest.json', manifest);
+  }
+  const candidateRootBuild = join(candidateProject, '.lake/build');
+  mkdirSync(candidateRootBuild, { recursive: true });
+  writeFileSync(join(candidateRootBuild, 'Foundation.olean'), 'foundation-cache');
+  const sourceState = localState(sourcePackage);
+  const heavyCachePaths = [];
+  seedProjectCaches(candidateRoot, sourceRoot, 'proofs/foundation', heavyCachePaths);
+
+  const candidatePackage = join(candidateProject, '.lake/packages/tiny');
+  const candidateArtifact = join(candidatePackage, '.lake/build/lib/lean/Tiny.olean');
+  assert.ok(existsSync(candidateArtifact));
+  assert.notEqual(candidatePackage, sourcePackage);
+  assert.equal(readFileSync(candidateArtifact, 'utf8'), 'original-cache-bytes');
+  writeFileSync(candidateArtifact, 'candidate-rebuilt-bytes');
+  assert.equal(readFileSync(sourceArtifact, 'utf8'), 'original-cache-bytes');
+  assert.deepEqual(localState(sourcePackage), sourceState);
+
+  const before = [{ kind: 'dependency-package', project: 'proofs/foundation', package: 'tiny',
+    revision: packageRevision, cache: buildCacheInventory(join(candidatePackage, '.lake/build')) }];
+  writeFileSync(join(candidatePackage, '.lake/build/lib/lean/Tiny.olean'), 'changed');
+  writeFileSync(join(candidatePackage, '.lake/build/lib/lean/Added.olean'), 'new');
+  const after = [{ ...before[0], cache: buildCacheInventory(join(candidatePackage, '.lake/build')) }];
+  const changes = compareBuildCaches(before, after);
+  assert.equal(changes[0].changed, true);
+  assert.equal(changes[0].changed_files, 2);
+  assert.equal(changes[0].rebuilt_bytes, Buffer.byteLength('changed') + Buffer.byteLength('new'));
+  assert.equal(changes[0].before_cache_sha256 === changes[0].after_cache_sha256, false);
+  const unchanged = compareBuildCaches(before, before);
+  assert.equal(unchanged[0].changed, false);
+  assert.equal(heavyCachePaths.length, 0);
 });
 
 test('SIGINT cancellation terminates an active child and leaves the fixture tree byte-identical', async () => {

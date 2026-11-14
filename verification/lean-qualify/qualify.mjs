@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync,
-  readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync, realpathSync,
+  readdirSync, readlinkSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir, userInfo } from 'node:os';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -12,14 +12,26 @@ import { canonical, classifyChanges, compareDirectToManifest, compareManifests,
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const defaultGit = '/run/current-system/sw/bin/git';
 const git = existsSync(defaultGit) ? realpathSync(defaultGit) : 'git';
+const qualificationTargetDir = '/dev/shm/noble-iss/target/qualify-126';
 const profileDefinitions = Object.freeze({
   'core-bootstrap': {
     name: 'core-bootstrap',
     projects: ['proofs/m3', 'proofs/foundation'],
     proofSources: ['proofs/mc1'],
+    proofMode: 'core-bootstrap',
     requiredCheckers: ['verification/ci/lean-proofs.sh', 'verification/foundation/differential.mjs'],
     requiredTools: ['lean', 'node', 'quality_rust', 'binaryen', 'wasm_tools'],
     explanation: 'M3 build/proof gate, foundation build/inventory/axiom audit, and seeded foundation differential replay controls.',
+  },
+  'inets-foundation': {
+    name: 'inets-foundation',
+    projects: ['proofs/foundation'],
+    companionProjects: ['proofs/m3'],
+    proofSources: ['proofs/mc1'],
+    proofMode: 'foundation-only',
+    requiredCheckers: ['verification/foundation/check.mjs', 'verification/foundation/differential.mjs'],
+    requiredTools: ['lean', 'node', 'quality_rust', 'binaryen', 'wasm_tools'],
+    explanation: 'Foundation build/inventory/axiom gate and its seeded differential replay; omits the M3/Aeneas consumer build because its checked-in Aeneas cache trace is for a different build context and rebuilding Aeneas is forbidden.',
   },
   'mc1-export': {
     name: 'mc1-export',
@@ -95,7 +107,8 @@ function readJsonBuffer(buffer, label) {
 function commitTree(revision) { return gitText(['rev-parse', `${revision}^{tree}`]); }
 
 function affectedPath(path, profile) {
-  return [...profile.projects, ...(profile.proofSources ?? [])].some(project => path === project || path.startsWith(`${project}/`)) ||
+  return [...profile.projects, ...(profile.companionProjects ?? []), ...(profile.proofSources ?? [])]
+    .some(project => path === project || path.startsWith(`${project}/`)) ||
     path === 'proofs/inets/UPSTREAM.json' || path.startsWith('proofs/inets/') ||
     path === 'policy/tool-selection.json' || path === 'policy/lean-inputs.json' ||
     path.startsWith('verification/lean-qualify/') || [
@@ -165,7 +178,8 @@ function snapshotRevision(revision, profile) {
     const bytes = gitFile(revision, path);
     if (bytes) files[path] = digest(bytes);
   }
-  const projects = Object.fromEntries(profile.projects.map(project => [project, projectSnapshot(revision, project)]));
+  const projects = Object.fromEntries([...new Set([...profile.projects, ...(profile.companionProjects ?? [])])]
+    .map(project => [project, projectSnapshot(revision, project)]));
   const package_sources = [];
   for (const [project, data] of Object.entries(projects)) {
     for (const pkg of data.packages ?? []) package_sources.push({ project,
@@ -368,60 +382,164 @@ function selectedPolicy(root, revision) {
     wasmTools: selected.wasm_tools?.output ? join(selected.wasm_tools.output, 'bin') : null };
 }
 
-function childEnvironment(tools, output) {
+function childEnvironment(tools, output, targetDir) {
   const { homedir: home, username } = userInfo();
   const paths = [dirname(tools.lean), dirname(tools.node), tools.rust, tools.binaryen, tools.wasmTools,
     '/run/current-system/sw/bin', `/etc/profiles/per-user/${username}/bin`, '/usr/bin', '/bin'].filter(Boolean);
   return { HOME: home ?? homedir(), USER: username, LOGNAME: username, LANG: 'C.UTF-8', CI: '1',
     GIT_TERMINAL_PROMPT: '0', PATH: [...new Set(paths)].join(':'), TMPDIR: join(output, 'tmp'),
-    NOBLE_TARGET: '/dev/shm/noble-iss/target/qualify-126', CARGO_TARGET_DIR: '/dev/shm/noble-iss/target/qualify-126',
+    NOBLE_TARGET: targetDir, CARGO_TARGET_DIR: targetDir,
     RUSTC_WRAPPER: '', RUSTFLAGS: '', LEAN_ABORT_ON_PANIC: '1' };
 }
 
-function capturePackageState(path) {
-  const top = sync(git, ['rev-parse', '--show-toplevel'], { cwd: path });
-  return { head: sync(git, ['rev-parse', 'HEAD'], { cwd: top }),
-    tree: sync(git, ['rev-parse', 'HEAD^{tree}'], { cwd: top }),
-    status: sync(git, ['status', '--porcelain=v1', '--untracked-files=all'], { cwd: top }) };
+function walkTree(root, visit) {
+  const stack = [root];
+  while (stack.length) {
+    const path = stack.pop(), stat = lstatSync(path);
+    visit(path, stat);
+    if (stat.isDirectory()) {
+      for (const name of readdirSync(path)) stack.push(join(path, name));
+    }
+  }
 }
 
-function seedProjectCaches(candidate, sourceRoot, project, scratch, cacheRows) {
+function setTreeWritable(root, writable) {
+  if (!existsSync(root)) return;
+  const entries = [];
+  walkTree(root, (path, stat) => entries.push({ path, stat }));
+  for (const { path, stat } of entries.reverse()) {
+    if (stat.isSymbolicLink()) continue;
+    const mode = stat.mode & 0o777;
+    chmodSync(path, writable ? (mode | 0o200) : (mode & ~0o222));
+  }
+}
+
+function assertPrivateLakeTree(root, packageRoot) {
+  if (!existsSync(root)) return;
+  const base = realpathSync(packageRoot);
+  walkTree(root, (path, stat) => {
+    if (!stat.isSymbolicLink()) return;
+    let resolved;
+    try { resolved = realpathSync(path); }
+    catch (error) { throw new QualificationError('CACHE_ISOLATION_UNAVAILABLE',
+      `broken symlink in private package cache ${path}: ${error.message}`); }
+    if (resolved !== base && !resolved.startsWith(`${base}${sep}`)) {
+      throw new QualificationError('CACHE_ISOLATION_UNAVAILABLE',
+        `package cache symlink escapes its private checkout: ${path} -> ${resolved}`);
+    }
+  });
+}
+
+function buildCacheInventory(root) {
+  if (!existsSync(root)) return { files: [], bytes: 0, sha256: digest(Buffer.alloc(0)) };
+  const files = [];
+  walkTree(root, (path, stat) => {
+    if (stat.isDirectory()) return;
+    const relativePath = relative(root, path).split(sep).join('/');
+    files.push({ path: relativePath, size: stat.size, mtime_ms: Number(stat.mtimeMs.toFixed(3)),
+      link: stat.isSymbolicLink() ? readlinkSync(path) : null });
+  });
+  files.sort((a, b) => a.path.localeCompare(b.path));
+  return { files, bytes: files.reduce((sum, file) => sum + file.size, 0),
+    sha256: digest(Buffer.from(canonical(files))) };
+}
+
+function buildCacheSnapshots(candidate, profile) {
+  const rows = [];
+  for (const project of profile.projects) {
+    const projectRoot = join(candidate, project);
+    rows.push({ kind: 'proof-project', project, package: project, revision: null,
+      path: join(projectRoot, '.lake/build'), cache: buildCacheInventory(join(projectRoot, '.lake/build')) });
+    const manifest = JSON.parse(readFileSync(join(projectRoot, 'lake-manifest.json'), 'utf8'));
+    for (const pkg of manifest.packages ?? []) {
+      const packageRoot = join(projectRoot, '.lake/packages', pkg.name);
+      const buildPath = join(packageRoot, pkg.subDir ?? '', '.lake/build');
+      rows.push({ kind: 'dependency-package', project, package: pkg.name, revision: pkg.rev,
+        path: buildPath, cache: buildCacheInventory(buildPath) });
+    }
+  }
+  return rows;
+}
+
+function compareBuildCaches(before, after) {
+  const prior = new Map(before.map(row => [`${row.kind}:${row.project}:${row.package}`, row]));
+  return after.map(row => {
+    const old = prior.get(`${row.kind}:${row.project}:${row.package}`);
+    const oldFiles = new Map((old?.cache.files ?? []).map(file => [file.path, file]));
+    const newFiles = row.cache.files;
+    const changed = newFiles.filter(file => canonical(oldFiles.get(file.path) ?? null) !== canonical(file));
+    const removed = [...oldFiles.keys()].filter(path => !newFiles.some(file => file.path === path));
+    return { kind: row.kind, project: row.project, package: row.package, revision: row.revision,
+      changed: changed.length > 0 || removed.length > 0, before_files: old?.cache.files.length ?? 0,
+      after_files: newFiles.length, changed_files: changed.length, removed_files: removed.length,
+      rebuilt_bytes: changed.reduce((sum, file) => sum + file.size, 0),
+      before_cache_sha256: old?.cache.sha256 ?? null, after_cache_sha256: row.cache.sha256,
+      changed_path_sample: changed.slice(0, 20).map(file => file.path),
+      changed_paths_truncated: changed.length > 20 };
+  });
+}
+
+function treeUsage(path) {
+  const du = '/run/current-system/sw/bin/du';
+  if (!existsSync(du)) return { apparent_bytes: null, allocated_bytes: null,
+    error: 'du is unavailable; byte usage was not measured' };
+  const measure = args => {
+    const result = spawnSync(du, ['-s', '--block-size=1', ...args, path], { encoding: 'utf8' });
+    if (result.status !== 0) return null;
+    const value = Number(result.stdout.trim().split(/\s+/)[0]);
+    return Number.isSafeInteger(value) ? value : null;
+  };
+  return { apparent_bytes: measure(['--apparent-size']), allocated_bytes: measure([]),
+    allocated_note: 'reflink-shared blocks are counted per file and may overstate unique filesystem allocation' };
+}
+
+function seedProjectCaches(candidate, sourceRoot, project, heavyCachePaths) {
   const sourceProject = join(sourceRoot, project), candidateProject = join(candidate, project);
   const sourceLake = join(sourceProject, '.lake'), targetLake = join(candidateProject, '.lake');
   mkdirSync(targetLake, { recursive: true });
   const sourceBuild = join(sourceLake, 'build');
   if (existsSync(sourceBuild)) {
+    if (lstatSync(sourceBuild).isSymbolicLink()) throw new QualificationError('CACHE_ISOLATION_UNAVAILABLE',
+      `${project} root .lake/build is a symlink; refusing to share a writable build cache`);
     const targetBuild = join(targetLake, 'build');
     const copied = spawnSync('/run/current-system/sw/bin/cp', ['-a', '--reflink=always', sourceBuild, targetBuild], {
       encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
     });
     if (copied.status !== 0) throw new QualificationError('CACHE_ISOLATION_UNAVAILABLE',
       `could not create copy-on-write Lean cache for ${project}; refusing an expensive/unsafe ordinary copy: ${copied.error?.message ?? (copied.stderr ?? '').trim()}`);
+    assertPrivateLakeTree(targetBuild, candidateProject);
   }
   const packagesDir = join(targetLake, 'packages');
   mkdirSync(packagesDir, { recursive: true });
   const manifest = JSON.parse(readFileSync(join(candidateProject, 'lake-manifest.json'), 'utf8'));
   for (const pkg of manifest.packages ?? []) {
-    const sourcePkg = join(sourceLake, 'packages', pkg.name);
-    if (!existsSync(sourcePkg)) throw new QualificationError('PACKAGE_CACHE_UNAVAILABLE',
+    const sourcePath = join(sourceLake, 'packages', pkg.name);
+    if (!existsSync(sourcePath)) throw new QualificationError('PACKAGE_CACHE_UNAVAILABLE',
       `${project}/${pkg.name} has no locally retained package source; this profile cannot resolve or rebuild it offline`);
+    const sourcePkg = realpathSync(sourcePath);
     const top = sync(git, ['rev-parse', '--show-toplevel'], { cwd: sourcePkg });
     const cachedRev = sync(git, ['rev-parse', 'HEAD'], { cwd: top });
     const cachedStatus = sync(git, ['status', '--porcelain=v1', '--untracked-files=all'], { cwd: top });
-    let target = sourcePkg;
-    if (cachedRev !== pkg.rev || cachedStatus !== '') {
-      const object = spawnSync(git, ['cat-file', '-e', `${pkg.rev}^{commit}`], { cwd: top });
-      if (object.status !== 0) throw new QualificationError('PACKAGE_REVISION_UNAVAILABLE',
-        `${project}/${pkg.name} requires ${pkg.rev}, but the local package object store does not contain it; fetch and review that immutable source before qualification`);
-      if (['aeneas', 'mathlib'].includes(pkg.name.toLowerCase())) throw new QualificationError('HEAVY_PACKAGE_UPDATE_REFUSED',
+    if (cachedStatus !== '') throw new QualificationError('PACKAGE_CACHE_DIRTY',
+      `${project}/${pkg.name} source cache is dirty; refusing to derive a candidate checkout from mutable package files`);
+    const object = spawnSync(git, ['cat-file', '-e', `${pkg.rev}^{commit}`], { cwd: top });
+    if (object.status !== 0) throw new QualificationError('PACKAGE_REVISION_UNAVAILABLE',
+      `${project}/${pkg.name} requires ${pkg.rev}, but the local package object store does not contain it; fetch and review that immutable source before qualification`);
+    if (['aeneas', 'mathlib'].includes(pkg.name.toLowerCase()) && cachedRev !== pkg.rev) {
+      throw new QualificationError('HEAVY_PACKAGE_UPDATE_REFUSED',
         `${pkg.name} changed from cached ${cachedRev} to ${pkg.rev}; candidate Mathlib/Aeneas rebuilds are forbidden by this qualification lane`);
-      target = join(scratch, 'package-checkouts', project.replaceAll('/', '-'), pkg.name);
-      mkdirSync(dirname(target), { recursive: true });
-      const clone = sync(git, ['clone', '--shared', '--no-checkout', top, target], { cwd: repo, allowFailure: true });
-      if (!existsSync(join(target, '.git'))) throw new QualificationError('PACKAGE_CHECKOUT_FAILED',
-        `could not create isolated checkout for ${project}/${pkg.name}: ${clone}`);
-      sync(git, ['checkout', '--detach', pkg.rev], { cwd: target });
     }
+    const target = join(targetLake, 'packages', pkg.name);
+    const copiedPackage = spawnSync('/run/current-system/sw/bin/cp', ['-a', '--reflink=always', sourcePkg, target], {
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    if (copiedPackage.status !== 0) throw new QualificationError('CACHE_ISOLATION_UNAVAILABLE',
+      `could not make a private reflink copy of ${project}/${pkg.name}; refusing a shared or ordinary copy: ${copiedPackage.error?.message ?? (copiedPackage.stderr ?? '').trim()}`);
+    if (cachedRev !== pkg.rev) sync(git, ['checkout', '--detach', pkg.rev], { cwd: target });
+    if (resolve(realpathSync(target)) !== resolve(target)) throw new QualificationError('CACHE_ISOLATION_UNAVAILABLE',
+      `${project}/${pkg.name} did not resolve to its private disposable checkout`);
+    const privateLake = join(target, pkg.subDir ?? '', '.lake');
+    assertPrivateLakeTree(privateLake, target);
     const packageToolchainPath = join(target, pkg.subDir ?? '', 'lean-toolchain');
     if (existsSync(packageToolchainPath)) {
       const packageToolchain = readFileSync(packageToolchainPath, 'utf8').trim();
@@ -429,11 +547,13 @@ function seedProjectCaches(candidate, sourceRoot, project, scratch, cacheRows) {
       if (packageToolchain !== projectToolchain) throw new QualificationError('DEPENDENCY_TOOLCHAIN_MISMATCH',
         `${project}/${pkg.name} selects ${packageToolchain}, but the consumer proof package selects ${projectToolchain}`);
     }
-    const link = join(packagesDir, pkg.name);
-    if (existsSync(link)) throw new QualificationError('CACHE_SETUP_FAILED', `unexpected candidate package path: ${link}`);
-    symlinkSync(target, link, 'dir');
-    if (target === sourcePkg) cacheRows.push({ project, package: pkg.name, path: sourcePkg,
-      state: capturePackageState(sourcePkg) });
+    if (['aeneas', 'mathlib'].includes(pkg.name.toLowerCase())) {
+      const buildPath = join(privateLake, 'build');
+      if (!existsSync(buildPath)) throw new QualificationError('HEAVY_PACKAGE_CACHE_UNAVAILABLE',
+        `${project}/${pkg.name} has no retained .lake/build cache; qualification refuses to build Mathlib or Aeneas`);
+      heavyCachePaths.push(buildPath);
+      setTreeWritable(buildPath, false);
+    }
   }
 }
 
@@ -488,13 +608,14 @@ function assertRequiredTools(profile, tools) {
   }
 }
 
-async function runOneRevision({ revision, side, plan, output, scratch, profileName }) {
+async function runOneRevision({ revision, side, plan, output, scratch, profileName, targetDir }) {
   const profile = profileDefinitions[profileName];
   const worktree = join(scratch, `worktree-${side}-${revision.slice(0, 12)}-${Date.now()}`);
   const worktrees = [];
-  const sharedPackageStates = [];
+  const heavyCachePaths = [];
   const row = { side, revision, tree: null, toolchain: null, outcome: 'fail', stages: [], diagnostics: [] };
   let worktreeAdded = false;
+  let cacheSnapshotBefore = null;
   try {
     sync(git, ['worktree', 'add', '--detach', worktree, revision]);
     worktreeAdded = true; worktrees.push(worktree);
@@ -503,10 +624,11 @@ async function runOneRevision({ revision, side, plan, output, scratch, profileNa
     const tools = selectedPolicy(worktree, revision);
     row.actual_toolchain = tools.toolchain;
     assertRequiredTools(profile, tools);
-    const env = childEnvironment(tools, output);
+    const env = childEnvironment(tools, output, targetDir);
     mkdirSync(env.TMPDIR, { recursive: true });
     mkdirSync(env.NOBLE_TARGET, { recursive: true });
-    for (const project of profile.projects) seedProjectCaches(worktree, repo, project, scratch, sharedPackageStates);
+    for (const project of profile.projects) seedProjectCaches(worktree, repo, project, heavyCachePaths);
+    row.package_cache_isolation = 'every manifest package checkout and its .lake cache are private cp -a --reflink=always copies inside the disposable worktree';
 
     const leanVersion = await runProcess(tools.lean, ['--version'], { cwd: worktree, env,
       logPath: join(output, 'stages', `${side}-lean-version.log`) });
@@ -555,15 +677,29 @@ async function runOneRevision({ revision, side, plan, output, scratch, profileNa
         `required checker ${checker} is unavailable in ${revision}; qualification cannot continue after a successful Lake build`);
     }
     const proofDir = join(output, side, 'lean-proofs');
-    const proofRecord = { name: 'lean-proof-suite', command: ['bash', join(worktree, 'verification/ci/lean-proofs.sh'), proofDir],
-      cwd: worktree, required: true };
-    const proofResult = await stage('bash', proofRecord.command.slice(1), { cwd: worktree, env,
-      logPath: join(output, 'stages', `${side}-lean-proofs.log`), outputRoot: output }, proofRecord);
+    cacheSnapshotBefore = buildCacheSnapshots(worktree, profile);
+    mkdirSync(dirname(proofDir), { recursive: true });
+    let proofRecord, proofResult, foundationReceipt;
+    if (profile.proofMode === 'foundation-only') {
+      const checker = join(worktree, 'verification/foundation/check.mjs');
+      const cleanEnv = existsSync('/run/current-system/sw/bin/env')
+        ? '/run/current-system/sw/bin/env' : '/usr/bin/env';
+      proofRecord = { name: 'foundation-proof-inventory-axiom',
+        command: [cleanEnv, '-i', tools.node, checker, '--output', proofDir], cwd: worktree, required: true };
+      proofResult = await stage(cleanEnv, proofRecord.command.slice(1), { cwd: worktree, env,
+        logPath: join(output, 'stages', `${side}-foundation-check.log`), outputRoot: output }, proofRecord);
+      foundationReceipt = join(proofDir, 'foundation-check.json');
+    } else {
+      proofRecord = { name: 'lean-proof-suite', command: ['bash', join(worktree, 'verification/ci/lean-proofs.sh'), proofDir],
+        cwd: worktree, required: true };
+      proofResult = await stage('bash', proofRecord.command.slice(1), { cwd: worktree, env,
+        logPath: join(output, 'stages', `${side}-lean-proofs.log`), outputRoot: output }, proofRecord);
+      foundationReceipt = join(proofDir, 'foundation', 'foundation-check.json');
+    }
     row.stages.push(proofRecord);
     if (proofResult.status !== 0) throw new QualificationError('PROOF_GATE_FAILED',
       `required proof/inventory/axiom gate failed (${proofResult.status}): ${proofResult.stderr.slice(-2500)}${proofResult.stdout.slice(-2500)}`,
       proofRecord.name);
-    const foundationReceipt = join(proofDir, 'foundation', 'foundation-check.json');
     if (!existsSync(foundationReceipt)) throw new QualificationError('REQUIRED_CHECKER_UNAVAILABLE',
       'lean-proofs completed without foundation-check.json; theorem-inventory/axiom checker is required');
 
@@ -600,16 +736,23 @@ async function runOneRevision({ revision, side, plan, output, scratch, profileNa
     if (error instanceof Cancelled) throw error;
     if (worktreeAdded) row.diagnostics.push({ code: row.failure.code, message: row.failure.message });
   } finally {
-    for (const item of sharedPackageStates) {
-      const after = capturePackageState(item.path);
-      if (canonical(after) !== canonical(item.state)) {
-        row.outcome = 'fail';
-        row.failure = { code: 'SHARED_PACKAGE_MUTATED', message: `${item.project}/${item.package} package cache changed` };
+    if (worktreeAdded) {
+      if (cacheSnapshotBefore) {
+        try {
+          row.build_cache_changes = compareBuildCaches(cacheSnapshotBefore, buildCacheSnapshots(worktree, profile));
+          row.packages_rebuilt = row.build_cache_changes.filter(item => item.changed);
+          row.rebuilt_bytes = row.packages_rebuilt.reduce((sum, item) => sum + item.rebuilt_bytes, 0);
+        } catch (error) {
+          row.diagnostics.push({ code: 'BUILD_CACHE_REPORT_FAILED', message: error.message });
+        }
       }
+      row.disposable_tree_usage = treeUsage(worktree);
     }
+    for (const path of heavyCachePaths.reverse()) setTreeWritable(path, true);
     for (const project of profile.projects) {
-      const link = join(worktree, project, '.lake/packages');
-      if (existsSync(link) && lstatSync(link).isDirectory()) rmSync(link, { recursive: true, force: true });
+      const packageCopies = join(worktree, project, '.lake/packages');
+      if (existsSync(packageCopies) && lstatSync(packageCopies).isDirectory())
+        rmSync(packageCopies, { recursive: true, force: true });
     }
     for (const item of worktrees.reverse()) {
       sync(git, ['worktree', 'remove', '--force', item], { cwd: repo, allowFailure: true });
@@ -671,6 +814,7 @@ async function runQualification({ planPath, approval, output, scratch }) {
     verifier_policy_changes: plan.source_diff.classes.verifier_policy_changes,
     pre_update_plan: plan.pre_update_plan, policy: plan.policy,
     baseline: null, proposal: null, localization: { status: 'not-requested', probes: [] },
+    target_dir: qualificationTargetDir,
     source_preservation: { before: initial, after: null, unchanged: false }, qualification_status: 'unqualified' };
   let baselineResult;
   try {
@@ -678,7 +822,7 @@ async function runQualification({ planPath, approval, output, scratch }) {
       profile?.unavailable ?? `consumer profile '${plan.profile?.name}' is unavailable`);
     verifyReviewPlan(plan, approval, planPath);
     baselineResult = await runOneRevision({ revision: plan.baseline.revision, side: 'baseline', plan,
-      output, scratch, profileName: profile.name });
+      output, scratch, profileName: profile.name, targetDir: qualificationTargetDir });
     report.baseline = baselineResult;
     if (baselineResult.outcome !== 'pass') throw new QualificationError('BASELINE_UNVERIFIED',
       `baseline failed required verification (${baselineResult.failure?.code ?? 'unknown'}): ${baselineResult.failure?.message ?? ''}`);
@@ -686,7 +830,7 @@ async function runQualification({ planPath, approval, output, scratch }) {
       report.proposal = { ...baselineResult, side: 'proposal', reused_identical_revision: true };
     } else {
       report.proposal = await runOneRevision({ revision: plan.proposal.revision, side: 'proposal', plan,
-        output, scratch, profileName: profile.name });
+        output, scratch, profileName: profile.name, targetDir: qualificationTargetDir });
     }
     if (report.proposal.outcome !== 'pass') {
       report.diagnostics = [report.proposal.failure ?? { code: 'PROPOSAL_FAILED', message: 'proposal did not pass all required checks' }];
@@ -735,7 +879,9 @@ function usage() {
     '  node verification/lean-qualify/qualify.mjs run --plan <plan.json> --approve-diff <review-sha256> --output <new-dir> --scratch <empty-dir>',
     '  node verification/lean-qualify/qualify.mjs localize --baseline <full-commit-sha> --proposal <full-commit-sha> --history <json-array-of-commit-shas> --mode bisect|linear --plan <approved-plan.json> --approve-diff <review-sha256> --output <new-dir> --scratch <empty-dir>',
     '  node --test verification/lean-qualify/qualify.test.mjs',
-    'Profile core-bootstrap is required and includes the existing M3/foundation proof+inventory+axiom gate and the seeded differential replay with receipt verification.',
+    'Profile core-bootstrap uses the existing M3/foundation proof+inventory+axiom gate and the seeded differential replay with receipt verification.',
+    'Profile inets-foundation rebuilds only the foundation consumer, retaining proofs/m3 dependency manifests as compatibility evidence without rebuilding Aeneas or Mathlib.',
+    `All Rust checker builds use NOBLE_TARGET=${qualificationTargetDir}.`,
   ].join('\n');
 }
 
@@ -756,7 +902,8 @@ async function localize({ args, output, scratch }) {
   const probe = async revision => {
     if (!cache.has(revision)) {
       const result = await runOneRevision({ revision, side: `probe-${revision.slice(0, 12)}`, plan,
-        output: join(output, 'probes', revision), scratch, profileName: plan.profile.name });
+        output: join(output, 'probes', revision), scratch, profileName: plan.profile.name,
+        targetDir: qualificationTargetDir });
       cache.set(revision, { outcome: result.outcome, toolchain: result.toolchain,
         details: result.failure ?? { receipts: [result.proof_receipt, result.replay_receipt] } });
     }
@@ -818,4 +965,5 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
 }
 
 export { profileDefinitions, snapshotRevision, planQualification, runQualification, runOneRevision,
-  verifyReviewPlan, localize, runProcess };
+  verifyReviewPlan, localize, runProcess, buildCacheInventory, compareBuildCaches,
+  seedProjectCaches, treeUsage };
