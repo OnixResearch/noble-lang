@@ -1,0 +1,257 @@
+use noble_ngraph::belt::target::{self, Issue, Machine, Operation, OutputRead, Refusal};
+use noble_ngraph::ir::{GraphBuilder, Op, ScalarType, SubProfile, Subject};
+use noble_ngraph::sem::Value;
+
+fn checked(builder: GraphBuilder) -> noble_ngraph::CheckedGraph {
+    noble_ngraph::check(&super::common::IDS, builder.finish()).expect("control graph checks")
+}
+
+fn encode_candidate(
+    accepted_graph: &noble_ngraph::CheckedGraph,
+    machine: Machine,
+    events: &[Issue],
+    outputs: &[OutputRead],
+) -> Vec<u8> {
+    target::encode(
+        &super::common::IDS,
+        accepted_graph,
+        machine,
+        events,
+        outputs,
+    )
+    .expect("well-framed candidate encodes")
+}
+
+#[test]
+fn exact_profile_belt_capacity_preserves_all_ordered_outputs() {
+    for machine in [Machine::T1, Machine::T2] {
+        let belt_slot_count = usize::from(machine.descriptor().belt_slots);
+        let mut builder = GraphBuilder::new(
+            SubProfile::I64,
+            Subject::authored(&super::common::IDS, "target-belt-114-exact-capacity"),
+        );
+        let mut expected = Vec::with_capacity(belt_slot_count);
+        for slot in 0..belt_slot_count {
+            let node = builder.input(ScalarType::I64);
+            builder.output(node);
+            expected.push(Value::I64(
+                i64::try_from(slot).expect("the fixed profile capacity fits I64") - 7,
+            ));
+        }
+        let accepted_graph = checked(builder);
+        let lowered = target::lower(&super::common::IDS, &accepted_graph, machine)
+            .expect("the graph exactly fills the fixed profile belt");
+        assert_eq!(lowered.preservation_saves, 0);
+        assert_eq!(accepted_graph.graph().outputs.len(), belt_slot_count);
+        assert_eq!(
+            target::execute(
+                &super::common::IDS,
+                &accepted_graph,
+                machine,
+                &lowered.bytes,
+                &expected,
+            ),
+            Ok(expected.clone()),
+        );
+    }
+}
+
+#[test]
+fn independent_operations_reorder_and_sparse_cycles_are_idle() {
+    let mut builder = GraphBuilder::new(
+        SubProfile::I64,
+        Subject::authored(&super::common::IDS, "target-belt-114-reorder"),
+    );
+    let x = builder.input(ScalarType::I64);
+    let y = builder.input(ScalarType::I64);
+    let sum = builder.op(Op::I64Add(x, y));
+    let difference = builder.op(Op::I64Sub(y, x));
+    builder.output(sum);
+    builder.output(difference);
+    let accepted_graph = checked(builder);
+    let events = [
+        Issue {
+            cycle: 0,
+            lane: 0,
+            unit: 2,
+            operation: Operation::Input { node: 0, slot: 0 },
+        },
+        Issue {
+            cycle: 2,
+            lane: 0,
+            unit: 2,
+            operation: Operation::Input { node: 1, slot: 1 },
+        },
+        Issue {
+            cycle: 4,
+            lane: 0,
+            unit: 0,
+            operation: Operation::Sub {
+                node: 3,
+                left_age: 0,
+                right_age: 1,
+            },
+        },
+        Issue {
+            cycle: 5,
+            lane: 0,
+            unit: 0,
+            operation: Operation::Add {
+                node: 2,
+                left_age: 2,
+                right_age: 1,
+            },
+        },
+    ];
+    let outputs = [OutputRead { node: 2 }, OutputRead { node: 3 }];
+    let bytes = target::encode(
+        &super::common::IDS,
+        &accepted_graph,
+        Machine::T1,
+        &events,
+        &outputs,
+    )
+    .expect("well-framed candidate encodes");
+    assert!(target::check(&super::common::IDS, &accepted_graph, Machine::T1, &bytes).is_ok());
+    assert_eq!(
+        target::execute(
+            &super::common::IDS,
+            &accepted_graph,
+            Machine::T1,
+            &bytes,
+            &[Value::I64(5), Value::I64(3)]
+        ),
+        Ok(vec![Value::I64(8), Value::I64(-2)]),
+    );
+}
+
+#[test]
+fn same_cycle_issue_reads_only_pre_cycle_values() {
+    let mut builder = GraphBuilder::new(
+        SubProfile::I64,
+        Subject::authored(&super::common::IDS, "target-belt-114-no-forward"),
+    );
+    let x = builder.input(ScalarType::I64);
+    let y = builder.input(ScalarType::I64);
+    let sum = builder.op(Op::I64Add(x, y));
+    let dependent = builder.op(Op::I64Add(sum, x));
+    builder.output(dependent);
+    let accepted_graph = checked(builder);
+    let events = [
+        Issue {
+            cycle: 0,
+            lane: 0,
+            unit: 3,
+            operation: Operation::Input { node: 0, slot: 0 },
+        },
+        Issue {
+            cycle: 0,
+            lane: 1,
+            unit: 4,
+            operation: Operation::Input { node: 1, slot: 1 },
+        },
+        Issue {
+            cycle: 1,
+            lane: 0,
+            unit: 0,
+            operation: Operation::Add {
+                node: 2,
+                left_age: 1,
+                right_age: 0,
+            },
+        },
+        Issue {
+            cycle: 1,
+            lane: 1,
+            unit: 1,
+            operation: Operation::Add {
+                node: 3,
+                left_age: 0,
+                right_age: 1,
+            },
+        },
+    ];
+    let bytes = target::encode(
+        &super::common::IDS,
+        &accepted_graph,
+        Machine::T2,
+        &events,
+        &[OutputRead { node: 3 }],
+    )
+    .expect("candidate encodes");
+    assert!(matches!(
+        target::check(&super::common::IDS, &accepted_graph, Machine::T2, &bytes),
+        Err(Refusal::OperandMismatch)
+    ));
+}
+
+#[test]
+fn latency_skew_allows_out_of_order_completion() {
+    let mut builder = GraphBuilder::new(
+        SubProfile::I64,
+        Subject::authored(&super::common::IDS, "target-belt-114-out-of-order"),
+    );
+    let x = builder.input(ScalarType::I64);
+    let y = builder.input(ScalarType::I64);
+    let product = builder.op(Op::I64Mul(x, y));
+    let sum = builder.op(Op::I64Add(x, y));
+    builder.output(product);
+    builder.output(sum);
+    let accepted_graph = checked(builder);
+    let events = [
+        Issue {
+            cycle: 0,
+            lane: 0,
+            unit: 3,
+            operation: Operation::Input { node: 0, slot: 0 },
+        },
+        Issue {
+            cycle: 0,
+            lane: 1,
+            unit: 4,
+            operation: Operation::Input { node: 1, slot: 1 },
+        },
+        Issue {
+            cycle: 1,
+            lane: 0,
+            unit: 2,
+            operation: Operation::Multiply {
+                node: 2,
+                left_age: 1,
+                right_age: 0,
+            },
+        },
+        Issue {
+            cycle: 1,
+            lane: 1,
+            unit: 0,
+            operation: Operation::Add {
+                node: 3,
+                left_age: 1,
+                right_age: 0,
+            },
+        },
+    ];
+    let outputs = [OutputRead { node: 2 }, OutputRead { node: 3 }];
+    let bytes = target::encode(
+        &super::common::IDS,
+        &accepted_graph,
+        Machine::T2,
+        &events,
+        &outputs,
+    )
+    .expect("variable-latency schedule encodes");
+    assert_eq!(
+        target::execute(
+            &super::common::IDS,
+            &accepted_graph,
+            Machine::T2,
+            &bytes,
+            &[Value::I64(5), Value::I64(3)]
+        ),
+        Ok(vec![Value::I64(15), Value::I64(8)]),
+    );
+}
+
+#[path = "controls/completion.rs"]
+mod completion;

@@ -2,9 +2,11 @@
 
 This package answers only the target-machine description and legality relation
 requested by #114. It depends on the target-neutral graph and artifact contract
-in `.cairn/changes/belt-backend-v0`; it does not implement or benchmark a
-scheduler. The target schedules are optional specializations over the same
-checked graph, never replacements for its semantic baseline.
+in `.cairn/changes/belt-backend-v0`; target schedules are optional
+specializations over the same checked graph, never replacements for its
+semantic baseline. Phase 1 selected the model; Phase 2 implements an untrusted
+list scheduler, independent legality checker, timed interpreter, Lean model,
+finite controls, and model-only cost evidence.
 
 ## Decisions
 
@@ -18,6 +20,13 @@ pipelined ALUs, one pipelined multiply unit, and two pipelined move units. Its
 ALU/equality latency is one cycle, multiply latency two cycles, and move
 latency one cycle. Every unit has initiation interval one cycle. Descriptors
 are immutable/versioned data, not caller-tunable hints.
+
+The Rust artifact has a separate `ngraph-belt-target/0` revision. Its bytes
+bind the machine id, complete canonical descriptor bytes and digest, checked
+graph identity, event stream and ordered outputs, schedule digest, and artifact
+binding. A schedule therefore cannot be reused under a different target id or
+silently inherit an edited timing table. This defines the target identity
+needed by #33; changing #33's cache keys is outside #114.
 
 ALU handles add, subtract, and equality; multiply handles multiply; move
 handles input/constant materialization and explicit save/load. The checker
@@ -58,6 +67,36 @@ that a legal schedule's output values equal the graph-reference values.
 Neither checker acceptance nor timing arithmetic proves that a real processor
 has these characteristics.
 
+The present final-read phase is a bounded snapshot, not a streaming drain: the
+entire requested ordered output set must fit in the selected belt. The lowerer
+and independent checker refuse a wider output set. A future streaming output
+protocol would need explicit read/load interleaving and a revised artifact
+contract; it is not inferred from this phase's output-order evidence.
+
+The initial producer is a deterministic canonical-order list scheduler with no
+search. It waits for issued definitions to complete and explicitly saves or
+reloads live values as the belt requires. It establishes a stable baseline for
+both fixed profiles, not an optimization-quality claim. The independent
+checker consumes encoded events and never calls the producer; it checks the
+event/resource/timing/operand/belt/output premises above. Bounded refusal,
+producer exhaustion, and checker-work exhaustion remain distinct outcomes.
+
+### Frozen phase-2 cost protocol
+
+Before retaining any measurement, run two fixed graph workloads through both
+T1 and T2: (a) six-node `input,input,constant,add,sub,multiply` with the three
+arithmetic nodes as ordered outputs; and (b) an eight-node preservation-pressure
+graph with two inputs, four constants, `add(input,input)`, then
+`add(sum,last_constant)`, and four ordered outputs. Use the Rust test profile
+(debug), 20 warm-up calls, then 200 measured lower/check pairs per
+machine/workload. Record modeled cycles, issue width and utilization
+(`events / (cycles * width)`), save/load counts, event count, scheduler work,
+encoded artifact bytes, peak in-flight event records, and mean nanoseconds per
+lower and per independent check. These are local software-path and abstract
+machine-model measurements only; no hardware or between-machine speed claim is
+permitted. Keep the protocol unchanged for the retained receipt; a changed
+workload or iteration count is a new measurement.
+
 ### Controls and future work
 
 A later implementation must exercise each descriptor against unequal
@@ -67,7 +106,12 @@ multiple ordered outputs. Mutations cover the descriptor and every legality
 field, especially latency, initiation interval, unit identity/class, issue
 cycle/lane, completion order, operand ages, save slots, and outputs.
 
-This package contains no implementation or measured result. The machine model
-is an explicit experiment choice, not Mill ISA compatibility, hardware
-semantics, or an assumption about expected speed. #37 remains the interaction
-net owner and #43 remains the guard-aware packed evaluator owner.
+**Phase 2 scope boundary.** Implementation and model evidence cover only the
+checked total-I64/Bool graph fragment. Guards, branches, calls, caches,
+variable-latency loads, F32 and host effects remain outside the lane. No graph
+mutation, optimization search, production backend selection, #33 cache update,
+or Rust-to-Lean correspondence is claimed. Measurements are fixed-workload
+simulated model results: no physical machine was measured and no hardware
+frequency, power, area, or speed claim follows. The machine model is not Mill
+ISA compatibility or hardware semantics. #37 remains the interaction-net
+owner and #43 remains the guard-aware packed evaluator owner.

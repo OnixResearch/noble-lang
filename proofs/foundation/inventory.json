@@ -9172,6 +9172,18 @@
       "claim": "An accepted symbolic belt program returns every ordered graph-reference value; this is a Lean model theorem, not Rust refinement."
     },
     {
+      "name": "NobleFoundation.BeltTarget.mapReadyOutputs",
+      "phase": 2,
+      "role": "belt-target-schedule-model",
+      "claim": "For outputs with latency-derived completion, the symbolic timed result preserves the graph-reference order."
+    },
+    {
+      "name": "NobleFoundation.BeltTarget.validate_sound",
+      "phase": 2,
+      "role": "belt-target-schedule-model",
+      "claim": "An accepted fixed-target symbolic schedule passes every requested output through its latency-derived completion gate and returns graph-reference results in exact order; the model does not execute arithmetic or belt/save state."
+    },
+    {
       "name": "NobleFoundation.LlvmLowering.denotes_iff",
       "phase": 1,
       "role": "llvm-validator-model",
