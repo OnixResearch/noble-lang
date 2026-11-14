@@ -1857,7 +1857,7 @@ def Program.resourceFunctions (program : Program) (inputs : List (BitVec 64)) :
 
 /-- The pinned semantic/lowering revisions bound by revision-3 certificates. -/
 def i64RuleRevision : String := "ngraph-net-i64/3"
-def i64LoweringRevision : String := "noble-net-i64-lowering/1"
+def i64LoweringRevision : String := "ngraph-net-i64-lowering/0"
 def i64CertificateRevision : String := "ngraph-net-certificate/2"
 
 /-- A certificate binds the source graph and input vector, both revisions, the
