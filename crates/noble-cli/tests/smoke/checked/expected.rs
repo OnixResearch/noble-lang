@@ -1,6 +1,9 @@
 const LEAN_EXPECTATIONS: &str =
     include_str!("../../../../../proofs/foundation/NobleFoundation/CheckedI64Expectations.lean");
 
+type LeanCase = (String, String, String, String);
+type ParseResult<T> = Result<T, Box<dyn std::error::Error>>;
+
 fn invalid_data(message: &str) -> Box<dyn std::error::Error> {
     Box::new(std::io::Error::new(
         std::io::ErrorKind::InvalidData,
@@ -16,8 +19,7 @@ fn lean_string(field: &str) -> Result<String, Box<dyn std::error::Error>> {
         .ok_or_else(|| invalid_data("Lean operation or expected value is not quoted"))
 }
 
-pub(super) fn lean_cases(
-) -> Result<Vec<(String, String, String, String)>, Box<dyn std::error::Error>> {
+pub(super) fn lean_cases() -> ParseResult<Vec<LeanCase>> {
     let table = LEAN_EXPECTATIONS
         .split_once("def retained")
         .and_then(|(_, tail)| tail.split_once('['))
