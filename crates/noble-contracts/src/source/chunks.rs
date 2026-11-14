@@ -1593,11 +1593,15 @@ fn witness_matches(witness: Option<&Instantiation>, expected: &[(u16, Ty)]) -> b
     if witness.bindings.len() != expected.len() {
         return false;
     }
-    witness.bindings.iter().zip(expected).all(|(binding, (variable, ty))| {
-        binding.variable == *variable
-            && binding.kind == noble_kernel::words::VariableKind::Value
-            && binding.ty.eq(ty)
-    })
+    for (binding, (variable, ty)) in witness.bindings.iter().zip(expected) {
+        if binding.variable != *variable
+            || binding.kind != noble_kernel::words::VariableKind::Value
+            || !binding.ty.eq(ty)
+        {
+            return false;
+        }
+    }
+    true
 }
 
 #[expect(
@@ -1680,6 +1684,20 @@ pub struct QueueCandidate {
     identity: Option<CandidateId>,
     feature_extraction_ns: u64,
     scorer_elapsed_ns: u64,
+}
+
+impl QueueCandidate {
+    fn unscored(ordinal: u32, sequence: alloc::vec::Vec<u16>) -> Self {
+        Self {
+            ordinal,
+            sequence,
+            ranking_position: ordinal,
+            score: None,
+            identity: None,
+            feature_extraction_ns: 0,
+            scorer_elapsed_ns: 0,
+        }
+    }
 }
 
 /// The requested number of canonical candidate entries to materialize.
@@ -3956,26 +3974,10 @@ pub fn candidate_queue(library: &Library, candidate_limit: CandidateLimit) -> Ca
                 debug_assert!(candidates.len() <= bounded_candidate_count);
                 return CandidateQueue {
                     candidates,
-                    next_candidate: Some(QueueCandidate {
-                        ordinal,
-                        sequence,
-                        ranking_position: ordinal,
-                        score: None,
-                        identity: None,
-                        feature_extraction_ns: 0,
-                        scorer_elapsed_ns: 0,
-                    }),
+                    next_candidate: Some(QueueCandidate::unscored(ordinal, sequence)),
                 };
             }
-            candidates.push(QueueCandidate {
-                ordinal,
-                sequence,
-                ranking_position: ordinal,
-                score: None,
-                identity: None,
-                feature_extraction_ns: 0,
-                scorer_elapsed_ns: 0,
-            });
+            candidates.push(QueueCandidate::unscored(ordinal, sequence));
             if !advance(&mut digits, order.len()) {
                 break;
             }
