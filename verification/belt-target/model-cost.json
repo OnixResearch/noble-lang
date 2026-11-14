@@ -1,13 +1,13 @@
 {
   "schema": "ngraph-belt-target-model-cost/0",
-  "source_commit": "05b0eeab16191c7b8020faa6dc3bcb491923ffd0",
+  "source_commit": "ba7ac02eeb7636295fd3c7818a0b37a9f6653c25",
   "profile": "Rust test profile (debug)",
   "warmup_calls": 20,
   "measured_calls_per_phase": 200,
   "cases": [
-    {"machine":"T1","workload":"reorderable-six-node","graph_nodes":6,"outputs":3,"modeled_cycles":9,"issue_width":1,"issue_utilization_milli":777,"preservation_saves":1,"preservation_loads":0,"event_count":7,"scheduler_work":6,"artifact_bytes":353,"peak_pending_events":1,"max_pending_bound":65536,"mean_lower_ns":10053,"mean_check_ns":11693},
-    {"machine":"T2","workload":"reorderable-six-node","graph_nodes":6,"outputs":3,"modeled_cycles":7,"issue_width":2,"issue_utilization_milli":428,"preservation_saves":0,"preservation_loads":0,"event_count":6,"scheduler_work":6,"artifact_bytes":332,"peak_pending_events":1,"max_pending_bound":65536,"mean_lower_ns":9982,"mean_check_ns":12146},
-    {"machine":"T1","workload":"preservation-pressure-eight-node","graph_nodes":8,"outputs":4,"modeled_cycles":19,"issue_width":1,"issue_utilization_milli":1000,"preservation_saves":6,"preservation_loads":5,"event_count":19,"scheduler_work":8,"artifact_bytes":609,"peak_pending_events":1,"max_pending_bound":65536,"mean_lower_ns":17385,"mean_check_ns":20985},
-    {"machine":"T2","workload":"preservation-pressure-eight-node","graph_nodes":8,"outputs":4,"modeled_cycles":8,"issue_width":2,"issue_utilization_milli":500,"preservation_saves":0,"preservation_loads":0,"event_count":8,"scheduler_work":8,"artifact_bytes":378,"peak_pending_events":1,"max_pending_bound":65536,"mean_lower_ns":11977,"mean_check_ns":14162}
+    {"machine":"T1","workload":"reorderable-six-node","graph_nodes":6,"outputs":3,"modeled_cycles":9,"issue_width":1,"issue_utilization_milli":777,"preservation_saves":1,"preservation_loads":0,"event_count":7,"scheduler_work":6,"artifact_bytes":353,"peak_pending_events":1,"max_pending_bound":65536,"mean_lower_ns":18740,"mean_check_ns":22738},
+    {"machine":"T2","workload":"reorderable-six-node","graph_nodes":6,"outputs":3,"modeled_cycles":7,"issue_width":2,"issue_utilization_milli":428,"preservation_saves":0,"preservation_loads":0,"event_count":6,"scheduler_work":6,"artifact_bytes":332,"peak_pending_events":1,"max_pending_bound":65536,"mean_lower_ns":18766,"mean_check_ns":20188},
+    {"machine":"T1","workload":"preservation-pressure-eight-node","graph_nodes":8,"outputs":4,"modeled_cycles":19,"issue_width":1,"issue_utilization_milli":1000,"preservation_saves":6,"preservation_loads":5,"event_count":19,"scheduler_work":8,"artifact_bytes":609,"peak_pending_events":1,"max_pending_bound":65536,"mean_lower_ns":27867,"mean_check_ns":60309},
+    {"machine":"T2","workload":"preservation-pressure-eight-node","graph_nodes":8,"outputs":4,"modeled_cycles":8,"issue_width":2,"issue_utilization_milli":500,"preservation_saves":0,"preservation_loads":0,"event_count":8,"scheduler_work":8,"artifact_bytes":378,"peak_pending_events":1,"max_pending_bound":65536,"mean_lower_ns":18772,"mean_check_ns":21541}
   ]
 }
