@@ -1,5 +1,7 @@
 //! `noble-ngraph-report/v1` lines (design D8): a fixed key prefix, then the
-//! command's fields. Reports carry no file path and no timing (D11).
+//! command's fields. `guest_requests` is always zero: the `ngraph` command
+//! family has no guest-runtime path. Reports carry no file path and no timing
+//! (D11).
 
 use crate::workflow::encoding::{string, Json};
 
@@ -156,6 +158,7 @@ impl Line {
             ("outcome", string(line.outcome.name())),
             ("code", optional(&line.code)),
             ("site", optional(&line.site)),
+            ("guest_requests", Json::Number(0)),
         ];
         if let Some(d) = &line.detail {
             entries.push(("detail", string(d)));

@@ -44,6 +44,12 @@ pub(super) const FORWARD_SCRATCH: Kind = kind!("--budget-forward-scratch", forwa
 pub(super) const BACKWARD_SCRATCH: Kind = kind!("--budget-backward-scratch", backward_scratch);
 pub(super) const STEPS: Kind = kind!("--budget-steps", optimizer_steps);
 
+/// The two bounded partial-evaluation caps of `ngraph-pe/0` (issue #32).
+pub(super) const SPECIALIZATION: [Kind; 2] = [
+    kind!("--budget-residual-nodes", residual_nodes),
+    kind!("--budget-variants", variants),
+];
+
 /// What a subcommand accepts.
 pub(super) struct Spec<'a> {
     /// Positional argument names (exact count).
@@ -231,4 +237,11 @@ pub(super) fn digest(flag: &str, text: &str) -> Result<[u8; 32], std::string::St
     noble_ngraph::format::digest_from_hex(text)
         .filter(|_| text.len() == 64)
         .ok_or_else(|| std::format!("{flag} takes a 64-digit hex identity"))
+}
+
+/// A signed decimal `I64`: an optional `-`, then ASCII digits (no leading `+`,
+/// as everywhere in the `ngraph` file formats and flags).
+pub(super) fn signed(flag: &str, text: &str) -> Result<i64, std::string::String> {
+    noble_ngraph::format::decimal_i64(text)
+        .ok_or_else(|| std::format!("{flag} takes a signed 64-bit decimal integer"))
 }

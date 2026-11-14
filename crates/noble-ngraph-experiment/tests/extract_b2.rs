@@ -276,3 +276,6 @@ fn check_static_examples(oracle: &Oracle) {
         }
     }
 }
+
+#[path = "extract_b2_pe/pe.rs"]
+mod specialization;

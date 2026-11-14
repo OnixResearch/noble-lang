@@ -3995,7 +3995,7 @@ the [labelled-lane README](../../verification/labelled-sup/README.md),
 [gate decision](../../verification/labelled-sup/decision.md), and
 [selected v3 contract](../../docs/i64-net-contract-v3.md).
 
-## Static-input specialization model (issue #32, phase 1)
+## Static-input specialization (issue #32)
 
 `NobleFoundation/Specialize.lean` defines a static map
 `Nat → Option (BitVec 64)`, the dynamic-slot rank, and a merge operation. The
@@ -4014,20 +4014,42 @@ slots as a prefix gives a different result on the non-prefix fixture.
 
 | Claim | Model / theorem(s) | Implementation boundary | Status |
 |---|---|---|---|
-| Bounded static-input specialization over packed graphs preserves values under merge | `staticValue_sound`, `specialize_wellFormed`, `congruenceWithInputs`, `residual_specialize_sound`, `specialize_sound` | Rust certificate emission, effect-aware program semantics, and runtime correspondence remain open | **proved** |
+| Bounded static-input specialization for checked packed graphs | `staticValue_sound`, `specialize_wellFormed`, `congruenceWithInputs`, `residual_specialize_sound`, `specialize_sound` prove only the index-preserving graph model's add/sub/mul value relation; the I64Eq fold is unproved, and pruning/renumbering is not modelled | The Rust entry point noble_ngraph::specialize and noble ngraph specialize implement substitution, rank/merge renumbering, add/sub/mul/eq folding, dead-node pruning and independent graph re-check for checked ngraph-i64/0 graphs. The emitted residual source is re-admitted through the ordinary frontend, kernel and extractor path. Effects and unsupported graph shapes are refused. Finite B2 tests compare the original, residual, re-admitted residual and both evaluators; this is not Rust/model correspondence or a Program-refinement proof. The source-bound receipt at [verification/ngraph/pe-2026-11-13.json](../../verification/ngraph/pe-2026-11-13.json) records 11 fixture/map rows × 1,000 seeded vectors (11,000 total): L3 and L4 each visit 49,000 original vs 33,000 residual/re-admitted nodes in aggregate; both evaluators visit fewer nodes in 6/11 rows. Residual source is 12–71 bytes; aggregate specialization is 811,014 ns and the residual pipeline is 55,785,995 ns. Per-row retained bytes and cold/warm timings are in the receipt. These finite measurements claim neither equal budgets nor universal speedup. | **model: proved**; **Rust/model correspondence: unproved**; **differential: finite tests**; **runtime: measured, see source-bound receipt** |
 
 The clean-source receipt for the specialization model is
 [`verification/foundation/receipts/84753c99e/`](../../verification/foundation/receipts/84753c99e/foundation-check.json)
 (692 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
 
+The implementation phase of the same issue keeps the four kinds of result apart:
+
+- **Model proof.** `specialize_sound` and its supporting lemmas are unchanged and
+  still cover only `add`/`sub`/`mul` on index-preserving packed graphs.
+- **Rust implementation, no correspondence claim.** `crates/noble-ngraph/src/specialize.rs`
+  implements the model's map, `rank`/`merge` and folding on a checked graph, adds an
+  `I64Eq` fold and a pruning/renumbering step, bounds the work with the `ngraph-pe/0`
+  accounting revision (`residual-nodes`, `variants`), and renders the residual as
+  `let`-based Noble source that `readmit` re-accepts through the ordinary
+  Declared-Text-v1 frontend, the kernel and the extractor. Nothing here relates the
+  Rust code to the Lean definitions.
+- **Finite differential tests.** The `extract_b2` issue-#32 leg compares the original
+  under the merged input vector, the checked residual and the re-admitted graph on L3,
+  L4 and (when `NOBLE_NODE` is set) the Node BigInt oracle. Agreement is finite
+  evidence about those graphs and vectors; it is not a proof.
+- **Runtime.** The measured node visits, residual sizes and retained bytes are recorded
+  in the change's measurement receipt. They report the two sides separately and claim
+  no equal budget, fuel or work (H-LIMIT-03) and no universal speedup.
+
 Open, and deliberately not closed:
 
 - pairs and `Unit` values, and `quote`/`compose`/`run`, are outside this graph
   model;
 - preservation of an arbitrary stack tail is not represented;
+- the `I64Eq` fold and the dead-node pruning step are implementation extensions with
+  no model theorem; pruning is justified only because the admitted slice has no
+  failing node;
 - budgets, thresholds, refusal/adoption criteria and other owner-reserved
-  contracts are not specified;
+  contracts remain the change's proposal, not an accepted policy;
 - effects, host calls, resource ownership and effect-aware partial execution
   are not modelled here;
 - no correspondence claim relates this model to Rust, Wasm, the certificate

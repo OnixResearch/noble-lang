@@ -42,6 +42,11 @@ pub enum BudgetKind {
     Fuel,
     /// Explicit decimal RNE token length.
     LiteralBytes,
+    /// Residual nodes created by static-input specialization, before pruning
+    /// (`ngraph-pe/0`, issue #32).
+    ResidualNodes,
+    /// Residual variants produced by one specialization request.
+    Variants,
 }
 
 impl BudgetKind {
@@ -67,6 +72,8 @@ impl BudgetKind {
             Self::Steps => "STEPS",
             Self::Fuel => "FUEL",
             Self::LiteralBytes => "LITERAL-BYTES",
+            Self::ResidualNodes => "RESIDUAL-NODES",
+            Self::Variants => "VARIANTS",
         }
     }
 }

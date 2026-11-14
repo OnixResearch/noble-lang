@@ -15,8 +15,10 @@
 //! The checker is ordinary Rust; its soundness is the open obligation NG-PO-B.
 
 use crate::identity::IdentityScheme;
-/// D5 budgets with the `/0` policy defaults. A policy may lower a budget;
-/// raising one requires a new profile policy revision (refused, `E-PROFILE`).
+/// D5 budgets with the `/0` policy defaults, plus the two bounded
+/// partial-evaluation caps of `ngraph-pe/0` (`residual_nodes`, `variants`). A
+/// policy may lower a budget; raising one requires a new profile policy
+/// revision (refused, `E-PROFILE`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Budgets {
     /// Extraction work units (symbolic steps, including repeated expansions).
@@ -55,6 +57,13 @@ pub struct Budgets {
     pub backward_scratch: u64,
     /// Optimizer steps per host call.
     pub optimizer_steps: u64,
+    /// Residual nodes one static-input specialization may create, before
+    /// pruning (`ngraph-pe/0`; issue #32). Charged by
+    /// [`crate::specialize`], not by the checker.
+    pub residual_nodes: u64,
+    /// Residual variants one specialization request may produce. The v1
+    /// entry point supports exactly one, so the `/0` default is 1.
+    pub variants: u64,
 }
 
 impl Default for Budgets {
@@ -76,12 +85,14 @@ impl Default for Budgets {
             forward_scratch: 64 * 1024 * 1024,
             backward_scratch: 128 * 1024 * 1024,
             optimizer_steps: 1_000_000,
+            residual_nodes: 262_144,
+            variants: 1,
         }
     }
 }
 
 impl Budgets {
-    fn pairs(&self) -> [u64; 16] {
+    fn pairs(&self) -> [u64; 18] {
         [
             self.work_units,
             self.expanded_nodes,
@@ -99,6 +110,8 @@ impl Budgets {
             self.forward_scratch,
             self.backward_scratch,
             self.optimizer_steps,
+            self.residual_nodes,
+            self.variants,
         ]
     }
 
