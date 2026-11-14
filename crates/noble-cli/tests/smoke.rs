@@ -12,9 +12,9 @@
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
 
-#[path = "smoke/checked_i64.rs"]
+#[path = "smoke/checked/i64.rs"]
 mod checked_i64;
-#[path = "smoke/checked_i64_guards.rs"]
+#[path = "smoke/checked/guards.rs"]
 mod checked_i64_guards;
 #[path = "smoke/reports.rs"]
 mod reports;

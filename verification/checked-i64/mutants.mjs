@@ -20,7 +20,7 @@ const cargo = process.env.NOBLE_CARGO;
 if (!cargo) throw new Error('NOBLE_CARGO must name the repository Rust test command');
 const target = path.join(root, 'crates/noble-wasm/runtime/checked-i64.wat');
 const original = fs.readFileSync(target, 'utf8');
-const testName = 'checked_i64::retained_checked_i64_expectations_match_lean_and_real_source_wasm';
+const testName = 'checked_i64::retained_vectors_match_lean_and_real_source_wasm';
 const cargoArgs = [
   'test', '-p', 'noble-cli', '--test', 'smoke',
   testName,

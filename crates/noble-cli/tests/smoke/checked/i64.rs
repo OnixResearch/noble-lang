@@ -1,8 +1,9 @@
 use std::io::Write;
 
-const PROPOSALS: &str = include_str!("../../../../verification/checked-i64/proposals.json");
-const LEAN_EXPECTATIONS: &str =
-    include_str!("../../../../proofs/foundation/NobleFoundation/CheckedI64Expectations.lean");
+const PROPOSALS: &str = include_str!("../../../../../verification/checked-i64/proposals.json");
+
+#[path = "expected.rs"]
+mod expected;
 
 struct Case {
     name: String,
@@ -12,79 +13,40 @@ struct Case {
     expected: String,
 }
 
-fn cases() -> Vec<Case> {
-    let document: serde_json::Value =
-        serde_json::from_str(PROPOSALS).expect("retained proposals are valid JSON");
+fn invalid_data(message: impl Into<String>) -> Box<dyn std::error::Error> {
+    Box::new(std::io::Error::new(
+        std::io::ErrorKind::InvalidData,
+        message.into(),
+    ))
+}
+
+fn case_field(row: &serde_json::Value, field: &str) -> Result<String, Box<dyn std::error::Error>> {
+    row[field]
+        .as_str()
+        .map(str::to_owned)
+        .ok_or_else(|| invalid_data(format!("proposal field {field} is not a string")))
+}
+
+fn cases() -> Result<Vec<Case>, Box<dyn std::error::Error>> {
+    let document: serde_json::Value = serde_json::from_str(PROPOSALS)?;
     assert_eq!(document["schema"], "noble-checked-i64-proposals/v1");
     let rows = document["cases"]
         .as_array()
-        .expect("proposal cases are an array");
+        .ok_or_else(|| invalid_data("proposal cases are not an array"))?;
     rows.iter()
-        .map(|row| Case {
-            name: row["name"]
-                .as_str()
-                .expect("case name is a string")
-                .to_owned(),
-            operation: row["operation"]
-                .as_str()
-                .expect("operation is a string")
-                .to_owned(),
-            left: row["left"]
-                .as_str()
-                .expect("left operand is an exact decimal string")
-                .to_owned(),
-            right: row["right"]
-                .as_str()
-                .expect("right operand is an exact decimal string")
-                .to_owned(),
-            expected: row["expected"]
-                .as_str()
-                .expect("expected result is a string")
-                .to_owned(),
+        .map(|row| {
+            Ok(Case {
+                name: case_field(row, "name")?,
+                operation: case_field(row, "operation")?,
+                left: case_field(row, "left")?,
+                right: case_field(row, "right")?,
+                expected: case_field(row, "expected")?,
+            })
         })
         .collect()
 }
 
-fn lean_cases() -> Vec<(String, String, String, String)> {
-    let table = LEAN_EXPECTATIONS
-        .split_once("def retained")
-        .and_then(|(_, tail)| tail.split_once('['))
-        .and_then(|(_, tail)| tail.split_once(']'))
-        .map(|(table, _)| table)
-        .expect("Lean retained table is present");
-    table
-        .lines()
-        .filter_map(|line| {
-            let row = line.trim().trim_end_matches(',').trim();
-            if row.is_empty() {
-                return None;
-            }
-            let fields: Vec<_> = row
-                .strip_prefix('(')
-                .and_then(|row| row.strip_suffix(')'))
-                .expect("Lean case row is a tuple")
-                .split(',')
-                .map(str::trim)
-                .collect();
-            assert_eq!(fields.len(), 4, "Lean case row has four fields");
-            let string = |field: &str| {
-                field
-                    .strip_prefix('"')
-                    .and_then(|value| value.strip_suffix('"'))
-                    .expect("Lean operation and expected value are strings")
-                    .to_owned()
-            };
-            Some((
-                string(fields[0]),
-                fields[1].to_owned(),
-                fields[2].to_owned(),
-                string(fields[3]),
-            ))
-        })
-        .collect()
-}
-
-fn source(case: &Case, first: bool) -> String {
+fn source(case: &Case, first: bool) -> Result<String, Box<dyn std::error::Error>> {
     let prefix = if first { "" } else { "drop " };
     let builtin = match case.operation.as_str() {
         "add" => "i64.checked-add",
@@ -94,13 +56,17 @@ fn source(case: &Case, first: bool) -> String {
         "abs" => "i64.checked-abs",
         "lt" => "i64.lt",
         "divrem" => "i64.checked-div-rem",
-        operation => panic!("unsupported checked-I64 operation {operation}"),
+        operation => {
+            return Err(invalid_data(format!(
+                "unsupported checked-I64 operation {operation}"
+            )));
+        }
     };
-    if matches!(case.operation.as_str(), "neg" | "abs") {
+    Ok(if matches!(case.operation.as_str(), "neg" | "abs") {
         format!("{prefix}{} {builtin}", case.left)
     } else {
         format!("{prefix}{} {} {builtin}", case.left, case.right)
-    }
+    })
 }
 
 pub(super) fn run_session(
@@ -135,7 +101,7 @@ fn execute(
         .iter()
         .enumerate()
         .map(|(index, case)| source(case, index == 0))
-        .collect::<Vec<_>>();
+        .collect::<Result<Vec<_>, _>>()?;
     let output = run_session(
         &[
             "session",
@@ -160,7 +126,17 @@ fn execute(
         .map_err(Into::into)
 }
 
-fn assert_value(actual: &serde_json::Value, expected: &str, name: &str) {
+struct ValueExpectation<'a> {
+    encoded: &'a str,
+    case_name: &'a str,
+}
+
+fn assert_value(
+    actual: &serde_json::Value,
+    expectation: ValueExpectation<'_>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let expected = expectation.encoded;
+    let name = expectation.case_name;
     if let Some(expected_bool) = expected.strip_prefix("bool:") {
         assert!(
             matches!(expected_bool, "true" | "false"),
@@ -181,7 +157,7 @@ fn assert_value(actual: &serde_json::Value, expected: &str, name: &str) {
     } else if let Some(payload) = expected.strip_prefix("pair:") {
         let (quotient, remainder) = payload
             .split_once(':')
-            .expect("pair expectation has quotient and remainder");
+            .ok_or_else(|| invalid_data("pair expectation has no separator"))?;
         assert_eq!(actual["type"], "Sum", "{name}");
         assert_eq!(actual["variant"], "left", "{name}");
         assert_eq!(actual["value"]["type"], "Pair", "{name}");
@@ -190,14 +166,16 @@ fn assert_value(actual: &serde_json::Value, expected: &str, name: &str) {
         assert_eq!(actual["value"]["value"][1]["type"], "I64", "{name}");
         assert_eq!(actual["value"]["value"][1]["value"], remainder, "{name}");
     } else {
-        panic!("{name}: unknown expectation encoding {expected}");
+        return Err(invalid_data(format!(
+            "{name}: unknown expectation encoding {expected}"
+        )));
     }
+    Ok(())
 }
 
 #[test]
-fn retained_checked_i64_expectations_match_lean_and_real_source_wasm(
-) -> Result<(), Box<dyn std::error::Error>> {
-    let cases = cases();
+fn retained_vectors_match_lean_and_real_source_wasm() -> Result<(), Box<dyn std::error::Error>> {
+    let cases = cases()?;
     let proposed = cases
         .iter()
         .map(|case| {
@@ -211,7 +189,7 @@ fn retained_checked_i64_expectations_match_lean_and_real_source_wasm(
         .collect::<Vec<_>>();
     assert_eq!(
         proposed,
-        lean_cases(),
+        expected::lean_cases()?,
         "Wasm rows equal the Lean retained table"
     );
     assert_eq!(cases.len(), 57);
@@ -230,15 +208,20 @@ fn retained_checked_i64_expectations_match_lean_and_real_source_wasm(
                 "{}",
                 case.name
             );
-            assert_value(&report["stack"][0], &case.expected, &case.name);
+            assert_value(
+                &report["stack"][0],
+                ValueExpectation {
+                    encoded: &case.expected,
+                    case_name: &case.name,
+                },
+            )?;
         }
     }
     Ok(())
 }
 
 #[test]
-fn checked_i64_preserves_stack_prefix_on_success_and_overflow(
-) -> Result<(), Box<dyn std::error::Error>> {
+fn stack_prefix_is_preserved_on_success_and_overflow() -> Result<(), Box<dyn std::error::Error>> {
     for optimization in ["off", "on"] {
         for (source, expected) in [
             ("97 1 -2 i64.checked-add", "ok:-1"),
@@ -269,7 +252,13 @@ fn checked_i64_preserves_stack_prefix_on_success_and_overflow(
             );
             assert_eq!(report["stack"][0]["type"], "I64", "{source}");
             assert_eq!(report["stack"][0]["value"], "97", "{source}");
-            assert_value(&report["stack"][1], expected, source);
+            assert_value(
+                &report["stack"][1],
+                ValueExpectation {
+                    encoded: expected,
+                    case_name: source,
+                },
+            )?;
         }
     }
     Ok(())

@@ -19,9 +19,9 @@ if (output === root || output.startsWith(`${root}${path.sep}`)) {
 const cargo = process.env.NOBLE_CARGO;
 if (!cargo) throw new Error('NOBLE_CARGO must name the repository Rust test command');
 const tests = [
-  'checked_i64::retained_checked_i64_expectations_match_lean_and_real_source_wasm',
-  'checked_i64::checked_i64_preserves_stack_prefix_on_success_and_overflow',
-  'checked_i64_guards::checked_i64_rejections_and_resource_exhaustion_start_no_guest',
+  'checked_i64::retained_vectors_match_lean_and_real_source_wasm',
+  'checked_i64::stack_prefix_is_preserved_on_success_and_overflow',
+  'checked_i64_guards::rejections_and_resource_exhaustion_start_no_guest',
 ];
 const args = [
   'test', '-p', 'noble-cli', '--test', 'smoke',
@@ -79,8 +79,9 @@ const receipt = {
     proposals: sha256('verification/checked-i64/proposals.json'),
     lean_expectations: sha256('proofs/foundation/NobleFoundation/CheckedI64Expectations.lean'),
     source_wasm: sha256('crates/noble-wasm/runtime/checked-i64.wat'),
-    replay_tests: sha256('crates/noble-cli/tests/smoke/checked_i64.rs'),
-    refusal_tests: sha256('crates/noble-cli/tests/smoke/checked_i64_guards.rs'),
+    replay_tests: sha256('crates/noble-cli/tests/smoke/checked/i64.rs'),
+    expectation_parser: sha256('crates/noble-cli/tests/smoke/checked/expected.rs'),
+    refusal_tests: sha256('crates/noble-cli/tests/smoke/checked/guards.rs'),
   },
   claim_boundary: 'Tested source-to-Wasm execution for the retained vectors under two optimization settings, stack-prefix preservation and refusal/resource boundaries; no Rust/Wasm refinement theorem is claimed.',
 };
