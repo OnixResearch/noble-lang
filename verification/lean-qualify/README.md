@@ -72,7 +72,7 @@ NOBLE_QUALIFY_TEST_TMP="<new private scratch directory outside the repository>" 
   "$NODE" --test verification/lean-qualify/qualify.test.mjs
 ```
 
-Coverage includes data-only planning, exact detection of a dependency added by an upstream package, a seeded mid-range regression, a fail-then-pass history showing why bisection alone is insufficient, full linear scan evidence, change-class separation, private reflink package-cache copies with source-byte preservation and rebuild-byte reporting, refusal controls for missing theorem roots/changed roots/extra axioms, missing negative-control detection, stale Lean artifact and missing-module builds, profile boundaries, and cancellation of an active child.
+Coverage includes data-only planning, exact detection of a dependency added by an upstream package, an incremental synthetic rebuild that leaves an unrelated consumer module untouched, a seeded mid-range regression, a fail-then-pass history showing why bisection alone is insufficient, full linear scan evidence, change-class separation, private reflink package-cache copies with source-byte preservation and rebuild-byte reporting, refusal controls for missing theorem roots/changed roots/extra axioms, missing negative-control detection, stale Lean artifact and missing-module builds, profile boundaries, and cancellation of an active child.
 
 ## Ownership boundaries
 

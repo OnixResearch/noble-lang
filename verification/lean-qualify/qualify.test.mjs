@@ -131,7 +131,8 @@ test('Lake update discovers a dependency added by an upstream package outside th
   const tinyUrl = pathToFileURL(tiny).href;
   write(consumer, 'lean-toolchain', 'leanprover/lean4:v4.35.0\n');
   write(consumer, '.gitignore', '/.lake/\n');
-  write(consumer, 'Fixture.lean', 'import Tiny\ndef fixtureValue : Nat := tinyValue\n');
+  write(consumer, 'Fixture.lean', 'import Tiny\nimport Fixture.Independent\ndef fixtureValue : Nat := tinyValue + independentValue\n');
+  write(consumer, 'Fixture/Independent.lean', 'def independentValue : Nat := 3\n');
   const writeConsumerLakefile = revision => write(consumer, 'lakefile.toml', [
     'name = "qualification-consumer"',
     'defaultTargets = ["Fixture"]',
@@ -149,6 +150,15 @@ test('Lake update discovers a dependency added by an upstream package outside th
   const first = spawnSync(lake, ['update'], { cwd: consumer, env: lakeEnv, encoding: 'utf8' });
   assert.equal(first.status, 0, `initial synthetic Lake resolution failed: ${first.stderr}`);
   const predicted = JSON.parse(readFileSync(join(consumer, 'lake-manifest.json'), 'utf8'));
+  const initialBuild = spawnSync(lake, ['build', 'Fixture'], { cwd: consumer, env: lakeEnv, encoding: 'utf8' });
+  assert.equal(initialBuild.status, 0, `initial synthetic Lean build failed: ${initialBuild.stderr}`);
+  const consumerOutputs = join(consumer, '.lake/build/lib/lean');
+  const tinyOutput = join(consumer, '.lake/packages/tiny/.lake/build/lib/lean/Tiny.olean');
+  const tinyBefore = readFileSync(tinyOutput);
+  const fixtureBefore = readFileSync(join(consumerOutputs, 'Fixture.olean'));
+  const independentOutput = join(consumerOutputs, 'Fixture/Independent.olean');
+  const independentBefore = readFileSync(independentOutput);
+  const independentMtime = statSync(independentOutput).mtimeMs;
 
   write(tiny, 'lakefile.toml', [
     'name = "tiny"',
@@ -160,6 +170,7 @@ test('Lake update discovers a dependency added by an upstream package outside th
     'name = "Tiny"',
     '',
   ].join('\n'));
+  write(tiny, 'Tiny.lean', 'def tinyValue : Nat := 2\n');
   const tinyNew = commit(tiny, 'add hidden dependency outside old manifest');
   writeConsumerLakefile(tinyNew);
   const second = spawnSync(lake, ['update'], { cwd: consumer, env: lakeEnv, encoding: 'utf8' });
@@ -170,6 +181,13 @@ test('Lake update discovers a dependency added by an upstream package outside th
   assert.ok(comparison.discrepancies.some(item => item.kind === 'unpredicted-dependency' && item.name === 'hidden'));
   const build = spawnSync(lake, ['build', 'Fixture'], { cwd: consumer, env: lakeEnv, encoding: 'utf8' });
   assert.equal(build.status, 0, `compatible synthetic Lean package update failed to build: ${build.stderr}`);
+  assert.notDeepEqual(readFileSync(tinyOutput), tinyBefore, 'changed dependency module was not rebuilt');
+  assert.notDeepEqual(readFileSync(join(consumerOutputs, 'Fixture.olean')), fixtureBefore,
+    'dependent consumer module was not rebuilt');
+  assert.deepEqual(readFileSync(independentOutput), independentBefore,
+    'unrelated consumer module output changed during the compatible update');
+  assert.equal(statSync(independentOutput).mtimeMs, independentMtime,
+    'Lake rebuilt the unrelated consumer module');
   const status = localState(consumer).status;
   assert.match(status, /lakefile\.toml/);
   assert.match(status, /lake-manifest\.json/);
