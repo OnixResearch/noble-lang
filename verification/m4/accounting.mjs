@@ -176,10 +176,10 @@ export function sourcePolicy(sourceFiles, readSource) {
         fail('SOURCE-FILTER', `${file}: unreviewed Charon annotation ${match[1]}`);
       }
     }
-    // Production-only extraction may not silently hide a new authored body in
-    // a cfg branch. Existing test-only Eq impls and derives remain unchanged.
+    // The extraction targets the non-test library, so exact cfg(test) items
+    // cannot select production bodies. Every other cfg branch needs review.
     for (const match of text.matchAll(/#\[\s*(cfg(?:_attr)?)\s*\(([^\n]*)/g)) {
-      const allowed = match[1] === 'cfg' && inheritedOpaqueSources[file] && match[2] === 'test)]' ||
+      const allowed = match[1] === 'cfg' && match[2] === 'test)]' ||
         match[1] === 'cfg_attr' && ['crates/noble-kernel/src/words.rs',
           'crates/noble-kernel/src/untrusted.rs'].includes(file) && match[2] === 'test, derive(PartialEq, Eq))]' ||
         match[1] === 'cfg_attr' && file === 'crates/noble-kernel/src/types.rs' &&
