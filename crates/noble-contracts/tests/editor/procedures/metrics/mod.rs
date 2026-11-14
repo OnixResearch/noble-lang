@@ -82,6 +82,25 @@ fn bind_manifest_and_withdraw_transfer_on_any_producer_call() -> Result<(), Stri
         assert!(!clean.contains(forbidden));
     }
 
+    let mut boundary = metrics.clone();
+    boundary.arms[0].seed = u64::MAX;
+    boundary.arms[0].retrieval_overhead_ns = u64::MAX;
+    boundary.model_synthesis = String::from("escaped: \n\t\"\\\u{001f}");
+    let encoded = library
+        .metrics_record(&boundary)
+        .map_err(|error| format!("boundary metrics: {error:?}"))?;
+    let parsed: serde_json::Value = serde_json::from_slice(&encoded)
+        .map_err(|error| format!("malformed boundary metrics: {error}"))?;
+    assert_eq!(parsed["acquisition"][0]["seed"].as_u64(), Some(u64::MAX));
+    assert_eq!(
+        parsed["arms"][0]["retrieval_overhead_ns"].as_u64(),
+        Some(u64::MAX)
+    );
+    assert_eq!(
+        parsed["claim_separation"]["model_synthesis"].as_str(),
+        Some("escaped: \n\t\"\\\u{001f}")
+    );
+
     let mut oversized_arm = metrics.clone();
     oversized_arm.arms[0].arm = "x".repeat(MAX_METRICS_BYTES.saturating_add(1));
     assert!(library.metrics_record(&oversized_arm).is_err());

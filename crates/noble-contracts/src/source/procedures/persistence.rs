@@ -79,10 +79,36 @@ impl BoundedJson {
         self.text.push(value);
     }
 
-    fn push_fmt(&mut self, arguments: core::fmt::Arguments<'_>) {
-        if core::fmt::Write::write_fmt(self, arguments).is_err() {
-            self.exceeded_limit = true;
+    fn push_u64(&mut self, mut value: u64) {
+        let mut digits = [0u8; 20];
+        let mut start = digits.len();
+        loop {
+            start -= 1;
+            // The remainder is in 0..=9; this narrowing cannot lose a bit.
+            digits[start] = b'0' + (value % 10) as u8;
+            value /= 10;
+            if value == 0 {
+                break;
+            }
         }
+        for digit in &digits[start..] {
+            self.push(char::from(*digit));
+        }
+    }
+
+    fn push_u32(&mut self, value: u32) {
+        self.push_u64(u64::from(value));
+    }
+
+    fn push_usize(&mut self, value: usize) {
+        match u64::try_from(value) {
+            Ok(value) => self.push_u64(value),
+            Err(_) => self.exceeded_limit = true,
+        }
+    }
+
+    fn push_bool(&mut self, value: bool) {
+        self.push_str(if value { "true" } else { "false" });
     }
 
     fn push_hex(&mut self, bytes: &[u8]) {
@@ -109,7 +135,8 @@ impl BoundedJson {
                 '\r' => self.push_str("\\r"),
                 '\t' => self.push_str("\\t"),
                 character if character <= '\u{001f}' => {
-                    self.push_fmt(format_args!("\\u{:04x}", u32::from(character)))
+                    self.push_str("\\u00");
+                    self.push_hex(&[character as u8]);
                 }
                 character => self.push(character),
             }
@@ -134,18 +161,6 @@ impl BoundedJson {
     fn finish(self, diagnostic: JsonLimitDiagnostic) -> Result<Vec<u8>, Refusal> {
         self.ensure_within_limit(diagnostic)?;
         Ok(self.text.into_bytes())
-    }
-}
-
-impl core::fmt::Write for BoundedJson {
-    fn write_str(&mut self, value: &str) -> core::fmt::Result {
-        let was_within_limit = !self.exceeded_limit;
-        self.push_str(value);
-        if was_within_limit && !self.exceeded_limit {
-            Ok(())
-        } else {
-            Err(core::fmt::Error)
-        }
     }
 }
 
@@ -1796,22 +1811,21 @@ impl ProcedureLibrary {
         out.push_str("\"profile\":\"pure-i64-bool/1\",\"semantic_revision\":0,");
         out.push_str("\"encoder\":{\"id\":");
         out.push_json_string(ENCODER_ID);
-        out.push_fmt(format_args!(
-            ",\"encoding_revision\":{ENCODING_REVISION},\"experimental\":true}},\"library\":{{"
-        ));
+        out.push_str(",\"encoding_revision\":");
+        out.push_u32(ENCODING_REVISION);
+        out.push_str(",\"experimental\":true},\"library\":{\"generation\":");
         let current = self.current();
-        out.push_fmt(format_args!(
-            "\"generation\":{},\"kind\":\"{}\",\"parent_generation\":",
-            current.record.generation,
-            generation_kind_code(current.record.kind)
-        ));
+        out.push_u32(current.record.generation);
+        out.push_str(",\"kind\":");
+        out.push_json_string(generation_kind_code(current.record.kind));
+        out.push_str(",\"parent_generation\":");
         match current.record.parent_generation {
-            Some(parent) => out.push_fmt(format_args!("{parent}")),
+            Some(parent) => out.push_u32(parent),
             None => out.push_str("null"),
         }
         out.push_str(",\"rollback_of\":");
         match current.record.rollback_of {
-            Some(abandoned) => out.push_fmt(format_args!("{abandoned}")),
+            Some(abandoned) => out.push_u32(abandoned),
             None => out.push_str("null"),
         }
         out.push_str(",\"chunk_library_revision\":\"");
@@ -1878,47 +1892,56 @@ impl ProcedureLibrary {
         let mut out = BoundedJson::new(MAX_METRICS_BYTES);
         out.push_str("{\"schema\":\"noble-procedure-library-metrics/1\",\"schema_revision\":0,\"manifest_digest\":\"");
         out.push_hex(&manifest_digest);
-        out.push_fmt(format_args!(
-            "\",\"generation\":{},",
-            self.current_generation
-        ));
-        out.push_fmt(format_args!(
-            "\"index\":{{\"entries\":{},\"bytes\":{},\"build_steps\":{},\"build_monotonic_ns\":{}}},",
-            self.records().len(),
-            self.records().len().checked_mul(32).ok_or_else(|| {
-                Refusal::new(RefusalKind::Exhausted, super::Diagnostic { field: "index.bytes", message: "retrieval index byte size overflow" })
-            })?,
-            metrics.index_build_steps,
-            metrics.index_build_monotonic_ns,
-        ));
-        out.push_fmt(format_args!(
-            "\"queries\":{{\"count\":{},\"examined_total\":{},\"max_examined\":{}}},",
-            aggregate.retrieval_queries,
-            aggregate.retrieval_examined,
-            aggregate.max_examined.ok_or_else(|| {
-                Refusal::new(
-                    RefusalKind::Internal,
-                    super::Diagnostic {
-                        field: "metrics.arms",
-                        message: "nonempty transfer arms have no maximum retrieval count",
-                    },
-                )
-            })?,
-        ));
-        out.push_fmt(format_args!(
-            "\"growth\":{{\"entries_added\":{},\"bytes_added\":{}}},\"acquisition\":[",
-            aggregate.growth_entries_added, aggregate.growth_bytes_added,
-        ));
+        out.push_str("\",\"generation\":");
+        out.push_u32(self.current_generation);
+        out.push_str(",\"index\":{\"entries\":");
+        out.push_usize(self.records().len());
+        out.push_str(",\"bytes\":");
+        out.push_usize(self.records().len().checked_mul(32).ok_or_else(|| {
+            Refusal::new(
+                RefusalKind::Exhausted,
+                super::Diagnostic {
+                    field: "index.bytes",
+                    message: "retrieval index byte size overflow",
+                },
+            )
+        })?);
+        out.push_str(",\"build_steps\":");
+        out.push_u32(metrics.index_build_steps);
+        out.push_str(",\"build_monotonic_ns\":");
+        out.push_u64(metrics.index_build_monotonic_ns);
+        out.push_str("},\"queries\":{\"count\":");
+        out.push_u32(aggregate.retrieval_queries);
+        out.push_str(",\"examined_total\":");
+        out.push_u32(aggregate.retrieval_examined);
+        out.push_str(",\"max_examined\":");
+        out.push_u32(aggregate.max_examined.ok_or_else(|| {
+            Refusal::new(
+                RefusalKind::Internal,
+                super::Diagnostic {
+                    field: "metrics.arms",
+                    message: "nonempty transfer arms have no maximum retrieval count",
+                },
+            )
+        })?);
+        out.push_str("},\"growth\":{\"entries_added\":");
+        out.push_u32(aggregate.growth_entries_added);
+        out.push_str(",\"bytes_added\":");
+        out.push_u32(aggregate.growth_bytes_added);
+        out.push_str("},\"acquisition\":[");
         for (index, arm) in metrics.arms.iter().enumerate() {
             if index != 0 {
                 out.push(',');
             }
             out.push_str("{\"arm\":");
             out.push_json_string(&arm.arm);
-            out.push_fmt(format_args!(
-                ",\"seed\":{},\"entries\":{},\"tasks\":{}}}",
-                arm.seed, arm.acquisition_entries, arm.acquisition_tasks
-            ));
+            out.push_str(",\"seed\":");
+            out.push_u64(arm.seed);
+            out.push_str(",\"entries\":");
+            out.push_u32(arm.acquisition_entries);
+            out.push_str(",\"tasks\":");
+            out.push_u32(arm.acquisition_tasks);
+            out.push('}');
             out.ensure_within_limit(METRICS_LIMIT_DIAGNOSTIC)?;
         }
         out.push_str("],\"retention\":[");
@@ -1928,10 +1951,11 @@ impl ProcedureLibrary {
             }
             out.push_str("{\"arm\":");
             out.push_json_string(&arm.arm);
-            out.push_fmt(format_args!(
-                ",\"seed\":{},\"surviving_generations\":{}}}",
-                arm.seed, arm.surviving_generations
-            ));
+            out.push_str(",\"seed\":");
+            out.push_u64(arm.seed);
+            out.push_str(",\"surviving_generations\":");
+            out.push_u32(arm.surviving_generations);
+            out.push('}');
             out.ensure_within_limit(METRICS_LIMIT_DIAGNOSTIC)?;
         }
         let is_transfer_valid = metrics
@@ -1948,10 +1972,13 @@ impl ProcedureLibrary {
                 }
                 out.push_str("{\"arm\":");
                 out.push_json_string(&arm.arm);
-                out.push_fmt(format_args!(
-                    ",\"seed\":{},\"held_out_tasks\":{},\"passed\":{}}}",
-                    arm.seed, arm.held_out_tasks, arm.transfer_passed
-                ));
+                out.push_str(",\"seed\":");
+                out.push_u64(arm.seed);
+                out.push_str(",\"held_out_tasks\":");
+                out.push_u32(arm.held_out_tasks);
+                out.push_str(",\"passed\":");
+                out.push_u32(arm.transfer_passed);
+                out.push('}');
                 out.ensure_within_limit(METRICS_LIMIT_DIAGNOSTIC)?;
             }
         }
@@ -1962,10 +1989,13 @@ impl ProcedureLibrary {
             }
             out.push_str("{\"arm\":");
             out.push_json_string(&arm.arm);
-            out.push_fmt(format_args!(
-                ",\"seed\":{},\"earlier_tasks\":{},\"failed\":{}}}",
-                arm.seed, arm.earlier_tasks, arm.regression_failed
-            ));
+            out.push_str(",\"seed\":");
+            out.push_u64(arm.seed);
+            out.push_str(",\"earlier_tasks\":");
+            out.push_u32(arm.earlier_tasks);
+            out.push_str(",\"failed\":");
+            out.push_u32(arm.regression_failed);
+            out.push('}');
             out.ensure_within_limit(METRICS_LIMIT_DIAGNOSTIC)?;
         }
         out.push_str("],\"restart\":{\"identity_match\":");
@@ -1983,14 +2013,23 @@ impl ProcedureLibrary {
             }
             out.push_str("{\"arm\":");
             out.push_json_string(&arm.arm);
-            out.push_fmt(format_args!(
-                ",\"seed\":{},\"growth_entries_added\":{},\"growth_bytes_added\":{},\"retrieval_queries\":{},\"retrieval_examined\":{},\"retrieval_overhead_ns\":{},\"restart_identity_match\":{},\"break_even_invocations\":",
-                arm.seed, arm.growth_entries_added, arm.growth_bytes_added,
-                arm.retrieval_queries, arm.retrieval_examined, arm.retrieval_overhead_ns,
-                arm.restart_identity_match
-            ));
+            out.push_str(",\"seed\":");
+            out.push_u64(arm.seed);
+            out.push_str(",\"growth_entries_added\":");
+            out.push_u32(arm.growth_entries_added);
+            out.push_str(",\"growth_bytes_added\":");
+            out.push_u32(arm.growth_bytes_added);
+            out.push_str(",\"retrieval_queries\":");
+            out.push_u32(arm.retrieval_queries);
+            out.push_str(",\"retrieval_examined\":");
+            out.push_u32(arm.retrieval_examined);
+            out.push_str(",\"retrieval_overhead_ns\":");
+            out.push_u64(arm.retrieval_overhead_ns);
+            out.push_str(",\"restart_identity_match\":");
+            out.push_bool(arm.restart_identity_match);
+            out.push_str(",\"break_even_invocations\":");
             match arm.break_even_invocations {
-                Some(value) => out.push_fmt(format_args!("{value}")),
+                Some(value) => out.push_u32(value),
                 None => out.push_str("null"),
             }
             out.push_str(",\"break_even_reason\":");
@@ -1999,9 +2038,9 @@ impl ProcedureLibrary {
             out.ensure_within_limit(METRICS_LIMIT_DIAGNOSTIC)?;
         }
         out.push_str("],\"proposer_calls\":");
-        out.push_fmt(format_args!("{}", aggregate.proposer_calls));
+        out.push_u32(aggregate.proposer_calls);
         out.push_str(",\"teacher_calls\":");
-        out.push_fmt(format_args!("{}", aggregate.teacher_calls));
+        out.push_u32(aggregate.teacher_calls);
         out.push_str(",\"claim_separation\":{\"model_synthesis\":");
         out.push_json_string(&metrics.model_synthesis);
         out.push_str(",\"executed_mechanics\":");
@@ -2146,28 +2185,26 @@ fn write_manifest_identity(out: &mut BoundedJson, record: &ProcedureRecord) -> R
     out.push_hex(&record.chunk.chunk_id);
     out.push_str("\",\"source_revision\":\"");
     out.push_hex(&record.chunk.source_revision);
-    out.push_fmt(format_args!(
-        "\",\"chunk_format\":{},\"chunk_semantic_revision\":{}",
-        record.chunk.format, record.chunk.semantic_revision
-    ));
+    out.push_str("\",\"chunk_format\":");
+    out.push_u32(record.chunk.format);
+    out.push_str(",\"chunk_semantic_revision\":");
+    out.push_u32(record.chunk.semantic_revision);
     out.push_str(",\"interface\":{\"stack_in\":[");
     write_type_tags(out, &record.chunk.interface.stack_in)?;
     out.push_str("],\"stack_out\":[");
     write_type_tags(out, &record.chunk.interface.stack_out)?;
     out.push_str("],\"effects\":[]},\"captures\":");
-    out.push_fmt(format_args!("{}", record.chunk.captures.len()));
+    out.push_usize(record.chunk.captures.len());
     out.push_str(",\"instantiations\":");
-    out.push_fmt(format_args!("{}", record.chunk.instantiations.len()));
+    out.push_usize(record.chunk.instantiations.len());
     Ok(())
 }
 
 fn write_manifest_provenance(out: &mut BoundedJson, record: &ProcedureRecord) {
     out.push_str(",\"provenance\":{\"producer\":");
     out.push_json_string(producer_code(record.provenance.producer));
-    out.push_fmt(format_args!(
-        ",\"producer_tool_revision\":{}",
-        record.provenance.producer_tool_revision
-    ));
+    out.push_str(",\"producer_tool_revision\":");
+    out.push_u32(record.provenance.producer_tool_revision);
     if let Some(task_id) = record.provenance.task_id {
         out.push_str(",\"task_id\":\"");
         out.push_hex(&task_id);
@@ -2176,7 +2213,8 @@ fn write_manifest_provenance(out: &mut BoundedJson, record: &ProcedureRecord) {
         out.push_str(",\"task_id\":null");
     }
     if let Some(revision) = record.provenance.grammar_revision {
-        out.push_fmt(format_args!(",\"grammar_revision\":{revision}"));
+        out.push_str(",\"grammar_revision\":");
+        out.push_u32(revision);
     } else {
         out.push_str(",\"grammar_revision\":null");
     }
@@ -2203,15 +2241,14 @@ fn write_manifest_dependencies(out: &mut BoundedJson, record: &ProcedureRecord) 
 fn write_manifest_promotion(out: &mut BoundedJson, record: &ProcedureRecord) {
     out.push_str(",\"promotion\":");
     if let Some(promotion) = &record.promotion {
-        out.push_fmt(format_args!(
-            "{{\"policy_revision\":{},\"obligations\":[",
-            promotion.policy_revision
-        ));
+        out.push_str("{\"policy_revision\":");
+        out.push_u32(promotion.policy_revision);
+        out.push_str(",\"obligations\":[");
         for (index, obligation) in promotion.obligations.iter().enumerate() {
             if index != 0 {
                 out.push(',');
             }
-            out.push_fmt(format_args!("{obligation}"));
+            out.push_u32(*obligation);
         }
         out.push_str("]}");
     } else {
@@ -2225,10 +2262,9 @@ fn write_manifest_evidence(out: &mut BoundedJson, record: &ProcedureRecord) {
         if index != 0 {
             out.push(',');
         }
-        out.push_fmt(format_args!(
-            "{{\"obligation\":{},\"class\":",
-            evidence.obligation
-        ));
+        out.push_str("{\"obligation\":");
+        out.push_u32(evidence.obligation);
+        out.push_str(",\"class\":");
         out.push_json_string(evidence.class.code());
         out.push_str(",\"outcome\":");
         out.push_json_string(evidence.outcome.code());
@@ -2243,19 +2279,21 @@ fn write_manifest_evidence(out: &mut BoundedJson, record: &ProcedureRecord) {
         out.push_json_string(&evidence.claim);
         out.push_str(",\"subject_binding\":\"");
         out.push_hex(&evidence.subject_binding);
-        out.push_fmt(format_args!(
-            "\",\"policy_revision\":{}}}",
-            evidence.policy_revision
-        ));
+        out.push_str("\",\"policy_revision\":");
+        out.push_u32(evidence.policy_revision);
+        out.push('}');
     }
     out.push(']');
 }
 
 fn write_manifest_cost_and_links(out: &mut BoundedJson, record: &ProcedureRecord) {
-    out.push_fmt(format_args!(
-        ",\"cost\":{{\"expanded_nodes\":{},\"emitted_source_bytes\":{},\"evaluation_steps\":{}}}",
-        record.cost.expanded_nodes, record.cost.emitted_source_bytes, record.cost.evaluation_steps
-    ));
+    out.push_str(",\"cost\":{\"expanded_nodes\":");
+    out.push_u32(record.cost.expanded_nodes);
+    out.push_str(",\"emitted_source_bytes\":");
+    out.push_u32(record.cost.emitted_source_bytes);
+    out.push_str(",\"evaluation_steps\":");
+    out.push_u32(record.cost.evaluation_steps);
+    out.push('}');
     out.push_str(",\"supersedes\":");
     if let Some(id) = record.supersedes {
         out.push('"');
