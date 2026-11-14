@@ -3,9 +3,9 @@
 //!
 //! The specification and its proof live in `proofs/m3/NobleM2/SizeChange*.lean`. This module is the
 //! front end that builds the model's call graphs from a checked definition: it classifies what each
-//! self-call site passes for each declared measure, decides the shared-measure criterion
-//! (`certifiedAll`), and on refusal names, for every measure, the first site that does not decrease
-//! it — the witness `certifiedAll_refusal_iff` proves is complete.
+//! it classifies what each self-call site passes for each declared measure, builds a size-change
+//! matrix, closes the bounded call graph under composition, and checks the idempotent strict-edge
+//! criterion. Refusals identify an idempotent closure graph with no strict self-edge.
 //!
 //! ## What is analyzed
 //!
@@ -27,24 +27,26 @@
 //!
 //! ## Soundness of the verdict
 //!
-//! `Accepted` is a Lean-checked certificate about the classified relations, not a theorem about an
-//! execution: the model proves that a certified family admits no infinite run *that respects those
-//! relations*, and the guarded run model supplies the positivity premise. Every path this module
-//! cannot model becomes `Unsupported` or `Opaque`, never an assumed decrease, so the verdict never
-//! claims more than the classifier observed. A refusal means **not shown terminating**, never
-//! "diverges".
+//! The Lean certificate checks the finite closure and every idempotent strict-edge witness against
+//! the same matrix algebra. The bounded classifier derives edges only from the existing guarded
+//! counter and structural-list facts. Its correspondence to source execution remains open. A
+//! refusal means **not shown terminating**, never "diverges".
 //!
 //! ## What is not done here
 //!
-//! The general size-change closure (composed graphs over paths) is not decided; the bounded
-//! shared-measure criterion is. The correspondence between `List` structure and its length, and
-//! between a wrapped `I64` counter and a natural number, is the front end's obligation and is
-//! documented in the lane (`verification/size-change`).
+//! Mutual recursion and general source-to-model correspondence are not claimed by this one-
+//! definition front end. The correspondence between `List` structure and its length, and between a
+//! guarded wrapped `I64` counter and a natural number, remains an explicit open boundary documented
+//! in the lane (`verification/size-change`).
 
-/// The rectangular zero-offset of one `Target` in the checked environment.
+/// Maximum number of concrete measures in one analyzed declaration.
 const MAX_MEASURES: usize = 8;
 /// The most self-call sites one definition's report carries.
 const MAX_SITES: usize = 256;
+/// The most distinct matrices retained by one positive closure.
+const MAX_CLOSURE: usize = 256;
+/// Fixed row stride for the bounded graph matrix.
+const GRAPH_STRIDE: usize = MAX_MEASURES;
 /// The most stack cells the symbolic walk tracks; a checked body needs far fewer.
 const MAX_FRAME: usize = 64;
 /// The most word steps one definition's walk spends before refusing.
@@ -86,6 +88,109 @@ pub enum Argument {
     Opaque,
 }
 
+/// A relation between one old parameter and one new parameter at a call site.
+#[octet::sealed_enum]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Relation {
+    /// The new value is strictly smaller than the old value.
+    Strict,
+    /// The new value is no larger than the old value.
+    NonIncrease,
+    /// The new value is equal to the old value.
+    Same,
+    /// No relation is established by the bounded classifier.
+    Unknown,
+}
+
+impl Relation {
+    /// The spelling used in reports and Lean certificates.
+    pub const fn spelling(self) -> &'static str {
+        match self {
+            Self::Strict => "strict",
+            Self::NonIncrease => "non-increase",
+            Self::Same => "same",
+            Self::Unknown => "unknown",
+        }
+    }
+
+    /// The `NobleM2.SizeChange.Rel4` constructor this relation certifies.
+    pub const fn constructor(self) -> &'static str {
+        match self {
+            Self::Strict => "strict",
+            Self::NonIncrease => "nonIncrease",
+            Self::Same => "same",
+            Self::Unknown => "unknown",
+        }
+    }
+}
+
+/// One row-major size-change matrix with a fixed stride of eight parameters.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Graph {
+    /// Relation from old measure `i` to new measure `j` at `i * 8 + j`.
+    pub relations: [Relation; GRAPH_STRIDE * GRAPH_STRIDE],
+}
+
+impl Graph {
+    /// An all-unknown matrix.
+    pub const fn unknown() -> Self {
+        Self {
+            relations: [Relation::Unknown; GRAPH_STRIDE * GRAPH_STRIDE],
+        }
+    }
+
+    /// Read one relation using the fixed matrix stride.
+    pub const fn get(&self, from: usize, to: usize) -> Relation {
+        self.relations[from * GRAPH_STRIDE + to]
+    }
+
+    /// Set one relation using the fixed matrix stride.
+    pub fn set(&mut self, from: usize, to: usize, relation: Relation) {
+        self.relations[from * GRAPH_STRIDE + to] = relation;
+    }
+}
+
+/// One distinct closure matrix and the shortest known sequence of call sites producing it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ClosureEntry {
+    /// The composed graph.
+    pub graph: Graph,
+    /// Indices into the definition's source-ordered `Evidence::sites`.
+    pub path: alloc::vec::Vec<u32>,
+}
+
+/// A per-idempotent strict diagonal selected by the accepted certificate.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct StrictWitness {
+    /// Index into the accepted closure list.
+    pub closure_entry: u32,
+    /// Measure whose diagonal relation is strict.
+    pub measure: u32,
+}
+
+/// Which declared bound made an otherwise supported analysis incomplete.
+#[octet::sealed_enum]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Bound {
+    /// More concrete parameters than the classifier supports.
+    Parameters,
+    /// More call sites than the classifier supports.
+    CallSites,
+    /// More distinct closure graphs than the certificate cap allows.
+    ClosureSize,
+}
+
+impl Bound {
+    /// Stable report spelling.
+    pub const fn spelling(self) -> &'static str {
+        match self {
+            Self::Parameters => "parameters",
+            Self::CallSites => "call-sites",
+            Self::ClosureSize => "closure-size",
+        }
+    }
+}
+
 impl Argument {
     /// The spelling the report uses.
     pub const fn spelling(self) -> &'static str {
@@ -116,6 +221,8 @@ pub struct Site {
     pub arguments: alloc::vec::Vec<Argument>,
     /// Whether a `0 <` guard on each measure is in force at the site.
     pub guarded: alloc::vec::Vec<bool>,
+    /// Full old-parameter to new-parameter graph; unobserved pairs are `Unknown`.
+    pub graph: Graph,
 }
 
 /// The reason a definition is outside the bounded classifier.
@@ -132,12 +239,16 @@ pub enum Unsupported {
     UnmodelledCall,
     /// A self call whose current frame is not the declared argument list.
     SelfArityMismatch,
-    /// More sites, measures or stack cells than the bounded walk tracks.
+    /// The symbolic walk exhausted its step, depth, or frame budget.
     BudgetExceeded,
+    /// The number of recursive call sites exceeded its declared bound.
+    CallSiteLimit,
     /// The body's final frame does not match the declared result.
     FinalFrameMismatch,
     /// The definition declares no self call, so there is nothing to classify.
     NoSelfCall,
+    /// A closure invariant expected by the bounded algebra did not hold.
+    ClosureInvariant,
 }
 
 impl Unsupported {
@@ -150,8 +261,10 @@ impl Unsupported {
             Self::UnmodelledCall => "unmodelled-call",
             Self::SelfArityMismatch => "self-arity-mismatch",
             Self::BudgetExceeded => "budget-exceeded",
+            Self::CallSiteLimit => "call-site-limit",
             Self::FinalFrameMismatch => "final-frame-mismatch",
             Self::NoSelfCall => "no-self-call",
+            Self::ClosureInvariant => "closure-invariant",
         }
     }
 }
@@ -171,15 +284,30 @@ pub struct Witness {
 #[octet::sealed_enum]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Verdict {
-    /// One measure decreases at every site.
+    /// Every idempotent matrix in the exact bounded closure has a strict diagonal.
     Accepted {
-        /// The shared measure index.
-        measure: u32,
+        /// A shared measure, when the legacy stronger criterion also applies.
+        shared_measure: Option<u32>,
+        /// The complete, deduplicated positive closure with one call-site path per matrix.
+        closure: alloc::vec::Vec<ClosureEntry>,
+        /// One strict diagonal witness for each idempotent matrix.
+        strict_witnesses: alloc::vec::Vec<StrictWitness>,
     },
-    /// No measure decreases at every site; each measure's failing site is named.
+    /// An idempotent graph in the closure has no strict self-edge: termination is not shown.
     Refused {
-        /// One witness per measure, in declaration order.
+        /// Legacy shared-measure failure details, in declaration order.
         witnesses: alloc::vec::Vec<Witness>,
+        /// The complete, deduplicated positive closure.
+        closure: alloc::vec::Vec<ClosureEntry>,
+        /// The idempotent graph and call-site cycle that witness refusal.
+        cycle: ClosureEntry,
+    },
+    /// A declared analysis bound was exceeded; no termination verdict is inferred.
+    BoundExceeded {
+        /// Which bound was reached.
+        bound: Bound,
+        /// Where the bound was observed.
+        span: crate::Span,
     },
     /// The definition is outside the bounded classifier; no claim is made either way.
     Unsupported {
@@ -374,10 +502,11 @@ impl<'a> Walker<'a> {
             return self.fail(Unsupported::SelfArityMismatch, span);
         }
         if self.sites.len() >= MAX_SITES {
-            return self.fail(Unsupported::BudgetExceeded, span);
+            return self.fail(Unsupported::CallSiteLimit, span);
         }
         let mut arguments = alloc::vec::Vec::with_capacity(measures.len());
         let mut guarded = alloc::vec::Vec::with_capacity(measures.len());
+        let mut graph = Graph::unknown();
         for (index, measure) in measures.iter().enumerate() {
             let is_guarded = self.guard & Self::measure_bit(index) != 0;
             let value = match self.stack.get(index.saturating_add(1)) {
@@ -387,11 +516,48 @@ impl<'a> Walker<'a> {
             let argument = classify(*measure, index, value, is_guarded);
             arguments.push(argument);
             guarded.push(is_guarded);
+            match value {
+                Value::Formal(source) => {
+                    let source_index = match usize::try_from(*source) {
+                        Ok(source) if source < measures.len() => source,
+                        _ => continue,
+                    };
+                    if measures[source_index] == *measure {
+                        graph.set(source_index, index, Relation::Same);
+                    }
+                }
+                Value::Predecessor(source) => {
+                    let source_index = match usize::try_from(*source) {
+                        Ok(source) if source < measures.len() => source,
+                        _ => continue,
+                    };
+                    let source_guarded = self.guard & Self::measure_bit(source_index) != 0;
+                    if source_guarded
+                        && measures[source_index] == Measure::Counter
+                        && *measure == Measure::Counter
+                    {
+                        graph.set(source_index, index, Relation::Strict);
+                    }
+                }
+                Value::Tail(source) => {
+                    let source_index = match usize::try_from(*source) {
+                        Ok(source) if source < measures.len() => source,
+                        _ => continue,
+                    };
+                    if measures[source_index] == Measure::Structural
+                        && *measure == Measure::Structural
+                    {
+                        graph.set(source_index, index, Relation::Strict);
+                    }
+                }
+                _ => {}
+            }
         }
         self.sites.push(Site {
             span,
             arguments,
             guarded,
+            graph,
         });
         self.stack.truncate(1);
         for _ in 0..self.result_frame {
@@ -781,32 +947,46 @@ fn concrete_positions(stack: &[noble_kernel::shapes::Pattern]) -> Option<usize> 
     Some(fixed.len())
 }
 
+#[derive(Clone, Copy)]
+enum ProfileError {
+    Outside,
+    BoundExceeded,
+}
+
 /// The measures and output frame one signature exposes, if it is in the bounded profile.
 #[expect(
     tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; measures_of is a fail-closed signature classifier: every unsupported prefix, stack shape, or measure returns None, and assertion panics would turn valid out-of-profile user programs into crashes."
+    reason = "Owner: noble-maintainers; measures_of is a fail-closed signature classifier: every unsupported prefix, stack shape, or measure returns Outside, while an excessive measure count is a distinct bound result; assertion panics would turn valid out-of-profile programs into crashes."
 )]
-fn measures_of(scheme: &noble_kernel::words::Scheme) -> Option<(alloc::vec::Vec<Measure>, usize)> {
-    let (prefix, fixed) = scheme.stack_in.split_first()?;
+fn measures_of(
+    scheme: &noble_kernel::words::Scheme,
+) -> Result<(alloc::vec::Vec<Measure>, usize), ProfileError> {
+    let (prefix, fixed) = scheme
+        .stack_in
+        .split_first()
+        .ok_or(ProfileError::Outside)?;
     if !matches!(prefix, noble_kernel::shapes::Pattern::StackVar(_)) {
-        return None;
+        return Err(ProfileError::Outside);
     }
-    let result_frame = concrete_positions(&scheme.stack_out)?;
+    let result_frame = concrete_positions(&scheme.stack_out).ok_or(ProfileError::Outside)?;
     if scheme.stack_in.first() != scheme.stack_out.first() {
-        return None;
+        return Err(ProfileError::Outside);
+    }
+    if fixed.len() > MAX_MEASURES {
+        return Err(ProfileError::BoundExceeded);
+    }
+    if fixed.is_empty() {
+        return Err(ProfileError::Outside);
     }
     let mut measures = alloc::vec::Vec::with_capacity(fixed.len());
     for pattern in fixed {
         measures.push(match pattern {
             noble_kernel::shapes::Pattern::I64 => Measure::Counter,
             noble_kernel::shapes::Pattern::List(_) => Measure::Structural,
-            _ => return None,
+            _ => return Err(ProfileError::Outside),
         });
     }
-    if measures.is_empty() || measures.len() > MAX_MEASURES {
-        return None;
-    }
-    Some((measures, result_frame))
+    Ok((measures, result_frame))
 }
 
 /// Whether a definition's tree contains a lexical self call.
@@ -828,9 +1008,25 @@ pub fn evidence(
     definition: &crate::source::Named,
     environment: &noble_kernel::contracts::Env,
 ) -> Evidence {
-    let (measures, result_frame) = match definition.signature.as_ref().and_then(measures_of) {
-        Some(profile) => profile,
-        None => {
+    let profile = definition
+        .signature
+        .as_ref()
+        .map(measures_of)
+        .unwrap_or(Err(ProfileError::Outside));
+    let (measures, result_frame) = match profile {
+        Ok(profile) => profile,
+        Err(ProfileError::BoundExceeded) => {
+            return Evidence {
+                definition: definition.name.clone(),
+                measures: alloc::vec::Vec::new(),
+                sites: alloc::vec::Vec::new(),
+                verdict: Verdict::BoundExceeded {
+                    bound: Bound::Parameters,
+                    span: definition.tree.span,
+                },
+            }
+        }
+        Err(ProfileError::Outside) => {
             return Evidence {
                 definition: definition.name.clone(),
                 measures: alloc::vec::Vec::new(),
@@ -871,6 +1067,15 @@ pub fn evidence(
         (halt, walker.sites)
     };
     match halt {
+        Some((Unsupported::CallSiteLimit, span)) => Evidence {
+            definition: definition.name.clone(),
+            measures,
+            sites,
+            verdict: Verdict::BoundExceeded {
+                bound: Bound::CallSites,
+                span,
+            },
+        },
         Some((reason, span)) => Evidence {
             definition: definition.name.clone(),
             measures,
@@ -896,7 +1101,123 @@ const fn final_shape(walker: &Walker<'_>) -> Option<(Unsupported, crate::Span)> 
     None
 }
 
-/// Decide the shared-measure criterion and build the evidence.
+/// Sequential composition matches the four-relation model's absorbing unknown.
+const fn compose_relation(left: Relation, right: Relation) -> Relation {
+    match (left, right) {
+        (Relation::Unknown, _) | (_, Relation::Unknown) => Relation::Unknown,
+        (Relation::Strict, _) | (_, Relation::Strict) => Relation::Strict,
+        (Relation::NonIncrease, _) | (_, Relation::NonIncrease) => Relation::NonIncrease,
+        (Relation::Same, Relation::Same) => Relation::Same,
+    }
+}
+
+/// Parallel paths retain the least informative common relation from the model's join table.
+const fn join_relation(left: Relation, right: Relation) -> Relation {
+    match (left, right) {
+        (Relation::Strict, _) | (_, Relation::Strict) => Relation::Strict,
+        (Relation::NonIncrease, _) | (_, Relation::NonIncrease) => Relation::NonIncrease,
+        (Relation::Same, _) | (_, Relation::Same) => Relation::Same,
+        (Relation::Unknown, Relation::Unknown) => Relation::Unknown,
+    }
+}
+
+/// Compose two bounded matrices in the same row/column orientation as `MGraph`.
+fn compose_graph(left: &Graph, right: &Graph, measure_count: usize) -> Graph {
+    let mut product = Graph::unknown();
+    for from in 0..measure_count {
+        for to in 0..measure_count {
+            let mut joined = Relation::Unknown;
+            for middle in 0..measure_count {
+                joined = join_relation(
+                    compose_relation(left.get(from, middle), right.get(middle, to)),
+                    joined,
+                );
+            }
+            product.set(from, to, joined);
+        }
+    }
+    product
+}
+
+/// Build the positive closure by breadth-first right-composition with each site matrix.
+fn close_graphs(sites: &[Site], measure_count: usize) -> Result<alloc::vec::Vec<ClosureEntry>, ()> {
+    let mut closure = alloc::vec::Vec::with_capacity(sites.len().min(MAX_CLOSURE));
+    for (site_index, site) in sites.iter().enumerate() {
+        if closure.iter().any(|entry: &ClosureEntry| entry.graph == site.graph) {
+            continue;
+        }
+        if closure.len() >= MAX_CLOSURE {
+            return Err(());
+        }
+        let site_index = u32::try_from(site_index).map_err(|_| ())?;
+        closure.push(ClosureEntry {
+            graph: site.graph,
+            path: alloc::vec![site_index],
+        });
+    }
+    let mut cursor = 0;
+    while cursor < closure.len() {
+        let graph = closure[cursor].graph;
+        let path = closure[cursor].path.clone();
+        for (site_index, site) in sites.iter().enumerate() {
+            let product = compose_graph(&graph, &site.graph, measure_count);
+            if closure.iter().any(|entry| entry.graph == product) {
+                continue;
+            }
+            if closure.len() >= MAX_CLOSURE || path.len() >= MAX_CLOSURE {
+                return Err(());
+            }
+            let site_index = u32::try_from(site_index).map_err(|_| ())?;
+            let mut product_path = path.clone();
+            product_path.push(site_index);
+            closure.push(ClosureEntry {
+                graph: product,
+                path: product_path,
+            });
+        }
+        cursor += 1;
+    }
+    Ok(closure)
+}
+
+enum ClosureCriterion {
+    Accepted(alloc::vec::Vec<StrictWitness>),
+    Refused(ClosureEntry),
+    MissingIdempotent,
+}
+
+/// Evaluate the idempotent strict-diagonal criterion over a completed finite closure.
+fn check_closure(closure: &[ClosureEntry], measure_count: usize) -> ClosureCriterion {
+    let mut found_idempotent = false;
+    let mut strict_witnesses = alloc::vec::Vec::new();
+    for (closure_index, entry) in closure.iter().enumerate() {
+        if compose_graph(&entry.graph, &entry.graph, measure_count) != entry.graph {
+            continue;
+        }
+        found_idempotent = true;
+        let measure = (0..measure_count)
+            .find(|measure| entry.graph.get(*measure, *measure) == Relation::Strict);
+        let Some(measure) = measure else {
+            return ClosureCriterion::Refused(entry.clone());
+        };
+        let (Ok(closure_entry), Ok(measure)) =
+            (u32::try_from(closure_index), u32::try_from(measure))
+        else {
+            return ClosureCriterion::MissingIdempotent;
+        };
+        strict_witnesses.push(StrictWitness {
+            closure_entry,
+            measure,
+        });
+    }
+    if found_idempotent {
+        ClosureCriterion::Accepted(strict_witnesses)
+    } else {
+        ClosureCriterion::MissingIdempotent
+    }
+}
+
+/// Decide the bounded closure criterion and build the evidence.
 #[expect(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; verdict allocates the refusal-witness vector and clones the definition name into the owned report, which cannot be a const operation."
@@ -906,11 +1227,26 @@ fn verdict(
     measures: alloc::vec::Vec<Measure>,
     sites: alloc::vec::Vec<Site>,
 ) -> Evidence {
-    let accepted = shared_measure(&measures, &sites);
-    let outcome = match accepted {
-        Some(measure) => Verdict::Accepted { measure },
-        None => Verdict::Refused {
-            witnesses: refusal_witnesses(&measures, &sites),
+    let outcome = match close_graphs(&sites, measures.len()) {
+        Err(()) => Verdict::BoundExceeded {
+            bound: Bound::ClosureSize,
+            span: definition.tree.span,
+        },
+        Ok(closure) => match check_closure(&closure, measures.len()) {
+            ClosureCriterion::Accepted(strict_witnesses) => Verdict::Accepted {
+                shared_measure: shared_measure(&measures, &sites),
+                closure,
+                strict_witnesses,
+            },
+            ClosureCriterion::Refused(cycle) => Verdict::Refused {
+                witnesses: refusal_witnesses(&measures, &sites),
+                closure,
+                cycle,
+            },
+            ClosureCriterion::MissingIdempotent => Verdict::Unsupported {
+                reason: Unsupported::ClosureInvariant,
+                span: definition.tree.span,
+            },
         },
     };
     Evidence {
@@ -964,10 +1300,99 @@ fn refusal_witnesses(measures: &[Measure], sites: &[Site]) -> alloc::vec::Vec<Wi
     witnesses
 }
 
-/// Render the Lean certificate for the accepted definitions of one report.
-///
-/// Each accepted definition becomes concrete `Args` plus a `decide` proof of `certifiedAll` and of
-/// the reported shared measure. Refused and unsupported definitions produce no theorem.
+/// Write one Lean matrix function from the bounded row-major representation.
+fn append_graph_definition(
+    mut output: alloc::string::String,
+    name: &str,
+    graph: &Graph,
+    measure_count: usize,
+) -> alloc::string::String {
+    output.push_str("def ");
+    output.push_str(name);
+    output.push_str(" : MGraph ");
+    output = append_decimal(output, measure_count);
+    output.push_str(" := fun from to =>\n  match from.val, to.val with\n");
+    for from in 0..measure_count {
+        for to in 0..measure_count {
+            let relation = graph.get(from, to);
+            if relation != Relation::Unknown {
+                output.push_str("  | ");
+                output = append_decimal(output, from);
+                output.push_str(", ");
+                output = append_decimal(output, to);
+                output.push_str(" => .");
+                output.push_str(relation.constructor());
+                output.push('\n');
+            }
+        }
+    }
+    output.push_str("  | _, _ => .unknown\n\n");
+    output
+}
+
+/// Emit graph definitions, the site function, and path-bearing closure entries.
+fn append_closure_model(
+    mut output: alloc::string::String,
+    name: &str,
+    sites: &[Site],
+    measure_count: usize,
+    closure: &[ClosureEntry],
+) -> alloc::string::String {
+    for (index, entry) in closure.iter().enumerate() {
+        let graph_name = append_decimal(alloc::string::String::from(name), index);
+        output = append_graph_definition(output, &graph_name, &entry.graph, measure_count);
+    }
+    output.push_str("def ");
+    output.push_str(name);
+    output.push_str("Sites : Fin ");
+    output = append_decimal(output, sites.len());
+    output.push_str(" → MGraph ");
+    output = append_decimal(output, measure_count);
+    output.push_str(" := fun site =>\n  match site.val with\n");
+    for (site_index, site) in sites.iter().enumerate() {
+        output.push_str("  | ");
+        output = append_decimal(output, site_index);
+        output.push_str(" => ");
+        let graph_index = closure.iter().position(|entry| entry.graph == site.graph);
+        if let Some(graph_index) = graph_index {
+            let graph_name = append_decimal(alloc::string::String::from(name), graph_index);
+            output.push_str(&graph_name);
+        } else {
+            output.push_str("(fun _ _ => .unknown)");
+        }
+        output.push('\n');
+    }
+    output.push_str("  | _ => (fun _ _ => .unknown)\n\n");
+    output.push_str("def ");
+    output.push_str(name);
+    output.push_str("Entries : List (MatrixClosureEntry ");
+    output = append_decimal(output, sites.len());
+    output.push(' ');
+    output = append_decimal(output, measure_count);
+    output.push_str(") :=\n  [\n");
+    for (index, entry) in closure.iter().enumerate() {
+        output.push_str("    ⟨");
+        let graph_name = append_decimal(alloc::string::String::from(name), index);
+        output.push_str(&graph_name);
+        output.push_str(", [");
+        for (path_index, site) in entry.path.iter().enumerate() {
+            if path_index > 0 {
+                output.push_str(", ");
+            }
+            let site = usize::try_from(*site).unwrap_or(usize::MAX);
+            output = append_decimal(output, site);
+        }
+        output.push_str("]⟩");
+        if index + 1 < closure.len() {
+            output.push(',');
+        }
+        output.push('\n');
+    }
+    output.push_str("  ]\n\n");
+    output
+}
+
+/// Render Lean-checkable closure certificates and idempotent refusal witnesses for one report.
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; certificate serializes already-classified report data into Lean source and deliberately emits no assertion about front-end input. The isolated Lean checker is the authority that accepts or rejects the generated theorem text."
@@ -975,65 +1400,112 @@ fn refusal_witnesses(measures: &[Measure], sites: &[Site]) -> alloc::vec::Vec<Wi
 pub fn certificate(evidence: &[Evidence]) -> alloc::string::String {
     let mut output = alloc::string::String::with_capacity(4096);
     output.push_str(
-        "/-\n  Generated size-change certificate (issue #101).\n\n  Each `Args` vector is the front end's classification of one self-call site; the theorems\n  re-check the model's own decision procedure (`certifiedAll`) by evaluation. This is evidence\n  about the classified relations, not about an execution: see `verification/size-change`.\n-/\nimport NobleM2.SizeChangeFixtures\n\nnamespace NobleSizeChangeCertificate\n\nopen NobleM2.SizeChange\n",
+        "/-\n  Generated bounded size-change closure certificate (issue #101).\n\n  The finite matrix set and each call-site path are checked in the Lean model. Accepted\n  definitions carry one strict diagonal witness for every idempotent matrix; refusals name a\n  real idempotent closure entry without such an edge. Front-end/source correspondence is separate.\n-/\nimport NobleM2.SizeChangeSCT\n\nnamespace NobleSizeChangeCertificate\n\nopen NobleM2.SizeChange\n",
     );
     for (entry_index, entry) in evidence.iter().enumerate() {
-        let accepted = match entry.verdict {
-            Verdict::Accepted { measure } => measure,
-            Verdict::Refused { .. } | Verdict::Unsupported { .. } => continue,
+        let (closure, refusal_cycle) = match &entry.verdict {
+            Verdict::Accepted { closure, .. } => (closure.as_slice(), None),
+            Verdict::Refused { closure, cycle, .. } => (closure.as_slice(), Some(cycle)),
+            Verdict::BoundExceeded { .. } | Verdict::Unsupported { .. } => continue,
         };
-        let accepted = match usize::try_from(accepted) {
-            Ok(measure) => measure,
-            Err(_) => continue,
-        };
-        let sites = entry.sites.len();
-        let measures = entry.measures.len();
         let name = append_decimal(alloc::string::String::from("definition_"), entry_index);
-        output.push_str("\n/-- Certified definition ");
+        let measures = entry.measures.len();
+        let sites = entry.sites.len();
+        output.push_str("\n/-- Bounded size-change evidence for definition ");
         output = append_decimal(output, entry_index);
         output.push_str(": ");
         output = append_decimal(output, sites);
         output.push_str(" self-call site(s) over ");
         output = append_decimal(output, measures);
-        output.push_str(" declared measure(s). -/\n");
-        output.push_str("def ");
-        output.push_str(&name);
-        output.push_str("Args : Fin ");
-        output = append_decimal(output, sites);
-        output.push_str(" → Args ");
-        output = append_decimal(output, measures);
-        output.push_str(" := fun site measure =>\n  match site.val, measure.val with\n");
-        for (site, row) in entry.sites.iter().enumerate() {
-            for (measure, argument) in row.arguments.iter().enumerate() {
-                output.push_str("  | ");
-                output = append_decimal(output, site);
+        output.push_str(" declared measure(s). The matrices and paths below are checked by the model. -/\n");
+        output = append_closure_model(output, &name, &entry.sites, measures, closure);
+        if let Verdict::Accepted {
+            strict_witnesses, ..
+        } = &entry.verdict
+        {
+            output.push_str("def ");
+            output.push_str(&name);
+            output.push_str("Certificate : MatrixClosureCertificate ");
+            output = append_decimal(output, sites);
+            output.push(' ');
+            output = append_decimal(output, measures);
+            output.push(' ');
+            output.push_str(&name);
+            output.push_str("Sites :=\n  ⟨");
+            output.push_str(&name);
+            output.push_str("Entries, [");
+            for (witness_index, witness) in strict_witnesses.iter().enumerate() {
+                let closure_index = usize::try_from(witness.closure_entry).unwrap_or(usize::MAX);
+                if closure.get(closure_index).is_none() {
+                    continue;
+                }
+                if witness_index > 0 {
+                    output.push_str(", ");
+                }
+                let graph_name = append_decimal(alloc::string::String::from(&name), closure_index);
+                output.push_str("⟨");
+                output.push_str(&graph_name);
                 output.push_str(", ");
-                output = append_decimal(output, measure);
-                output.push_str(" => .");
-                output.push_str(argument.constructor());
-                output.push('\n');
+                output = append_decimal(
+                    output,
+                    usize::try_from(witness.measure).unwrap_or(usize::MAX),
+                );
+                output.push_str("⟩");
             }
+            output.push_str("], by decide, by decide⟩\n\ntheorem ");
+            output.push_str(&name);
+            output.push_str("Criterion : ∀ {graph : MGraph ");
+            output = append_decimal(output, measures);
+            output.push_str("}, MatrixClosure ");
+            output.push_str(&name);
+            output.push_str("Sites graph → composeMatrix graph graph = graph → HasStrictDiagonal graph := by\n  intro graph member idempotent\n  exact certificate_closure_criterion ");
+            output.push_str(&name);
+            output.push_str("Certificate member idempotent\n");
+        } else if let Some(cycle) = refusal_cycle {
+            let graph_index = closure
+                .iter()
+                .position(|entry| entry.graph == cycle.graph)
+                .unwrap_or(usize::MAX);
+            output.push_str("def ");
+            output.push_str(&name);
+            output.push_str("ClosureSetCertificate : MatrixClosureSetCertificate ");
+            output = append_decimal(output, sites);
+            output.push(' ');
+            output = append_decimal(output, measures);
+            output.push(' ');
+            output.push_str(&name);
+            output.push_str("Sites := ⟨");
+            output.push_str(&name);
+            output.push_str("Entries, by decide⟩\n\ndef ");
+            output.push_str(&name);
+            output.push_str("Refusal : MatrixIdempotentRefusal ");
+            output.push_str(&name);
+            output.push_str("ClosureSetCertificate :=\n  ⟨⟨");
+            let graph_name = append_decimal(alloc::string::String::from(&name), graph_index);
+            output.push_str(&graph_name);
+            output.push_str(", [");
+            for (path_index, site) in cycle.path.iter().enumerate() {
+                if path_index > 0 {
+                    output.push_str(", ");
+                }
+                output = append_decimal(output, usize::try_from(*site).unwrap_or(usize::MAX));
+            }
+            output.push_str("]⟩, by decide, by decide, by decide⟩\n\ntheorem ");
+            output.push_str(&name);
+            output.push_str("RefusalGraphIsClosure : MatrixClosure ");
+            output.push_str(&name);
+            output.push_str("Sites ");
+            output.push_str(&name);
+            output.push_str("Refusal.entry.graph := refusal_graph_in_closure ");
+            output.push_str(&name);
+            output.push_str("Refusal\n\ntheorem ");
+            output.push_str(&name);
+            output.push_str("RefusalHasNoStrictDiagonal : ¬ HasStrictDiagonal ");
+            output.push_str(&name);
+            output.push_str("Refusal.entry.graph := refusal_no_strict_diagonal ");
+            output.push_str(&name);
+            output.push_str("Refusal\n");
         }
-        output.push_str("  | _, _ => .opaque\n\n");
-        output.push_str("def ");
-        output.push_str(&name);
-        output.push_str("Measure : Fin ");
-        output = append_decimal(output, measures);
-        output.push_str(" := ⟨");
-        output = append_decimal(output, accepted);
-        output.push_str(", by decide⟩\n\ntheorem ");
-        output.push_str(&name);
-        output.push_str("Certified : certifiedAll (fun site => graphOf (");
-        output.push_str(&name);
-        output.push_str("Args site)) = true := by\n  decide\n\ntheorem ");
-        output.push_str(&name);
-        output.push_str("Shared : ∀ site : Fin ");
-        output = append_decimal(output, sites);
-        output.push_str(", graphOf (");
-        output.push_str(&name);
-        output.push_str("Args site) ");
-        output.push_str(&name);
-        output.push_str("Measure = .decrease := by\n  decide\n");
     }
     output.push_str("\nend NobleSizeChangeCertificate");
     output

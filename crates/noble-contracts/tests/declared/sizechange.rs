@@ -4,7 +4,8 @@
 //! front end reports, which the Lean lane re-checks by evaluating the generated certificate.
 
 use noble_contracts::source::{
-    Argument, Evidence, Measure, ModuleSession, RetainedSourceLimit, Unsupported, Verdict,
+    Argument, Bound, Evidence, Measure, ModuleSession, Relation, RetainedSourceLimit, Unsupported,
+    Verdict,
 };
 
 const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
@@ -50,7 +51,17 @@ fn structural_list_recursion_is_accepted() -> Result<(), String> {
     assert_eq!(entry.measures, vec![Measure::Structural]);
     assert_eq!(entry.sites.len(), 1);
     assert_eq!(entry.sites[0].arguments, vec![Argument::Tail]);
-    assert_eq!(entry.verdict, Verdict::Accepted { measure: 0 });
+    assert_eq!(
+        entry.sites[0].graph.get(0, 0),
+        noble_contracts::source::Relation::Strict
+    );
+    assert!(matches!(
+        entry.verdict,
+        Verdict::Accepted {
+            shared_measure: Some(0),
+            ..
+        }
+    ));
     Ok(())
 }
 
@@ -65,7 +76,13 @@ fn guarded_countdown_is_accepted() -> Result<(), String> {
     assert_eq!(entry.sites.len(), 1);
     assert_eq!(entry.sites[0].arguments, vec![Argument::Predecessor]);
     assert_eq!(entry.sites[0].guarded, vec![true]);
-    assert_eq!(entry.verdict, Verdict::Accepted { measure: 0 });
+    assert!(matches!(
+        entry.verdict,
+        Verdict::Accepted {
+            shared_measure: Some(0),
+            ..
+        }
+    ));
     Ok(())
 }
 
@@ -93,11 +110,18 @@ fn non_decreasing_self_call_is_refused_with_its_site() -> Result<(), String> {
     assert_eq!(entry.sites.len(), 1);
     assert_eq!(entry.sites[0].arguments, vec![Argument::Same]);
     match entry.verdict {
-        Verdict::Refused { witnesses } => {
+        Verdict::Refused {
+            witnesses, cycle, ..
+        } => {
             assert_eq!(witnesses.len(), 1);
             assert_eq!(witnesses[0].measure, 0);
             assert_eq!(witnesses[0].site, 0);
             assert_eq!(witnesses[0].argument, Argument::Same);
+            assert_eq!(cycle.path, vec![0]);
+            assert_eq!(
+                cycle.graph.get(0, 0),
+                noble_contracts::source::Relation::Same
+            );
         }
         other => return Err(std::format!("expected a refusal, got {other:?}")),
     }
@@ -112,7 +136,7 @@ fn wrapping_arithmetic_is_refused() -> Result<(), String> {
     ))?);
     assert_eq!(entry.sites[0].arguments, vec![Argument::Opaque]);
     match entry.verdict {
-        Verdict::Refused { witnesses } => {
+        Verdict::Refused { witnesses, .. } => {
             assert_eq!(witnesses[0].argument, Argument::Opaque);
         }
         other => return Err(std::format!("expected a refusal, got {other:?}")),
@@ -135,7 +159,79 @@ fn guard_justifies_only_the_measure_it_names() -> Result<(), String> {
         entry.sites[0].arguments,
         vec![Argument::Opaque, Argument::Predecessor]
     );
-    assert_eq!(entry.verdict, Verdict::Accepted { measure: 1 });
+    assert!(matches!(
+        entry.verdict,
+        Verdict::Accepted {
+            shared_measure: Some(1),
+            ..
+        }
+    ));
+    Ok(())
+}
+
+/// A strict edge followed by an argument permutation is accepted only after composition.
+#[test]
+fn argument_permutation_is_accepted_by_composed_closure() -> Result<(), String> {
+    let entry = only(analyze(&module(
+        "signature perm forall<S:stack> [ S I64 I64 -- S I64 I64 ! pure ] export perm \
+         def perm [ dup 0 swap < [ 1 - swap perm ] [ ] if ]",
+    ))?);
+    assert_eq!(entry.sites.len(), 1);
+    assert_eq!(
+        entry.sites[0].arguments,
+        vec![Argument::Opaque, Argument::Opaque]
+    );
+    assert_eq!(entry.sites[0].graph.get(1, 0), Relation::Strict);
+    assert_eq!(entry.sites[0].graph.get(0, 1), Relation::Same);
+    match entry.verdict {
+        Verdict::Accepted {
+            shared_measure,
+            closure,
+            strict_witnesses,
+        } => {
+            assert_eq!(shared_measure, None);
+            assert_eq!(closure.len(), 3);
+            assert_eq!(strict_witnesses.len(), 1);
+            assert_eq!(strict_witnesses[0].closure_entry, 1);
+        }
+        other => return Err(std::format!("expected closure acceptance, got {other:?}")),
+    }
+    Ok(())
+}
+
+/// A measure cap is a distinct incomplete-analysis result, not a divergence verdict.
+#[test]
+fn excess_parameters_report_bound_exceeded() -> Result<(), String> {
+    let entry = only(analyze(&module(
+        "signature big forall<S:stack> [ S I64 I64 I64 I64 I64 I64 I64 I64 I64 -- \
+         S I64 I64 I64 I64 I64 I64 I64 I64 I64 ! pure ] export big def big [ big ]",
+    ))?);
+    assert!(matches!(
+        entry.verdict,
+        Verdict::BoundExceeded {
+            bound: Bound::Parameters,
+            ..
+        }
+    ));
+    Ok(())
+}
+
+/// The call-site cap is distinct from the walk's ordinary unsupported-profile budgets.
+#[test]
+fn excess_call_sites_report_bound_exceeded() -> Result<(), String> {
+    let sites = std::string::String::from("same ").repeat(257);
+    let source = std::format!(
+        "module m@1 [ signature same forall<S:stack> [ S I64 -- S I64 ! pure ] \
+         export same def same [ {sites} ] ]"
+    );
+    let entry = only(analyze(source.as_bytes())?);
+    assert!(matches!(
+        entry.verdict,
+        Verdict::BoundExceeded {
+            bound: Bound::CallSites,
+            ..
+        }
+    ));
     Ok(())
 }
 
@@ -149,7 +245,13 @@ fn two_sites_sharing_the_measure_are_accepted() -> Result<(), String> {
     assert_eq!(entry.sites.len(), 2);
     assert_eq!(entry.sites[0].guarded, vec![true]);
     assert_eq!(entry.sites[1].guarded, vec![true]);
-    assert_eq!(entry.verdict, Verdict::Accepted { measure: 0 });
+    assert!(matches!(
+        entry.verdict,
+        Verdict::Accepted {
+            shared_measure: Some(0),
+            ..
+        }
+    ));
     Ok(())
 }
 
@@ -164,7 +266,7 @@ fn one_non_decreasing_site_refuses_the_shared_measure() -> Result<(), String> {
     assert_eq!(entry.sites[0].arguments, vec![Argument::Predecessor]);
     assert_eq!(entry.sites[1].arguments, vec![Argument::Same]);
     match entry.verdict {
-        Verdict::Refused { witnesses } => {
+        Verdict::Refused { witnesses, .. } => {
             assert_eq!(witnesses.len(), 1);
             assert_eq!(witnesses[0].site, 1);
             assert_eq!(witnesses[0].argument, Argument::Same);
@@ -256,10 +358,9 @@ fn named_recursive_helper_is_not_assumed_terminating() -> Result<(), String> {
     Ok(())
 }
 
-/// The certificate gives each accepted entry a generated numeric identifier and `decide` proofs,
-/// and carries no theorem for a refusal.
+/// The certificate carries a checked closure for acceptance and a path-bearing refusal witness.
 #[test]
-fn certificate_carries_the_accepted_verdict_only() -> Result<(), String> {
+fn certificate_checks_closures_and_refusals() -> Result<(), String> {
     let accepted = only(analyze(&module(
         "signature down forall<S:stack> [ S I64 -- S I64 ! pure ] export down \
          def down [ dup 0 swap < [ 1 - down ] [ ] if ]",
@@ -268,15 +369,16 @@ fn certificate_carries_the_accepted_verdict_only() -> Result<(), String> {
         "signature same forall<S:stack> [ S I64 -- S I64 ! pure ] export same def same [ same ]",
     ))?);
     let certificate = noble_contracts::source::certificate(&[accepted, refused]);
-    assert!(certificate.contains("import NobleM2.SizeChangeFixtures"));
-    assert!(certificate.contains("def definition_0Args : Fin 1 → Args 1"));
-    assert!(certificate.contains("def definition_0Measure : Fin 1 := ⟨0, by decide⟩"));
-    assert!(certificate.contains("theorem definition_0Certified : certifiedAll"));
-    assert!(certificate.contains("theorem definition_0Shared : ∀ site : Fin 1"));
+    assert!(certificate.contains("import NobleM2.SizeChangeSCT"));
+    assert!(certificate.contains("def definition_0Sites : Fin 1 → MGraph 1"));
+    assert!(certificate.contains("def definition_0Entries : List (MatrixClosureEntry 1 1)"));
+    assert!(certificate.contains("def definition_0Certificate : MatrixClosureCertificate"));
+    assert!(certificate.contains("theorem definition_0Criterion"));
+    assert!(certificate.contains("definition_00"));
+    assert!(certificate.contains("def definition_1ClosureSetCertificate"));
+    assert!(certificate.contains("def definition_1Refusal : MatrixIdempotentRefusal"));
+    assert!(certificate.contains("theorem definition_1RefusalGraphIsClosure"));
+    assert!(certificate.contains("theorem definition_1RefusalHasNoStrictDiagonal"));
     assert!(certificate.contains("decide"));
-    assert!(
-        !certificate.contains("definition_1Args"),
-        "a refusal carries no certificate"
-    );
     Ok(())
 }

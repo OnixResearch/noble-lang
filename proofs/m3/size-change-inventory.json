@@ -42,6 +42,7 @@
     "NobleM2.SizeChangePowers",
     "NobleM2.SizeChangeRefusal",
     "NobleM2.SizeChangeRepeat",
+    "NobleM2.SizeChangeSCT",
     "NobleM2.SizeChangeSites",
     "NobleM2.SizeChangeTightness",
     "NobleM2.SizeChangeUniverse"
@@ -1069,6 +1070,110 @@
     {
       "name": "NobleM2.SizeChange.staticArgs_names_argument",
       "module": "NobleM2.SizeChangeRefusal"
+    },
+    {
+      "name": "NobleM2.SizeChange.hasStrictDiagonal_iff",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.closureSetValid_iff",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.closureCertificateValid_iff",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.closureCertificate_constraints",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.closureSitesPresent_member",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.closureCompositionClosed_member",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.closurePathsValid_member",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.closureIdempotentsStrict_member",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.matrixProduct_sites_mem_closure",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.closure_subset_certificate",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.certificate_subset_closure",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.certificate_exact",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.certificate_closure_criterion",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.refusal_no_strict_diagonal",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.refusal_graph_in_closure",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.stepList_sites",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.periodic_site_run_terminates",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.permutationClosure_entries_nodup",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.permutationClosure_sites_present",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.permutationClosure_composition_closed",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.permutationClosure_paths_valid",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.permutationClosure_idempotents_strict",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.permutationSquare_idempotent",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.permutation_closure_has_strict_diagonal",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.sameSiteRefusal_graph_is_real_closure",
+      "module": "NobleM2.SizeChangeSCT"
+    },
+    {
+      "name": "NobleM2.SizeChange.sameSiteRefusal_has_no_strict_diagonal",
+      "module": "NobleM2.SizeChangeSCT"
     },
     {
       "name": "NobleM2.SizeChange.graphsAux_length_succ",
