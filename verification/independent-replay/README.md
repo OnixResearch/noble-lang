@@ -63,7 +63,26 @@ resource exhaustion, and unsupported checker capabilities remain separately clas
 RLIMIT_AS control records silent exit 139 as resource exhaustion only under that explicit limit.
 The exact survey and unbuilt-candidate decisions are in [`decision.md`](decision.md). The earlier
 [`multi.json`](receipts/2026-11-13/multi.json)
-receipt remains immutable history; the updated classifier and OCaml run are recorded separately.
+receipt remains immutable history. The updated classifier and language-diversity run are retained in
+[`multi-diversity.json`](receipts/2026-11-13/multi-diversity.json), produced from clean source commit
+`7421e32c87e0494734d72151b7126aa98f3734e4`. All three baseline roots were accepted by every
+configured checker; every semantic mutation and both dropped-dependency controls were refused by all
+five checkers. The substituted valid claim was accepted by each checker but refused by the lane's
+statement binding. A changed export format was accepted by four checkers and unsupported by nanoda,
+then refused by the lane; custom-axiom outcomes likewise remain distinct from the lane's refusal.
+
+| Checker | Implementation language / lineage | Run records / attempted | Total wall time (s) | Peak max RSS (KiB) |
+|---|---|---:|---:|---:|
+| nanoda | Rust, independent design | 14 / 14 | 0.44 | 14,720 |
+| con-leche | Lean, independent design | 14 / 12 | 1.38 | 69,772 |
+| con-ron | Rust, con-leche port | 14 / 12 | 0.87 | 106,000 |
+| lean4lean | Lean, derived from C++ kernel | 14 / 12 | 1.19 | 36,112 |
+| OCaml4Lean | OCaml, independent design | 14 / 12 | 0.32 | 60,556 |
+
+The unattempted rows are explicitly unsupported capabilities, not passes. Every executed run records
+its own wall time and maximum RSS in the receipt. The receipt's check matrix is all true, including
+separate parse-failure, kernel-rejection, forbidden-axiom, unsupported, and resource-exhaustion
+classification checks.
 The pinned source build is reproducible with
 `nix build --no-link --print-out-paths --file verification/independent-replay/ocaml4lean.nix`;
 the runner takes its built executable through `--ocaml-bin <absolute path of built ocaml4lean>`.
