@@ -4,9 +4,20 @@ pub(crate) fn ty_name(ty: &Ty) -> &'static str {
     match ty {
         Ty::I64 => "I64",
         Ty::Bool => "Bool",
-        Ty::Unit | Ty::Text | Ty::Syntax | Ty::Contract | Ty::Evidence | Ty::Certified
-        | Ty::Pair(..) | Ty::Sum(..) | Ty::List(_) | Ty::Program(..) | Ty::LiveRef(..)
-        | Ty::Resource(_) | Ty::Nominal(..) | Ty::GenericNominal(..) => "unsupported",
+        Ty::Unit
+        | Ty::Text
+        | Ty::Syntax
+        | Ty::Contract
+        | Ty::Evidence
+        | Ty::Certified
+        | Ty::Pair(..)
+        | Ty::Sum(..)
+        | Ty::List(_)
+        | Ty::Program(..)
+        | Ty::LiveRef(..)
+        | Ty::Resource(_)
+        | Ty::Nominal(..)
+        | Ty::GenericNominal(..) => "unsupported",
     }
 }
 
@@ -21,7 +32,7 @@ pub(crate) fn hex(bytes: &[u8]) -> String {
     let mut out = String::with_capacity(bytes.len().saturating_mul(2));
     for byte in bytes {
         use core::fmt::Write;
-        let _ = write!(&mut out, "{byte:02x}");
+        write!(&mut out, "{byte:02x}").expect("writing to a String cannot fail");
     }
     out
 }
@@ -29,7 +40,9 @@ pub(crate) fn hex(bytes: &[u8]) -> String {
 fn library_identity(revision: &[u8], entries: &[Envelope]) -> String {
     let mut bytes = Vec::with_capacity(
         revision.len().saturating_add(
-            entries.len().saturating_mul(chunks::IDENTITY_BYTES.saturating_add(chunks::REVISION_BYTES)),
+            entries
+                .len()
+                .saturating_mul(chunks::IDENTITY_BYTES.saturating_add(chunks::REVISION_BYTES)),
         ),
     );
     bytes.extend_from_slice(revision);
@@ -77,8 +90,18 @@ fn task_target_kind(task: &TaskSpec) -> String {
         Target::Arithmetic(op) => format!("arithmetic:{}", op.spelling()),
         Target::Swap => "ordered-stack-swap".to_string(),
         Target::Boolean(mode) => format!("boolean-mode:{mode}"),
-        Target::Integer(value) if task.family == 3 => format!("nested-integer:{value}"),
-        Target::Integer(value) => format!("equal-signature-integer:{value}"),
+        _ => integer_target_kind(task),
+    }
+}
+
+fn integer_target_kind(task: &TaskSpec) -> String {
+    let Target::Integer(value) = task.target else {
+        return String::from("unsupported-target");
+    };
+    if task.family == 3 {
+        format!("nested-integer:{value}")
+    } else {
+        format!("equal-signature-integer:{value}")
     }
 }
 
@@ -113,12 +136,14 @@ fn task_record(task: &TaskSpec, library: &Value) -> Value {
     })
 }
 
-pub(crate) fn corpus_manifest() -> Value {
+pub(crate) fn corpus() -> Value {
     let libraries: Vec<Value> = (0..FAMILY_NAMES.len()).map(library_record).collect();
-    let records: Vec<Value> = corpus_tasks()
+    let records: Vec<Value> = super::tasks::corpus()
         .iter()
         .map(|task| task_record(task, &libraries[task.family]))
         .collect();
+    assert_eq!(libraries.len(), FAMILY_NAMES.len(), "every family needs a library");
+    assert_eq!(records.len(), 480, "every frozen task needs a record");
     json!({
         "schema": "tchunk-ranking-corpus/1",
         "task_count": records.len(),
@@ -137,7 +162,7 @@ pub(crate) fn corpus_manifest() -> Value {
 
 #[test]
 pub(crate) fn frozen_corpus_has_the_registered_split_and_valid_libraries() -> Result<(), String> {
-    let manifest = corpus_manifest();
+    let manifest = corpus();
     let frozen: Value = serde_json::from_str(FROZEN_CORPUS)
         .map_err(|error| format!("frozen corpus JSON is invalid: {error}"))?;
     assert_eq!(manifest, frozen, "frozen corpus manifest drifted");
@@ -150,7 +175,7 @@ pub(crate) fn frozen_corpus_has_the_registered_split_and_valid_libraries() -> Re
     check_task_splits(tasks)?;
     let session = noble_contracts::source::Session::without_test_hosts();
     let libraries = check_registered_libraries(&session)?;
-    for spec in corpus_tasks() {
+    for spec in super::tasks::corpus() {
         let library = libraries
             .get(spec.family)
             .ok_or_else(|| format!("reference library missing for {}", spec.id()))?;
@@ -220,7 +245,12 @@ fn check_primitive_reference(
             source_limits(request(spec, library).budget),
         )
         .map_err(|error| format!("primitive reference {} refused: {error:?}", spec.id()))?;
-    assert_eq!(prepared.output(), spec.stack_out, "typed reference {}", spec.id());
+    assert_eq!(
+        prepared.output(),
+        spec.stack_out,
+        "typed reference {}",
+        spec.id()
+    );
     Ok(())
 }
 

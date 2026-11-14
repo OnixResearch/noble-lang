@@ -1,29 +1,61 @@
 use super::*;
 
 #[derive(Clone, Debug)]
-pub(crate) enum OracleValue {
+enum StackValue {
     I64(i64),
     Bool(bool),
     Quotation(Vec<u32>),
 }
 
-pub(crate) fn pop_i64(stack: &mut Vec<OracleValue>) -> Result<i64, String> {
-    match stack.pop() {
-        Some(OracleValue::I64(value)) => Ok(value),
-        Some(OracleValue::Bool(_) | OracleValue::Quotation(_)) | None => {
-            Err(String::from("independent replay expected I64"))
+struct ValueStack(Vec<StackValue>);
+
+impl ValueStack {
+    fn pop(&mut self) -> Option<StackValue> {
+        self.0.pop()
+    }
+
+    fn push(&mut self, value: StackValue) {
+        self.0.push(value);
+    }
+
+    fn pop_i64(&mut self) -> Result<i64, String> {
+        match self.pop() {
+            Some(StackValue::I64(value)) => Ok(value),
+            Some(StackValue::Bool(_) | StackValue::Quotation(_)) | None => {
+                Err(String::from("independent replay expected I64"))
+            }
         }
+    }
+
+    fn swap_top(&mut self) -> Result<(), String> {
+        if self.0.len() < 2 {
+            return Err(String::from("independent swap underflow"));
+        }
+        let top = self.0.len().saturating_sub(1);
+        let below = self.0.len().saturating_sub(2);
+        self.0.swap(top, below);
+        Ok(())
+    }
+
+    fn duplicate_top(&mut self) -> Result<(), String> {
+        let value = self.0.last().cloned().ok_or("independent dup underflow")?;
+        self.push(value);
+        Ok(())
+    }
+
+    fn into_scalars(self) -> Result<Vec<Scalar>, String> {
+        self.0.into_iter().map(output_scalar).collect()
     }
 }
 
-fn arithmetic_operation(op: Op, stack: &mut Vec<OracleValue>) -> Result<(), String> {
-    let right = pop_i64(stack)?;
-    let left = pop_i64(stack)?;
+fn arithmetic_operation(op: Op, stack: &mut ValueStack) -> Result<(), String> {
+    let right = stack.pop_i64()?;
+    let left = stack.pop_i64()?;
     match op {
-        Op::Add => stack.push(OracleValue::I64(left.wrapping_add(right))),
-        Op::Sub => stack.push(OracleValue::I64(left.wrapping_sub(right))),
-        Op::Mul => stack.push(OracleValue::I64(left.wrapping_mul(right))),
-        Op::Eq => stack.push(OracleValue::Bool(left == right)),
+        Op::Add => stack.push(StackValue::I64(left.wrapping_add(right))),
+        Op::Sub => stack.push(StackValue::I64(left.wrapping_sub(right))),
+        Op::Mul => stack.push(StackValue::I64(left.wrapping_mul(right))),
+        Op::Eq => stack.push(StackValue::Bool(left == right)),
         Op::Dup | Op::Drop | Op::Swap | Op::Run => {
             return Err(String::from("unreachable arithmetic oracle branch"));
         }
@@ -31,24 +63,8 @@ fn arithmetic_operation(op: Op, stack: &mut Vec<OracleValue>) -> Result<(), Stri
     Ok(())
 }
 
-fn swap_top(stack: &mut Vec<OracleValue>) -> Result<(), String> {
-    if stack.len() < 2 {
-        return Err(String::from("independent swap underflow"));
-    }
-    let top = stack.len().saturating_sub(1);
-    let below = stack.len().saturating_sub(2);
-    stack.swap(top, below);
-    Ok(())
-}
-
-fn duplicate_top(stack: &mut Vec<OracleValue>) -> Result<(), String> {
-    let value = stack.last().cloned().ok_or("independent dup underflow")?;
-    stack.push(value);
-    Ok(())
-}
-
-fn run_quotation(recipe: &Recipe, stack: &mut Vec<OracleValue>, depth: u32) -> Result<(), String> {
-    let Some(OracleValue::Quotation(body)) = stack.pop() else {
+fn run_quotation(recipe: &Recipe, stack: &mut ValueStack, depth: u32) -> Result<(), String> {
+    let Some(StackValue::Quotation(body)) = stack.pop() else {
         return Err(String::from("independent run received a non-quotation"));
     };
     evaluate_recipe(recipe, &body, stack, depth.saturating_add(1))
@@ -57,13 +73,16 @@ fn run_quotation(recipe: &Recipe, stack: &mut Vec<OracleValue>, depth: u32) -> R
 fn execute_operation(
     recipe: &Recipe,
     op: Op,
-    stack: &mut Vec<OracleValue>,
+    stack: &mut ValueStack,
     depth: u32,
 ) -> Result<(), String> {
     match op {
-        Op::Dup => duplicate_top(stack),
-        Op::Drop => stack.pop().map(|_| ()).ok_or_else(|| String::from("independent drop underflow")),
-        Op::Swap => swap_top(stack),
+        Op::Dup => stack.duplicate_top(),
+        Op::Drop => stack
+            .pop()
+            .map(|_| ())
+            .ok_or_else(|| String::from("independent drop underflow")),
+        Op::Swap => stack.swap_top(),
         Op::Add | Op::Sub | Op::Mul | Op::Eq => arithmetic_operation(op, stack),
         Op::Run => run_quotation(recipe, stack, depth),
     }
@@ -72,25 +91,27 @@ fn execute_operation(
 fn evaluate_node(
     recipe: &Recipe,
     node: &Node,
-    stack: &mut Vec<OracleValue>,
+    stack: &mut ValueStack,
     depth: u32,
 ) -> Result<(), String> {
     match node {
-        Node::I64(value) => stack.push(OracleValue::I64(*value)),
-        Node::Bool(value) => stack.push(OracleValue::Bool(*value)),
+        Node::I64(value) => stack.push(StackValue::I64(*value)),
+        Node::Bool(value) => stack.push(StackValue::Bool(*value)),
         Node::Capture { .. } | Node::Invoke { .. } => {
-            return Err(String::from("fixture oracle does not admit captures or dependencies"));
+            return Err(String::from(
+                "fixture oracle does not admit captures or dependencies",
+            ));
         }
-        Node::Quotation { body, .. } => stack.push(OracleValue::Quotation(body.clone())),
+        Node::Quotation { body, .. } => stack.push(StackValue::Quotation(body.clone())),
         Node::Operation { op, .. } => return execute_operation(recipe, *op, stack, depth),
     }
     Ok(())
 }
 
-pub(crate) fn evaluate_recipe(
+fn evaluate_recipe(
     recipe: &Recipe,
     references: &[u32],
-    stack: &mut Vec<OracleValue>,
+    stack: &mut ValueStack,
     depth: u32,
 ) -> Result<(), String> {
     if depth > 8 {
@@ -109,18 +130,18 @@ pub(crate) fn evaluate_recipe(
     Ok(())
 }
 
-fn oracle_input(value: &Scalar) -> OracleValue {
+fn input_value(value: &Scalar) -> StackValue {
     match value {
-        Scalar::I64(value) => OracleValue::I64(*value),
-        Scalar::Bool(value) => OracleValue::Bool(*value),
+        Scalar::I64(value) => StackValue::I64(*value),
+        Scalar::Bool(value) => StackValue::Bool(*value),
     }
 }
 
-fn oracle_output(value: OracleValue) -> Result<Scalar, String> {
+fn output_scalar(value: StackValue) -> Result<Scalar, String> {
     match value {
-        OracleValue::I64(value) => Ok(Scalar::I64(value)),
-        OracleValue::Bool(value) => Ok(Scalar::Bool(value)),
-        OracleValue::Quotation(_) => Err(String::from("independent replay left quotation data")),
+        StackValue::I64(value) => Ok(Scalar::I64(value)),
+        StackValue::Bool(value) => Ok(Scalar::Bool(value)),
+        _ => Err(String::from("independent replay left quotation data")),
     }
 }
 
@@ -128,9 +149,9 @@ pub(crate) fn independent_recipe_output(
     envelope: &Envelope,
     inputs: &[Scalar],
 ) -> Result<Vec<Scalar>, String> {
-    let mut stack: Vec<OracleValue> = inputs.iter().map(oracle_input).collect();
+    let mut stack = ValueStack(inputs.iter().map(input_value).collect());
     evaluate_recipe(&envelope.body, &envelope.body.entry, &mut stack, 0)?;
-    stack.into_iter().map(oracle_output).collect()
+    stack.into_scalars()
 }
 
 fn arithmetic_target(op: Op, inputs: &[Scalar]) -> Result<Vec<Scalar>, String> {
@@ -142,7 +163,9 @@ fn arithmetic_target(op: Op, inputs: &[Scalar]) -> Result<Vec<Scalar>, String> {
         Op::Sub => left.wrapping_sub(*right),
         Op::Mul => left.wrapping_mul(*right),
         Op::Dup | Op::Drop | Op::Swap | Op::Eq | Op::Run => {
-            return Err(String::from("arithmetic oracle received a non-arithmetic operation"));
+            return Err(String::from(
+                "arithmetic oracle received a non-arithmetic operation",
+            ));
         }
     };
     Ok(vec![Scalar::I64(value)])
@@ -152,15 +175,22 @@ fn boolean_target(mode: u8, inputs: &[Scalar]) -> Result<Vec<Scalar>, String> {
     let [Scalar::I64(left), Scalar::I64(right)] = inputs else {
         return Err(String::from("boolean oracle received malformed inputs"));
     };
-    let result = match mode {
+    let is_match = match mode {
         0 => left == right,
         1 => left.wrapping_add(*right) == 0,
         _ => left.wrapping_sub(*right) == 0,
     };
-    Ok(vec![Scalar::Bool(result)])
+    Ok(vec![Scalar::Bool(is_match)])
 }
 
-pub(crate) fn oracle_target(target: Target, inputs: &[Scalar]) -> Result<Vec<Scalar>, String> {
+fn integer_target(target: Target) -> Result<Vec<Scalar>, String> {
+    let Target::Integer(value) = target else {
+        return Err(String::from("independent oracle received an unsupported target"));
+    };
+    Ok(vec![Scalar::I64(value)])
+}
+
+pub(crate) fn target(target: Target, inputs: &[Scalar]) -> Result<Vec<Scalar>, String> {
     match target {
         Target::Arithmetic(op) => arithmetic_target(op, inputs),
         Target::Swap => {
@@ -169,7 +199,7 @@ pub(crate) fn oracle_target(target: Target, inputs: &[Scalar]) -> Result<Vec<Sca
             Ok(output)
         }
         Target::Boolean(mode) => boolean_target(mode, inputs),
-        Target::Integer(value) => Ok(vec![Scalar::I64(value)]),
+        _ => integer_target(target),
     }
 }
 

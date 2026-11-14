@@ -212,12 +212,11 @@ fn task_spec(coordinate: TaskCoordinate) -> TaskSpec {
         0 => arithmetic_task(coordinate),
         1 => routing_task(coordinate),
         2 => boolean_task(coordinate),
-        3 | 4 => integer_task(coordinate),
-        _ => unreachable!("only the five frozen families are enumerated"),
+        _ => integer_task(coordinate),
     }
 }
 
-pub(crate) fn corpus_tasks() -> Vec<TaskSpec> {
+pub(crate) fn corpus() -> Vec<TaskSpec> {
     let mut tasks = Vec::with_capacity(480);
     for family in 0..FAMILY_NAMES.len() {
         for block in 0..12 {
