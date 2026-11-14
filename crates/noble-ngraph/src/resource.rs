@@ -117,10 +117,14 @@ struct Claims {
 
 #[cfg(test)]
 const RESOURCE_CLAIMS_OFFSET: usize = CERTIFICATE_MAGIC.len()
-    + 2 + CERTIFICATE_REVISION.len()
-    + 2 + CHECKER_REVISION.len()
-    + 2 + PROOF_MODEL_REVISION.len()
-    + 2 + COST_MODEL_REVISION.len()
+    + 2
+    + CERTIFICATE_REVISION.len()
+    + 2
+    + CHECKER_REVISION.len()
+    + 2
+    + PROOF_MODEL_REVISION.len()
+    + 2
+    + COST_MODEL_REVISION.len()
     + DIGEST_BYTES * 3;
 #[cfg(test)]
 const RESOURCE_INTERACTIONS_OFFSET: usize = RESOURCE_CLAIMS_OFFSET;
@@ -128,10 +132,14 @@ const RESOURCE_INTERACTIONS_OFFSET: usize = RESOURCE_CLAIMS_OFFSET;
 const RESOURCE_LIVE_BOUND_OFFSET: usize = RESOURCE_CLAIMS_OFFSET + 8;
 #[cfg(test)]
 const RESOURCE_COST_DIGEST_OFFSET: usize = CERTIFICATE_MAGIC.len()
-    + 2 + CERTIFICATE_REVISION.len()
-    + 2 + CHECKER_REVISION.len()
-    + 2 + PROOF_MODEL_REVISION.len()
-    + 2 + COST_MODEL_REVISION.len()
+    + 2
+    + CERTIFICATE_REVISION.len()
+    + 2
+    + CHECKER_REVISION.len()
+    + 2
+    + PROOF_MODEL_REVISION.len()
+    + 2
+    + COST_MODEL_REVISION.len()
     + DIGEST_BYTES * 2;
 
 /// Creates the producer-side artifact for an already lowered net.
@@ -150,7 +158,8 @@ pub fn issue(
     let interactions = net
         .expected_interactions()
         .ok_or(Refusal::ArithmeticOverflow)?;
-    let live_agent_bound = u64::try_from(net.agents.len()).map_err(|_| Refusal::ArithmeticOverflow)?;
+    let live_agent_bound =
+        u64::try_from(net.agents.len()).map_err(|_| Refusal::ArithmeticOverflow)?;
     let claims = Claims {
         net_digest: digest(ids, b"noble.ngraph.resource.net.v0", &net_bytes),
         rule_digest: digest(ids, b"noble.ngraph.resource.rules.v0", RULE_TABLE_BYTES),
@@ -191,8 +200,14 @@ pub fn check(
         return Err(Refusal::WrongCostModel);
     }
     let decoded = decode_net(net_bytes)?;
-    crate::net::validate(ids, checked, &decoded, inputs, &crate::net::Limits::default())
-        .map_err(|_| Refusal::InvalidNet)?;
+    crate::net::validate(
+        ids,
+        checked,
+        &decoded,
+        inputs,
+        &crate::net::Limits::default(),
+    )
+    .map_err(|_| Refusal::InvalidNet)?;
     let interactions = decoded
         .expected_interactions()
         .ok_or(Refusal::ArithmeticOverflow)?;
@@ -502,10 +517,7 @@ impl<'a> Reader<'a> {
     }
 
     fn take(&mut self, length: usize) -> Result<&'a [u8], Refusal> {
-        let end = self
-            .offset
-            .checked_add(length)
-            .ok_or(Refusal::Malformed)?;
+        let end = self.offset.checked_add(length).ok_or(Refusal::Malformed)?;
         let bytes = self.bytes.get(self.offset..end).ok_or(Refusal::Malformed)?;
         self.offset = end;
         Ok(bytes)
@@ -610,7 +622,11 @@ mod tests {
 
     const IDS: TestIds = TestIds;
 
-    fn sample() -> (crate::check::CheckedGraph, crate::net::InteractionGraph, [crate::sem::Value; 2]) {
+    fn sample() -> (
+        crate::check::CheckedGraph,
+        crate::net::InteractionGraph,
+        [crate::sem::Value; 2],
+    ) {
         let subject = crate::ir::Subject::authored(&IDS, "resource-certificate-sample");
         let mut builder = crate::ir::GraphBuilder::new(crate::ir::SubProfile::I64, subject);
         let left = builder.input(crate::ir::ScalarType::I64);
@@ -626,11 +642,7 @@ mod tests {
         (checked, net, inputs)
     }
 
-    fn artifact() -> (
-        crate::check::CheckedGraph,
-        [crate::sem::Value; 2],
-        Artifact,
-    ) {
+    fn artifact() -> (crate::check::CheckedGraph, [crate::sem::Value; 2], Artifact) {
         let (checked, net, inputs) = sample();
         let artifact = issue(&IDS, &checked, &net, &inputs).expect("certificate producer");
         (checked, inputs, artifact)
@@ -651,7 +663,10 @@ mod tests {
         assert_eq!(resources.interactions, 6);
         assert_eq!(resources.live_agent_bound, 6);
         assert_eq!(resources.initial_wires, 8);
-        assert_eq!(decode_net(&artifact.net_bytes).expect("net bytes"), sample().1);
+        assert_eq!(
+            decode_net(&artifact.net_bytes).expect("net bytes"),
+            sample().1
+        );
     }
 
     #[test]
@@ -738,28 +753,50 @@ mod tests {
         let mut cost = artifact.certificate_bytes.clone();
         cost[RESOURCE_COST_DIGEST_OFFSET] ^= 1;
         assert_eq!(
-            check(&IDS, &checked, &inputs, &cost, &artifact.net_bytes, RULE_TABLE_BYTES),
+            check(
+                &IDS,
+                &checked,
+                &inputs,
+                &cost,
+                &artifact.net_bytes,
+                RULE_TABLE_BYTES
+            ),
             Err(Refusal::WrongCostModel)
         );
 
         let mut omitted_erase = RULE_TABLE_BYTES.to_vec();
-        let at = omitted_erase.windows(7).position(|window| window == b"era-num")
+        let at = omitted_erase
+            .windows(7)
+            .position(|window| window == b"era-num")
             .expect("rule table includes erasure");
         omitted_erase.drain(at..at + 7);
         assert_eq!(
-            check(&IDS, &checked, &inputs, &artifact.certificate_bytes,
-                &artifact.net_bytes, &omitted_erase),
+            check(
+                &IDS,
+                &checked,
+                &inputs,
+                &artifact.certificate_bytes,
+                &artifact.net_bytes,
+                &omitted_erase
+            ),
             Err(Refusal::StaleRuleTable)
         );
 
         let mut stale_checker = artifact.certificate_bytes.clone();
-        let at = stale_checker.windows(CHECKER_REVISION.len())
+        let at = stale_checker
+            .windows(CHECKER_REVISION.len())
             .position(|window| window == CHECKER_REVISION.as_bytes())
             .expect("certificate binds checker identity");
         stale_checker[at] ^= 1;
         assert_eq!(
-            check(&IDS, &checked, &inputs, &stale_checker,
-                &artifact.net_bytes, RULE_TABLE_BYTES),
+            check(
+                &IDS,
+                &checked,
+                &inputs,
+                &stale_checker,
+                &artifact.net_bytes,
+                RULE_TABLE_BYTES
+            ),
             Err(Refusal::StaleCheckerRevision)
         );
     }
@@ -778,7 +815,14 @@ mod tests {
         };
         let certificate = encode_certificate(IDS.name(), claims).expect("encode claims");
         assert_eq!(
-            check(&IDS, &checked, &inputs, &certificate, &bytes, RULE_TABLE_BYTES),
+            check(
+                &IDS,
+                &checked,
+                &inputs,
+                &certificate,
+                &bytes,
+                RULE_TABLE_BYTES
+            ),
             Err(Refusal::InvalidNet)
         );
     }
