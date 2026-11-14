@@ -23,7 +23,7 @@ const binaryBytes = await readFile(testBinary);
 const executableSha256 = createHash('sha256').update(binaryBytes).digest('hex');
 const executableBytes = (await stat(testBinary)).size;
 const run = spawnSync(testBinary, [
-  'net::tests::plan_storage_comparison_covers_required_families',
+  'plancomparison::plan_storage_comparison_covers_required_families',
   '--exact',
   '--nocapture',
 ], { cwd: repo, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
@@ -53,6 +53,14 @@ for (let index = 0; index < expectedFamilies.length; index += 1) {
   if (row.reuse.samples_ns.length !== 31 || row.allocate.samples_ns.length !== 31) throw new Error(`${row.family}: expected 31 paired samples per arm`);
   if (!row.rule_revision || row.reuse.plan_digest === row.allocate.plan_digest) throw new Error(`${row.family}: changed plan did not change digest under a fixed rule identity`);
   if (row.reuse.replay_digest === row.allocate.replay_digest) throw new Error(`${row.family}: changed plan reused replay identity`);
+}
+for (const row of cases) {
+  const reuseMedian = Number(row.reuse.median_ns);
+  const allocateMedian = Number(row.allocate.median_ns);
+  if (!Number.isFinite(reuseMedian) || !Number.isFinite(allocateMedian) || allocateMedian <= 0) {
+    throw new Error(`${row.family}: invalid median for descriptive ratio`);
+  }
+  row.median_reuse_to_allocate_ratio = reuseMedian / allocateMedian;
 }
 const identities = cases.map((row) => ({
   family: row.family,
@@ -86,7 +94,7 @@ const report = {
   source_commit: sourceCommit.stdout.trim(),
   test_executable_sha256: executableSha256,
   test_executable_bytes: executableBytes,
-  executable_command: 'net::tests::plan_storage_comparison_covers_required_families --exact --nocapture',
+  executable_command: 'plancomparison::plan_storage_comparison_covers_required_families --exact --nocapture',
   criteria: 'verification/net-plans/criteria.md',
   timing_scope: 'complete reduce call, including validation, plan compile/check, execution, read-back and local destruction; excludes graph admission/lowering',
   paired_correctness: 'all five workloads have identical full observations and interaction counts in every measured pair, and match the reference evaluator',
