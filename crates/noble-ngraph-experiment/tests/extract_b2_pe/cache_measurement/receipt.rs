@@ -30,7 +30,7 @@ fn clean_source_commit() -> String {
 
 #[test]
 #[ignore = "writes a source-bound cache differential receipt to NOBLE_CACHE_RECEIPT_OUT"]
-fn source_bound_cache_receipt() {
+fn produce_source_bound() {
     let source_revision = clean_source_commit();
     let cases = CASES
         .iter()

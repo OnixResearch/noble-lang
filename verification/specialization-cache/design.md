@@ -157,8 +157,9 @@ stages. A hit does not claim that its work or resource use equals the first gene
 
 The differential receipt reports cache-disabled, cold-miss and warm-hit execution agreement, with
 lookup, specialization, source emission, current admission, cache publication, backend compilation,
-execution and retained-byte costs reported as distinct observations. It is finite implementation evidence, not a specialization
-equivalence proof or a performance generalization beyond the measured corpus.
+execution and retained-byte costs reported as distinct observations. It is finite implementation
+evidence, not a specialization equivalence proof or a performance generalization beyond the
+measured corpus.
 
 The opt-in integration-test receipt producer lives under the existing B2 test target and records
 the exact source revision only after verifying that its checkout is clean. The library's
@@ -169,7 +170,7 @@ boundaries separately from backend compilation and execution. Reproduce it with 
 ```sh
 NOBLE_CACHE_RECEIPT_OUT="<new directory outside the repository>/specialization-cache.json" \
   cargo test --offline --locked -p noble-ngraph-experiment --test extract_b2 \
-  source_bound_cache_receipt -- --ignored
+  produce_source_bound -- --ignored
 ```
 
 The output is measurement evidence for this retained three-fixture, 3,000-vector corpus only.

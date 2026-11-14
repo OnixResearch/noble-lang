@@ -30,8 +30,10 @@ fn lowered_limits_do_not_reuse_or_publish_refusals() {
             .status,
         Status::MissStored
     );
-    let mut budgets = crate::check::Budgets::default();
-    budgets.residual_nodes = 0;
+    let budgets = crate::check::Budgets {
+        residual_nodes: 0,
+        ..crate::check::Budgets::default()
+    };
     assert!(custom_request(
         &mut session,
         &original,
