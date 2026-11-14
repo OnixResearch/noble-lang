@@ -3486,6 +3486,18 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "NGRAPH-NICKEL-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
       "id": "NGRAPH-OWN-01",
       "document": "../.cairn/specs/safety/spec.md",
       "document_id": "SPEC-S001",
@@ -4100,6 +4112,78 @@
     },
     {
       "id": "RA-CLEAN-04",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "RA-GROUP-01",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "RA-GROUP-02",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "RA-GROUP-03",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "RA-GROUP-04",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "RA-GROUP-05",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "RA-GROUP-06",
       "document": "../.cairn/specs/resource-adapters/spec.md",
       "document_id": "SPEC-R001",
       "evidence_routes": [
