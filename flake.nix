@@ -147,9 +147,11 @@
             ".pi"
             ".lake"
             ".octet"
-            "target"
             "node_modules"
           ])
+          # Only the root Cargo build directory is excluded: tracked source modules may be named
+          # `target` (crates/noble-ngraph/src/belt/target/).
+          && path != toString ./target
           && !(builtins.elem (baseNameOf path) [
             "NobleKernel.lean"
             "translation.json"

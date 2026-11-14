@@ -258,7 +258,7 @@
     "crates/noble-wasm/wit/worker-transition.wit": "f788988352acbccfe9a9f4fd6811551b1b3e4d4b43f1436b7a8c5e702e7652f0",
     "dylint.toml": "265d16c2a5bba73d011ce460e1e9d15ce04dca24cdf6e7bc0cf4e66a9040a88b",
     "flake.lock": "85e86e8f3826b97d3deb9ff5355d5a4d10d227201ee4d11e71b1bb8028cc2c30",
-    "flake.nix": "f7639f5fb146919e18ae9ddc4649b1f37383ef57de9cd8a8d2b2acc11997b95f",
+    "flake.nix": "45e751161a69c38afe9155f5c5c13945ea614d88c024b00f13772869bec63b32",
     "nix/aeneas-string-escaping.patch": "3d2a88e02e55b491aa7d53573cd0256c58ffb4e549a8ff9a0134c2eaef07cc70",
     "nix/boundary-controls.nix": "86e9bbd342b616c0861775ab336cd8313e7473506c381634fbc1eec6a2cab943",
     "nix/boundary-fixture-tests.nix": "9d008b1cafac6c076c9fb1e58933b476efa0ac31a9569d09f887c1a9be8aa26f",
