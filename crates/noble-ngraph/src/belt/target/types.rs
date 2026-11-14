@@ -1,5 +1,3 @@
-use alloc::vec::Vec;
-
 /// Operation class assigned to a physical machine unit.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum UnitClass {
@@ -17,7 +15,7 @@ pub struct MachineDescriptor {
     /// Maximum operations accepted in one issue cycle.
     pub issue_width: u8,
     /// Number of newest-first value positions in the belt.
-    pub belt_capacity: u8,
+    pub belt_slots: u8,
     /// Number of explicit preservation slots.
     pub save_slots: u8,
     /// Number of pipelined ALU units.
@@ -27,13 +25,13 @@ pub struct MachineDescriptor {
     /// Number of pipelined move units.
     pub move_units: u8,
     /// ALU/equality latency in cycles.
-    pub alu_latency: u8,
+    pub alu_cycles: u8,
     /// Multiply latency in cycles.
-    pub multiply_latency: u8,
+    pub multiply_cycles: u8,
     /// Move latency in cycles.
-    pub move_latency: u8,
-    /// Initiation interval of every unit, in cycles.
-    pub initiation_interval: u8,
+    pub move_cycles: u8,
+    /// Minimum issue gap for every unit, in cycles.
+    pub issue_gap_cycles: u8,
 }
 
 impl MachineDescriptor {
@@ -53,26 +51,26 @@ impl MachineDescriptor {
 
     /// Returns the fixed latency of a unit class.
     #[must_use]
-    pub const fn latency(self, class: UnitClass) -> u8 {
+    pub const fn completion_cycles(self, class: UnitClass) -> u8 {
         match class {
-            UnitClass::Alu => self.alu_latency,
-            UnitClass::Multiply => self.multiply_latency,
-            UnitClass::Move => self.move_latency,
+            UnitClass::Alu => self.alu_cycles,
+            UnitClass::Multiply => self.multiply_cycles,
+            UnitClass::Move => self.move_cycles,
         }
     }
 
     pub(super) const fn bytes(self) -> [u8; 10] {
         [
             self.issue_width,
-            self.belt_capacity,
+            self.belt_slots,
             self.save_slots,
             self.alu_units,
             self.multiply_units,
             self.move_units,
-            self.alu_latency,
-            self.multiply_latency,
-            self.move_latency,
-            self.initiation_interval,
+            self.alu_cycles,
+            self.multiply_cycles,
+            self.move_cycles,
+            self.issue_gap_cycles,
         ]
     }
 }
@@ -94,27 +92,27 @@ impl Machine {
         match self {
             Self::T1 => MachineDescriptor {
                 issue_width: 1,
-                belt_capacity: 4,
+                belt_slots: 4,
                 save_slots: 8,
                 alu_units: 1,
                 multiply_units: 1,
                 move_units: 1,
-                alu_latency: 1,
-                multiply_latency: 3,
-                move_latency: 1,
-                initiation_interval: 1,
+                alu_cycles: 1,
+                multiply_cycles: 3,
+                move_cycles: 1,
+                issue_gap_cycles: 1,
             },
             Self::T2 => MachineDescriptor {
                 issue_width: 2,
-                belt_capacity: 8,
+                belt_slots: 8,
                 save_slots: 8,
                 alu_units: 2,
                 multiply_units: 1,
                 move_units: 2,
-                alu_latency: 1,
-                multiply_latency: 2,
-                move_latency: 1,
-                initiation_interval: 1,
+                alu_cycles: 1,
+                multiply_cycles: 2,
+                move_cycles: 1,
+                issue_gap_cycles: 1,
             },
         }
     }
@@ -189,7 +187,7 @@ pub struct OutputRead {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Lowered {
     /// Fully identity-bound encoded schedule bytes.
-    pub bytes: Vec<u8>,
+    pub bytes: alloc::vec::Vec<u8>,
     /// Number of issued operations, including save/load traffic.
     pub event_count: usize,
     /// Number of cycles from cycle zero through the last completion.
@@ -272,7 +270,7 @@ pub enum Refusal {
 }
 
 /// Checker-issued token tied to the exact schedule bytes validated.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CheckedSchedule<'a> {
     pub(super) bytes: &'a [u8],
     pub(super) machine: Machine,
@@ -310,8 +308,8 @@ pub struct DecodedSchedule {
     pub(super) machine: Machine,
     pub(super) descriptor_digest: crate::ir::Digest,
     pub(super) graph_id: crate::ir::Digest,
-    pub(super) events: Vec<Issue>,
-    pub(super) outputs: Vec<OutputRead>,
+    pub(super) events: alloc::vec::Vec<Issue>,
+    pub(super) outputs: alloc::vec::Vec<OutputRead>,
     pub(super) schedule_digest: crate::ir::Digest,
     pub(super) artifact_binding: crate::ir::Digest,
 }

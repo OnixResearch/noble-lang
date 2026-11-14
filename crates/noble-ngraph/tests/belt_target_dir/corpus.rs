@@ -56,7 +56,8 @@ fn node_term(graph: &CheckedGraph, index: usize) -> String {
 }
 
 fn graph_operands(graph: &CheckedGraph, node: u32) -> (usize, usize) {
-    match &graph.graph().nodes[node as usize].op {
+    let node_index = usize::try_from(node).expect("target node indices fit usize");
+    match &graph.graph().nodes[node_index].op {
         Op::I64Add(left, right)
         | Op::I64Sub(left, right)
         | Op::I64Mul(left, right)
@@ -130,14 +131,22 @@ fn lean_value(value: Value) -> String {
     }
 }
 
-fn append_schedule(
-    text: &mut impl std::fmt::Write,
-    checked: &CheckedGraph,
+struct ScheduleExample<'a> {
+    checked: &'a CheckedGraph,
     machine: Machine,
-    schedule_name: &str,
-    lowered: &target::Lowered,
-    expected: &[Value],
-) {
+    schedule_name: &'a str,
+    lowered: &'a target::Lowered,
+    expected: &'a [Value],
+}
+
+fn append_schedule(text: &mut impl std::fmt::Write, example: ScheduleExample<'_>) {
+    let ScheduleExample {
+        checked,
+        machine,
+        schedule_name,
+        lowered,
+        expected,
+    } = example;
     let decoded = target::decode(&super::common::IDS, &lowered.bytes)
         .expect("the lowered target artifact decodes");
     writeln!(
@@ -235,14 +244,16 @@ fn render() -> String {
         .expect("lowered target schedule executes");
         append_schedule(
             &mut text,
-            &checked,
-            machine,
-            match machine {
-                Machine::T1 => "t1Schedule",
-                Machine::T2 => "t2Schedule",
+            ScheduleExample {
+                checked: &checked,
+                machine,
+                schedule_name: match machine {
+                    Machine::T1 => "t1Schedule",
+                    Machine::T2 => "t2Schedule",
+                },
+                lowered: &lowered,
+                expected: &expected,
             },
-            &lowered,
-            &expected,
         );
     }
     text.write_str("end NobleFoundation.BeltTargetCorpus\n")

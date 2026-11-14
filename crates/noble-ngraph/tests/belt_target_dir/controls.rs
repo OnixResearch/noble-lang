@@ -6,16 +6,32 @@ fn checked(builder: GraphBuilder) -> noble_ngraph::CheckedGraph {
     noble_ngraph::check(&super::common::IDS, builder.finish()).expect("control graph checks")
 }
 
+fn encode_candidate(
+    accepted_graph: &noble_ngraph::CheckedGraph,
+    machine: Machine,
+    events: &[Issue],
+    outputs: &[OutputRead],
+) -> Vec<u8> {
+    target::encode(
+        &super::common::IDS,
+        accepted_graph,
+        machine,
+        events,
+        outputs,
+    )
+    .expect("well-framed candidate encodes")
+}
+
 #[test]
 fn exact_profile_belt_capacity_preserves_all_ordered_outputs() {
     for machine in [Machine::T1, Machine::T2] {
-        let capacity = usize::from(machine.descriptor().belt_capacity);
+        let belt_slot_count = usize::from(machine.descriptor().belt_slots);
         let mut builder = GraphBuilder::new(
             SubProfile::I64,
             Subject::authored(&super::common::IDS, "target-belt-114-exact-capacity"),
         );
-        let mut expected = Vec::with_capacity(capacity);
-        for slot in 0..capacity {
+        let mut expected = Vec::with_capacity(belt_slot_count);
+        for slot in 0..belt_slot_count {
             let node = builder.input(ScalarType::I64);
             builder.output(node);
             expected.push(Value::I64(
@@ -26,7 +42,7 @@ fn exact_profile_belt_capacity_preserves_all_ordered_outputs() {
         let lowered = target::lower(&super::common::IDS, &accepted_graph, machine)
             .expect("the graph exactly fills the fixed profile belt");
         assert_eq!(lowered.preservation_saves, 0);
-        assert_eq!(accepted_graph.graph().outputs.len(), capacity);
+        assert_eq!(accepted_graph.graph().outputs.len(), belt_slot_count);
         assert_eq!(
             target::execute(
                 &super::common::IDS,
@@ -237,155 +253,5 @@ fn latency_skew_allows_out_of_order_completion() {
     );
 }
 
-#[test]
-fn completion_priority_controls_operand_ages_and_lane_unit_conflicts_refuse() {
-    let mut builder = GraphBuilder::new(
-        SubProfile::I64,
-        Subject::authored(&super::common::IDS, "target-belt-114-completion-priority"),
-    );
-    let x = builder.input(ScalarType::I64);
-    let y = builder.input(ScalarType::I64);
-    let z = builder.input(ScalarType::I64);
-    let w = builder.input(ScalarType::I64);
-    let left = builder.op(Op::I64Add(x, y));
-    let right = builder.op(Op::I64Sub(z, w));
-    let result = builder.op(Op::I64Add(left, right));
-    builder.output(result);
-    let accepted_graph = checked(builder);
-    let events = [
-        Issue {
-            cycle: 0,
-            lane: 0,
-            unit: 3,
-            operation: Operation::Input { node: 0, slot: 0 },
-        },
-        Issue {
-            cycle: 0,
-            lane: 1,
-            unit: 4,
-            operation: Operation::Input { node: 1, slot: 1 },
-        },
-        Issue {
-            cycle: 1,
-            lane: 0,
-            unit: 3,
-            operation: Operation::Input { node: 2, slot: 2 },
-        },
-        Issue {
-            cycle: 1,
-            lane: 1,
-            unit: 4,
-            operation: Operation::Input { node: 3, slot: 3 },
-        },
-        Issue {
-            cycle: 2,
-            lane: 0,
-            unit: 0,
-            operation: Operation::Add {
-                node: 4,
-                left_age: 3,
-                right_age: 2,
-            },
-        },
-        Issue {
-            cycle: 2,
-            lane: 1,
-            unit: 1,
-            operation: Operation::Sub {
-                node: 5,
-                left_age: 1,
-                right_age: 0,
-            },
-        },
-        Issue {
-            cycle: 3,
-            lane: 0,
-            unit: 0,
-            operation: Operation::Add {
-                node: 6,
-                left_age: 1,
-                right_age: 0,
-            },
-        },
-    ];
-    let outputs = [OutputRead { node: 6 }];
-    let bytes = target::encode(
-        &super::common::IDS,
-        &accepted_graph,
-        Machine::T2,
-        &events,
-        &outputs,
-    )
-    .expect("ordered completion schedule encodes");
-    assert_eq!(
-        target::execute(
-            &super::common::IDS,
-            &accepted_graph,
-            Machine::T2,
-            &bytes,
-            &[Value::I64(5), Value::I64(3), Value::I64(9), Value::I64(1)]
-        ),
-        Ok(vec![Value::I64(16)]),
-    );
-
-    let mut reordered = events;
-    reordered[4].unit = 1;
-    reordered[5].unit = 0;
-    let reordered_bytes = target::encode(
-        &super::common::IDS,
-        &accepted_graph,
-        Machine::T2,
-        &reordered,
-        &outputs,
-    )
-    .expect("a changed completion order is still structurally encoded");
-    assert!(matches!(
-        target::check(
-            &super::common::IDS,
-            &accepted_graph,
-            Machine::T2,
-            &reordered_bytes
-        ),
-        Err(Refusal::OperandMismatch)
-    ));
-
-    let mut lane_conflict = events;
-    lane_conflict[5].lane = 0;
-    let lane_bytes = target::encode(
-        &super::common::IDS,
-        &accepted_graph,
-        Machine::T2,
-        &lane_conflict,
-        &outputs,
-    )
-    .expect("a lane conflict is a legality failure rather than a framing error");
-    assert!(matches!(
-        target::check(
-            &super::common::IDS,
-            &accepted_graph,
-            Machine::T2,
-            &lane_bytes
-        ),
-        Err(Refusal::IssueConflict)
-    ));
-
-    let mut unit_conflict = events;
-    unit_conflict[5].unit = 0;
-    let unit_bytes = target::encode(
-        &super::common::IDS,
-        &accepted_graph,
-        Machine::T2,
-        &unit_conflict,
-        &outputs,
-    )
-    .expect("a unit conflict is a legality failure rather than a framing error");
-    assert!(matches!(
-        target::check(
-            &super::common::IDS,
-            &accepted_graph,
-            Machine::T2,
-            &unit_bytes
-        ),
-        Err(Refusal::UnitConflict)
-    ));
-}
+#[path = "controls/completion.rs"]
+mod completion;

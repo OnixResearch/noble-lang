@@ -21,7 +21,7 @@ fn target_results_match_reference_compiled_and_sequential_belt() {
         let belt_schedule = belt::lower(
             &super::common::IDS,
             &accepted_graph,
-            descriptor.belt_capacity,
+            descriptor.belt_slots,
             descriptor.save_slots,
         )
         .expect("the sequential belt baseline lowers at the same capacity");

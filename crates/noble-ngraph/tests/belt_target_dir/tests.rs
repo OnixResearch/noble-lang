@@ -29,7 +29,7 @@ fn fixed_profiles_produce_bound_checked_and_interpreted_schedules() {
     let expected = [Value::I64(8), Value::I64(-2), Value::I64(-24)];
     for machine in [Machine::T1, Machine::T2] {
         let descriptor = machine.descriptor();
-        assert_eq!(descriptor.initiation_interval, 1);
+        assert_eq!(descriptor.issue_gap_cycles, 1);
         let lowered = target::lower(&super::common::IDS, &accepted_graph, machine)
             .expect("the bounded test graph schedules");
         let schedule = target::check(

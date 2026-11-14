@@ -63,33 +63,45 @@ fn pressure_case() -> (&'static str, CheckedGraph, Vec<Value>) {
 }
 
 fn mean_lower_ns(checked: &CheckedGraph, machine: Machine) -> u128 {
+    let denominator = u128::try_from(ITERATIONS).expect("fixed iteration count fits u128");
+    assert!(denominator != 0, "fixed iteration count is nonzero");
     for _ in 0..WARMUP {
         std::hint::black_box(
             target::lower(&super::common::IDS, checked, machine).expect("fixed profile lowers"),
         );
     }
-    let start = Instant::now();
+    let start = start_clock();
     for _ in 0..ITERATIONS {
         std::hint::black_box(
             target::lower(&super::common::IDS, checked, machine).expect("fixed profile lowers"),
         );
     }
-    start.elapsed().as_nanos() / ITERATIONS as u128
+    start.elapsed().as_nanos() / denominator
 }
 
 fn mean_check_ns(checked: &CheckedGraph, machine: Machine, bytes: &[u8]) -> u128 {
+    let denominator = u128::try_from(ITERATIONS).expect("fixed iteration count fits u128");
+    assert!(denominator != 0, "fixed iteration count is nonzero");
     for _ in 0..WARMUP {
         std::hint::black_box(
             target::check(&super::common::IDS, checked, machine, bytes).expect("artifact checks"),
         );
     }
-    let start = Instant::now();
+    let start = start_clock();
     for _ in 0..ITERATIONS {
         std::hint::black_box(
             target::check(&super::common::IDS, checked, machine, bytes).expect("artifact checks"),
         );
     }
-    start.elapsed().as_nanos() / ITERATIONS as u128
+    start.elapsed().as_nanos() / denominator
+}
+
+#[expect(
+    tigerstyle::ambient_clock,
+    reason = "Owner: noble-maintainers; this fixed, ignored benchmark reads monotonic time only at its measurement boundary."
+)]
+fn start_clock() -> Instant {
+    Instant::now()
 }
 
 fn completion_cycle(machine: Machine, event: Issue) -> u32 {
@@ -97,7 +109,7 @@ fn completion_cycle(machine: Machine, event: Issue) -> u32 {
     let class = descriptor
         .unit_class(event.unit)
         .expect("the emitted unit is in profile");
-    event.cycle + u32::from(descriptor.latency(class)) - 1
+    event.cycle + u32::from(descriptor.completion_cycles(class)) - 1
 }
 
 fn peak_pending(machine: Machine, events: &[Issue], modeled_cycles: u32) -> usize {
@@ -126,8 +138,14 @@ fn case_json(name: &str, checked: &CheckedGraph, inputs: &[Value], machine: Mach
     .expect("measured artifact executes");
     let decoded =
         target::decode(&super::common::IDS, &lowered.bytes).expect("measured artifact decodes");
-    let utilization_milli = (lowered.event_count as u128 * 1000)
-        / (u128::from(lowered.modeled_cycles) * u128::from(descriptor.issue_width));
+    let utilization_denominator =
+        u128::from(lowered.modeled_cycles) * u128::from(descriptor.issue_width);
+    assert!(
+        utilization_denominator != 0,
+        "a nonempty schedule has nonzero modeled cycles and issue width"
+    );
+    let event_count = u128::try_from(lowered.event_count).expect("fixed workload event count fits");
+    let utilization_milli = event_count * 1000 / utilization_denominator;
     format!(
         "{{\"machine\":\"{}\",\"workload\":\"{}\",\"graph_nodes\":{},\"outputs\":{},\"modeled_cycles\":{},\"issue_width\":{},\"issue_utilization_milli\":{},\"preservation_saves\":{},\"preservation_loads\":{},\"event_count\":{},\"scheduler_work\":{},\"artifact_bytes\":{},\"peak_pending_events\":{},\"max_pending_bound\":{},\"mean_lower_ns\":{},\"mean_check_ns\":{}}}",
         match machine { Machine::T1 => "T1", Machine::T2 => "T2" },
@@ -149,10 +167,12 @@ fn case_json(name: &str, checked: &CheckedGraph, inputs: &[Value], machine: Mach
     )
 }
 
-fn report() -> String {
-    let source = std::env::var("NOBLE_TARGET_SOURCE_COMMIT")
-        .expect("NOBLE_TARGET_SOURCE_COMMIT must name the committed source revision");
-    assert!(source.len() == 40 && source.bytes().all(|byte| byte.is_ascii_hexdigit()));
+fn report(source: &str) -> String {
+    assert_eq!(source.len(), 40, "source commit is a full object ID");
+    assert!(
+        source.bytes().all(|byte| byte.is_ascii_hexdigit()),
+        "source commit contains only hexadecimal digits"
+    );
     let cases = [basic_case(), pressure_case()];
     let mut rows = Vec::with_capacity(4);
     for (name, checked, inputs) in &cases {
@@ -166,13 +186,31 @@ fn report() -> String {
     )
 }
 
+struct MeasurementConfig {
+    source_commit: String,
+    destination: std::path::PathBuf,
+}
+
+#[expect(
+    tigerstyle::ambient_env,
+    reason = "Owner: noble-maintainers; the ignored benchmark captures only its explicit source-commit and external-report-path inputs at the test shell boundary."
+)]
+fn measurement_config() -> MeasurementConfig {
+    MeasurementConfig {
+        source_commit: std::env::var("NOBLE_TARGET_SOURCE_COMMIT")
+            .expect("NOBLE_TARGET_SOURCE_COMMIT must name the committed source revision"),
+        destination: std::path::PathBuf::from(
+            std::env::var_os("NOBLE_TARGET_REPORT")
+                .expect("NOBLE_TARGET_REPORT must name an external report file"),
+        ),
+    }
+}
+
 #[test]
 #[ignore = "frozen model/software-path measurement; report destination and source commit are explicit environment inputs"]
 fn fixed_model_cost_report() {
-    let destination = std::path::PathBuf::from(
-        std::env::var_os("NOBLE_TARGET_REPORT")
-            .expect("NOBLE_TARGET_REPORT must name an external report file"),
-    );
+    let config = measurement_config();
+    let destination = config.destination;
     assert!(destination.is_absolute());
     let parent = destination
         .parent()
@@ -192,6 +230,6 @@ fn fixed_model_cost_report() {
         .open(destination)
         .expect("the report path is new");
     output
-        .write_all(report().as_bytes())
+        .write_all(report(&config.source_commit).as_bytes())
         .expect("report bytes write");
 }
