@@ -773,8 +773,14 @@ struct Issue125Cell {
     inputs: [f32; 6],
 }
 
-fn issue125_values(family: &str, fp_class: &str) -> [f32; 6] {
-    let (special, secondary, third, safe) = match fp_class {
+#[derive(Clone, Copy)]
+struct Issue125Spec<'a> {
+    family: &'a str,
+    fp_class: &'a str,
+}
+
+fn issue125_values(spec: Issue125Spec<'_>) -> [f32; 6] {
+    let (special, secondary, third, safe) = match spec.fp_class {
         "signed_zero" => (-0.0, -0.0, 0.0, -0.0),
         "nan" => (f32::from_bits(0x7fc0_0000), 0.0, 0.0, 1.0),
         "subnormal_normal_boundary" => (f32::from_bits(1), f32::MIN_POSITIVE, 0.0, 0.0),
@@ -788,17 +794,18 @@ fn issue125_values(family: &str, fp_class: &str) -> [f32; 6] {
         ),
         _ => unreachable!("matrix-v1 FP class"),
     };
-    if matches!(family, "index_affine" | "guard_affine") && fp_class == "cancellation" {
+    if matches!(spec.family, "index_affine" | "guard_affine") && spec.fp_class == "cancellation" {
         return [-1.0e20, secondary, third, 1.0, 1.0, 1.0e20];
     }
-    if matches!(family, "index_affine" | "guard_affine") && fp_class == "rounding_tie" {
+    if matches!(spec.family, "index_affine" | "guard_affine") && spec.fp_class == "rounding_tie" {
         return [special, secondary, -1.0, 1.0, 1.0, 1.0];
     }
     [special, secondary, third, 1.0, 1.0, safe]
 }
 
-fn issue125_cell(family: &'static str, fp_class: &'static str) -> Issue125Cell {
-    let values = issue125_values(family, fp_class);
+fn issue125_cell(spec: Issue125Spec<'static>) -> Issue125Cell {
+    let Issue125Spec { family, fp_class } = spec;
+    let values = issue125_values(spec);
     let mut b = GraphBuilder::new(
         SubProfile::F32,
         Subject::authored(&BLAKE3, &format!("issue125/{family}/{fp_class}")),
@@ -852,10 +859,28 @@ fn issue125_cell(family: &'static str, fp_class: &'static str) -> Issue125Cell {
                 below: OutOfRange::Refuse,
                 above: OutOfRange::Refuse,
             });
-            issue125_affine(&mut b, fp_class, indexed, secondary, third, safe)
+            issue125_affine(
+                &mut b,
+                fp_class,
+                Issue125AffineOperands {
+                    selected: indexed,
+                    secondary,
+                    third,
+                    safe,
+                },
+            )
         }
         "guard_affine" => {
-            let output = issue125_affine(&mut b, fp_class, special, secondary, third, safe);
+            let output = issue125_affine(
+                &mut b,
+                fp_class,
+                Issue125AffineOperands {
+                    selected: special,
+                    secondary,
+                    third,
+                    safe,
+                },
+            );
             b.guard(Fact::Finite, safe);
             output
         }
@@ -883,10 +908,16 @@ fn issue125_input_value(
     inputs: &[f32; 6],
 ) -> Option<f32> {
     match &graph.nodes.get(node.index())?.op {
-        Op::Input(slot) => inputs.get(*slot as usize).copied(),
+        Op::Input(slot) => inputs.get(usize::try_from(*slot).ok()?).copied(),
         Op::Const(Literal::F32(bits)) => Some(f32::from_bits(*bits)),
         _ => None,
     }
+}
+
+fn issue125_input_bits(inputs: &[f32; 6], slot: u32) -> Option<u32> {
+    inputs
+        .get(usize::try_from(slot).ok()?)
+        .map(|value| value.to_bits())
 }
 
 fn issue125_runtime_selected_branch(
@@ -978,7 +1009,7 @@ fn issue125_selected_table_node(
 ) -> Option<NodeId> {
     let index = issue125_runtime_table_index(graph, family, inputs)?;
     graph.nodes.iter().find_map(|node| match &node.op {
-        Op::F32Index { table, .. } => table.get(index as usize).copied(),
+        Op::F32Index { table, .. } => table.get(usize::try_from(index).ok()?).copied(),
         _ => None,
     })
 }
@@ -1008,17 +1039,9 @@ fn issue125_random_interaction_families(graph: &noble_ngraph::Graph) -> Vec<&'st
             }
             Op::F32Affine { terms, .. } => {
                 for term in terms {
-                    if !matches!(
-                        &graph.nodes[match &term.operand {
-                            AffineOperand::Node(value) => value.index(),
-                            AffineOperand::One => continue,
-                        }]
-                        .op,
-                        Op::F32Index { .. }
-                    ) {
-                        continue;
+                    if issue125_affine_term_is_index(graph, &term.operand) {
+                        record("index_affine");
                     }
-                    record("index_affine");
                 }
                 if graph.nodes.iter().any(|candidate| {
                     matches!(&candidate.op,
@@ -1032,6 +1055,16 @@ fn issue125_random_interaction_families(graph: &noble_ngraph::Graph) -> Vec<&'st
         }
     }
     families
+}
+
+fn issue125_affine_term_is_index(graph: &noble_ngraph::Graph, operand: &AffineOperand) -> bool {
+    let AffineOperand::Node(value) = operand else {
+        return false;
+    };
+    graph
+        .nodes
+        .get(value.index())
+        .is_some_and(|node| matches!(&node.op, Op::F32Index { .. }))
 }
 
 fn issue125_post_select(
@@ -1055,14 +1088,24 @@ fn issue125_post_select(
     }
 }
 
-fn issue125_affine(
-    b: &mut GraphBuilder,
-    fp_class: &str,
+struct Issue125AffineOperands {
     selected: NodeId,
     secondary: NodeId,
     third: NodeId,
     safe: NodeId,
+}
+
+fn issue125_affine(
+    b: &mut GraphBuilder,
+    fp_class: &str,
+    operands: Issue125AffineOperands,
 ) -> NodeId {
+    let Issue125AffineOperands {
+        selected,
+        secondary,
+        third,
+        safe,
+    } = operands;
     let bias = if fp_class == "signed_zero" { -0.0 } else { 0.0 };
     let terms = match fp_class {
         "signed_zero" => vec![
@@ -1098,17 +1141,17 @@ fn issue125_affine(
     b.affine(bias, &terms)
 }
 
-fn issue125_expected(family: &str, fp_class: &str) -> Option<u32> {
-    match fp_class {
+fn issue125_expected(spec: Issue125Spec<'_>) -> Option<u32> {
+    match spec.fp_class {
         "signed_zero" => Some(0x8000_0000),
         "nan" => None,
         "subnormal_normal_boundary" => Some(1),
         "overflow_infinity" => Some(f32::INFINITY.to_bits()),
-        "cancellation" if family == "index_affine" || family == "guard_affine" => {
+        "cancellation" if spec.family == "index_affine" || spec.family == "guard_affine" => {
             Some(3.0f32.to_bits())
         }
         "cancellation" => Some(0.0f32.to_bits()),
-        "rounding_tie" if family == "index_affine" || family == "guard_affine" => {
+        "rounding_tie" if spec.family == "index_affine" || spec.family == "guard_affine" => {
             Some(0.0f32.to_bits())
         }
         "rounding_tie" => Some(1.0f32.to_bits()),
@@ -1141,10 +1184,10 @@ fn issue125_output_bits(obs: &Obs) -> Vec<u32> {
 fn issue125_observation_code(obs: &Obs) -> u32 {
     match obs {
         Obs::Normal(_) => issue125_output_bits(obs).first().copied().unwrap_or(0),
-        Obs::GuardFailed { .. } => u32::MAX - 1,
-        Obs::Refused(_) => u32::MAX - 2,
-        Obs::Exhausted(_) => u32::MAX - 3,
-        Obs::Cancelled => u32::MAX - 4,
+        Obs::GuardFailed { .. } => u32::MAX.saturating_sub(1),
+        Obs::Refused(_) => u32::MAX.saturating_sub(2),
+        Obs::Exhausted(_) => u32::MAX.saturating_sub(3),
+        Obs::Cancelled => u32::MAX.saturating_sub(4),
     }
 }
 
@@ -1168,6 +1211,53 @@ fn issue125_execution_outcome(obs: &Obs) -> &'static str {
         Obs::Exhausted(_) => "exhausted",
         Obs::Cancelled => "cancelled",
     }
+}
+
+struct Issue125MutationEvidence<'a> {
+    execution_reached: bool,
+    l2_property_passed: bool,
+    l3_property_failed: bool,
+    expected_mismatch: Option<&'a str>,
+    minimized: &'a serde_json::Value,
+}
+
+fn issue125_mutation_outcome(evidence: Issue125MutationEvidence<'_>) -> &'static str {
+    let Issue125MutationEvidence {
+        execution_reached,
+        l2_property_passed,
+        l3_property_failed,
+        expected_mismatch,
+        minimized,
+    } = evidence;
+    if expected_mismatch.is_none() {
+        return if execution_reached {
+            "executed-survived"
+        } else {
+            "divergence-unreached"
+        };
+    }
+    if !execution_reached || !l2_property_passed || !l3_property_failed {
+        return "incomplete";
+    }
+    let Some(expected_mismatch) = expected_mismatch else {
+        return "incomplete";
+    };
+    if !minimized.is_object() {
+        return "incomplete";
+    }
+    if minimized["mismatch_class"].as_str() != Some(expected_mismatch) {
+        return "incomplete";
+    }
+    if minimized["target_feature_preserved"] != true {
+        return "incomplete";
+    }
+    if minimized["selected_branch_preserved"] != true {
+        return "incomplete";
+    }
+    if minimized["selected_table_index_preserved"] != true {
+        return "incomplete";
+    }
+    "killed"
 }
 
 fn issue125_shrink_candidate_allowed(
@@ -1199,11 +1289,29 @@ fn issue125_shrink_candidate_allowed(
         && issue125_mismatch_class(legs) == Some(mismatch_class)
 }
 
+struct Issue125MutationControls {
+    mutation_id: Option<String>,
+    target_cell: Option<String>,
+}
+
+// justification: the test runner configures mutation probes through these two environment variables at the harness boundary.
+#[allow(
+    tigerstyle::ambient_env,
+    reason = "Owner: noble-maintainers; capture mutation-runner controls once at the test boundary"
+)]
+fn issue125_mutation_controls() -> Issue125MutationControls {
+    Issue125MutationControls {
+        mutation_id: std::env::var("NOBLE_ISSUE125_MUTATION_ID").ok(),
+        target_cell: std::env::var("NOBLE_ISSUE125_MUTATION_CELL").ok(),
+    }
+}
+
 fn issue125_shrink_inputs(
     case: &Issue125Cell,
     compiled: &Compiled,
     expected: Option<u32>,
     mismatch_class: &'static str,
+    mutation_id: Option<&str>,
 ) -> Option<serde_json::Value> {
     use shrink::{minimize, DEFAULT_ATTEMPTS};
     let run_pair = |left: u32, right: u32| {
@@ -1264,7 +1372,7 @@ fn issue125_shrink_inputs(
         "selected_branch_preserved": minimized_inputs[4].to_bits() == case.inputs[4].to_bits(),
         "selected_table_index_preserved": minimized_inputs[3].to_bits() == case.inputs[3].to_bits(),
         "target_feature_preserved": target_feature_preserved,
-        "mutation_site": std::env::var("NOBLE_ISSUE125_MUTATION_ID").ok(),
+        "mutation_site": mutation_id,
         "snapshot": null,
         "limits": {
             "control": "Control::default()",
@@ -1292,13 +1400,13 @@ fn issue125_structured_interaction_matrix() {
     const MATRIX: &str =
         include_str!("../../../verification/differential-interactions/matrix-v1.json");
     let matrix_sha256 = blake3::hash(MATRIX.as_bytes()).to_hex().to_string();
-    let families = [
+    let families: [&'static str; 4] = [
         "guard_select",
         "select_index",
         "index_affine",
         "guard_affine",
     ];
-    let classes = [
+    let classes: [&'static str; 6] = [
         "signed_zero",
         "nan",
         "subnormal_normal_boundary",
@@ -1306,13 +1414,13 @@ fn issue125_structured_interaction_matrix() {
         "cancellation",
         "rounding_tie",
     ];
-    let mut cells = Vec::new();
+    let mut cells = Vec::with_capacity(families.len().saturating_mul(classes.len()));
     let mut shrunk = false;
-    let mutation_id = std::env::var("NOBLE_ISSUE125_MUTATION_ID").ok();
-    let mutation_target = std::env::var("NOBLE_ISSUE125_MUTATION_CELL").ok();
+    let mutation_controls = issue125_mutation_controls();
     for family in families {
         for fp_class in classes {
-            let case = issue125_cell(family, fp_class);
+            let spec = Issue125Spec { family, fp_class };
+            let case = issue125_cell(spec);
             let checked = check(&BLAKE3, case.graph.clone()).unwrap_or_else(|diagnostic| {
                 panic!("{} x {} refused: {diagnostic}", case.family, case.fp_class)
             });
@@ -1320,7 +1428,7 @@ fn issue125_structured_interaction_matrix() {
             let inputs = f32_inputs(&case.inputs);
             let legs = run_legs(&compiled, &inputs, None);
             let output_bits = issue125_output_bits(&legs.l3_reference);
-            let expected = issue125_expected(family, fp_class);
+            let expected = issue125_expected(spec);
             let property_evaluable = matches!(legs.l2_apfloat, Obs::Normal(_))
                 && matches!(legs.b2_oracle_f64, Obs::Normal(_))
                 && matches!(legs.l3_reference, Obs::Normal(_))
@@ -1355,12 +1463,19 @@ fn issue125_structured_interaction_matrix() {
             let mismatch_class = issue125_mismatch_class(&legs);
             let cell_name = format!("P2/{family}/{fp_class}");
             let minimized_witness = if !shrunk
-                && mutation_target
+                && mutation_controls
+                    .target_cell
                     .as_deref()
                     .is_none_or(|target| target == cell_name)
             {
                 mismatch_class.and_then(|class| {
-                    let witness = issue125_shrink_inputs(&case, &compiled, expected, class);
+                    let witness = issue125_shrink_inputs(
+                        &case,
+                        &compiled,
+                        expected,
+                        class,
+                        mutation_controls.mutation_id.as_deref(),
+                    );
                     shrunk = witness.is_some();
                     witness
                 })
@@ -1385,10 +1500,10 @@ fn issue125_structured_interaction_matrix() {
                 "selected_branch": issue125_runtime_selected_branch(&case.graph, family, &case.inputs),
                 "selected_branch_input_slot": issue125_selected_branch_input_slot(&case.graph, family),
                 "selected_branch_input_bits": issue125_selected_branch_input_slot(&case.graph, family)
-                    .map(|slot| case.inputs[slot as usize].to_bits()),
+                    .and_then(|slot| issue125_input_bits(&case.inputs, slot)),
                 "index_input_slot": issue125_index_input_slot(&case.graph, family, &case.inputs),
                 "index_input_bits": issue125_index_input_slot(&case.graph, family, &case.inputs)
-                    .map(|slot| case.inputs[slot as usize].to_bits()),
+                    .and_then(|slot| issue125_input_bits(&case.inputs, slot)),
                 "selected_table_index": issue125_runtime_table_index(&case.graph, family, &case.inputs),
                 "selected_table_node": issue125_selected_table_node(&case.graph, family, &case.inputs)
                     .map(|node| node.0),
@@ -1450,7 +1565,7 @@ fn issue125_structured_interaction_matrix() {
     };
     let current_node_count = current_random_checked.node_count() as u64;
     let current_vector_budget = (structured_node_budget / current_node_count).max(1);
-    let current_potential_node_work = current_node_count * current_vector_budget;
+    let current_potential_node_work = current_node_count.saturating_mul(current_vector_budget);
     let current_campaign = campaign(comparison_seed, current_ops, current_vector_budget);
     let current_interactions = issue125_random_interaction_families(&current_random_graph.graph);
     let current_full_execution = current_campaign.full_normal_executions > 0;
@@ -1502,7 +1617,10 @@ fn issue125_structured_interaction_matrix() {
             "structured_cells": structured_failures }
     });
 
-    let mut invalid = issue125_cell("guard_select", "nan");
+    let mut invalid = issue125_cell(Issue125Spec {
+        family: "guard_select",
+        fp_class: "nan",
+    });
     invalid.inputs[5] = f32::NAN;
     let invalid_checked = check(&BLAKE3, invalid.graph.clone()).expect("valid guard-failure graph");
     let invalid_legs = run_legs(
@@ -1513,7 +1631,10 @@ fn issue125_structured_interaction_matrix() {
     let invalid_refused =
         matches!(invalid_legs.l3_reference, Obs::GuardFailed { .. }) && invalid_legs.agree();
 
-    let mut invalid_index = issue125_cell("index_affine", "subnormal_normal_boundary");
+    let mut invalid_index = issue125_cell(Issue125Spec {
+        family: "index_affine",
+        fp_class: "subnormal_normal_boundary",
+    });
     invalid_index.inputs[3] = f32::NAN;
     let invalid_index_checked = check(&BLAKE3, invalid_index.graph.clone())
         .expect("input-fact mutation keeps the graph admitted");
@@ -1531,10 +1652,14 @@ fn issue125_structured_interaction_matrix() {
         &invalid_index,
         &invalid_index.inputs,
         &invalid_index_legs,
-        issue125_expected("index_affine", "subnormal_normal_boundary"),
+        issue125_expected(Issue125Spec {
+            family: "index_affine",
+            fp_class: "subnormal_normal_boundary",
+        }),
         "normal-value-mismatch",
     );
-    let target_failure_class = mutation_target
+    let target_failure_class = mutation_controls
+        .target_cell
         .as_ref()
         .and_then(|target| {
             cells
@@ -1564,7 +1689,10 @@ fn issue125_structured_interaction_matrix() {
         l4_compiled: substituted_l3,
         l3_evaluated_nodes: 3,
     };
-    let different_failure_case = issue125_cell("index_affine", "subnormal_normal_boundary");
+    let different_failure_case = issue125_cell(Issue125Spec {
+        family: "index_affine",
+        fp_class: "subnormal_normal_boundary",
+    });
     let different_failure_rejected_by_shrinker = !issue125_shrink_candidate_allowed(
         &different_failure_case,
         &different_failure_case.inputs,
@@ -1579,7 +1707,10 @@ fn issue125_structured_interaction_matrix() {
         "different_failure_rejected_by_shrinker": different_failure_rejected_by_shrinker
     });
 
-    let quota = issue125_cell("guard_select", "signed_zero");
+    let quota = issue125_cell(Issue125Spec {
+        family: "guard_select",
+        fp_class: "signed_zero",
+    });
     let quota_checked = check(&BLAKE3, quota.graph).expect("valid quota graph");
     let quota_inputs = f32_inputs(&quota.inputs);
     let mut reference_control = Control {
@@ -1656,8 +1787,11 @@ fn issue125_structured_interaction_matrix() {
     let executable_hash = blake3::hash(&std::fs::read(&executable).expect("read test executable"))
         .to_hex()
         .to_string();
-    let mutation_probe = mutation_id.as_ref().map(|id| {
-        let target = mutation_target.as_deref().expect("mutation target cell");
+    let mutation_probe = mutation_controls.mutation_id.as_ref().map(|id| {
+        let target = mutation_controls
+            .target_cell
+            .as_deref()
+            .expect("mutation target cell");
         let cell = cells.iter().find(|cell| cell["cell"] == target)
             .expect("mutation target is a selected matrix cell");
         let expected_mismatch = cell["mismatch_class"].as_str();
@@ -1687,17 +1821,13 @@ fn issue125_structured_interaction_matrix() {
         let original_witness_size_bytes = original_witness.to_string().len();
         let minimized_witness_size_bytes = minimized_witness.to_string().len();
         let failure_identity = expected_mismatch.map(|mismatch| format!("{id}:{target}:{mismatch}"));
-        let outcome = if execution_reached && l2_property && l3_property_failed
-            && expected_mismatch.is_some() && minimized.is_object()
-            && minimized["mismatch_class"].as_str() == expected_mismatch
-            && minimized["target_feature_preserved"] == true
-            && minimized["selected_branch_preserved"] == true
-            && minimized["selected_table_index_preserved"] == true
-        { "killed" } else if execution_reached && expected_mismatch.is_none() {
-            "executed-survived"
-        } else if expected_mismatch.is_none() {
-            "divergence-unreached"
-        } else { "incomplete" };
+        let outcome = issue125_mutation_outcome(Issue125MutationEvidence {
+            execution_reached,
+            l2_property_passed: l2_property,
+            l3_property_failed,
+            expected_mismatch,
+            minimized: &minimized,
+        });
         serde_json::json!({
             "mutation_id": id,
             "target_cell": target,
@@ -1729,8 +1859,8 @@ fn issue125_structured_interaction_matrix() {
         "unreached": cells.iter().filter(|cell| cell["reached"] != true).map(|cell| cell["cell"].clone()).collect::<Vec<_>>(),
         "matrix_outcomes": matrix_outcomes,
         "control_outcomes": {
-            "refused": usize::from(invalid_refused) + usize::from(invalid_index_refused),
-            "exhausted": usize::from(exhausted) + usize::from(exhausted_at_one),
+            "refused": usize::from(invalid_refused).saturating_add(usize::from(invalid_index_refused)),
+            "exhausted": usize::from(exhausted).saturating_add(usize::from(exhausted_at_one)),
             "unsupported": 1
         },
         "refusal_controls": [
@@ -1760,7 +1890,7 @@ fn issue125_structured_interaction_matrix() {
         current_potential_node_work <= structured_node_budget,
         "current P2 generator exceeded the frozen node-work budget"
     );
-    if mutation_id.is_none() {
+    if mutation_controls.mutation_id.is_none() {
         assert!(
             accepted > 0,
             "all-refused P2 campaign cannot pass semantic acceptance"
@@ -1783,7 +1913,7 @@ fn issue125_structured_interaction_matrix() {
     }
     // The guard-edge mutant deliberately invalidates both guard-based refusal
     // controls; retain their observations, but keep the kill bound to its target.
-    if mutation_id.as_deref() != Some("p2-inverted-guard-edge") {
+    if mutation_controls.mutation_id.as_deref() != Some("p2-inverted-guard-edge") {
         assert!(
             invalid_refused,
             "one-premise guard refusal control must be observed by every leg"
@@ -1867,7 +1997,7 @@ fn issue125_replay_retained_witness() {
         .as_str()
         .expect("interaction family");
     let fp_class = retained["fp_class"].as_str().expect("FP class");
-    let expected = issue125_expected(family, fp_class);
+    let expected = issue125_expected(Issue125Spec { family, fp_class });
     let expected_mismatch = retained["expected_mismatch_class"].as_str();
     let input_bits = |key: &str| -> [u32; 6] {
         let bits: Vec<u32> = retained[key]
@@ -1912,10 +2042,10 @@ fn issue125_replay_retained_witness() {
         "retained branch operand slot changed"
     );
     assert_eq!(
-        branch_slot.map(|slot| original_values[slot as usize].to_bits()),
-        retained["selected_branch_input_bits"]
-            .as_u64()
-            .map(|bits| bits as u32),
+        branch_slot
+            .and_then(|slot| issue125_input_bits(&original_values, slot))
+            .map(u64::from),
+        retained["selected_branch_input_bits"].as_u64(),
         "retained branch operand bits changed"
     );
     let original_index_slot = issue125_index_input_slot(checked.graph(), family, &original_values);
@@ -1931,10 +2061,10 @@ fn issue125_replay_retained_witness() {
         "retained index operand slot changed"
     );
     assert_eq!(
-        original_index_slot.map(|slot| original_values[slot as usize].to_bits()),
-        retained["index_input_bits"]
-            .as_u64()
-            .map(|bits| bits as u32),
+        original_index_slot
+            .and_then(|slot| issue125_input_bits(&original_values, slot))
+            .map(u64::from),
+        retained["index_input_bits"].as_u64(),
         "retained index operand bits changed"
     );
     let original_index = issue125_runtime_table_index(checked.graph(), family, &original_values);
@@ -2011,10 +2141,10 @@ fn issue125_replay_retained_witness() {
             "selected_branch": issue125_runtime_selected_branch(checked.graph(), family, &inputs),
             "selected_branch_input_slot": issue125_selected_branch_input_slot(checked.graph(), family),
             "selected_branch_input_bits": issue125_selected_branch_input_slot(checked.graph(), family)
-                .map(|slot| inputs[slot as usize].to_bits()),
+                .and_then(|slot| issue125_input_bits(&inputs, slot)),
             "index_input_slot": issue125_index_input_slot(checked.graph(), family, &inputs),
             "index_input_bits": issue125_index_input_slot(checked.graph(), family, &inputs)
-                .map(|slot| inputs[slot as usize].to_bits()),
+                .and_then(|slot| issue125_input_bits(&inputs, slot)),
             "selected_table_index": issue125_runtime_table_index(checked.graph(), family, &inputs),
             "selected_table_node": issue125_selected_table_node(checked.graph(), family, &inputs)
                 .map(|node| node.0),
