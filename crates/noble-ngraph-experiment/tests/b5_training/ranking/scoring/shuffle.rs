@@ -14,12 +14,16 @@ impl SplitMix64 {
     }
 
     pub(crate) fn index(&mut self, upper: usize) -> usize {
-        let upper = u64::try_from(upper).unwrap_or(1).max(1);
+        let upper = u64::try_from(upper)
+            .expect("the fixed candidate set fits into a u64 shuffle bound")
+            .max(1);
+        assert!(upper > 0, "the normalized shuffle bound must be nonzero");
         let threshold = upper.wrapping_neg() % upper;
         loop {
             let value = self.next();
             if value >= threshold {
-                return usize::try_from(value % upper).unwrap_or(0);
+                return usize::try_from(value % upper)
+                    .expect("a reduced shuffle index fits into usize");
             }
         }
     }
@@ -36,18 +40,11 @@ pub(crate) fn shuffled_model_identity(
     *hasher.finalize().as_bytes()
 }
 
-pub(crate) fn shuffled_scores(context: &RankingContext, seed: u64) -> std::collections::BTreeMap<u32, f32> {
-    let mut ordinals: Vec<u32> = context
-        .allowed_candidates
-        .iter()
-        .map(|candidate| candidate.ordinal)
-        .collect();
-    let mut rng = SplitMix64 { state: seed };
-    for upper in (2..=ordinals.len()).rev() {
-        let index = rng.index(upper);
-        ordinals.swap(upper.saturating_sub(1), index);
-    }
-    ordinals
+pub(crate) fn shuffled_scores(
+    context: &RankingContext,
+    seed: u64,
+) -> std::collections::BTreeMap<u32, f32> {
+    shuffled_ordinals(context, seed)
         .into_iter()
         .enumerate()
         .map(|(position, ordinal)| {
@@ -60,4 +57,18 @@ pub(crate) fn shuffled_scores(context: &RankingContext, seed: u64) -> std::colle
             (ordinal, score)
         })
         .collect()
+}
+
+fn shuffled_ordinals(context: &RankingContext, seed: u64) -> Vec<u32> {
+    let mut ordinals: Vec<u32> = context
+        .allowed_candidates
+        .iter()
+        .map(|candidate| candidate.ordinal)
+        .collect();
+    let mut rng = SplitMix64 { state: seed };
+    for upper in (2..=ordinals.len()).rev() {
+        let index = rng.index(upper);
+        ordinals.swap(upper.saturating_sub(1), index);
+    }
+    ordinals
 }

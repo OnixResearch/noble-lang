@@ -1,6 +1,7 @@
 use super::*;
 
-pub(crate) const TRAIN_SEEDS: [u64; 3] = [0x74031a7e20261029, 0x74031a7e2026102a, 0x74031a7e2026102b];
+pub(crate) const TRAIN_SEEDS: [u64; 3] =
+    [0x74031a7e20261029, 0x74031a7e2026102a, 0x74031a7e2026102b];
 pub(crate) const PAIRED_SEEDS: [u64; 10] = [
     0x7403000000000001,
     0x7403000000000002,
@@ -21,16 +22,7 @@ pub(crate) fn score_graph() -> CheckedGraph {
         SubProfile::F32,
         Subject::authored(&BLAKE3, "tchunk-ranking/score-v1"),
     );
-    let inputs: Vec<_> = (0..chunks::FEATURE_LANES)
-        .map(|_| builder.input(ScalarType::F32))
-        .collect();
-    let products: Vec<_> = inputs
-        .into_iter()
-        .map(|input| {
-            let parameter = builder.param();
-            builder.op(noble_ngraph::ir::Op::F32Mul(parameter, input))
-        })
-        .collect();
+    let products = weighted_terms(&mut builder);
     let mut total = products[0];
     for product in products.iter().skip(1) {
         total = builder.op(noble_ngraph::ir::Op::F32Add(total, *product));
@@ -39,6 +31,19 @@ pub(crate) fn score_graph() -> CheckedGraph {
     let output = builder.op(noble_ngraph::ir::Op::F32Add(total, bias));
     builder.output(output);
     check(&BLAKE3, builder.finish()).expect("fixed scorer graph admits")
+}
+
+fn weighted_terms(builder: &mut GraphBuilder) -> Vec<noble_ngraph::ir::NodeId> {
+    let inputs: Vec<_> = (0..chunks::FEATURE_LANES)
+        .map(|_| builder.input(ScalarType::F32))
+        .collect();
+    inputs
+        .into_iter()
+        .map(|input| {
+            let parameter = builder.param();
+            builder.op(noble_ngraph::ir::Op::F32Mul(parameter, input))
+        })
+        .collect()
 }
 
 pub(crate) fn mse_graph() -> CheckedGraph {
@@ -82,6 +87,10 @@ pub(crate) fn numeric_output_traced(
         },
     )
     .obs;
+    singleton_f32(observation)
+}
+
+fn singleton_f32(observation: Obs) -> Result<f32, String> {
     match observation {
         Obs::Normal(values) => match values.as_slice() {
             [noble_ngraph::sem::Value::F32(bits)] => Ok(f32::from_bits(*bits)),
@@ -109,31 +118,138 @@ pub(crate) fn validation_mean_loss(
     Ok(sum / count as f32)
 }
 
-pub(crate) fn assert_equal_signature_features(rows: &[TrainingRow]) -> Result<(), String> {
-    for ordinal in 1..=3 {
-        let selected: Vec<&TrainingRow> = rows
+fn checked_signature_labels<'a>(
+    rows: impl Iterator<Item = &'a TrainingRow>,
+    first: &TrainingRow,
+    ordinal: u32,
+) -> Result<std::collections::BTreeSet<u32>, String> {
+    let mut labels = std::collections::BTreeSet::new();
+    for row in rows {
+        let is_matching = row
+            .features
             .iter()
-            .filter(|row| row.family == FAMILY_NAMES[4] && row.ordinal == ordinal)
-            .collect();
-        let Some(first) = selected.first() else {
-            return Err(String::from("equal-signature training rows are missing"));
-        };
-        let expected_bits: Vec<u32> = first.features.iter().map(|value| value.to_bits()).collect();
-        let mut labels = std::collections::BTreeSet::new();
-        for row in selected {
-            let actual_bits: Vec<u32> = row.features.iter().map(|value| value.to_bits()).collect();
-            if actual_bits != expected_bits {
-                return Err(format!(
-                    "fixture leakage changed equal-signature features for ordinal {ordinal}"
-                ));
-            }
-            labels.insert(row.target.to_bits());
-        }
-        if labels.len() != 2 {
+            .zip(&first.features)
+            .all(|(actual, expected)| actual.to_bits() == expected.to_bits());
+        if !is_matching {
             return Err(format!(
-                "equal-signature ordinal {ordinal} lacks both behavioral labels"
+                "fixture leakage changed equal-signature features for ordinal {ordinal}"
             ));
         }
+        labels.insert(row.target.to_bits());
+    }
+    Ok(labels)
+}
+
+fn check_equal_signature_ordinal(rows: &[TrainingRow], ordinal: u32) -> Result<(), String> {
+    let selected = rows
+        .iter()
+        .filter(|row| row.family == FAMILY_NAMES[4] && row.ordinal == ordinal);
+    let Some(first) = selected.clone().next() else {
+        return Err(String::from("equal-signature training rows are missing"));
+    };
+    if checked_signature_labels(selected, first, ordinal)?.len() != 2 {
+        return Err(format!(
+            "equal-signature ordinal {ordinal} lacks both behavioral labels"
+        ));
     }
     Ok(())
+}
+
+pub(crate) fn assert_equal_signature_features(rows: &[TrainingRow]) -> Result<(), String> {
+    for ordinal in 1..=3 {
+        check_equal_signature_ordinal(rows, ordinal)?;
+    }
+    Ok(())
+}
+
+pub(crate) fn optimizer_state_bytes(state: &train::AdamState) -> Vec<u8> {
+    let mut bytes = Vec::with_capacity(
+        state
+            .m
+            .len()
+            .saturating_add(state.v.len())
+            .saturating_mul(core::mem::size_of::<f64>())
+            .saturating_add(2 * core::mem::size_of::<f64>())
+            .saturating_add(core::mem::size_of::<u64>()),
+    );
+    for value in state.m.iter().chain(&state.v) {
+        bytes.extend_from_slice(&value.to_bits().to_le_bytes());
+    }
+    bytes.extend_from_slice(&state.b1t.to_bits().to_le_bytes());
+    bytes.extend_from_slice(&state.b2t.to_bits().to_le_bytes());
+    bytes.extend_from_slice(&state.t.to_le_bytes());
+    bytes
+}
+
+pub(crate) struct ModelBuildIdentity<'a> {
+    pub(crate) source_commit: &'a str,
+    pub(crate) rustc_version: &'a str,
+    pub(crate) cargo_version: &'a str,
+}
+
+pub(crate) fn model_identity(
+    fit: &ModelFit,
+    build: ModelBuildIdentity<'_>,
+) -> [u8; chunks::REVISION_BYTES] {
+    let state_bytes = optimizer_state_bytes(&fit.state);
+    let mut hasher = blake3::Hasher::new();
+    hash_model_header(&mut hasher, &build);
+    hash_snapshot_lineage(&mut hasher, fit);
+    for seed in &fit.seeds {
+        hash_seed_summary(&mut hasher, seed);
+    }
+    for context in &fit.training_rows.contexts {
+        hash_training_context(&mut hasher, context);
+    }
+    hasher.update(blake3::hash(&state_bytes).as_bytes());
+    *hasher.finalize().as_bytes()
+}
+
+fn hash_model_header(hasher: &mut blake3::Hasher, build: &ModelBuildIdentity<'_>) {
+    hasher.update(b"noble.tchunk-ranking-model/1\0");
+    hasher.update(build.source_commit.as_bytes());
+    hasher.update(build.rustc_version.as_bytes());
+    hasher.update(build.cargo_version.as_bytes());
+    hasher.update(blake3::hash(FROZEN_CRITERIA.as_bytes()).as_bytes());
+    hasher.update(blake3::hash(FROZEN_CORPUS.as_bytes()).as_bytes());
+}
+
+fn hash_snapshot_lineage(hasher: &mut blake3::Hasher, fit: &ModelFit) {
+    let graph_text = noble_ngraph::format::graph::print(fit.graph.graph());
+    let loss_text = noble_ngraph::format::graph::print(fit.loss_graph.graph());
+    hasher.update(graph_text.as_bytes());
+    hasher.update(loss_text.as_bytes());
+    hasher.update(&fit.snapshot.id());
+    hasher.update(fit.snapshot.bytes());
+    hasher.update(&fit.provenance.parent);
+    hasher.update(&fit.provenance.graph);
+    hasher.update(&fit.provenance.loss);
+    hasher.update(&fit.provenance.data);
+    hasher.update(&fit.provenance.optimizer_state);
+    hasher.update(fit.provenance.tools.as_bytes());
+    hasher.update(&fit.selected_seed.to_le_bytes());
+    hasher.update(&fit.validation_loss.to_bits().to_le_bytes());
+}
+
+fn hash_seed_summary(hasher: &mut blake3::Hasher, seed: &SeedSummary) {
+    hasher.update(&seed.seed.to_le_bytes());
+    hasher.update(&seed.validation_loss.to_bits().to_le_bytes());
+    hasher.update(&seed.provenance_data);
+    hasher.update(&seed.optimizer_state_digest);
+}
+
+fn hash_training_context(hasher: &mut blake3::Hasher, context: &RankingContext) {
+    hasher.update(context.family.as_bytes());
+    hasher.update(&context.library_identity);
+    hasher.update(&context.library_revision);
+    hasher.update(&context.candidate_set);
+    hasher.update(&context.policy);
+    hasher.update(&context.editor_request);
+    for interface in &context.task_interfaces {
+        hasher.update(interface);
+    }
+    for candidate in &context.allowed_candidates {
+        hasher.update(&candidate.ordinal.to_le_bytes());
+        hasher.update(&candidate.digest);
+    }
 }

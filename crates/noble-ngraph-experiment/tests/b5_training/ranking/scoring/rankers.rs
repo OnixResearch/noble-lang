@@ -70,9 +70,9 @@ impl chunks::CandidateRanker for ModelRanker<'_> {
     }
 
     fn provenance_matches(&self, identity: &chunks::RankingIdentity) -> bool {
-        let matched = self.context_matches(identity);
-        *self.active_identity.borrow_mut() = matched.then(|| identity.clone());
-        matched
+        let is_matched = self.context_matches(identity);
+        *self.active_identity.borrow_mut() = is_matched.then(|| identity.clone());
+        is_matched
     }
 
     fn score(
@@ -146,7 +146,7 @@ impl chunks::CandidateRanker for ShuffledRanker {
     }
 
     fn provenance_matches(&self, identity: &chunks::RankingIdentity) -> bool {
-        let matched = identity.model_identity == Some(self.model_identity)
+        let is_matched = identity.model_identity == Some(self.model_identity)
             && identity.feature_revision == chunks::FEATURE_REVISION
             && identity.semantic_revision == 0
             && self.contexts.iter().any(|context| {
@@ -156,8 +156,8 @@ impl chunks::CandidateRanker for ShuffledRanker {
                     && identity.editor_request == context.editor_request
                     && context.task_interfaces.contains(&identity.task_interface)
             });
-        *self.active_identity.borrow_mut() = matched.then(|| identity.clone());
-        matched
+        *self.active_identity.borrow_mut() = is_matched.then(|| identity.clone());
+        is_matched
     }
 
     fn score(
