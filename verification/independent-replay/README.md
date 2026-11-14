@@ -7,24 +7,31 @@ changes MC1 admission, or claims compiler/runtime correspondence.
 ## Current decision
 
 The replay lanes use the policy-selected Lean 4.35.0 package and its bundled
-`leanexport`, `nanoda_bin`, `con-leche`, `con-ron`, and `lean4lean` binaries.
-Their exact store path, derivation and binary SHA-256 digests are in
-[`checkers.json`](checkers.json). The toolchain's `leanexport` emits NDJSON
-format 3.1.0. Current sources enforce a strict acceptance rule: pinned tool and
-export bytes, required roots, complete reference closures, compiled-environment
-statement binding, supported format, allowed axioms, and a checker's positive
-checked-declaration count must all pass.
+`leanexport`, `nanoda_bin`, `con-leche`, `con-ron`, and `lean4lean` binaries. The Lean package's
+exact store path, derivation, and bundled binary digests are in
+[`checkers.json`](checkers.json).
+OCaml4Lean is also built from the source and Nixpkgs revisions in
+[`ocaml4lean.nix`](ocaml4lean.nix). Its source revision is in `checkers.json`; the
+clean-source run receipt binds the resulting binary digest and executable path.
+The toolchain's `leanexport` emits NDJSON format 3.1.0. Current sources enforce
+a strict acceptance rule: pinned tool and export bytes, required roots, complete
+reference closures, compiled-environment statement binding, supported format,
+allowed axioms, and a checker's positive checked-declaration count must all pass.
 
 Clean-source Lean 4.35.0 receipts for binding, refusal classification, resource
 limits, executed pin controls, multi-checker replay, and protected semantics are
 retained in the [binding](receipts/2026-11-13/binding.json),
 [refusal](receipts/2026-11-13/refusals.json), [limit](receipts/2026-11-13/limits.json),
 [pin-control](receipts/2026-11-13/pin-controls.json), [multi-checker](receipts/2026-11-13/multi.json),
-and [protected-semantics](receipts/2026-11-13/protected.json) receipts. Every receipt has
+the [language-diverse multi-checker](receipts/2026-11-13/multi-diversity.json), and
+[protected-semantics](receipts/2026-11-13/protected.json) receipts. Every receipt has
 `holds: true`; each binds the clean source commit used by its run. The binding,
 refusal, and limit receipts use `24fbb6f`; the pin-control, multi-checker, and
 protected-semantics receipts use `c4d6925`. The separately implemented checker
-designs in this set are nanoda and con-leche.
+designs in the language-diverse run are nanoda, con-leche, and OCaml4Lean, in
+Rust, Lean, and OCaml respectively. OCaml4Lean follows the official kernel's
+algorithmic behavior, so the new language and implementation do not imply
+algorithmic independence.
 Con-ron is a distinct Rust implementation but a close port/refinement of
 con-leche, not a second independent checker design. Lean4Lean is derived from
 the C++ kernel and is only a lower-diversity cross-check. Per-checker source
@@ -41,26 +48,52 @@ implementation. `lean4checker` is deprecated and merged into Lean itself.
 |---|---|
 | Lean release | policy-selected `4.35.0`, output and derivation in `checkers.json` |
 | Exporter | bundled `leanexport`, binary digest in `checkers.json` |
-| External checkers | bundled nanoda, con-leche, con-ron, and lean4lean; separate implementation/design classifications in `checkers.json` |
+| External checkers | bundled nanoda, con-leche, con-ron, lean4lean, plus source-built OCaml4Lean; separate implementation/design classifications in `checkers.json` |
 | Export format | NDJSON `3.1.0`; other versions are lane-level `unsupported-format` refusals |
 | Bound foundation roots | `NobleFoundation.toInt_add`, `NobleFoundation.LinkBoundary.vertical_simulation_compose`, and `Nat.add_comm` for the fresh `Init` baseline |
 | Binding source | `statements.json`, regenerated from the compiled foundation environment at `fed77835` |
 
 ## 4.35.0 multi-checker and protected-semantics lanes
 
-`multi.mjs` exercised the bundled checkers over the selected foundation closures and a fresh `Init`
-export. All four checkers accepted each baseline; none accepted the proof mutation; the lane's
-statement binding refused the substituted claim even though every checker accepted it. The receipt
-records per-checker time and RSS and distinguishes nanoda/con-leche as separate checker designs from
-con-ron (a close con-leche port) and Lean4Lean (derived from Lean's C++ kernel).
+`multi.mjs` exercises every pinned checker over the selected foundation closures and a fresh `Init`
+export. The source-bound language-diversity receipt records checker outcomes and per-run wall time
+and max RSS. Every semantic-mutation and dropped-dependency control is run by every checker; claim
+binding, format audit, custom-axiom policy, kernel rejection, parse failure, forbidden-axiom refusal,
+resource exhaustion, and unsupported checker capabilities remain separately classified. The 1 MiB
+RLIMIT_AS control records silent exit 139 as resource exhaustion only under that explicit limit.
+The exact survey and unbuilt-candidate decisions are in [`decision.md`](decision.md). The earlier
+[`multi.json`](receipts/2026-11-13/multi.json)
+receipt remains immutable history. The updated classifier and language-diversity run are retained in
+[`multi-diversity.json`](receipts/2026-11-13/multi-diversity.json), produced from clean source commit
+`7421e32c87e0494734d72151b7126aa98f3734e4`. All three baseline roots were accepted by every
+configured checker; every semantic mutation and both dropped-dependency controls were refused by all
+five checkers. The substituted valid claim was accepted by each checker but refused by the lane's
+statement binding. A changed export format was accepted by four checkers and unsupported by nanoda,
+then refused by the lane; custom-axiom outcomes likewise remain distinct from the lane's refusal.
+
+| Checker | Implementation language / lineage | Run records / attempted | Total wall time (s) | Peak max RSS (KiB) |
+|---|---|---:|---:|---:|
+| nanoda | Rust, independent design | 14 / 14 | 0.44 | 14,720 |
+| con-leche | Lean, independent design | 14 / 12 | 1.38 | 69,772 |
+| con-ron | Rust, con-leche port | 14 / 12 | 0.87 | 106,000 |
+| lean4lean | Lean, derived from C++ kernel | 14 / 12 | 1.19 | 36,112 |
+| OCaml4Lean | OCaml, independent design | 14 / 12 | 0.32 | 60,556 |
+
+The unattempted rows are explicitly unsupported capabilities, not passes. Every executed run records
+its own wall time and maximum RSS in the receipt. The receipt's check matrix is all true, including
+separate parse-failure, kernel-rejection, forbidden-axiom, unsupported, and resource-exhaustion
+classification checks.
+The pinned source build is reproducible with
+`nix build --no-link --print-out-paths --file verification/independent-replay/ocaml4lean.nix`;
+the runner takes its built executable through `--ocaml-bin <absolute path of built ocaml4lean>`.
 
 `protected.mjs` built a caller-owned challenge and separate solution packages. The real and alternate
 proofs passed; the weakened predicate, changed imported semantics, wrong statement, forbidden axiom,
 invalid proof, and missing-definition controls were classified separately. `lake comparator` was not
 run because `bwrap` is absent from the execution path; the receipt records that the lane used its
-exported-definition-closure fallback, which is not a claim of comparator parity. The source pins bind
-each tool to the policy-selected release and binary digest; the lane does not rebuild checker binaries
-from source.
+exported-definition-closure fallback, which is not a claim of comparator parity. This protected
+fixture continues to use the policy-selected release binaries; source-built OCaml4Lean is specific to
+the multi-checker lane.
 
 Each older dated section is a historical observation at its named source/toolchain revision. New
 clean-tree runs are recorded under `receipts/<date>/`; they supplement, rather than rewrite, retained

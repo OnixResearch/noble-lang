@@ -1,0 +1,3949 @@
+{
+  "schema": "noble-independent-replay-multi/v2",
+  "measured_on": "2026-11-14",
+  "host": "Linux 6.18.60 x86_64",
+  "source_commit": "7421e32c87e0494734d72151b7126aa98f3734e4",
+  "toolchain": "Lean 4.35.0",
+  "execution_tools": {
+    "time": {
+      "path": "/run/current-system/sw/bin/time",
+      "sha256": "5bf804cb413a3390c9555dd9cb181f0c378d49c673c65ed78445bce822efc399"
+    },
+    "prlimit": {
+      "path": "/run/current-system/sw/bin/prlimit",
+      "sha256": "c6b1166080f3dad0de515bb45862310163ecb796c3c343269dbbbf9e872afffe"
+    }
+  },
+  "assertion": "every pinned checker accepted both named closures and the fresh Init closure under the strict rule; every checker row records semantic-mutation and dropped-dependency outcomes, parse and resource failures are distinguished from kernel rejection and unsupported controls, the substituted valid claim was refused by statement binding, custom axioms were refused by the lane, and every executed run records wall time and max RSS",
+  "holds": true,
+  "checks": {
+    "manifest_matches_the_compiled_environment": true,
+    "every_checker_language_marker_matches": true,
+    "independent_designs_include_three_distinct_languages": true,
+    "con_ron_is_distinct_but_related": true,
+    "lean4lean_is_kernel_derived": true,
+    "every_control_has_a_row_for_every_checker": true,
+    "every_baseline_subject_accepted_by_every_checker": true,
+    "every_baseline_lane_verdict_accepted": true,
+    "every_accepted_run_has_a_positive_declaration_count": true,
+    "every_checker_run_has_wall_time_and_max_rss": true,
+    "no_checker_accepted_a_proof_mutation": true,
+    "semantic_mutation_refused_by_every_checker": true,
+    "dropped_dependencies_refused_by_the_lane": true,
+    "substituted_claim_accepted_by_every_checker": true,
+    "substituted_claim_refused_by_statement_binding": true,
+    "semantic_mutation_changed_the_closure_digest": true,
+    "format_mutation_refused_by_the_lane": true,
+    "format_mutation_shows_a_checker_divergence": true,
+    "custom_axiom_control_refused_by_lane": true,
+    "configurable_checker_accepts_permitted_custom_axiom": true,
+    "parse_failure_control_is_refused_by_every_checker": true,
+    "resource_limit_is_reported_as_resource_exhaustion_for_every_checker": true,
+    "unsupported_controls_are_explicit": true,
+    "classifier_preserves_all_refusal_classes_for_every_checker": true,
+    "no_mutation_lane_verdict_accepted": true
+  },
+  "pin_guard_passed": true,
+  "harness": {
+    "multi": {
+      "path": "verification/independent-replay/multi.mjs",
+      "sha256": "fffa3728477d2d9b1211edead5a5cc45d646ff9c1f14005be5b08691d99326aa"
+    },
+    "checkers": {
+      "path": "verification/independent-replay/checkers.json",
+      "sha256": "6ac82ee5ae13c96d111402a76ff5f773efa5f52bc6d8b5dfe20d9f04cdfabb26"
+    },
+    "ocaml_derivation": {
+      "path": "verification/independent-replay/ocaml4lean.nix",
+      "sha256": "db4f4df98ee7118bdaf81655c850f9b3dfbb3fd9d54496ebf8f90f7454b57ed2"
+    },
+    "binding_core": {
+      "path": "verification/independent-replay/binding-core.mjs",
+      "sha256": "33fd4c32419656e1261f843eb379d7a0d8b482d13870d4dde300140ed54e3cf3"
+    },
+    "ndjson": {
+      "path": "verification/independent-replay/ndjson.mjs",
+      "sha256": "9993894eae64690fafa6fe3a564f0ba3dccddddf343728da6f1f59b5ba8ebf9d"
+    },
+    "pins": {
+      "path": "verification/independent-replay/pins.mjs",
+      "sha256": "7c16eafaa35fecde58c1f9c125701d91a32d4754938260c4c5dd79882fd7cc10"
+    },
+    "statements": {
+      "path": "verification/independent-replay/statements.lean",
+      "sha256": "2059eb9aa76aa957262ade493fc29559d8bf9bd943f43bec4b97efa8268e91ee"
+    },
+    "manifest": {
+      "path": "verification/independent-replay/statements.json",
+      "sha256": "7e2859d7485adbcc4d97ef89421aa0cfa2fd4317ef91271c95ef38b3e2ff98d0"
+    }
+  },
+  "acceptance_rule": [
+    "exporter exit status zero and no exporter panic (for the fresh export)",
+    "every requested root declared in the export",
+    "every constant the roots reference, transitively, declared in the export",
+    "every root statement rendered from the export equal to its pinned statement digest",
+    "the export's declared meta format version equal to 3.1.0",
+    "every declared axiom in propext, Classical.choice, Quot.sound",
+    "the checker exits zero with a positive checked-declaration count"
+  ],
+  "toolchain_pins": {
+    "lean": {
+      "binary_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c"
+    },
+    "lake": {
+      "binary_sha256": "f6b0733782cb24932ed45979f88eccfb0e466f966a578c9f35e70ea468ee67ad"
+    },
+    "leanexport": {
+      "binary_sha256": "beb75c89dab5e6e40e781a006fe4340dcca81d5896e61f305e858fea491fc57f"
+    },
+    "release": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0",
+    "derivation": "/nix/store/54871l591i8ji049ffyyjh3qkrdikh9h-noble-lean-release-4.35.0.drv",
+    "policy": "policy/tool-selection.json (tools.lean)",
+    "checkers": [
+      {
+        "id": "nanoda",
+        "binary": "nanoda_bin",
+        "binary_sha256": "42c552c48618da739861c1b807240df6b83587ab38b015b69dff0d850ed95770",
+        "binary_source_revision": "not exposed by the prebuilt Lean release; the release store path and binary digest are the executable identity",
+        "binary_arg": null,
+        "language": "Rust",
+        "independent_of_lean_kernel": true,
+        "independent_implementation": true,
+        "independent_checker_design": true,
+        "independence": "A separately authored Rust implementation of a Lean export type checker. Its README calls it an external checker; it is not a port of another listed checker and shares no implementation code with Lean's C++ kernel. Its source revision is not exposed by the bundled release, and it still shares the export format and permitted Lean axioms with the other checkers."
+      },
+      {
+        "id": "con-leche",
+        "binary": "con-leche",
+        "binary_sha256": "d85f0b78e91d0ac421df172fa6dc1582d9fadc6428aee746c1d945d6ef5f2631",
+        "binary_source_revision": "not exposed by the prebuilt Lean release; the release store path and binary digest are the executable identity",
+        "binary_arg": null,
+        "language": "Lean",
+        "independent_of_lean_kernel": true,
+        "independent_implementation": true,
+        "independent_checker_design": true,
+        "independence": "A separately authored Lean checker with its own term representation (the upstream design explicitly says it does not rely on Lean.Expr or unverified C++ routines) and a machine-checked consistency theorem for --verified. It is not a copy of the official kernel. Its soundness theorem is checked by Lean, and its Nat acceleration uses Lean's runtime Nat operations, so it is not independent of the Lean toolchain/runtime."
+      },
+      {
+        "id": "con-ron",
+        "binary": "con-ron",
+        "binary_sha256": "6a546cccd55ca70f1b1337baaa1424fab6a98542491b09ab816fcb7b6882db73",
+        "binary_source_revision": "not exposed by the prebuilt Lean release; the release store path and binary digest are the executable identity",
+        "binary_arg": null,
+        "language": "Rust",
+        "independent_of_lean_kernel": true,
+        "independent_implementation": true,
+        "independent_checker_design": false,
+        "independence": "A separate Rust implementation. Its upstream README calls it a Rust port of con-leche and describes a checked refinement relationship to a Lean twin of con-leche's pure algorithm; it is a distinct implementation but not an independent checker design. Count it as a related implementation, never as a second independent design."
+      },
+      {
+        "id": "lean4lean",
+        "binary": "lean4lean",
+        "binary_sha256": "a7cfbc8a45d2bd0ad1793f60e5640813f584ca88ca962a0b91128305c36883fa",
+        "binary_source_revision": "not exposed by the prebuilt Lean release; the release store path and binary digest are the executable identity",
+        "binary_arg": null,
+        "language": "Lean",
+        "independent_of_lean_kernel": false,
+        "independent_implementation": false,
+        "independent_checker_design": false,
+        "independence": "The upstream README states this Lean kernel implementation is derived directly from the C++ kernel and likely shares implementation bugs. It is kept only as a lower-diversity kernel-derived cross-check."
+      },
+      {
+        "id": "ocaml4lean",
+        "binary": "ocaml4lean",
+        "binary_sha256": "89700edec6f6d9bcf73a20a4a40a4f84c2d62e305bf7b96f9e9b487fb4cc38c1",
+        "binary_source_revision": "6f94226df5b91e51af692d05e00b001ee8e0f2fd",
+        "binary_arg": "--ocaml-bin",
+        "language": "OCaml",
+        "independent_of_lean_kernel": true,
+        "independent_implementation": true,
+        "independent_checker_design": true,
+        "independence": "A separately authored OCaml kernel with its own term/environment representation and parser; its source is not a port of Lean's C++ kernel or another listed checker. It intentionally follows the reference kernel's algorithmic behavior, so algorithm-level common-mode risk remains. The checker has no Lean runtime dependency; the lane still shares the pinned lean4export format and permitted Lean axioms."
+      }
+    ]
+  },
+  "statement_source": {
+    "extraction_elapsed_ms": 13987,
+    "manifest_check": [
+      {
+        "root": "NobleFoundation.toInt_add",
+        "environment_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2",
+        "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2",
+        "matches": true
+      },
+      {
+        "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+        "environment_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+        "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+        "matches": true
+      },
+      {
+        "root": "Nat.add_comm",
+        "environment_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508",
+        "pinned_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508",
+        "matches": true
+      }
+    ]
+  },
+  "inputs": {
+    "large": {
+      "root": "NobleFoundation.toInt_add",
+      "sha256": "6bf49d7871d537afc125467c5467bf9211e0bb22ae988f093efb3e1d609597ab",
+      "retained": false
+    },
+    "small": {
+      "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+      "sha256": "7cfd9a6559ed8d30ba3cd620bac6d373cf3829771b3a04f9066328ff1ddba9fb",
+      "retained": true,
+      "path": null
+    },
+    "mutation_source": {
+      "sha256": "7cfd9a6559ed8d30ba3cd620bac6d373cf3829771b3a04f9066328ff1ddba9fb",
+      "retained": true,
+      "path": null
+    },
+    "fresh": {
+      "root": "Nat.add_comm",
+      "sha256": "6aa6de21984e6c060d8d7c5e674ced9766553089c0568783753564bbf4f2617f",
+      "retained": false,
+      "stage": {
+        "argv": [
+          "leanexport",
+          "Init",
+          "--",
+          "Nat.add_comm"
+        ],
+        "exit_code": 0,
+        "signal": null,
+        "panic": false,
+        "stderr_excerpt": ""
+      }
+    }
+  },
+  "subjects": [
+    {
+      "id": "baseline-large",
+      "kind": "baseline",
+      "roots": [
+        "NobleFoundation.toInt_add"
+      ],
+      "changes": "none: the pinned toInt_add export",
+      "expected": "accepted by every checker",
+      "export": {
+        "retained": true,
+        "path": null,
+        "producer": "leanexport 4.35.0 NobleFoundation",
+        "stage": null,
+        "sha256": "6bf49d7871d537afc125467c5467bf9211e0bb22ae988f093efb3e1d609597ab",
+        "records": 149829,
+        "format": "3.1.0",
+        "declared": 2780,
+        "axioms": [
+          "propext",
+          "Quot.sound",
+          "Classical.choice"
+        ]
+      },
+      "runs": [
+        {
+          "checker": "nanoda",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/nanoda_bin",
+            "$WORK/baseline-large.nanoda.json"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 440,
+          "wall_seconds": 0.43,
+          "max_rss_kb": 14720,
+          "classification": "accepted",
+          "count": 2780,
+          "stdout": "Checked 2780 declarations with no errors\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "accepted",
+            "closure": {
+              "reachable": 2779,
+              "missing": [],
+              "digest": {
+                "declarations": 2779,
+                "sha256": "5a9731dbf18e48f27ee96319c68d22639881eb2d0a83b8176f35e517bb0525c4"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.toInt_add",
+                "export_statement_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2",
+                "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "con-leche",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-leche",
+            "--verified",
+            "--jobs=1",
+            "large.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 1350,
+          "wall_seconds": 1.34,
+          "max_rss_kb": 69772,
+          "classification": "accepted",
+          "count": 2462,
+          "stdout": "con-leche: accepted 2462 declarations (--verified)\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "accepted",
+            "closure": {
+              "reachable": 2779,
+              "missing": [],
+              "digest": {
+                "declarations": 2779,
+                "sha256": "5a9731dbf18e48f27ee96319c68d22639881eb2d0a83b8176f35e517bb0525c4"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.toInt_add",
+                "export_statement_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2",
+                "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "con-ron",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-ron",
+            "--verified",
+            "--jobs=1",
+            "large.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 602,
+          "wall_seconds": 0.59,
+          "max_rss_kb": 106000,
+          "classification": "accepted",
+          "count": 2462,
+          "stdout": "con-ron: accepted 2462 declarations (--verified)\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "accepted",
+            "closure": {
+              "reachable": 2779,
+              "missing": [],
+              "digest": {
+                "declarations": 2779,
+                "sha256": "5a9731dbf18e48f27ee96319c68d22639881eb2d0a83b8176f35e517bb0525c4"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.toInt_add",
+                "export_statement_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2",
+                "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "lean4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean4lean",
+            "--import",
+            "large.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 1059,
+          "wall_seconds": 1.05,
+          "max_rss_kb": 36112,
+          "classification": "accepted",
+          "count": 2459,
+          "stdout": "checked 2459 declarations\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "accepted",
+            "closure": {
+              "reachable": 2779,
+              "missing": [],
+              "digest": {
+                "declarations": 2779,
+                "sha256": "5a9731dbf18e48f27ee96319c68d22639881eb2d0a83b8176f35e517bb0525c4"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.toInt_add",
+                "export_statement_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2",
+                "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "ocaml4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/6dv63927n6rn41wziwvg8lqmz7p4agsh-noble-independent-replay-ocaml4lean-6f94226df5b91e51af692d05e00b001ee8e0f2fd/bin/ocaml4lean",
+            "-j",
+            "4",
+            "large.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 266,
+          "wall_seconds": 0.26,
+          "max_rss_kb": 60556,
+          "classification": "accepted",
+          "count": 2780,
+          "stdout": "accepted 2780 declarations\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "accepted",
+            "closure": {
+              "reachable": 2779,
+              "missing": [],
+              "digest": {
+                "declarations": 2779,
+                "sha256": "5a9731dbf18e48f27ee96319c68d22639881eb2d0a83b8176f35e517bb0525c4"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.toInt_add",
+                "export_statement_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2",
+                "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2"
+              }
+            ]
+          }
+        }
+      ],
+      "quorum": {
+        "accepted_by": [
+          "nanoda",
+          "con-leche",
+          "con-ron",
+          "lean4lean",
+          "ocaml4lean"
+        ],
+        "refused_by": [],
+        "accepted": true
+      }
+    },
+    {
+      "id": "baseline-small",
+      "kind": "baseline",
+      "roots": [
+        "NobleFoundation.LinkBoundary.vertical_simulation_compose"
+      ],
+      "changes": "none: the retained vertical_simulation_compose export",
+      "expected": "accepted by every checker",
+      "export": {
+        "retained": true,
+        "path": null,
+        "producer": "leanexport 4.35.0 NobleFoundation",
+        "stage": null,
+        "sha256": "7cfd9a6559ed8d30ba3cd620bac6d373cf3829771b3a04f9066328ff1ddba9fb",
+        "records": 1157,
+        "format": "3.1.0",
+        "declared": 16,
+        "axioms": []
+      },
+      "runs": [
+        {
+          "checker": "nanoda",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/nanoda_bin",
+            "$WORK/baseline-small.nanoda.json"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 7,
+          "wall_seconds": 0,
+          "max_rss_kb": 2164,
+          "classification": "accepted",
+          "count": 16,
+          "stdout": "Checked 16 declarations with no errors\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "accepted",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "con-leche",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-leche",
+            "--verified",
+            "--jobs=1",
+            "small.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 13,
+          "wall_seconds": 0,
+          "max_rss_kb": 20660,
+          "classification": "accepted",
+          "count": 9,
+          "stdout": "con-leche: accepted 9 declarations (--verified)\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "accepted",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "con-ron",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-ron",
+            "--verified",
+            "--jobs=1",
+            "small.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 40,
+          "wall_seconds": 0.03,
+          "max_rss_kb": 54404,
+          "classification": "accepted",
+          "count": 9,
+          "stdout": "con-ron: accepted 9 declarations (--verified)\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "accepted",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "lean4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean4lean",
+            "--import",
+            "small.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 22,
+          "wall_seconds": 0.01,
+          "max_rss_kb": 20068,
+          "classification": "accepted",
+          "count": 9,
+          "stdout": "checked 9 declarations\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "accepted",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "ocaml4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/6dv63927n6rn41wziwvg8lqmz7p4agsh-noble-independent-replay-ocaml4lean-6f94226df5b91e51af692d05e00b001ee8e0f2fd/bin/ocaml4lean",
+            "-j",
+            "4",
+            "small.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 13,
+          "wall_seconds": 0,
+          "max_rss_kb": 25040,
+          "classification": "accepted",
+          "count": 16,
+          "stdout": "accepted 16 declarations\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "accepted",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ]
+          }
+        }
+      ],
+      "quorum": {
+        "accepted_by": [
+          "nanoda",
+          "con-leche",
+          "con-ron",
+          "lean4lean",
+          "ocaml4lean"
+        ],
+        "refused_by": [],
+        "accepted": true
+      }
+    },
+    {
+      "id": "baseline-fresh",
+      "kind": "baseline",
+      "roots": [
+        "Nat.add_comm"
+      ],
+      "changes": "none: a fresh Init export of Nat.add_comm",
+      "expected": "accepted by every checker",
+      "export": {
+        "retained": false,
+        "path": null,
+        "producer": "leanexport 4.35.0 Init",
+        "stage": {
+          "argv": [
+            "leanexport",
+            "Init",
+            "--",
+            "Nat.add_comm"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "panic": false,
+          "stderr_excerpt": ""
+        },
+        "sha256": "6aa6de21984e6c060d8d7c5e674ced9766553089c0568783753564bbf4f2617f",
+        "records": 1138,
+        "format": "3.1.0",
+        "declared": 52,
+        "axioms": []
+      },
+      "runs": [
+        {
+          "checker": "nanoda",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/nanoda_bin",
+            "$WORK/baseline-fresh.nanoda.json"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 6,
+          "wall_seconds": 0,
+          "max_rss_kb": 2176,
+          "classification": "accepted",
+          "count": 52,
+          "stdout": "Checked 52 declarations with no errors\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "accepted",
+            "closure": {
+              "reachable": 52,
+              "missing": [],
+              "digest": {
+                "declarations": 52,
+                "sha256": "6ccf1c23809274f378970a6e9303a7771de529db715f4ab85929cf1dec6f943d"
+              }
+            },
+            "statements": [
+              {
+                "root": "Nat.add_comm",
+                "export_statement_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508",
+                "pinned_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "con-leche",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-leche",
+            "--verified",
+            "--jobs=1",
+            "$WORK/fresh-Init.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 24,
+          "wall_seconds": 0.02,
+          "max_rss_kb": 20784,
+          "classification": "accepted",
+          "count": 37,
+          "stdout": "con-leche: accepted 37 declarations (--verified)\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "accepted",
+            "closure": {
+              "reachable": 52,
+              "missing": [],
+              "digest": {
+                "declarations": 52,
+                "sha256": "6ccf1c23809274f378970a6e9303a7771de529db715f4ab85929cf1dec6f943d"
+              }
+            },
+            "statements": [
+              {
+                "root": "Nat.add_comm",
+                "export_statement_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508",
+                "pinned_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "con-ron",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-ron",
+            "--verified",
+            "--jobs=1",
+            "$WORK/fresh-Init.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 42,
+          "wall_seconds": 0.03,
+          "max_rss_kb": 56960,
+          "classification": "accepted",
+          "count": 37,
+          "stdout": "con-ron: accepted 37 declarations (--verified)\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "accepted",
+            "closure": {
+              "reachable": 52,
+              "missing": [],
+              "digest": {
+                "declarations": 52,
+                "sha256": "6ccf1c23809274f378970a6e9303a7771de529db715f4ab85929cf1dec6f943d"
+              }
+            },
+            "statements": [
+              {
+                "root": "Nat.add_comm",
+                "export_statement_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508",
+                "pinned_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "lean4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean4lean",
+            "--import",
+            "$WORK/fresh-Init.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 23,
+          "wall_seconds": 0.01,
+          "max_rss_kb": 20036,
+          "classification": "accepted",
+          "count": 37,
+          "stdout": "checked 37 declarations\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "accepted",
+            "closure": {
+              "reachable": 52,
+              "missing": [],
+              "digest": {
+                "declarations": 52,
+                "sha256": "6ccf1c23809274f378970a6e9303a7771de529db715f4ab85929cf1dec6f943d"
+              }
+            },
+            "statements": [
+              {
+                "root": "Nat.add_comm",
+                "export_statement_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508",
+                "pinned_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "ocaml4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/6dv63927n6rn41wziwvg8lqmz7p4agsh-noble-independent-replay-ocaml4lean-6f94226df5b91e51af692d05e00b001ee8e0f2fd/bin/ocaml4lean",
+            "-j",
+            "4",
+            "$WORK/fresh-Init.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 14,
+          "wall_seconds": 0,
+          "max_rss_kb": 25704,
+          "classification": "accepted",
+          "count": 52,
+          "stdout": "accepted 52 declarations\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "accepted",
+            "closure": {
+              "reachable": 52,
+              "missing": [],
+              "digest": {
+                "declarations": 52,
+                "sha256": "6ccf1c23809274f378970a6e9303a7771de529db715f4ab85929cf1dec6f943d"
+              }
+            },
+            "statements": [
+              {
+                "root": "Nat.add_comm",
+                "export_statement_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508",
+                "pinned_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508"
+              }
+            ]
+          }
+        }
+      ],
+      "quorum": {
+        "accepted_by": [
+          "nanoda",
+          "con-leche",
+          "con-ron",
+          "lean4lean",
+          "ocaml4lean"
+        ],
+        "refused_by": [],
+        "accepted": true
+      }
+    }
+  ],
+  "controls": [
+    {
+      "id": "semantic-mutation",
+      "kind": "mutation",
+      "roots": [
+        "NobleFoundation.LinkBoundary.vertical_simulation_compose"
+      ],
+      "changes": "one root-proof argument: expression 943, record 1113, arg 396 -> 394",
+      "expected": "every checker refuses; the lane is never accepted",
+      "export": {
+        "retained": false,
+        "producer": "derived",
+        "sha256": "df0dcf3f74ebcfa80c68842dcc8449ddbe8defdf4b771d1a439cc1098c8c97de",
+        "records": 1157,
+        "format": "3.1.0",
+        "declared": 16,
+        "axioms": []
+      },
+      "runs": [
+        {
+          "checker": "nanoda",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/nanoda_bin",
+            "$WORK/semantic-mutation.nanoda.json"
+          ],
+          "exit_code": 101,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 6,
+          "wall_seconds": 0,
+          "max_rss_kb": 2164,
+          "classification": "kernel-rejection",
+          "count": null,
+          "rejection_shaped": true,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3573586) panicked at src/tc.rs:955:71:\nassertion failed: self.def_eq(u, v)\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "lane": {
+            "verdict": "kernel-rejection",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "0afa7333739cfa524b775e55f443f37f14eca5d1252f0c01e322dc4bb65482aa"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "con-leche",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-leche",
+            "--verified",
+            "--jobs=1",
+            "$WORK/semantic-mutation.ndjson"
+          ],
+          "exit_code": 1,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 12,
+          "wall_seconds": 0,
+          "max_rss_kb": 20456,
+          "classification": "kernel-rejection",
+          "count": null,
+          "rejection_shaped": true,
+          "stdout": "",
+          "stderr": "con-leche: invalid: application type mismatch [at theorem NobleFoundation.LinkBoundary.vertical_simulation_compose, fold position 18] (--verified) t=0.0s\n",
+          "lane": {
+            "verdict": "kernel-rejection",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "0afa7333739cfa524b775e55f443f37f14eca5d1252f0c01e322dc4bb65482aa"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "con-ron",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-ron",
+            "--verified",
+            "--jobs=1",
+            "$WORK/semantic-mutation.ndjson"
+          ],
+          "exit_code": 1,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 36,
+          "wall_seconds": 0.03,
+          "max_rss_kb": 54652,
+          "classification": "kernel-rejection",
+          "count": null,
+          "rejection_shaped": true,
+          "stdout": "",
+          "stderr": "con-ron: rejected: application type mismatch [at theorem NobleFoundation.LinkBoundary.vertical_simulation_compose, fold position 18] (--verified) t=0.028s\n",
+          "lane": {
+            "verdict": "kernel-rejection",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "0afa7333739cfa524b775e55f443f37f14eca5d1252f0c01e322dc4bb65482aa"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "lean4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean4lean",
+            "--import",
+            "$WORK/semantic-mutation.ndjson"
+          ],
+          "exit_code": 1,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 22,
+          "wall_seconds": 0.01,
+          "max_rss_kb": 20212,
+          "classification": "kernel-rejection",
+          "count": null,
+          "rejection_shaped": true,
+          "stdout": "",
+          "stderr": "uncaught exception: at NobleFoundation.LinkBoundary.vertical_simulation_compose: (kernel) application type mismatch\n  [Error pretty printing expression: Unknown constant `ident`. Falling back to raw printer.]\n  _kernel_fresh.57 _kernel_fresh.65\nargument has type\n  [Error pretty printing expression: Unknown constant `ident`. Falling back to raw printer.]\n  _kernel_fresh.45\nbut function has type\n  [Error pretty printing expression: Unknown constant `ident`. Falling back to raw printer.]\n  _kernel_fresh.43 -> _kernel_fresh.44 -> Prop\n",
+          "lane": {
+            "verdict": "kernel-rejection",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "0afa7333739cfa524b775e55f443f37f14eca5d1252f0c01e322dc4bb65482aa"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "ocaml4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/6dv63927n6rn41wziwvg8lqmz7p4agsh-noble-independent-replay-ocaml4lean-6f94226df5b91e51af692d05e00b001ee8e0f2fd/bin/ocaml4lean",
+            "-j",
+            "4",
+            "$WORK/semantic-mutation.ndjson"
+          ],
+          "exit_code": 1,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 13,
+          "wall_seconds": 0,
+          "max_rss_kb": 24764,
+          "classification": "kernel-rejection",
+          "count": null,
+          "rejection_shaped": true,
+          "stdout": "rejected (1 failing blocks): application type mismatch: argument _x126 has type _x106 but is expected to have type _x104\n",
+          "stderr": "error in block 8 (NobleFoundation.LinkBoundary.vertical_simulation_compose): application type mismatch: argument _x126 has type _x106 but is expected to have type _x104\n",
+          "lane": {
+            "verdict": "kernel-rejection",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "0afa7333739cfa524b775e55f443f37f14eca5d1252f0c01e322dc4bb65482aa"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ]
+          }
+        }
+      ],
+      "quorum": {
+        "accepted_by": [],
+        "refused_by": [
+          "nanoda:kernel-rejection",
+          "con-leche:kernel-rejection",
+          "con-ron:kernel-rejection",
+          "lean4lean:kernel-rejection",
+          "ocaml4lean:kernel-rejection"
+        ],
+        "accepted": false
+      }
+    },
+    {
+      "id": "dropped-theorem",
+      "kind": "mutation",
+      "roots": [
+        "NobleFoundation.LinkBoundary.vertical_simulation_compose"
+      ],
+      "changes": "the retained export without the declaration of _private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps",
+      "expected": "incomplete-closure at the lane; the checkers refuse too",
+      "export": {
+        "retained": false,
+        "producer": "derived",
+        "sha256": "b9d0583dd535be9c668d8cc95f142bb0b8e88d9bcf5a0fd7ac113be0b28e1409",
+        "records": 1156,
+        "format": "3.1.0",
+        "declared": 15,
+        "axioms": []
+      },
+      "runs": [
+        {
+          "checker": "nanoda",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/nanoda_bin",
+            "$WORK/dropped-theorem.nanoda.json"
+          ],
+          "exit_code": 101,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 6,
+          "wall_seconds": 0,
+          "max_rss_kb": 2168,
+          "classification": "kernel-rejection",
+          "count": null,
+          "rejection_shaped": true,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3573659) panicked at src/tc.rs:230:13:\ndeclaration not found in infer_const, _private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "lane": {
+            "verdict": "incomplete-closure",
+            "reasons": [
+              "referenced but not declared: _private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps"
+            ],
+            "closure": {
+              "reachable": 14,
+              "missing": [
+                "_private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps"
+              ]
+            }
+          }
+        },
+        {
+          "checker": "con-leche",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-leche",
+            "--verified",
+            "--jobs=1",
+            "$WORK/dropped-theorem.ndjson"
+          ],
+          "exit_code": 1,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 10,
+          "wall_seconds": 0,
+          "max_rss_kb": 20300,
+          "classification": "kernel-rejection",
+          "count": null,
+          "rejection_shaped": true,
+          "stdout": "",
+          "stderr": "con-leche: invalid: unknown constant in value of NobleFoundation.LinkBoundary.vertical_simulation_compose [at theorem NobleFoundation.LinkBoundary.vertical_simulation_compose, fold position 17] (--verified) t=0.0s\n",
+          "lane": {
+            "verdict": "incomplete-closure",
+            "reasons": [
+              "referenced but not declared: _private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps"
+            ],
+            "closure": {
+              "reachable": 14,
+              "missing": [
+                "_private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps"
+              ]
+            }
+          }
+        },
+        {
+          "checker": "con-ron",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-ron",
+            "--verified",
+            "--jobs=1",
+            "$WORK/dropped-theorem.ndjson"
+          ],
+          "exit_code": 1,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 37,
+          "wall_seconds": 0.03,
+          "max_rss_kb": 52832,
+          "classification": "kernel-rejection",
+          "count": null,
+          "rejection_shaped": true,
+          "stdout": "",
+          "stderr": "con-ron: rejected: unknown constant [at theorem NobleFoundation.LinkBoundary.vertical_simulation_compose, fold position 17] (--verified) t=0.029s\n",
+          "lane": {
+            "verdict": "incomplete-closure",
+            "reasons": [
+              "referenced but not declared: _private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps"
+            ],
+            "closure": {
+              "reachable": 14,
+              "missing": [
+                "_private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps"
+              ]
+            }
+          }
+        },
+        {
+          "checker": "lean4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean4lean",
+            "--import",
+            "$WORK/dropped-theorem.ndjson"
+          ],
+          "exit_code": 1,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 21,
+          "wall_seconds": 0.01,
+          "max_rss_kb": 19716,
+          "classification": "kernel-rejection",
+          "count": null,
+          "rejection_shaped": true,
+          "stdout": "",
+          "stderr": "uncaught exception: at NobleFoundation.LinkBoundary.vertical_simulation_compose: (kernel) unknown constant '_private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps'\n",
+          "lane": {
+            "verdict": "incomplete-closure",
+            "reasons": [
+              "referenced but not declared: _private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps"
+            ],
+            "closure": {
+              "reachable": 14,
+              "missing": [
+                "_private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps"
+              ]
+            }
+          }
+        },
+        {
+          "checker": "ocaml4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/6dv63927n6rn41wziwvg8lqmz7p4agsh-noble-independent-replay-ocaml4lean-6f94226df5b91e51af692d05e00b001ee8e0f2fd/bin/ocaml4lean",
+            "-j",
+            "4",
+            "$WORK/dropped-theorem.ndjson"
+          ],
+          "exit_code": 1,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 13,
+          "wall_seconds": 0,
+          "max_rss_kb": 24552,
+          "classification": "kernel-rejection",
+          "count": null,
+          "rejection_shaped": true,
+          "stdout": "rejected (1 failing blocks): unknown constant '_private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps'\n",
+          "stderr": "error in block 7 (NobleFoundation.LinkBoundary.vertical_simulation_compose): unknown constant '_private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps'\n",
+          "lane": {
+            "verdict": "incomplete-closure",
+            "reasons": [
+              "referenced but not declared: _private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps"
+            ],
+            "closure": {
+              "reachable": 14,
+              "missing": [
+                "_private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps"
+              ]
+            }
+          }
+        }
+      ],
+      "quorum": {
+        "accepted_by": [],
+        "refused_by": [
+          "nanoda:incomplete-closure",
+          "con-leche:incomplete-closure",
+          "con-ron:incomplete-closure",
+          "lean4lean:incomplete-closure",
+          "ocaml4lean:incomplete-closure"
+        ],
+        "accepted": false
+      }
+    },
+    {
+      "id": "dropped-definition",
+      "kind": "mutation",
+      "roots": [
+        "NobleFoundation.LinkBoundary.vertical_simulation_compose"
+      ],
+      "changes": "the retained export without the declaration of NobleFoundation.LinkBoundary.ForwardSimulation",
+      "expected": "incomplete-closure at the lane; the checkers refuse too",
+      "export": {
+        "retained": false,
+        "producer": "derived",
+        "sha256": "8e3c70f00c050e395efdb57d31b7a34e18c2f7d1826da3719d0c901d347109f0",
+        "records": 1156,
+        "format": "3.1.0",
+        "declared": 15,
+        "axioms": []
+      },
+      "runs": [
+        {
+          "checker": "nanoda",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/nanoda_bin",
+            "$WORK/dropped-definition.nanoda.json"
+          ],
+          "exit_code": 101,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 6,
+          "wall_seconds": 0,
+          "max_rss_kb": 2160,
+          "classification": "kernel-rejection",
+          "count": null,
+          "rejection_shaped": true,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3573685) panicked at src/tc.rs:230:13:\ndeclaration not found in infer_const, NobleFoundation.LinkBoundary.ForwardSimulation\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "lane": {
+            "verdict": "incomplete-closure",
+            "reasons": [
+              "referenced but not declared: NobleFoundation.LinkBoundary.ForwardSimulation"
+            ],
+            "closure": {
+              "reachable": 15,
+              "missing": [
+                "NobleFoundation.LinkBoundary.ForwardSimulation"
+              ]
+            }
+          }
+        },
+        {
+          "checker": "con-leche",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-leche",
+            "--verified",
+            "--jobs=1",
+            "$WORK/dropped-definition.ndjson"
+          ],
+          "exit_code": 1,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 10,
+          "wall_seconds": 0,
+          "max_rss_kb": 18524,
+          "classification": "kernel-rejection",
+          "count": null,
+          "rejection_shaped": true,
+          "stdout": "",
+          "stderr": "con-leche: invalid: unknown constant in type of _private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps [at theorem _private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps, fold position 16] (--verified) t=0.0s\n",
+          "lane": {
+            "verdict": "incomplete-closure",
+            "reasons": [
+              "referenced but not declared: NobleFoundation.LinkBoundary.ForwardSimulation"
+            ],
+            "closure": {
+              "reachable": 15,
+              "missing": [
+                "NobleFoundation.LinkBoundary.ForwardSimulation"
+              ]
+            }
+          }
+        },
+        {
+          "checker": "con-ron",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-ron",
+            "--verified",
+            "--jobs=1",
+            "$WORK/dropped-definition.ndjson"
+          ],
+          "exit_code": 1,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 42,
+          "wall_seconds": 0.03,
+          "max_rss_kb": 52836,
+          "classification": "kernel-rejection",
+          "count": null,
+          "rejection_shaped": true,
+          "stdout": "",
+          "stderr": "con-ron: rejected: unknown constant [at theorem _private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps, fold position 16] (--verified) t=0.035s\n",
+          "lane": {
+            "verdict": "incomplete-closure",
+            "reasons": [
+              "referenced but not declared: NobleFoundation.LinkBoundary.ForwardSimulation"
+            ],
+            "closure": {
+              "reachable": 15,
+              "missing": [
+                "NobleFoundation.LinkBoundary.ForwardSimulation"
+              ]
+            }
+          }
+        },
+        {
+          "checker": "lean4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean4lean",
+            "--import",
+            "$WORK/dropped-definition.ndjson"
+          ],
+          "exit_code": 1,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 24,
+          "wall_seconds": 0.01,
+          "max_rss_kb": 19872,
+          "classification": "kernel-rejection",
+          "count": null,
+          "rejection_shaped": true,
+          "stdout": "",
+          "stderr": "uncaught exception: at _private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps: (kernel) unknown constant 'NobleFoundation.LinkBoundary.ForwardSimulation'\n",
+          "lane": {
+            "verdict": "incomplete-closure",
+            "reasons": [
+              "referenced but not declared: NobleFoundation.LinkBoundary.ForwardSimulation"
+            ],
+            "closure": {
+              "reachable": 15,
+              "missing": [
+                "NobleFoundation.LinkBoundary.ForwardSimulation"
+              ]
+            }
+          }
+        },
+        {
+          "checker": "ocaml4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/6dv63927n6rn41wziwvg8lqmz7p4agsh-noble-independent-replay-ocaml4lean-6f94226df5b91e51af692d05e00b001ee8e0f2fd/bin/ocaml4lean",
+            "-j",
+            "4",
+            "$WORK/dropped-definition.ndjson"
+          ],
+          "exit_code": 1,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 15,
+          "wall_seconds": 0.01,
+          "max_rss_kb": 24392,
+          "classification": "kernel-rejection",
+          "count": null,
+          "rejection_shaped": true,
+          "stdout": "rejected (2 failing blocks): unknown constant 'NobleFoundation.LinkBoundary.ForwardSimulation'\n",
+          "stderr": "error in block 6 (_private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps): unknown constant 'NobleFoundation.LinkBoundary.ForwardSimulation'\nerror in block 7 (NobleFoundation.LinkBoundary.vertical_simulation_compose): unknown constant 'NobleFoundation.LinkBoundary.ForwardSimulation'\n",
+          "lane": {
+            "verdict": "incomplete-closure",
+            "reasons": [
+              "referenced but not declared: NobleFoundation.LinkBoundary.ForwardSimulation"
+            ],
+            "closure": {
+              "reachable": 15,
+              "missing": [
+                "NobleFoundation.LinkBoundary.ForwardSimulation"
+              ]
+            }
+          }
+        }
+      ],
+      "quorum": {
+        "accepted_by": [],
+        "refused_by": [
+          "nanoda:incomplete-closure",
+          "con-leche:incomplete-closure",
+          "con-ron:incomplete-closure",
+          "lean4lean:incomplete-closure",
+          "ocaml4lean:incomplete-closure"
+        ],
+        "accepted": false
+      }
+    },
+    {
+      "id": "substituted-valid-claim",
+      "kind": "mutation",
+      "roots": [
+        "NobleFoundation.toInt_add"
+      ],
+      "changes": "the fresh Nat.add_comm export with its theorem renamed NobleFoundation.toInt_add",
+      "expected": "claim-mismatch at the lane; every checker accepts it",
+      "export": {
+        "retained": false,
+        "producer": "derived",
+        "sha256": "e88a77d3ca74212b8b1516471afcc73115eae8e6b7242a3d972b82377aa09eaf",
+        "records": 1140,
+        "format": "3.1.0",
+        "declared": 52,
+        "axioms": []
+      },
+      "runs": [
+        {
+          "checker": "nanoda",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/nanoda_bin",
+            "$WORK/substituted-valid-claim.nanoda.json"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 6,
+          "wall_seconds": 0,
+          "max_rss_kb": 2196,
+          "classification": "accepted",
+          "count": 52,
+          "stdout": "Checked 52 declarations with no errors\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "claim-mismatch",
+            "closure": {
+              "reachable": 52,
+              "missing": [],
+              "digest": {
+                "declarations": 52,
+                "sha256": "10a50e90ac4b80362dec46f5455efe613ecd5db73ad9d5a8e1d51853981d3999"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.toInt_add",
+                "export_statement_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508",
+                "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2"
+              }
+            ],
+            "reasons": [
+              "NobleFoundation.toInt_add: exported statement differs from the pinned statement"
+            ]
+          }
+        },
+        {
+          "checker": "con-leche",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-leche",
+            "--verified",
+            "--jobs=1",
+            "$WORK/substituted-valid-claim.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 12,
+          "wall_seconds": 0,
+          "max_rss_kb": 20460,
+          "classification": "accepted",
+          "count": 37,
+          "stdout": "con-leche: accepted 37 declarations (--verified)\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "claim-mismatch",
+            "closure": {
+              "reachable": 52,
+              "missing": [],
+              "digest": {
+                "declarations": 52,
+                "sha256": "10a50e90ac4b80362dec46f5455efe613ecd5db73ad9d5a8e1d51853981d3999"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.toInt_add",
+                "export_statement_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508",
+                "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2"
+              }
+            ],
+            "reasons": [
+              "NobleFoundation.toInt_add: exported statement differs from the pinned statement"
+            ]
+          }
+        },
+        {
+          "checker": "con-ron",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-ron",
+            "--verified",
+            "--jobs=1",
+            "$WORK/substituted-valid-claim.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 34,
+          "wall_seconds": 0.02,
+          "max_rss_kb": 58668,
+          "classification": "accepted",
+          "count": 37,
+          "stdout": "con-ron: accepted 37 declarations (--verified)\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "claim-mismatch",
+            "closure": {
+              "reachable": 52,
+              "missing": [],
+              "digest": {
+                "declarations": 52,
+                "sha256": "10a50e90ac4b80362dec46f5455efe613ecd5db73ad9d5a8e1d51853981d3999"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.toInt_add",
+                "export_statement_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508",
+                "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2"
+              }
+            ],
+            "reasons": [
+              "NobleFoundation.toInt_add: exported statement differs from the pinned statement"
+            ]
+          }
+        },
+        {
+          "checker": "lean4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean4lean",
+            "--import",
+            "$WORK/substituted-valid-claim.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 22,
+          "wall_seconds": 0.01,
+          "max_rss_kb": 20052,
+          "classification": "accepted",
+          "count": 37,
+          "stdout": "checked 37 declarations\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "claim-mismatch",
+            "closure": {
+              "reachable": 52,
+              "missing": [],
+              "digest": {
+                "declarations": 52,
+                "sha256": "10a50e90ac4b80362dec46f5455efe613ecd5db73ad9d5a8e1d51853981d3999"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.toInt_add",
+                "export_statement_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508",
+                "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2"
+              }
+            ],
+            "reasons": [
+              "NobleFoundation.toInt_add: exported statement differs from the pinned statement"
+            ]
+          }
+        },
+        {
+          "checker": "ocaml4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/6dv63927n6rn41wziwvg8lqmz7p4agsh-noble-independent-replay-ocaml4lean-6f94226df5b91e51af692d05e00b001ee8e0f2fd/bin/ocaml4lean",
+            "-j",
+            "4",
+            "$WORK/substituted-valid-claim.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 15,
+          "wall_seconds": 0.01,
+          "max_rss_kb": 24768,
+          "classification": "accepted",
+          "count": 52,
+          "stdout": "accepted 52 declarations\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "claim-mismatch",
+            "closure": {
+              "reachable": 52,
+              "missing": [],
+              "digest": {
+                "declarations": 52,
+                "sha256": "10a50e90ac4b80362dec46f5455efe613ecd5db73ad9d5a8e1d51853981d3999"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.toInt_add",
+                "export_statement_sha256": "bdf56aeb7c014e17d9365e68767c3b8ecd0da66d1ff01758d9907c042424c508",
+                "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2"
+              }
+            ],
+            "reasons": [
+              "NobleFoundation.toInt_add: exported statement differs from the pinned statement"
+            ]
+          }
+        }
+      ],
+      "quorum": {
+        "accepted_by": [],
+        "refused_by": [
+          "nanoda:claim-mismatch",
+          "con-leche:claim-mismatch",
+          "con-ron:claim-mismatch",
+          "lean4lean:claim-mismatch",
+          "ocaml4lean:claim-mismatch"
+        ],
+        "accepted": false
+      }
+    },
+    {
+      "id": "format-version-mutation",
+      "kind": "format-mutation",
+      "roots": [
+        "NobleFoundation.LinkBoundary.vertical_simulation_compose"
+      ],
+      "changes": "the export's meta format version: 3.1.0 -> 3.2.0",
+      "expected": "unsupported-format at the lane regardless of the checker verdict",
+      "export": {
+        "retained": false,
+        "producer": "derived",
+        "sha256": "2bcfe4a8b6f19df6e0d8dd47e58b62b7f932d54669e695e0316448931281fda2",
+        "records": 1157,
+        "format": "3.2.0",
+        "declared": 16,
+        "axioms": []
+      },
+      "runs": [
+        {
+          "checker": "nanoda",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/nanoda_bin",
+            "$WORK/format-version-mutation.nanoda.json"
+          ],
+          "exit_code": 1,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 4,
+          "wall_seconds": 0,
+          "max_rss_kb": 1904,
+          "classification": "unsupported",
+          "count": null,
+          "stdout": "",
+          "stderr": "Error: export format version is greater than the maximum supported version. Found 3.2.0, but max (exclusive) supported is 3.2.0\n\nrun with `-h` or `--help` for help\n",
+          "lane": {
+            "verdict": "unsupported-format",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ],
+            "reasons": [
+              "export format 3.2.0 is not the pinned 3.1.0"
+            ]
+          }
+        },
+        {
+          "checker": "con-leche",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-leche",
+            "--verified",
+            "--jobs=1",
+            "$WORK/format-3.2.0.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 16,
+          "wall_seconds": 0.01,
+          "max_rss_kb": 20436,
+          "classification": "accepted",
+          "count": 9,
+          "stdout": "con-leche: accepted 9 declarations (--verified)\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "unsupported-format",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ],
+            "reasons": [
+              "export format 3.2.0 is not the pinned 3.1.0"
+            ]
+          }
+        },
+        {
+          "checker": "con-ron",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-ron",
+            "--verified",
+            "--jobs=1",
+            "$WORK/format-3.2.0.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 36,
+          "wall_seconds": 0.03,
+          "max_rss_kb": 54448,
+          "classification": "accepted",
+          "count": 9,
+          "stdout": "con-ron: accepted 9 declarations (--verified)\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "unsupported-format",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ],
+            "reasons": [
+              "export format 3.2.0 is not the pinned 3.1.0"
+            ]
+          }
+        },
+        {
+          "checker": "lean4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean4lean",
+            "--import",
+            "$WORK/format-3.2.0.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 23,
+          "wall_seconds": 0.01,
+          "max_rss_kb": 19784,
+          "classification": "accepted",
+          "count": 9,
+          "stdout": "checked 9 declarations\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "unsupported-format",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ],
+            "reasons": [
+              "export format 3.2.0 is not the pinned 3.1.0"
+            ]
+          }
+        },
+        {
+          "checker": "ocaml4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/6dv63927n6rn41wziwvg8lqmz7p4agsh-noble-independent-replay-ocaml4lean-6f94226df5b91e51af692d05e00b001ee8e0f2fd/bin/ocaml4lean",
+            "-j",
+            "4",
+            "$WORK/format-3.2.0.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 15,
+          "wall_seconds": 0.01,
+          "max_rss_kb": 24280,
+          "classification": "accepted",
+          "count": 16,
+          "stdout": "accepted 16 declarations\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "unsupported-format",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ],
+            "reasons": [
+              "export format 3.2.0 is not the pinned 3.1.0"
+            ]
+          }
+        }
+      ],
+      "quorum": {
+        "accepted_by": [],
+        "refused_by": [
+          "nanoda:unsupported-format",
+          "con-leche:unsupported-format",
+          "con-ron:unsupported-format",
+          "lean4lean:unsupported-format",
+          "ocaml4lean:unsupported-format"
+        ],
+        "accepted": false
+      }
+    },
+    {
+      "id": "custom-axiom-untrusted",
+      "kind": "axiom-mutation",
+      "roots": [
+        "NobleFoundation.LinkBoundary.vertical_simulation_compose"
+      ],
+      "changes": "the retained export with untrusted axiom NobleReplayControl.customAxiom; checkers use their normal policy",
+      "expected": "forbidden-axiom at the lane regardless of the checker verdict",
+      "export": {
+        "retained": false,
+        "producer": "derived",
+        "sha256": "19e368afbdbca022f51452ac07bf081c92ffe70e80ee1ec6f600b4dc4ffa868a",
+        "records": 1160,
+        "format": "3.1.0",
+        "declared": 17,
+        "axioms": [
+          "NobleReplayControl.customAxiom"
+        ]
+      },
+      "runs": [
+        {
+          "checker": "nanoda",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/nanoda_bin",
+            "$WORK/custom-axiom-untrusted.nanoda.json"
+          ],
+          "exit_code": 1,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 5,
+          "wall_seconds": 0,
+          "max_rss_kb": 2176,
+          "classification": "forbidden-axiom",
+          "count": null,
+          "stdout": "",
+          "stderr": "Error: export file declares unpermitted axiom \"NobleReplayControl.customAxiom\"\n\nrun with `-h` or `--help` for help\n",
+          "lane": {
+            "verdict": "forbidden-axiom",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ],
+            "reasons": [
+              "declared axioms: NobleReplayControl.customAxiom"
+            ]
+          }
+        },
+        {
+          "checker": "con-leche",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-leche",
+            "--verified",
+            "--jobs=1",
+            "$WORK/custom-axiom.ndjson"
+          ],
+          "exit_code": 2,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 12,
+          "wall_seconds": 0,
+          "max_rss_kb": 18336,
+          "classification": "unsupported",
+          "count": null,
+          "stdout": "",
+          "stderr": "con-leche: not implemented yet: non-standard axiom (NobleReplayControl.customAxiom) [at axiom NobleReplayControl.customAxiom, fold position 19] (--verified) t=0.0s\n",
+          "lane": {
+            "verdict": "forbidden-axiom",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ],
+            "reasons": [
+              "declared axioms: NobleReplayControl.customAxiom"
+            ]
+          }
+        },
+        {
+          "checker": "con-ron",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-ron",
+            "--verified",
+            "--jobs=1",
+            "$WORK/custom-axiom.ndjson"
+          ],
+          "exit_code": 2,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 46,
+          "wall_seconds": 0.04,
+          "max_rss_kb": 52808,
+          "classification": "unsupported",
+          "count": null,
+          "stdout": "",
+          "stderr": "con-ron: declined: non-standard axiom [at axiom NobleReplayControl.customAxiom, fold position 19] (--verified) t=0.037s\n",
+          "lane": {
+            "verdict": "forbidden-axiom",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ],
+            "reasons": [
+              "declared axioms: NobleReplayControl.customAxiom"
+            ]
+          }
+        },
+        {
+          "checker": "lean4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean4lean",
+            "--import",
+            "$WORK/custom-axiom.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 25,
+          "wall_seconds": 0.01,
+          "max_rss_kb": 20092,
+          "classification": "accepted",
+          "count": 10,
+          "stdout": "checked 10 declarations\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "forbidden-axiom",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ],
+            "reasons": [
+              "declared axioms: NobleReplayControl.customAxiom"
+            ]
+          }
+        },
+        {
+          "checker": "ocaml4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/6dv63927n6rn41wziwvg8lqmz7p4agsh-noble-independent-replay-ocaml4lean-6f94226df5b91e51af692d05e00b001ee8e0f2fd/bin/ocaml4lean",
+            "-j",
+            "4",
+            "$WORK/custom-axiom.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 16,
+          "wall_seconds": 0.01,
+          "max_rss_kb": 25140,
+          "classification": "accepted",
+          "count": 17,
+          "stdout": "accepted 17 declarations\n",
+          "stderr": "note: non-standard axiom 'NobleReplayControl.customAxiom'\n",
+          "lane": {
+            "verdict": "forbidden-axiom",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ],
+            "reasons": [
+              "declared axioms: NobleReplayControl.customAxiom"
+            ]
+          }
+        }
+      ],
+      "quorum": {
+        "accepted_by": [],
+        "refused_by": [
+          "nanoda:forbidden-axiom",
+          "con-leche:forbidden-axiom",
+          "con-ron:forbidden-axiom",
+          "lean4lean:forbidden-axiom",
+          "ocaml4lean:forbidden-axiom"
+        ],
+        "accepted": false
+      }
+    },
+    {
+      "id": "custom-axiom-permitted-to-checker",
+      "kind": "axiom-mutation",
+      "roots": [
+        "NobleFoundation.LinkBoundary.vertical_simulation_compose"
+      ],
+      "changes": "the retained export with NobleReplayControl.customAxiom explicitly permitted to configurable checkers",
+      "expected": "forbidden-axiom at the lane even if a checker accepts it",
+      "export": {
+        "retained": false,
+        "producer": "derived",
+        "sha256": "19e368afbdbca022f51452ac07bf081c92ffe70e80ee1ec6f600b4dc4ffa868a",
+        "records": 1160,
+        "format": "3.1.0",
+        "declared": 17,
+        "axioms": [
+          "NobleReplayControl.customAxiom"
+        ]
+      },
+      "runs": [
+        {
+          "checker": "nanoda",
+          "attempted": true,
+          "config_overrides": {
+            "permitted_axioms": [
+              "propext",
+              "Classical.choice",
+              "Quot.sound",
+              "NobleReplayControl.customAxiom"
+            ]
+          },
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/nanoda_bin",
+            "$WORK/custom-axiom-permitted-to-checker.nanoda.json"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 6,
+          "wall_seconds": 0,
+          "max_rss_kb": 2184,
+          "classification": "accepted",
+          "count": 17,
+          "stdout": "Checked 17 declarations with no errors\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "forbidden-axiom",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ],
+            "reasons": [
+              "declared axioms: NobleReplayControl.customAxiom"
+            ]
+          }
+        },
+        {
+          "checker": "con-leche",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-leche",
+            "--verified",
+            "--jobs=1",
+            "$WORK/custom-axiom.ndjson"
+          ],
+          "exit_code": 2,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 10,
+          "wall_seconds": 0,
+          "max_rss_kb": 18412,
+          "classification": "unsupported",
+          "count": null,
+          "stdout": "",
+          "stderr": "con-leche: not implemented yet: non-standard axiom (NobleReplayControl.customAxiom) [at axiom NobleReplayControl.customAxiom, fold position 19] (--verified) t=0.0s\n",
+          "lane": {
+            "verdict": "forbidden-axiom",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ],
+            "reasons": [
+              "declared axioms: NobleReplayControl.customAxiom"
+            ]
+          }
+        },
+        {
+          "checker": "con-ron",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-ron",
+            "--verified",
+            "--jobs=1",
+            "$WORK/custom-axiom.ndjson"
+          ],
+          "exit_code": 2,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 37,
+          "wall_seconds": 0.03,
+          "max_rss_kb": 52784,
+          "classification": "unsupported",
+          "count": null,
+          "stdout": "",
+          "stderr": "con-ron: declined: non-standard axiom [at axiom NobleReplayControl.customAxiom, fold position 19] (--verified) t=0.028s\n",
+          "lane": {
+            "verdict": "forbidden-axiom",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ],
+            "reasons": [
+              "declared axioms: NobleReplayControl.customAxiom"
+            ]
+          }
+        },
+        {
+          "checker": "lean4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean4lean",
+            "--import",
+            "$WORK/custom-axiom.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 23,
+          "wall_seconds": 0.01,
+          "max_rss_kb": 19996,
+          "classification": "accepted",
+          "count": 10,
+          "stdout": "checked 10 declarations\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "forbidden-axiom",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ],
+            "reasons": [
+              "declared axioms: NobleReplayControl.customAxiom"
+            ]
+          }
+        },
+        {
+          "checker": "ocaml4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/6dv63927n6rn41wziwvg8lqmz7p4agsh-noble-independent-replay-ocaml4lean-6f94226df5b91e51af692d05e00b001ee8e0f2fd/bin/ocaml4lean",
+            "-j",
+            "4",
+            "$WORK/custom-axiom.ndjson"
+          ],
+          "exit_code": 0,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 14,
+          "wall_seconds": 0.01,
+          "max_rss_kb": 24748,
+          "classification": "accepted",
+          "count": 17,
+          "stdout": "accepted 17 declarations\n",
+          "stderr": "note: non-standard axiom 'NobleReplayControl.customAxiom'\n",
+          "lane": {
+            "verdict": "forbidden-axiom",
+            "closure": {
+              "reachable": 16,
+              "missing": [],
+              "digest": {
+                "declarations": 16,
+                "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.LinkBoundary.vertical_simulation_compose",
+                "export_statement_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a",
+                "pinned_sha256": "d1ac3ae2694fe27caaaec13906a5abe4d6554fab3a0916df60b876fff877f03a"
+              }
+            ],
+            "reasons": [
+              "declared axioms: NobleReplayControl.customAxiom"
+            ]
+          }
+        }
+      ],
+      "quorum": {
+        "accepted_by": [],
+        "refused_by": [
+          "nanoda:forbidden-axiom",
+          "con-leche:forbidden-axiom",
+          "con-ron:forbidden-axiom",
+          "lean4lean:forbidden-axiom",
+          "ocaml4lean:forbidden-axiom"
+        ],
+        "accepted": false
+      }
+    }
+  ],
+  "operational_controls": [
+    {
+      "id": "resource-exhaustion",
+      "kind": "resource-control",
+      "roots": [
+        "NobleFoundation.toInt_add"
+      ],
+      "changes": "the large pinned export under RLIMIT_AS=1048576 bytes",
+      "expected": "resource-exhausted",
+      "export": {
+        "retained": false,
+        "producer": "pinned large export",
+        "address_space_limit_bytes": 1048576,
+        "sha256": "6bf49d7871d537afc125467c5467bf9211e0bb22ae988f093efb3e1d609597ab",
+        "records": 149829,
+        "format": "3.1.0",
+        "declared": 2780,
+        "axioms": [
+          "propext",
+          "Quot.sound",
+          "Classical.choice"
+        ]
+      },
+      "runs": [
+        {
+          "checker": "nanoda",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": {
+            "address_space_bytes": 1048576
+          },
+          "argv": [
+            "/run/current-system/sw/bin/prlimit",
+            "--as=1048576",
+            "--",
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/nanoda_bin",
+            "$WORK/resource-exhaustion.nanoda.json"
+          ],
+          "exit_code": 139,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 20,
+          "wall_seconds": 0.01,
+          "max_rss_kb": 1628,
+          "classification": "resource-exhausted",
+          "count": null,
+          "resource_failure": "silent exit status 139 under the explicit RLIMIT_AS cap",
+          "stdout": "",
+          "stderr": "",
+          "lane": {
+            "verdict": "resource-exhausted",
+            "closure": {
+              "reachable": 2779,
+              "missing": [],
+              "digest": {
+                "declarations": 2779,
+                "sha256": "5a9731dbf18e48f27ee96319c68d22639881eb2d0a83b8176f35e517bb0525c4"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.toInt_add",
+                "export_statement_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2",
+                "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "con-leche",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": {
+            "address_space_bytes": 1048576
+          },
+          "argv": [
+            "/run/current-system/sw/bin/prlimit",
+            "--as=1048576",
+            "--",
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-leche",
+            "--verified",
+            "--jobs=1",
+            "large.ndjson"
+          ],
+          "exit_code": 139,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 5,
+          "wall_seconds": 0,
+          "max_rss_kb": 1720,
+          "classification": "resource-exhausted",
+          "count": null,
+          "resource_failure": "silent exit status 139 under the explicit RLIMIT_AS cap",
+          "stdout": "",
+          "stderr": "",
+          "lane": {
+            "verdict": "resource-exhausted",
+            "closure": {
+              "reachable": 2779,
+              "missing": [],
+              "digest": {
+                "declarations": 2779,
+                "sha256": "5a9731dbf18e48f27ee96319c68d22639881eb2d0a83b8176f35e517bb0525c4"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.toInt_add",
+                "export_statement_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2",
+                "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "con-ron",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": {
+            "address_space_bytes": 1048576
+          },
+          "argv": [
+            "/run/current-system/sw/bin/prlimit",
+            "--as=1048576",
+            "--",
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-ron",
+            "--verified",
+            "--jobs=1",
+            "large.ndjson"
+          ],
+          "exit_code": 139,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 6,
+          "wall_seconds": 0,
+          "max_rss_kb": 1696,
+          "classification": "resource-exhausted",
+          "count": null,
+          "resource_failure": "silent exit status 139 under the explicit RLIMIT_AS cap",
+          "stdout": "",
+          "stderr": "",
+          "lane": {
+            "verdict": "resource-exhausted",
+            "closure": {
+              "reachable": 2779,
+              "missing": [],
+              "digest": {
+                "declarations": 2779,
+                "sha256": "5a9731dbf18e48f27ee96319c68d22639881eb2d0a83b8176f35e517bb0525c4"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.toInt_add",
+                "export_statement_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2",
+                "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "lean4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": {
+            "address_space_bytes": 1048576
+          },
+          "argv": [
+            "/run/current-system/sw/bin/prlimit",
+            "--as=1048576",
+            "--",
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean4lean",
+            "--import",
+            "large.ndjson"
+          ],
+          "exit_code": 139,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 6,
+          "wall_seconds": 0,
+          "max_rss_kb": 1696,
+          "classification": "resource-exhausted",
+          "count": null,
+          "resource_failure": "silent exit status 139 under the explicit RLIMIT_AS cap",
+          "stdout": "",
+          "stderr": "",
+          "lane": {
+            "verdict": "resource-exhausted",
+            "closure": {
+              "reachable": 2779,
+              "missing": [],
+              "digest": {
+                "declarations": 2779,
+                "sha256": "5a9731dbf18e48f27ee96319c68d22639881eb2d0a83b8176f35e517bb0525c4"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.toInt_add",
+                "export_statement_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2",
+                "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2"
+              }
+            ]
+          }
+        },
+        {
+          "checker": "ocaml4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": {
+            "address_space_bytes": 1048576
+          },
+          "argv": [
+            "/run/current-system/sw/bin/prlimit",
+            "--as=1048576",
+            "--",
+            "/nix/store/6dv63927n6rn41wziwvg8lqmz7p4agsh-noble-independent-replay-ocaml4lean-6f94226df5b91e51af692d05e00b001ee8e0f2fd/bin/ocaml4lean",
+            "-j",
+            "4",
+            "large.ndjson"
+          ],
+          "exit_code": 139,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 6,
+          "wall_seconds": 0,
+          "max_rss_kb": 1680,
+          "classification": "resource-exhausted",
+          "count": null,
+          "resource_failure": "silent exit status 139 under the explicit RLIMIT_AS cap",
+          "stdout": "",
+          "stderr": "",
+          "lane": {
+            "verdict": "resource-exhausted",
+            "closure": {
+              "reachable": 2779,
+              "missing": [],
+              "digest": {
+                "declarations": 2779,
+                "sha256": "5a9731dbf18e48f27ee96319c68d22639881eb2d0a83b8176f35e517bb0525c4"
+              }
+            },
+            "statements": [
+              {
+                "root": "NobleFoundation.toInt_add",
+                "export_statement_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2",
+                "pinned_sha256": "f4e7e3ad2fa857948a58347e1ea7a91d8288e3d192bd89db53ce8e9121102ae2"
+              }
+            ]
+          }
+        }
+      ],
+      "quorum": {
+        "accepted_by": [],
+        "refused_by": [
+          "nanoda:resource-exhausted",
+          "con-leche:resource-exhausted",
+          "con-ron:resource-exhausted",
+          "lean4lean:resource-exhausted",
+          "ocaml4lean:resource-exhausted"
+        ],
+        "accepted": false
+      }
+    },
+    {
+      "id": "parse-failure",
+      "kind": "parse-control",
+      "expected": "parse-failure",
+      "changes": "malformed declaration record after the valid meta record",
+      "export": {
+        "sha256": "9fae5873af88a8ff590ece60df2ab59b462c034232b12ca80c7158737c0c2e07",
+        "size_bytes": 56552,
+        "lane_parser_error": "SyntaxError: Unexpected end of JSON input"
+      },
+      "runs": [
+        {
+          "checker": "nanoda",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/nanoda_bin",
+            "$WORK/parse-failure.nanoda.json"
+          ],
+          "exit_code": 1,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 8,
+          "wall_seconds": 0,
+          "max_rss_kb": 1968,
+          "classification": "parse-failure",
+          "count": null,
+          "stdout": "",
+          "stderr": "Error: EOF while parsing a value at line 2 column 0\n\nrun with `-h` or `--help` for help\n",
+          "lane": {
+            "verdict": "parse-failure",
+            "reasons": [
+              "SyntaxError: Unexpected end of JSON input"
+            ]
+          }
+        },
+        {
+          "checker": "con-leche",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-leche",
+            "--verified",
+            "--jobs=1",
+            "$WORK/parse-failure.ndjson"
+          ],
+          "exit_code": 3,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 25,
+          "wall_seconds": 0.01,
+          "max_rss_kb": 9004,
+          "classification": "parse-failure",
+          "count": null,
+          "stdout": "",
+          "stderr": "con-leche: /home/brittonr/.cache/noble-iss/scratch/replay-62c/multi-work-4/parse-failure.ndjson:2: expected a decimal number (byte 6)\n",
+          "lane": {
+            "verdict": "parse-failure",
+            "reasons": [
+              "SyntaxError: Unexpected end of JSON input"
+            ]
+          }
+        },
+        {
+          "checker": "con-ron",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/con-ron",
+            "--verified",
+            "--jobs=1",
+            "$WORK/parse-failure.ndjson"
+          ],
+          "exit_code": 3,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 26,
+          "wall_seconds": 0.01,
+          "max_rss_kb": 2692,
+          "classification": "parse-failure",
+          "count": null,
+          "stdout": "",
+          "stderr": "con-ron: /home/brittonr/.cache/noble-iss/scratch/replay-62c/multi-work-4/parse-failure.ndjson:2: expected a decimal number (byte 6)\n",
+          "lane": {
+            "verdict": "parse-failure",
+            "reasons": [
+              "SyntaxError: Unexpected end of JSON input"
+            ]
+          }
+        },
+        {
+          "checker": "lean4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean4lean",
+            "--import",
+            "$WORK/parse-failure.ndjson"
+          ],
+          "exit_code": 1,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 61,
+          "wall_seconds": 0.05,
+          "max_rss_kb": 13244,
+          "classification": "parse-failure",
+          "count": null,
+          "stdout": "",
+          "stderr": "uncaught exception: Expected JSON object\n",
+          "lane": {
+            "verdict": "parse-failure",
+            "reasons": [
+              "SyntaxError: Unexpected end of JSON input"
+            ]
+          }
+        },
+        {
+          "checker": "ocaml4lean",
+          "attempted": true,
+          "config_overrides": {},
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/6dv63927n6rn41wziwvg8lqmz7p4agsh-noble-independent-replay-ocaml4lean-6f94226df5b91e51af692d05e00b001ee8e0f2fd/bin/ocaml4lean",
+            "-j",
+            "4",
+            "$WORK/parse-failure.ndjson"
+          ],
+          "exit_code": 3,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 18,
+          "wall_seconds": 0.01,
+          "max_rss_kb": 18912,
+          "classification": "parse-failure",
+          "count": null,
+          "stdout": "parse error: line 2: json error: eof at 6\n",
+          "stderr": "",
+          "lane": {
+            "verdict": "parse-failure",
+            "reasons": [
+              "SyntaxError: Unexpected end of JSON input"
+            ]
+          }
+        }
+      ],
+      "quorum": {
+        "accepted_by": [],
+        "refused_by": [
+          "nanoda:parse-failure",
+          "con-leche:parse-failure",
+          "con-ron:parse-failure",
+          "lean4lean:parse-failure",
+          "ocaml4lean:parse-failure"
+        ],
+        "accepted": false
+      }
+    },
+    {
+      "id": "unsupported-nat-literal",
+      "kind": "capability-control",
+      "expected": "unsupported",
+      "changes": "nat_extension=false; checkers without this configuration are recorded unsupported",
+      "input": {
+        "root": "NobleFoundation.toInt_add",
+        "sha256": "6bf49d7871d537afc125467c5467bf9211e0bb22ae988f093efb3e1d609597ab"
+      },
+      "runs": [
+        {
+          "checker": "nanoda",
+          "attempted": true,
+          "config_overrides": {
+            "nat_extension": false
+          },
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/nanoda_bin",
+            "$WORK/unsupported-nat-literal.nanoda.json"
+          ],
+          "exit_code": 1,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 8,
+          "wall_seconds": 0,
+          "max_rss_kb": 1932,
+          "classification": "unsupported",
+          "count": null,
+          "stdout": "",
+          "stderr": "Error: Nat lit extension disallowed by checker execution config, but export file contains a nat literal \"{\\\"ie\\\":544,\\\"natVal\\\":\\\"0\\\"}\\n\"\n\nrun with `-h` or `--help` for help\n",
+          "lane": {
+            "verdict": "unsupported"
+          }
+        },
+        {
+          "checker": "con-leche",
+          "attempted": false,
+          "exit_code": null,
+          "signal": null,
+          "classification": "unsupported",
+          "unsupported_reason": "no nat_extension configuration interface",
+          "lane": {
+            "verdict": "unsupported",
+            "reasons": [
+              "checker cannot express nat_extension=false"
+            ]
+          }
+        },
+        {
+          "checker": "con-ron",
+          "attempted": false,
+          "exit_code": null,
+          "signal": null,
+          "classification": "unsupported",
+          "unsupported_reason": "no nat_extension configuration interface",
+          "lane": {
+            "verdict": "unsupported",
+            "reasons": [
+              "checker cannot express nat_extension=false"
+            ]
+          }
+        },
+        {
+          "checker": "lean4lean",
+          "attempted": false,
+          "exit_code": null,
+          "signal": null,
+          "classification": "unsupported",
+          "unsupported_reason": "no nat_extension configuration interface",
+          "lane": {
+            "verdict": "unsupported",
+            "reasons": [
+              "checker cannot express nat_extension=false"
+            ]
+          }
+        },
+        {
+          "checker": "ocaml4lean",
+          "attempted": false,
+          "exit_code": null,
+          "signal": null,
+          "classification": "unsupported",
+          "unsupported_reason": "no nat_extension configuration interface",
+          "lane": {
+            "verdict": "unsupported",
+            "reasons": [
+              "checker cannot express nat_extension=false"
+            ]
+          }
+        }
+      ],
+      "quorum": {
+        "accepted_by": [],
+        "refused_by": [
+          "nanoda:unsupported",
+          "con-leche:unsupported",
+          "con-ron:unsupported",
+          "lean4lean:unsupported",
+          "ocaml4lean:unsupported"
+        ],
+        "accepted": false
+      }
+    },
+    {
+      "id": "unsupported-string-literal",
+      "kind": "capability-control",
+      "expected": "unsupported",
+      "changes": "string_extension=false; checkers without this configuration are recorded unsupported",
+      "input": {
+        "root": "NobleFoundation.toInt_add",
+        "sha256": "6bf49d7871d537afc125467c5467bf9211e0bb22ae988f093efb3e1d609597ab"
+      },
+      "runs": [
+        {
+          "checker": "nanoda",
+          "attempted": true,
+          "config_overrides": {
+            "string_extension": false
+          },
+          "resource_limit": null,
+          "argv": [
+            "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/nanoda_bin",
+            "$WORK/unsupported-string-literal.nanoda.json"
+          ],
+          "exit_code": 1,
+          "signal": null,
+          "process_error": null,
+          "elapsed_ms": 14,
+          "wall_seconds": 0,
+          "max_rss_kb": 2676,
+          "classification": "unsupported",
+          "count": null,
+          "stdout": "",
+          "stderr": "Error: String lit extension disallowed by checker execution config, but export file contains a string literal \"{\\\"ie\\\":9390,\\\"strVal\\\":\\\"Lean\\\"}\\n\"\n\nrun with `-h` or `--help` for help\n",
+          "lane": {
+            "verdict": "unsupported"
+          }
+        },
+        {
+          "checker": "con-leche",
+          "attempted": false,
+          "exit_code": null,
+          "signal": null,
+          "classification": "unsupported",
+          "unsupported_reason": "no string_extension configuration interface",
+          "lane": {
+            "verdict": "unsupported",
+            "reasons": [
+              "checker cannot express string_extension=false"
+            ]
+          }
+        },
+        {
+          "checker": "con-ron",
+          "attempted": false,
+          "exit_code": null,
+          "signal": null,
+          "classification": "unsupported",
+          "unsupported_reason": "no string_extension configuration interface",
+          "lane": {
+            "verdict": "unsupported",
+            "reasons": [
+              "checker cannot express string_extension=false"
+            ]
+          }
+        },
+        {
+          "checker": "lean4lean",
+          "attempted": false,
+          "exit_code": null,
+          "signal": null,
+          "classification": "unsupported",
+          "unsupported_reason": "no string_extension configuration interface",
+          "lane": {
+            "verdict": "unsupported",
+            "reasons": [
+              "checker cannot express string_extension=false"
+            ]
+          }
+        },
+        {
+          "checker": "ocaml4lean",
+          "attempted": false,
+          "exit_code": null,
+          "signal": null,
+          "classification": "unsupported",
+          "unsupported_reason": "no string_extension configuration interface",
+          "lane": {
+            "verdict": "unsupported",
+            "reasons": [
+              "checker cannot express string_extension=false"
+            ]
+          }
+        }
+      ],
+      "quorum": {
+        "accepted_by": [],
+        "refused_by": [
+          "nanoda:unsupported",
+          "con-leche:unsupported",
+          "con-ron:unsupported",
+          "lean4lean:unsupported",
+          "ocaml4lean:unsupported"
+        ],
+        "accepted": false
+      }
+    }
+  ],
+  "semantic_mutation": {
+    "file": "/home/brittonr/.cache/noble-iss/scratch/replay-62c/multi-work-4/semantic-mutation.ndjson",
+    "line": 1113,
+    "expression": 943,
+    "before": "{\"app\":{\"arg\":396,\"fn\":507},\"ie\":943}",
+    "after": "{\"app\":{\"arg\":394,\"fn\":507},\"ie\":943}",
+    "derived_digest": "df0dcf3f74ebcfa80c68842dcc8449ddbe8defdf4b771d1a439cc1098c8c97de"
+  },
+  "semantic_mutation_baseline_closure": {
+    "reachable": 16,
+    "missing": [],
+    "digest": {
+      "declarations": 16,
+      "sha256": "1883b3ae9828e236e309e4e654fecc3df8c97bfe20abfbf56ca320570af289cd"
+    }
+  },
+  "classifier_self_test": [
+    {
+      "checker": "nanoda",
+      "id": "declined-exit",
+      "input": {
+        "status": 2,
+        "stdout": "",
+        "stderr": "declined"
+      },
+      "expected": "unsupported",
+      "classified": "unsupported"
+    },
+    {
+      "checker": "nanoda",
+      "id": "unsupported-feature",
+      "input": {
+        "status": 1,
+        "stdout": "",
+        "stderr": "Nat literal extension disallowed"
+      },
+      "expected": "unsupported",
+      "classified": "unsupported"
+    },
+    {
+      "checker": "nanoda",
+      "id": "kernel-rejection",
+      "input": {
+        "status": 1,
+        "stdout": "",
+        "stderr": "rejected: application type mismatch"
+      },
+      "expected": "kernel-rejection",
+      "classified": "kernel-rejection"
+    },
+    {
+      "checker": "nanoda",
+      "id": "parse-failure",
+      "input": {
+        "status": 3,
+        "stdout": "",
+        "stderr": "parse error: expected ':' after a key"
+      },
+      "expected": "parse-failure",
+      "classified": "parse-failure"
+    },
+    {
+      "checker": "nanoda",
+      "id": "forbidden-axiom",
+      "input": {
+        "status": 1,
+        "stdout": "",
+        "stderr": "export file declares unpermitted axiom \"NobleReplayControl.customAxiom\""
+      },
+      "expected": "forbidden-axiom",
+      "classified": "forbidden-axiom"
+    },
+    {
+      "checker": "nanoda",
+      "id": "resource-exhaustion",
+      "input": {
+        "status": 137,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": "resource-exhausted",
+      "classified": "resource-exhausted"
+    },
+    {
+      "checker": "nanoda",
+      "id": "address-space-cap-silent-exit",
+      "input": {
+        "status": 139,
+        "stdout": "",
+        "stderr": ""
+      },
+      "address_space_bytes": 1048576,
+      "expected": "resource-exhausted",
+      "classified": "resource-exhausted"
+    },
+    {
+      "checker": "nanoda",
+      "id": "unparseable-zero-exit",
+      "input": {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": "checker-error",
+      "classified": "checker-error"
+    },
+    {
+      "checker": "nanoda",
+      "id": "empty-check",
+      "input": {
+        "status": 0,
+        "stdout": "Checked 0 declarations with no errors",
+        "stderr": ""
+      },
+      "expected": "empty-check",
+      "classified": "empty-check"
+    },
+    {
+      "checker": "con-leche",
+      "id": "declined-exit",
+      "input": {
+        "status": 2,
+        "stdout": "",
+        "stderr": "declined"
+      },
+      "expected": "unsupported",
+      "classified": "unsupported"
+    },
+    {
+      "checker": "con-leche",
+      "id": "unsupported-feature",
+      "input": {
+        "status": 1,
+        "stdout": "",
+        "stderr": "Nat literal extension disallowed"
+      },
+      "expected": "unsupported",
+      "classified": "unsupported"
+    },
+    {
+      "checker": "con-leche",
+      "id": "kernel-rejection",
+      "input": {
+        "status": 1,
+        "stdout": "",
+        "stderr": "rejected: application type mismatch"
+      },
+      "expected": "kernel-rejection",
+      "classified": "kernel-rejection"
+    },
+    {
+      "checker": "con-leche",
+      "id": "parse-failure",
+      "input": {
+        "status": 3,
+        "stdout": "",
+        "stderr": "parse error: expected ':' after a key"
+      },
+      "expected": "parse-failure",
+      "classified": "parse-failure"
+    },
+    {
+      "checker": "con-leche",
+      "id": "forbidden-axiom",
+      "input": {
+        "status": 1,
+        "stdout": "",
+        "stderr": "export file declares unpermitted axiom \"NobleReplayControl.customAxiom\""
+      },
+      "expected": "forbidden-axiom",
+      "classified": "forbidden-axiom"
+    },
+    {
+      "checker": "con-leche",
+      "id": "resource-exhaustion",
+      "input": {
+        "status": 137,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": "resource-exhausted",
+      "classified": "resource-exhausted"
+    },
+    {
+      "checker": "con-leche",
+      "id": "address-space-cap-silent-exit",
+      "input": {
+        "status": 139,
+        "stdout": "",
+        "stderr": ""
+      },
+      "address_space_bytes": 1048576,
+      "expected": "resource-exhausted",
+      "classified": "resource-exhausted"
+    },
+    {
+      "checker": "con-leche",
+      "id": "unparseable-zero-exit",
+      "input": {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": "checker-error",
+      "classified": "checker-error"
+    },
+    {
+      "checker": "con-leche",
+      "id": "empty-check",
+      "input": {
+        "status": 0,
+        "stdout": "accepted 0 declarations",
+        "stderr": ""
+      },
+      "expected": "empty-check",
+      "classified": "empty-check"
+    },
+    {
+      "checker": "con-ron",
+      "id": "declined-exit",
+      "input": {
+        "status": 2,
+        "stdout": "",
+        "stderr": "declined"
+      },
+      "expected": "unsupported",
+      "classified": "unsupported"
+    },
+    {
+      "checker": "con-ron",
+      "id": "unsupported-feature",
+      "input": {
+        "status": 1,
+        "stdout": "",
+        "stderr": "Nat literal extension disallowed"
+      },
+      "expected": "unsupported",
+      "classified": "unsupported"
+    },
+    {
+      "checker": "con-ron",
+      "id": "kernel-rejection",
+      "input": {
+        "status": 1,
+        "stdout": "",
+        "stderr": "rejected: application type mismatch"
+      },
+      "expected": "kernel-rejection",
+      "classified": "kernel-rejection"
+    },
+    {
+      "checker": "con-ron",
+      "id": "parse-failure",
+      "input": {
+        "status": 3,
+        "stdout": "",
+        "stderr": "parse error: expected ':' after a key"
+      },
+      "expected": "parse-failure",
+      "classified": "parse-failure"
+    },
+    {
+      "checker": "con-ron",
+      "id": "forbidden-axiom",
+      "input": {
+        "status": 1,
+        "stdout": "",
+        "stderr": "export file declares unpermitted axiom \"NobleReplayControl.customAxiom\""
+      },
+      "expected": "forbidden-axiom",
+      "classified": "forbidden-axiom"
+    },
+    {
+      "checker": "con-ron",
+      "id": "resource-exhaustion",
+      "input": {
+        "status": 137,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": "resource-exhausted",
+      "classified": "resource-exhausted"
+    },
+    {
+      "checker": "con-ron",
+      "id": "address-space-cap-silent-exit",
+      "input": {
+        "status": 139,
+        "stdout": "",
+        "stderr": ""
+      },
+      "address_space_bytes": 1048576,
+      "expected": "resource-exhausted",
+      "classified": "resource-exhausted"
+    },
+    {
+      "checker": "con-ron",
+      "id": "unparseable-zero-exit",
+      "input": {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": "checker-error",
+      "classified": "checker-error"
+    },
+    {
+      "checker": "con-ron",
+      "id": "empty-check",
+      "input": {
+        "status": 0,
+        "stdout": "accepted 0 declarations",
+        "stderr": ""
+      },
+      "expected": "empty-check",
+      "classified": "empty-check"
+    },
+    {
+      "checker": "lean4lean",
+      "id": "declined-exit",
+      "input": {
+        "status": 2,
+        "stdout": "",
+        "stderr": "declined"
+      },
+      "expected": "unsupported",
+      "classified": "unsupported"
+    },
+    {
+      "checker": "lean4lean",
+      "id": "unsupported-feature",
+      "input": {
+        "status": 1,
+        "stdout": "",
+        "stderr": "Nat literal extension disallowed"
+      },
+      "expected": "unsupported",
+      "classified": "unsupported"
+    },
+    {
+      "checker": "lean4lean",
+      "id": "kernel-rejection",
+      "input": {
+        "status": 1,
+        "stdout": "",
+        "stderr": "rejected: application type mismatch"
+      },
+      "expected": "kernel-rejection",
+      "classified": "kernel-rejection"
+    },
+    {
+      "checker": "lean4lean",
+      "id": "parse-failure",
+      "input": {
+        "status": 3,
+        "stdout": "",
+        "stderr": "parse error: expected ':' after a key"
+      },
+      "expected": "parse-failure",
+      "classified": "parse-failure"
+    },
+    {
+      "checker": "lean4lean",
+      "id": "forbidden-axiom",
+      "input": {
+        "status": 1,
+        "stdout": "",
+        "stderr": "export file declares unpermitted axiom \"NobleReplayControl.customAxiom\""
+      },
+      "expected": "forbidden-axiom",
+      "classified": "forbidden-axiom"
+    },
+    {
+      "checker": "lean4lean",
+      "id": "resource-exhaustion",
+      "input": {
+        "status": 137,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": "resource-exhausted",
+      "classified": "resource-exhausted"
+    },
+    {
+      "checker": "lean4lean",
+      "id": "address-space-cap-silent-exit",
+      "input": {
+        "status": 139,
+        "stdout": "",
+        "stderr": ""
+      },
+      "address_space_bytes": 1048576,
+      "expected": "resource-exhausted",
+      "classified": "resource-exhausted"
+    },
+    {
+      "checker": "lean4lean",
+      "id": "unparseable-zero-exit",
+      "input": {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": "checker-error",
+      "classified": "checker-error"
+    },
+    {
+      "checker": "lean4lean",
+      "id": "empty-check",
+      "input": {
+        "status": 0,
+        "stdout": "checked 0 declarations",
+        "stderr": ""
+      },
+      "expected": "empty-check",
+      "classified": "empty-check"
+    },
+    {
+      "checker": "ocaml4lean",
+      "id": "declined-exit",
+      "input": {
+        "status": 2,
+        "stdout": "",
+        "stderr": "declined"
+      },
+      "expected": "unsupported",
+      "classified": "unsupported"
+    },
+    {
+      "checker": "ocaml4lean",
+      "id": "unsupported-feature",
+      "input": {
+        "status": 1,
+        "stdout": "",
+        "stderr": "Nat literal extension disallowed"
+      },
+      "expected": "unsupported",
+      "classified": "unsupported"
+    },
+    {
+      "checker": "ocaml4lean",
+      "id": "kernel-rejection",
+      "input": {
+        "status": 1,
+        "stdout": "",
+        "stderr": "rejected: application type mismatch"
+      },
+      "expected": "kernel-rejection",
+      "classified": "kernel-rejection"
+    },
+    {
+      "checker": "ocaml4lean",
+      "id": "parse-failure",
+      "input": {
+        "status": 3,
+        "stdout": "",
+        "stderr": "parse error: expected ':' after a key"
+      },
+      "expected": "parse-failure",
+      "classified": "parse-failure"
+    },
+    {
+      "checker": "ocaml4lean",
+      "id": "forbidden-axiom",
+      "input": {
+        "status": 1,
+        "stdout": "",
+        "stderr": "export file declares unpermitted axiom \"NobleReplayControl.customAxiom\""
+      },
+      "expected": "forbidden-axiom",
+      "classified": "forbidden-axiom"
+    },
+    {
+      "checker": "ocaml4lean",
+      "id": "resource-exhaustion",
+      "input": {
+        "status": 137,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": "resource-exhausted",
+      "classified": "resource-exhausted"
+    },
+    {
+      "checker": "ocaml4lean",
+      "id": "address-space-cap-silent-exit",
+      "input": {
+        "status": 139,
+        "stdout": "",
+        "stderr": ""
+      },
+      "address_space_bytes": 1048576,
+      "expected": "resource-exhausted",
+      "classified": "resource-exhausted"
+    },
+    {
+      "checker": "ocaml4lean",
+      "id": "unparseable-zero-exit",
+      "input": {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "expected": "checker-error",
+      "classified": "checker-error"
+    },
+    {
+      "checker": "ocaml4lean",
+      "id": "empty-check",
+      "input": {
+        "status": 0,
+        "stdout": "accepted 0 declarations",
+        "stderr": ""
+      },
+      "expected": "empty-check",
+      "classified": "empty-check"
+    }
+  ],
+  "declined_exit_observed": true,
+  "unsupported_classification_observed": true,
+  "checker_summaries": [
+    {
+      "checker": "nanoda",
+      "language": "Rust",
+      "implementation_family": "nanoda-rust",
+      "independent_of_lean_kernel": true,
+      "independent_implementation": true,
+      "independent_checker_design": true,
+      "language_evidence": {
+        "declared": "Rust",
+        "marker": "cargo/registry|/rustc/",
+        "matched": true,
+        "match": "cargo/registry\n/rustc/\ncargo/registry\n/rustc/",
+        "exit_code": 0
+      },
+      "source_evidence": "https://github.com/ammkrn/nanoda_lib#about",
+      "binary_source_revision": "not exposed by the prebuilt Lean release; the release store path and binary digest are the executable identity",
+      "accepted_runs": 5,
+      "run_records": 14,
+      "attempted_runs": 14,
+      "wall_seconds_total": 0.44,
+      "max_rss_kb_peak": 14720,
+      "classifications": {
+        "accepted": 5,
+        "kernel-rejection": 3,
+        "unsupported": 3,
+        "forbidden-axiom": 1,
+        "resource-exhausted": 1,
+        "parse-failure": 1
+      }
+    },
+    {
+      "checker": "con-leche",
+      "language": "Lean",
+      "implementation_family": "con-leche-lean",
+      "independent_of_lean_kernel": true,
+      "independent_implementation": true,
+      "independent_checker_design": true,
+      "language_evidence": {
+        "declared": "Lean",
+        "marker": "lean_apply_|_lean_main|Lean\\.[A-Z]",
+        "matched": true,
+        "match": "lean_apply_",
+        "exit_code": 0
+      },
+      "source_evidence": "https://github.com/leanprover/con-leche#design-of-the-checker-implementation",
+      "binary_source_revision": "not exposed by the prebuilt Lean release; the release store path and binary digest are the executable identity",
+      "accepted_runs": 5,
+      "run_records": 14,
+      "attempted_runs": 12,
+      "wall_seconds_total": 1.38,
+      "max_rss_kb_peak": 69772,
+      "classifications": {
+        "accepted": 5,
+        "kernel-rejection": 3,
+        "unsupported": 4,
+        "resource-exhausted": 1,
+        "parse-failure": 1
+      }
+    },
+    {
+      "checker": "con-ron",
+      "language": "Rust",
+      "implementation_family": "con-leche-family",
+      "independent_of_lean_kernel": true,
+      "independent_implementation": true,
+      "independent_checker_design": false,
+      "language_evidence": {
+        "declared": "Rust",
+        "marker": "/rustc/",
+        "matched": true,
+        "match": "/rustc/",
+        "exit_code": 0
+      },
+      "source_evidence": "https://github.com/leanprover/con-ron#method",
+      "binary_source_revision": "not exposed by the prebuilt Lean release; the release store path and binary digest are the executable identity",
+      "accepted_runs": 5,
+      "run_records": 14,
+      "attempted_runs": 12,
+      "wall_seconds_total": 0.87,
+      "max_rss_kb_peak": 106000,
+      "classifications": {
+        "accepted": 5,
+        "kernel-rejection": 3,
+        "unsupported": 4,
+        "resource-exhausted": 1,
+        "parse-failure": 1
+      }
+    },
+    {
+      "checker": "lean4lean",
+      "language": "Lean",
+      "implementation_family": "lean4lean-derived-cpp",
+      "independent_of_lean_kernel": false,
+      "independent_implementation": false,
+      "independent_checker_design": false,
+      "language_evidence": {
+        "declared": "Lean",
+        "marker": "Lean4Lean\\.",
+        "matched": true,
+        "match": "Lean4Lean.",
+        "exit_code": 0
+      },
+      "source_evidence": "https://github.com/digama0/lean4lean#lean-for-lean",
+      "binary_source_revision": "not exposed by the prebuilt Lean release; the release store path and binary digest are the executable identity",
+      "accepted_runs": 7,
+      "run_records": 14,
+      "attempted_runs": 12,
+      "wall_seconds_total": 1.19,
+      "max_rss_kb_peak": 36112,
+      "classifications": {
+        "accepted": 7,
+        "kernel-rejection": 3,
+        "resource-exhausted": 1,
+        "parse-failure": 1,
+        "unsupported": 2
+      }
+    },
+    {
+      "checker": "ocaml4lean",
+      "language": "OCaml",
+      "implementation_family": "ocaml4lean-ocaml",
+      "independent_of_lean_kernel": true,
+      "independent_implementation": true,
+      "independent_checker_design": true,
+      "language_evidence": {
+        "declared": "OCaml",
+        "marker": "caml_",
+        "matched": true,
+        "match": "caml_\ncaml_\ncaml_\ncaml_\ncaml_\ncaml_\ncaml_\ncaml_\ncaml_\ncaml_\ncaml_\ncaml_\ncaml_\ncaml_\ncaml_\ncaml_\ncaml_\ncaml_\ncaml_\ncaml_\n",
+        "exit_code": 0
+      },
+      "source_evidence": "https://github.com/yoonwoojeong/ocaml4lean/tree/6f94226df5b91e51af692d05e00b001ee8e0f2fd",
+      "binary_source_revision": "6f94226df5b91e51af692d05e00b001ee8e0f2fd",
+      "accepted_runs": 7,
+      "run_records": 14,
+      "attempted_runs": 12,
+      "wall_seconds_total": 0.32,
+      "max_rss_kb_peak": 60556,
+      "classifications": {
+        "accepted": 7,
+        "kernel-rejection": 3,
+        "resource-exhausted": 1,
+        "parse-failure": 1,
+        "unsupported": 2
+      }
+    }
+  ],
+  "observations": {
+    "declaration_count_spread_on_large": {
+      "nanoda": 2780,
+      "con-leche": 2462,
+      "con-ron": 2462,
+      "lean4lean": 2459,
+      "ocaml4lean": 2780
+    },
+    "independence": [
+      {
+        "checker": "nanoda",
+        "independent_of_lean_kernel": true,
+        "independent_implementation": true,
+        "independent_checker_design": true,
+        "implementation_family": "nanoda-rust",
+        "note": "A separately authored Rust implementation of a Lean export type checker. Its README calls it an external checker; it is not a port of another listed checker and shares no implementation code with Lean's C++ kernel. Its source revision is not exposed by the bundled release, and it still shares the export format and permitted Lean axioms with the other checkers."
+      },
+      {
+        "checker": "con-leche",
+        "independent_of_lean_kernel": true,
+        "independent_implementation": true,
+        "independent_checker_design": true,
+        "implementation_family": "con-leche-lean",
+        "note": "A separately authored Lean checker with its own term representation (the upstream design explicitly says it does not rely on Lean.Expr or unverified C++ routines) and a machine-checked consistency theorem for --verified. It is not a copy of the official kernel. Its soundness theorem is checked by Lean, and its Nat acceleration uses Lean's runtime Nat operations, so it is not independent of the Lean toolchain/runtime."
+      },
+      {
+        "checker": "con-ron",
+        "independent_of_lean_kernel": true,
+        "independent_implementation": true,
+        "independent_checker_design": false,
+        "implementation_family": "con-leche-family",
+        "note": "A separate Rust implementation. Its upstream README calls it a Rust port of con-leche and describes a checked refinement relationship to a Lean twin of con-leche's pure algorithm; it is a distinct implementation but not an independent checker design. Count it as a related implementation, never as a second independent design."
+      },
+      {
+        "checker": "lean4lean",
+        "independent_of_lean_kernel": false,
+        "independent_implementation": false,
+        "independent_checker_design": false,
+        "implementation_family": "lean4lean-derived-cpp",
+        "note": "The upstream README states this Lean kernel implementation is derived directly from the C++ kernel and likely shares implementation bugs. It is kept only as a lower-diversity kernel-derived cross-check."
+      },
+      {
+        "checker": "ocaml4lean",
+        "independent_of_lean_kernel": true,
+        "independent_implementation": true,
+        "independent_checker_design": true,
+        "implementation_family": "ocaml4lean-ocaml",
+        "note": "A separately authored OCaml kernel with its own term/environment representation and parser; its source is not a port of Lean's C++ kernel or another listed checker. It intentionally follows the reference kernel's algorithmic behavior, so algorithm-level common-mode risk remains. The checker has no Lean runtime dependency; the lane still shares the pinned lean4export format and permitted Lean axioms."
+      }
+    ],
+    "divergences": [
+      {
+        "control": "format-version-mutation",
+        "by_checker": {
+          "nanoda": "unsupported",
+          "con-leche": "accepted",
+          "con-ron": "accepted",
+          "lean4lean": "accepted",
+          "ocaml4lean": "accepted"
+        }
+      },
+      {
+        "control": "custom-axiom-untrusted",
+        "by_checker": {
+          "nanoda": "forbidden-axiom",
+          "con-leche": "unsupported",
+          "con-ron": "unsupported",
+          "lean4lean": "accepted",
+          "ocaml4lean": "accepted"
+        }
+      },
+      {
+        "control": "custom-axiom-permitted-to-checker",
+        "by_checker": {
+          "nanoda": "accepted",
+          "con-leche": "unsupported",
+          "con-ron": "unsupported",
+          "lean4lean": "accepted",
+          "ocaml4lean": "accepted"
+        }
+      }
+    ]
+  },
+  "non_claims": [
+    "Acceptance by several checkers says nothing about any checker's correctness, completeness or equivalence to the Lean kernel.",
+    "con-ron is con-leche's Rust twin: agreement between them is not independent corroboration.",
+    "lean4lean is derived from the C++ kernel and is counted as lower diversity, never as an independent implementation.",
+    "OCaml4Lean is built from its pinned upstream source revision with the source-pinned Nix derivation; the other checkers remain release-bundled.",
+    "Only the three bound subjects were replayed; this is not a full NobleFoundation replay.",
+    "No checker emitted exit 2 in this run; every checker maps that exit to unsupported in the classifier self-test.",
+    "No CI, flake, policy or gate change; promotion is an owner decision."
+  ]
+}

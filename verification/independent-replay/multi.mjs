@@ -8,22 +8,22 @@
 //   closure        every constant the roots reference, transitively, is declared;
 //   statement      each root's statement, rendered from the export, equals the digest in
 //                  statements.json, and that manifest equals the compiled environment;
-//   format         the export's declared meta format version is the pinned 3.1.0, because three of
-//                  the four checkers accept a 3.2.0 export that nanoda refuses;
+//   format         the export's declared meta format version is the pinned 3.1.0, because checker
+//                  binaries do not necessarily enforce the producer's declared format version;
 //   axiom audit    every declared axiom is propext, Classical.choice or Quot.sound;
 //   checker        exit 0 with a positive checked-declaration count and a rejection-shaped message
-//                  absent. Exit 2 (Arena 'declined') is `unsupported`; every other nonzero exit is
-//                  `checker-error`; an unparseable zero exit is also `checker-error`. None of these
-//                  is ever success or a mathematical refutation.
+//                  absent. Exit 2, declared feature declines, parser diagnostics, kernel rejection,
+//                  and resource exhaustion are separate refusal classes. Other nonzero exits and
+//                  unparseable zero exits are `checker-error`; no refusal is a mathematical
+//                  refutation.
 //
 // The quorum is never weaker than one checker: a subject is accepted only when every pinned checker
 // accepts it under those rules. Disagreements are retained verbatim, not averaged.
 //
-// Every mutation control is run against every checker: the retained semantic mutation, dropped
-// theorem/definition (the lane refuses on closure), the substituted valid claim (the checkers accept
-// it; only statement binding refuses it), and a format-version mutation. Checker and lane verdicts
-// are kept separately. Per-checker wall time and max RSS are measured. Pilot evidence on one host,
-// not a gate.
+// Every proof, closure, claim, format, axiom, parser, resource and capability control has a row for
+// every checker. Controls without a checker-facing option are recorded as unsupported, never passed.
+// Checker and lane verdicts are separate; executed checker calls retain per-run wall time and max RSS.
+// Pilot evidence on one host, not a gate.
 import { spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -56,6 +56,7 @@ const small = path.resolve(value('--small-export'));
 const mutationSource = path.resolve(value('--mutation-export'));
 const timeBin = path.resolve(optional('--time', '/run/current-system/sw/bin/time'));
 const grepBin = path.resolve(optional('--grep', '/run/current-system/sw/bin/grep'));
+const prlimitBin = path.resolve(optional('--prlimit', '/run/current-system/sw/bin/prlimit'));
 const work = path.resolve(value('--work'));
 const output = path.resolve(value('--output'));
 const toolchain = optional('--toolchain');
@@ -68,7 +69,10 @@ const pins = {
   mutation: value('--mutation-sha256'),
 };
 const checkersPin = JSON.parse(fs.readFileSync(checkersPath, 'utf8'));
-const binaries = new Map(checkersPin.checkers.map((checker) => [checker.id, path.join(leanBin, checker.binary)]));
+const binaries = new Map(checkersPin.checkers.map((checker) => [
+  checker.id,
+  path.resolve(checker.binary_arg ? value(checker.binary_arg) : path.join(leanBin, checker.binary)),
+]));
 
 // The pin guard runs first: no checker binary, Lean binary or export is used when a digest moved.
 pinGuard([
@@ -94,6 +98,7 @@ const SMALL_ROOT = 'NobleFoundation.LinkBoundary.vertical_simulation_compose';
 const FRESH_ROOT = 'Nat.add_comm';
 const DROPPED_THEOREM = '_private.NobleFoundation.LinkBoundary.0.NobleFoundation.LinkBoundary.forward_simulation_steps';
 const DROPPED_DEFINITION = 'NobleFoundation.LinkBoundary.ForwardSimulation';
+const CUSTOM_AXIOM = 'NobleReplayControl.customAxiom';
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 const childEnv = {
   HOME: process.env.HOME ?? '/', LANG: 'C.UTF-8',
@@ -115,7 +120,7 @@ function languageEvidence(checker) {
   };
 }
 
-function nanodaConfig(id, exportPath, checker) {
+function nanodaConfig(id, exportPath, checker, overrides = {}) {
   const file = path.join(work, `${id}.${checker.id}.json`);
   fs.writeFileSync(file, `${JSON.stringify({
     use_stdin: false,
@@ -127,25 +132,47 @@ function nanodaConfig(id, exportPath, checker) {
     string_extension: true,
     print_axioms: false,
     print_success_message: true,
+    ...overrides,
   }, null, 2)}\n`);
   return file;
 }
 
-function commandFor(checker, exportPath, id) {
+function commandFor(checker, exportPath, id, configOverrides = {}) {
   if (checker.run.kind === 'nanoda-config') {
-    return [binaries.get(checker.id), nanodaConfig(id, exportPath, checker)];
+    return [binaries.get(checker.id), nanodaConfig(id, exportPath, checker, configOverrides)];
   }
   return [binaries.get(checker.id), ...checker.run.argv.map((part) => (part === 'FILE' ? exportPath : part))];
 }
 
-/** Classification from exit status, signal and the checker's own output; never from the lane's hopes. */
-function classify(result, checker, timedOut) {
+/** Classify from exit status, explicit OS limits and checker diagnostics; never from the lane's hopes. */
+function classify(result, checker, timedOut, addressSpaceBytes = null) {
   const stdout = result.stdout ?? '';
   const stderr = result.stderr ?? '';
-  const text = `${stdout}\n${stderr}`;
+  const processError = result.error?.message ?? '';
+  const text = `${stdout}\n${stderr}\n${processError}`;
   if (timedOut) return { classification: 'timeout', count: null };
   if (result.status === 2 || (checker.declined_exit ?? []).includes(result.status)) {
     return { classification: 'unsupported', count: null };
+  }
+  if (/export format version is (?:greater|less) than the (?:maximum|minimum) supported version|\b(?:extension|literal)\b.{0,60}\b(?:disallow(?:ed)?|unsupported|not supported|disabled|not enabled)\b|\b(?:nat|string) lit(?:eral)?\b.{0,80}\b(?:disallow(?:ed)?|disabled|unsupported|not supported|not enabled)\b|\bunsupported(?: feature| extension)?\b/iu.test(text)) {
+    return { classification: 'unsupported', count: null };
+  }
+  if (result.signal === 'SIGKILL' || result.signal === 'SIGXCPU' || result.signal === 'SIGXFSZ'
+      || result.status === 137 || /out of memory|cannot allocate(?: memory)?|allocation failed|memory allocation|too many open files|\bEMFILE\b|\bENOMEM\b|resource temporarily unavailable|failed to allocate|failed to map segment/iu.test(text)) {
+    return { classification: 'resource-exhausted', count: null };
+  }
+  if (/\bparse\b.{0,60}(?:error|fail|invalid|unexpected|eof|end of input)|\b(?:json|ndjson)\b.{0,60}(?:error|fail|invalid|unexpected|eof|end of input)|\b(?:unexpected|expected|eof)\b.{0,60}\b(?:json|ndjson|token|input|key|value)\b|\binvalid\s+(?:json|ndjson|token|input|syntax)\b|\bEOF while parsing\b|\bexpected .{1,80} after\b|\bunexpected end of input\b/iu.test(text)) {
+    return { classification: 'parse-failure', count: null };
+  }
+  if (addressSpaceBytes !== null && result.status === 139 && text.trim() === '') {
+    return {
+      classification: 'resource-exhausted',
+      count: null,
+      resource_failure: 'silent exit status 139 under the explicit RLIMIT_AS cap',
+    };
+  }
+  if (/\bunpermitted axiom\b/iu.test(text)) {
+    return { classification: 'forbidden-axiom', count: null };
   }
   if (result.status === 0) {
     const match = new RegExp(checker.accept_pattern, 'u').exec(stdout);
@@ -155,17 +182,22 @@ function classify(result, checker, timedOut) {
       ? { classification: 'accepted', count }
       : { classification: 'empty-check', count };
   }
+  const rejectionShaped = /mismatch|invalid:|rejected|unknown constant|declaration not found|assertion failed|\(kernel\)/iu.test(text);
   return {
-    classification: 'checker-error', count: null,
-    rejection_shaped: /mismatch|invalid|rejected|unknown constant|declaration not found|assertion failed|panicked/iu.test(text),
+    classification: rejectionShaped ? 'kernel-rejection' : 'checker-error',
+    count: null,
+    rejection_shaped: rejectionShaped,
   };
 }
 
-function runChecker(checker, exportPath, id) {
-  const command = commandFor(checker, exportPath, id);
+function runChecker(checker, exportPath, id, { configOverrides = {}, addressSpaceBytes = null } = {}) {
+  const command = commandFor(checker, exportPath, id, configOverrides);
+  const launched = addressSpaceBytes === null
+    ? command
+    : [prlimitBin, `--as=${addressSpaceBytes}`, '--', ...command];
   const timeFile = path.join(work, `${id}.${checker.id}.time`);
   const started = process.hrtime.bigint();
-  const result = spawnSync(timeBin, ['-f', '%e %M', '-o', timeFile, '--', ...command], {
+  const result = spawnSync(timeBin, ['-f', '%e %M', '-o', timeFile, '--', ...launched], {
     env: childEnv, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, timeout: 900_000, killSignal: 'SIGKILL',
   });
   const elapsed = Number((process.hrtime.bigint() - started) / 1_000_000n);
@@ -182,13 +214,17 @@ function runChecker(checker, exportPath, id) {
   }
   return {
     checker: checker.id,
-    argv: command.map((part) => part.replace(work, '$WORK').replace(exportPath, path.basename(exportPath))),
+    attempted: true,
+    config_overrides: checker.run.kind === 'nanoda-config' ? configOverrides : {},
+    resource_limit: addressSpaceBytes === null ? null : { address_space_bytes: addressSpaceBytes },
+    argv: launched.map((part) => part.replace(work, '$WORK').replace(exportPath, path.basename(exportPath))),
     exit_code: result.status,
     signal: result.signal,
+    process_error: result.error ? { code: result.error.code ?? null, message: result.error.message } : null,
     elapsed_ms: elapsed,
     wall_seconds: time.seconds,
     max_rss_kb: time.max_rss_kb,
-    ...classify(result, checker, timedOut),
+    ...classify(result, checker, timedOut, addressSpaceBytes),
     stdout: result.stdout ?? '',
     stderr: result.stderr ?? '',
   };
@@ -242,7 +278,11 @@ function laneVerdict(parsed, roots, checkerResult) {
 function subjectEntry(control, exportPath, description) {
   const parsed = parseExport(exportPath);
   const runs = checkersPin.checkers.map((checker) => {
-    const result = runChecker(checker, exportPath, control.id);
+    const runOptions = {
+      configOverrides: control.config ?? {},
+      ...(control.runOptions?.(checker) ?? {}),
+    };
+    const result = runChecker(checker, exportPath, control.id, runOptions);
     return { ...result, lane: laneVerdict(parsed, control.roots, result) };
   });
   const accepted = runs.filter((run) => run.lane.verdict === 'accepted').map((run) => run.checker);
@@ -352,7 +392,28 @@ function semanticMutation() {
     derived_digest: fileSha256(file),
   };
 }
+
+/** Adds one untrusted axiom from an export's own Sort expression and fresh name indices. */
+function deriveCustomAxiom(sourcePath) {
+  const lines = fs.readFileSync(sourcePath, 'utf8').split('\n').filter((line) => line !== '');
+  const records = lines.map((line) => JSON.parse(line));
+  const parameters = new Map(records.filter((record) => 'il' in record && 'param' in record)
+    .map((record) => [record.il, record.param]));
+  const sort = records.find((record) => 'ie' in record && 'sort' in record && parameters.has(record.sort));
+  if (!sort) throw new Error(`${sourcePath}: no Sort u expression for the custom axiom control`);
+  const fresh = Math.max(...records.filter((record) => 'in' in record).map((record) => record.in)) + 1;
+  const [space, leaf] = CUSTOM_AXIOM.split('.');
+  const appended = [
+    { in: fresh, str: { pre: 0, str: space } },
+    { in: fresh + 1, str: { pre: fresh, str: leaf } },
+    { axiom: { name: fresh + 1, levelParams: [parameters.get(sort.sort)], type: sort.ie, isUnsafe: false } },
+  ];
+  const file = path.join(work, 'custom-axiom.ndjson');
+  fs.writeFileSync(file, `${[...lines, ...appended.map((record) => JSON.stringify(record))].join('\n')}\n`);
+  return { file, sha256: fileSha256(file), axiom: CUSTOM_AXIOM };
+}
 const semantic = semanticMutation();
+const customAxiom = deriveCustomAxiom(small);
 
 // The closure digest of the unmutated mutation source, so "the mutation changed the digest" is a
 // comparison on one artifact.
@@ -380,8 +441,8 @@ const mutations = [
     expected: 'claim-mismatch at the lane; every checker accepts it' },
 ];
 
-// A format-version mutation: three of the four bundled checkers do not enforce the format, so this
-// control demonstrates the lane-level format audit rather than a checker verdict.
+// A format-version mutation: the checkers do not enforce the lane's format pin, so this control
+// demonstrates the lane-level audit rather than a checker verdict.
 const formatMutation = (() => {
   const text = fs.readFileSync(small, 'utf8');
   const newline = text.indexOf('\n');
@@ -397,45 +458,138 @@ mutations.push({
   changes: `the export's meta format version: ${formatMutation.before} -> ${formatMutation.after}`,
   expected: 'unsupported-format at the lane regardless of the checker verdict',
 });
+mutations.push({
+  id: 'custom-axiom-untrusted', kind: 'axiom-mutation', roots: [SMALL_ROOT], file: customAxiom.file,
+  changes: `the retained export with untrusted axiom ${CUSTOM_AXIOM}; checkers use their normal policy`,
+  expected: 'forbidden-axiom at the lane regardless of the checker verdict',
+});
+mutations.push({
+  id: 'custom-axiom-permitted-to-checker', kind: 'axiom-mutation', roots: [SMALL_ROOT], file: customAxiom.file,
+  config: { permitted_axioms: [...STANDARD_AXIOMS, CUSTOM_AXIOM] },
+  changes: `the retained export with ${CUSTOM_AXIOM} explicitly permitted to configurable checkers`,
+  expected: 'forbidden-axiom at the lane even if a checker accepts it',
+});
 
 const controls = mutations.map((control) => subjectEntry(control, control.file, { retained: false, producer: 'derived' }));
 
-// Classifier self-test: exit 2 and unparseable outputs never count as acceptance. These rows feed the
-// classifier synthetic statuses because no bundled checker produced exit 2 on any subject of this run
-// (recorded below as `declined_exit_observed: false`).
-const classifierSelfTest = [
-  { input: { status: 2, stdout: '', stderr: 'declined' }, expected: 'unsupported' },
-  { input: { status: 1, stdout: '', stderr: 'rejected' }, expected: 'checker-error' },
-  { input: { status: 3, stdout: '', stderr: 'parse error' }, expected: 'checker-error' },
-  { input: { status: 0, stdout: '', stderr: '' }, expected: 'checker-error' },
-  { input: { status: 137, stdout: '', stderr: '' }, expected: 'checker-error' },
-  { input: { status: 0, stdout: 'Checked 0 declarations with no errors', stderr: '' }, expected: 'empty-check' },
-].map((row) => {
-  const synthetic = checkersPin.checkers[0];
-  const classified = classify({ status: row.input.status, stdout: row.input.stdout, stderr: row.input.stderr }, synthetic, false);
-  return { ...row, classified: classified.classification };
-});
+const RESOURCE_ADDRESS_SPACE_BYTES = 1024 * 1024;
+const resourceControl = subjectEntry({
+  id: 'resource-exhaustion', kind: 'resource-control', roots: [LARGE_ROOT],
+  changes: `the large pinned export under RLIMIT_AS=${RESOURCE_ADDRESS_SPACE_BYTES} bytes`,
+  expected: 'resource-exhausted',
+  runOptions: () => ({ addressSpaceBytes: RESOURCE_ADDRESS_SPACE_BYTES }),
+}, large, { retained: false, producer: 'pinned large export', address_space_limit_bytes: RESOURCE_ADDRESS_SPACE_BYTES });
+
+/** Invalid NDJSON is parsed independently before each checker outcome is attributed. */
+function parseFailureControl() {
+  const file = path.join(work, 'parse-failure.ndjson');
+  const lines = fs.readFileSync(small, 'utf8').split('\n');
+  if (lines.length < 3) throw new Error('the small export has no declaration record to corrupt');
+  lines[1] = '{"in":';
+  fs.writeFileSync(file, lines.join('\n'));
+  let parserError = null;
+  try {
+    parseExport(file);
+  } catch (error) {
+    parserError = String(error);
+  }
+  if (parserError === null) throw new Error('the lane parser accepted the malformed NDJSON control');
+  const runs = checkersPin.checkers.map((checker) => ({
+    ...runChecker(checker, file, 'parse-failure'),
+    lane: { verdict: 'parse-failure', reasons: [parserError] },
+  }));
+  return {
+    id: 'parse-failure', kind: 'parse-control', expected: 'parse-failure', changes: 'malformed declaration record after the valid meta record',
+    export: { sha256: fileSha256(file), size_bytes: fs.statSync(file).size, lane_parser_error: parserError },
+    runs,
+    quorum: {
+      accepted_by: runs.filter((run) => run.classification === 'accepted').map((run) => run.checker),
+      refused_by: runs.filter((run) => run.classification !== 'accepted').map((run) => `${run.checker}:${run.classification}`),
+      accepted: false,
+    },
+  };
+}
+
+/** Exposes an unsupported policy control as unsupported rather than a successful skip. */
+function extensionControl(id, extension) {
+  const option = `${extension}_extension`;
+  const runs = checkersPin.checkers.map((checker) => {
+    if (checker.run.kind !== 'nanoda-config') {
+      return {
+        checker: checker.id, attempted: false, exit_code: null, signal: null,
+        classification: 'unsupported', unsupported_reason: `no ${option} configuration interface`,
+        lane: { verdict: 'unsupported', reasons: [`checker cannot express ${option}=false`] },
+      };
+    }
+    const result = runChecker(checker, large, id, { configOverrides: { [option]: false } });
+    return { ...result, lane: { verdict: result.classification } };
+  });
+  return {
+    id, kind: 'capability-control', expected: 'unsupported',
+    changes: `${option}=false; checkers without this configuration are recorded unsupported`,
+    input: { root: LARGE_ROOT, sha256: pins.large },
+    runs,
+    quorum: {
+      accepted_by: runs.filter((run) => run.classification === 'accepted').map((run) => run.checker),
+      refused_by: runs.filter((run) => run.classification !== 'accepted').map((run) => `${run.checker}:${run.classification}`),
+      accepted: false,
+    },
+  };
+}
+
+const operationalControls = [
+  resourceControl,
+  parseFailureControl(),
+  extensionControl('unsupported-nat-literal', 'nat'),
+  extensionControl('unsupported-string-literal', 'string'),
+];
+// The same refusal-class mapping is checked for every configured checker; real and synthetic
+// unsupported outcomes remain separately identified in the receipt.
+const classifierCases = [
+  { id: 'declined-exit', input: { status: 2, stdout: '', stderr: 'declined' }, expected: 'unsupported' },
+  { id: 'unsupported-feature', input: { status: 1, stdout: '', stderr: 'Nat literal extension disallowed' }, expected: 'unsupported' },
+  { id: 'kernel-rejection', input: { status: 1, stdout: '', stderr: 'rejected: application type mismatch' }, expected: 'kernel-rejection' },
+  { id: 'parse-failure', input: { status: 3, stdout: '', stderr: "parse error: expected ':' after a key" }, expected: 'parse-failure' },
+  { id: 'forbidden-axiom', input: { status: 1, stdout: '', stderr: 'export file declares unpermitted axiom "NobleReplayControl.customAxiom"' }, expected: 'forbidden-axiom' },
+  { id: 'resource-exhaustion', input: { status: 137, stdout: '', stderr: '' }, expected: 'resource-exhausted' },
+  { id: 'address-space-cap-silent-exit', input: { status: 139, stdout: '', stderr: '' },
+    address_space_bytes: RESOURCE_ADDRESS_SPACE_BYTES, expected: 'resource-exhausted' },
+  { id: 'unparseable-zero-exit', input: { status: 0, stdout: '', stderr: '' }, expected: 'checker-error' },
+  { id: 'empty-check', input: { status: 0, stdout: '', stderr: '' }, expected: 'empty-check' },
+];
+const classifierSelfTest = checkersPin.checkers.flatMap((checker) => classifierCases.map((row) => {
+  const input = row.id === 'empty-check'
+    ? { ...row.input, stdout: checker.accept_pattern.replace(/\(\\d\+\)/u, '0') }
+    : row.input;
+  const classified = classify({ ...input, signal: null }, checker, false, row.address_space_bytes ?? null);
+  return { checker: checker.id, ...row, input, classified: classified.classification };
+}));
 
 const baselineRuns = baselines.flatMap((subject) => subject.runs.map((run) => ({ subject: subject.id, ...run })));
 const mutationRuns = controls.flatMap((subject) => subject.runs.map((run) => ({ subject: subject.id, ...run })));
+const operationalRuns = operationalControls.flatMap((subject) => subject.runs.map((run) => ({ subject: subject.id, ...run })));
+const allExecutedRuns = [...baselineRuns, ...mutationRuns, ...operationalRuns].filter((run) => run.attempted !== false);
 const proofMutations = controls.filter((control) => control.id === 'semantic-mutation');
 const proofMutationRuns = proofMutations.flatMap((control) => control.runs.map((run) => ({ subject: control.id, ...run })));
 const checkerIds = checkersPin.checkers.map((checker) => checker.id);
 const languageEvidenceRows = new Map(checkersPin.checkers.map((checker) => [checker.id, languageEvidence(checker)]));
 const independentDesigns = checkersPin.checkers.filter((checker) => checker.independent_checker_design)
   .map((checker) => checker.id).sort();
+const subjectAndOperationalControls = [...controls, ...operationalControls];
+const independentDesignLanguages = independentDesigns.map((id) => checkersPin.checkers.find((checker) => checker.id === id).language);
 
 const checks = {
   manifest_matches_the_compiled_environment: manifestCheck.every((row) => row.matches),
   every_checker_language_marker_matches: checkersPin.checkers
     .every((checker) => languageEvidenceRows.get(checker.id).matched),
-  independent_designs_are_nanoda_and_con_leche:
-    independentDesigns.join(',') === 'con-leche,nanoda',
+  independent_designs_include_three_distinct_languages:
+    independentDesigns.join(',') === 'con-leche,nanoda,ocaml4lean'
+    && new Set(independentDesignLanguages).size === independentDesignLanguages.length,
   con_ron_is_distinct_but_related: checkersPin.checkers.some((checker) =>
     checker.id === 'con-ron' && checker.independent_implementation && !checker.independent_checker_design),
   lean4lean_is_kernel_derived: checkersPin.checkers.some((checker) =>
     checker.id === 'lean4lean' && !checker.independent_of_lean_kernel && !checker.independent_checker_design),
-  every_control_ran_against_every_checker: controls.every((control) =>
+  every_control_has_a_row_for_every_checker: subjectAndOperationalControls.every((control) =>
     control.runs.length === checkerIds.length
       && new Set(control.runs.map((run) => run.checker)).size === checkerIds.length
       && checkerIds.every((checker) => control.runs.some((run) => run.checker === checker))),
@@ -447,12 +601,12 @@ const checks = {
     baselineRuns.filter((run) => run.classification === 'accepted').every((run) => run.count > 0)
     && baselineRuns.filter((run) => run.classification === 'accepted').length > 0,
   every_checker_run_has_wall_time_and_max_rss:
-    [...baselineRuns, ...mutationRuns].every((run) =>
+    allExecutedRuns.every((run) =>
       Number.isFinite(run.wall_seconds) && Number.isFinite(run.max_rss_kb) && run.max_rss_kb > 0),
   no_checker_accepted_a_proof_mutation:
     proofMutationRuns.every((run) => run.classification !== 'accepted'),
   semantic_mutation_refused_by_every_checker:
-    controls.find((control) => control.id === 'semantic-mutation').runs.every((run) => run.classification !== 'accepted'),
+    controls.find((control) => control.id === 'semantic-mutation').runs.every((run) => run.classification === 'kernel-rejection'),
   dropped_dependencies_refused_by_the_lane:
     controls.filter((control) => control.id.startsWith('dropped-'))
       .every((control) => control.runs.every((run) =>
@@ -471,25 +625,41 @@ const checks = {
       .runs.every((run) => run.lane.verdict === 'unsupported-format'),
   format_mutation_shows_a_checker_divergence:
     new Set(controls.find((control) => control.id === 'format-version-mutation').runs.map((run) => run.classification)).size > 1,
-  classifier_exit_2_is_unsupported: classifierSelfTest
-    .find((row) => row.input.status === 2).classified === 'unsupported',
-  classifier_other_nonzero_is_checker_error: classifierSelfTest
-    .filter((row) => row.input.status !== 0 && row.input.status !== 2)
-    .every((row) => row.classified === 'checker-error'),
-  classifier_never_accepts_an_unparseable_zero_exit: classifierSelfTest
-    .find((row) => row.input.status === 0 && row.input.stdout === '').classified !== 'accepted',
-  no_mutation_lane_verdict_accepted: controls.every((control) => control.quorum.accepted === false),
+  custom_axiom_control_refused_by_lane:
+    controls.filter((control) => control.id.startsWith('custom-axiom-'))
+      .every((control) => control.runs.every((run) => run.lane.verdict === 'forbidden-axiom')),
+  configurable_checker_accepts_permitted_custom_axiom:
+    controls.find((control) => control.id === 'custom-axiom-permitted-to-checker')
+      .runs.some((run) => run.checker === 'nanoda' && run.classification === 'accepted'
+        && run.config_overrides.permitted_axioms.includes(CUSTOM_AXIOM)),
+  parse_failure_control_is_refused_by_every_checker:
+    operationalControls.find((control) => control.id === 'parse-failure')
+      .runs.every((run) => run.classification === 'parse-failure' && run.lane.verdict === 'parse-failure'),
+  resource_limit_is_reported_as_resource_exhaustion_for_every_checker:
+    resourceControl.runs.every((run) => run.classification === 'resource-exhausted' && run.lane.verdict === 'resource-exhausted'),
+  unsupported_controls_are_explicit:
+    operationalControls.filter((control) => control.id.startsWith('unsupported-'))
+      .every((control) => control.runs.every((run) => run.classification === 'unsupported'
+        && (run.attempted === true || (run.attempted === false && run.unsupported_reason !== undefined)))),
+  classifier_preserves_all_refusal_classes_for_every_checker:
+    classifierSelfTest.every((row) => row.classified === row.expected)
+      && checkersPin.checkers.every((checker) => classifierSelfTest.some((row) => row.checker === checker.id && row.expected === 'kernel-rejection')
+        && classifierSelfTest.some((row) => row.checker === checker.id && row.expected === 'parse-failure')
+        && classifierSelfTest.some((row) => row.checker === checker.id && row.expected === 'forbidden-axiom')
+        && classifierSelfTest.some((row) => row.checker === checker.id && row.expected === 'unsupported')
+        && classifierSelfTest.some((row) => row.checker === checker.id && row.expected === 'resource-exhausted')),
+  no_mutation_lane_verdict_accepted: subjectAndOperationalControls.every((control) => control.quorum.accepted === false),
 };
 const holds = Object.values(checks).every(Boolean);
 
-const declinedExitObserved = [...baselineRuns, ...mutationRuns].some((run) => run.classification === 'unsupported');
+const declinedExitObserved = allExecutedRuns.some((run) => run.exit_code === 2);
 const host = spawnSync('uname', ['-srm'], { encoding: 'utf8' }).stdout.trim();
 const source = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: process.cwd(), encoding: 'utf8' });
 if (source.status !== 0 || source.stdout.trim() === '') {
   throw new Error(`cannot identify receipt source commit: ${source.stderr.trim()}`);
 }
 const summaries = checkersPin.checkers.map((checker) => {
-  const runs = [...baselineRuns, ...mutationRuns].filter((run) => run.checker === checker.id);
+  const runs = [...baselineRuns, ...mutationRuns, ...operationalRuns].filter((run) => run.checker === checker.id);
   return {
     checker: checker.id,
     language: checker.language,
@@ -501,7 +671,8 @@ const summaries = checkersPin.checkers.map((checker) => {
     source_evidence: checker.source_evidence,
     binary_source_revision: checker.binary_source_revision,
     accepted_runs: runs.filter((run) => run.classification === 'accepted').length,
-    runs: runs.length,
+    run_records: runs.length,
+    attempted_runs: runs.filter((run) => run.attempted !== false).length,
     wall_seconds_total: Number(runs.reduce((sum, run) => sum + (run.wall_seconds ?? 0), 0).toFixed(2)),
     max_rss_kb_peak: runs.reduce((peak, run) => Math.max(peak, run.max_rss_kb ?? 0), 0),
     classifications: runs.reduce((counts, run) => {
@@ -512,18 +683,23 @@ const summaries = checkersPin.checkers.map((checker) => {
 });
 
 const receipt = {
-  schema: 'noble-independent-replay-multi/v1',
+  schema: 'noble-independent-replay-multi/v2',
   measured_on: new Date().toISOString().slice(0, 10),
   host,
   source_commit: source.stdout.trim(),
   toolchain,
-  assertion: 'every pinned checker accepted both named closures and the fresh Init closure under the strict rule; each checker refused the semantic proof mutation and the dropped dependencies, the substituted valid claim was accepted by every checker and refused by statement binding, a format-version mutation that three checkers accept was refused by the lane, and per-checker wall time and max RSS are recorded',
+  execution_tools: {
+    time: { path: timeBin, sha256: fileSha256(timeBin) },
+    prlimit: { path: prlimitBin, sha256: fileSha256(prlimitBin) },
+  },
+  assertion: 'every pinned checker accepted both named closures and the fresh Init closure under the strict rule; every checker row records semantic-mutation and dropped-dependency outcomes, parse and resource failures are distinguished from kernel rejection and unsupported controls, the substituted valid claim was refused by statement binding, custom axioms were refused by the lane, and every executed run records wall time and max RSS',
   holds,
   checks,
   pin_guard_passed: true,
   harness: {
     multi: { path: 'verification/independent-replay/multi.mjs', sha256: fileSha256(fileURLToPath(import.meta.url)) },
     checkers: { path: 'verification/independent-replay/checkers.json', sha256: fileSha256(checkersPath) },
+    ocaml_derivation: { path: 'verification/independent-replay/ocaml4lean.nix', sha256: fileSha256(path.join(here, 'ocaml4lean.nix')) },
     binding_core: { path: 'verification/independent-replay/binding-core.mjs', sha256: fileSha256(path.join(here, 'binding-core.mjs')) },
     ndjson: { path: 'verification/independent-replay/ndjson.mjs', sha256: fileSha256(path.join(here, 'ndjson.mjs')) },
     pins: { path: 'verification/independent-replay/pins.mjs', sha256: fileSha256(path.join(here, 'pins.mjs')) },
@@ -548,6 +724,8 @@ const receipt = {
     policy: checkersPin.toolchain.policy,
     checkers: checkersPin.checkers.map((checker) => ({
       id: checker.id, binary: checker.binary, binary_sha256: checker.sha256,
+      binary_source_revision: checker.binary_source_revision,
+      binary_arg: checker.binary_arg ?? null,
       language: checker.language,
       independent_of_lean_kernel: checker.independent_of_lean_kernel,
       independent_implementation: checker.independent_implementation,
@@ -567,10 +745,12 @@ const receipt = {
   },
   subjects: baselines,
   controls,
+  operational_controls: operationalControls,
   semantic_mutation: semantic,
   semantic_mutation_baseline_closure: mutationBaseline,
   classifier_self_test: classifierSelfTest,
   declined_exit_observed: declinedExitObserved,
+  unsupported_classification_observed: allExecutedRuns.some((run) => run.classification === 'unsupported'),
   checker_summaries: summaries,
   observations: {
     declaration_count_spread_on_large: Object.fromEntries(
@@ -585,7 +765,7 @@ const receipt = {
       implementation_family: checker.implementation_family,
       note: checker.independence,
     })),
-    divergences: controls
+    divergences: subjectAndOperationalControls
       .filter((control) => new Set(control.runs.map((run) => run.classification)).size > 1)
       .map((control) => ({
         control: control.id,
@@ -596,9 +776,9 @@ const receipt = {
     'Acceptance by several checkers says nothing about any checker\'s correctness, completeness or equivalence to the Lean kernel.',
     'con-ron is con-leche\'s Rust twin: agreement between them is not independent corroboration.',
     'lean4lean is derived from the C++ kernel and is counted as lower diversity, never as an independent implementation.',
-    'No checker was built from source in this lane; identity comes from the pinned release path and the binary digests above.',
+    'OCaml4Lean is built from its pinned upstream source revision with the source-pinned Nix derivation; the other checkers remain release-bundled.',
     'Only the three bound subjects were replayed; this is not a full NobleFoundation replay.',
-    'Exit 2 (declined) was not produced by any bundled checker in this run; the classifier unit control covers the mapping.',
+    'No checker emitted exit 2 in this run; every checker maps that exit to unsupported in the classifier self-test.',
     'No CI, flake, policy or gate change; promotion is an owner decision.',
   ],
 };

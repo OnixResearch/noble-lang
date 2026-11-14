@@ -1,6 +1,6 @@
 {
   "schema": "noble-independent-replay-checkers/v1",
-  "description": "Pinned external checkers for the issue #62 multi-checker lane. Every checker is a binary bundled with the policy-selected Lean 4.35.0 release, so its identity is pinned twice: by the release's store path (policy/tool-selection.json) and by the binary's own SHA-256 below. No checker is built from source by this lane; the nanoda-from-source receipts of 2026-10-29/30 stay as history.",
+  "description": "Pinned external checkers for the issue #62 multi-checker lane. Release-bundled checkers are pinned by the policy-selected Lean 4.35.0 store path and binary SHA-256. OCaml4Lean is additionally built from its pinned source revision with the adjacent Nix derivation; its executable SHA-256 is pinned below.",
   "toolchain": {
     "lean": "4.35.0",
     "githash": "eb6cafb7290e8bd5f2937522d8d804f58f02bafc",
@@ -14,8 +14,12 @@
   },
   "checker_interface": {
     "accepted": "exit 0 and a positive checked-declaration count parsed from the checker's own output",
-    "unsupported": "exit 2 (the Lean Kernel Arena's 'declined'), recorded as a refusal class and never as success",
-    "checker-error": "every other nonzero exit or signal, or exit 0 without a parseable positive count; rejection-shaped diagnostics are recorded but never promoted to mathematical refutations",
+    "unsupported": "exit 2 or an explicit unsupported-format/feature diagnostic, recorded as refusal and never as success",
+    "forbidden-axiom": "checker-specific refusal of an unpermitted axiom; distinct from a kernel rejection",
+    "kernel-rejection": "a nonzero checker result with a rejection-shaped type/kernel diagnostic; it is not a mathematical refutation of the source theorem",
+    "parse-failure": "a malformed export reported by a parser-specific diagnostic; distinct from unsupported input and kernel rejection",
+    "resource-exhausted": "the OS limit is exhausted or the checker reports a memory/resource allocation failure; never a kernel rejection",
+    "checker-error": "every other nonzero exit or signal, or exit 0 without a parseable positive count",
     "source": "https://github.com/leanprover/lean-kernel-arena checkers/*.yaml (run: 0 accept, 1 reject, 2 decline)"
   },
   "independence_dimensions": {
@@ -25,7 +29,7 @@
   "export_format": {
     "version": "3.1.0",
     "producer": "lean4export bundled with Lean 4.35.0",
-    "rule": "the lane audits the export's declared meta format version itself: three of the four bundled checkers accepted a 3.2.0 export that nanoda refuses, so a format mismatch is a lane refusal (`unsupported-format`), not a checker verdict"
+    "rule": "the lane audits the export's declared meta format version itself; a format mismatch is a lane-level unsupported-format refusal regardless of a checker's parser behavior"
   },
   "checkers": [
     {
@@ -107,6 +111,28 @@
       "accept_pattern": "checked (\\d+) declarations",
       "declined_exit": [2],
       "note": "Rejections print 'uncaught exception: at <decl>: (kernel) ...' on stderr and exit 1, the same status as an internal error; the rejection-shaped message is recorded."
+    },
+    {
+      "id": "ocaml4lean",
+      "binary": "ocaml4lean",
+      "binary_arg": "--ocaml-bin",
+      "sha256": "89700edec6f6d9bcf73a20a4a40a4f84c2d62e305bf7b96f9e9b487fb4cc38c1",
+      "version": "source revision 6f94226df5b91e51af692d05e00b001ee8e0f2fd",
+      "language": "OCaml",
+      "language_marker": "caml_",
+      "implementation_family": "ocaml4lean-ocaml",
+      "source_evidence": "https://github.com/yoonwoojeong/ocaml4lean/tree/6f94226df5b91e51af692d05e00b001ee8e0f2fd",
+      "binary_source_revision": "6f94226df5b91e51af692d05e00b001ee8e0f2fd",
+      "build_derivation": "verification/independent-replay/ocaml4lean.nix",
+      "upstream": "yoonwoojeong/ocaml4lean (Apache-2.0), built from the pinned source revision with the pinned Nixpkgs source",
+      "independent_of_lean_kernel": true,
+      "independent_implementation": true,
+      "independent_checker_design": true,
+      "independence": "A separately authored OCaml kernel with its own term/environment representation and parser; its source is not a port of Lean's C++ kernel or another listed checker. It intentionally follows the reference kernel's algorithmic behavior, so algorithm-level common-mode risk remains. The checker has no Lean runtime dependency; the lane still shares the pinned lean4export format and permitted Lean axioms.",
+      "run": { "argv": ["-j", "4", "FILE"], "threads": 4 },
+      "accept_pattern": "accepted (\\d+) declarations",
+      "declined_exit": [2],
+      "note": "The upstream checker never declines and accepts any axiom; parse/resource errors use exit 3. The lane independently enforces the allowed-axiom rule. Exact compatibility with Lean 4.35.0 / format 3.1.0 is exercised in the source-bound replay receipt."
     }
   ]
 }
