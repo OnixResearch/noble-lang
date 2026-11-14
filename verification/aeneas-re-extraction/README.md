@@ -11,7 +11,15 @@ This directory records the two minimal Aeneas failures that block completing iss
 
 Full records: [`vec-new-failure.json`](vec-new-failure.json) and [`iterator-find-failure.json`](iterator-find-failure.json). Charon was invoked with `--inline-anon-consts` in both cases. That argument addresses the promoted-constant inlining regression; it does not fix either limitation above. Aeneas produced no Lean files for either reproducer, and no Lean proof was attempted. The separate promoted-`'static` negative control passed: Aeneas refused both escaping promoted constants with `There should be no bottoms in the value` (recorded by unit 3, commit `048c3971`).
 
+The attempted full-kernel extraction with a reviewed opaque-item fallback also failed before producing a complete subject: Aeneas exited 2 with `Could not read a borrow` at `crates/noble-kernel/src/shapes.rs:251:17-251:22`, followed by a context mismatch at `crates/noble-kernel/src/contracts/nominal.rs:300:25-300:51`. No opaque exception was adopted, and no downstream Lean check was reached.
+
 The selected revisions were Aeneas and Aeneas Lean library `1238879f9ea550512096e9bf8bd6fe7407b3eaef`, Charon `9e95cf318e3a2964fcf5e03104cde5b718f98ea5`, and extraction Rust `1.100.0-nightly-2026-09-17`; see each record for the resolved store paths and nar hashes.
+
+## Generated subjects and lane receipts
+
+The unit-4 byte comparisons cover the eight checked-in generated files: `Funs.lean` and `Types.lean` for the M2 kernel, M3 kernel, M3-Wasm emitter, and MC1 contract subjects. Those files match output from the selected Aeneas `1238879f` extractor for their recorded inputs; this does not establish a complete full-kernel translation or successful proof-port.
+
+The committed M4, M3-Wasm, and MC1 implementation/lock receipts still identify the earlier Aeneas `505b6ca` run. They are retained as historical evidence and are not current receipts for the `1238879f` selection. Their active producers are bound to the current selection; fresh receipts remain pending until full extraction and the affected Lean lanes pass. The M1 README similarly labels its `505b6ca` / `1238879f` run as historical. Do not use any of these earlier receipts as evidence for the current extractor.
 
 ## Re-running
 
