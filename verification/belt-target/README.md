@@ -7,13 +7,17 @@ untrusted, and target artifacts are independently checked before execution.
 
 ## Reproduction
 
-Run the ignored fixed-workload report after committing the source revision. Set
-the report path to a new absolute file outside the repository:
+Run the ignored fixed-workload report from a clean source commit. Set `report`
+to a new absolute file outside the repository; the Cargo configuration entries
+pass both explicit values to the test process:
 
 ```sh
-NOBLE_TARGET_REPORT=<new absolute report path outside the repository> \
-NOBLE_TARGET_SOURCE_COMMIT=$(git rev-parse HEAD) \
-cargo test -p noble-ngraph --test schedule_correspondence --offline --locked -- \
+report="$HOME/model-cost.json"
+source_commit=$(git rev-parse HEAD)
+cargo test \
+  --config "env.NOBLE_TARGET_REPORT=\"$report\"" \
+  --config "env.NOBLE_TARGET_SOURCE_COMMIT=\"$source_commit\"" \
+  -p noble-ngraph --test schedule_correspondence --offline --locked -- \
   --ignored --nocapture belt_target_measure::fixed_model_cost_report
 ```
 
