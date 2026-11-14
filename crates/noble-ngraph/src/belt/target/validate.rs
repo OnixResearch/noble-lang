@@ -87,12 +87,8 @@ pub(super) fn check_stream(
         return Err(Refusal::CheckingExhausted);
     }
     for cycle in 0..=max_cycle {
-        for used in &mut lane_used {
-            *used = false;
-        }
-        for used in &mut unit_used {
-            *used = false;
-        }
+        lane_used.fill(false);
+        unit_used.fill(false);
         let start = cursor;
         while cursor < ordered.len() && ordered[cursor].cycle == cycle {
             cursor += 1;
