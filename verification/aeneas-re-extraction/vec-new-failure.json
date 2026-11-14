@@ -1,0 +1,54 @@
+{
+  "schema": "noble-aeneas-re-extraction-failure/v1",
+  "subject": "vec-new-function-item-1238879f",
+  "source_commit": "1fcc664",
+  "tool_selection": {
+    "aeneas_rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+    "aeneas_narHash": "sha256-HXAeoR35sHdqQj9FEz4ulPvVAdxqZlBcMG2ly7OYNDk=",
+    "charon_rev": "9e95cf318e3a2964fcf5e03104cde5b718f98ea5",
+    "charon_narHash": "sha256-5k2jpmT+hl0ocmJPeyVKlf2ehHJDVJiZy8sovKWHiIg=",
+    "rust_toolchain": "1.100.0-nightly-2026-09-17"
+  },
+  "working_directory": "verification/aeneas-re-extraction/reproducers/vec-new",
+  "environment": {
+    "run_root": "/dev/shm/reextract-97-reproducers.vF3y2y",
+    "CARGO_BUILD_JOBS": "6",
+    "CARGO_HOME": "/dev/shm/reextract-97-reproducers.vF3y2y/cargo-home",
+    "CARGO_TARGET_DIR": "/dev/shm/reextract-97-reproducers.vF3y2y/cargo-target",
+    "HOME": "/dev/shm/reextract-97-reproducers.vF3y2y/home",
+    "TMPDIR": "/dev/shm/reextract-97-reproducers.vF3y2y/tmp",
+    "RUSTC_WRAPPER": ""
+  },
+  "commands": {
+    "charon_argv": [
+      "/nix/store/dg8i5s1hl2lncdcjmi6iq98iq1dji5x3-charon/bin/charon",
+      "cargo", "--preset=aeneas", "--error-on-warnings", "--inline-anon-consts",
+      "--dest-file", "/dev/shm/reextract-97-reproducers.vF3y2y/vec-new.llbc", "--",
+      "--manifest-path", "Cargo.toml", "--lib", "--all-features", "--target",
+      "x86_64-unknown-linux-gnu", "--locked", "--offline"
+    ],
+    "aeneas_argv": [
+      "/nix/store/mx4siwxnwb74avq1sq971h5i55bwxwzq-ocaml5.2.1-aeneas-0.1.0/bin/aeneas",
+      "-backend", "lean", "-abort-on-error", "-warnings-as-errors", "-no-progress-bar",
+      "-emit-json", "-split-files", "-gen-lib-entry", "-all-computable", "-dest",
+      "/dev/shm/reextract-97-reproducers.vF3y2y/vec-new",
+      "/dev/shm/reextract-97-reproducers.vF3y2y/vec-new.llbc"
+    ]
+  },
+  "observed": {
+    "charon_exit": 0,
+    "charon_log_sha256": "143de1d08a948dcf59c0c22e1f4116fc4693df362a87e5380ec68daa5b6741bf",
+    "llbc_sha256": "8940677a4df41342c689f8ce84c61e6a9ade87cb210f07b73a3fe6b530106a37",
+    "aeneas_exit": 2,
+    "aeneas_log_sha256": "9bd2c21776230b975c0cbcf7a8214b5c50ce59d74db648f7e697f5540c2974a8",
+    "failure": {
+      "message": "Unimplemented",
+      "source": "/rustc/library/alloc/src/vec/mod.rs:464:4-464:30",
+      "aeneas_source": "symbolic/SymbolicToPureTypes.ml:411"
+    }
+  },
+  "non_claims": [
+    "No Lean subject was generated and no Lean theorem was checked.",
+    "The reproducer demonstrates an Aeneas translation refusal; it is not a claim that the Rust function is invalid."
+  ]
+}
