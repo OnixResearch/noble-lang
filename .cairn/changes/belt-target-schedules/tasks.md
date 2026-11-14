@@ -6,9 +6,9 @@
 - [x] [serial] Define input/constant materialization, explicit save/load timing, and ordered final output reads. r[NGRAPH-BELT-TARGET-02]
 - [x] [serial] Specify independent legality, semantic-preservation evidence, controls, mutations, and explicit non-claims. r[NGRAPH-BELT-TARGET-03] r[NGRAPH-BELT-TARGET-04]
 
-## Phase 2: Not selected by this issue slice
+## Phase 2: Selected by issue #114
 
-- [ ] [serial] Implement a target schedule representation and independent checker. r[NGRAPH-BELT-TARGET-01] r[NGRAPH-BELT-TARGET-02] r[NGRAPH-BELT-TARGET-03]
-- [ ] [serial] Add a Lean timed-machine model and semantic soundness theorem. r[NGRAPH-BELT-TARGET-03]
-- [ ] [serial] Add T1/T2 differential fixtures, mutations, and cost measurements. r[NGRAPH-BELT-TARGET-04]
-- [ ] [serial] Claim no implementation or measurement until a separately selected implementation issue completes those tasks. r[NGRAPH-BELT-TARGET-03] r[NGRAPH-BELT-TARGET-04]
+- [x] [serial] Implement a target schedule representation and independent checker. Evidence: `crates/noble-ngraph/src/belt/target.rs` and `crates/noble-ngraph/tests/belt_target_dir/`; commits `1a0028c5`, `6b27d997`, `7476e6fc`. r[NGRAPH-BELT-TARGET-01] r[NGRAPH-BELT-TARGET-02] r[NGRAPH-BELT-TARGET-03]
+- [x] [serial] Add a Lean timed-machine model and scoped completion/output theorem. Evidence: `proofs/foundation/NobleFoundation/BeltTarget.lean`, `BeltTargetCorpus.lean`, and the corpus freshness test; commits `2238adf9`, `298a5383`. The theorem gates ordered graph-reference values on latency-derived completion; operation execution, belt/save transitions, and Rust refinement remain open and are not claimed. r[NGRAPH-BELT-TARGET-03]
+- [x] [serial] Add T1/T2 differential fixtures, mutations, boundary controls, and cost measurements. Evidence: target tests under `crates/noble-ngraph/tests/belt_target_dir/`; receipt `verification/belt-target/model-cost.json`, measured from clean source commit `05b0eeab`; commits `0c63b138`, `5d78e293`, `7476e6fc`, `05b0eeab`, `98faea1f`. r[NGRAPH-BELT-TARGET-04]
+- [x] [serial] Keep implementation and measurement claims within the selected abstract-model scope. Evidence: `verification/belt-target/README.md` and the target row of `proofs/foundation/README.md` explicitly exclude production-backend, hardware-performance, independent arithmetic-machine, belt/save-model, and Rust-to-Lean-refinement claims. r[NGRAPH-BELT-TARGET-03] r[NGRAPH-BELT-TARGET-04]
