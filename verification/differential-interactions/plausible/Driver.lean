@@ -34,7 +34,7 @@ private def push (v : String) : Json := obj [("push", jstr v)]
 private def op (s : String) : Json := jstr s
 private def one (ops : List Json) : Json := obj [("arith", array ops)]
 private def addZero (v : Nat) : List Json := (List.range v).flatMap fun _ => [push "0", op "add"]
-private def addZeroText (v : Nat) : List String := (List.range v).flatMap fun _ => ["0", "add"]
+private def addZeroText (v : Nat) : List String := (List.range v).flatMap fun _ => ["0", "+"]
 private def cellName : Fin 4 → String
   | ⟨0, _⟩ => "P1/plain/small/preserved_prefix_multiple"
   | ⟨1, _⟩ => "P1/plain/zero_negative_one/ordered_single"
@@ -61,24 +61,24 @@ private def render (c : PilotCase cell) : Json × String := Id.run do
   if cell.val == 0 then
     let ops := [push "2", push "3", op "mul"] ++ addZero v
     let text := String.intercalate " " ([toString (23 + v), if v % 2 == 0 then "true" else "false",
-      "2", "3", "mul"] ++ addZeroText v) ++ "\n"
+      "2", "3", "*"] ++ addZeroText v) ++ "\n"
     return (obj [("kind", jstr "straight"), ("prefix", p), ("ops", array ops),
       ("interaction", interaction)], text)
   if cell.val == 1 then
     let ops := [push "0", push "-1", op "sub"] ++ addZero v
-    let text := String.intercalate " " (["0", "-1", "sub"] ++ addZeroText v) ++ "\n"
+    let text := String.intercalate " " (["0", "-1", "-"] ++ addZeroText v) ++ "\n"
     return (obj [("kind", jstr "straight"), ("prefix", p), ("ops", array ops),
       ("interaction", interaction)], text)
   if cell.val == 2 then
     let ops := [op "add"] ++ addZero v
-    let text := String.intercalate " " (["9223372036854775807", "1", "[", "add"] ++
+    let text := String.intercalate " " (["9223372036854775807", "1", "[", "+"] ++
       addZeroText v ++ ["]", "run"]) ++ "\n"
     return (obj [("kind", jstr "program"), ("prefix", p),
       ("ins", array [push "9223372036854775807", push "1"]),
       ("program", one ops), ("interaction", interaction)], text)
   let second := [push "2", op "mul"] ++ addZero v
-  let text := String.intercalate " " (["9223372036854775807", "[", "1", "add", "]",
-    "["] ++ ["2", "mul"] ++ addZeroText v ++ ["]", "compose", "run"]) ++ "\n"
+  let text := String.intercalate " " (["9223372036854775807", "[", "1", "+", "]",
+    "["] ++ ["2", "*"] ++ addZeroText v ++ ["]", "compose", "run"]) ++ "\n"
   return (obj [("kind", jstr "program"), ("prefix", p),
     ("ins", array [push "9223372036854775807"]),
     ("program", obj [("compose", array [one [push "1", op "add"], one second])]),
