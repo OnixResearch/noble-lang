@@ -84,8 +84,11 @@ impl BoundedJson {
         let mut start = digits.len();
         loop {
             start -= 1;
-            // The remainder is in 0..=9; this narrowing cannot lose a bit.
-            digits[start] = b'0' + (value % 10) as u8;
+            let Ok(digit) = u8::try_from(value % 10) else {
+                self.exceeded_limit = true;
+                return;
+            };
+            digits[start] = b"0123456789"[usize::from(digit)];
             value /= 10;
             if value == 0 {
                 break;
@@ -136,7 +139,11 @@ impl BoundedJson {
                 '\t' => self.push_str("\\t"),
                 character if character <= '\u{001f}' => {
                     self.push_str("\\u00");
-                    self.push_hex(&[character as u8]);
+                    if let Ok(ascii) = u8::try_from(u32::from(character)) {
+                        self.push_hex(&[ascii]);
+                    } else {
+                        self.exceeded_limit = true;
+                    }
                 }
                 character => self.push(character),
             }
