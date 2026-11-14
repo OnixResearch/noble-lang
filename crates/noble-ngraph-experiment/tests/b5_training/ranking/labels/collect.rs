@@ -24,6 +24,16 @@ pub(crate) fn primitive_baseline_uses_the_callers_source_budget_caps() {
     assert_eq!(limits.work, 1_000);
 }
 
+fn fixture_record(cases: &[Fixture]) -> Value {
+    json!(cases
+        .iter()
+        .map(|case| json!({
+            "inputs": case.inputs.iter().copied().map(scalar_json).collect::<Vec<_>>(),
+            "outputs": case.outputs.iter().copied().map(scalar_json).collect::<Vec<_>>()
+        }))
+        .collect::<Vec<_>>())
+}
+
 pub(crate) fn fixture_set(spec: &TaskSpec) -> FixtureSet {
     let cases: Vec<Fixture> = spec
         .cases
@@ -33,24 +43,22 @@ pub(crate) fn fixture_set(spec: &TaskSpec) -> FixtureSet {
             outputs: case.outputs.clone(),
         })
         .collect();
-    let record = json!(cases
-        .iter()
-        .map(|case| json!({
-            "inputs": case.inputs.iter().copied().map(scalar_json).collect::<Vec<_>>(),
-            "outputs": case.outputs.iter().copied().map(scalar_json).collect::<Vec<_>>()
-        }))
-        .collect::<Vec<_>>());
-    let encoded = serde_json::to_vec(&record).unwrap_or_default();
+    let encoded = serde_json::to_vec(&fixture_record(&cases))
+        .expect("fixture records contain only JSON values");
     let digest = blake3::hash(&encoded);
     let mut id = [0u8; chunks::IDENTITY_BYTES];
     id.copy_from_slice(&digest.as_bytes()[..chunks::IDENTITY_BYTES]);
     FixtureSet { id, cases }
 }
 
-pub(crate) fn request(spec: &TaskSpec, library: &Library) -> Request {
+fn single_candidate_budget() -> Budget {
     let mut budget = Budget::PROFILE;
     budget.candidates = 4;
     budget.composed_chunks = 1;
+    budget
+}
+
+pub(crate) fn request(spec: &TaskSpec, library: &Library) -> Request {
     Request {
         format: 1,
         semantic_revision: 0,
@@ -67,14 +75,17 @@ pub(crate) fn request(spec: &TaskSpec, library: &Library) -> Request {
         hole_path: vec![0],
         library_revision: *library.revision(),
         fixtures: Some(fixture_set(spec)),
-        budget,
+        budget: single_candidate_budget(),
     }
 }
 
 pub(crate) fn monotonic_now_ns() -> u64 {
     static START: std::sync::LazyLock<std::time::Instant> =
         std::sync::LazyLock::new(std::time::Instant::now);
-    u64::try_from(START.elapsed().as_nanos()).unwrap_or(u64::MAX)
+    let Ok(nanos) = u64::try_from(START.elapsed().as_nanos()) else {
+        return u64::MAX;
+    };
+    nanos
 }
 
 pub(crate) struct CapturedFeature {
@@ -95,14 +106,14 @@ impl chunks::CandidateRanker for CapturingRanker {
     }
 
     fn provenance_matches(&self, identity: &chunks::RankingIdentity) -> bool {
-        let matched = identity.model_identity == Some(self.model_identity)
+        let is_matched = identity.model_identity == Some(self.model_identity)
             && identity.library_revision == self.library_revision
             && identity.feature_revision == chunks::FEATURE_REVISION
             && identity.semantic_revision == 0;
-        if matched {
+        if is_matched {
             *self.identity.borrow_mut() = Some(identity.clone());
         }
-        matched
+        is_matched
     }
 
     fn score(
@@ -132,49 +143,60 @@ pub(crate) struct FeatureCapture {
     pub(crate) response: chunks::Response,
 }
 
-pub(crate) fn collect_features(
-    session: &noble_contracts::source::Session,
-    library: &Library,
-    spec: &TaskSpec,
-) -> Result<FeatureCapture, String> {
-    let model_identity = [0x74; chunks::REVISION_BYTES];
-    let mut ranker = CapturingRanker {
-        model_identity,
+fn capturing_ranker(library: &Library) -> CapturingRanker {
+    CapturingRanker {
+        model_identity: [0x74; chunks::REVISION_BYTES],
         library_revision: *library.revision(),
         identity: std::cell::RefCell::new(None),
         features: Vec::new(),
-    };
-    let mut observed = Vec::new();
+    }
+}
+
+fn observed_ranked_response(
+    session: &noble_contracts::source::Session,
+    library: &Library,
+    spec: &TaskSpec,
+    ranker: &mut CapturingRanker,
+    observed: &mut Vec<chunks::CandidateOutcome>,
+) -> chunks::RankedResponse {
     let mut observer = |outcome: &chunks::CandidateOutcome| observed.push(outcome.clone());
-    let mut ranker_session = chunks::RankerSession::new(&mut ranker, model_identity);
-    let ranked = chunks::complete_ranked_observed(
-        session,
-        library,
-        &request(spec, library),
-        &mut ranker_session,
-        &mut observer,
-        monotonic_now_ns,
-    );
-    let identity = ranker
-        .identity
-        .borrow()
-        .clone()
+    let model_identity = ranker.model_identity;
+    let mut ranker_session = chunks::RankerSession::new(ranker, model_identity);
+    chunks::complete_ranked_observed(
+        session, library, &request(spec, library), &mut ranker_session,
+        &mut observer, monotonic_now_ns,
+    )
+}
+
+fn checked_ranked_capture(
+    ranker: &mut CapturingRanker,
+    disposition: chunks::RankingDisposition,
+    spec: &TaskSpec,
+) -> Result<chunks::RankingIdentity, String> {
+    let identity = ranker.identity.borrow().clone()
         .ok_or_else(|| format!("ranking identity missing for {}", spec.id()))?;
-    if ranked.disposition != chunks::RankingDisposition::Applied {
-        return Err(format!(
-            "feature scorer refused {}: {:?}",
-            spec.id(),
-            ranked.disposition
-        ));
+    if disposition != chunks::RankingDisposition::Applied {
+        return Err(format!("feature scorer refused {}: {disposition:?}", spec.id()));
     }
     ranker.features.sort_by_key(|row| row.candidate.ordinal);
     if ranker.features.len() != 4 {
         return Err(format!(
             "feature queue for {} had {} candidates, expected four",
-            spec.id(),
-            ranker.features.len()
+            spec.id(), ranker.features.len()
         ));
     }
+    Ok(identity)
+}
+
+pub(crate) fn collect_features(
+    session: &noble_contracts::source::Session,
+    library: &Library,
+    spec: &TaskSpec,
+) -> Result<FeatureCapture, String> {
+    let mut ranker = capturing_ranker(library);
+    let mut observed = Vec::new();
+    let ranked = observed_ranked_response(session, library, spec, &mut ranker, &mut observed);
+    let identity = checked_ranked_capture(&mut ranker, ranked.disposition, spec)?;
     Ok(FeatureCapture {
         identity,
         features: ranker.features,
@@ -201,12 +223,12 @@ pub(crate) fn candidate_attempt_for<'a>(
     outcomes.iter().find(|outcome| outcome.sequence == sequence)
 }
 
-pub(crate) fn candidate_label(
+fn isolated_candidate_response(
     session: &noble_contracts::source::Session,
     library: &Library,
     spec: &TaskSpec,
     envelope: &Envelope,
-) -> Result<(f32, chunks::CandidateOutcome, chunks::Response), String> {
+) -> Result<(chunks::CandidateOutcome, chunks::Response), String> {
     let mut isolated = Library::new(*library.revision());
     isolated
         .admit(session, envelope.clone())
@@ -224,26 +246,46 @@ pub(crate) fn candidate_label(
     let candidate_outcome = candidate_attempt_for(&outcomes, &[0])
         .cloned()
         .ok_or_else(|| format!("isolated candidate was not attempted for {}", spec.id()))?;
+    Ok((candidate_outcome, response))
+}
+
+fn is_expected_chunk_selected(response: &chunks::Response, envelope: &Envelope) -> bool {
+    matches!(response, chunks::Response::Accepted { accepted, .. }
+        if accepted.selected.as_slice() == [envelope.chunk_id])
+}
+
+fn checked_target_label(
+    spec: &TaskSpec,
+    envelope: &Envelope,
+    candidate_outcome: &chunks::CandidateOutcome,
+    response: &chunks::Response,
+) -> Result<f32, String> {
     if candidate_outcome.candidate.ordinal != 1 {
         return Err(format!(
             "isolated candidate ordinal changed for {}",
             spec.id()
         ));
     }
-    if candidate_outcome.accepted
-        && !matches!(&response, chunks::Response::Accepted { accepted, .. }
-            if accepted.selected.as_slice() == [envelope.chunk_id])
-    {
+    if candidate_outcome.accepted && !is_expected_chunk_selected(response, envelope) {
         return Err(format!(
             "isolated admission selected a different body for {}",
             spec.id()
         ));
     }
-    let target =
-        if candidate_outcome.accepted && candidate_outcome.fixture_agreement.unwrap_or(false) {
-            1.0
-        } else {
-            0.0
-        };
-    Ok((target, candidate_outcome, response))
+    Ok(if candidate_outcome.accepted && candidate_outcome.fixture_agreement.unwrap_or(false) {
+        1.0
+    } else {
+        0.0
+    })
+}
+
+pub(crate) fn candidate_label(
+    session: &noble_contracts::source::Session,
+    library: &Library,
+    spec: &TaskSpec,
+    envelope: &Envelope,
+) -> Result<(f32, chunks::CandidateOutcome, chunks::Response), String> {
+    let (outcome, response) = isolated_candidate_response(session, library, spec, envelope)?;
+    let target = checked_target_label(spec, envelope, &outcome, &response)?;
+    Ok((target, outcome, response))
 }

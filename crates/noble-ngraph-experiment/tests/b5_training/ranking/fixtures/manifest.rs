@@ -4,7 +4,9 @@ pub(crate) fn ty_name(ty: &Ty) -> &'static str {
     match ty {
         Ty::I64 => "I64",
         Ty::Bool => "Bool",
-        _ => "unsupported",
+        Ty::Unit | Ty::Text | Ty::Syntax | Ty::Contract | Ty::Evidence | Ty::Certified
+        | Ty::Pair(..) | Ty::Sum(..) | Ty::List(_) | Ty::Program(..) | Ty::LiveRef(..)
+        | Ty::Resource(_) | Ty::Nominal(..) | Ty::GenericNominal(..) => "unsupported",
     }
 }
 
@@ -24,76 +26,98 @@ pub(crate) fn hex(bytes: &[u8]) -> String {
     out
 }
 
+fn library_identity(revision: &[u8], entries: &[Envelope]) -> String {
+    let mut bytes = Vec::with_capacity(
+        revision.len().saturating_add(
+            entries.len().saturating_mul(chunks::IDENTITY_BYTES.saturating_add(chunks::REVISION_BYTES)),
+        ),
+    );
+    bytes.extend_from_slice(revision);
+    for entry in entries {
+        bytes.extend_from_slice(&entry.chunk_id);
+        bytes.extend_from_slice(&entry.source_revision);
+    }
+    hex(blake3::hash(&bytes).as_bytes())
+}
+
+fn library_entry_record(entry: &Envelope) -> Value {
+    json!({
+        "chunk_id": hex(&entry.chunk_id),
+        "source_revision": hex(&entry.source_revision),
+        "stack_in": entry.interface.stack_in.iter().map(ty_name).collect::<Vec<_>>(),
+        "stack_out": entry.interface.stack_out.iter().map(ty_name).collect::<Vec<_>>(),
+        "effects": "pure",
+        "dependency_ids": entry.dependencies.iter().map(|dependency| dependency.identity).collect::<Vec<_>>(),
+        "recipe_node_count": entry.body.nodes.len(),
+        "recipe_entry_count": entry.body.entry.len()
+    })
+}
+
+fn library_record(family: usize) -> Value {
+    let revision = family_revision(family);
+    let entries = family_envelopes(family);
+    json!({
+        "family": FAMILY_NAMES[family],
+        "revision": hex(&revision),
+        "identity": library_identity(&revision, &entries),
+        "identity_rule": "blake3(revision || insertion-ordered-(chunk-identity,source-revision)-pairs)",
+        "entries": entries.iter().map(library_entry_record).collect::<Vec<_>>()
+    })
+}
+
+fn task_fixture_record(case: &TaskCase) -> Value {
+    json!({
+        "inputs": case.inputs.iter().copied().map(scalar_json).collect::<Vec<_>>(),
+        "expected": case.outputs.iter().copied().map(scalar_json).collect::<Vec<_>>()
+    })
+}
+
+fn task_target_kind(task: &TaskSpec) -> String {
+    match task.target {
+        Target::Arithmetic(op) => format!("arithmetic:{}", op.spelling()),
+        Target::Swap => "ordered-stack-swap".to_string(),
+        Target::Boolean(mode) => format!("boolean-mode:{mode}"),
+        Target::Integer(value) if task.family == 3 => format!("nested-integer:{value}"),
+        Target::Integer(value) => format!("equal-signature-integer:{value}"),
+    }
+}
+
+fn task_provenance(task: &TaskSpec) -> Value {
+    json!({
+        "generator": "tchunk-ranking-corpus/1",
+        "family_index": task.family,
+        "block": task.block,
+        "within_block": task.within_block,
+        "split": task.split()
+    })
+}
+
+fn task_contract(task: &TaskSpec) -> Value {
+    json!({
+        "stack_in": task.stack_in.iter().map(ty_name).collect::<Vec<_>>(),
+        "stack_out": task.stack_out.iter().map(ty_name).collect::<Vec<_>>(),
+        "effects": "pure"
+    })
+}
+
+fn task_record(task: &TaskSpec, library: &Value) -> Value {
+    json!({
+        "id": task.id(),
+        "family": FAMILY_NAMES[task.family],
+        "chunk_library_identity": library["identity"].clone(),
+        "provenance": task_provenance(task),
+        "contract": task_contract(task),
+        "primitive_reference_source": String::from_utf8_lossy(&task.primitive_source),
+        "independent_fixtures": task.cases.iter().map(task_fixture_record).collect::<Vec<_>>(),
+        "target_kind": task_target_kind(task)
+    })
+}
+
 pub(crate) fn corpus_manifest() -> Value {
-    let tasks = corpus_tasks();
-    let libraries: Vec<Value> = (0..FAMILY_NAMES.len())
-        .map(|family| {
-            let revision = family_revision(family);
-            let entries = family_envelopes(family);
-            let mut identity_bytes = Vec::with_capacity(
-                revision
-                    .len()
-                    .saturating_add(entries.len().saturating_mul(
-                        chunks::IDENTITY_BYTES.saturating_add(chunks::REVISION_BYTES),
-                    )),
-            );
-            identity_bytes.extend_from_slice(&revision);
-            for entry in &entries {
-                identity_bytes.extend_from_slice(&entry.chunk_id);
-                identity_bytes.extend_from_slice(&entry.source_revision);
-            }
-            let identity = blake3::hash(&identity_bytes);
-            json!({
-                "family": FAMILY_NAMES[family],
-                "revision": hex(&revision),
-                "identity": hex(identity.as_bytes()),
-                "identity_rule": "blake3(revision || insertion-ordered-(chunk-identity,source-revision)-pairs)",
-                "entries": entries.iter().map(|entry| json!({
-                    "chunk_id": hex(&entry.chunk_id),
-                    "source_revision": hex(&entry.source_revision),
-                    "stack_in": entry.interface.stack_in.iter().map(ty_name).collect::<Vec<_>>(),
-                    "stack_out": entry.interface.stack_out.iter().map(ty_name).collect::<Vec<_>>(),
-                    "effects": "pure",
-                    "dependency_ids": entry.dependencies.iter().map(|dependency| dependency.identity).collect::<Vec<_>>(),
-                    "recipe_node_count": entry.body.nodes.len(),
-                    "recipe_entry_count": entry.body.entry.len()
-                })).collect::<Vec<_>>()
-            })
-        })
-        .collect();
-    let records: Vec<Value> = tasks
+    let libraries: Vec<Value> = (0..FAMILY_NAMES.len()).map(library_record).collect();
+    let records: Vec<Value> = corpus_tasks()
         .iter()
-        .map(|task| {
-            json!({
-                "id": task.id(),
-                "family": FAMILY_NAMES[task.family],
-                "chunk_library_identity": libraries[task.family]["identity"].clone(),
-                "provenance": {
-                    "generator": "tchunk-ranking-corpus/1",
-                    "family_index": task.family,
-                    "block": task.block,
-                    "within_block": task.within_block,
-                    "split": task.split()
-                },
-                "contract": {
-                    "stack_in": task.stack_in.iter().map(ty_name).collect::<Vec<_>>(),
-                    "stack_out": task.stack_out.iter().map(ty_name).collect::<Vec<_>>(),
-                    "effects": "pure"
-                },
-                "primitive_reference_source": String::from_utf8_lossy(&task.primitive_source),
-                "independent_fixtures": task.cases.iter().map(|case| json!({
-                    "inputs": case.inputs.iter().copied().map(scalar_json).collect::<Vec<_>>(),
-                    "expected": case.outputs.iter().copied().map(scalar_json).collect::<Vec<_>>()
-                })).collect::<Vec<_>>(),
-                "target_kind": match task.target {
-                    Target::Arithmetic(op) => format!("arithmetic:{}", op.spelling()),
-                    Target::Swap => "ordered-stack-swap".to_string(),
-                    Target::Boolean(mode) => format!("boolean-mode:{mode}"),
-                    Target::Integer(value) if task.family == 3 => format!("nested-integer:{value}"),
-                    Target::Integer(value) => format!("equal-signature-integer:{value}"),
-                }
-            })
-        })
+        .map(|task| task_record(task, &libraries[task.family]))
         .collect();
     json!({
         "schema": "tchunk-ranking-corpus/1",
@@ -123,6 +147,20 @@ pub(crate) fn frozen_corpus_has_the_registered_split_and_valid_libraries() -> Re
     assert_eq!(tasks.len(), 480);
     assert_eq!(manifest["libraries"].as_array().map(Vec::len), Some(5));
 
+    check_task_splits(tasks)?;
+    let session = noble_contracts::source::Session::without_test_hosts();
+    let libraries = check_registered_libraries(&session)?;
+    for spec in corpus_tasks() {
+        let library = libraries
+            .get(spec.family)
+            .ok_or_else(|| format!("reference library missing for {}", spec.id()))?;
+        check_primitive_reference(&session, library, &spec)?;
+        check_fixture_reference(&spec, &primitive_envelope(&spec))?;
+    }
+    Ok(())
+}
+
+fn check_task_splits(tasks: &[Value]) -> Result<(), String> {
     let mut split_counts = [0usize; 3];
     let mut family_counts = [0usize; 5];
     let mut seen_ids = std::collections::BTreeSet::new();
@@ -151,11 +189,15 @@ pub(crate) fn frozen_corpus_has_the_registered_split_and_valid_libraries() -> Re
     }
     assert_eq!(family_counts, [96; 5]);
     assert_eq!(split_counts, [280, 80, 120]);
+    Ok(())
+}
 
-    let session = noble_contracts::source::Session::without_test_hosts();
+fn check_registered_libraries(
+    session: &noble_contracts::source::Session,
+) -> Result<Vec<Library>, String> {
     let mut libraries = Vec::with_capacity(FAMILY_NAMES.len());
     for family in 0..FAMILY_NAMES.len() {
-        let library = family_library(&session, family)?;
+        let library = family_library(session, family)?;
         assert_eq!(library.entries().len(), 3);
         assert!(library
             .entries()
@@ -163,30 +205,31 @@ pub(crate) fn frozen_corpus_has_the_registered_split_and_valid_libraries() -> Re
             .all(|entry| entry.interface().effects.is_empty()));
         libraries.push(library);
     }
-    for spec in corpus_tasks() {
-        let library = libraries
-            .get(spec.family)
-            .ok_or_else(|| format!("reference library missing for {}", spec.id()))?;
-        let prepared = session
-            .prepare(
-                &spec.primitive_source,
-                &spec.stack_in,
-                source_limits(request(&spec, library).budget),
-            )
-            .map_err(|error| format!("primitive reference {} refused: {error:?}", spec.id()))?;
-        assert_eq!(
-            prepared.output(),
-            spec.stack_out,
-            "typed reference {}",
-            spec.id()
-        );
-        let envelope = primitive_envelope(&spec);
-        for case in &spec.cases {
-            let expected = oracle_target(spec.target, &case.inputs)?;
-            assert_eq!(expected, case.outputs, "independent fixture {}", spec.id());
-            let actual = independent_recipe_output(&envelope, &case.inputs)?;
-            assert_eq!(actual, case.outputs, "primitive recipe {}", spec.id());
-        }
+    Ok(libraries)
+}
+
+fn check_primitive_reference(
+    session: &noble_contracts::source::Session,
+    library: &Library,
+    spec: &TaskSpec,
+) -> Result<(), String> {
+    let prepared = session
+        .prepare(
+            &spec.primitive_source,
+            &spec.stack_in,
+            source_limits(request(spec, library).budget),
+        )
+        .map_err(|error| format!("primitive reference {} refused: {error:?}", spec.id()))?;
+    assert_eq!(prepared.output(), spec.stack_out, "typed reference {}", spec.id());
+    Ok(())
+}
+
+fn check_fixture_reference(spec: &TaskSpec, envelope: &Envelope) -> Result<(), String> {
+    for case in &spec.cases {
+        let expected = oracle_target(spec.target, &case.inputs)?;
+        assert_eq!(expected, case.outputs, "independent fixture {}", spec.id());
+        let actual = independent_recipe_output(envelope, &case.inputs)?;
+        assert_eq!(actual, case.outputs, "primitive recipe {}", spec.id());
     }
     Ok(())
 }
