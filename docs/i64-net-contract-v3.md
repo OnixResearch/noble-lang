@@ -135,3 +135,31 @@ step rule. Revision 3 instead uses operand-facing `op2`/`op1`, explicit `dup`/`e
 producer per wire, source-node/port-order validation and separately checked ordered read-back.
 The historical fixtures do not establish a Rust refinement proof; no IVM run is evidence for
 Noble reduction, progress or read-back.
+
+## 7. Optional external Ivy/IVM experiment: not pursued here
+
+The optional #37 Ivy/IVM execution comparison is **not pursued in this repository**.
+No pinned Vine build, Ivy emitter, registered IVM extrinsics, host runner or IVM output
+is part of `noble-ngraph`, its safe-Rust reducer, or the revision-3 proof claim.
+The external work belongs to compiler-lab
+[#168 (differential lane)](https://github.com/brittonr/compiler-lab/issues/168),
+[#169 (runtime failures)](https://github.com/brittonr/compiler-lab/issues/169),
+[#170 (resource effects)](https://github.com/brittonr/compiler-lab/issues/170),
+[#171 (transform validation)](https://github.com/brittonr/compiler-lab/issues/171), and
+[#172 (CPU benchmarks)](https://github.com/brittonr/compiler-lab/issues/172).
+Their status is independent of this local backend's correctness and NO-GO decision.
+
+An external comparison could be admitted **only as separate evidence** after pinning
+the Vine compiler/runtime and exact source/graph/net bytes; specifying the complete
+I64-to-two-N32 bit-pattern and ordered-output adapters; restricting registered extrinsics
+and result sinks to the chosen pure profile; imposing process-memory, wall-clock, output
+and net-heap caps; and preserving timeout, process failure, malformed output and
+unsupported interruption as distinct outcomes. It must compare exact observations
+against an independent I64 oracle, Noble's graph reference, packed evaluator and
+ordinary Wasm where applicable, with truncation, carry/borrow, operand-swap,
+output-permutation and mapping fault controls. It must report whether each case used
+Vine N64 or direct Ivy/custom extrinsics, and record construction, validation,
+execution, read-back and cleanup separately, including losses and the direct scalar
+baseline. IVM's unsafe runtime/compiler would be new **experimental trusted
+components**, not a dependency or proof of Noble's safe-Rust path. No external
+measurement changes the frozen continuation criteria or authorizes default adoption.
