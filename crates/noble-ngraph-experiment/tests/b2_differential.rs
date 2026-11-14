@@ -1662,8 +1662,10 @@ fn issue125_structured_interaction_matrix() {
         let expected_mismatch = cell["mismatch_class"].as_str();
         let l2_property = cell["property_passed_by_leg"]["l2_apfloat"] == true;
         let l3_property_failed = cell["property_passed_by_leg"]["l3_reference"] == false;
-        let execution_reached = cell["reached"] == true
-            && cell["admission"] == "accepted"
+        // A mutated guard can reject a safe input after evaluating the selected
+        // guard/select graph. That is a reached divergence, although it is not
+        // a normally completed matrix cell.
+        let execution_reached = cell["admission"] == "accepted"
             && cell["l3_nodes_evaluated"] == cell["checked_node_count"]
             && cell["required_operator_nodes"].as_array().is_some_and(|required| {
                 let present = cell["operator_nodes"].as_array();

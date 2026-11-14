@@ -353,7 +353,10 @@ retains the #38 observation relation and compares APFloat, binary64-per-operatio
 reference and compiled legs. Its reach witness includes the actual checked graph
 operands, runtime-selected branch/table entry and a full-node L3 execution; L4
 has no per-node trace. P2 has no Lean or source-to-Wasm claim, and immutable
-parameter snapshots are explicitly unsupported on this seeded path.
+parameter snapshots are explicitly unsupported on this seeded path. Each P2
+cell and replay records `/0` graph admission, `Control::default()` controls,
+effective forward scratch, no snapshot, one vector, and L3 work relative to the
+matrix node-work cap.
 
 The fixed matrix reports reached and unreached cells plus accepted, refused,
 exhausted and unsupported outcomes separately; a refused-only run cannot pass.
@@ -362,7 +365,8 @@ scratch worktree, applied in place and restored after each run. Only an intended
 property failure on the same fully executed case is a kill. The retained report
 also distinguishes divergence-unreached, executed-survived, invalid/equivalent
 and incomplete outcomes. Shrinking retains the complete source or graph/input
-witness, rechecks feature eligibility, expectation and failure identity, and
+witness, snapshot status, selected limits and mutation site; it rechecks feature
+eligibility, expectation and failure identity, and
 reports its bounded stopping reason without claiming a global minimum. Fresh
 processes replay original and minimized bytes without regenerating the corpus;
 changed bytes are rebuilt and receive fresh expectations, while historical
