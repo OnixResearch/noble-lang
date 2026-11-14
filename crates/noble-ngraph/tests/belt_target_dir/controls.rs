@@ -7,6 +7,40 @@ fn checked(builder: GraphBuilder) -> noble_ngraph::CheckedGraph {
 }
 
 #[test]
+fn exact_profile_belt_capacity_preserves_all_ordered_outputs() {
+    for machine in [Machine::T1, Machine::T2] {
+        let capacity = usize::from(machine.descriptor().belt_capacity);
+        let mut builder = GraphBuilder::new(
+            SubProfile::I64,
+            Subject::authored(&super::common::IDS, "target-belt-114-exact-capacity"),
+        );
+        let mut expected = Vec::with_capacity(capacity);
+        for slot in 0..capacity {
+            let node = builder.input(ScalarType::I64);
+            builder.output(node);
+            expected.push(Value::I64(
+                i64::try_from(slot).expect("the fixed profile capacity fits I64") - 7,
+            ));
+        }
+        let accepted_graph = checked(builder);
+        let lowered = target::lower(&super::common::IDS, &accepted_graph, machine)
+            .expect("the graph exactly fills the fixed profile belt");
+        assert_eq!(lowered.preservation_saves, 0);
+        assert_eq!(accepted_graph.graph().outputs.len(), capacity);
+        assert_eq!(
+            target::execute(
+                &super::common::IDS,
+                &accepted_graph,
+                machine,
+                &lowered.bytes,
+                &expected,
+            ),
+            Ok(expected.clone()),
+        );
+    }
+}
+
+#[test]
 fn independent_operations_reorder_and_sparse_cycles_are_idle() {
     let mut builder = GraphBuilder::new(
         SubProfile::I64,
