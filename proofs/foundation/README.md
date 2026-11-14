@@ -354,7 +354,7 @@ Unsupported modes: none. Both `off` and `on` are supported by
 freezes two disjoint finite test profiles before their campaign: P1 Core source
 through managed Wasm, and P2 numeric-graph F32 through the experiment lane.
 The clean foundation receipt used by the current campaign is retained at
-[`receipts/756ccc9/index.json`](receipts/756ccc9/index.json); it is a 1,450-
+[`verification/foundation/receipts/756ccc9/index.json`](../../verification/foundation/receipts/756ccc9/index.json); it is a 1,450-
 theorem per-case expectation basis only and does not claim an implementation
 theorem. The corresponding source-bound campaign receipt is linked from the
 interaction-lane README.
@@ -418,7 +418,7 @@ explicit sufficient-budget relation; this matrix makes no resource-equivalence
 claim.
 
 The clean P1 model-basis receipt is retained at
-[`receipts/7ed66b5/foundation-check.json`](receipts/7ed66b5/foundation-check.json).
+[`verification/foundation/receipts/7ed66b5/foundation-check.json`](../../verification/foundation/receipts/7ed66b5/foundation-check.json).
 The bounded P1/P2 campaign for source commit `7ed66b5d` is retained at
 [`verification/differential-interactions/receipts/7ed66b5/campaign.json`](../../verification/differential-interactions/receipts/7ed66b5/campaign.json);
 these are finite test receipts, not an implementation theorem.
