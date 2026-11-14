@@ -1,0 +1,159 @@
+{
+  "cases": [
+    {
+      "agreement": "cache-disabled=cold-miss=warm-hit on L3/L4 and compiled execution",
+      "backend_retained_bytes": {
+        "cache_disabled": 108,
+        "cold_miss": 108,
+        "warm_hit": 108
+      },
+      "cache_disabled": {
+        "admission_ns": 13990235,
+        "backend_build_ns": 76573,
+        "execution_ns": 1035296,
+        "retained_bytes": 0,
+        "source_emission_ns": 12113,
+        "specialization_ns": 148508
+      },
+      "case": {
+        "input_leaves": 2,
+        "root": "dup * swap 3 * +",
+        "static_map": [
+          5,
+          null
+        ]
+      },
+      "cold_miss": {
+        "admission_ns": 9960638,
+        "backend_build_ns": 78336,
+        "execution_ns": 900103,
+        "lookup_entries": 0,
+        "lookup_ns": 154159,
+        "publication_ns": 389929,
+        "retained_bytes": 2291,
+        "source_emission_ns": 11061,
+        "specialization_ns": 166942,
+        "status": "miss-stored",
+        "total_ns": 10690904
+      },
+      "vectors": 1000,
+      "warm_hit": {
+        "admission_ns": 12236966,
+        "backend_build_ns": 21090,
+        "execution_ns": 766082,
+        "lookup_entries": 1,
+        "lookup_ns": 576318,
+        "publication_ns": 0,
+        "retained_bytes": 2291,
+        "source_emission_ns": 0,
+        "specialization_ns": 0,
+        "status": "hit",
+        "total_ns": 12817242
+      }
+    },
+    {
+      "agreement": "cache-disabled=cold-miss=warm-hit on L3/L4 and compiled execution",
+      "backend_retained_bytes": {
+        "cache_disabled": 124,
+        "cold_miss": 124,
+        "warm_hit": 124
+      },
+      "cache_disabled": {
+        "admission_ns": 22870954,
+        "backend_build_ns": 97573,
+        "execution_ns": 1879756,
+        "retained_bytes": 0,
+        "source_emission_ns": 13826,
+        "specialization_ns": 1234869
+      },
+      "case": {
+        "input_leaves": 1,
+        "root": "2 + 3 +",
+        "static_map": [
+          null
+        ]
+      },
+      "cold_miss": {
+        "admission_ns": 24327598,
+        "backend_build_ns": 80510,
+        "execution_ns": 1874035,
+        "lookup_entries": 0,
+        "lookup_ns": 68638,
+        "publication_ns": 506697,
+        "retained_bytes": 2286,
+        "source_emission_ns": 13766,
+        "specialization_ns": 125454,
+        "status": "miss-stored",
+        "total_ns": 25049368
+      },
+      "vectors": 1000,
+      "warm_hit": {
+        "admission_ns": 26664349,
+        "backend_build_ns": 19447,
+        "execution_ns": 1806138,
+        "lookup_entries": 1,
+        "lookup_ns": 584704,
+        "publication_ns": 0,
+        "retained_bytes": 2286,
+        "source_emission_ns": 0,
+        "specialization_ns": 0,
+        "status": "hit",
+        "total_ns": 27252890
+      }
+    },
+    {
+      "agreement": "cache-disabled=cold-miss=warm-hit on L3/L4 and compiled execution",
+      "backend_retained_bytes": {
+        "cache_disabled": 92,
+        "cold_miss": 92,
+        "warm_hit": 92
+      },
+      "cache_disabled": {
+        "admission_ns": 23186845,
+        "backend_build_ns": 58700,
+        "execution_ns": 4892099,
+        "retained_bytes": 0,
+        "source_emission_ns": 15309,
+        "specialization_ns": 232865
+      },
+      "case": {
+        "input_leaves": 1,
+        "root": "dup dup * *",
+        "static_map": [
+          null
+        ]
+      },
+      "cold_miss": {
+        "admission_ns": 48847336,
+        "backend_build_ns": 55855,
+        "execution_ns": 6870870,
+        "lookup_entries": 0,
+        "lookup_ns": 6209654,
+        "publication_ns": 401922,
+        "retained_bytes": 2190,
+        "source_emission_ns": 12844,
+        "specialization_ns": 211225,
+        "status": "miss-stored",
+        "total_ns": 55692548
+      },
+      "vectors": 1000,
+      "warm_hit": {
+        "admission_ns": 16473880,
+        "backend_build_ns": 17894,
+        "execution_ns": 4871531,
+        "lookup_entries": 1,
+        "lookup_ns": 4694921,
+        "publication_ns": 0,
+        "retained_bytes": 2190,
+        "source_emission_ns": 0,
+        "specialization_ns": 0,
+        "status": "hit",
+        "total_ns": 21174161
+      }
+    }
+  ],
+  "finite_implementation_evidence": true,
+  "not_a_performance_generalization": true,
+  "schema": "noble-ngraph-specialization-cache-measurement/v1",
+  "source_revision": "38c42f1c9c8915b67c403bb342c968dea4304ae9"
+}
