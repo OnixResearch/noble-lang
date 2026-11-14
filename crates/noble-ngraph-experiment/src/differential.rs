@@ -23,6 +23,8 @@ pub struct Legs {
     pub l3_reference: Obs,
     /// L4: compiled layered evaluator.
     pub l4_compiled: Obs,
+    /// L3 node work, counted by the reference interpreter itself.
+    pub l3_evaluated_nodes: u64,
 }
 
 impl Legs {
@@ -39,11 +41,18 @@ impl Legs {
 #[must_use]
 pub fn run_legs(c: &Compiled, inputs: &[Value], snapshot: Option<&ParamSnapshot>) -> Legs {
     let checked: &CheckedGraph = c.checked();
+    let mut l3_evaluated_nodes = 0;
+    let mut control = Control {
+        evaluated_nodes: Some(&mut l3_evaluated_nodes),
+        ..Control::default()
+    };
+    let l3_reference = eval::reference(checked, inputs, snapshot, &mut control).obs;
     Legs {
         l2_apfloat: oracle::apfloat(checked, inputs, snapshot),
         b2_oracle_f64: oracle::f64_per_op(checked, inputs, snapshot),
-        l3_reference: eval::reference(checked, inputs, snapshot, &mut Control::default()).obs,
+        l3_reference,
         l4_compiled: c.evaluate(inputs, snapshot, &mut Control::default()).obs,
+        l3_evaluated_nodes,
     }
 }
 
@@ -58,12 +67,18 @@ pub struct Campaign {
     pub ops: usize,
     /// Checked node count.
     pub nodes: usize,
+    /// Total L3 node work across attempted input vectors.
+    pub l3_evaluated_nodes: u64,
     /// Layers.
     pub layers: u32,
     /// `GraphLogicalId` (hex).
     pub graph_id: String,
     /// Vectors run.
     pub vectors: u64,
+    /// Normal vector evaluations that visited every checked node.
+    pub full_normal_executions: u64,
+    /// Input bits for the first full normal vector, if one was reached.
+    pub full_normal_input_bits: Option<Vec<u32>>,
     /// `Normal` observations.
     pub normal: u64,
     /// `GuardFailed` observations.
@@ -80,6 +95,8 @@ pub struct Campaign {
     pub inf_outputs: u64,
     /// Disagreements (first 8 recorded).
     pub disagreements: u64,
+    /// Distinct differential edges that disagreed during the campaign.
+    pub failure_classes: Vec<&'static str>,
     /// First disagreement detail.
     pub first_disagreement: Option<String>,
     /// Whether the checker refused the generated graph (counted, not hidden).
@@ -113,6 +130,22 @@ pub fn campaign(seed: u64, ops: usize, vectors: u64) -> Campaign {
         let inputs = eval::f32_inputs(&random::inputs(&rg, &mut rng));
         let legs = run_legs(&compiled, &inputs, None);
         out.vectors += 1;
+        if legs.l3_evaluated_nodes == checked.node_count() as u64
+            && matches!(&legs.l3_reference, Obs::Normal(_))
+        {
+            out.full_normal_executions += 1;
+            if out.full_normal_input_bits.is_none() {
+                out.full_normal_input_bits = Some(
+                    inputs
+                        .iter()
+                        .filter_map(|value| match value {
+                            Value::F32(bits) => Some(*bits),
+                            _ => None,
+                        })
+                        .collect(),
+                );
+            }
+        }
         match &legs.l3_reference {
             Obs::Normal(vs) => {
                 out.normal += 1;
@@ -132,10 +165,23 @@ pub fn campaign(seed: u64, ops: usize, vectors: u64) -> Campaign {
         }
         if !legs.agree() {
             out.disagreements += 1;
+            for (class, agrees) in [
+                ("L2-vs-L3", legs.l3_reference.obs_eq(&legs.l2_apfloat)),
+                (
+                    "B2-oracle-vs-L3",
+                    legs.l3_reference.obs_eq(&legs.b2_oracle_f64),
+                ),
+                ("L3-vs-L4", legs.l3_reference.obs_eq(&legs.l4_compiled)),
+            ] {
+                if !agrees && !out.failure_classes.contains(&class) {
+                    out.failure_classes.push(class);
+                }
+            }
             if out.first_disagreement.is_none() {
                 out.first_disagreement = Some(format!("inputs={inputs:?} legs={legs:?}"));
             }
         }
+        out.l3_evaluated_nodes += legs.l3_evaluated_nodes;
     }
     out
 }

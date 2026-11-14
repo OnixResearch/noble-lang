@@ -20,7 +20,10 @@
 
 use noble_ngraph::compiled::Compiled;
 use noble_ngraph::eval::{f32_inputs, Control};
-use noble_ngraph::ir::{Fact, NodeId};
+use noble_ngraph::ir::{
+    AffineOperand, Fact, GraphBuilder, Literal, NodeId, Op, OutOfRange, Provenance, ScalarType,
+    SubProfile, Subject,
+};
 use noble_ngraph::prng::SplitMix64;
 use noble_ngraph::snapshot::ParamSnapshot;
 use noble_ngraph::{check, Obs, Value};
@@ -761,4 +764,1415 @@ fn every_l1_vector_must_be_agreement_or_recorded_quota() {
         l1_coverage(usize::MAX, 1, 0),
         Err("vectors outside agreement plus recorded ordinary quota")
     );
+}
+
+struct Issue125Cell {
+    family: &'static str,
+    fp_class: &'static str,
+    graph: noble_ngraph::Graph,
+    inputs: [f32; 6],
+}
+
+#[derive(Clone, Copy)]
+struct Issue125Spec<'a> {
+    family: &'a str,
+    fp_class: &'a str,
+}
+
+fn issue125_values(spec: Issue125Spec<'_>) -> [f32; 6] {
+    let (special, secondary, third, safe) = match spec.fp_class {
+        "signed_zero" => (-0.0, -0.0, 0.0, -0.0),
+        "nan" => (f32::from_bits(0x7fc0_0000), 0.0, 0.0, 1.0),
+        "subnormal_normal_boundary" => (f32::from_bits(1), f32::MIN_POSITIVE, 0.0, 0.0),
+        "overflow_infinity" => (f32::MAX, 0.0, 0.0, 1.0),
+        "cancellation" => (1.0e20, -1.0e20, 3.0, 2.0e20),
+        "rounding_tie" => (
+            1.0,
+            f32::from_bits(0x3380_0000),
+            f32::from_bits(0x3380_0000),
+            2.0,
+        ),
+        _ => unreachable!("matrix-v1 FP class"),
+    };
+    if matches!(spec.family, "index_affine" | "guard_affine") && spec.fp_class == "cancellation" {
+        return [-1.0e20, secondary, third, 1.0, 1.0, 1.0e20];
+    }
+    if matches!(spec.family, "index_affine" | "guard_affine") && spec.fp_class == "rounding_tie" {
+        return [special, secondary, -1.0, 1.0, 1.0, 1.0];
+    }
+    [special, secondary, third, 1.0, 1.0, safe]
+}
+
+fn issue125_cell(spec: Issue125Spec<'static>) -> Issue125Cell {
+    let Issue125Spec { family, fp_class } = spec;
+    let values = issue125_values(spec);
+    let mut b = GraphBuilder::new(
+        SubProfile::F32,
+        Subject::authored(&BLAKE3, &format!("issue125/{family}/{fp_class}")),
+    );
+    let special = b.input(ScalarType::F32);
+    let secondary = b.input(ScalarType::F32);
+    let third = b.input(ScalarType::F32);
+    let index = b.input(ScalarType::F32);
+    let bit = b.input(ScalarType::F32);
+    let safe = b.input(ScalarType::F32);
+    b.fact(index, Fact::Integral, Provenance::InputValidated);
+    b.fact(
+        index,
+        Fact::Range {
+            lo: Literal::f32(0.0),
+            hi: Literal::f32(1.0),
+        },
+        Provenance::InputValidated,
+    );
+    b.fact(bit, Fact::Bit, Provenance::InputValidated);
+    let output = match family {
+        "guard_select" => {
+            let selected = b.op(Op::F32Select {
+                bit,
+                off: safe,
+                on: special,
+            });
+            let output = issue125_post_select(&mut b, fp_class, selected, secondary, third);
+            b.guard(Fact::Finite, safe);
+            output
+        }
+        "select_index" => {
+            let zero = b.f32_const(0.0);
+            let selected = b.op(Op::F32Select {
+                bit,
+                off: zero,
+                on: index,
+            });
+            let indexed = b.op(Op::F32Index {
+                index: selected,
+                table: vec![safe, special],
+                below: OutOfRange::Refuse,
+                above: OutOfRange::Refuse,
+            });
+            issue125_post_select(&mut b, fp_class, indexed, secondary, third)
+        }
+        "index_affine" => {
+            let indexed = b.op(Op::F32Index {
+                index,
+                table: vec![safe, special],
+                below: OutOfRange::Refuse,
+                above: OutOfRange::Refuse,
+            });
+            issue125_affine(
+                &mut b,
+                fp_class,
+                Issue125AffineOperands {
+                    selected: indexed,
+                    secondary,
+                    third,
+                    safe,
+                },
+            )
+        }
+        "guard_affine" => {
+            let output = issue125_affine(
+                &mut b,
+                fp_class,
+                Issue125AffineOperands {
+                    selected: special,
+                    secondary,
+                    third,
+                    safe,
+                },
+            );
+            b.guard(Fact::Finite, safe);
+            output
+        }
+        _ => unreachable!("matrix-v1 interaction family"),
+    };
+    b.output(output);
+    Issue125Cell {
+        family,
+        fp_class,
+        graph: b.finish(),
+        inputs: values,
+    }
+}
+
+fn issue125_input_slot(graph: &noble_ngraph::Graph, node: NodeId) -> Option<u32> {
+    match &graph.nodes.get(node.index())?.op {
+        Op::Input(slot) => Some(*slot),
+        _ => None,
+    }
+}
+
+fn issue125_input_value(
+    graph: &noble_ngraph::Graph,
+    node: NodeId,
+    inputs: &[f32; 6],
+) -> Option<f32> {
+    match &graph.nodes.get(node.index())?.op {
+        Op::Input(slot) => inputs.get(usize::try_from(*slot).ok()?).copied(),
+        Op::Const(Literal::F32(bits)) => Some(f32::from_bits(*bits)),
+        _ => None,
+    }
+}
+
+fn issue125_input_bits(inputs: &[f32; 6], slot: u32) -> Option<u32> {
+    inputs
+        .get(usize::try_from(slot).ok()?)
+        .map(|value| value.to_bits())
+}
+
+fn issue125_runtime_selected_branch(
+    graph: &noble_ngraph::Graph,
+    family: &str,
+    inputs: &[f32; 6],
+) -> Option<&'static str> {
+    if !matches!(family, "guard_select" | "select_index") {
+        return None;
+    }
+    let bit_node = graph.nodes.iter().find_map(|node| match &node.op {
+        Op::F32Select { bit, .. } => Some(*bit),
+        _ => None,
+    })?;
+    let bit_value = issue125_input_value(graph, bit_node, inputs)?;
+    if bit_value == 1.0 {
+        Some("on")
+    } else if bit_value == 0.0 {
+        Some("off")
+    } else {
+        Some("invalid-bit-input")
+    }
+}
+
+fn issue125_runtime_table_index(
+    graph: &noble_ngraph::Graph,
+    family: &str,
+    inputs: &[f32; 6],
+) -> Option<u32> {
+    if !matches!(family, "select_index" | "index_affine") {
+        return None;
+    }
+    let (index_node, table) = graph.nodes.iter().find_map(|node| match &node.op {
+        Op::F32Index { index, table, .. } => Some((*index, table)),
+        _ => None,
+    })?;
+    let index_value = match &graph.nodes.get(index_node.index())?.op {
+        Op::F32Select { off, on, .. } => {
+            let branch = issue125_runtime_selected_branch(graph, "select_index", inputs)?;
+            issue125_input_value(graph, if branch == "on" { *on } else { *off }, inputs)?
+        }
+        _ => issue125_input_value(graph, index_node, inputs)?,
+    };
+    let index = index_value as u32;
+    (index_value >= 0.0 && index < table.len() as u32).then_some(index)
+}
+
+fn issue125_selected_branch_input_slot(graph: &noble_ngraph::Graph, family: &str) -> Option<u32> {
+    if !matches!(family, "guard_select" | "select_index") {
+        return None;
+    }
+    let bit_node = graph.nodes.iter().find_map(|node| match &node.op {
+        Op::F32Select { bit, .. } => Some(*bit),
+        _ => None,
+    })?;
+    issue125_input_slot(graph, bit_node)
+}
+
+fn issue125_index_input_slot(
+    graph: &noble_ngraph::Graph,
+    family: &str,
+    inputs: &[f32; 6],
+) -> Option<u32> {
+    if !matches!(family, "select_index" | "index_affine") {
+        return None;
+    }
+    let index_node = graph.nodes.iter().find_map(|node| match &node.op {
+        Op::F32Index { index, .. } => Some(*index),
+        _ => None,
+    })?;
+    let selected_node = match &graph.nodes.get(index_node.index())?.op {
+        Op::F32Select { off, on, .. } => {
+            let branch = issue125_runtime_selected_branch(graph, "select_index", inputs)?;
+            if branch == "on" {
+                *on
+            } else {
+                *off
+            }
+        }
+        _ => index_node,
+    };
+    issue125_input_slot(graph, selected_node)
+}
+
+fn issue125_selected_table_node(
+    graph: &noble_ngraph::Graph,
+    family: &str,
+    inputs: &[f32; 6],
+) -> Option<NodeId> {
+    let index = issue125_runtime_table_index(graph, family, inputs)?;
+    graph.nodes.iter().find_map(|node| match &node.op {
+        Op::F32Index { table, .. } => table.get(usize::try_from(index).ok()?).copied(),
+        _ => None,
+    })
+}
+
+fn issue125_random_interaction_families(graph: &noble_ngraph::Graph) -> Vec<&'static str> {
+    let mut families = Vec::new();
+    let mut record = |family| {
+        if !families.contains(&family) {
+            families.push(family);
+        }
+    };
+    for node in &graph.nodes {
+        match &node.op {
+            Op::F32Select { off, on, .. }
+                if graph.nodes.iter().any(|candidate| {
+                    matches!(&candidate.op,
+                    Op::Guard { value, .. } if *value == *off || *value == *on)
+                }) =>
+            {
+                record("guard_select");
+            }
+            Op::F32Select { .. } => {}
+            Op::F32Index { index, .. } => {
+                if matches!(&graph.nodes[index.index()].op, Op::F32Select { .. }) {
+                    record("select_index");
+                }
+            }
+            Op::F32Affine { terms, .. } => {
+                for term in terms {
+                    if issue125_affine_term_is_index(graph, &term.operand) {
+                        record("index_affine");
+                    }
+                }
+                if graph.nodes.iter().any(|candidate| {
+                    matches!(&candidate.op,
+                    Op::Guard { value, .. } if terms.iter().any(|term|
+                        matches!(&term.operand, AffineOperand::Node(input) if *input == *value)))
+                }) {
+                    record("guard_affine");
+                }
+            }
+            _ => {}
+        }
+    }
+    families
+}
+
+fn issue125_affine_term_is_index(graph: &noble_ngraph::Graph, operand: &AffineOperand) -> bool {
+    let AffineOperand::Node(value) = operand else {
+        return false;
+    };
+    graph
+        .nodes
+        .get(value.index())
+        .is_some_and(|node| matches!(&node.op, Op::F32Index { .. }))
+}
+
+fn issue125_post_select(
+    b: &mut GraphBuilder,
+    fp_class: &str,
+    selected: NodeId,
+    secondary: NodeId,
+    third: NodeId,
+) -> NodeId {
+    match fp_class {
+        "overflow_infinity" => {
+            let two = b.f32_const(2.0);
+            b.op(Op::F32Mul(selected, two))
+        }
+        "cancellation" => b.op(Op::F32Add(selected, secondary)),
+        "rounding_tie" => {
+            let first = b.op(Op::F32Add(selected, secondary));
+            b.op(Op::F32Add(first, third))
+        }
+        _ => selected,
+    }
+}
+
+struct Issue125AffineOperands {
+    selected: NodeId,
+    secondary: NodeId,
+    third: NodeId,
+    safe: NodeId,
+}
+
+fn issue125_affine(
+    b: &mut GraphBuilder,
+    fp_class: &str,
+    operands: Issue125AffineOperands,
+) -> NodeId {
+    let Issue125AffineOperands {
+        selected,
+        secondary,
+        third,
+        safe,
+    } = operands;
+    let bias = if fp_class == "signed_zero" { -0.0 } else { 0.0 };
+    let terms = match fp_class {
+        "signed_zero" => vec![
+            (1.0, AffineOperand::Node(safe)),
+            (1.0, AffineOperand::Node(selected)),
+        ],
+        "nan" => vec![
+            (1.0, AffineOperand::Node(safe)),
+            (1.0, AffineOperand::Node(selected)),
+        ],
+        "subnormal_normal_boundary" => vec![
+            (0.0, AffineOperand::Node(safe)),
+            (1.0, AffineOperand::Node(selected)),
+            (0.0, AffineOperand::Node(secondary)),
+        ],
+        "overflow_infinity" => vec![
+            (0.0, AffineOperand::Node(safe)),
+            (2.0, AffineOperand::Node(selected)),
+        ],
+        "cancellation" => vec![
+            (1.0, AffineOperand::Node(safe)),
+            (1.0, AffineOperand::Node(selected)),
+            (1.0, AffineOperand::Node(third)),
+        ],
+        "rounding_tie" => vec![
+            (0.0, AffineOperand::Node(safe)),
+            (1.0, AffineOperand::Node(selected)),
+            (1.0, AffineOperand::Node(secondary)),
+            (1.0, AffineOperand::Node(third)),
+        ],
+        _ => unreachable!("matrix-v1 FP class"),
+    };
+    b.affine(bias, &terms)
+}
+
+fn issue125_expected(spec: Issue125Spec<'_>) -> Option<u32> {
+    match spec.fp_class {
+        "signed_zero" => Some(0x8000_0000),
+        "nan" => None,
+        "subnormal_normal_boundary" => Some(1),
+        "overflow_infinity" => Some(f32::INFINITY.to_bits()),
+        "cancellation" if spec.family == "index_affine" || spec.family == "guard_affine" => {
+            Some(3.0f32.to_bits())
+        }
+        "cancellation" => Some(0.0f32.to_bits()),
+        "rounding_tie" if spec.family == "index_affine" || spec.family == "guard_affine" => {
+            Some(0.0f32.to_bits())
+        }
+        "rounding_tie" => Some(1.0f32.to_bits()),
+        _ => unreachable!("matrix-v1 FP class"),
+    }
+}
+
+fn issue125_property(obs: &Obs, expected: Option<u32>) -> bool {
+    let bits = issue125_output_bits(obs);
+    match (expected, bits.first()) {
+        (None, Some(bits)) => f32::from_bits(*bits).is_nan(),
+        (Some(expected), Some(actual)) => *actual == expected,
+        _ => false,
+    }
+}
+
+fn issue125_output_bits(obs: &Obs) -> Vec<u32> {
+    match obs {
+        Obs::Normal(values) => values
+            .iter()
+            .filter_map(|value| match value {
+                Value::F32(bits) => Some(*bits),
+                _ => None,
+            })
+            .collect(),
+        _ => Vec::new(),
+    }
+}
+
+fn issue125_observation_code(obs: &Obs) -> u32 {
+    match obs {
+        Obs::Normal(_) => issue125_output_bits(obs).first().copied().unwrap_or(0),
+        Obs::GuardFailed { .. } => u32::MAX.saturating_sub(1),
+        Obs::Refused(_) => u32::MAX.saturating_sub(2),
+        Obs::Exhausted(_) => u32::MAX.saturating_sub(3),
+        Obs::Cancelled => u32::MAX.saturating_sub(4),
+    }
+}
+
+fn issue125_mismatch_class(
+    legs: &noble_ngraph_experiment::differential::Legs,
+) -> Option<&'static str> {
+    if legs.agree() {
+        return None;
+    }
+    match (&legs.l2_apfloat, &legs.l3_reference) {
+        (Obs::Normal(_), Obs::Normal(_)) => Some("normal-value-mismatch"),
+        (Obs::Normal(_), _) | (_, Obs::Normal(_)) => Some("normal-outcome-mismatch"),
+        _ => Some("non-normal-observation-mismatch"),
+    }
+}
+
+fn issue125_execution_outcome(obs: &Obs) -> &'static str {
+    match obs {
+        Obs::Normal(_) => "accepted",
+        Obs::GuardFailed { .. } | Obs::Refused(_) => "refused",
+        Obs::Exhausted(_) => "exhausted",
+        Obs::Cancelled => "cancelled",
+    }
+}
+
+struct Issue125MutationEvidence<'a> {
+    execution_reached: bool,
+    l2_property_passed: bool,
+    l3_property_failed: bool,
+    expected_mismatch: Option<&'a str>,
+    minimized: &'a serde_json::Value,
+}
+
+fn issue125_mutation_outcome(evidence: Issue125MutationEvidence<'_>) -> &'static str {
+    let Issue125MutationEvidence {
+        execution_reached,
+        l2_property_passed,
+        l3_property_failed,
+        expected_mismatch,
+        minimized,
+    } = evidence;
+    if expected_mismatch.is_none() {
+        return if execution_reached {
+            "executed-survived"
+        } else {
+            "divergence-unreached"
+        };
+    }
+    if !execution_reached || !l2_property_passed || !l3_property_failed {
+        return "incomplete";
+    }
+    let Some(expected_mismatch) = expected_mismatch else {
+        return "incomplete";
+    };
+    if !minimized.is_object() {
+        return "incomplete";
+    }
+    if minimized["mismatch_class"].as_str() != Some(expected_mismatch) {
+        return "incomplete";
+    }
+    if minimized["target_feature_preserved"] != true {
+        return "incomplete";
+    }
+    if minimized["selected_branch_preserved"] != true {
+        return "incomplete";
+    }
+    if minimized["selected_table_index_preserved"] != true {
+        return "incomplete";
+    }
+    "killed"
+}
+
+fn issue125_shrink_candidate_allowed(
+    case: &Issue125Cell,
+    inputs: &[f32; 6],
+    legs: &noble_ngraph_experiment::differential::Legs,
+    expected: Option<u32>,
+    mismatch_class: &str,
+) -> bool {
+    let required_nodes: &[&str] = match case.family {
+        "guard_select" => &["guard", "f32.select"],
+        "select_index" => &["f32.select", "f32.index"],
+        "index_affine" => &["f32.index", "f32.affine"],
+        "guard_affine" => &["guard", "f32.affine"],
+        _ => return false,
+    };
+    let graph_ops: Vec<&str> = case.graph.nodes.iter().map(|node| node.op.name()).collect();
+    required_nodes.iter().all(|name| graph_ops.contains(name))
+        && inputs[3].to_bits() == case.inputs[3].to_bits()
+        && inputs[4].to_bits() == case.inputs[4].to_bits()
+        && issue125_runtime_selected_branch(&case.graph, case.family, inputs)
+            == issue125_runtime_selected_branch(&case.graph, case.family, &case.inputs)
+        && issue125_runtime_table_index(&case.graph, case.family, inputs)
+            == issue125_runtime_table_index(&case.graph, case.family, &case.inputs)
+        && legs.l3_evaluated_nodes == case.graph.nodes.len() as u64
+        && matches!(&legs.l3_reference, Obs::Normal(_) | Obs::GuardFailed { .. })
+        && issue125_property(&legs.l2_apfloat, expected)
+        && !issue125_property(&legs.l3_reference, expected)
+        && issue125_mismatch_class(legs) == Some(mismatch_class)
+}
+
+struct Issue125MutationControls {
+    mutation_id: Option<String>,
+    target_cell: Option<String>,
+}
+
+// justification: the test runner configures mutation probes through these two environment variables at the harness boundary.
+#[allow(
+    tigerstyle::ambient_env,
+    reason = "Owner: noble-maintainers; capture mutation-runner controls once at the test boundary"
+)]
+fn issue125_mutation_controls() -> Issue125MutationControls {
+    Issue125MutationControls {
+        mutation_id: std::env::var("NOBLE_ISSUE125_MUTATION_ID").ok(),
+        target_cell: std::env::var("NOBLE_ISSUE125_MUTATION_CELL").ok(),
+    }
+}
+
+fn issue125_shrink_inputs(
+    case: &Issue125Cell,
+    compiled: &Compiled,
+    expected: Option<u32>,
+    mismatch_class: &'static str,
+    mutation_id: Option<&str>,
+) -> Option<serde_json::Value> {
+    use shrink::{minimize, DEFAULT_ATTEMPTS};
+    let run_pair = |left: u32, right: u32| {
+        let mut inputs = case.inputs;
+        inputs[0] = f32::from_bits(left);
+        inputs[1] = f32::from_bits(right);
+        run_legs(compiled, &f32_inputs(&inputs), None)
+    };
+    let authority = |_: u8, left: u32, right: u32| {
+        let legs = run_pair(left, right);
+        if issue125_property(&legs.l2_apfloat, expected) {
+            issue125_observation_code(&legs.l2_apfloat)
+        } else {
+            0
+        }
+    };
+    let candidate = |_: u8, left: u32, right: u32| {
+        let mut inputs = case.inputs;
+        inputs[0] = f32::from_bits(left);
+        inputs[1] = f32::from_bits(right);
+        let legs = run_pair(left, right);
+        if issue125_shrink_candidate_allowed(case, &inputs, &legs, expected, mismatch_class) {
+            issue125_observation_code(&legs.l3_reference)
+        } else if issue125_property(&legs.l2_apfloat, expected) {
+            issue125_observation_code(&legs.l2_apfloat)
+        } else {
+            0
+        }
+    };
+    let witness = minimize(
+        0,
+        &authority,
+        &candidate,
+        (case.inputs[0].to_bits(), case.inputs[1].to_bits()),
+        DEFAULT_ATTEMPTS,
+    )?;
+    let mut minimized_inputs = case.inputs;
+    minimized_inputs[0] = f32::from_bits(witness.left);
+    minimized_inputs[1] = f32::from_bits(witness.right);
+    let legs = run_pair(witness.left, witness.right);
+    if !issue125_shrink_candidate_allowed(case, &minimized_inputs, &legs, expected, mismatch_class)
+    {
+        return None;
+    }
+    let required = match case.family {
+        "guard_select" => ["guard", "f32.select"],
+        "select_index" => ["f32.select", "f32.index"],
+        "index_affine" => ["f32.index", "f32.affine"],
+        "guard_affine" => ["guard", "f32.affine"],
+        _ => unreachable!("matrix-v1 interaction family"),
+    };
+    let graph_ops: Vec<&str> = case.graph.nodes.iter().map(|node| node.op.name()).collect();
+    let target_feature_preserved = required.iter().all(|name| graph_ops.contains(name));
+    Some(serde_json::json!({
+        "input_bits": minimized_inputs.map(f32::to_bits),
+        "original_input_bits": case.inputs.map(f32::to_bits),
+        "graph_unchanged": true,
+        "selected_branch_preserved": minimized_inputs[4].to_bits() == case.inputs[4].to_bits(),
+        "selected_table_index_preserved": minimized_inputs[3].to_bits() == case.inputs[3].to_bits(),
+        "target_feature_preserved": target_feature_preserved,
+        "mutation_site": mutation_id,
+        "snapshot": null,
+        "limits": {
+            "control": "Control::default()",
+            "fuel": null,
+            "cancellation": false,
+            "scratch_instrumentation": false,
+            "forward_scratch_override": null,
+            "effective_forward_scratch": noble_ngraph::check::Budgets::default().forward_scratch
+        },
+        "mismatch_class": mismatch_class,
+        "l2_after": format!("{:?}", legs.l2_apfloat),
+        "l3_after": format!("{:?}", legs.l3_reference),
+        "work": witness.attempts,
+        "budget": DEFAULT_ATTEMPTS,
+        "eligibility_rechecked_each_candidate": true,
+        "expected_property_rechecked_each_candidate": true,
+        "mismatch_class_rechecked_each_candidate": true,
+        "termination_reason": if witness.budget_exhausted { "attempt-budget-exhausted" } else { "local-minimum-under-issue38-input-simplifications" },
+        "global_minimum_claimed": false
+    }))
+}
+
+#[test]
+fn issue125_structured_interaction_matrix() {
+    const MATRIX: &str =
+        include_str!("../../../verification/differential-interactions/matrix-v1.json");
+    let matrix_sha256 = blake3::hash(MATRIX.as_bytes()).to_hex().to_string();
+    let families: [&'static str; 4] = [
+        "guard_select",
+        "select_index",
+        "index_affine",
+        "guard_affine",
+    ];
+    let classes: [&'static str; 6] = [
+        "signed_zero",
+        "nan",
+        "subnormal_normal_boundary",
+        "overflow_infinity",
+        "cancellation",
+        "rounding_tie",
+    ];
+    let mut cells = Vec::with_capacity(families.len().saturating_mul(classes.len()));
+    let mut shrunk = false;
+    let mutation_controls = issue125_mutation_controls();
+    for family in families {
+        for fp_class in classes {
+            let spec = Issue125Spec { family, fp_class };
+            let case = issue125_cell(spec);
+            let checked = check(&BLAKE3, case.graph.clone()).unwrap_or_else(|diagnostic| {
+                panic!("{} x {} refused: {diagnostic}", case.family, case.fp_class)
+            });
+            let compiled = Compiled::new(&BLAKE3, &checked);
+            let inputs = f32_inputs(&case.inputs);
+            let legs = run_legs(&compiled, &inputs, None);
+            let output_bits = issue125_output_bits(&legs.l3_reference);
+            let expected = issue125_expected(spec);
+            let property_evaluable = matches!(legs.l2_apfloat, Obs::Normal(_))
+                && matches!(legs.b2_oracle_f64, Obs::Normal(_))
+                && matches!(legs.l3_reference, Obs::Normal(_))
+                && matches!(legs.l4_compiled, Obs::Normal(_));
+            let l2_property_passed = issue125_property(&legs.l2_apfloat, expected);
+            let binary64_property_passed = issue125_property(&legs.b2_oracle_f64, expected);
+            let l3_property_passed = issue125_property(&legs.l3_reference, expected);
+            let l4_property_passed = issue125_property(&legs.l4_compiled, expected);
+            let property_passed_by_leg = serde_json::json!({
+                "l2_apfloat": l2_property_passed,
+                "binary64_per_operation": binary64_property_passed,
+                "l3_reference": l3_property_passed,
+                "l4_compiled": l4_property_passed
+            });
+            let property_passed = l2_property_passed
+                && binary64_property_passed
+                && l3_property_passed
+                && l4_property_passed;
+            let required_nodes: Vec<&str> = match family {
+                "guard_select" => vec!["guard", "f32.select"],
+                "select_index" => vec!["f32.select", "f32.index"],
+                "index_affine" => vec!["f32.index", "f32.affine"],
+                "guard_affine" => vec!["guard", "f32.affine"],
+                _ => unreachable!("matrix-v1 interaction family"),
+            };
+            let graph_ops: Vec<&str> = case.graph.nodes.iter().map(|node| node.op.name()).collect();
+            let ops_present = required_nodes.iter().all(|name| graph_ops.contains(name));
+            let reached = matches!(legs.l3_reference, Obs::Normal(_))
+                && legs.l3_evaluated_nodes == checked.node_count() as u64
+                && ops_present
+                && property_evaluable;
+            let mismatch_class = issue125_mismatch_class(&legs);
+            let cell_name = format!("P2/{family}/{fp_class}");
+            let minimized_witness = if !shrunk
+                && mutation_controls
+                    .target_cell
+                    .as_deref()
+                    .is_none_or(|target| target == cell_name)
+            {
+                mismatch_class.and_then(|class| {
+                    let witness = issue125_shrink_inputs(
+                        &case,
+                        &compiled,
+                        expected,
+                        class,
+                        mutation_controls.mutation_id.as_deref(),
+                    );
+                    shrunk = witness.is_some();
+                    witness
+                })
+            } else {
+                None
+            };
+            let graph_text = noble_ngraph::format::graph::print(&case.graph);
+            cells.push(serde_json::json!({
+                "cell": cell_name,
+                "interaction_family": family,
+                "fp_class": fp_class,
+                "selected": true,
+                "reached": reached,
+                "admission": "accepted",
+                "execution_outcome": issue125_execution_outcome(&legs.l3_reference),
+                "graph_id": noble_ngraph::ir::hex(&checked.id()),
+                "graph_text": graph_text,
+                "graph_text_blake3": blake3::hash(graph_text.as_bytes()).to_hex().to_string(),
+                "input_bits": case.inputs.map(f32::to_bits),
+                "operator_nodes": graph_ops,
+                "required_operator_nodes": required_nodes,
+                "selected_branch": issue125_runtime_selected_branch(&case.graph, family, &case.inputs),
+                "selected_branch_input_slot": issue125_selected_branch_input_slot(&case.graph, family),
+                "selected_branch_input_bits": issue125_selected_branch_input_slot(&case.graph, family)
+                    .and_then(|slot| issue125_input_bits(&case.inputs, slot)),
+                "index_input_slot": issue125_index_input_slot(&case.graph, family, &case.inputs),
+                "index_input_bits": issue125_index_input_slot(&case.graph, family, &case.inputs)
+                    .and_then(|slot| issue125_input_bits(&case.inputs, slot)),
+                "selected_table_index": issue125_runtime_table_index(&case.graph, family, &case.inputs),
+                "selected_table_node": issue125_selected_table_node(&case.graph, family, &case.inputs)
+                    .map(|node| node.0),
+                "snapshot": null,
+                "limits": {
+                    "control": "Control::default()",
+                    "fuel": null,
+                    "cancellation": false,
+                    "scratch_instrumentation": false,
+                    "forward_scratch_override": null,
+                    "effective_forward_scratch": noble_ngraph::check::Budgets::default().forward_scratch
+                },
+                "expected_output_bits": expected,
+                "l3_nodes_evaluated": legs.l3_evaluated_nodes,
+                "checked_node_count": checked.node_count(),
+                "output_bits": output_bits,
+                "property_engaged": property_evaluable,
+                "property_passed_by_leg": property_passed_by_leg,
+                "property_passed": property_passed,
+                "property_failed": !l3_property_passed && mismatch_class.is_some(),
+                "legs_agree": legs.agree(),
+                "mismatch_class": mismatch_class,
+                "minimized_witness": minimized_witness,
+                "comparison_legs_reached": ["L2 APFloat", "binary64-per-operation", "L3 reference", "L4 compiled"],
+                "l2": format!("{:?}", legs.l2_apfloat),
+                "binary64": format!("{:?}", legs.b2_oracle_f64),
+                "l3": format!("{:?}", legs.l3_reference),
+                "l4": format!("{:?}", legs.l4_compiled),
+                "l4_per_node_trace_available": false,
+                "witness_kind": "L3 full-node evaluation count plus runtime-derived direct input branch/index and output-discriminating values; L4 matched output, no per-node trace"
+            }));
+        }
+    }
+
+    let structured_node_budget: u64 = cells
+        .iter()
+        .map(|cell| {
+            cell["l3_nodes_evaluated"]
+                .as_u64()
+                .expect("structured node-work receipt")
+        })
+        .sum();
+    for cell in &mut cells {
+        cell["limits"]["graph_admission"] =
+            serde_json::json!("noble_ngraph::check::check with Budgets::default (/0)");
+        cell["limits"]["vectors_per_cell"] = serde_json::json!(1);
+        cell["limits"]["l3_node_work"] = cell["l3_nodes_evaluated"].clone();
+        cell["limits"]["matrix_l3_node_work_cap"] = serde_json::json!(structured_node_budget);
+    }
+    let comparison_seed = 125_u64;
+    let mut current_ops = 48_usize;
+    let (current_random_graph, current_random_checked) = loop {
+        let generated = noble_ngraph_experiment::random::graph(comparison_seed, current_ops);
+        let checked = check(&BLAKE3, generated.graph.clone()).expect("current random graph checks");
+        if checked.node_count() as u64 <= structured_node_budget || current_ops == 0 {
+            break (generated, checked);
+        }
+        current_ops -= 1;
+    };
+    let current_node_count = current_random_checked.node_count() as u64;
+    let current_vector_budget = (structured_node_budget / current_node_count).max(1);
+    let current_potential_node_work = current_node_count.saturating_mul(current_vector_budget);
+    let current_campaign = campaign(comparison_seed, current_ops, current_vector_budget);
+    let current_interactions = issue125_random_interaction_families(&current_random_graph.graph);
+    let current_full_execution = current_campaign.full_normal_executions > 0;
+    let current_reached_interactions: Vec<&str> = if current_full_execution {
+        current_interactions.to_vec()
+    } else {
+        Vec::new()
+    };
+    let structured_failures: Vec<serde_json::Value> = cells.iter()
+        .filter(|cell| cell["mismatch_class"] != serde_json::Value::Null)
+        .map(|cell| serde_json::json!({ "cell": cell["cell"], "mismatch_class": cell["mismatch_class"] }))
+        .collect();
+    let structured_reached_count = cells.iter().filter(|cell| cell["reached"] == true).count();
+    let structured_reached_cells: Vec<&str> = cells
+        .iter()
+        .filter(|cell| cell["reached"] == true)
+        .filter_map(|cell| cell["cell"].as_str())
+        .collect();
+    let generator_comparison = serde_json::json!({
+        "profiles_separate": true,
+        "seed_budget": { "current_graph_seed": comparison_seed,
+            "current_input_seed": current_campaign.input_seed,
+            "structured_fixed_case_seed": comparison_seed, "graphs_per_arm": 1 },
+        "compute_budget": { "unit": "L3 node evaluations", "cap": structured_node_budget,
+            "structured_actual": structured_node_budget,
+            "current_potential_max": current_potential_node_work,
+            "current_actual": current_campaign.l3_evaluated_nodes,
+            "current_unused": structured_node_budget.saturating_sub(current_campaign.l3_evaluated_nodes),
+            "same_budget_cap": current_potential_node_work <= structured_node_budget,
+            "note": "The random graph is indivisible; its full-execution node budget is capped at the structured arm's measured work, and input-fact refusals can leave that cap unused." },
+        "current_generator": { "ops_requested": current_ops, "graph_id": noble_ngraph::ir::hex(&current_random_checked.id()),
+            "graph_nodes": current_node_count, "vectors": current_campaign.vectors,
+            "full_normal_executions": current_campaign.full_normal_executions,
+            "full_normal_input_bits": current_campaign.full_normal_input_bits,
+            "normal": current_campaign.normal, "guard_failed": current_campaign.guard_failed,
+            "refused": current_campaign.refused, "disagreements": current_campaign.disagreements,
+            "failure_classes": current_campaign.failure_classes,
+            "first_disagreement": current_campaign.first_disagreement,
+            "structural_interaction_pairs": current_interactions,
+            "reached_interactions": current_reached_interactions,
+            "reached_cells": [],
+            "reached_cell_limitation": "No full-normal L3 execution; matrix-cell coverage is not inferred from structural tags.",
+            "witness_kind": "connected operation nodes plus at least one normal, full-node L3 execution; no per-node or selected-branch trace" },
+        "structured_extension": { "cells": cells.len(), "reached_cell_count": structured_reached_count,
+            "reached_cells": structured_reached_cells,
+            "actual_node_work": structured_node_budget, "distinct_attributed_failures": structured_failures,
+            "witness_kind": "per-cell full-node L3 count, runtime-derived direct input branch/index, outputs and all-leg comparison" },
+        "distinct_attributed_failures": { "current_generator_classes": current_campaign.failure_classes,
+            "structured_cells": structured_failures }
+    });
+
+    let mut invalid = issue125_cell(Issue125Spec {
+        family: "guard_select",
+        fp_class: "nan",
+    });
+    invalid.inputs[5] = f32::NAN;
+    let invalid_checked = check(&BLAKE3, invalid.graph.clone()).expect("valid guard-failure graph");
+    let invalid_legs = run_legs(
+        &Compiled::new(&BLAKE3, &invalid_checked),
+        &f32_inputs(&invalid.inputs),
+        None,
+    );
+    let invalid_refused =
+        matches!(invalid_legs.l3_reference, Obs::GuardFailed { .. }) && invalid_legs.agree();
+
+    let mut invalid_index = issue125_cell(Issue125Spec {
+        family: "index_affine",
+        fp_class: "subnormal_normal_boundary",
+    });
+    invalid_index.inputs[3] = f32::NAN;
+    let invalid_index_checked = check(&BLAKE3, invalid_index.graph.clone())
+        .expect("input-fact mutation keeps the graph admitted");
+    let invalid_index_legs = run_legs(
+        &Compiled::new(&BLAKE3, &invalid_index_checked),
+        &f32_inputs(&invalid_index.inputs),
+        None,
+    );
+    let invalid_index_refused = matches!(invalid_index_legs.l2_apfloat, Obs::Refused(_))
+        && matches!(invalid_index_legs.b2_oracle_f64, Obs::Refused(_))
+        && matches!(invalid_index_legs.l3_reference, Obs::Refused(_))
+        && matches!(invalid_index_legs.l4_compiled, Obs::Refused(_))
+        && invalid_index_legs.agree();
+    let earlier_refusal_rejected_by_shrinker = !issue125_shrink_candidate_allowed(
+        &invalid_index,
+        &invalid_index.inputs,
+        &invalid_index_legs,
+        issue125_expected(Issue125Spec {
+            family: "index_affine",
+            fp_class: "subnormal_normal_boundary",
+        }),
+        "normal-value-mismatch",
+    );
+    let target_failure_class = mutation_controls
+        .target_cell
+        .as_ref()
+        .and_then(|target| {
+            cells
+                .iter()
+                .find(|cell| cell["cell"].as_str() == Some(target.as_str()))
+                .and_then(|cell| cell["mismatch_class"].as_str())
+        })
+        .unwrap_or("normal-value-mismatch");
+    let substitute_class = if target_failure_class == "normal-value-mismatch" {
+        "normal-outcome-mismatch"
+    } else {
+        "normal-value-mismatch"
+    };
+    let expected_value = noble_ngraph::sem::Value::f32(f32::from_bits(1));
+    let substituted_l3 = if substitute_class == "normal-outcome-mismatch" {
+        Obs::GuardFailed {
+            node: noble_ngraph::ir::NodeId(0),
+            fact: noble_ngraph::ir::Fact::Finite,
+        }
+    } else {
+        Obs::Normal(vec![noble_ngraph::sem::Value::f32(2.0)])
+    };
+    let substituted_failure = noble_ngraph_experiment::differential::Legs {
+        l2_apfloat: Obs::Normal(vec![expected_value]),
+        b2_oracle_f64: Obs::Normal(vec![expected_value]),
+        l3_reference: substituted_l3.clone(),
+        l4_compiled: substituted_l3,
+        l3_evaluated_nodes: 3,
+    };
+    let different_failure_case = issue125_cell(Issue125Spec {
+        family: "index_affine",
+        fp_class: "subnormal_normal_boundary",
+    });
+    let different_failure_rejected_by_shrinker = !issue125_shrink_candidate_allowed(
+        &different_failure_case,
+        &different_failure_case.inputs,
+        &substituted_failure,
+        Some(1),
+        target_failure_class,
+    );
+    let different_failure_control = serde_json::json!({
+        "target_failure_class": target_failure_class,
+        "substituted_failure_class": substitute_class,
+        "property_still_engaged_on_l2": issue125_property(&substituted_failure.l2_apfloat, Some(1)),
+        "different_failure_rejected_by_shrinker": different_failure_rejected_by_shrinker
+    });
+
+    let quota = issue125_cell(Issue125Spec {
+        family: "guard_select",
+        fp_class: "signed_zero",
+    });
+    let quota_checked = check(&BLAKE3, quota.graph).expect("valid quota graph");
+    let quota_inputs = f32_inputs(&quota.inputs);
+    let mut reference_control = Control {
+        fuel: Some(0),
+        ..Control::default()
+    };
+    let reference_quota =
+        noble_ngraph::eval::reference(&quota_checked, &quota_inputs, None, &mut reference_control)
+            .obs;
+    let mut compiled_control = Control {
+        fuel: Some(0),
+        ..Control::default()
+    };
+    let compiled_quota = Compiled::new(&BLAKE3, &quota_checked)
+        .evaluate(&quota_inputs, None, &mut compiled_control)
+        .obs;
+    let exhausted = matches!(
+        reference_quota,
+        Obs::Exhausted(noble_ngraph::BudgetKind::Fuel)
+    ) && matches!(
+        compiled_quota,
+        Obs::Exhausted(noble_ngraph::BudgetKind::Fuel)
+    );
+    let mut reference_boundary_control = Control {
+        fuel: Some(1),
+        ..Control::default()
+    };
+    let reference_boundary = noble_ngraph::eval::reference(
+        &quota_checked,
+        &quota_inputs,
+        None,
+        &mut reference_boundary_control,
+    )
+    .obs;
+    let mut compiled_boundary_control = Control {
+        fuel: Some(1),
+        ..Control::default()
+    };
+    let compiled_boundary = Compiled::new(&BLAKE3, &quota_checked)
+        .evaluate(&quota_inputs, None, &mut compiled_boundary_control)
+        .obs;
+    let exhausted_at_one = matches!(
+        reference_boundary,
+        Obs::Exhausted(noble_ngraph::BudgetKind::Fuel)
+    ) && matches!(
+        compiled_boundary,
+        Obs::Exhausted(noble_ngraph::BudgetKind::Fuel)
+    );
+
+    let ftz = fixtures::b2_vectors()
+        .into_iter()
+        .find(|vector| vector.name.starts_with("subnormal: 2^-126"))
+        .expect("retained #38 subnormal vector");
+    let ftz_checked = check(&BLAKE3, ftz.graph).expect("retained #38 vector checks");
+    let ftz_legs = run_legs(
+        &Compiled::new(&BLAKE3, &ftz_checked),
+        &f32_inputs(&ftz.inputs),
+        None,
+    );
+    let weak_ftz = fixtures::ftz_mul(f32::MIN_POSITIVE, 0.5);
+    let independent_oracle_control = ftz_legs.agree()
+        && issue125_output_bits(&ftz_legs.l2_apfloat) == vec![ftz.expected[0]]
+        && weak_ftz.to_bits() != ftz.expected[0];
+    let reached = cells.iter().filter(|cell| cell["reached"] == true).count();
+    let matrix_outcomes = serde_json::json!({
+        "accepted": cells.iter().filter(|cell| cell["execution_outcome"] == "accepted").count(),
+        "refused": cells.iter().filter(|cell| cell["execution_outcome"] == "refused").count(),
+        "exhausted": cells.iter().filter(|cell| cell["execution_outcome"] == "exhausted").count(),
+        "unsupported": 0,
+        "cancelled": cells.iter().filter(|cell| cell["execution_outcome"] == "cancelled").count()
+    });
+    let accepted = matrix_outcomes["accepted"].as_u64().unwrap_or(0);
+    let executable = std::env::current_exe().expect("test executable path");
+    let executable_hash = blake3::hash(&std::fs::read(&executable).expect("read test executable"))
+        .to_hex()
+        .to_string();
+    let mutation_probe = mutation_controls.mutation_id.as_ref().map(|id| {
+        let target = mutation_controls
+            .target_cell
+            .as_deref()
+            .expect("mutation target cell");
+        let cell = cells.iter().find(|cell| cell["cell"] == target)
+            .expect("mutation target is a selected matrix cell");
+        let expected_mismatch = cell["mismatch_class"].as_str();
+        let l2_property = cell["property_passed_by_leg"]["l2_apfloat"] == true;
+        let l3_property_failed = cell["property_passed_by_leg"]["l3_reference"] == false;
+        // A mutated guard can reject a safe input after evaluating the selected
+        // guard/select graph. That is a reached divergence, although it is not
+        // a normally completed matrix cell.
+        let execution_reached = cell["admission"] == "accepted"
+            && cell["l3_nodes_evaluated"] == cell["checked_node_count"]
+            && cell["required_operator_nodes"].as_array().is_some_and(|required| {
+                let present = cell["operator_nodes"].as_array();
+                required.iter().all(|name| present.is_some_and(|nodes|
+                    nodes.iter().any(|node| node == name)))
+            });
+        let minimized = cell["minimized_witness"].clone();
+        let shrink_work = minimized.get("work").cloned();
+        let graph_text = cell["graph_text"].as_str().expect("retained graph text");
+        let original_witness = serde_json::json!({
+            "graph_text": graph_text,
+            "input_bits": cell["input_bits"].clone()
+        });
+        let minimized_witness = serde_json::json!({
+            "graph_text": graph_text,
+            "input_bits": minimized["input_bits"].clone()
+        });
+        let original_witness_size_bytes = original_witness.to_string().len();
+        let minimized_witness_size_bytes = minimized_witness.to_string().len();
+        let failure_identity = expected_mismatch.map(|mismatch| format!("{id}:{target}:{mismatch}"));
+        let outcome = issue125_mutation_outcome(Issue125MutationEvidence {
+            execution_reached,
+            l2_property_passed: l2_property,
+            l3_property_failed,
+            expected_mismatch,
+            minimized: &minimized,
+        });
+        serde_json::json!({
+            "mutation_id": id,
+            "target_cell": target,
+            "outcome": outcome,
+            "failure_identity": failure_identity,
+            "divergence_reached": execution_reached,
+            "independent_l2_property_engaged": l2_property,
+            "intended_l3_property_failed": l3_property_failed,
+            "mismatch_class": expected_mismatch,
+            "original": cell,
+            "minimized": minimized,
+            "witness_size_encoding": "compact UTF-8 JSON containing graph_text and six input-bit words",
+            "original_witness_size_bytes": original_witness_size_bytes,
+            "minimized_witness_size_bytes": minimized_witness_size_bytes,
+            "shrink_work": shrink_work,
+            "candidate_test_executable_blake3": executable_hash
+        })
+    });
+    let receipt = serde_json::json!({
+        "schema": "noble-differential-interactions-p2/v1",
+        "profile": "P2-ngraph-f32",
+        "matrix_sha256": matrix_sha256,
+        "test_executable": executable,
+        "test_executable_blake3": executable_hash,
+        "selected": cells.len(),
+        "generator_comparison": generator_comparison,
+        "mutation_probe": mutation_probe,
+        "reached": reached,
+        "unreached": cells.iter().filter(|cell| cell["reached"] != true).map(|cell| cell["cell"].clone()).collect::<Vec<_>>(),
+        "matrix_outcomes": matrix_outcomes,
+        "control_outcomes": {
+            "refused": usize::from(invalid_refused).saturating_add(usize::from(invalid_index_refused)),
+            "exhausted": usize::from(exhausted).saturating_add(usize::from(exhausted_at_one)),
+            "unsupported": 1
+        },
+        "refusal_controls": [
+            { "variant": "Finite premise violated: safe input changed to NaN", "detected": invalid_refused,
+                "comparison_legs_reached": ["L2 APFloat", "binary64-per-operation", "L3 reference", "L4 compiled"] },
+            { "variant": "Integral premise violated: index input changed to NaN", "detected": invalid_index_refused,
+                "earlier_refusal_rejected_by_shrinker": earlier_refusal_rejected_by_shrinker,
+                "comparison_legs_reached": ["L2 APFloat", "binary64-per-operation", "L3 reference", "L4 compiled"] }
+        ],
+        "different_failure_control": different_failure_control,
+        "budget_controls": [
+            { "fuel": 0, "l3": format!("{reference_quota:?}"), "l4": format!("{compiled_quota:?}"), "detected": exhausted,
+                "comparison_legs_reached": ["L3 reference", "L4 compiled"] },
+            { "fuel": 1, "l3": format!("{reference_boundary:?}"), "l4": format!("{compiled_boundary:?}"), "detected": exhausted_at_one,
+                "comparison_legs_reached": ["L3 reference", "L4 compiled"] }
+        ],
+        "unsupported_features": ["immutable parameter snapshots: this seeded path passes None to run_legs"],
+        "oracle_weakness_control": { "fault": "flush subnormal result to zero", "fixture": ftz.name,
+            "retained_expected_bits": ftz.expected[0], "weak_output_bits": weak_ftz.to_bits(),
+            "independent_control_detected": independent_oracle_control },
+        "all_refused_is_semantic_acceptance": false,
+        "cells": cells
+    });
+    println!("ISSUE125_INTERACTION_RECEIPT={receipt}");
+    assert_eq!(cells.len(), 24, "matrix-v1 P2 cell count");
+    assert!(
+        current_potential_node_work <= structured_node_budget,
+        "current P2 generator exceeded the frozen node-work budget"
+    );
+    if mutation_controls.mutation_id.is_none() {
+        assert!(
+            accepted > 0,
+            "all-refused P2 campaign cannot pass semantic acceptance"
+        );
+        assert!(
+            reached > 0,
+            "P2 matrix did not execute any selected interaction"
+        );
+    } else {
+        // An implementation mutant may change results outside its declared
+        // target cell; mutation runs judge that target's retained witness,
+        // while only the clean baseline is required to reach every cell.
+        assert_eq!(
+            mutation_probe
+                .as_ref()
+                .and_then(|probe| probe["outcome"].as_str()),
+            Some("killed"),
+            "semantic mutant must fail its selected property after reaching the divergence"
+        );
+    }
+    // The guard-edge mutant deliberately invalidates both guard-based refusal
+    // controls; retain their observations, but keep the kill bound to its target.
+    if mutation_controls.mutation_id.as_deref() != Some("p2-inverted-guard-edge") {
+        assert!(
+            invalid_refused,
+            "one-premise guard refusal control must be observed by every leg"
+        );
+        assert!(
+            invalid_index_refused,
+            "one-premise index-fact refusal must be observed by every leg"
+        );
+    }
+    assert!(
+        earlier_refusal_rejected_by_shrinker,
+        "shrinker accepted an earlier input-fact refusal"
+    );
+    assert!(
+        different_failure_rejected_by_shrinker,
+        "shrinker accepted a different mismatch class for the retained failure"
+    );
+    assert!(
+        exhausted && exhausted_at_one,
+        "zero- and one-fuel controls must remain exhausted outcomes"
+    );
+    assert!(
+        independent_oracle_control,
+        "independent control must catch the deliberate FTZ oracle weakness"
+    );
+}
+
+#[test]
+#[ignore = "replay-only: consumes exact retained graph and input bytes written by the issue-125 runner"]
+fn issue125_replay_retained_witness() {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../verification/differential-interactions/replay.json");
+    let retained: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&path).expect("retained replay witness must exist"))
+            .expect("retained witness JSON");
+    let graph_text = retained["graph_text"].as_str().expect("graph bytes");
+    let graph = noble_ngraph::format::graph::parse(&BLAKE3, graph_text)
+        .unwrap_or_else(|diagnostic| panic!("retained graph refused: {diagnostic}"));
+    let checked = check(&BLAKE3, graph).expect("retained graph checks");
+    let graph_id = noble_ngraph::ir::hex(&checked.id());
+    let executable = std::env::current_exe().expect("current test executable");
+    let executable_hash =
+        blake3::hash(&std::fs::read(&executable).expect("read current executable"))
+            .to_hex()
+            .to_string();
+    assert_eq!(
+        graph_id,
+        retained["graph_id"].as_str().expect("graph identity")
+    );
+    assert_eq!(
+        blake3::hash(graph_text.as_bytes()).to_hex().as_str(),
+        retained["graph_text_blake3"]
+            .as_str()
+            .expect("graph byte digest")
+    );
+    assert!(retained["snapshot"].is_null(), "P2 matrix has no snapshot");
+    let selected_limits = &retained["limits"];
+    assert_eq!(
+        selected_limits["graph_admission"],
+        "noble_ngraph::check::check with Budgets::default (/0)"
+    );
+    assert_eq!(selected_limits["control"], "Control::default()");
+    assert!(selected_limits["fuel"].is_null());
+    assert_eq!(selected_limits["cancellation"], false);
+    assert_eq!(selected_limits["scratch_instrumentation"], false);
+    assert!(selected_limits["forward_scratch_override"].is_null());
+    assert_eq!(
+        selected_limits["effective_forward_scratch"].as_u64(),
+        Some(noble_ngraph::check::Budgets::default().forward_scratch)
+    );
+    assert_eq!(selected_limits["vectors_per_cell"], 1);
+    assert_eq!(
+        selected_limits["l3_node_work"].as_u64(),
+        Some(checked.node_count() as u64)
+    );
+    assert!(
+        selected_limits["l3_node_work"].as_u64().unwrap()
+            <= selected_limits["matrix_l3_node_work_cap"].as_u64().unwrap()
+    );
+    let family = retained["interaction_family"]
+        .as_str()
+        .expect("interaction family");
+    let fp_class = retained["fp_class"].as_str().expect("FP class");
+    let expected = issue125_expected(Issue125Spec { family, fp_class });
+    let expected_mismatch = retained["expected_mismatch_class"].as_str();
+    let input_bits = |key: &str| -> [u32; 6] {
+        let bits: Vec<u32> = retained[key]
+            .as_array()
+            .expect("retained input bits")
+            .iter()
+            .map(|value| {
+                u32::try_from(value.as_u64().expect("u32 input bits")).expect("u32 input bits")
+            })
+            .collect();
+        bits.try_into().expect("six retained F32 input bits")
+    };
+    let original_bits = input_bits("original_input_bits");
+    let minimized_bits = input_bits("minimized_input_bits");
+    assert_eq!(
+        original_bits[3], minimized_bits[3],
+        "shrinking changed the index input"
+    );
+    assert_eq!(
+        original_bits[4], minimized_bits[4],
+        "shrinking changed the select branch"
+    );
+    let original_values = original_bits.map(f32::from_bits);
+    let minimized_values = minimized_bits.map(f32::from_bits);
+    let original_branch =
+        issue125_runtime_selected_branch(checked.graph(), family, &original_values);
+    let minimized_branch =
+        issue125_runtime_selected_branch(checked.graph(), family, &minimized_values);
+    assert_eq!(
+        original_branch, minimized_branch,
+        "shrinking changed the selected branch"
+    );
+    assert_eq!(
+        original_branch,
+        retained["selected_branch"].as_str(),
+        "retained branch witness changed"
+    );
+    let branch_slot = issue125_selected_branch_input_slot(checked.graph(), family);
+    assert_eq!(
+        branch_slot.map(u64::from),
+        retained["selected_branch_input_slot"].as_u64(),
+        "retained branch operand slot changed"
+    );
+    assert_eq!(
+        branch_slot
+            .and_then(|slot| issue125_input_bits(&original_values, slot))
+            .map(u64::from),
+        retained["selected_branch_input_bits"].as_u64(),
+        "retained branch operand bits changed"
+    );
+    let original_index_slot = issue125_index_input_slot(checked.graph(), family, &original_values);
+    let minimized_index_slot =
+        issue125_index_input_slot(checked.graph(), family, &minimized_values);
+    assert_eq!(
+        original_index_slot, minimized_index_slot,
+        "shrinking changed the index operand slot"
+    );
+    assert_eq!(
+        original_index_slot.map(u64::from),
+        retained["index_input_slot"].as_u64(),
+        "retained index operand slot changed"
+    );
+    assert_eq!(
+        original_index_slot
+            .and_then(|slot| issue125_input_bits(&original_values, slot))
+            .map(u64::from),
+        retained["index_input_bits"].as_u64(),
+        "retained index operand bits changed"
+    );
+    let original_index = issue125_runtime_table_index(checked.graph(), family, &original_values);
+    let minimized_index = issue125_runtime_table_index(checked.graph(), family, &minimized_values);
+    assert_eq!(
+        original_index, minimized_index,
+        "shrinking changed the selected table index"
+    );
+    assert_eq!(
+        original_index.map(u64::from),
+        retained["selected_table_index"].as_u64(),
+        "retained table-index witness changed"
+    );
+    let original_table_node =
+        issue125_selected_table_node(checked.graph(), family, &original_values);
+    let minimized_table_node =
+        issue125_selected_table_node(checked.graph(), family, &minimized_values);
+    assert_eq!(
+        original_table_node, minimized_table_node,
+        "shrinking changed the table operand"
+    );
+    assert_eq!(
+        original_table_node.map(|node| u64::from(node.0)),
+        retained["selected_table_node"].as_u64(),
+        "retained table operand changed"
+    );
+    assert_eq!(
+        executable_hash,
+        retained["candidate_test_executable_blake3"]
+            .as_str()
+            .expect("candidate binary identity"),
+        "replay binary differs from the candidate receipt"
+    );
+    let historical_hash = retained["historical_test_executable_blake3"]
+        .as_str()
+        .expect("historical binary identity");
+    assert_ne!(
+        executable_hash, historical_hash,
+        "historical baseline executable must be refused as evidence for changed bytes"
+    );
+    let replay_variant = |name: &str, key: &str| {
+        let input_bits = input_bits(key);
+        let inputs = input_bits.map(f32::from_bits);
+        let legs = run_legs(
+            &Compiled::new(&BLAKE3, &checked),
+            &f32_inputs(&inputs),
+            None,
+        );
+        let mismatch = issue125_mismatch_class(&legs);
+        assert!(
+            issue125_property(&legs.l2_apfloat, expected),
+            "independent property no longer engaged for {name}"
+        );
+        assert!(
+            !issue125_property(&legs.l3_reference, expected),
+            "retained mutant no longer violates its intended property for {name}"
+        );
+        assert_eq!(
+            mismatch, expected_mismatch,
+            "retained failure identity changed for {name}"
+        );
+        assert!(
+            !legs.agree(),
+            "mutated retained failure unexpectedly agrees for {name}"
+        );
+        assert_eq!(
+            legs.l3_evaluated_nodes,
+            checked.node_count() as u64,
+            "retained graph did not evaluate every node for {name}"
+        );
+        serde_json::json!({
+            "variant": name,
+            "input_bits": input_bits,
+            "selected_branch": issue125_runtime_selected_branch(checked.graph(), family, &inputs),
+            "selected_branch_input_slot": issue125_selected_branch_input_slot(checked.graph(), family),
+            "selected_branch_input_bits": issue125_selected_branch_input_slot(checked.graph(), family)
+                .and_then(|slot| issue125_input_bits(&inputs, slot)),
+            "index_input_slot": issue125_index_input_slot(checked.graph(), family, &inputs),
+            "index_input_bits": issue125_index_input_slot(checked.graph(), family, &inputs)
+                .and_then(|slot| issue125_input_bits(&inputs, slot)),
+            "selected_table_index": issue125_runtime_table_index(checked.graph(), family, &inputs),
+            "selected_table_node": issue125_selected_table_node(checked.graph(), family, &inputs)
+                .map(|node| node.0),
+            "mismatch_class": mismatch,
+            "failure_identity": retained["failure_identity"],
+            "l2": format!("{:?}", legs.l2_apfloat),
+            "l3": format!("{:?}", legs.l3_reference),
+            "l4": format!("{:?}", legs.l4_compiled),
+            "legs_agree": legs.agree(),
+            "l3_evaluated_nodes": legs.l3_evaluated_nodes,
+        })
+    };
+    let replayed = vec![
+        replay_variant("original", "original_input_bits"),
+        replay_variant("minimized", "minimized_input_bits"),
+    ];
+    let output = serde_json::json!({
+        "replay_mode": retained["replay_mode"],
+        "cell": retained["cell"],
+        "graph_id": graph_id,
+        "graph_text_blake3": blake3::hash(graph_text.as_bytes()).to_hex().to_string(),
+        "replayed": replayed,
+        "failure_identity": retained["failure_identity"],
+        "limits": retained["limits"],
+        "candidate_test_executable_blake3": executable_hash,
+        "historical_executable_refused": executable_hash != historical_hash,
+        "corpus_regenerated": false,
+        "fresh_process_replay": true
+    });
+    println!("ISSUE125_REPLAY={output}");
 }

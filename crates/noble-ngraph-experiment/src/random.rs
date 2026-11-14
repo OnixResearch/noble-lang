@@ -40,12 +40,16 @@ const COEFS: [f32; 12] = [
 
 fn exact_coef(rng: &mut SplitMix64) -> f32 {
     let k = rng.below(COEFS.len() as u64 + 4);
-    if (k as usize) < COEFS.len() {
+    let coefficient = if (k as usize) < COEFS.len() {
         COEFS[k as usize]
     } else {
         random_f32(rng)
+    };
+    if coefficient.is_finite() {
+        coefficient.clamp(f32::MIN, f32::MAX)
+    } else {
+        0.0
     }
-    .clamp(f32::MIN, f32::MAX)
 }
 
 /// One random binary32 input: specials, raw bit patterns and moderate values.

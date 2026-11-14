@@ -1,0 +1,28 @@
+{
+  "schema": "noble-foundation-receipt-index/v1",
+  "source_commit": "c9fa57db9d5c56f8c93380532ed0d79ccbe5502c",
+  "source_tree": "7d5c5ed434bda87550c80586b98364e18b2a43fe",
+  "run": "verification/foundation/check.mjs --output <new external directory> (issue #125 P1 expectation basis), clean source",
+  "raw_location": "/home/brittonr/.cache/noble-iss/scratch/diffcov-125/foundation-c9fa57d (host-local, not attested by this file)",
+  "raw_sha256": {
+    "foundation-check.json": "f387671680f2a081a59d47cefdde6ccc7e655003f879d98f454d4dd7b315ddb4",
+    "Audit.lean": "acc64f76bd7a55e887189a8e912cd4955a91c915da77d1f9a35c15ca78221fef"
+  },
+  "in_repo": {
+    "foundation-check.json": "verbatim",
+    "Audit.lean": "verbatim"
+  },
+  "results": {
+    "foundation": {
+      "theorem_count": 1450,
+      "clean_source": true,
+      "implementation_theorem": false,
+      "allowed_axioms": ["propext", "Classical.choice", "Quot.sound"]
+    },
+    "issue_125": {
+      "use": "P1 per-case Lean expectation basis only",
+      "campaign_receipt": "verification/differential-interactions/receipts/c9fa57d/campaign.json",
+      "campaign_receipt_sha256": "5f8ced58b15a81703fdddd2a964b3793d3cdd71c58646de945dfbc80edbfb71f"
+    }
+  }
+}
