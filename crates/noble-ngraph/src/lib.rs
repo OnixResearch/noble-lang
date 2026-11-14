@@ -65,6 +65,8 @@
 //! claim is made.
 
 extern crate alloc;
+#[cfg(test)]
+extern crate std;
 
 pub mod batch;
 pub mod belt;
