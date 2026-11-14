@@ -33,8 +33,8 @@ this repository.
 
 **Fetched-source notice.** [`prepare-talos.mjs`](prepare-talos.mjs) fetches the Talos interpreter at
 exactly `d7c84ac660757953b752bdfc9cb8dae3dab623ed` into a new work directory outside the repository,
-verifies that revision, applies the Noble patches in [`lean/patches/`](lean/patches/), copies the
-Noble pilot modules from [`lean/overlay/`](lean/overlay/) into the prepared tree, and copies the
+verifies that revision, applies the Noble patches in `lean/patches/`, copies the
+Noble pilot modules from `lean/overlay/` into the prepared tree, and copies the
 matching cached package directories into it. Every lane script reads that prepared directory. Talos
 is distributed under AGPL-3.0; that license applies to the fetched code and to the patches, which
 modify it (a dropped-segment `memory.init` source-bounds fix, a decoder extension and the lakefile
