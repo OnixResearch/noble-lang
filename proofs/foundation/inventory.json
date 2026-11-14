@@ -11686,6 +11686,168 @@
       "claim": "capture admits a permission only when both the duplicate and discard bits are set"
     },
     {
+      "name": "NobleFoundation.PackedLayoutEncoded.decodeInput_encodeInput",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "The total decoder round-trips every canonical finite graph and layout-table encoding."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutEncoded.encodeInput_injective",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "Distinct finite graph and layout-table inputs have distinct canonical bit encodings."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutEncoded.validateEncoded_agrees",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "Encoded validation agrees with PackedLayout.accepted on the decoded finite graph and table representation."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutEncoded.encodedSize_is_bit_length",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "The encoded-size measure is exactly the number of bits emitted by the chosen encoding."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutEncoded.decodeNatPrefix_encodeNat_append",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "The unary-prefixed binary-width natural decoder consumes exactly one natural code and preserves the remaining suffix."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutEncoded.encodeNat_length",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "A natural code occupies exactly two times its binary width plus the unary-prefix terminator bits."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.interleaved_real_encoded_accepted",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The actual Rust-checked interleaved_real layout is accepted by layout::check and the encoded model's acceptance predicate is kernel-decided true."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_real_encoded_accepted",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The actual Rust-checked two_constants_real layout is accepted by layout::check and the encoded model's acceptance predicate is kernel-decided true."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_stale_revision_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated stale revision layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_register_map_shape_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated register map shape layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_register_out_of_range_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated register out of range layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_aliased_registers_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated aliased registers layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_register_count_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated register count layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_one_register_held_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated one register held layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_constant_entry_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated constant entry layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_constant_count_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated constant count layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_constant_duplicate_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated constant duplicate layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_slot_entry_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated slot entry layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_slot_count_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated slot count layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_slot_duplicate_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated slot duplicate layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_layer_shape_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated layer shape layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_layer_order_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated layer order layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_failure_suffix_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated failure suffix layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_layer_coverage_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated layer coverage layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.nodesOnlyEncoding_is_not_injective",
+      "phase": 2,
+      "role": "packed-layout-cost-control",
+      "claim": "Omitting revision metadata from the packed-layout encoding admits distinct valid and stale-revision model inputs with the same node-only encoding."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.finiteFixtureLookup_misses_model_accepted_extension",
+      "phase": 2,
+      "role": "packed-layout-cost-control",
+      "claim": "A finite fixture layer-count lookup misses a model-accepted input with an additional empty layer."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.node_count_does_not_measure_encoded_input",
+      "phase": 2,
+      "role": "packed-layout-cost-control",
+      "claim": "Two model-accepted inputs with the same graph node count can differ in complete encoded bit length."
+    },
+    {
       "name": "NobleFoundation.NetI64.system_rule_wf",
       "phase": 1,
       "role": "interaction-system",
@@ -12306,6 +12468,28 @@
     "NobleFoundation.NetLabelled.op1NumberWF",
     "NobleFoundation.NetLabelled.op2SupWF",
     "NobleFoundation.NetLabelled.op1SupWF",
-    "NobleFoundation.NetLabelled.ruleDataSlots"
+    "NobleFoundation.NetLabelled.ruleDataSlots",
+    "NobleFoundation.PackedLayoutEncoded.decodeBoolPrefix_encodeBool_append",
+    "NobleFoundation.PackedLayoutEncoded.encodeUnary_length",
+    "NobleFoundation.PackedLayoutEncoded.decodeUnaryPrefix_encodeUnary_append",
+    "NobleFoundation.PackedLayoutEncoded.encodeFixedBits_length",
+    "NobleFoundation.PackedLayoutEncoded.encodeList_length",
+    "NobleFoundation.PackedLayoutEncoded.nat_lt_pow_width",
+    "NobleFoundation.PackedLayoutEncoded.decodeFixedBitsPrefix_encodeFixedBits_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeWordPrefix_encodeWord_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeListFrom_encodeList_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeListPrefix_encodeList_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeNodePrefix_encodeNode_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeRegisterPrefix_encodeRegister_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeNatPairPrefix_encodeNatPair_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeConstantPrefix_encodeConstant_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeListNodes_encode_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeListNats_encode_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeListRegisters_encode_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeListConstants_encode_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeListPairs_encode_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeTablesPrefix_encodeTables_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeInputPrefix_encodeInput_append",
+    "NobleFoundation.PackedLayoutEncoded.decodeInputPrefix_encodeInput"
   ]
 }

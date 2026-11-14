@@ -213,7 +213,10 @@ Status words:
 | What interaction-net contract revision 1 admits (issue #37) | `oriented_active_pair`, `value_into_result_port_is_accepted`, `fanout_cannot_feed_an_operand`, `identity_agents_bypass_the_operand_rule` | revision-1 contract model only; no reduction semantics, Rust or runtime claim | model **proved**: under the documented orientation no value meets an arithmetic agent in an active pair; the validator does not enforce the orientation, fanout cannot feed operands, and the operand rule constrains wiring shape, not the function |
 | Selected revision-3 I64 system on inets (#37/#109/#124) | `system_rule_wf`, `system_rule_symm`, the op2, op1, dup and era rules, `Program.acceptanceCheck_iff`, `Program.translateChecked_accepted`, `Program.translateChecked_wf`, `Program.translateChecked_interface`, `Program.normalize_spec`, `i64_normal_form_unique`, `i64_equal_interaction_count`, `checkCertificate_iff`, `Certificate.accepted_exact_count`, `Certificate.accepted_reduction_live_agents`, `chainProgram_interactionCount`, `chainProgram_agentBound`, `balancedProgram_interactionCount`, `balancedProgram_agentBound`, the independent-subtraction schedule fixtures, `fifo_control_fork_not_diamond`, and `fifo_control_schedules_differ` | no Rust implementation or lowering correspondence is claimed | model **proved**: checked translation, ordered interface, exact mirrored interaction rules, schedule-independent normal-form counts, and finite-prefix live-agent bounds. Chain, balanced-tree, and fanout graph-count/resource formulas hold for arbitrary sizes. The #124 two-subtraction fixture executes distinct scan-order schedules and establishes the same abstract normal form, wrapping read-back, and count. The explicitly rejected FIFO control has a non-diamond delivery fork and schedule-dependent subtraction result; it is not the selected semantics. Revision 3 has no operand stacks: each wire has exactly two port endpoints, with fanout represented by explicit `dup`. Arbitrary-size chain/tree normalization and read-back, general graph observation, and proof that every admitted lowering reaches normal form remain **open** |
 | Bounded Boolean Shannon control, interval ISOP, and independent checker (issue #35) | `Isop.shannon_exact`, `Isop.majority_cover_has_a_nonprime_cube`, `Isop.equivOn_sound`; `IsopInterval.isop_bounds`, `isopCover_eval`, `isopCover_bounds`, `isopCover_exact`, `allCubes_complete`, `majority_isop_cover_prime_and_irredundant`, `intervalChecker_sound`, `isopCover_interval_checked`, interval fixtures, and seeded atom-map/care-set controls | Lean truth-table model and `crates/noble-ngraph-experiment/src/isop.rs`; standalone checked Boolean DAG only, not connected to source lowering or `Program` | Shannon control and interval ISOP semantics **proved**; Rust core/checker and seeded limits **tested**; synthetic comparison and frozen adoption decision in `verification/isop/`. Source integration **NO-GO/deferred**: the current #32 whitelist contains no Boolean-composition regions, and no lazy Bool/branch extension is admitted |
-| Constructor reuse under a unique root, matching size, and resource eligibility | `makeCell_requested`, `reuseStep_success`, `reuseStep_refuses_size_mismatch`, `reuseStep_replaces_unique_root`, `reuseStep_initializes_requested_cell`, `eligible_replacement_has_no_resource`, `eligible_replacement_requires_move`, `wrapped_resource_is_not_reuse_eligible`, `shared_alias_control` | none (finite model only; no allocator, runtime or Wasm correspondence) | **proved** |
+| Constructor reuse under a unique root, matching size, and resource eligibility | `makeCell_requested`, `reuseStep_success`, `reuseStep_refuses_size_mismatch`, `reuseStep_replaces_unique_root`, `reuseStep_initializes_requested_cell`, `eligible_replacement_has_no_resource`, `eligible_replacement_requires_move`, `wrapped_resource_is_not_reuse_eligible`, `shared_alias_control` | none (finite model only; no allocator, runtime or Wasm correspondence) | **proved** (model) |
+| Encoded packed-layout validation (issue #80, unit 1) | `NobleFoundation.PackedLayoutEncoded.decodeInput_encodeInput`, `NobleFoundation.PackedLayoutEncoded.encodeInput_injective`, `NobleFoundation.PackedLayoutEncoded.validateEncoded_agrees`, `NobleFoundation.PackedLayoutEncoded.encodedSize_is_bit_length`, `NobleFoundation.PackedLayoutEncoded.encodeNat_length` | finite list-based I64/Bool graph and layout tables; unary-prefixed binary-width natural fields of exactly `2 * natWidth n + 1` bits, fixed 64-bit constants and total decoder. The revision flag and fail-node set are model inputs, not the Rust serde format | model **proved**; Rust bytes, CheckedGraph metadata and implementation refinement **open** |
+| Rust-generated packed-layout corpus (issue #80, unit 2) | `NobleFoundation.PackedLayoutCorpus.interleaved_real_encoded_accepted`, `NobleFoundation.PackedLayoutCorpus.two_constants_real_encoded_accepted`, and all sixteen two_constants mutation verdict theorems | Real CheckedGraph and PackedLayout outputs plus 16 copies refused by layout::check at the named path; the Lean theorems rewrite through `NobleFoundation.PackedLayoutEncoded.validateEncoded_agrees` then kernel-decide encoded-model acceptance. Not Rust byte correspondence: compiler revision/build key and derivation or consistency of CheckedGraph layer metadata are outside the model; guard/F32 layouts are outside the exported I64/Bool slice | fixtures **tested** against Rust refusal paths; finite decisions **proved** in Lean; implementation refinement **open** |
+| Encoded-layout claim/cost controls (issue #80, unit 3) | `NobleFoundation.PackedLayoutCorpus.nodesOnlyEncoding_is_not_injective`, `NobleFoundation.PackedLayoutCorpus.finiteFixtureLookup_misses_model_accepted_extension`, `NobleFoundation.PackedLayoutCorpus.node_count_does_not_measure_encoded_input` | Generated finite-model controls only; see verification/complexity-pilot/README.md for Rust pass/accounting inventory, metadata trust boundary, exclusions, empirical context and the isolated toolchain pins | control claims **proved** in Lean; asymptotic cost table **documented**, not a costed-machine theorem; Rust refinement **open** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
 | Collision-safe cache lookup and length-prefixed subject encoding | `NobleFoundation.CacheLookup.lookup_some_implies_manifest_eq`, `colliding_index_equal`, `colliding_index_wrong_manifest_misses`, `colliding_index_hit_skips_wrong_manifest`, `matching_entry_hits`, `stale_manifest_entry_refused`, `corrupt_entry_refused`, `lookup_after_erase_subset`, `lengthBytes_injective_of_lt`, `encodeParts_injective_of_lt`, `changed_field_changes_encoding`, `naive_concat_field_collision` | model only; `Subject::derive` byte correspondence and all cache integration boundaries remain open | **proved** (model) |
 
@@ -3705,6 +3708,33 @@ The clean-source receipt for implicit-argument propositions is
 [`verification/foundation/receipts/5da1aa2bc/`](../../verification/foundation/receipts/5da1aa2bc/foundation-check.json)
 (1103 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
+
+## Encoded packed-layout model (issue #80, unit 1)
+
+`NobleFoundation/PackedLayoutEncoded.lean` gives finite lists for the graph's
+nodes and layer metadata and for the declared register, constant, slot, layer
+and failure-suffix tables. Naturals use a terminated unary code; every I64
+constant uses 64 little-endian bits. Lists carry their lengths. The decoder
+returns `none` for malformed or trailing bits, and `validateEncoded` refuses
+those inputs. Its revision flag models only equality with the selected layout
+revision; `failNodes` models a `Node → Bool` predicate by list membership.
+The output index is immaterial to `PackedLayout.accepted` and is set to zero
+when the finite graph is decoded.
+
+The kernel proves canonical decode round-trip and encoding injectivity,
+`validateEncoded` agreement with `PackedLayout.accepted` on the decoded finite
+graph and table representation, and that the size measure is exactly the
+number of encoded bits. These are model theorems. This encoding is deliberately
+not claimed to match Rust's serde bytes, and the model still uses the existing
+validator's checker-provided layer and failure metadata as inputs.
+
+**Open, and deliberately not closed:** the Rust byte decoder/serializer,
+`CheckedGraph` metadata derivation and trust boundary, `layout::check`
+correspondence, the comparison-sort and ordered-map cost model, asymptotic
+proofs, and implementation-level cost bounds. U2 adds only finite real-layout
+corpus evidence; it does not close these universal claims.
+
+The clean foundation receipt for this model is attached with unit 1.
 
 ## Status by phase
 
