@@ -1,0 +1,81 @@
+{
+  "schema": "noble-differential-interactions-receipt-index/v1",
+  "source_commit": "756ccc9433677c8bdc70a8fac9e061e4ca875997",
+  "source_tree": "9b05b0531b02b82180ac1cce54f7286f4577b0b6",
+  "matrix_sha256": "d8183d933e40cafd9e283aeeef2e07af2d5c635f26045198730b576e787c4845",
+  "run_argv": [
+    "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+    "verification/differential-interactions/mutant-runner.mjs",
+    "--root", "/home/brittonr/.cache/noble-iss/scratch/diffcov-125/campaign-worktree",
+    "--output", "/home/brittonr/.cache/noble-iss/scratch/diffcov-125/campaign-run-16",
+    "--target-dir", "/home/brittonr/.cache/noble-iss/target/diffcov-125",
+    "--cargo", "/home/brittonr/.cache/noble-iss/cargo.sh",
+    "--node", "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+    "--foundation", "/home/brittonr/.cache/noble-iss/scratch/diffcov-125/foundation-756ccc9/foundation-check.json",
+    "--corpus", "/home/brittonr/.cache/noble-iss/scratch/diffcov-125/campaign-worktree/crates/noble-wasm/fuzz/regressions/source"
+  ],
+  "raw_location": "/home/brittonr/.cache/noble-iss/scratch/diffcov-125/campaign-run-16 (host-local, not attested by this file)",
+  "raw_sha256": {
+    "campaign.json": "ef3f51dcecd16dd1ee50572c45442730346f7e8cf9553cddc5a95dd6fc2e7c35"
+  },
+  "in_repo": {
+    "campaign.json": "verbatim"
+  },
+  "results": {
+    "clean_baseline": true,
+    "p1": {
+      "selected": 18,
+      "reached": 18,
+      "accepted": 18,
+      "refused": 0,
+      "exhausted": 0,
+      "unsupported": 1,
+      "unsupported_feature": "foundation CLI differential observer has no per-run fuel override; case-count budget used"
+    },
+    "p1_invalid_control": {
+      "selected": 1,
+      "refused": true,
+      "outcome": "reject",
+      "matched": true
+    },
+    "p1_budget": {
+      "selected_case_limit": 18,
+      "opt_off": 18,
+      "opt_on": 18,
+      "budget_boundary_reached": true
+    },
+    "p1_oracle_controls": {
+      "selected": 7,
+      "demonstrably_fail": 7,
+      "literal_wrapping_instead_of_refusal_detected": true
+    },
+    "p2": {
+      "selected": 24,
+      "reached": 24,
+      "accepted": 24,
+      "refused": 0,
+      "exhausted": 0,
+      "unsupported": 0,
+      "matrix_sha256": "49ca05ba266a22b754e51630bec5fb11bc2706ea50df5e127ab0827da8816c06",
+      "node_work_cap": 208
+    },
+    "mutants": {
+      "selected": 8,
+      "killed": 8,
+      "all_original_and_minimized_replays_passed": true,
+      "ids": [
+        "p1-wrong-compose-scheduling",
+        "p1-quoted-add-as-subtraction",
+        "p1-reversed-i64-subtraction-operands",
+        "p1-reversed-observed-stack",
+        "p2-inverted-guard-edge",
+        "p2-reversed-select-edge",
+        "p2-stale-index-table-edge",
+        "p2-reversed-affine-terms"
+      ]
+    },
+    "changed_build_historical_receipts_refused": true,
+    "scratch_restored_cleanly": true,
+    "runner_exit": 0
+  }
+}

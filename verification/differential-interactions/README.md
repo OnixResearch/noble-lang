@@ -25,11 +25,12 @@ cargo test --locked --offline -p noble-ngraph-experiment \
 
 and replay results. See the runner's usage comment for the required options.
 The successful runs for source commits `7ed66b5d` and `675ab62f` are retained
-in their respective receipt directories, but attest only those revisions. The
-latest run for source commit `c9fa57d` is retained in
-[`receipts/c9fa57d/campaign.json`](receipts/c9fa57d/campaign.json): it reached
+in their respective receipt directories, but attest only those revisions.
+The latest run for source commit `756ccc9` is retained in
+[`receipts/756ccc9/campaign.json`](receipts/756ccc9/campaign.json): it reached
 18/18 P1 and 24/24 P2 cells, killed and replayed all eight selected mutants,
-and refused historical expectations or executables for changed builds.
+refused historical expectations or executables for changed builds, and restored
+the single mutation worktree cleanly.
 
 ## Evidence boundary and ownership
 

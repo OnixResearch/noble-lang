@@ -346,7 +346,7 @@ Unsupported modes: none. Both `off` and `on` are supported by
 freezes two disjoint finite test profiles before their campaign: P1 Core source
 through managed Wasm, and P2 numeric-graph F32 through the experiment lane.
 The clean foundation receipt used by the current campaign is retained at
-[`receipts/c9fa57d/index.json`](receipts/c9fa57d/index.json); it is a 1,450-
+[`receipts/756ccc9/index.json`](receipts/756ccc9/index.json); it is a 1,450-
 theorem per-case expectation basis only and does not claim an implementation
 theorem. The corresponding source-bound campaign receipt is linked from the
 interaction-lane README.
