@@ -70,6 +70,9 @@ test('Lakefile dependency plan is data-only and records manifest omissions', () 
   const direct = directDependencies(lakefile, 'toml');
   const comparison = compareDirectToManifest(direct, { packages: [] });
   assert.equal(direct.evaluator, 'toml-data-parser');
+  assert.equal(direct.entries[0].url, 'file:///fixture/tiny');
+  assert.equal(direct.entries[0].rev, '1111111111111111111111111111111111111111');
+  assert.equal(direct.complete, true);
   assert.deepEqual(comparison.discrepancies.map(item => item.kind), ['lakefile-dependency-not-in-manifest']);
   assert.equal(comparison.discrepancies[0].name, 'tiny');
   assert.equal(directDependencies('name = "root"\n[[require]]\nname = "unresolved"\n', 'toml').complete, false);

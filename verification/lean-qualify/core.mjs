@@ -25,8 +25,10 @@ export function directDependencies(lakefile, format) {
       const name = quoted(block, 'name');
       if (!name) { complete = false; continue; }
       const git = block.match(/(?:^|\n)\s*git\s*=\s*\{([^}]*)\}/s)?.[1];
-      const entryComplete = Boolean(git && quoted(block, 'url') && quoted(block, 'rev'));
-      entries.push({ name, url: git ? quoted(block, 'url') : null, rev: git ? quoted(block, 'rev') : null,
+      const url = git?.match(/\burl\s*=\s*"([^"]+)"/)?.[1] ?? null;
+      const rev = git?.match(/\brev\s*=\s*"([^"]+)"/)?.[1] ?? quoted(block, 'rev');
+      const entryComplete = Boolean(git && url && rev);
+      entries.push({ name, url: git ? url : null, rev: git ? rev : null,
         kind: git ? 'git' : 'path', complete: entryComplete });
       complete &&= entryComplete;
     }
