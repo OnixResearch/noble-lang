@@ -41,18 +41,13 @@ impl Legs {
 #[must_use]
 pub fn run_legs(c: &Compiled, inputs: &[Value], snapshot: Option<&ParamSnapshot>) -> Legs {
     let checked: &CheckedGraph = c.checked();
-    let mut l3_evaluated_nodes = 0;
-    let mut control = Control {
-        evaluated_nodes: Some(&mut l3_evaluated_nodes),
-        ..Control::default()
-    };
-    let l3_reference = eval::reference(checked, inputs, snapshot, &mut control).obs;
+    let l3 = eval::reference(checked, inputs, snapshot, &mut Control::default());
     Legs {
         l2_apfloat: oracle::apfloat(checked, inputs, snapshot),
         b2_oracle_f64: oracle::f64_per_op(checked, inputs, snapshot),
-        l3_reference,
+        l3_reference: l3.obs,
         l4_compiled: c.evaluate(inputs, snapshot, &mut Control::default()).obs,
-        l3_evaluated_nodes,
+        l3_evaluated_nodes: l3.evaluated_nodes,
     }
 }
 

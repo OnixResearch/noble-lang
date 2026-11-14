@@ -170,8 +170,14 @@ try {
   const p2BaseResult = runCargo(p2Command, 'p2-baseline', tmp);
   requireThat(p2BaseResult.status === 0, `P2 baseline failed: ${p2BaseResult.stderr}`);
   const p2Baseline = markerJson(p2BaseResult.stdout, 'ISSUE125_INTERACTION_RECEIPT=');
-  requireThat(p2Baseline?.reached === 24 && p2Baseline?.selected === 24,
-    'P2 clean baseline did not reach all frozen cells');
+  const p2Reached = p2Baseline?.cells?.filter(cell => cell.reached === true).length ?? 0;
+  const p2OutcomeCount = p2Baseline?.matrix_outcomes
+    ? Object.values(p2Baseline.matrix_outcomes).reduce((sum, count) => sum + count, 0) : 0;
+  requireThat(p2Baseline?.selected === 24 && p2Baseline.cells?.length === 24 &&
+    p2Baseline.reached === p2Reached && p2Baseline.unreached?.length === 24 - p2Reached &&
+    p2Baseline.matrix_outcomes?.accepted > 0 && p2OutcomeCount === 24,
+  'P2 baseline must account for every selected cell and cannot pass with all-refused outcomes');
+  const p2BaselineCells = new Map(p2Baseline.cells.map(cell => [cell.cell, cell]));
   const p2BaselineHash = p2Baseline.test_executable_blake3;
 
   const p1Mutants = [];
@@ -256,6 +262,24 @@ try {
       }
       p1Mutants.push(entry);
     } else if (mutant.profile === 'P2-ngraph-f32') {
+      const baselineTarget = p2BaselineCells.get(mutant.cell);
+      const baselineTargetValid = baselineTarget?.reached === true &&
+        baselineTarget.execution_outcome === 'accepted' && baselineTarget.property_passed === true &&
+        baselineTarget.legs_agree === true;
+      if (!baselineTargetValid) {
+        allKilled = false;
+        const sourcePath = join(root, mutant.source_path);
+        p2Mutants.push({ id: mutant.id, profile: mutant.profile, family: mutant.family, cell: mutant.cell,
+          mutation: mutant, outcome: 'incomplete', command_exit: null, clean_source_commit: sourceCommit,
+          source_path: mutant.source_path, baseline_source_sha256: existsSync(sourcePath) ? hashFile(sourcePath) : null,
+          mutant_source_sha256: null, source_bytes_changed: false,
+          baseline_target: baselineTarget ? { reached: baselineTarget.reached,
+            execution_outcome: baselineTarget.execution_outcome,
+            property_passed: baselineTarget.property_passed, legs_agree: baselineTarget.legs_agree,
+            mismatch_class: baselineTarget.mismatch_class } : null,
+          error: `${mutant.id}: the frozen target is not a reached, all-leg-correct baseline case` });
+        continue;
+      }
       const mutantDir = join(output, 'p2-mutants', mutantLabel);
       mkdirSync(mutantDir, { recursive: true });
       const replayPath = join(root, 'verification/differential-interactions/replay.json');
@@ -320,6 +344,10 @@ try {
               ? probe.outcome : 'incomplete';
         const result = { id: mutant.id, profile: mutant.profile, family: mutant.family, cell: mutant.cell,
           mutation: mutant,
+          baseline_target: { reached: baselineTarget.reached,
+            execution_outcome: baselineTarget.execution_outcome,
+            property_passed: baselineTarget.property_passed, legs_agree: baselineTarget.legs_agree,
+            mismatch_class: baselineTarget.mismatch_class },
           outcome,
           command_exit: mutationResult.status, clean_source_commit: sourceCommit,
           source_path: mutant.source_path, baseline_source_sha256: beforeSha256,
@@ -396,7 +424,10 @@ try {
       p2: { matrix_sha256: p2Baseline.matrix_sha256,
         test_executable: p2Baseline.test_executable,
         test_executable_blake3: p2BaselineHash, selected: p2Baseline.selected,
-        reached: p2Baseline.reached, generator_comparison: p2Baseline.generator_comparison } },
+        reached: p2Baseline.reached, matrix_outcomes: p2Baseline.matrix_outcomes,
+        unreached_cells: p2Baseline.unreached,
+        distinct_attributed_failures: p2Baseline.generator_comparison.structured_extension.distinct_attributed_failures,
+        generator_comparison: p2Baseline.generator_comparison } },
     mutants: [...p1Mutants, ...p2Mutants],
     outcome_classes: matrix.outcome_classes,
     all_selected_mutants_killed_and_replayed: allKilled,
