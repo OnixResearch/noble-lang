@@ -24,8 +24,10 @@ pub(super) const EXTRACTION: [Kind; 3] = [
     kind!("--budget-inline-depth", inline_depth),
 ];
 
-/// Budgets charged by the graph checker.
-pub(super) const CHECKER: [Kind; 9] = [
+/// Budgets charged by graph checks or by constructor-data lowering.
+pub(super) const CHECKER: [Kind; 11] = [
+    kind!("--budget-work", work_units),
+    kind!("--budget-expansion", expanded_nodes),
     kind!("--budget-live-nodes", live_nodes),
     kind!("--budget-layers", layers),
     kind!("--budget-inputs", inputs),

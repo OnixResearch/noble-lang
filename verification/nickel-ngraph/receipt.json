@@ -1,0 +1,295 @@
+{
+  "schema": "noble-ngraph-nickel-receipt/v1",
+  "payload": {
+    "source_commit": "96bdc0dd6129577f78e15e38e6391b54b033e7a9",
+    "source_bytes": [
+      {
+        "path": "nickel/ngraph/fixtures/arithmetic.ncl",
+        "sha256": "8530ff178be31b3af2f67a6717af03a4bd8ba6bfe55f9fc91b3e2c0fa0e78c35",
+        "bytes": 1218
+      },
+      {
+        "path": "nickel/ngraph/fixtures/composition.ncl",
+        "sha256": "12d3ddeace363a02d3835e424d7b65dfc1adab9375278ff7492fece587c1839b",
+        "bytes": 3546
+      },
+      {
+        "path": "nickel/ngraph/fixtures/delayed-contract-failure.ncl",
+        "sha256": "818c37918f231864ac841859bb2da0ca9aa5a52a2748b26bef1699191d89accc",
+        "bytes": 73
+      }
+    ],
+    "import_bytes": [
+      {
+        "path": "nickel/ngraph/library.ncl",
+        "sha256": "c0110cce7861662d4e6e221d49d0148c098faec70570df0f7923ab7580a45f76",
+        "bytes": 1942
+      },
+      {
+        "path": "nickel/ngraph/contract.ncl",
+        "sha256": "8c293280fddb15a13e1f6cd5a9dedf89a74052f7009cd055a511bbaa0682ecac",
+        "bytes": 561
+      }
+    ],
+    "construction_parameters": [
+      {
+        "source": "nickel/ngraph/fixtures/arithmetic.ncl",
+        "case": "arithmetic",
+        "parameters": [
+          {
+            "name": "first.bias",
+            "value": "9223372036854775807"
+          },
+          {
+            "name": "first.scale",
+            "value": "9007199254740993"
+          },
+          {
+            "name": "second.bias",
+            "value": "-9223372036854775808"
+          },
+          {
+            "name": "second.scale",
+            "value": "-2"
+          }
+        ]
+      },
+      {
+        "source": "nickel/ngraph/fixtures/composition.ncl",
+        "case": "identity",
+        "parameters": []
+      },
+      {
+        "source": "nickel/ngraph/fixtures/composition.ncl",
+        "case": "scalar_copy",
+        "parameters": []
+      },
+      {
+        "source": "nickel/ngraph/fixtures/composition.ncl",
+        "case": "product",
+        "parameters": [
+          {
+            "name": "left.offset",
+            "value": "5"
+          },
+          {
+            "name": "right.offset",
+            "value": "2"
+          }
+        ]
+      },
+      {
+        "source": "nickel/ngraph/fixtures/composition.ncl",
+        "case": "permutation",
+        "parameters": []
+      },
+      {
+        "source": "nickel/ngraph/fixtures/composition.ncl",
+        "case": "reassociation_left",
+        "parameters": [
+          {
+            "name": "add.offset",
+            "value": "5"
+          },
+          {
+            "name": "multiply.factor",
+            "value": "2"
+          },
+          {
+            "name": "subtract.offset",
+            "value": "3"
+          }
+        ]
+      },
+      {
+        "source": "nickel/ngraph/fixtures/composition.ncl",
+        "case": "reassociation_right",
+        "parameters": [
+          {
+            "name": "add.offset",
+            "value": "5"
+          },
+          {
+            "name": "multiply.factor",
+            "value": "2"
+          },
+          {
+            "name": "subtract.offset",
+            "value": "3"
+          }
+        ]
+      }
+    ],
+    "versions": {
+      "schema": "noble-ngraph-nickel/v1",
+      "library": "noble-ngraph-nickel/1",
+      "contract": "noble-ngraph-nickel-contracts/1"
+    },
+    "evaluator_identity": {
+      "node": {
+        "executable": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+        "version": "v24.13.0",
+        "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b"
+      },
+      "nickel": {
+        "executable": "/nix/store/ck3a4k9az87z5rjwgy8nmpcs34xp9cc5-nickel-lang-rev-fixup-1.17.0/bin/nickel",
+        "version": "nickel-lang-cli nickel 1.17.0 (rev 1320a98)",
+        "sha256": "c04af27eeb8bff666ffadcbac83f024690549a12956758530e6181d2fbfe3b72"
+      }
+    },
+    "import_closures": [
+      {
+        "entry": "nickel/ngraph/fixtures/arithmetic.ncl",
+        "declared": [
+          "nickel/ngraph/fixtures/arithmetic.ncl",
+          "nickel/ngraph/library.ncl",
+          "nickel/ngraph/contract.ncl"
+        ],
+        "observed": [
+          {
+            "path": "nickel/ngraph/fixtures/arithmetic.ncl",
+            "sha256": "8530ff178be31b3af2f67a6717af03a4bd8ba6bfe55f9fc91b3e2c0fa0e78c35",
+            "bytes": 1218
+          },
+          {
+            "path": "nickel/ngraph/library.ncl",
+            "sha256": "c0110cce7861662d4e6e221d49d0148c098faec70570df0f7923ab7580a45f76",
+            "bytes": 1942
+          },
+          {
+            "path": "nickel/ngraph/contract.ncl",
+            "sha256": "8c293280fddb15a13e1f6cd5a9dedf89a74052f7009cd055a511bbaa0682ecac",
+            "bytes": 561
+          }
+        ]
+      },
+      {
+        "entry": "nickel/ngraph/fixtures/composition.ncl",
+        "declared": [
+          "nickel/ngraph/fixtures/composition.ncl",
+          "nickel/ngraph/library.ncl",
+          "nickel/ngraph/contract.ncl"
+        ],
+        "observed": [
+          {
+            "path": "nickel/ngraph/fixtures/composition.ncl",
+            "sha256": "12d3ddeace363a02d3835e424d7b65dfc1adab9375278ff7492fece587c1839b",
+            "bytes": 3546
+          },
+          {
+            "path": "nickel/ngraph/library.ncl",
+            "sha256": "c0110cce7861662d4e6e221d49d0148c098faec70570df0f7923ab7580a45f76",
+            "bytes": 1942
+          },
+          {
+            "path": "nickel/ngraph/contract.ncl",
+            "sha256": "8c293280fddb15a13e1f6cd5a9dedf89a74052f7009cd055a511bbaa0682ecac",
+            "bytes": 561
+          }
+        ]
+      },
+      {
+        "entry": "nickel/ngraph/fixtures/delayed-contract-failure.ncl",
+        "declared": [
+          "nickel/ngraph/fixtures/delayed-contract-failure.ncl",
+          "nickel/ngraph/fixtures/arithmetic.ncl",
+          "nickel/ngraph/library.ncl",
+          "nickel/ngraph/contract.ncl"
+        ],
+        "observed": [
+          {
+            "path": "nickel/ngraph/fixtures/delayed-contract-failure.ncl",
+            "sha256": "818c37918f231864ac841859bb2da0ca9aa5a52a2748b26bef1699191d89accc",
+            "bytes": 73
+          },
+          {
+            "path": "nickel/ngraph/fixtures/arithmetic.ncl",
+            "sha256": "8530ff178be31b3af2f67a6717af03a4bd8ba6bfe55f9fc91b3e2c0fa0e78c35",
+            "bytes": 1218
+          },
+          {
+            "path": "nickel/ngraph/library.ncl",
+            "sha256": "c0110cce7861662d4e6e221d49d0148c098faec70570df0f7923ab7580a45f76",
+            "bytes": 1942
+          },
+          {
+            "path": "nickel/ngraph/contract.ncl",
+            "sha256": "8c293280fddb15a13e1f6cd5a9dedf89a74052f7009cd055a511bbaa0682ecac",
+            "bytes": 561
+          }
+        ]
+      }
+    ],
+    "exported_constructor_bytes": [
+      {
+        "source": "nickel/ngraph/fixtures/arithmetic.ncl",
+        "sha256": "8912d02c4e2842b5a9ca6030a59a8433956497a35215f23b20ed20e70299f6ad",
+        "bytes": 3390
+      },
+      {
+        "source": "nickel/ngraph/fixtures/composition.ncl",
+        "sha256": "27f0c7021f1d45c2ff2e6aa1df59cad0e9cf53d161b090102a5fb0fd6d3b0462",
+        "bytes": 10658
+      }
+    ],
+    "lowerer": {
+      "revision": "noble-ngraph-nickel-lowerer/1",
+      "source": "crates/noble-cli/src/ngraph/nickel.rs",
+      "sha256": "9f0ceb0f72cea30264f57607dae349606bfbfa0f564fc266ee1368ceb18b2e8d",
+      "bytes": 17381
+    },
+    "profile": "ngraph-i64/0",
+    "graphs": [
+      {
+        "label": "arithmetic",
+        "sha256": "5955b93597dc8f999bb018e2f1e52ba97b8df2ef6b4b1d390d7cf84cc6055a4f",
+        "bytes": 438,
+        "checked_identity": "4b7fe3283b800ba9cf2a53000d6ca520a8cf748a7775e8002652b82c85f64b60",
+        "profile": "ngraph-i64/0"
+      },
+      {
+        "label": "composition-identity",
+        "sha256": "447648d2b1913561a612e1639590640846a4a004d351762eea8854a0abe03b91",
+        "bytes": 159,
+        "checked_identity": "6bb9454d1124381eea264b0e38d40508276d08fbc166a07efda6edcb4ad0a9a0",
+        "profile": "ngraph-i64/0"
+      },
+      {
+        "label": "composition-scalar_copy",
+        "sha256": "ba7fb6fa7cae3f7a456298524090753820e5f120833ee833ff47b5ace89248d9",
+        "bytes": 166,
+        "checked_identity": "51eeb831d85710f771fc991468e2959a57ecde985706c324a2e2fb93f5584a3b",
+        "profile": "ngraph-i64/0"
+      },
+      {
+        "label": "composition-product",
+        "sha256": "c5fa2f7e0beac10aa53776d0ddf9b961d3617a84c395c220698b747247624af5",
+        "bytes": 266,
+        "checked_identity": "2df75a94f9df819d5cbae5fd7a26e8d8959b08a3772dbb34449705216f7f71ed",
+        "profile": "ngraph-i64/0"
+      },
+      {
+        "label": "composition-permutation",
+        "sha256": "357413660701df6387074e7afb6d03538f310600f08130efa4c67990c7771736",
+        "bytes": 194,
+        "checked_identity": "86e9fbe545fd26177056c55ac0010e65957ae26365f1c50273579f02d677c5e4",
+        "profile": "ngraph-i64/0"
+      },
+      {
+        "label": "composition-reassociation_left",
+        "sha256": "694df136aea82825992c44660ca04482084f4f2c79f23e8636719a31006e80a3",
+        "bytes": 267,
+        "checked_identity": "5453ebedb905bcd583f44b7ceeb39fd3643ee323a9431c1eb37e931ad786b677",
+        "profile": "ngraph-i64/0"
+      },
+      {
+        "label": "composition-reassociation_right",
+        "sha256": "162b3f15a8ba872ad3e2cce5f7cf2b368f079aad11f6c81c96f268be884f8683",
+        "bytes": 267,
+        "checked_identity": "8904d243c3415e45f56c6647a5e9b92456eeec71a4bfb814a30738c22d3a89d0",
+        "profile": "ngraph-i64/0"
+      }
+    ]
+  },
+  "sha256": "ab05ff0b5f787f303ff75d6225b95ad093f2340f892e5b22e7b237d103bc16df"
+}

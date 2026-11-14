@@ -1,0 +1,41 @@
+{
+  "bundle_sha256": "e0805085c65044e05613517a526fe09164e4a0946394bc27874bd828775b6bf8",
+  "contract_version": "noble-ngraph-nickel-contracts/1",
+  "inputs": [
+    {
+      "id": "x",
+      "scope": "identity"
+    }
+  ],
+  "instances": [
+    {
+      "inputs": [
+        "x"
+      ],
+      "nodes": [
+        {
+          "id": "x",
+          "op": {
+            "kind": "input"
+          }
+        }
+      ],
+      "outputs": [
+        "x"
+      ],
+      "scope": "identity",
+      "template": "identity/1"
+    }
+  ],
+  "library_version": "noble-ngraph-nickel/1",
+  "outputs": [
+    {
+      "id": "x",
+      "scope": "identity"
+    }
+  ],
+  "parameters": [],
+  "profile": "ngraph-i64/0",
+  "schema": "noble-ngraph-nickel/v1",
+  "wires": []
+}

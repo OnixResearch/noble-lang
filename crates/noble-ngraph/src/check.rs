@@ -382,6 +382,57 @@ fn op_profile(op: &crate::ir::Op) -> Option<crate::ir::SubProfile> {
     }
 }
 
+fn check_authored_nickel_policy(g: &crate::ir::Graph) -> Result<(), crate::diag::Diagnostic> {
+    if g.subject.kind != crate::ir::SubjectKind::AuthoredNickel {
+        return Ok(());
+    }
+    if g.profile != crate::ir::SubProfile::I64 {
+        return Err(crate::diag::Diagnostic::new(
+            crate::diag::Code::Profile,
+            crate::diag::Site::Graph,
+            "authored-nickel admits only ngraph-i64/0",
+        ));
+    }
+    if !g.subject.closure.is_empty() {
+        return Err(crate::diag::Diagnostic::new(
+            crate::diag::Code::Subject,
+            crate::diag::Site::Graph,
+            "authored-nickel subjects have no source closure",
+        ));
+    }
+    if !g.facts.is_empty()
+        || g.slots.iter().any(|slot| {
+            slot.kind != crate::ir::SlotKind::Input || slot.ty != crate::ir::ScalarType::I64
+        })
+    {
+        return Err(crate::diag::Diagnostic::new(
+            crate::diag::Code::Profile,
+            crate::diag::Site::Graph,
+            "authored-nickel requires I64 inputs and has no params or facts",
+        ));
+    }
+    for (index, node) in g.nodes.iter().enumerate() {
+        if !matches!(
+            node.op,
+            crate::ir::Op::Input(_)
+                | crate::ir::Op::Const(crate::ir::Literal::I64(_))
+                | crate::ir::Op::I64Add(..)
+                | crate::ir::Op::I64Sub(..)
+                | crate::ir::Op::I64Mul(..)
+        ) {
+            return Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::Profile,
+                crate::diag::Site::Node(crate::ir::NodeId(index as u32)),
+                alloc::format!(
+                    "{} is outside the authored-nickel I64 arithmetic profile",
+                    node.op.name()
+                ),
+            ));
+        }
+    }
+    Ok(())
+}
+
 /// Checks `graph` under the `/0` default budgets.
 ///
 /// # Errors
@@ -405,6 +456,7 @@ pub fn check_with(
     budgets: &Budgets,
 ) -> Result<CheckedGraph, crate::diag::Diagnostic> {
     budgets.validate_policy()?;
+    check_authored_nickel_policy(&graph)?;
     let n = graph.nodes.len();
     budget(
         crate::diag::BudgetKind::LiveNodes,

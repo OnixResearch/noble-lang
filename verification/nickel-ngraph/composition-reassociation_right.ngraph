@@ -1,0 +1,11 @@
+ngraph-ir/0 ngraph-i64/0
+subject authored-nickel 8c19d7c37f4c1dbe5da8764b44b4d8500b9935ff29d35396798104fbc2d657fe closure -
+slot input i64
+%0 = input 0
+%1 = const i64 5
+%2 = i64.add %0 %1
+%3 = const i64 2
+%4 = i64.mul %2 %3
+%5 = const i64 3
+%6 = i64.sub %4 %5
+out %6

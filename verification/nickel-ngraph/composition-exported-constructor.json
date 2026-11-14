@@ -1,0 +1,563 @@
+{
+  "identity": {
+    "bundle_sha256": "",
+    "contract_version": "noble-ngraph-nickel-contracts/1",
+    "inputs": [
+      {
+        "id": "x",
+        "scope": "identity"
+      }
+    ],
+    "instances": [
+      {
+        "inputs": [
+          "x"
+        ],
+        "nodes": [
+          {
+            "id": "x",
+            "op": {
+              "kind": "input"
+            }
+          }
+        ],
+        "outputs": [
+          "x"
+        ],
+        "scope": "identity",
+        "template": "identity/1"
+      }
+    ],
+    "library_version": "noble-ngraph-nickel/1",
+    "outputs": [
+      {
+        "id": "x",
+        "scope": "identity"
+      }
+    ],
+    "parameters": [],
+    "profile": "ngraph-i64/0",
+    "schema": "noble-ngraph-nickel/v1",
+    "wires": []
+  },
+  "permutation": {
+    "bundle_sha256": "",
+    "contract_version": "noble-ngraph-nickel-contracts/1",
+    "inputs": [
+      {
+        "id": "x",
+        "scope": "permutation"
+      },
+      {
+        "id": "y",
+        "scope": "permutation"
+      }
+    ],
+    "instances": [
+      {
+        "inputs": [
+          "x",
+          "y"
+        ],
+        "nodes": [
+          {
+            "id": "x",
+            "op": {
+              "kind": "input"
+            }
+          },
+          {
+            "id": "y",
+            "op": {
+              "kind": "input"
+            }
+          }
+        ],
+        "outputs": [
+          "y",
+          "x"
+        ],
+        "scope": "permutation",
+        "template": "permutation/1"
+      }
+    ],
+    "library_version": "noble-ngraph-nickel/1",
+    "outputs": [
+      {
+        "id": "y",
+        "scope": "permutation"
+      },
+      {
+        "id": "x",
+        "scope": "permutation"
+      }
+    ],
+    "parameters": [],
+    "profile": "ngraph-i64/0",
+    "schema": "noble-ngraph-nickel/v1",
+    "wires": []
+  },
+  "product": {
+    "bundle_sha256": "",
+    "contract_version": "noble-ngraph-nickel-contracts/1",
+    "inputs": [
+      {
+        "id": "x",
+        "scope": "left"
+      },
+      {
+        "id": "x",
+        "scope": "right"
+      }
+    ],
+    "instances": [
+      {
+        "inputs": [
+          "x"
+        ],
+        "nodes": [
+          {
+            "id": "x",
+            "op": {
+              "kind": "input"
+            }
+          },
+          {
+            "id": "offset",
+            "op": {
+              "kind": "const",
+              "value": "5"
+            }
+          },
+          {
+            "id": "result",
+            "op": {
+              "kind": "add",
+              "left": "x",
+              "right": "offset"
+            }
+          }
+        ],
+        "outputs": [
+          "result"
+        ],
+        "scope": "left",
+        "template": "add-5/1"
+      },
+      {
+        "inputs": [
+          "x"
+        ],
+        "nodes": [
+          {
+            "id": "x",
+            "op": {
+              "kind": "input"
+            }
+          },
+          {
+            "id": "offset",
+            "op": {
+              "kind": "const",
+              "value": "2"
+            }
+          },
+          {
+            "id": "result",
+            "op": {
+              "kind": "sub",
+              "left": "x",
+              "right": "offset"
+            }
+          }
+        ],
+        "outputs": [
+          "result"
+        ],
+        "scope": "right",
+        "template": "subtract-2/1"
+      }
+    ],
+    "library_version": "noble-ngraph-nickel/1",
+    "outputs": [
+      {
+        "id": "result",
+        "scope": "left"
+      },
+      {
+        "id": "result",
+        "scope": "right"
+      }
+    ],
+    "parameters": [
+      {
+        "name": "left.offset",
+        "value": "5"
+      },
+      {
+        "name": "right.offset",
+        "value": "2"
+      }
+    ],
+    "profile": "ngraph-i64/0",
+    "schema": "noble-ngraph-nickel/v1",
+    "wires": []
+  },
+  "reassociation_left": {
+    "bundle_sha256": "",
+    "contract_version": "noble-ngraph-nickel-contracts/1",
+    "inputs": [
+      {
+        "id": "x",
+        "scope": "root.left.left"
+      }
+    ],
+    "instances": [
+      {
+        "inputs": [
+          "x"
+        ],
+        "nodes": [
+          {
+            "id": "x",
+            "op": {
+              "kind": "input"
+            }
+          },
+          {
+            "id": "offset",
+            "op": {
+              "kind": "const",
+              "value": "5"
+            }
+          },
+          {
+            "id": "result",
+            "op": {
+              "kind": "add",
+              "left": "x",
+              "right": "offset"
+            }
+          }
+        ],
+        "outputs": [
+          "result"
+        ],
+        "scope": "root.left.left",
+        "template": "add/1"
+      },
+      {
+        "inputs": [
+          "x"
+        ],
+        "nodes": [
+          {
+            "id": "x",
+            "op": {
+              "kind": "input"
+            }
+          },
+          {
+            "id": "factor",
+            "op": {
+              "kind": "const",
+              "value": "2"
+            }
+          },
+          {
+            "id": "result",
+            "op": {
+              "kind": "mul",
+              "left": "x",
+              "right": "factor"
+            }
+          }
+        ],
+        "outputs": [
+          "result"
+        ],
+        "scope": "root.left.right",
+        "template": "multiply/1"
+      },
+      {
+        "inputs": [
+          "x"
+        ],
+        "nodes": [
+          {
+            "id": "x",
+            "op": {
+              "kind": "input"
+            }
+          },
+          {
+            "id": "offset",
+            "op": {
+              "kind": "const",
+              "value": "3"
+            }
+          },
+          {
+            "id": "result",
+            "op": {
+              "kind": "sub",
+              "left": "x",
+              "right": "offset"
+            }
+          }
+        ],
+        "outputs": [
+          "result"
+        ],
+        "scope": "root.right",
+        "template": "subtract/1"
+      }
+    ],
+    "library_version": "noble-ngraph-nickel/1",
+    "outputs": [
+      {
+        "id": "result",
+        "scope": "root.right"
+      }
+    ],
+    "parameters": [
+      {
+        "name": "add.offset",
+        "value": "5"
+      },
+      {
+        "name": "multiply.factor",
+        "value": "2"
+      },
+      {
+        "name": "subtract.offset",
+        "value": "3"
+      }
+    ],
+    "profile": "ngraph-i64/0",
+    "schema": "noble-ngraph-nickel/v1",
+    "wires": [
+      {
+        "from": {
+          "id": "result",
+          "scope": "root.left.left"
+        },
+        "to": {
+          "id": "x",
+          "scope": "root.left.right"
+        }
+      },
+      {
+        "from": {
+          "id": "result",
+          "scope": "root.left.right"
+        },
+        "to": {
+          "id": "x",
+          "scope": "root.right"
+        }
+      }
+    ]
+  },
+  "reassociation_right": {
+    "bundle_sha256": "",
+    "contract_version": "noble-ngraph-nickel-contracts/1",
+    "inputs": [
+      {
+        "id": "x",
+        "scope": "root.left"
+      }
+    ],
+    "instances": [
+      {
+        "inputs": [
+          "x"
+        ],
+        "nodes": [
+          {
+            "id": "x",
+            "op": {
+              "kind": "input"
+            }
+          },
+          {
+            "id": "offset",
+            "op": {
+              "kind": "const",
+              "value": "5"
+            }
+          },
+          {
+            "id": "result",
+            "op": {
+              "kind": "add",
+              "left": "x",
+              "right": "offset"
+            }
+          }
+        ],
+        "outputs": [
+          "result"
+        ],
+        "scope": "root.left",
+        "template": "add/1"
+      },
+      {
+        "inputs": [
+          "x"
+        ],
+        "nodes": [
+          {
+            "id": "x",
+            "op": {
+              "kind": "input"
+            }
+          },
+          {
+            "id": "factor",
+            "op": {
+              "kind": "const",
+              "value": "2"
+            }
+          },
+          {
+            "id": "result",
+            "op": {
+              "kind": "mul",
+              "left": "x",
+              "right": "factor"
+            }
+          }
+        ],
+        "outputs": [
+          "result"
+        ],
+        "scope": "root.right.left",
+        "template": "multiply/1"
+      },
+      {
+        "inputs": [
+          "x"
+        ],
+        "nodes": [
+          {
+            "id": "x",
+            "op": {
+              "kind": "input"
+            }
+          },
+          {
+            "id": "offset",
+            "op": {
+              "kind": "const",
+              "value": "3"
+            }
+          },
+          {
+            "id": "result",
+            "op": {
+              "kind": "sub",
+              "left": "x",
+              "right": "offset"
+            }
+          }
+        ],
+        "outputs": [
+          "result"
+        ],
+        "scope": "root.right.right",
+        "template": "subtract/1"
+      }
+    ],
+    "library_version": "noble-ngraph-nickel/1",
+    "outputs": [
+      {
+        "id": "result",
+        "scope": "root.right.right"
+      }
+    ],
+    "parameters": [
+      {
+        "name": "add.offset",
+        "value": "5"
+      },
+      {
+        "name": "multiply.factor",
+        "value": "2"
+      },
+      {
+        "name": "subtract.offset",
+        "value": "3"
+      }
+    ],
+    "profile": "ngraph-i64/0",
+    "schema": "noble-ngraph-nickel/v1",
+    "wires": [
+      {
+        "from": {
+          "id": "result",
+          "scope": "root.left"
+        },
+        "to": {
+          "id": "x",
+          "scope": "root.right.left"
+        }
+      },
+      {
+        "from": {
+          "id": "result",
+          "scope": "root.right.left"
+        },
+        "to": {
+          "id": "x",
+          "scope": "root.right.right"
+        }
+      }
+    ]
+  },
+  "scalar_copy": {
+    "bundle_sha256": "",
+    "contract_version": "noble-ngraph-nickel-contracts/1",
+    "inputs": [
+      {
+        "id": "x",
+        "scope": "copy"
+      }
+    ],
+    "instances": [
+      {
+        "inputs": [
+          "x"
+        ],
+        "nodes": [
+          {
+            "id": "x",
+            "op": {
+              "kind": "input"
+            }
+          }
+        ],
+        "outputs": [
+          "x"
+        ],
+        "scope": "copy",
+        "template": "identity/1"
+      }
+    ],
+    "library_version": "noble-ngraph-nickel/1",
+    "outputs": [
+      {
+        "id": "x",
+        "scope": "copy"
+      },
+      {
+        "id": "x",
+        "scope": "copy"
+      }
+    ],
+    "parameters": [],
+    "profile": "ngraph-i64/0",
+    "schema": "noble-ngraph-nickel/v1",
+    "wires": []
+  }
+}

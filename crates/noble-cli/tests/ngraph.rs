@@ -32,6 +32,9 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use serde_json::Value;
 
+#[path = "ngraph/nickel/construction.rs"]
+mod construction;
+
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 
 // ---------------------------------------------------------------------------

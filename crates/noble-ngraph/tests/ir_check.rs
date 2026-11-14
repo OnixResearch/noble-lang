@@ -12,6 +12,8 @@
 //! Checker and reference-interpreter behaviour on directly built IR.
 
 mod common;
+#[path = "ir_check/profile.rs"]
+mod profile;
 
 use common::IDS;
 use noble_ngraph::eval::{i64_inputs, Control};

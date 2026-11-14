@@ -1,0 +1,104 @@
+{
+  "schema": "noble-ngraph-nickel-stale-controls/v1",
+  "current_receipt_accepted": true,
+  "current_consumer_accepted": true,
+  "mutation_count": 16,
+  "mutations": [
+    {
+      "field": "source bytes",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    },
+    {
+      "field": "library import bytes",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    },
+    {
+      "field": "contract import bytes",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    },
+    {
+      "field": "construction parameters",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    },
+    {
+      "field": "library version",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    },
+    {
+      "field": "contract version",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    },
+    {
+      "field": "evaluator identity",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    },
+    {
+      "field": "Nickel evaluator identity",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    },
+    {
+      "field": "import closure",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    },
+    {
+      "field": "observed import closure",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    },
+    {
+      "field": "exported constructor bytes",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    },
+    {
+      "field": "lowerer revision",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    },
+    {
+      "field": "lowerer source bytes",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    },
+    {
+      "field": "profile",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    },
+    {
+      "field": "graph bytes",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    },
+    {
+      "field": "checked identity",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    }
+  ]
+}

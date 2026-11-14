@@ -497,6 +497,7 @@ fn subject(t: &[&str], n: usize) -> Result<crate::ir::Subject, crate::diag::Diag
     };
     let kind = match *kind {
         "authored" => crate::ir::SubjectKind::Authored,
+        "authored-nickel" => crate::ir::SubjectKind::AuthoredNickel,
         "extracted" => crate::ir::SubjectKind::Extracted,
         "captured" => crate::ir::SubjectKind::Captured,
         _ => return Err(bad()),

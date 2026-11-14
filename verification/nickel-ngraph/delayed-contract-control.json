@@ -1,0 +1,30 @@
+{
+  "fixture": "nickel/ngraph/fixtures/delayed-contract-failure.ncl",
+  "evaluator_exit": 1,
+  "contract_failure": "contract broken by a value",
+  "exported_bytes": 0,
+  "lowerer_invoked": false,
+  "admitted_graph_created": false,
+  "import_closure": [
+    {
+      "path": "nickel/ngraph/fixtures/delayed-contract-failure.ncl",
+      "sha256": "818c37918f231864ac841859bb2da0ca9aa5a52a2748b26bef1699191d89accc",
+      "bytes": 73
+    },
+    {
+      "path": "nickel/ngraph/fixtures/arithmetic.ncl",
+      "sha256": "8530ff178be31b3af2f67a6717af03a4bd8ba6bfe55f9fc91b3e2c0fa0e78c35",
+      "bytes": 1218
+    },
+    {
+      "path": "nickel/ngraph/library.ncl",
+      "sha256": "c0110cce7861662d4e6e221d49d0148c098faec70570df0f7923ab7580a45f76",
+      "bytes": 1942
+    },
+    {
+      "path": "nickel/ngraph/contract.ncl",
+      "sha256": "8c293280fddb15a13e1f6cd5a9dedf89a74052f7009cd055a511bbaa0682ecac",
+      "bytes": 561
+    }
+  ]
+}

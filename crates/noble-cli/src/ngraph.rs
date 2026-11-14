@@ -12,6 +12,7 @@
 mod arguments;
 mod files;
 mod literals;
+mod nickel;
 mod report;
 
 use crate::workflow::encoding::{string, Json};
@@ -21,7 +22,8 @@ use noble_ngraph::{CheckedGraph, Code, Diagnostic, IdentityHasher, IdentitySchem
 use report::Line;
 
 pub(crate) const USAGE: &str = "usage:
-  noble ngraph check GRAPH [--budget-KIND N]...
+  noble ngraph check GRAPH_OR_CONSTRUCTOR [--graph-out GRAPH] [--budget-work N] [--budget-expansion N]
+      [--budget-KIND N]...
   noble ngraph import GRAPH --out RECEIPT
   noble ngraph export RECEIPT --out GRAPH [--source]
   noble ngraph extract SOURCE --inputs T[,T...] --out GRAPH [--framed] [--profile ngraph-i64/0]
@@ -290,7 +292,7 @@ fn load_graph(
     path: &std::path::Path,
     budgets: &noble_ngraph::Budgets,
     what: &str,
-) -> Result<CheckedGraph, Line> {
+) -> Result<(CheckedGraph, Option<&'static str>), Line> {
     let bytes = attempt!(read(command, path, files::GRAPH_BYTES, what));
     let source = attempt!(text(
         command,
@@ -298,10 +300,16 @@ fn load_graph(
         what,
         Code::GraphMalformed(noble_ngraph::Malformed::Syntax)
     ));
+    if source.trim_start().starts_with('{') {
+        return nickel::admit(source.as_bytes(), budgets)
+            .map(|graph| (graph, Some(nickel::LOWERER_REVISION)))
+            .map_err(|d| Line::diagnostic(command, "check", &about(d, what)));
+    }
     let graph = attempt!(noble_ngraph::format::graph::parse(&IDS, &source)
         .map_err(|d| Line::diagnostic(command, "input", &about(d, what))));
-    noble_ngraph::check_with(&IDS, graph, budgets)
-        .map_err(|d| Line::diagnostic(command, "check", &about(d, what)))
+    let checked = noble_ngraph::check_with(&IDS, graph, budgets)
+        .map_err(|d| Line::diagnostic(command, "check", &about(d, what)))?;
+    Ok((checked, None))
 }
 
 /// Reads and parses a snapshot file (identities recomputed).
@@ -374,7 +382,7 @@ fn check(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop> 
     let args = attempt!(arguments::parse(
         &Spec {
             positional: &["GRAPH"],
-            values: &[],
+            values: &["--graph-out"],
             repeated: &[],
             switches: &[],
             budgets: &arguments::CHECKER,
@@ -383,8 +391,18 @@ fn check(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop> 
     )
     .map_err(Stop::Usage));
     attempt!(policy(C, &args.budgets));
-    let graph = attempt!(load_graph(C, &args.path(0), &args.budgets, "graph file"));
-    Ok(std::vec![check_fields(Line::normal(C, "check"), &graph)])
+    let (graph, lowerer_revision) =
+        attempt!(load_graph(C, &args.path(0), &args.budgets, "graph file"));
+    if let Some(out) = args.path_value("--graph-out") {
+        let text = noble_ngraph::format::graph::print(graph.graph());
+        attempt!(publish(C, &out, text.as_bytes()));
+    }
+    let line = check_fields(Line::normal(C, "check"), &graph);
+    let line = match lowerer_revision {
+        Some(revision) => line.with("lowerer_revision", string(revision)),
+        None => line,
+    };
+    Ok(std::vec![line])
 }
 
 /// The submissions of a Core source file: newline-separated (blank lines
@@ -537,7 +555,7 @@ fn eval(
         return usage("--snapshot-id needs --snapshot");
     }
     attempt!(policy(C, &args.budgets));
-    let graph = attempt!(load_graph(C, &args.path(0), &args.budgets, "graph file"));
+    let (graph, _) = attempt!(load_graph(C, &args.path(0), &args.budgets, "graph file"));
     let snapshot = match args.path_value("--snapshot") {
         Some(p) => {
             let f = attempt!(load_snapshot(C, &p, &args.budgets, "snapshot file"));
@@ -809,8 +827,8 @@ fn train(
         );
     }
     attempt!(adam.admit().map_err(|d| Line::diagnostic(C, "request", &d)));
-    let model = attempt!(load_graph(C, &args.path(0), &budgets, "model graph"));
-    let loss = attempt!(load_graph(C, &loss_path, &budgets, "loss graph"));
+    let (model, _) = attempt!(load_graph(C, &args.path(0), &budgets, "model graph"));
+    let (loss, _) = attempt!(load_graph(C, &loss_path, &budgets, "loss graph"));
     let params = model.param_slots().to_vec();
     attempt!(noble_ngraph::train::admit(&model, &loss, &params, &deriv)
         .map_err(|d| Line::diagnostic(C, "admission", &d)));
@@ -910,7 +928,7 @@ fn verify(
     let pinned = attempt!(pinned(&args));
     let budgets = args.budgets.clone();
     attempt!(policy(C, &budgets));
-    let graph = attempt!(load_graph(C, &args.path(0), &budgets, "graph file"));
+    let (graph, _) = attempt!(load_graph(C, &args.path(0), &budgets, "graph file"));
     let file = attempt!(load_snapshot(C, &args.path(1), &budgets, "snapshot file"));
     attempt!(file
         .bind(&IDS, &graph, pinned.as_ref())
@@ -921,7 +939,7 @@ fn verify(
         else {
             return usage("--replay needs --loss and --data");
         };
-        let loss = attempt!(load_graph(C, &loss_path, &budgets, "loss graph"));
+        let (loss, _) = attempt!(load_graph(C, &loss_path, &budgets, "loss graph"));
         let data = attempt!(load_points(C, &data_path, &graph, &loss));
         let parent = match args.path_value("--from") {
             Some(p) => {
