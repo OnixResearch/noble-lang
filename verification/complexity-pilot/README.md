@@ -57,4 +57,18 @@ These refute those particular incomplete encodings/size claims; they do not prov
 
 The previously retained [validation-cost report](../ngraph/validation-cost-2026-11-05.json) measures four existing families: a 16,384-node deepest chain; four and sixteen deepest chains (65,533 and 262,129 nodes, each with 16,384 layers); and a 262,144-node balanced tree with 19 layers. It reports five-run, one-thread release medians and layout-check speedups of 46×, 54.5×, 158.3× and 549.7× respectively for the post-`#43` implementation. Its own non-claims say the result is reporting-only, from one host/run, with no cross-hardware bound. This pilot adds no timing threshold and treats the measurements as empirical context, not a proof.
 
+## Needs integrator: isolated Complexitylib project
+
+The current foundation remains on its existing Lean 4.35.0 toolchain. Do not add the newer dependency to `proofs/foundation`; the Complexitylib proof work needs a separately pinned project under `proofs/complexity-pilot/` and an integrator resource decision.
+
+Pinned upstream snapshot observed at the latest Complexitylib `main` commit before the campaign date, `2026-11-13T23:57:54Z`:
+
+* Complexitylib: [`cslib-community/complexitylib` revision `56e731dc048c8afcc696a95e147573c29a619637`](https://github.com/cslib-community/complexitylib/tree/56e731dc048c8afcc696a95e147573c29a619637).
+* Toolchain: `leanprover/lean4:v4.36.0-rc2`.
+* The pinned `lake-manifest.json` resolves CSLib to `ee99dd30bd1a9f466c25a51b39a5cb0bfe4d2342` and Mathlib to `69552756cd8a2d2d48763cf7279fd814d6a1224d`.
+* Remaining manifest revisions: `plausible` `129d1ba9a16bc0660f46c79e9fb041ef5d5d80de`; `LeanSearchClient` `c61286b7b63cbfd563b28e11e81d0a18233a044a`; `importGraph` `b8cc5dd0a36233b88a6ed5a7dbf1207d09338c60`; `proofwidgets` `16259c0d07d61ee37d999d05b5cf96338b8daa11`; `aesop` `7d11bfa88558f8d3d90afdf6bd877ed70001498d`; `Qq` `b0256621cb88178e9ad932a53633077b3029e621`; `batteries` `d4c39b228d4a06f3b00748c2c445a7b9f056a6e3`; `Cli` `c09cb1e4f1e6e1c231a1175a12b681b075054a1b`.
+* The upstream fix `d728d117ee3341b5fcabd27a9415f24685215629` is an ancestor of this pinned Complexitylib revision; the upstream compare API reported `d728…` as the merge base. If a future proof selects the WordRAM/`realize` route, retain the requested alias/codomain regression (including an empty-vector alias and a real read/projection); that regression is not part of this current-toolchain unit.
+
+Disk is a scheduling risk, not a measured build result. The existing compatible foundation dependency tree has a `mathlib` package directory of about 1.2 GB; the current foundation build directory is about 62 MB and does not represent a v4.36 Mathlib build. At the measurement point, the volume had 18,544,852,992 bytes free (about 17.27 GiB). Reserve **10 GiB** for a fresh isolated source closure, v4.36 Mathlib oleans and peak build scratch as a conservative planning estimate; no v4.36 checkout/build was performed, so this is not a measured upper bound. Recheck free space immediately before scheduling, account for concurrent slices, and defer if the shared volume cannot keep that reserve. Keep the existing foundation pins unchanged.
+
 
