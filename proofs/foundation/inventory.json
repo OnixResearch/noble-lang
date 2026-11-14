@@ -12070,6 +12070,12 @@
       "claim": "the depth-zero balanced tree has an empty normal abstract trace and reads back its sole input"
     },
     {
+      "name": "NobleFoundation.NetI64Families.fanoutProgram_one_trace",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "one requested fanout copy has an empty normal abstract trace and reads back the input in order"
+    },
+    {
       "name": "NobleFoundation.NetI64.balancedProgram_opCount",
       "phase": 1,
       "role": "family-formula",

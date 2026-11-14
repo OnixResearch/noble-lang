@@ -4031,7 +4031,8 @@ The missing arbitrary-size reduction/read-back lemmas are precisely:
   and a normal target reached by `Steps (CStep system) (if n = 0 then 1 else n - 1)`, with ordered
   read-back equal to `List.replicate n (.i64 x)`. The missing proof must induct over the left-leaning
   `dup` chain (and handle the zero-output `era` case); `fanout_three_reference` and
-  `fanout_zero_reference` are only closed computations. This arbitrary-`n` statement remains open.
+  `fanout_zero_reference` are only closed computations. The one-output case is proved by
+  `NobleFoundation.NetI64Families.fanoutProgram_one_trace`; the arbitrary-`n` statement remains open.
 
 For all three, the missing artifact is an inductively constructed abstract reduction trace and its
 normality/read-back proof, not another cost formula or a symbolic evaluation of `XNet.run`.

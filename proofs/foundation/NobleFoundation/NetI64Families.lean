@@ -89,4 +89,26 @@ theorem balancedProgram_zero_trace (input : BitVec 64) :
   · simpa [xsys] using hspec.2.2.2.1
   · rfl
 
+/-- One requested fanout copy is already the input net, so no interaction is needed. -/
+theorem fanoutProgram_one_trace (input : BitVec 64) :
+    ∃ normal : XNet NetSym,
+      (fanoutProgram 1).translateChecked [input] =
+        some ((fanoutProgram 1).translate [input]) ∧
+      (fanoutProgram 1).normalize [input] = some (normal, 0) ∧
+      Steps (CStep system) 0 ((fanoutProgram 1).translate [input]).toNet
+        normal.toNet ∧
+      Normal (CStep system) normal.toNet ∧
+      (fanoutProgram 1).readBack normal =
+        some (List.replicate 1 (.i64 input)) := by
+  obtain ⟨normal, hchecked, hnormalize, hsteps, hnormal, hread⟩ :=
+    balancedProgram_zero_trace input
+  refine ⟨normal, ?_, ?_, ?_, hnormal, ?_⟩
+  · simpa [balancedProgram, balancedSubtree, fanoutProgram] using hchecked
+  · simpa [balancedProgram, balancedSubtree, fanoutProgram] using hnormalize
+  · simpa [balancedProgram, balancedSubtree, fanoutProgram] using hsteps
+  · simpa [balancedProgram, balancedSubtree, fanoutProgram,
+      Program.referenceOutputs, Program.referenceValue, Program.graphFor,
+      Program.nodeAt, Program.inputValue, PackedSchedule.value,
+      PackedSchedule.valuesUpTo, PackedSchedule.evalStep] using hread
+
 end NobleFoundation.NetI64Families
