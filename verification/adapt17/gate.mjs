@@ -204,13 +204,23 @@ function compileWat(noble, tmpdir, source, arm, destination, inputTypes = []) {
   });
   const elapsed = micros(started, now());
   if (result.error || result.status !== 0) {
-    throw new Error(`noble ${args.join(' ')} failed: ${result.error ?? result.stderr.toString()}`);
+    const diagnostic = result.error ? String(result.error)
+      : (result.stderr.length ? result.stderr : result.stdout).toString();
+    throw new Error(`noble ${args.join(' ')} failed: ${diagnostic}`);
   }
   const wat = Buffer.from(result.stdout);
   check(wat.length > 0, `${source.id}/${arm} emitted WAT`);
   fs.writeFileSync(destination, wat, { flag: 'wx' });
   return { wat, sha256: sha256(wat), compile_us: elapsed,
     command: ['NOBLE_TARGET/debug/noble', ...args], stderr: result.stderr.toString() };
+}
+
+function withoutTrialCleanup(wat) {
+  const fragment = fs.readFileSync(path.join(root,
+    'crates/noble-wasm/runtime/experiment-cleanup.wat'), 'utf8');
+  const text = wat.toString('utf8');
+  check(text.includes(fragment), 'explicit baseline includes the trial-only cleanup fragment');
+  return Buffer.from(text.replace(`${fragment}\n`, ''), 'utf8');
 }
 
 function candidateReport(wat, arm, id) {
@@ -224,9 +234,16 @@ function candidateReport(wat, arm, id) {
 function parseRun(report, engine, elapsedUs) {
   const runtime = engine.last?.exports;
   check(runtime !== undefined, 'execution left a selected guest instance for observation');
+  check(typeof runtime.cleanup === 'function', 'source runtime exposes explicit guest-region cleanup');
   const phase = Number(engine.shared.phase.value);
   const beforeCleanup = rawStack(runtime, engine.abi);
   const cleanupLiveBytes = Number(runtime.cleanup());
+  const releasedMetric = Object.keys(engine.abi.metrics)
+    .find(key => engine.abi.metrics[key] === 'released_total_bytes');
+  check(releasedMetric !== undefined, 'selected runtime ABI exposes released guest bytes');
+  const cleanupReleasedBytes = Number(runtime.metric(Number(releasedMetric)));
+  equal(cleanupReleasedBytes, report.metrics.allocated_since_begin_bytes,
+    'explicit cleanup releases every guest cell allocated since begin');
   const cleanup = {
     live_bytes: cleanupLiveBytes,
     stack_length: Number(runtime.stack_length()),
@@ -234,6 +251,7 @@ function parseRun(report, engine, elapsedUs) {
     continuations: Number(engine.shared.cp.value),
     heap_delta_cells: Number(engine.shared.heap_cursor.value) - Number(engine.shared.heap_baseline.value),
     failure: Number(engine.shared.failure.value),
+    released_bytes: cleanupReleasedBytes,
   };
   const semanticStack = normalized(report.stack);
   const semantic = {
@@ -485,7 +503,8 @@ function checkControlExpected(controlId, row) {
 
 function verifyFallback(row) {
   if (row.arm !== 'candidate') return;
-  const expectedSpecializations = row.workload === 'two-arm-variant-both-arms' ? 2
+  const expectedSpecializations = row.workload === 'two-arm-variant-both-arms'
+    || row.workload === 'branch-laziness' ? 2
     : row.workload.startsWith('allocation-boundary-') ? 1 : 0;
   equal(row.lowering_report.specializations, expectedSpecializations,
     `${row.workload} candidate specialization count`);
@@ -638,17 +657,21 @@ function main() {
   for (const spec of formSpecs) {
     const source = sourceRecord(spec.form, spec.inputTypes ?? []);
     sources.set(spec.form, source);
-    const basePath = path.join(artifacts, 'wat', `${spec.id}-baseline.wat`);
-    const baseline = compileWat(runtimeConfig.noble, runtimeConfig.tmpdir, source, 'baseline', basePath,
+    const defaultPath = path.join(artifacts, 'wat', `${spec.id}-default.wat`);
+    const defaultBaseline = compileWat(runtimeConfig.noble, runtimeConfig.tmpdir, source, 'default', defaultPath,
       spec.inputTypes ?? []);
     const explicitPath = path.join(artifacts, 'wat', `${spec.id}-baseline-explicit.wat`);
     const explicit = compileWat(runtimeConfig.noble, runtimeConfig.tmpdir, source, 'baseline-explicit', explicitPath,
       spec.inputTypes ?? []);
-    equal(baseline.sha256, explicit.sha256, `${spec.id} default CLI equals explicit baseline lowering`);
-    compiled.set(`${spec.form}/baseline`, baseline);
-    compilerRecords.push({ source: source.id, arm: 'default-baseline', bytes: baseline.wat.length,
-      sha256: baseline.sha256, compile_us: baseline.compile_us, command: baseline.command,
-      explicit_baseline_sha256: explicit.sha256, explicit_baseline_compile_us: explicit.compile_us });
+    equal(sha256(withoutTrialCleanup(explicit.wat)), defaultBaseline.sha256,
+      `${spec.id} default CLI equals explicit baseline after removing only trial cleanup`);
+    check(!defaultBaseline.wat.toString('utf8').includes('(export "cleanup"'),
+      `${spec.id} default CLI does not expose trial cleanup`);
+    compiled.set(`${spec.form}/baseline`, explicit);
+    compilerRecords.push({ source: source.id, arm: 'default-baseline', bytes: defaultBaseline.wat.length,
+      sha256: defaultBaseline.sha256, compile_us: defaultBaseline.compile_us,
+      command: defaultBaseline.command, explicit_baseline_sha256: explicit.sha256,
+      explicit_baseline_compile_us: explicit.compile_us, explicit_baseline_command: explicit.command });
     if (mode === 'full') {
       const candidatePath = path.join(artifacts, 'wat', `${spec.id}-candidate.wat`);
       const candidate = compileWat(runtimeConfig.noble, runtimeConfig.tmpdir, source, 'candidate', candidatePath,
@@ -746,9 +769,12 @@ function main() {
     'crates/noble-cli/src/core/runtime/engine-host.mjs',
     'crates/noble-cli/src/core/runtime/engine.mjs',
     'crates/noble-wasm/runtime/data.wat',
+    'crates/noble-wasm/runtime/experiment-cleanup.wat',
+    'crates/noble-wasm/runtime/source.wat',
     'crates/noble-wasm/Cargo.toml',
     'crates/noble-wasm/src/source/emit.rs',
     'crates/noble-wasm/src/source/emit/functions.rs',
+    'crates/noble-wasm/src/source/emit/imports/entry.rs',
     'crates/noble-wasm/src/source/mod.rs',
     'crates/noble-wasm/src/source/plan.rs',
     'crates/noble-wasm/src/source/plan/operations.rs',

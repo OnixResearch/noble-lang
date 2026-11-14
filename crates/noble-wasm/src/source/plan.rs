@@ -274,6 +274,7 @@ pub(super) struct Layout {
     pub(super) has_live_propose: bool,
     pub(super) has_live_generation: bool,
     pub(super) type_directed_experimental: bool,
+    pub(super) experimental_cleanup: bool,
     pub(super) type_directed_specializations: u64,
     pub(super) type_directed_fallback_operations: u64,
 }
@@ -407,6 +408,7 @@ fn start(
         has_live_propose: false,
         has_live_generation: false,
         type_directed_experimental: compiler.type_directed_experimental,
+        experimental_cleanup: compiler.experimental_cleanup,
         type_directed_specializations: 0,
         type_directed_fallback_operations: 0,
     };

@@ -14,6 +14,7 @@ pub(super) struct Options {
     pub framed: bool,
     pub optimized: bool,
     pub type_directed_experimental: bool,
+    pub lowering_selected: bool,
     pub emit: Option<std::path::PathBuf>,
     pub limits: noble_contracts::Limits,
 }
@@ -66,6 +67,7 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
         framed: false,
         optimized: false,
         type_directed_experimental: false,
+        lowering_selected: false,
         emit: None,
         limits: maximum,
     };
@@ -132,7 +134,7 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
     {
         return Err(usage());
     }
-    if options.type_directed_experimental
+    if options.lowering_selected
         && (!options.compile_only || options.declared_modules || options.text_byte_cursor)
     {
         return Err(usage());
@@ -197,11 +199,14 @@ fn set(
             Some("on") => options.optimized = true,
             Some(_) | None => return Err(usage()),
         },
-        "--lowering" if options.compile_only => match value.to_str() {
-            Some("baseline") => options.type_directed_experimental = false,
-            Some("type-directed-experimental") => options.type_directed_experimental = true,
-            Some(_) | None => return Err(usage()),
-        },
+        "--lowering" if options.compile_only => {
+            match value.to_str() {
+                Some("baseline") => options.type_directed_experimental = false,
+                Some("type-directed-experimental") => options.type_directed_experimental = true,
+                Some(_) | None => return Err(usage()),
+            }
+            options.lowering_selected = true;
+        }
         "--emit" => options.emit = Some(std::path::PathBuf::from(value)),
         "--bindings" => options.bindings = Some(std::path::PathBuf::from(value)),
         "--source-bytes" => options.limits.bytes = attempt!(limit(value, maximum.bytes)),
@@ -268,12 +273,20 @@ mod tests {
             "type-directed-experimental",
         ])?;
         assert!(selected.type_directed_experimental);
+        assert!(selected.lowering_selected);
         let default = flags(&["compile", "expression.noble"])?;
         assert!(!default.type_directed_experimental);
+        assert!(!default.lowering_selected);
         let baseline = flags(&["compile", "expression.noble", "--lowering", "baseline"])?;
         assert!(!baseline.type_directed_experimental);
+        assert!(baseline.lowering_selected);
         for arguments in [
-            &["run", "expression.noble", "--lowering", "type-directed-experimental"][..],
+            &[
+                "run",
+                "expression.noble",
+                "--lowering",
+                "type-directed-experimental",
+            ][..],
             &[
                 "compile",
                 "expression.noble",
@@ -290,9 +303,28 @@ mod tests {
                 "--lowering",
                 "type-directed-experimental",
             ][..],
+            &["run", "expression.noble", "--lowering", "baseline"][..],
+            &[
+                "compile",
+                "expression.noble",
+                "--text-byte-cursor",
+                "--lowering",
+                "baseline",
+            ][..],
+            &[
+                "compile",
+                "expression.noble",
+                "--declared-modules",
+                "--bindings",
+                "host.txt",
+                "--lowering",
+                "baseline",
+            ][..],
         ] {
             if flags(arguments).is_ok() {
-                return Err(std::format!("accepted unsupported lowering options: {arguments:?}"));
+                return Err(std::format!(
+                    "accepted unsupported lowering options: {arguments:?}"
+                ));
             }
         }
         Ok(())

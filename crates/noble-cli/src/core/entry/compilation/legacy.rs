@@ -44,6 +44,8 @@ pub(super) fn compile(
     }));
     let compiler = if options.type_directed_experimental {
         noble_wasm::source::Compiler::new_type_directed_experimental()
+    } else if options.lowering_selected {
+        noble_wasm::source::Compiler::new_experimental_baseline()
     } else if options.text_byte_cursor {
         noble_wasm::source::Compiler::new_text_cursor()
     } else {

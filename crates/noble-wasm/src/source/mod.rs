@@ -240,6 +240,8 @@ pub struct Compiler {
     worker_interruption: bool,
     /// Explicitly selected, finite type-directed ADT lowering experiment.
     type_directed_experimental: bool,
+    /// Emit the trial-only cleanup export for either explicitly selected arm.
+    experimental_cleanup: bool,
     generation: u32,
     functions: u32,
     retention_revision: u64,
@@ -746,6 +748,7 @@ impl Compiler {
             worker_inputs: false,
             worker_interruption: false,
             type_directed_experimental: false,
+            experimental_cleanup: false,
             generation: 0,
             functions: 4,
             retention_revision: 0,
@@ -764,6 +767,15 @@ impl Compiler {
     pub fn new_type_directed_experimental() -> Self {
         Self {
             type_directed_experimental: true,
+            experimental_cleanup: true,
+            ..Self::new()
+        }
+    }
+
+    /// Select the baseline lowering with the explicit trial cleanup export.
+    pub fn new_experimental_baseline() -> Self {
+        Self {
+            experimental_cleanup: true,
             ..Self::new()
         }
     }
@@ -1115,6 +1127,7 @@ impl Compiler {
             worker_inputs: self.worker_inputs,
             worker_interruption: self.worker_interruption,
             type_directed_experimental: self.type_directed_experimental,
+            experimental_cleanup: self.experimental_cleanup,
             generation: match self.generation.checked_add(1) {
                 Some(value) => value,
                 None => return Err(crate::Diagnostic::Exhausted),
@@ -1678,17 +1691,24 @@ mod tests {
         let baseline = Compiler::new()
             .prepare(submission)
             .unwrap_or_else(|_| panic!("baseline known-sum compile refused"));
+        let explicit_baseline = Compiler::new_experimental_baseline()
+            .prepare(submission)
+            .unwrap_or_else(|_| panic!("explicit trial baseline compile refused"));
         let experimental = Compiler::new_type_directed_experimental()
             .prepare(submission)
             .unwrap_or_else(|_| panic!("experimental known-sum compile refused"));
 
         assert_eq!(baseline.metrics().type_directed_specializations, 0);
         assert_eq!(experimental.metrics().type_directed_specializations, 1);
-        assert!(core::str::from_utf8(experimental.wat())
-            .is_ok_and(|wat| wat.contains("noble-type-directed-report:v1 specialized-known-sum-cases=1")
-                && wat.contains("(call $op_known_case_left")));
+        assert!(core::str::from_utf8(experimental.wat()).is_ok_and(|wat| wat
+            .contains("noble-type-directed-report:v1 specialized-known-sum-cases=1")
+            && wat.contains("(call $op_known_case_left")));
         assert!(!core::str::from_utf8(baseline.wat())
             .is_ok_and(|wat| wat.contains("(call $op_known_case_left")));
+        assert!(!core::str::from_utf8(baseline.wat())
+            .is_ok_and(|wat| wat.contains("(export \"cleanup\"")));
+        assert!(core::str::from_utf8(explicit_baseline.wat())
+            .is_ok_and(|wat| wat.contains("(export \"cleanup\"")));
     }
 
     #[test]

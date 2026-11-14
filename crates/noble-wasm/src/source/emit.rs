@@ -282,9 +282,7 @@ pub(super) fn module(
     }
     attempt!(out.append(b"))\n(global.get $failure))\n)\n"));
     if plan.type_directed_experimental {
-        attempt!(out.append(
-            b";; noble-type-directed-report:v1 specialized-known-sum-cases="
-        ));
+        attempt!(out.append(b";; noble-type-directed-report:v1 specialized-known-sum-cases="));
         attempt!(out.number(plan.type_directed_specializations));
         attempt!(out.append(b" baseline-fallback-operations="));
         attempt!(out.number(plan.type_directed_fallback_operations));

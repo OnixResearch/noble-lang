@@ -75,6 +75,9 @@
     "signature_address":"(id:i32)->UTF-8 descriptor address:i32; the checked source-free runtime bridge inspects all committed signature IDs",
     "signature_length":"(id:i32)->descriptor byte length:i32"
   },
+  "optional_experiment_exports": {
+    "cleanup":"compile-only trial export, ()->live_guest_bytes:i32; clears transient operand, continuation and recipe state and rolls back guest cells to heap_baseline; preserves failure/phase and does not reverse host effects"
+  },
   "status": {"0":"success","1":"initialization exhaustion","2":"runtime exhaustion","3":"exact interface mismatch","4":"invalid ABI/state","5":"host denial","6":"test.abort trap","7":"cancelled at a typed-worker interruption point","8":"host deadline at a typed-worker interruption point"},
   "quota_reason": {"1":"allocation","2":"recipe leaves","3":"program graph depth","4":"operand bytes","5":"continuation bytes","6":"execution work","7":"reflection/type-observation work"},
   "limits_maximum": {"allocation_bytes":196608,"recipe_leaves":256,"program_depth":256,"operand_bytes":2048,"continuation_bytes":4096,"steps":100000,"session_cells":4096,"session_functions":16384,"session_literal_bytes":786432},
