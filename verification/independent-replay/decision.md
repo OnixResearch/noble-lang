@@ -49,8 +49,11 @@ The source-bound multi-checker receipt includes every baseline and control row f
 checker. The semantic proof mutation and both dropped-dependency controls are executed by every
 checker. The receipt also separates kernel rejection, parse failure, unsupported capability, and
 resource exhaustion; unsupported controls without a checker-facing option are explicit `unsupported`
-rows, not passes. Each executed run records wall time and maximum RSS. Lane-level claim/format/axiom
-refusals remain separate from the checker's own result.
+rows, not passes. The 1 MiB address-space control can terminate a checker without diagnostics; its
+silent exit 139 is classified as resource exhaustion only under that explicit limit, while the
+unlimited baseline establishes the same checker accepts the input. Each executed run records wall
+time and maximum RSS. Lane-level claim/format/axiom refusals remain separate from the checker's own
+result.
 
 ## (d) Remaining `native_decide` conversions
 

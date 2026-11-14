@@ -59,7 +59,9 @@ implementation. `lean4checker` is deprecated and merged into Lean itself.
 export. The source-bound language-diversity receipt records checker outcomes and per-run wall time
 and max RSS. Every semantic-mutation and dropped-dependency control is run by every checker; claim
 binding, format audit, custom-axiom policy, parse failure, resource exhaustion, and unsupported
-checker capabilities remain separately classified. The exact survey and unbuilt-candidate decisions
+checker capabilities remain separately classified. The 1 MiB RLIMIT_AS control records silent
+exit 139 as resource exhaustion only under that explicit limit. The exact survey and
+unbuilt-candidate decisions
 are in [`decision.md`](decision.md). The earlier [`multi.json`](receipts/2026-11-13/multi.json)
 receipt remains immutable history; the updated classifier and OCaml run are recorded separately.
 The pinned source build is reproducible with

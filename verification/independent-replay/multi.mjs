@@ -144,8 +144,8 @@ function commandFor(checker, exportPath, id, configOverrides = {}) {
   return [binaries.get(checker.id), ...checker.run.argv.map((part) => (part === 'FILE' ? exportPath : part))];
 }
 
-/** Classification from exit status, signal and the checker's own output; never from the lane's hopes. */
-function classify(result, checker, timedOut) {
+/** Classify from exit status, explicit OS limits and checker diagnostics; never from the lane's hopes. */
+function classify(result, checker, timedOut, addressSpaceBytes = null) {
   const stdout = result.stdout ?? '';
   const stderr = result.stderr ?? '';
   const processError = result.error?.message ?? '';
@@ -154,7 +154,7 @@ function classify(result, checker, timedOut) {
   if (result.status === 2 || (checker.declined_exit ?? []).includes(result.status)) {
     return { classification: 'unsupported', count: null };
   }
-  if (/\b(?:extension|literal)\b.{0,60}\b(?:disallow|unsupported|not supported|disabled|not enabled)\b|\b(?:nat|string) literal\b.{0,80}\b(?:disabled|unsupported|not supported|not enabled)\b|\bunsupported(?: feature| extension)?\b/iu.test(text)) {
+  if (/\b(?:extension|literal)\b.{0,60}\b(?:disallow(?:ed)?|unsupported|not supported|disabled|not enabled)\b|\b(?:nat|string) lit(?:eral)?\b.{0,80}\b(?:disallow(?:ed)?|disabled|unsupported|not supported|not enabled)\b|\bunsupported(?: feature| extension)?\b/iu.test(text)) {
     return { classification: 'unsupported', count: null };
   }
   if (result.signal === 'SIGKILL' || result.signal === 'SIGXCPU' || result.signal === 'SIGXFSZ'
@@ -163,6 +163,13 @@ function classify(result, checker, timedOut) {
   }
   if (/parse.{0,60}(?:error|fail|invalid|unexpected|eof|end of input)|(?:json|ndjson).{0,60}(?:error|fail|invalid|unexpected|eof|end of input)|(?:unexpected|invalid|expected|eof).{0,60}(?:json|ndjson|token|input|key|value)|EOF while parsing|expected .{1,80} after|unexpected end of input/iu.test(text)) {
     return { classification: 'parse-failure', count: null };
+  }
+  if (addressSpaceBytes !== null && result.status === 139 && text.trim() === '') {
+    return {
+      classification: 'resource-exhausted',
+      count: null,
+      resource_failure: 'silent exit status 139 under the explicit RLIMIT_AS cap',
+    };
   }
   if (result.status === 0) {
     const match = new RegExp(checker.accept_pattern, 'u').exec(stdout);
@@ -214,7 +221,7 @@ function runChecker(checker, exportPath, id, { configOverrides = {}, addressSpac
     elapsed_ms: elapsed,
     wall_seconds: time.seconds,
     max_rss_kb: time.max_rss_kb,
-    ...classify(result, checker, timedOut),
+    ...classify(result, checker, timedOut, addressSpaceBytes),
     stdout: result.stdout ?? '',
     stderr: result.stderr ?? '',
   };
@@ -473,7 +480,10 @@ const resourceControl = subjectEntry({
 /** Invalid NDJSON is parsed independently before each checker outcome is attributed. */
 function parseFailureControl() {
   const file = path.join(work, 'parse-failure.ndjson');
-  fs.writeFileSync(file, '{"meta":\n');
+  const lines = fs.readFileSync(small, 'utf8').split('\n');
+  if (lines.length < 3) throw new Error('the small export has no declaration record to corrupt');
+  lines[1] = '{"in":';
+  fs.writeFileSync(file, lines.join('\n'));
   let parserError = null;
   try {
     parseExport(file);
@@ -486,7 +496,7 @@ function parseFailureControl() {
     lane: { verdict: 'parse-failure', reasons: [parserError] },
   }));
   return {
-    id: 'parse-failure', kind: 'parse-control', expected: 'parse-failure', changes: 'malformed first NDJSON record',
+    id: 'parse-failure', kind: 'parse-control', expected: 'parse-failure', changes: 'malformed declaration record after the valid meta record',
     export: { sha256: fileSha256(file), size_bytes: fs.statSync(file).size, lane_parser_error: parserError },
     runs,
     quorum: {
@@ -538,11 +548,13 @@ const classifierCases = [
   { id: 'kernel-rejection', input: { status: 1, stdout: '', stderr: 'rejected: application type mismatch' }, expected: 'kernel-rejection' },
   { id: 'parse-failure', input: { status: 3, stdout: '', stderr: "parse error: expected ':' after a key" }, expected: 'parse-failure' },
   { id: 'resource-exhaustion', input: { status: 137, stdout: '', stderr: '' }, expected: 'resource-exhausted' },
+  { id: 'address-space-cap-startup-failure', input: { status: 139, stdout: '', stderr: '' },
+    address_space_bytes: RESOURCE_ADDRESS_SPACE_BYTES, expected: 'resource-exhausted' },
   { id: 'unparseable-zero-exit', input: { status: 0, stdout: '', stderr: '' }, expected: 'checker-error' },
   { id: 'empty-check', input: { status: 0, stdout: 'Checked 0 declarations with no errors', stderr: '' }, expected: 'empty-check' },
 ];
 const classifierSelfTest = checkersPin.checkers.flatMap((checker) => classifierCases.map((row) => {
-  const classified = classify({ ...row.input, signal: null }, checker, false);
+  const classified = classify({ ...row.input, signal: null }, checker, false, row.address_space_bytes ?? null);
   return { checker: checker.id, ...row, classified: classified.classification };
 }));
 
