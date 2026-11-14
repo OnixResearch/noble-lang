@@ -2,11 +2,13 @@
 Finite, encoded packed-layout validation (issue #80, unit 1).
 
 The model uses finite lists for node, layer, register, constant and slot tables. Each natural
-number uses a self-delimiting unary code; each 64-bit constant uses exactly 64 bits. This is an
+number uses a unary width prefix followed by its bounded binary payload; each 64-bit constant uses
+exactly 64 bits. This is an
 explicit model encoding, not the Rust serde byte format. Validation delegates to the existing
 PackedLayout obligations after total decoding.
 -/
 import Init.Data.List.Lemmas
+import Init.Data.Nat.Lemmas
 import NobleFoundation.PackedLayout
 
 namespace NobleFoundation.PackedLayoutEncoded
@@ -31,16 +33,16 @@ structure Input where
   layerOf : List Nat
   tables : Tables
 
-/-- Self-delimiting unary natural encoding, terminated by `false`. -/
-def encodeNat : Nat → List Bool
+/-- Self-delimiting unary width encoding, terminated by `false`. -/
+def encodeUnary : Nat → List Bool
   | 0 => [false]
-  | n + 1 => true :: encodeNat n
+  | n + 1 => true :: encodeUnary n
 
-/-- Read a unary natural and preserve the unconsumed suffix. -/
-def decodeNatPrefix : List Bool → Option (Nat × List Bool)
+/-- Read a unary width and preserve the unconsumed suffix. -/
+def decodeUnaryPrefix : List Bool → Option (Nat × List Bool)
   | [] => none
   | false :: rest => some (0, rest)
-  | true :: rest => (decodeNatPrefix rest).map fun (value, tail) => (value + 1, tail)
+  | true :: rest => (decodeUnaryPrefix rest).map fun (value, tail) => (value + 1, tail)
 termination_by bits => bits.length
 
 def encodeBool (value : Bool) : List Bool := [value]
@@ -62,6 +64,24 @@ def decodeFixedBitsPrefix : Nat → List Bool → Option (Nat × List Bool)
         ((if bit then 1 else 0) + 2 * value, tail)
   | _, [] => none
 termination_by width bits => width + bits.length
+
+/-- Number of significant binary digits, with zero represented at width zero. -/
+def natWidth : Nat → Nat
+  | 0 => 0
+  | value + 1 => (value + 1).log2 + 1
+
+/-- A natural's unary-prefixed width and fixed-width little-endian binary payload. -/
+def encodeNat (value : Nat) : List Bool :=
+  encodeUnary (natWidth value) ++ encodeFixedBits (natWidth value) value
+
+/-- Read a self-delimiting natural and preserve the unconsumed suffix. -/
+def decodeNatPrefix (bits : List Bool) : Option (Nat × List Bool) :=
+  match decodeUnaryPrefix bits with
+  | some (width, rest) =>
+      match decodeFixedBitsPrefix width rest with
+      | some (value, tail) => some (value, tail)
+      | none => none
+  | none => none
 
 def encodeWord (value : BitVec 64) : List Bool := encodeFixedBits 64 value.toNat
 
@@ -223,15 +243,21 @@ def validateEncoded (bits : List Bool) : Bool :=
 /-- The declared size is the exact number of bits in the chosen encoding. -/
 def encodedSize (input : Input) : Nat := (encodeInput input).length
 
-theorem decodeNatPrefix_encodeNat_append (value : Nat) (rest : List Bool) :
-    decodeNatPrefix (encodeNat value ++ rest) = some (value, rest) := by
-  induction value with
-  | zero => simp [encodeNat, decodeNatPrefix]
-  | succ value ih =>
-      simp only [encodeNat, List.cons_append, decodeNatPrefix, ih]
-      rfl
+private theorem nat_lt_pow_width (value : Nat) : value < 2 ^ natWidth value := by
+  cases value with
+  | zero => simp [natWidth]
+  | succ value =>
+      change value + 1 < 2 ^ ((value + 1).log2 + 1)
+      apply (Nat.log2_lt (by omega)).mp
+      omega
 
-attribute [simp] decodeNatPrefix_encodeNat_append
+private theorem decodeUnaryPrefix_encodeUnary_append (width : Nat) (rest : List Bool) :
+    decodeUnaryPrefix (encodeUnary width ++ rest) = some (width, rest) := by
+  induction width with
+  | zero => simp [encodeUnary, decodeUnaryPrefix]
+  | succ width ih =>
+      simp only [encodeUnary, List.cons_append, decodeUnaryPrefix, ih]
+      rfl
 
 private theorem decodeBoolPrefix_encodeBool_append (value : Bool) (rest : List Bool) :
     decodeBoolPrefix (encodeBool value ++ rest) = some (value, rest) := by
@@ -253,6 +279,17 @@ private theorem decodeFixedBitsPrefix_encodeFixedBits_append (width value : Nat)
       cases hmod with
       | inl hzero => simp [hzero]; omega
       | inr hone => simp [hone]; omega
+
+theorem decodeNatPrefix_encodeNat_append (value : Nat) (rest : List Bool) :
+    decodeNatPrefix (encodeNat value ++ rest) = some (value, rest) := by
+  unfold decodeNatPrefix encodeNat
+  rw [List.append_assoc]
+  rw [decodeUnaryPrefix_encodeUnary_append]
+  dsimp
+  rw [decodeFixedBitsPrefix_encodeFixedBits_append (natWidth value) value
+    (nat_lt_pow_width value) rest]
+
+attribute [simp] decodeNatPrefix_encodeNat_append
 
 private theorem decodeWordPrefix_encodeWord_append (value : BitVec 64) (rest : List Bool) :
     decodeWordPrefix (encodeWord value ++ rest) = some (value, rest) := by

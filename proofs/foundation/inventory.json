@@ -10783,7 +10783,7 @@
       "name": "NobleFoundation.PackedLayoutEncoded.decodeNatPrefix_encodeNat_append",
       "phase": 2,
       "role": "packed-layout",
-      "claim": "The unary natural decoder consumes exactly one canonical natural code and preserves the remaining suffix."
+      "claim": "The unary-prefixed binary-width natural decoder consumes exactly one natural code and preserves the remaining suffix."
     }
   ],
   "private_theorems": [
@@ -10874,6 +10874,7 @@
     "NobleFoundation.NetLabelled.op1SupWF",
     "NobleFoundation.NetLabelled.ruleDataSlots",
     "NobleFoundation.PackedLayoutEncoded.decodeBoolPrefix_encodeBool_append",
+    "NobleFoundation.PackedLayoutEncoded.nat_lt_pow_width",
     "NobleFoundation.PackedLayoutEncoded.decodeFixedBitsPrefix_encodeFixedBits_append",
     "NobleFoundation.PackedLayoutEncoded.decodeWordPrefix_encodeWord_append",
     "NobleFoundation.PackedLayoutEncoded.decodeListFrom_encodeList_append",
