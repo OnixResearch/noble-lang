@@ -11678,6 +11678,480 @@
       "phase": 2,
       "role": "capture",
       "claim": "capture admits a permission only when both the duplicate and discard bits are set"
+    },
+    {
+      "name": "NobleFoundation.NetI64.system_rule_wf",
+      "phase": 1,
+      "role": "interaction-system",
+      "claim": "every selected revision-3 rule right-hand side is inets-well-formed"
+    },
+    {
+      "name": "NobleFoundation.NetI64.system_rule_symm",
+      "phase": 1,
+      "role": "interaction-system",
+      "claim": "every selected revision-3 rule has its inets mirror in the reverse orientation"
+    },
+    {
+      "name": "NobleFoundation.NetI64.XNet.fire_agents_le",
+      "phase": 1,
+      "role": "live-agent-bound",
+      "claim": "one executable active-pair firing cannot increase live-agent count"
+    },
+    {
+      "name": "NobleFoundation.NetI64.XNet.step_agents_le",
+      "phase": 1,
+      "role": "live-agent-bound",
+      "claim": "one executable reducer step cannot increase live-agent count"
+    },
+    {
+      "name": "NobleFoundation.NetI64.XNet.run_agents_le",
+      "phase": 1,
+      "role": "live-agent-bound",
+      "claim": "every finite executable run stays within its initial live-agent population"
+    },
+    {
+      "name": "NobleFoundation.NetI64.XNet.cstep_agent_bound",
+      "phase": 1,
+      "role": "live-agent-bound",
+      "claim": "each abstract compacted firing has a finite executable representative within the initial agent bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64.XNet.steps_agents_le",
+      "phase": 1,
+      "role": "live-agent-bound",
+      "claim": "every finite abstract reduction prefix has an executable representative within the initial agent bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64.no_rule_num_num",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "two numeric symbols have no active-pair rule"
+    },
+    {
+      "name": "NobleFoundation.NetI64.no_rule_op2_op2",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "two binary-operation symbols have no active-pair rule"
+    },
+    {
+      "name": "NobleFoundation.NetI64.rule_op2_num",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "a binary-operation and first numeric operand interact to retain the operation with its first value"
+    },
+    {
+      "name": "NobleFoundation.NetI64.rule_op1_num",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "a partially applied operation and second numeric operand produce the wrapped result"
+    },
+    {
+      "name": "NobleFoundation.NetI64.rule_dup_num",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "a duplicator and numeric symbol interact to make two numeric copies"
+    },
+    {
+      "name": "NobleFoundation.NetI64.rule_era_num",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "an eraser and numeric symbol have the empty right-hand side"
+    },
+    {
+      "name": "NobleFoundation.NetI64.conflicting_rule_pair_rejected",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "inets SysData.check rejects a table with competing distinct right-hand sides for one ordered pair"
+    },
+    {
+      "name": "NobleFoundation.NetI64.sub_operand_order",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "subtraction computes operand one minus operand two"
+    },
+    {
+      "name": "NobleFoundation.NetI64.eq_one_of_equal",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "equality returns numeric one for equal operands"
+    },
+    {
+      "name": "NobleFoundation.NetI64.eq_zero_of_ne",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "equality returns numeric zero for distinct operands"
+    },
+    {
+      "name": "NobleFoundation.NetI64.Program.wellFormedCheck_iff",
+      "phase": 1,
+      "role": "translation-admission",
+      "claim": "the finite well-formedness checker is equivalent to graph well-formedness"
+    },
+    {
+      "name": "NobleFoundation.NetI64.Program.wellTypedCheck_iff",
+      "phase": 1,
+      "role": "translation-admission",
+      "claim": "the finite type checker is equivalent to the I64 operand typing predicate"
+    },
+    {
+      "name": "NobleFoundation.NetI64.Program.acceptanceCheck_iff",
+      "phase": 1,
+      "role": "translation-admission",
+      "claim": "checked translation acceptance is exactly input arity, graph well-formedness and typing"
+    },
+    {
+      "name": "NobleFoundation.NetI64.chainProgram_opCount",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "the chain family has exactly one arithmetic operation per requested link"
+    },
+    {
+      "name": "NobleFoundation.NetI64.chainProgram_uses_count",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "the chain family has the exact ordered-use multiplicity for every value"
+    },
+    {
+      "name": "NobleFoundation.NetI64.chainProgram_dupCount",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "the chain family has one duplicator per operation"
+    },
+    {
+      "name": "NobleFoundation.NetI64.chainProgram_eraCount",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "the chain family has no unused graph values"
+    },
+    {
+      "name": "NobleFoundation.NetI64.chainProgram_interactionCount",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "the chain family has exactly three interactions per arithmetic operation"
+    },
+    {
+      "name": "NobleFoundation.NetI64.chainProgram_agentBound",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "the chain family initial live-agent bound is two times its operation count plus one"
+    },
+    {
+      "name": "NobleFoundation.NetI64.chain_three_translation_checked",
+      "phase": 1,
+      "role": "translation-admission",
+      "claim": "every 64-bit input to the three-operation chain lowers to an XNet accepted by the executable invariant checker"
+    },
+    {
+      "name": "NobleFoundation.NetI64.balancedProgram_opCount",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "a balanced tree of depth d has exactly 2^d minus one operation nodes"
+    },
+    {
+      "name": "NobleFoundation.NetI64.balancedProgram_dupCount",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "every value in a balanced tree has one use, so the family has no duplicators"
+    },
+    {
+      "name": "NobleFoundation.NetI64.balancedProgram_eraCount",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "every value in a balanced tree has a use, so the family has no erasers"
+    },
+    {
+      "name": "NobleFoundation.NetI64.balancedProgram_interactionCount",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "a balanced tree of depth d has exactly two times its operation count interactions"
+    },
+    {
+      "name": "NobleFoundation.NetI64.balancedProgram_agentBound",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "a balanced tree of depth d has initial agent bound 2^(d+1) minus one"
+    },
+    {
+      "name": "NobleFoundation.NetI64.binaryProgram_interactionCount",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "each binary arithmetic or equality program has exactly two interactions"
+    },
+    {
+      "name": "NobleFoundation.NetI64.fanoutProgram_interactionCount",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "fanout has one erasure for zero outputs and one interaction per additional output otherwise"
+    },
+    {
+      "name": "NobleFoundation.NetI64.fanoutProgram_agentBound",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "the fanout family's initial live-agent count has the stated output-count formula"
+    },
+    {
+      "name": "NobleFoundation.NetI64.chain_three_family_counts",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "the three-operation chain has three arithmetic, three duplicator, zero eraser interactions and seven initial agents"
+    },
+    {
+      "name": "NobleFoundation.NetI64.balanced_depth_two_family_counts",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "the depth-two balanced tree has three arithmetic interactions and six initial agents"
+    },
+    {
+      "name": "NobleFoundation.NetI64.chain_three_reference",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "the three-operation chain normalizes, reads back, and agrees with its reference result"
+    },
+    {
+      "name": "NobleFoundation.NetI64.balanced_depth_two_reference",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "the depth-two balanced tree normalizes, reads back, and agrees with its reference result"
+    },
+    {
+      "name": "NobleFoundation.NetI64.fanout_three_reference",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "three-way fanout reads back three copies after its exact duplicator interactions"
+    },
+    {
+      "name": "NobleFoundation.NetI64.fanout_zero_reference",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "an unused input is erased in one interaction and yields an empty output list"
+    },
+    {
+      "name": "NobleFoundation.NetI64.parallel_sub_schedules_start_differ",
+      "phase": 1,
+      "role": "schedule-fixture",
+      "claim": "forward and reversed agent scans select different independent subtraction pairs first"
+    },
+    {
+      "name": "NobleFoundation.NetI64.parallel_sub_initial_net_equal",
+      "phase": 1,
+      "role": "schedule-fixture",
+      "claim": "reversing the finite agent-list representation preserves the same abstract interaction net"
+    },
+    {
+      "name": "NobleFoundation.NetI64.parallel_sub_schedules_same_normal_form",
+      "phase": 1,
+      "role": "schedule-fixture",
+      "claim": "inets normal-form uniqueness identifies the two successful scan-order normal forms and their interaction counts"
+    },
+    {
+      "name": "NobleFoundation.NetI64.parallel_sub_schedules_normalize",
+      "phase": 1,
+      "role": "schedule-fixture",
+      "claim": "both explicit scan orders normalize within four interactions"
+    },
+    {
+      "name": "NobleFoundation.NetI64.parallel_sub_schedules_agree",
+      "phase": 1,
+      "role": "schedule-fixture",
+      "claim": "two explicit schedules for compiled independent subtractions agree on positive and wrapping read-back and exact count four"
+    },
+    {
+      "name": "NobleFoundation.NetI64.fifo_control_fork_not_diamond",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the rejected FIFO operand-order variant has a producer-delivery fork with no one-step join"
+    },
+    {
+      "name": "NobleFoundation.NetI64.fifo_control_schedules_differ",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "the rejected FIFO variant returns different subtraction values under opposite delivery orders"
+    },
+    {
+      "name": "NobleFoundation.NetI64.Program.translateChecked_accepted",
+      "phase": 1,
+      "role": "translation-admission",
+      "claim": "checked lowering acceptance implies exact input arity, well-formed graph and valid I64 operands"
+    },
+    {
+      "name": "NobleFoundation.NetI64.checkCertificate_iff",
+      "phase": 1,
+      "role": "certificate-checker",
+      "claim": "the executable certificate checker accepts exactly the declared certificate predicate"
+    },
+    {
+      "name": "NobleFoundation.NetI64.Program.translateChecked_ok",
+      "phase": 1,
+      "role": "translation-soundness",
+      "claim": "a checked translation is a well-formed inets executable net"
+    },
+    {
+      "name": "NobleFoundation.NetI64.Program.normalize_spec",
+      "phase": 1,
+      "role": "normalization-model",
+      "claim": "a completed admitted normalization has a checked source, exact reduction trace and normal form"
+    },
+    {
+      "name": "NobleFoundation.NetI64.i64_normal_form_unique",
+      "phase": 1,
+      "role": "normal-form-uniqueness",
+      "claim": "any two reductions from a checked net that reach normal forms have equal results and lengths"
+    },
+    {
+      "name": "NobleFoundation.NetI64.i64_equal_interaction_count",
+      "phase": 1,
+      "role": "interaction-count",
+      "claim": "every schedule reaching a normal form has the canonical interaction count once a canonical reduction of that length is established"
+    },
+    {
+      "name": "NobleFoundation.NetI64.Certificate.accepted_exact_count",
+      "phase": 1,
+      "role": "certificate-count",
+      "claim": "an accepted certificate proves the formula interaction count for every reduction to a normal form"
+    },
+    {
+      "name": "NobleFoundation.NetI64.Certificate.accepted_run_live_agents",
+      "phase": 1,
+      "role": "live-agent-bound",
+      "claim": "an accepted certificate bounds the reducer's finite executable run by its declared live-agent limit"
+    },
+    {
+      "name": "NobleFoundation.NetI64.Certificate.accepted_reduction_live_agents",
+      "phase": 1,
+      "role": "live-agent-bound",
+      "claim": "an accepted certificate bounds every finite abstract reduction prefix by its declared live-agent limit"
+    },
+    {
+      "name": "NobleFoundation.NetI64.binaryAddCertificate_accepted",
+      "phase": 1,
+      "role": "certificate-fixture",
+      "claim": "the concrete checked addition certificate is accepted"
+    },
+    {
+      "name": "NobleFoundation.NetI64.certificateOutcome_iff",
+      "phase": 1,
+      "role": "certificate-checker",
+      "claim": "the certificate outcome is certified exactly when the checker accepts"
+    },
+    {
+      "name": "NobleFoundation.NetI64.changed_graph_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a certificate bound to another graph is rejected"
+    },
+    {
+      "name": "NobleFoundation.NetI64.changed_inputs_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a certificate bound to another input vector is rejected"
+    },
+    {
+      "name": "NobleFoundation.NetI64.changed_rule_revision_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a certificate with the superseded rule revision is rejected"
+    },
+    {
+      "name": "NobleFoundation.NetI64.changed_certificate_revision_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a certificate with an unsupported certificate revision is rejected"
+    },
+    {
+      "name": "NobleFoundation.NetI64.changed_lowering_revision_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a certificate with a mismatched lowering revision is rejected"
+    },
+    {
+      "name": "NobleFoundation.NetI64.insufficient_interaction_count_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a declared interaction count below the required formula is rejected"
+    },
+    {
+      "name": "NobleFoundation.NetI64.insufficient_interaction_potential_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "an interaction potential below the required count is rejected"
+    },
+    {
+      "name": "NobleFoundation.NetI64.insufficient_agent_bound_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a declared live-agent bound below the initial population is rejected"
+    },
+    {
+      "name": "NobleFoundation.NetI64.changed_resource_function_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a certificate with an altered resource function is rejected"
+    },
+    {
+      "name": "NobleFoundation.NetI64.changed_wire_count_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a certificate with an altered wire count is rejected"
+    },
+    {
+      "name": "NobleFoundation.NetI64.omitted_dup_cost_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a fanout certificate omitting a duplicator interaction is rejected"
+    },
+    {
+      "name": "NobleFoundation.NetI64.omitted_era_cost_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "a certificate omitting the eraser interaction for an unused input is rejected"
+    },
+    {
+      "name": "NobleFoundation.NetI64.forward_reference_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "checked lowering refuses a forward edge instead of inventing an operand value"
+    },
+    {
+      "name": "NobleFoundation.NetI64.ill_typed_graph_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "checked lowering refuses a Boolean operand where I64 is required"
+    },
+    {
+      "name": "NobleFoundation.NetI64.invalid_input_slot_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "checked lowering refuses an out-of-range input slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64.short_input_vector_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "checked lowering refuses an input vector with the wrong arity"
+    },
+    {
+      "name": "NobleFoundation.NetI64.false_structural_assumption_refused",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "self-consistent certificate fields cannot certify an ill-typed graph"
+    },
+    {
+      "name": "NobleFoundation.NetI64.Program.translate_interface",
+      "phase": 1,
+      "role": "translation-interface",
+      "claim": "raw lowering retains exactly the ordered declared output interface"
+    },
+    {
+      "name": "NobleFoundation.NetI64.Program.translateChecked_wf",
+      "phase": 1,
+      "role": "translation-soundness",
+      "claim": "accepted lowering yields a well-formed inets net"
+    },
+    {
+      "name": "NobleFoundation.NetI64.Program.translateChecked_interface",
+      "phase": 1,
+      "role": "translation-interface",
+      "claim": "checked lowering preserves the exact ordered output interface"
     }
   ],
   "private_theorems": [
@@ -11765,6 +12239,56 @@
     "NobleFoundation.UsePermissions.signatureStep_compose",
     "NobleFoundation.UsePermissions.signatureStep_run",
     "NobleFoundation.UsePermissions.signatureRun_eq",
+    "NobleFoundation.NetI64.op2NumData_checked",
+    "NobleFoundation.NetI64.op1NumData_checked",
+    "NobleFoundation.NetI64.dupNumData_checked",
+    "NobleFoundation.NetI64.eraNumData_checked",
+    "NobleFoundation.NetI64.op2Num_wf",
+    "NobleFoundation.NetI64.op1Num_wf",
+    "NobleFoundation.NetI64.dupNum_wf",
+    "NobleFoundation.NetI64.eraNum_wf",
+    "NobleFoundation.NetI64.rhs_swap_mirror",
+    "NobleFoundation.NetI64.rhs_mirror_swap",
+    "NobleFoundation.NetI64.rhs_swap_wf",
+    "NobleFoundation.NetI64.xRule_wf",
+    "NobleFoundation.NetI64.xRule_symm",
+    "NobleFoundation.NetI64.ruleData_slots",
+    "NobleFoundation.NetI64.xRule_slots",
+    "NobleFoundation.NetI64.xRule_slots_length_le",
+    "NobleFoundation.NetI64.filter_id_drop_one",
+    "NobleFoundation.NetI64.filter_two_ids_drop_two",
+    "NobleFoundation.NetI64.rule_to_xRule",
+    "NobleFoundation.NetI64.Program.nodeInputCheck_iff",
+    "NobleFoundation.NetI64.Program.nodeTypedCheck_iff",
+    "NobleFoundation.NetI64.nodeUses_append",
+    "NobleFoundation.NetI64.Program.usesOf_length",
+    "NobleFoundation.NetI64.chainNodes_length",
+    "NobleFoundation.NetI64.chainNodes_opCount",
+    "NobleFoundation.NetI64.chainNodes_uses_length",
+    "NobleFoundation.NetI64.range_fold_zero",
+    "NobleFoundation.NetI64.range_countP_zero",
+    "NobleFoundation.NetI64.chainProgram_use_isEmpty",
+    "NobleFoundation.NetI64.balancedSubtree_length_add_one",
+    "NobleFoundation.NetI64.balancedSubtree_length",
+    "NobleFoundation.NetI64.balancedSubtree_opCount_add_one",
+    "NobleFoundation.NetI64.balancedSubtree_opCount",
+    "NobleFoundation.NetI64.inputNodes_opCount",
+    "NobleFoundation.NetI64.balancedSubtree_next_eq",
+    "NobleFoundation.NetI64.balancedSubtree_root_next_eq",
+    "NobleFoundation.NetI64.balancedSubtree_root_data",
+    "NobleFoundation.NetI64.balanced_leaf_range_partition",
+    "NobleFoundation.NetI64.balanced_op_range_partition",
+    "NobleFoundation.NetI64.balancedSubtree_uses_length",
+    "NobleFoundation.NetI64.inputNodes_uses_empty",
+    "NobleFoundation.NetI64.balancedProgram_uses_once",
+    "NobleFoundation.NetI64.range_fold_uses_once_zero",
+    "NobleFoundation.NetI64.outputConsumers_replicate_length",
+    "NobleFoundation.NetI64.fanoutProgram_uses_length",
+    "NobleFoundation.NetI64.fanoutProgram_uses_empty",
+    "NobleFoundation.NetI64.fanoutProgram_uses_isEmpty",
+    "NobleFoundation.NetI64.fanoutProgram_dupCount",
+    "NobleFoundation.NetI64.fanoutProgram_eraCount",
+    "NobleFoundation.NetI64.Program.translateChecked_parts",
     "NobleFoundation.NetLabelled.rhsSwapInvolutive",
     "NobleFoundation.NetLabelled.duplicateNumberWF",
     "NobleFoundation.NetLabelled.duplicateEraseWF",

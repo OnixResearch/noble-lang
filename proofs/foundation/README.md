@@ -209,8 +209,9 @@ Status words:
 | Pure I64 graph rewrite certificates: rule, congruence, lifting, checker, replay endpoint, token codec and the generated fixture corpus | `fold_add_constants`, `add_wraps_at_the_boundary`, `neutral_add_left`, `neutral_mul_right`, `evalStep_congr`, `congruence`, `replacement_lift`, `checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`, `constant_value`, `foldGraph_wellFormed`, `foldGraph_reference`, `fold_certificate_accepted`, `wrong_constant_refused`, `swapped_operands_refused`, `wrong_rule_identity_refused`, `wrong_bits_refused`, `accepted_endpoint_equivalence`, `stale_model_refused`, `stale_model_kills_acceptance`, `multiFold_endpoint`, `substituted_result_differs`, `decode_encode_step_replays`, `decode_encode_replays`, `acceptance_preserved_by_codec`, `encodeStep_length`, `truncated_step_refused`, `unknown_rule_token_refused`, `stale_revision_token_refused`, `stale_model_token_refused`, `chunk_count_refused`, `dropped_chunk_refused`, and the nine `Certificate.Corpus.*` statements | `crates/noble-ngraph/src/ir.rs` graph producer, `crates/noble-ngraph/src/cert.rs` encoder/checker and any future untrusted transformation | model **proved** (rules, lifting, checker soundness, the Lean replay endpoint and the token codec). One fixed fixture's exact tokens are **kernel-decided** against the model end to end. Correspondence to the `cert.rs` code (as opposed to that fixture's output), derivation replay budget and every other graph's endpoint decoding **open** |
 | Bounded graph-pair query model: witness decoding, exhaustive search and refutation | `lookup_returns_recorded`, `decode_uses_fallback`, `decode_replays_recorded`, `not_refuted_iff_agrees`, `search_none_sound`, `search_some_refutes`, `same_sum_search_none`, `same_sum_agrees`, `subtraction_refuted`, `witness_bits_decide`, `unrecorded_slot_falls_back`, `corrupted_witness_changes_the_verdict`, and the six `SymbolicSolver.Corpus.*_first` verdicts | `crates/noble-ngraph/src/extract/symbolic.rs` encoder, `crates/noble-ngraph-experiment/src/b2i64` replay legs and any emitted Wasm | model **proved** (decoding only returns recorded pairs; bounded-universe search soundness). Six fixed pairs of checked `noble-ngraph` graphs: compiled and reference verdicts **tested**, and the same verdicts kernel-decided. Encoder correspondence, solver, emitted-Wasm replay and witness shrinking **open** |
 | Bounded M6 task interleavings: prefix invariants, a proved reduction and full/reduced agreement, for refusal-ending and valid client histories | `step_preserves_invariants`, `reachable_prefixes_satisfy_the_invariants`, `independent_actions_commute`, `every_sequence_has_a_reduced_representative`, `reduced_search_agrees`, `the_declared_reduction_agrees`, `the_declared_observation_counts`, `different_ids_rule_is_unsound`, `the_unsound_reduction_is_detected_only_where_ids_interleave`, `every_disagreement_has_a_shortest_witness`, `independent_is_client_sound`, `client_canonicalize`, `reduced_client_search_agrees`, `the_client_projection_discriminates`, `the_lossy_client_projection_hides_rejected_calls` | `crates/noble-kernel/src/async_tasks/table` (admission, callbacks, ownership) | model **proved** (two-record model; counts and coverage at the declared bound). Rule-level negative controls against the Rust table **tested** (`crates/noble-kernel/tests/m6-interleaving.rs`). Model ↔ Rust table correspondence and witness replay through the table API **open** |
-| Checked interaction-net contract: versioned typed agent kinds, arity-checked ports, reciprocal unique-incidence wiring, compatible ordered operand links and ordered output boundary | `version_ok_sound`, `reciprocity_ok_sound`, `compatibility_ok_sound`, `boundary_ok_sound`, `validate_sound`, `deeper_minus_top_is_accepted`, `swapped_sub_operands_are_rejected`, `dangling_wire_is_rejected`, `aliased_incidence_is_rejected`, `two_output_boundary_is_accepted`, `wrong_output_order_is_rejected` | no implementation correspondence; net reduction/readback and graph-to-net translation remain open | **proved** (model) |
+| Historical revision-1 checked interaction-net contract: versioned typed agent kinds, arity-checked ports, reciprocal unique-incidence wiring, compatible ordered operand links and ordered output boundary | `version_ok_sound`, `reciprocity_ok_sound`, `compatibility_ok_sound`, `boundary_ok_sound`, `validate_sound`, `deeper_minus_top_is_accepted`, `swapped_sub_operands_are_rejected`, `dangling_wire_is_rejected`, `aliased_incidence_is_rejected`, `two_output_boundary_is_accepted`, `wrong_output_order_is_rejected` | revision-1 validator only; reduction/read-back and graph-to-net translation are open for that superseded profile; revision-3 work is listed separately below | **proved** (model) |
 | What interaction-net contract revision 1 admits (issue #37) | `oriented_active_pair`, `value_into_result_port_is_accepted`, `fanout_cannot_feed_an_operand`, `identity_agents_bypass_the_operand_rule` | revision-1 contract model only; no reduction semantics, Rust or runtime claim | model **proved**: under the documented orientation no value meets an arithmetic agent in an active pair; the validator does not enforce the orientation, fanout cannot feed operands, and the operand rule constrains wiring shape, not the function |
+| Selected revision-3 I64 system on inets (#37/#109/#124) | `system_rule_wf`, `system_rule_symm`, the op2, op1, dup and era rules, `Program.acceptanceCheck_iff`, `Program.translateChecked_accepted`, `Program.translateChecked_wf`, `Program.translateChecked_interface`, `Program.normalize_spec`, `i64_normal_form_unique`, `i64_equal_interaction_count`, `checkCertificate_iff`, `Certificate.accepted_exact_count`, `Certificate.accepted_reduction_live_agents`, `chainProgram_interactionCount`, `chainProgram_agentBound`, `balancedProgram_interactionCount`, `balancedProgram_agentBound`, the independent-subtraction schedule fixtures, `fifo_control_fork_not_diamond`, and `fifo_control_schedules_differ` | no Rust implementation or lowering correspondence is claimed | model **proved**: checked translation, ordered interface, exact mirrored interaction rules, schedule-independent normal-form counts, and finite-prefix live-agent bounds. Chain, balanced-tree, and fanout graph-count/resource formulas hold for arbitrary sizes. The #124 two-subtraction fixture executes distinct scan-order schedules and establishes the same abstract normal form, wrapping read-back, and count. The explicitly rejected FIFO control has a non-diamond delivery fork and schedule-dependent subtraction result; it is not the selected semantics. Revision 3 has no operand stacks: each wire has exactly two port endpoints, with fanout represented by explicit `dup`. Arbitrary-size chain/tree normalization and read-back, general graph observation, and proof that every admitted lowering reaches normal form remain **open** |
 | Bounded Boolean Shannon control, interval ISOP, and independent checker (issue #35) | `Isop.shannon_exact`, `Isop.majority_cover_has_a_nonprime_cube`, `Isop.equivOn_sound`; `IsopInterval.isop_bounds`, `isopCover_eval`, `isopCover_bounds`, `isopCover_exact`, `allCubes_complete`, `majority_isop_cover_prime_and_irredundant`, `intervalChecker_sound`, `isopCover_interval_checked`, interval fixtures, and seeded atom-map/care-set controls | Lean truth-table model and `crates/noble-ngraph-experiment/src/isop.rs`; standalone checked Boolean DAG only, not connected to source lowering or `Program` | Shannon control and interval ISOP semantics **proved**; Rust core/checker and seeded limits **tested**; synthetic comparison and frozen adoption decision in `verification/isop/`. Source integration **NO-GO/deferred**: the current #32 whitelist contains no Boolean-composition regions, and no lazy Bool/branch extension is admitted |
 | Constructor reuse under a unique root, matching size, and resource eligibility | `makeCell_requested`, `reuseStep_success`, `reuseStep_refuses_size_mismatch`, `reuseStep_replaces_unique_root`, `reuseStep_initializes_requested_cell`, `eligible_replacement_has_no_resource`, `eligible_replacement_requires_move`, `wrapped_resource_is_not_reuse_eligible`, `shared_alias_control` | none (finite model only; no allocator, runtime or Wasm correspondence) | **proved** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
@@ -3783,10 +3784,14 @@ Open, and deliberately not closed by this model:
 - Any lowering, runtime or host-ledger correspondence (OWN-PO-4..7) and any
   checker refinement. Task 13 of `ownership-lifetime-contract` stays open.
 
-## Checked interaction-net contract (issue #37, phase 1)
+## Historical revision-1 checked interaction-net contract (issue #37, phase 1)
 
-`NobleFoundation/InteractionNet.lean` is a versioned (contract revision `1`),
-structural contract for the bounded checked I64 interaction-net backend.
+`NobleFoundation/InteractionNet.lean` is the superseded versioned (contract
+revision `1`) structural model, retained for comparison. The owner selected
+revision 3 on 2026-11-13; the current interaction-system model is
+`NobleFoundation/NetI64.lean` and its contract is
+[`docs/i64-net-contract-v3.md`](../../docs/i64-net-contract-v3.md). The
+revision-1 claims below do not describe the selected backend.
 `AgentKind` names the typed
 input, constant, add, sub, mul, equality, dup/fanout, era/erase and output
 agents. `Port` uses an explicit natural-number agent and slot; `validPort`
@@ -3821,11 +3826,12 @@ theorems. The clean-source receipt for the net contract is
 (657 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
 
-### What revision 1 admits, before any reduction rule (issue #37)
+### What revision 1 admitted, before any reduction rule (issue #37)
 
-`NobleFoundation/InteractionNetOrientation.lean` measures the revision-1 validator under the
+`NobleFoundation/InteractionNetOrientation.lean` records what the revision-1 validator admitted under the
 documented orientation. Port `0` of a binary agent is its result, and ports `1` and `2` are its
-operands. The contract and `validate` are unchanged.
+ports. The contract and `validate` are unchanged; these findings are historical, not open design
+choices for the selected contract.
 - **No arithmetic interaction.** `orientedOk` checks the documented orientation: every wire joins a
   value producer to a value consumer. In an oriented net, every active pair has an output, eraser or
   fanout on one side (`oriented_active_pair`). A constant or input therefore never meets an
@@ -3842,16 +3848,58 @@ operands. The contract and `validate` are unchanged.
   subtraction passes once each input goes through an addition of `0`
   (`identity_agents_bypass_the_operand_rule`).
 
-Reduction rules, termination, confluence and readback therefore need a contract revision first. The
-open choices, which are the owner's:
-- which port of an arithmetic agent is principal;
-- how fanout reaches operands;
-- whether operand order is checked against the source graph rather than input slot numbers.
+The owner resolved these design questions in revision 3: arithmetic operand order is the graph's
+order, operation agents use principal/auxiliary ports as documented, and fanout chains can feed
+operand consumers. The historical revision-1 validator remains unchanged and is not used as the
+revision-3 admission checker.
 
 The clean-source receipt for the orientation analysis is
 [`verification/foundation/receipts/d2a5393c2/`](../../verification/foundation/receipts/d2a5393c2/foundation-check.json)
 (1005 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
+
+## Selected revision-3 I64 interaction system (#37/#109)
+
+`NobleFoundation/NetI64.lean` instantiates the vendored `InteractionNets` system for `num`, `op2`,
+`op1`, `dup`, and `era`, proves rule well-formedness and mirror symmetry, and supplies a checked
+translation from admitted `PackedSchedule`-style graphs to `XNet`. `Program.translateChecked_accepted`
+states the required input-arity, definition-before-use, input-slot, output-index, and I64-operand
+premises; `Program.translateChecked_wf` and `Program.translateChecked_interface` establish the
+inets invariant and ordered output boundary. Read-back refuses a residual non-number agent or a
+boundary that does not point to exactly the declared number of numeric agents.
+
+The model executes only the declared formula budget `2 * opCount + dupCount + eraCount` and returns
+a result only for a normal form. An accepted certificate is bound to the graph, input vector,
+`ngraph-net-i64/3` rule revision, lowering revision, formula count, agent bound, and exact resource
+functions. `checkCertificate_iff` proves checker equivalence to its declarative predicate;
+`Certificate.accepted_exact_count` then uses inets' schedule-independent unique-normal-form length
+theorem for **every** reduction to a normal form. Per-rule, reducer-step, and arbitrary abstract
+reduction-prefix theorems establish the live-agent bound for finite nets. Refusal is the explicit
+`uncertified` outcome, not a divergence claim.
+
+The #124 operand-stack multiplicity question is decided by the revision-3 cutover: inets has no
+operand stacks, and each net wire joins exactly two port endpoints; fanout is explicit through
+`dup`, never multiple producer values queued at one consumer port. `i64_normal_form_unique` and
+`i64_equal_interaction_count` expose inets' normal-form/count corollaries for checked NetI64 nets.
+The compiled pair of independent `x - y` subtractions has two kernel-evaluated scan orders with
+different first active pairs and the same abstract normal form by inets' uniqueness theorem, with
+matching read-back and exact count `K = 4`.
+
+The kernel-evaluated family coverage includes arbitrary-size exact graph-count and agent-bound
+formulas: a chain of `n` operations has `3n` planned interactions and `2n + 1` initial agents; a
+balanced tree of depth `d` has `2(2^d - 1)` planned interactions and `2^(d+1) - 1` initial agents;
+fanout has its corresponding exact formulas as well. Read-back fixtures cover a three-operation
+chain, a depth-two balanced tree, fanout with three copies, fanout with an unused input, and two
+independent subtraction schedules including a wrapping case. These parameterized formulas are
+static graph counts, not an arbitrary-size normalization/read-back proof. For every 64-bit input,
+`chain_three_translation_checked` additionally proves that the three-operation chain lowers to a
+finite net accepted by inets' executable invariant checker; it does not establish its normalization
+trace or output for all inputs.
+Arbitrary-size chain and balanced-tree execution/read-back semantics, plus a general graph-to-net
+observation proof (and the statement that every admitted graph's canonical lowering reaches a normal
+form), remain **open**. This module is a
+mathematical model only: it proves no Rust lowering/reducer correspondence, runtime budget behavior,
+or implementation property. Those are integration/evidence work, not established by this slice.
 
 ## Labelled DUP/SUP interaction system (issue #105, selected v3)
 

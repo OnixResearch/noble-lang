@@ -27,6 +27,7 @@ import NobleFoundation.PackedScheduleCorpus
 import NobleFoundation.PackedScheduleGuardCorpus
 import NobleFoundation.Belt
 import NobleFoundation.BeltCorpus
+import NobleFoundation.NetI64
 import NobleFoundation.GraphRewrite
 import NobleFoundation.Specialize
 import NobleFoundation.SymbolicMutations

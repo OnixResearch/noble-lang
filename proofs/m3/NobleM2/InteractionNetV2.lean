@@ -3,8 +3,12 @@ import NobleM2.SizeChange
 /-!
 # Revision-2 I64 interaction-net vocabulary (issue #37)
 
-The agent and port table of the selected contract (`docs/i64-net-contract-v2.md`), as Lean types, so
-the validator and reducer can be written against one definition rather than prose.
+This is the superseded revision-2 dataflow model, retained only for comparison. The selected
+revision-3 interaction system is `NobleFoundation.NetI64.system`, backed by the vendored inets
+library. No theorem in this module establishes a property of revision-3 interaction nets.
+
+The agent and port table of former contract revision 2 (`docs/i64-net-contract-v2.md`), as Lean types,
+so its historical validator and reducer share one definition rather than prose.
 
 The three decisions that shape the table are recorded here as theorems rather than comments:
 
