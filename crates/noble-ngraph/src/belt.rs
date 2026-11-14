@@ -11,6 +11,7 @@ mod execution;
 #[path = "belt/lower.rs"]
 mod lowering;
 mod support;
+pub mod target;
 mod types;
 mod validate;
 

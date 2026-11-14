@@ -33,6 +33,8 @@ mod belt_fixtures;
 mod belt_measure;
 #[path = "belt_dir/mutations.rs"]
 mod belt_mutations;
+#[path = "belt_target_dir/tests.rs"]
+mod belt_target_tests;
 mod common;
 #[path = "schedule_lean_dir/corpus.rs"]
 mod corpus;
