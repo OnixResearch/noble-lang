@@ -1,0 +1,20 @@
+{
+  "schema": "noble-wasm-pilot-decode/v1",
+  "issue": 82,
+  "source_commit": "f354732928a4b9ab3d496d5317b7971d000c4dbd",
+  "clean_tree_at_start": true,
+  "artifact": "verification/owi/receipts/2026-10-26/subject-module-1.wasm",
+  "artifact_bytes_path": "/home/brittonr/.cache/noble-iss/wt/talos-82/verification/owi/receipts/2026-10-26/subject-module-1.wasm",
+  "artifact_sha256": "261f11d32f24b7bba064782ff3654b28d90efd67fe1a9d8de502f057b63a6eac",
+  "artifact_bytes": 10474,
+  "decoder": "wasm-tools 1.245.1",
+  "printed_text_sha256": "20486db68776c5ef436f366f2e5db24b8e49c8d5394054e7c2ca979b7ed8eb69",
+  "printed_text_bytes": 69685,
+  "roundtrip_bytes": 10474,
+  "roundtrip_sha256": "261f11d32f24b7bba064782ff3654b28d90efd67fe1a9d8de502f057b63a6eac",
+  "generated_subject_source_sha256": "3b02c1fd7ab9eea462ac8b7425877486578a952415094427f89fcbfae113a682",
+  "generated_subject_source": "/home/brittonr/.cache/noble-iss/scratch/talos-82/workdir-f354732/interpreter/Interpreter/WasmPilot/Subject.lean",
+  "talos_source_commit": "d7c84ac660757953b752bdfc9cb8dae3dab623ed",
+  "talos_source_tree": "70f1830876d298dab2e2cb4d0d5a5d7962508133",
+  "method": "wasm-tools print, then wasm-tools parse, followed by exact byte-for-byte equality against the retained artifact"
+}

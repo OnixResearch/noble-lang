@@ -1,0 +1,37 @@
+{
+  "schema": "wasm-pilot-spec-tests/v1",
+  "repository": "https://github.com/WebAssembly/spec",
+  "commit": "f3268fa9dcb7d3a60d09546e743e7281e75cddb0",
+  "license": {
+    "path": "test/LICENSE",
+    "license": "Apache-2.0",
+    "git_blob_sha1": "8f71f43fee3f78649d238238cbde51e6d7055c82",
+    "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+  },
+  "files": [
+    {
+      "local_path": "memory_init.wast",
+      "upstream_path": "test/core/bulk-memory/memory_init.wast",
+      "git_blob_sha1": "2a8284c6525bb5ed510afc2aa5f1e9c59f0c3c62",
+      "sha256": "f970c47de1bfdd8d59672c4f006fe96011236ec226ab40157c77c69b1ab25572"
+    },
+    {
+      "local_path": "table_init.wast",
+      "upstream_path": "test/core/bulk-memory/table_init.wast",
+      "git_blob_sha1": "e74c56f34cb45bfaf2cc4f2010444e2f26f062ae",
+      "sha256": "b23c6e49e1f6e51b642609c5df7b66a517efcd7a8e316fac80d7332c7dfdfaa7"
+    },
+    {
+      "local_path": "i32.wast",
+      "upstream_path": "test/core/i32.wast",
+      "git_blob_sha1": "2e8ab70053a10b9cfd0bb78fdb666a648d50aaae",
+      "sha256": "f3b7e8fd641893ea0989a8ab801fce0654d276d27b5cad9cf482291a422cffe8"
+    },
+    {
+      "local_path": "i64.wast",
+      "upstream_path": "test/core/i64.wast",
+      "git_blob_sha1": "b662f3d92781548ebf4d0636e5b3067d17f7c314",
+      "sha256": "7d0e27a617565e0685aef56cee01b2b4890084068e3989168c41d14c56b1945e"
+    }
+  ]
+}

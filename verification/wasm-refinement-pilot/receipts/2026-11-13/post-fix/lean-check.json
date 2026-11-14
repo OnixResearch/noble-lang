@@ -1,0 +1,41 @@
+{
+  "schema": "wasm-pilot-lean-check/v1",
+  "issue": 82,
+  "source_commit": "e05cc4afce893711298438296f25acca50b7dc9d",
+  "source_worktree_clean": true,
+  "command": [
+    "/home/brittonr/.cache/noble-iss/lean.sh",
+    "/home/brittonr/.cache/noble-iss/wt/talos-82/verification/wasm-refinement-pilot/lean/interpreter",
+    "env",
+    "env",
+    "PATH=/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin:/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:/run/current-system/sw/bin:/usr/bin:/bin",
+    "lean",
+    "--run",
+    "Interpreter/WasmPilot/Check.lean"
+  ],
+  "lean_path": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+  "lean_version": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+  "exit_code": 0,
+  "stdout": [
+    "'Interpreter.WasmPilot.model_i64_mul_exec' does not depend on any axioms",
+    "'Interpreter.WasmPilot.model_i64_add_exec' does not depend on any axioms",
+    "'Interpreter.WasmPilot.model_mul_vs_add_2_3' does not depend on any axioms",
+    "'Interpreter.WasmPilot.model_linking_projection_exec' depends on axioms: [propext]",
+    "'Interpreter.WasmPilot.model_fixed_fixture_exec' depends on axioms: [propext]",
+    "'Wasm.Decoder.Wat.decodeForVerification' depends on axioms: [propext, Classical.choice, Quot.sound]",
+    "'Wasm.SmallStep.stepChecked?_sound' depends on axioms: [propext, Classical.choice, Quot.sound]",
+    "'Wasm.SmallStep.stepChecked?_complete' depends on axioms: [propext, Classical.choice, Quot.sound]",
+    "subject decoder check passed"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "forbidden_construct_scan": {
+    "path": "verification/wasm-refinement-pilot/lean/interpreter/Interpreter/Wasm/SmallStep.lean;verification/wasm-refinement-pilot/lean/interpreter/Interpreter/Wasm/Semantics.lean;verification/wasm-refinement-pilot/lean/interpreter/Interpreter/Wasm/Wp/Atomic.lean;verification/wasm-refinement-pilot/lean/interpreter/Interpreter/Wasm/Examples/SmallStep.lean",
+    "pattern": "\\b(native_decide|sorry|admit|axiom)\\b",
+    "result": "No matches found"
+  },
+  "interpretation": "The full-module decoder ran and accepted both digest-bound WAT strings; these are executable checks, not kernel proofs that the decoder accepts them or that either artifact refines MC1."
+}

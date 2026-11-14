@@ -1,0 +1,67 @@
+{
+  "schema": "wasm-pilot-spec-test-run/v1",
+  "issue": 82,
+  "source_commit": "589f8dcd6cbe6f9303d9d1751d317a09b0f6a7e1",
+  "source_worktree_clean": true,
+  "spec_repository": "https://github.com/WebAssembly/spec",
+  "spec_commit": "f3268fa9dcb7d3a60d09546e743e7281e75cddb0",
+  "fixture_manifest": "verification/wasm-refinement-pilot/lean/interpreter/vendor/testsuite/SOURCE.json",
+  "fixtures": [
+    {
+      "local_path": "memory_init.wast",
+      "upstream_path": "test/core/bulk-memory/memory_init.wast",
+      "git_blob_sha1": "2a8284c6525bb5ed510afc2aa5f1e9c59f0c3c62",
+      "sha256": "f970c47de1bfdd8d59672c4f006fe96011236ec226ab40157c77c69b1ab25572"
+    },
+    {
+      "local_path": "table_init.wast",
+      "upstream_path": "test/core/bulk-memory/table_init.wast",
+      "git_blob_sha1": "e74c56f34cb45bfaf2cc4f2010444e2f26f062ae",
+      "sha256": "b23c6e49e1f6e51b642609c5df7b66a517efcd7a8e316fac80d7332c7dfdfaa7"
+    },
+    {
+      "local_path": "i32.wast",
+      "upstream_path": "test/core/i32.wast",
+      "git_blob_sha1": "2e8ab70053a10b9cfd0bb78fdb666a648d50aaae",
+      "sha256": "f3b7e8fd641893ea0989a8ab801fce0654d276d27b5cad9cf482291a422cffe8"
+    },
+    {
+      "local_path": "i64.wast",
+      "upstream_path": "test/core/i64.wast",
+      "git_blob_sha1": "b662f3d92781548ebf4d0636e5b3067d17f7c314",
+      "sha256": "7d0e27a617565e0685aef56cee01b2b4890084068e3989168c41d14c56b1945e"
+    }
+  ],
+  "lean_path": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+  "lean_version": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+  "wasm_tools_path": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+  "wasm_tools_version": "wasm-tools 1.245.1",
+  "command": [
+    "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+    "env",
+    "env",
+    "PATH=/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin:/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:/run/current-system/sw/bin:/usr/bin:/bin",
+    "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+    "--run",
+    "Interpreter/Testsuite.lean",
+    "--json"
+  ],
+  "exit_code": 1,
+  "command_count": 1918,
+  "outcomes": {
+    "pass": 1917,
+    "fail": 1
+  },
+  "failed_cases": [
+    {
+      "outcome": "fail",
+      "line": 240,
+      "kind": "assert_trap",
+      "file": "memory_init.wast",
+      "detail": "expected trap `out of bounds memory access`, returned []"
+    }
+  ],
+  "stdout_sha256": "ab2ed0fb9b5d9716b639593094ca5bdae6210feed4575e59236281d9c47d2344",
+  "stderr": "",
+  "interpretation": "failed spec assertions are Talos/spec discrepancies, not evidence of a Noble miscompilation"
+}

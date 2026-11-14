@@ -1,0 +1,35 @@
+{
+  "schema": "wasm-pilot-lean-check/v1",
+  "issue": 82,
+  "source_commit": "f354732928a4b9ab3d496d5317b7971d000c4dbd",
+  "source_worktree_clean": true,
+  "command": [
+    "/home/brittonr/.cache/noble-iss/lean.sh",
+    "/home/brittonr/.cache/noble-iss/scratch/talos-82/workdir-f354732/interpreter",
+    "env",
+    "lean",
+    "--run",
+    "Interpreter/WasmPilot/Check.lean"
+  ],
+  "lean_path": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+  "lean_version": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+  "exit_code": 0,
+  "stdout": [
+    "'Interpreter.WasmPilot.model_i64_mul_exec' does not depend on any axioms",
+    "'Interpreter.WasmPilot.model_i64_add_exec' does not depend on any axioms",
+    "'Interpreter.WasmPilot.model_mul_vs_add_2_3' does not depend on any axioms",
+    "'Interpreter.WasmPilot.model_linking_projection_exec' depends on axioms: [propext]",
+    "'Interpreter.WasmPilot.model_fixed_fixture_exec' depends on axioms: [propext]",
+    "'Wasm.Decoder.Wat.decodeForVerification' depends on axioms: [propext, Classical.choice, Quot.sound]",
+    "'Wasm.SmallStep.stepChecked?_sound' depends on axioms: [propext, Classical.choice, Quot.sound]",
+    "'Wasm.SmallStep.stepChecked?_complete' depends on axioms: [propext, Classical.choice, Quot.sound]",
+    "subject decoder check passed"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "source_audit_receipt": "verification/wasm-refinement-pilot/receipts/2026-11-13/source-audit-f3547329.json",
+  "interpretation": "decodeForVerification executed and accepted both digest-bound WAT strings; the printed axioms are within the permitted set. These are executable checks, not kernel proofs that the decoder accepts them or that either artifact refines MC1."
+}

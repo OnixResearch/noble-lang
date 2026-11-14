@@ -1,0 +1,170 @@
+--- a/interpreter/Interpreter/Wasm/Examples/SmallStep.lean
++++ b/interpreter/Interpreter/Wasm/Examples/SmallStep.lean
+@@ -510,6 +510,19 @@
+       (fun store => store = droppedMemoryInitTrapConfig.store) :=
+   runSteps_trapped_trapsWith_store dropped_memory_init_traps_atomically
+ 
++def droppedMemoryInitZeroLengthSourceTrapConfig : Config Unit :=
++  { droppedMemoryInitTrapConfig with
++    expr := .running
++      { locals := {},
++        code := [.const 0, .const 1, .const 0, .memoryInit 0],
++        resultArity := 0, callerRemainder := [] } }
++
++/-- A dropped segment has length zero, so a nonzero source with zero length
++still violates the source-range bound. -/
++theorem dropped_memory_init_zero_length_source_traps :
++    (runSteps 4 droppedMemoryInitZeroLengthSourceTrapConfig).result =
++      .trapped .outOfBoundsMemory droppedMemoryInitZeroLengthSourceTrapConfig.store := by rfl
++
+ def memory64InitModule : Module :=
+   { funcs :=
+       [{ body :=
+@@ -552,6 +565,21 @@
+       some (runValues 14 memory64InitModule 0
+         memory64InitModule.initialStore []) := by decide +kernel
+ 
++def droppedMemory64InitZeroLengthSourceTrapConfig : Config Unit :=
++  { expr := .running
++      { locals := {},
++        code := [.constI64 0, .const 1, .const 0, .memoryInit 0],
++        resultArity := 0, callerRemainder := [] }
++    store :=
++      { memory64InitConfig.store with
++        wasm :=
++          { memory64InitConfig.store.wasm with dataSegments := [none] } } }
++
++/-- The same zero-length source-index check applies to memory64 destinations. -/
++theorem dropped_memory64_init_zero_length_source_traps :
++    (runSteps 4 droppedMemory64InitZeroLengthSourceTrapConfig).result =
++      .trapped .outOfBoundsMemory droppedMemory64InitZeroLengthSourceTrapConfig.store := by rfl
++
+ def byteRoundtripConfig : Config Unit :=
+   { expr := .running
+       { locals := {},
+--- a/interpreter/Interpreter/Wasm/Semantics.lean
++++ b/interpreter/Interpreter/Wasm/Semantics.lean
+@@ -1711,7 +1711,7 @@
+ 
+     -- memory.init i: pops len :: src :: dst (top = len). Source bytes
+     -- come from data segment `i`; a dropped segment is modelled as
+-    -- having length 0, so any nonzero-length init from it traps on
++    -- having length 0, so any source range beyond offset 0 traps on
+     -- the source-bounds check. Both bounds are checked atomically
+     -- before any write.
+     | _, .memoryInit i => match s.values with
+@@ -1720,7 +1720,8 @@
+         | none => .Invalid s!"memoryInit: segment index {i} out of range"
+         | some none =>
+           -- segment already dropped: equivalent to length-0 source
+-          if 0 < len.toNat ∨ dst.toNat + len.toNat > st.mem.pages * 65536 then
++          if src.toNat + len.toNat > 0
++             ∨ dst.toNat + len.toNat > st.mem.pages * 65536 then
+             .Trap st "out of bounds memory access"
+           else
+             .Fallthrough st { s with values := vs }
+@@ -1737,7 +1738,8 @@
+         match st.dataSegments[i]? with
+         | none => .Invalid s!"memoryInit: segment index {i} out of range"
+         | some none =>
+-          if 0 < len.toNat ∨ dst.toNat + len.toNat > st.mem.pages * 65536 then
++          if src.toNat + len.toNat > 0
++             ∨ dst.toNat + len.toNat > st.mem.pages * 65536 then
+             .Trap st "out of bounds memory access"
+           else
+             .Fallthrough st { s with values := vs }
+--- a/interpreter/Interpreter/Wasm/SmallStep.lean
++++ b/interpreter/Interpreter/Wasm/SmallStep.lean
+@@ -3082,7 +3082,7 @@
+           | none =>
+             .error ⟨s!"memory.init segment index {segmentIndex} is invalid"⟩
+           | some none =>
+-            if 0 < len.toNat ∨
++            if source.toNat + len.toNat > 0 ∨
+                 destination.toNat + len.toNat >
+                   store.wasm.mem.pages * 65536 then
+               .ok (some (.instruction instr,
+@@ -3105,7 +3105,7 @@
+           | none =>
+             .error ⟨s!"memory.init segment index {segmentIndex} is invalid"⟩
+           | some none =>
+-            if 0 < len.toNat ∨
++            if source.toNat + len.toNat > 0 ∨
+                 destination.toNat + len.toNat >
+                   store.wasm.mem.pages * 65536 then
+               .ok (some (.instruction instr,
+@@ -5714,8 +5714,8 @@
+             (store.wasm.mem.copy destination.toNat source.toNat len.toNat)⟩
+   | memoryInit32DroppedTrap
+       (hsegment : store.wasm.dataSegments[segmentIndex]? = some none)
+-      (h : 0 < len.toNat ∨ destination.toNat + len.toNat >
+-        store.wasm.mem.pages * 65536) :
++      (h : source.toNat + len.toNat > 0 ∨
++        destination.toNat + len.toNat > store.wasm.mem.pages * 65536) :
+       Step ⟨.running ⟨⟨params, localValues,
+           .i32 len :: .i32 source :: .i32 destination :: values⟩,
+           .memoryInit segmentIndex :: code,
+@@ -5724,8 +5724,8 @@
+         ⟨.trapped .outOfBoundsMemory, store⟩
+   | memoryInit32Dropped
+       (hsegment : store.wasm.dataSegments[segmentIndex]? = some none)
+-      (h : ¬(0 < len.toNat ∨ destination.toNat + len.toNat >
+-        store.wasm.mem.pages * 65536)) :
++      (h : ¬(source.toNat + len.toNat > 0 ∨
++        destination.toNat + len.toNat > store.wasm.mem.pages * 65536)) :
+       Step ⟨.running ⟨⟨params, localValues,
+           .i32 len :: .i32 source :: .i32 destination :: values⟩,
+           .memoryInit segmentIndex :: code,
+@@ -5763,8 +5763,8 @@
+               segmentBytes source.toNat len.toNat)⟩
+   | memoryInit64DroppedTrap
+       (hsegment : store.wasm.dataSegments[segmentIndex]? = some none)
+-      (h : 0 < len.toNat ∨ destination.toNat + len.toNat >
+-        store.wasm.mem.pages * 65536) :
++      (h : source.toNat + len.toNat > 0 ∨
++        destination.toNat + len.toNat > store.wasm.mem.pages * 65536) :
+       Step ⟨.running ⟨⟨params, localValues,
+           .i32 len :: .i32 source :: .i64 destination :: values⟩,
+           .memoryInit segmentIndex :: code,
+@@ -5773,8 +5773,8 @@
+         ⟨.trapped .outOfBoundsMemory, store⟩
+   | memoryInit64Dropped
+       (hsegment : store.wasm.dataSegments[segmentIndex]? = some none)
+-      (h : ¬(0 < len.toNat ∨ destination.toNat + len.toNat >
+-        store.wasm.mem.pages * 65536)) :
++      (h : ¬(source.toNat + len.toNat > 0 ∨
++        destination.toNat + len.toNat > store.wasm.mem.pages * 65536)) :
+       Step ⟨.running ⟨⟨params, localValues,
+           .i32 len :: .i32 source :: .i64 destination :: values⟩,
+           .memoryInit segmentIndex :: code,
+@@ -7808,7 +7808,7 @@
+       simp [hr] at h
+ 
+ /-- Boolean-checking variant of `runSteps_result_terminates`. This is useful
+-for `native_decide` regression witnesses: the outer proposition is always a
++for closed-evaluation regression witnesses: the outer proposition is always a
+ decidable equality even when Lean cannot synthesize `Decidable (post v σ)`
+ under an opaque runner-result match. -/
+ theorem runSteps_checked_terminates {fuel : Nat} {config : Config α}
+--- a/interpreter/Interpreter/Wasm/Wp/Atomic.lean
++++ b/interpreter/Interpreter/Wasm/Wp/Atomic.lean
+@@ -1068,7 +1068,8 @@
+        (match st.dataSegments[i]? with
+         | none => Q (.Invalid s!"memoryInit: segment index {i} out of range")
+         | some none =>
+-          if 0 < len.toNat ∨ dst.toNat + len.toNat > st.mem.pages * 65536 then
++          if src.toNat + len.toNat > 0
++             ∨ dst.toNat + len.toNat > st.mem.pages * 65536 then
+             Q (.Trap st "out of bounds memory access")
+           else
+             wp m rest Q st { s with values := vs } env
+@@ -1084,7 +1085,8 @@
+        (match st.dataSegments[i]? with
+         | none => Q (.Invalid s!"memoryInit: segment index {i} out of range")
+         | some none =>
+-          if 0 < len.toNat ∨ dst.toNat + len.toNat > st.mem.pages * 65536 then
++          if src.toNat + len.toNat > 0
++             ∨ dst.toNat + len.toNat > st.mem.pages * 65536 then
+             Q (.Trap st "out of bounds memory access")
+           else
+             wp m rest Q st { s with values := vs } env

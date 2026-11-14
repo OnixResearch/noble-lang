@@ -1,0 +1,14 @@
+{
+  "schema": "wasm-pilot-controls/v1",
+  "source_commit": "589f8dcd6cbe6f9303d9d1751d317a09b0f6a7e1",
+  "source_worktree_clean": true,
+  "stale_digest_refusal": {
+    "artifact": "verification/owi/receipts/2026-10-26/subject-module-1.wasm",
+    "retained_sha256": "261f11d32f24b7bba064782ff3654b28d90efd67fe1a9d8de502f057b63a6eac",
+    "tampered_sha256": "f026799e87b6255a4127c30c297ef3f6c4cc467b52e63294fa6b73ee5dcd2553",
+    "tampered_artifact_path": "/home/brittonr/.cache/noble-iss/scratch/talos-82/controls-final-v4/tampered-subject.wasm",
+    "decoder_exit": 1,
+    "decoder_stderr": "[wasm-pilot-decode] FAIL subject sha256 f026799e87b6255a4127c30c297ef3f6c4cc467b52e63294fa6b73ee5dcd2553 does not match retained sha256 261f11d32f24b7bba064782ff3654b28d90efd67fe1a9d8de502f057b63a6eac",
+    "outcome": "refused-before-wasm-decoding"
+  }
+}

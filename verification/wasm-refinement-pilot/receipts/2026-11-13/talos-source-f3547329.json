@@ -1,0 +1,91 @@
+{
+  "schema": "wasm-pilot-talos-preparation/v1",
+  "issue": 82,
+  "source_commit": "f354732928a4b9ab3d496d5317b7971d000c4dbd",
+  "source_worktree_clean": true,
+  "upstream_repository": "https://github.com/cajal-technologies/talos.git",
+  "upstream_commit": "d7c84ac660757953b752bdfc9cb8dae3dab623ed",
+  "upstream_tree": "70f1830876d298dab2e2cb4d0d5a5d7962508133",
+  "project": "/home/brittonr/.cache/noble-iss/scratch/talos-82/workdir-f354732/interpreter",
+  "runner_wrapper": "/home/brittonr/.cache/noble-iss/scratch/talos-82/workdir-f354732/pilot-runner",
+  "runner_wrapper_sha256": "4319fcf26013a5679d7982e1b68004d293f95f790d23d2e54d1af845668de011",
+  "lean_toolchain": "leanprover/lean4:v4.35.0",
+  "patches": [
+    {
+      "path": "verification/wasm-refinement-pilot/lean/patches/talos-d7c84ac-decoder.patch",
+      "sha256": "3f0a8b08d0093b39785caeccd023c65ecb941a28414b32906f566daf294139e5"
+    },
+    {
+      "path": "verification/wasm-refinement-pilot/lean/patches/talos-d7c84ac-memory-init.patch",
+      "sha256": "e75d63056e632caf7ddf306a3cf47fd94661b1c2dd8dec1002bbbb0023a5d1d7"
+    },
+    {
+      "path": "verification/wasm-refinement-pilot/lean/patches/talos-d7c84ac-lakefile.patch",
+      "sha256": "56f1794d1cd2a91ec47d1fa2c430e86a07e440ab03382e9158236d3621468f98"
+    }
+  ],
+  "overlays": [
+    {
+      "path": "verification/wasm-refinement-pilot/lean/overlay/Interpreter/WasmPilot/Check.lean",
+      "sha256": "1586675e1b2bfbb73a21787134e532451d24be8df4a00591839e8ae5125e3bf9"
+    },
+    {
+      "path": "verification/wasm-refinement-pilot/lean/overlay/Interpreter/WasmPilot/Runner.lean",
+      "sha256": "ca888e30296acf6666d070209e9bb9e688eba3bbda29c4687061f46bcd1958e5"
+    },
+    {
+      "path": "proofs/mc1/NobleContracts/Model.lean",
+      "sha256": "368cad7d6d86db4b182bd6b9e2bd0d3a354559c04579e3e27b789bb69313a7c3"
+    }
+  ],
+  "spec_fixture_manifest_sha256": "7c9bdcbb9c6ea510df5d4431bd7190a0934f176c48a9016e93970e7f05ad3d8e",
+  "packages": [
+    {
+      "name": "mathlib",
+      "rev": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+      "reflink_copied": true
+    },
+    {
+      "name": "plausible",
+      "rev": "dfa4f38190d07c37e315953e08b90fe2d95b3c24",
+      "reflink_copied": true
+    },
+    {
+      "name": "LeanSearchClient",
+      "rev": "d6b4c7be5be75ec4917c873ac50c756dc1436372",
+      "reflink_copied": true
+    },
+    {
+      "name": "importGraph",
+      "rev": "a41f0e9a4dea23188ea9cc1c41ac9f8bbafe0b93",
+      "reflink_copied": true
+    },
+    {
+      "name": "proofwidgets",
+      "rev": "df72b022e558978a1c50264cfc4d7fec86fa8e04",
+      "reflink_copied": true
+    },
+    {
+      "name": "aesop",
+      "rev": "4a174c490d8707121c4a9290800489f105d85e07",
+      "reflink_copied": true
+    },
+    {
+      "name": "Qq",
+      "rev": "dce0ad79c486cb1fb504af04f953c3466b0c6db8",
+      "reflink_copied": true
+    },
+    {
+      "name": "batteries",
+      "rev": "66e469188fe07963e5cf666c7d4433f45b8131c5",
+      "reflink_copied": true
+    },
+    {
+      "name": "Cli",
+      "rev": "c24fe6078c630e89b489bffe59b3e20ac30d12c8",
+      "reflink_copied": true
+    }
+  ],
+  "package_source": "proofs/foundation/.lake/packages",
+  "package_copy_method": "cp -a --reflink=always; no package fetch or Mathlib rebuild"
+}

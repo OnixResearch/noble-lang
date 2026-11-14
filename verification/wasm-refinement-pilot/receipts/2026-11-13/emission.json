@@ -1,0 +1,28 @@
+{
+  "schema": "wasm-pilot-emission/v1",
+  "mode": "--verify-subject",
+  "source_commit": "589f8dcd6cbe6f9303d9d1751d317a09b0f6a7e1",
+  "source_worktree_clean": true,
+  "source_path": "verification/wasm-refinement-pilot/mul.noble",
+  "source_sha256": "684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1",
+  "compiler_path": "/home/brittonr/.cache/noble-iss/wt/int/target/debug/noble",
+  "compiler_sha256": "80f91e50d52656f17c2fd97ee05974e58f90a84e8fec63600d10409bba8bd0c7",
+  "compiler_args": [
+    "compile",
+    "/home/brittonr/.cache/noble-iss/wt/talos-82/verification/wasm-refinement-pilot/mul.noble",
+    "--input-type",
+    "I64",
+    "--input-type",
+    "I64"
+  ],
+  "node_path": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
+  "node_version": "v24.13.0",
+  "v8_version": "13.6.233.17-node.37",
+  "wasm_tools_path": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+  "wasm_tools_version": "wasm-tools 1.245.1",
+  "artifact_bytes": 10107,
+  "artifact_sha256": "ff96e4abb1da66b0716b04903c22ae9b58de3a3c5fcd77789b5d3d3ddff80dbb",
+  "wat_bytes": 54913,
+  "wat_sha256": "fc4afc5f9da27feacf44269e808db84351b542f767778c637f6e4ac1fe76d106",
+  "subject_file_sha256": "7605afabfe1c1901f3cd16d7e89275a78e9ffb132bacbfc69acc71015680fc77"
+}

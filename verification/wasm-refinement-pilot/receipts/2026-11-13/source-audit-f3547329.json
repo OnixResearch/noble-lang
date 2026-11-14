@@ -1,0 +1,19 @@
+{
+  "schema": "wasm-pilot-source-audit/v1",
+  "issue": 82,
+  "source_commit": "f354732928a4b9ab3d496d5317b7971d000c4dbd",
+  "source_worktree_clean": true,
+  "talos_source_commit": "d7c84ac660757953b752bdfc9cb8dae3dab623ed",
+  "talos_source_tree": "70f1830876d298dab2e2cb4d0d5a5d7962508133",
+  "scope": "all Lean files under the prepared Interpreter/Wasm source tree",
+  "lean_files_scanned": 81,
+  "forbidden_code_tokens": [
+    "native_decide",
+    "sorry",
+    "admit",
+    "axiom"
+  ],
+  "comments_and_strings_ignored": true,
+  "matches": [],
+  "result": "no forbidden code tokens found"
+}

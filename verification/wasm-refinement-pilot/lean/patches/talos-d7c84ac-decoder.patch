@@ -1,0 +1,233 @@
+--- a/interpreter/Interpreter/Wasm/Decoder/Wat.lean
++++ b/interpreter/Interpreter/Wasm/Decoder/Wat.lean
+@@ -648,6 +648,9 @@
+   /-- `$name → element segment index` for `(elem $name ...)` declarations,
+   so `table.init` / `elem.drop` can resolve symbolic segment refs. -/
+   elemNames        : NameMap := {}
++  /-- `$name → data segment index` for `(data $name ...)` declarations,
++  so `memory.init` / `data.drop` can resolve symbolic segment refs. -/
++  dataNames        : NameMap := {}
+   /-- `$name → memory index` for `(memory $name ...)` declarations
+   (multi-memory). -/
+   memNames         : NameMap := {}
+@@ -1324,14 +1327,14 @@
+   | .atom a :: .atom b :: rest' =>
+     if looksLikeLabel a && looksLikeLabel b then do
+       let k ← resolveNamed ctx.memNames "memory" a
+-      let d ← parseNat b
++      let d ← resolveNamed ctx.dataNames "data" b
+       .ok ([wrapMem k (.memoryInit d)], rest')
+     else if looksLikeLabel a then do
+-      .ok ([.memoryInit (← parseNat a)], .atom b :: rest')
++      .ok ([.memoryInit (← resolveNamed ctx.dataNames "data" a)], .atom b :: rest')
+     else .error "memory.init expects a data-segment immediate"
+   | .atom a :: rest' =>
+     if looksLikeLabel a then do
+-      .ok ([.memoryInit (← parseNat a)], rest')
++      .ok ([.memoryInit (← resolveNamed ctx.dataNames "data" a)], rest')
+     else .error "memory.init expects a data-segment immediate"
+   | _ => .error "memory.init expects a data-segment immediate"
+ 
+@@ -1474,7 +1477,7 @@
+     | "memory.fill" => parseOptMemIdx ctx .memoryFill rest
+     | "memory.copy" => parseMemCopy ctx rest
+     | "memory.init" => parseMemInit ctx rest
+-    | "data.drop"   => parseImmediateNat parseNat .dataDrop   op rest
++    | "data.drop"   => parseImmediateNat (resolveNamed ctx.dataNames "data") .dataDrop op rest
+     | "ref.func"    => parseImmediateNat (resolveNamed ctx.funcIds "function") .refFunc op rest
+     -- `ref.null ht` carries a heap-type immediate. `func`-like heap types
+     -- become the null funcref, `extern`-like ones the null externref; heap
+@@ -2211,6 +2214,7 @@
+     (globalIds : NameMap)
+     (tableNames : NameMap)
+     (elemNames : NameMap)
++    (dataNames : NameMap)
+     (memNames : NameMap)
+     (tagNames : NameMap)
+     (types : Array TypeEntry) (rejectUnsupported : Bool) (xs : List Sexpr)
+@@ -2221,6 +2225,7 @@
+   let mut symId : Option String := none
+   let mut inlineExports : List String := []
+   let mut localIds : NameMap := {}
++  let mut explicitParamIndex : Nat := 0
+   let mut typeApplied : Bool := false
+   -- Declared `(type N)` index, recorded on the function so the runtime
+   -- nominal type checks (`(return_)call_indirect`, `ref.test`/`ref.cast`
+@@ -2240,29 +2245,37 @@
+     | .list (.atom h :: tail) :: r =>
+       match h with
+       | "param" =>
+-        if !typeApplied then
+-          let named := tail.any fun
+-            | .atom a => startsWith a "$"
+-            | _ => false
+-          if named then
+-            for t in tail do
+-              match t with
+-              | .atom a =>
+-                if startsWith a "$" then
+-                  localIds := localIds.insert (a.drop 1).toString paramTypes.length
+-                else match atomToValueType? a with
+-                  | some vt => paramTypes := paramTypes ++ [vt]
+-                  | none    => throw s!"unsupported param type: {a}"
+-              -- Reference-type forms like `(ref null T)` → i32 placeholder.
+-              | .list l => paramTypes := paramTypes ++ [listToValueType l]
+-          else
+-            for t in tail do
+-              match t with
+-              | .atom a =>
++        let named := tail.any fun
++          | .atom a => startsWith a "$"
++          | _ => false
++        if named then
++          for t in tail do
++            match t with
++            | .atom a =>
++              if startsWith a "$" then
++                localIds := localIds.insert (a.drop 1).toString explicitParamIndex
++              else
+                 match atomToValueType? a with
+-                | some vt => paramTypes := paramTypes ++ [vt]
+-                | none    => throw s!"unsupported param type: {a}"
+-              | .list l => paramTypes := paramTypes ++ [listToValueType l]
++                | some vt =>
++                  if !typeApplied then paramTypes := paramTypes ++ [vt]
++                  explicitParamIndex := explicitParamIndex + 1
++                | none => throw s!"unsupported param type: {a}"
++            -- Reference-type forms like `(ref null T)` → i32 placeholder.
++            | .list l =>
++              if !typeApplied then paramTypes := paramTypes ++ [listToValueType l]
++              explicitParamIndex := explicitParamIndex + 1
++        else
++          for t in tail do
++            match t with
++            | .atom a =>
++              match atomToValueType? a with
++              | some vt =>
++                if !typeApplied then paramTypes := paramTypes ++ [vt]
++                explicitParamIndex := explicitParamIndex + 1
++              | none => throw s!"unsupported param type: {a}"
++            | .list l =>
++              if !typeApplied then paramTypes := paramTypes ++ [listToValueType l]
++              explicitParamIndex := explicitParamIndex + 1
+         rest := r
+       | "local" =>
+         let named := tail.any fun
+@@ -2330,7 +2343,7 @@
+     match resolveTypeRef types ref with
+     | .ok sig  => some sig
+     | .error _ => none
+-  let ctx : Ctx := { funcIds, localIds, globalIds, types, tableNames, elemNames,
++  let ctx : Ctx := { funcIds, localIds, globalIds, types, tableNames, elemNames, dataNames,
+                      memNames, tagNames, resolveBlockType, rejectUnsupported }
+   let instrs ← parseInstrSeq ctx rest
+   return { symId, inlineExports,
+@@ -2732,6 +2745,22 @@
+     | _ => pure ()
+   return idOf
+ 
++/-- Collect names declared by `(data $name ...)` forms in source order. -/
++private def collectDataNames (fields : List Sexpr) : NameMap := Id.run do
++  let mut idOf : NameMap := {}
++  let mut i := 0
++  for f in fields do
++    match f with
++    | .list (.atom "data" :: body) =>
++      match body with
++      | .atom a :: _ =>
++        if startsWith a "$" then
++          idOf := idOf.insert (a.drop 1).toString i
++      | _ => pure ()
++      i := i + 1
++    | _ => pure ()
++  return idOf
++
+ /-- Parse the body of one `(table ...)` form. We accept the canonical
+ post-`wasm-tools print` shapes:
+ 
+@@ -3196,6 +3225,7 @@
+   let globalIds ← collectGlobalNames rest
+   let tableNames := collectTableNames rest
+   let elemNames := collectElemNames rest
++  let dataNames := collectDataNames rest
+   let memNames := collectMemNames rest
+   let tagNames := collectTagNames rest
+   -- Tag index space: imported tags first, then declarations.
+@@ -3235,7 +3265,7 @@
+     match f with
+     | .list (.atom "func" :: body) =>
+       decls := decls.push
+-        (← parseFunc funcIds globalIds tableNames elemNames memNames tagNames types
++        (← parseFunc funcIds globalIds tableNames elemNames dataNames memNames tagNames types
+           rejectUnsupported body)
+     | .list (.atom "export" :: tail) =>
+       match tail with
+@@ -3262,7 +3292,7 @@
+         globalExports := globalExports.push (n, globImps.length + globalDecls.size)
+       let gResolveBlockType : BlockTypeResolver := fun ref =>
+         (match resolveTypeRef types ref with | .ok sig => some sig | .error _ => none)
+-      let gctx : Ctx := { Ctx.empty with funcIds := funcIds, globalIds := globalIds, types := types, tableNames := tableNames, elemNames := elemNames, memNames := memNames, tagNames := tagNames, resolveBlockType := gResolveBlockType, rejectUnsupported }
++      let gctx : Ctx := { Ctx.empty with funcIds := funcIds, globalIds := globalIds, types := types, tableNames := tableNames, elemNames := elemNames, dataNames := dataNames, memNames := memNames, tagNames := tagNames, resolveBlockType := gResolveBlockType, rejectUnsupported }
+       globalDecls := globalDecls.push (← parseGlobalDecl gctx body)
+     | .list (.atom "memory" :: body) =>
+       -- Multi-memory: declared memories follow the imported ones in the
+@@ -3275,7 +3305,7 @@
+       | none   => memDecl := some (← parseMemDecl body)
+       | some _ => extraMemDecls := extraMemDecls.push (← parseMemDecl body)
+     | .list (.atom "data" :: body) =>
+-      let dctx : Ctx := { Ctx.empty with funcIds := funcIds, globalIds := globalIds, types := types, tableNames := tableNames, elemNames := elemNames, memNames := memNames, tagNames := tagNames, rejectUnsupported }
++      let dctx : Ctx := { Ctx.empty with funcIds := funcIds, globalIds := globalIds, types := types, tableNames := tableNames, elemNames := elemNames, dataNames := dataNames, memNames := memNames, tagNames := tagNames, rejectUnsupported }
+       dataSegs := dataSegs.push (← parseDataSegment dctx body)
+     | .list (.atom "table" :: body) =>
+       for n in inlineExportsOf body do
+@@ -3293,7 +3323,7 @@
+     | .list (.atom "elem" :: body) =>
+       let eResolveBlockType : BlockTypeResolver := fun ref =>
+         (match resolveTypeRef types ref with | .ok sig => some sig | .error _ => none)
+-      let ectx : Ctx := { Ctx.empty with funcIds := funcIds, globalIds := globalIds, types := types, tableNames := tableNames, elemNames := elemNames, memNames := memNames, tagNames := tagNames, resolveBlockType := eResolveBlockType, rejectUnsupported }
++      let ectx : Ctx := { Ctx.empty with funcIds := funcIds, globalIds := globalIds, types := types, tableNames := tableNames, elemNames := elemNames, dataNames := dataNames, memNames := memNames, tagNames := tagNames, resolveBlockType := eResolveBlockType, rejectUnsupported }
+       elemSegs := elemSegs.push (← parseElemSegment ectx body)
+     | .list [.atom "start", .atom ref] =>
+       if startFunc.isSome then throw "duplicate (start ...) declaration"
+--- a/interpreter/Interpreter/Wasm/Examples/Lexer.lean
++++ b/interpreter/Interpreter/Wasm/Examples/Lexer.lean
+@@ -25,4 +25,39 @@
+     parseAll "(module" = .error "unbalanced parens: missing ')'" ∧
+     parseAll "module)" = .error "unexpected ')'" := ⟨rfl, rfl⟩
+ 
++private def typedLocalParamWat : String :=
++  "(module (type $entry (func (param i32) (result i32))) (func (type $entry) (param $environment i32) (result i32) local.get $environment))"
++
++private def typedLocalParamDecoded : Bool :=
++  match decodeForVerification typedLocalParamWat with
++  | .ok module =>
++    match module.funcs with
++    | [func] =>
++      match func.params, func.results, func.body with
++      | [.i32], [.i32], [.localGet 0] => true
++      | _, _, _ => false
++    | _ => false
++  | .error _ => false
++
++#eval if typedLocalParamDecoded then pure () else
++  throw <| IO.userError "typed function local name did not decode to local 0"
++
++private def namedDataSegmentsWat : String :=
++  "(module (memory 1) (data $bytes \"x\") (func (export \"copy\") " ++
++  "i32.const 0 i32.const 0 i32.const 1 memory.init $bytes data.drop $bytes))"
++
++private def namedDataSegmentsDecoded : Bool :=
++  match decodeForVerification namedDataSegmentsWat with
++  | .ok module =>
++    match module.funcs with
++    | [func] =>
++      match func.body with
++      | [.const 0, .const 0, .const 1, .memoryInit 0, .dataDrop 0] => true
++      | _ => false
++    | _ => false
++  | .error _ => false
++
++#eval if namedDataSegmentsDecoded then pure () else
++  throw <| IO.userError "named data segment did not decode to memory.init/data.drop index 0"
++
+ end Wasm.Decoder.Wat

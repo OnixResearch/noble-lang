@@ -1,0 +1,18 @@
+{
+  "schema": "wasm-pilot-focused-build/v1",
+  "issue": 82,
+  "source_commit": "589f8dcd6cbe6f9303d9d1751d317a09b0f6a7e1",
+  "source_worktree_clean": true,
+  "command": [
+    "/home/brittonr/.cache/noble-iss/lean.sh",
+    "/home/brittonr/.cache/noble-iss/wt/talos-82/verification/wasm-refinement-pilot/lean/interpreter",
+    "build",
+    "Interpreter.WasmPilot.Check",
+    "Interpreter.WasmPilot.Runner"
+  ],
+  "lean_version": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+  "exit_code": 0,
+  "result_line": "Build completed successfully (17 jobs).",
+  "observed_build_line": "Replayed Interpreter.WasmPilot.Check",
+  "interpretation": "The requested focused Lean library targets completed; this is not the full Lake executable link, which remains blocked by the prebuilt native Mathlib symbol failure described in README.md."
+}

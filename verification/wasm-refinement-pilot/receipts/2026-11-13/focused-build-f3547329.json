@@ -1,0 +1,31 @@
+{
+  "schema": "wasm-pilot-focused-build/v1",
+  "issue": 82,
+  "source_commit": "f354732928a4b9ab3d496d5317b7971d000c4dbd",
+  "source_worktree_clean": true,
+  "command": [
+    "/home/brittonr/.cache/noble-iss/lean.sh",
+    "/home/brittonr/.cache/noble-iss/scratch/talos-82/workdir-f354732/interpreter",
+    "build",
+    "Interpreter.WasmPilot.Check",
+    "Interpreter.WasmPilot.Runner"
+  ],
+  "lean_version": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+  "exit_code": 0,
+  "result_line": "Build completed successfully (17 jobs).",
+  "stdout_excerpt": "Replayed Interpreter.WasmPilot.Check; the axiom output is recorded in lean-check-f3547329.json.",
+  "build_output_source": {
+    "source_commit": "7b671ed99575f7a4347c6bc59ac6da3b782f35ee",
+    "source_worktree_clean": true,
+    "upstream_commit": "d7c84ac660757953b752bdfc9cb8dae3dab623ed",
+    "upstream_tree": "70f1830876d298dab2e2cb4d0d5a5d7962508133",
+    "patch_and_overlay_hashes_match": true,
+    "compared_lean_inputs": [
+      "Interpreter/WasmPilot/Subject.lean",
+      "Interpreter/WasmPilot/SubjectMul.lean",
+      "Interpreter/WasmPilot/Check.lean",
+      "Interpreter/WasmPilot/Runner.lean"
+    ]
+  },
+  "interpretation": "The prepared f3547329 Check/Runner target completed its 17-job Lake build without rebuilding Mathlib. It replayed local build outputs from the clean 7b671ed9 project; the pinned Talos tree, patch and overlay hashes matched, and all four listed Lean input hashes were identical across the two prepared workdirs. This does not establish a complete Lake executable link, which remains blocked by the unavailable prebuilt Mathlib native symbol described in README.md."
+}
