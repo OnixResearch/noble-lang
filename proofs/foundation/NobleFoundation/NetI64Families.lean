@@ -296,4 +296,60 @@ theorem fanoutProgram_two_trace (input : BitVec 64) :
       Steps.head hstepSound.1 (Steps.refl Y.toNet)
   · rfl
 
+/-- One binary layer reduces its two input values through `op2` and `op1`. -/
+theorem balancedProgram_one_trace (left right : BitVec 64) :
+    ∃ normal : XNet NetSym,
+      (balancedProgram 1).translateChecked [left, right] =
+        some ((balancedProgram 1).translate [left, right]) ∧
+      (balancedProgram 1).normalize [left, right] = some (normal, 2) ∧
+      Steps (CStep system) 2 ((balancedProgram 1).translate [left, right]).toNet
+        normal.toNet ∧
+      Normal (CStep system) normal.toNet ∧
+      (balancedProgram 1).readBack normal =
+        (balancedProgram 1).referenceOutputs [left, right] := by
+  let X : XNet NetSym := XNet.ofWires
+    [(valueId 0, .num left), (valueId 1, .num right), (opId 2, .op2 .add)]
+    [outputPort 0]
+    [((valueId 0, 0), (opId 2, 0)), ((valueId 1, 0), (opId 2, 1)),
+     ((opId 2, 2), outputPort 0)]
+  let Y := (X.step xsys).getD X
+  let Z := (Y.step xsys).getD Y
+  have htranslate : (balancedProgram 1).translate [left, right] = X := by rfl
+  have hcheck : X.check arity = true := by
+    simp [XNet.check, X, XNet.ofWires, XNet.ends, XNet.ids,
+      assoc, endsWith, arity, valueId, opId, outputPort, List.all]
+    intro x hx
+    have hcases : x = 0 ∨ x = 1 ∨ x = 2 := by omega
+    rcases hcases with rfl | rfl | rfl <;> decide
+  have hinput : (balancedProgram 1).InputsOk [left, right] := rfl
+  have hwf : (balancedProgram 1).WellFormed :=
+    (Program.wellFormedCheck_iff _).1 (by decide)
+  have htyped : (balancedProgram 1).WellTyped :=
+    (Program.wellTypedCheck_iff _).1 (by decide)
+  have hadmission := (Program.acceptanceCheck_iff (balancedProgram 1) [left, right]).2
+    ⟨hinput, hwf, htyped⟩
+  have hchecked : (balancedProgram 1).translateChecked [left, right] =
+      some ((balancedProgram 1).translate [left, right]) := by
+    simp [Program.translateChecked, hadmission, htranslate, hcheck]
+  have hstep : X.step xsys = some Y := by rfl
+  have hnext : Y.step xsys = some Z := by rfl
+  have hZstep : Z.step xsys = none := by rfl
+  have hcheck' : X.check xsys.sys.ar = true := by
+    change X.check arity = true
+    exact hcheck
+  have hXok : X.Ok xsys.sys.ar :=
+    XNet.Checked.ok (XNet.check_iff.mp hcheck')
+  have hstepSound := XNet.step_sound hXok hstep
+  have hnextSound := XNet.step_sound hstepSound.2 hnext
+  have hnormal : Normal (CStep system) Z.toNet := by
+    simpa [xsys] using XNet.step_complete hnextSound.2 hZstep
+  have hnormalize : (balancedProgram 1).normalize [left, right] = some (Z, 2) := by
+    unfold Program.normalize
+    rw [hchecked, balancedProgram_interactionCount, htranslate]
+    simp [XNet.normalize, XNet.run, hstep, hnext, hZstep, hcheck']
+  refine ⟨Z, hchecked, hnormalize, ?_, hnormal, ?_⟩
+  · simpa [xsys, htranslate] using
+      Steps.head hstepSound.1 (Steps.head hnextSound.1 (Steps.refl Z.toNet))
+  · rfl
+
 end NobleFoundation.NetI64Families

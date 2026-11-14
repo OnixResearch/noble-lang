@@ -12070,6 +12070,12 @@
       "claim": "the depth-zero balanced tree has an empty normal abstract trace and reads back its sole input"
     },
     {
+      "name": "NobleFoundation.NetI64Families.balancedProgram_one_trace",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "for every pair of 64-bit leaves, the depth-one balanced tree fires op2 then op1, normalizes in two abstract interactions, and reads back the packed reference"
+    },
+    {
       "name": "NobleFoundation.NetI64Families.chainProgram_zero_trace",
       "phase": 1,
       "role": "family-fixture",

@@ -4026,8 +4026,9 @@ The missing arbitrary-size reduction/read-back lemmas are precisely:
   The missing proof must inductively fire both child subtrees and then the parent `op2`/`op1` pair;
   `balanced_depth_two_reference` is only the closed depth-two computation. The depth-zero case is
   proved by `NobleFoundation.NetI64Families.balancedProgram_zero_translation_checked` and
-  `NobleFoundation.NetI64Families.balancedProgram_zero_trace`; the arbitrary-depth statement above
-  remains open.
+  `NobleFoundation.NetI64Families.balancedProgram_zero_trace`; the first binary layer for every
+  pair of input values is proved by `NobleFoundation.NetI64Families.balancedProgram_one_trace`.
+  The arbitrary-depth statement above remains open.
 - **Fanout:** for every output count `n` and input `x`, establish a successful checked translation
   and a normal target reached by `Steps (CStep system) (if n = 0 then 1 else n - 1)`, with ordered
   read-back equal to `List.replicate n (.i64 x)`. The missing proof must induct over the left-leaning
