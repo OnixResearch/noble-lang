@@ -1,0 +1,51 @@
+{
+  "schema": "noble-complexity-pilot-toolchain/v1",
+  "source_commit": "4b750a52f584dff091154d1d3225e856749a90b6",
+  "clean_source_before_receipt": true,
+  "scope": "seven named theorem dependency chains; not the complete imported library, the complete validator, or the Rust implementation",
+  "toolchain": {
+    "lean_version": "4.36.0-rc2",
+    "lean_commit": "b35cb10cf2ced51a2fd1880cfdbf75c71ab7a35a",
+    "lake_version": "5.0.0-src+b35cb10",
+    "release_archive_sha256": "0a0a3208617e9eab92f1041efa83ad94d405e69d172fb654a62dbfa9fbc5313b",
+    "lean_binary_sha256": "db7f559d05795e7af52e42bc966c90240a39dcb9712161c54c97afa546e20c00"
+  },
+  "locked_project": {
+    "lean_toolchain_sha256": "11c697aebe5b539d74f5069e497a588e7dfab1c4eeb74313f28357e351c55ca3",
+    "lakefile_sha256": "a294f26602a5264883d0b39a760910b4e7f46ff526298ad9b18b6db2bc36dd5a",
+    "lake_manifest_sha256": "8c3bc1dfdbba153aacad527187c5d7e0ab15dc60cb18d53cc37c16abc755c1c8",
+    "complexitylib_commit": "56e731dc048c8afcc696a95e147573c29a619637",
+    "cslib_commit": "ee99dd30bd1a9f466c25a51b39a5cb0bfe4d2342",
+    "mathlib_commit": "69552756cd8a2d2d48763cf7279fd814d6a1224d",
+    "primary_dependency_checkouts_matched_lock": true
+  },
+  "source_sha256": {
+    "proofs/foundation/NobleFoundation/PackedSchedule.lean": "0e1db688aeec829d207fc640f06ece9cdf47dac4d2d98e1f0ea329c187de2757",
+    "proofs/foundation/NobleFoundation/PackedLayout.lean": "1edc32e5665d284187e89676e2b17b20364399046440984dc94428c4f1555f88",
+    "proofs/foundation/NobleFoundation/PackedLayoutEncoded.lean": "b80ec0289d1ff9ff229a678ce78dd424b59b663ebdeebe170282c318c68f0da1",
+    "proofs/complexity-pilot/NobleFoundation/PackedLayoutComplexity.lean": "ae0027558a4b21c7bb4830c0c98c315a42980331f12e2e3b2f0eea10a85d24b4",
+    "proofs/complexity-pilot/Audit.lean": "a351b56b87b404bc37eb867f57bdb1c1b072fb3026f94bcfb35fc6006cc8e72e"
+  },
+  "checks": {
+    "lake build NobleComplexityPilot": {"exit": 0, "summary": "Build completed successfully (3984 jobs)."},
+    "lake env lean Audit.lean": {"exit": 0, "theorems_checked": 7, "audit_file": "toolchain-audit.txt", "audit_sha256": "7ad3a0726be50a76e928bf2f177a825db58c022ccf260d8f02080a0d1f8eb697", "accepted_axioms": ["propext", "Classical.choice", "Quot.sound"], "unexpected_axioms": []}
+  },
+  "negative_probes": [
+    {
+      "statement": "ComputableInPolyTime (fun bits => (decodeInput bits).isSome) encBits encBool",
+      "proof_attempt": "by unfold decodeInput decodeInputPrefix; polytime",
+      "exit": 1,
+      "failure": "No theorems found for Option.bind in the nested decodeInputPrefix chain",
+      "interpretation": "missing compositional proof, not an impossibility theorem"
+    },
+    {
+      "statement": "ComputableInPolyTime decodeNatPrefix encBits (encOption (encPair encNat encBits))",
+      "imports": ["CslibFrontier.Tactic.PolyTime", "CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat.Binary", "CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Option", "NobleFoundation.PackedLayoutEncoded"],
+      "proof_attempt": "by unfold decodeNatPrefix; polytime",
+      "exit": 1,
+      "failure": "No theorems found for decodeNatPrefix.match_1, which branches on the result of decodeFixedBitsPrefix",
+      "interpretation": "binary-result decoder certificate remains open"
+    }
+  ],
+  "decision": "Only the unary-width prefix parser has a machine-grounded polynomial-time theorem. The complete encoded validator and Rust/Wasm costs are explicitly unclaimed; see decision.md."
+}
