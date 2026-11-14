@@ -33,13 +33,13 @@ mod attribution;
 /// existing test target (not a separate Cargo integration-test target).
 #[cfg(test)]
 #[path = "extract_b2/net.rs"]
-mod net_cases;
+mod graph_shapes;
 
 /// Rust-produced input nets and results, serialized into kernel-checked Lean
 /// theorems in the existing B2 integration-test target.
 #[cfg(test)]
 #[path = "extract_b2/net_i64_corpus.rs"]
-mod net_i64_corpus;
+mod proof;
 
 fn i64s(v: &[i64]) -> Vec<Value> {
     v.iter().map(|x| Value::I64(*x)).collect()
@@ -152,6 +152,11 @@ fn l2_node_bigint_oracle_agrees_with_l3_l4_l5() {
     let oracle = Oracle {
         node: format!("{node}/bin/node").into(),
     };
+    check_random_node_programs(&oracle);
+    check_static_examples(&oracle);
+}
+
+fn check_random_node_programs(oracle: &Oracle) {
     let seed = 0x1404_b202;
     let mut rng = SplitMix64::new(seed);
     for i in 0..8 {
@@ -186,7 +191,9 @@ fn l2_node_bigint_oracle_agrees_with_l3_l4_l5() {
             assert_eq!(&l5_cells, cells, "net on random {i} {v:?}");
         }
     }
+}
 
+fn check_static_examples(oracle: &Oracle) {
     type DifferentialFixture<'a> = (&'a [&'a str], &'a str, usize, &'a [&'a [i64]]);
     let fixtures: &[DifferentialFixture<'_>] = &[
         (&[], "=", 2, &[&[i64::MIN, i64::MAX], &[i64::MAX, i64::MAX]]),

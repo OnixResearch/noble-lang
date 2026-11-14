@@ -132,11 +132,13 @@ impl Lowered {
             .map_err(|refusal| format!("net lowering refused: {refusal:?}"))?;
         Ok(noble_ngraph::net::reduce(
             &BLAKE3,
-            &self.extraction.checked,
-            &net,
-            inputs,
-            &limits,
-            &noble_ngraph::net::Plan::default(),
+            noble_ngraph::net::ReduceRequest {
+                checked: &self.extraction.checked,
+                candidate: &net,
+                inputs,
+                limits: &limits,
+                plan: noble_ngraph::net::Plan::default(),
+            },
         ))
     }
 }

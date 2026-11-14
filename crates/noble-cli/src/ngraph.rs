@@ -562,11 +562,13 @@ fn eval_net(
         let net = noble_ngraph::net::lower(&IDS, graph, row, &limits).map_err(net_refusal)?;
         let result = noble_ngraph::net::reduce(
             &IDS,
-            graph,
-            &net,
-            row,
-            &limits,
-            &noble_ngraph::net::Plan::default(),
+            noble_ngraph::net::ReduceRequest {
+                checked: graph,
+                candidate: &net,
+                inputs: row,
+                limits: &limits,
+                plan: noble_ngraph::net::Plan::default(),
+            },
         );
         match &result.obs {
             noble_ngraph::net::Obs::Normal(values) => {

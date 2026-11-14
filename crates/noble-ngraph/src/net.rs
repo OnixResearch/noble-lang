@@ -93,12 +93,33 @@ impl Origin {
 }
 
 /// Agent port reference.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct PortIndex(u8);
+
+impl From<u8> for PortIndex {
+    fn from(value: u8) -> Self {
+        Self(value)
+    }
+}
+
+impl From<PortIndex> for usize {
+    fn from(value: PortIndex) -> Self {
+        usize::from(value.0)
+    }
+}
+
+impl From<PortIndex> for u8 {
+    fn from(value: PortIndex) -> Self {
+        value.0
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct PortRef {
-    /// Index in [`Net::agents`].
+    /// Index in [`InteractionGraph::agents`].
     pub agent: u32,
     /// Port 0 is principal; ports 1 and 2 are auxiliary.
-    pub port: u8,
+    pub port_index: PortIndex,
 }
 
 /// The other end of one wire; `Output` is an ordered free interface port.
@@ -123,7 +144,7 @@ pub struct Agent {
 
 /// One graph- and input-specific lowered net.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Net {
+pub struct InteractionGraph {
     /// Checked graph identity.
     pub graph_id: crate::ir::Digest,
     /// Contract identity carried by this candidate.
@@ -142,7 +163,7 @@ pub struct Net {
     pub output_types: alloc::vec::Vec<crate::ir::ScalarType>,
 }
 
-impl Net {
+impl InteractionGraph {
     /// Number of undirected agent/wire and agent/output connections.
     #[must_use]
     pub fn wire_count(&self) -> Option<u64> {
@@ -153,7 +174,7 @@ impl Net {
     #[must_use]
     pub fn retained_bytes(&self) -> u64 {
         let mut bytes = u64::try_from(core::mem::size_of::<Self>()).unwrap_or(u64::MAX);
-        for (capacity, element) in [
+        for (element_slots, element) in [
             (self.input_values.capacity(), core::mem::size_of::<i64>()),
             (self.agents.capacity(), core::mem::size_of::<Agent>()),
             (self.outputs.capacity(), core::mem::size_of::<PortRef>()),
@@ -163,8 +184,8 @@ impl Net {
             ),
         ] {
             let element_bytes = u64::try_from(element).unwrap_or(u64::MAX);
-            let capacity = u64::try_from(capacity).unwrap_or(u64::MAX);
-            bytes = bytes.saturating_add(capacity.saturating_mul(element_bytes));
+            let element_slots = u64::try_from(element_slots).unwrap_or(u64::MAX);
+            bytes = bytes.saturating_add(element_slots.saturating_mul(element_bytes));
         }
         bytes
     }
@@ -198,9 +219,9 @@ impl Net {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Limits {
     /// Maximum initial agents and fixed reducer arena slots.
-    pub agent_capacity: u64,
+    pub max_agent_slots: u64,
     /// Maximum initial wires, including free output connections.
-    pub wire_capacity: u64,
+    pub max_wires: u64,
     /// Maximum interaction steps.
     pub interaction_fuel: u64,
 }
@@ -208,8 +229,8 @@ pub struct Limits {
 impl Default for Limits {
     fn default() -> Self {
         Self {
-            agent_capacity: 1_048_576,
-            wire_capacity: 2_097_152,
+            max_agent_slots: 1_048_576,
+            max_wires: 2_097_152,
             interaction_fuel: 2_097_152,
         }
     }
@@ -382,6 +403,21 @@ pub struct Plan<'a> {
     pub cancel: Option<&'a dyn Fn(u64) -> bool>,
 }
 
+/// Borrowed checked inputs and controls for one reduction.
+#[derive(Clone, Copy)]
+pub struct ReduceRequest<'a> {
+    /// Independently checked source graph.
+    pub checked: &'a crate::check::CheckedGraph,
+    /// Lowered candidate to validate and reduce.
+    pub candidate: &'a InteractionGraph,
+    /// Input values in the checked graph's interface order.
+    pub inputs: &'a [crate::sem::Value],
+    /// Admission and execution resource limits.
+    pub limits: &'a Limits,
+    /// Schedule, optional tighter fuel and host cancellation hook.
+    pub plan: Plan<'a>,
+}
+
 /// Complete net observation. A successful output vector is never partial.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Obs {
@@ -436,7 +472,7 @@ pub fn lower(
     checked: &crate::check::CheckedGraph,
     inputs: &[crate::sem::Value],
     limits: &Limits,
-) -> Result<Net, Refusal> {
+) -> Result<InteractionGraph, Refusal> {
     build_expected(ids, checked, inputs, limits)
 }
 
@@ -446,7 +482,7 @@ pub fn lower(
 pub fn validate(
     ids: &dyn IdentityScheme,
     checked: &crate::check::CheckedGraph,
-    net: &Net,
+    net: &InteractionGraph,
     inputs: &[crate::sem::Value],
     limits: &Limits,
 ) -> Result<(), Refusal> {
@@ -477,14 +513,14 @@ pub fn validate(
 ///
 /// Every successful schedule fully normalizes and returns the same ordered
 /// outputs and interaction count. Fuel is checked before the next firing.
-pub fn reduce(
-    ids: &dyn IdentityScheme,
-    checked: &crate::check::CheckedGraph,
-    net: &Net,
-    inputs: &[crate::sem::Value],
-    limits: &Limits,
-    plan: &Plan<'_>,
-) -> Report {
+pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
+    let ReduceRequest {
+        checked,
+        candidate: net,
+        inputs,
+        limits,
+        plan,
+    } = request;
     let retained_bytes = net.retained_bytes();
     let validation = validate(ids, checked, net, inputs, limits);
     if let Err(refusal) = validation {
@@ -531,7 +567,9 @@ pub fn reduce(
         });
     }
     let mut outputs = net.outputs.clone();
-    let mut worklist = alloc::vec::Vec::with_capacity(net.agents.len());
+    let mut worklist = ActiveWorklist {
+        entries: alloc::vec::Vec::with_capacity(net.agents.len()),
+    };
     let mut random = match plan.schedule.unwrap_or(Schedule::Lifo) {
         Schedule::SplitMix64 { seed } => Some(crate::prng::SplitMix64::new(seed)),
         Schedule::Lifo | Schedule::Fifo => None,
@@ -737,7 +775,7 @@ fn admit(checked: &crate::check::CheckedGraph) -> Result<(), Refusal> {
     for &output in &graph.outputs {
         match checked.ty(output) {
             Some(crate::ir::ScalarType::I64 | crate::ir::ScalarType::Bool) => {}
-            _ => return Err(Refusal::Operation),
+            Some(crate::ir::ScalarType::F32) | None => return Err(Refusal::Operation),
         }
     }
     Ok(())
@@ -840,7 +878,7 @@ fn build_expected(
     checked: &crate::check::CheckedGraph,
     inputs: &[crate::sem::Value],
     limits: &Limits,
-) -> Result<Net, Refusal> {
+) -> Result<InteractionGraph, Refusal> {
     admit(checked)?;
     let values = input_values(checked, inputs)?;
     build_expected_from_i64(ids, checked, values, limits)
@@ -851,27 +889,27 @@ fn build_expected_from_i64(
     checked: &crate::check::CheckedGraph,
     input_values: alloc::vec::Vec<i64>,
     limits: &Limits,
-) -> Result<Net, Refusal> {
+) -> Result<InteractionGraph, Refusal> {
     let (counts, use_counts) = counts(checked)?;
-    if counts.agents > limits.agent_capacity {
+    if counts.agents > limits.max_agent_slots {
         return Err(Refusal::Exhausted {
             limit: Limit::Agents,
-            cap: limits.agent_capacity,
+            cap: limits.max_agent_slots,
             observed: counts.agents,
         });
     }
-    if counts.wires > limits.wire_capacity {
+    if counts.wires > limits.max_wires {
         return Err(Refusal::Exhausted {
             limit: Limit::Wires,
-            cap: limits.wire_capacity,
+            cap: limits.max_wires,
             observed: counts.wires,
         });
     }
-    let agent_capacity = usize::try_from(counts.agents)
+    let agent_slots = usize::try_from(counts.agents)
         .map_err(|_| Refusal::InternalInvalid(Invalid::CounterOverflow))?;
     let graph = checked.graph();
     let source_count = graph.nodes.len();
-    let mut agents = alloc::vec::Vec::with_capacity(agent_capacity);
+    let mut agents = alloc::vec::Vec::with_capacity(agent_slots);
     for (index, node) in graph.nodes.iter().enumerate() {
         let node_id = crate::ir::NodeId(
             u32::try_from(index).map_err(|_| Refusal::InternalInvalid(Invalid::CounterOverflow))?,
@@ -935,7 +973,7 @@ fn build_expected_from_i64(
             }
         }
     }
-    if agents.len() != agent_capacity {
+    if agents.len() != agent_slots {
         return Err(Refusal::InternalInvalid(Invalid::SourceOrigin));
     }
     let total_uses = use_counts.iter().try_fold(0usize, |sum, count| {
@@ -976,7 +1014,7 @@ fn build_expected_from_i64(
             a,
             Endpoint::Port(PortRef {
                 agent: node_index,
-                port: 0,
+                port_index: PortIndex::from(0),
             }),
         )?;
         insert_use(
@@ -985,7 +1023,7 @@ fn build_expected_from_i64(
             b,
             Endpoint::Port(PortRef {
                 agent: node_index,
-                port: 1,
+                port_index: PortIndex::from(1),
             }),
         )?;
     }
@@ -1007,18 +1045,18 @@ fn build_expected_from_i64(
                 Symbol::Num(_) => PortRef {
                     agent: u32::try_from(index)
                         .map_err(|_| Refusal::InternalInvalid(Invalid::CounterOverflow))?,
-                    port: 0,
+                    port_index: PortIndex::from(0),
                 },
                 Symbol::Op2(_) => PortRef {
                     agent: u32::try_from(index)
                         .map_err(|_| Refusal::InternalInvalid(Invalid::CounterOverflow))?,
-                    port: 2,
+                    port_index: PortIndex::from(2),
                 },
                 _ => return Err(Refusal::InternalInvalid(Invalid::SourceSymbol)),
             },
             None => return Err(Refusal::InternalInvalid(Invalid::UnknownPort)),
         };
-        let offset = *offsets
+        let use_index = *offsets
             .get(index)
             .ok_or(Refusal::InternalInvalid(Invalid::UnknownPort))?;
         match *use_count {
@@ -1031,13 +1069,13 @@ fn build_expected_from_i64(
                     source,
                     Endpoint::Port(PortRef {
                         agent: era,
-                        port: 0,
+                        port_index: PortIndex::from(0),
                     }),
                 )?;
             }
             1 => {
                 let target = *uses
-                    .get(offset)
+                    .get(use_index)
                     .ok_or(Refusal::InternalInvalid(Invalid::UnknownPort))?
                     .as_ref()
                     .ok_or(Refusal::InternalInvalid(Invalid::SourceWiring))?;
@@ -1052,7 +1090,7 @@ fn build_expected_from_i64(
                     source,
                     Endpoint::Port(PortRef {
                         agent: first,
-                        port: 0,
+                        port_index: PortIndex::from(0),
                     }),
                 )?;
                 let duplicate_count = n - 1;
@@ -1062,7 +1100,7 @@ fn build_expected_from_i64(
                     let duplicate = first
                         .checked_add(ordinal_u32)
                         .ok_or(Refusal::InternalInvalid(Invalid::CounterOverflow))?;
-                    let first_use_index = offset
+                    let first_use_index = use_index
                         .checked_add(
                             usize::try_from(ordinal)
                                 .map_err(|_| Refusal::InternalInvalid(Invalid::CounterOverflow))?,
@@ -1078,7 +1116,7 @@ fn build_expected_from_i64(
                         &mut output_links,
                         PortRef {
                             agent: duplicate,
-                            port: 1,
+                            port_index: PortIndex::from(1),
                         },
                         first_use,
                     )?;
@@ -1087,11 +1125,11 @@ fn build_expected_from_i64(
                             agent: duplicate
                                 .checked_add(1)
                                 .ok_or(Refusal::InternalInvalid(Invalid::CounterOverflow))?,
-                            port: 0,
+                            port_index: PortIndex::from(0),
                         })
                     } else {
                         let last_index =
-                            offset
+                            use_index
                                 .checked_add(usize::try_from(n - 1).map_err(|_| {
                                     Refusal::InternalInvalid(Invalid::CounterOverflow)
                                 })?)
@@ -1107,7 +1145,7 @@ fn build_expected_from_i64(
                         &mut output_links,
                         PortRef {
                             agent: duplicate,
-                            port: 2,
+                            port_index: PortIndex::from(2),
                         },
                         second_copy,
                     )?;
@@ -1127,7 +1165,7 @@ fn build_expected_from_i64(
                 .ok_or(Refusal::InternalInvalid(Invalid::SourceSymbol))?,
         );
     }
-    let net = Net {
+    let net = InteractionGraph {
         graph_id: checked.id(),
         contract_revision: CONTRACT_REVISION,
         lowering_revision: LOWERING_REVISION,
@@ -1176,7 +1214,7 @@ fn connect(
         .ok_or(Refusal::InternalInvalid(Invalid::UnknownPort))?;
     let source_endpoint = source_agent
         .ports
-        .get_mut(usize::from(source.port))
+        .get_mut(usize::from(source.port_index))
         .ok_or(Refusal::InternalInvalid(Invalid::UnknownPort))?;
     if source_endpoint.is_some() {
         return Err(Refusal::InternalInvalid(Invalid::SourceWiring));
@@ -1192,7 +1230,7 @@ fn connect(
                 .ok_or(Refusal::InternalInvalid(Invalid::UnknownPort))?;
             let target_endpoint = target_agent
                 .ports
-                .get_mut(usize::from(other.port))
+                .get_mut(usize::from(other.port_index))
                 .ok_or(Refusal::InternalInvalid(Invalid::UnknownPort))?;
             if target_endpoint.is_some() {
                 return Err(Refusal::InternalInvalid(Invalid::SourceWiring));
@@ -1228,13 +1266,13 @@ fn build_key(
     Ok(canonical.finish())
 }
 
-fn validate_structure(net: &Net, limits: &Limits) -> Result<(), Invalid> {
+fn validate_structure(net: &InteractionGraph, limits: &Limits) -> Result<(), Invalid> {
     let agents = u64::try_from(net.agents.len()).map_err(|_| Invalid::CounterOverflow)?;
-    if agents > limits.agent_capacity {
+    if agents > limits.max_agent_slots {
         return Err(Invalid::AgentCapacity);
     }
     let output_count = u64::try_from(net.outputs.len()).map_err(|_| Invalid::CounterOverflow)?;
-    if output_count > limits.wire_capacity {
+    if output_count > limits.max_wires {
         return Err(Invalid::WireCapacity);
     }
     let mut output_seen = alloc::vec![false; net.outputs.len()];
@@ -1242,11 +1280,10 @@ fn validate_structure(net: &Net, limits: &Limits) -> Result<(), Invalid> {
     for (index, agent) in net.agents.iter().enumerate() {
         let source = PortRef {
             agent: u32::try_from(index).map_err(|_| Invalid::CounterOverflow)?,
-            port: 0,
+            port_index: PortIndex::from(0),
         };
-        let port_count = agent.symbol.port_count();
         for (port_index, endpoint) in agent.ports.iter().enumerate() {
-            if port_index >= port_count {
+            if port_index >= agent.symbol.port_count() {
                 if endpoint.is_some() {
                     return Err(Invalid::PortArity);
                 }
@@ -1254,7 +1291,9 @@ fn validate_structure(net: &Net, limits: &Limits) -> Result<(), Invalid> {
             }
             let endpoint = endpoint.ok_or(Invalid::PortArity)?;
             let source_port = PortRef {
-                port: u8::try_from(port_index).map_err(|_| Invalid::CounterOverflow)?,
+                port_index: PortIndex::from(
+                    u8::try_from(port_index).map_err(|_| Invalid::CounterOverflow)?,
+                ),
                 ..source
             };
             match endpoint {
@@ -1266,17 +1305,19 @@ fn validate_structure(net: &Net, limits: &Limits) -> Result<(), Invalid> {
                         .agents
                         .get(target.agent as usize)
                         .ok_or(Invalid::UnknownPort)?;
-                    if usize::from(target.port) >= target_agent.symbol.port_count() {
+                    if usize::from(target.port_index) >= target_agent.symbol.port_count() {
                         return Err(Invalid::UnknownPort);
                     }
                     let reciprocal = target_agent
                         .ports
-                        .get(usize::from(target.port))
+                        .get(usize::from(target.port_index))
                         .ok_or(Invalid::UnknownPort)?;
                     if *reciprocal != Some(Endpoint::Port(source_port)) {
                         return Err(Invalid::NonReciprocal);
                     }
-                    if (source_port.agent, source_port.port) < (target.agent, target.port) {
+                    if (source_port.agent, source_port.port_index)
+                        < (target.agent, target.port_index)
+                    {
                         wires = wires.checked_add(1).ok_or(Invalid::CounterOverflow)?;
                     }
                 }
@@ -1304,8 +1345,8 @@ fn validate_structure(net: &Net, limits: &Limits) -> Result<(), Invalid> {
             .agents
             .get(output.agent as usize)
             .ok_or(Invalid::OutputBoundary)?;
-        if usize::from(output.port) >= agent.symbol.port_count()
-            || agent.ports[usize::from(output.port)]
+        if usize::from(output.port_index) >= agent.symbol.port_count()
+            || agent.ports[usize::from(output.port_index)]
                 != Some(Endpoint::Output(
                     u32::try_from(index).map_err(|_| Invalid::CounterOverflow)?,
                 ))
@@ -1313,13 +1354,16 @@ fn validate_structure(net: &Net, limits: &Limits) -> Result<(), Invalid> {
             return Err(Invalid::OutputBoundary);
         }
     }
-    if wires > limits.wire_capacity {
+    if wires > limits.max_wires {
         return Err(Invalid::WireCapacity);
     }
     Ok(())
 }
 
-fn compare_up_to_renaming(expected: &Net, candidate: &Net) -> Result<(), Invalid> {
+fn compare_up_to_renaming(
+    expected: &InteractionGraph,
+    candidate: &InteractionGraph,
+) -> Result<(), Invalid> {
     if expected.graph_id != candidate.graph_id {
         return Err(Invalid::GraphIdentity);
     }
@@ -1378,7 +1422,7 @@ fn compare_up_to_renaming(expected: &Net, candidate: &Net) -> Result<(), Invalid
             match (expected_agent.ports[port], candidate_agent.ports[port]) {
                 (Some(Endpoint::Output(a)), Some(Endpoint::Output(b))) if a == b => {}
                 (Some(Endpoint::Port(expected_port)), Some(Endpoint::Port(candidate_port))) => {
-                    if expected_port.port != candidate_port.port {
+                    if expected_port.port_index != candidate_port.port_index {
                         return Err(Invalid::SourceWiring);
                     }
                     let expected_target = expected
@@ -1399,7 +1443,7 @@ fn compare_up_to_renaming(expected: &Net, candidate: &Net) -> Result<(), Invalid
         }
     }
     for (expected_port, candidate_port) in expected.outputs.iter().zip(&candidate.outputs) {
-        if expected_port.port != candidate_port.port {
+        if expected_port.port_index != candidate_port.port_index {
             return Err(Invalid::OutputBoundary);
         }
         let expected_agent = expected
@@ -1429,8 +1473,8 @@ fn wire_count(agents: &[Agent]) -> Option<u64> {
         {
             match (*endpoint)? {
                 Endpoint::Port(target) => {
-                    let source_port = (source_agent, u8::try_from(port).ok()?);
-                    if source_port < (target.agent, target.port) {
+                    let source_port = (source_agent, PortIndex::from(u8::try_from(port).ok()?));
+                    if source_port < (target.agent, target.port_index) {
                         wires = wires.checked_add(1)?;
                     }
                 }
@@ -1462,15 +1506,33 @@ struct Pair {
     second_generation: u64,
 }
 
+struct FireState<'a> {
+    slots: &'a mut [Slot],
+    outputs: &'a mut [PortRef],
+}
+
+#[derive(Clone, Copy)]
+struct ValueInteraction {
+    rule_agent_id: u32,
+    number_agent_id: u32,
+    rule_agent: RuntimeAgent,
+    number_bits: u64,
+}
+
+/// Pending principal-port pairs, bounded by the fixed agent arena.
+struct ActiveWorklist {
+    entries: alloc::vec::Vec<Pair>,
+}
+
 fn enqueue_active(
     slots: &mut [Slot],
-    worklist: &mut alloc::vec::Vec<Pair>,
+    worklist: &mut ActiveWorklist,
     index: usize,
 ) -> Result<(), Invalid> {
     let slot = slots.get(index).ok_or(Invalid::UnknownPort)?;
     let agent = slot.agent.ok_or(Invalid::UnknownPort)?;
     let target = match agent.ports[0] {
-        Some(Endpoint::Port(target)) if target.port == 0 => target,
+        Some(Endpoint::Port(target)) if target.port_index == PortIndex::from(0) => target,
         Some(Endpoint::Port(_)) | Some(Endpoint::Output(_)) | None => return Ok(()),
     };
     if target.agent as usize == index {
@@ -1483,7 +1545,7 @@ fn enqueue_active(
     if other_agent.ports[0]
         != Some(Endpoint::Port(PortRef {
             agent: u32::try_from(index).map_err(|_| Invalid::CounterOverflow)?,
-            port: 0,
+            port_index: PortIndex::from(0),
         }))
     {
         return Ok(());
@@ -1509,14 +1571,14 @@ fn enqueue_active(
     if first_mark == Some(first_generation) || second_mark == Some(second_generation) {
         return Err(Invalid::WorklistBound);
     }
-    if worklist.len() >= slots.len() {
+    if worklist.entries.len() >= slots.len() {
         return Err(Invalid::WorklistBound);
     }
     let first_slot = slots.get_mut(first).ok_or(Invalid::UnknownPort)?;
     first_slot.queued_generation = Some(first_generation);
     let second_slot = slots.get_mut(second).ok_or(Invalid::UnknownPort)?;
     second_slot.queued_generation = Some(second_generation);
-    worklist.push(Pair {
+    worklist.entries.push(Pair {
         first: u32::try_from(first).map_err(|_| Invalid::CounterOverflow)?,
         first_generation,
         second: u32::try_from(second).map_err(|_| Invalid::CounterOverflow)?,
@@ -1526,26 +1588,26 @@ fn enqueue_active(
 }
 
 fn pop_pair(
-    worklist: &mut alloc::vec::Vec<Pair>,
+    worklist: &mut ActiveWorklist,
     schedule: Schedule,
     random: &mut Option<crate::prng::SplitMix64>,
 ) -> Option<Pair> {
     match schedule {
-        Schedule::Lifo => worklist.pop(),
+        Schedule::Lifo => worklist.entries.pop(),
         Schedule::Fifo => {
-            if worklist.is_empty() {
+            if worklist.entries.is_empty() {
                 None
             } else {
-                Some(worklist.remove(0))
+                Some(worklist.entries.remove(0))
             }
         }
         Schedule::SplitMix64 { .. } => {
-            if worklist.is_empty() {
+            if worklist.entries.is_empty() {
                 None
             } else {
-                let len = u64::try_from(worklist.len()).ok()?;
+                let len = u64::try_from(worklist.entries.len()).ok()?;
                 let index = random.as_mut()?.below(len).try_into().ok()?;
-                Some(worklist.swap_remove(index))
+                Some(worklist.entries.swap_remove(index))
             }
         }
     }
@@ -1557,7 +1619,7 @@ fn pair_is_current(slots: &mut [Slot], pair: Pair) -> bool {
     let Some(first_slot) = slots.get_mut(first) else {
         return false;
     };
-    let first_current = first_slot.generation == pair.first_generation
+    let is_first_current = first_slot.generation == pair.first_generation
         && first_slot.agent.is_some()
         && first_slot.queued_generation == Some(pair.first_generation);
     if first_slot.queued_generation == Some(pair.first_generation) {
@@ -1566,13 +1628,13 @@ fn pair_is_current(slots: &mut [Slot], pair: Pair) -> bool {
     let Some(second_slot) = slots.get_mut(second) else {
         return false;
     };
-    let second_current = second_slot.generation == pair.second_generation
+    let is_second_current = second_slot.generation == pair.second_generation
         && second_slot.agent.is_some()
         && second_slot.queued_generation == Some(pair.second_generation);
     if second_slot.queued_generation == Some(pair.second_generation) {
         second_slot.queued_generation = None;
     }
-    if !first_current || !second_current {
+    if !is_first_current || !is_second_current {
         return false;
     }
     let Some(first_agent) = slots.get(first).and_then(|slot| slot.agent) else {
@@ -1584,12 +1646,12 @@ fn pair_is_current(slots: &mut [Slot], pair: Pair) -> bool {
     first_agent.ports[0]
         == Some(Endpoint::Port(PortRef {
             agent: pair.second,
-            port: 0,
+            port_index: PortIndex::from(0),
         }))
         && second_agent.ports[0]
             == Some(Endpoint::Port(PortRef {
                 agent: pair.first,
-                port: 0,
+                port_index: PortIndex::from(0),
             }))
 }
 
@@ -1608,37 +1670,66 @@ fn fire_pair(
         .get(second_id)
         .and_then(|slot| slot.agent)
         .ok_or(Invalid::UnknownPort)?;
+    let mut state = FireState { slots, outputs };
     match (first.symbol, second.symbol) {
-        (Symbol::Op2(op), Symbol::Num(value)) => {
-            fire_op2(slots, outputs, pair.first, pair.second, first, op, value)
-        }
-        (Symbol::Num(value), Symbol::Op2(op)) => {
-            fire_op2(slots, outputs, pair.second, pair.first, second, op, value)
-        }
+        (Symbol::Op2(op), Symbol::Num(value)) => fire_op2(
+            &mut state,
+            ValueInteraction {
+                rule_agent_id: pair.first,
+                number_agent_id: pair.second,
+                rule_agent: first,
+                number_bits: value,
+            },
+            op,
+        ),
+        (Symbol::Num(value), Symbol::Op2(op)) => fire_op2(
+            &mut state,
+            ValueInteraction {
+                rule_agent_id: pair.second,
+                number_agent_id: pair.first,
+                rule_agent: second,
+                number_bits: value,
+            },
+            op,
+        ),
         (Symbol::Op1(op, first_value), Symbol::Num(second_value)) => fire_op1(
-            slots,
-            outputs,
-            pair.first,
-            pair.second,
-            first,
-            apply(op, first_value, second_value),
+            &mut state,
+            ValueInteraction {
+                rule_agent_id: pair.first,
+                number_agent_id: pair.second,
+                rule_agent: first,
+                number_bits: apply(op, first_value, second_value),
+            },
         ),
         (Symbol::Num(second_value), Symbol::Op1(op, first_value)) => fire_op1(
-            slots,
-            outputs,
-            pair.second,
-            pair.first,
-            second,
-            apply(op, first_value, second_value),
+            &mut state,
+            ValueInteraction {
+                rule_agent_id: pair.second,
+                number_agent_id: pair.first,
+                rule_agent: second,
+                number_bits: apply(op, first_value, second_value),
+            },
         ),
-        (Symbol::Dup, Symbol::Num(value)) => {
-            fire_dup(slots, outputs, pair.first, pair.second, first, value)
-        }
-        (Symbol::Num(value), Symbol::Dup) => {
-            fire_dup(slots, outputs, pair.second, pair.first, second, value)
-        }
+        (Symbol::Dup, Symbol::Num(value)) => fire_dup(
+            &mut state,
+            ValueInteraction {
+                rule_agent_id: pair.first,
+                number_agent_id: pair.second,
+                rule_agent: first,
+                number_bits: value,
+            },
+        ),
+        (Symbol::Num(value), Symbol::Dup) => fire_dup(
+            &mut state,
+            ValueInteraction {
+                rule_agent_id: pair.second,
+                number_agent_id: pair.first,
+                rule_agent: second,
+                number_bits: value,
+            },
+        ),
         (Symbol::Era, Symbol::Num(_)) | (Symbol::Num(_), Symbol::Era) => {
-            remove_pair(slots, pair.first, pair.second)?;
+            remove_pair(state.slots, pair.first, pair.second)?;
             Ok(([None, None], 2))
         }
         _ => Err(Invalid::StuckPair),
@@ -1646,129 +1737,124 @@ fn fire_pair(
 }
 
 fn fire_op2(
-    slots: &mut [Slot],
-    outputs: &mut [PortRef],
-    op2_id: u32,
-    num_id: u32,
-    op2: RuntimeAgent,
+    state: &mut FireState<'_>,
+    interaction: ValueInteraction,
     operation: Op,
-    value: u64,
 ) -> Result<([Option<u32>; 2], u64), Invalid> {
+    let op2_id = interaction.rule_agent_id;
+    let op2 = interaction.rule_agent;
     let operand2 = op2.ports[1].ok_or(Invalid::PortArity)?;
     let result = op2.ports[2].ok_or(Invalid::PortArity)?;
     let new = RuntimeAgent {
         origin: op2.origin,
-        symbol: Symbol::Op1(operation, value),
+        symbol: Symbol::Op1(operation, interaction.number_bits),
         ports: [Some(operand2), Some(result), None],
     };
-    replace_agent(slots, op2_id, new)?;
+    replace_agent(state.slots, op2_id, new)?;
     redirect_external(
-        slots,
-        outputs,
+        state.slots,
+        state.outputs,
         PortRef {
             agent: op2_id,
-            port: 1,
+            port_index: PortIndex::from(1),
         },
         PortRef {
             agent: op2_id,
-            port: 0,
+            port_index: PortIndex::from(0),
         },
         operand2,
     )?;
     redirect_external(
-        slots,
-        outputs,
+        state.slots,
+        state.outputs,
         PortRef {
             agent: op2_id,
-            port: 2,
+            port_index: PortIndex::from(2),
         },
         PortRef {
             agent: op2_id,
-            port: 1,
+            port_index: PortIndex::from(1),
         },
         result,
     )?;
-    remove_agent(slots, num_id)?;
+    remove_agent(state.slots, interaction.number_agent_id)?;
     Ok(([Some(op2_id), None], 1))
 }
 
 fn fire_op1(
-    slots: &mut [Slot],
-    outputs: &mut [PortRef],
-    op1_id: u32,
-    num_id: u32,
-    op1: RuntimeAgent,
-    value: u64,
+    state: &mut FireState<'_>,
+    interaction: ValueInteraction,
 ) -> Result<([Option<u32>; 2], u64), Invalid> {
+    let op1_id = interaction.rule_agent_id;
+    let op1 = interaction.rule_agent;
     let target = op1.ports[1].ok_or(Invalid::PortArity)?;
     let new = RuntimeAgent {
         origin: op1.origin,
-        symbol: Symbol::Num(value),
+        symbol: Symbol::Num(interaction.number_bits),
         ports: [Some(target), None, None],
     };
-    replace_agent(slots, op1_id, new)?;
+    replace_agent(state.slots, op1_id, new)?;
     redirect_external(
-        slots,
-        outputs,
+        state.slots,
+        state.outputs,
         PortRef {
             agent: op1_id,
-            port: 1,
+            port_index: PortIndex::from(1),
         },
         PortRef {
             agent: op1_id,
-            port: 0,
+            port_index: PortIndex::from(0),
         },
         target,
     )?;
-    remove_agent(slots, num_id)?;
+    remove_agent(state.slots, interaction.number_agent_id)?;
     Ok(([Some(op1_id), None], 1))
 }
 
 fn fire_dup(
-    slots: &mut [Slot],
-    outputs: &mut [PortRef],
-    dup_id: u32,
-    num_id: u32,
-    dup: RuntimeAgent,
-    value: u64,
+    state: &mut FireState<'_>,
+    interaction: ValueInteraction,
 ) -> Result<([Option<u32>; 2], u64), Invalid> {
+    let dup_id = interaction.rule_agent_id;
+    let num_id = interaction.number_agent_id;
+    let dup = interaction.rule_agent;
     let first = dup.ports[1].ok_or(Invalid::PortArity)?;
     let second = dup.ports[2].ok_or(Invalid::PortArity)?;
     let first_num = RuntimeAgent {
         origin: dup.origin,
-        symbol: Symbol::Num(value),
+        symbol: Symbol::Num(interaction.number_bits),
         ports: [Some(first), None, None],
     };
     let second_num = RuntimeAgent {
         origin: dup.origin,
-        symbol: Symbol::Num(value),
+        symbol: Symbol::Num(interaction.number_bits),
         ports: [Some(second), None, None],
     };
-    replace_agent(slots, dup_id, first_num)?;
-    replace_agent(slots, num_id, second_num)?;
+    replace_agent(state.slots, dup_id, first_num)?;
+    replace_agent(state.slots, num_id, second_num)?;
     redirect_external(
-        slots,
-        outputs,
+        state.slots,
+        state.outputs,
         PortRef {
             agent: dup_id,
-            port: 1,
+            port_index: PortIndex::from(1),
         },
         PortRef {
             agent: dup_id,
-            port: 0,
+            port_index: PortIndex::from(0),
         },
         first,
     )?;
     redirect_external(
-        slots,
-        outputs,
+        state.slots,
+        state.outputs,
         PortRef {
             agent: dup_id,
-            port: 2,
+            port_index: PortIndex::from(2),
         },
         PortRef {
             agent: num_id,
-            port: 0,
+            port_index: PortIndex::from(0),
         },
         second,
     )?;
@@ -1826,7 +1912,7 @@ fn redirect_external(
                 .ok_or(Invalid::UnknownPort)?;
             let endpoint = target_agent
                 .ports
-                .get_mut(usize::from(target.port))
+                .get_mut(usize::from(target.port_index))
                 .ok_or(Invalid::UnknownPort)?;
             if *endpoint != Some(Endpoint::Port(old)) {
                 return Err(Invalid::NonReciprocal);
@@ -1857,7 +1943,7 @@ fn read_back(
     let mut observed = alloc::vec::Vec::with_capacity(outputs.len());
     let mut output_agent_seen = alloc::vec![false; slots.len()];
     for (index, output) in outputs.iter().enumerate() {
-        if output.port != 0 {
+        if output.port_index != PortIndex::from(0) {
             return Err(Invalid::ReadBack);
         }
         let agent = slots
@@ -1923,18 +2009,22 @@ mod tests {
 
     struct TestHasher {
         state: [u8; 32],
-        offset: usize,
+        next_byte_index: usize,
     }
 
     impl crate::identity::IdentityHasher for TestHasher {
         fn update(&mut self, bytes: &[u8]) {
             for byte in bytes {
-                let index = self.offset % self.state.len();
+                let index = self.next_byte_index;
                 self.state[index] = self.state[index]
                     .wrapping_mul(31)
                     .wrapping_add(*byte)
                     .wrapping_add(index as u8);
-                self.offset += 1;
+                self.next_byte_index = if index + 1 == self.state.len() {
+                    0
+                } else {
+                    index + 1
+                };
             }
         }
 
@@ -1951,7 +2041,7 @@ mod tests {
         fn start(&self) -> alloc::boxed::Box<dyn crate::identity::IdentityHasher + '_> {
             alloc::boxed::Box::new(TestHasher {
                 state: [0; 32],
-                offset: 0,
+                next_byte_index: 0,
             })
         }
     }
@@ -1984,13 +2074,23 @@ mod tests {
         }
     }
 
-    fn inputs(x: i64, y: i64) -> [crate::sem::Value; 2] {
-        [crate::sem::Value::I64(x), crate::sem::Value::I64(y)]
+    fn inputs(left_i64: i64, right_i64: i64) -> [crate::sem::Value; 2] {
+        [
+            crate::sem::Value::I64(left_i64),
+            crate::sem::Value::I64(right_i64),
+        ]
     }
 
-    fn sample_net(x: i64, y: i64) -> (crate::check::CheckedGraph, Net, [crate::sem::Value; 2]) {
+    fn sample_interaction_graph(
+        left_i64: i64,
+        right_i64: i64,
+    ) -> (
+        crate::check::CheckedGraph,
+        InteractionGraph,
+        [crate::sem::Value; 2],
+    ) {
         let checked = sample();
-        let inputs = inputs(x, y);
+        let inputs = inputs(left_i64, right_i64);
         let net = match lower(&IDS, &checked, &inputs, &Limits::default()) {
             Ok(net) => net,
             Err(error) => panic!("sample net refused: {error:?}"),
@@ -1998,17 +2098,17 @@ mod tests {
         (checked, net, inputs)
     }
 
-    fn limits(agents: u64, wires: u64, fuel: u64) -> Limits {
+    fn limits(agent_slots: u64, wire_count: u64, interaction_fuel: u64) -> Limits {
         Limits {
-            agent_capacity: agents,
-            wire_capacity: wires,
-            interaction_fuel: fuel,
+            max_agent_slots: agent_slots,
+            max_wires: wire_count,
+            interaction_fuel,
         }
     }
 
     #[test]
     fn lowering_is_canonical_and_alpha_renaming_is_accepted() {
-        let (checked, net, row) = sample_net(11, 4);
+        let (checked, net, row) = sample_interaction_graph(11, 4);
         assert_eq!(net.agents.len(), 9);
         assert_eq!(net.wire_count(), Some(13));
         assert_eq!(net.rule_counts(), (3, 4, 0));
@@ -2046,12 +2146,22 @@ mod tests {
 
     #[test]
     fn reduction_matches_reference_and_exact_interaction_bound() {
-        let (checked, net, row) = sample_net(11, 4);
+        let (checked, net, row) = sample_interaction_graph(11, 4);
         let plan = Plan {
             schedule: Some(Schedule::Lifo),
             ..Plan::default()
         };
-        let report = reduce(&IDS, &checked, &net, &row, &Limits::default(), &plan);
+        let limits = Limits::default();
+        let report = reduce(
+            &IDS,
+            ReduceRequest {
+                checked: &checked,
+                candidate: &net,
+                inputs: &row,
+                limits: &limits,
+                plan,
+            },
+        );
         assert_eq!(
             report.obs,
             Obs::Normal(alloc::vec![
@@ -2077,19 +2187,30 @@ mod tests {
 
     #[test]
     fn schedules_have_identical_values_counts_and_live_bound() {
-        let (checked, net, row) = sample_net(i64::MIN, -1);
-        let mut observations = alloc::vec::Vec::new();
-        for schedule in [
+        let (checked, net, row) = sample_interaction_graph(i64::MIN, -1);
+        let schedules = [
             Schedule::Lifo,
             Schedule::Fifo,
             Schedule::SplitMix64 { seed: 1 },
             Schedule::SplitMix64 { seed: 0x5eed },
-        ] {
+        ];
+        let limits = Limits::default();
+        let mut observations = alloc::vec::Vec::with_capacity(schedules.len());
+        for schedule in schedules {
             let plan = Plan {
                 schedule: Some(schedule),
                 ..Plan::default()
             };
-            let report = reduce(&IDS, &checked, &net, &row, &Limits::default(), &plan);
+            let report = reduce(
+                &IDS,
+                ReduceRequest {
+                    checked: &checked,
+                    candidate: &net,
+                    inputs: &row,
+                    limits: &limits,
+                    plan,
+                },
+            );
             assert!(
                 matches!(report.obs, Obs::Normal(_)),
                 "{schedule:?}: {report:?}"
@@ -2103,7 +2224,7 @@ mod tests {
 
     #[test]
     fn budgets_refuse_below_and_succeed_at_or_above_each_limit() {
-        let (checked, net, row) = sample_net(8, 3);
+        let (checked, net, row) = sample_interaction_graph(8, 3);
         let agents = u64::try_from(net.agents.len()).expect("bounded sample agents");
         let wires = net.wire_count().expect("well-formed sample wires");
         let fuel = net.expected_interactions().expect("sample interactions");
@@ -2131,13 +2252,16 @@ mod tests {
         assert!(lower(&IDS, &checked, &row, &limits(agents, wires + 1, fuel)).is_ok());
 
         for (cap, expected) in [(fuel - 1, false), (fuel, true), (fuel + 1, true)] {
+            let limits = limits(agents, wires, cap);
             let report = reduce(
                 &IDS,
-                &checked,
-                &net,
-                &row,
-                &limits(agents, wires, cap),
-                &Plan::default(),
+                ReduceRequest {
+                    checked: &checked,
+                    candidate: &net,
+                    inputs: &row,
+                    limits: &limits,
+                    plan: Plan::default(),
+                },
             );
             if expected {
                 assert!(
@@ -2163,13 +2287,16 @@ mod tests {
     fn empty_unit_shape_reduces_to_an_empty_ordered_observation() {
         let checked = empty();
         let net = lower(&IDS, &checked, &[], &Limits::default()).expect("empty net");
+        let limits = Limits::default();
         let report = reduce(
             &IDS,
-            &checked,
-            &net,
-            &[],
-            &Limits::default(),
-            &Plan::default(),
+            ReduceRequest {
+                checked: &checked,
+                candidate: &net,
+                inputs: &[],
+                limits: &limits,
+                plan: Plan::default(),
+            },
         );
         assert_eq!(report.obs, Obs::Normal(alloc::vec::Vec::new()));
         assert_eq!(report.interactions, 0);
@@ -2266,13 +2393,16 @@ mod tests {
         let net = lower(&IDS, &checked, &row, &Limits::default()).expect("discarded input net");
         assert_eq!(net.rule_counts(), (0, 0, 1));
         assert_eq!(net.expected_interactions(), Some(1));
+        let limits = Limits::default();
         let report = reduce(
             &IDS,
-            &checked,
-            &net,
-            &row,
-            &Limits::default(),
-            &Plan::default(),
+            ReduceRequest {
+                checked: &checked,
+                candidate: &net,
+                inputs: &row,
+                limits: &limits,
+                plan: Plan::default(),
+            },
         );
         assert_eq!(report.obs, Obs::Normal(alloc::vec::Vec::new()));
         assert_eq!(report.interactions, 1);
@@ -2281,17 +2411,20 @@ mod tests {
 
     #[test]
     fn seeded_faults_are_rejected_before_reduction() {
-        let (checked, original, row) = sample_net(11, 4);
-        let must_reject = |candidate: Net, expected: Invalid| {
-            let result = validate(&IDS, &checked, &candidate, &row, &Limits::default());
+        let (checked, original, row) = sample_interaction_graph(11, 4);
+        let limits = Limits::default();
+        let must_reject = |candidate: InteractionGraph, expected: Invalid| {
+            let result = validate(&IDS, &checked, &candidate, &row, &limits);
             assert_eq!(result, Err(Refusal::InternalInvalid(expected)));
             let report = reduce(
                 &IDS,
-                &checked,
-                &candidate,
-                &row,
-                &Limits::default(),
-                &Plan::default(),
+                ReduceRequest {
+                    checked: &checked,
+                    candidate: &candidate,
+                    inputs: &row,
+                    limits: &limits,
+                    plan: Plan::default(),
+                },
             );
             assert_eq!(report.obs, Obs::InternalInvalid(expected));
             assert_eq!(report.interactions, 0);
@@ -2301,11 +2434,11 @@ mod tests {
         let sub = 2u32;
         swapped.agents[usize::from(0u8)].ports[0] = Some(Endpoint::Port(PortRef {
             agent: sub,
-            port: 1,
+            port_index: PortIndex::from(1),
         }));
         swapped.agents[1].ports[0] = Some(Endpoint::Port(PortRef {
             agent: sub,
-            port: 0,
+            port_index: PortIndex::from(0),
         }));
         swapped.agents[sub as usize].ports.swap(0, 1);
         must_reject(swapped, Invalid::SourceWiring);
@@ -2326,7 +2459,7 @@ mod tests {
         let mut duplicated = original.clone();
         duplicated.agents[1].ports[0] = Some(Endpoint::Port(PortRef {
             agent: sub,
-            port: 0,
+            port_index: PortIndex::from(0),
         }));
         must_reject(duplicated, Invalid::NonReciprocal);
 
@@ -2370,7 +2503,10 @@ mod tests {
             origin: Origin::Node(crate::ir::NodeId(0)),
             symbol: Symbol::Num(1),
             ports: [
-                Some(Endpoint::Port(PortRef { agent: 1, port: 0 })),
+                Some(Endpoint::Port(PortRef {
+                    agent: 1,
+                    port_index: PortIndex::from(0),
+                })),
                 None,
                 None,
             ],
@@ -2379,7 +2515,10 @@ mod tests {
             origin: Origin::Node(crate::ir::NodeId(1)),
             symbol: Symbol::Num(2),
             ports: [
-                Some(Endpoint::Port(PortRef { agent: 0, port: 0 })),
+                Some(Endpoint::Port(PortRef {
+                    agent: 0,
+                    port_index: PortIndex::from(0),
+                })),
                 None,
                 None,
             ],
@@ -2402,17 +2541,20 @@ mod tests {
 
     #[test]
     fn cancellation_and_input_refusals_are_not_partial_results() {
-        let (checked, net, row) = sample_net(11, 4);
+        let (checked, net, row) = sample_interaction_graph(11, 4);
+        let limits = Limits::default();
         let cancel_after_two = |steps| steps >= 2;
         let report = reduce(
             &IDS,
-            &checked,
-            &net,
-            &row,
-            &Limits::default(),
-            &Plan {
-                cancel: Some(&cancel_after_two),
-                ..Plan::default()
+            ReduceRequest {
+                checked: &checked,
+                candidate: &net,
+                inputs: &row,
+                limits: &limits,
+                plan: Plan {
+                    cancel: Some(&cancel_after_two),
+                    ..Plan::default()
+                },
             },
         );
         assert_eq!(report.obs, Obs::Cancelled);
@@ -2425,11 +2567,13 @@ mod tests {
         );
         let report = reduce(
             &IDS,
-            &checked,
-            &net,
-            &wrong,
-            &Limits::default(),
-            &Plan::default(),
+            ReduceRequest {
+                checked: &checked,
+                candidate: &net,
+                inputs: &wrong,
+                limits: &limits,
+                plan: Plan::default(),
+            },
         );
         assert_eq!(report.obs, Obs::Refused(Refusal::Interface));
         assert_eq!(report.interactions, 0);
@@ -2437,11 +2581,13 @@ mod tests {
         let wrong_values = inputs(12, 4);
         let report = reduce(
             &IDS,
-            &checked,
-            &net,
-            &wrong_values,
-            &Limits::default(),
-            &Plan::default(),
+            ReduceRequest {
+                checked: &checked,
+                candidate: &net,
+                inputs: &wrong_values,
+                limits: &limits,
+                plan: Plan::default(),
+            },
         );
         assert_eq!(report.obs, Obs::InternalInvalid(Invalid::InputValues));
         assert_eq!(report.interactions, 0);

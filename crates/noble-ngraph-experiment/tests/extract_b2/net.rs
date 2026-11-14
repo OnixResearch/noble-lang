@@ -14,7 +14,7 @@ fn unit_and_empty_outputs_read_back_without_a_partial_prefix() {
 }
 
 #[test]
-fn ordered_multi_output_shapes_preserve_repetition_and_shared_values() {
+fn ordered_multi_results_preserve_repetition_and_shared_values() {
     let repeated = Lowered::new(&[], "dup", 1).expect("repeated output extracts");
     let repeated_input = i64s(&[i64::MAX]);
     assert_eq!(repeated.outputs(), 2);
@@ -40,7 +40,7 @@ fn ordered_multi_output_shapes_preserve_repetition_and_shared_values() {
 }
 
 #[test]
-fn nested_pair_outputs_flatten_in_order_for_the_net() {
+fn nested_pair_outputs_flatten_in_order() {
     let lowered = Lowered::new(&[], "dup dup 1 + swap pair pair", 1).expect("nested pair extracts");
     let inputs = i64s(&[41]);
     let expected = vec![Value::I64(41), Value::I64(42), Value::I64(41)];
