@@ -47,6 +47,9 @@ mod tamper;
 #[path = "cert/multi_step.rs"]
 mod multi_step;
 
+#[path = "cert/chained/mod.rs"]
+mod chained;
+
 #[path = "cert/admission.rs"]
 mod admission;
 #[path = "cert/scoped.rs"]

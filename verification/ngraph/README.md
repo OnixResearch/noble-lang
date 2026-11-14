@@ -34,6 +34,28 @@ residual reaches zero under `FixedPoint`) and *uncertified* (the checker refuses
 claim is made about them, and `SinglePass` passing the frozen fixtures is not evidence that a
 one-pass proposer is sufficient in general.
 
+### Executable chained profile (`ngraph-cert/2`; issue #64 follow-up)
+
+The existing `ngraph-cert/0` and chainless `ngraph-cert/1` reader remain available and keep their
+original-premise semantics. The new `cert::propose_chained` / `cert::check_chained` lane has a
+distinct `ngraph-cert/2` revision: every rewrite transition records the exact logical identities of
+its before/after graphs, and each premise is checked against the graph produced by the preceding
+transition. A single final `PruneUnreachable` transition is permitted; the checker recomputes the
+same deterministic survivor map, retains ordered outputs, guards, interface nodes and fact
+references, remaps operands/facts/outputs in creation order, and then requires equality with the
+named endpoint. Admission is unchanged and independently validates both source and pruned candidate
+before any candidate execution. The decimal-token decoder bounds the transition count before
+allocation and refuses malformed or trailing tokens.
+
+`tests/cert_differential.rs` pins chained fixed-point, ordered-output, identity, and malformed prune
+controls. The executable fixtures compare the complete ordered output vectors, including repeated
+output slots; refusing admission or any certificate stage yields zero candidate execution calls.
+Lean separately proves an ordered-vector preservation lemma under its explicit survivor-map premise
+and composes soundness of accepted chain edges. `CertificateChained.lean` and its generated exact
+Rust-token corpus model the wire parser; there is **no correspondence theorem** binding those model
+claims to the Rust parser, checker, pruning implementation, or evaluator. The v4 integrated cost
+receipt below measures implementation behavior separately.
+
 ### Historical cost accounting (v1; issue #64 items 5-7)
 
 The quality lane above prices nothing. The original cost lane
@@ -216,24 +238,23 @@ checker ceiling, execution and cost eligibility criteria, coverage denominators,
 stages. The runner ([rewrite-cost.mjs](rewrite-cost.mjs)) binds the v3 plan and v2 corpus and rejects
 missing rows or changed output vectors. Historical v1/v2 plans and receipts remain unchanged.
 
-The certificate decision is to adopt `ngraph-cert/1` as a new revision with certified dead-node
-removal (an explicit old-to-new node map) and sequential premises, while retaining
-`ngraph-cert/0` and its pinned regressions. That implementation remains in #42's scope; this slice
-does not edit `cert.rs`.
+The earlier #64 plan proposed certified dead-node removal and sequential premises under a new
+certificate revision while preserving the pinned `ngraph-cert/0` regressions. The v3 receipt
+showed that this capability was not present in the then-current `ngraph-cert/1`: all 23 optimized
+candidate endpoints were refused at ordinary graph admission. This follow-up implements the
+distinct `ngraph-cert/2` transition profile; `/0` and the chainless `/1` reader remain unchanged.
 
-The learned/circuit ranker is **NO-GO / deferred**. The current lane has no independently admitted
-non-identity rewrite, so ranking has no useful work to prioritize; with the present confluent,
-fold-only rules, rewrite order does not change the result. Training a scorer or comparing rankings
-now would manufacture a choice the accepted candidate universe does not provide. Reopen only when
-all of these hold:
+The learned/circuit ranker remains **NO-GO / deferred**. The v2/v3 baseline had no independently
+admitted non-identity rewrite, so ranking had no useful work to prioritize; the new executable
+profile is measured separately under v4 below. With the present confluent, fold-only rules, rewrite
+order does not change the final result. Reopen ranking only when the measured candidate universe
+exposes at least two eligible choices whose ordering can change useful work and all of these hold:
 
-1. #42's new `ngraph-cert/1` supports certified dead-node removal with an explicit old-to-new node
-   map and sequential premises, without changing the pinned `ngraph-cert/0` regressions.
-2. The unchanged checker and candidate-admission pipeline independently admits at least one
+1. The unchanged checker and candidate-admission pipeline independently admits at least one
    non-identity rewrite that reaches a frozen quality target.
-3. A deterministic baseline exposes at least two eligible choices whose ordering can change useful
+2. A deterministic baseline exposes at least two eligible choices whose ordering can change useful
    work under the same frozen total-work budget; otherwise record NO-GO without training.
-4. The comparison freezes the candidate universe, features and scorer identity before held-out
+3. The comparison freezes the candidate universe, features and scorer identity before held-out
    evaluation; ranking may only reorder those choices. It cannot add rules, alter premises, repair
    endpoints, weaken refusals, raise budgets or bypass certificate/admission/layout checks.
 
@@ -276,8 +297,8 @@ node verification/ngraph/rewrite-cost.mjs --output /absolute/outside-checkout/re
 ```
 
 The runner refuses dirty source or pre-existing output/evidence paths and retains the raw process
-streams and source snapshots beside the receipt. This v3 result leaves the executable-optimization
-item open pending #42's `ngraph-cert/1`; it does not close #64.
+streams and source snapshots beside the receipt. This is the historical v3 result; it does not
+include the separate `ngraph-cert/2` follow-up or its v4 integrated measurement below.
 
 ### Issue #64 effects-as-laws controls
 

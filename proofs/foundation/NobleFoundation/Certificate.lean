@@ -389,6 +389,44 @@ theorem accepted_endpoint_equivalence (graph : Graph) (hwf : WellFormed graph)
     go derivation.steps graph (by intro step hmem; exact hmem) hwf
       (by intro index; rfl) index
 
+/-! ### Chained certificates -/
+
+/-- A chain whose edge is one independently accepted certificate, applied to the
+preceding edge's endpoint. -/
+inductive AcceptedRewriteChain (inputs : Nat → BitVec 64) : Graph → Graph → Prop where
+  | done (graph : Graph) : AcceptedRewriteChain inputs graph graph
+  | step {source middle target : Graph} (hwf : WellFormed source)
+      (derivation : Derivation) (haccepted : accepted source derivation = true)
+      (hmiddle : middle = applyDerivation source derivation)
+      (rest : AcceptedRewriteChain inputs middle target) :
+      AcceptedRewriteChain inputs source target
+
+/-- Per-step soundness composes over an arbitrarily long accepted chain. The
+edge certificate is checked against its own source graph, which is the graph
+produced by the preceding edge rather than a shared original premise. -/
+theorem accepted_rewrite_chain_preserves_all_nodes
+    (inputs : Nat → BitVec 64) {source target : Graph}
+    (chain : AcceptedRewriteChain inputs source target) (index : Nat) :
+    value source inputs index = value target inputs index := by
+  induction chain with
+  | done => rfl
+  | @step source middle target hwf derivation haccepted hmiddle rest ih =>
+      calc
+        value source inputs index = value (applyDerivation source derivation) inputs index :=
+          accepted_endpoint_equivalence source hwf derivation haccepted inputs index
+        _ = value middle inputs index := by rw [hmiddle]
+        _ = value target inputs index := ih
+
+/-- Chained soundness also preserves output order and multiplicity: map the
+nodewise endpoint theorem over the exact declared output list. -/
+theorem accepted_rewrite_chain_preserves_ordered_outputs
+    (inputs : Nat → BitVec 64) {source target : Graph}
+    (chain : AcceptedRewriteChain inputs source target) (outputs : List Nat) :
+    outputs.map (value source inputs) = outputs.map (value target inputs) := by
+  apply List.map_congr_left
+  intro index _
+  exact accepted_rewrite_chain_preserves_all_nodes inputs chain index
+
 /-! ### Replay fixture -/
 
 /-- Two independent constant additions in strictly increasing node order. -/

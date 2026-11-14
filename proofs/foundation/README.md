@@ -205,7 +205,7 @@ Status words:
 | Real packed I64/Bool artifacts, validated one at a time (issue #43) | the `interleaved`, `lateInput` and `nonLayerSortedGuarded` acceptance/soundness/well-formedness theorems, the refused mutations and the 17 `*_execution_*_agrees` runs in the generated corpus modules | three artifacts `Compiled::new` emits, written into Lean by an untrusted exporter and pinned by both generated-corpus freshness tests; the slot and constant preload translation is trusted | **proved** for those three artifacts; the Rust executor agrees at 17 inputs, a **tested** fact, not a theorem about it |
 | Explicit exact and RNE decimal import | `decimalRatio_den_pos`, `isNegative_eq_msb`, `rne_negative_sign`, `zero_spelling`, `outcomeClass_overflow_iff`, `exactImport_some_iff`, `exactImport_agrees_with_rne`, `exactImport_exactValue`, `negative_zero_fixture`, `decimal_point_one_fixture`, `decimal_point_five_fixture`, `decimal_one_e39_overflow_fixture`, `decimal_least_subnormal_fixture`, `decimal_tie_fixture`, `decimal_just_above_tie_fixture` | decimal syntax/resource bounds, overflow response policy, and correspondence to `crates/noble-ngraph/src/sem.rs` | model **proved**. Implementation and owner-policy obligations remain **open** |
 | Packed I64/Bool schedule: result equivalence and missing-register behavior | `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved** (schedule soundness and the handwritten `Option Val` machine's empty-register behavior). Actual emitted-artifact binding, the Rust transcription, graph guards/`fail_suffix_min`, `F32` and end-to-end checker execution **open** |
-| Pure I64 graph rewrite certificates: rule, congruence, lifting, checker, replay endpoint, token codec and the generated fixture corpus | `fold_add_constants`, `add_wraps_at_the_boundary`, `neutral_add_left`, `neutral_mul_right`, `evalStep_congr`, `congruence`, `replacement_lift`, `checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`, `constant_value`, `foldGraph_wellFormed`, `foldGraph_reference`, `fold_certificate_accepted`, `wrong_constant_refused`, `swapped_operands_refused`, `wrong_rule_identity_refused`, `wrong_bits_refused`, `accepted_endpoint_equivalence`, `stale_model_refused`, `stale_model_kills_acceptance`, `multiFold_endpoint`, `substituted_result_differs`, `decode_encode_step_replays`, `decode_encode_replays`, `acceptance_preserved_by_codec`, `encodeStep_length`, `truncated_step_refused`, `unknown_rule_token_refused`, `stale_revision_token_refused`, `stale_model_token_refused`, `chunk_count_refused`, `dropped_chunk_refused`, and the nine `Certificate.Corpus.*` statements | `crates/noble-ngraph/src/ir.rs` graph producer, `crates/noble-ngraph/src/cert.rs` encoder/checker and any future untrusted transformation | model **proved** (rules, lifting, checker soundness, the Lean replay endpoint and the token codec). One fixed fixture's exact tokens are **kernel-decided** against the model end to end. Correspondence to the `cert.rs` code (as opposed to that fixture's output), derivation replay budget and every other graph's endpoint decoding **open** |
+| Pure I64 graph rewrite certificates: ordered-output pruning, chained soundness, checker, token codec and generated fixture corpus | `fold_add_constants`, `add_wraps_at_the_boundary`, `neutral_add_left`, `neutral_mul_right`, `evalStep_congr`, `congruence`, `replacement_lift`, `ordered_outputs_preserved_by_pruning`, `checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`, `constant_value`, `foldGraph_wellFormed`, `foldGraph_reference`, `fold_certificate_accepted`, `wrong_constant_refused`, `swapped_operands_refused`, `wrong_rule_identity_refused`, `wrong_bits_refused`, `accepted_endpoint_equivalence`, `accepted_rewrite_chain_preserves_all_nodes`, `accepted_rewrite_chain_preserves_ordered_outputs`, `stale_model_refused`, `stale_model_kills_acceptance`, `multiFold_endpoint`, `substituted_result_differs`, `decode_encode_step_replays`, `decode_encode_replays`, `acceptance_preserved_by_codec`, `encodeStep_length`, `truncated_step_refused`, `unknown_rule_token_refused`, `stale_revision_token_refused`, `stale_model_token_refused`, `chunk_count_refused`, `dropped_chunk_refused`, the nine `Certificate.Corpus.*` statements and three `CertificateChainedCorpus.*_wire_decodes` statements | `crates/noble-ngraph/src/ir.rs` graph producer and `crates/noble-ngraph/src/cert.rs` encoder/checker; generated Lean fixtures retain exact ngraph-cert/2 body tokens | model **proved** (ordered-vector preservation premise and transitivity of accepted edge soundness); exact Rust-produced tokens **kernel-decided** against the codec model. No theorem binds Rust pruning, certificate bytes or evaluator behavior to Lean |
 | Bounded graph-pair query model: witness decoding, exhaustive search and refutation | `lookup_returns_recorded`, `decode_uses_fallback`, `decode_replays_recorded`, `not_refuted_iff_agrees`, `search_none_sound`, `search_some_refutes`, `same_sum_search_none`, `same_sum_agrees`, `subtraction_refuted`, `witness_bits_decide`, `unrecorded_slot_falls_back`, `corrupted_witness_changes_the_verdict`, and the six `SymbolicSolver.Corpus.*_first` verdicts | `crates/noble-ngraph/src/extract/symbolic.rs` encoder, `crates/noble-ngraph-experiment/src/b2i64` replay legs and any emitted Wasm | model **proved** (decoding only returns recorded pairs; bounded-universe search soundness). Six fixed pairs of checked `noble-ngraph` graphs: compiled and reference verdicts **tested**, and the same verdicts kernel-decided. Encoder correspondence, solver, emitted-Wasm replay and witness shrinking **open** |
 | Bounded M6 task interleavings: prefix invariants, a proved reduction and full/reduced agreement, for refusal-ending and valid client histories | `step_preserves_invariants`, `reachable_prefixes_satisfy_the_invariants`, `independent_actions_commute`, `every_sequence_has_a_reduced_representative`, `reduced_search_agrees`, `the_declared_reduction_agrees`, `the_declared_observation_counts`, `different_ids_rule_is_unsound`, `the_unsound_reduction_is_detected_only_where_ids_interleave`, `every_disagreement_has_a_shortest_witness`, `independent_is_client_sound`, `client_canonicalize`, `reduced_client_search_agrees`, `the_client_projection_discriminates`, `the_lossy_client_projection_hides_rejected_calls` | `crates/noble-kernel/src/async_tasks/table` (admission, callbacks, ownership) | model **proved** (two-record model; counts and coverage at the declared bound). Rule-level negative controls against the Rust table **tested** (`crates/noble-kernel/tests/m6-interleaving.rs`). Model ↔ Rust table correspondence and witness replay through the table API **open** |
 | Checked interaction-net contract: versioned typed agent kinds, arity-checked ports, reciprocal unique-incidence wiring, compatible ordered operand links and ordered output boundary | `version_ok_sound`, `reciprocity_ok_sound`, `compatibility_ok_sound`, `boundary_ok_sound`, `validate_sound`, `deeper_minus_top_is_accepted`, `swapped_sub_operands_are_rejected`, `dangling_wire_is_rejected`, `aliased_incidence_is_rejected`, `two_output_boundary_is_accepted`, `wrong_output_order_is_rejected` | no implementation correspondence; net reduction/readback and graph-to-net translation remain open | **proved** (model) |
@@ -1833,7 +1833,9 @@ a total rewrite claim (`neutral_add_left`, `neutral_mul_right`); the step functi
 congruent in node identity and operand lookups (`evalStep_congr`), so equal operand
 denotations give equal node denotations (`congruence`); and **lifting** carries one
 unchanged local denotation to agreement over every node of the graph, which
-preserves unaffected shared uses (`replacement_lift`). The checker decodes exact
+preserves unaffected shared uses (`replacement_lift`). `ordered_outputs_preserved_by_pruning`
+proves that a survivor map with nodewise denotation preservation preserves the exact ordered
+output vector; the map remains a premise, not an implementation theorem. The checker decodes exact
 node shapes, operand positions and constant bits from the graph — it never asks
 the reference for the answer — and acceptance implies the declared denotation
 (`checked_sound_const_add`, `checked_sound_zero_left`, `checked_sound_one_right`).
@@ -1848,7 +1850,7 @@ and its multiplication (`foldGraph_reference`); the true constant-folding claim 
 accepted (`fold_certificate_accepted`) and a wrong claimed constant
 (`wrong_constant_refused`), swapped operand positions (`swapped_operands_refused`),
 a claim naming a node of another kind (`wrong_rule_identity_refused`) and the
-identity claim at swapped positions (`wrong_bits_refused`) are refused. Eighteen
+identity claim at swapped positions (`wrong_bits_refused`) are refused. Nineteen
 inventoried GraphRewrite theorems. The two-independent-fold certificate fixture
 is accepted and has endpoint agreement (`multiFold_derivation_accepted`,
 `multiFold_reference`, `multiFold_endpoint`), while a substituted result graph
@@ -1863,22 +1865,22 @@ Open, and deliberately not closed:
 
 - **correspondence to `cert.rs` remains open**: the Lean endpoint theorem above
   is about `Certificate.applyDerivation`, while
-  `crates/noble-ngraph/src/cert.rs` emits and checks a versioned `ngraph-cert/0`
-  derivation. No theorem yet binds the Rust steps, replay or result graph to the
-  Lean structures; there is also no replay budget, Rust byte codec or wire-size
-  measurement. The checker now replays folds on the original and refuses any
-  other result (`Refusal::ResultMismatch`), but that fix is implementation
-  evidence rather than a Lean correspondence result;
+  `crates/noble-ngraph/src/cert.rs` retains the chainless profile and separately
+  emits and checks `ngraph-cert/2` transitions. No theorem yet binds Rust steps,
+  replay, pruning, endpoint identities, wire encoding or result graphs to the Lean
+  structures. Rust implementation tests and the generated model token corpus remain
+  separate evidence, not correspondence;
 - `crates/noble-ngraph/tests/cert_differential.rs` executes both endpoints of
-  single-step folds and of a three-step certificate (two independent folds and a
-  recorded identity) on the compiled and reference evaluators; no dependent
-  multi-step simplification is admitted beyond that, corrupting any step after the
-  first is refused, including the identity step's operand order and, under the
+  single-step folds, a dependent fixed-point chain with certified pruning, and a
+  recorded identity on the compiled and reference evaluators. Removing a live node,
+  changing survivor numbering, reordering outputs or corrupting any transition is
+  refused, including the identity step's operand order and, under the
   canonical-bits rule, its declared bits and claim, and its expectations are
   computed in Rust rather than kernel-checked;
-- substitution/transitivity closure, a full e-graph, guard/failure-preserving
-  rewrites and `F32` laws are outside phase 1; value preservation says nothing
-  about fuel, allocation, cancellation behaviour or recipe identity;
+- general substitution and a full e-graph, guard/failure-preserving rewrites and
+  `F32` laws are outside phase 1; only composition of accepted chain endpoint
+  equivalence is modeled above. Value preservation says nothing about fuel,
+  allocation, cancellation behaviour or recipe identity;
 - finite fixtures are not a universal claim about any scheduler or transformation.
 
 ## Declared packed graph layout (issue #43)
@@ -2116,6 +2118,25 @@ output. This is agreement and model coverage at these exact bytes. It is **not**
 execution, packed-layout or emitted-Wasm correctness. `verification/ngraph/cert-binding.mjs
 --verify` binds these module bytes, the Rust implementation bytes and the retained receipt
 membership.
+
+## Chained certificate and pruning model (issue #64 follow-up)
+
+`NobleFoundation.CertificateChained.lean` models the `ngraph-cert/2` token body: transition tags,
+the declared transition count, exact 32-byte endpoint digests, seven-field rewrite premises, and
+the no-trailing-token boundary. `Certificate.accepted_rewrite_chain_preserves_all_nodes` composes
+the existing accepted-derivation endpoint theorem over a chain whose next source is the preceding
+endpoint. `accepted_rewrite_chain_preserves_ordered_outputs` lifts that nodewise theorem over an
+exact list, including its order and multiplicity. `GraphRewrite.ordered_outputs_preserved_by_pruning`
+states the separate pruning obligation: if the re-derived survivor mapping preserves each output's
+denotation, the whole ordered vector is preserved. It does not prove the Rust checker derives that
+mapping or that the mapping is a survivor bijection.
+
+`NobleFoundation.CertificateChainedCorpus.lean` is generated from three real Rust certificates:
+dependent fixed-point folds followed by pruning, an ordered-output single-eligible rewrite, and an
+identity derivation. The Rust freshness test regenerates the exact encoded body tokens, transitions,
+and endpoint digests; the kernel decides the three decoded model structures. This is finite model
+coverage only. No correspondence theorem binds these bytes or model transitions to Rust `cert.rs`,
+the Rust graph evaluator, or the pruning implementation.
 
 ## Bounded graph-pair query model (issue #56, phase 1)
 

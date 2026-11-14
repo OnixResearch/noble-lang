@@ -32,13 +32,23 @@
 //! congruence and checker-soundness theorems are stated over the Lean graph
 //! denotation, and the fixed fixture is kernel-checked in the generated
 //! `CertificateCorpus.lean`. No correspondence theorem binds this module's code (as
-//! opposed to that fixture) to the model. Chained derivations, budgets, retained
-//! evidence sizes and every `F32`, guard, effect or resource rewrite remain open.
+//! opposed to that fixture) to the model. `ngraph-cert/2` adds a separate chained
+//! transition API: each rewrite is checked against its predecessor graph and an
+//! optional final prune is checker-derived. Admission still runs independently on
+//! both endpoints. No theorem binds this Rust parser, checker or prune implementation
+//! to the Lean model. Wire/resource budgets, retained evidence sizes and every `F32`,
+//! guard, effect or resource rewrite remain open.
 
 use crate::identity::IdentityScheme;
 
 /// Certificate format revision bound into every accepted derivation.
 pub const CERT_REVISION: &str = "ngraph-cert/0";
+
+/// The readable predecessor profile, whose rules remain bound to the original graph.
+pub const LEGACY_CHAINLESS_REVISION: &str = "ngraph-cert/1";
+
+/// Certificate format revision for graph-chained derivations and certified pruning.
+pub const CHAINED_REVISION: &str = "ngraph-cert/2";
 
 /// Semantic model revision bound into every accepted derivation: the rules are
 /// sound for `ngraph-sem/0`'s wrapping `I64` arithmetic and for no other reading.
@@ -143,6 +153,41 @@ pub struct Envelope {
     pub model: alloc::string::String,
     /// Ordered steps exactly as transported.
     pub steps: alloc::vec::Vec<Step>,
+}
+
+/// One state transition in `ngraph-cert/2`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ChainedAction {
+    /// Apply one rewrite to the graph state produced by the previous transition.
+    Rewrite(Step),
+    /// Remove precisely the nodes the checker independently derives as unreachable.
+    PruneUnreachable,
+}
+
+/// One chained transition with the logical identities of both adjacent states.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ChainedStep {
+    /// The transition to replay.
+    pub action: ChainedAction,
+    /// Identity of the graph immediately before this transition.
+    pub before: crate::ir::Digest,
+    /// Identity of the graph immediately after this transition.
+    pub after: crate::ir::Digest,
+}
+
+/// A replayable `ngraph-cert/2` derivation over exact endpoints.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ChainedDerivation {
+    /// Format revision.
+    pub revision: alloc::string::String,
+    /// Semantic model revision the rules were proved against.
+    pub model: alloc::string::String,
+    /// Ordered graph transitions; every intermediate identity is recorded.
+    pub steps: alloc::vec::Vec<ChainedStep>,
+    /// Digest of the original graph.
+    pub left: crate::ir::Digest,
+    /// Digest of the resulting graph.
+    pub right: crate::ir::Digest,
 }
 
 impl Envelope {
@@ -315,7 +360,7 @@ pub fn decode(wire: &str) -> Result<Envelope, Refusal> {
     }
     let mut tokens = wire.split(' ');
     let revision = next_token(&mut tokens)?;
-    if revision != CERT_REVISION {
+    if revision != CERT_REVISION && revision != LEGACY_CHAINLESS_REVISION {
         return Err(Refusal::StaleRevision);
     }
     let model = next_token(&mut tokens)?;
@@ -338,6 +383,122 @@ pub fn decode(wire: &str) -> Result<Envelope, Refusal> {
         revision: alloc::string::String::from(revision),
         model: alloc::string::String::from(model),
         steps,
+    })
+}
+
+fn push_digest(out: &mut alloc::string::String, digest: &crate::ir::Digest) {
+    for byte in digest {
+        out.push(' ');
+        push_decimal(out, u64::from(*byte));
+    }
+}
+
+fn decode_digest(tokens: &mut core::str::Split<'_, char>) -> Result<crate::ir::Digest, Refusal> {
+    let mut digest = [0u8; 32];
+    for byte in &mut digest {
+        *byte = u8::try_from(decimal_token(tokens)?).map_err(|_| Refusal::Malformed)?;
+    }
+    Ok(digest)
+}
+
+/// Encodes an `ngraph-cert/2` derivation as a bounded decimal-token envelope.
+///
+/// The header carries both endpoint identities. Each transition carries a kind,
+/// its rewrite premise when present, and the 32-byte identities of the graph state
+/// before and after the transition.
+#[must_use]
+pub fn encode_chained(derivation: &ChainedDerivation) -> alloc::string::String {
+    let mut out = alloc::string::String::with_capacity(
+        256usize.saturating_add(derivation.steps.len().saturating_mul(256)),
+    );
+    out.push_str(&derivation.revision);
+    out.push(' ');
+    out.push_str(&derivation.model);
+    out.push(' ');
+    push_decimal(&mut out, derivation.steps.len() as u64);
+    push_digest(&mut out, &derivation.left);
+    push_digest(&mut out, &derivation.right);
+    for transition in &derivation.steps {
+        out.push(' ');
+        match &transition.action {
+            ChainedAction::Rewrite(step) => {
+                push_decimal(&mut out, 0);
+                out.push(' ');
+                push_decimal(&mut out, rule_token(step.rule));
+                out.push(' ');
+                push_decimal(&mut out, u64::from(step.node.0));
+                for operand in step.operands {
+                    out.push(' ');
+                    push_decimal(&mut out, u64::from(operand.0));
+                }
+                out.push(' ');
+                push_decimal(&mut out, step.first_bits);
+                out.push(' ');
+                push_decimal(&mut out, step.second_bits);
+                out.push(' ');
+                push_decimal(&mut out, step.claimed);
+            }
+            ChainedAction::PruneUnreachable => push_decimal(&mut out, 1),
+        }
+        push_digest(&mut out, &transition.before);
+        push_digest(&mut out, &transition.after);
+    }
+    out
+}
+
+/// Decodes one `ngraph-cert/2` envelope and refuses legacy profiles.
+pub fn decode_chained(wire: &str) -> Result<ChainedDerivation, Refusal> {
+    if wire.is_empty() {
+        return Err(Refusal::Malformed);
+    }
+    let mut tokens = wire.split(' ');
+    let revision = next_token(&mut tokens)?;
+    if revision != CHAINED_REVISION {
+        return Err(Refusal::StaleRevision);
+    }
+    let model = next_token(&mut tokens)?;
+    if model != MODEL_REVISION {
+        return Err(Refusal::StaleModel);
+    }
+    let count = usize::try_from(decimal_token(&mut tokens)?).map_err(|_| Refusal::TooManySteps)?;
+    if count > MAX_STEPS {
+        return Err(Refusal::TooManySteps);
+    }
+    let left = decode_digest(&mut tokens)?;
+    let right = decode_digest(&mut tokens)?;
+    let mut steps = alloc::vec::Vec::with_capacity(count);
+    for _ in 0..count {
+        let kind = decimal_token(&mut tokens)?;
+        let action = match kind {
+            0 => {
+                let rule = decode_rule(decimal_token(&mut tokens)?).ok_or(Refusal::Malformed)?;
+                ChainedAction::Rewrite(Step {
+                    rule,
+                    node: node_token(&mut tokens)?,
+                    operands: [node_token(&mut tokens)?, node_token(&mut tokens)?],
+                    first_bits: decimal_token(&mut tokens)?,
+                    second_bits: decimal_token(&mut tokens)?,
+                    claimed: decimal_token(&mut tokens)?,
+                })
+            }
+            1 => ChainedAction::PruneUnreachable,
+            _ => return Err(Refusal::Malformed),
+        };
+        steps.push(ChainedStep {
+            action,
+            before: decode_digest(&mut tokens)?,
+            after: decode_digest(&mut tokens)?,
+        });
+    }
+    if tokens.next().is_some() {
+        return Err(Refusal::Malformed);
+    }
+    Ok(ChainedDerivation {
+        revision: alloc::string::String::from(revision),
+        model: alloc::string::String::from(model),
+        steps,
+        left,
+        right,
     })
 }
 
@@ -604,6 +765,381 @@ fn replay(graph: &crate::ir::Graph, derivation: &Derivation) -> Result<crate::ir
     Ok(replayed)
 }
 
+fn remap_node(
+    mapping: &[Option<crate::ir::NodeId>],
+    node: crate::ir::NodeId,
+) -> Result<crate::ir::NodeId, Refusal> {
+    mapping
+        .get(node.index())
+        .copied()
+        .flatten()
+        .ok_or(Refusal::Malformed)
+}
+
+fn remap_fact(
+    fact: &crate::ir::Fact,
+    mapping: &[Option<crate::ir::NodeId>],
+) -> Result<crate::ir::Fact, Refusal> {
+    Ok(match fact {
+        crate::ir::Fact::Range { lo, hi } => crate::ir::Fact::Range { lo: *lo, hi: *hi },
+        crate::ir::Fact::Grid { log2 } => crate::ir::Fact::Grid { log2: *log2 },
+        crate::ir::Fact::Bit => crate::ir::Fact::Bit,
+        crate::ir::Fact::OneHot { group, allow_zero } => crate::ir::Fact::OneHot {
+            group: group
+                .iter()
+                .map(|node| remap_node(mapping, *node))
+                .collect::<Result<_, _>>()?,
+            allow_zero: *allow_zero,
+        },
+        crate::ir::Fact::Finite => crate::ir::Fact::Finite,
+        crate::ir::Fact::Shape(size) => crate::ir::Fact::Shape(*size),
+        crate::ir::Fact::Integral => crate::ir::Fact::Integral,
+    })
+}
+
+fn remap_op(
+    op: &crate::ir::Op,
+    mapping: &[Option<crate::ir::NodeId>],
+) -> Result<crate::ir::Op, Refusal> {
+    use crate::ir::Op;
+    let remap = |node| remap_node(mapping, node);
+    Ok(match op {
+        Op::Input(slot) => Op::Input(*slot),
+        Op::Param(slot) => Op::Param(*slot),
+        Op::Const(literal) => Op::Const(*literal),
+        Op::I64Add(a, b) => Op::I64Add(remap(*a)?, remap(*b)?),
+        Op::I64Sub(a, b) => Op::I64Sub(remap(*a)?, remap(*b)?),
+        Op::I64Mul(a, b) => Op::I64Mul(remap(*a)?, remap(*b)?),
+        Op::I64Eq(a, b) => Op::I64Eq(remap(*a)?, remap(*b)?),
+        Op::F32Add(a, b) => Op::F32Add(remap(*a)?, remap(*b)?),
+        Op::F32Sub(a, b) => Op::F32Sub(remap(*a)?, remap(*b)?),
+        Op::F32Mul(a, b) => Op::F32Mul(remap(*a)?, remap(*b)?),
+        Op::F32Affine { bias, terms } => Op::F32Affine {
+            bias: *bias,
+            terms: terms
+                .iter()
+                .map(|term| {
+                    Ok(crate::ir::AffineTerm {
+                        coefficient: term.coefficient,
+                        operand: match term.operand {
+                            crate::ir::AffineOperand::One => crate::ir::AffineOperand::One,
+                            crate::ir::AffineOperand::Node(node) => {
+                                crate::ir::AffineOperand::Node(remap(node)?)
+                            }
+                        },
+                    })
+                })
+                .collect::<Result<_, Refusal>>()?,
+        },
+        Op::F32Relu(node) => Op::F32Relu(remap(*node)?),
+        Op::F32Reglu { left, gate } => Op::F32Reglu {
+            left: remap(*left)?,
+            gate: remap(*gate)?,
+        },
+        Op::F32Step(node) => Op::F32Step(remap(*node)?),
+        Op::F32Select { bit, off, on } => Op::F32Select {
+            bit: remap(*bit)?,
+            off: remap(*off)?,
+            on: remap(*on)?,
+        },
+        Op::F32Index {
+            index,
+            table,
+            below,
+            above,
+        } => Op::F32Index {
+            index: remap(*index)?,
+            table: table
+                .iter()
+                .map(|node| remap(*node))
+                .collect::<Result<_, _>>()?,
+            below: *below,
+            above: *above,
+        },
+        Op::Guard { fact, value } => Op::Guard {
+            fact: remap_fact(fact, mapping)?,
+            value: remap(*value)?,
+        },
+    })
+}
+
+/// Computes the unique creation-order pruning of unreachable non-interface graph nodes.
+///
+/// Roots include ordered outputs, guard roots, interface nodes (whose slot numbering is part
+/// of the checked graph contract), and all references held by fact records. Operands are
+/// traversed in their original order. Survivors are copied in creation order, which makes the
+/// induced old-to-new map a bijection and preserves operand and output order by construction.
+fn prune_unreachable(graph: &crate::ir::Graph) -> Result<crate::ir::Graph, Refusal> {
+    let node_count = graph.nodes.len();
+    let mut live = alloc::vec![false; node_count];
+    let mut work = graph.outputs.clone();
+    for (index, node) in graph.nodes.iter().enumerate() {
+        if node.op.is_guard()
+            || matches!(node.op, crate::ir::Op::Input(_) | crate::ir::Op::Param(_))
+        {
+            work.push(crate::ir::NodeId(
+                u32::try_from(index).map_err(|_| Refusal::Malformed)?,
+            ));
+        }
+    }
+    for fact in &graph.facts {
+        work.push(fact.node);
+        if let crate::ir::Fact::OneHot { group, .. } = &fact.fact {
+            work.extend_from_slice(group);
+        }
+        if let crate::ir::Provenance::Guard(guard) = &fact.provenance {
+            work.push(*guard);
+        }
+    }
+    while let Some(node) = work.pop() {
+        let Some(is_live) = live.get_mut(node.index()) else {
+            return Err(Refusal::Malformed);
+        };
+        if core::mem::replace(is_live, true) {
+            continue;
+        }
+        let Some(source) = graph.nodes.get(node.index()) else {
+            return Err(Refusal::Malformed);
+        };
+        source.op.visit_operands(|operand| work.push(operand));
+    }
+
+    let mut mapping = alloc::vec![None; node_count];
+    let mut next = 0u32;
+    for (old, is_live) in live.iter().copied().enumerate() {
+        if is_live {
+            let old = u32::try_from(old).map_err(|_| Refusal::Malformed)?;
+            let old_index = usize::try_from(old).map_err(|_| Refusal::Malformed)?;
+            mapping[old_index] = Some(crate::ir::NodeId(next));
+            next = next.checked_add(1).ok_or(Refusal::Malformed)?;
+        }
+    }
+    let mut pruned = graph.clone();
+    pruned.nodes = alloc::vec::Vec::with_capacity(mapping.iter().flatten().count());
+    for (index, node) in graph.nodes.iter().enumerate() {
+        if live[index] {
+            pruned.nodes.push(crate::ir::Node {
+                op: remap_op(&node.op, &mapping)?,
+                origin: node.origin.clone(),
+            });
+        }
+    }
+    pruned.outputs = graph
+        .outputs
+        .iter()
+        .map(|node| remap_node(&mapping, *node))
+        .collect::<Result<_, _>>()?;
+    pruned.facts = graph
+        .facts
+        .iter()
+        .map(|fact| {
+            Ok(crate::ir::FactRecord {
+                node: remap_node(&mapping, fact.node)?,
+                fact: remap_fact(&fact.fact, &mapping)?,
+                provenance: match &fact.provenance {
+                    crate::ir::Provenance::Guard(guard) => {
+                        crate::ir::Provenance::Guard(remap_node(&mapping, *guard)?)
+                    }
+                    other => other.clone(),
+                },
+            })
+        })
+        .collect::<Result<_, Refusal>>()?;
+    Ok(pruned)
+}
+
+fn validate_chained_rule(graph: &crate::ir::Graph, step: Step) -> Result<(), Refusal> {
+    let index = step.node.index();
+    for operand in step.operands {
+        if operand.index() >= index {
+            return Err(Refusal::Malformed);
+        }
+    }
+    let op = &graph.nodes.get(index).ok_or(Refusal::Malformed)?.op;
+    match (step.rule, op) {
+        (Rule::FoldAddConstants, crate::ir::Op::I64Add(first, second)) => {
+            if step.operands != [*first, *second] {
+                return Err(Refusal::Malformed);
+            }
+            let first_bits = checked_bits(graph, *first, step.first_bits)?;
+            let second_bits = checked_bits(graph, *second, step.second_bits)?;
+            if step.claimed != wrapping_add(first_bits, second_bits) {
+                return Err(Refusal::ClaimMismatch);
+            }
+        }
+        (Rule::NeutralAddLeft, crate::ir::Op::I64Add(first, second)) => {
+            if step.operands != [*first, *second]
+                || !identity_bits_are_canonical(
+                    graph,
+                    *first,
+                    [step.first_bits, step.second_bits],
+                    0,
+                )
+                || step.claimed != 0
+            {
+                return Err(Refusal::Malformed);
+            }
+        }
+        (Rule::NeutralMulRight, crate::ir::Op::I64Mul(first, second)) => {
+            if step.operands != [*first, *second]
+                || !identity_bits_are_canonical(
+                    graph,
+                    *second,
+                    [step.first_bits, step.second_bits],
+                    1,
+                )
+                || step.claimed != 0
+            {
+                return Err(Refusal::Malformed);
+            }
+        }
+        _ => return Err(Refusal::Malformed),
+    }
+    Ok(())
+}
+
+fn replay_chained_rule(graph: &crate::ir::Graph, step: Step) -> Result<crate::ir::Graph, Refusal> {
+    let mut result = graph.clone();
+    if step.rule == Rule::FoldAddConstants {
+        let node = result
+            .nodes
+            .get_mut(step.node.index())
+            .ok_or(Refusal::Malformed)?;
+        node.op = crate::ir::Op::Const(crate::ir::Literal::I64(step.claimed.cast_signed()));
+    }
+    Ok(result)
+}
+
+fn record_chained_rule(
+    ids: &dyn IdentityScheme,
+    graph: &mut crate::ir::Graph,
+    step: Step,
+    transitions: &mut alloc::vec::Vec<ChainedStep>,
+) -> Result<(), Refusal> {
+    let before = graph.logical_id(ids);
+    validate_chained_rule(graph, step)?;
+    *graph = replay_chained_rule(graph, step)?;
+    let after = graph.logical_id(ids);
+    transitions.push(ChainedStep {
+        action: ChainedAction::Rewrite(step),
+        before,
+        after,
+    });
+    Ok(())
+}
+
+/// Proposes a chained derivation and its result graph under `ngraph-cert/2`.
+///
+/// Unlike the legacy profile, each rewrite premise is checked against the state produced by
+/// the preceding step. A final certified prune is emitted only when it removes unreachable
+/// non-interface nodes; admission itself is unchanged and still runs on both endpoints.
+#[must_use]
+pub fn propose_chained(
+    ids: &dyn IdentityScheme,
+    proposer: Proposer,
+    graph: &crate::ir::Graph,
+) -> Result<(ChainedDerivation, crate::ir::Graph), Refusal> {
+    let mut result = graph.clone();
+    let mut steps = alloc::vec::Vec::new();
+    match proposer {
+        Proposer::Identity => {}
+        Proposer::FirstEligible => {
+            if let Some(step) = (0..result.nodes.len()).find_map(|index| fold_site(&result, index)) {
+                record_chained_rule(ids, &mut result, step, &mut steps)?;
+            }
+        }
+        Proposer::SinglePass => {
+            let sites: alloc::vec::Vec<Step> = (0..graph.nodes.len())
+                .filter_map(|index| fold_site(graph, index))
+                .collect();
+            for step in sites {
+                record_chained_rule(ids, &mut result, step, &mut steps)?;
+            }
+        }
+        Proposer::FixedPoint => {
+            while let Some(step) =
+                (0..result.nodes.len()).find_map(|index| fold_site(&result, index))
+            {
+                record_chained_rule(ids, &mut result, step, &mut steps)?;
+            }
+        }
+    }
+    let pruned = prune_unreachable(&result)?;
+    if pruned != result {
+        steps.push(ChainedStep {
+            action: ChainedAction::PruneUnreachable,
+            before: result.logical_id(ids),
+            after: pruned.logical_id(ids),
+        });
+        result = pruned;
+    }
+    let derivation = ChainedDerivation {
+        revision: alloc::string::String::from(CHAINED_REVISION),
+        model: alloc::string::String::from(MODEL_REVISION),
+        steps,
+        left: graph.logical_id(ids),
+        right: result.logical_id(ids),
+    };
+    Ok((derivation, result))
+}
+
+/// Checks every `ngraph-cert/2` transition by independently replaying the exact graph state.
+///
+/// The verifier checks the before/after logical identity of every transition, re-derives every
+/// rewrite premise from the current state, recomputes the unique pruning map, and compares the
+/// exact replayed endpoint with `result`. Pruning is permitted only as the final transition.
+pub fn check_chained(
+    ids: &dyn IdentityScheme,
+    graph: &crate::ir::Graph,
+    result: &crate::ir::Graph,
+    derivation: &ChainedDerivation,
+) -> Result<(), Refusal> {
+    if derivation.revision != CHAINED_REVISION {
+        return Err(Refusal::StaleRevision);
+    }
+    if derivation.model != MODEL_REVISION {
+        return Err(Refusal::StaleModel);
+    }
+    if derivation.steps.len() > MAX_STEPS {
+        return Err(Refusal::TooManySteps);
+    }
+    if graph.logical_id(ids) != derivation.left || result.logical_id(ids) != derivation.right {
+        return Err(Refusal::EndpointMismatch);
+    }
+    let mut current = graph.clone();
+    let mut previous = None;
+    let mut pruned = false;
+    for (position, transition) in derivation.steps.iter().enumerate() {
+        if current.logical_id(ids) != transition.before {
+            return Err(Refusal::EndpointMismatch);
+        }
+        current = match &transition.action {
+            ChainedAction::Rewrite(step) => {
+                if pruned || previous.is_some_and(|prior| step.node.0 <= prior) {
+                    return Err(Refusal::Order);
+                }
+                previous = Some(step.node.0);
+                validate_chained_rule(&current, *step)?;
+                replay_chained_rule(&current, *step)?
+            }
+            ChainedAction::PruneUnreachable => {
+                if pruned || position + 1 != derivation.steps.len() {
+                    return Err(Refusal::Order);
+                }
+                pruned = true;
+                prune_unreachable(&current)?
+            }
+        };
+        if current.logical_id(ids) != transition.after {
+            return Err(Refusal::ResultMismatch);
+        }
+    }
+    if current != *result {
+        return Err(Refusal::ResultMismatch);
+    }
+    Ok(())
+}
+
 /// Validates a derivation against the original and the resulting graph. The
 /// operand order is compared, never re-derived from the claimed value, every
 /// recorded bit field and claim must be the canonical one for its rule (see
@@ -621,7 +1157,9 @@ pub fn check(
     result: &crate::ir::Graph,
     derivation: &Derivation,
 ) -> Result<(), Refusal> {
-    if derivation.revision != CERT_REVISION {
+    if derivation.revision != CERT_REVISION
+        && derivation.revision != LEGACY_CHAINLESS_REVISION
+    {
         return Err(Refusal::StaleRevision);
     }
     if derivation.model != MODEL_REVISION {
@@ -808,7 +1346,7 @@ mod tests {
         );
 
         let mut stale = derivation.clone();
-        stale.revision = alloc::string::String::from("ngraph-cert/1");
+        stale.revision = alloc::string::String::from(super::CHAINED_REVISION);
         assert_eq!(
             super::check(&scheme, &graph, &result, &stale),
             Err(super::Refusal::StaleRevision)
@@ -1226,7 +1764,7 @@ mod tests {
         let scheme = TestIds;
         let (derivation, _) = super::emit(&scheme, &graph);
         let wire = super::encode(&derivation);
-        let revision = wire.replacen(super::CERT_REVISION, "ngraph-cert/1", 1);
+        let revision = wire.replacen(super::CERT_REVISION, super::CHAINED_REVISION, 1);
         assert_eq!(
             super::decode(&revision),
             Err(super::Refusal::StaleRevision),
@@ -1238,6 +1776,19 @@ mod tests {
             Err(super::Refusal::StaleModel),
             "a stale semantic model token is refused before any step"
         );
+    }
+
+    #[test]
+    fn the_chainless_v1_profile_remains_decodable_and_checkable() {
+        let graph = sample();
+        let scheme = TestIds;
+        let (mut derivation, result) = super::emit(&scheme, &graph);
+        derivation.revision = alloc::string::String::from(super::LEGACY_CHAINLESS_REVISION);
+        let wire = super::encode(&derivation);
+        let envelope = super::decode(&wire).expect("the readable v1 envelope decodes");
+        let decoded = envelope.bind(derivation.left, derivation.right);
+        assert_eq!(decoded, derivation);
+        assert_eq!(super::check(&scheme, &graph, &result, &decoded), Ok(()));
     }
 
     #[test]
