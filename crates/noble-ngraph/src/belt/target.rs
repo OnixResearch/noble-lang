@@ -35,8 +35,8 @@ pub const MAX_OUTPUTS: usize = super::MAX_OUTPUTS;
 pub const MAX_HORIZON: u32 = 65_536;
 /// Maximum number of pending event records the checker retains.
 pub const MAX_PENDING: usize = 65_536;
-/// Maximum checker work units: bounded issue events plus bounded cycles.
-pub const MAX_CHECK_WORK: usize = MAX_EVENTS + MAX_HORIZON as usize;
+/// Maximum checker work units: bounded issue events plus half the horizon.
+pub const MAX_CHECK_WORK: usize = MAX_EVENTS + (MAX_HORIZON as usize / 2);
 
 /// Independently validate the exact encoded schedule against `checked` and `machine`.
 ///
