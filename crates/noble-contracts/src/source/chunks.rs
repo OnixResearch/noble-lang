@@ -628,7 +628,6 @@ impl Ledger {
     }
 
     fn refuse(&mut self, resource: Resource, observed: u32, at: Location) -> Refusal {
-        let resource_limit_units = self.limits.limit(resource);
         let mut refusal = Refusal::new(
             Class::Exhausted,
             at,
@@ -636,7 +635,7 @@ impl Ledger {
         );
         refusal.resource = Some(resource);
         refusal.observed = observed;
-        refusal.limit = resource_limit_units;
+        refusal.limit = self.limits.limit(resource);
         refusal
     }
 
@@ -656,14 +655,14 @@ impl Ledger {
     /// always names the boundary that stopped the work.
     pub fn charge(&mut self, resource: Resource, amount: u32, at: Location) -> Result<(), Refusal> {
         let current = self.observed(resource);
-        let resource_limit_units = self.limits.limit(resource);
+        let max_value = self.limits.limit(resource);
         let next = match current.checked_add(amount) {
             Some(next) => next,
             None => return Err(self.refuse(resource, u32::MAX, at)),
         };
-        if next > resource_limit_units {
+        if next > max_value {
             if let Some(slot) = self.charged.get_mut(resource.slot()) {
-                *slot = resource_limit_units;
+                *slot = max_value;
             }
             return Err(self.refuse(resource, next, at));
         }
@@ -689,10 +688,10 @@ impl Ledger {
     /// Record a per-item ceiling. A smaller value than one already observed is
     /// kept out, so the ledger reports the worst case, never the last case.
     pub fn observe(&mut self, resource: Resource, value: u32, at: Location) -> Result<(), Refusal> {
-        let resource_limit_units = self.limits.limit(resource);
-        if value > resource_limit_units {
+        let max_value = self.limits.limit(resource);
+        if value > max_value {
             if let Some(slot) = self.charged.get_mut(resource.slot()) {
-                *slot = resource_limit_units;
+                *slot = max_value;
             }
             return Err(self.refuse(resource, value, at));
         }
@@ -1270,7 +1269,11 @@ fn byte_budget_refusal(observed: u64, at: Location) -> Refusal {
         "emitted source exceeds the fixed byte bound",
     );
     refusal.resource = Some(Resource::SourceBytes);
-    refusal.observed = observed.min(u64::from(u32::MAX)) as u32;
+    let mut observed_report = u32::MAX;
+    if let Ok(representable) = u32::try_from(observed) {
+        observed_report = representable;
+    }
+    refusal.observed = observed_report;
     refusal.limit = MAX_SOURCE_BYTES;
     refusal
 }
@@ -2001,7 +2004,11 @@ fn add_encoded_size(total: &mut u64, amount: u64, at: Location) -> Result<(), Re
             "canonical encoded size exceeds the finite retained-byte bound",
         );
         refusal.resource = Some(Resource::RetainedBytes);
-        refusal.observed = next.min(u64::from(u32::MAX)) as u32;
+        let mut observed_report = u32::MAX;
+        if let Ok(representable) = u32::try_from(next) {
+            observed_report = representable;
+        }
+        refusal.observed = observed_report;
         refusal.limit = MAX_RETAINED_BYTES;
         return Err(refusal);
     }
