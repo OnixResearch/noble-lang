@@ -35,6 +35,8 @@ mod belt_measure;
 mod belt_mutations;
 #[path = "belt_target_dir/tests.rs"]
 mod belt_target_tests;
+#[path = "belt_target_dir/differential.rs"]
+mod belt_target_differential;
 mod common;
 #[path = "schedule_lean_dir/corpus.rs"]
 mod corpus;
