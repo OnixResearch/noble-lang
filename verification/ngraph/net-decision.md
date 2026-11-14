@@ -6,7 +6,7 @@
 
 The rule is frozen in [net-continuation-criteria.md](net-continuation-criteria.md), before any net timing. It selects #117's fanout-heavy `shared-prefix` family, its 8,192 frozen rows, and requires every row on every separate, merged, and recomputing graph to agree across the independent BigInt oracle, normative reference, packed evaluator, and net read-back. It requires `packed merged / net merged >= 1.15`, with lowering and validation included in the measured net execution and construction accounting for one complete run. No threshold or criteria file was changed after measurement.
 
-The source-bound #117 run is [receipt-2026-11-13-c.json](../shared-candidates/receipt-2026-11-13-c.json), produced from clean source commit `ee34d988390a904080f137a9ec321cfe3108f66a` and CLI SHA-256 `f188f734a6d9b07ee502a8741fbfaceded96cb315e03dfd898bb77c9b846224b`. Its criteria SHA-256 is `054944e2e8c66461213b38e5779f2180792425ad510a0af94ae9f73ff521f551`; the committed criteria blob is `4b9559916be062c52d55797ff8c8df6391c48ed9`. The run used one warm-up plus nine interleaved warm rounds on a shared 32-CPU x86-64 host (load average 37.37); “first” is not page-cache-cold.
+The source-bound final #117 run is [receipt-2026-11-14-d.json](../shared-candidates/receipt-2026-11-14-d.json), produced from a clean tree at source commit `68ea8a60575143429fe62aee8a2fd51079f56fb0` (`clean_tree: true`) with CLI SHA-256 `639932997493c112cf2108c5faa46ca8f602a282e1248274d20b3dd34cc3e3a7`. Its criteria SHA-256 is `054944e2e8c66461213b38e5779f2180792425ad510a0af94ae9f73ff521f551`; the committed criteria blob is `4b9559916be062c52d55797ff8c8df6391c48ed9`. The run used one warm-up plus nine interleaved warm rounds on a shared 32-CPU x86-64 host (load average 16.77); “first” is not page-cache-cold.
 
 ## Correctness
 
@@ -14,20 +14,20 @@ The receipt's `net-oracle` and `reference-all-net` gates hold for both families.
 
 The frozen #117 criteria retain `reference_rows: 256`; that field and all original thresholds remain unchanged. The runner keeps that original prefix check and adds the separate `reference-all-net` gate for the #37 continuation requirement, covering every row and every separate/merged/recomputing graph. Thus the 256-row #117 reference sample was not silently substituted for the stronger #37 requirement, and no frozen criterion was weakened.
 
-The compressed [B2 extraction receipt](phase-b-extract-net-2026-11-13.json.gz), also source-bound to `ee34d988390a904080f137a9ec321cfe3108f66a`, reports `result: passed`, `agree: true`, and no mismatches across the 15 named graphs (120,003 L2–L5 vectors) and 64 seeded random Core programs (640,000 vectors). L1 agrees on all 685 checked vectors in each `--opt off` and `--opt on` mode, with no ordinary-path quota outcomes. The B2 differential fixtures cover boundaries, nested pairs, fanout, captured recipes, rebinding, overflow, equality, Unit/empty, repeated outputs, and the I4 transition; all are retained in that receipt. The reducer's unit tests additionally check exact interaction counts and schedule invariance; this does not establish the Rust-to-Lean refinement theorem.
+The compressed [B2 extraction receipt](phase-b-extract-net-2026-11-13.json.gz) is historical evidence source-bound to `ee34d988390a904080f137a9ec321cfe3108f66a`, not to the final backend commit. At `68ea8a6`, the current B2 target passed with 22 tests and 2 intentionally ignored; the explicitly run ignored BigInt differential passed, and the corpus-freshness test confirmed the retained Lean corpus matches fresh Rust lowerings. The suite covers the current backend's boundaries, nested pairs, fanout, captured recipes, rebinding, overflow, equality, Unit/empty, repeated outputs, seeded random programs and schedule/count invariance. The freshness result is not itself a Lean kernel proof: the kernel-checked corpus gate is completed by integration with the corresponding `NetsLean` definitions. The prior B2 receipt's L1/Wasmtime results remain tied to its own recorded source revision.
 
 ## Net performance against the frozen threshold
 
 | Shared-prefix arm | Warm median wall | Warm median CPU | Warm median RSS | Interactions in one complete evaluation run | Peak live agents | Max retained-byte estimate |
 |---|---:|---:|---:|---:|---:|---:|
-| packed `merged` | 268.659 ms | 180 ms | 16,464 KiB | — | — | — |
-| `net-merged` | 4,240.036 ms | 3,120 ms | 17,840 KiB | 819,200 | 84 | 5,684 B |
-| packed `merged-duplicated` | 269.768 ms | 220 ms | 16,276 KiB | — | — | — |
-| `net-merged-duplicated` | 12,163.044 ms | 10,690 ms | 18,324 KiB | 3,612,672 | 348 | 22,580 B |
+| packed `merged` | 131.661 ms | 110 ms | 25,592 KiB | — | — | — |
+| `net-merged` | 2,017.644 ms | 1,980 ms | 24,296 KiB | 819,200 | 84 | 5,684 B |
+| packed `merged-duplicated` | 150.922 ms | 130 ms | 25,304 KiB | — | — | — |
+| `net-merged-duplicated` | 7,373.835 ms | 7,290 ms | 24,516 KiB | 3,612,672 | 348 | 22,580 B |
 
-The observed `packed merged / net merged` ratio is `0.06336`; the frozen minimum is `1.15`. Equivalently, net merged is about `15.78x` slower than packed merged. The net merged form does reduce work relative to its recomputing net control (`net-merged / net-merged-duplicated = 0.3486`), but that relative saving does not change the absolute comparison with the packed backend. The run accounts for construction once: every net input row includes graph-to-net lowering, independent validation, reduction, and read-back. No cross-input cache or repeated-run amortization is assumed.
+The observed `packed merged / net merged` ratio is `0.06525`; the frozen minimum is `1.15`. Equivalently, net merged is about `15.33x` slower than packed merged. The net merged form does reduce work relative to its recomputing net control (`net-merged / net-merged-duplicated = 0.2736`), but that relative saving does not change the absolute comparison with the packed backend. The run accounts for construction once: every net input row includes graph-to-net lowering, independent validation, reduction, and read-back. No cross-input cache or repeated-run amortization is assumed.
 
-The original #117 packed-arm rule separately remains **NO-GO** in run c: d2 is `0.9959` against `<= 0.90`, and d4 observes `+1,208 KiB` RSS growth for the shared-prefix merged arm against `<= 1,024 KiB`. The runner's summary is `NO-GO: an arm grew its peak resident set beyond the declared bound.` This #117 verdict is distinct from the #37 net speed NO-GO; neither is treated as a correctness failure.
+The frozen #117 packed-arm rule is **GO** on final run d: d1 `0.1558`, d2 `0.8724`, d3 `0.0072`, and every d4 packed-arm growth is at most `684 KiB`, under the `1,024 KiB` bound. Run c's earlier d2 and d4 failures remain historical outcomes, not the final run's verdict. The separate #37 net speed rule remains **NO-GO**; neither outcome is a correctness failure.
 
 ## Scope and reopen conditions
 
