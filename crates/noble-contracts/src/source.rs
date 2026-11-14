@@ -1467,17 +1467,13 @@ const fn classify_diagnostic(kind: PreviewRefusal, error: Error) -> PreviewError
 
 /// The source test environment is explicit, resource-free, and fixed. The old
 /// checker's Text--Unit host contract remains unchanged outside source.
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; the fixed bootstrap environment and emit slot are checked fallibly before appending matching scheme, behavior, dependency, and effect entries."
-)]
 pub(crate) fn environment() -> Result<noble_kernel::contracts::Env, crate::Diagnostic> {
     let span = crate::Span { start: 0, end: 0 };
     let env = match noble_kernel::contracts::environment() {
         Ok(env) => env,
         Err(_) => return Err(crate::internal(span)),
     };
-    source_environment(env, true)
+    adapt_environment(env, true)
 }
 
 pub(crate) fn checked_i64_environment() -> Result<noble_kernel::contracts::Env, crate::Diagnostic> {
@@ -1486,14 +1482,14 @@ pub(crate) fn checked_i64_environment() -> Result<noble_kernel::contracts::Env, 
         Ok(env) => env,
         Err(_) => return Err(crate::internal(span)),
     };
-    source_environment(env, false)
+    adapt_environment(env, false)
 }
 
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; the fixed bootstrap environment and emit slot are checked fallibly before appending matching scheme, behavior, dependency, and effect entries."
 )]
-fn source_environment(
+fn adapt_environment(
     mut env: noble_kernel::contracts::Env,
     source_abort: bool,
 ) -> Result<noble_kernel::contracts::Env, crate::Diagnostic> {

@@ -326,7 +326,7 @@ fn calculator_word(word: &[u8]) -> Option<super::Target> {
     Some(super::Target::Builtin(identity))
 }
 
-fn checked_i64_word(word: &[u8]) -> Option<super::Target> {
+const fn checked_i64_word(word: &[u8]) -> Option<super::Target> {
     let identity = match word {
         b"i64.checked-add" => 23,
         b"i64.checked-sub" => 24,

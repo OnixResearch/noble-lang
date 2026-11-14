@@ -177,10 +177,7 @@ const fn definition_limit(calculator: bool) -> usize {
 )]
 pub(super) fn check(
     submission: &noble_kernel::execution::Submission,
-    calculator: bool,
-    checked_i64: bool,
-    text_cursor: bool,
-    declared_text: bool,
+    profile: super::ProfileSelection,
     work: &mut super::Work,
 ) -> Result<(), crate::Diagnostic> {
     // Profile selection is the compiler's own flags, never an untrusted Env
@@ -189,13 +186,18 @@ pub(super) fn check(
     // adds 32 rows, the pure byte cursor adds its row (27), declared text its
     // signed-comparison row (28), and checked-I64 its seven operations (30).
     // A narrower prefix would refuse a valid environment before profile audit.
-    let rows_cap = super::maximum_rows(calculator, text_cursor, declared_text, checked_i64);
+    let rows_cap = super::maximum_rows(
+        profile.calculator,
+        profile.text_cursor,
+        profile.declared_text,
+        profile.checked_i64,
+    );
     if submission.environment.defs.len() > rows_cap
-        || submission.definitions.len() > definition_limit(calculator)
+        || submission.definitions.len() > definition_limit(profile.calculator)
     {
         return Err(crate::Diagnostic::Exhausted);
     }
-    if calculator {
+    if profile.calculator {
         let budget = attempt!(submission
             .environment
             .calculator_clone_budget()
@@ -221,7 +223,7 @@ pub(super) fn check(
     // The selected clone-budget walk has already inspected every scheme
     // constructor, embedded nominal descriptor and depth/arity bound.
     // Do not repeat the old borrowed tree walk before independent admission.
-    if !calculator {
+    if !profile.calculator {
         while index < submission.environment.defs.len() {
             match schemes::check(&submission.environment.defs[index], work) {
                 Ok(()) => index += 1,
@@ -235,10 +237,10 @@ pub(super) fn check(
     if let Some(problem) = failure {
         return Err(problem);
     }
-    if calculator {
+    if profile.calculator {
         attempt!(variables::schemes(submission, work));
     }
-    if !calculator {
+    if !profile.calculator {
         index = 0;
         while index < submission.environment.nominals.len() {
             let shape = &submission.environment.nominals[index].shape;
@@ -276,7 +278,7 @@ pub(super) fn check(
     }
     match failure {
         Some(problem) => Err(problem),
-        None if calculator => variables::check(submission, work),
+        None if profile.calculator => variables::check(submission, work),
         None => Ok(()),
     }
 }
@@ -411,7 +413,17 @@ mod row_cap_tests {
         );
         let mut work = budget(submission.request.limits.work);
         assert!(
-            check(submission, false, false, true, true, &mut work).is_ok(),
+            check(
+                submission,
+                super::super::ProfileSelection {
+                    calculator: false,
+                    checked_i64: false,
+                    text_cursor: true,
+                    declared_text: true,
+                },
+                &mut work,
+            )
+            .is_ok(),
             "a full-definition declared-text environment must pass preflight"
         );
     }

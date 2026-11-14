@@ -528,21 +528,22 @@ fn lookup_rows(env: &noble_kernel::contracts::Env) -> Result<usize, crate::Diagn
 )]
 pub(super) fn work(
     environment: &noble_kernel::contracts::Env,
-    calculator: bool,
-    checked_i64: bool,
-    text_cursor: bool,
-    declared_text: bool,
+    profile: super::super::ProfileSelection,
     meter: &mut super::super::Work,
 ) -> Result<u64, crate::Diagnostic> {
-    let definition_cap = if calculator {
+    let definition_cap = if profile.calculator {
         super::super::CALCULATOR_DEFINITION_LIMIT
     } else {
         super::super::DEFINITION_LIMIT
     };
     // The same per-profile row cap the declared-shape check uses; a full
     // selected environment must not be refused after preflight admitted it.
-    let maximum_rows =
-        super::super::maximum_rows(calculator, text_cursor, declared_text, checked_i64);
+    let maximum_rows = super::super::maximum_rows(
+        profile.calculator,
+        profile.text_cursor,
+        profile.declared_text,
+        profile.checked_i64,
+    );
     if environment.defs.len() > maximum_rows || environment.deps.len() > maximum_rows {
         return Err(crate::Diagnostic::Exhausted);
     }
@@ -553,7 +554,7 @@ pub(super) fn work(
         return Err(crate::Diagnostic::Exhausted);
     }
     let mut cost = 1u64;
-    let selected_lookup_rows = if calculator {
+    let selected_lookup_rows = if profile.calculator {
         attempt!(lookup_rows(environment))
     } else {
         0
@@ -561,7 +562,7 @@ pub(super) fn work(
     let mut index = 0usize;
     let mut failure = None;
     while index < environment.defs.len() {
-        let row = if calculator {
+        let row = if profile.calculator {
             weight::scheme(&environment.defs[index], selected_lookup_rows, meter)
         } else {
             scheme_work(&environment.defs[index])
@@ -696,9 +697,18 @@ mod contract_meter_tests {
         ));
         assert_eq!(sufficient.remaining, 0);
         assert!(
-            work(&env, false, false, false, false, &mut budget(u64::MAX))
-                .ok()
-                .expect("full environment budget")
+            work(
+                &env,
+                super::super::super::ProfileSelection {
+                    calculator: false,
+                    checked_i64: false,
+                    text_cursor: false,
+                    declared_text: false,
+                },
+                &mut budget(u64::MAX),
+            )
+            .ok()
+            .expect("full environment budget")
                 > cost
         );
     }
@@ -711,7 +721,16 @@ mod contract_meter_tests {
             .map(|_| noble_kernel::shapes::Pattern::Unit)
             .collect();
         assert!(matches!(
-            work(&env, false, false, false, false, &mut budget(u64::MAX)),
+            work(
+                &env,
+                super::super::super::ProfileSelection {
+                    calculator: false,
+                    checked_i64: false,
+                    text_cursor: false,
+                    declared_text: false,
+                },
+                &mut budget(u64::MAX),
+            ),
             Err(Diagnostic::Exhausted)
         ));
     }

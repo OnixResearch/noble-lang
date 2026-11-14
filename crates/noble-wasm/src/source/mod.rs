@@ -33,6 +33,14 @@ const DEFINITION_LIMIT: usize = 256;
 // whose 321 reachable named bodies exceed the older 256-definition profile.
 const CALCULATOR_DEFINITION_LIMIT: usize = 512;
 
+#[derive(Clone, Copy)]
+pub(in crate::source) struct ProfileSelection {
+    calculator: bool,
+    checked_i64: bool,
+    text_cursor: bool,
+    declared_text: bool,
+}
+
 /// The environment row cap of a selected profile: its definition limit plus the
 /// fixed rows only that profile installs (calculator 32, text cursor 27,
 /// declared text 28, ordinary 26). Borrowed preflight, admission's environment
@@ -1027,10 +1035,12 @@ impl Compiler {
         };
         attempt!(preflight::check(
             submission,
-            self.calculator,
-            self.checked_i64,
-            self.text_cursor,
-            self.declared_text,
+            ProfileSelection {
+                calculator: self.calculator,
+                checked_i64: self.checked_i64,
+                text_cursor: self.text_cursor,
+                declared_text: self.declared_text,
+            },
             &mut work
         ));
         work.calculator_preflight = false;
@@ -2065,7 +2075,17 @@ mod declared_text_ingress_tests {
         let compiler = Compiler::new_declared_text();
         let mut work = budget(original.request.limits.work);
         assert!(
-            preflight::check(&original, false, false, true, true, &mut work).is_ok(),
+            preflight::check(
+                &original,
+                super::ProfileSelection {
+                    calculator: false,
+                    checked_i64: false,
+                    text_cursor: true,
+                    declared_text: true,
+                },
+                &mut work,
+            )
+            .is_ok(),
             "whole-source preflight exhausted before declared-text admission"
         );
         let checked = admission::check(

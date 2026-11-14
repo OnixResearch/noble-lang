@@ -910,7 +910,7 @@ mod checked_i64_tests {
     }
 
     #[test]
-    fn div_rem_result_is_pair_success_or_i64_error() {
+    fn div_rem_result_has_pair_success_or_error_alternative() {
         let checked =
             super::checked_i64_environment().unwrap_or_else(|_| panic!("checked-I64 environment"));
         let scheme = checked.scheme(super::Definition(29)).unwrap();
