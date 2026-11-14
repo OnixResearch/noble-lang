@@ -116,5 +116,7 @@ fn evaluate(
     }
 }
 
+#[path = "tests/identity.rs"]
+mod identity;
 #[path = "tests/reuse.rs"]
 mod reuse;
