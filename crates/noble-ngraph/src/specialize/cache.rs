@@ -1193,4 +1193,6 @@ fn exact_bytes(mut bytes: alloc::vec::Vec<u8>) -> alloc::vec::Vec<u8> {
     bytes
 }
 
-
+#[cfg(test)]
+#[path = "cache/tests.rs"]
+mod tests;
