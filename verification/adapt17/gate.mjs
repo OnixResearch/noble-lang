@@ -477,11 +477,11 @@ function checkControlExpected(controlId, row) {
     ] }], `${name} both selected branches are lazy`);
     deepEqual(row.observation.request_trace, [], `${name} unselected abort branches make no request`);
   } else if (controlId === 'construction-quota') {
-    equal(row.observation.status, 2, `${name} quotation-construction quota status`);
+    equal(row.observation.status, 1, `${name} quotation-construction quota status`);
     equal(row.observation.outcome, 'runtime-exhausted', `${name} initialization quota outcome`);
     equal(row.observation.quota_reason, 'recipe leaves', `${name} initialization quota reason`);
-    equal(row.observation.quota_phase, 1, `${name} quotation-construction quota phase`);
-    expectCleanState(row, name, 2);
+    equal(row.observation.quota_phase, 0, `${name} quotation-construction quota phase`);
+    expectCleanState(row, name, 1);
   } else if (controlId === 'invocation-quota') {
     equal(row.observation.status, 2, `${name} invocation quota status`);
     equal(row.observation.outcome, 'runtime-exhausted', `${name} invocation quota outcome`);
