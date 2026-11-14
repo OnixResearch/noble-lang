@@ -148,6 +148,17 @@ The other native proofs in the requested sources remain deliberately classified 
 The M3 proof gate and its refusal matrix pass with the converted declarations. The conversions do not
 turn the remaining evaluation fixtures into strict proofs and do not expand the replay corpus.
 
+### Current strength-join follow-up (2026-11-14)
+
+The 26 currently strength-flagged native citations for `noble_kernel.acceptance.check` were each
+tried with `decide +kernel` under 1,000,000 heartbeats and recursion depth 4,096, with no statement
+changes. All 12 M2 and 14 M3 candidate proofs stopped at the extracted/reference `Outcome` match
+before the extracted `Result` computation reduced; these were reduction failures, not heartbeat
+timeouts. No conversion or replay-root change was made. The per-theorem locations, measurements,
+reopen condition, clean-commit M2/M3 strength receipt, and scoped deferral of community axiom-audit
+are recorded in [`decision.md`](decision.md#d-remaining-native_decide-conversions) and
+[`receipts/2026-11-14/strength-join.json`](receipts/2026-11-14/strength-join.json).
+
 ## Historical measurements (4.31.0; 2026-10-26 through 2026-10-30)
 
 | Lane | Command | Result |
