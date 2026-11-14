@@ -112,8 +112,17 @@ fn controls(
     let refusal = |cert: &[u8], net_bytes: &[u8], rules: &[u8]| {
         format!(
             "{:?}",
-            resource::check(&IDS, checked, row, cert, net_bytes, rules)
-                .expect_err("forged resource certificate must refuse")
+            resource::check(
+                &IDS,
+                checked,
+                row,
+                resource::CheckBytes {
+                    certificate: cert,
+                    net: net_bytes,
+                    rules
+                }
+            )
+            .expect_err("forged resource certificate must refuse")
         )
     };
     let observed = json!({
@@ -162,9 +171,11 @@ fn byte_certificates_replay_against_cli_net_traces() -> TestResult {
             &IDS,
             &checked,
             &row,
-            &artifact.certificate_bytes,
-            &artifact.net_bytes,
-            resource::RULE_TABLE_BYTES,
+            resource::CheckBytes {
+                certificate: &artifact.certificate_bytes,
+                net: &artifact.net_bytes,
+                rules: resource::RULE_TABLE_BYTES,
+            },
         )
         .expect("independent byte decoder and checker");
         assert_eq!(
@@ -278,13 +289,15 @@ fn byte_certificates_replay_against_cli_net_traces() -> TestResult {
                 &IDS,
                 checked,
                 row,
-                &unhex(
-                    entry["certificate_bytes"]
-                        .as_str()
-                        .expect("certificate bytes"),
-                ),
-                &unhex(entry["net_bytes"].as_str().expect("net bytes")),
-                resource::RULE_TABLE_BYTES,
+                resource::CheckBytes {
+                    certificate: &unhex(
+                        entry["certificate_bytes"]
+                            .as_str()
+                            .expect("certificate bytes"),
+                    ),
+                    net: &unhex(entry["net_bytes"].as_str().expect("net bytes")),
+                    rules: resource::RULE_TABLE_BYTES,
+                },
             )
             .expect("retained independent replay");
             assert_eq!(verified.interactions, entry["certified_interactions"]);

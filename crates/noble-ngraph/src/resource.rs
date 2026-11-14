@@ -12,8 +12,6 @@
 //! caller's [`crate::identity::IdentityScheme`]; the decoder and checker do not prove properties
 //! of that hash implementation.
 
-use alloc::vec::Vec;
-
 use crate::identity::IdentityScheme;
 
 /// Wire format revision for the bounded resource certificate.
@@ -90,9 +88,20 @@ pub enum Refusal {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Artifact {
     /// Exact canonical bytes for the fully connected lowered net.
-    pub net_bytes: Vec<u8>,
+    pub net_bytes: alloc::vec::Vec<u8>,
     /// Encoded certificate whose digests bind `net_bytes` and [`RULE_TABLE_BYTES`].
-    pub certificate_bytes: Vec<u8>,
+    pub certificate_bytes: alloc::vec::Vec<u8>,
+}
+
+/// Borrowed exact bytes supplied to the independent checker.
+#[derive(Clone, Copy)]
+pub struct CheckBytes<'a> {
+    /// Producer-declared binary certificate, parsed before any claim is trusted.
+    pub certificate: &'a [u8],
+    /// Canonically encoded connected net, decoded and revalidated against the source graph.
+    pub net: &'a [u8],
+    /// Complete selected rule table, compared byte-for-byte against the checker's fixed table.
+    pub rules: &'a [u8],
 }
 
 /// Independently recomputed claims accepted by [`check`].
@@ -179,10 +188,13 @@ pub fn check(
     ids: &dyn IdentityScheme,
     checked: &crate::check::CheckedGraph,
     inputs: &[crate::sem::Value],
-    certificate_bytes: &[u8],
-    net_bytes: &[u8],
-    rule_bytes: &[u8],
+    bytes: CheckBytes<'_>,
 ) -> Result<VerifiedResources, Refusal> {
+    let CheckBytes {
+        certificate: certificate_bytes,
+        net: net_bytes,
+        rules: rule_bytes,
+    } = bytes;
     if net_bytes.len() > MAX_NET_BYTES {
         return Err(Refusal::Malformed);
     }
@@ -229,8 +241,15 @@ pub fn check(
 
 /// Encodes all identity-bearing fields and every agent, port, and interface endpoint of a
 /// lowered net. The exact output is the byte sequence whose digest a certificate records.
-pub fn encode_net(net: &crate::net::InteractionGraph) -> Result<Vec<u8>, Refusal> {
-    let mut bytes = Vec::new();
+pub fn encode_net(net: &crate::net::InteractionGraph) -> Result<alloc::vec::Vec<u8>, Refusal> {
+    if net.outputs.len() != net.output_types.len() {
+        return Err(Refusal::Malformed);
+    }
+    let encoded_bytes = net_encoded_bytes(net).ok_or(Refusal::Malformed)?;
+    if encoded_bytes > MAX_NET_BYTES {
+        return Err(Refusal::Malformed);
+    }
+    let mut bytes = alloc::vec::Vec::with_capacity(encoded_bytes);
     bytes.extend_from_slice(NET_MAGIC);
     bytes.extend_from_slice(&net.graph_id);
     bytes.extend_from_slice(&net.build_key);
@@ -239,9 +258,6 @@ pub fn encode_net(net: &crate::net::InteractionGraph) -> Result<Vec<u8>, Refusal
     push_count(&mut bytes, net.input_values.len())?;
     for value in &net.input_values {
         bytes.extend_from_slice(&(*value as u64).to_le_bytes());
-    }
-    if net.outputs.len() != net.output_types.len() {
-        return Err(Refusal::Malformed);
     }
     push_count(&mut bytes, net.outputs.len())?;
     for (output, ty) in net.outputs.iter().zip(&net.output_types) {
@@ -308,6 +324,45 @@ pub fn encode_net(net: &crate::net::InteractionGraph) -> Result<Vec<u8>, Refusal
     Ok(bytes)
 }
 
+fn net_encoded_bytes(net: &crate::net::InteractionGraph) -> Option<usize> {
+    let parts_bytes = NET_MAGIC
+        .len()
+        .checked_add(DIGEST_BYTES.checked_mul(2)?)?
+        .checked_add(2 + net.contract_revision.len())?
+        .checked_add(2 + net.lowering_revision.len())?
+        .checked_add(3 * core::mem::size_of::<u32>())?
+        .checked_add(
+            net.input_values
+                .len()
+                .checked_mul(core::mem::size_of::<u64>())?,
+        )?
+        .checked_add(net.outputs.len().checked_mul(6)?)?;
+    net.agents
+        .iter()
+        .try_fold(parts_bytes, |total_bytes, agent| {
+            let origin_bytes = match agent.origin {
+                crate::net::Origin::Dup { .. } => 9,
+                crate::net::Origin::Node(_) | crate::net::Origin::Era(_) => 5,
+            };
+            let symbol_bytes = match agent.symbol {
+                crate::net::Symbol::Num(_) => 9,
+                crate::net::Symbol::Op2(_) => 2,
+                crate::net::Symbol::Op1(..) => 10,
+                crate::net::Symbol::Dup | crate::net::Symbol::Era => 1,
+            };
+            let ports_bytes: usize = agent
+                .ports
+                .iter()
+                .map(|endpoint| match endpoint {
+                    None => 1,
+                    Some(crate::net::Endpoint::Port(_)) => 6,
+                    Some(crate::net::Endpoint::Output(_)) => 5,
+                })
+                .sum();
+            total_bytes.checked_add(origin_bytes + symbol_bytes + ports_bytes)
+        })
+}
+
 fn encode_op(op: crate::net::Op) -> u8 {
     match op {
         crate::net::Op::Add => 0,
@@ -345,7 +400,7 @@ fn decode_net(bytes: &[u8]) -> Result<crate::net::InteractionGraph, Refusal> {
     if input_count > reader.remaining() / 8 {
         return Err(Refusal::Malformed);
     }
-    let mut input_values = Vec::with_capacity(input_count);
+    let mut input_values = alloc::vec::Vec::with_capacity(input_count);
     for _ in 0..input_count {
         input_values.push(reader.u64()? as i64);
     }
@@ -353,8 +408,8 @@ fn decode_net(bytes: &[u8]) -> Result<crate::net::InteractionGraph, Refusal> {
     if output_count > reader.remaining() / 6 {
         return Err(Refusal::Malformed);
     }
-    let mut outputs = Vec::with_capacity(output_count);
-    let mut output_types = Vec::with_capacity(output_count);
+    let mut outputs = alloc::vec::Vec::with_capacity(output_count);
+    let mut output_types = alloc::vec::Vec::with_capacity(output_count);
     for _ in 0..output_count {
         outputs.push(crate::net::PortRef {
             agent: reader.u32()?,
@@ -370,7 +425,7 @@ fn decode_net(bytes: &[u8]) -> Result<crate::net::InteractionGraph, Refusal> {
     if agent_count > reader.remaining() / 9 {
         return Err(Refusal::Malformed);
     }
-    let mut agents = Vec::with_capacity(agent_count);
+    let mut agents = alloc::vec::Vec::with_capacity(agent_count);
     for _ in 0..agent_count {
         let origin = match reader.byte()? {
             0 => crate::net::Origin::Node(crate::ir::NodeId(reader.u32()?)),
@@ -428,12 +483,25 @@ fn decode_net(bytes: &[u8]) -> Result<crate::net::InteractionGraph, Refusal> {
     })
 }
 
-fn encode_certificate(hash_scheme: &str, claims: Claims) -> Result<Vec<u8>, Refusal> {
+fn encode_certificate(hash_scheme: &str, claims: Claims) -> Result<alloc::vec::Vec<u8>, Refusal> {
     let scheme = hash_scheme.as_bytes();
     if scheme.len() > MAX_HASH_SCHEME_BYTES {
         return Err(Refusal::Malformed);
     }
-    let mut bytes = Vec::with_capacity(8 + DIGEST_BYTES * 2 + 16 + 1 + scheme.len());
+    let encoded_bytes = CERTIFICATE_MAGIC.len()
+        + 2
+        + CERTIFICATE_REVISION.len()
+        + 2
+        + CHECKER_REVISION.len()
+        + 2
+        + PROOF_MODEL_REVISION.len()
+        + 2
+        + COST_MODEL_REVISION.len()
+        + DIGEST_BYTES * 3
+        + 16
+        + 1
+        + scheme.len();
+    let mut bytes = alloc::vec::Vec::with_capacity(encoded_bytes);
     bytes.extend_from_slice(CERTIFICATE_MAGIC);
     push_string(&mut bytes, CERTIFICATE_REVISION)?;
     push_string(&mut bytes, CHECKER_REVISION)?;
@@ -486,7 +554,11 @@ fn digest(ids: &dyn IdentityScheme, domain: &[u8], bytes: &[u8]) -> crate::ir::D
     hasher.finish()
 }
 
-fn push_count(bytes: &mut Vec<u8>, count: usize) -> Result<(), Refusal> {
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Appending encoded fields requires a mutable owning Vec, not a fixed-size byte slice"
+)]
+fn push_count(bytes: &mut alloc::vec::Vec<u8>, count: usize) -> Result<(), Refusal> {
     if count > MAX_NET_ITEMS {
         return Err(Refusal::Malformed);
     }
@@ -498,28 +570,41 @@ fn push_count(bytes: &mut Vec<u8>, count: usize) -> Result<(), Refusal> {
     Ok(())
 }
 
-fn push_string(bytes: &mut Vec<u8>, value: &str) -> Result<(), Refusal> {
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Appending a variable-length string requires a mutable owning Vec, not a fixed-size byte slice"
+)]
+fn push_string(bytes: &mut alloc::vec::Vec<u8>, value: &str) -> Result<(), Refusal> {
     let raw = value.as_bytes();
-    let length = u16::try_from(raw.len()).map_err(|_| Refusal::Malformed)?;
-    bytes.extend_from_slice(&length.to_le_bytes());
+    let length_bytes = u16::try_from(raw.len()).map_err(|_| Refusal::Malformed)?;
+    bytes.extend_from_slice(&length_bytes.to_le_bytes());
     bytes.extend_from_slice(raw);
     Ok(())
 }
 
 struct Reader<'a> {
     bytes: &'a [u8],
-    offset: usize,
+    offset_bytes: usize,
 }
 
 impl<'a> Reader<'a> {
     const fn new(bytes: &'a [u8]) -> Self {
-        Self { bytes, offset: 0 }
+        Self {
+            bytes,
+            offset_bytes: 0,
+        }
     }
 
-    fn take(&mut self, length: usize) -> Result<&'a [u8], Refusal> {
-        let end = self.offset.checked_add(length).ok_or(Refusal::Malformed)?;
-        let bytes = self.bytes.get(self.offset..end).ok_or(Refusal::Malformed)?;
-        self.offset = end;
+    fn take(&mut self, length_bytes: usize) -> Result<&'a [u8], Refusal> {
+        let end = self
+            .offset_bytes
+            .checked_add(length_bytes)
+            .ok_or(Refusal::Malformed)?;
+        let bytes = self
+            .bytes
+            .get(self.offset_bytes..end)
+            .ok_or(Refusal::Malformed)?;
+        self.offset_bytes = end;
         Ok(bytes)
     }
 
@@ -564,19 +649,19 @@ impl<'a> Reader<'a> {
         expected: &'static str,
         stale: Refusal,
     ) -> Result<&'static str, Refusal> {
-        let length = usize::from(self.u16()?);
-        if self.take(length)? != expected.as_bytes() {
+        let length_bytes = usize::from(self.u16()?);
+        if self.take(length_bytes)? != expected.as_bytes() {
             return Err(stale);
         }
         Ok(expected)
     }
 
     const fn is_finished(&self) -> bool {
-        self.offset == self.bytes.len()
+        self.offset_bytes == self.bytes.len()
     }
 
     const fn remaining(&self) -> usize {
-        self.bytes.len() - self.offset
+        self.bytes.len() - self.offset_bytes
     }
 }
 
@@ -592,11 +677,15 @@ mod tests {
     impl crate::identity::IdentityHasher for TestHasher {
         fn update(&mut self, bytes: &[u8]) {
             for byte in bytes {
-                let index = self.position % self.state.len();
+                let index = self.position;
                 self.state[index] = self.state[index]
                     .wrapping_add(*byte)
                     .rotate_left(u32::try_from(index % 7).expect("small rotation"));
-                self.position = self.position.wrapping_add(1);
+                self.position = if index + 1 == DIGEST_BYTES {
+                    0
+                } else {
+                    index + 1
+                };
             }
         }
 
@@ -648,11 +737,29 @@ mod tests {
         (checked, inputs, artifact)
     }
 
-    #[test]
-    fn decoded_resource_certificate_binds_exact_net_and_rule_bytes() {
-        let (checked, inputs, artifact) = artifact();
-        let resources = check(
+    fn check_case(
+        checked: &crate::check::CheckedGraph,
+        inputs: &[crate::sem::Value],
+        certificate: &[u8],
+        net: &[u8],
+        rules: &[u8],
+    ) -> Result<VerifiedResources, Refusal> {
+        check(
             &IDS,
+            checked,
+            inputs,
+            CheckBytes {
+                certificate,
+                net,
+                rules,
+            },
+        )
+    }
+
+    #[test]
+    fn decoded_certificate_binds_exact_net_and_rule_bytes() {
+        let (checked, inputs, artifact) = artifact();
+        let resources = check_case(
             &checked,
             &inputs,
             &artifact.certificate_bytes,
@@ -670,14 +777,13 @@ mod tests {
     }
 
     #[test]
-    fn resource_checker_refuses_wrong_count_and_live_bound() {
+    fn checker_refuses_wrong_count_and_live_bound() {
         let (checked, inputs, artifact) = artifact();
         let mut wrong_count = artifact.certificate_bytes.clone();
         wrong_count[RESOURCE_INTERACTIONS_OFFSET..RESOURCE_LIVE_BOUND_OFFSET]
             .copy_from_slice(&3_u64.to_le_bytes());
         assert_eq!(
-            check(
-                &IDS,
+            check_case(
                 &checked,
                 &inputs,
                 &wrong_count,
@@ -691,8 +797,7 @@ mod tests {
         wrong_bound[RESOURCE_LIVE_BOUND_OFFSET..RESOURCE_LIVE_BOUND_OFFSET + 8]
             .copy_from_slice(&4_u64.to_le_bytes());
         assert_eq!(
-            check(
-                &IDS,
+            check_case(
                 &checked,
                 &inputs,
                 &wrong_bound,
@@ -704,13 +809,12 @@ mod tests {
     }
 
     #[test]
-    fn resource_checker_refuses_mismatched_net_stale_rules_and_truncation() {
+    fn checker_refuses_mismatched_net_stale_rules_and_truncation() {
         let (checked, inputs, artifact) = artifact();
         let mut changed_net = artifact.net_bytes.clone();
         changed_net[8] ^= 1;
         assert_eq!(
-            check(
-                &IDS,
+            check_case(
                 &checked,
                 &inputs,
                 &artifact.certificate_bytes,
@@ -723,8 +827,7 @@ mod tests {
         let mut stale_rules = RULE_TABLE_BYTES.to_vec();
         stale_rules[0] ^= 1;
         assert_eq!(
-            check(
-                &IDS,
+            check_case(
                 &checked,
                 &inputs,
                 &artifact.certificate_bytes,
@@ -735,8 +838,7 @@ mod tests {
         );
 
         assert_eq!(
-            check(
-                &IDS,
+            check_case(
                 &checked,
                 &inputs,
                 &artifact.certificate_bytes[..artifact.certificate_bytes.len() - 1],
@@ -748,13 +850,12 @@ mod tests {
     }
 
     #[test]
-    fn resource_checker_refuses_forged_cost_rule_and_model_identities() {
+    fn checker_refuses_forged_cost_rule_and_model_identities() {
         let (checked, inputs, artifact) = artifact();
         let mut cost = artifact.certificate_bytes.clone();
         cost[RESOURCE_COST_DIGEST_OFFSET] ^= 1;
         assert_eq!(
-            check(
-                &IDS,
+            check_case(
                 &checked,
                 &inputs,
                 &cost,
@@ -771,8 +872,7 @@ mod tests {
             .expect("rule table includes erasure");
         omitted_erase.drain(at..at + 7);
         assert_eq!(
-            check(
-                &IDS,
+            check_case(
                 &checked,
                 &inputs,
                 &artifact.certificate_bytes,
@@ -789,8 +889,7 @@ mod tests {
             .expect("certificate binds checker identity");
         stale_checker[at] ^= 1;
         assert_eq!(
-            check(
-                &IDS,
+            check_case(
                 &checked,
                 &inputs,
                 &stale_checker,
@@ -802,7 +901,7 @@ mod tests {
     }
 
     #[test]
-    fn resource_decoder_refuses_malformed_nets_even_with_recomputed_digest() {
+    fn decoder_refuses_malformed_nets_even_with_recomputed_digest() {
         let (checked, net, inputs) = sample();
         let mut bytes = encode_net(&net).expect("encode net");
         bytes[8] ^= 1;
@@ -815,14 +914,7 @@ mod tests {
         };
         let certificate = encode_certificate(IDS.name(), claims).expect("encode claims");
         assert_eq!(
-            check(
-                &IDS,
-                &checked,
-                &inputs,
-                &certificate,
-                &bytes,
-                RULE_TABLE_BYTES
-            ),
+            check_case(&checked, &inputs, &certificate, &bytes, RULE_TABLE_BYTES),
             Err(Refusal::InvalidNet)
         );
     }
