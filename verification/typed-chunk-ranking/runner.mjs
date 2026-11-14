@@ -27,6 +27,7 @@ requireValue(criteria.scorer?.optimizer?.training_seeds?.length === 3, "exactly 
 requireValue(criteria.modes?.join(",") === "primitive-only,fixed-chunk-shortlex,learned-ranking,splitmix64-shuffled-control", "all four matched modes must remain frozen and ordered");
 requireValue(criteria.evaluation?.test_tasks === 120 && criteria.evaluation.paired_repetitions === 10 && criteria.evaluation.seeds.length === 10, "evaluation criteria must include all 120 test tasks and ten paired seeds");
 requireValue(criteria.decision?.default === "NO-GO" && criteria.decision.go_requires_all === true, "GO must require every frozen decision condition");
+requireValue(criteria.measurements?.total_charged_work_definition === "Report.checking_work shared-budget units; other budget dimensions are reported separately and are not summed because their units differ and would double-count work", "total charged work must use one shared-budget counter without mixing resource units");
 requireValue(criteria.ranking?.authority === "queue-permutation-only", "the scorer must remain a queue-permutation-only signal");
 requireValue(criteria.ranking?.exhaustion === "fail-closed-exhausted-no-fallback-work-no-partial-publication", "exhaustion must remain fail-closed");
 requireValue(criteria.system_one?.consumer_owns_observation === true, "System One observations must be consumer-owned");

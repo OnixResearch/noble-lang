@@ -105,6 +105,7 @@
   },
   "measurements": {
     "primary": ["total-charged-work", "warm-scorer-inclusive-latency"],
+    "total_charged_work_definition": "Report.checking_work shared-budget units; other budget dimensions are reported separately and are not summed because their units differ and would double-count work",
     "latency_scope": "monotonic-request-to-outcome-including-feature-score-queue-model-load-source-check-fixture-and-report",
     "latency_summaries": ["median", "p95", "paired-task-deltas"],
     "work_fields": ["feature-extraction", "score-evaluation", "queue-management", "candidate-proposals", "candidate-checks", "expanded-nodes", "dependency-work", "instantiation-work", "source-preparation-work", "kernel-check-work", "fixture-steps", "total-shared-work"],
