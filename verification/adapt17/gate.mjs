@@ -668,9 +668,9 @@ function decisionFor(matrix) {
   for (const optimized of [false, true]) {
     const baseline = byWorkloadOpt.get(keyFor(specializable.id, 'baseline', optimized));
     const candidate = byWorkloadOpt.get(keyFor(specializable.id, 'candidate', optimized));
-    const expectedSaving = candidate.lowering_report.specializations * logicalCellBytes;
+    const expectedSaving = candidate.lowering_report.specializations * boundarySpecializationSavings;
     equal(baseline.metrics.allocated_since_begin_bytes - candidate.metrics.allocated_since_begin_bytes,
-      expectedSaving, `two-arm candidate saves one cell per reached known Sum case (${optimized ? 'opt-on' : 'opt-off'})`);
+      expectedSaving, `two-arm candidate saves scalar-box and Sum-wrapper cells per reached known case (${optimized ? 'opt-on' : 'opt-off'})`);
   }
   return {
     outcome: reasons.length === 0 ? 'GO' : 'NO-GO',
