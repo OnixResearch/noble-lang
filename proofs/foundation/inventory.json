@@ -8242,6 +8242,12 @@
       "claim": "An accepted symbolic belt program returns every ordered graph-reference value; this is a Lean model theorem, not Rust refinement."
     },
     {
+      "name": "NobleFoundation.BeltTarget.validate_sound",
+      "phase": 2,
+      "role": "belt-target-schedule-model",
+      "claim": "An accepted fixed-target symbolic schedule returns every requested graph-reference value in exact order."
+    },
+    {
       "name": "NobleFoundation.LlvmLowering.denotes_iff",
       "phase": 1,
       "role": "llvm-validator-model",
