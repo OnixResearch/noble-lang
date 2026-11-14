@@ -13,7 +13,7 @@ mod rewrite;
 /// Selected graph-to-net and rule contract.
 pub const CONTRACT_REVISION: &str = "ngraph-net-i64/3";
 /// Canonical graph-to-agent and use-order mapping.
-pub const LOWERING_REVISION: &str = "noble-net-i64-lowering/0";
+pub const LOWERING_REVISION: &str = "ngraph-net-i64-lowering/0";
 /// Version of the emitted, independently checked in-place rewrite plans.
 pub const PLAN_REVISION: &str = "ngraph-net-plan/1";
 /// Version of the exact arithmetic, fanout, and erasure rules compiled into plans.
