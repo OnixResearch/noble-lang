@@ -104,7 +104,7 @@ fn sequential_publications_expose_a_mixed_compatible_pair() {
     run_lane("live_slot_relocation_controls.mjs");
 }
 
-#[cfg(not(feature = "live-test-current-map"))]
+#[cfg(not(feature = "live-test-barrier"))]
 #[test]
 fn shipped_cli_does_not_contain_the_test_only_current_map_seam() {
     const MARKER: &[u8] = b"noble-test-current-map-seam/v1";
@@ -115,7 +115,7 @@ fn shipped_cli_does_not_contain_the_test_only_current_map_seam() {
     );
 }
 
-#[cfg(feature = "live-test-current-map")]
+#[cfg(feature = "live-test-barrier")]
 #[test]
 fn current_map_mutant_duplicates_and_omits_relocated_events() {
     run_lane_args("live_slot_relocation_controls.mjs", &["current-map"]);

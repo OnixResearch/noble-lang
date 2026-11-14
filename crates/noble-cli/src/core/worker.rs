@@ -30,7 +30,7 @@ const SLOT_HOST: &str = concat!(
     include_str!("runtime/slot-engine.mjs"),
     include_str!("runtime/protocol.mjs"),
 );
-#[cfg(feature = "live-test-current-map")]
+#[cfg(feature = "live-test-barrier")]
 fn slot_host() -> std::borrow::Cow<'static, str> {
     const BEFORE: &str = "const selected = root.state.map.get(ref.slotId);";
     const AFTER: &str =
@@ -42,7 +42,7 @@ fn slot_host() -> std::borrow::Cow<'static, str> {
     );
     std::borrow::Cow::Owned(SLOT_HOST.replacen(BEFORE, AFTER, 1))
 }
-#[cfg(not(feature = "live-test-current-map"))]
+#[cfg(not(feature = "live-test-barrier"))]
 fn slot_host() -> std::borrow::Cow<'static, str> {
     std::borrow::Cow::Borrowed(SLOT_HOST)
 }

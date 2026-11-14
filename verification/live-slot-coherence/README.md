@@ -90,11 +90,12 @@ callee slot `E` changes from inert to emitting. Its asserted observation is the 
   after the next publication, the all-new pair emits once. The intermediate root is a real mixed
   compatible map, not the earlier empty-slot failed invocation.
 
-The counterfactual is isolated behind Cargo feature `live-test-current-map`, which is not a default
-feature. Only that feature-built worker substitutes current-map selection into its embedded host;
-the default `live_slot` test scans the selected default `noble` binary for the unique seam marker
-and requires it absent. A feature-enabled integration test runs the duplicate/omission lane against
-the deliberately broken binary. Do not enable this feature in shipped builds. Neither these finite
+The counterfactual is isolated behind the existing Cargo feature `live-test-barrier`, which is not
+a default feature and is already the repository's explicit test-only safepoint instrumentation.
+Only that feature-built worker substitutes current-map selection into its embedded host; the
+default `live_slot` test scans the selected default `noble` binary for the unique seam marker and
+requires it absent. A feature-enabled integration test runs the duplicate/omission lane against the
+deliberately broken binary. Do not enable this feature in shipped builds. Neither these finite
 observations nor the receipt prove correspondence with `LiveDispatch.lean`.
 
 The source/model/artifact-bound dated receipt is
