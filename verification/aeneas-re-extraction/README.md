@@ -19,7 +19,7 @@ The selected revisions were Aeneas and Aeneas Lean library `1238879f9ea550512096
 
 The unit-4 byte comparisons cover the eight checked-in generated files: `Funs.lean` and `Types.lean` for the M2 kernel, M3 kernel, M3-Wasm emitter, and MC1 contract subjects. Those files match output from the selected Aeneas `1238879f` extractor for their recorded inputs; this does not establish a complete full-kernel translation or successful proof-port.
 
-The committed M4, M3-Wasm, and MC1 implementation/lock receipts still identify the earlier Aeneas `505b6ca` run. They are retained as historical evidence and are not current receipts for the `1238879f` selection. Their active producers are bound to the current selection; fresh receipts remain pending until full extraction and the affected Lean lanes pass. The M1 README similarly labels its `505b6ca` / `1238879f` run as historical. Do not use any of these earlier receipts as evidence for the current extractor.
+The committed M4 `implementation.json` and `extraction-lock.json`, M3-Wasm `implementation.json`, and MC1 `implementation.json` receipts still identify the earlier Aeneas `505b6ca` run. They are retained as historical evidence and are not current receipts for the `1238879f` selection. Their active producers are bound to the current selection; fresh receipts remain pending until full extraction and the affected Lean lanes pass. The M1 README similarly labels its `505b6ca` / `1238879f` run as historical. Do not use any of these earlier receipts as evidence for the current extractor.
 
 ## Re-running
 
