@@ -1311,7 +1311,7 @@ fn append_graph_definition(
     output.push_str(name);
     output.push_str(" : MGraph ");
     output = append_decimal(output, measure_count);
-    output.push_str(" := fun from to =>\n  match from.val, to.val with\n");
+    output.push_str(" := fun oldIndex newIndex =>\n  match oldIndex.val, newIndex.val with\n");
     for from in 0..measure_count {
         for to in 0..measure_count {
             let relation = graph.get(from, to);
