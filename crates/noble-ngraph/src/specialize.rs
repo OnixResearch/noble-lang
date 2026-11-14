@@ -1197,10 +1197,10 @@ mod tests {
             assert_eq!(residual.report.pruned_nodes, 2);
             assert_eq!(residual.report.residual_nodes, 3);
             assert_eq!(residual.report.dynamic_inputs, [crate::ir::ScalarType::I64]);
-            assert_eq!(residual.checked.graph().outputs, [
-                crate::ir::NodeId(1),
-                crate::ir::NodeId(2),
-            ]);
+            assert_eq!(
+                residual.checked.graph().outputs,
+                [crate::ir::NodeId(1), crate::ir::NodeId(2),]
+            );
             assert_eq!(
                 residual.checked.graph().nodes[0].op,
                 crate::ir::Op::Input(0),

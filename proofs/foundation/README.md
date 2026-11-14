@@ -4067,9 +4067,10 @@ residual nodes with their original operand positions.
 `NobleFoundation/SpecializeResidual.lean` starts from that index-preserving
 specialization model and extends the proof boundary through exact I64 equality
 folding and output-preserving pruning/renumbering. Its `PruneMap` premise
-represents the canonical dense survivor map: output roots and all surviving
+requires a dense, order-preserving survivor map: output roots and all surviving
 operands are kept, dynamic input nodes are retained, and both index directions
-are inverse on the dense residual range. `residualize_outputs_sound` proves the
+are inverse on the dense residual range. The theorem does not require that the
+kept set is *minimal*. `residualize_outputs_sound` proves the
 ordered output values agree under merged inputs when this map is valid. The
 theorem proves the residualization semantics conditional on a valid map; it does
 not prove that the Rust reachability walk constructs such a map for every graph.
@@ -4092,6 +4093,11 @@ The clean-source receipt for the specialization model is
 [`verification/foundation/receipts/84753c99e/`](../../verification/foundation/receipts/84753c99e/foundation-check.json)
 (692 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
+The residualization extension has a separate
+[clean-source receipt](../../verification/foundation/receipts/a92b343c5/foundation-check.json)
+(source commit a92b343c5, 2,091 inventoried theorems, including 20 new
+theorems; each new theorem's axioms are a subset of `propext`,
+`Classical.choice` and `Quot.sound`; `implementation_theorem: false`).
 
 The implementation phase of the same issue keeps the four kinds of result apart:
 
@@ -4125,7 +4131,7 @@ Open, and deliberately not closed:
   model;
 - preservation of an arbitrary stack tail is not represented: the graph model
   has explicit input slots and ordered outputs, not an arbitrary stack prefix;
-- the model conditions pruning correctness on a valid canonical survivor map;
+- the model conditions pruning correctness on a valid dense survivor map;
   the Rust-to-map construction and Rust/backend correspondence remain open;
 - exact source dependency preservation is not represented. The residual receives
   a new graph identity and records the emitted source digest/re-admitted graph id,

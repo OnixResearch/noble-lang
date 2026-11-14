@@ -408,7 +408,8 @@ operands are exact I64 constants, and defines dead-node removal plus dense renum
 input node, dense two-way index correspondence and topological operand order. The theorem
 `residualize_outputs_sound` proves the ordered output values after the composition agree with
 the original values under `merge`; it reuses the existing theorem for static input mapping and
-wrapping add/sub/mul folding.
+wrapping add/sub/mul folding. A valid map can keep extra pure nodes: this theorem establishes
+preservation, not minimality of the Rust reachability walk.
 
 **Boundary:** this is a model theorem conditional on a valid `PruneMap`. It does not prove that
 the Rust reachability and numbering loops construct a map satisfying every premise for every
