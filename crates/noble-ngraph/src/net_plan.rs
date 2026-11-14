@@ -30,6 +30,7 @@ impl PlanBytes {
         &self.bytes[..self.len]
     }
 
+    #[cfg(test)]
     pub(super) fn as_mut_bytes(&mut self) -> &mut [u8] {
         &mut self.bytes[..self.len]
     }
@@ -480,7 +481,7 @@ fn classify(
     Ok(instance)
 }
 
-fn consumed_actions(pair: Pair, reused: [u32; 2], policy: StoragePolicy) -> Result<[u8; 2], Invalid> {
+fn consumed_actions<const N: usize>(pair: Pair, reused: [u32; N], policy: StoragePolicy) -> Result<[u8; 2], Invalid> {
     let mut actions = [0; 2];
     for id in reused {
         let index = if pair.first == id { 0 } else if pair.second == id { 1 } else {
@@ -866,16 +867,19 @@ fn validate_image(
     if usize::from(image.result_count) != expected_results {
         return Err(Invalid::PlanMismatch);
     }
-    let consumed = [pair.first, pair.second];
     let mut consumed_reused = [false; 2];
     let mut fresh_count = 0u32;
     for (index, result) in image.results.iter().take(expected_results).enumerate() {
         let result = result.ok_or(Invalid::PlanEncoding)?;
-        let expected_symbol_for_result = if rule == 3 { result_symbol } else { result_symbol };
-        if result.symbol != expected_symbol_for_result {
+        if result.symbol != result_symbol {
             return Err(Invalid::PlanMismatch);
         }
-        if result.donor_slot != rule_slot {
+        let expected_donor = if rule == 3 && index == 1 {
+            value_slot
+        } else {
+            rule_slot
+        };
+        if result.donor_slot != expected_donor {
             return Err(Invalid::PlanMismatch);
         }
         let expected_ports: [Option<u8>; 3] = match (rule, index) {
@@ -1027,7 +1031,7 @@ fn expected_publications(
     slots: &[Slot],
     pair: Pair,
 ) -> Result<(usize, [Option<Active>; MAX_RESULTS]), Invalid> {
-    let mut result = [None; MAX_RESULTS];
+    let mut result: [Option<Active>; MAX_RESULTS] = [None; MAX_RESULTS];
     let mut count = 0usize;
     for agent in image.results.iter().take(usize::from(image.result_count)).flatten() {
         let Some(boundary_index) = agent.ports[0] else {

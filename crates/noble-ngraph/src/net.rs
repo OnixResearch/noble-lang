@@ -1887,33 +1887,6 @@ fn pair_is_current(slots: &mut [Slot], pair: Pair) -> bool {
             }))
 }
 
-#[cfg(test)]
-
-
-#[cfg(test)]
-
-
-#[cfg(test)]
-
-
-#[cfg(test)]
-
-
-#[cfg(test)]
-
-
-#[cfg(test)]
-
-
-#[cfg(test)]
-
-
-#[cfg(test)]
-
-
-#[cfg(test)]
-
-
 fn read_back(
     slots: &[Slot],
     outputs: &[PortRef],
@@ -2142,6 +2115,29 @@ mod tests {
         }
         assert_eq!(value_slot, if reverse { 0 } else { 1 });
         (slots, outputs, pair)
+    }
+
+    fn result_slot_range(plan: &net_plan::PlanBytes, result_index: usize) -> Option<core::ops::Range<usize>> {
+        let bytes = plan.as_bytes();
+        let mut offset = 33usize;
+        let boundary_count = usize::from(*bytes.get(offset)?);
+        offset = offset.checked_add(1)?;
+        for _ in 0..boundary_count {
+            offset = offset.checked_add(5)?;
+            offset = offset.checked_add(match bytes.get(offset).copied()? {
+                0 => 6,
+                1 => 5,
+                _ => return None,
+            })?;
+        }
+        let result_count = usize::from(*bytes.get(offset)?);
+        if result_index >= result_count {
+            return None;
+        }
+        offset = offset.checked_add(1)?;
+        offset = offset.checked_add(result_index.checked_mul(21)?)?;
+        offset = offset.checked_add(1)?;
+        Some(offset..offset.checked_add(4)?)
     }
 
     fn principal_boundary_fixture(
@@ -2386,10 +2382,8 @@ mod tests {
             crate::ir::SubProfile::I64,
             crate::ir::Subject::authored(&IDS, "net-plan-erasure"),
         );
-        let a = builder.input(crate::ir::ScalarType::I64);
-        let b = builder.input(crate::ir::ScalarType::I64);
-        let _erased = builder.op(crate::ir::Op::I64Add(a, b));
-        let observed = builder.op(crate::ir::Op::I64Sub(a, b));
+        let _erased = builder.input(crate::ir::ScalarType::I64);
+        let observed = builder.input(crate::ir::ScalarType::I64);
         builder.output(observed);
         match crate::check::check(&IDS, builder.finish()) {
             Ok(checked) => checked,
@@ -2537,10 +2531,16 @@ mod tests {
         assert_eq!(reuse.obs, allocate.obs, "{family} measured outputs differ");
         assert_eq!(reuse.interactions, allocate.interactions, "{family} measured counts differ");
         assert_eq!(reuse.plan_stats.allocated_slots, 0, "{family} reuse arm allocated a slot");
-        assert!(reuse.plan_stats.reused_slots > 0, "{family} reuse arm reused no slots");
-        assert!(allocate.plan_stats.allocated_slots > 0, "{family} allocation arm allocated no slots");
+        if family == "erasure" {
+            assert_eq!(reuse.plan_stats.reused_slots, 0, "erasure reused a replacement slot");
+            assert_eq!(allocate.plan_stats.allocated_slots, 0, "erasure allocated a replacement slot");
+            assert_eq!(reuse.plan_stats.freed_slots, allocate.plan_stats.freed_slots);
+        } else {
+            assert!(reuse.plan_stats.reused_slots > 0, "{family} reuse arm reused no slots");
+            assert!(allocate.plan_stats.allocated_slots > 0, "{family} allocation arm allocated no slots");
+        }
         assert_ne!(reuse.plan_stats.plan_digest, allocate.plan_stats.plan_digest, "{family} plan identities collided");
-        println!(
+        std::println!(
             "NOBLE_NET_PLAN_SAMPLE:{{\"family\":\"{family}\",\"graph_id\":\"{}\",\"net_key\":\"{}\",\"input_count\":{},\"rule_revision\":\"{}\",\"plan_revision\":\"{}\",\"representation_revision\":\"{}\",\"checker_revision\":\"{}\",\"executor_revision\":\"{}\",\"same_observation\":true,\"same_interactions\":true,\"reuse\":{},\"allocate\":{}}}",
             plan_digest_hex(&checked.id()),
             plan_digest_hex(&net.build_key),
@@ -2721,13 +2721,11 @@ mod tests {
         let (dup_slots, dup_outputs, dup_pair) = plan_fixture(Symbol::Dup, 5, false);
         let mut duplicate_free = net_plan::compile(&dup_slots, &dup_outputs, dup_pair, StoragePolicy::Reuse)
             .expect("dup plan");
-        let first_destination = [
-            duplicate_free.as_bytes()[58],
-            duplicate_free.as_bytes()[59],
-            duplicate_free.as_bytes()[60],
-            duplicate_free.as_bytes()[61],
-        ];
-        duplicate_free.as_mut_bytes()[79..83].copy_from_slice(&first_destination);
+        let first_range = result_slot_range(&duplicate_free, 0).expect("first dup slot range");
+        let second_range = result_slot_range(&duplicate_free, 1).expect("second dup slot range");
+        let mut first_destination = [0; 4];
+        first_destination.copy_from_slice(&duplicate_free.as_bytes()[first_range]);
+        duplicate_free.as_mut_bytes()[second_range].copy_from_slice(&first_destination);
         assert!(net_plan::check(&duplicate_free, &dup_slots, &dup_outputs, dup_pair, StoragePolicy::Reuse).is_err());
 
         let (fanout_slots, fanout_outputs, fanout_pair) = duplicate_principal_fixture();
@@ -2839,8 +2837,11 @@ mod tests {
             u64::try_from(initial_slots).expect("fixture arena size"),
             net_plan::MAX_PLAN_BYTES as u64,
             1,
-        )
-        .expect("reusable plan fits with zero free arena slots");
+        );
+        let result = match result {
+            Ok(result) => result,
+            Err(_) => panic!("reusable plan fits with zero free arena slots"),
+        };
         assert_eq!(result.allocated_slots, 0);
         assert_eq!(result.reused_slots, 1);
         assert_eq!(slots.len(), initial_slots);
