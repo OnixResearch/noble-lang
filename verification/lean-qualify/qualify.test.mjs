@@ -20,7 +20,14 @@ assert.ok(scratchBase, 'set NOBLE_QUALIFY_TEST_TMP to a new private directory ou
 assert.ok(existsSync(scratchBase), `test scratch directory must already exist: ${scratchBase}`);
 assert.equal(statSync(scratchBase).mode & 0o077, 0, 'test scratch directory must be private (0700 or stricter)');
 const testRoot = mkdtempSync(join(scratchBase, 'qualification-tests-'));
-after(() => rmSync(testRoot, { recursive: true, force: true }));
+after(() => {
+  if (regressionEvidence.monotone_bisection && regressionEvidence.nonmonotone_bisection
+      && regressionEvidence.linear_scan) {
+    writeFileSync(join(scratchBase, 'regression-evidence.json'),
+      `${JSON.stringify(regressionEvidence, null, 2)}\n`);
+  }
+  rmSync(testRoot, { recursive: true, force: true });
+});
 
 const git = process.env.GIT ?? '/run/current-system/sw/bin/git';
 function gitRun(cwd, ...args) {
@@ -61,6 +68,13 @@ for (const [index, outcome] of ['pass', 'pass', 'pass', 'fail', 'pass', 'fail', 
   historyRevisions.push(commit(history, `probe-${index}-${outcome}`));
 }
 const historyOutcome = revision => JSON.parse(execFileSync(git, ['show', `${revision}:probe.json`], { cwd: history, encoding: 'utf8' }));
+const regressionEvidence = {
+  schema: 'noble-lean-qualification-synthetic-regression/v1',
+  source_revision: gitRun(root, 'rev-parse', 'HEAD'),
+  fixture: 'isolated local Git revisions with declared outcomes, not complete proof/replay executions',
+  toolchain: execFileSync(join(leanBin, 'lean'), ['--version'], { encoding: 'utf8' }).trim(),
+  history: historyRevisions.map(revision => ({ revision, ...historyOutcome(revision) })),
+};
 
 test('Lakefile dependency plan is data-only and records manifest omissions', () => {
   const lakefile = [
@@ -88,6 +102,10 @@ test('exact manifest comparison names newly resolved upstream dependencies', () 
   const comparison = compareManifests(predicted, actual);
   assert.equal(comparison.equal, false);
   assert.ok(comparison.discrepancies.some(item => item.kind === 'unpredicted-dependency' && item.name === 'hidden'));
+  assert.deepEqual(compareManifests(predicted, { ...predicted, version: 2 }).discrepancies,
+    [{ kind: 'manifest-metadata-mismatch', expected: {}, actual: { version: 2 } }]);
+  assert.deepEqual(compareManifests(predicted, { packages: [...predicted.packages, ...predicted.packages] })
+    .discrepancies, [{ kind: 'invalid-manifest', duplicate_expected: [], duplicate_actual: ['tiny'] }]);
 });
 
 test('no-op planning retains empty source changes and complete consumer pins', () => {
@@ -206,6 +224,7 @@ test('native bisection verifies a good baseline and localizes the seeded mid-ran
   assert.equal(probed[0], historyRevisions[0]);
   assert.ok(result.probes.every(row => row.toolchain === 'leanprover/lean4:v4.35.0'));
   assert.deepEqual(new Set(probed), new Set(result.probes.map(row => row.revision)));
+  regressionEvidence.monotone_bisection = result;
 });
 
 test('fail-then-pass sequence exposes bisection limits and linear scan certifies every revision', async () => {
@@ -219,6 +238,8 @@ test('fail-then-pass sequence exposes bisection limits and linear scan certifies
   assert.equal(linear.qualified, true);
   assert.deepEqual(linear.probes.map(row => row.revision), historyRevisions);
   assert.ok(linear.transitions.some(row => row.from === 'fail' && row.to === 'pass'));
+  regressionEvidence.nonmonotone_bisection = bisection;
+  regressionEvidence.linear_scan = linear;
 });
 
 test('candidate change classification keeps pins, semantics, and verifier policy separate', () => {

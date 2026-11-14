@@ -3,7 +3,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync, realpathSync,
   readdirSync, readlinkSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir, userInfo } from 'node:os';
-import { basename, dirname, join, relative, resolve, sep } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { canonical, classifyChanges, compareDirectToManifest, compareManifests,
   dependencyToolchainMismatches, directDependencies, digest, manifestPackages, sourceRevision, bisectRegression,
@@ -12,7 +12,6 @@ import { canonical, classifyChanges, compareDirectToManifest, compareManifests,
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const defaultGit = '/run/current-system/sw/bin/git';
 const git = existsSync(defaultGit) ? realpathSync(defaultGit) : 'git';
-const qualificationTargetDir = '/dev/shm/noble-iss/target/qualify-126';
 const profileDefinitions = Object.freeze({
   'core-bootstrap': {
     name: 'core-bootstrap',
@@ -74,6 +73,13 @@ function safeScratch(path, root) {
     assert(lstatSync(absolute).isDirectory(), `scratch is not a directory: ${absolute}`);
     assert(readdirSync(absolute).length === 0, `scratch must be empty: ${absolute}`);
   } else mkdirSync(absolute, { recursive: true });
+  return absolute;
+}
+function safeTarget(path, root) {
+  assert(isAbsolute(path), 'target directory must be an absolute path outside the repository');
+  const absolute = cleanPath(path);
+  assert(absolute !== root && !absolute.startsWith(`${root}${sep}`),
+    'target directory must be outside the repository');
   return absolute;
 }
 
@@ -674,7 +680,8 @@ async function runOneRevision({ revision, side, plan, output, scratch, profileNa
       row.manifests[project].resolution_patch = { path: relative(output, resolutionPath),
         sha256: digest(resolutionPatch), bytes: resolutionPatch.length };
       if (!comparison.equal) throw new QualificationError('MANIFEST_DISCREPANCY',
-        `${project} post-resolution manifest differs from the reviewed pin prediction: ${JSON.stringify(comparison.discrepancies)}`, record.name);
+        `${project} post-resolution manifest differs from the reviewed pin prediction: ${JSON.stringify(comparison.discrepancies)}`,
+        `${resolutionMethod}:${project}`);
     }
 
     for (const checker of profile.requiredCheckers) {
@@ -807,7 +814,7 @@ function verifyReviewPlan(plan, approval, planPath) {
   return true;
 }
 
-async function runQualification({ planPath, approval, output, scratch }) {
+async function runQualification({ planPath, approval, output, scratch, targetDir }) {
   const plan = readJsonBuffer(readFileSync(planPath), 'qualification plan');
   const profile = profileDefinitions[plan.profile?.name];
   const initial = gitState(repo);
@@ -821,7 +828,7 @@ async function runQualification({ planPath, approval, output, scratch }) {
     verifier_policy_changes: plan.source_diff.classes.verifier_policy_changes,
     pre_update_plan: plan.pre_update_plan, policy: plan.policy,
     baseline: null, proposal: null, localization: { status: 'not-requested', probes: [] },
-    target_dir: qualificationTargetDir,
+    target_dir: targetDir,
     source_preservation: { before: initial, after: null, unchanged: false }, qualification_status: 'unqualified' };
   let baselineResult;
   try {
@@ -829,7 +836,7 @@ async function runQualification({ planPath, approval, output, scratch }) {
       profile?.unavailable ?? `consumer profile '${plan.profile?.name}' is unavailable`);
     verifyReviewPlan(plan, approval, planPath);
     baselineResult = await runOneRevision({ revision: plan.baseline.revision, side: 'baseline', plan,
-      output, scratch, profileName: profile.name, targetDir: qualificationTargetDir });
+      output, scratch, profileName: profile.name, targetDir });
     report.baseline = baselineResult;
     if (baselineResult.outcome !== 'pass') throw new QualificationError('BASELINE_UNVERIFIED',
       `baseline failed required verification (${baselineResult.failure?.code ?? 'unknown'}): ${baselineResult.failure?.message ?? ''}`);
@@ -837,7 +844,7 @@ async function runQualification({ planPath, approval, output, scratch }) {
       report.proposal = { ...baselineResult, side: 'proposal', reused_identical_revision: true };
     } else {
       report.proposal = await runOneRevision({ revision: plan.proposal.revision, side: 'proposal', plan,
-        output, scratch, profileName: profile.name, targetDir: qualificationTargetDir });
+        output, scratch, profileName: profile.name, targetDir });
     }
     if (report.proposal.outcome !== 'pass') {
       report.diagnostics = [report.proposal.failure ?? { code: 'PROPOSAL_FAILED', message: 'proposal did not pass all required checks' }];
@@ -883,16 +890,16 @@ function usage() {
   return [
     'Usage:',
     '  node verification/lean-qualify/qualify.mjs plan --baseline <full-commit-sha> --proposal <full-commit-sha> --profile core-bootstrap --output <new-dir> --scratch <empty-dir>',
-    '  node verification/lean-qualify/qualify.mjs run --plan <plan.json> --approve-diff <review-sha256> --output <new-dir> --scratch <empty-dir>',
-    '  node verification/lean-qualify/qualify.mjs localize --baseline <full-commit-sha> --proposal <full-commit-sha> --history <json-array-of-commit-shas> --mode bisect|linear --plan <approved-plan.json> --approve-diff <review-sha256> --output <new-dir> --scratch <empty-dir>',
+    '  node verification/lean-qualify/qualify.mjs run --plan <plan.json> --approve-diff <review-sha256> --output <new-dir> --scratch <empty-dir> --target-dir <absolute-temporary-target>',
+    '  node verification/lean-qualify/qualify.mjs localize --baseline <full-commit-sha> --proposal <full-commit-sha> --history <json-array-of-commit-shas> --mode bisect|linear --plan <approved-plan.json> --approve-diff <review-sha256> --output <new-dir> --scratch <empty-dir> --target-dir <absolute-temporary-target>',
     '  node --test verification/lean-qualify/qualify.test.mjs',
     'Profile core-bootstrap uses the existing M3/foundation proof+inventory+axiom gate and the seeded differential replay with receipt verification.',
     'Profile inets-foundation rebuilds only the foundation consumer, retaining proofs/m3 dependency manifests as compatibility evidence without rebuilding Aeneas or Mathlib.',
-    `All Rust checker builds use NOBLE_TARGET=${qualificationTargetDir}.`,
+    'All Rust checker builds use the caller-selected target directory outside the repository.',
   ].join('\n');
 }
 
-async function localize({ args, output, scratch }) {
+async function localize({ args, output, scratch, targetDir }) {
   const plan = readJsonBuffer(readFileSync(args.plan), 'qualification plan');
   verifyReviewPlan(plan, args['approve-diff'], args.plan);
   const history = JSON.parse(readFileSync(args.history, 'utf8'));
@@ -910,7 +917,7 @@ async function localize({ args, output, scratch }) {
     if (!cache.has(revision)) {
       const result = await runOneRevision({ revision, side: `probe-${revision.slice(0, 12)}`, plan,
         output: join(output, 'probes', revision), scratch, profileName: plan.profile.name,
-        targetDir: qualificationTargetDir });
+        targetDir });
       cache.set(revision, { outcome: result.outcome, toolchain: result.toolchain,
         details: result.failure ?? { receipts: [result.proof_receipt, result.replay_receipt] } });
     }
@@ -940,20 +947,22 @@ async function main() {
     } finally { if (existsSync(scratch)) rmSync(scratch, { recursive: true, force: true }); }
   }
   if (args.operation === 'run') {
-    for (const name of ['plan', 'approve-diff', 'output', 'scratch']) assert(args[name], `run requires --${name}`);
+    for (const name of ['plan', 'approve-diff', 'output', 'scratch', 'target-dir']) assert(args[name], `run requires --${name}`);
+    const targetDir = safeTarget(args['target-dir'], repo);
     const output = safeOutput(args.output, repo), scratch = safeScratch(args.scratch, repo);
     try {
-      const report = await runQualification({ planPath: args.plan, approval: args['approve-diff'], output, scratch });
+      const report = await runQualification({ planPath: args.plan, approval: args['approve-diff'], output, scratch, targetDir });
       console.log(JSON.stringify({ report: join(output, 'qualification.json'), status: report.qualification_status,
         source_unchanged: report.source_preservation.unchanged }, null, 2));
       return report.qualification_status.startsWith('qualified') ? 0 : 2;
     } finally { if (existsSync(scratch)) rmSync(scratch, { recursive: true, force: true }); }
   }
   if (args.operation === 'localize') {
-    for (const name of ['baseline', 'proposal', 'history', 'mode', 'plan', 'approve-diff', 'output', 'scratch']) assert(args[name], `localize requires --${name}`);
+    for (const name of ['baseline', 'proposal', 'history', 'mode', 'plan', 'approve-diff', 'output', 'scratch', 'target-dir']) assert(args[name], `localize requires --${name}`);
+    const targetDir = safeTarget(args['target-dir'], repo);
     const output = safeOutput(args.output, repo), scratch = safeScratch(args.scratch, repo);
     try {
-      const result = await localize({ args, output, scratch });
+      const result = await localize({ args, output, scratch, targetDir });
       writeFileSync(join(output, 'localization.json'), `${JSON.stringify(result, null, 2)}\n`);
       console.log(JSON.stringify({ localization: join(output, 'localization.json'), ...result }, null, 2));
       return result.qualified ? 0 : 2;

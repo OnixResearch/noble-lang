@@ -62,9 +62,22 @@ export function compareManifests(expectedManifest, actualManifest) {
   const expected = manifestPackages(expectedManifest);
   const actual = manifestPackages(actualManifest);
   if (!expected || !actual) return { equal: false, discrepancies: [{ kind: 'invalid-manifest' }] };
+  const duplicates = items => items.map(item => item.name)
+    .filter((name, index, names) => names.indexOf(name) !== index);
+  const duplicateExpected = [...new Set(duplicates(expected))];
+  const duplicateActual = [...new Set(duplicates(actual))];
+  if (duplicateExpected.length || duplicateActual.length) return { equal: false,
+    discrepancies: [{ kind: 'invalid-manifest', duplicate_expected: duplicateExpected,
+      duplicate_actual: duplicateActual }] };
   const byName = items => new Map(items.map(item => [item.name, item]));
   const left = byName(expected), right = byName(actual);
   const discrepancies = [];
+  const metadata = manifest => Object.fromEntries(Object.entries(manifest)
+    .filter(([key]) => key !== 'packages'));
+  if (canonical(metadata(expectedManifest)) !== canonical(metadata(actualManifest))) {
+    discrepancies.push({ kind: 'manifest-metadata-mismatch',
+      expected: metadata(expectedManifest), actual: metadata(actualManifest) });
+  }
   for (const name of [...new Set([...left.keys(), ...right.keys()])].sort()) {
     if (!left.has(name)) discrepancies.push({ kind: 'unpredicted-dependency', name, actual: right.get(name) });
     else if (!right.has(name)) discrepancies.push({ kind: 'missing-dependency', name, expected: left.get(name) });
