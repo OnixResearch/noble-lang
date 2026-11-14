@@ -156,11 +156,7 @@ fn v2_ordered_repeated_and_chained_candidates_execute_in_output_order() {
             Ok(()),
             "{name}: the independent v2 checker accepts its pruned endpoint"
         );
-        let measured = pipeline::measure(
-            &graph,
-            noble_ngraph::cert::Proposer::FixedPoint,
-            2,
-        );
+        let measured = pipeline::measure(&graph, noble_ngraph::cert::Proposer::FixedPoint, 2);
         assert_eq!(measured.disposition, "executed", "{name}");
         assert!(measured.candidate_execution_calls > 0, "{name}");
     }

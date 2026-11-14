@@ -1,6 +1,6 @@
+use crate::differential::TestIds;
 use noble_ngraph::cert::{self, ChainedAction, ChainedDerivation, Rule};
 use noble_ngraph::ir::{Digest, Graph};
-use crate::differential::TestIds;
 
 fn digest_term(digest: &Digest) -> String {
     let bytes = digest
@@ -45,7 +45,8 @@ fn transition_term(transition: &cert::ChainedStep) -> String {
 }
 
 fn fixture_term(name: &str, graph: Graph, proposer: cert::Proposer) -> String {
-    noble_ngraph::check::check(&TestIds, graph.clone()).expect("the Rust fixture source is admitted");
+    noble_ngraph::check::check(&TestIds, graph.clone())
+        .expect("the Rust fixture source is admitted");
     let (derivation, result): (ChainedDerivation, Graph) =
         cert::propose_chained(&TestIds, proposer, &graph).expect("bounded real Rust proposal");
     assert_eq!(derivation.revision, cert::CHAINED_REVISION);
@@ -58,7 +59,10 @@ fn fixture_term(name: &str, graph: Graph, proposer: cert::Proposer) -> String {
         .expect("the Rust candidate passes unchanged graph admission");
     let wire = cert::encode_chained(&derivation);
     let decoded = cert::decode_chained(&wire).expect("the actual emitted wire bytes decode");
-    assert_eq!(decoded, derivation, "wire transport preserves every certificate field");
+    assert_eq!(
+        decoded, derivation,
+        "wire transport preserves every certificate field"
+    );
 
     let mut tokens = wire.split(' ');
     let revision = tokens.next().expect("revision token");

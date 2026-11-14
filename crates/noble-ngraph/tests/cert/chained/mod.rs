@@ -35,9 +35,8 @@ fn ordered_graph() -> Graph {
 #[path = "corpus.rs"]
 mod corpus;
 
-const COMMITTED: &str = include_str!(
-    "../../../../../proofs/foundation/NobleFoundation/CertificateChainedCorpus.lean"
-);
+const COMMITTED: &str =
+    include_str!("../../../../../proofs/foundation/NobleFoundation/CertificateChainedCorpus.lean");
 
 #[test]
 fn the_chained_lean_corpus_is_fresh_from_real_rust_certificates() {
@@ -140,8 +139,14 @@ fn chained_fixed_point_and_pruning_round_trip_and_execute() {
     let (graph, derivation, result) = certified();
     assert_eq!(derivation.revision, cert::CHAINED_REVISION);
     assert_eq!(derivation.steps.len(), 3, "two folds and a final prune");
-    assert!(matches!(derivation.steps[0].action, ChainedAction::Rewrite(_)));
-    assert!(matches!(derivation.steps[1].action, ChainedAction::Rewrite(_)));
+    assert!(matches!(
+        derivation.steps[0].action,
+        ChainedAction::Rewrite(_)
+    ));
+    assert!(matches!(
+        derivation.steps[1].action,
+        ChainedAction::Rewrite(_)
+    ));
     assert!(matches!(
         derivation.steps[2].action,
         ChainedAction::PruneUnreachable
@@ -159,18 +164,10 @@ fn chained_fixed_point_and_pruning_round_trip_and_execute() {
 
     let before = noble_ngraph::check(&TestIds, graph.clone()).expect("source admission");
     let after = noble_ngraph::check(&TestIds, result.clone()).expect("pruned candidate admission");
-    let before_reference = noble_ngraph::reference(
-        &before,
-        &[],
-        None,
-        &mut noble_ngraph::Control::default(),
-    );
-    let after_reference = noble_ngraph::reference(
-        &after,
-        &[],
-        None,
-        &mut noble_ngraph::Control::default(),
-    );
+    let before_reference =
+        noble_ngraph::reference(&before, &[], None, &mut noble_ngraph::Control::default());
+    let after_reference =
+        noble_ngraph::reference(&after, &[], None, &mut noble_ngraph::Control::default());
     assert_eq!(before_reference.obs, after_reference.obs);
     assert_eq!(
         after_reference.obs,
@@ -181,7 +178,9 @@ fn chained_fixed_point_and_pruning_round_trip_and_execute() {
     );
     let compiled = noble_ngraph::compiled::Compiled::new(&TestIds, &after);
     assert_eq!(
-        compiled.evaluate(&[], None, &mut noble_ngraph::Control::default()).obs,
+        compiled
+            .evaluate(&[], None, &mut noble_ngraph::Control::default())
+            .obs,
         after_reference.obs,
         "compiled ordered outputs equal the reference vector"
     );
@@ -228,7 +227,12 @@ fn certified_pruning_refuses_live_node_removal_wrong_renumbering_and_output_reor
     let mut renumbered_certificate = derivation.clone();
     renumbered_certificate.right = wrong_renumbering.logical_id(&TestIds);
     assert_eq!(
-        cert::check_chained(&TestIds, &graph, &wrong_renumbering, &renumbered_certificate),
+        cert::check_chained(
+            &TestIds,
+            &graph,
+            &wrong_renumbering,
+            &renumbered_certificate
+        ),
         Err(Refusal::ResultMismatch),
         "survivor renumbering is the re-derived creation-order bijection"
     );
@@ -251,7 +255,10 @@ fn a_prune_without_a_rewrite_is_identity_only_for_already_admitted_graphs() {
         .expect("the input graph needs no normalization");
     assert!(derivation.steps.is_empty());
     assert_eq!(result, graph);
-    assert_eq!(cert::check_chained(&TestIds, &graph, &result, &derivation), Ok(()));
+    assert_eq!(
+        cert::check_chained(&TestIds, &graph, &result, &derivation),
+        Ok(())
+    );
     assert!(matches!(result.nodes[0].op, Op::Input(_)));
     assert!(matches!(result.nodes[1].op, Op::Input(_)));
     assert_eq!(result.nodes[2].op, Op::I64Add(NodeId(0), NodeId(1)));

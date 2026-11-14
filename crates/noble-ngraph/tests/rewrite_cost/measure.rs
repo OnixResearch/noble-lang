@@ -70,19 +70,17 @@ fn sample(graph: &Graph, proposer: Proposer, samples: usize) -> Measured {
         samples,
         || {
             // Preserve proposal-plus-artifact-drop timing from the original lane.
-            let _ = std::hint::black_box(cert::propose_chained(
-                &super::common::IDS,
-                proposer,
-                graph,
-            ));
+            let _ =
+                std::hint::black_box(cert::propose_chained(&super::common::IDS, proposer, graph));
         },
         |()| {},
     );
     let (check_median, check_iqr) = warm_stats(
         samples,
         || {
-            cert::decode_chained(&wire)
-                .and_then(|decoded| cert::check_chained(&super::common::IDS, graph, &result, &decoded))
+            cert::decode_chained(&wire).and_then(|decoded| {
+                cert::check_chained(&super::common::IDS, graph, &result, &decoded)
+            })
         },
         |outcome| {
             // Handle every sampled Result without pricing the assertion as checker work.

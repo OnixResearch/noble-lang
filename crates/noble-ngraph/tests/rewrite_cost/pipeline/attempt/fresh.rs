@@ -69,9 +69,8 @@ fn admit(graph: Graph, proposer: Option<Proposer>, run: &mut FreshRun) -> Option
     let wire = cert::encode_chained(&derivation);
     run.details.certificate = Some(super::certificate_info(&derivation, wire.len()));
     let verdict = timed(run, Stage::CertificateChecking, || {
-        cert::decode_chained(&wire).and_then(|decoded| {
-            cert::check_chained(&IDS, checked.graph(), &candidate, &decoded)
-        })
+        cert::decode_chained(&wire)
+            .and_then(|decoded| cert::check_chained(&IDS, checked.graph(), &candidate, &decoded))
     });
     if let Err(refusal) = verdict {
         run.refuse(

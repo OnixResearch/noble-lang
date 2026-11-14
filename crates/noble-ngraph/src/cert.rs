@@ -1044,7 +1044,8 @@ pub fn propose_chained(
     match proposer {
         Proposer::Identity => {}
         Proposer::FirstEligible => {
-            if let Some(step) = (0..result.nodes.len()).find_map(|index| fold_site(&result, index)) {
+            if let Some(step) = (0..result.nodes.len()).find_map(|index| fold_site(&result, index))
+            {
                 record_chained_rule(ids, &mut result, step, &mut steps)?;
             }
         }
@@ -1157,9 +1158,7 @@ pub fn check(
     result: &crate::ir::Graph,
     derivation: &Derivation,
 ) -> Result<(), Refusal> {
-    if derivation.revision != CERT_REVISION
-        && derivation.revision != LEGACY_CHAINLESS_REVISION
-    {
+    if derivation.revision != CERT_REVISION && derivation.revision != LEGACY_CHAINLESS_REVISION {
         return Err(Refusal::StaleRevision);
     }
     if derivation.model != MODEL_REVISION {
