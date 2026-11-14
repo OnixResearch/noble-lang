@@ -518,7 +518,7 @@ try {
     },
     assumptions: [
       'Pinned Lean and the imported Aeneas/Mathlib dependency libraries are trusted; downloaded dependency .oleans are not rebuilt by this audit.',
-      'The regenerated kernel subjects build against the matching selected Aeneas library without compatibility aliases.',
+      'The regenerated kernel subjects build against the Lean backend from the same selected Aeneas revision without compatibility aliases.',
       'The recorded Charon/Aeneas translation (verification/declared-modules-v1/extraction.json) is trusted to model the bound Rust sources; this lane does not re-run it.',
       'Reachable handwritten external models are part of the trusted base and are listed in binding.external_models; core.str.converts.from_utf8 is modelled as returning its input on valid UTF-8 and Utf8Error.Invalid otherwise.',
       'The Aeneas library models of slices, arrays, range indexing and range writes, slice copies, scalars, checked arithmetic and loops are trusted.',

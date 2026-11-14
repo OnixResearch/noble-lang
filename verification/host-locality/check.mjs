@@ -152,7 +152,7 @@ function prepareProject(profile, inventory) {
     const name = member.split('/m3/')[1];
     writeFileSync(join(project, name), readFileSync(join(extracted, member.slice(2))));
   }
-  // The archived subject names library declarations the selected Aeneas Lean library dropped (#86).
+  // Archived M5-only aliases cover library declarations absent from the retained generated subject.
   const compatibility = libraryCompatibility(root);
   appendCompatibility(join(project, 'NobleKernel/TypesExternal.lean'), compatibility);
   writeFileSync(join(project, 'M5Resources.lean'), readFileSync(join(root, 'proofs/m5/M5Resources.lean')));
@@ -263,7 +263,7 @@ try {
     scope: 'Conditional bounded synchronous adapter/guest model and reused extracted M5 decision lemmas; not Rust host, lowering, Wasmtime or whole-engine refinement.',
     assumptions: ['Pinned Lean and imported Aeneas/Mathlib dependency libraries are trusted; downloaded dependency .oleans are not rebuilt by this audit.',
       'The retained generated M5 sources are compiled anew, not replaced with a handwritten table; all six resource decision source files must retain their extraction-recorded bytes.',
-      'The reviewed Aeneas library compatibility block is appended to the archived TypesExternal.lean; it restates library names the selected library dropped as the library\'s own definitions (VT-PIN-02 exception, #86).',
+      'The temporary M5 proof root appends aliases from verification/m5-archived-library-compatibility.lean solely for the archived generated subject; current checked-in subjects do not use them.',
       'Current CLI host wrapper, guest lowering and Wasmtime/Canonical ABI correspondence remain separate explicit obligations.'],
     artifact_directory: output, command_count: commandSerial,
   };

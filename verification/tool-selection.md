@@ -56,14 +56,14 @@ A matching top-level Git revision alone cannot hide a changed selected tool reci
 These Nix identities assume store integrity and do not independently authenticate builds or caches.
 
 The selected Aeneas extractor source (`sources.aeneas`) supplies its required Charon revision.
-The separately selected Aeneas Lean library source (`sources.aeneas_lean`, the VT-PIN-02 exception of issue #86) supplies the Lean toolchain and the backend manifest.
+The Aeneas Lean library source (`sources.aeneas_lean`) supplies the proof projects' Lean toolchain and backend manifest; its revision matches the selected extractor as required by VT-PIN-02.
 The inherited M1 checker compares that proof project's resolved Lake dependencies with the library's backend manifest.
 The comparison preserves the complete dependency set but ignores package ordering and inherited placement metadata.
 It rejects duplicate packages, floating resolved revisions, missing dependencies, path overrides, and noncanonical package directories.
 A resolved Git revision remains mandatory even when an upstream `inputRev` names a branch or release tag.
 The additional M2, checker-M3, MC1 and Wasm-emitter Lake files are exact byte bindings, not a claim that this M1 comparison or a build has independently checked every later proof project.
 
-The selected extractor applies `nix/aeneas-string-escaping.patch` to the pinned Aeneas source: complete string literals use OCaml `String.escaped`, not per-character `Char.escaped`, which leaves embedded double quotes unescaped. The patch is a separately named Nix input, so changing the containing flake path does not recursively change the tool pin. Fresh M3 and MC1 extraction/Lean compilation validate this patched executable; generated Lean is not hand-repaired. The upstream Charon and Lean-library revisions are unchanged.
+The selected extractor applies `nix/aeneas-string-escaping.patch` to the pinned Aeneas source: complete string literals use OCaml `String.escaped`, not per-character `Char.escaped`, which leaves embedded double quotes unescaped. The patch is a separately named Nix input, so changing the containing flake path does not recursively change the tool pin. Fresh M3 and MC1 extraction/Lean compilation validate this patched executable; generated Lean is not hand-repaired. The patch does not alter the pinned Charon revision or the matching Aeneas Lean backend source.
 
 The Octet flake input and lock retain revision `235255bc4972ced9128fd5b4d1ec66ff7508ded4`.
 `nix/octet-patched-source.nix` applies five content-hashed engine, libc-path,
