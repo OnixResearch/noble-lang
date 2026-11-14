@@ -58,7 +58,6 @@ mod llvm;
 #[path = "cert/scoped.rs"]
 mod scoped;
 
-
 #[test]
 fn a_folded_endpoint_evaluates_identically_with_a_constant() -> Result<(), noble_ngraph::Diagnostic>
 {
