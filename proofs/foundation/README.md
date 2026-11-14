@@ -170,6 +170,7 @@ Status words:
 
 | Claim | Model / theorem(s) | Implementation boundary | Status |
 |---|---|---|---|
+| Checked revision-3 worklist-plan semantics (issue #110) | `NobleFoundation.NetI64Plans.compileRule_exact_rhs`, `NobleFoundation.NetI64Plans.compileRule_op2_forward`, `NobleFoundation.NetI64Plans.compileRule_op2_reverse`, `NobleFoundation.NetI64Plans.compileRule_op1_forward`, `NobleFoundation.NetI64Plans.compileRule_op1_reverse`, `NobleFoundation.NetI64Plans.compileRule_dup_forward`, `NobleFoundation.NetI64Plans.compileRule_dup_reverse`, `NobleFoundation.NetI64Plans.compileRule_era_forward`, `NobleFoundation.NetI64Plans.compileRule_era_reverse`, `NobleFoundation.NetI64Plans.Plan.compile_commit`, `NobleFoundation.NetI64Plans.Plan.commit_worklist`, `NobleFoundation.NetI64Plans.Plan.precommit_stutters`, `NobleFoundation.NetI64Plans.Plan.commit_refines` | Kernel model over the vendored inets hash-map agent/wire state and active-pair worklist; it does not model the Rust generation-tagged vector arena, encoded byte checker, physical reuse map, or allocator | Lean plan-rule/refinement model **proved**. Rust compiler/checker, adversarial controls, and storage comparisons are separate finite **tested** evidence. Rust↔Lean/plan correspondence **open**; runtime default and #37's threshold unchanged |
 | Bounded sequential I64/Bool belt validator (issue #113) | `NobleFoundation.Belt.validate_sound`; real lowered program and exact-vector controls in the generated BeltCorpus module | symbolic graph identities over `PackedSchedule`; no Rust refinement theorem | model **proved**; real artifact corpus is finite model evidence; Rust lowerer/checker/interpreter and B2 comparisons remain separate **tested** evidence |
 | Fixed T1/T2 timing legality and ordered target outputs (issue #114) | `NobleFoundation.BeltTarget.mapReadyOutputs`, `NobleFoundation.BeltTarget.validate_sound` | the symbolic run gates graph-reference values on latency-derived completion; it does not evaluate operations or simulate belt/save state, and no Rust artifact/operand-age refinement theorem is claimed | completion-gate/order **proved** only; generated corpus and Rust lowerer/checker/interpreter cross-backend controls are separate **tested** evidence; machine-step refinement remains **open** |
 | ZMod/BitVec/K-NUM-01 signed decoding, range, round trips | `toZ_ofZ`, `ofZ_toZ`, `toZ_add`, `toZ_sub`, `toZ_mul`, `toZ_neg`, `signed_eq_toInt`, `signed_toZ`, `wrap_eq_bmod`, `wrap_eq_toInt_ofInt`, `wrap_eq_knum01`, `toInt_range`, `signed_range`, `intCast_signed`, `toInt_ofInt_eq_iff`, `signed_intCast_eq_iff`, `ofInt_toInt` | none (mathematics only) | **proved** |
@@ -3865,6 +3866,34 @@ proofs, and implementation-level cost bounds. U2 adds only finite real-layout
 corpus evidence; it does not close these universal claims.
 
 The clean foundation receipt for this model is attached with unit 1.
+
+## Checked revision-3 plan semantics (issue #110, phase 1)
+
+`NobleFoundation/NetI64Plans.lean` models revision-3 rule-plan images over the
+vendored inets `HNet` hash-map/worklist representation. The rule compiler keeps
+the exact `NetI64.xRule` right-hand side for both orientations of OP2, OP1,
+DUP, and ERA. A captured plan records the local boundary, initialized result
+agents, local wire image, new principal-pair publications, and finite
+reservation counts. Commit applies those captured fields to the HNet maps;
+the compiled-image equation identifies that update with the vendored HNet
+worklist firing. Its pre-commit phases are observational stutters; commit
+refines to one `CStep` and publishes exactly the captured local pair list.
+
+The Lean model, Rust implementation correspondence, and finite Rust tests are
+separate claims. The Lean proof establishes the inets worklist model only; it
+does **not** prove that the Rust byte compiler/checker or generation-tagged
+vector arena implements this model. Rust tests cover the versioned byte plans,
+independent decoder/checker, rejection controls, rollback/resource boundaries,
+and paired storage-policy workloads. The measured comparison is descriptive
+only: net execution remains opt-in, and the #37 frozen 1.15 threshold is not
+changed.
+
+**Open, and deliberately not closed:** a Rust-to-Lean/plan refinement proof;
+proof that Rust's reservation, slot reuse, generation, rollback and queue
+publication transitions implement this finite HNet plan model for arbitrary
+nets; and performance claims beyond the retained matched finite workloads.
+
+The integrator attaches the clean foundation receipt for issue #110 after integration.
 
 ## Status by phase
 
