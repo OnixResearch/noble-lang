@@ -387,27 +387,28 @@ fn check_data(c: &Contract) -> Result<(), crate::diag::Diagnostic> {
     Ok(())
 }
 
-fn batch_size_is_valid(data_len: usize, batch_size: Option<u32>) -> bool {
-    batch_size
-        .is_none_or(|size| usize::try_from(size).is_ok_and(|size| size > 0 && size <= data_len))
+fn batch_size_is_valid(data_len: usize, batch_len: Option<u32>) -> bool {
+    batch_len.is_none_or(|batch_len| {
+        usize::try_from(batch_len).is_ok_and(|batch_len| batch_len > 0 && batch_len <= data_len)
+    })
 }
 
 fn training_batch_range(
     data_len: usize,
-    batch_size: Option<u32>,
+    batch_len: Option<u32>,
     step: u64,
 ) -> Option<(usize, usize)> {
-    let Some(batch_size) = batch_size else {
+    let Some(batch_len) = batch_len else {
         return Some((0, data_len));
     };
-    if !batch_size_is_valid(data_len, Some(batch_size)) || step == 0 {
+    if !batch_size_is_valid(data_len, Some(batch_len)) || step == 0 {
         return None;
     }
-    let batch_size = usize::try_from(batch_size).ok()?;
-    let batch_count = u64::try_from(data_len.div_ceil(batch_size)).ok()?;
-    let batch_index = usize::try_from((step - 1) % batch_count).ok()?;
-    let start = batch_index.checked_mul(batch_size)?;
-    Some((start, start.saturating_add(batch_size).min(data_len)))
+    let batch_len = usize::try_from(batch_len).ok()?;
+    let batch_count = u64::try_from(data_len.div_ceil(batch_len)).ok()?;
+    let batch_index = usize::try_from(step.checked_sub(1)?.checked_rem(batch_count)?).ok()?;
+    let start = batch_index.checked_mul(batch_len)?;
+    Some((start, start.saturating_add(batch_len).min(data_len)))
 }
 
 fn values_f32(slots: &[crate::sem::Value]) -> alloc::vec::Vec<f32> {
