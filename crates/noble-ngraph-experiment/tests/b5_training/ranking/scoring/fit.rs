@@ -103,17 +103,21 @@ fn training_control<'a>(
     }
 }
 
-fn train_with_counters(
-    inputs: &TrainingInputs<'_>,
-    seed: u64,
-) -> Result<SeedTraining, String> {
+fn train_with_counters(inputs: &TrainingInputs<'_>, seed: u64) -> Result<SeedTraining, String> {
+    debug_assert!(TRAIN_SEEDS.contains(&seed));
+    debug_assert_eq!(inputs.model.graph().input_slots().len(), chunks::FEATURE_LANES);
     let contract = training_contract(inputs, seed);
     let started = std::time::Instant::now();
     let mut scratch = noble_ngraph::eval::ScratchCounters::default();
     let mut evaluated_nodes = 0u64;
     let mut control = training_control(&mut scratch, &mut evaluated_nodes);
-    let trained = train::train(&BLAKE3, &contract, None, TRAIN_STEPS, &mut control)
-        .map_err(|stopped| format!("training seed {seed:016x} stopped: {:?}", stopped.diagnostic))?;
+    let trained =
+        train::train(&BLAKE3, &contract, None, TRAIN_STEPS, &mut control).map_err(|stopped| {
+            format!(
+                "training seed {seed:016x} stopped: {:?}",
+                stopped.diagnostic
+            )
+        })?;
     Ok(SeedTraining {
         trained,
         training_elapsed_ns: elapsed_ns(started),
@@ -146,8 +150,11 @@ fn seed_summary(
 
 fn train_one_seed(inputs: &TrainingInputs<'_>, seed: u64) -> Result<SeedRun, String> {
     let training = train_with_counters(inputs, seed)?;
-    let validation_loss =
-        validation_mean_loss(inputs.model, &training.trained.snapshot, inputs.validation_rows)?;
+    let validation_loss = validation_mean_loss(
+        inputs.model,
+        &training.trained.snapshot,
+        inputs.validation_rows,
+    )?;
     if !validation_loss.is_finite() {
         return Err(format!("validation loss is nonfinite for seed {seed:016x}"));
     }
@@ -174,14 +181,14 @@ fn run_all_seeds(inputs: &TrainingInputs<'_>) -> Result<(TrainingOutcome, u64), 
     Ok((outcome, elapsed_ns(started)))
 }
 
-pub(crate) fn fit_model(
+pub(crate) fn train_and_select(
     session: &noble_contracts::source::Session,
     libraries: &[Library],
     tasks: &[TaskSpec],
 ) -> Result<ModelFit, String> {
     let training_started = std::time::Instant::now();
-    let training_rows = collect_split(session, libraries, tasks, "train")?;
-    let validation_rows = collect_split(session, libraries, tasks, "validation")?;
+    let training_rows = dataset_for_split(session, libraries, tasks, "train")?;
+    let validation_rows = dataset_for_split(session, libraries, tasks, "validation")?;
     assert_eq!(training_rows.rows.len(), 280 * 4);
     assert_eq!(validation_rows.rows.len(), 80 * 4);
     assert_equal_signature_features(&training_rows.rows)?;
@@ -201,8 +208,9 @@ pub(crate) fn fit_model(
         validation_rows: &validation_rows.rows,
     };
     let (outcome, model_selection_elapsed_ns) = run_all_seeds(&inputs)?;
-    let (selected_seed, validation_loss, trained) =
-        outcome.best.ok_or_else(|| String::from("no training seed produced a snapshot"))?;
+    let (selected_seed, validation_loss, trained) = outcome
+        .best
+        .ok_or_else(|| String::from("no training seed produced a snapshot"))?;
     if train_points.len() != 1_120 || validation_points.len() != 320 {
         return Err(String::from(
             "split point counts changed from the frozen 280/80 task sets",
@@ -226,7 +234,7 @@ pub(crate) fn fit_model(
     })
 }
 
-pub(crate) fn contexts_json(contexts: &[RankingContext]) -> Vec<Value> {
+pub(crate) fn contexts_json(contexts: &[CandidateContext]) -> Vec<Value> {
     contexts
         .iter()
         .map(|context| {

@@ -181,19 +181,19 @@ pub(crate) fn optimizer_state_bytes(state: &train::AdamState) -> Vec<u8> {
     bytes
 }
 
-pub(crate) struct ModelBuildIdentity<'a> {
+pub(crate) struct BuildIdentity<'a> {
     pub(crate) source_commit: &'a str,
     pub(crate) rustc_version: &'a str,
     pub(crate) cargo_version: &'a str,
 }
 
-pub(crate) fn model_identity(
+pub(crate) fn trained_identity(
     fit: &ModelFit,
-    build: ModelBuildIdentity<'_>,
+    build: BuildIdentity<'_>,
 ) -> [u8; chunks::REVISION_BYTES] {
     let state_bytes = optimizer_state_bytes(&fit.state);
     let mut hasher = blake3::Hasher::new();
-    hash_model_header(&mut hasher, &build);
+    hash_header(&mut hasher, &build);
     hash_snapshot_lineage(&mut hasher, fit);
     for seed in &fit.seeds {
         hash_seed_summary(&mut hasher, seed);
@@ -205,7 +205,7 @@ pub(crate) fn model_identity(
     *hasher.finalize().as_bytes()
 }
 
-fn hash_model_header(hasher: &mut blake3::Hasher, build: &ModelBuildIdentity<'_>) {
+fn hash_header(hasher: &mut blake3::Hasher, build: &BuildIdentity<'_>) {
     hasher.update(b"noble.tchunk-ranking-model/1\0");
     hasher.update(build.source_commit.as_bytes());
     hasher.update(build.rustc_version.as_bytes());
@@ -238,7 +238,7 @@ fn hash_seed_summary(hasher: &mut blake3::Hasher, seed: &SeedSummary) {
     hasher.update(&seed.optimizer_state_digest);
 }
 
-fn hash_training_context(hasher: &mut blake3::Hasher, context: &RankingContext) {
+fn hash_training_context(hasher: &mut blake3::Hasher, context: &CandidateContext) {
     hasher.update(context.family.as_bytes());
     hasher.update(&context.library_identity);
     hasher.update(&context.library_revision);
