@@ -25,8 +25,10 @@
 -- Note: the declarations live in the `noble_kernel` namespace (like they did
 -- in the previous monolithic extraction) so that all the fully qualified
 -- names (e.g. `noble_kernel.alloc.vec.Vec.pop`) are unchanged.
-import Aeneas
-import NobleKernel.Types
+module
+public import Aeneas
+public import NobleKernel.Types
+@[expose] public section
 open Aeneas Aeneas.Std Result ControlFlow Error
 set_option linter.dupNamespace false
 set_option linter.hashCommand false
@@ -34,6 +36,7 @@ set_option linter.unusedVariables false
 set_option linter.style.whitespace false
 set_option linter.style.setOption false
 set_option linter.style.longLine false
+set_option linter.internalConstructors false
 
 /- You can set the `maxHeartbeats` value with the `-max-heartbeats` CLI option -/
 set_option maxHeartbeats 1000000
@@ -181,11 +184,11 @@ def core.result.Result.ok
 /-- [core::result::{core::result::Result<T, E>}::unwrap_or]. -/
 @[rust_fun "core::result::{core::result::Result<@T, @E>}::unwrap_or"]
 def core.result.Result.unwrap_or
-  {T : Type} {E : Type} : core.result.Result T E → T → Result T :=
+  {T : Type} {E : Type} : core.result.Result T E → T → T :=
   fun r default =>
     match r with
-    | .Ok v => pure v
-    | .Err _ => pure default
+    | .Ok v => v
+    | .Err _ => default
 
 /-! ## alloc::vec -/
 

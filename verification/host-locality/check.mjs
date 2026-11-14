@@ -82,7 +82,8 @@ function checkedSources(profile) {
   const files = [
     codeFile, inventoryFile, profileFile, 'verification/host-locality/check.mjs',
     'proofs/m5/M5Resources.lean', 'proofs/m5/lake-manifest.json', 'proofs/m5/lean-toolchain',
-    profile.source, profile.historical_extraction_receipt, 'policy/tool-selection.json', compatibilitySource,
+    profile.source, profile.historical_extraction_receipt, 'policy/tool-selection.json',
+    'verification/aeneas-library-compatibility.mjs', compatibilitySource,
     ...sourceFiles('crates/noble-kernel/src/resources'),
   ];
   return Object.fromEntries(files.map(file => [file, fileHash(join(root, file))]));

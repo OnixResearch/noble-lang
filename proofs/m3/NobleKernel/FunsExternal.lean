@@ -33,8 +33,10 @@
 -- Note: the declarations live in the `noble_kernel` namespace (like they did
 -- in the previous monolithic extraction) so that all the fully qualified
 -- names (e.g. `noble_kernel.alloc.vec.Vec.pop`) are unchanged.
-import Aeneas
-import NobleKernel.Types
+module
+public import Aeneas
+public import NobleKernel.Types
+@[expose] public section
 open Aeneas Aeneas.Std Result ControlFlow Error
 set_option linter.dupNamespace false
 set_option linter.hashCommand false
@@ -42,6 +44,7 @@ set_option linter.unusedVariables false
 set_option linter.style.whitespace false
 set_option linter.style.setOption false
 set_option linter.style.longLine false
+set_option linter.internalConstructors false
 
 /- You can set the `maxHeartbeats` value with the `-max-heartbeats` CLI option -/
 set_option maxHeartbeats 1000000
@@ -203,7 +206,7 @@ def core.option.Option.as_ref {T : Type} (value : Option T) : Result (Option T) 
 /-- Optional equality compares payloads only when both values are present. -/
 @[rust_fun
   "core::option::{core::cmp::PartialEq<core::option::Option<@T>, core::option::Option<@T>>}::eq"]
-def core.option.Option.Insts.CoreCmpPartialEqOption.eq {T : Type}
+def core.option.Option.Insts.CoreCmpPartialEqOption.eq {T : Type _}
   (partialEq : core.cmp.PartialEq T T) (left right : Option T) : Result Bool :=
   match left, right with
   | none, none => ok true
@@ -267,25 +270,6 @@ def core.option.Option.Insts.CoreDefaultDefault.default (T : Type) :
   Result (Option T) :=
   ok none
 
-@[rust_fun
-  "core::option::{core::ops::try_trait::Try<core::option::Option<@T>>}::branch"]
-def core.option.Option.Insts.CoreOpsTry_traitTry.branch {T : Type}
-  (value : Option T) :
-  Result (core.ops.control_flow.ControlFlow (Option core.convert.Infallible) T) :=
-  match value with
-  | some payload => ok (.Continue payload)
-  | none => ok (.Break none)
-
-/-- The only possible residual for `Option` is `None`: `Infallible`
-    has no inhabitants, so a `Some` residual cannot occur. -/
-@[rust_fun
-  "core::option::{core::ops::try_trait::FromResidual<core::option::Option<@T>, core::option::Option<core::convert::Infallible>>}::from_residual"]
-def core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
-  (T : Type) (residual : Option core.convert.Infallible) : Result (Option T) :=
-  match residual with
-  | none => ok none
-  | some impossible => impossible.casesOn
-
 /-! ## core::result -/
 
 @[rust_fun "core::result::{core::result::Result<@T, @E>}::is_ok_and"]
@@ -315,7 +299,7 @@ def core.result.Result.Insts.CoreFmtDebug.fmt {T E : Type}
     the supplied Rust PartialEq implementations, including their effects. -/
 @[rust_fun
   "core::result::{core::cmp::PartialEq<core::result::Result<@T, @E>, core::result::Result<@T, @E>>}::eq"]
-def core.result.Result.Insts.CoreCmpPartialEqResult.eq {T E : Type}
+def core.result.Result.Insts.CoreCmpPartialEqResult.eq {T E : Type _}
   (valueEq : core.cmp.PartialEq T T) (errorEq : core.cmp.PartialEq E E)
   (left right : core.result.Result T E) : Result Bool :=
   match left, right with
@@ -354,11 +338,11 @@ def core.result.Result.map_or {T E U F : Type}
 /-- [core::result::{core::result::Result<T, E>}::unwrap_or]. -/
 @[rust_fun "core::result::{core::result::Result<@T, @E>}::unwrap_or"]
 def core.result.Result.unwrap_or
-  {T : Type} {E : Type} : core.result.Result T E → T → Result T :=
+  {T : Type} {E : Type} : core.result.Result T E → T → T :=
   fun r default =>
     match r with
-    | .Ok v => pure v
-    | .Err _ => pure default
+    | .Ok v => v
+    | .Err _ => default
 
 /-! ## core::str -/
 
@@ -369,15 +353,13 @@ def core.str.Str.len (value : Str) : Result Usize := ok value.len
 @[rust_fun "core::str::{str}::is_empty"]
 def core.str.Str.is_empty (value : Str) : Result Bool := ok value.val.isEmpty
 
-private def utf8Bytes (value : Str) : ByteArray :=
-  ByteArray.mk (value.val.map (fun byte => UInt8.ofNat byte.val)).toArray
-
 /-- Preserve the exact input bytes on success. The checked decoder discards
     the error's diagnostic fields and retains only the failure branch. -/
 @[rust_fun "core::str::converts::from_utf8"]
 def core.str.converts.from_utf8 (value : Slice U8) :
     Result (core.result.Result Str core.str.error.Utf8Error) :=
-  match String.fromUTF8? (utf8Bytes value) with
+  let bytes := ByteArray.mk (value.val.map (fun byte => UInt8.ofNat byte.val)).toArray
+  match String.fromUTF8? bytes with
   | some _ => ok (.Ok value)
   | none => ok (.Err .Invalid)
 
@@ -431,7 +413,8 @@ def alloc.string.String.Insts.CoreCloneClone.clone (value : String) : Result Str
 @[rust_fun "alloc::string::{core::cmp::PartialEq<alloc::string::String, &'0 str>}::eq"]
 def alloc.string.String.Insts.CoreCmpPartialEqShared0Str.eq (left : String) (right : Str) :
     Result Bool :=
-  match String.fromUTF8? (utf8Bytes right) with
+  let bytes := ByteArray.mk (right.val.map (fun byte => UInt8.ofNat byte.val)).toArray
+  match String.fromUTF8? bytes with
   | some decoded => ok (left == decoded)
   | none => ok false
 
@@ -440,15 +423,13 @@ def alloc.string.String.Insts.CoreFmtDebug.fmt (_ : String) (formatter : core.fm
     Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter) :=
   ok (.Ok (), formatter)
 
-private def ownedByte (byte : UInt8) : U8 :=
-  ⟨byte.toNat, by
-    cases byte
-    simp only [UInt8.toNat_ofBitVec, UScalarTy.U8_numBits_eq, Nat.reducePow]
-    omega⟩
-
 @[rust_fun "alloc::string::{core::ops::deref::Deref<alloc::string::String, str>}::deref"]
 def alloc.string.String.Insts.CoreOpsDerefDerefStr.deref (value : String) : Result Str :=
-  let bytes := value.toUTF8.toList.map ownedByte
+  let bytes := value.toUTF8.toList.map (fun byte =>
+    ⟨byte.toNat, by
+      cases byte
+      simp only [UInt8.toNat_ofBitVec, UScalarTy.U8_numBits_eq, Nat.reducePow]
+      omega⟩)
   if valid : bytes.length ≤ Usize.max then
     ok (.from bytes valid)
   else
@@ -456,7 +437,8 @@ def alloc.string.String.Insts.CoreOpsDerefDerefStr.deref (value : String) : Resu
 
 @[rust_fun "alloc::string::{core::convert::From<alloc::string::String, &'0 str>}::from"]
 def alloc.string.String.Insts.CoreConvertFromShared0Str.from (value : Str) : Result String :=
-  match String.fromUTF8? (utf8Bytes value) with
+  let bytes := ByteArray.mk (value.val.map (fun byte => UInt8.ofNat byte.val)).toArray
+  match String.fromUTF8? bytes with
   | some decoded => ok decoded
   | none => fail .panic
 
@@ -518,7 +500,7 @@ def alloc.vec.Vec.swap_remove {T : Type} (_ : Type)
       let retained := (value.val.take (value.val.length - 1)).set index.val last
       ok (removed, .from retained (by
         have bound := value.property
-        simp [retained, List.length_set, List.length_take] <;> omega))
+        simp [retained, List.length_set, List.length_take]; omega))
   else
     fail .arrayOutOfBounds
 
@@ -534,7 +516,7 @@ def alloc.vec.Vec.remove {T : Type} (_ : Type)
     let retained := value.val.take index.val ++ value.val.drop (index.val + 1)
     ok (removed, .from retained (by
       have bound := value.property
-      simp [retained, List.length_append, List.length_take, List.length_drop] <;> omega))
+      simp [retained, List.length_append, List.length_take, List.length_drop]; omega))
   else
     fail .arrayOutOfBounds
 

@@ -1,7 +1,9 @@
-import Aeneas
-import NobleWasmImpl.Types
-import NobleKernel.FunsExternal
-import NobleContractImpl.StdModels
+module
+public import Aeneas
+public import NobleWasmImpl.Types
+public import NobleKernel.FunsExternal
+public import NobleContractImpl.StdModels
+@[expose] public section
 
 open Aeneas Aeneas.Std Result
 
@@ -91,7 +93,7 @@ def core.option.OptionShared0T.copied
 @[rust_fun
   "core::option::{core::cmp::PartialEq<core::option::Option<@T>, core::option::Option<@T>>}::eq"]
 def core.option.Option.Insts.CoreCmpPartialEqOption.eq
-    {T : Type} (inst : core.cmp.PartialEq T T) (left right : Option T) : Result Bool :=
+    {T : Type _} (inst : core.cmp.PartialEq T T) (left right : Option T) : Result Bool :=
   _root_.noble_contracts.core.option.Option.Insts.CoreCmpPartialEqOption.eq inst left right
 
 @[rust_fun "core::result::{core::result::Result<@T, @E>}::is_err"]
@@ -101,7 +103,7 @@ def core.result.Result.is_err
 
 @[rust_fun "core::result::{core::result::Result<@T, @E>}::unwrap_or"]
 def core.result.Result.unwrap_or
-    {T E : Type} (value : core.result.Result T E) (fallback : T) : Result T :=
+    {T E : Type} (value : core.result.Result T E) (fallback : T) : T :=
   _root_.noble_kernel.core.result.Result.unwrap_or value fallback
 
 @[rust_fun

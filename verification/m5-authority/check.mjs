@@ -492,7 +492,8 @@ try {
   const historical = verifyProfile(profile);
   const checkedFiles = [codeFile, inventoryFile, profileFile, 'verification/m5-authority/check.mjs',
     'proofs/m5/lake-manifest.json', 'proofs/m5/lean-toolchain', profile.source,
-    profile.historical_extraction_receipt, 'policy/tool-selection.json', compatibilitySource];
+    profile.historical_extraction_receipt, 'policy/tool-selection.json',
+    'verification/aeneas-library-compatibility.mjs', compatibilitySource];
   const sources = Object.fromEntries(checkedFiles.map(file => [file, fileHash(join(root, file))]));
   const version = run(join(leanBin, 'lean'), ['--version']).trim();
   requireThat(version.includes('version 4.35.0') && version.includes('eb6cafb7290e8bd5f2937522d8d804f58f02bafc'),
