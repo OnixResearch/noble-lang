@@ -717,7 +717,7 @@ function main() {
           controlRows.push(row);
         } else if (control.id === 'invocation-quota') {
           const row = runEngineCell(runtimeConfig, source, arm, optimized, watArtifact,
-            keyFor(control.id, arm, optimized), { limits: { steps: 1 }, observationId: control.id });
+            keyFor(control.id, arm, optimized), { limits: { steps: 7 }, observationId: control.id });
           verifyFallback(row);
           checkControlExpected(control.id, row);
           controlRows.push(row);
