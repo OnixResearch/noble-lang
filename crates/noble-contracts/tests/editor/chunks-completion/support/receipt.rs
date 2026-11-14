@@ -1,17 +1,19 @@
 use super::{Accepted, Report};
 use noble_contracts::source::chunks as chunk;
 
+#[expect(
+    tigerstyle::ambient_env,
+    reason = "Owner: noble-contracts; this test-only measurement shell reads the explicitly supplied receipt path and clean source commit from its runner, while the production completion API remains environment-independent"
+)]
 pub(crate) fn maybe_write_measurement_receipt(
     accepted: &Accepted,
     report: &Report,
-    receipt_path: Option<&str>,
-    source_commit: Option<&str>,
 ) -> Result<(), String> {
-    let Some(path) = receipt_path else {
+    let Some(path) = std::env::var_os("NOBLE_TYPED_CHUNK_RECEIPT") else {
         return Ok(());
     };
-    let source_commit =
-        source_commit.ok_or_else(|| String::from("source commit environment is not configured"))?;
+    let source_commit = std::env::var("NOBLE_TYPED_CHUNK_SOURCE_COMMIT")
+        .map_err(|error| format!("source commit environment is not configured: {error}"))?;
     let source_commit = source_commit.trim();
     let worktree = worktree_root()?;
     verify_source_commit(&worktree, source_commit)?;

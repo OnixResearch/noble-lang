@@ -148,11 +148,6 @@ fn fixed_baseline_measurement_reports_bounded_work() -> Result<(), String> {
     assert!(report.source_bytes > 0);
     assert!(report.retained_bytes > 0);
     assert!(report.total_latency_ns > 0);
-    maybe_write_measurement_receipt(
-        &accepted,
-        &report,
-        MEASUREMENT_RECEIPT_PATH,
-        MEASUREMENT_SOURCE_COMMIT,
-    )?;
+    maybe_write_measurement_receipt(&accepted, &report)?;
     Ok(())
 }

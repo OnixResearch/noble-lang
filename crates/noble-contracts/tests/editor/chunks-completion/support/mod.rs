@@ -10,9 +10,5 @@ pub(crate) use noble_contracts::source::chunks::{
 pub(crate) use noble_contracts::source::editor::Node as EditorNode;
 pub(crate) use noble_kernel::types::Ty;
 
-pub(super) const MEASUREMENT_RECEIPT_PATH: Option<&str> = option_env!("NOBLE_TYPED_CHUNK_RECEIPT");
-pub(super) const MEASUREMENT_SOURCE_COMMIT: Option<&str> =
-    option_env!("NOBLE_TYPED_CHUNK_SOURCE_COMMIT");
-
 pub(crate) use common::*;
 pub(crate) use evidence::maybe_write_measurement_receipt;
