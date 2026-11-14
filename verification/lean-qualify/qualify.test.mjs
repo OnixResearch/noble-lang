@@ -86,8 +86,10 @@ test('exact manifest comparison names newly resolved upstream dependencies', () 
 
 test('no-op planning retains empty source changes and complete consumer pins', () => {
   const revision = gitRun(root, 'rev-parse', 'b7af712703ba968a9449772ac87b36d28039d636');
+  const output = join(testRoot, 'no-op-plan');
+  mkdirSync(output);
   const plan = planQualification({ baseline: revision, proposal: revision,
-    profileName: 'core-bootstrap', output: join(testRoot, 'no-op-plan') });
+    profileName: 'core-bootstrap', output });
   assert.equal(plan.no_op, true);
   assert.deepEqual(plan.source_diff.changed_paths, []);
   assert.deepEqual(plan.source_diff.classes, { proposed_pin_changes: [], proof_only_repairs: [],
@@ -214,8 +216,10 @@ test('exporter profile refuses qualification without an explicitly pinned requir
   assert.match(profileDefinitions['mc1-export'].unavailable,
     /Bun.*no tool-selection pin.*cannot be treated as an optional pass/);
   const revision = gitRun(root, 'rev-parse', 'b7af712703ba968a9449772ac87b36d28039d636');
+  const output = join(testRoot, 'unavailable-export-plan');
+  mkdirSync(output);
   const plan = planQualification({ baseline: revision, proposal: revision,
-    profileName: 'mc1-export', output: join(testRoot, 'unavailable-export-plan') });
+    profileName: 'mc1-export', output });
   assert.equal(plan.qualification_status, 'unqualified');
   assert.ok(plan.blockers.some(item => item.code === 'REQUIRED_CHECKER_UNAVAILABLE' && /Bun/.test(item.message)));
 });
