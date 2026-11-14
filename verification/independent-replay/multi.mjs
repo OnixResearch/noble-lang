@@ -548,14 +548,17 @@ const classifierCases = [
   { id: 'kernel-rejection', input: { status: 1, stdout: '', stderr: 'rejected: application type mismatch' }, expected: 'kernel-rejection' },
   { id: 'parse-failure', input: { status: 3, stdout: '', stderr: "parse error: expected ':' after a key" }, expected: 'parse-failure' },
   { id: 'resource-exhaustion', input: { status: 137, stdout: '', stderr: '' }, expected: 'resource-exhausted' },
-  { id: 'address-space-cap-startup-failure', input: { status: 139, stdout: '', stderr: '' },
+  { id: 'address-space-cap-silent-exit', input: { status: 139, stdout: '', stderr: '' },
     address_space_bytes: RESOURCE_ADDRESS_SPACE_BYTES, expected: 'resource-exhausted' },
   { id: 'unparseable-zero-exit', input: { status: 0, stdout: '', stderr: '' }, expected: 'checker-error' },
-  { id: 'empty-check', input: { status: 0, stdout: 'Checked 0 declarations with no errors', stderr: '' }, expected: 'empty-check' },
+  { id: 'empty-check', input: { status: 0, stdout: '', stderr: '' }, expected: 'empty-check' },
 ];
 const classifierSelfTest = checkersPin.checkers.flatMap((checker) => classifierCases.map((row) => {
-  const classified = classify({ ...row.input, signal: null }, checker, false, row.address_space_bytes ?? null);
-  return { checker: checker.id, ...row, classified: classified.classification };
+  const input = row.id === 'empty-check'
+    ? { ...row.input, stdout: checker.accept_pattern.replace(/\(\\d\+\)/u, '0') }
+    : row.input;
+  const classified = classify({ ...input, signal: null }, checker, false, row.address_space_bytes ?? null);
+  return { checker: checker.id, ...row, input, classified: classified.classification };
 }));
 
 const baselineRuns = baselines.flatMap((subject) => subject.runs.map((run) => ({ subject: subject.id, ...run })));
