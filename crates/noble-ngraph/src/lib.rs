@@ -102,3 +102,6 @@ pub use sem::Value;
 pub use specialize::{
     emit_source, interface_types, merge, rank, readmit, specialize, Residual, ACCOUNTING_REVISION,
 };
+
+#[cfg(test)]
+extern crate std;
