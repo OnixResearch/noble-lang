@@ -992,14 +992,15 @@ fn issue125_random_interaction_families(graph: &noble_ngraph::Graph) -> Vec<&'st
     };
     for node in &graph.nodes {
         match &node.op {
-            Op::F32Select { off, on, .. } => {
+            Op::F32Select { off, on, .. }
                 if graph.nodes.iter().any(|candidate| {
                     matches!(&candidate.op,
                     Op::Guard { value, .. } if *value == *off || *value == *on)
-                }) {
-                    record("guard_select");
-                }
+                }) =>
+            {
+                record("guard_select");
             }
+            Op::F32Select { .. } => {}
             Op::F32Index { index, .. } => {
                 if matches!(&graph.nodes[index.index()].op, Op::F32Select { .. }) {
                     record("select_index");
@@ -1454,7 +1455,7 @@ fn issue125_structured_interaction_matrix() {
     let current_interactions = issue125_random_interaction_families(&current_random_graph.graph);
     let current_full_execution = current_campaign.full_normal_executions > 0;
     let current_reached_interactions: Vec<&str> = if current_full_execution {
-        current_interactions.iter().copied().collect()
+        current_interactions.to_vec()
     } else {
         Vec::new()
     };
