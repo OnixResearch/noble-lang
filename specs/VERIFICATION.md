@@ -284,7 +284,7 @@ For a chained graph-rewrite certificate, every transition MUST bind the exact lo
 
 #### Scenario: NGRAPH-CASE-16 chained rewrite admission and execution controls
 
-- GIVEN the `Numeric-Graph-v1` profile and every field of `input` in [NGRAPH-CASE-16](../../../specs/conformance/numeric-graph-cases.json)
+- GIVEN the `Numeric-Graph-v1` profile and every field of `input` in [NGRAPH-CASE-16](conformance/numeric-graph-cases.json)
 - WHEN the independent checker replays each certificate transition, derives its prune mapping, admits the resulting candidate, and executes only admitted candidates
 - THEN every executed output vector MUST equal the source reference in order and multiplicity, every listed stale or malformed variant MUST be refused before candidate execution, and the unchanged legacy revisions MUST retain their prior semantics
 
