@@ -503,7 +503,14 @@ impl Budget {
     pub fn lowered(&self, profile: &Budget) -> Budget {
         let mut out = *profile;
         for resource in Resource::ALL {
-            out.set(resource, profile.limit(resource).min(self.limit(resource)));
+            let profile_limit = profile.limit(resource);
+            let requested_limit = self.limit(resource);
+            let limit = if profile_limit < requested_limit {
+                profile_limit
+            } else {
+                requested_limit
+            };
+            out.set(resource, limit);
         }
         out
     }
@@ -722,7 +729,11 @@ impl Ledger {
             // an unreported 256-node cap on editor context around the hole.
             nodes: MAX_SOURCE_BYTES,
             depth: MAX_QUOTATION_DEPTH,
-            work: work.min(INNER_WORK_CEILING),
+            work: if work < INNER_WORK_CEILING {
+                work
+            } else {
+                INNER_WORK_CEILING
+            },
         }
     }
 }
@@ -1319,15 +1330,13 @@ fn editor_context_bytes(elements: &[Element], at: Location) -> Result<u32, Refus
         }
     }
     debug_assert!(bytes <= u64::from(MAX_SOURCE_BYTES));
-    debug_assert!(
-        bytes
-            >= encoded_len(
-                elements
-                    .iter()
-                    .filter(|element| !matches!(element, Element::Hole))
-                    .count()
-            )
-    );
+    let mut non_hole_count = 0usize;
+    for element in elements {
+        if !matches!(element, Element::Hole) {
+            non_hole_count = non_hole_count.saturating_add(1);
+        }
+    }
+    debug_assert!(bytes >= encoded_len(non_hole_count));
     u32::try_from(bytes).map_err(|_| byte_budget_refusal(u64::MAX, at))
 }
 
@@ -1549,13 +1558,18 @@ impl Replay {
         if boundary == Some(0) {
             self.mark = Some(self.stack.clone());
         }
-        for (index, element) in elements.iter().enumerate() {
+        let mut index = 0usize;
+        while index < elements.len() {
+            let Some(element) = elements.get(index) else {
+                return Err(internal(context, "replay index exceeds the checked element slice"));
+            };
             let position = index as u32;
             self.steps = self.steps.saturating_add(1);
             self.step(element, ledger, context, position)?;
             if boundary == Some(index.saturating_add(1)) {
                 self.mark = Some(self.stack.clone());
             }
+            index = index.saturating_add(1);
         }
         if !require_closed || self.ambient.is_empty() {
             Ok(())
@@ -1576,7 +1590,12 @@ fn witness_matches(witness: Option<&Instantiation>, expected: &[(u16, Ty)]) -> b
     if witness.bindings.len() != expected.len() {
         return false;
     }
-    for (binding, (variable, ty)) in witness.bindings.iter().zip(expected) {
+    for index in 0..expected.len() {
+        let (Some(binding), Some((variable, ty))) =
+            (witness.bindings.get(index), expected.get(index))
+        else {
+            return false;
+        };
         if binding.variable != *variable
             || binding.kind != noble_kernel::words::VariableKind::Value
             || !binding.ty.eq(ty)
@@ -1662,10 +1681,21 @@ pub struct Request {
 pub struct QueueCandidate {
     pub ordinal: u32,
     pub sequence: alloc::vec::Vec<u16>,
+    ranking_position: u32,
     score: Option<f32>,
     identity: Option<CandidateId>,
     feature_extraction_ns: u64,
     scorer_elapsed_ns: u64,
+}
+
+/// The requested number of canonical candidate entries to materialize.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CandidateLimit(u32);
+
+impl From<u32> for CandidateLimit {
+    fn from(value: u32) -> Self {
+        Self(value)
+    }
 }
 
 /// A bounded prefix of the canonical shortlex queue. `has_more` records
@@ -2161,7 +2191,13 @@ impl Library {
     }
 
     fn check_dependencies(&self, envelope: &Envelope) -> Result<(), Refusal> {
-        for (index, record) in envelope.dependencies.iter().enumerate() {
+        for index in 0..envelope.dependencies.len() {
+            let Some(record) = envelope.dependencies.get(index) else {
+                return Err(internal(
+                    Location::field("envelope.dependencies"),
+                    "dependency index exceeds the checked record slice",
+                ));
+            };
             if self.find(record).is_none() {
                 let position = index as u32;
                 return Err(Refusal::new(
@@ -2431,7 +2467,10 @@ fn check_captures(envelope: &Envelope) -> Result<(), Refusal> {
             "capture list exceeds the eight-capture bound",
         ));
     }
-    for (position, capture) in envelope.captures.iter().enumerate() {
+    for position in 0..envelope.captures.len() {
+        let Some(capture) = envelope.captures.get(position) else {
+            return Err(internal(at, "capture index exceeds the checked capture slice"));
+        };
         let expected = match u16::try_from(position) {
             Ok(expected) => expected,
             Err(_) => {
@@ -2458,8 +2497,11 @@ fn check_captures(envelope: &Envelope) -> Result<(), Refusal> {
 }
 
 fn check_instantiations(envelope: &Envelope, ledger: &mut Ledger) -> Result<(), Refusal> {
-    for (position, instantiation) in envelope.instantiations.iter().enumerate() {
+    for position in 0..envelope.instantiations.len() {
         let at = Location::at("envelope.instantiations", position as u32);
+        let Some(instantiation) = envelope.instantiations.get(position) else {
+            return Err(internal(at, "instantiation index exceeds the checked slice"));
+        };
         if u64::try_from(instantiation.bindings.len())
             .map_or(true, |count| count > u64::from(MAX_INSTANTIATION_BINDINGS))
         {
@@ -2502,17 +2544,18 @@ fn check_instantiations(envelope: &Envelope, ledger: &mut Ledger) -> Result<(), 
             previous = Some(binding.variable);
         }
     }
-    debug_assert!(envelope.instantiations.iter().all(|instantiation| {
-        u32::try_from(instantiation.bindings.len())
-            .is_ok_and(|count| count <= MAX_INSTANTIATION_BINDINGS)
-    }));
-    debug_assert!(envelope
-        .instantiations
-        .iter()
-        .flat_map(|item| &item.bindings)
-        .all(|binding| {
-            binding.kind == noble_kernel::words::VariableKind::Value && profile_type(&binding.ty)
-        }));
+    let mut instantiations_bounded = true;
+    let mut bindings_supported = true;
+    for instantiation in &envelope.instantiations {
+        instantiations_bounded &= u32::try_from(instantiation.bindings.len())
+            .is_ok_and(|count| count <= MAX_INSTANTIATION_BINDINGS);
+        for binding in &instantiation.bindings {
+            bindings_supported &= binding.kind == noble_kernel::words::VariableKind::Value
+                && profile_type(&binding.ty);
+        }
+    }
+    debug_assert!(instantiations_bounded);
+    debug_assert!(bindings_supported);
     Ok(())
 }
 
@@ -2525,7 +2568,10 @@ fn check_recipe(envelope: &Envelope) -> Result<(), Refusal> {
             "recipe entry list is empty",
         ));
     }
-    for (position, reference) in envelope.body.entry.iter().enumerate() {
+    for position in 0..envelope.body.entry.len() {
+        let Some(reference) = envelope.body.entry.get(position) else {
+            return Err(internal(at, "recipe entry index exceeds the checked entry slice"));
+        };
         if !reference_precedes(*reference, envelope.body.nodes.len()) {
             let Ok(position) = u32::try_from(position) else {
                 return Err(Refusal::new(
@@ -2541,7 +2587,10 @@ fn check_recipe(envelope: &Envelope) -> Result<(), Refusal> {
             ));
         }
     }
-    for (position, node) in envelope.body.nodes.iter().enumerate() {
+    for position in 0..envelope.body.nodes.len() {
+        let Some(node) = envelope.body.nodes.get(position) else {
+            return Err(internal(at, "recipe node index exceeds the checked node arena"));
+        };
         let own = match u32::try_from(position) {
             Ok(position) => position,
             Err(_) => {
@@ -2555,11 +2604,11 @@ fn check_recipe(envelope: &Envelope) -> Result<(), Refusal> {
         check_recipe_node(envelope, node, own, position)?;
     }
     debug_assert!(!envelope.body.entry.is_empty());
-    debug_assert!(envelope
-        .body
-        .entry
-        .iter()
-        .all(|reference| { reference_precedes(*reference, envelope.body.nodes.len()) }));
+    let mut references_precede = true;
+    for reference in &envelope.body.entry {
+        references_precede &= reference_precedes(*reference, envelope.body.nodes.len());
+    }
+    debug_assert!(references_precede);
     Ok(())
 }
 
@@ -2686,7 +2735,10 @@ fn expected_bootstrap_targets(
     at: Location,
 ) -> Result<alloc::vec::Vec<noble_kernel::contracts::Definition>, Refusal> {
     let mut expected = alloc::vec::Vec::with_capacity(elements.len());
-    for (index, element) in elements.iter().enumerate() {
+    for index in 0..elements.len() {
+        let Some(element) = elements.get(index) else {
+            return Err(internal(at, "bootstrap element index exceeds the checked slice"));
+        };
         let Element::Op { op, .. } = element else {
             continue;
         };
@@ -3135,7 +3187,12 @@ fn fill(elements: &[Element], hole: usize, proposal: &[Element]) -> alloc::vec::
             .saturating_add(proposal.len())
             .saturating_sub(1),
     );
-    out.extend_from_slice(&elements[..hole.min(elements.len())]);
+    let prefix_end = if hole < elements.len() {
+        hole
+    } else {
+        elements.len()
+    };
+    out.extend_from_slice(&elements[..prefix_end]);
     out.extend_from_slice(proposal);
     if let Some(rest) = elements.get(hole.saturating_add(1)..) {
         out.extend_from_slice(rest);
@@ -3157,11 +3214,10 @@ fn record(
     if matches!(refusal.class, Class::Exhausted | Class::Internal) {
         return Err(refusal);
     }
-    if diagnostics
-        .iter()
-        .any(|retained| retained.class == refusal.class && retained.location == refusal.location)
-    {
-        return Ok(());
+    for retained in diagnostics.iter() {
+        if retained.class == refusal.class && retained.location == refusal.location {
+            return Ok(());
+        }
     }
     ledger.charge(Resource::Diagnostics, 1, refusal.location)?;
     ledger.charge(
@@ -3557,7 +3613,13 @@ impl Search<'_> {
             if index == start {
                 selected_expansion = Some(expansion);
             }
-            for (position, dependency) in envelope.dependencies.iter().enumerate() {
+            for position in 0..envelope.dependencies.len() {
+                let Some(dependency) = envelope.dependencies.get(position) else {
+                    return Err(internal(
+                        Location::field("proposal.dependencies"),
+                        "dependency index exceeds the checked record slice",
+                    ));
+                };
                 let at = Location::at("proposal.dependencies", position as u32);
                 ledger.charge(Resource::DependencySteps, 1, at)?;
                 let Some(target) = library.find(dependency) else {
@@ -3589,7 +3651,10 @@ impl Search<'_> {
         let mut elements = alloc::vec::Vec::with_capacity(MAX_EXPANDED_NODE_CAPACITY);
         let mut current = self.stack_in.clone();
         let mut untouched = current.len();
-        for (position, index) in sequence.iter().enumerate() {
+        for position in 0..sequence.len() {
+            let Some(index) = sequence.get(position) else {
+                return Err(internal(at, "sequence index exceeds the checked slice"));
+            };
             let expansion =
                 Self::revalidate_entry(self.namespace, self.library, &mut self.ledger, *index)?;
             let Some(entry) = entries.get(usize::from(*index)) else {
@@ -3611,7 +3676,9 @@ impl Search<'_> {
             let consumed_from_untouched = interface.stack_in.len().saturating_sub(above_untouched);
             untouched = untouched.saturating_sub(consumed_from_untouched);
             current.truncate(current.len().saturating_sub(interface.stack_in.len()));
-            current.extend(interface.stack_out.iter().cloned());
+            for ty in &interface.stack_out {
+                current.push(ty.clone());
+            }
             self.ledger
                 .observe_count(Resource::StackHeight, encoded_len(current.len()), at)?;
         }
@@ -3737,11 +3804,16 @@ impl Search<'_> {
         };
         let tail = u32::try_from(untouched)
             .map_err(|_| internal(at, "stack tail exceeds the fixed report width"))?;
-        let selected: alloc::vec::Vec<[u8; IDENTITY_BYTES]> = sequence
-            .iter()
-            .filter_map(|index| self.library.entries().get(usize::from(*index)))
-            .map(|entry| entry.envelope().chunk_id)
-            .collect();
+        let mut selected = alloc::vec::Vec::with_capacity(sequence.len());
+        for position in 0..sequence.len() {
+            let Some(index) = sequence.get(position) else {
+                continue;
+            };
+            let Some(entry) = self.library.entries().get(usize::from(*index)) else {
+                continue;
+            };
+            selected.push(entry.envelope().chunk_id);
+        }
         let stack_bytes = [
             self.stack_in.len(),
             stack.len(),
@@ -3833,9 +3905,15 @@ fn canonical_order(library: &Library) -> alloc::vec::Vec<u16> {
         }
     });
     debug_assert!(order.len() <= library.entries().len());
-    debug_assert!(order
-        .windows(2)
-        .all(|pair| canonical_pair_is_ordered(library, pair)));
+    let mut ordered = true;
+    for index in 0..order.len().saturating_sub(1) {
+        let Some(pair) = order.get(index..index.saturating_add(2)) else {
+            ordered = false;
+            break;
+        };
+        ordered &= canonical_pair_is_ordered(library, pair);
+    }
+    debug_assert!(ordered);
     order
 }
 
@@ -3844,11 +3922,15 @@ pub fn canonical_entry_order(library: &Library) -> alloc::vec::Vec<u16> {
     canonical_order(library)
 }
 
-/// Materialize at most `candidate_limit_count` members of the canonical shortlex
-/// queue, plus a boolean indicating that a later canonical candidate exists.
-pub fn candidate_queue(library: &Library, candidate_limit_count: u32) -> CandidateQueue {
-    let bounded_candidate_count =
-        usize::try_from(candidate_limit_count.min(MAX_CANDIDATES)).unwrap_or(0);
+/// Materialize at most the requested prefix of the canonical shortlex queue,
+/// plus a boolean indicating that a later canonical candidate exists.
+pub fn candidate_queue(library: &Library, candidate_limit: CandidateLimit) -> CandidateQueue {
+    let limited_candidates = if candidate_limit.0 < MAX_CANDIDATES {
+        candidate_limit.0
+    } else {
+        MAX_CANDIDATES
+    };
+    let bounded_candidate_count = usize::try_from(limited_candidates).unwrap_or(0);
     let order = canonical_entry_order(library);
     debug_assert!(u32::try_from(bounded_candidate_count).is_ok_and(|count| count <= MAX_CANDIDATES));
     debug_assert!(encoded_len(order.len()) <= u64::from(MAX_LIBRARY_ENTRIES));
@@ -3874,6 +3956,7 @@ pub fn candidate_queue(library: &Library, candidate_limit_count: u32) -> Candida
                     next_candidate: Some(QueueCandidate {
                         ordinal,
                         sequence,
+                        ranking_position: ordinal,
                         score: None,
                         identity: None,
                         feature_extraction_ns: 0,
@@ -3884,6 +3967,7 @@ pub fn candidate_queue(library: &Library, candidate_limit_count: u32) -> Candida
             candidates.push(QueueCandidate {
                 ordinal,
                 sequence,
+                ranking_position: ordinal,
                 score: None,
                 identity: None,
                 feature_extraction_ns: 0,
@@ -3895,9 +3979,15 @@ pub fn candidate_queue(library: &Library, candidate_limit_count: u32) -> Candida
         }
     }
     debug_assert!(candidates.len() <= bounded_candidate_count);
-    debug_assert!(candidates
-        .windows(2)
-        .all(|pair| pair[0].ordinal < pair[1].ordinal));
+    let mut ordinals_are_ordered = true;
+    for index in 0..candidates.len().saturating_sub(1) {
+        let (Some(left), Some(right)) = (candidates.get(index), candidates.get(index + 1)) else {
+            ordinals_are_ordered = false;
+            break;
+        };
+        ordinals_are_ordered &= left.ordinal < right.ordinal;
+    }
+    debug_assert!(ordinals_are_ordered);
     CandidateQueue {
         candidates,
         next_candidate: None,
@@ -3934,23 +4024,36 @@ fn check_task(task: &Task, ledger: &mut Ledger) -> Result<(), Refusal> {
     Ok(())
 }
 
+fn fixture_values_match_types(values: &[Scalar], expected: &[Ty]) -> bool {
+    if values.len() != expected.len() {
+        return false;
+    }
+    for index in 0..values.len() {
+        let (Some(value), Some(ty)) = (values.get(index), expected.get(index)) else {
+            return false;
+        };
+        if value.ty() != *ty {
+            return false;
+        }
+    }
+    true
+}
+
 fn check_fixtures(request: &Request) -> Result<(), Refusal> {
     let Some(set) = &request.fixtures else {
         return Ok(());
     };
-    for (position, fixture) in set.cases.iter().enumerate() {
-        let is_input_match = fixture.inputs.len() == request.task.stack_in.len()
-            && fixture
-                .inputs
-                .iter()
-                .zip(&request.task.stack_in)
-                .all(|(value, ty)| value.ty() == *ty);
-        let is_output_match = fixture.outputs.len() == request.task.stack_out.len()
-            && fixture
-                .outputs
-                .iter()
-                .zip(&request.task.stack_out)
-                .all(|(value, ty)| value.ty() == *ty);
+    for position in 0..set.cases.len() {
+        let Some(fixture) = set.cases.get(position) else {
+            return Err(internal(
+                Location::field("request.fixtures.cases"),
+                "fixture index exceeds the checked case slice",
+            ));
+        };
+        let is_input_match =
+            fixture_values_match_types(&fixture.inputs, &request.task.stack_in);
+        let is_output_match =
+            fixture_values_match_types(&fixture.outputs, &request.task.stack_out);
         if !is_input_match || !is_output_match {
             return Err(Refusal::new(
                 Class::Invalid,
@@ -3959,14 +4062,14 @@ fn check_fixtures(request: &Request) -> Result<(), Refusal> {
             ));
         }
     }
-    debug_assert!(set
-        .cases
-        .iter()
-        .all(|fixture| { fixture.inputs.len() == request.task.stack_in.len() }));
-    debug_assert!(set
-        .cases
-        .iter()
-        .all(|fixture| { fixture.outputs.len() == request.task.stack_out.len() }));
+    let mut fixtures_have_matching_inputs = true;
+    let mut fixtures_have_matching_outputs = true;
+    for fixture in &set.cases {
+        fixtures_have_matching_inputs &= fixture.inputs.len() == request.task.stack_in.len();
+        fixtures_have_matching_outputs &= fixture.outputs.len() == request.task.stack_out.len();
+    }
+    debug_assert!(fixtures_have_matching_inputs);
+    debug_assert!(fixtures_have_matching_outputs);
     Ok(())
 }
 
@@ -4389,6 +4492,41 @@ struct CandidateObservation<'a> {
     cost: CandidateAttemptCost,
 }
 
+struct CandidateCapture<'observer, 'callback, 'identity> {
+    observer: Option<&'observer mut CandidateOutcomeObserver<'callback>>,
+    identity: Option<&'identity RankingIdentity>,
+    monotonic_now_ns: fn() -> u64,
+}
+
+struct CandidateAttempt<'a> {
+    ordinal: u32,
+    sequence: &'a [u16],
+    identity: Option<CandidateId>,
+    feature_extraction_ns: u64,
+    scorer_elapsed_ns: u64,
+}
+
+struct CandidateAttemptOutcome<'a> {
+    ordinal: u32,
+    sequence: &'a [u16],
+    binding: Option<([u8; REVISION_BYTES], CandidateId)>,
+    cost: CandidateAttemptCost,
+}
+
+struct CandidateAttemptMeasurement {
+    resources_before: [u32; Resource::COUNT],
+    started_ns: u64,
+    feature_extraction_ns: u64,
+    scorer_elapsed_ns: u64,
+    monotonic_now_ns: fn() -> u64,
+}
+
+struct CandidateScoringControl<'a> {
+    identity: &'a RankingIdentity,
+    should_measure_candidate_time: bool,
+    monotonic_now_ns: fn() -> u64,
+}
+
 fn resource_snapshot(ledger: &Ledger) -> [u32; Resource::COUNT] {
     let mut snapshot = [0; Resource::COUNT];
     for resource in Resource::ALL {
@@ -4401,25 +4539,21 @@ fn resource_snapshot(ledger: &Ledger) -> [u32; Resource::COUNT] {
 
 fn candidate_attempt_cost(
     search: &Search<'_>,
-    before: &[u32; Resource::COUNT],
-    started_ns: u64,
-    feature_extraction_ns: u64,
-    scorer_elapsed_ns: u64,
-    monotonic_now_ns: fn() -> u64,
+    measurement: CandidateAttemptMeasurement,
 ) -> CandidateAttemptCost {
     let mut resource_deltas = [0; Resource::COUNT];
     for resource in Resource::ALL {
         if let (Some(before), Some(delta)) = (
-            before.get(resource.slot()),
+            measurement.resources_before.get(resource.slot()),
             resource_deltas.get_mut(resource.slot()),
         ) {
             *delta = search.ledger.observed(resource).saturating_sub(*before);
         }
     }
     CandidateAttemptCost {
-        feature_extraction_ns,
-        scorer_elapsed_ns,
-        re_admission_ns: monotonic_now_ns().saturating_sub(started_ns),
+        feature_extraction_ns: measurement.feature_extraction_ns,
+        scorer_elapsed_ns: measurement.scorer_elapsed_ns,
+        re_admission_ns: (measurement.monotonic_now_ns)().saturating_sub(measurement.started_ns),
         resource_deltas,
     }
 }
@@ -4452,21 +4586,147 @@ fn observe_candidate(
     }
 }
 
+fn candidate_binding(
+    search: &Search<'_>,
+    attempt: &CandidateAttempt<'_>,
+    capture: &CandidateCapture<'_, '_, '_>,
+) -> Result<Option<([u8; REVISION_BYTES], CandidateId)>, Refusal> {
+    debug_assert!(attempt.ordinal <= MAX_CANDIDATES);
+    debug_assert!(encoded_len(attempt.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
+    if capture.observer.is_none() {
+        return Ok(None);
+    }
+    let Some(identity) = capture.identity else {
+        return Err(internal(
+            Location::field("ranking.identity"),
+            "an observation request has no immutable identity",
+        ));
+    };
+    let candidate = attempt
+        .identity
+        .unwrap_or_else(|| candidate_identity(search.library, attempt.ordinal, attempt.sequence));
+    Ok(Some((identity.request, candidate)))
+}
+
+fn observe_refusal(
+    attempt: &CandidateAttemptOutcome<'_>,
+    refusal: &Refusal,
+    capture: &mut CandidateCapture<'_, '_, '_>,
+) {
+    let refusal_class = refusal.class;
+    observe_candidate(
+        &mut capture.observer,
+        CandidateObservation {
+            binding: attempt.binding,
+            ordinal: attempt.ordinal,
+            sequence: attempt.sequence,
+            accepted: false,
+            refusal_class: Some(refusal_class),
+            fixture_agreement: None,
+            cost: attempt.cost,
+        },
+    );
+}
+
+fn accept_candidate(
+    search: &mut Search<'_>,
+    attempt: &CandidateAttemptOutcome<'_>,
+    accepted: alloc::boxed::Box<Accepted>,
+    capture: &mut CandidateCapture<'_, '_, '_>,
+) -> Result<(), alloc::boxed::Box<Response>> {
+    debug_assert!(attempt.ordinal <= MAX_CANDIDATES);
+    debug_assert_eq!(accepted.selected.len(), attempt.sequence.len());
+    let fixture_agreement = search.fixtures.as_ref().map(|fixtures| fixtures.agreement);
+    observe_candidate(
+        &mut capture.observer,
+        CandidateObservation {
+            binding: attempt.binding,
+            ordinal: attempt.ordinal,
+            sequence: attempt.sequence,
+            accepted: true,
+            refusal_class: None,
+            fixture_agreement,
+            cost: attempt.cost,
+        },
+    );
+    let report = search.report(1);
+    Err(alloc::boxed::Box::new(Response::Accepted {
+        accepted,
+        report: alloc::boxed::Box::new(report),
+    }))
+}
+
+fn run_candidate_attempt(
+    search: &mut Search<'_>,
+    attempt: CandidateAttempt<'_>,
+    capture: &mut CandidateCapture<'_, '_, '_>,
+) -> Result<(), alloc::boxed::Box<Response>> {
+    debug_assert!(attempt.ordinal <= MAX_CANDIDATES);
+    debug_assert!(encoded_len(attempt.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
+    let binding = match candidate_binding(search, &attempt, capture) {
+        Ok(binding) => binding,
+        Err(refusal) => return Err(alloc::boxed::Box::new(response_of_search(refusal, search))),
+    };
+    let resources_before = capture
+        .observer
+        .as_ref()
+        .map(|_| resource_snapshot(&search.ledger));
+    let started_ns = if resources_before.is_some() {
+        (capture.monotonic_now_ns)()
+    } else {
+        0
+    };
+    let result = search.candidate(attempt.sequence);
+    let cost = resources_before.map_or_else(CandidateAttemptCost::default, |resources_before| {
+        candidate_attempt_cost(
+            search,
+            CandidateAttemptMeasurement {
+                resources_before,
+                started_ns,
+                feature_extraction_ns: attempt.feature_extraction_ns,
+                scorer_elapsed_ns: attempt.scorer_elapsed_ns,
+                monotonic_now_ns: capture.monotonic_now_ns,
+            },
+        )
+    });
+    let outcome = CandidateAttemptOutcome {
+        ordinal: attempt.ordinal,
+        sequence: attempt.sequence,
+        binding,
+        cost,
+    };
+    match result {
+        Ok(Step::Admitted(accepted)) => accept_candidate(search, &outcome, accepted, capture),
+        Ok(Step::Refused(refusal)) => {
+            observe_refusal(&outcome, &refusal, capture);
+            search.rejected = search.rejected.saturating_add(1);
+            if let Err(exhausted) = record(&mut search.ledger, &mut search.diagnostics, refusal) {
+                return Err(alloc::boxed::Box::new(response_of_search(
+                    exhausted, search,
+                )));
+            }
+            Ok(())
+        }
+        Err(refusal) => {
+            observe_refusal(&outcome, &refusal, capture);
+            Err(alloc::boxed::Box::new(response_of_search(refusal, search)))
+        }
+    }
+}
+
 /// Visit every sequence of one length in canonical shortlex order.
 fn run_length(
     search: &mut Search<'_>,
     order: &[u16],
     chunk_count: u32,
     next_ordinal: &mut u32,
-    observer: &mut Option<&mut CandidateOutcomeObserver<'_>>,
-    identity: Option<&RankingIdentity>,
-    monotonic_now_ns: fn() -> u64,
+    capture: &mut CandidateCapture<'_, '_, '_>,
 ) -> Result<(), alloc::boxed::Box<Response>> {
     let width = order.len();
     debug_assert!(u32::try_from(width).is_ok_and(|count| count <= MAX_LIBRARY_ENTRIES));
     debug_assert!(chunk_count <= MAX_COMPOSED_CHUNKS);
     debug_assert!(*next_ordinal <= MAX_CANDIDATES);
-    if observer.is_some() && identity.is_none() {
+    if capture.observer.is_some() && capture.identity.is_none() {
         let refusal = internal(
             Location::field("ranking.identity"),
             "an observation request has no immutable identity",
@@ -4498,88 +4758,17 @@ fn run_length(
         debug_assert_eq!(sequence.len(), digits.len());
         let ordinal = *next_ordinal;
         *next_ordinal = (*next_ordinal).saturating_add(1);
-        let binding = if observer.is_some() {
-            identity.map(|identity| {
-                (
-                    identity.request,
-                    candidate_identity(search.library, ordinal, &sequence),
-                )
-            })
-        } else {
-            None
-        };
-        let before = observer
-            .is_some()
-            .then(|| resource_snapshot(&search.ledger));
-        let started_ns = if before.is_some() {
-            monotonic_now_ns()
-        } else {
-            0
-        };
-        let result = search.candidate(&sequence);
-        let cost = before.map_or_else(CandidateAttemptCost::default, |before| {
-            candidate_attempt_cost(search, &before, started_ns, 0, 0, monotonic_now_ns)
-        });
-        match result {
-            Ok(Step::Admitted(accepted)) => {
-                let fixture_agreement = search.fixtures.as_ref().map(|fixtures| fixtures.agreement);
-                observe_candidate(
-                    observer,
-                    CandidateObservation {
-                        binding,
-                        ordinal,
-                        sequence: &sequence,
-                        accepted: true,
-                        refusal_class: None,
-                        fixture_agreement,
-                        cost,
-                    },
-                );
-                let report = search.report(1);
-                return Err(alloc::boxed::Box::new(Response::Accepted {
-                    accepted,
-                    report: alloc::boxed::Box::new(report),
-                }));
-            }
-            Ok(Step::Refused(refusal)) => {
-                let refusal_class = refusal.class;
-                observe_candidate(
-                    observer,
-                    CandidateObservation {
-                        binding,
-                        ordinal,
-                        sequence: &sequence,
-                        accepted: false,
-                        refusal_class: Some(refusal_class),
-                        fixture_agreement: None,
-                        cost,
-                    },
-                );
-                search.rejected = search.rejected.saturating_add(1);
-                if let Err(exhausted) = record(&mut search.ledger, &mut search.diagnostics, refusal)
-                {
-                    return Err(alloc::boxed::Box::new(response_of_search(
-                        exhausted, search,
-                    )));
-                }
-            }
-            Err(refusal) => {
-                let refusal_class = refusal.class;
-                observe_candidate(
-                    observer,
-                    CandidateObservation {
-                        binding,
-                        ordinal,
-                        sequence: &sequence,
-                        accepted: false,
-                        refusal_class: Some(refusal_class),
-                        fixture_agreement: None,
-                        cost,
-                    },
-                );
-                return Err(alloc::boxed::Box::new(response_of_search(refusal, search)));
-            }
-        }
+        run_candidate_attempt(
+            search,
+            CandidateAttempt {
+                ordinal,
+                sequence: &sequence,
+                identity: None,
+                feature_extraction_ns: 0,
+                scorer_elapsed_ns: 0,
+            },
+            capture,
+        )?;
         if !advance(&mut digits, width) {
             break;
         }
@@ -4614,7 +4803,13 @@ const fn feature_bit(value: bool) -> f32 {
     reason = "Owner: noble-contracts; the bounded slice scan compares kernel Ty with its runtime PartialEq implementation"
 )]
 fn feature_type_count(stack: &[Ty], ty: Ty) -> u64 {
-    encoded_len(stack.iter().filter(|item| **item == ty).count())
+    let mut count = 0usize;
+    for item in stack {
+        if *item == ty {
+            count = count.saturating_add(1);
+        }
+    }
+    encoded_len(count)
 }
 
 #[expect(
@@ -4657,7 +4852,10 @@ fn recipe_quotation_depth(recipe: &Recipe) -> Option<u32> {
     debug_assert!(encoded_len(recipe.nodes.len()) <= u64::from(MAX_RECIPE_NODES));
     debug_assert!(encoded_len(recipe.entry.len()) <= u64::from(MAX_RECIPE_NODES));
     let mut node_depths = [0u32; 64];
-    for (node_index, node) in recipe.nodes.iter().enumerate() {
+    for node_index in 0..recipe.nodes.len() {
+        let Some(node) = recipe.nodes.get(node_index) else {
+            return None;
+        };
         if node_index >= node_depths.len() {
             return None;
         }
@@ -4668,7 +4866,10 @@ fn recipe_quotation_depth(recipe: &Recipe) -> Option<u32> {
                 if child_index >= node_index {
                     return None;
                 }
-                nested_depth = nested_depth.max(node_depths[child_index]);
+                let child_depth = node_depths[child_index];
+                if child_depth > nested_depth {
+                    nested_depth = child_depth;
+                }
             }
             node_depths[node_index] = nested_depth.saturating_add(1);
         }
@@ -4676,7 +4877,10 @@ fn recipe_quotation_depth(recipe: &Recipe) -> Option<u32> {
     let mut deepest = 0u32;
     for reference in &recipe.entry {
         let index = usize::try_from(*reference).ok()?;
-        deepest = deepest.max(*node_depths.get(index)?);
+        let depth = *node_depths.get(index)?;
+        if depth > deepest {
+            deepest = depth;
+        }
     }
     Some(deepest)
 }
@@ -4752,20 +4956,43 @@ fn feature_metadata_matches(
             return matches;
         };
         let envelope = entry.envelope();
-        let is_dependencies_match = envelope
-            .dependencies
-            .iter()
-            .all(|dependency| library.find(dependency).is_some());
-        let is_instantiations_match = envelope.instantiations.iter().all(|instantiation| {
-            instantiation
-                .bindings
-                .windows(2)
-                .all(|pair| pair[0].variable < pair[1].variable)
-                && instantiation.bindings.iter().all(|binding| {
-                    binding.kind == noble_kernel::words::VariableKind::Value
-                        && profile_type(&binding.ty)
-                })
-        });
+        let mut is_dependencies_match = true;
+        for dependency in &envelope.dependencies {
+            if library.find(dependency).is_none() {
+                is_dependencies_match = false;
+                break;
+            }
+        }
+        let mut is_instantiations_match = true;
+        for instantiation in &envelope.instantiations {
+            for binding_index in 0..instantiation.bindings.len().saturating_sub(1) {
+                let (Some(left), Some(right)) = (
+                    instantiation.bindings.get(binding_index),
+                    instantiation.bindings.get(binding_index.saturating_add(1)),
+                ) else {
+                    is_instantiations_match = false;
+                    break;
+                };
+                if left.variable >= right.variable {
+                    is_instantiations_match = false;
+                    break;
+                }
+            }
+            if !is_instantiations_match {
+                break;
+            }
+            for binding in &instantiation.bindings {
+                if binding.kind != noble_kernel::words::VariableKind::Value
+                    || !profile_type(&binding.ty)
+                {
+                    is_instantiations_match = false;
+                    break;
+                }
+            }
+            if !is_instantiations_match {
+                break;
+            }
+        }
         matches.body &= envelope.chunk_id == chunk_identity_of(envelope)
             && envelope.source_revision == canonical_revision(entry.source());
         matches.dependencies &= is_dependencies_match;
@@ -4784,7 +5011,14 @@ fn candidate_features(
     feature_candidate_lanes(&mut features, search.request, candidate, &counts);
     feature_budget_lanes(&mut features, search, candidate);
     feature_identity_lanes(&mut features, search, candidate)?;
-    if features.iter().all(|feature| feature.is_finite()) {
+    let mut features_are_finite = true;
+    for feature in &features {
+        if !feature.is_finite() {
+            features_are_finite = false;
+            break;
+        }
+    }
+    if features_are_finite {
         Ok(features)
     } else {
         Err(ScorerFailure::InvalidFeature)
@@ -4871,9 +5105,12 @@ fn collect_candidate_features(
             .source_bytes
             .saturating_add(encoded_len(entry.source().len()));
         feature_recipe_metrics(&envelope.body, &mut counts);
-        counts.quote_depth = counts.quote_depth.max(u64::from(
+        let quote_depth = u64::from(
             recipe_quotation_depth(&envelope.body).ok_or(ScorerFailure::InvalidFeature)?,
-        ));
+        );
+        if quote_depth > counts.quote_depth {
+            counts.quote_depth = quote_depth;
+        }
         let base = 32usize.saturating_add(chunk_at.saturating_mul(4));
         let input = &interface.stack_in;
         let output = &interface.stack_out;
@@ -4905,7 +5142,14 @@ fn feature_candidate_lanes(
     counts: &CandidateFeatureCounts,
 ) {
     debug_assert!(encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
-    debug_assert!(encoded_len(counts.stack_after.len()) <= u64::from(MAX_STACK_HEIGHT));
+    // A sequence can overflow the legal stack before re-admission refuses it.
+    // The feature scratch still has a bound: the initial stack plus four
+    // admitted chunk outputs, each at most one profile stack high.
+    debug_assert!(
+        encoded_len(counts.stack_after.len())
+            <= u64::from(MAX_STACK_HEIGHT)
+                .saturating_mul(u64::from(MAX_COMPOSED_CHUNKS).saturating_add(1))
+    );
     let current_stack_height = encoded_len(counts.stack_after.len());
     let output_height = encoded_len(request.task.stack_out.len());
     let stack_max = MAX_STACK_HEIGHT;
@@ -4936,6 +5180,10 @@ fn feature_candidate_lanes(
     features[31] = feature_bit(counts.effects_match);
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; feature extraction reads the request's runtime shared budget ledger"
+)]
 fn feature_budget_lanes(
     features: &mut CandidateFeatureVector,
     search: &Search<'_>,
@@ -5009,17 +5257,42 @@ const DOMAIN_RANKING_POLICY: u64 = 0x7463_7261_6e6b_0005;
 const DOMAIN_RANKING_EDITOR: u64 = 0x7463_7261_6e6b_0006;
 const DOMAIN_RANKING_REQUEST: u64 = 0x7463_7261_6e6b_0007;
 
+#[derive(Default)]
+struct IdentityBytes(alloc::vec::Vec<u8>);
+
+impl IdentityBytes {
+    fn with_capacity(capacity_bytes: usize) -> Self {
+        Self(alloc::vec::Vec::with_capacity(capacity_bytes))
+    }
+
+    fn push(&mut self, byte: u8) {
+        self.0.push(byte);
+    }
+
+    fn extend_from_slice(&mut self, bytes: &[u8]) {
+        self.0.extend_from_slice(bytes);
+    }
+
+    fn as_slice(&self) -> &[u8] {
+        &self.0
+    }
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the digest fold mutates runtime identity state"
+)]
 fn ranking_digest(domain: u64, input: &[u8]) -> [u8; REVISION_BYTES] {
     let mut digest = [0u8; REVISION_BYTES];
     absorb_bytes_lanes(domain, input, REVISION_BYTES / 8, &mut digest);
     digest
 }
 
-fn identity_push_count(bytes: &mut alloc::vec::Vec<u8>, count: usize) {
+fn identity_push_count(bytes: &mut IdentityBytes, count: usize) {
     bytes.extend_from_slice(&encoded_len(count).to_le_bytes());
 }
 
-fn identity_push_type(bytes: &mut alloc::vec::Vec<u8>, ty: &Ty) {
+fn identity_push_type(bytes: &mut IdentityBytes, ty: &Ty) {
     bytes.push(match ty {
         Ty::I64 => 1,
         Ty::Bool => 2,
@@ -5027,14 +5300,14 @@ fn identity_push_type(bytes: &mut alloc::vec::Vec<u8>, ty: &Ty) {
     });
 }
 
-fn identity_push_stack(bytes: &mut alloc::vec::Vec<u8>, stack: &[Ty]) {
+fn identity_push_stack(bytes: &mut IdentityBytes, stack: &[Ty]) {
     identity_push_count(bytes, stack.len());
     for ty in stack {
         identity_push_type(bytes, ty);
     }
 }
 
-fn identity_push_budget(bytes: &mut alloc::vec::Vec<u8>, budget: Budget) {
+fn identity_push_budget(bytes: &mut IdentityBytes, budget: Budget) {
     for limit in [
         budget.library_bytes,
         budget.entries,
@@ -5056,14 +5329,20 @@ fn identity_push_budget(bytes: &mut alloc::vec::Vec<u8>, budget: Budget) {
     }
 }
 
-fn identity_push_editor_nodes(bytes: &mut alloc::vec::Vec<u8>, nodes: &[super::editor::Node]) {
+fn identity_push_editor_nodes(bytes: &mut IdentityBytes, nodes: &[super::editor::Node]) {
     struct Frame<'a> {
         nodes: &'a [super::editor::Node],
         next: usize,
     }
     identity_push_count(bytes, nodes.len());
     let mut frames = alloc::vec![Frame { nodes, next: 0 }];
-    while let Some(frame) = frames.last_mut() {
+    loop {
+        debug_assert!(u64::try_from(frames.len())
+            .is_ok_and(|depth| depth <= u64::from(MAX_QUOTATION_DEPTH).saturating_add(1)));
+        let Some(frame) = frames.last_mut() else {
+            break;
+        };
+        debug_assert!(frame.next <= frame.nodes.len());
         if frame.next == frame.nodes.len() {
             bytes.push(0);
             frames.pop();
@@ -5102,18 +5381,18 @@ fn identity_push_editor_nodes(bytes: &mut alloc::vec::Vec<u8>, nodes: &[super::e
 }
 
 fn task_interface_identity(request: &Request) -> [u8; REVISION_BYTES] {
-    let mut bytes = alloc::vec::Vec::new();
+    let mut bytes = IdentityBytes::default();
     identity_push_stack(&mut bytes, &request.task.stack_in);
     identity_push_stack(&mut bytes, &request.task.stack_out);
     identity_push_count(&mut bytes, request.task.allowed_effects.as_slice().len());
     for effect in request.task.allowed_effects.as_slice() {
         bytes.extend_from_slice(&effect.0.to_le_bytes());
     }
-    ranking_digest(DOMAIN_RANKING_INTERFACE, &bytes)
+    ranking_digest(DOMAIN_RANKING_INTERFACE, bytes.as_slice())
 }
 
 fn independent_goal_identity(request: &Request) -> [u8; REVISION_BYTES] {
-    let mut bytes = alloc::vec::Vec::new();
+    let mut bytes = IdentityBytes::default();
     if let Some(fixtures) = &request.fixtures {
         bytes.push(1);
         bytes.extend_from_slice(&fixtures.id);
@@ -5131,10 +5410,19 @@ fn independent_goal_identity(request: &Request) -> [u8; REVISION_BYTES] {
     } else {
         bytes.push(0);
     }
-    ranking_digest(DOMAIN_RANKING_GOAL, &bytes)
+    debug_assert!(!bytes.as_slice().is_empty());
+    debug_assert_eq!(
+        bytes.as_slice().first().copied(),
+        Some(u8::from(request.fixtures.is_some()))
+    );
+    ranking_digest(DOMAIN_RANKING_GOAL, bytes.as_slice())
 }
 
-fn identity_push_scalar(bytes: &mut alloc::vec::Vec<u8>, value: Scalar) {
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; scalar identity appends runtime bytes to its bounded digest input"
+)]
+fn identity_push_scalar(bytes: &mut IdentityBytes, value: Scalar) {
     match value {
         Scalar::I64(value) => {
             bytes.push(1);
@@ -5148,10 +5436,20 @@ fn identity_push_scalar(bytes: &mut alloc::vec::Vec<u8>, value: Scalar) {
 }
 
 fn candidate_identity(library: &Library, ordinal: u32, sequence: &[u16]) -> CandidateId {
-    let mut bytes = alloc::vec::Vec::with_capacity(
+    debug_assert!(ordinal <= MAX_CANDIDATES);
+    debug_assert!(encoded_len(sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
+    let mut bytes = IdentityBytes::with_capacity(
         REVISION_BYTES
             .saturating_add(core::mem::size_of::<u32>())
-            .saturating_add(sequence.len().saturating_mul(core::mem::size_of::<u16>())),
+            .saturating_add(core::mem::size_of::<u64>())
+            .saturating_add(
+                sequence.len().saturating_mul(
+                    core::mem::size_of::<u16>()
+                        .saturating_add(1)
+                        .saturating_add(IDENTITY_BYTES)
+                        .saturating_add(REVISION_BYTES),
+                ),
+            ),
     );
     bytes.extend_from_slice(library.revision());
     bytes.extend_from_slice(&ordinal.to_le_bytes());
@@ -5169,17 +5467,27 @@ fn candidate_identity(library: &Library, ordinal: u32, sequence: &[u16]) -> Cand
     }
     CandidateId {
         ordinal,
-        digest: ranking_digest(DOMAIN_RANKING_CANDIDATE, &bytes),
+        digest: ranking_digest(DOMAIN_RANKING_CANDIDATE, bytes.as_slice()),
     }
 }
 
 fn candidate_set_identity(library: &Library, queue: &CandidateQueue) -> [u8; REVISION_BYTES] {
-    let mut bytes = alloc::vec::Vec::with_capacity(
-        queue
-            .candidates
-            .len()
-            .saturating_add(usize::from(queue.next_candidate.is_some()))
-            .saturating_mul(REVISION_BYTES),
+    debug_assert!(encoded_len(queue.candidates.len()) <= u64::from(MAX_CANDIDATES));
+    debug_assert!(queue.next_candidate.as_ref().is_none_or(|candidate| {
+        candidate.ordinal <= MAX_CANDIDATES
+            && encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS)
+    }));
+    let mut bytes = IdentityBytes::with_capacity(
+        REVISION_BYTES
+            .saturating_add(core::mem::size_of::<u64>())
+            .saturating_add(1)
+            .saturating_add(
+                queue
+                    .candidates
+                    .len()
+                    .saturating_add(usize::from(queue.next_candidate.is_some()))
+                    .saturating_mul(REVISION_BYTES),
+            ),
     );
     bytes.extend_from_slice(library.revision());
     identity_push_count(&mut bytes, queue.candidates.len());
@@ -5197,7 +5505,7 @@ fn candidate_set_identity(library: &Library, queue: &CandidateQueue) -> [u8; REV
         }
         None => bytes.push(0),
     }
-    ranking_digest(DOMAIN_RANKING_CANDIDATES, &bytes)
+    ranking_digest(DOMAIN_RANKING_CANDIDATES, bytes.as_slice())
 }
 
 fn ranking_identity(
@@ -5206,25 +5514,28 @@ fn ranking_identity(
     queue: &CandidateQueue,
     model_identity: Option<[u8; REVISION_BYTES]>,
 ) -> RankingIdentity {
-    let mut editor_bytes = alloc::vec::Vec::new();
+    debug_assert!(encoded_len(queue.candidates.len()) <= u64::from(MAX_CANDIDATES));
+    // The caller's declared budget may exceed the profile; the ledger clamps it.
+    debug_assert!(encoded_len(queue.candidates.len()) <= u64::from(request.budget.candidates));
+    let mut editor_bytes = IdentityBytes::default();
     editor_bytes.extend_from_slice(&request.editor.format.to_le_bytes());
     identity_push_count(&mut editor_bytes, request.hole_path.len());
     for part in &request.hole_path {
         editor_bytes.extend_from_slice(&part.to_le_bytes());
     }
     identity_push_editor_nodes(&mut editor_bytes, &request.editor.nodes);
-    let editor_request = ranking_digest(DOMAIN_RANKING_EDITOR, &editor_bytes);
+    let editor_request = ranking_digest(DOMAIN_RANKING_EDITOR, editor_bytes.as_slice());
     let task_interface = task_interface_identity(request);
     let independent_goal = independent_goal_identity(request);
     let candidate_set = candidate_set_identity(library, queue);
-    let mut policy_bytes = alloc::vec::Vec::new();
+    let mut policy_bytes = IdentityBytes::default();
     policy_bytes.extend_from_slice(&request.format.to_le_bytes());
     policy_bytes.extend_from_slice(&request.semantic_revision.to_le_bytes());
     identity_push_count(&mut policy_bytes, request.profile.len());
     policy_bytes.extend_from_slice(request.profile.as_bytes());
     identity_push_budget(&mut policy_bytes, request.budget);
-    let policy = ranking_digest(DOMAIN_RANKING_POLICY, &policy_bytes);
-    let mut request_bytes = alloc::vec::Vec::new();
+    let policy = ranking_digest(DOMAIN_RANKING_POLICY, policy_bytes.as_slice());
+    let mut request_bytes = IdentityBytes::default();
     request_bytes.extend_from_slice(&task_interface);
     request_bytes.extend_from_slice(&independent_goal);
     request_bytes.extend_from_slice(&candidate_set);
@@ -5243,7 +5554,7 @@ fn ranking_identity(
         None => request_bytes.push(0),
     }
     RankingIdentity {
-        request: ranking_digest(DOMAIN_RANKING_REQUEST, &request_bytes),
+        request: ranking_digest(DOMAIN_RANKING_REQUEST, request_bytes.as_slice()),
         task_interface,
         independent_goal,
         candidate_set,
@@ -5257,193 +5568,139 @@ fn ranking_identity(
     }
 }
 
+fn candidate_sequences_are_bounded(queue: &CandidateQueue) -> bool {
+    let mut index = 0usize;
+    while index < queue.candidates.len() {
+        let Some(candidate) = queue.candidates.get(index) else {
+            return false;
+        };
+        if encoded_len(candidate.sequence.len()) > u64::from(MAX_COMPOSED_CHUNKS) {
+            return false;
+        }
+        index = index.saturating_add(1);
+    }
+    true
+}
+
+const fn later_timestamp(started: u64, finished: u64) -> u64 {
+    if finished > started {
+        finished
+    } else {
+        started
+    }
+}
+
 fn run_candidate_queue(
     search: &mut Search<'_>,
     queue: &CandidateQueue,
-    observer: &mut Option<&mut CandidateOutcomeObserver<'_>>,
-    identity: &RankingIdentity,
-    monotonic_now_ns: fn() -> u64,
+    capture: &mut CandidateCapture<'_, '_, '_>,
 ) -> Result<(), alloc::boxed::Box<Response>> {
     debug_assert!(encoded_len(queue.candidates.len()) <= u64::from(MAX_CANDIDATES));
-    debug_assert!(queue.candidates.iter().all(|candidate| {
-        encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS)
-    }));
+    debug_assert!(candidate_sequences_are_bounded(queue));
+    let Some(identity) = capture.identity else {
+        let refusal = internal(
+            Location::field("ranking.identity"),
+            "a ranked queue has no immutable identity",
+        );
+        return Err(alloc::boxed::Box::new(response_of_search(refusal, search)));
+    };
     debug_assert_eq!(identity.library_revision, *search.library.revision());
-    debug_assert!(observer.is_none() || identity.model_identity.is_some());
+    debug_assert!(capture.observer.is_none() || identity.model_identity.is_some());
     for candidate in &queue.candidates {
-        run_ranked_candidate(search, candidate, observer, identity, monotonic_now_ns)?;
+        run_ranked_candidate(search, candidate, capture)?;
     }
     if let Some(candidate) = &queue.next_candidate {
-        let before = observer
-            .is_some()
-            .then(|| resource_snapshot(&search.ledger));
-        let started_ns = if before.is_some() {
-            monotonic_now_ns()
-        } else {
-            0
-        };
-        let result = search.candidate(&candidate.sequence);
-        let cost = before.map_or_else(CandidateAttemptCost::default, |before| {
-            candidate_attempt_cost(
-                search,
-                &before,
-                started_ns,
-                candidate.feature_extraction_ns,
-                candidate.scorer_elapsed_ns,
-                monotonic_now_ns,
-            )
-        });
-        match result {
-            Err(refusal) => {
-                let refusal_class = refusal.class;
-                observe_candidate(
-                    observer,
-                    CandidateObservation {
-                        binding: Some((
-                            identity.request,
-                            candidate_identity(
-                                search.library,
-                                candidate.ordinal,
-                                &candidate.sequence,
-                            ),
-                        )),
-                        ordinal: candidate.ordinal,
-                        sequence: &candidate.sequence,
-                        accepted: false,
-                        refusal_class: Some(refusal_class),
-                        fixture_agreement: None,
-                        cost,
-                    },
-                );
-                return Err(alloc::boxed::Box::new(response_of_search(refusal, search)));
-            }
-            Ok(_) => {
-                let refusal = internal(
-                    Location::field("request.budget.candidates"),
-                    "the bounded queue overflow was not refused by the shared candidate budget",
-                );
-                return Err(alloc::boxed::Box::new(response_of_search(refusal, search)));
-            }
-        }
+        return run_overflow_candidate(search, candidate, capture);
     }
     Ok(())
 }
 
-fn run_ranked_candidate(
+fn run_overflow_candidate(
     search: &mut Search<'_>,
     candidate: &QueueCandidate,
-    observer: &mut Option<&mut CandidateOutcomeObserver<'_>>,
-    identity: &RankingIdentity,
-    monotonic_now_ns: fn() -> u64,
+    capture: &mut CandidateCapture<'_, '_, '_>,
 ) -> Result<(), alloc::boxed::Box<Response>> {
-    debug_assert!(candidate.ordinal < MAX_CANDIDATES);
+    debug_assert!(candidate.ordinal <= MAX_CANDIDATES);
     debug_assert!(encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
-    let before = observer
-        .is_some()
-        .then(|| resource_snapshot(&search.ledger));
-    let started_ns = if before.is_some() {
-        monotonic_now_ns()
+    let attempt = CandidateAttempt {
+        ordinal: candidate.ordinal,
+        sequence: &candidate.sequence,
+        identity: candidate.identity,
+        feature_extraction_ns: candidate.feature_extraction_ns,
+        scorer_elapsed_ns: candidate.scorer_elapsed_ns,
+    };
+    let binding = match candidate_binding(search, &attempt, capture) {
+        Ok(binding) => binding,
+        Err(refusal) => return Err(alloc::boxed::Box::new(response_of_search(refusal, search))),
+    };
+    let resources_before = capture
+        .observer
+        .as_ref()
+        .map(|_| resource_snapshot(&search.ledger));
+    let started_ns = if resources_before.is_some() {
+        (capture.monotonic_now_ns)()
     } else {
         0
     };
-    let result = search.candidate(&candidate.sequence);
-    let cost = before.map_or_else(CandidateAttemptCost::default, |before| {
+    let result = search.candidate(attempt.sequence);
+    let cost = resources_before.map_or_else(CandidateAttemptCost::default, |resources_before| {
         candidate_attempt_cost(
             search,
-            &before,
-            started_ns,
-            candidate.feature_extraction_ns,
-            candidate.scorer_elapsed_ns,
-            monotonic_now_ns,
+            CandidateAttemptMeasurement {
+                resources_before,
+                started_ns,
+                feature_extraction_ns: attempt.feature_extraction_ns,
+                scorer_elapsed_ns: attempt.scorer_elapsed_ns,
+                monotonic_now_ns: capture.monotonic_now_ns,
+            },
         )
     });
     match result {
-        Ok(Step::Admitted(accepted)) => {
-            let fixture_agreement = search.fixtures.as_ref().map(|fixtures| fixtures.agreement);
-            observe_candidate(
-                observer,
-                CandidateObservation {
-                    binding: Some((
-                        identity.request,
-                        candidate.identity.unwrap_or_else(|| {
-                            candidate_identity(
-                                search.library,
-                                candidate.ordinal,
-                                &candidate.sequence,
-                            )
-                        }),
-                    )),
-                    ordinal: candidate.ordinal,
-                    sequence: &candidate.sequence,
-                    accepted: true,
-                    refusal_class: None,
-                    fixture_agreement,
-                    cost,
-                },
-            );
-            let report = search.report(1);
-            Err(alloc::boxed::Box::new(Response::Accepted {
-                accepted,
-                report: alloc::boxed::Box::new(report),
-            }))
-        }
-        Ok(Step::Refused(refusal)) => {
-            let refusal_class = refusal.class;
-            observe_candidate(
-                observer,
-                CandidateObservation {
-                    binding: Some((
-                        identity.request,
-                        candidate.identity.unwrap_or_else(|| {
-                            candidate_identity(
-                                search.library,
-                                candidate.ordinal,
-                                &candidate.sequence,
-                            )
-                        }),
-                    )),
-                    ordinal: candidate.ordinal,
-                    sequence: &candidate.sequence,
-                    accepted: false,
-                    refusal_class: Some(refusal_class),
-                    fixture_agreement: None,
-                    cost,
-                },
-            );
-            search.rejected = search.rejected.saturating_add(1);
-            if let Err(exhausted) = record(&mut search.ledger, &mut search.diagnostics, refusal) {
-                return Err(alloc::boxed::Box::new(response_of_search(
-                    exhausted, search,
-                )));
-            }
-            Ok(())
-        }
         Err(refusal) => {
-            let refusal_class = refusal.class;
-            observe_candidate(
-                observer,
-                CandidateObservation {
-                    binding: Some((
-                        identity.request,
-                        candidate.identity.unwrap_or_else(|| {
-                            candidate_identity(
-                                search.library,
-                                candidate.ordinal,
-                                &candidate.sequence,
-                            )
-                        }),
-                    )),
-                    ordinal: candidate.ordinal,
-                    sequence: &candidate.sequence,
-                    accepted: false,
-                    refusal_class: Some(refusal_class),
-                    fixture_agreement: None,
+            observe_refusal(
+                &CandidateAttemptOutcome {
+                    ordinal: attempt.ordinal,
+                    sequence: attempt.sequence,
+                    binding,
                     cost,
                 },
+                &refusal,
+                capture,
+            );
+            Err(alloc::boxed::Box::new(response_of_search(refusal, search)))
+        }
+        Ok(_) => {
+            let refusal = internal(
+                Location::field("request.budget.candidates"),
+                "the bounded queue overflow was not refused by the shared candidate budget",
             );
             Err(alloc::boxed::Box::new(response_of_search(refusal, search)))
         }
     }
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; ranked candidate execution mutates the request ledger and invokes the caller's runtime observer"
+)]
+fn run_ranked_candidate(
+    search: &mut Search<'_>,
+    candidate: &QueueCandidate,
+    capture: &mut CandidateCapture<'_, '_, '_>,
+) -> Result<(), alloc::boxed::Box<Response>> {
+    debug_assert!(candidate.ordinal < MAX_CANDIDATES);
+    debug_assert!(encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
+    run_candidate_attempt(
+        search,
+        CandidateAttempt {
+            ordinal: candidate.ordinal,
+            sequence: &candidate.sequence,
+            identity: candidate.identity,
+            feature_extraction_ns: candidate.feature_extraction_ns,
+            scorer_elapsed_ns: candidate.scorer_elapsed_ns,
+        },
+        capture,
+    )
 }
 
 /// Run one bounded one-hole completion request.
@@ -5476,7 +5733,14 @@ pub fn complete(
         },
         &mut ranking,
     );
-    response.report_mut().total_latency_ns = monotonic_now_ns().saturating_sub(started);
+    let finished = monotonic_now_ns();
+    let total_latency_ns = finished.saturating_sub(started);
+    debug_assert_eq!(
+        started.saturating_add(total_latency_ns),
+        later_timestamp(started, finished)
+    );
+    response.report_mut().total_latency_ns = total_latency_ns;
+    debug_assert_eq!(response.report_mut().total_latency_ns, total_latency_ns);
     response
 }
 
@@ -5508,7 +5772,14 @@ pub fn complete_observed(
         },
         &mut ranking,
     );
-    response.report_mut().total_latency_ns = monotonic_now_ns().saturating_sub(started);
+    let finished = monotonic_now_ns();
+    let total_latency_ns = finished.saturating_sub(started);
+    debug_assert_eq!(
+        started.saturating_add(total_latency_ns),
+        later_timestamp(started, finished)
+    );
+    response.report_mut().total_latency_ns = total_latency_ns;
+    debug_assert_eq!(response.report_mut().total_latency_ns, total_latency_ns);
     response
 }
 
@@ -5541,11 +5812,18 @@ pub fn complete_ranked(
         },
         &mut ranking,
     );
+    let finished = monotonic_now_ns();
+    let total_latency_ns = finished.saturating_sub(started);
+    debug_assert_eq!(
+        started.saturating_add(total_latency_ns),
+        later_timestamp(started, finished)
+    );
+    response.report_mut().total_latency_ns = total_latency_ns;
+    debug_assert_eq!(response.report_mut().total_latency_ns, total_latency_ns);
     debug_assert!(ranking.invalid_scores <= MAX_CANDIDATES);
     debug_assert!(
         ranking.disposition != RankingDisposition::Applied || ranking.invalid_scores == 0
     );
-    response.report_mut().total_latency_ns = monotonic_now_ns().saturating_sub(started);
     RankedResponse {
         response,
         disposition: ranking.disposition,
@@ -5588,11 +5866,18 @@ pub fn complete_ranked_observed(
         },
         &mut ranking,
     );
+    let finished = monotonic_now_ns();
+    let total_latency_ns = finished.saturating_sub(started);
+    debug_assert_eq!(
+        started.saturating_add(total_latency_ns),
+        later_timestamp(started, finished)
+    );
+    response.report_mut().total_latency_ns = total_latency_ns;
+    debug_assert_eq!(response.report_mut().total_latency_ns, total_latency_ns);
     debug_assert!(ranking.invalid_scores <= MAX_CANDIDATES);
     debug_assert!(
         ranking.disposition != RankingDisposition::Applied || ranking.invalid_scores == 0
     );
-    response.report_mut().total_latency_ns = monotonic_now_ns().saturating_sub(started);
     RankedResponse {
         response,
         disposition: ranking.disposition,
@@ -5640,7 +5925,14 @@ pub fn complete_replayed<'observer>(
         },
         &mut ranking,
     );
-    response.report_mut().total_latency_ns = monotonic_now_ns().saturating_sub(started);
+    let finished = monotonic_now_ns();
+    let total_latency_ns = finished.saturating_sub(started);
+    debug_assert_eq!(
+        started.saturating_add(total_latency_ns),
+        later_timestamp(started, finished)
+    );
+    response.report_mut().total_latency_ns = total_latency_ns;
+    debug_assert_eq!(response.report_mut().total_latency_ns, total_latency_ns);
     RankedResponse {
         response,
         disposition: ranking.disposition,
@@ -5651,6 +5943,11 @@ pub fn complete_replayed<'observer>(
 }
 
 fn charge_ranking_queue(search: &mut Search<'_>, queue: &CandidateQueue) -> Result<(), Refusal> {
+    debug_assert!(encoded_len(queue.candidates.len()) <= u64::from(MAX_CANDIDATES));
+    debug_assert!(queue.next_candidate.as_ref().is_none_or(|candidate| {
+        candidate.ordinal <= MAX_CANDIDATES
+            && encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS)
+    }));
     let bounded_candidate_count = queue
         .candidates
         .len()
@@ -5676,22 +5973,28 @@ fn charge_ranking_queue(search: &mut Search<'_>, queue: &CandidateQueue) -> Resu
 }
 
 fn ranked_candidate_ids(queue: &CandidateQueue, library: &Library) -> alloc::vec::Vec<CandidateId> {
-    queue
-        .candidates
-        .iter()
-        .map(|candidate| {
-            candidate.identity.unwrap_or_else(|| {
-                candidate_identity(library, candidate.ordinal, &candidate.sequence)
-            })
-        })
-        .collect()
+    let mut identities = alloc::vec::Vec::with_capacity(queue.candidates.len());
+    for index in 0..queue.candidates.len() {
+        let Some(candidate) = queue.candidates.get(index) else {
+            continue;
+        };
+        let identity = match candidate.identity {
+            Some(identity) => identity,
+            None => candidate_identity(library, candidate.ordinal, &candidate.sequence),
+        };
+        identities.push(identity);
+    }
+    identities
 }
 
 fn replay_candidate_queue(
     search: &mut Search<'_>,
     stored: &StoredRankingControl<'_>,
 ) -> Result<(CandidateQueue, RankingDisposition, RankingIdentity), Refusal> {
-    let mut queue = candidate_queue(search.library, search.ledger.limits().candidates);
+    let candidate_limit = CandidateLimit::from(search.ledger.limits().candidates);
+    let mut queue = candidate_queue(search.library, candidate_limit);
+    debug_assert!(encoded_len(queue.candidates.len()) <= u64::from(MAX_CANDIDATES));
+    debug_assert!(candidate_sequences_are_bounded(&queue));
     let identity = ranking_identity(
         search.request,
         search.library,
@@ -5719,57 +6022,81 @@ fn replay_candidate_queue(
     if identity != stored.ranking.identity {
         return Ok((queue, RankingDisposition::FallbackStaleProvenance, identity));
     }
-    if stored.ranking.ordered_candidates.len() != queue.candidates.len() {
-        return Ok((queue, RankingDisposition::FallbackInvalidResponse, identity));
-    }
-    if usize::try_from(stored.ranking.invalid_scores).unwrap_or(usize::MAX) > queue.candidates.len()
-        || (!queue.candidates.is_empty()
-            && stored.ranking.invalid_scores
-                == u32::try_from(queue.candidates.len()).unwrap_or(u32::MAX))
+    if let Err(disposition) =
+        validate_and_apply_stored_order(&mut queue, stored.ranking, search.library)
     {
-        return Ok((queue, RankingDisposition::FallbackInvalidResponse, identity));
+        return Ok((queue, disposition, identity));
     }
-    let mut positions = alloc::vec![usize::MAX; queue.candidates.len()];
-    for (position, candidate_id) in stored.ranking.ordered_candidates.iter().enumerate() {
+    Ok((queue, RankingDisposition::Applied, identity))
+}
+
+fn validate_and_apply_stored_order(
+    queue: &mut CandidateQueue,
+    stored: &StoredRanking,
+    library: &Library,
+) -> Result<(), RankingDisposition> {
+    debug_assert!(encoded_len(queue.candidates.len()) <= u64::from(MAX_CANDIDATES));
+    debug_assert!(candidate_sequences_are_bounded(queue));
+    if stored.ordered_candidates.len() != queue.candidates.len() {
+        return Err(RankingDisposition::FallbackInvalidResponse);
+    }
+    let candidate_count = match u32::try_from(queue.candidates.len()) {
+        Ok(count) => count,
+        Err(_) => return Err(RankingDisposition::FallbackInvalidResponse),
+    };
+    if stored.invalid_scores > candidate_count
+        || (candidate_count > 0 && stored.invalid_scores == candidate_count)
+    {
+        return Err(RankingDisposition::FallbackInvalidResponse);
+    }
+    let mut seen = alloc::vec![false; queue.candidates.len()];
+    for position in 0..stored.ordered_candidates.len() {
+        let Some(candidate_id) = stored.ordered_candidates.get(position) else {
+            return Err(RankingDisposition::FallbackInvalidResponse);
+        };
         let Some(index) = usize::try_from(candidate_id.ordinal).ok() else {
-            return Ok((queue, RankingDisposition::FallbackInvalidResponse, identity));
+            return Err(RankingDisposition::FallbackInvalidResponse);
         };
         let Some(candidate) = queue.candidates.get_mut(index) else {
-            return Ok((queue, RankingDisposition::FallbackInvalidResponse, identity));
+            return Err(RankingDisposition::FallbackInvalidResponse);
         };
-        if positions.get(index).copied() != Some(usize::MAX)
+        let Some(seen_slot) = seen.get_mut(index) else {
+            return Err(RankingDisposition::FallbackInvalidResponse);
+        };
+        let ranking_position = match u32::try_from(position) {
+            Ok(position) => position,
+            Err(_) => return Err(RankingDisposition::FallbackInvalidResponse),
+        };
+        if *seen_slot
             || candidate.ordinal != candidate_id.ordinal
-            || candidate_identity(search.library, candidate.ordinal, &candidate.sequence)
-                != *candidate_id
+            || candidate_identity(library, candidate.ordinal, &candidate.sequence) != *candidate_id
         {
-            return Ok((queue, RankingDisposition::FallbackInvalidResponse, identity));
+            return Err(RankingDisposition::FallbackInvalidResponse);
         }
+        *seen_slot = true;
         candidate.identity = Some(*candidate_id);
-        if let Some(slot) = positions.get_mut(index) {
-            *slot = position;
+        candidate.ranking_position = ranking_position;
+    }
+    for was_seen in &seen {
+        if !*was_seen {
+            return Err(RankingDisposition::FallbackInvalidResponse);
         }
     }
-    if positions.contains(&usize::MAX) {
-        return Ok((queue, RankingDisposition::FallbackInvalidResponse, identity));
-    }
-    queue.candidates.sort_unstable_by_key(|candidate| {
-        usize::try_from(candidate.ordinal)
-            .ok()
-            .and_then(|index| positions.get(index).copied())
-            .unwrap_or(usize::MAX)
-    });
-    Ok((queue, RankingDisposition::Applied, identity))
+    queue
+        .candidates
+        .sort_unstable_by_key(|candidate| candidate.ranking_position);
+    Ok(())
 }
 
 fn rank_candidate_queue(
     search: &mut Search<'_>,
     session: &mut RankerSession<'_>,
-    measure_candidate_time: bool,
+    should_measure_candidate_time: bool,
     monotonic_now_ns: fn() -> u64,
 ) -> Result<(CandidateQueue, RankingDisposition, u32, RankingIdentity), Refusal> {
-    let candidate_limit_count = search.ledger.limits().candidates;
-    debug_assert!(candidate_limit_count <= MAX_CANDIDATES);
-    let mut queue = candidate_queue(search.library, candidate_limit_count);
+    let candidate_limit = CandidateLimit::from(search.ledger.limits().candidates);
+    debug_assert!(candidate_limit.0 <= MAX_CANDIDATES);
+    let mut queue = candidate_queue(search.library, candidate_limit);
     debug_assert!(encoded_len(queue.candidates.len()) <= u64::from(MAX_CANDIDATES));
     let identity = ranking_identity(
         search.request,
@@ -5792,9 +6119,11 @@ fn rank_candidate_queue(
         search,
         &mut queue,
         session,
-        &identity,
-        measure_candidate_time,
-        monotonic_now_ns,
+        CandidateScoringControl {
+            identity: &identity,
+            should_measure_candidate_time,
+            monotonic_now_ns,
+        },
     )?;
     if let Some(disposition) = fallback {
         return Ok((queue, disposition, invalid_scores, identity));
@@ -5807,109 +6136,123 @@ fn score_candidate_queue(
     search: &mut Search<'_>,
     queue: &mut CandidateQueue,
     session: &mut RankerSession<'_>,
-    identity: &RankingIdentity,
-    measure_candidate_time: bool,
-    monotonic_now_ns: fn() -> u64,
+    control: CandidateScoringControl<'_>,
 ) -> Result<(u32, Option<RankingDisposition>), Refusal> {
     debug_assert!(encoded_len(queue.candidates.len()) <= u64::from(MAX_CANDIDATES));
-    debug_assert!(queue.candidates.iter().all(|candidate| {
-        encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS)
-    }));
+    debug_assert!(candidate_sequences_are_bounded(queue));
     let mut invalid_scores = 0u32;
     for candidate in &mut queue.candidates {
-        let candidate_identity =
-            candidate_identity(search.library, candidate.ordinal, &candidate.sequence);
-        candidate.identity = Some(candidate_identity);
-        search.ledger.charge(
-            Resource::CheckingWork,
-            RANKING_CANDIDATE_ID_WORK,
-            Location::at("ranking.candidate_identity", candidate.ordinal),
-        )?;
-        search.ledger.charge(
-            Resource::CheckingWork,
-            FEATURE_EXTRACTION_WORK,
-            Location::at("ranking.features", candidate.ordinal),
-        )?;
-        let feature_started_ns = if measure_candidate_time {
-            monotonic_now_ns()
-        } else {
-            0
-        };
-        let feature_result = candidate_features(search, candidate);
-        if measure_candidate_time {
-            candidate.feature_extraction_ns = monotonic_now_ns().saturating_sub(feature_started_ns);
-        }
-        let features = match feature_result {
-            Ok(features) => features,
-            Err(failure) => {
-                let fallback = if failure == ScorerFailure::StaleProvenance {
-                    RankingDisposition::FallbackStaleProvenance
-                } else {
-                    RankingDisposition::FallbackScorerFailure
-                };
-                return Ok((invalid_scores, Some(fallback)));
-            }
-        };
-        search.ledger.charge(
-            Resource::CheckingWork,
-            RANKING_SCORE_WORK,
-            Location::at("ranking.score", candidate.ordinal),
-        )?;
-        let score_request = CandidateScoreRequest {
-            request_identity: identity.request,
-            model_identity: session.expected_model_identity,
-            candidate: candidate_identity,
-            features: &features,
-        };
-        let score_started_ns = if measure_candidate_time {
-            monotonic_now_ns()
-        } else {
-            0
-        };
-        let score_result = session.ranker.score(&score_request);
-        if measure_candidate_time {
-            candidate.scorer_elapsed_ns = monotonic_now_ns().saturating_sub(score_started_ns);
-        }
-        match score_result {
-            Ok(response)
-                if response.request_identity == identity.request
-                    && response.model_identity == session.expected_model_identity
-                    && response.candidate == candidate_identity =>
-            {
-                let score = response.score;
+        match score_candidate(search, candidate, session, &control)? {
+            Ok(score) => {
                 if !score.is_finite() {
                     invalid_scores = invalid_scores.saturating_add(1);
                 }
                 candidate.score = Some(score);
             }
-            Ok(response) if response.model_identity != session.expected_model_identity => {
-                let _ = response;
-                return Ok((
-                    invalid_scores,
-                    Some(RankingDisposition::FallbackStaleProvenance),
-                ));
-            }
-            Ok(_) => {
-                return Ok((
-                    invalid_scores,
-                    Some(RankingDisposition::FallbackInvalidResponse),
-                ));
-            }
-            Err(failure) => {
-                let fallback = match failure {
-                    ScorerFailure::StaleProvenance => RankingDisposition::FallbackStaleProvenance,
-                    ScorerFailure::InvalidResponse => RankingDisposition::FallbackInvalidResponse,
-                    ScorerFailure::Unavailable
-                    | ScorerFailure::InvalidFeature
-                    | ScorerFailure::Evaluation => RankingDisposition::FallbackScorerFailure,
-                };
-                return Ok((invalid_scores, Some(fallback)));
-            }
+            Err(disposition) => return Ok((invalid_scores, Some(disposition))),
         }
     }
     Ok((invalid_scores, None))
 }
 
+fn score_candidate(
+    search: &mut Search<'_>,
+    candidate: &mut QueueCandidate,
+    session: &mut RankerSession<'_>,
+    control: &CandidateScoringControl<'_>,
+) -> Result<Result<f32, RankingDisposition>, Refusal> {
+    debug_assert!(candidate.ordinal < MAX_CANDIDATES);
+    debug_assert!(encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
+    let candidate_id = candidate_identity(search.library, candidate.ordinal, &candidate.sequence);
+    candidate.identity = Some(candidate_id);
+    search.ledger.charge(
+        Resource::CheckingWork,
+        RANKING_CANDIDATE_ID_WORK,
+        Location::at("ranking.candidate_identity", candidate.ordinal),
+    )?;
+    let features = match extract_candidate_features(search, candidate, control)? {
+        Ok(features) => features,
+        Err(disposition) => return Ok(Err(disposition)),
+    };
+    search.ledger.charge(
+        Resource::CheckingWork,
+        RANKING_SCORE_WORK,
+        Location::at("ranking.score", candidate.ordinal),
+    )?;
+    let score_request = CandidateScoreRequest {
+        request_identity: control.identity.request,
+        model_identity: session.expected_model_identity,
+        candidate: candidate_id,
+        features: &features,
+    };
+    let score_started_ns = if control.should_measure_candidate_time {
+        (control.monotonic_now_ns)()
+    } else {
+        0
+    };
+    let score_result = session.ranker.score(&score_request);
+    if control.should_measure_candidate_time {
+        candidate.scorer_elapsed_ns = (control.monotonic_now_ns)().saturating_sub(score_started_ns);
+    }
+    match score_result {
+        Ok(response)
+            if response.request_identity == control.identity.request
+                && response.model_identity == session.expected_model_identity
+                && response.candidate == candidate_id =>
+        {
+            Ok(Ok(response.score))
+        }
+        Ok(response) if response.model_identity != session.expected_model_identity => {
+            let _ = response;
+            Ok(Err(RankingDisposition::FallbackStaleProvenance))
+        }
+        Ok(_) => Ok(Err(RankingDisposition::FallbackInvalidResponse)),
+        Err(failure) => {
+            let disposition = match failure {
+                ScorerFailure::StaleProvenance => RankingDisposition::FallbackStaleProvenance,
+                ScorerFailure::InvalidResponse => RankingDisposition::FallbackInvalidResponse,
+                ScorerFailure::Unavailable
+                | ScorerFailure::InvalidFeature
+                | ScorerFailure::Evaluation => RankingDisposition::FallbackScorerFailure,
+            };
+            Ok(Err(disposition))
+        }
+    }
+}
+
+fn extract_candidate_features(
+    search: &mut Search<'_>,
+    candidate: &mut QueueCandidate,
+    control: &CandidateScoringControl<'_>,
+) -> Result<Result<CandidateFeatureVector, RankingDisposition>, Refusal> {
+    debug_assert!(candidate.ordinal < MAX_CANDIDATES);
+    debug_assert!(encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
+    search.ledger.charge(
+        Resource::CheckingWork,
+        FEATURE_EXTRACTION_WORK,
+        Location::at("ranking.features", candidate.ordinal),
+    )?;
+    let feature_started_ns = if control.should_measure_candidate_time {
+        (control.monotonic_now_ns)()
+    } else {
+        0
+    };
+    let features = candidate_features(search, candidate);
+    if control.should_measure_candidate_time {
+        candidate.feature_extraction_ns =
+            (control.monotonic_now_ns)().saturating_sub(feature_started_ns);
+    }
+    match features {
+        Ok(features) => Ok(Ok(features)),
+        Err(ScorerFailure::StaleProvenance) => Ok(Err(RankingDisposition::FallbackStaleProvenance)),
+        Err(_) => Ok(Err(RankingDisposition::FallbackScorerFailure)),
+    }
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; candidate ordering compares the runtime F32 scorer results"
+)]
 fn sort_ranked_candidates(queue: &mut CandidateQueue, invalid_scores: u32) -> RankingDisposition {
     debug_assert!(encoded_len(queue.candidates.len()) <= u64::from(MAX_CANDIDATES));
     debug_assert!(u32::try_from(queue.candidates.len()).is_ok_and(|count| invalid_scores <= count));
@@ -5971,7 +6314,7 @@ fn initialize_search<'a>(
         return Err(response_of(refusal, &ledger));
     }
     let stack_in = prefix.stack.clone();
-    debug_assert!(stack_in.len() <= MAX_STACK_HEIGHT as usize);
+    debug_assert!(usize::try_from(MAX_STACK_HEIGHT).is_ok_and(|maximum| stack_in.len() <= maximum));
     debug_assert!(flat.hole <= flat.elements.len());
     Ok(Search {
         namespace,
@@ -5988,6 +6331,10 @@ fn initialize_search<'a>(
     })
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; completion dispatch initializes runtime search state and routes the caller's trust-boundary controls"
+)]
 fn complete_inner(
     namespace: &super::Session,
     library: &Library,
@@ -5995,66 +6342,133 @@ fn complete_inner(
     control: CompletionControl<'_, '_, '_, '_>,
     ranking: &mut RankingStatus,
 ) -> Response {
-    let mut search = match initialize_search(namespace, library, request) {
+    let search = match initialize_search(namespace, library, request) {
         Ok(search) => search,
         Err(response) => return response,
     };
-    debug_assert!(search.request.budget.candidates <= MAX_CANDIDATES);
-    let monotonic_now_ns = control.monotonic_now_ns;
-    let mut observer = control.observer;
-    let mut observation_identity = None;
-    if let Some(ranker) = control.ranker {
-        let (queue, status, invalid, identity) =
-            match rank_candidate_queue(&mut search, ranker, observer.is_some(), monotonic_now_ns) {
-                Ok(ranked) => ranked,
-                Err(refusal) => return response_of_search(refusal, &search),
-            };
-        ranking.disposition = status;
-        ranking.invalid_scores = invalid;
-        ranking.identity = Some(identity.clone());
-        ranking.ranked_candidates = ranked_candidate_ids(&queue, library);
-        debug_assert!(ranking.invalid_scores <= MAX_CANDIDATES);
-        if let Err(response) = run_candidate_queue(
-            &mut search,
-            &queue,
-            &mut observer,
-            &identity,
-            monotonic_now_ns,
-        ) {
-            return *response;
-        }
-        return Response::NoResult {
-            report: alloc::boxed::Box::new(search.report(0)),
-        };
+    debug_assert!(search.ledger.limits().candidates <= MAX_CANDIDATES);
+    debug_assert!(control.ranker.is_none() || control.stored.is_none());
+    let CompletionControl {
+        ranker,
+        observer,
+        stored,
+        monotonic_now_ns,
+    } = control;
+    let capture = CandidateCapture {
+        observer,
+        identity: None,
+        monotonic_now_ns,
+    };
+    if let Some(ranker) = ranker {
+        return complete_with_ranker(search, library, ranker, capture, ranking);
     }
-    if let Some(stored) = control.stored {
-        let (queue, disposition, identity) = match replay_candidate_queue(&mut search, &stored) {
-            Ok(replayed) => replayed,
-            Err(refusal) => return response_of_search(refusal, &search),
-        };
-        ranking.disposition = disposition;
-        if disposition == RankingDisposition::Applied {
-            ranking.invalid_scores = stored.ranking.invalid_scores;
-        }
-        ranking.identity = Some(identity.clone());
-        ranking.ranked_candidates = ranked_candidate_ids(&queue, library);
-        if let Err(response) = run_candidate_queue(
-            &mut search,
-            &queue,
-            &mut observer,
-            &identity,
-            monotonic_now_ns,
-        ) {
-            return *response;
-        }
-        return Response::NoResult {
-            report: alloc::boxed::Box::new(search.report(0)),
-        };
+    if let Some(stored) = stored {
+        return complete_with_stored_ranking(search, library, stored, capture, ranking);
     }
-    if observer.is_some() {
-        let queue = candidate_queue(library, search.ledger.limits().candidates);
-        observation_identity = Some(ranking_identity(request, library, &queue, None));
+    complete_shortlex(search, library, request, capture)
+}
+
+fn complete_with_ranker(
+    mut search: Search<'_>,
+    library: &Library,
+    ranker: &mut RankerSession<'_>,
+    capture: CandidateCapture<'_, '_, '_>,
+    ranking: &mut RankingStatus,
+) -> Response {
+    debug_assert!(search.ledger.limits().candidates <= MAX_CANDIDATES);
+    debug_assert!(capture.identity.is_none());
+    let should_measure_candidate_time = capture.observer.is_some();
+    let monotonic_now_ns = capture.monotonic_now_ns;
+    let (queue, status, invalid, identity) = match rank_candidate_queue(
+        &mut search,
+        ranker,
+        should_measure_candidate_time,
+        monotonic_now_ns,
+    ) {
+        Ok(ranked) => ranked,
+        Err(refusal) => return response_of_search(refusal, &search),
+    };
+    ranking.disposition = status;
+    ranking.invalid_scores = invalid;
+    ranking.identity = Some(identity.clone());
+    ranking.ranked_candidates = ranked_candidate_ids(&queue, library);
+    debug_assert!(ranking.invalid_scores <= MAX_CANDIDATES);
+    debug_assert_eq!(identity.library_revision, *search.library.revision());
+    let CandidateCapture { observer, .. } = capture;
+    let mut ranked_capture = CandidateCapture {
+        observer,
+        identity: Some(&identity),
+        monotonic_now_ns,
+    };
+    if let Err(response) = run_candidate_queue(&mut search, &queue, &mut ranked_capture) {
+        return *response;
     }
+    Response::NoResult {
+        report: alloc::boxed::Box::new(search.report(0)),
+    }
+}
+
+fn complete_with_stored_ranking(
+    mut search: Search<'_>,
+    library: &Library,
+    stored: StoredRankingControl<'_>,
+    capture: CandidateCapture<'_, '_, '_>,
+    ranking: &mut RankingStatus,
+) -> Response {
+    debug_assert!(search.ledger.limits().candidates <= MAX_CANDIDATES);
+    debug_assert!(capture.identity.is_none());
+    let monotonic_now_ns = capture.monotonic_now_ns;
+    let (queue, disposition, identity) = match replay_candidate_queue(&mut search, &stored) {
+        Ok(replayed) => replayed,
+        Err(refusal) => return response_of_search(refusal, &search),
+    };
+    ranking.disposition = disposition;
+    if disposition == RankingDisposition::Applied {
+        ranking.invalid_scores = stored.ranking.invalid_scores;
+    }
+    ranking.identity = Some(identity.clone());
+    ranking.ranked_candidates = ranked_candidate_ids(&queue, library);
+    debug_assert_eq!(identity.library_revision, *search.library.revision());
+    debug_assert!(ranking.invalid_scores <= MAX_CANDIDATES);
+    let CandidateCapture { observer, .. } = capture;
+    let mut replay_capture = CandidateCapture {
+        observer,
+        identity: Some(&identity),
+        monotonic_now_ns,
+    };
+    if let Err(response) = run_candidate_queue(&mut search, &queue, &mut replay_capture) {
+        return *response;
+    }
+    Response::NoResult {
+        report: alloc::boxed::Box::new(search.report(0)),
+    }
+}
+
+fn complete_shortlex(
+    mut search: Search<'_>,
+    library: &Library,
+    request: &Request,
+    capture: CandidateCapture<'_, '_, '_>,
+) -> Response {
+    debug_assert!(search.ledger.limits().candidates <= MAX_CANDIDATES);
+    debug_assert!(capture.identity.is_none());
+    let observation_identity = capture.observer.as_ref().map(|_| {
+        let queue = candidate_queue(
+            library,
+            CandidateLimit::from(search.ledger.limits().candidates),
+        );
+        ranking_identity(request, library, &queue, None)
+    });
+    let CandidateCapture {
+        observer,
+        monotonic_now_ns,
+        ..
+    } = capture;
+    let mut shortlex_capture = CandidateCapture {
+        observer,
+        identity: observation_identity.as_ref(),
+        monotonic_now_ns,
+    };
     let order = canonical_order(library);
     debug_assert!(encoded_len(order.len()) <= u64::from(MAX_LIBRARY_ENTRIES));
     let mut chunk_count = 0u32;
@@ -6065,9 +6479,7 @@ fn complete_inner(
             &order,
             chunk_count,
             &mut next_ordinal,
-            &mut observer,
-            observation_identity.as_ref(),
-            monotonic_now_ns,
+            &mut shortlex_capture,
         ) {
             return *response;
         }
