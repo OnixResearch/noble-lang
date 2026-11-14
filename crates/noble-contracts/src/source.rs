@@ -14,6 +14,7 @@ mod locals;
 mod parsing;
 mod preflight;
 mod preparation;
+pub mod procedures;
 pub mod proof;
 mod replacement;
 mod resolution;

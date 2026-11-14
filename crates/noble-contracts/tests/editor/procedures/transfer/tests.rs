@@ -1,0 +1,92 @@
+use super::*;
+
+#[test]
+#[ignore = "one-shot held-out transfer measurement; run only from the frozen, clean source commit"]
+fn frozen_heldout_measurement_once() -> Result<(), String> {
+    let selection_namespace = Session::without_test_hosts();
+    let control = super::selection::choose_control_pair(&selection_namespace)?;
+    let mut rows = Vec::with_capacity(TRANSFER_ROW_CAPACITY);
+    let mut is_learned_passed = true;
+    let mut no_runtime_agent_calls = true;
+    for (seed_index, seed) in SEEDS.iter().copied().enumerate() {
+        for arm in TRANSFER_ARMS {
+            let (row, metrics, is_control_size_matched) =
+                super::runner::run_arm_seed(arm, seed_index, &control)?;
+            no_runtime_agent_calls &= metrics.proposer_calls == 0 && metrics.teacher_calls == 0;
+            if arm == "accumulated_learned_library" {
+                is_learned_passed &= metrics.transfer_passed == 2;
+            }
+            if arm == "size_matched_nontransfer" && !is_control_size_matched {
+                eprintln!("size-matched control unavailable at seed {seed}: selected pair exceeds the preregistered 10% byte bound");
+            }
+            rows.push(row);
+        }
+    }
+    if !no_runtime_agent_calls {
+        return Err(String::from(
+            "proposer or teacher calls occurred in a frozen transfer arm",
+        ));
+    }
+    let mut output = String::from("{\"schema\":\"noble-procedure-library-transfer-run/1\",\"criteria\":\"verification/procedure-library/criteria-2026-11-13.json\",\"seeds\":[1,7,23,101],\"producer_receipt\":\"verification/synthesis/receipts/2026-11-13/synthesis-v2.json\",\"control_pool_selection_before_measurement\":{\"eligible_pair\":[\"");
+    output.push_str(control.tasks[0].name());
+    output.push_str("\",\"");
+    output.push_str(control.tasks[1].name());
+    output.push_str(&format!(
+        "\"],\"target_bytes\":{},\"candidate_bytes\":{},\"within_ten_percent\":{}}},\"rows\":[",
+        control.target_bytes, control.candidate_bytes, control.within_ten_percent,
+    ));
+    for (index, row) in rows.iter().enumerate() {
+        if index != 0 {
+            output.push(',');
+        }
+        output.push_str(row);
+    }
+    output.push_str("]}");
+    println!("PROCEDURE_TRANSFER_JSON={output}");
+    if !is_learned_passed {
+        return Err(String::from(
+            "accumulated learned library did not meet the frozen 8/8 task-cell transfer threshold",
+        ));
+    }
+    Ok(())
+}
+
+#[test]
+fn producer_task_candidates_are_source_readmitted_and_fixture_bound() -> Result<(), String> {
+    let namespace = Session::without_test_hosts();
+    for task in SOURCE_TASKS {
+        let record = super::producer::task_record(task, Producer::Synthesis)?;
+        let mut library = chunks::Library::new(super::revision(7));
+        library
+            .admit(&namespace, record.chunk.clone())
+            .map_err(|error| format!("{} typed-chunk admission: {error:?}", task.name()))?;
+        let fixtures = FixtureSet {
+            id: [0x71; chunks::IDENTITY_BYTES],
+            cases: task
+                .earlier_cases()
+                .iter()
+                .map(|(inputs, expected)| Fixture {
+                    inputs: inputs.iter().copied().map(Scalar::I64).collect(),
+                    outputs: vec![Scalar::I64(*expected)],
+                })
+                .collect(),
+        };
+        let task_request = super::fixtures::request(&library, &[Ty::I64, Ty::I64], fixtures);
+        let (_, passed, cases) =
+            super::fixtures::fixture_report(&namespace, &library, &task_request);
+        let passed_count = usize::try_from(passed)
+            .map_err(|_| String::from("source task case count does not fit host index"))?;
+        assert_eq!(
+            passed_count,
+            cases.len(),
+            "{} source task regression",
+            task.name()
+        );
+        assert!(
+            !cases.is_empty(),
+            "{} source task fixtures did not execute",
+            task.name()
+        );
+    }
+    Ok(())
+}

@@ -101,6 +101,45 @@ pub(crate) fn bind_artifact(
 }
 
 #[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; binding an ordinary checked program must reject external definitions, failed kernel admission, malformed event lowering, and any subject/interface mismatch before returning an applicable subject."
+)]
+pub(crate) fn bind_checked_program(
+    engine: &crate::companion::Core,
+    evidence: crate::companion::EvidenceId,
+    submission: &noble_kernel::execution::Submission,
+) -> Result<crate::companion::Subject, crate::companion::Refusal> {
+    if !submission.definitions.is_empty() || !submission.body.texts.is_empty() {
+        return Err(crate::companion::Refusal::CorrespondenceMismatch);
+    }
+    let environment = match noble_kernel::contracts::environment() {
+        Ok(environment) => environment,
+        Err(_) => return Err(crate::companion::Refusal::Internal),
+    };
+    let mut request = submission.request.clone();
+    request.limits.bytes = request.limits.bytes.min(engine.limits.bytes);
+    request.limits.nodes = request.limits.nodes.min(engine.limits.nodes);
+    request.limits.depth = request.limits.depth.min(engine.limits.depth);
+    request.limits.work = request.limits.work.min(engine.limits.work);
+    attempt!(checked(&noble_kernel::acceptance::check(
+        &environment,
+        &request,
+        &submission.body.candidate
+    )));
+    let events = attempt!(crate::companion::admit::program::canonical_op_events(
+        &submission.body.candidate
+    ));
+    let observed = crate::companion::subject::observe(
+        &events,
+        crate::companion::InterfaceSignatures {
+            input: crate::companion::interface_signature(&submission.request.expected.stack_in),
+            output: crate::companion::interface_signature(&submission.request.expected.stack_out),
+        },
+    );
+    engine.bind(evidence, &observed)
+}
+
+#[expect(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; is_quotation_root uses checked TryFrom conversion and Vec dereferencing for candidate arena lookup, neither stable const on the pinned compiler."
 )]

@@ -222,6 +222,7 @@ Status words:
 | Collision-safe cache lookup and length-prefixed subject encoding | `NobleFoundation.CacheLookup.lookup_some_implies_manifest_eq`, `colliding_index_equal`, `colliding_index_wrong_manifest_misses`, `colliding_index_hit_skips_wrong_manifest`, `matching_entry_hits`, `stale_manifest_entry_refused`, `corrupt_entry_refused`, `lookup_after_erase_subset`, `lengthBytes_injective_of_lt`, `encodeParts_injective_of_lt`, `changed_field_changes_encoding`, `naive_concat_field_collision` | model only; `Subject::derive` byte correspondence and all cache integration boundaries remain open | **proved** (model) |
 
 | Bounded typed program synthesis with counterexample-guided refinement (issue #116) | `NobleFoundation.Synthesis.not_certifiable_of_refuted`, `NobleFoundation.Synthesis.arithCommuted_certified`, `NobleFoundation.Synthesis.arithSubtract_certified`, `NobleFoundation.Synthesis.arithScaled_certified`, `NobleFoundation.Synthesis.overBoundControl_certified`, `NobleFoundation.Synthesis.bitOr_refused_witness_refutes`, `NobleFoundation.Synthesis.bitOr_refused_not_certifiable`, `NobleFoundation.Synthesis.bitXor_refused_witness_refutes`, `NobleFoundation.Synthesis.bitXor_refused_not_certifiable` | `verification/synthesis/cegis.mjs` and finite re-admission through the existing CLI; no production synthesis implementation theorem | model **proved** (four affine graph-pair certificates and two exact-witness refusal controls); bounded search/refinement and held-out behavior **tested** only on the frozen tasks and budgets; nonlinear, Bool, 0/1-domain and list cases are **unproven** or run-only; general synthesis and source-to-model refinement remain **open** |
+| Learned procedure identity, persistence, append-only state and rollback (issue #118, LPL-O1--LPL-O4) | `NobleFoundation.ProcedureLibrary.decode_encode_subject`, `NobleFoundation.ProcedureLibrary.encode_subject_injective`, `NobleFoundation.ProcedureLibrary.identity_injective_on_subjects`, `NobleFoundation.ProcedureLibrary.identity_binds_body`, `NobleFoundation.ProcedureLibrary.identity_binds_dependency_closure`, `NobleFoundation.ProcedureLibrary.identity_ignores_mutable_state`, `NobleFoundation.ProcedureLibrary.reload_recomputes_identity`, `NobleFoundation.ProcedureLibrary.reload_repeated_identity`, `NobleFoundation.ProcedureLibrary.deduplicate_reuses_exact_subject`, `NobleFoundation.ProcedureLibrary.deduplicate_reuse_preserves_dependency_closures`, `NobleFoundation.ProcedureLibrary.deduplicate_reuse_preserves_all_evidence`, `NobleFoundation.ProcedureLibrary.bound_evidence_appends_to_existing_evidence`, `NobleFoundation.ProcedureLibrary.appended_evidence_preserves_identity`, `NobleFoundation.ProcedureLibrary.appended_evidence_preserves_prior_obligations`, `NobleFoundation.ProcedureLibrary.evidence_publication_appends_a_generation`, `NobleFoundation.ProcedureLibrary.evidence_publication_retains_prior_generation`, `NobleFoundation.ProcedureLibrary.wrong_subject_evidence_does_not_publish`, `NobleFoundation.ProcedureLibrary.rollback_restores_exact_retained_closure`, `NobleFoundation.ProcedureLibrary.rollback_never_rewrites_retained_history` | The abstract canonical subject tuple and generation relation in the ProcedureLibrary model; the Rust serializer, experimental digest and implementation correspondence are outside the theorem subject | abstract model **proved**; Rust persistence, four corruption controls and restart identity are **tested** separately; no theorem claims a canonical hash, Rust implementation refinement or portability |
 
 Typing premises are stated exactly:
 - Sequences require `depthRun ops k = some k'` (static depth) for typing,
@@ -2607,6 +2608,25 @@ The search, witnesses, candidate counts, held-out results, re-admission and tool
 recorded in [`verification/synthesis/README.md`](../../verification/synthesis/README.md) and its
 source-bound receipt. All proof claims remain model-only; CEGIS, grammar conformance, and
 implementation refinement are not theorem subjects.
+
+## Learned procedure library identity and generation model (issue #118)
+
+`NobleFoundation/ProcedureLibrary.lean` models the procedure's immutable subject as the version,
+encoder, body, source revision and ordered dependency tuple. Its canonical representation is an
+abstract typed tuple, not a byte serializer or digest. LPL-O1 proves that this representation
+round-trips and is injective on immutable subjects, while mutable evidence, status and cost do not
+enter identity. The Rust tests separately exercise the experimental byte encoding and body,
+encoder, dependency and evidence corruption refusals; no Rust-to-Lean refinement theorem is claimed.
+
+LPL-O2 proves that persisting and reloading a list of abstract records recomputes the same ordered
+identities, including a repeated reload. The two fresh-process Rust tests compare the actual
+identity manifests independently. LPL-O3 proves exact duplicate reuse leaves the stored dependency
+closures and evidence unchanged, and that subject-bound evidence appends after prior evidence
+without changing identity; publication moves the previous generation intact into retained history.
+LPL-O4 proves that an available retained generation is restored as the new current closure while
+earlier generations remain retained. Rust generation, evidence and rollback fixtures remain the
+implementation evidence; the model does not establish the concrete persistence decoder, evidence
+toolchain availability checks, or runtime behavior.
 
 ## Specification-quality obligations (issue #65)
 

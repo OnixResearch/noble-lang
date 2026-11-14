@@ -75,6 +75,7 @@ import NobleFoundation.SgdReference
 import NobleFoundation.SgdReferenceCorpus
 import NobleFoundation.FirstProjection
 import NobleFoundation.SynthesisCertified
+import NobleFoundation.ProcedureLibrary
 import NobleFoundation.OperandForwarding
 import NobleFoundation.Binary32Scale
 import NobleFoundation.ReverseADMutations

@@ -6298,6 +6298,120 @@
       "claim": "a seeded interpreter with swapped subtraction operands disagrees with the reference"
     },
     {
+      "name": "NobleFoundation.ProcedureLibrary.decode_encode_subject",
+      "phase": 2,
+      "role": "library-identity",
+      "claim": "the abstract canonical subject encoder round-trips immutable identity fields"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.encode_subject_injective",
+      "phase": 2,
+      "role": "library-identity",
+      "claim": "the abstract canonical subject encoding is injective"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.identity_injective_on_subjects",
+      "phase": 2,
+      "role": "library-identity",
+      "claim": "equal procedure identities determine equal immutable subjects"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.identity_binds_body",
+      "phase": 2,
+      "role": "library-identity",
+      "claim": "equal procedure identities determine equal bodies"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.identity_binds_dependency_closure",
+      "phase": 2,
+      "role": "library-identity",
+      "claim": "equal procedure identities determine equal ordered dependency closures"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.identity_ignores_mutable_state",
+      "phase": 2,
+      "role": "library-identity",
+      "claim": "evidence status and cost changes do not alter abstract subject identity"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.reload_recomputes_identity",
+      "phase": 2,
+      "role": "library-reload",
+      "claim": "reloading a persisted record list recomputes the same ordered identities"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.reload_repeated_identity",
+      "phase": 2,
+      "role": "library-reload",
+      "claim": "repeated abstract persistence and reload preserve a record identity"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.deduplicate_reuses_exact_subject",
+      "phase": 2,
+      "role": "library-deduplication",
+      "claim": "an exact identity duplicate reuses the existing model records"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.deduplicate_reuse_preserves_dependency_closures",
+      "phase": 2,
+      "role": "library-deduplication",
+      "claim": "exact deduplication preserves all retained dependency closures"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.deduplicate_reuse_preserves_all_evidence",
+      "phase": 2,
+      "role": "library-deduplication",
+      "claim": "exact deduplication preserves every retained evidence record"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.bound_evidence_appends_to_existing_evidence",
+      "phase": 2,
+      "role": "library-evidence",
+      "claim": "subject-bound evidence is appended after the existing evidence sequence"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.appended_evidence_preserves_identity",
+      "phase": 2,
+      "role": "library-evidence",
+      "claim": "appending evidence leaves immutable procedure identity unchanged"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.appended_evidence_preserves_prior_obligations",
+      "phase": 2,
+      "role": "library-evidence",
+      "claim": "appending one evidence record preserves the prior evidence prefix"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.evidence_publication_appends_a_generation",
+      "phase": 2,
+      "role": "library-generation",
+      "claim": "bound evidence publication increments the generation number"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.evidence_publication_retains_prior_generation",
+      "phase": 2,
+      "role": "library-generation",
+      "claim": "bound evidence publication retains the exact previous generation"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.wrong_subject_evidence_does_not_publish",
+      "phase": 2,
+      "role": "library-evidence",
+      "claim": "evidence bound to a different subject cannot publish a generation"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.rollback_restores_exact_retained_closure",
+      "phase": 2,
+      "role": "library-rollback",
+      "claim": "rollback restores the exact record closure of a retained generation"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.rollback_never_rewrites_retained_history",
+      "phase": 2,
+      "role": "library-rollback",
+      "claim": "rollback appends a generation without rewriting earlier retained history"
+    },
+    {
       "name": "NobleFoundation.Synthesis.not_certifiable_of_refuted",
       "phase": 2,
       "role": "symbolic-solver",
@@ -12344,6 +12458,60 @@
       "phase": 1,
       "role": "abstract-reduction-step",
       "claim": "the two-output fanout duplicator firing is one abstract Step of the selected system"
+    },
+    {
+      "name": "NobleFoundation.NetI64Corpus.fanout_overflow_translation",
+      "phase": 1,
+      "role": "translation-corpus",
+      "claim": "the checked lowering of the fanout-overflow fixture matches its retained interaction net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Corpus.fanout_overflow_normalization",
+      "phase": 1,
+      "role": "translation-corpus",
+      "claim": "the fanout-overflow fixture normalizes to its retained outputs and interaction count"
+    },
+    {
+      "name": "NobleFoundation.NetI64Corpus.fanout_overflow_interaction_count",
+      "phase": 1,
+      "role": "translation-corpus",
+      "claim": "the fanout-overflow fixture has its retained exact interaction count"
+    },
+    {
+      "name": "NobleFoundation.NetI64Corpus.discarded_unit_translation",
+      "phase": 1,
+      "role": "translation-corpus",
+      "claim": "the checked lowering of the discarded-unit fixture matches its retained interaction net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Corpus.discarded_unit_normalization",
+      "phase": 1,
+      "role": "translation-corpus",
+      "claim": "the discarded-unit fixture normalizes to its retained outputs and interaction count"
+    },
+    {
+      "name": "NobleFoundation.NetI64Corpus.discarded_unit_interaction_count",
+      "phase": 1,
+      "role": "translation-corpus",
+      "claim": "the discarded-unit fixture has its retained exact interaction count"
+    },
+    {
+      "name": "NobleFoundation.NetI64Corpus.empty_translation",
+      "phase": 1,
+      "role": "translation-corpus",
+      "claim": "the checked lowering of the empty fixture matches its retained empty interaction net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Corpus.empty_normalization",
+      "phase": 1,
+      "role": "translation-corpus",
+      "claim": "the empty fixture normalizes to its retained empty outputs and zero interactions"
+    },
+    {
+      "name": "NobleFoundation.NetI64Corpus.empty_interaction_count",
+      "phase": 1,
+      "role": "translation-corpus",
+      "claim": "the empty fixture has its retained zero interaction count"
     }
   ],
   "private_theorems": [

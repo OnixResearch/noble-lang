@@ -344,6 +344,21 @@ Equal signatures with different bodies are never merged, never deduplicated and
 never treated as behaviorally equal (TCHUNK-01). A name, interface, cost,
 template identity, path or nearest-body similarity is not a deduplication key.
 
+### LPL-04 implementation decision (2026-11-14)
+
+Exact-record reuse and the `DuplicateEntry` restatement refusal are implemented.
+The **positive exact-certificate semantic-alias case is NOT DONE**. Issue #56
+currently supplies a verification lane, not a runtime exact-pair equivalence
+verifier: a certificate digest alone cannot establish the equivalence of the
+two retained bodies and their dependency closures. `ProcedureLibrary::admit`
+therefore refuses every proposed `alias_of`, including a nonzero digest; the
+alias refusal fixture pins this fail-closed behavior. No contracts-to-ngraph
+dependency or mock certificate is introduced. Reopen positive alias admission
+only after an exact-pair #56 runtime verifier exists in a crate that
+`noble-contracts` may depend on, or after `noble-contracts` defines a verifier
+trait implemented by a higher crate. The verifier must check the *actual*
+pair and both closures before an alias edge and its evidence can be retained.
+
 ## Retrieval
 
 Retrieval is a pure function of one generation and one query. Total order:
