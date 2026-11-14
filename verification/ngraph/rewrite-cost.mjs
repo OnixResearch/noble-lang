@@ -587,7 +587,7 @@ function validateReport(report, manifest, corpus) {
         row.pipeline.disposition === 'executed' && row.pipeline.candidate_execution_calls > 0) {
       executedNonIdentity++;
     }
-    if (row.pipeline.comparison?.status === 'estimated') breakEvenEstimates++;
+    if (row.pipeline.comparison?.break_even?.status === 'estimated') breakEvenEstimates++;
   }
   requireThat(rowKeys.size === expectedRows && [...fixtureNames].every(fixture =>
     proposers.every(proposer => rowKeys.has(`${fixture}\0${proposer}`))),
