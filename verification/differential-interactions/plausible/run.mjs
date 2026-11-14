@@ -207,11 +207,40 @@ if (replayPath) {
       if (result.injected.failure_identity !== identity) { rejected.different_failure++; continue; }
       minimized = result; currentModel = candidate; improved = true; break;
     }
-    if (!improved) { localMinimum = true; break; }
+    if (!improved) { localMinimum = attempts < 48; break; }
   }
   const mutant = bank.mutants.find(m => m.id === 'p1-reversed-observed-stack');
   requireThat(mutant?.cell === protocol.selected_cells[0] &&
     mutant.after.includes('}).reverse();'), 'retained semantic-mutant bank no longer matches this fault');
+  const selectedMutantControls = protocol.selected_cells.map((cell, index) => {
+    const entry = bank.mutants.find(m => m.cell === cell && m.profile === protocol.profile);
+    requireThat(entry, `missing existing implementation-side mutant for ${cell}`);
+    const generatedCase = cases.find(c => c.interaction.cell === cell);
+    const model = { ...generatedCase }; delete model.origin;
+    const baseline = generatedRows.find(row =>
+      row.source_sha256 === generatedCase.origin.sha256 && row.mode === 'off');
+    const expected = p1Expected(model);
+    requireThat(baseline?.observed.outcome === 'normal' &&
+      baseline.observed.execution_steps > 0 && baseline.matched &&
+      show(baseline.observed.stack) === show(expected.stack),
+    `mutant control ${cell} was not reached by a clean admitted execution`);
+    let faultyStack;
+    if (index === 0) faultyStack = [...baseline.observed.stack].reverse();
+    if (index === 1) faultyStack = p1Expected({ ...model, ops: [
+      { push: -1n }, { push: 0n }, ...model.ops.slice(2) ] }).stack;
+    if (index === 2) faultyStack = p1Expected({ ...model, program: {
+      arith: ['sub', ...model.program.arith.slice(1)] } }).stack;
+    if (index === 3) faultyStack = p1Expected({ ...model, program: {
+      compose: [...model.program.compose].reverse() } }).stack;
+    const failure = mismatch(expected, { outcome: 'normal', stack: faultyStack });
+    requireThat(failure !== null && show(faultyStack) !== show(expected.stack),
+      `semantic fault ${entry.id} escaped its independent reference`);
+    return { bank_id: entry.id, cell, source: generatedCase.origin.text,
+      source_sha256: generatedCase.origin.sha256, baseline_execution_steps: baseline.observed.execution_steps,
+      baseline_clean_matched: baseline.matched, expected_stack: expected.stack,
+      test_side_fault_stack: faultyStack, failure_identity: failure,
+      fault_kind: 'test-side simulation of the bank fault; historical implementation-side mutation is separate' };
+  });
   const outcome = selected.length === 0 ? 'no-go' : selected.length - current.length >= 2 ? 'adopt' : 'retain-current';
   const receipt = { schema: 'noble-plausible-pilot/v1', source_commit: initialCommit, source_tree: initialTree,
     protocol_sha256: fileHash(protocolPath), source_matrix_sha256: fileHash(join(root, protocol.source_matrix)),
@@ -237,6 +266,7 @@ if (replayPath) {
       distinct_attributed_failures_current: comparison.generator_comparison.current_generator.distinct_attributed_failures,
       distinct_attributed_failures_plausible: comparison.generator_comparison.structured_extension.distinct_attributed_failures },
     controls: { lean_positive_and_false_property: true, oracle_controls: comparison.controls,
+      selected_mutant_controls: selectedMutantControls,
       shrinking: controls, mutant_bank_id: mutant.id, mutant_injection_kind: 'test-side output reversal, not a candidate implementation build',
       earlier_implementation_mutant_evidence: 'verification/differential-interactions/receipts/756ccc9/campaign.json' },
     mutant_control: { cell: mutant.cell, failure_identity: identity, original, minimized,
