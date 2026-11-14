@@ -168,5 +168,9 @@ mod chunks_completion;
 fn monotonic_now_ns() -> u64 {
     static START: std::sync::LazyLock<std::time::Instant> =
         std::sync::LazyLock::new(std::time::Instant::now);
-    u64::try_from(START.elapsed().as_nanos()).unwrap_or(u64::MAX)
+    let mut elapsed_ns = u64::MAX;
+    if let Ok(representable_ns) = u64::try_from(START.elapsed().as_nanos()) {
+        elapsed_ns = representable_ns;
+    }
+    elapsed_ns
 }
