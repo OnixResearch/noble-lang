@@ -1,0 +1,29 @@
+{
+  "schema": "noble-plausible-interaction-pilot/v1",
+  "source_matrix": "verification/differential-interactions/matrix-v1.json",
+  "profile": "P1-core-source-wasm",
+  "seed": 125,
+  "size": 8,
+  "cases_per_arm": 16,
+  "selected_cells": [
+    "P1/plain/small/preserved_prefix_multiple",
+    "P1/plain/zero_negative_one/ordered_single",
+    "P1/quoted/min_max_wrap/ordered_single",
+    "P1/composed/min_max_wrap/ordered_single"
+  ],
+  "plausible_allocation": "four attempts per selected cell, with a typed, cell-preserving generator for the varied input; attempts are counted even if refused",
+  "current_allocation": "the first 16 cases from the existing seeded foundation generator with seed 125",
+  "total_budget": "16 source-case executions per arm in each of opt-off and opt-on, not including the fixed legacy refusal and oracle controls, plus up to 48 shrink candidates for one attributed failure",
+  "required_controls": [
+    "positive reference equality and a deliberately false mutant property",
+    "no admitted shrink into a different profile, missing reached feature, dropped premise, or unrelated failure",
+    "proof gate rejects a test-passing tactic with sorryAx",
+    "fresh process replays retained original and minimized case bytes without generation"
+  ],
+  "decision": {
+    "adopt": "All selected cells reached, both comparison modes admit and match every generated case, all controls pass, independent mutant detected, and Plausible reaches at least two more selected cells than current generation at the same case budget; shrink never grows the witness.",
+    "retain_current": "All safety and provenance controls pass, but Plausible improves fewer than two selected-cell reaches or distinct attributed failures over the current generator; keep the existing generator as default.",
+    "no_go": "Any provenance, independence, proof-gate, replay, mutant-sensitivity or shrink-admission control fails, or no generated case is accepted; do not use Plausible-generated inputs as qualification evidence."
+  },
+  "unsupported": ["P2 F32 graph", "per-run runtime fuel override", "parameter snapshot", "universal model/executable correspondence"]
+}

@@ -378,6 +378,22 @@ try {
   requireThat(cases.slice(0, count).every(c => c.expected.outcome === 'normal'), 'generator produced an unexpected refusal');
   const imported = cases.filter(c => c.origin && !c.invalidControl);
   const invalidImported = cases.filter(c => c.origin && c.invalidControl);
+  const pilot = imported.filter(c => c.origin.unit === 'issue125-plausible-v1');
+  if (pilot.length) {
+    const protocol = JSON.parse(readFileSync(join(root,
+      'verification/differential-interactions/plausible/matrix-v1.json')));
+    requireThat(protocol.schema === 'noble-plausible-interaction-pilot/v1' &&
+      seed === BigInt(protocol.seed) && count === protocol.cases_per_arm &&
+      pilot.length === protocol.cases_per_arm && pilot.length === imported.length &&
+      pilot.every(c => p1Eligible(c) && protocol.selected_cells.includes(c.interaction.cell)) &&
+      invalidImported.length === 1 && invalidImported[0].origin.unit === 'issue125-p1-invalid-control',
+    'Plausible pilot import differs from its frozen typed 16-case protocol');
+    const counts = new Map();
+    for (const c of pilot) counts.set(c.interaction.cell, (counts.get(c.interaction.cell) ?? 0) + 1);
+    requireThat(protocol.selected_cells.every(cell => counts.get(cell) === 4) &&
+      counts.size === protocol.selected_cells.length,
+    'Plausible pilot did not allocate four actual generated cases per selected cell');
+  }
   requireThat(imported.every(c => c.expected.outcome === 'normal'), 'an imported case is not a normal reference run');
   requireThat(invalidImported.every(c => c.expected.outcome === 'reject'),
     'an imported one-premise invalid control did not refuse in the independent reference');
@@ -537,6 +553,7 @@ try {
   };
   const p1Rows = receipt.cases.filter(entry => entry.interaction?.profile === 'P1-core-source-wasm' && entry.interaction.cell);
   if (p1Rows.length) {
+    const pilotRun = pilot.length > 0;
     const cells = new Map();
     for (const row of p1Rows) {
       const existing = cells.get(row.interaction.cell) ?? { cell: row.interaction.cell, selected: true, runs: [] };
@@ -547,7 +564,8 @@ try {
       cells.set(row.interaction.cell, existing);
     }
     const selectedCells = [...cells.values()].sort((a, b) => a.cell.localeCompare(b.cell)).map(cell => ({
-      ...cell, reached: cell.runs.length === 2 && cell.runs.every(run => run.reached && run.matched),
+      ...cell, reached: cell.runs.length === (pilotRun ? 8 : 2) &&
+        cell.runs.every(run => run.reached && run.matched),
     }));
     receipt.interaction_matrix = {
       profile: 'P1-core-source-wasm', version: 1, selected: selectedCells.length,
@@ -565,9 +583,10 @@ try {
     };
     const invalidRows = receipt.cases.filter(row => row.corpus_unit?.unit === 'issue125-p1-invalid-control');
     receipt.p1_budget = { kind: 'frozen-case-count-per-optimization-mode',
-      selected_case_limit: 18, selected_cases: selectedCells.length,
-      observed: { opt_off: selectedCells.length, opt_on: selectedCells.length },
-      budget_boundary_reached: selectedCells.length === 18,
+      selected_case_limit: pilotRun ? 16 : 18, selected_cases: pilotRun ? pilot.length : selectedCells.length,
+      observed: { opt_off: pilotRun ? pilot.length : selectedCells.length,
+        opt_on: pilotRun ? pilot.length : selectedCells.length },
+      budget_boundary_reached: (pilotRun ? pilot.length === 16 : selectedCells.length === 18),
       runtime_fuel_boundary_supported: false,
       note: 'The foundation CLI differential observer has no per-run fuel override; this boundary is the frozen case-work budget.' };
     receipt.p1_invalid_control = { selected: invalidRows.length,
@@ -578,8 +597,9 @@ try {
       refused_invalid_variants: invalidRows.filter(row => row.observed.outcome === 'reject' && row.matched).length,
       exhausted_runs: selectedCells.filter(cell => cell.runs.some(run => run.admission_outcome === 'runtime-exhausted')).length,
       unsupported_variants: 1 };
-    if (!mutationProbe) requireThat(selectedCells.length === 18 && selectedCells.every(cell => cell.reached),
-      `P1 interaction matrix incomplete: reached ${selectedCells.filter(cell => cell.reached).length}/18`);
+    if (!mutationProbe) requireThat(selectedCells.length === (pilotRun ? 4 : 18) &&
+      selectedCells.every(cell => cell.reached),
+    `P1 interaction matrix incomplete: reached ${selectedCells.filter(cell => cell.reached).length}/${pilotRun ? 4 : 18}`);
     if (!mutationProbe) requireThat(receipt.p1_invalid_control.refused,
       'P1 one-premise invalid control did not reach the expected frontend refusal');
 
@@ -615,13 +635,13 @@ try {
     receipt.generator_comparison = {
       profiles_separate: true,
       same_compute_seed_budget: { seed: String(seed), cases_per_mode: count, opt_modes: ['off', 'on'],
-        current_generator_case_runs: count * 2, structured_extension_case_runs: selectedCells.length * 2,
-        equal_case_run_budget: count === selectedCells.length },
+        current_generator_case_runs: count * 2, structured_extension_case_runs: (pilotRun ? pilot.length : selectedCells.length) * 2,
+        equal_case_run_budget: count === (pilotRun ? pilot.length : selectedCells.length) },
       current_generator: { classified_cells: randomCells.size, reached_cells: [...randomCells]
           .filter(([, reached]) => reached).map(([cell]) => cell).sort(),
         classified_cell_observation: 'seeded case model plus successful exact source execution and positive runtime steps; no operator trace',
         distinct_attributed_failures: randomFailures },
-      structured_extension: { selected_cells: selectedCells.length,
+      structured_extension: { selected_cells: selectedCells.length, generated_cases: pilotRun ? pilot.length : selectedCells.length,
         reached_cells: selectedCells.filter(cell => cell.reached).map(cell => cell.cell),
         witness_kind: 'frozen interaction model plus positive execution steps and property comparison; no operator trace',
         distinct_attributed_failures: structuredFailures },

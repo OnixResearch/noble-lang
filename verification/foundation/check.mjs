@@ -109,6 +109,21 @@ function theoremInventoryViolations(declared, privateDeclared, inventory) {
   return violations;
 }
 
+// The same axiom admission check serves the full inventory and an external
+// test-only diagnostic: a passing randomized tactic must not certify a theorem.
+function checkedAxioms(name, printed, allowed) {
+  let axioms;
+  if (/does not depend on any axioms/.test(printed)) axioms = [];
+  else {
+    const list = printed.match(/depends on axioms: \[([\s\S]*)\]/);
+    requireThat(list, `${name}: unparsable axioms: ${printed}`);
+    axioms = list[1].split(',').map(s => s.trim()).filter(Boolean);
+  }
+  const extra = axioms.filter(axiom => !allowed.has(axiom));
+  requireThat(extra.length === 0, `${name}: disallowed axioms ${extra.join(', ')}`);
+  return axioms;
+}
+
 // The reviewer's bypass, its controls, and the comment-only declaration control.
 function runSelfTest() {
   const cases = [];
@@ -175,6 +190,27 @@ function run(command, args, options = {}) {
 
 const args = process.argv.slice(2);
 if (args.includes('--self-test')) runSelfTest();
+if (args[0] === '--negative-axioms' && args.length === 2) {
+  // Feed the real `lean --json` output of a scratch tactic proof through the
+  // precise predicate used on every inventoried foundation theorem below.
+  try {
+    const records = readFileSync(args[1], 'utf8').split('\n').filter(Boolean).map(JSON.parse);
+    const printed = records.find(record => record.severity === 'information' &&
+      /depends on axioms:/.test(record.data))?.data;
+    requireThat(printed, 'negative axiom control lacks a Lean axiom diagnostic');
+    const inventory = JSON.parse(readFileSync(join(project, 'inventory.json')));
+    checkedAxioms('negative-tactic-control', printed, new Set(inventory.allowed_axioms));
+    console.error('[foundation] FAIL negative axiom control was accepted');
+    process.exit(1);
+  } catch (error) {
+    if (/disallowed axioms .*sorryAx/.test(error.message)) {
+      console.error(`[foundation] REFUSED ${error.message}`);
+      process.exit(1);
+    }
+    console.error(`[foundation] FAIL ${error.message}`);
+    process.exit(2);
+  }
+}
 const allowDirty = args[0] === '--allow-dirty' ? (args.shift(), true) : false;
 requireThat(args.length === 0 || (args.length === 2 && args[0] === '--output'),
   'usage: check.mjs [--allow-dirty] [--output NEW_DIR]');
@@ -273,15 +309,7 @@ try {
   const theorems = inventory.theorems.map(entry => {
     const record = records[entry.name] ?? {};
     requireThat(record.check && record.axioms, `${entry.name}: missing audit output`);
-    let axioms;
-    if (/does not depend on any axioms/.test(record.axioms)) axioms = [];
-    else {
-      const list = record.axioms.match(/depends on axioms: \[([\s\S]*)\]/);
-      requireThat(list, `${entry.name}: unparsable axioms: ${record.axioms}`);
-      axioms = list[1].split(',').map(s => s.trim()).filter(Boolean);
-    }
-    const extra = axioms.filter(axiom => !allowed.has(axiom));
-    requireThat(extra.length === 0, `${entry.name}: disallowed axioms ${extra.join(', ')}`);
+    const axioms = checkedAxioms(entry.name, record.axioms, allowed);
     return { ...entry, status: 'proved', statement: record.check.replace(/\s+/g, ' '), axioms };
   });
 
