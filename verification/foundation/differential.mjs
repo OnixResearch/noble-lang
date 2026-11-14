@@ -31,6 +31,7 @@ import { fileURLToPath } from 'node:url';
 import { MIN, MAX, wrap, refRun, opSource, opsSource, leanInt, leanOps, leanList, prng } from './arithmetic.mjs';
 import { buildCli, createCliObserver, matchesScalar } from './execution.mjs';
 import { shrinkCandidates } from './shrinking.mjs';
+import { verifyRequiredDifferentialControls } from './control-ids.mjs';
 import { p1Eligible, p1RandomCell, structuredP1Cases } from '../differential-interactions/p1-cases.mjs';
 
 const root = resolve(fileURLToPath(import.meta.url), '../../..');
@@ -52,6 +53,7 @@ const theoremsUsed = ['NobleFoundation.PExpr.exec_inputs_run', 'NobleFoundation.
 const boundSources = [
   'verification/foundation/differential.mjs', 'verification/foundation/arithmetic.mjs',
   'verification/foundation/execution.mjs', 'verification/foundation/shrinking.mjs',
+  'verification/foundation/control-ids.mjs',
   'verification/differential-interactions/p1-cases.mjs', 'verification/differential-interactions/matrix-v1.json',
   'verification/differential-interactions/mutants-v1.json', 'verification/differential-interactions/replay-p1.mjs',
   'verification/differential-interactions/mutant-runner.mjs',
@@ -677,6 +679,7 @@ try {
     lean_case_rebinding_rejected: staleRejected, foundation_tree_mismatch_rejected: staleFoundationRejected,
     demonstrably_fails: staleRejected && staleFoundationRejected });
   requireThat(staleRejected && staleFoundationRejected, 'stale proof subject control did not fail');
+  receipt.required_negative_controls = verifyRequiredDifferentialControls(controls);
   receipt.controls = controls;
   } else {
     receipt.controls = { skipped: true, reason: 'mutant outcome is classified by the issue-125 semantic witness' };

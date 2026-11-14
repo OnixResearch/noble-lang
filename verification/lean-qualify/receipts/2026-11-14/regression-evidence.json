@@ -1,0 +1,201 @@
+{
+  "schema": "noble-lean-qualification-synthetic-regression/v1",
+  "source_revision": "32c909a31a92dbb4e93c8993e7372ab13036eb4c",
+  "fixture": "isolated local Git revisions with declared outcomes, not complete proof/replay executions",
+  "toolchain": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+  "history": [
+    {
+      "revision": "821044cc6a2ef5408a717744acbcebdb40f754a8",
+      "index": 0,
+      "outcome": "pass",
+      "toolchain": "leanprover/lean4:v4.35.0"
+    },
+    {
+      "revision": "6fcae8b038d60275bf0c4dbb7a6b5ca4810bb51f",
+      "index": 1,
+      "outcome": "pass",
+      "toolchain": "leanprover/lean4:v4.35.0"
+    },
+    {
+      "revision": "c5ecb81172ef437a0694a7a5c6f26b4709fa9b07",
+      "index": 2,
+      "outcome": "pass",
+      "toolchain": "leanprover/lean4:v4.35.0"
+    },
+    {
+      "revision": "110fde509812b137ec6d289380404cbb78ecc86e",
+      "index": 3,
+      "outcome": "fail",
+      "toolchain": "leanprover/lean4:v4.35.0"
+    },
+    {
+      "revision": "cd1afb641d3d98db8e8d11eddfd646d3c153c493",
+      "index": 4,
+      "outcome": "pass",
+      "toolchain": "leanprover/lean4:v4.35.0"
+    },
+    {
+      "revision": "752f5431630930e0c6ba7979a9de99f3f7d57199",
+      "index": 5,
+      "outcome": "fail",
+      "toolchain": "leanprover/lean4:v4.35.0"
+    },
+    {
+      "revision": "8abfec5a0e52a29e7ea5f28d6ec1fd7b85646a1d",
+      "index": 6,
+      "outcome": "fail",
+      "toolchain": "leanprover/lean4:v4.35.0"
+    }
+  ],
+  "monotone_bisection": {
+    "qualified": true,
+    "algorithm": "native-binary-search-monotonic-assumption",
+    "boundary": {
+      "last_good": "c5ecb81172ef437a0694a7a5c6f26b4709fa9b07",
+      "first_bad": "110fde509812b137ec6d289380404cbb78ecc86e"
+    },
+    "probes": [
+      {
+        "revision": "821044cc6a2ef5408a717744acbcebdb40f754a8",
+        "toolchain": "leanprover/lean4:v4.35.0",
+        "outcome": "pass",
+        "details": {
+          "commit": "821044cc6a2ef5408a717744acbcebdb40f754a8"
+        }
+      },
+      {
+        "revision": "110fde509812b137ec6d289380404cbb78ecc86e",
+        "toolchain": "leanprover/lean4:v4.35.0",
+        "outcome": "fail",
+        "details": {
+          "commit": "110fde509812b137ec6d289380404cbb78ecc86e"
+        }
+      },
+      {
+        "revision": "6fcae8b038d60275bf0c4dbb7a6b5ca4810bb51f",
+        "toolchain": "leanprover/lean4:v4.35.0",
+        "outcome": "pass",
+        "details": {
+          "commit": "6fcae8b038d60275bf0c4dbb7a6b5ca4810bb51f"
+        }
+      },
+      {
+        "revision": "c5ecb81172ef437a0694a7a5c6f26b4709fa9b07",
+        "toolchain": "leanprover/lean4:v4.35.0",
+        "outcome": "pass",
+        "details": {
+          "commit": "c5ecb81172ef437a0694a7a5c6f26b4709fa9b07"
+        }
+      }
+    ]
+  },
+  "nonmonotone_bisection": {
+    "qualified": true,
+    "algorithm": "native-binary-search-monotonic-assumption",
+    "boundary": {
+      "last_good": "c5ecb81172ef437a0694a7a5c6f26b4709fa9b07",
+      "first_bad": "110fde509812b137ec6d289380404cbb78ecc86e"
+    },
+    "probes": [
+      {
+        "revision": "821044cc6a2ef5408a717744acbcebdb40f754a8",
+        "toolchain": "leanprover/lean4:v4.35.0",
+        "outcome": "pass",
+        "details": null
+      },
+      {
+        "revision": "8abfec5a0e52a29e7ea5f28d6ec1fd7b85646a1d",
+        "toolchain": "leanprover/lean4:v4.35.0",
+        "outcome": "fail",
+        "details": null
+      },
+      {
+        "revision": "110fde509812b137ec6d289380404cbb78ecc86e",
+        "toolchain": "leanprover/lean4:v4.35.0",
+        "outcome": "fail",
+        "details": null
+      },
+      {
+        "revision": "6fcae8b038d60275bf0c4dbb7a6b5ca4810bb51f",
+        "toolchain": "leanprover/lean4:v4.35.0",
+        "outcome": "pass",
+        "details": null
+      },
+      {
+        "revision": "c5ecb81172ef437a0694a7a5c6f26b4709fa9b07",
+        "toolchain": "leanprover/lean4:v4.35.0",
+        "outcome": "pass",
+        "details": null
+      }
+    ]
+  },
+  "linear_scan": {
+    "qualified": true,
+    "algorithm": "linear-scan-every-revision",
+    "baseline_good": true,
+    "transitions": [
+      {
+        "from": "pass",
+        "to": "fail",
+        "from_revision": "c5ecb81172ef437a0694a7a5c6f26b4709fa9b07",
+        "to_revision": "110fde509812b137ec6d289380404cbb78ecc86e"
+      },
+      {
+        "from": "fail",
+        "to": "pass",
+        "from_revision": "110fde509812b137ec6d289380404cbb78ecc86e",
+        "to_revision": "cd1afb641d3d98db8e8d11eddfd646d3c153c493"
+      },
+      {
+        "from": "pass",
+        "to": "fail",
+        "from_revision": "cd1afb641d3d98db8e8d11eddfd646d3c153c493",
+        "to_revision": "752f5431630930e0c6ba7979a9de99f3f7d57199"
+      }
+    ],
+    "probes": [
+      {
+        "revision": "821044cc6a2ef5408a717744acbcebdb40f754a8",
+        "toolchain": "leanprover/lean4:v4.35.0",
+        "outcome": "pass",
+        "details": null
+      },
+      {
+        "revision": "6fcae8b038d60275bf0c4dbb7a6b5ca4810bb51f",
+        "toolchain": "leanprover/lean4:v4.35.0",
+        "outcome": "pass",
+        "details": null
+      },
+      {
+        "revision": "c5ecb81172ef437a0694a7a5c6f26b4709fa9b07",
+        "toolchain": "leanprover/lean4:v4.35.0",
+        "outcome": "pass",
+        "details": null
+      },
+      {
+        "revision": "110fde509812b137ec6d289380404cbb78ecc86e",
+        "toolchain": "leanprover/lean4:v4.35.0",
+        "outcome": "fail",
+        "details": null
+      },
+      {
+        "revision": "cd1afb641d3d98db8e8d11eddfd646d3c153c493",
+        "toolchain": "leanprover/lean4:v4.35.0",
+        "outcome": "pass",
+        "details": null
+      },
+      {
+        "revision": "752f5431630930e0c6ba7979a9de99f3f7d57199",
+        "toolchain": "leanprover/lean4:v4.35.0",
+        "outcome": "fail",
+        "details": null
+      },
+      {
+        "revision": "8abfec5a0e52a29e7ea5f28d6ec1fd7b85646a1d",
+        "toolchain": "leanprover/lean4:v4.35.0",
+        "outcome": "fail",
+        "details": null
+      }
+    ]
+  }
+}

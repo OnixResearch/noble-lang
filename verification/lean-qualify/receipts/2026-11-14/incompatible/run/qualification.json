@@ -1,0 +1,300 @@
+{
+  "schema": "noble-lean-qualification/v1",
+  "plan": "/home/brittonr/.cache/noble-iss/scratch/qualify-126/incompatible-final-plan-32c909a/plan.json",
+  "plan_sha256": "286c7defd16425d032f880175d71cc87cbc98ed5dbc78100f4f04807bceb4c02",
+  "source_revision": "9b619aac3113560c87d037eb44430837fdc475ff",
+  "source_tree": "6c897a63cdc75d87b933eaf23a3233814d346f60",
+  "profile": {
+    "name": "inets-foundation",
+    "explanation": "Foundation build/inventory/axiom gate and its seeded differential replay; omits the M3/Aeneas consumer build because its checked-in Aeneas cache trace is for a different build context and rebuilding Aeneas is forbidden.",
+    "projects": [
+      "proofs/foundation"
+    ],
+    "proof_sources": [
+      "proofs/mc1"
+    ],
+    "required_checkers": [
+      "verification/foundation/check.mjs",
+      "verification/foundation/differential.mjs"
+    ],
+    "required_tools": [
+      "lean",
+      "node",
+      "quality_rust",
+      "binaryen",
+      "wasm_tools"
+    ]
+  },
+  "candidate_patch": {
+    "path": "candidate.patch",
+    "sha256": "107d57456f286ca219aa8909b7e772316f657c4f2c4fff04fe96e9c9a51ff103"
+  },
+  "candidate_change_classes": {
+    "proposed_pin_changes": [
+      "proofs/foundation/lean-toolchain"
+    ],
+    "proof_only_repairs": [],
+    "semantic_changes": [],
+    "verifier_policy_changes": []
+  },
+  "proposed_pin_changes": [
+    "proofs/foundation/lean-toolchain"
+  ],
+  "proof_only_repairs": [],
+  "semantic_changes": [],
+  "verifier_policy_changes": [],
+  "pre_update_plan": {
+    "evaluator": "native data-only Lakefile parser; no Lakefile or package code executed",
+    "limitations": [
+      "Dynamic Lean lakefile declarations and dependencies introduced only by a newly resolved upstream package cannot be predicted by the static pre-update plan.",
+      "After the approved source diff, Lake resolution is run in the disposable proposal worktree and its complete manifest is compared exactly with this prediction."
+    ],
+    "discrepancies": [],
+    "toolchain_discrepancies": [
+      {
+        "side": "proposal",
+        "project": "proofs/foundation",
+        "package": "aeneas",
+        "consumer_toolchain": "leanprover/lean4:v4.36.0-rc2",
+        "dependency_toolchain": "leanprover/lean4:v4.35.0",
+        "kind": "lean-library-toolchain-mismatch"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/foundation",
+        "package": "aesop",
+        "consumer_toolchain": "leanprover/lean4:v4.36.0-rc2",
+        "dependency_toolchain": "leanprover/lean4:v4.35.0",
+        "kind": "lean-library-toolchain-mismatch"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/foundation",
+        "package": "batteries",
+        "consumer_toolchain": "leanprover/lean4:v4.36.0-rc2",
+        "dependency_toolchain": "leanprover/lean4:v4.35.0",
+        "kind": "lean-library-toolchain-mismatch"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/foundation",
+        "package": "Cli",
+        "consumer_toolchain": "leanprover/lean4:v4.36.0-rc2",
+        "dependency_toolchain": "leanprover/lean4:v4.35.0",
+        "kind": "lean-library-toolchain-mismatch"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/foundation",
+        "package": "importGraph",
+        "consumer_toolchain": "leanprover/lean4:v4.36.0-rc2",
+        "dependency_toolchain": "leanprover/lean4:v4.35.0",
+        "kind": "lean-library-toolchain-mismatch"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/foundation",
+        "package": "LeanSearchClient",
+        "consumer_toolchain": "leanprover/lean4:v4.36.0-rc2",
+        "dependency_toolchain": "leanprover/lean4:v4.35.0",
+        "kind": "lean-library-toolchain-mismatch"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/foundation",
+        "package": "mathlib",
+        "consumer_toolchain": "leanprover/lean4:v4.36.0-rc2",
+        "dependency_toolchain": "leanprover/lean4:v4.35.0",
+        "kind": "lean-library-toolchain-mismatch"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/foundation",
+        "package": "plausible",
+        "consumer_toolchain": "leanprover/lean4:v4.36.0-rc2",
+        "dependency_toolchain": "leanprover/lean4:v4.35.0",
+        "kind": "lean-library-toolchain-mismatch"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/foundation",
+        "package": "proofwidgets",
+        "consumer_toolchain": "leanprover/lean4:v4.36.0-rc2",
+        "dependency_toolchain": "leanprover/lean4:v4.35.0",
+        "kind": "lean-library-toolchain-mismatch"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/foundation",
+        "package": "Qq",
+        "consumer_toolchain": "leanprover/lean4:v4.36.0-rc2",
+        "dependency_toolchain": "leanprover/lean4:v4.35.0",
+        "kind": "lean-library-toolchain-mismatch"
+      }
+    ],
+    "incomplete_upstream_configs": [
+      {
+        "side": "baseline",
+        "project": "proofs/foundation",
+        "package": "aeneas",
+        "config_path": "backends/lean/lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      },
+      {
+        "side": "baseline",
+        "project": "proofs/foundation",
+        "package": "aesop",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "baseline",
+        "project": "proofs/foundation",
+        "package": "importGraph",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "baseline",
+        "project": "proofs/foundation",
+        "package": "mathlib",
+        "config_path": "lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      },
+      {
+        "side": "baseline",
+        "project": "proofs/m3",
+        "package": "aeneas",
+        "config_path": "backends/lean/lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      },
+      {
+        "side": "baseline",
+        "project": "proofs/m3",
+        "package": "aesop",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "baseline",
+        "project": "proofs/m3",
+        "package": "importGraph",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "baseline",
+        "project": "proofs/m3",
+        "package": "mathlib",
+        "config_path": "lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/foundation",
+        "package": "aeneas",
+        "config_path": "backends/lean/lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/foundation",
+        "package": "aesop",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/foundation",
+        "package": "importGraph",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/foundation",
+        "package": "mathlib",
+        "config_path": "lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/m3",
+        "package": "aeneas",
+        "config_path": "backends/lean/lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/m3",
+        "package": "aesop",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/m3",
+        "package": "importGraph",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/m3",
+        "package": "mathlib",
+        "config_path": "lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      }
+    ]
+  },
+  "policy": {
+    "adapters": "native implementation; paranoid-lake-update and hopscotch are not used",
+    "localization": "native monotone bisection plus a complete linear scan; bisection assumes a good start and monotonic outcomes"
+  },
+  "baseline": null,
+  "proposal": null,
+  "localization": {
+    "status": "not-requested",
+    "probes": []
+  },
+  "target_dir": "/dev/shm/noble-iss/target/qualify-126",
+  "source_preservation": {
+    "before": {
+      "head": "32c909a31a92dbb4e93c8993e7372ab13036eb4c",
+      "tree": "65905a5e282292d01b748e19f30cec6cda030bd9",
+      "status": ""
+    },
+    "after": {
+      "head": "32c909a31a92dbb4e93c8993e7372ab13036eb4c",
+      "tree": "65905a5e282292d01b748e19f30cec6cda030bd9",
+      "status": ""
+    },
+    "unchanged": true
+  },
+  "qualification_status": "unqualified",
+  "diagnostics": [
+    {
+      "code": "PLAN_BLOCKED",
+      "stage": null,
+      "message": "pre-update plan has blockers and cannot be qualified: [{\"code\":\"INCOMPATIBLE_LEAN_LIBRARY\",\"side\":\"proposal\",\"project\":\"proofs/foundation\",\"package\":\"aeneas\",\"consumer_toolchain\":\"leanprover/lean4:v4.36.0-rc2\",\"dependency_toolchain\":\"leanprover/lean4:v4.35.0\",\"kind\":\"lean-library-toolchain-mismatch\",\"message\":\"aeneas selects leanprover/lean4:v4.35.0, but its consumer selects leanprover/lean4:v4.36.0-rc2\"},{\"code\":\"INCOMPATIBLE_LEAN_LIBRARY\",\"side\":\"proposal\",\"project\":\"proofs/foundation\",\"package\":\"aesop\",\"consumer_toolchain\":\"leanprover/lean4:v4.36.0-rc2\",\"dependency_toolchain\":\"leanprover/lean4:v4.35.0\",\"kind\":\"lean-library-toolchain-mismatch\",\"message\":\"aesop selects leanprover/lean4:v4.35.0, but its consumer selects leanprover/lean4:v4.36.0-rc2\"},{\"code\":\"INCOMPATIBLE_LEAN_LIBRARY\",\"side\":\"proposal\",\"project\":\"proofs/foundation\",\"package\":\"batteries\",\"consumer_toolchain\":\"leanprover/lean4:v4.36.0-rc2\",\"dependency_toolchain\":\"leanprover/lean4:v4.35.0\",\"kind\":\"lean-library-toolchain-mismatch\",\"message\":\"batteries selects leanprover/lean4:v4.35.0, but its consumer selects leanprover/lean4:v4.36.0-rc2\"},{\"code\":\"INCOMPATIBLE_LEAN_LIBRARY\",\"side\":\"proposal\",\"project\":\"proofs/foundation\",\"package\":\"Cli\",\"consumer_toolchain\":\"leanprover/lean4:v4.36.0-rc2\",\"dependency_toolchain\":\"leanprover/lean4:v4.35.0\",\"kind\":\"lean-library-toolchain-mismatch\",\"message\":\"Cli selects leanprover/lean4:v4.35.0, but its consumer selects leanprover/lean4:v4.36.0-rc2\"},{\"code\":\"INCOMPATIBLE_LEAN_LIBRARY\",\"side\":\"proposal\",\"project\":\"proofs/foundation\",\"package\":\"importGraph\",\"consumer_toolchain\":\"leanprover/lean4:v4.36.0-rc2\",\"dependency_toolchain\":\"leanprover/lean4:v4.35.0\",\"kind\":\"lean-library-toolchain-mismatch\",\"message\":\"importGraph selects leanprover/lean4:v4.35.0, but its consumer selects leanprover/lean4:v4.36.0-rc2\"},{\"code\":\"INCOMPATIBLE_LEAN_LIBRARY\",\"side\":\"proposal\",\"project\":\"proofs/foundation\",\"package\":\"LeanSearchClient\",\"consumer_toolchain\":\"leanprover/lean4:v4.36.0-rc2\",\"dependency_toolchain\":\"leanprover/lean4:v4.35.0\",\"kind\":\"lean-library-toolchain-mismatch\",\"message\":\"LeanSearchClient selects leanprover/lean4:v4.35.0, but its consumer selects leanprover/lean4:v4.36.0-rc2\"},{\"code\":\"INCOMPATIBLE_LEAN_LIBRARY\",\"side\":\"proposal\",\"project\":\"proofs/foundation\",\"package\":\"mathlib\",\"consumer_toolchain\":\"leanprover/lean4:v4.36.0-rc2\",\"dependency_toolchain\":\"leanprover/lean4:v4.35.0\",\"kind\":\"lean-library-toolchain-mismatch\",\"message\":\"mathlib selects leanprover/lean4:v4.35.0, but its consumer selects leanprover/lean4:v4.36.0-rc2\"},{\"code\":\"INCOMPATIBLE_LEAN_LIBRARY\",\"side\":\"proposal\",\"project\":\"proofs/foundation\",\"package\":\"plausible\",\"consumer_toolchain\":\"leanprover/lean4:v4.36.0-rc2\",\"dependency_toolchain\":\"leanprover/lean4:v4.35.0\",\"kind\":\"lean-library-toolchain-mismatch\",\"message\":\"plausible selects leanprover/lean4:v4.35.0, but its consumer selects leanprover/lean4:v4.36.0-rc2\"},{\"code\":\"INCOMPATIBLE_LEAN_LIBRARY\",\"side\":\"proposal\",\"project\":\"proofs/foundation\",\"package\":\"proofwidgets\",\"consumer_toolchain\":\"leanprover/lean4:v4.36.0-rc2\",\"dependency_toolchain\":\"leanprover/lean4:v4.35.0\",\"kind\":\"lean-library-toolchain-mismatch\",\"message\":\"proofwidgets selects leanprover/lean4:v4.35.0, but its consumer selects leanprover/lean4:v4.36.0-rc2\"},{\"code\":\"INCOMPATIBLE_LEAN_LIBRARY\",\"side\":\"proposal\",\"project\":\"proofs/foundation\",\"package\":\"Qq\",\"consumer_toolchain\":\"leanprover/lean4:v4.36.0-rc2\",\"dependency_toolchain\":\"leanprover/lean4:v4.35.0\",\"kind\":\"lean-library-toolchain-mismatch\",\"message\":\"Qq selects leanprover/lean4:v4.35.0, but its consumer selects leanprover/lean4:v4.36.0-rc2\"}]"
+    }
+  ],
+  "completed_at": "2026-11-14T22:56:17.974Z",
+  "report_sha256": "354779e8abb27fe4976cbe2a342f3739c4b8d993c0d87724089ebac19c9c082d"
+}

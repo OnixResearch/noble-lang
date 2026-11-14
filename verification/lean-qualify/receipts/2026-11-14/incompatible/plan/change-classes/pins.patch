@@ -1,0 +1,7 @@
+diff --git a/proofs/foundation/lean-toolchain b/proofs/foundation/lean-toolchain
+index a6aff065..0fc43369 100644
+--- a/proofs/foundation/lean-toolchain
++++ b/proofs/foundation/lean-toolchain
+@@ -1 +1 @@
+-leanprover/lean4:v4.35.0
++leanprover/lean4:v4.36.0-rc2

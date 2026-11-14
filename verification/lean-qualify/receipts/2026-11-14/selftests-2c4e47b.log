@@ -1,0 +1,26 @@
+✔ Lakefile dependency plan is data-only and records manifest omissions (3.835983ms)
+✔ exact manifest comparison names newly resolved upstream dependencies (11.499082ms)
+✔ no-op planning retains empty source changes and complete consumer pins (3934.415133ms)
+✔ incompatible Lean/library pairs are identified before any build (0.339886ms)
+✔ Lake update discovers a dependency added by an upstream package outside the pinned manifest (2730.587111ms)
+✔ native bisection verifies a good baseline and localizes the seeded mid-range regression (25.371241ms)
+✔ fail-then-pass sequence exposes bisection limits and linear scan certifies every revision (43.047753ms)
+✔ candidate change classification keeps pins, semantics, and verifier policy separate (4.511456ms)
+✔ exporter profile refuses qualification without an explicitly pinned required checker (1731.172343ms)
+✔ core profile keeps all existing proof, inventory, axiom, and replay checks mandatory (0.314979ms)
+✔ foundation compatibility profile does not build M3/Aeneas but retains its pin evidence (0.234639ms)
+✔ differential replay process receives a sanitized environment (0.170538ms)
+✔ differential gate rejects a missing required negative control (0.654824ms)
+✔ foundation gate self-test refuses a missing theorem root and an extra axiom (53.343144ms)
+✔ Lake rejects a stale compiled artifact and a missing imported module (2513.75755ms)
+✔ package build cache copies are private and cache changes are reported (108.141459ms)
+✔ a missing tool spawn leaves the fixture tree byte-identical (36.345501ms)
+✔ SIGINT cancellation terminates an active child and leaves the fixture tree byte-identical (130.436549ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11754.942708

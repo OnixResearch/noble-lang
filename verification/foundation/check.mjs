@@ -87,6 +87,28 @@ function declarationsOf(text) {
   return found;
 }
 
+function theoremInventoryViolations(declared, privateDeclared, inventory) {
+  if (!Array.isArray(inventory.theorems)) return ['inventory theorems is not a list'];
+  const names = inventory.theorems.map(t => t.name);
+  const privateNames = inventory.private_theorems ?? [];
+  if (!Array.isArray(privateNames)) return ['inventory private_theorems is not a list'];
+  const violations = [];
+  if (new Set(names).size !== names.length) violations.push('duplicate inventory names');
+  if (new Set(privateNames).size !== privateNames.length) violations.push('duplicate inventory private names');
+  if (privateNames.some(name => names.includes(name))) violations.push('a private theorem is inventoried as public');
+  const unlisted = declared.filter(name => !names.includes(name));
+  const missing = names.filter(name => !declared.includes(name));
+  if (unlisted.length) violations.push(`theorems missing from inventory: ${unlisted.join(', ')}`);
+  if (missing.length) violations.push(`inventory names not declared: ${missing.join(', ')}`);
+  const unlistedPrivate = privateDeclared.filter(name => !privateNames.includes(name));
+  const missingPrivate = privateNames.filter(name => !privateDeclared.includes(name));
+  if (unlistedPrivate.length) violations.push(
+    `private theorems missing from inventory.private_theorems: ${unlistedPrivate.join(', ')}`);
+  if (missingPrivate.length) violations.push(
+    `inventory.private_theorems not declared: ${missingPrivate.join(', ')}`);
+  return violations;
+}
+
 // The reviewer's bypass, its controls, and the comment-only declaration control.
 function runSelfTest() {
   const cases = [];
@@ -123,6 +145,21 @@ function runSelfTest() {
       && split.public.join() === 'NobleFoundation.shown',
     declared: split,
   });
+  const extraAxiom = hygieneViolations('extra-axiom.lean', 'axiom externalClaim : True\n');
+  cases.push({ case: 'extra axiom declaration is refused',
+    refused: extraAxiom.some(violation => violation.includes('declares an axiom')), violations: extraAxiom });
+  const missingModule = theoremInventoryViolations([], [], {
+    theorems: [{ name: 'NobleFoundation.Removed.proof' }], private_theorems: [],
+  });
+  cases.push({ case: 'missing module removes its inventoried theorem root',
+    refused: missingModule.some(violation => violation.includes('inventory names not declared')),
+    violations: missingModule });
+  const changedRoot = theoremInventoryViolations(['DifferentRoot.proof'], [], {
+    theorems: [{ name: 'NobleFoundation.Checked.proof' }], private_theorems: [],
+  });
+  cases.push({ case: 'changed theorem root does not satisfy the inventory',
+    refused: changedRoot.some(violation => violation.includes('inventory names not declared')),
+    violations: changedRoot });
   const passed = cases.every(entry => entry.refused);
   console.log(JSON.stringify({ self_test: passed, cases }, null, 2));
   process.exit(passed ? 0 : 1);
@@ -205,23 +242,9 @@ try {
     readFileSync(vendored, 'utf8'));
   requireThat(vendoredViolations.length === 0, vendoredViolations.join('; '));
   const inventory = JSON.parse(readFileSync(join(project, 'inventory.json')));
+  const inventoryViolations = theoremInventoryViolations(declared, privateDeclared, inventory);
+  requireThat(inventoryViolations.length === 0, inventoryViolations.join('; '));
   const names = inventory.theorems.map(t => t.name);
-  requireThat(new Set(names).size === names.length, 'duplicate inventory names');
-  const privateNames = inventory.private_theorems ?? [];
-  requireThat(Array.isArray(privateNames), 'inventory private_theorems is not a list');
-  requireThat(new Set(privateNames).size === privateNames.length, 'duplicate inventory private names');
-  requireThat(privateNames.every(name => !names.includes(name)),
-    'a private theorem is inventoried as public');
-  const unlisted = declared.filter(name => !names.includes(name));
-  const missing = names.filter(name => !declared.includes(name));
-  requireThat(unlisted.length === 0, `theorems missing from inventory: ${unlisted.join(', ')}`);
-  requireThat(missing.length === 0, `inventory names not declared: ${missing.join(', ')}`);
-  const unlistedPrivate = privateDeclared.filter(name => !privateNames.includes(name));
-  const missingPrivate = privateNames.filter(name => !privateDeclared.includes(name));
-  requireThat(unlistedPrivate.length === 0,
-    `private theorems missing from inventory.private_theorems: ${unlistedPrivate.join(', ')}`);
-  requireThat(missingPrivate.length === 0,
-    `inventory.private_theorems not declared: ${missingPrivate.join(', ')}`);
 
   const env = { ...childBase, TMPDIR: scratch };
   const build = run(lake, ['build', 'NobleFoundation'], { cwd: project, env });
