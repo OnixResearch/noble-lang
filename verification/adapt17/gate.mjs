@@ -38,6 +38,9 @@ const controls = [
   { id: 'malformed-host-boundary-rejection', form: 'malformed-boundary-control.noble', inputTypes: ['Bool'] },
 ];
 const logicalCellBytes = 48;
+const boundarySpecializationSavings = logicalCellBytes * 2;
+const boundaryOffsets = [47, 48, 49, boundarySpecializationSavings - 1,
+  boundarySpecializationSavings, boundarySpecializationSavings + 1];
 const defaultLimits = {
   allocation_bytes: 65536,
   recipe_leaves: 256,
@@ -528,7 +531,7 @@ function boundaryReference(source, arm, optimized, rows, runtimeConfig, watArtif
 }
 
 function boundaryLimits(source, arm, optimized, baseCharge, rows, runtimeConfig, watArtifact) {
-  for (const allocationBytes of [47, 48, 49]) {
+  for (const allocationBytes of boundaryOffsets) {
     const id = `allocation-boundary-${allocationBytes}`;
     const inputs = [];
     const row = runEngineCell(runtimeConfig, source, arm, optimized,
@@ -572,10 +575,11 @@ function checkBoundaryGroups(boundaries, references, mode) {
       const candidateReference = references.find(row => row.workload === 'allocation-boundary-reference'
         && row.arm === 'candidate' && row.optimized === optimized);
       check(candidateReference !== undefined, `candidate/opt-${optimized ? 'on' : 'off'} boundary reference exists`);
-      equal(baselineCharge - candidateReference.metrics.allocated_since_begin_bytes, logicalCellBytes,
-        `opt-${optimized ? 'on' : 'off'} boundary reference saves exactly one variant-wrapper cell`);
+      equal(baselineCharge - candidateReference.metrics.allocated_since_begin_bytes,
+        boundarySpecializationSavings,
+        `opt-${optimized ? 'on' : 'off'} boundary reference saves payload-box and variant-wrapper cells`);
       equal(baselineReference.metrics.allocation_peak_bytes - candidateReference.metrics.allocation_peak_bytes,
-        logicalCellBytes, `opt-${optimized ? 'on' : 'off'} boundary peak saves one variant-wrapper cell`);
+        boundarySpecializationSavings, `opt-${optimized ? 'on' : 'off'} boundary peak saves payload-box and variant-wrapper cells`);
       equal(candidateReference.metrics.allocation_peak_bytes, candidateReference.metrics.allocated_since_begin_bytes,
         `candidate/opt-${optimized ? 'on' : 'off'} boundary total charge equals its peak live bytes`);
     }
@@ -583,7 +587,7 @@ function checkBoundaryGroups(boundaries, references, mode) {
   for (const arm of arms) {
     for (const optimized of [false, true]) {
       const rows = boundaries.filter(row => row.arm === arm && row.optimized === optimized);
-      equal(rows.length, 3, `${arm}/opt-${optimized ? 'on' : 'off'} boundary controls count`);
+      equal(rows.length, boundaryOffsets.length, `${arm}/opt-${optimized ? 'on' : 'off'} boundary controls count`);
       const byLimit = new Map(rows.map(row => [Number(row.workload.slice('allocation-boundary-'.length)), row]));
       const reference = references.find(row => row.workload === 'allocation-boundary-reference'
         && row.arm === arm && row.optimized === optimized);
@@ -591,11 +595,11 @@ function checkBoundaryGroups(boundaries, references, mode) {
       const baseCharge = mode === 'full'
         ? references.find(row => row.workload === 'allocation-boundary-reference'
           && row.arm === 'candidate' && row.optimized === optimized).metrics.allocation_peak_bytes
-        : reference.metrics.allocation_peak_bytes - logicalCellBytes;
+        : reference.metrics.allocation_peak_bytes - boundarySpecializationSavings;
       const measuredCharge = reference.metrics.allocation_peak_bytes;
       check(baseCharge >= 0 && baseCharge % logicalCellBytes === 0,
         `${arm}/opt-${optimized ? 'on' : 'off'} non-wrapper reference charge is whole guest cells`);
-      for (const limit of [47, 48, 49]) {
+      for (const limit of boundaryOffsets) {
         const row = byLimit.get(limit);
         equal(row.runtime_limits.allocation_bytes, baseCharge + limit,
           `${arm}/opt-${optimized ? 'on' : 'off'} offset ${limit} allocation budget`);
@@ -790,7 +794,7 @@ function main() {
     check(reference !== undefined, `opt-${boundaryRun.optimized ? 'on' : 'off'} boundary budget reference exists`);
     const baseCharge = mode === 'full'
       ? reference.metrics.allocation_peak_bytes
-      : reference.metrics.allocation_peak_bytes - logicalCellBytes;
+      : reference.metrics.allocation_peak_bytes - boundarySpecializationSavings;
     check(baseCharge >= 0 && baseCharge % logicalCellBytes === 0,
       `opt-${boundaryRun.optimized ? 'on' : 'off'} boundary reference charge is whole guest cells`);
     boundaryLimits(boundaryRun.source, boundaryRun.arm, boundaryRun.optimized, baseCharge,
