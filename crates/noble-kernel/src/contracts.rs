@@ -643,8 +643,9 @@ pub fn text_cursor_environment() -> Result<Env, crate::shapes::Defect> {
         .extend(core::iter::repeat_n(reserved.clone(), reserved_rows));
     env.kinds
         .extend(core::iter::repeat_n(Behavior::Reserved, reserved_rows));
+    // Aeneas 1238879f cannot translate bound-region function items (SymbolicToPureTypes.ml:411).
     env.deps
-        .extend(core::iter::repeat_with(alloc::vec::Vec::new).take(reserved_rows));
+        .extend(core::iter::repeat_with(|| alloc::vec::Vec::new()).take(reserved_rows));
     env.definition_owners
         .extend(core::iter::repeat_n(None, reserved_rows));
     let tail = crate::shapes::Pattern::StackVar(crate::words::Variable(0));
@@ -825,8 +826,9 @@ pub fn calculator_environment() -> Result<Env, crate::shapes::Defect> {
         env.defs.push(scheme);
         env.kinds.push(behavior);
     }
+    // Aeneas 1238879f cannot translate bound-region function items (SymbolicToPureTypes.ml:411).
     env.deps
-        .extend(core::iter::repeat_with(alloc::vec::Vec::new).take(rows));
+        .extend(core::iter::repeat_with(|| alloc::vec::Vec::new()).take(rows));
     env.definition_owners
         .extend(core::iter::repeat_n(None, rows));
     Ok(env)
