@@ -32,6 +32,42 @@ The latest run for source commit `756ccc9` is retained in
 refused historical expectations or executables for changed builds, and restored
 the single mutation worktree cleanly.
 
+## Optional Plausible P1 test arm
+
+The Lean-community follow-up uses a separate executable driver under
+`plausible/`, not a proof tactic in any accepted foundation theorem. Its
+four-cell subset and matched 16-case-per-arm budget are frozen in
+`plausible/matrix-v1.json`. The typed generator preserves cell-indexed
+premises; the existing foundation differential path checks each generated
+source against its independent BigInt reference, Lean-kernel-checked
+expectation and both Wasm optimization modes. For the clean source commit
+`fb63cb9`, the generated arm reached 4/4 selected cells, versus 0/4 for the
+current seeded generator in those same cells. The measured decision in
+`plausible/decision.md` adopts the optional stratified arm only for this
+subset; it does not replace the current general generator. The retained
+receipt, raw source and proof-gate negative control are indexed at
+`plausible/receipts/fb63cb9/index.json`. The new generated inputs detected
+test-side simulations of all four P1 bank faults. The real implementation
+mutants were measured by the earlier, independently source-bound batch-5
+campaign, not rerun by this pilot.
+
+From a clean commit with populated pinned Lean packages, run:
+
+```sh
+verification/ci/lean-proofs.sh <new-proof-output-directory>
+<selected-node> verification/differential-interactions/plausible/run.mjs \
+  --foundation <new-proof-output-directory>/foundation/foundation-check.json \
+  --output <new-pilot-output-directory> --target-dir <external-cargo-target>
+<selected-node> verification/differential-interactions/plausible/run.mjs \
+  --replay <new-pilot-output-directory>/pilot.json \
+  --output <new-replay-output-directory> --target-dir <external-cargo-target>
+```
+
+Replay is bound to the exact clean source tree and built executable recorded
+in the pilot receipt; to replay the retained historical receipt, check out
+its recorded source commit. Passing generated cases and printed tactic
+counterexamples remain finite test evidence, not proofs.
+
 ## Evidence boundary and ownership
 
 All results are finite test evidence, not a theorem about Noble implementations. A cell counts as reached only when its required interaction is observed in an admitted execution and its declared property is evaluated; a generated template, unexecuted node, panic, or unrelated failure does not count. Reachability is separate from whether the property passed or all comparison legs agreed: those outcomes and mismatch classes remain explicit per cell. Refusal, exhaustion, and unsupported outcomes are reported separately, and an all-refused campaign cannot pass semantic acceptance. A mutant kill requires the intended property to fail on the same retained case and execution that reached the injected divergence, with the clean baseline target independently satisfying the property. Shrinking is bounded and does not establish a global minimum.

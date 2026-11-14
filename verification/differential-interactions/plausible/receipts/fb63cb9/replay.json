@@ -1,0 +1,26 @@
+{
+  "schema": "noble-plausible-replay/v1",
+  "source_commit": "fb63cb96807ff8a1c59149a13476c83bbfbf5dee",
+  "source_tree": "81b994541e0c44ef50a6cb211e01642d8a6b2e27",
+  "cli_sha256": "4e4b10c16b53ec06282c81bf97f3bc335a625e907d4147dc0373c395d01024af",
+  "generator_called": false,
+  "fresh_process": true,
+  "replayed": [
+    {
+      "label": "original",
+      "source_sha256": "2f8a1e93775716a43fa1b73212c02debb9a1ab97a6590bece51543dbf828f1d9",
+      "source_size_bytes": 27,
+      "failure_identity": "ordered-prefix-output-mismatch",
+      "execution_steps": 29,
+      "matched_clean_reference": true
+    },
+    {
+      "label": "minimized",
+      "source_sha256": "b3bfb18127528235051b81216451613a60fe86ea722a228fd116058f21c2097c",
+      "source_size_bytes": 15,
+      "failure_identity": "ordered-prefix-output-mismatch",
+      "execution_steps": 17,
+      "matched_clean_reference": true
+    }
+  ]
+}

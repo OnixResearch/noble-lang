@@ -1,0 +1,4267 @@
+{
+  "schema": "noble-foundation-differential/v1",
+  "profile": "Core-Bootstrap / managed-linear-memory",
+  "fragment": "I64 literals, + - *, quote, literal blocks, compose, run, nested quote-run-run, Bool/I64 prefix",
+  "seed": "125",
+  "count": 16,
+  "opt_modes": [
+    "off",
+    "on"
+  ],
+  "universal_backend_proof": false,
+  "source_commit": "fb63cb96807ff8a1c59149a13476c83bbfbf5dee",
+  "source_tree": "81b994541e0c44ef50a6cb211e01642d8a6b2e27",
+  "clean_source": true,
+  "theorems": [
+    {
+      "name": "NobleFoundation.PExpr.exec_inputs_run",
+      "statement": "NobleFoundation.PExpr.exec_inputs_run : ∀ (P : NobleFoundation.PExpr) (ins : List NobleFoundation.AOp) {zs' : List ℤ}, NobleFoundation.refRun (ins ++ P.flat) [] = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.lowerAll ins ++ (P.code ++ [NobleContracts.Op.word 10])) pre t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.exec_lowerAll_from_empty",
+      "statement": "@NobleFoundation.exec_lowerAll_from_empty : ∀ {ops : List NobleFoundation.AOp} {zs' : List ℤ}, NobleFoundation.refRun ops [] = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.lowerAll ops) pre t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.exec_inputs_nested",
+      "statement": "NobleFoundation.exec_inputs_nested : ∀ (ins ops : List NobleFoundation.AOp) {zs' : List ℤ}, NobleFoundation.refRun (ins ++ ops) [] = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.lowerAll ins ++ [NobleContracts.Op.block (NobleFoundation.lowerAll ops), NobleContracts.Op.word 8, NobleContracts.Op.word 10, NobleContracts.Op.word 10]) pre t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.exec_lowerAll",
+      "statement": "@NobleFoundation.exec_lowerAll : ∀ {ops : List NobleFoundation.AOp} {zs zs' : List ℤ}, NobleFoundation.refRun ops zs = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (NobleFoundation.lowerAll ops) (pre ++ NobleFoundation.enc zs) t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.PExpr.exec_run_ref",
+      "statement": "NobleFoundation.PExpr.exec_run_ref : ∀ (P : NobleFoundation.PExpr) {zs zs' : List ℤ}, NobleFoundation.refRun P.flat zs = some zs' → ∀ (pre t : NobleContracts.Stack), NobleContracts.Exec (P.code ++ [NobleContracts.Op.word 10]) (pre ++ NobleFoundation.enc zs) t ↔ t = pre ++ NobleFoundation.enc zs'",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.accumulate_eq_acceptLiteral",
+      "statement": "NobleFoundation.accumulate_eq_acceptLiteral : ∀ (negative : Bool) (ds : List (Fin 10)), NobleFoundation.accumulate negative ds = NobleFoundation.acceptLiteral negative ds",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.refRun_range",
+      "statement": "@NobleFoundation.refRun_range : ∀ {ops : List NobleFoundation.AOp} {zs zs' : List ℤ}, NobleFoundation.refRun ops zs = some zs' → (∀ z ∈ zs, NobleFoundation.I64Range z) → ∀ z ∈ zs', NobleFoundation.I64Range z",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.wrap_eq_knum01",
+      "statement": "NobleFoundation.wrap_eq_knum01 : ∀ (z : ℤ), MathlibI64.wrap z = (z + 2 ^ 63) % 2 ^ 64 - 2 ^ 63",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    }
+  ],
+  "foundation_receipt_sha256": "a151e534b10d802fea7252c853cc9c615653b1a0a08928816758d269d560835b",
+  "toolchain": {
+    "cli_sha256": "4e4b10c16b53ec06282c81bf97f3bc335a625e907d4147dc0373c395d01024af",
+    "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+    "mathlib_commit": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+    "tools": {
+      "node": {
+        "path": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+        "sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b"
+      },
+      "wasm_tools": {
+        "path": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1/bin/wasm-tools",
+        "sha256": "30b6ccb08b58d6159f196eb3d21beea1dcfcf9ec2948a791e32aad95f6d91d2f"
+      },
+      "wasm_opt": {
+        "path": "/nix/store/9jkpw0sws1134333z8690i1plw5xzbyb-binaryen-125/bin/wasm-opt",
+        "sha256": "e68e014ba43ece72b23e4e9955b822d65ec2c3dbab6f407ca3af6cc5639543a2"
+      }
+    }
+  },
+  "expected_lean": {
+    "path": "Expected.lean",
+    "sha256": "6ce68d7ac6fd6931740702e399d3cd527f7be4a90012e3ac3b16f07cb500164c",
+    "kernel_checked_cases": 36
+  },
+  "cases": [
+    {
+      "index": 0,
+      "kind": "nested",
+      "mode": "off",
+      "source": "8387227553427015165 7437673423764155863 [ -8936309182246613764 -2 + ] quote run run",
+      "source_sha256": "581a54d947860b82346513ccf3f297ecba2eb7cfc3db436e1d3eb2d01ad7702c",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "8387227553427015165"
+          ],
+          [
+            "I64",
+            "7437673423764155863"
+          ],
+          [
+            "I64",
+            "-8936309182246613766"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "8387227553427015165"
+          ],
+          [
+            "I64",
+            "7437673423764155863"
+          ],
+          [
+            "I64",
+            "-8936309182246613766"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 31
+      },
+      "wasm_sha256": "8f4e423c5075bd89e92e776e2e8c004a9aff2e0c2af2a99c2a2db905f4a666b1",
+      "lean_theorem": "case_0_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 0,
+      "kind": "nested",
+      "mode": "on",
+      "source": "8387227553427015165 7437673423764155863 [ -8936309182246613764 -2 + ] quote run run",
+      "source_sha256": "581a54d947860b82346513ccf3f297ecba2eb7cfc3db436e1d3eb2d01ad7702c",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "8387227553427015165"
+          ],
+          [
+            "I64",
+            "7437673423764155863"
+          ],
+          [
+            "I64",
+            "-8936309182246613766"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "8387227553427015165"
+          ],
+          [
+            "I64",
+            "7437673423764155863"
+          ],
+          [
+            "I64",
+            "-8936309182246613766"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 31
+      },
+      "wasm_sha256": "cb3e41bd47293e6908acca988122cbe950ee07f35eed7dcb1fade2559840e23e",
+      "lean_theorem": "case_0_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 1,
+      "kind": "nested",
+      "mode": "off",
+      "source": "-489250978877471706 -9223372036854775808 7380523375172052064 [ -3037000500 + ] quote run run",
+      "source_sha256": "d09ba2837408c7a2db685252bcd3a797269425cdc925593d59f7d25cca27a4c7",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-489250978877471706"
+          ],
+          [
+            "I64",
+            "-9223372036854775808"
+          ],
+          [
+            "I64",
+            "7380523372135051564"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-489250978877471706"
+          ],
+          [
+            "I64",
+            "-9223372036854775808"
+          ],
+          [
+            "I64",
+            "7380523372135051564"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 31
+      },
+      "wasm_sha256": "24706e077369a206d6495fd331cea332705eb0052c714464688a286e76713f87",
+      "lean_theorem": "case_1_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 1,
+      "kind": "nested",
+      "mode": "on",
+      "source": "-489250978877471706 -9223372036854775808 7380523375172052064 [ -3037000500 + ] quote run run",
+      "source_sha256": "d09ba2837408c7a2db685252bcd3a797269425cdc925593d59f7d25cca27a4c7",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-489250978877471706"
+          ],
+          [
+            "I64",
+            "-9223372036854775808"
+          ],
+          [
+            "I64",
+            "7380523372135051564"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-489250978877471706"
+          ],
+          [
+            "I64",
+            "-9223372036854775808"
+          ],
+          [
+            "I64",
+            "7380523372135051564"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 31
+      },
+      "wasm_sha256": "17eec490a11ec13360c3f468c3d8375248e7f8c9705df4242fa5861308579a79",
+      "lean_theorem": "case_1_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 2,
+      "kind": "program",
+      "mode": "off",
+      "source": "true -3037000500 [ -4611686018427387904 + ] 4294967296 quote compose run",
+      "source_sha256": "6b7c88c19d81a9f132082ca21d4c384dff754912a20045bf4afb0607dfe3573f",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-4611686021464388404"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-4611686021464388404"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 33
+      },
+      "wasm_sha256": "c05a6d292337ba565167b79a2e7005d1af03c844a04255d14b73d55fdcf8341b",
+      "lean_theorem": "case_2_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 2,
+      "kind": "program",
+      "mode": "on",
+      "source": "true -3037000500 [ -4611686018427387904 + ] 4294967296 quote compose run",
+      "source_sha256": "6b7c88c19d81a9f132082ca21d4c384dff754912a20045bf4afb0607dfe3573f",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-4611686021464388404"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-4611686021464388404"
+          ],
+          [
+            "I64",
+            "4294967296"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 33
+      },
+      "wasm_sha256": "a7242195651dc3eee8d3bc76b4a3b75685ab3dc544674bcbed8fb5a1d82edf1c",
+      "lean_theorem": "case_2_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 3,
+      "kind": "nested",
+      "mode": "off",
+      "source": "[ -3250464868976199841 1559655854772313886 - ] quote run run",
+      "source_sha256": "c5fa2dc30ec9672015ecfb9689f41dea8821d7704f920a54b83e35be43a06e6c",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-4810120723748513727"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-4810120723748513727"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 24
+      },
+      "wasm_sha256": "7114d0aca053cd3a11fcbd44745a9045a759d84aaee406a51231cd074953cbbc",
+      "lean_theorem": "case_3_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 3,
+      "kind": "nested",
+      "mode": "on",
+      "source": "[ -3250464868976199841 1559655854772313886 - ] quote run run",
+      "source_sha256": "c5fa2dc30ec9672015ecfb9689f41dea8821d7704f920a54b83e35be43a06e6c",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-4810120723748513727"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-4810120723748513727"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 24
+      },
+      "wasm_sha256": "f33d215d45365f04b12065ffc6fd8a7f8106749f7896c8bb10abe91dc3e98155",
+      "lean_theorem": "case_3_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 4,
+      "kind": "straight",
+      "mode": "off",
+      "source": "9193307235356993321 -3788329303902485732 3037000499 5360535979711393760 5622977308943621380 -8289670426420317633 - - - * +",
+      "source_sha256": "4aa89347074bf8269022d40791cb2285f7b30b050ce0c80cdc8c42f9052cd843",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-4542246106112673335"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-4542246106112673335"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 31
+      },
+      "wasm_sha256": "7671f02a85b70dccb545c3f97d29412cc90900bd4b5f922776f046507b44f693",
+      "lean_theorem": "case_4_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 4,
+      "kind": "straight",
+      "mode": "on",
+      "source": "9193307235356993321 -3788329303902485732 3037000499 5360535979711393760 5622977308943621380 -8289670426420317633 - - - * +",
+      "source_sha256": "4aa89347074bf8269022d40791cb2285f7b30b050ce0c80cdc8c42f9052cd843",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-4542246106112673335"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-4542246106112673335"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 31
+      },
+      "wasm_sha256": "39861f9a8edbff0503fde836e76766acd4a30d9434413872e252245c3d3db9c5",
+      "lean_theorem": "case_4_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 5,
+      "kind": "straight",
+      "mode": "off",
+      "source": "true -4611686018427387904 -3037000500 1 +",
+      "source_sha256": "8b5166e49be0860166b3b171ccb9bf618f6c2df71f09d497ba908a2c2e1d712e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "-3037000499"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "-3037000499"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 17
+      },
+      "wasm_sha256": "b4cc6d1fdd5b15a4062bc2272fdcd6dd04429d21a020024edb9a0877930e9374",
+      "lean_theorem": "case_5_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 5,
+      "kind": "straight",
+      "mode": "on",
+      "source": "true -4611686018427387904 -3037000500 1 +",
+      "source_sha256": "8b5166e49be0860166b3b171ccb9bf618f6c2df71f09d497ba908a2c2e1d712e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "-3037000499"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "true"
+          ],
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "-3037000499"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 17
+      },
+      "wasm_sha256": "a4436939de36d7450c7b3ae63f36db4585eac0ed9509f77659cb819dfdd7822f",
+      "lean_theorem": "case_5_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 6,
+      "kind": "straight",
+      "mode": "off",
+      "source": "2834683549932842780 2162077401622541269 2592011508614518740 9223372036854775806 + *",
+      "source_sha256": "c7e8ca01592a39aedd4d54dff4583dabe951e0cdfdf24c6a310920c1a5b5ad05",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2834683549932842780"
+          ],
+          [
+            "I64",
+            "8763148087439484858"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2834683549932842780"
+          ],
+          [
+            "I64",
+            "8763148087439484858"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 19
+      },
+      "wasm_sha256": "c3413db5f200d95389d5c744d856729def16d79dd9ed6d99e764337b0e2d1187",
+      "lean_theorem": "case_6_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 6,
+      "kind": "straight",
+      "mode": "on",
+      "source": "2834683549932842780 2162077401622541269 2592011508614518740 9223372036854775806 + *",
+      "source_sha256": "c7e8ca01592a39aedd4d54dff4583dabe951e0cdfdf24c6a310920c1a5b5ad05",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2834683549932842780"
+          ],
+          [
+            "I64",
+            "8763148087439484858"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "2834683549932842780"
+          ],
+          [
+            "I64",
+            "8763148087439484858"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 19
+      },
+      "wasm_sha256": "f6f991ed14992da99d0373528aa139c06fb543a0e7c95b1eeb9669dca5295bd0",
+      "lean_theorem": "case_6_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 7,
+      "kind": "nested",
+      "mode": "off",
+      "source": "-6935486217385807870 -3 -4611686018427387904 [ -3860185971516211225 * + ] quote run run",
+      "source_sha256": "ea97666507ebf2773eb451c8f16aafdaa76b4f48a116851047416adaffbd4726",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6935486217385807870"
+          ],
+          [
+            "I64",
+            "4611686018427387901"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6935486217385807870"
+          ],
+          [
+            "I64",
+            "4611686018427387901"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 33
+      },
+      "wasm_sha256": "bcb9c4f923525e6588cd435de745d3038a2d3a140d9398bae59da7a7f65a844d",
+      "lean_theorem": "case_7_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 7,
+      "kind": "nested",
+      "mode": "on",
+      "source": "-6935486217385807870 -3 -4611686018427387904 [ -3860185971516211225 * + ] quote run run",
+      "source_sha256": "ea97666507ebf2773eb451c8f16aafdaa76b4f48a116851047416adaffbd4726",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6935486217385807870"
+          ],
+          [
+            "I64",
+            "4611686018427387901"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-6935486217385807870"
+          ],
+          [
+            "I64",
+            "4611686018427387901"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 33
+      },
+      "wasm_sha256": "5abd0ba9ecd984e1b419338aca16538cffc874899319431ac8bb045ff2ed6010",
+      "lean_theorem": "case_7_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 8,
+      "kind": "straight",
+      "mode": "off",
+      "source": "4294967295 -3914109182464487665",
+      "source_sha256": "074b9147db518b52fe0088e680ee7c69da1f517a60dfbe0c96b6cccdb73bd5dc",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4294967295"
+          ],
+          [
+            "I64",
+            "-3914109182464487665"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4294967295"
+          ],
+          [
+            "I64",
+            "-3914109182464487665"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 9
+      },
+      "wasm_sha256": "de48c39475380703ed17a416cdd5e99ee99dd8e0e13116b3c3f0b65e26da54cb",
+      "lean_theorem": "case_8_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 8,
+      "kind": "straight",
+      "mode": "on",
+      "source": "4294967295 -3914109182464487665",
+      "source_sha256": "074b9147db518b52fe0088e680ee7c69da1f517a60dfbe0c96b6cccdb73bd5dc",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4294967295"
+          ],
+          [
+            "I64",
+            "-3914109182464487665"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4294967295"
+          ],
+          [
+            "I64",
+            "-3914109182464487665"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 9
+      },
+      "wasm_sha256": "88178d9e1edf8aa5f2d20a8f3127fbdfc3b614b865043ac5a7baf6d172e12905",
+      "lean_theorem": "case_8_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 9,
+      "kind": "program",
+      "mode": "off",
+      "source": "7254829345931326319 4300335662125858302 quote run",
+      "source_sha256": "99ac264bf9430c0670e0388f91aa3ebee00b95b2f3ed4927e2bbd58b0a4ea555",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "7254829345931326319"
+          ],
+          [
+            "I64",
+            "4300335662125858302"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "7254829345931326319"
+          ],
+          [
+            "I64",
+            "4300335662125858302"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 16
+      },
+      "wasm_sha256": "2e244e7f7bc5a5200a35a35f020f7305490160e9e78d3630b72ff4fb2675b33e",
+      "lean_theorem": "case_9_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 9,
+      "kind": "program",
+      "mode": "on",
+      "source": "7254829345931326319 4300335662125858302 quote run",
+      "source_sha256": "99ac264bf9430c0670e0388f91aa3ebee00b95b2f3ed4927e2bbd58b0a4ea555",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "7254829345931326319"
+          ],
+          [
+            "I64",
+            "4300335662125858302"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "7254829345931326319"
+          ],
+          [
+            "I64",
+            "4300335662125858302"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 16
+      },
+      "wasm_sha256": "4b2549caaf8fb7dc94b1aa78cea84b0b15e616a8070f179b5a1e7f182fd565b8",
+      "lean_theorem": "case_9_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 10,
+      "kind": "program",
+      "mode": "off",
+      "source": "false [ 3037000499 5676416417509980765 * ] run",
+      "source_sha256": "3f5d7b7b5c9a1be86487c557f10da2f7e2a6d94c75fc56647078d826c0508576",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-1970373348930132089"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-1970373348930132089"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 20
+      },
+      "wasm_sha256": "a3ffe3e9499b63f382cd9bb22543fb80e065a93ff2b03f7540931eef48e03535",
+      "lean_theorem": "case_10_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 10,
+      "kind": "program",
+      "mode": "on",
+      "source": "false [ 3037000499 5676416417509980765 * ] run",
+      "source_sha256": "3f5d7b7b5c9a1be86487c557f10da2f7e2a6d94c75fc56647078d826c0508576",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-1970373348930132089"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "-1970373348930132089"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 20
+      },
+      "wasm_sha256": "5cf70e72790e5c3b9199fc80fae241c0c20ce6a5e3ea5d874268e3f26a5e6558",
+      "lean_theorem": "case_10_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 11,
+      "kind": "nested",
+      "mode": "off",
+      "source": "5915290794636541318 7349712707944994343 [ + 6337970843290529344 - ] quote run run",
+      "source_sha256": "a5ca204a94e3539ac0e100c1834a6f5c0cccc77198c83f76c3931fac487fa49c",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6927032659291006317"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6927032659291006317"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 29
+      },
+      "wasm_sha256": "5ea5b2a7edd2420a93c0b8b61c00b0a36dc30e083d34efe34408ac4ea794fcb4",
+      "lean_theorem": "case_11_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 11,
+      "kind": "nested",
+      "mode": "on",
+      "source": "5915290794636541318 7349712707944994343 [ + 6337970843290529344 - ] quote run run",
+      "source_sha256": "a5ca204a94e3539ac0e100c1834a6f5c0cccc77198c83f76c3931fac487fa49c",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6927032659291006317"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "6927032659291006317"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 29
+      },
+      "wasm_sha256": "d3fe4bcdc53bfd6d2894d04e424e97650f078e823514a0fc086bf54bcc9b7ec2",
+      "lean_theorem": "case_11_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 12,
+      "kind": "program",
+      "mode": "off",
+      "source": "9223372036854775806 2147483648 [ -9223372036854775807 * 9223372036854775807 + ] [ 4294967296 * ] compose run",
+      "source_sha256": "7ff899035d8a02231c085602ab198e901dbfb9b83269ea482023c9887c38a605",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "9223372036854775806"
+          ],
+          [
+            "I64",
+            "9223372032559808512"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "9223372036854775806"
+          ],
+          [
+            "I64",
+            "9223372032559808512"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 35
+      },
+      "wasm_sha256": "f4a01a6f11570a240e19ead33fe9856ff82af286d7dd348d71b4b37a6ef779f8",
+      "lean_theorem": "case_12_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 12,
+      "kind": "program",
+      "mode": "on",
+      "source": "9223372036854775806 2147483648 [ -9223372036854775807 * 9223372036854775807 + ] [ 4294967296 * ] compose run",
+      "source_sha256": "7ff899035d8a02231c085602ab198e901dbfb9b83269ea482023c9887c38a605",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "9223372036854775806"
+          ],
+          [
+            "I64",
+            "9223372032559808512"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "9223372036854775806"
+          ],
+          [
+            "I64",
+            "9223372032559808512"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 35
+      },
+      "wasm_sha256": "983fca501e88851d01f1b1d56e670369257b007386e082282e47c63c406940d3",
+      "lean_theorem": "case_12_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 13,
+      "kind": "program",
+      "mode": "off",
+      "source": "-1833718893144434576 -4611686018427387904 [ 8983063487338953604 -3159069410772003191 - -9223372036854775808 - ] 2996888570324207050 quote [ 9223372036854775806 4294967295 * - * ] compose compose run",
+      "source_sha256": "2d84d30b1bfb15635f1962a3ad4abbf47ce74115ea6ae34c9be05e56dac63178",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-1833718893144434576"
+          ],
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "-7591310650433303784"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-1833718893144434576"
+          ],
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "-7591310650433303784"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 58
+      },
+      "wasm_sha256": "732a9cc4143336c7326dde9f14e94b7fc6df8d49511dc1b355638bf8560101ba",
+      "lean_theorem": "case_13_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 13,
+      "kind": "program",
+      "mode": "on",
+      "source": "-1833718893144434576 -4611686018427387904 [ 8983063487338953604 -3159069410772003191 - -9223372036854775808 - ] 2996888570324207050 quote [ 9223372036854775806 4294967295 * - * ] compose compose run",
+      "source_sha256": "2d84d30b1bfb15635f1962a3ad4abbf47ce74115ea6ae34c9be05e56dac63178",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-1833718893144434576"
+          ],
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "-7591310650433303784"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-1833718893144434576"
+          ],
+          [
+            "I64",
+            "-4611686018427387904"
+          ],
+          [
+            "I64",
+            "-7591310650433303784"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 58
+      },
+      "wasm_sha256": "28df5d90c9b4b416ee62433fbf976dd11591e05a41fb730e290b422a396ca405",
+      "lean_theorem": "case_13_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 14,
+      "kind": "program",
+      "mode": "off",
+      "source": "3 -5782814818432194501 2 quote 6957004115249272709 quote compose [ + 563216646640416076 -440823945720597602 -9223372036854775808 * - * - - ] [ -2147483648 - ] compose compose run",
+      "source_sha256": "388f43477b4709c0772dc837d62f1f940ccc70adc5afb3122ac0c00ecf0f6054",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-1220378294732224804"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-1220378294732224804"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 71
+      },
+      "wasm_sha256": "f2bd85ae782e3d496f4941ff04210fc6ab058ff460a26d8f156b75e0ede325e0",
+      "lean_theorem": "case_14_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 14,
+      "kind": "program",
+      "mode": "on",
+      "source": "3 -5782814818432194501 2 quote 6957004115249272709 quote compose [ + 563216646640416076 -440823945720597602 -9223372036854775808 * - * - - ] [ -2147483648 - ] compose compose run",
+      "source_sha256": "388f43477b4709c0772dc837d62f1f940ccc70adc5afb3122ac0c00ecf0f6054",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-1220378294732224804"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-1220378294732224804"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 71
+      },
+      "wasm_sha256": "454243eccd168744e16c9fcf1cf80b7018dc7a7d8cc15b3d93486ead814413d1",
+      "lean_theorem": "case_14_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 15,
+      "kind": "program",
+      "mode": "off",
+      "source": "4611686018427387904 [ 3379940506471610498 3037000499 * ] run",
+      "source_sha256": "baac9eda975406f8df6792c7a414652bcffc1b26c35508ba874c42758be881ce",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4611686018427387904"
+          ],
+          [
+            "I64",
+            "5210537574721071078"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4611686018427387904"
+          ],
+          [
+            "I64",
+            "5210537574721071078"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 20
+      },
+      "wasm_sha256": "ca63f9e0cae131b0cdb4d558a0740ab1f4b16a3790585891062c6d164c175e66",
+      "lean_theorem": "case_15_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 15,
+      "kind": "program",
+      "mode": "on",
+      "source": "4611686018427387904 [ 3379940506471610498 3037000499 * ] run",
+      "source_sha256": "baac9eda975406f8df6792c7a414652bcffc1b26c35508ba874c42758be881ce",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4611686018427387904"
+          ],
+          [
+            "I64",
+            "5210537574721071078"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "4611686018427387904"
+          ],
+          [
+            "I64",
+            "5210537574721071078"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 20
+      },
+      "wasm_sha256": "991b32b8732a3cdfa27f0ecfa6768a434a9f953685327a11455038e621c98afe",
+      "lean_theorem": "case_15_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 16,
+      "kind": "straight",
+      "mode": "off",
+      "source": "9223372036854775808",
+      "source_sha256": "83acd6ec9b70e1b3d1bf22d3451ebba0ea14c2de3fc46dcc761886521b339147",
+      "expected": {
+        "outcome": "reject"
+      },
+      "observed": {
+        "outcome": "reject",
+        "diagnostic": "integer literal is outside I64",
+        "execution_steps": null
+      },
+      "wasm_sha256": null,
+      "lean_theorem": "case_16_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 17,
+      "kind": "straight",
+      "mode": "off",
+      "source": "true 1 -9223372036854775809 +",
+      "source_sha256": "26dccfe262724f3e2a6fb5245844fcec6ebfa55c2b9299ec50fb4df64b3beda6",
+      "expected": {
+        "outcome": "reject"
+      },
+      "observed": {
+        "outcome": "reject",
+        "diagnostic": "integer literal is outside I64",
+        "execution_steps": null
+      },
+      "wasm_sha256": null,
+      "lean_theorem": "case_17_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 18,
+      "kind": "program",
+      "mode": "off",
+      "source": "5 [ 18446744073709551616 + ] run",
+      "source_sha256": "eb4df4aa17f21749af98a5b6056d6c6890b5e4d138b0c6d5e8389fcd0f758d8e",
+      "expected": {
+        "outcome": "reject"
+      },
+      "observed": {
+        "outcome": "reject",
+        "diagnostic": "integer literal is outside I64",
+        "execution_steps": null
+      },
+      "wasm_sha256": null,
+      "lean_theorem": "case_18_ref",
+      "matched": true,
+      "interaction": null
+    },
+    {
+      "index": 19,
+      "kind": "straight",
+      "mode": "off",
+      "source": "26 false 2 3 * 0 + 0 + 0 +",
+      "source_sha256": "2f8a1e93775716a43fa1b73212c02debb9a1ab97a6590bece51543dbf828f1d9",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "26"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "26"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 29
+      },
+      "wasm_sha256": "227fdc7c8c655c15bbe07c55e3978770b4f367ee8afdc5a61b62da24e07fcf68",
+      "lean_theorem": "case_19_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "2f8a1e93775716a43fa1b73212c02debb9a1ab97a6590bece51543dbf828f1d9"
+      },
+      "interaction": {
+        "boundary_arithmetic": "small",
+        "cell": "P1/plain/small/preserved_prefix_multiple",
+        "output_shape": "preserved_prefix_multiple",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "plain",
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 29,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-off"
+        ]
+      }
+    },
+    {
+      "index": 19,
+      "kind": "straight",
+      "mode": "on",
+      "source": "26 false 2 3 * 0 + 0 + 0 +",
+      "source_sha256": "2f8a1e93775716a43fa1b73212c02debb9a1ab97a6590bece51543dbf828f1d9",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "26"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "26"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 29
+      },
+      "wasm_sha256": "9a24e39defd97b5cc8991a979f90d1ed42c98fd841c3edc68260a6bcb9e1392e",
+      "lean_theorem": "case_19_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "2f8a1e93775716a43fa1b73212c02debb9a1ab97a6590bece51543dbf828f1d9"
+      },
+      "interaction": {
+        "boundary_arithmetic": "small",
+        "cell": "P1/plain/small/preserved_prefix_multiple",
+        "output_shape": "preserved_prefix_multiple",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "plain",
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 29,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-on"
+        ]
+      }
+    },
+    {
+      "index": 20,
+      "kind": "straight",
+      "mode": "off",
+      "source": "0 -1 - 0 +",
+      "source_sha256": "5fab8d6607a286c2e3b6b8a6648301117ea3bac819215d342bc7b650a9e5bb57",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 15
+      },
+      "wasm_sha256": "dcc0656719d9cc9d9aaa29e06bef44f4175a6024c48c6c30f4a972ee33a80942",
+      "lean_theorem": "case_20_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "5fab8d6607a286c2e3b6b8a6648301117ea3bac819215d342bc7b650a9e5bb57"
+      },
+      "interaction": {
+        "boundary_arithmetic": "zero_negative_one",
+        "cell": "P1/plain/zero_negative_one/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "plain",
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 15,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-off"
+        ]
+      }
+    },
+    {
+      "index": 20,
+      "kind": "straight",
+      "mode": "on",
+      "source": "0 -1 - 0 +",
+      "source_sha256": "5fab8d6607a286c2e3b6b8a6648301117ea3bac819215d342bc7b650a9e5bb57",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 15
+      },
+      "wasm_sha256": "1daa70f713c6558baddb3cc44b86414dc7a7cd0bda6af40e23c4d90e1deb13a4",
+      "lean_theorem": "case_20_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "5fab8d6607a286c2e3b6b8a6648301117ea3bac819215d342bc7b650a9e5bb57"
+      },
+      "interaction": {
+        "boundary_arithmetic": "zero_negative_one",
+        "cell": "P1/plain/zero_negative_one/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "plain",
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 15,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-on"
+        ]
+      }
+    },
+    {
+      "index": 21,
+      "kind": "program",
+      "mode": "off",
+      "source": "9223372036854775807 1 [ + 0 + 0 + 0 + ] run",
+      "source_sha256": "66d48909ad90d81139a2c48cc3b3bb2a008c357b753280a1bb789754502f41c4",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 29
+      },
+      "wasm_sha256": "7c80f0ad3f798980e003170d63ffdef7c6a76bbceb2e1ff7b5a8048b45eba13e",
+      "lean_theorem": "case_21_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "66d48909ad90d81139a2c48cc3b3bb2a008c357b753280a1bb789754502f41c4"
+      },
+      "interaction": {
+        "boundary_arithmetic": "min_max_wrap",
+        "cell": "P1/quoted/min_max_wrap/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "quoted",
+        "source_operator_witness": [
+          "quote",
+          "run",
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 29,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "quote",
+          "run",
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-off"
+        ]
+      }
+    },
+    {
+      "index": 21,
+      "kind": "program",
+      "mode": "on",
+      "source": "9223372036854775807 1 [ + 0 + 0 + 0 + ] run",
+      "source_sha256": "66d48909ad90d81139a2c48cc3b3bb2a008c357b753280a1bb789754502f41c4",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 29
+      },
+      "wasm_sha256": "6cd0c9a0f2f6864560b77e43b6ca2f05327f7a4faa270c09ae488a15a4c83873",
+      "lean_theorem": "case_21_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "66d48909ad90d81139a2c48cc3b3bb2a008c357b753280a1bb789754502f41c4"
+      },
+      "interaction": {
+        "boundary_arithmetic": "min_max_wrap",
+        "cell": "P1/quoted/min_max_wrap/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "quoted",
+        "source_operator_witness": [
+          "quote",
+          "run",
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 29,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "quote",
+          "run",
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-on"
+        ]
+      }
+    },
+    {
+      "index": 22,
+      "kind": "program",
+      "mode": "off",
+      "source": "9223372036854775807 [ 1 + ] [ 2 * 0 + ] compose run",
+      "source_sha256": "a34443a6ebe39f2f0414ad73ed5f75787abbacdcaa576e5d3933deafd4d69e2c",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 32
+      },
+      "wasm_sha256": "fc1f5e696e55c92b93b319216a5f36f9c1cb1ca9dfdf184967e2aa2a3ab7422f",
+      "lean_theorem": "case_22_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "a34443a6ebe39f2f0414ad73ed5f75787abbacdcaa576e5d3933deafd4d69e2c"
+      },
+      "interaction": {
+        "boundary_arithmetic": "min_max_wrap",
+        "cell": "P1/composed/min_max_wrap/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "composed",
+        "source_operator_witness": [
+          "quote",
+          "compose",
+          "run",
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 32,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "quote",
+          "compose",
+          "run",
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-off"
+        ]
+      }
+    },
+    {
+      "index": 22,
+      "kind": "program",
+      "mode": "on",
+      "source": "9223372036854775807 [ 1 + ] [ 2 * 0 + ] compose run",
+      "source_sha256": "a34443a6ebe39f2f0414ad73ed5f75787abbacdcaa576e5d3933deafd4d69e2c",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 32
+      },
+      "wasm_sha256": "feefcdaae7c1685c0dbcfc774ae1c4dff1839637892832252096ef23daa6a848",
+      "lean_theorem": "case_22_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "a34443a6ebe39f2f0414ad73ed5f75787abbacdcaa576e5d3933deafd4d69e2c"
+      },
+      "interaction": {
+        "boundary_arithmetic": "min_max_wrap",
+        "cell": "P1/composed/min_max_wrap/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "composed",
+        "source_operator_witness": [
+          "quote",
+          "compose",
+          "run",
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 32,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "quote",
+          "compose",
+          "run",
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-on"
+        ]
+      }
+    },
+    {
+      "index": 23,
+      "kind": "straight",
+      "mode": "off",
+      "source": "24 false 2 3 * 0 +",
+      "source_sha256": "b1262b35e57e0a76f65c83fe2f62dc44e061cc5946761fdafb679b699dada2db",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "24"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "24"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 21
+      },
+      "wasm_sha256": "209b1261c6bdd8c10638f0a71c7d60539a481fb00b389ad7022f3cf938fbf67d",
+      "lean_theorem": "case_23_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "b1262b35e57e0a76f65c83fe2f62dc44e061cc5946761fdafb679b699dada2db"
+      },
+      "interaction": {
+        "boundary_arithmetic": "small",
+        "cell": "P1/plain/small/preserved_prefix_multiple",
+        "output_shape": "preserved_prefix_multiple",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "plain",
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 21,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-off"
+        ]
+      }
+    },
+    {
+      "index": 23,
+      "kind": "straight",
+      "mode": "on",
+      "source": "24 false 2 3 * 0 +",
+      "source_sha256": "b1262b35e57e0a76f65c83fe2f62dc44e061cc5946761fdafb679b699dada2db",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "24"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "24"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 21
+      },
+      "wasm_sha256": "b00477dce6e0613fb9acf3be8b2053387eaf6625bd536800f666ff435f6619e6",
+      "lean_theorem": "case_23_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "b1262b35e57e0a76f65c83fe2f62dc44e061cc5946761fdafb679b699dada2db"
+      },
+      "interaction": {
+        "boundary_arithmetic": "small",
+        "cell": "P1/plain/small/preserved_prefix_multiple",
+        "output_shape": "preserved_prefix_multiple",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "plain",
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 21,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-on"
+        ]
+      }
+    },
+    {
+      "index": 24,
+      "kind": "straight",
+      "mode": "off",
+      "source": "0 -1 - 0 + 0 + 0 +",
+      "source_sha256": "b224d5272a484345f7be8b6371d734b6553503a1efe8314afd6abd6841e739d9",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 23
+      },
+      "wasm_sha256": "9e7ad2c3fc32dc33e04e84c2132a3bbaf93099fabd51e68714ba6253595bf170",
+      "lean_theorem": "case_24_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "b224d5272a484345f7be8b6371d734b6553503a1efe8314afd6abd6841e739d9"
+      },
+      "interaction": {
+        "boundary_arithmetic": "zero_negative_one",
+        "cell": "P1/plain/zero_negative_one/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "plain",
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 23,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-off"
+        ]
+      }
+    },
+    {
+      "index": 24,
+      "kind": "straight",
+      "mode": "on",
+      "source": "0 -1 - 0 + 0 + 0 +",
+      "source_sha256": "b224d5272a484345f7be8b6371d734b6553503a1efe8314afd6abd6841e739d9",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 23
+      },
+      "wasm_sha256": "6dbd0b1583cb869a98c7602543342934a1a47014e51389fd8f72fb1e709e8a73",
+      "lean_theorem": "case_24_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "b224d5272a484345f7be8b6371d734b6553503a1efe8314afd6abd6841e739d9"
+      },
+      "interaction": {
+        "boundary_arithmetic": "zero_negative_one",
+        "cell": "P1/plain/zero_negative_one/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "plain",
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 23,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-on"
+        ]
+      }
+    },
+    {
+      "index": 25,
+      "kind": "program",
+      "mode": "off",
+      "source": "9223372036854775807 1 [ + 0 + ] run",
+      "source_sha256": "cd94e2c1e16401208cb591ae909fa6ffa9117621f35622410fa62a15606cac6e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 21
+      },
+      "wasm_sha256": "776412cc47be029dab7f8f40e14add4495bb9a2aeccaa49f99b471065060ac0e",
+      "lean_theorem": "case_25_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "cd94e2c1e16401208cb591ae909fa6ffa9117621f35622410fa62a15606cac6e"
+      },
+      "interaction": {
+        "boundary_arithmetic": "min_max_wrap",
+        "cell": "P1/quoted/min_max_wrap/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "quoted",
+        "source_operator_witness": [
+          "quote",
+          "run",
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 21,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "quote",
+          "run",
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-off"
+        ]
+      }
+    },
+    {
+      "index": 25,
+      "kind": "program",
+      "mode": "on",
+      "source": "9223372036854775807 1 [ + 0 + ] run",
+      "source_sha256": "cd94e2c1e16401208cb591ae909fa6ffa9117621f35622410fa62a15606cac6e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 21
+      },
+      "wasm_sha256": "3581e6c751dd4ff25703a0f21b1fd9030da894393141ea6d6cd1200e81865ac1",
+      "lean_theorem": "case_25_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "cd94e2c1e16401208cb591ae909fa6ffa9117621f35622410fa62a15606cac6e"
+      },
+      "interaction": {
+        "boundary_arithmetic": "min_max_wrap",
+        "cell": "P1/quoted/min_max_wrap/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "quoted",
+        "source_operator_witness": [
+          "quote",
+          "run",
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 21,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "quote",
+          "run",
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-on"
+        ]
+      }
+    },
+    {
+      "index": 26,
+      "kind": "program",
+      "mode": "off",
+      "source": "9223372036854775807 [ 1 + ] [ 2 * 0 + 0 + 0 + ] compose run",
+      "source_sha256": "cfb846006e7c9614ef4bf756d472ca0e8cd456cc94ded8522d4045f228e19729",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 40
+      },
+      "wasm_sha256": "8803fed786f298fa85e6d2246356c2723d0056a4bb14968999d8d27aef3b70cb",
+      "lean_theorem": "case_26_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "cfb846006e7c9614ef4bf756d472ca0e8cd456cc94ded8522d4045f228e19729"
+      },
+      "interaction": {
+        "boundary_arithmetic": "min_max_wrap",
+        "cell": "P1/composed/min_max_wrap/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "composed",
+        "source_operator_witness": [
+          "quote",
+          "compose",
+          "run",
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 40,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "quote",
+          "compose",
+          "run",
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-off"
+        ]
+      }
+    },
+    {
+      "index": 26,
+      "kind": "program",
+      "mode": "on",
+      "source": "9223372036854775807 [ 1 + ] [ 2 * 0 + 0 + 0 + ] compose run",
+      "source_sha256": "cfb846006e7c9614ef4bf756d472ca0e8cd456cc94ded8522d4045f228e19729",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 40
+      },
+      "wasm_sha256": "ef6b956e40f7f1378602e44448269265e71b0cae717ad53cf401352fabe3490e",
+      "lean_theorem": "case_26_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "cfb846006e7c9614ef4bf756d472ca0e8cd456cc94ded8522d4045f228e19729"
+      },
+      "interaction": {
+        "boundary_arithmetic": "min_max_wrap",
+        "cell": "P1/composed/min_max_wrap/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "composed",
+        "source_operator_witness": [
+          "quote",
+          "compose",
+          "run",
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 40,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "quote",
+          "compose",
+          "run",
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-on"
+        ]
+      }
+    },
+    {
+      "index": 27,
+      "kind": "straight",
+      "mode": "off",
+      "source": "26 false 2 3 * 0 + 0 + 0 +",
+      "source_sha256": "2f8a1e93775716a43fa1b73212c02debb9a1ab97a6590bece51543dbf828f1d9",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "26"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "26"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 29
+      },
+      "wasm_sha256": "227fdc7c8c655c15bbe07c55e3978770b4f367ee8afdc5a61b62da24e07fcf68",
+      "lean_theorem": "case_27_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "2f8a1e93775716a43fa1b73212c02debb9a1ab97a6590bece51543dbf828f1d9"
+      },
+      "interaction": {
+        "boundary_arithmetic": "small",
+        "cell": "P1/plain/small/preserved_prefix_multiple",
+        "output_shape": "preserved_prefix_multiple",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "plain",
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 29,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-off"
+        ]
+      }
+    },
+    {
+      "index": 27,
+      "kind": "straight",
+      "mode": "on",
+      "source": "26 false 2 3 * 0 + 0 + 0 +",
+      "source_sha256": "2f8a1e93775716a43fa1b73212c02debb9a1ab97a6590bece51543dbf828f1d9",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "26"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "26"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 29
+      },
+      "wasm_sha256": "9a24e39defd97b5cc8991a979f90d1ed42c98fd841c3edc68260a6bcb9e1392e",
+      "lean_theorem": "case_27_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "2f8a1e93775716a43fa1b73212c02debb9a1ab97a6590bece51543dbf828f1d9"
+      },
+      "interaction": {
+        "boundary_arithmetic": "small",
+        "cell": "P1/plain/small/preserved_prefix_multiple",
+        "output_shape": "preserved_prefix_multiple",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "plain",
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 29,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-on"
+        ]
+      }
+    },
+    {
+      "index": 28,
+      "kind": "straight",
+      "mode": "off",
+      "source": "0 -1 - 0 +",
+      "source_sha256": "5fab8d6607a286c2e3b6b8a6648301117ea3bac819215d342bc7b650a9e5bb57",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 15
+      },
+      "wasm_sha256": "dcc0656719d9cc9d9aaa29e06bef44f4175a6024c48c6c30f4a972ee33a80942",
+      "lean_theorem": "case_28_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "5fab8d6607a286c2e3b6b8a6648301117ea3bac819215d342bc7b650a9e5bb57"
+      },
+      "interaction": {
+        "boundary_arithmetic": "zero_negative_one",
+        "cell": "P1/plain/zero_negative_one/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "plain",
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 15,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-off"
+        ]
+      }
+    },
+    {
+      "index": 28,
+      "kind": "straight",
+      "mode": "on",
+      "source": "0 -1 - 0 +",
+      "source_sha256": "5fab8d6607a286c2e3b6b8a6648301117ea3bac819215d342bc7b650a9e5bb57",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 15
+      },
+      "wasm_sha256": "1daa70f713c6558baddb3cc44b86414dc7a7cd0bda6af40e23c4d90e1deb13a4",
+      "lean_theorem": "case_28_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "5fab8d6607a286c2e3b6b8a6648301117ea3bac819215d342bc7b650a9e5bb57"
+      },
+      "interaction": {
+        "boundary_arithmetic": "zero_negative_one",
+        "cell": "P1/plain/zero_negative_one/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "plain",
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 15,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-on"
+        ]
+      }
+    },
+    {
+      "index": 29,
+      "kind": "program",
+      "mode": "off",
+      "source": "9223372036854775807 1 [ + 0 + 0 + 0 + ] run",
+      "source_sha256": "66d48909ad90d81139a2c48cc3b3bb2a008c357b753280a1bb789754502f41c4",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 29
+      },
+      "wasm_sha256": "7c80f0ad3f798980e003170d63ffdef7c6a76bbceb2e1ff7b5a8048b45eba13e",
+      "lean_theorem": "case_29_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "66d48909ad90d81139a2c48cc3b3bb2a008c357b753280a1bb789754502f41c4"
+      },
+      "interaction": {
+        "boundary_arithmetic": "min_max_wrap",
+        "cell": "P1/quoted/min_max_wrap/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "quoted",
+        "source_operator_witness": [
+          "quote",
+          "run",
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 29,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "quote",
+          "run",
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-off"
+        ]
+      }
+    },
+    {
+      "index": 29,
+      "kind": "program",
+      "mode": "on",
+      "source": "9223372036854775807 1 [ + 0 + 0 + 0 + ] run",
+      "source_sha256": "66d48909ad90d81139a2c48cc3b3bb2a008c357b753280a1bb789754502f41c4",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 29
+      },
+      "wasm_sha256": "6cd0c9a0f2f6864560b77e43b6ca2f05327f7a4faa270c09ae488a15a4c83873",
+      "lean_theorem": "case_29_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "66d48909ad90d81139a2c48cc3b3bb2a008c357b753280a1bb789754502f41c4"
+      },
+      "interaction": {
+        "boundary_arithmetic": "min_max_wrap",
+        "cell": "P1/quoted/min_max_wrap/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "quoted",
+        "source_operator_witness": [
+          "quote",
+          "run",
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 29,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "quote",
+          "run",
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-on"
+        ]
+      }
+    },
+    {
+      "index": 30,
+      "kind": "program",
+      "mode": "off",
+      "source": "9223372036854775807 [ 1 + ] [ 2 * 0 + ] compose run",
+      "source_sha256": "a34443a6ebe39f2f0414ad73ed5f75787abbacdcaa576e5d3933deafd4d69e2c",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 32
+      },
+      "wasm_sha256": "fc1f5e696e55c92b93b319216a5f36f9c1cb1ca9dfdf184967e2aa2a3ab7422f",
+      "lean_theorem": "case_30_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "a34443a6ebe39f2f0414ad73ed5f75787abbacdcaa576e5d3933deafd4d69e2c"
+      },
+      "interaction": {
+        "boundary_arithmetic": "min_max_wrap",
+        "cell": "P1/composed/min_max_wrap/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "composed",
+        "source_operator_witness": [
+          "quote",
+          "compose",
+          "run",
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 32,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "quote",
+          "compose",
+          "run",
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-off"
+        ]
+      }
+    },
+    {
+      "index": 30,
+      "kind": "program",
+      "mode": "on",
+      "source": "9223372036854775807 [ 1 + ] [ 2 * 0 + ] compose run",
+      "source_sha256": "a34443a6ebe39f2f0414ad73ed5f75787abbacdcaa576e5d3933deafd4d69e2c",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 32
+      },
+      "wasm_sha256": "feefcdaae7c1685c0dbcfc774ae1c4dff1839637892832252096ef23daa6a848",
+      "lean_theorem": "case_30_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "a34443a6ebe39f2f0414ad73ed5f75787abbacdcaa576e5d3933deafd4d69e2c"
+      },
+      "interaction": {
+        "boundary_arithmetic": "min_max_wrap",
+        "cell": "P1/composed/min_max_wrap/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "composed",
+        "source_operator_witness": [
+          "quote",
+          "compose",
+          "run",
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 32,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "quote",
+          "compose",
+          "run",
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-on"
+        ]
+      }
+    },
+    {
+      "index": 31,
+      "kind": "straight",
+      "mode": "off",
+      "source": "24 false 2 3 * 0 +",
+      "source_sha256": "b1262b35e57e0a76f65c83fe2f62dc44e061cc5946761fdafb679b699dada2db",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "24"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "24"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 21
+      },
+      "wasm_sha256": "209b1261c6bdd8c10638f0a71c7d60539a481fb00b389ad7022f3cf938fbf67d",
+      "lean_theorem": "case_31_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "b1262b35e57e0a76f65c83fe2f62dc44e061cc5946761fdafb679b699dada2db"
+      },
+      "interaction": {
+        "boundary_arithmetic": "small",
+        "cell": "P1/plain/small/preserved_prefix_multiple",
+        "output_shape": "preserved_prefix_multiple",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "plain",
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 21,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-off"
+        ]
+      }
+    },
+    {
+      "index": 31,
+      "kind": "straight",
+      "mode": "on",
+      "source": "24 false 2 3 * 0 +",
+      "source_sha256": "b1262b35e57e0a76f65c83fe2f62dc44e061cc5946761fdafb679b699dada2db",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "24"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "24"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 21
+      },
+      "wasm_sha256": "b00477dce6e0613fb9acf3be8b2053387eaf6625bd536800f666ff435f6619e6",
+      "lean_theorem": "case_31_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "b1262b35e57e0a76f65c83fe2f62dc44e061cc5946761fdafb679b699dada2db"
+      },
+      "interaction": {
+        "boundary_arithmetic": "small",
+        "cell": "P1/plain/small/preserved_prefix_multiple",
+        "output_shape": "preserved_prefix_multiple",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "plain",
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 21,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-on"
+        ]
+      }
+    },
+    {
+      "index": 32,
+      "kind": "straight",
+      "mode": "off",
+      "source": "0 -1 - 0 + 0 + 0 +",
+      "source_sha256": "b224d5272a484345f7be8b6371d734b6553503a1efe8314afd6abd6841e739d9",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 23
+      },
+      "wasm_sha256": "9e7ad2c3fc32dc33e04e84c2132a3bbaf93099fabd51e68714ba6253595bf170",
+      "lean_theorem": "case_32_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "b224d5272a484345f7be8b6371d734b6553503a1efe8314afd6abd6841e739d9"
+      },
+      "interaction": {
+        "boundary_arithmetic": "zero_negative_one",
+        "cell": "P1/plain/zero_negative_one/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "plain",
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 23,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-off"
+        ]
+      }
+    },
+    {
+      "index": 32,
+      "kind": "straight",
+      "mode": "on",
+      "source": "0 -1 - 0 + 0 + 0 +",
+      "source_sha256": "b224d5272a484345f7be8b6371d734b6553503a1efe8314afd6abd6841e739d9",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 23
+      },
+      "wasm_sha256": "6dbd0b1583cb869a98c7602543342934a1a47014e51389fd8f72fb1e709e8a73",
+      "lean_theorem": "case_32_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "b224d5272a484345f7be8b6371d734b6553503a1efe8314afd6abd6841e739d9"
+      },
+      "interaction": {
+        "boundary_arithmetic": "zero_negative_one",
+        "cell": "P1/plain/zero_negative_one/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "plain",
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 23,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-on"
+        ]
+      }
+    },
+    {
+      "index": 33,
+      "kind": "program",
+      "mode": "off",
+      "source": "9223372036854775807 1 [ + 0 + ] run",
+      "source_sha256": "cd94e2c1e16401208cb591ae909fa6ffa9117621f35622410fa62a15606cac6e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 21
+      },
+      "wasm_sha256": "776412cc47be029dab7f8f40e14add4495bb9a2aeccaa49f99b471065060ac0e",
+      "lean_theorem": "case_33_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "cd94e2c1e16401208cb591ae909fa6ffa9117621f35622410fa62a15606cac6e"
+      },
+      "interaction": {
+        "boundary_arithmetic": "min_max_wrap",
+        "cell": "P1/quoted/min_max_wrap/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "quoted",
+        "source_operator_witness": [
+          "quote",
+          "run",
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 21,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "quote",
+          "run",
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-off"
+        ]
+      }
+    },
+    {
+      "index": 33,
+      "kind": "program",
+      "mode": "on",
+      "source": "9223372036854775807 1 [ + 0 + ] run",
+      "source_sha256": "cd94e2c1e16401208cb591ae909fa6ffa9117621f35622410fa62a15606cac6e",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 21
+      },
+      "wasm_sha256": "3581e6c751dd4ff25703a0f21b1fd9030da894393141ea6d6cd1200e81865ac1",
+      "lean_theorem": "case_33_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "cd94e2c1e16401208cb591ae909fa6ffa9117621f35622410fa62a15606cac6e"
+      },
+      "interaction": {
+        "boundary_arithmetic": "min_max_wrap",
+        "cell": "P1/quoted/min_max_wrap/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "quoted",
+        "source_operator_witness": [
+          "quote",
+          "run",
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 21,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "quote",
+          "run",
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-on"
+        ]
+      }
+    },
+    {
+      "index": 34,
+      "kind": "program",
+      "mode": "off",
+      "source": "9223372036854775807 [ 1 + ] [ 2 * 0 + 0 + 0 + ] compose run",
+      "source_sha256": "cfb846006e7c9614ef4bf756d472ca0e8cd456cc94ded8522d4045f228e19729",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 40
+      },
+      "wasm_sha256": "8803fed786f298fa85e6d2246356c2723d0056a4bb14968999d8d27aef3b70cb",
+      "lean_theorem": "case_34_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "cfb846006e7c9614ef4bf756d472ca0e8cd456cc94ded8522d4045f228e19729"
+      },
+      "interaction": {
+        "boundary_arithmetic": "min_max_wrap",
+        "cell": "P1/composed/min_max_wrap/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "composed",
+        "source_operator_witness": [
+          "quote",
+          "compose",
+          "run",
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 40,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "quote",
+          "compose",
+          "run",
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-off"
+        ]
+      }
+    },
+    {
+      "index": 34,
+      "kind": "program",
+      "mode": "on",
+      "source": "9223372036854775807 [ 1 + ] [ 2 * 0 + 0 + 0 + ] compose run",
+      "source_sha256": "cfb846006e7c9614ef4bf756d472ca0e8cd456cc94ded8522d4045f228e19729",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "trace": []
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "diagnostic": null,
+        "execution_steps": 40
+      },
+      "wasm_sha256": "ef6b956e40f7f1378602e44448269265e71b0cae717ad53cf401352fabe3490e",
+      "lean_theorem": "case_34_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-plausible-v1",
+        "sha256": "cfb846006e7c9614ef4bf756d472ca0e8cd456cc94ded8522d4045f228e19729"
+      },
+      "interaction": {
+        "boundary_arithmetic": "min_max_wrap",
+        "cell": "P1/composed/min_max_wrap/ordered_single",
+        "output_shape": "ordered_single",
+        "profile": "P1-core-source-wasm",
+        "quotation_composition": "composed",
+        "source_operator_witness": [
+          "quote",
+          "compose",
+          "run",
+          "arithmetic"
+        ],
+        "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+      },
+      "interaction_witness": {
+        "admission_outcome": "normal",
+        "executed": true,
+        "runtime_execution_steps": 40,
+        "positive_execution_steps": true,
+        "operator_trace_available": false,
+        "source_operator_witness": [
+          "quote",
+          "compose",
+          "run",
+          "arithmetic"
+        ],
+        "property_engaged": true,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-on"
+        ]
+      }
+    },
+    {
+      "index": 35,
+      "kind": "straight",
+      "mode": "off",
+      "source": "9223372036854775808",
+      "source_sha256": "83acd6ec9b70e1b3d1bf22d3451ebba0ea14c2de3fc46dcc761886521b339147",
+      "expected": {
+        "outcome": "reject"
+      },
+      "observed": {
+        "outcome": "reject",
+        "diagnostic": "integer literal is outside I64",
+        "execution_steps": null
+      },
+      "wasm_sha256": null,
+      "lean_theorem": "case_35_ref",
+      "matched": true,
+      "corpus_unit": {
+        "unit": "issue125-p1-invalid-control",
+        "sha256": "83acd6ec9b70e1b3d1bf22d3451ebba0ea14c2de3fc46dcc761886521b339147"
+      },
+      "interaction": {
+        "profile": "P1-core-source-wasm",
+        "cell": null,
+        "variant": "one-premise-invalid-literal",
+        "outcome": "refused",
+        "changed_premise": "I64 literal remains in range",
+        "witness_kind": "frontend parse refusal; no execution claimed"
+      },
+      "interaction_witness": {
+        "admission_outcome": "reject",
+        "executed": false,
+        "runtime_execution_steps": null,
+        "positive_execution_steps": false,
+        "operator_trace_available": false,
+        "property_engaged": false,
+        "property_failed": false,
+        "prefix_preserved": true,
+        "comparison_legs_reached": [
+          "BigInt reference",
+          "Lean-kernel-checked expectation",
+          "managed Wasm opt-off"
+        ]
+      }
+    }
+  ],
+  "all_matched": true,
+  "imported": {
+    "cases_sha256": "934287a5ec78e49efb6527bd9e425b2aa31957166d3c7e5203edfe977195618e",
+    "corpus": "issue125-plausible-p1-v1",
+    "export_counts": {
+      "seed": 125,
+      "size": 8,
+      "cases_per_arm": 16
+    },
+    "cases": 16,
+    "executed_cases": 16,
+    "invalid_cases": 1,
+    "executions": 32,
+    "invalid_control_executions": 1
+  },
+  "opt_on_off_same_stack": true,
+  "coverage": {
+    "kinds": {
+      "straight": 15,
+      "program": 16,
+      "nested": 5
+    },
+    "with_prefix": 16,
+    "with_bool_prefix": 8,
+    "with_compose": 8,
+    "with_nested_compose": 2,
+    "with_quote": 9,
+    "negative_results": 15,
+    "boundary_values": 12,
+    "rejection_cases": 3,
+    "imported_corpus_cases": 16
+  },
+  "interaction_matrix": {
+    "profile": "P1-core-source-wasm",
+    "version": 1,
+    "selected": 4,
+    "matrix_sha256": "d8183d933e40cafd9e283aeeef2e07af2d5c635f26045198730b576e787c4845",
+    "reached": 4,
+    "unreached": [],
+    "accepted": 4,
+    "refused": 0,
+    "exhausted": 0,
+    "unsupported": 1,
+    "unsupported_features": [
+      "per-case runtime fuel limit: the foundation CLI observer exposes no fuel override; the case-count budget is measured separately"
+    ],
+    "comparison_legs": [
+      "BigInt reference",
+      "Lean-kernel-checked expectation",
+      "managed Wasm opt-off",
+      "managed Wasm opt-on"
+    ],
+    "cells": [
+      {
+        "cell": "P1/composed/min_max_wrap/ordered_single",
+        "selected": true,
+        "runs": [
+          {
+            "mode": "off",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "on",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "off",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "on",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "off",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "on",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "off",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "on",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          }
+        ],
+        "reached": true
+      },
+      {
+        "cell": "P1/plain/small/preserved_prefix_multiple",
+        "selected": true,
+        "runs": [
+          {
+            "mode": "off",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "on",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "off",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "on",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "off",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "on",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "off",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "on",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          }
+        ],
+        "reached": true
+      },
+      {
+        "cell": "P1/plain/zero_negative_one/ordered_single",
+        "selected": true,
+        "runs": [
+          {
+            "mode": "off",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "on",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "off",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "on",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "off",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "on",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "off",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "on",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          }
+        ],
+        "reached": true
+      },
+      {
+        "cell": "P1/quoted/min_max_wrap/ordered_single",
+        "selected": true,
+        "runs": [
+          {
+            "mode": "off",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "on",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "off",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "on",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "off",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "on",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "off",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          },
+          {
+            "mode": "on",
+            "reached": true,
+            "matched": true,
+            "admission_outcome": "normal"
+          }
+        ],
+        "reached": true
+      }
+    ],
+    "all_refused_is_semantic_acceptance": false
+  },
+  "p1_budget": {
+    "kind": "frozen-case-count-per-optimization-mode",
+    "selected_case_limit": 16,
+    "selected_cases": 16,
+    "observed": {
+      "opt_off": 16,
+      "opt_on": 16
+    },
+    "budget_boundary_reached": true,
+    "runtime_fuel_boundary_supported": false,
+    "note": "The foundation CLI differential observer has no per-run fuel override; this boundary is the frozen case-work budget."
+  },
+  "p1_invalid_control": {
+    "selected": 1,
+    "refused": true,
+    "rows": [
+      {
+        "source": "9223372036854775808",
+        "source_sha256": "83acd6ec9b70e1b3d1bf22d3451ebba0ea14c2de3fc46dcc761886521b339147",
+        "outcome": "reject",
+        "matched": true,
+        "variant": "one-premise-invalid-literal"
+      }
+    ]
+  },
+  "p1_outcome_summary": {
+    "accepted_cells": 4,
+    "refused_invalid_variants": 1,
+    "exhausted_runs": 0,
+    "unsupported_variants": 1
+  },
+  "generator_comparison": {
+    "profiles_separate": true,
+    "same_compute_seed_budget": {
+      "seed": "125",
+      "cases_per_mode": 16,
+      "opt_modes": [
+        "off",
+        "on"
+      ],
+      "current_generator_case_runs": 32,
+      "structured_extension_case_runs": 32,
+      "equal_case_run_budget": true
+    },
+    "current_generator": {
+      "classified_cells": 1,
+      "reached_cells": [
+        "P1/composed/small/ordered_single"
+      ],
+      "classified_cell_observation": "seeded case model plus successful exact source execution and positive runtime steps; no operator trace",
+      "distinct_attributed_failures": []
+    },
+    "structured_extension": {
+      "selected_cells": 4,
+      "generated_cases": 16,
+      "reached_cells": [
+        "P1/composed/min_max_wrap/ordered_single",
+        "P1/plain/small/preserved_prefix_multiple",
+        "P1/plain/zero_negative_one/ordered_single",
+        "P1/quoted/min_max_wrap/ordered_single"
+      ],
+      "witness_kind": "frozen interaction model plus positive execution steps and property comparison; no operator trace",
+      "distinct_attributed_failures": []
+    }
+  },
+  "controls": [
+    {
+      "id": "reversed-subtraction",
+      "intended": "reference computes top - deeper",
+      "detected_cases": 18,
+      "all_attributable_to_intended_reason": true,
+      "shrunk": {
+        "source": "[ 1 1559655854772313886 - ] quote run run",
+        "steps": 48
+      },
+      "demonstrably_fails": true
+    },
+    {
+      "id": "unsigned-decoding",
+      "intended": "observed I64 decoded as unsigned",
+      "detected_cases": 30,
+      "all_attributable_to_intended_reason": true,
+      "shrunk": {
+        "source": "[ -1 ] quote run run",
+        "steps": 14
+      },
+      "demonstrably_fails": true
+    },
+    {
+      "id": "prefix-corruption",
+      "intended": "expected bottom prefix item replaced",
+      "detected_cases": 30,
+      "all_attributable_to_intended_reason": true,
+      "shrunk": {
+        "source": "7437673423764155863 [  ] quote run run",
+        "steps": 10
+      },
+      "demonstrably_fails": true
+    },
+    {
+      "id": "wrong-composition-order",
+      "intended": "compose evaluated as q then p",
+      "detected_cases": 16,
+      "all_attributable_to_intended_reason": true,
+      "shrunk": {
+        "source": "0 [ -4611686018427387904 + ] 4294967296 quote compose run",
+        "steps": 49
+      },
+      "demonstrably_fails": true
+    },
+    {
+      "id": "trace-mismatch",
+      "intended": "expectation claims a host request",
+      "detected_cases": 64,
+      "all_attributable_to_intended_reason": true,
+      "shrunk": {
+        "source": "[  ] quote run run",
+        "steps": 7
+      },
+      "demonstrably_fails": true
+    },
+    {
+      "id": "literal-wrapping-instead-of-refusal",
+      "intended": "out-of-range literal assumed to wrap",
+      "detected_cases": 4,
+      "demonstrably_fails": true
+    },
+    {
+      "id": "stale-proof-subject",
+      "intended": "Lean case or foundation receipt for a different subject",
+      "lean_case_rebinding_rejected": true,
+      "foundation_tree_mismatch_rejected": true,
+      "demonstrably_fails": true
+    }
+  ],
+  "checker_property_lanes": {
+    "skipped": true,
+    "reason": "requested by --skip-checker-lanes"
+  },
+  "sources_sha256": {
+    "verification/foundation/differential.mjs": "b5bbbd360a460419f37fb9e3e15db117f3b456bb21415614dca2cb0828402ff2",
+    "verification/foundation/arithmetic.mjs": "ba98f8b1f7efad87e218011e708ccc2feee185587b1717966ec23f10dd48370f",
+    "verification/foundation/execution.mjs": "193ee0337eca0f846a00bf5994eeef87c830b30d476fb550d4ee9a1dfc06f876",
+    "verification/foundation/shrinking.mjs": "7740f370ed7f1f57372b748e8778bf959392e99075bf397edbd54387a15a85fa",
+    "verification/differential-interactions/p1-cases.mjs": "f7c56ae2977369cca29c65dbe8d2ddf35c7063692153c8e1ab3230a5fc4cfddb",
+    "verification/differential-interactions/matrix-v1.json": "d8183d933e40cafd9e283aeeef2e07af2d5c635f26045198730b576e787c4845",
+    "verification/differential-interactions/mutants-v1.json": "3c7188c17c7abba1be563a8475574545ae973b81006a885df474cb3791a409f6",
+    "verification/differential-interactions/replay-p1.mjs": "d8671d1e902519fecb9c32a8f5c2e9a721aee1b531210aba4856b687c4a430a7",
+    "verification/differential-interactions/mutant-runner.mjs": "ba1f3d977bdbbd9a73bfdd9dd43d2593565105383619b34d6eb58a14f0fae45c",
+    "verification/fuzz/export-differential.mjs": "ffed8c3e7785ac72b5f7510c9fbc405cd99c1e1ef38afec129fc0f00c1c410ba",
+    "verification/selected-vendor.mjs": "da20d74af3549fa71889a0427ed9f58ae38d3dcd0df5b0cd20a38194058cf0da",
+    "crates/noble-cli/src/core/runtime/engine.mjs": "ec72cd59255938ae952f1737caa1d5e308dccff6a090f1503d280583ffd821b3",
+    "crates/noble-cli/src/core/runtime/values.mjs": "1b305dd458b50a8b7eb4390f39938e8087b699d16b295024b0d68aff835ca1c3",
+    "proofs/foundation/NobleFoundation/Sequence.lean": "4b2d84b438845b345b7a8a98232a82dedda79d19d1c05e12b0d8a2972c02d73e",
+    "proofs/foundation/NobleFoundation/Literal.lean": "e6a2053848b738c7d1a7a0fcd6e6328c2199fc179a86344f032a038e33865d1f",
+    "proofs/foundation/NobleFoundation/Repr.lean": "b8fb9ab30fb80e75c4df5d51b56fe3b178eef1415e7f09ba85a3a2b1d08d93f8",
+    "proofs/m3/MathlibI64.lean": "deb32a80f4593d042b20c636ffebaeed69347f0b248e4a19490e0133048dc618",
+    "proofs/mc1/NobleContracts/Model.lean": "368cad7d6d86db4b182bd6b9e2bd0d3a354559c04579e3e27b789bb69313a7c3",
+    "proofs/mc1/NobleContracts/Rules.lean": "1d5802ddec13fcfcbba70e6c75f46ab051ea569e6f30fe92d61e3b5dec8d877b",
+    "crates/noble-wasm/runtime/operations.wat": "ed8b474eaf8209030a7fa53f249c5743da6edb67887d94a32dfaef08f7c2897d",
+    "crates/noble-wasm/runtime/stack.wat": "6abc22e80a016b4f6f0f263e696bf401d370c3685e732606e388636d9f230db0",
+    "crates/noble-wasm/runtime/programs.wat": "ef6432e7f40e619494a65de802add69b3376185bfd802579364410ee5c6af3be",
+    "crates/noble-wasm/src/operations.rs": "011486bba310dc34d93e08fa72792b580df96702c530486370b91515970b6fbd",
+    "crates/noble-contracts/src/syntax/integer.rs": "fa33fe5666b9e372ad49a9d816b207a78f71485caec7d90fcb3fa7446e1924c7",
+    "crates/noble-contracts/src/source/lexer/tokens.rs": "4ecfd1dfbb17417dc4f7bb40e23ff1299057a8c6ee51c7607669f4bdaee28b0a",
+    "crates/noble-cli/src/core/runtime/config.json": "be38ad3c8d647968ed44628efe5d945dcaf57d162764b3cec51bab661738dcfd",
+    "policy/tool-selection.json": "ea875571e8897865a7a8662c347854c8e4de9b227e41c3ced8a1960c89b2b9f0",
+    "Cargo.lock": "87a504999bc56d5080cd6fc080bb8fe06b86f18ddc446de4065032f1ddbfb63b",
+    "crates/noble-kernel/tests/property.rs": "264181e6886c4828f3a0198a796aaaf0948c367109ad38c5da0b8126de493088"
+  },
+  "claims": [
+    {
+      "claim": "refRun semantics equal MC1 Exec for the fragment (any prefix)",
+      "status": "proved",
+      "theorems": [
+        "NobleFoundation.PExpr.exec_inputs_run",
+        "NobleFoundation.exec_lowerAll_from_empty",
+        "NobleFoundation.exec_inputs_nested",
+        "NobleFoundation.exec_lowerAll",
+        "NobleFoundation.PExpr.exec_run_ref"
+      ]
+    },
+    {
+      "claim": "per-case expectations equal refRun (kernel decide) and per-case MC1 theorems",
+      "status": "proved",
+      "count": 36
+    },
+    {
+      "claim": "compiled managed-Wasm execution matches, opt off and on",
+      "status": "tested",
+      "count": 68
+    },
+    {
+      "claim": "imported fuzz-corpus programs match their Lean-checked expectations, opt off and on",
+      "status": "tested",
+      "count": 16
+    },
+    {
+      "claim": "out-of-range literals refused by the frontend",
+      "status": "tested",
+      "count": 3
+    },
+    {
+      "claim": "Rust frontend refines the transcribed literal accumulator",
+      "status": "open"
+    },
+    {
+      "claim": "noble-wasm lowering, helpers, wasm-tools, wasm-opt, V8",
+      "status": "assumed"
+    },
+    {
+      "claim": "universal backend correctness",
+      "status": "open"
+    },
+    {
+      "claim": "Mathlib .olean imports",
+      "status": "assumed",
+      "note": "downloaded cache, not rebuilt"
+    }
+  ],
+  "commands": 149
+}
