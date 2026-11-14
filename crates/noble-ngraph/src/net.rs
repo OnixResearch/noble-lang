@@ -2223,6 +2223,72 @@ mod tests {
     }
 
     #[test]
+    fn schedule_fuel_boundary_refuses_without_partial_readback() {
+        let (checked, net, row) = sample_interaction_graph(11, 4);
+        let total = net.expected_interactions().expect("sample interactions");
+        let initial_wires = net.wire_count().expect("sample wires");
+        let reference =
+            crate::eval::reference(&checked, &row, None, &mut crate::eval::Control::default());
+        let expected = match reference.obs {
+            crate::eval::Obs::Normal(values) => values,
+            other => panic!("sample reference was not normal: {other:?}"),
+        };
+        let schedules = [
+            Schedule::Lifo,
+            Schedule::Fifo,
+            Schedule::SplitMix64 { seed: 1 },
+            Schedule::SplitMix64 { seed: 0x5eed },
+        ];
+        for cap in [total - 1, total, total + 1] {
+            for schedule in schedules {
+                let limits = Limits::default();
+                let report = reduce(
+                    &IDS,
+                    ReduceRequest {
+                        checked: &checked,
+                        candidate: &net,
+                        inputs: &row,
+                        limits: &limits,
+                        plan: Plan {
+                            schedule: Some(schedule),
+                            interaction_fuel: Some(cap),
+                            ..Plan::default()
+                        },
+                    },
+                );
+                if cap < total {
+                    assert_eq!(
+                        report.obs,
+                        Obs::Exhausted {
+                            limit: Limit::Fuel,
+                            cap,
+                            observed: cap + 1,
+                        },
+                        "{schedule:?}"
+                    );
+                    assert_eq!(report.interactions, cap, "{schedule:?}");
+                    assert_eq!(
+                        report.final_wires,
+                        Some(initial_wires - cap),
+                        "{schedule:?}"
+                    );
+                } else {
+                    assert!(
+                        matches!(&report.obs, Obs::Normal(values) if values == &expected),
+                        "{schedule:?}: {report:?}"
+                    );
+                    assert_eq!(report.interactions, total, "{schedule:?}");
+                    assert_eq!(
+                        report.final_wires,
+                        Some(initial_wires - total),
+                        "{schedule:?}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
     fn budgets_refuse_below_and_succeed_at_or_above_each_limit() {
         let (checked, net, row) = sample_interaction_graph(8, 3);
         let agents = u64::try_from(net.agents.len()).expect("bounded sample agents");

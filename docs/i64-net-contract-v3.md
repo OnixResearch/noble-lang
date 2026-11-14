@@ -163,3 +163,22 @@ execution, read-back and cleanup separately, including losses and the direct sca
 baseline. IVM's unsafe runtime/compiler would be new **experimental trusted
 components**, not a dependency or proof of Noble's safe-Rust path. No external
 measurement changes the frozen continuation criteria or authorizes default adoption.
+
+## 8. Finite schedule observations and fuel outcomes
+
+The local [Rust reducer tests](../crates/noble-ngraph/src/net.rs) run the same
+validated, shared-subtraction/square/equality graph under LIFO, FIFO and
+SplitMix64 seeds `1` and `0x5eed`. These are worklist **selection orders**,
+not revision 2's rejected FIFO operand-stack semantics:
+
+| Separate observation | Finite evidence | Limit |
+|---|---|---|
+| Successful values and count | `schedules_have_identical_values_counts_and_live_bound` uses `(i64::MIN, -1)` and checks four complete results agree, terminate normally in ten interactions and stay under the initial live-agent bound. `reduction_matches_reference_and_exact_interaction_bound` compares the `(11, 4)` result with the normative graph reference. | Agreement on these rows does not prove graph-to-Rust correspondence for arbitrary inputs. |
+| Termination and distinct legal order | In [the Lean model](../proofs/foundation/NobleFoundation/NetI64.lean), `parallel_sub_schedules_start_differ` chooses different independent first active pairs; `parallel_sub_schedules_normalize` checks both complete four-step runs; `parallel_sub_schedules_agree` compares ordered positive/wrapping read-back. `parallel_sub_schedules_same_normal_form` instantiates inets' **conditional** normal-form uniqueness and equal-length theorem. | The fixture proves two model runs, not that every checked Rust lowering terminates; the model theorem assumes both normalizations succeed. |
+| Fuel boundary and refusal | `schedule_fuel_boundary_refuses_without_partial_readback` runs `(11, 4)` under all four Rust schedules with fuel `K-1`, `K` and `K+1` (`K=10`). At `K-1` each returns only `Exhausted(Fuel)` with nine interactions and required amount ten; at and above `K` each terminates with the normative complete result and ten interactions. The test also checks remaining wire counts. | **No schedule-dependent fuel-exhaustion difference was observed or claimed.** The reducer charges one fuel and removes one wire per firing, and its agent/wire caps validate the input before the schedule runs. A claimed same-net/same-fuel difference in the public exhaustion result would contradict this tested finite profile and the equal-length theorem for normalizing abstract runs. Per-rule transient storage, physical time and interrupted/stuck nets are different comparisons; no schedule-dependent resource-exhaustion receipt exists. |
+
+These tests are executable finite evidence, not retained per-order runtime traces.
+The source-bound [NO-GO decision](../verification/ngraph/net-decision.md) and its
+timing receipt compare backends, not all four worklist schedules. The old
+`fifo_control_schedules_differ` fixture belongs to the rejected revision-2
+operand-delivery control; it is **not** a legal revision-3 schedule counterexample.
