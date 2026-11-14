@@ -7,12 +7,12 @@ fn frozen_heldout_measurement_once() -> Result<(), String> {
     let control = super::selection::choose_control_pair(&selection_namespace)?;
     let mut rows = Vec::with_capacity(TRANSFER_ROW_CAPACITY);
     let mut is_learned_passed = true;
-    let mut no_runtime_agent_calls = true;
+    let mut has_runtime_agent_calls = false;
     for (seed_index, seed) in SEEDS.iter().copied().enumerate() {
         for arm in TRANSFER_ARMS {
             let (row, metrics, is_control_size_matched) =
                 super::runner::run_arm_seed(arm, seed_index, &control)?;
-            no_runtime_agent_calls &= metrics.proposer_calls == 0 && metrics.teacher_calls == 0;
+            has_runtime_agent_calls |= metrics.proposer_calls != 0 || metrics.teacher_calls != 0;
             if arm == "accumulated_learned_library" {
                 is_learned_passed &= metrics.transfer_passed == 2;
             }
@@ -22,7 +22,7 @@ fn frozen_heldout_measurement_once() -> Result<(), String> {
             rows.push(row);
         }
     }
-    if !no_runtime_agent_calls {
+    if has_runtime_agent_calls {
         return Err(String::from(
             "proposer or teacher calls occurred in a frozen transfer arm",
         ));

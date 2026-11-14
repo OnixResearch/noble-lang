@@ -1202,8 +1202,7 @@ impl ProcedureLibrary {
                             RefusalKind::ForgedStatus,
                             Diagnostic {
                                 field: "promotion.obligations",
-                                message:
-                                    "consumer obligations must be strictly increasing",
+                                message: "consumer obligations must be strictly increasing",
                             },
                             index as u32,
                         ));
