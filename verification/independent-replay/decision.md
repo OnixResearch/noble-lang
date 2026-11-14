@@ -58,8 +58,24 @@ result.
 
 ## (d) Remaining `native_decide` conversions
 
-**Deferred for this slice by the integration scope change.** No proof source, axiom inventory, M2/M3
-coverage list, or strength join is changed here. Reopen after the #97 re-extraction merges: re-inventory
-the then-current candidates, apply only conversions that finish under the declared heartbeat budget,
-and rerun the M2/M3 proof and refusal gates and the strength join. This prevents measurements of
-pre-extraction files from being mistaken for current-source results.
+The previous deferral awaited #97's extraction merge so the conversion inventory would not describe
+stale source. Reopened against the current slice base: the in-flight #97 branch changes only
+`proofs/foundation/NobleFoundation.lean`, its foundation modules, README, and inventory; it does not
+change `proofs/m2/` or `proofs/m3/`. Therefore the remaining M2/M3 candidates in this worktree are
+current for the requested conversion trial and do not need an unmerged foundation source.
+
+Before measuring, the still-untried bounded targets in the existing README table are the three
+direct `native_decide` acceptance fixtures in `proofs/m3/NobleM2/SignedSelf.lean`:
+`forever_accepted`, `polymorphic_ordinary_check_accepts`, and `monomorphic_accepted`. The M3 proof
+gate separately lists the dependent `forever_signed_derives` theorem in its native-axiom allowance;
+that theorem will become strict automatically only if its `forever_accepted` dependency becomes
+strict. Try each direct proposition with `decide +kernel` under 1,000,000 heartbeats and recursion
+depth 4,096. Change only proofs that complete within this fixed budget; retain native evaluation for
+any target that does not. Do not add any of these declarations to the external replay corpus: the
+three compiled-environment roots in `statements.json` remain the only selected roots.
+
+Previously measured conversion attempts and their reduction limits remain documented in the README
+table above; this follow-up does not repeat the known failed trials. After the SignedSelf trial,
+record exact results and re-run M2/M3 proof and coverage gates, their refusal matrices, and the
+strength joins before updating the conversion counts. Revisit further sites only if a reduction
+definition or the declared budget changes.
