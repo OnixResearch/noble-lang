@@ -45,7 +45,7 @@
     }
   ],
   "collection_limits": {
-    "max_artifact_bytes": 268435456,
+    "max_artifact_bytes": 536870912,
     "max_calls": 65536,
     "max_configurations": 4096,
     "max_constructors": 65536,
