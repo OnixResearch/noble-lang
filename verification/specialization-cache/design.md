@@ -132,6 +132,20 @@ Expected encoded bytes (lowercase hex):
 These fixtures pin the encoding schema and do not claim a Rust/Lean theorem about cache behavior,
 partial-evaluation correctness, or runtime equivalence.
 
+The Rust test also pins the shared Lean `encodeParts` fixture under its exact model tag,
+`noble.ngraph.subject.v0`, with parts `specialization-cache-fixture`, `v1`, and `bytes`. The
+expected bytes are:
+
+```text
+6e6f626c652e6e67726170682e7375626a6563742e7630
+1c000000000000007370656369616c697a6174696f6e2d63616368652d66697874757265
+02000000000000007631
+05000000000000006279746573
+```
+
+This cross-language fixture is the concrete Rust-to-model encoding correspondence; the two cache
+key fixtures above additionally pin their distinct production domains and field order.
+
 ## Resource and stage accounting
 
 The cache bounds entry count, variants per original recipe, manifest bytes, retained canonical
@@ -142,6 +156,20 @@ of eviction. Cache-hit admission and historical specialization/build/execution c
 stages. A hit does not claim that its work or resource use equals the first generation's.
 
 The differential receipt reports cache-disabled, cold-miss and warm-hit execution agreement, with
-lookup, current admission, specialization, backend compilation, execution and retained-byte costs
-reported as distinct observations. It is finite implementation evidence, not a specialization
+lookup, specialization, source emission, current admission, cache publication, backend compilation,
+execution and retained-byte costs reported as distinct observations. It is finite implementation evidence, not a specialization
 equivalence proof or a performance generalization beyond the measured corpus.
+
+The opt-in integration-test receipt producer lives under the existing B2 test target and records
+the exact source revision only after verifying that its checkout is clean. The library's
+`Session::specialize_with_observer` reports synchronous begin/end events for lookup, #32
+specialization, source emission, independent admission and publication; the harness times those
+boundaries separately from backend compilation and execution. Reproduce it with the repository's pinned Rust toolchain:
+
+```sh
+NOBLE_CACHE_RECEIPT_OUT="<new directory outside the repository>/specialization-cache.json" \
+  cargo test --offline --locked -p noble-ngraph-experiment --test extract_b2 \
+  source_bound_cache_receipt -- --ignored
+```
+
+The output is measurement evidence for this retained three-fixture, 3,000-vector corpus only.
