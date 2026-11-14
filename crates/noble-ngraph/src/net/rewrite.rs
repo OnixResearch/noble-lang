@@ -1344,27 +1344,25 @@ fn validate_worklist(
         {
             return Err(super::Invalid::DoubleEnqueue);
         }
-        if active_pair(slots, *queued).is_ok() {
-            let first = slots
-                .get(queued.first as usize)
-                .ok_or(super::Invalid::StalePlanSlot)?;
-            let second = slots
-                .get(queued.second as usize)
-                .ok_or(super::Invalid::StalePlanSlot)?;
-            if first.queued_generation != Some(queued.first_generation)
-                || second.queued_generation != Some(queued.second_generation)
+        active_pair(slots, *queued)?;
+        let first = slots
+            .get(queued.first as usize)
+            .ok_or(super::Invalid::StalePlanSlot)?;
+        let second = slots
+            .get(queued.second as usize)
+            .ok_or(super::Invalid::StalePlanSlot)?;
+        if first.queued_generation != Some(queued.first_generation)
+            || second.queued_generation != Some(queued.second_generation)
+        {
+            return Err(super::Invalid::WorklistBound);
+        }
+        for prior in worklist.entries.iter().take(index) {
+            if prior.first == queued.first
+                || prior.first == queued.second
+                || prior.second == queued.first
+                || prior.second == queued.second
             {
-                return Err(super::Invalid::WorklistBound);
-            }
-            for prior in worklist.entries.iter().take(index) {
-                if active_pair(slots, *prior).is_ok()
-                    && (prior.first == queued.first
-                        || prior.first == queued.second
-                        || prior.second == queued.first
-                        || prior.second == queued.second)
-                {
-                    return Err(super::Invalid::DoubleEnqueue);
-                }
+                return Err(super::Invalid::DoubleEnqueue);
             }
         }
     }

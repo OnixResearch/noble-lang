@@ -2526,6 +2526,36 @@ mod tests {
             }),
             Err(Invalid::DoubleEnqueue)
         ));
+
+        let mut stale_queue = ActiveWorklist {
+            entries: worklist.entries.clone(),
+        };
+        stale_queue.entries[0].second_generation += 1;
+        assert!(matches!(
+            rewrite::check_with_worklist(rewrite::CheckRequest {
+                bytes: &bytes,
+                slots: &slots,
+                outputs: &outputs,
+                worklist: &stale_queue,
+                pair,
+                policy: StoragePolicy::Reuse,
+            }),
+            Err(Invalid::StalePlanSlot)
+        ));
+
+        let mut freed_slots = slots.clone();
+        freed_slots[3].agent = None;
+        assert!(matches!(
+            rewrite::check_with_worklist(rewrite::CheckRequest {
+                bytes: &bytes,
+                slots: &freed_slots,
+                outputs: &outputs,
+                worklist: &worklist,
+                pair,
+                policy: StoragePolicy::Reuse,
+            }),
+            Err(Invalid::StalePlanSlot)
+        ));
     }
 
     #[test]
@@ -2543,10 +2573,12 @@ mod tests {
 
         let mut wrong_reuse =
             rewrite::compile(&slots, &outputs, pair, StoragePolicy::Reuse).expect("op2 plan");
-        wrong_reuse.as_mut_bytes()[58..62].copy_from_slice(&pair.second.to_le_bytes());
-        assert!(
-            rewrite::check(&wrong_reuse, &slots, &outputs, pair, StoragePolicy::Reuse).is_err()
-        );
+        let slot_range = result_slot_range(&wrong_reuse, 0).expect("first result slot range");
+        wrong_reuse.as_mut_bytes()[slot_range].copy_from_slice(&pair.second.to_le_bytes());
+        assert!(matches!(
+            rewrite::check(&wrong_reuse, &slots, &outputs, pair, StoragePolicy::Reuse),
+            Err(Invalid::PlanMismatch)
+        ));
 
         let mut omitted_write =
             rewrite::compile(&slots, &outputs, pair, StoragePolicy::Reuse).expect("op2 plan");
@@ -2597,14 +2629,16 @@ mod tests {
         let mut first_destination = [0; 4];
         first_destination.copy_from_slice(&duplicate_free.as_bytes()[first_range]);
         duplicate_free.as_mut_bytes()[second_range].copy_from_slice(&first_destination);
-        assert!(rewrite::check(
-            &duplicate_free,
-            &dup_slots,
-            &dup_outputs,
-            dup_pair,
-            StoragePolicy::Reuse
-        )
-        .is_err());
+        assert!(matches!(
+            rewrite::check(
+                &duplicate_free,
+                &dup_slots,
+                &dup_outputs,
+                dup_pair,
+                StoragePolicy::Reuse
+            ),
+            Err(Invalid::DuplicateFree)
+        ));
 
         let (fanout_slots, fanout_outputs, fanout_pair) = duplicate_principal_fixture();
         let mut duplicate_enqueue = rewrite::compile(
