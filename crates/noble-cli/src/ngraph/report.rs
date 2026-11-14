@@ -67,6 +67,26 @@ impl Line {
         }))
     }
 
+    /// A backend-specific refusal or exhaustion that has no shared graph
+    /// diagnostic code.
+    pub(super) fn backend_failure(
+        command: &'static str,
+        stage: &'static str,
+        outcome: noble_ngraph::Outcome,
+        code: &str,
+        detail: impl Into<std::string::String>,
+    ) -> Self {
+        Self(std::boxed::Box::new(Fields {
+            command,
+            stage,
+            outcome,
+            code: Some(code.into()),
+            site: None,
+            detail: Some(detail.into()),
+            fields: std::vec::Vec::new(),
+        }))
+    }
+
     /// An evaluation observation that is not normal.
     pub(super) fn observation(command: &'static str, obs: &noble_ngraph::Obs) -> Self {
         match obs {

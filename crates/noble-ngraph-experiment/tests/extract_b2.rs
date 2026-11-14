@@ -9,14 +9,14 @@
     tigerstyle::underscore_in_module_filename,
     reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
 )]
-//! Phase B B2 (default tier): L3 ≡obs L4 ≡obs L5 over extracted `I64` graphs —
+//! Phase B B2 (default tier): L3 ≡obs L4 ≡obs L5 ≡obs L6 over extracted `I64` graphs —
 //! the design's named vectors and seeded random Core programs.
 //!
 //! The full campaign (L1 real CLI `--opt off|on`, L2 Node BigInt oracle,
-//! L5 independently checked belt, ≥10,000 vectors per graph) is the
+//! L5 independently checked belt, L6 bounded revision-3 net, ≥10,000 vectors per graph) is the
 //! `ngraph-phase-b-extract` harness; its
 //! receipt is `verification/ngraph/phase-b-extract.json`. The ignored test below
-//! runs L2 and L5 when `NOBLE_NODE` names a Node installation:
+//! runs L2 against L3/L4/L5/L6 when `NOBLE_NODE` names a Node installation:
 //! `NOBLE_NODE=… cargo test -p noble-ngraph-experiment --test extract_b2 -- --ignored`.
 
 use noble_ngraph::prng::SplitMix64;
@@ -31,12 +31,24 @@ use noble_ngraph_experiment::scheme::BLAKE3;
 #[path = "attribution/mod.rs"]
 mod attribution;
 
+/// Additional revision-3 boundary-shape and source-rebinding fixtures in this
+/// existing test target (not a separate Cargo integration-test target).
+#[cfg(test)]
+#[path = "extract_b2/net.rs"]
+mod graph_shapes;
+
+/// Rust-produced input nets and results, serialized into kernel-checked Lean
+/// theorems in the existing B2 integration-test target.
+#[cfg(test)]
+#[path = "extract_b2/net_i64_corpus.rs"]
+mod proof;
+
 fn i64s(v: &[i64]) -> Vec<Value> {
     v.iter().map(|x| Value::I64(*x)).collect()
 }
 
 #[test]
-fn design_vectors_agree_on_l3_l4_and_l5() {
+fn design_vectors_agree_on_l3_l4_l5_and_l6() {
     type Case = (
         &'static [&'static str],
         &'static str,
@@ -66,14 +78,20 @@ fn design_vectors_agree_on_l3_l4_and_l5() {
         let l4 = x.l4(&inputs).expect("L4");
         let l5 = noble_ngraph::belt::execute_checked(&BLAKE3, checked, accepted, &inputs)
             .expect("L5 belt");
+        let l6 = x.l6(&inputs).expect("L6 net");
         assert_eq!(l3, i64s(expected), "{root}");
         assert_eq!(l4, i64s(expected), "{root}");
         assert_eq!(l5, i64s(expected), "{root}");
+        assert_eq!(
+            l6.obs,
+            noble_ngraph::net::Obs::Normal(i64s(expected)),
+            "{root}"
+        );
     }
 }
 
 #[test]
-fn seeded_random_programs_extract_and_agree_on_l3_l4_and_l5() {
+fn seeded_random_programs_extract_and_agree_on_l3_l4_l5_and_l6() {
     let seed = 0x1404_b201;
     let mut rng = SplitMix64::new(seed);
     for i in 0..48 {
@@ -98,26 +116,72 @@ fn seeded_random_programs_extract_and_agree_on_l3_l4_and_l5() {
             );
             assert!(
                 obs_eq_all(&a, &c),
-                "program {i} {p:?} on {v:?}: L3 {a:?} vs belt {c:?}"
+                "program {i} {p:?} on {v:?}: L3 {a:?} vs L5 belt {c:?}"
+            );
+            let net = x.l6(&v).expect("L6");
+            assert!(
+                matches!(&net.obs, noble_ngraph::net::Obs::Normal(values) if obs_eq_all(&a, values)),
+                "program {i} {p:?} on {v:?}: L3 {a:?} vs L6 net {net:?}"
             );
         }
     }
 }
 
 #[test]
-#[ignore = "needs the pinned Node on PATH for the L2 BigInt oracle"]
+fn net_equality_captured_recipes_and_rebound_definitions_are_exact() {
+    let equality = Lowered::new(&[], "=", 2).expect("equality extracts");
+    for (row, expected) in [
+        (i64s(&[i64::MIN, i64::MAX]), false),
+        (i64s(&[i64::MAX, i64::MAX]), true),
+    ] {
+        let reference = equality.l3(&row).expect("L3");
+        let compiled = equality.l4(&row).expect("L4");
+        let net = equality.l6(&row).expect("L6");
+        assert_eq!(reference, vec![Value::Bool(expected)]);
+        assert_eq!(compiled, reference);
+        assert_eq!(net.obs, noble_ngraph::net::Obs::Normal(reference));
+    }
+
+    let captured = Lowered::new(&["def sq [ dup * ]".to_owned()], "sq swap sq +", 2)
+        .expect("captured recipe extracts");
+    let captured_row = i64s(&[3, 4]);
+    assert_eq!(
+        captured.l6(&captured_row).expect("captured L6").obs,
+        noble_ngraph::net::Obs::Normal(i64s(&[25]))
+    );
+
+    let old =
+        Lowered::new(&["def step [ 1 + ]".to_owned()], "step", 1).expect("old definition extracts");
+    let rebound = Lowered::new(
+        &["def step [ 1 + ]".to_owned(), "def step [ 9 + ]".to_owned()],
+        "step",
+        1,
+    )
+    .expect("rebound definition extracts");
+    assert_ne!(old.extraction.checked.id(), rebound.extraction.checked.id());
+    let row = i64s(&[3]);
+    assert_eq!(
+        old.l6(&row).expect("saved old net").obs,
+        noble_ngraph::net::Obs::Normal(i64s(&[4]))
+    );
+    assert_eq!(
+        rebound.l6(&row).expect("new net").obs,
+        noble_ngraph::net::Obs::Normal(i64s(&[12]))
+    );
+}
+
+#[test]
+#[ignore = "needs NOBLE_NODE (pinned Node) for the L2 BigInt oracle"]
 fn l2_node_bigint_oracle_agrees_with_l3() {
-    let node = std::env::var_os("NOBLE_NODE")
-        .map(|directory| std::path::PathBuf::from(directory).join("bin/node"))
-        .or_else(|| {
-            std::env::var_os("PATH").and_then(|path| {
-                std::env::split_paths(&path)
-                    .map(|directory| directory.join("node"))
-                    .find(|binary| binary.is_file())
-            })
-        })
-        .expect("NOBLE_NODE or the pinned Node on PATH");
-    let oracle = Oracle { node };
+    let node = std::env::var("NOBLE_NODE").expect("NOBLE_NODE");
+    let oracle = Oracle {
+        node: format!("{node}/bin/node").into(),
+    };
+    check_random_node_programs(&oracle);
+    check_static_examples(&oracle);
+}
+
+fn check_random_node_programs(oracle: &Oracle) {
     let seed = 0x1404_b202;
     let mut rng = SplitMix64::new(seed);
     for i in 0..8 {
@@ -153,6 +217,62 @@ fn l2_node_bigint_oracle_agrees_with_l3() {
                     .map(noble_ngraph_experiment::b2i64::cell)
                     .collect();
             assert_eq!(&l5, cells, "belt program {i} on {v:?}");
+            let l6 = x.l6(v).expect("L6");
+            let l6_cells: Vec<String> = match l6.obs {
+                noble_ngraph::net::Obs::Normal(values) => values
+                    .into_iter()
+                    .map(noble_ngraph_experiment::b2i64::cell)
+                    .collect(),
+                other => panic!("net normalisation failed for random {i}: {other:?}"),
+            };
+            assert_eq!(&l6_cells, cells, "net on random {i} {v:?}");
+        }
+    }
+}
+
+fn check_static_examples(oracle: &Oracle) {
+    type DifferentialFixture<'a> = (&'a [&'a str], &'a str, usize, &'a [&'a [i64]]);
+    let fixtures: &[DifferentialFixture<'_>] = &[
+        (&[], "=", 2, &[&[i64::MIN, i64::MAX], &[i64::MAX, i64::MAX]]),
+        (&[], "drop", 1, &[&[91], &[i64::MIN]]),
+        (
+            &[],
+            "swap [ * ] dip + dup",
+            3,
+            &[&[2, 3, 5], &[i64::MIN, 7, -1]],
+        ),
+        (
+            &["def sq [ dup * ]"],
+            "sq swap sq +",
+            2,
+            &[&[3, 4], &[i64::MIN, 1]],
+        ),
+    ];
+    for (index, (definitions, root, arity, rows)) in fixtures.iter().enumerate() {
+        let definitions: Vec<String> = definitions.iter().map(|item| (*item).to_owned()).collect();
+        let lowered = Lowered::new(&definitions, root, *arity).expect("fixture extracts");
+        let vectors: Vec<Vec<Value>> = rows.iter().map(|row| i64s(row)).collect();
+        let oracle_values = oracle
+            .evaluate(lowered.extraction.checked.graph(), &vectors)
+            .expect("fixture BigInt oracle");
+        for (row, expected) in vectors.iter().zip(oracle_values.iter()) {
+            let reference = lowered.l3(row).expect("fixture L3");
+            let compiled = lowered.l4(row).expect("fixture L4");
+            let net = lowered.l6(row).expect("fixture L6");
+            let net_values: Vec<String> = match net.obs {
+                noble_ngraph::net::Obs::Normal(values) => values
+                    .into_iter()
+                    .map(noble_ngraph_experiment::b2i64::cell)
+                    .collect(),
+                other => panic!("fixture net refusal {other:?}"),
+            };
+            let reference_cells: Vec<String> = reference
+                .iter()
+                .map(|value| noble_ngraph_experiment::b2i64::cell(*value))
+                .collect();
+            assert_eq!(reference, compiled, "fixture {index} L3/L4 {row:?}");
+            assert_eq!(&reference_cells, expected, "fixture {index} L2 {row:?}");
+            assert_eq!(&net_values, expected, "fixture {index} L5 {row:?}");
         }
     }
 }

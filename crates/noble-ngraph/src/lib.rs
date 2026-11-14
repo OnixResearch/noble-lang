@@ -83,6 +83,7 @@ pub mod identity;
 pub mod ir;
 pub mod layout;
 pub mod llvm;
+pub mod net;
 pub mod prng;
 pub mod schedule;
 pub mod sem;

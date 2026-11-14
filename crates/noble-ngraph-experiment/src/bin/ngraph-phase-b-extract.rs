@@ -19,7 +19,8 @@
 )]
 //! Issue #14 Phase B evidence harness for the `I64` extraction leg: B1
 //! (I1–I4 lowering), B2 (L1 real CLI `--opt off|on`, L2 Node BigInt oracle,
-//! L3, L4, L5 checked belt) and B3 (source-level controls with their ordinary-path runs).
+//! L3 reference, L4 packed evaluator, L5 independently checked belt, L6 bounded revision-3 net) and B3
+//! (source-level controls with their ordinary-path runs).
 //! Writes one JSON receipt with EV-STATE-01 fields per record and the
 //! BE-CONFIG-01 run fields.
 //!
@@ -296,8 +297,8 @@ fn run() -> Result<bool, String> {
         "logical_cpus": std::thread::available_parallelism().map_or(0, std::num::NonZero::get),
         "load_average_at_start": load_start,
         "workload": format!(
-            "B1 I1-I4; B2 {} named graphs + {} random Core programs x {} vectors (L2-L4), L1 on named design vectors + {} vectors per named graph and {} random programs x {} vectors, I4 {} host steps; B3 source controls",
-            10, a.programs, a.vectors, a.l1_vectors, a.l1_programs, a.l1_vectors, a.steps
+            "B1 I1-I4; B2 {} named graphs + {} random Core programs x {} vectors (L2-L5, including per-row net construction, validation, reduction and read-back), L1 on named design vectors + {} vectors per named graph and {} random programs x {} vectors, I4 {} host steps; B3 source controls",
+            15, a.programs, a.vectors, a.l1_vectors, a.l1_programs, a.l1_vectors, a.steps
         ),
         "resource_limits": format!(
             "extraction /0 defaults: work units {}, expanded nodes {}, inline depth {}; checker /0 defaults; CLI Core session limits (65,536 bytes, 16,384 nodes, depth 64, work 2,000,000)",
@@ -328,12 +329,12 @@ fn run() -> Result<bool, String> {
     records.push(record(
         "B2-I64-differential",
         &["NGRAPH-EXTRACT-01", "NGRAPH-PROOF-01"],
-        "L1 (real CLI, --opt off and on), L2 (Node BigInt mod 2^64), L3, L4 and independently checked L5 belt agree under ≡obs on the named vectors (5 3 - = 2, MAX 1 + = MIN, MIN -1 * = MIN, I1–I4), the I4 host-step chain and seeded random Core I64 programs",
+        "L1 (real CLI, --opt off and on), L2 (Node BigInt mod 2^64), L3, L4, L5 independently checked belt and L6 bounded revision-3 net agree under ≡obs on I1–I4, operand-order and overflow boundaries, Bool equality, Unit/empty output, repeated outputs, nested pairs, fanout, captured recipes, rebound definitions and seeded random Core I64 programs; L2–L4 also agree on the I4 host-step chain",
         k,
         &["NG-PO-A", "NG-PO-B", "NG-PO-C", "PO-17", "PO-18"],
         &[
             "L2 evaluates the extracted graph, so L1 is the only leg that observes the source independently of extraction",
-            "L1 covers a recorded sample; L2–L5 cover every vector",
+            "L1 covers a recorded sample; L2–L6 cover every vector; finite net agreement is not a refinement proof",
         ],
         b2,
         &cfg,

@@ -5,9 +5,9 @@
 //! library; this module supplies bytes, budgets and the BLAKE3 identity
 //! scheme, and renders `noble-ngraph-report/v1` lines.
 //!
-//! Non-claims: no performance, GPU or backend-selection claim (the Phase C
-//! measurement recommended stop); NG-PO-A..H stay open; agreement between
-//! evaluators and replay are finite differential evidence.
+//! Non-claims: the opt-in interaction-net path is an experiment, never the
+//! default; agreement between evaluators and replay is finite differential
+//! evidence, not a refinement proof.
 
 mod arguments;
 mod files;
@@ -28,7 +28,7 @@ pub(crate) const USAGE: &str = "usage:
   noble ngraph export RECEIPT --out GRAPH [--source]
   noble ngraph extract SOURCE --inputs T[,T...] --out GRAPH [--framed] [--profile ngraph-i64/0]
       [--budget-KIND N]...
-  noble ngraph eval GRAPH VECTORS [--reference] [--snapshot FILE [--snapshot-id HEX]] [--fuel N]
+  noble ngraph eval GRAPH VECTORS [--reference | --net] [--snapshot FILE [--snapshot-id HEX]] [--fuel N]
       [--budget-KIND N]...
   noble ngraph train MODEL --loss LOSS --data DATA --policy ngraph-deriv-real/0 --optimizer adam/0
       --seed U64 --steps N --out SNAPSHOT [--from PARENT] [--opt-in SPEC]...
@@ -538,12 +538,18 @@ fn eval(
             positional: &["GRAPH", "VECTORS"],
             values: &["--snapshot", "--snapshot-id", "--fuel"],
             repeated: &[],
-            switches: &["--reference"],
+            switches: &["--reference", "--net"],
             budgets: &budget_kinds,
         },
         arguments
     )
     .map_err(Stop::Usage));
+    if args.switch("--net") && args.switch("--reference") {
+        return usage("--net and --reference select different evaluation backends");
+    }
+    if args.switch("--net") && args.has("--snapshot") {
+        return usage("--net does not accept a parameter snapshot");
+    }
     let fuel = match attempt!(args.text("--fuel").map_err(Stop::Usage)) {
         Some(t) => Some(attempt!(
             arguments::unsigned("--fuel", &t).map_err(Stop::Usage)
@@ -594,6 +600,9 @@ fn eval(
         )
         .into());
     }
+    if args.switch("--net") {
+        return eval_net(&graph, &vectors.rows, fuel);
+    }
     let mut control = noble_ngraph::Control {
         fuel,
         forward_scratch: Some(args.budgets.forward_scratch),
@@ -643,6 +652,168 @@ fn eval(
         });
     }
     Ok(lines)
+}
+
+/// Runs each validated input row through the explicitly selected bounded net.
+/// No output row is returned unless that row reached a complete normal form.
+fn eval_net(
+    graph: &CheckedGraph,
+    rows: &[std::vec::Vec<noble_ngraph::Value>],
+    fuel: Option<u64>,
+) -> Result<std::vec::Vec<Line>, Stop> {
+    const C: &str = "eval";
+    let mut limits = noble_ngraph::net::Limits::default();
+    if let Some(fuel) = fuel {
+        limits.interaction_fuel = fuel.min(limits.interaction_fuel);
+    }
+    let mut lines = std::vec![Line::normal(C, "evaluation")
+        .with("graph", report::digest(&graph.id()))
+        .with("snapshot", Json::Null)
+        .with("backend", string("net"))];
+    for (index, row) in rows.iter().enumerate() {
+        let net = noble_ngraph::net::lower(&IDS, graph, row, &limits).map_err(net_refusal)?;
+        let result = noble_ngraph::net::reduce(
+            &IDS,
+            noble_ngraph::net::ReduceRequest {
+                checked: graph,
+                candidate: &net,
+                inputs: row,
+                limits: &limits,
+                plan: noble_ngraph::net::Plan::default(),
+            },
+        );
+        match &result.obs {
+            noble_ngraph::net::Obs::Normal(values) => {
+                lines.push(
+                    Line::normal(C, "evaluation")
+                        .with("vector", report::count(index))
+                        .with("backend", string("net"))
+                        .with(
+                            "outputs",
+                            Json::Array(
+                                values
+                                    .iter()
+                                    .map(|value| {
+                                        string(noble_ngraph::format::value::render(*value))
+                                    })
+                                    .collect(),
+                            ),
+                        )
+                        .with("interactions", Json::Number(result.interactions))
+                        .with("peak_live_agents", Json::Number(result.peak_live_agents))
+                        .with(
+                            "final_wires",
+                            result.final_wires.map_or(Json::Null, Json::Number),
+                        )
+                        .with("retained_bytes", Json::Number(result.retained_bytes)),
+                );
+            }
+            observation => {
+                let (outcome, code, label, detail) = match observation {
+                    noble_ngraph::net::Obs::Refused(refusal) => (
+                        noble_ngraph::Outcome::Reject,
+                        "E-NET-REFUSED".to_owned(),
+                        "refused",
+                        std::format!("net reduction refused: {refusal:?}"),
+                    ),
+                    noble_ngraph::net::Obs::GuardFailed { node, fact } => (
+                        noble_ngraph::Outcome::Trap,
+                        "G-FACT-FALSE".to_owned(),
+                        "guard-failed",
+                        std::format!("%{} fails its {} fact", node.0, fact.kind_name()),
+                    ),
+                    noble_ngraph::net::Obs::Exhausted {
+                        limit,
+                        cap,
+                        observed,
+                    } => (
+                        noble_ngraph::Outcome::Exhausted,
+                        std::format!("E-NET-BUDGET-{}", limit.name()),
+                        "exhausted",
+                        std::format!("net {limit:?} capacity {cap} exhausted at {observed}"),
+                    ),
+                    noble_ngraph::net::Obs::Cancelled => (
+                        noble_ngraph::Outcome::Trap,
+                        "C-CANCELLED".to_owned(),
+                        "cancelled",
+                        "net reduction cancelled by the host".to_owned(),
+                    ),
+                    noble_ngraph::net::Obs::InternalInvalid(invalid) => (
+                        noble_ngraph::Outcome::Reject,
+                        "E-NET-INTERNAL-INVALID".to_owned(),
+                        "internal-invalid",
+                        std::format!("net invariant failed: {invalid:?}"),
+                    ),
+                    noble_ngraph::net::Obs::Normal(_) => (
+                        noble_ngraph::Outcome::Normal,
+                        "".to_owned(),
+                        "normal",
+                        "unreachable normal observation".to_owned(),
+                    ),
+                };
+                let mut line = Line::backend_failure(C, "evaluation", outcome, &code, detail)
+                    .with("backend", string("net"))
+                    .with("observation", string(label))
+                    .with("vector", report::count(index))
+                    .with("interactions", Json::Number(result.interactions))
+                    .with("peak_live_agents", Json::Number(result.peak_live_agents))
+                    .with("retained_bytes", Json::Number(result.retained_bytes));
+                if let noble_ngraph::net::Obs::Exhausted {
+                    limit,
+                    cap,
+                    observed,
+                } = observation
+                {
+                    line = line
+                        .with("limit", string(limit.name()))
+                        .with("cap", Json::Number(*cap))
+                        .with("observed", Json::Number(*observed));
+                }
+                return Err(line.into());
+            }
+        }
+    }
+    Ok(lines)
+}
+
+fn net_refusal(refusal: noble_ngraph::net::Refusal) -> Line {
+    use noble_ngraph::net::Refusal;
+    match refusal {
+        Refusal::Profile | Refusal::Operation | Refusal::Facts | Refusal::Params => {
+            Line::backend_failure(
+                "eval",
+                "evaluation",
+                noble_ngraph::Outcome::Unsupported,
+                "E-NET-UNSUPPORTED",
+                std::format!("the selected net backend refuses {}", refusal.name()),
+            )
+        }
+        Refusal::Interface => Line::backend_failure(
+            "eval",
+            "evaluation",
+            noble_ngraph::Outcome::Reject,
+            "E-NET-INTERFACE",
+            "net input values do not match the checked graph interface",
+        ),
+        Refusal::Exhausted {
+            limit,
+            cap,
+            observed,
+        } => Line::backend_failure(
+            "eval",
+            "evaluation",
+            noble_ngraph::Outcome::Exhausted,
+            &std::format!("E-NET-BUDGET-{}", limit.name()),
+            std::format!("net {} capacity {cap} requires {observed}", limit.name()),
+        ),
+        Refusal::InternalInvalid(invalid) => Line::backend_failure(
+            "eval",
+            "evaluation",
+            noble_ngraph::Outcome::Reject,
+            "E-NET-INTERNAL-INVALID",
+            std::format!("net validation failed: {invalid:?}"),
+        ),
+    }
 }
 
 fn pinned(args: &Parsed) -> Result<Option<[u8; 32]>, Stop> {

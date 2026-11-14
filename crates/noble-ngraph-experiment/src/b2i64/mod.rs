@@ -1,4 +1,4 @@
-//! Phase B B2 for `ngraph-i64/0`: the four differential legs over extracted
+//! Phase B B2 for `ngraph-i64/0`: the six differential legs over extracted
 //! graphs.
 //!
 //! - L1 ordinary Noble Wasm/V8 through the real CLI ([`crate::l1`]), `--opt
@@ -8,6 +8,7 @@
 //! - L3 the reference interpreter ([`noble_ngraph::eval::reference`]);
 //! - L4 the compiled layered evaluator ([`noble_ngraph::compiled::Compiled`]).
 //! - L5 the independently checked sequential-belt evaluator.
+//! - L6 the bounded revision-3 interaction-net reducer.
 //!
 //! Agreement is `≡obs` (for `I64`/`Bool`: equality of every output). It is
 //! finite differential evidence; it proves neither extraction (NG-PO-A) nor
@@ -39,6 +40,8 @@ pub struct Lowered {
     pub root: String,
     /// `I64` inputs.
     pub inputs: usize,
+    /// Root stack arity before aggregate outputs are flattened into graph ports.
+    pub root_stack_arity: usize,
     /// Extraction.
     pub extraction: Extraction,
     /// L4.
@@ -74,16 +77,18 @@ impl Lowered {
             extract::extract(&BLAKE3, &admitted, &noble_ngraph::check::Budgets::default())
                 .map_err(|d| d.to_string())?;
         let compiled = Compiled::new(&BLAKE3, &extraction.checked);
+        let root_stack_arity = p.root_stack_arity;
         Ok(Self {
             definitions: definitions.to_vec(),
             root: root.to_owned(),
             inputs,
+            root_stack_arity,
             extraction,
             compiled,
         })
     }
 
-    /// Number of graph outputs (all roots here have scalar outputs).
+    /// Number of flattened scalar graph outputs.
     #[must_use]
     pub fn outputs(&self) -> usize {
         self.extraction.checked.graph().outputs.len()
@@ -116,6 +121,27 @@ impl Lowered {
                 .obs,
         )
     }
+
+    /// L6 net construction, independent validation and full reduction.
+    ///
+    /// # Errors
+    /// A refusal to lower the checked graph. Runtime refusals are retained in
+    /// the returned report so a differential records them as disagreements.
+    pub fn l6(&self, inputs: &[Value]) -> Result<noble_ngraph::net::Report, String> {
+        let limits = noble_ngraph::net::Limits::default();
+        let net = noble_ngraph::net::lower(&BLAKE3, &self.extraction.checked, inputs, &limits)
+            .map_err(|refusal| format!("net lowering refused: {refusal:?}"))?;
+        Ok(noble_ngraph::net::reduce(
+            &BLAKE3,
+            noble_ngraph::net::ReduceRequest {
+                checked: &self.extraction.checked,
+                candidate: &net,
+                inputs,
+                limits: &limits,
+                plan: noble_ngraph::net::Plan::default(),
+            },
+        ))
+    }
 }
 
 fn normal(obs: Obs) -> Result<Vec<Value>, String> {
@@ -136,6 +162,25 @@ fn l1_values(values: &[Value]) -> Vec<l1::Value> {
         .collect()
 }
 
+fn flatten_l1_stack(values: &[l1::Value]) -> Result<Vec<l1::Value>, String> {
+    let mut pending: Vec<&l1::Value> = values.iter().rev().collect();
+    let mut flattened = Vec::new();
+    while let Some(value) = pending.pop() {
+        match value {
+            l1::Value::I64(_) | l1::Value::Bool(_) => flattened.push(value.clone()),
+            l1::Value::Unit => {}
+            l1::Value::Pair(left, right) => {
+                pending.push(right);
+                pending.push(left);
+            }
+            l1::Value::Other(kind) => {
+                return Err(format!("unsupported ordinary output type {kind}"));
+            }
+        }
+    }
+    Ok(flattened)
+}
+
 fn i64s(values: &[i64]) -> Vec<Value> {
     values.iter().map(|v| Value::I64(*v)).collect()
 }
@@ -147,7 +192,7 @@ pub struct Config {
     pub seed: u64,
     /// Random programs.
     pub programs: u64,
-    /// Input vectors per graph through L2–L4.
+    /// Input vectors per graph through L2–L6.
     pub vectors: usize,
     /// Pinned CLI for L1 (`None` skips L1).
     pub cli: Option<PathBuf>,
@@ -252,6 +297,30 @@ const NAMED: &[Named] = &[
         design: &[i64::MIN, -1],
         expected: &[i64::MIN],
     },
+    Named {
+        name: "nested-pair-output",
+        definitions: &[],
+        root: "dup dup 1 + swap pair pair",
+        inputs: 1,
+        design: &[41],
+        expected: &[41, 42, 41],
+    },
+    Named {
+        name: "rebound-definition-before-overwrite",
+        definitions: &["def step [ 1 + ]"],
+        root: "step",
+        inputs: 1,
+        design: &[3],
+        expected: &[4],
+    },
+    Named {
+        name: "rebound-definition-after-overwrite",
+        definitions: &["def step [ 1 + ]", "def step [ 9 + ]"],
+        root: "step",
+        inputs: 1,
+        design: &[3],
+        expected: &[12],
+    },
 ];
 
 struct Tally {
@@ -266,7 +335,7 @@ impl Tally {
     }
 }
 
-/// Runs L2–L5 on `vectors` (and L1 on the first `l1` of them, both `--opt`
+/// Runs L2–L6 on `vectors` (L5 belt, L6 net; and L1 on the first `l1` of them, both `--opt`
 /// modes); returns the per-graph record.
 fn legs(
     cfg: &Config,
@@ -288,12 +357,26 @@ fn legs(
     let mut digest = blake3::Hasher::new();
     let mut l3_all = Vec::with_capacity(vectors.len());
     let mut l5_all = Vec::with_capacity(vectors.len());
+    let mut l6_interactions = Vec::with_capacity(vectors.len());
+    let mut l6_normal = 0usize;
     for (i, v) in vectors.iter().enumerate() {
         let l3 = lowered.l3(v)?;
         let l4 = lowered.l4(v)?;
         let l5 = noble_ngraph::belt::execute_checked(&BLAKE3, checked, belt_accepted, v).map_err(
             |refusal| format!("{name} v{i}: checked belt execution refused: {refusal:?}"),
         )?;
+        let l6_report = lowered.l6(v)?;
+        let l6 = match l6_report.obs {
+            noble_ngraph::net::Obs::Normal(values) => {
+                l6_normal += 1;
+                values
+            }
+            other => {
+                t.check(|| format!("{name} v{i}: L6 net returned {other:?}"), false);
+                Vec::new()
+            }
+        };
+        l6_interactions.push(l6_report.interactions);
         t.check(
             || format!("{name} v{i}: L3 {l3:?} ≢ L4 {l4:?}"),
             sem::obs_eq_all(&l3, &l4),
@@ -302,15 +385,24 @@ fn legs(
             || format!("{name} v{i}: L3 {l3:?} ≢ L5 belt {l5:?}"),
             sem::obs_eq_all(&l3, &l5),
         );
+        t.check(
+            || format!("{name} v{i}: L3 {l3:?} ≢ L6 net {l6:?}"),
+            sem::obs_eq_all(&l3, &l6),
+        );
         let l3_cells: Vec<String> = l3.iter().map(|x| cell(*x)).collect();
-        let l5_cells: Vec<String> = l5.iter().map(|x| cell(*x)).collect();
         t.check(
             || format!("{name} v{i}: L3 {l3_cells:?} ≢ L2 {:?}", l2[i]),
             l3_cells == l2[i],
         );
+        let l5_cells: Vec<String> = l5.iter().map(|x| cell(*x)).collect();
         t.check(
             || format!("{name} v{i}: L5 belt {l5_cells:?} ≢ L2 {:?}", l2[i]),
             l5_cells == l2[i],
+        );
+        let l6_cells: Vec<String> = l6.iter().map(|x| cell(*x)).collect();
+        t.check(
+            || format!("{name} v{i}: L6 net {l6_cells:?} ≢ L2 {:?}", l2[i]),
+            l6_cells == l2[i],
         );
         for c in &l3_cells {
             digest.update(c.as_bytes());
@@ -328,7 +420,8 @@ fn legs(
         let mut modes = serde_json::Map::new();
         for opt in [Opt::Off, Opt::On] {
             let cli = Cli::new(bin.clone(), opt);
-            let run = match cli.run_vectors(&defs, &lowered.root, lowered.outputs(), &inputs) {
+            let run = match cli.run_vectors(&defs, &lowered.root, lowered.root_stack_arity, &inputs)
+            {
                 Ok(run) => run,
                 Err(l1::Error::Session(failure)) => {
                     // A protocol, process or transport failure is its own
@@ -361,13 +454,15 @@ fn legs(
                     quota.push(json!({ "vector": i, "outcome": r.outcome, "stage": r.stage, "diagnostic": r.diagnostic }));
                     continue;
                 }
+                let flattened = flatten_l1_stack(&r.stack);
+                let expected_l3 = l1_values(&l3_all[i]);
+                let expected_l5 = l1_values(&l5_all[i]);
                 let ok = r.outcome == "normal"
-                    && r.stack == l1_values(&l3_all[i])
-                    && r.stack == l1_values(&l5_all[i]);
+                    && matches!(&flattened, Ok(values) if values == &expected_l3 && values == &expected_l5);
                 t.check(
                     || {
                         format!(
-                            "{name} v{i}: L1 --opt {} {} ≢ L3/L5 {:?}/{:?}",
+                            "{name} v{i}: L1 --opt {} {} flattens to {flattened:?} ≢ L3/L5 {:?}/{:?}",
                             opt.flag(),
                             r.raw,
                             l3_all[i],
@@ -415,7 +510,6 @@ fn legs(
         "pruned_nodes": lowered.extraction.stats.pruned_nodes,
         "work_units": lowered.extraction.stats.work_units,
         "max_inline_depth": lowered.extraction.stats.max_inline_depth,
-        "l2_l3_l4_vectors": vectors.len(),
         "l2_l3_l4_l5_vectors": vectors.len(),
         "l3_l5_belt_vectors": vectors.len(),
         "l2_l5_belt_vectors": vectors.len(),
@@ -425,6 +519,11 @@ fn legs(
             "instruction_count": belt_accepted.instruction_count(),
             "preservation_saves": belt.preservation_saves,
             "preservation_loads": belt.preservation_loads,
+        },
+        "l6_net": {
+            "vectors": vectors.len(),
+            "normal": l6_normal,
+            "interaction_counts": l6_interactions,
         },
         "l1": l1_record,
         "l3_output_digest": digest.finalize().to_hex().to_string(),
@@ -485,6 +584,31 @@ pub fn campaign(cfg: &Config) -> Result<serde_json::Value, String> {
         record["design_expected"] = json!(n.expected);
         named.push(record);
     }
+    let equality = Lowered::new(&[], "=", 2)?;
+    let equality_vectors = seeded_vectors(
+        &mut rng,
+        equality.inputs,
+        cfg.vectors,
+        &[i64::MIN, i64::MAX],
+    );
+    named.push(legs(
+        cfg,
+        &mut t,
+        "boolean-equality-boundaries",
+        &equality,
+        &equality_vectors,
+        cfg.l1_vectors.min(equality_vectors.len()),
+    )?);
+    let unit = Lowered::new(&[], "drop", 1)?;
+    let unit_vectors = seeded_vectors(&mut rng, unit.inputs, cfg.vectors, &[i64::MIN]);
+    named.push(legs(
+        cfg,
+        &mut t,
+        "unit-empty-output",
+        &unit,
+        &unit_vectors,
+        cfg.l1_vectors.min(unit_vectors.len()),
+    )?);
     let transition = transition(cfg, &mut t, &mut rng)?;
     let mut random_records = Vec::new();
     for i in 0..cfg.programs {
