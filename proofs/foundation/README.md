@@ -4018,17 +4018,20 @@ The missing arbitrary-size reduction/read-back lemmas are precisely:
   `Steps (CStep system) (3 * n)`, with `chainProgram n`'s read-back equal to its packed-schedule
   reference output. The missing proof must construct the abstract trace that interleaves the
   input's duplicator chain with each `op2`/`op1` pair; the existing `chain_three_reference` is only
-  a closed `XNet.normalize` computation at `n = 3`.
+  a closed `XNet.normalize` computation at `n = 3`. This arbitrary-`n` statement remains open.
 - **Balanced tree:** for every depth `d` and input vector of length `2^d`, establish a successful
   checked translation and a normal target reached by
   `Steps (CStep system) (2 * (2^d - 1))`, with read-back equal to the packed-schedule reference.
   The missing proof must inductively fire both child subtrees and then the parent `op2`/`op1` pair;
-  `balanced_depth_two_reference` is only the closed depth-two computation.
+  `balanced_depth_two_reference` is only the closed depth-two computation. The depth-zero case is
+  proved by `NobleFoundation.NetI64Families.balancedProgram_zero_translation_checked` and
+  `NobleFoundation.NetI64Families.balancedProgram_zero_trace`; the arbitrary-depth statement above
+  remains open.
 - **Fanout:** for every output count `n` and input `x`, establish a successful checked translation
   and a normal target reached by `Steps (CStep system) (if n = 0 then 1 else n - 1)`, with ordered
   read-back equal to `List.replicate n (.i64 x)`. The missing proof must induct over the left-leaning
   `dup` chain (and handle the zero-output `era` case); `fanout_three_reference` and
-  `fanout_zero_reference` are only closed computations.
+  `fanout_zero_reference` are only closed computations. This arbitrary-`n` statement remains open.
 
 For all three, the missing artifact is an inductively constructed abstract reduction trace and its
 normality/read-back proof, not another cost formula or a symbolic evaluation of `XNet.run`.

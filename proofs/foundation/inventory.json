@@ -12058,6 +12058,18 @@
       "claim": "every 64-bit input to the three-operation chain lowers to an XNet accepted by the executable invariant checker"
     },
     {
+      "name": "NobleFoundation.NetI64Families.balancedProgram_zero_translation_checked",
+      "phase": 1,
+      "role": "translation-admission",
+      "claim": "every input to the depth-zero balanced tree lowers to an XNet accepted by the executable invariant checker"
+    },
+    {
+      "name": "NobleFoundation.NetI64Families.balancedProgram_zero_trace",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "the depth-zero balanced tree has an empty normal abstract trace and reads back its sole input"
+    },
+    {
       "name": "NobleFoundation.NetI64.balancedProgram_opCount",
       "phase": 1,
       "role": "family-formula",

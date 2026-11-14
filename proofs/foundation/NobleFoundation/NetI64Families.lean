@@ -1,0 +1,92 @@
+import NobleFoundation.NetI64
+
+/-!
+# Inductive revision-3 I64 family traces (issue #37)
+
+These proofs establish per-family abstract reductions; they do not establish a
+Rust lowering or reducer correspondence.
+-/
+
+namespace NobleFoundation.NetI64Families
+
+open NobleFoundation.NetI64 INet
+
+/-- The depth-zero balanced family is the one-input identity net. -/
+theorem balancedProgram_zero_translation_checked (input : BitVec 64) :
+    (balancedProgram 0).translateChecked [input] =
+      some ((balancedProgram 0).translate [input]) := by
+  let source := (valueId 0, 0)
+  let boundary := outputPort 0
+  let X : XNet NetSym := {
+    agents := [(valueId 0, .num input)]
+    free := [boundary]
+    wires := [(source, boundary), (boundary, source)]
+  }
+  have htranslate : (balancedProgram 0).translate [input] = X := by
+    rfl
+  have hcheck : X.check arity = true := by
+    simp [X, source, boundary, XNet.check, XNet.ends, XNet.ids,
+      assoc, endsWith, arity, valueId, outputPort,
+      List.range, List.range.loop]
+  have hinput : (balancedProgram 0).InputsOk [input] := rfl
+  have hwfCheck : (balancedProgram 0).wellFormedCheck = true := by decide
+  have hwf := (Program.wellFormedCheck_iff (balancedProgram 0)).1 hwfCheck
+  have htypedCheck : (balancedProgram 0).wellTypedCheck = true := by decide
+  have htyped := (Program.wellTypedCheck_iff (balancedProgram 0)).1 htypedCheck
+  have hadmission : (balancedProgram 0).acceptanceCheck [input] = true :=
+    (Program.acceptanceCheck_iff (balancedProgram 0) [input]).2
+      ⟨hinput, hwf, htyped⟩
+  simp [Program.translateChecked, hadmission, htranslate, hcheck]
+
+/-- The depth-zero tree has the empty abstract trace and reads back its input. -/
+theorem balancedProgram_zero_trace (input : BitVec 64) :
+    ∃ normal : XNet NetSym,
+      (balancedProgram 0).translateChecked [input] =
+        some ((balancedProgram 0).translate [input]) ∧
+      (balancedProgram 0).normalize [input] = some (normal, 0) ∧
+      Steps (CStep system) 0 ((balancedProgram 0).translate [input]).toNet
+        normal.toNet ∧
+      Normal (CStep system) normal.toNet ∧
+      (balancedProgram 0).readBack normal =
+        (balancedProgram 0).referenceOutputs [input] := by
+  let source := (valueId 0, 0)
+  let boundary := outputPort 0
+  let X : XNet NetSym := {
+    agents := [(valueId 0, .num input)]
+    free := [boundary]
+    wires := [(source, boundary), (boundary, source)]
+  }
+  have htranslate : (balancedProgram 0).translate [input] = X := rfl
+  have hcheck : X.check arity = true := by
+    simp [X, source, boundary, XNet.check, XNet.ends, XNet.ids,
+      assoc, endsWith, arity, valueId, outputPort,
+      List.range, List.range.loop]
+  have hinput : (balancedProgram 0).InputsOk [input] := rfl
+  have hwfCheck : (balancedProgram 0).wellFormedCheck = true := by decide
+  have hwf := (Program.wellFormedCheck_iff (balancedProgram 0)).1 hwfCheck
+  have htypedCheck : (balancedProgram 0).wellTypedCheck = true := by decide
+  have htyped := (Program.wellTypedCheck_iff (balancedProgram 0)).1 htypedCheck
+  have hadmission : (balancedProgram 0).acceptanceCheck [input] = true :=
+    (Program.acceptanceCheck_iff (balancedProgram 0) [input]).2
+      ⟨hinput, hwf, htyped⟩
+  have hstep : X.step xsys = none := by
+    simp [XNet.step, XNet.findRedex, XNet.redexAt, X, source, boundary,
+      assoc, valueId, outputPort]
+  have hcheck' : X.check xsys.sys.ar = true := by
+    change X.check arity = true
+    exact hcheck
+  have hrun : X.normalize xsys 0 = some (X, 0) := by
+    simp [XNet.normalize, XNet.run, hcheck', hstep]
+  have hspec := XNet.normalize_spec hrun
+  have hcount : (balancedProgram 0).interactionCount = 0 := by
+    rw [balancedProgram_interactionCount]
+  have hnormalize : (balancedProgram 0).normalize [input] = some (X, 0) := by
+    unfold Program.normalize
+    rw [balancedProgram_zero_translation_checked input, htranslate, hcount]
+    exact hrun
+  refine ⟨X, balancedProgram_zero_translation_checked input, hnormalize, ?_, ?_, ?_⟩
+  · simpa [xsys, htranslate] using hspec.2.2.1
+  · simpa [xsys] using hspec.2.2.2.1
+  · rfl
+
+end NobleFoundation.NetI64Families
