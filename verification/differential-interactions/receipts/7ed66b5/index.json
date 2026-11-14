@@ -1,0 +1,32 @@
+{
+  "schema": "noble-differential-interactions-receipt-index/v1",
+  "source_commit": "7ed66b5dca72d3256c9d3f3d79e8a775b93c0963",
+  "source_tree": "ef1314907bc293a4400d92bfe22c3862b342f77e",
+  "run_argv": [
+    "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+    "verification/differential-interactions/mutant-runner.mjs",
+    "--root", "/home/brittonr/.cache/noble-iss/scratch/diffcov-125/campaign-worktree",
+    "--output", "/home/brittonr/.cache/noble-iss/scratch/diffcov-125/campaign-run-11",
+    "--target-dir", "/home/brittonr/.cache/noble-iss/target/diffcov-125",
+    "--cargo", "/home/brittonr/.cache/noble-iss/cargo.sh",
+    "--node", "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+    "--foundation", "/home/brittonr/.cache/noble-iss/scratch/diffcov-125/foundation-7ed66b5/output/foundation-check.json",
+    "--corpus", "/home/brittonr/.cache/noble-iss/scratch/diffcov-125/campaign-worktree/crates/noble-wasm/fuzz/regressions/source"
+  ],
+  "raw_location": "/home/brittonr/.cache/noble-iss/scratch/diffcov-125/campaign-run-11 (host-local, not attested by this file)",
+  "raw_sha256": {
+    "campaign.json": "107aa1b5c74caa9d7481a01e5c699fca048dd736477aa021a62e5da9d6a1c9e0"
+  },
+  "in_repo": {
+    "campaign.json": "verbatim"
+  },
+  "results": {
+    "clean_baseline": true,
+    "p1": {"selected": 18, "reached": 18, "generator_budget_equal": true},
+    "p2": {"selected": 24, "reached": 24, "generator_node_cap": 208},
+    "mutants": {"selected": 8, "killed": 8, "all_original_and_minimized_replays_passed": true},
+    "changed_build_historical_receipts_refused": true,
+    "scratch_restored_cleanly": true,
+    "runner_exit": 0
+  }
+}

@@ -23,7 +23,10 @@ cargo test --locked --offline -p noble-ngraph-experiment \
   --test b2_differential issue125_structured_interaction_matrix -- --nocapture
 ```
 
-For the full baseline, semantic-mutant bank, changed-build refusal checks, and fresh-process replay controls, invoke `verification/differential-interactions/mutant-runner.mjs` with a detached clean linked worktree, a new output directory outside the repository, one external target directory, the selected Node and Cargo executables, the fresh foundation receipt, and the existing minimized source corpus. The runner applies each mutation in place and restores it before proceeding. Its campaign JSON retains source/toolchain/workload identities, per-cell witnesses, outcome classifications, shrink work, and replay results. See the runner's usage comment for the required options.
+and replay results. See the runner's usage comment for the required options.
+The successful run for source commit `7ed66b5d` is retained in
+[`receipts/7ed66b5/campaign.json`](receipts/7ed66b5/campaign.json); it is not
+evidence for later source revisions.
 
 ## Evidence boundary and ownership
 
