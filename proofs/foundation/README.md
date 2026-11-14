@@ -4069,6 +4069,10 @@ interaction and live bounds, mismatched net bytes, stale rules and cost profile,
 checker identity, malformed certificates, and forged structural bytes with recomputed digests.
 The fixed unsigned potential table admits no negative annotations or missing rule cases: changing
 its bytes requires a new checked revision, not a producer-declared override.
+The [retained resource receipt](../../verification/ngraph/resource-receipt.json) binds the six
+canonical graph texts, decoded net/certificate bytes, BLAKE3 identities, checker/proof/cost
+revisions, rejected controls and CLI-reported interaction/live-agent measurements to its source
+commit; the integration test replays each retained byte pair through the independent checker.
 
 `NobleFoundation.NetI64Resource.chain_family_resources`,
 `NobleFoundation.NetI64Resource.balanced_family_resources`, and
