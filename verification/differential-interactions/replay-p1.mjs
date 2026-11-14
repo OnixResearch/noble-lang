@@ -66,7 +66,9 @@ try {
     requireThat(digest(Buffer.from(source)) === entry.source_sha256, 'retained P1 source bytes changed');
     requireThat(model.interaction?.cell === witness.target_cell && p1Eligible(model),
       'retained P1 source lost its selected interaction');
-    const expected = p1Expected(model);
+    // P1 is the host-free Core fragment, so its executed-source expectation
+    // includes the differential lane's empty host trace as well as the stack.
+    const expected = { ...p1Expected(model), trace: [] };
     requireThat(JSON.stringify(expected) === JSON.stringify(entry.expected),
       'fresh P1 expectation differs from the retained model-bound expectation');
     const mode = entry.mode;
