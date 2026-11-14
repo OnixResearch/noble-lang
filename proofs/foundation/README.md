@@ -345,6 +345,11 @@ Unsupported modes: none. Both `off` and `on` are supported by
 [`verification/differential-interactions/matrix-v1.json`](../../verification/differential-interactions/matrix-v1.json)
 freezes two disjoint finite test profiles before their campaign: P1 Core source
 through managed Wasm, and P2 numeric-graph F32 through the experiment lane.
+The clean foundation receipt used by the current campaign is retained at
+[`receipts/675ab62/index.json`](receipts/675ab62/index.json); it is a 1,450-
+theorem per-case expectation basis only and does not claim an implementation
+theorem. The corresponding source-bound campaign receipt is linked from the
+interaction-lane README.
 P1 expectations are independently computed and Lean-kernel-checked per case;
 its execution witness is the exact admitted source, positive runtime steps and
 the observed ordered outputs. The observer has no per-operator trace, so source
