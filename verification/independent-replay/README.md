@@ -159,6 +159,26 @@ reopen condition, clean-commit M2/M3 strength receipt, and scoped deferral of co
 are recorded in [`decision.md`](decision.md#d-remaining-native_decide-conversions) and
 [`receipts/2026-11-14/strength-join.json`](receipts/2026-11-14/strength-join.json).
 
+### Compiled-artifact binding after batch 4
+
+The refreshed `olean-integrity.txt` binds 112 project `.olean` files and nine external search-path
+aggregates from a clean rebuild of the current foundation source under Lean 4.35.0. Reusing the
+previous 79-file pin refused the newly built modules, as intended. A previous build directory also
+contained orphan `.olean` files with incompatible headers and no source module; cleaning and
+rebuilding the project removed them before freezing the new manifest. The selected toolchain,
+theorem statements and checker-source pins did not change. The refreshed manifest must be
+regenerated from the actual compiled artifacts when the integration checkout differs; never
+silently accept a digest mismatch.
+
+The five integrity controls pass against this pin. A local full-root `leanchecker NobleFoundation`
+was killed by the **global OOM killer** (status 137, 42,432,012 kB anonymous RSS), which is a
+resource refusal, not a kernel verdict. The same pinned artifacts and runner were copied to a
+high-memory machine: the manifest digest matched, all artifact checks passed, and the full-root
+replay returned silent `kernel-accepted` with exit 0. That remote run did not have Git metadata, so
+its raw output has an empty `source_commit`; the scoped receipt states the local source commit and
+manifest digest separately rather than pretending the runner reported one. This remains Lean's
+own kernel replay, not independent-checker acceptance or proof of source/runtime correspondence.
+
 ## Historical measurements (4.31.0; 2026-10-26 through 2026-10-30)
 
 | Lane | Command | Result |
