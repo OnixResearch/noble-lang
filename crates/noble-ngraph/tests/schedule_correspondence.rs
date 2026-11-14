@@ -33,18 +33,18 @@ mod belt_fixtures;
 mod belt_measure;
 #[path = "belt_dir/mutations.rs"]
 mod belt_mutations;
-#[path = "belt_target_dir/tests.rs"]
-mod belt_target_tests;
-#[path = "belt_target_dir/differential.rs"]
-mod belt_target_differential;
 #[path = "belt_target_dir/controls.rs"]
 mod belt_target_controls;
-#[path = "belt_target_dir/mutations.rs"]
-mod belt_target_mutations;
 #[path = "belt_target_dir/corpus.rs"]
 mod belt_target_corpus;
+#[path = "belt_target_dir/differential.rs"]
+mod belt_target_differential;
 #[path = "belt_target_dir/measure.rs"]
 mod belt_target_measure;
+#[path = "belt_target_dir/mutations.rs"]
+mod belt_target_mutations;
+#[path = "belt_target_dir/tests.rs"]
+mod belt_target_tests;
 mod common;
 #[path = "schedule_lean_dir/corpus.rs"]
 mod corpus;

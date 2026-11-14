@@ -1,6 +1,6 @@
 use alloc::vec::Vec;
 
-use super::{Machine, Operation, OutputRead, Refusal, Issue};
+use super::{Issue, Machine, Operation, OutputRead, Refusal};
 
 const MAGIC: &[u8; 4] = b"NGT0";
 const EVENT_BYTES: usize = 21;
@@ -36,7 +36,12 @@ pub fn encode(
     }
     let descriptor = machine.descriptor();
     let descriptor_bytes = descriptor.bytes();
-    let descriptor_digest = hash(ids, b"noble.ngraph.belt.descriptor.v0", &[machine as u8], &descriptor_bytes);
+    let descriptor_digest = hash(
+        ids,
+        b"noble.ngraph.belt.descriptor.v0",
+        &[machine as u8],
+        &descriptor_bytes,
+    );
     let mut body = Vec::with_capacity(events.len() * EVENT_BYTES + outputs.len() * 4);
     for event in events {
         encode_event(*event, &mut body);
@@ -47,10 +52,21 @@ pub fn encode(
     let schedule_digest = hash(ids, b"noble.ngraph.belt.schedule.v0", &[], &body);
     let graph_id = checked.id();
     let counts = [
-        u32::try_from(events.len()).map_err(|_| Refusal::EventBound)?.to_le_bytes(),
-        u32::try_from(outputs.len()).map_err(|_| Refusal::EventBound)?.to_le_bytes(),
+        u32::try_from(events.len())
+            .map_err(|_| Refusal::EventBound)?
+            .to_le_bytes(),
+        u32::try_from(outputs.len())
+            .map_err(|_| Refusal::EventBound)?
+            .to_le_bytes(),
     ];
-    let binding = binding_digest(ids, machine, descriptor_digest, graph_id, counts, schedule_digest);
+    let binding = binding_digest(
+        ids,
+        machine,
+        descriptor_digest,
+        graph_id,
+        counts,
+        schedule_digest,
+    );
     let total = HEADER_BYTES
         .checked_add(body.len())
         .and_then(|size| size.checked_add(2 * DIGEST_BYTES))
@@ -85,7 +101,8 @@ pub fn decode(
         return Err(Refusal::Malformed);
     }
     read_revision(bytes, &mut cursor, super::FORMAT_REVISION)?;
-    let machine = Machine::from_id(take(bytes, &mut cursor, 1)?[0]).ok_or(Refusal::UnknownMachine)?;
+    let machine =
+        Machine::from_id(take(bytes, &mut cursor, 1)?[0]).ok_or(Refusal::UnknownMachine)?;
     read_revision(bytes, &mut cursor, super::MACHINE_REVISION)?;
     let descriptor_bytes: [u8; 10] = take(bytes, &mut cursor, 10)?
         .try_into()
@@ -110,9 +127,13 @@ pub fn decode(
         return Err(Refusal::EventBound);
     }
     let body_start = cursor;
-    let event_bytes = event_count.checked_mul(EVENT_BYTES).ok_or(Refusal::ArtifactBound)?;
+    let event_bytes = event_count
+        .checked_mul(EVENT_BYTES)
+        .ok_or(Refusal::ArtifactBound)?;
     let output_bytes = output_count.checked_mul(4).ok_or(Refusal::ArtifactBound)?;
-    let body_len = event_bytes.checked_add(output_bytes).ok_or(Refusal::ArtifactBound)?;
+    let body_len = event_bytes
+        .checked_add(output_bytes)
+        .ok_or(Refusal::ArtifactBound)?;
     let body = take(bytes, &mut cursor, body_len)?;
     let body_end = cursor;
     let schedule_digest = digest(bytes, &mut cursor)?;
@@ -124,11 +145,22 @@ pub fn decode(
         return Err(Refusal::DigestMismatch);
     }
     let counts = [
-        u32::try_from(event_count).map_err(|_| Refusal::EventBound)?.to_le_bytes(),
-        u32::try_from(output_count).map_err(|_| Refusal::EventBound)?.to_le_bytes(),
+        u32::try_from(event_count)
+            .map_err(|_| Refusal::EventBound)?
+            .to_le_bytes(),
+        u32::try_from(output_count)
+            .map_err(|_| Refusal::EventBound)?
+            .to_le_bytes(),
     ];
     if artifact_binding
-        != binding_digest(ids, machine, descriptor_digest, graph_id, counts, schedule_digest)
+        != binding_digest(
+            ids,
+            machine,
+            descriptor_digest,
+            graph_id,
+            counts,
+            schedule_digest,
+        )
     {
         return Err(Refusal::DigestMismatch);
     }
@@ -146,7 +178,9 @@ pub fn decode(
         let raw: [u8; 4] = take(body, &mut body_cursor, 4)?
             .try_into()
             .map_err(|_| Refusal::Malformed)?;
-        outputs.push(OutputRead { node: u32::from_le_bytes(raw) });
+        outputs.push(OutputRead {
+            node: u32::from_le_bytes(raw),
+        });
     }
     if body_cursor != body.len() {
         return Err(Refusal::Malformed);
@@ -173,10 +207,26 @@ fn encode_event(event: Issue, bytes: &mut Vec<u8>) {
             (0, node, 0, 0, payload)
         }
         Operation::Constant { node, bits } => (1, node, 0, 0, bits.to_le_bytes()),
-        Operation::Add { node, left_age, right_age } => (2, node, left_age, right_age, [0; 8]),
-        Operation::Sub { node, left_age, right_age } => (3, node, left_age, right_age, [0; 8]),
-        Operation::Multiply { node, left_age, right_age } => (4, node, left_age, right_age, [0; 8]),
-        Operation::Equal { node, left_age, right_age } => (5, node, left_age, right_age, [0; 8]),
+        Operation::Add {
+            node,
+            left_age,
+            right_age,
+        } => (2, node, left_age, right_age, [0; 8]),
+        Operation::Sub {
+            node,
+            left_age,
+            right_age,
+        } => (3, node, left_age, right_age, [0; 8]),
+        Operation::Multiply {
+            node,
+            left_age,
+            right_age,
+        } => (4, node, left_age, right_age, [0; 8]),
+        Operation::Equal {
+            node,
+            left_age,
+            right_age,
+        } => (5, node, left_age, right_age, [0; 8]),
         Operation::Save { node, age, slot } => (6, node, age, slot, [0; 8]),
         Operation::Load { node, slot } => (7, node, slot, 0, [0; 8]),
     };
@@ -202,18 +252,44 @@ fn decode_event(raw: &[u8]) -> Result<Issue, Refusal> {
             let slot = u32::from_le_bytes(payload[..4].try_into().map_err(|_| Refusal::Malformed)?);
             Operation::Input { node, slot }
         }
-        1 if a == 0 && b == 0 => {
-            Operation::Constant { node, bits: u64::from_le_bytes(payload.try_into().map_err(|_| Refusal::Malformed)?) }
-        }
-        2 if payload.iter().all(|value| *value == 0) => Operation::Add { node, left_age: a, right_age: b },
-        3 if payload.iter().all(|value| *value == 0) => Operation::Sub { node, left_age: a, right_age: b },
-        4 if payload.iter().all(|value| *value == 0) => Operation::Multiply { node, left_age: a, right_age: b },
-        5 if payload.iter().all(|value| *value == 0) => Operation::Equal { node, left_age: a, right_age: b },
-        6 if payload.iter().all(|value| *value == 0) => Operation::Save { node, age: a, slot: b },
+        1 if a == 0 && b == 0 => Operation::Constant {
+            node,
+            bits: u64::from_le_bytes(payload.try_into().map_err(|_| Refusal::Malformed)?),
+        },
+        2 if payload.iter().all(|value| *value == 0) => Operation::Add {
+            node,
+            left_age: a,
+            right_age: b,
+        },
+        3 if payload.iter().all(|value| *value == 0) => Operation::Sub {
+            node,
+            left_age: a,
+            right_age: b,
+        },
+        4 if payload.iter().all(|value| *value == 0) => Operation::Multiply {
+            node,
+            left_age: a,
+            right_age: b,
+        },
+        5 if payload.iter().all(|value| *value == 0) => Operation::Equal {
+            node,
+            left_age: a,
+            right_age: b,
+        },
+        6 if payload.iter().all(|value| *value == 0) => Operation::Save {
+            node,
+            age: a,
+            slot: b,
+        },
         7 if b == 0 && zero() => Operation::Load { node, slot: a },
         _ => return Err(Refusal::Malformed),
     };
-    Ok(Issue { cycle, lane, unit, operation })
+    Ok(Issue {
+        cycle,
+        lane,
+        unit,
+        operation,
+    })
 }
 
 fn put_revision(bytes: &mut Vec<u8>, revision: &str) -> Result<(), Refusal> {
@@ -224,16 +300,24 @@ fn put_revision(bytes: &mut Vec<u8>, revision: &str) -> Result<(), Refusal> {
 
 fn read_revision(bytes: &[u8], cursor: &mut usize, revision: &str) -> Result<(), Refusal> {
     let length = usize::from(take(bytes, cursor, 1)?[0]);
-    if take(bytes, cursor, length)? != revision.as_bytes() { return Err(Refusal::Malformed); }
+    if take(bytes, cursor, length)? != revision.as_bytes() {
+        return Err(Refusal::Malformed);
+    }
     Ok(())
 }
 
 fn digest(bytes: &[u8], cursor: &mut usize) -> Result<crate::ir::Digest, Refusal> {
-    take(bytes, cursor, DIGEST_BYTES)?.try_into().map_err(|_| Refusal::Malformed)
+    take(bytes, cursor, DIGEST_BYTES)?
+        .try_into()
+        .map_err(|_| Refusal::Malformed)
 }
 
 fn read_u32(bytes: &[u8], cursor: &mut usize) -> Result<u32, Refusal> {
-    Ok(u32::from_le_bytes(take(bytes, cursor, 4)?.try_into().map_err(|_| Refusal::Malformed)?))
+    Ok(u32::from_le_bytes(
+        take(bytes, cursor, 4)?
+            .try_into()
+            .map_err(|_| Refusal::Malformed)?,
+    ))
 }
 
 fn take<'a>(bytes: &'a [u8], cursor: &mut usize, length: usize) -> Result<&'a [u8], Refusal> {
@@ -243,7 +327,12 @@ fn take<'a>(bytes: &'a [u8], cursor: &mut usize, length: usize) -> Result<&'a [u
     Ok(result)
 }
 
-fn hash(ids: &dyn crate::identity::IdentityScheme, domain: &[u8], prefix: &[u8], data: &[u8]) -> crate::ir::Digest {
+fn hash(
+    ids: &dyn crate::identity::IdentityScheme,
+    domain: &[u8],
+    prefix: &[u8],
+    data: &[u8],
+) -> crate::ir::Digest {
     let mut hasher = ids.start();
     hasher.update(&(domain.len() as u32).to_le_bytes());
     hasher.update(domain);
@@ -268,5 +357,10 @@ fn binding_digest(
     fields.extend_from_slice(&counts[0]);
     fields.extend_from_slice(&counts[1]);
     fields.extend_from_slice(&schedule_digest);
-    hash(ids, b"noble.ngraph.belt.binding.v0", super::FORMAT_REVISION.as_bytes(), &fields)
+    hash(
+        ids,
+        b"noble.ngraph.belt.binding.v0",
+        super::FORMAT_REVISION.as_bytes(),
+        &fields,
+    )
 }

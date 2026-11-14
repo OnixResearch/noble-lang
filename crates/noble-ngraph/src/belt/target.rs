@@ -12,12 +12,10 @@ mod types;
 mod validate;
 
 pub use codec::{decode, encode, MAX_ARTIFACT_BYTES};
+pub use execution::{execute, execute_checked};
 pub use lower::lower;
 pub use machine::{Machine, MachineDescriptor, UnitClass};
-pub use types::{
-    CheckedSchedule, DecodedSchedule, Issue, Lowered, Operation, OutputRead, Refusal,
-};
-pub use execution::{execute, execute_checked};
+pub use types::{CheckedSchedule, DecodedSchedule, Issue, Lowered, Operation, OutputRead, Refusal};
 
 /// Fixed machine-family revision.
 pub const MACHINE_REVISION: &str = "ngraph-belt-machine/0";

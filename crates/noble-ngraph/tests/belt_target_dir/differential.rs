@@ -27,7 +27,8 @@ fn target_results_match_reference_compiled_and_sequential_belt() {
         .expect("the sequential belt baseline lowers at the same capacity");
         for inputs in &vectors {
             let inputs = inputs.as_slice();
-            let reference = eval::reference(&accepted_graph, inputs, None, &mut Control::default()).obs;
+            let reference =
+                eval::reference(&accepted_graph, inputs, None, &mut Control::default()).obs;
             let packed = compiled.evaluate(inputs, None, &mut Control::default()).obs;
             let target_result = target::execute(
                 &super::common::IDS,

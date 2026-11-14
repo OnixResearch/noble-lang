@@ -57,7 +57,9 @@ fn node_term(graph: &CheckedGraph, index: usize) -> String {
 
 fn graph_operands(graph: &CheckedGraph, node: u32) -> (usize, usize) {
     match &graph.graph().nodes[node as usize].op {
-        Op::I64Add(left, right) | Op::I64Sub(left, right) | Op::I64Mul(left, right)
+        Op::I64Add(left, right)
+        | Op::I64Sub(left, right)
+        | Op::I64Mul(left, right)
         | Op::I64Eq(left, right) => (left.index(), right.index()),
         _ => panic!("only binary events require graph operands"),
     }
@@ -67,19 +69,35 @@ fn issue_term(graph: &CheckedGraph, event: Issue) -> String {
     let operation = match event.operation {
         Operation::Input { slot, .. } => format!(".input {slot}"),
         Operation::Constant { bits, .. } => format!(".constant (BitVec.ofNat 64 {bits})"),
-        Operation::Add { left_age, right_age, node } => {
+        Operation::Add {
+            left_age,
+            right_age,
+            node,
+        } => {
             let (left, right) = graph_operands(graph, node);
             format!(".add {left} {right} {left_age} {right_age}")
         }
-        Operation::Sub { left_age, right_age, node } => {
+        Operation::Sub {
+            left_age,
+            right_age,
+            node,
+        } => {
             let (left, right) = graph_operands(graph, node);
             format!(".sub {left} {right} {left_age} {right_age}")
         }
-        Operation::Multiply { left_age, right_age, node } => {
+        Operation::Multiply {
+            left_age,
+            right_age,
+            node,
+        } => {
             let (left, right) = graph_operands(graph, node);
             format!(".multiply {left} {right} {left_age} {right_age}")
         }
-        Operation::Equal { left_age, right_age, node } => {
+        Operation::Equal {
+            left_age,
+            right_age,
+            node,
+        } => {
             let (left, right) = graph_operands(graph, node);
             format!(".equal {left} {right} {left_age} {right_age}")
         }
@@ -88,11 +106,18 @@ fn issue_term(graph: &CheckedGraph, event: Issue) -> String {
     };
     format!(
         "{{ cycle := {}, lane := {}, unit := {}, node := {}, operation := {operation} }}",
-        event.cycle, event.lane, event.unit, match event.operation {
-            Operation::Input { node, .. } | Operation::Constant { node, .. }
-            | Operation::Add { node, .. } | Operation::Sub { node, .. }
-            | Operation::Multiply { node, .. } | Operation::Equal { node, .. }
-            | Operation::Save { node, .. } | Operation::Load { node, .. } => node,
+        event.cycle,
+        event.lane,
+        event.unit,
+        match event.operation {
+            Operation::Input { node, .. }
+            | Operation::Constant { node, .. }
+            | Operation::Add { node, .. }
+            | Operation::Sub { node, .. }
+            | Operation::Multiply { node, .. }
+            | Operation::Equal { node, .. }
+            | Operation::Save { node, .. }
+            | Operation::Load { node, .. } => node,
         }
     )
 }
@@ -129,7 +154,9 @@ fn append_schedule(
     text.write_str("  ],\n  outputs := [")
         .expect("writing to a string succeeds");
     for (index, OutputRead { node }) in decoded.outputs().iter().enumerate() {
-        if index > 0 { text.write_str(", ").expect("writing to a string succeeds"); }
+        if index > 0 {
+            text.write_str(", ").expect("writing to a string succeeds");
+        }
         write!(text, "{node}").expect("writing to a string succeeds");
     }
     text.write_str("]\n}\n\n")
@@ -137,7 +164,10 @@ fn append_schedule(
     writeln!(
         text,
         "example : validate graph .{} outputs {schedule_name} = true := by decide",
-        match machine { Machine::T1 => "t1", Machine::T2 => "t2" }
+        match machine {
+            Machine::T1 => "t1",
+            Machine::T2 => "t2",
+        }
     )
     .expect("writing to a string succeeds");
     writeln!(
@@ -171,8 +201,12 @@ fn render() -> String {
     .expect("writing to a string succeeds");
     for index in 0..graph.nodes.len() {
         let prefix = if index == 0 { "    if" } else { "    else if" };
-        writeln!(text, "{prefix} index = {index} then {}", node_term(&checked, index))
-            .expect("writing to a string succeeds");
+        writeln!(
+            text,
+            "{prefix} index = {index} then {}",
+            node_term(&checked, index)
+        )
+        .expect("writing to a string succeeds");
     }
     text.write_str("    else .input 0\n}\n\n")
         .expect("writing to a string succeeds");
@@ -181,7 +215,11 @@ fn render() -> String {
     writeln!(
         text,
         "def outputs : List Nat := {:?}\n",
-        graph.outputs.iter().map(|node| node.index()).collect::<Vec<_>>()
+        graph
+            .outputs
+            .iter()
+            .map(|node| node.index())
+            .collect::<Vec<_>>()
     )
     .expect("writing to a string succeeds");
     for machine in [Machine::T1, Machine::T2] {
@@ -199,7 +237,10 @@ fn render() -> String {
             &mut text,
             &checked,
             machine,
-            match machine { Machine::T1 => "t1Schedule", Machine::T2 => "t2Schedule" },
+            match machine {
+                Machine::T1 => "t1Schedule",
+                Machine::T2 => "t2Schedule",
+            },
             &lowered,
             &expected,
         );

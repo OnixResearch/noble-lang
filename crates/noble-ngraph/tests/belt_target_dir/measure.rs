@@ -29,7 +29,9 @@ fn basic_case() -> (&'static str, CheckedGraph, Vec<Value>) {
     let sum = builder.op(Op::I64Add(x, y));
     let difference = builder.op(Op::I64Sub(y, x));
     let product = builder.op(Op::I64Mul(sum, scale));
-    for node in [sum, difference, product] { builder.output(node); }
+    for node in [sum, difference, product] {
+        builder.output(node);
+    }
     (
         "reorderable-six-node",
         noble_ngraph::check(&super::common::IDS, builder.finish()).expect("fixed graph checks"),
@@ -50,7 +52,9 @@ fn pressure_case() -> (&'static str, CheckedGraph, Vec<Value>) {
     let last = builder.i64_const(5);
     let sum = builder.op(Op::I64Add(x, y));
     let result = builder.op(Op::I64Add(sum, last));
-    for node in [first, second, third, result] { builder.output(node); }
+    for node in [first, second, third, result] {
+        builder.output(node);
+    }
     (
         "preservation-pressure-eight-node",
         noble_ngraph::check(&super::common::IDS, builder.finish()).expect("fixed graph checks"),
@@ -90,16 +94,19 @@ fn mean_check_ns(checked: &CheckedGraph, machine: Machine, bytes: &[u8]) -> u128
 
 fn completion_cycle(machine: Machine, event: Issue) -> u32 {
     let descriptor = machine.descriptor();
-    let class = descriptor.unit_class(event.unit).expect("the emitted unit is in profile");
+    let class = descriptor
+        .unit_class(event.unit)
+        .expect("the emitted unit is in profile");
     event.cycle + u32::from(descriptor.latency(class)) - 1
 }
 
 fn peak_pending(machine: Machine, events: &[Issue], modeled_cycles: u32) -> usize {
     (0..modeled_cycles)
         .map(|cycle| {
-            events.iter().filter(|event| {
-                event.cycle <= cycle && completion_cycle(machine, **event) >= cycle
-            }).count()
+            events
+                .iter()
+                .filter(|event| event.cycle <= cycle && completion_cycle(machine, **event) >= cycle)
+                .count()
         })
         .max()
         .unwrap_or(0)
@@ -107,10 +114,18 @@ fn peak_pending(machine: Machine, events: &[Issue], modeled_cycles: u32) -> usiz
 
 fn case_json(name: &str, checked: &CheckedGraph, inputs: &[Value], machine: Machine) -> String {
     let descriptor = machine.descriptor();
-    let lowered = target::lower(&super::common::IDS, checked, machine).expect("fixed profile lowers");
-    target::execute(&super::common::IDS, checked, machine, &lowered.bytes, inputs)
-        .expect("measured artifact executes");
-    let decoded = target::decode(&super::common::IDS, &lowered.bytes).expect("measured artifact decodes");
+    let lowered =
+        target::lower(&super::common::IDS, checked, machine).expect("fixed profile lowers");
+    target::execute(
+        &super::common::IDS,
+        checked,
+        machine,
+        &lowered.bytes,
+        inputs,
+    )
+    .expect("measured artifact executes");
+    let decoded =
+        target::decode(&super::common::IDS, &lowered.bytes).expect("measured artifact decodes");
     let utilization_milli = (lowered.event_count as u128 * 1000)
         / (u128::from(lowered.modeled_cycles) * u128::from(descriptor.issue_width));
     format!(
@@ -155,18 +170,28 @@ fn report() -> String {
 #[ignore = "frozen model/software-path measurement; report destination and source commit are explicit environment inputs"]
 fn fixed_model_cost_report() {
     let destination = std::path::PathBuf::from(
-        std::env::var_os("NOBLE_TARGET_REPORT").expect("NOBLE_TARGET_REPORT must name an external report file"),
+        std::env::var_os("NOBLE_TARGET_REPORT")
+            .expect("NOBLE_TARGET_REPORT must name an external report file"),
     );
     assert!(destination.is_absolute());
-    let parent = destination.parent().expect("report has a parent directory")
-        .canonicalize().expect("report parent exists");
+    let parent = destination
+        .parent()
+        .expect("report has a parent directory")
+        .canonicalize()
+        .expect("report parent exists");
     let repository = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .canonicalize().expect("the crate path exists");
-    assert!(!parent.starts_with(repository), "report must be outside the repository");
+        .canonicalize()
+        .expect("the crate path exists");
+    assert!(
+        !parent.starts_with(repository),
+        "report must be outside the repository"
+    );
     let mut output = std::fs::OpenOptions::new()
         .write(true)
         .create_new(true)
         .open(destination)
         .expect("the report path is new");
-    output.write_all(report().as_bytes()).expect("report bytes write");
+    output
+        .write_all(report().as_bytes())
+        .expect("report bytes write");
 }

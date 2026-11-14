@@ -29,19 +29,29 @@ pub(super) fn check_stream(
         return Err(Refusal::EventBound);
     }
     if schedule.outputs.len() != graph.outputs.len()
-        || schedule.outputs.iter().zip(&graph.outputs).any(|(actual, expected)| actual.node != expected.0)
+        || schedule
+            .outputs
+            .iter()
+            .zip(&graph.outputs)
+            .any(|(actual, expected)| actual.node != expected.0)
     {
         return Err(Refusal::OutputMismatch);
     }
     if schedule.outputs.len() > usize::from(descriptor.belt_capacity) {
         return Err(Refusal::OutputMismatch);
     }
-    schedule.events.sort_unstable_by_key(|event| (event.cycle, event.lane, event.unit));
+    schedule
+        .events
+        .sort_unstable_by_key(|event| (event.cycle, event.lane, event.unit));
     let ordered = &schedule.events;
-    if ordered.iter().any(|event| event.cycle >= super::MAX_HORIZON) {
+    if ordered
+        .iter()
+        .any(|event| event.cycle >= super::MAX_HORIZON)
+    {
         return Err(Refusal::HorizonBound);
     }
-    let units = usize::from(descriptor.alu_units + descriptor.multiply_units + descriptor.move_units);
+    let units =
+        usize::from(descriptor.alu_units + descriptor.multiply_units + descriptor.move_units);
     let mut lane_used = vec![false; usize::from(descriptor.issue_width)];
     let mut unit_used = vec![false; units];
     let mut last_issue = vec![None::<u32>; units];
@@ -59,18 +69,30 @@ pub(super) fn check_stream(
     for event in ordered {
         let class = operation_class(event.operation);
         let latency = u32::from(descriptor.latency(class));
-        max_cycle = max_cycle.max(event.cycle.checked_add(latency - 1).ok_or(Refusal::CompletionHorizon)?);
+        max_cycle = max_cycle.max(
+            event
+                .cycle
+                .checked_add(latency - 1)
+                .ok_or(Refusal::CompletionHorizon)?,
+        );
     }
     if max_cycle >= super::MAX_HORIZON {
         return Err(Refusal::CompletionHorizon);
     }
-    let work_bound = ordered.len().checked_add(max_cycle as usize + 1).ok_or(Refusal::CheckingExhausted)?;
+    let work_bound = ordered
+        .len()
+        .checked_add(max_cycle as usize + 1)
+        .ok_or(Refusal::CheckingExhausted)?;
     if work_bound > super::MAX_CHECK_WORK {
         return Err(Refusal::CheckingExhausted);
     }
     for cycle in 0..=max_cycle {
-        for used in &mut lane_used { *used = false; }
-        for used in &mut unit_used { *used = false; }
+        for used in &mut lane_used {
+            *used = false;
+        }
+        for used in &mut unit_used {
+            *used = false;
+        }
         let start = cursor;
         while cursor < ordered.len() && ordered[cursor].cycle == cycle {
             cursor += 1;
@@ -80,7 +102,13 @@ pub(super) fn check_stream(
         }
         consumed_this_cycle.clear();
         for event in &ordered[start..cursor] {
-            check_issue_resources(*event, descriptor, &mut lane_used, &mut unit_used, &mut last_issue)?;
+            check_issue_resources(
+                *event,
+                descriptor,
+                &mut lane_used,
+                &mut unit_used,
+                &mut last_issue,
+            )?;
             let node = event_node(event.operation);
             let completion = match event.operation {
                 Operation::Input { slot, .. } => {
@@ -93,10 +121,26 @@ pub(super) fn check_stream(
                     issue_graph_node(&mut issued, node)?;
                     Completion::Node(node)
                 }
-                Operation::Add { left_age, right_age, .. }
-                | Operation::Sub { left_age, right_age, .. }
-                | Operation::Multiply { left_age, right_age, .. }
-                | Operation::Equal { left_age, right_age, .. } => {
+                Operation::Add {
+                    left_age,
+                    right_age,
+                    ..
+                }
+                | Operation::Sub {
+                    left_age,
+                    right_age,
+                    ..
+                }
+                | Operation::Multiply {
+                    left_age,
+                    right_age,
+                    ..
+                }
+                | Operation::Equal {
+                    left_age,
+                    right_age,
+                    ..
+                } => {
                     let (left, right) = graph_operands(graph, node, event.operation)?;
                     require_age(&belt, left_age, left)?;
                     require_age(&belt, right_age, right)?;
@@ -112,12 +156,17 @@ pub(super) fn check_stream(
                 }
                 Operation::Save { age, slot, node } => {
                     let slot = usize::from(slot);
-                    if slot >= saves.len() { return Err(Refusal::SaveSlotBound); }
+                    if slot >= saves.len() {
+                        return Err(Refusal::SaveSlotBound);
+                    }
                     require_age(&belt, age, NodeId(node))?;
                     if let Some(previous) = saves[slot] {
                         if is_live(previous, &remaining, &output_live)
                             && !belt.contains(&previous)
-                            && !saves.iter().enumerate().any(|(other, saved)| other != slot && *saved == Some(previous))
+                            && !saves
+                                .iter()
+                                .enumerate()
+                                .any(|(other, saved)| other != slot && *saved == Some(previous))
                         {
                             return Err(Refusal::LiveSaveOverwrite);
                         }
@@ -125,14 +174,25 @@ pub(super) fn check_stream(
                             return Err(Refusal::LiveSaveOverwrite);
                         }
                     }
-                    if reserved_slots[slot] { return Err(Refusal::LiveSaveOverwrite); }
+                    if reserved_slots[slot] {
+                        return Err(Refusal::LiveSaveOverwrite);
+                    }
                     reserved_slots[slot] = true;
-                    Completion::Save { slot, node: NodeId(node) }
+                    Completion::Save {
+                        slot,
+                        node: NodeId(node),
+                    }
                 }
                 Operation::Load { node, slot } => {
                     let slot = usize::from(slot);
-                    let saved = saves.get(slot).copied().flatten().ok_or(Refusal::UninitializedSave)?;
-                    if saved.0 != node { return Err(Refusal::UninitializedSave); }
+                    let saved = saves
+                        .get(slot)
+                        .copied()
+                        .flatten()
+                        .ok_or(Refusal::UninitializedSave)?;
+                    if saved.0 != node {
+                        return Err(Refusal::UninitializedSave);
+                    }
                     if !completed.get(node as usize).copied().unwrap_or(false) {
                         return Err(Refusal::DependencyNotReady);
                     }
@@ -140,7 +200,8 @@ pub(super) fn check_stream(
                 }
             };
             let class = operation_class(event.operation);
-            let completion_cycle = event.cycle
+            let completion_cycle = event
+                .cycle
                 .checked_add(u32::from(descriptor.latency(class)) - 1)
                 .ok_or(Refusal::CompletionHorizon)?;
             pending.push(Pending {
@@ -157,7 +218,9 @@ pub(super) fn check_stream(
         }
         pending.sort_unstable_by_key(|item| (item.completion_cycle, item.issue_cycle, item.unit));
         let mut completed_at_cycle = 0usize;
-        while completed_at_cycle < pending.len() && pending[completed_at_cycle].completion_cycle == cycle {
+        while completed_at_cycle < pending.len()
+            && pending[completed_at_cycle].completion_cycle == cycle
+        {
             match pending[completed_at_cycle].completion {
                 Completion::Node(node) => {
                     if !completed[node.0 as usize] {
@@ -206,13 +269,25 @@ fn check_issue_resources(
     last_issue: &mut [Option<u32>],
 ) -> Result<(), Refusal> {
     let lane = usize::from(event.lane);
-    if lane >= lane_used.len() { return Err(Refusal::IssueLane); }
+    if lane >= lane_used.len() {
+        return Err(Refusal::IssueLane);
+    }
     let unit = usize::from(event.unit);
-    let class = descriptor.unit_class(event.unit).ok_or(Refusal::UnitBound)?;
-    if class != operation_class(event.operation) { return Err(Refusal::UnitClass); }
-    if lane_used[lane] { return Err(Refusal::IssueConflict); }
-    if unit_used[unit] { return Err(Refusal::UnitConflict); }
-    if last_issue[unit].is_some_and(|last| event.cycle.saturating_sub(last) < u32::from(descriptor.initiation_interval)) {
+    let class = descriptor
+        .unit_class(event.unit)
+        .ok_or(Refusal::UnitBound)?;
+    if class != operation_class(event.operation) {
+        return Err(Refusal::UnitClass);
+    }
+    if lane_used[lane] {
+        return Err(Refusal::IssueConflict);
+    }
+    if unit_used[unit] {
+        return Err(Refusal::UnitConflict);
+    }
+    if last_issue[unit].is_some_and(|last| {
+        event.cycle.saturating_sub(last) < u32::from(descriptor.initiation_interval)
+    }) {
         return Err(Refusal::InitiationInterval);
     }
     lane_used[lane] = true;
@@ -222,14 +297,22 @@ fn check_issue_resources(
 }
 
 fn issue_graph_node(issued: &mut [bool], node: NodeId) -> Result<(), Refusal> {
-    let present = issued.get_mut(node.0 as usize).ok_or(Refusal::NodeMismatch)?;
-    if *present { return Err(Refusal::DuplicateNode); }
+    let present = issued
+        .get_mut(node.0 as usize)
+        .ok_or(Refusal::NodeMismatch)?;
+    if *present {
+        return Err(Refusal::DuplicateNode);
+    }
     *present = true;
     Ok(())
 }
 
 fn expect_input(graph: &crate::ir::Graph, node: NodeId, slot: u32) -> Result<(), Refusal> {
-    if graph.nodes.get(node.0 as usize).is_some_and(|entry| entry.op == Op::Input(slot)) {
+    if graph
+        .nodes
+        .get(node.0 as usize)
+        .is_some_and(|entry| entry.op == Op::Input(slot))
+    {
         Ok(())
     } else {
         Err(Refusal::NodeMismatch)
@@ -237,7 +320,10 @@ fn expect_input(graph: &crate::ir::Graph, node: NodeId, slot: u32) -> Result<(),
 }
 
 fn expect_constant(graph: &crate::ir::Graph, node: NodeId, bits: u64) -> Result<(), Refusal> {
-    let expected = graph.nodes.get(node.0 as usize).ok_or(Refusal::NodeMismatch)?;
+    let expected = graph
+        .nodes
+        .get(node.0 as usize)
+        .ok_or(Refusal::NodeMismatch)?;
     match expected.op {
         Op::Const(Literal::I64(value)) if value as u64 == bits => Ok(()),
         _ => Err(Refusal::NodeMismatch),
@@ -249,7 +335,10 @@ fn graph_operands(
     node: NodeId,
     operation: Operation,
 ) -> Result<(NodeId, NodeId), Refusal> {
-    let graph_node = graph.nodes.get(node.0 as usize).ok_or(Refusal::NodeMismatch)?;
+    let graph_node = graph
+        .nodes
+        .get(node.0 as usize)
+        .ok_or(Refusal::NodeMismatch)?;
     let (left, right) = match (&graph_node.op, operation) {
         (Op::I64Add(left, right), Operation::Add { .. })
         | (Op::I64Sub(left, right), Operation::Sub { .. })
@@ -261,7 +350,11 @@ fn graph_operands(
 }
 
 fn require_age(belt: &[NodeId], age: u8, expected: NodeId) -> Result<(), Refusal> {
-    if belt.get(usize::from(age)) == Some(&expected) { Ok(()) } else { Err(Refusal::OperandMismatch) }
+    if belt.get(usize::from(age)) == Some(&expected) {
+        Ok(())
+    } else {
+        Err(Refusal::OperandMismatch)
+    }
 }
 
 fn insert_value(
@@ -289,7 +382,9 @@ fn use_counts(checked: &crate::check::CheckedGraph) -> Vec<u32> {
     let mut counts = vec![0u32; graph.nodes.len()];
     for node in &graph.nodes {
         node.op.visit_operands(|operand| {
-            if let Some(count) = counts.get_mut(operand.0 as usize) { *count = count.saturating_add(1); }
+            if let Some(count) = counts.get_mut(operand.0 as usize) {
+                *count = count.saturating_add(1);
+            }
         });
     }
     counts
@@ -299,7 +394,9 @@ fn output_counts(checked: &crate::check::CheckedGraph) -> Vec<u32> {
     let graph = checked.graph();
     let mut counts = vec![0u32; graph.nodes.len()];
     for output in &graph.outputs {
-        if let Some(count) = counts.get_mut(output.0 as usize) { *count = count.saturating_add(1); }
+        if let Some(count) = counts.get_mut(output.0 as usize) {
+            *count = count.saturating_add(1);
+        }
     }
     counts
 }
@@ -311,7 +408,10 @@ fn is_live(node: NodeId, remaining: &[u32], outputs: &[u32]) -> bool {
 
 fn operation_class(operation: Operation) -> UnitClass {
     match operation {
-        Operation::Input { .. } | Operation::Constant { .. } | Operation::Save { .. } | Operation::Load { .. } => UnitClass::Move,
+        Operation::Input { .. }
+        | Operation::Constant { .. }
+        | Operation::Save { .. }
+        | Operation::Load { .. } => UnitClass::Move,
         Operation::Multiply { .. } => UnitClass::Multiply,
         Operation::Add { .. } | Operation::Sub { .. } | Operation::Equal { .. } => UnitClass::Alu,
     }

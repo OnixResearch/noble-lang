@@ -136,13 +136,29 @@ pub enum Operation {
     /// Materialize an I64 literal graph node.
     Constant { node: u32, bits: u64 },
     /// Wrapping addition from two pre-cycle belt ages.
-    Add { node: u32, left_age: u8, right_age: u8 },
+    Add {
+        node: u32,
+        left_age: u8,
+        right_age: u8,
+    },
     /// Wrapping subtraction from two pre-cycle belt ages.
-    Sub { node: u32, left_age: u8, right_age: u8 },
+    Sub {
+        node: u32,
+        left_age: u8,
+        right_age: u8,
+    },
     /// Wrapping multiplication from two pre-cycle belt ages.
-    Multiply { node: u32, left_age: u8, right_age: u8 },
+    Multiply {
+        node: u32,
+        left_age: u8,
+        right_age: u8,
+    },
     /// Equality from two pre-cycle belt ages.
-    Equal { node: u32, left_age: u8, right_age: u8 },
+    Equal {
+        node: u32,
+        left_age: u8,
+        right_age: u8,
+    },
     /// Save a belt value to an explicit slot; completion updates the slot.
     Save { node: u32, age: u8, slot: u8 },
     /// Load a saved graph value; completion inserts it at belt age zero.
@@ -271,15 +287,21 @@ pub struct CheckedSchedule<'a> {
 impl CheckedSchedule<'_> {
     /// Target selected by the independent checker.
     #[must_use]
-    pub const fn machine(&self) -> Machine { self.machine }
+    pub const fn machine(&self) -> Machine {
+        self.machine
+    }
 
     /// Number of checked issue events.
     #[must_use]
-    pub const fn event_count(&self) -> usize { self.event_count }
+    pub const fn event_count(&self) -> usize {
+        self.event_count
+    }
 
     /// Number of ordered final reads.
     #[must_use]
-    pub const fn output_count(&self) -> usize { self.output_count }
+    pub const fn output_count(&self) -> usize {
+        self.output_count
+    }
 }
 
 /// Structurally decoded artifact with fixed descriptor and digest validation.
@@ -297,13 +319,19 @@ pub struct DecodedSchedule {
 impl DecodedSchedule {
     /// Machine id declared by this artifact.
     #[must_use]
-    pub const fn machine(&self) -> Machine { self.machine }
+    pub const fn machine(&self) -> Machine {
+        self.machine
+    }
 
     /// Issue events in encoded order.
     #[must_use]
-    pub fn events(&self) -> &[Issue] { &self.events }
+    pub fn events(&self) -> &[Issue] {
+        &self.events
+    }
 
     /// Final output reads in encoded order.
     #[must_use]
-    pub fn outputs(&self) -> &[OutputRead] { &self.outputs }
+    pub fn outputs(&self) -> &[OutputRead] {
+        &self.outputs
+    }
 }

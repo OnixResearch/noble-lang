@@ -13,7 +13,9 @@ pub(crate) fn graph() -> Graph {
     let sum = builder.op(Op::I64Add(x, y));
     let difference = builder.op(Op::I64Sub(y, x));
     let product = builder.op(Op::I64Mul(sum, z));
-    for node in [sum, difference, product] { builder.output(node); }
+    for node in [sum, difference, product] {
+        builder.output(node);
+    }
     builder.finish()
 }
 
@@ -30,8 +32,13 @@ fn fixed_profiles_produce_bound_checked_and_interpreted_schedules() {
         assert_eq!(descriptor.initiation_interval, 1);
         let lowered = target::lower(&super::common::IDS, &accepted_graph, machine)
             .expect("the bounded test graph schedules");
-        let schedule = target::check(&super::common::IDS, &accepted_graph, machine, &lowered.bytes)
-            .expect("the independent checker accepts the producer's artifact");
+        let schedule = target::check(
+            &super::common::IDS,
+            &accepted_graph,
+            machine,
+            &lowered.bytes,
+        )
+        .expect("the independent checker accepts the producer's artifact");
         assert_eq!(schedule.machine(), machine);
         assert_eq!(schedule.event_count(), lowered.event_count);
         assert_eq!(
