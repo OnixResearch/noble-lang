@@ -52,7 +52,7 @@
     "max_effects": 4096,
     "max_expansions": 16384,
     "max_function_safety_facts": 4096,
-    "max_implementations": 1024,
+    "max_implementations": 2048,
     "max_items": 8192,
     "max_modules": 2048,
     "max_shard_bytes": 134217728,
