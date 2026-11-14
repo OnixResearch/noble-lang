@@ -14,7 +14,8 @@
   },
   "checker_interface": {
     "accepted": "exit 0 and a positive checked-declaration count parsed from the checker's own output",
-    "unsupported": "exit 2 (the Lean Kernel Arena's 'declined'), recorded as a refusal class and never as success",
+    "unsupported": "exit 2 or an explicit unsupported-format/feature diagnostic, recorded as refusal and never as success",
+    "forbidden-axiom": "checker-specific refusal of an unpermitted axiom; distinct from a kernel rejection",
     "kernel-rejection": "a nonzero checker result with a rejection-shaped type/kernel diagnostic; it is not a mathematical refutation of the source theorem",
     "parse-failure": "a malformed export reported by a parser-specific diagnostic; distinct from unsupported input and kernel rejection",
     "resource-exhausted": "the OS limit is exhausted or the checker reports a memory/resource allocation failure; never a kernel rejection",

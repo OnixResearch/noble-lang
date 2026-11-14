@@ -154,14 +154,14 @@ function classify(result, checker, timedOut, addressSpaceBytes = null) {
   if (result.status === 2 || (checker.declined_exit ?? []).includes(result.status)) {
     return { classification: 'unsupported', count: null };
   }
-  if (/\b(?:extension|literal)\b.{0,60}\b(?:disallow(?:ed)?|unsupported|not supported|disabled|not enabled)\b|\b(?:nat|string) lit(?:eral)?\b.{0,80}\b(?:disallow(?:ed)?|disabled|unsupported|not supported|not enabled)\b|\bunsupported(?: feature| extension)?\b/iu.test(text)) {
+  if (/export format version is (?:greater|less) than the (?:maximum|minimum) supported version|\b(?:extension|literal)\b.{0,60}\b(?:disallow(?:ed)?|unsupported|not supported|disabled|not enabled)\b|\b(?:nat|string) lit(?:eral)?\b.{0,80}\b(?:disallow(?:ed)?|disabled|unsupported|not supported|not enabled)\b|\bunsupported(?: feature| extension)?\b/iu.test(text)) {
     return { classification: 'unsupported', count: null };
   }
   if (result.signal === 'SIGKILL' || result.signal === 'SIGXCPU' || result.signal === 'SIGXFSZ'
       || result.status === 137 || /out of memory|cannot allocate(?: memory)?|allocation failed|memory allocation|too many open files|\bEMFILE\b|\bENOMEM\b|resource temporarily unavailable|failed to allocate|failed to map segment/iu.test(text)) {
     return { classification: 'resource-exhausted', count: null };
   }
-  if (/parse.{0,60}(?:error|fail|invalid|unexpected|eof|end of input)|(?:json|ndjson).{0,60}(?:error|fail|invalid|unexpected|eof|end of input)|(?:unexpected|invalid|expected|eof).{0,60}(?:json|ndjson|token|input|key|value)|EOF while parsing|expected .{1,80} after|unexpected end of input/iu.test(text)) {
+  if (/\bparse\b.{0,60}(?:error|fail|invalid|unexpected|eof|end of input)|\b(?:json|ndjson)\b.{0,60}(?:error|fail|invalid|unexpected|eof|end of input)|\b(?:unexpected|expected|eof)\b.{0,60}\b(?:json|ndjson|token|input|key|value)\b|\binvalid\s+(?:json|ndjson|token|input|syntax)\b|\bEOF while parsing\b|\bexpected .{1,80} after\b|\bunexpected end of input\b/iu.test(text)) {
     return { classification: 'parse-failure', count: null };
   }
   if (addressSpaceBytes !== null && result.status === 139 && text.trim() === '') {
@@ -170,6 +170,9 @@ function classify(result, checker, timedOut, addressSpaceBytes = null) {
       count: null,
       resource_failure: 'silent exit status 139 under the explicit RLIMIT_AS cap',
     };
+  }
+  if (/\bunpermitted axiom\b/iu.test(text)) {
+    return { classification: 'forbidden-axiom', count: null };
   }
   if (result.status === 0) {
     const match = new RegExp(checker.accept_pattern, 'u').exec(stdout);
@@ -547,6 +550,7 @@ const classifierCases = [
   { id: 'unsupported-feature', input: { status: 1, stdout: '', stderr: 'Nat literal extension disallowed' }, expected: 'unsupported' },
   { id: 'kernel-rejection', input: { status: 1, stdout: '', stderr: 'rejected: application type mismatch' }, expected: 'kernel-rejection' },
   { id: 'parse-failure', input: { status: 3, stdout: '', stderr: "parse error: expected ':' after a key" }, expected: 'parse-failure' },
+  { id: 'forbidden-axiom', input: { status: 1, stdout: '', stderr: 'export file declares unpermitted axiom "NobleReplayControl.customAxiom"' }, expected: 'forbidden-axiom' },
   { id: 'resource-exhaustion', input: { status: 137, stdout: '', stderr: '' }, expected: 'resource-exhausted' },
   { id: 'address-space-cap-silent-exit', input: { status: 139, stdout: '', stderr: '' },
     address_space_bytes: RESOURCE_ADDRESS_SPACE_BYTES, expected: 'resource-exhausted' },
@@ -641,6 +645,7 @@ const checks = {
     classifierSelfTest.every((row) => row.classified === row.expected)
       && checkersPin.checkers.every((checker) => classifierSelfTest.some((row) => row.checker === checker.id && row.expected === 'kernel-rejection')
         && classifierSelfTest.some((row) => row.checker === checker.id && row.expected === 'parse-failure')
+        && classifierSelfTest.some((row) => row.checker === checker.id && row.expected === 'forbidden-axiom')
         && classifierSelfTest.some((row) => row.checker === checker.id && row.expected === 'unsupported')
         && classifierSelfTest.some((row) => row.checker === checker.id && row.expected === 'resource-exhausted')),
   no_mutation_lane_verdict_accepted: subjectAndOperationalControls.every((control) => control.quorum.accepted === false),
