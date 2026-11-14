@@ -1,0 +1,111 @@
+{
+  "schema": "noble-procedure-library-transfer-criteria/1",
+  "revision": 0,
+  "issue": "OnixResearch/noble-lang#118",
+  "frozen_before_measurement": true,
+  "producer": {
+    "receipt": "verification/synthesis/receipts/2026-11-13/synthesis-v2.json",
+    "receipt_sha256": "4c05b46b3d439d7c5a95786d6a07e2c2017573d8a364fd6e8c52e2c70958387f",
+    "source_commit": "7add60d54abaaf8f7d48f15d3de1ac2635bc1fe6",
+    "grammar_revision": "synth-i64/0",
+    "budget": {
+      "seed": "0x9e3779b97f4a7c15",
+      "max_words": 8,
+      "max_stack": 4,
+      "max_candidates": 400000,
+      "max_rounds": 4,
+      "solver_ms": 10000
+    },
+    "acquisition_tasks": [
+      {
+        "task_id": "arithCommuted",
+        "producer_status": "proved",
+        "candidate": "7 + +",
+        "reference": "(+ (+ x 7) y)",
+        "certificate": "NobleFoundation.Synthesis.arithCommuted_certified"
+      },
+      {
+        "task_id": "arithSubtract",
+        "producer_status": "proved",
+        "candidate": "- 7 +",
+        "reference": "(- (+ x 7) y)",
+        "certificate": "NobleFoundation.Synthesis.arithSubtract_certified"
+      }
+    ],
+    "producer_negative_traces_retained_by_bound_receipt": ["bitOr", "bitXor"]
+  },
+  "task_family": "three-input wrapping-i64 arithmetic composition",
+  "held_out_split": {
+    "training_records": ["arithCommuted", "arithSubtract"],
+    "targets_not_present_in_producer_suite": [
+      {
+        "task_id": "commuted_then_subtract",
+        "selected_training_tasks_in_order": ["arithCommuted", "arithSubtract"],
+        "reference": "x - y - z"
+      },
+      {
+        "task_id": "subtract_then_commuted",
+        "selected_training_tasks_in_order": ["arithSubtract", "arithCommuted"],
+        "reference": "x + y - z + 14"
+      }
+    ],
+    "seed_cases": {
+      "1": [[1, 2, 3], [5, -5, 7], [-12, 23, -8]],
+      "7": [[17, -4, 9], [9, 13, 21], [-4, 5, -11]],
+      "23": [[-3, 8, 4], [31, 7, -19], [6, -14, 2]],
+      "101": [[0, 0, 0], [19, -23, 41], [-55, 13, 9]]
+    },
+    "witnesses": "The stated references evaluated with two's-complement wrapping i64 arithmetic are the only held-out expected values. Every case is re-admitted through typed-chunk/1; the library contains only the two source task records and no target id, target body, target answer, or evaluator state.",
+    "split_rule": "All twelve input triples per task are withheld from library admission and retrieval-index construction. The transfer fixture contains target task ids and their reference outputs only at the consumer-check boundary."
+  },
+  "arms": [
+    {
+      "name": "no_library",
+      "entries": 0,
+      "purpose": "measure refusal when retrieval has no procedure candidates"
+    },
+    {
+      "name": "frozen_hand_library",
+      "entries": 2,
+      "purpose": "same two retained source bodies, constructed as explicit hand-library records rather than acquired producer records"
+    },
+    {
+      "name": "accumulated_learned_library",
+      "sweeps": [0, 1, 2],
+      "acquisition_order": ["arithCommuted", "arithSubtract"],
+      "purpose": "append producer records in separate generations and evaluate each fixed sweep"
+    },
+    {
+      "name": "size_matched_nontransfer",
+      "entries": 2,
+      "sweeps": [0, 1, 2],
+      "acquisition_order": "admit the lexicographically ordered selected pair one record per generation, matching the accumulated-learned archive shape",
+      "candidate_pool": ["arithScaled", "arithProduct", "bitXor"],
+      "selection": "Among all two-task subsets whose source task has an I64 x I64 -> I64 interface and no precondition, select the pair with the smallest absolute difference in canonical encoded library byte length from the two-entry accumulated library, with both pairs admitted in two successive generations. Ties use lexicographic task-id order. No held-out case, target output, or transfer result may influence selection. Require an absolute size difference <= 10%; otherwise report the arm unavailable and do not claim a size-matched comparison.",
+      "purpose": "control for the same retrieval-entry count and approximately equal serialized library size using different producer tasks"
+    }
+  ],
+  "paired_seeds": [1, 7, 23, 101],
+  "success_threshold": {
+    "learned_transfer": "All three held-out cases pass for both composed tasks at each of all four seeds (8/8 seed-task cells, 24/24 cases).",
+    "no_runtime_proposer_or_teacher": "Exactly zero proposer_calls and teacher_calls in every arm/seed; any attempted call must return a refusal and invalidates the transfer claim.",
+    "control": "Report all control outcomes without changing the success threshold or selecting a different non-transfer pair after inspecting outcomes."
+  },
+  "fixed_measurements": [
+    "acquisition count and task count per arm and seed",
+    "generation count and restart identity equality",
+    "record count, canonical encoded library bytes, and identity-manifest digest",
+    "retrieval query count, examined-entry total, maximum examined entries, and measured retrieval-only monotonic nanoseconds",
+    "passed/total composed tasks and passed/total held-out examples",
+    "earlier producer task regression checks",
+    "proposer and teacher call counts",
+    "break-even invocation count per arm/seed or null with an explicit reason"
+  ],
+  "measurement_limits": [
+    "The #116 producer artifact is fixed input to this evaluation; synthesis is not run during any arm.",
+    "Composition orders are frozen by the target task descriptions. Retrieval returns identities only; every composed source is freshly prepared and re-admitted by the ordinary checker and typed-chunk/1 fixtures.",
+    "No result claims lifelong learning, universal transfer, a speedup, amortized break-even, proof of source-to-graph correspondence, or a model-generated plan.",
+    "A passing bounded Rust execution is implementation evidence, not a proof. Producer certificates and this lane's typed-chunk re-admission remain separate evidence classes."
+  ],
+  "receipt_requirement": "Run exactly once from a clean committed source tree, bind that source commit, criteria SHA-256, producer receipt SHA-256, selected control pair and raw command output; commit a new dated receipt separately."
+}
