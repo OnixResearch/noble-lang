@@ -539,21 +539,25 @@ fn specialize_known_sum_cases(
         while index < program.operations.len() {
             attempt!(work.charge(1));
             if index.saturating_add(4) < program.operations.len() {
-                let literal = matches!(
+                let is_scalar_literal = matches!(
                     program.operations[index].action,
                     Action::I64(_) | Action::Bool(_) | Action::Unit
                 );
-                let variant = match program.operations[index + 1].action {
-                    Action::Word(definition @ (15 | 16)) => Some(definition),
-                    _ => None,
+                let variant_definition = if let Action::Word(definition @ (15 | 16)) =
+                    program.operations[index + 1].action
+                {
+                    Some(definition)
+                } else {
+                    None
                 };
-                let quotations = matches!(program.operations[index + 2].action, Action::Program(_))
-                    && matches!(program.operations[index + 3].action, Action::Program(_));
-                if literal
-                    && quotations
+                let has_static_quotations =
+                    matches!(program.operations[index + 2].action, Action::Program(_))
+                        && matches!(program.operations[index + 3].action, Action::Program(_));
+                if is_scalar_literal
+                    && has_static_quotations
                     && matches!(program.operations[index + 4].action, Action::Word(17))
                 {
-                    if let Some(definition) = variant {
+                    if let Some(definition) = variant_definition {
                         program.operations[index + 1].action = Action::KnownVariant(definition);
                         program.operations[index + 4].action =
                             Action::KnownCase(u32::from(definition == 16));
