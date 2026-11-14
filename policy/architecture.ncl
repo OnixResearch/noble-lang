@@ -463,7 +463,11 @@ let contracts = import "./architecture.contracts.ncl" in
     max_items = 8192,
     max_types = 4096,
     max_traits = 512,
-    max_implementations = 1024,
+    # The #118 procedure library (noble_contracts) and the #33 specialization cache
+    # (noble_ngraph) each fill their library and library+test shards to exactly the
+    # 1024 implementation-fact cap, so those shards are incomplete. Double the cap
+    # for complete compiler coverage.
+    max_implementations = 2048,
     max_signatures = 4096,
     # Calculator-v1 (issue #22 collection of 44329dc + fmt/clippy): both CLI
     # noble bin and bin+test shards reached the 16,384 call cap, and the bin
