@@ -522,7 +522,7 @@ function boundaryLimits(source, arm, optimized, rows, runtimeConfig, watArtifact
     const id = `allocation-boundary-${allocationBytes}`;
     const inputs = [];
     const row = runEngineCell(runtimeConfig, source, arm, optimized,
-      watArtifact, id, { limits: { allocation_bytes: allocationBytes }, inputs,
+      watArtifact, keyFor(id, arm, optimized), { limits: { allocation_bytes: allocationBytes }, inputs,
         observationId: id });
     verifyFallback(row);
     rows.push(row);
