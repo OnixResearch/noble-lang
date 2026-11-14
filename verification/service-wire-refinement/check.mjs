@@ -136,7 +136,8 @@ function verifyProfile(profile) {
   requireThat(receipt.result === 'passed', 'recorded extraction did not pass');
   requireThat(JSON.stringify(Object.keys(profile.generated_inputs).sort()) === JSON.stringify([...generatedInputs].sort()),
     'generated input set changed');
-  // The regenerated kernel subjects match the selected extractor/library directly.
+  // A passing profile binds checked-in inputs to its recorded extraction, not
+  // merely to the currently selected Lean library. A stale profile fails here.
   for (const file of generatedInputs) {
     const recorded = handwrittenModels.has(file)
       ? [receipt.source_files[file], lock.source_files[file]]
@@ -518,7 +519,7 @@ try {
     },
     assumptions: [
       'Pinned Lean and the imported Aeneas/Mathlib dependency libraries are trusted; downloaded dependency .oleans are not rebuilt by this audit.',
-      'The regenerated kernel subjects build against the Lean backend from the same selected Aeneas revision without compatibility aliases.',
+      'The checked-in kernel subjects match the recorded extraction and build against the selected Aeneas Lean library without compatibility aliases; matching the library pin alone does not renew extraction provenance.',
       'The recorded Charon/Aeneas translation (verification/declared-modules-v1/extraction.json) is trusted to model the bound Rust sources; this lane does not re-run it.',
       'Reachable handwritten external models are part of the trusted base and are listed in binding.external_models; core.str.converts.from_utf8 is modelled as returning its input on valid UTF-8 and Utf8Error.Invalid otherwise.',
       'The Aeneas library models of slices, arrays, range indexing and range writes, slice copies, scalars, checked arithmetic and loops are trusted.',

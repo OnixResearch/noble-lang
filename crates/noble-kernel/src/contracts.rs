@@ -870,6 +870,31 @@ pub fn declared_text_environment() -> Result<Env, crate::shapes::Defect> {
 #[cfg(test)]
 mod checked_i64_tests {
     #[test]
+    fn concrete_aeneas_factory_keeps_each_reserved_dependency_list_empty() {
+        let base = super::environment()
+            .expect("bootstrap environment")
+            .defs
+            .len();
+        let cursor = super::text_cursor_environment().expect("cursor environment");
+        assert_eq!(cursor.deps.len(), cursor.defs.len());
+        assert_eq!(cursor.deps.len(), base + 4);
+        assert!(cursor.deps[base..base + 3]
+            .iter()
+            .all(alloc::vec::Vec::is_empty));
+
+        let mut calculator = super::calculator_environment().expect("calculator environment");
+        assert_eq!(calculator.deps.len(), calculator.defs.len());
+        assert_eq!(calculator.deps.len(), cursor.deps.len() + 5);
+        assert!(calculator.deps[base..]
+            .iter()
+            .all(alloc::vec::Vec::is_empty));
+        calculator.deps[base].push(super::Definition(0));
+        assert!(calculator.deps[base + 1..]
+            .iter()
+            .all(alloc::vec::Vec::is_empty));
+    }
+
+    #[test]
     fn profile_appends_the_fixed_pure_operation_table() {
         let ordinary = super::environment().unwrap_or_else(|_| panic!("ordinary environment"));
         let checked =

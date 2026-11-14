@@ -1,5 +1,15 @@
 # M5 authority ledger: implementation theorems (issue #66, tasks 2 and 3)
 
+**Archived-source lane.** The generated M5 subject in
+`verification/m5/discovery.tar.gz` and its extraction receipt predate #97 and
+record Aeneas `505b6ca`. The profile's `aeneas_revision: 1238879f` names the
+selected **Lean library for compiling the archived subject**; it does not
+re-extract the archive or make it a current-kernel receipt. The four aliases
+in `verification/m5-archived-library-compatibility.lean` are appended only to
+the temporary archive replay, never to checked-in current proof sources.
+Retained proof receipts record their own earlier source and Lean versions.
+See the [#97 classification](../aeneas-re-extraction/README.md#generated-subjects-and-lane-receipts).
+
 This lane proves statements about the generated Lean functions in the retained M5 Charon/Aeneas
 translation of `crates/noble-kernel/src/authority`. The statements are not about a handwritten
 machine. The phase 1 model,

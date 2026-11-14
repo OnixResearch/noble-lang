@@ -10,6 +10,24 @@
 
 `--inline-anon-consts` was present in both standalone Charon runs. It does not resolve either failure above. The separate promoted-`'static` negative control passed: pinned Charon extracted the fixture, and Aeneas exited 2 with `There should be no bottoms in the value` for both escaping constants. That is the expected refusal and addresses the `'static` caveat; it does not resolve the two independent translation blockers documented here (unit-3 record, commit `048c3971`).
 
+## Kernel helper decision
+
+Keep `contracts::empty_dependency_list` only as an Aeneas-compatibility
+expression form, **not** as a claim that the M4 extraction now succeeds.
+The old calls passed the generic `Vec::new` function item to `repeat_with`;
+the new monomorphic zero-argument function returns the same
+`Vec<Definition>::new()`. `repeat_with` still invokes the factory once for
+each reserved row, and `take` still bounds the row count; an empty `Vec`
+allocates no buffer. The regression in `crates/noble-kernel/src/contracts.rs`
+checks both cursor and calculator row counts, every appended dependency's
+emptiness, and that mutating one row cannot mutate another. This rules out
+the behavioral risk of sharing one dependency vector between rows. The
+standalone generic-function-item reproducer establishes why the form matters
+to Aeneas `1238879f`, but the full M4 subject still fails at unrelated
+interpreter limitations. Remove the helper only if the selected extractor
+accepts the generic item again or a future fresh translation establishes an
+equally simple compatible source form; do not treat its presence as a receipt.
+
 ## Exact condition for issue completion
 
 Complete #97 only after a pinned extraction revision and command configuration satisfy all of the following on the fixed subject inputs:
