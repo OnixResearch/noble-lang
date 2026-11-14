@@ -6,13 +6,12 @@ let Pin = { rev | String, narHash | String } in
     aeneas | Pin, aeneas_lean | Pin, aeneas_nixpkgs | Pin, cairn | Pin, charon | Pin,
     extraction_nixpkgs | Pin, nixpkgs | Pin, octet | Pin, rust_overlay | Pin,
   } = {
-    # The extractor that generated the checked-in Lean subjects (Charon -> Aeneas).
+    # The extractor and Lean library share Aeneas revision 1238879f.
     aeneas = {
-      rev = "505b6ca35217e7be5c96c3e2f8045edfbdf47291",
-      narHash = "sha256-V6H12+Qg3qlZBGdjoTHCbYWSOwcdZ86XCxOkWURo6Qs=",
+      rev = "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+      narHash = "sha256-HXAeoR35sHdqQj9FEz4ulPvVAdxqZlBcMG2ly7OYNDk=",
     },
-    # The Aeneas Lean library every proof project requires. No Aeneas that supports Lean 4.35 can
-    # re-extract the noble-contracts subject yet, so the extractor stays at `aeneas` (#86).
+    # The Aeneas Lean library every proof project requires; it is the extractor's same source tree.
     aeneas_lean = {
       rev = "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
       narHash = "sha256-HXAeoR35sHdqQj9FEz4ulPvVAdxqZlBcMG2ly7OYNDk=",
@@ -26,8 +25,8 @@ let Pin = { rev | String, narHash | String } in
       narHash = "sha256-r6maRgum3TeE17B/prR6ixA4R5CuLdEOAN8CWAD+zMg=",
     },
     charon = {
-      rev = "b104e24fea7d721b71e6c39fd70f26ff20bc0980",
-      narHash = "sha256-T5YOon6o64//bS5NihALMrDGivJNwvmoJRoKIGITEmc=",
+      rev = "9e95cf318e3a2964fcf5e03104cde5b718f98ea5",
+      narHash = "sha256-5k2jpmT+hl0ocmJPeyVKlf2ehHJDVJiZy8sovKWHiIg=",
     },
     extraction_nixpkgs = {
       rev = "643809054d65fdd466a63e3155b8c498cb483c04",
@@ -42,8 +41,8 @@ let Pin = { rev | String, narHash | String } in
       narHash = "sha256-b9eFelLNGuhS4FpGD3uVh3yS0J2jtGz2/NDN+9agVP4=",
     },
     rust_overlay = {
-      rev = "e598b37857b895b81020a65a802ef55f5bbed72f",
-      narHash = "sha256-KlepQu/O5m11lAjcJ4ER5bc6bIzyX2UMPDARzMzQfIw=",
+      rev = "a1d497a9415999853809ba22a7959b1c36dc6554",
+      narHash = "sha256-hulcXtNnQVDTPXiC8dQpTX3FPHxklIfX7Cx2kd2GDrM=",
     },
   },
   configuration = {
@@ -51,7 +50,7 @@ let Pin = { rev | String, narHash | String } in
     target | String = "x86_64-unknown-linux-gnu",
     word_bits | Number = 64,
     quality_rust | String = "nightly-2026-03-21",
-    extraction_rust | String = "nightly-2026-08-18",
+    extraction_rust | String = "nightly-2026-09-17",
     miri_rust | String = "nightly-2026-08-18",
     miri_flags | Array String = ["-Zmiri-strict-provenance"],
     features | Array String = [],
@@ -66,7 +65,8 @@ let Pin = { rev | String, narHash | String } in
     extraction_subject | String = "crates/noble-kernel/Cargo.toml",
     # The declared subject: Charon translates this item and what it reaches, not the whole library.
     extraction_start_from | String = "noble_kernel::consume_budget",
-    charon_args | Array String = ["--preset=aeneas", "--error-on-warnings"],
+    # The promoted &'static refusal control for #97 passed with this option enabled.
+    charon_args | Array String = ["--preset=aeneas", "--error-on-warnings", "--inline-anon-consts"],
     cargo_args | Array String = ["--lib", "--all-features", "--target", "x86_64-unknown-linux-gnu", "--locked", "--offline"],
     aeneas_args | Array String = ["-backend", "lean", "-abort-on-error", "-warnings-as-errors", "-no-progress-bar", "-emit-json"],
     translator_timeout_seconds | Number = 120,

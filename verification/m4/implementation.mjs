@@ -47,13 +47,13 @@ const fileSha = file => sha(fs.readFileSync(file));
 const json = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const save = (name, value) => fs.writeFileSync(path.join(artifacts, name), JSON.stringify(value, null, 2) + '\n');
 const pins = {
-  charon: '/nix/store/ka61j6d6zy8zg91ynlbd6nmjssyynrpl-charon',
-  aeneas: '/nix/store/q3hsccq1s53aa85vh3mmc3b0k31pnyl2-ocaml5.2.1-aeneas-0.1.0',
-  extraction_rust: '/nix/store/wq92i79ivn1w1nrdhmzl1mqx0wcyrawi-rust-default-1.100.0-nightly-2026-08-18',
-  lean: '/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0',
+  charon: '/nix/store/dg8i5s1hl2lncdcjmi6iq98iq1dji5x3-charon',
+  aeneas: '/nix/store/mx4siwxnwb74avq1sq971h5i55bwxwzq-ocaml5.2.1-aeneas-0.1.0',
+  extraction_rust: '/nix/store/hwnilj8cghz1kjkz7f636kz2clla03vr-rust-default-1.100.0-nightly-2026-09-17',
+  lean: '/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0',
   node: '/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0',
 };
-const aeneasRevision = '505b6ca35217e7be5c96c3e2f8045edfbdf47291';
+const aeneasRevision = '1238879f9ea550512096e9bf8bd6fe7407b3eaef';
 const evidence = {
   schema: 'm4-implementation-evidence/v1', scope: 'actual-core-sync-and-async-component-bootstrap-pure-rust-extraction',
   mode, result: 'running', commands: [], extractions: {},
@@ -166,21 +166,21 @@ function run(label, binary, args, cwd = workspace, extraEnvironment = {}, allowF
 function validateSelection() {
   equal(selection.schema_version, 'noble-tool-selection-policy/v1', 'SELECTION', 'schema');
   for (const [name, pin] of Object.entries(pins)) equal(selection.tool_paths[name]?.output, pin, 'TOOL', name);
-  equal(selection.configuration.charon_args, ['--preset=aeneas', '--error-on-warnings'], 'SELECTION', 'Charon arguments');
+  equal(selection.configuration.charon_args, ['--preset=aeneas', '--error-on-warnings', '--inline-anon-consts'], 'SELECTION', 'Charon arguments');
   equal(selection.configuration.cargo_args, ['--lib', '--all-features', '--target',
     'x86_64-unknown-linux-gnu', '--locked', '--offline'], 'SELECTION', 'Cargo arguments');
   equal(selection.configuration.aeneas_args, ['-backend', 'lean', '-abort-on-error', '-warnings-as-errors',
     '-no-progress-bar', '-emit-json'], 'SELECTION', 'Aeneas arguments');
   for (const [name, expected] of Object.entries({ target: 'x86_64-unknown-linux-gnu', word_bits: 64,
-    extraction_rust: 'nightly-2026-08-18', extraction_profile: 'dev', all_features: true,
+    extraction_rust: 'nightly-2026-09-17', extraction_profile: 'dev', all_features: true,
     default_features: true, overflow_checks: true, panic: 'unwind', lean_heartbeats: 1000000,
     lean_recursion_depth: 2048, lean_timeout_seconds: 900, translator_timeout_seconds: 120 })) {
     equal(selection.configuration[name], expected, 'SELECTION', name);
   }
   equal(selection.configuration.features, [], 'SELECTION', 'features');
   equal(selection.sources.aeneas.rev, aeneasRevision, 'SELECTION', 'Aeneas source');
-  equal(selection.sources.charon.rev, 'b104e24fea7d721b71e6c39fd70f26ff20bc0980', 'SELECTION', 'Charon source');
-  equal(selection.lean.toolchain, 'leanprover/lean4:v4.31.0', 'SELECTION', 'Lean toolchain');
+  equal(selection.sources.charon.rev, '9e95cf318e3a2964fcf5e03104cde5b718f98ea5', 'SELECTION', 'Charon source');
+  equal(selection.lean.toolchain, 'leanprover/lean4:v4.35.0', 'SELECTION', 'Lean toolchain');
   for (const name of ['lakefile.toml', 'lake-manifest.json', 'lean-toolchain']) {
     if (!selection.file_sha256[`proofs/m4/${name}`]) fail('SELECTION', `missing proofs/m4/${name} binding`);
   }

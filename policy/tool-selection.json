@@ -67,11 +67,12 @@
     ],
     "charon_args": [
       "--preset=aeneas",
-      "--error-on-warnings"
+      "--error-on-warnings",
+      "--inline-anon-consts"
     ],
     "default_features": true,
     "extraction_profile": "dev",
-    "extraction_rust": "nightly-2026-08-18",
+    "extraction_rust": "nightly-2026-09-17",
     "extraction_start_from": "noble_kernel::consume_budget",
     "extraction_subject": "crates/noble-kernel/Cargo.toml",
     "features": [],
@@ -98,19 +99,19 @@
     ".pre-commit-config.yaml": "548cb1a1e56a47c8154dd20e58256033f4fa4d6f94fc20445ff5af45f9c1bdf4",
     "Cargo.lock": "87a504999bc56d5080cd6fc080bb8fe06b86f18ddc446de4065032f1ddbfb63b",
     "Cargo.toml": "d0d718b46958904e242065b9d20d5e6fac83ca1395570ed0da00ecac5aa6afd6",
-    "crates/noble-cli/Cargo.toml": "6cf3abb55e6346755a3b7d915e643c4590db1e9e6085b35565c5d8c412b6add1",
+    "crates/noble-cli/Cargo.toml": "ad45ae25a1ec15133f57cf8fe3bc52dd97e7d21e97f3fc2ec2c11392b9c88bb0",
     "crates/noble-cli/src/backend/vocabulary.noble": "f8d7a7e587cf85bcc36fe21c75506dd0c58a4c7e18baa8ddb1e11fde8aeb23e3",
     "crates/noble-cli/src/build.rs": "598903ddd41b0a4537fca51a8bc926d901a83dd56cc6ad2e5808231d25c6f8d8",
     "crates/noble-cli/src/c_backend.rs": "8b8023c91975723b39e1f092d7b70be88254f678164561a454a6c53be688eee2",
     "crates/noble-cli/src/component.rs": "1136e05fd6d5a7d230f59af75aa8705769d3072ae105d9c8ace0c479453760ff",
     "crates/noble-cli/src/component/artifacts.rs": "584dbd064218b304fa0d0e174e0b7b5fef129265c950a0793b14b93dd9c29610",
     "crates/noble-cli/src/component/report.rs": "2ef03ca0f1e0f83d2a037fd9a1b945419974348526f7d47a9298433eafa43b01",
-    "crates/noble-cli/src/core.rs": "d2f43a495742c52f3759d186490575f0b61259812861174f08360f40daa58b3b",
-    "crates/noble-cli/src/core/arguments.rs": "a3d1e23e701942335af8999d4658a6a63c473c0f6bfe8caf1e9b6a76e9d21412",
+    "crates/noble-cli/src/core.rs": "ef4338f73f87edd6520e6292f23567f6b3aab251b91c7bc198c8c949ed7f89d7",
+    "crates/noble-cli/src/core/arguments.rs": "5bab19aa47b1ef40ea747c06ba638c2e8fe98e2fd2f6fc2c4b3d29e594d688b5",
     "crates/noble-cli/src/core/arguments/bindings.rs": "9ebc866815018f2ca74b15aa2e6377ce979a1912d83e0b5b90183c9400f6051a",
     "crates/noble-cli/src/core/arguments/bindings/adapter.rs": "6a41ba2f57d9dd274a404d0994894ea38ac3d32d389d7c93449681b88d2a942e",
-    "crates/noble-cli/src/core/companions/session.rs": "5cc05c160e479daf323da19908442ff37e88c4c42b539824ca4b90c7b8413288",
-    "crates/noble-cli/src/core/entry.rs": "1232f7162d5dcdf383f47c6b441e9aef2d9de01d2974b07ebcc52b50569c6c8e",
+    "crates/noble-cli/src/core/companions/session.rs": "ac91cd5a29b411ffdebd0e1595bf440812154f62db6adcddee2eace432056f82",
+    "crates/noble-cli/src/core/entry.rs": "20d7bd84e431e91d6b616f9a356fe154168876a4a49af8e5220f3cf0f2207d24",
     "crates/noble-cli/src/core/entry/compilation.rs": "803b9848159cf0e798b407ecc9ad733df0149a91733218bc6f41886d38f969df",
     "crates/noble-cli/src/core/framing.rs": "d9a2dd72588c6f16970717efe64ca09053760de717f6d5a3f96148d617b5c907",
     "crates/noble-cli/src/core/inspect.rs": "dd070004f022fb9bf4c95b8eb87b34ecb958ceb00940041deff66b1057d2bffe",
@@ -121,22 +122,22 @@
     "crates/noble-cli/src/core/live_slot.rs": "8cf7aa908c2c594115c7ba1df7540c1c6b84188786afd33f6ae6002e4c823bf1",
     "crates/noble-cli/src/core/live_slot_origin.rs": "b173f1649587d94d846acf1cf9119c268f9673202dc4133990f67ae5ebc3c0cb",
     "crates/noble-cli/src/core/live_slot_returned_dag.rs": "bb4fad9de54b38bd49f7ab3d3c96f3bedb928364014064827809fe10eedf0a3e",
-    "crates/noble-cli/src/core/output.rs": "e129b408268f66ffaf09f28273cd515fc726156fc0ba52f5c2ed6928af8df16e",
+    "crates/noble-cli/src/core/output.rs": "d2de87a361e29c0a5d169c4f0eb980012436b9d190e9d83aa9702f37123b960d",
     "crates/noble-cli/src/core/preview.rs": "51c772e74768ec895b4ae6eb78c6f33d4e1047ecb07d56be76027f910c9b0554",
     "crates/noble-cli/src/core/runtime/abi.json": "2eb6c057c70ae4f32be45e5c1bfd00ee225c6f8409ca0e126dec29304fceee1d",
-    "crates/noble-cli/src/core/runtime/config.json": "aba32bb0e89c5c4e000109701ad620a640327364b4a7f6596f54c5dedbecef53",
+    "crates/noble-cli/src/core/runtime/config.json": "be38ad3c8d647968ed44628efe5d945dcaf57d162764b3cec51bab661738dcfd",
     "crates/noble-cli/src/core/runtime/declared-abi.json": "6927b379477ee6318d292e7aa09b2103f488349931a89ed84e2e3bf7dac3eb0d",
-    "crates/noble-cli/src/core/runtime/engine-host.mjs": "523f71490e2a449015d127c8a70476a45cd4fb1bfcb57f72ffae231411f5a447",
-    "crates/noble-cli/src/core/runtime/engine.mjs": "798633a753bc10c73e404dcfa38df0827904c0412f75e0f57b23f6e60e44766e",
+    "crates/noble-cli/src/core/runtime/engine-host.mjs": "4d353abd1c076edfa2bc44a020b8ba1dba0ea3ad96f4ed5d23b64c4ba4e76981",
+    "crates/noble-cli/src/core/runtime/engine.mjs": "ec72cd59255938ae952f1737caa1d5e308dccff6a090f1503d280583ffd821b3",
     "crates/noble-cli/src/core/runtime/host.mjs": "271d8add2c5ab940fec867d822cbb68fed9b0c57e98f9243ffed879065d59494",
     "crates/noble-cli/src/core/runtime/live-test-barrier.mjs": "7d76638c7bbfe624ee2ffc9cd479ab3542aed4134c375e53ac1505d4993fd6bf",
-    "crates/noble-cli/src/core/runtime/preamble.mjs": "1787a81093cfb8c0286fa09d5bc4129dcb5ba5cd75a3a407b9f25009d75ceb28",
-    "crates/noble-cli/src/core/runtime/protocol.mjs": "7a2d8c7b1aaa178700ad2f8417aa6c42480ac2b9f97f47fb5847fe19cd1c37eb",
+    "crates/noble-cli/src/core/runtime/preamble.mjs": "5736053747fc9f7fd84e8c098769fbb213f2908ea7ad06a47ef5174502ac4086",
+    "crates/noble-cli/src/core/runtime/protocol.mjs": "b1655238b8b68b3265b2940e211736ea2e6bc907134c47697e00b41ff54f68fd",
     "crates/noble-cli/src/core/runtime/slot-engine.mjs": "85481b0223891a9150127fa8b859d477af0117fd3794811164fe6ec993262a9c",
-    "crates/noble-cli/src/core/runtime/values.mjs": "6f9d50e189cd8911fac1c88295c4047d98ea8ef008e8b36b4593c05933641fe6",
-    "crates/noble-cli/src/core/worker.rs": "7ba4633a00609d4bd853b7d8e6d8b87abc8015351146acb152eac61a7a1f13d4",
-    "crates/noble-cli/src/core/worker/assembly.rs": "f678031f0f1c493c5b1080a0a6b12e1f98b128e28e8570c78c6e77624f6aad35",
-    "crates/noble-cli/src/core/worker/configuration.rs": "e89159cc3fc38878b01e3dec1d68b812082c1fb5a20a68f165f0cf9c5e2d3b50",
+    "crates/noble-cli/src/core/runtime/values.mjs": "1b305dd458b50a8b7eb4390f39938e8087b699d16b295024b0d68aff835ca1c3",
+    "crates/noble-cli/src/core/worker.rs": "2fd3e8ccc8b3ae8b3177a40acce9615e05a665104520727f198c2949101c11e2",
+    "crates/noble-cli/src/core/worker/assembly.rs": "35140f611562725ab87d06a22ecb7a77cc9d9198c57a12704d147447f91eedf6",
+    "crates/noble-cli/src/core/worker/configuration.rs": "47f52b8a4a3380228802e9d1b831aebb6a152d7ed071de77ce14b02057437c60",
     "crates/noble-cli/src/core/worker/process.rs": "6fd43083f07a66330e91568d59a21f0c954d1e688d9b65787729b6b949356267",
     "crates/noble-cli/src/core/worker/protocol.rs": "2f411ae83f9e8d2fbab3e42534d9efd7a99d7c2ca8f26093c78dc80d711ddfa9",
     "crates/noble-cli/src/core/worker_package.rs": "f832a38f58002c5939ff25f7d61b257f223683628b8d85ddf7c03e2411d57c97",
@@ -152,7 +153,7 @@
     "crates/noble-cli/tests/live_repl.rs": "e60bda2bf81cbeaa6ca0f2c3d1afb69774f81250b4aa091624ccbd9ab8d7a328",
     "crates/noble-cli/tests/live_slot_selected_origin.mjs": "1a3ae8a348c93e63792d200fc1e4ee9a13868c88cb8bb1709267fce68dba90d4",
     "crates/noble-cli/tests/live_slot_selected_retention.rs": "c3d570334884cbda25ed5b7822ff76aefba3cf8f3e3f36699c49e98cb38d6fa0",
-    "crates/noble-cli/tests/smoke.rs": "2a3450abf8d3b6baf8958c04727a7cc9bf86458cf277dd92b6960321952692c5",
+    "crates/noble-cli/tests/smoke.rs": "f00dab69704f89f81ffea98dc0702a1d1c5dff57b4dc79388b495c0f26de5de0",
     "crates/noble-cli/tests/worker_host_child.rs": "b684f43d88297bb029fb1aac25a41ea9dc52dab0e669f9723c8c3c874fa0866a",
     "crates/noble-contracts/Cargo.toml": "757e1546739b76fb93fadffee7ceb32bc537c030e945adcd2ca6905f79d43bd8",
     "crates/noble-contracts/src/component/bindings.rs": "b6c15ae0d787db0adb1473c532d0f36f4271ea248eb59d19a367d5dbced47025",
@@ -163,12 +164,12 @@
     "crates/noble-contracts/src/inference/construct.rs": "6e5444cab9349194fc6c2b4457e67d44cc2ba2b931df0a0839f99d53e3d56433",
     "crates/noble-contracts/src/inference/effects.rs": "3706445eea09cc4f8b2b60a3c4cd1e3f182b9a92fafae9c041e30b2b43cc31e0",
     "crates/noble-contracts/src/inference/mod.rs": "3f4e059c487775c40072ba78815a7f80a31cce029b7b76a20f8914943b9c77f2",
-    "crates/noble-contracts/src/source.rs": "df22a5d2622b68d89192f5198cb97356e1cfbfeec96e841967c6da01b1f858cf",
+    "crates/noble-contracts/src/source.rs": "7cc7f74fb27993315002e7af1b5f300b0c7c76e44ce634014e04a549b551362c",
     "crates/noble-contracts/src/source/declared.rs": "10e3947335561b4f692e155a87086b078cfcc1dfe4d6bcd298998d23f508ccf0",
     "crates/noble-contracts/src/source/declared/links.rs": "927bceec682e35f561b808a7910dbd68d56f483d6a3600f8116ba9892e5e377f",
     "crates/noble-contracts/src/source/declared/parsing/members.rs": "1b32fa305844c3bd72af3f76e851f82e946185f7f3762cbdf354e5a52d22f691",
     "crates/noble-contracts/src/source/declared/signatures.rs": "be44df43da3da221abc9c03c8cea7f839a04d17684b883819adb01bd3d2225d3",
-    "crates/noble-contracts/src/source/declared/state.rs": "e28ab09eeb98ee1a9d2fc2086372a09f8293498f2f869305ba9558a563709b4c",
+    "crates/noble-contracts/src/source/declared/state.rs": "348bd71f3c16719364226bdbfd878b5f648ee08cbe8ef8bce41205b71e49c440",
     "crates/noble-contracts/src/source/declared/state/namespace.rs": "91020beddece5107f16b0a01eb99dd0e530c07c0fbd6c746afb258a0b4c0fa68",
     "crates/noble-contracts/src/source/declared/state/prepare.rs": "b7bb74e6501e284c1a8514adc16d5f1c59382deb329eeddec53f9da596c88be3",
     "crates/noble-contracts/src/source/declared/state/rebind.rs": "cd536c643b2b30565d1d25c7f7e304efd5072405c3048697458ea183d36b84fc",
@@ -182,9 +183,9 @@
     "crates/noble-contracts/src/source/inference/mod.rs": "9cd0118c59f6eeaec04d5551123b2663a949aae230e3136c5df3ca8533096b3d",
     "crates/noble-contracts/src/source/locals.rs": "9359d14b1b5d4c14efe39feae29d00b8d6c0a756dc191f5f58ed5c3643d9fe5d",
     "crates/noble-contracts/src/source/preflight.rs": "c54b7df52d290904bb4a8308edbde196f9b6446a5a62d927b1fcac05bb64c3db",
-    "crates/noble-contracts/src/source/preparation.rs": "19725e60a761a14f38bc5404401f89e9f2c7b7974785688d58aca0417f9faf35",
+    "crates/noble-contracts/src/source/preparation.rs": "5cbc5f232380770ad84c03882b29a7a14d6717dec1e55921c1fc810b417d9f6e",
     "crates/noble-contracts/src/source/proof.rs": "9b1ef24f919e10836164fef1ee8cef7cac831831c98920d541c6bffb7a4017a5",
-    "crates/noble-contracts/src/source/resolution.rs": "4ebf19cb770d3f43bc4f187a195a028dcee936bc036243b723b7996f745c9153",
+    "crates/noble-contracts/src/source/resolution.rs": "5e089637e4659d6d31fe61e6aab33d198e0d52dc54b4ce230119dafbe8c1fa71",
     "crates/noble-contracts/tests/component.rs": "7fc004caf7669ad1cdff54df0cb17324e9fbd01f59715d9e69dd9fc5323ee7d4",
     "crates/noble-contracts/tests/declared.rs": "305a4a67af0ae9a937c60b114476d1350994060026cadaf0fe49ce4045110f09",
     "crates/noble-contracts/tests/declared/bindings.rs": "2c5336c794e854d20526cf3c880e48770b8fd8c253a0a10c793762ef9a9e3396",
@@ -196,12 +197,12 @@
     "crates/noble-contracts/tests/source.rs": "b85f196974177a9e0ec4236bc1619245e0005cc9bcf887dfe6efa300c8322478",
     "crates/noble-contracts/tests/source_proof.rs": "8d097211ddc8f051686a601c316bd4fd5eed7c42d0dac69319045e4be774382c",
     "crates/noble-kernel/Cargo.toml": "19e6c70441ef5d51b9caf828ecb4a7432c8bd7efc40bfdafa158d4d95efc949b",
-    "crates/noble-kernel/src/acceptance/nodes/visibility.rs": "12c8013f94a6e748a3e3e5051f1bc3cf938d8480419624a97ad174c0e9c7069c",
-    "crates/noble-kernel/src/acceptance/parts/instantiate.rs": "87524e78f19c8ff2ecc54307dd76b41f2188be00e2aba3c6ef1d6878635f860e",
-    "crates/noble-kernel/src/contracts.rs": "a921c64760e8c74eb6f8d95fda2e58a140b0b9b1708a224a112519cf969ceee3",
+    "crates/noble-kernel/src/acceptance/nodes/visibility.rs": "2af47d240b0275c94ee3b7d82a35cf79c85cc7bb4cd2daf918bf481523fda7dc",
+    "crates/noble-kernel/src/acceptance/parts/instantiate.rs": "a04c9092e51a77d8948431c326143698c6707239389ca0103475251e5e0902ab",
+    "crates/noble-kernel/src/contracts.rs": "2f6165c0cffd310a4a560706cacfa9f8eff4c392da3211f51a1673b8ba209693",
     "crates/noble-kernel/src/contracts/nominal.rs": "90645d0e65cac4aa67435282302776175a232cb00612f7f9fefd745f20ace9a2",
-    "crates/noble-kernel/src/contracts/nominal/schemes.rs": "7f794dbf9bc7a907ec904866ba685b3662bf09db584c936d296b9fb01d6be918",
-    "crates/noble-kernel/src/contracts/nominal/validation.rs": "36e65929e672b7cf3e892c7b62f75ddc27a9e8e3edc092c1a153bc5d48585f01",
+    "crates/noble-kernel/src/contracts/nominal/schemes.rs": "3becbc1be0a84b66bc3c6da71c19814e2123489c8f492e51aee196ba7d6dcdbd",
+    "crates/noble-kernel/src/contracts/nominal/validation.rs": "183b0b60cf950d0923a5834a7e1aa4cbca9cd94e92736df6bc6a4539ca725cae",
     "crates/noble-kernel/tests/acceptance/nominal/forgery.rs": "b4a7db38a3c10cb4b474f45057aec11c356e47e228b1855f1945a6d06ffdaa0c",
     "crates/noble-ngraph-experiment/Cargo.toml": "f68a81759c47060dea67e16ef68c80a7a960dbba8cd5ce7996bbd976cc535348",
     "crates/noble-ngraph/Cargo.toml": "9fdaf8bf88be311b40962fbedf4af3349ff1f1768c89785a1ea21ff39202138d",
@@ -226,26 +227,26 @@
     "crates/noble-wasm/src/component/lower/operations.rs": "1390dd1c326696bf740c9d25b686680ef858bfae18f152dad248dd9a330a5256",
     "crates/noble-wasm/src/component/mod.rs": "16ad0590e4fd374a4874f52e7ef01b8ed332688e7163d0272a07ea8cc823d109",
     "crates/noble-wasm/src/component/runtime.wat": "c1a21dd7573c87235d176722b3cdd0f7319c896912be564bb210c8cc41eb5754",
-    "crates/noble-wasm/src/source/admission.rs": "5a78b37dcec32c89c03f27435e852092a310a6da13ece15b7acb89a084ecc5fd",
-    "crates/noble-wasm/src/source/admission/environment.rs": "f73055571be1046be3e36226a5ffcf81acbc1061f49090f529ee2d789af85d5b",
+    "crates/noble-wasm/src/source/admission.rs": "e2c02485a288217814482f07e65a5f8e485f33653676c207a4c555ea7d7f890f",
+    "crates/noble-wasm/src/source/admission/environment.rs": "3769b1c95e8a8f7402f13400e6db72a766e289bf7cb2332ee7486b537de7046f",
     "crates/noble-wasm/src/source/admission/environment/replay.rs": "7133c83c58b2d742701984cbd12763469b49ca6a9baf8cc864b8f5c60d4c260f",
-    "crates/noble-wasm/src/source/admission/identity.rs": "2e195639b9e18ebed0ff4f055f7728ec24259b6a893fe4a56e70ce13f6cdfb12",
+    "crates/noble-wasm/src/source/admission/identity.rs": "90f4efaeadf3e5afd61b9c6aa18dd5a9c3fb7f13b5a952b6a26b818a77138729",
     "crates/noble-wasm/src/source/emit.rs": "f1e529d311a5f2f98c4f37e64aadd323e9a3b57ee7ea7b358c729f1fa8fec125",
-    "crates/noble-wasm/src/source/emit/functions.rs": "5bbb2b033458294d07bb8e06b165c748939f03f510c8e355a90590e1f8bbf52b",
+    "crates/noble-wasm/src/source/emit/functions.rs": "8644a3e807b5271cc6fa6e1782500e4e0b3371bc41944cb9313fecba6e4f96e5",
     "crates/noble-wasm/src/source/emit/imports.rs": "cb64c731ad2d6d83948a92e704ea97ed34bc3907b3f412562e6f7cfcec4334b3",
     "crates/noble-wasm/src/source/emit/initialize.rs": "2140c2faee12b6eab9686c61fb886f8dc0f54080e17bccaa2895ad20e025c4ba",
     "crates/noble-wasm/src/source/emit/metadata.rs": "03f8acb2f15c7f70ef719b10cccc6805c571c1f115d53209ce8d0c19fb7bcdf4",
     "crates/noble-wasm/src/source/emit/reflection.rs": "7598ff8c9c904afd150ec34e6a4eb77727156f62b7e7f4a4bdf93e8a39e3ecd6",
     "crates/noble-wasm/src/source/emit/worker.rs": "d79adadc5fd86d93588ac5981b004541ebf932b81132d38ad9c759dae6605f9c",
-    "crates/noble-wasm/src/source/mod.rs": "b88e58e7fb01cebee9ad0669dc84f8ec2bdd9d5a106d939769ac49e74b0a8e15",
+    "crates/noble-wasm/src/source/mod.rs": "1361bbff8f3e128bd1271683c2d61595b8ef2586ff6e5b9a2d2ce385b7615a11",
     "crates/noble-wasm/src/source/origin.rs": "7f19906037bab0127e900687fdb135f8c66083309bf681c89ac1424a6dbd8541",
-    "crates/noble-wasm/src/source/plan.rs": "f7f4c1c3eaeb3d92ee31edddb48317de73c3467b2254e61e3fe6fd4c93562f90",
+    "crates/noble-wasm/src/source/plan.rs": "560ae9111c307d75e68f8cbf144d51c35f60418e1e28b110f48bc4cacef2cc88",
     "crates/noble-wasm/src/source/plan/allocation.rs": "f134d0031dafcb16397e8ba2a24771770a37f32aea855acc5157a1f93c0f4d43",
-    "crates/noble-wasm/src/source/plan/operations.rs": "feca2d75cf286fef19658fa0e12315a63bb627ca85fded3aa6210916c748ddbc",
+    "crates/noble-wasm/src/source/plan/operations.rs": "e861342e6f6989c5458f5c1d400e6f4dee1a39222b5227ce30abafe962a56484",
     "crates/noble-wasm/src/source/plan/operations/nominal.rs": "e6d2f843dffed194de81b69eeff0e938f1330e63fb7f53cf02280c60e0376fbf",
-    "crates/noble-wasm/src/source/preflight.rs": "3c8010f7157750336fa4c854dcd4cb6e5e53875c6ed6af48afd4830fb137679f",
+    "crates/noble-wasm/src/source/preflight.rs": "63c55ee2648ac8c8c89ad9ed0e28c4ac5f66b0f3cdead354c037feaaa8558882",
     "crates/noble-wasm/src/source/preflight/concrete.rs": "496b4e6e57c514a6f0c796f348c2fee2b520ad03787aa4e5c26e0f7618b1c8fb",
-    "crates/noble-wasm/src/source/transaction.rs": "317d30462b475765d3d27ffb6cb2f4b79455fb2b167a0f17ab34ebdbbcb2b16e",
+    "crates/noble-wasm/src/source/transaction.rs": "2451d3bc32fa48a3afe5ead6c616da8ff6f8eb1f1c9a686fd9c0b804743a6ca6",
     "crates/noble-wasm/tests/declared_text.rs": "75e58a4b31d5f348842d6d6e9d47bd0a1323a44d371f6736774a5c2b5b9dec74",
     "crates/noble-wasm/tests/live_slot_artifact.rs": "50acfa0f7b4508fb4005ddbd1d2acf688f7922dd60ff5cb9081ebc089264b49b",
     "crates/noble-wasm/tests/nominal.rs": "d892f1c59f8676c95976d407564e68b80935414bbbb11ee434cb78fb9c6c1448",
@@ -257,8 +258,8 @@
     "crates/noble-wasm/wit/worker-send.wit": "3963a55c7f98c248f5e9f9f72ccd93c985139f04c04433a89f578c0a42d85d93",
     "crates/noble-wasm/wit/worker-transition.wit": "f788988352acbccfe9a9f4fd6811551b1b3e4d4b43f1436b7a8c5e702e7652f0",
     "dylint.toml": "265d16c2a5bba73d011ce460e1e9d15ce04dca24cdf6e7bc0cf4e66a9040a88b",
-    "flake.lock": "85e86e8f3826b97d3deb9ff5355d5a4d10d227201ee4d11e71b1bb8028cc2c30",
-    "flake.nix": "f7639f5fb146919e18ae9ddc4649b1f37383ef57de9cd8a8d2b2acc11997b95f",
+    "flake.lock": "a95c2c8aecf2169bc1f8aff45aabab06e17a559a0e7cf86570d6b936b25b3671",
+    "flake.nix": "fe150d79c583b21eee0a1ebc4c87a0b6345c78624ae614d6376ddebb05e47e60",
     "nix/aeneas-string-escaping.patch": "3d2a88e02e55b491aa7d53573cd0256c58ffb4e549a8ff9a0134c2eaef07cc70",
     "nix/boundary-controls.nix": "86e9bbd342b616c0861775ab336cd8313e7473506c381634fbc1eec6a2cab943",
     "nix/boundary-fixture-tests.nix": "9d008b1cafac6c076c9fb1e58933b476efa0ac31a9569d09f887c1a9be8aa26f",
@@ -266,7 +267,7 @@
     "nix/boundary-observation-tests.nix": "2a9408d322a2724b4c642cb2bb37df5dfb4dd80110cd8335d0d081cc37ec382e",
     "nix/boundary-observation.nix": "a8001fd134498e90256f9d0630ee84401bd9f31ac01338b9cf77a789cf3097a7",
     "nix/boundary-read-observation.nix": "2f741c1285a7754131898ada36c9f7f189a18d219cd8bba1762daa2e1b516701",
-    "nix/extract-kernel-app.nix": "862081a90a982fcd461c7d3da85969cd29f7bfc2640ff31c8542a9b9f4d0ad85",
+    "nix/extract-kernel-app.nix": "824e2caa52c02e9458bfaf920c8e78c489222ddd673107e9e37df62bfbc52cda",
     "nix/lean-dependency-check.nix": "92390712899ed9e248c5032924ec0d3242e64c45abc3c6fbd7984b9f9164ed40",
     "nix/lean-release.nix": "7d88aa27b4f8a5d1c0036ed98a1e2db1f5485b782b462eaaae51b8b7b6c46485",
     "nix/m3-wasm-app.nix": "a83a2ea157787803e0fabdf089a7549ffd5737f42a657bf1df383d1908676ad5",
@@ -351,7 +352,7 @@
     "verification/m4/accounting.mjs": "6026dd01b2b66bea944d1abeb3e84ba5a98f4fb1c6b7014be9c3e8f06c2a2c19",
     "verification/m4/documentation.mjs": "7a0cb970a34ae325a702494c171ad7a92468fff9fda37f6af48fa8a800176970",
     "verification/m4/gate.mjs": "f65c516f592ae9e8885a4be9f75bf2924bc9da0f7183e83aeb99549a274b148b",
-    "verification/m4/implementation.mjs": "f06ee4cfcec90fd6b9abdd9414a0b45da94c0796c15ab6357985feba59dbb5d6",
+    "verification/m4/implementation.mjs": "3ad8a2d2fdb0814ef89b7a15cd5e7a5a22f8d3d22fe8b71ab4d7c4c404b57e06",
     "verification/m4/inherited-boundaries.json": "0724a876b1e337aec268aea9b6dafbcd910cdc450d58e0af9e6564c17737acc8",
     "verification/m4/opaque-model-review.test.mjs": "cac6cdce9f0fe067fbd5bb419a60ec93c2db7b9803ddb8f1d5dcce841638bb3c",
     "verification/m4/property.mjs": "406faa4e99cbc9b02a122a476797428fb38b49f2506754bf428f0cb7e77ff02f",
@@ -436,8 +437,8 @@
   "schema_version": "noble-tool-selection-policy/v1",
   "sources": {
     "aeneas": {
-      "narHash": "sha256-V6H12+Qg3qlZBGdjoTHCbYWSOwcdZ86XCxOkWURo6Qs=",
-      "rev": "505b6ca35217e7be5c96c3e2f8045edfbdf47291"
+      "narHash": "sha256-HXAeoR35sHdqQj9FEz4ulPvVAdxqZlBcMG2ly7OYNDk=",
+      "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef"
     },
     "aeneas_lean": {
       "narHash": "sha256-HXAeoR35sHdqQj9FEz4ulPvVAdxqZlBcMG2ly7OYNDk=",
@@ -452,8 +453,8 @@
       "rev": "15f00875562025e7ea7e0d1f4af24d1a2e2ac06f"
     },
     "charon": {
-      "narHash": "sha256-T5YOon6o64//bS5NihALMrDGivJNwvmoJRoKIGITEmc=",
-      "rev": "b104e24fea7d721b71e6c39fd70f26ff20bc0980"
+      "narHash": "sha256-5k2jpmT+hl0ocmJPeyVKlf2ehHJDVJiZy8sovKWHiIg=",
+      "rev": "9e95cf318e3a2964fcf5e03104cde5b718f98ea5"
     },
     "extraction_nixpkgs": {
       "narHash": "sha256-1+YGJM7PLfvTsbUxDHKj0NcuEXYFHfZBDuajujCcVmY=",
@@ -468,14 +469,14 @@
       "rev": "9d134f00e902586c08bc71e8dc910d305c8dd875"
     },
     "rust_overlay": {
-      "narHash": "sha256-KlepQu/O5m11lAjcJ4ER5bc6bIzyX2UMPDARzMzQfIw=",
-      "rev": "e598b37857b895b81020a65a802ef55f5bbed72f"
+      "narHash": "sha256-hulcXtNnQVDTPXiC8dQpTX3FPHxklIfX7Cx2kd2GDrM=",
+      "rev": "a1d497a9415999853809ba22a7959b1c36dc6554"
     }
   },
   "tool_paths": {
     "aeneas": {
-      "derivation": "/nix/store/9lpscsmmksg98pnjn854w6s9qifldy5a-ocaml5.2.1-aeneas-0.1.0.drv",
-      "output": "/nix/store/q3hsccq1s53aa85vh3mmc3b0k31pnyl2-ocaml5.2.1-aeneas-0.1.0"
+      "derivation": "/nix/store/hnxklkb079mzyvsnjff4b66bpw1srij8-ocaml5.2.1-aeneas-0.1.0.drv",
+      "output": "/nix/store/mx4siwxnwb74avq1sq971h5i55bwxwzq-ocaml5.2.1-aeneas-0.1.0"
     },
     "binaryen": {
       "derivation": "/nix/store/nah9yvc3mdzhvfj5sldnqnivy659f6k3-binaryen-125.drv",
@@ -486,12 +487,12 @@
       "output": "/nix/store/bvz6kl88qkfi15n8ml1xr7p22syykggd-cairn-0.1.0"
     },
     "charon": {
-      "derivation": "/nix/store/4cbk4z12wcjr68zrryb7wim5vlh719l2-charon.drv",
-      "output": "/nix/store/ka61j6d6zy8zg91ynlbd6nmjssyynrpl-charon"
+      "derivation": "/nix/store/pyfcg8mxniy3l41753ndj6i2nphdflnz-charon.drv",
+      "output": "/nix/store/dg8i5s1hl2lncdcjmi6iq98iq1dji5x3-charon"
     },
     "extraction_rust": {
-      "derivation": "/nix/store/jjyd99rqsd7zbkwzyqma7qcc61l71kfw-rust-default-1.100.0-nightly-2026-08-18.drv",
-      "output": "/nix/store/wq92i79ivn1w1nrdhmzl1mqx0wcyrawi-rust-default-1.100.0-nightly-2026-08-18"
+      "derivation": "/nix/store/jgb39144hgj94r3bzp3d0zhjprgg75zp-rust-default-1.100.0-nightly-2026-09-17.drv",
+      "output": "/nix/store/hwnilj8cghz1kjkz7f636kz2clla03vr-rust-default-1.100.0-nightly-2026-09-17"
     },
     "lean": {
       "derivation": "/nix/store/54871l591i8ji049ffyyjh3qkrdikh9h-noble-lean-release-4.35.0.drv",
@@ -518,8 +519,8 @@
       "output": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21"
     },
     "upstream_pin_check": {
-      "derivation": "/nix/store/abf9q3r42bql84jmywvw8q0r9q7ya84n-aeneas-check-charon-pin.drv",
-      "output": "/nix/store/b34wcdj3gbjf03dzi5y8ghv23bsc3aya-aeneas-check-charon-pin"
+      "derivation": "/nix/store/vabx9imqh73j0cvicdb7hbjbhrf7r3ny-aeneas-check-charon-pin.drv",
+      "output": "/nix/store/dw249a5932656m1qqhjra4a729wc1nw4-aeneas-check-charon-pin"
     },
     "wasm_tools": {
       "derivation": "/nix/store/z5rgcxgccxssz1gmrm7m2f4cz9mqy8ql-wasm-tools-1.245.1.drv",

@@ -2,8 +2,8 @@
 # These interoperate with Nix identities; they are not build authenticity proofs.
 {
   aeneas = {
-    derivation = "/nix/store/9lpscsmmksg98pnjn854w6s9qifldy5a-ocaml5.2.1-aeneas-0.1.0.drv",
-    output = "/nix/store/q3hsccq1s53aa85vh3mmc3b0k31pnyl2-ocaml5.2.1-aeneas-0.1.0",
+    derivation = "/nix/store/hnxklkb079mzyvsnjff4b66bpw1srij8-ocaml5.2.1-aeneas-0.1.0.drv",
+    output = "/nix/store/mx4siwxnwb74avq1sq971h5i55bwxwzq-ocaml5.2.1-aeneas-0.1.0",
   },
   binaryen = {
     derivation = "/nix/store/nah9yvc3mdzhvfj5sldnqnivy659f6k3-binaryen-125.drv",
@@ -14,12 +14,12 @@
     output = "/nix/store/bvz6kl88qkfi15n8ml1xr7p22syykggd-cairn-0.1.0",
   },
   charon = {
-    derivation = "/nix/store/4cbk4z12wcjr68zrryb7wim5vlh719l2-charon.drv",
-    output = "/nix/store/ka61j6d6zy8zg91ynlbd6nmjssyynrpl-charon",
+    derivation = "/nix/store/pyfcg8mxniy3l41753ndj6i2nphdflnz-charon.drv",
+    output = "/nix/store/dg8i5s1hl2lncdcjmi6iq98iq1dji5x3-charon",
   },
   extraction_rust = {
-    derivation = "/nix/store/jjyd99rqsd7zbkwzyqma7qcc61l71kfw-rust-default-1.100.0-nightly-2026-08-18.drv",
-    output = "/nix/store/wq92i79ivn1w1nrdhmzl1mqx0wcyrawi-rust-default-1.100.0-nightly-2026-08-18",
+    derivation = "/nix/store/jgb39144hgj94r3bzp3d0zhjprgg75zp-rust-default-1.100.0-nightly-2026-09-17.drv",
+    output = "/nix/store/hwnilj8cghz1kjkz7f636kz2clla03vr-rust-default-1.100.0-nightly-2026-09-17",
   },
   lean = {
     derivation = "/nix/store/54871l591i8ji049ffyyjh3qkrdikh9h-noble-lean-release-4.35.0.drv",
@@ -46,8 +46,8 @@
     output = "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21",
   },
   upstream_pin_check = {
-    derivation = "/nix/store/abf9q3r42bql84jmywvw8q0r9q7ya84n-aeneas-check-charon-pin.drv",
-    output = "/nix/store/b34wcdj3gbjf03dzi5y8ghv23bsc3aya-aeneas-check-charon-pin",
+    derivation = "/nix/store/vabx9imqh73j0cvicdb7hbjbhrf7r3ny-aeneas-check-charon-pin.drv",
+    output = "/nix/store/dw249a5932656m1qqhjra4a729wc1nw4-aeneas-check-charon-pin",
   },
   wasm_tools = {
     derivation = "/nix/store/z5rgcxgccxssz1gmrm7m2f4cz9mqy8ql-wasm-tools-1.245.1.drv",

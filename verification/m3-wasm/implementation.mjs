@@ -46,12 +46,12 @@ let environment;
 let selection;
 let sourceFiles;
 const pins = {
-  charon: '/nix/store/ka61j6d6zy8zg91ynlbd6nmjssyynrpl-charon',
-  aeneas: '/nix/store/q3hsccq1s53aa85vh3mmc3b0k31pnyl2-ocaml5.2.1-aeneas-0.1.0',
-  extraction_rust: '/nix/store/wq92i79ivn1w1nrdhmzl1mqx0wcyrawi-rust-default-1.100.0-nightly-2026-08-18',
-  lean: '/nix/store/hbxwgcbpkyqllqzq7cidhnvhgb60jb9q-noble-lean-release-4.31.0',
+  charon: '/nix/store/dg8i5s1hl2lncdcjmi6iq98iq1dji5x3-charon',
+  aeneas: '/nix/store/mx4siwxnwb74avq1sq971h5i55bwxwzq-ocaml5.2.1-aeneas-0.1.0',
+  extraction_rust: '/nix/store/hwnilj8cghz1kjkz7f636kz2clla03vr-rust-default-1.100.0-nightly-2026-09-17',
+  lean: '/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0',
 };
-const aeneasRevision = '505b6ca35217e7be5c96c3e2f8045edfbdf47291';
+const aeneasRevision = '1238879f9ea550512096e9bf8bd6fe7407b3eaef';
 const tool = (name, binary) => path.join(selection.tool_paths[name].output, 'bin', binary);
 const skipped = new Set(['.git', '.lake', 'target', 'node_modules']);
 function files(directory) {
@@ -147,7 +147,7 @@ function extract(label, manifest, basename, prefix, checked, allowedOpaque) {
   const translation = json(translationFile);
   record.translation_sha256 = fileSha(translationFile);
   if (translation.crate !== (label === 'kernel' ? 'noble_kernel' : 'noble_wasm')) throw Error(`wrong extraction crate: ${label}`);
-  if (translation.aeneas_version !== aeneasRevision.slice(0, 7) || translation.charon_version !== '0.1.254') {
+  if (translation.aeneas_version !== aeneasRevision.slice(0, 7) || translation.charon_version !== '0.1.291') {
     throw Error(`unreviewed translator version in ${label}`);
   }
   for (const kind of ['functions', 'types', 'globals', 'trait_decls', 'trait_impls']) {
@@ -217,17 +217,17 @@ try {
   for (const [name, expected] of Object.entries(pins)) {
     if (selection.tool_paths[name]?.output !== expected) throw Error(`unreviewed selected tool: ${name}`);
   }
-  equal(selection.configuration.charon_args, ['--preset=aeneas', '--error-on-warnings'], 'unreviewed Charon options');
+  equal(selection.configuration.charon_args, ['--preset=aeneas', '--error-on-warnings', '--inline-anon-consts'], 'unreviewed Charon options');
   equal(selection.configuration.cargo_args, ['--lib', '--all-features', '--target', 'x86_64-unknown-linux-gnu', '--locked', '--offline'], 'unreviewed Cargo options');
   equal(selection.configuration.aeneas_args, ['-backend', 'lean', '-abort-on-error', '-warnings-as-errors', '-no-progress-bar', '-emit-json'], 'unreviewed Aeneas options');
   for (const [name, expected] of Object.entries({ target: 'x86_64-unknown-linux-gnu', word_bits: 64,
-    extraction_rust: 'nightly-2026-08-18', extraction_profile: 'dev', all_features: true,
+    extraction_rust: 'nightly-2026-09-17', extraction_profile: 'dev', all_features: true,
     default_features: true, overflow_checks: true, panic: 'unwind' })) {
     if (selection.configuration[name] !== expected) throw Error(`unreviewed extraction configuration: ${name}`);
   }
   equal(selection.configuration.features, [], 'unreviewed extraction features');
-  if (selection.sources.aeneas.rev !== aeneasRevision || selection.sources.charon.rev !== 'b104e24fea7d721b71e6c39fd70f26ff20bc0980' ||
-      selection.lean.toolchain !== 'leanprover/lean4:v4.31.0') throw Error('unreviewed extraction/library revision');
+  if (selection.sources.aeneas.rev !== aeneasRevision || selection.sources.charon.rev !== '9e95cf318e3a2964fcf5e03104cde5b718f98ea5' ||
+      selection.lean.toolchain !== 'leanprover/lean4:v4.35.0') throw Error('unreviewed extraction/library revision');
   const forbidden = /^(?:CHARON_|AENEAS_|LEAN_|LAKE_|RUSTC(?:_|$)|RUSTFLAGS$|RUSTDOCFLAGS$|RUSTUP_TOOLCHAIN$|CARGO_(?!HOME$)|LD_PRELOAD$|LD_LIBRARY_PATH$|GIT_(?:CONFIG|DIR|WORK_TREE|OBJECT|ALTERNATE))/;
   for (const [name, value] of Object.entries(process.env)) {
     if (value && forbidden.test(name)) throw Error(`unreviewed tool override: ${name}`);
