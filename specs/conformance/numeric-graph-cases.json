@@ -1764,6 +1764,54 @@
           ]
         }
       ]
+    },
+    {
+      "id": "NGRAPH-CASE-16",
+      "profile": "Numeric-Graph-v1",
+      "kind": "runtime",
+      "requirements": [
+        "NGRAPH-PROOF-01"
+      ],
+      "input": {
+        "harness": "noble-ngraph-rewrite-cost-v4",
+        "corpus": "verification/ngraph/rewrite-quality-v2.txt",
+        "certificate_revisions": [
+          "ngraph-cert/0",
+          "ngraph-cert/1",
+          "ngraph-cert/2"
+        ],
+        "variants": [
+          "fixed-point chain whose second premise uses the first replacement",
+          "dead operands removed while the complete output sequence remains",
+          "repeated output indices",
+          "changed intermediate before or after identity",
+          "removed live node",
+          "wrong survivor numbering",
+          "reordered outputs",
+          "non-final pruning transition",
+          "over-bound transition count"
+        ],
+        "execution": "compare complete ordered outputs against source reference; a refused candidate receives zero execution calls"
+      },
+      "expected": {
+        "stage": "certificate-check-candidate-admission-and-execution",
+        "outcome": "exact-versioned-chain-admitted-or-invalid-chain-refused",
+        "legacy_original_premise_semantics_unchanged": true,
+        "each_transition_identity_bound": true,
+        "prune_map_derived_by_checker": true,
+        "creation_order_survivors_and_operand_order_preserved": true,
+        "ordered_outputs_and_multiplicity_preserved": true,
+        "candidate_admission_unchanged": true,
+        "refused_candidate_execution_calls": 0,
+        "Rust_to_Lean_correspondence": "open"
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "not-run",
+        "proof": "open",
+        "trust": "unassessed"
+      },
+      "evidence": []
     }
   ]
 }

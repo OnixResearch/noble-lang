@@ -3505,7 +3505,8 @@
         "review"
       ],
       "scenarios": [
-        "NGRAPH-CASE-15"
+        "NGRAPH-CASE-15",
+        "NGRAPH-CASE-16"
       ],
       "test_design": "scenario-described-not-executed"
     },
