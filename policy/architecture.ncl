@@ -497,7 +497,10 @@ let contracts = import "./architecture.contracts.ncl" in
     # 8698dca0, within 0.8% of the 64 MiB cap, and further CLI additions
     # exceed it. Double the shard cap again; the artifact cap is unchanged.
     max_shard_bytes = 134217728,
-    max_artifact_bytes = 268435456,
+    # The complete artifact collection measured 281,534,239 bytes at e480c821,
+    # over the 256 MiB artifact cap once batch-4 slices merged. Double the
+    # artifact cap as well.
+    max_artifact_bytes = 536870912,
   },
   non_claims = [
     "complete-fcis-proof",
