@@ -19,6 +19,8 @@ mod fixture_limits;
 mod fixtures;
 #[path = "chunks-completion/instantiation.rs"]
 mod instantiation;
+#[path = "chunks-completion/ranking.rs"]
+mod ranking;
 #[path = "chunks-completion/requests.rs"]
 mod requests;
 #[path = "chunks-completion/signatures.rs"]

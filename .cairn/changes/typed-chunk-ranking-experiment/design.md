@@ -202,10 +202,24 @@ behavioral evaluation and report encoding. Report median, p95 and per-task
 paired deltas, not only a selected subset. Report peak scratch bytes and peak
 retained bytes, including model and feature buffers.
 
-Offline training reports elapsed CPU time, optimizer steps, training rows,
-peak training memory, parameter/state bytes and model-selection time
-separately. It may be amortized only under a stated deployment count; no total
-savings claim may fold training into inference or omit it.
+The primary `W` is exactly `Report.checking_work` in shared-budget units, as
+bound by `verification/typed-chunk-ranking/criteria-v1.json`; unlike resource
+dimensions remain separately reported and are not summed. `Session::prepare`
+does not expose host parser-work counters, so that field is `null`, not an
+invented estimate. The maximum expanded-program size is the maximum per-
+admission expanded-node delta; primitive-only preparation and actual process
+or allocator retained-memory peaks are not exposed by the current observer and
+remain `null`. A serialized-model plus budget-retained proxy is informative
+only and MUST NOT satisfy the retained-memory GO condition. These limitations
+make the frozen decision fail closed rather than converting missing data into
+zero.
+
+Offline training reports elapsed wall time, optimizer steps, training rows,
+parameter/state bytes and measured scratch counters separately; actual
+process or allocator peak training memory is `null` because it is not
+instrumented. The report records zero amortization and makes no total-savings
+claim; offline training and model-selection costs remain separate from
+inference.
 
 Use ten paired evaluation repetitions over all 120 test tasks. Controller seeds
 are `0x7403000000000001` through `0x740300000000000a`; the learned model and

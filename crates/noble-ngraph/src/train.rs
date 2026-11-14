@@ -19,6 +19,9 @@ pub const ADAM: &str = "adam/0";
 /// Library tool revision recorded in training provenance.
 pub const TOOL_REVISION: &str = "noble-ngraph/0";
 
+/// Fixed canonical minibatch schedule for a supplied batch size.
+pub const BATCH_ORDER_REVISION: &str = "canonical-contiguous-batches/0";
+
 /// `adam/0` hyperparameters (exact binary64 bits are recorded).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Adam {
@@ -171,6 +174,22 @@ pub fn data_digest(ids: &dyn IdentityScheme, points: &[Point]) -> crate::ir::Dig
     c.finish()
 }
 
+fn training_data_digest(
+    ids: &dyn IdentityScheme,
+    points: &[Point],
+    batch_size: Option<u32>,
+) -> crate::ir::Digest {
+    let data = data_digest(ids, points);
+    let Some(batch_size) = batch_size else {
+        return data;
+    };
+    let mut c = crate::ir::Canon::new(ids, "noble.ngraph.training-batch-data.v0");
+    c.bytes(&data);
+    c.u32(batch_size);
+    c.str(BATCH_ORDER_REVISION);
+    c.finish()
+}
+
 /// The training contract (D11).
 #[derive(Clone, Debug)]
 pub struct Contract {
@@ -206,7 +225,7 @@ pub struct Provenance {
     pub facts: crate::ir::Digest,
     /// Loss graph id.
     pub loss: crate::ir::Digest,
-    /// Training-data digest.
+    /// Ordered training-data digest, including the optional minibatch schedule.
     pub data: crate::ir::Digest,
     /// Derivative opt-ins (policy [`crate::grad::DERIV_POLICY`]).
     pub deriv: crate::grad::DerivOptions,
@@ -234,7 +253,7 @@ pub struct Trained {
     pub snapshot: crate::snapshot::ParamSnapshot,
     /// Last published optimizer state.
     pub state: alloc::rc::Rc<AdamState>,
-    /// Loss before each step, then the final loss (binary64 mean).
+    /// The selected batch loss before each step, then full-data loss (binary64 mean).
     pub losses: alloc::vec::Vec<f64>,
     /// Provenance of `snapshot`.
     pub provenance: Provenance,
@@ -368,6 +387,29 @@ fn check_data(c: &Contract) -> Result<(), crate::diag::Diagnostic> {
     Ok(())
 }
 
+fn batch_size_is_valid(data_len: usize, batch_size: Option<u32>) -> bool {
+    batch_size
+        .is_none_or(|size| usize::try_from(size).is_ok_and(|size| size > 0 && size <= data_len))
+}
+
+fn training_batch_range(
+    data_len: usize,
+    batch_size: Option<u32>,
+    step: u64,
+) -> Option<(usize, usize)> {
+    let Some(batch_size) = batch_size else {
+        return Some((0, data_len));
+    };
+    if !batch_size_is_valid(data_len, Some(batch_size)) || step == 0 {
+        return None;
+    }
+    let batch_size = usize::try_from(batch_size).ok()?;
+    let batch_count = u64::try_from(data_len.div_ceil(batch_size)).ok()?;
+    let batch_index = usize::try_from((step - 1) % batch_count).ok()?;
+    let start = batch_index.checked_mul(batch_size)?;
+    Some((start, start.saturating_add(batch_size).min(data_len)))
+}
+
 fn values_f32(slots: &[crate::sem::Value]) -> alloc::vec::Vec<f32> {
     slots
         .iter()
@@ -378,7 +420,7 @@ fn values_f32(slots: &[crate::sem::Value]) -> alloc::vec::Vec<f32> {
         .collect()
 }
 
-/// Mean loss and binary64 mean gradient over the data, point order fixed.
+/// Mean loss and binary64 mean gradient over one ordered data range.
 /// Per-point gradients come from the FP32 reference backward (G2). Each
 /// point is first admitted with the reference failure semantics (D10): the
 /// model's input facts (including param facts on `params`), then the first
@@ -388,11 +430,20 @@ fn loss_and_grad(
     c: &Contract,
     params: &crate::snapshot::ParamSnapshot,
     evaluated_nodes: &mut Option<&mut u64>,
+    data_range: Option<(usize, usize)>,
 ) -> Result<(f64, alloc::vec::Vec<f64>, bool), crate::diag::Diagnostic> {
+    let (start, end) = data_range.unwrap_or((0, c.data.len()));
+    let points = c.data.get(start..end).ok_or_else(|| {
+        crate::diag::Diagnostic::new(
+            crate::diag::Code::Interface,
+            crate::diag::Site::Graph,
+            "training batch range is outside the ordered data",
+        )
+    })?;
     let mut grad_sum = alloc::vec![0f64; c.params.len()];
     let mut loss_sum = 0f64;
     let mut is_finite = true;
-    for p in &c.data {
+    for p in points {
         let model_slots =
             crate::eval::preflight(&c.model, &crate::eval::f32_inputs(&p.inputs), Some(params))?;
         let (l, gs) = crate::grad::objective_observed(
@@ -410,7 +461,7 @@ fn loss_and_grad(
             *acc += f64::from(gk);
         }
     }
-    let n = c.data.len().max(1) as f64;
+    let n = points.len().max(1) as f64;
     let inv = 1.0 / n;
     Ok((
         loss_sum * inv,
@@ -448,13 +499,18 @@ pub struct TrainControl<'a> {
     /// This is not the evaluator's historical fuel/Report node accounting;
     /// backward and optimizer work are not graph evaluation events.
     pub evaluated_nodes: Option<&'a mut u64>,
+    /// Optional fixed-size minibatches in canonical contiguous data order.
+    /// The last batch in each pass may be shorter; passes then restart at row zero.
+    pub batch_size: Option<u32>,
     /// crate::check::Budgets (D5): `optimizer_steps`, `backward_scratch` and
     /// `snapshot_bytes` are charged; a raised budget is `E-PROFILE`.
     pub budgets: crate::check::Budgets,
 }
 
-/// Runs `steps` `adam/0` steps from `init` (or from the seed). Each step
-/// publishes a new immutable snapshot; a failing step publishes nothing.
+/// Runs `steps` `adam/0` steps from `init` (or from the seed). By default each
+/// step uses all ordered data; `TrainControl::batch_size` selects successive
+/// canonical contiguous batches and restarts at row zero after the last batch.
+/// Each step publishes a new immutable snapshot; a failing step publishes nothing.
 ///
 /// # Errors
 /// [`Stopped`] with the code and the last published snapshot.
@@ -478,6 +534,21 @@ pub fn train(
     c.adam.admit().map_err(|d| stop(d, None, 0))?;
     admit(&c.model, &c.loss, &c.params, &c.deriv).map_err(|d| stop(d, None, 0))?;
     check_data(c).map_err(|d| stop(d, None, 0))?;
+    if !batch_size_is_valid(c.data.len(), control.batch_size) {
+        return Err(stop(
+            crate::diag::Diagnostic::new(
+                crate::diag::Code::Interface,
+                crate::diag::Site::Graph,
+                alloc::format!(
+                    "batch size {:?} is invalid for {} ordered training rows",
+                    control.batch_size,
+                    c.data.len()
+                ),
+            ),
+            None,
+            0,
+        ));
+    }
     if steps > budgets.optimizer_steps {
         return Err(stop(
             crate::diag::Diagnostic::budget(
@@ -527,14 +598,26 @@ pub fn train(
                 t - 1,
             ));
         }
-        let lease = crate::eval::ScratchLease::acquire(control.scratch.as_deref_mut(), step_bytes);
-        let (l, g, is_finite) = match loss_and_grad(c, &current, &mut control.evaluated_nodes) {
-            Ok(r) => r,
-            Err(d) => {
-                drop(lease);
-                return Err(stop(d, Some(current), t - 1));
-            }
+        let Some(batch) = training_batch_range(c.data.len(), control.batch_size, t) else {
+            return Err(stop(
+                crate::diag::Diagnostic::new(
+                    crate::diag::Code::Interface,
+                    crate::diag::Site::Graph,
+                    "training batch schedule could not select an ordered data range",
+                ),
+                Some(current),
+                t - 1,
+            ));
         };
+        let lease = crate::eval::ScratchLease::acquire(control.scratch.as_deref_mut(), step_bytes);
+        let (l, g, is_finite) =
+            match loss_and_grad(c, &current, &mut control.evaluated_nodes, Some(batch)) {
+                Ok(r) => r,
+                Err(d) => {
+                    drop(lease);
+                    return Err(stop(d, Some(current), t - 1));
+                }
+            };
         losses.push(l);
         if !is_finite || g.iter().any(|x| !x.is_finite()) {
             drop(lease);
@@ -560,7 +643,7 @@ pub fn train(
         current = next;
         state = alloc::rc::Rc::new(ns);
     }
-    let (final_loss, _, _) = loss_and_grad(c, &current, &mut control.evaluated_nodes)
+    let (final_loss, _, _) = loss_and_grad(c, &current, &mut control.evaluated_nodes, None)
         .map_err(|d| stop(d, Some(current.clone()), steps))?;
     losses.push(final_loss);
     let g = c.model.graph();
@@ -571,7 +654,7 @@ pub fn train(
         profile: g.profile,
         facts: c.model.fact_bindings(ids),
         loss: c.loss.id(),
-        data: data_digest(ids, &c.data),
+        data: training_data_digest(ids, &c.data, control.batch_size),
         deriv: c.deriv.clone(),
         seed: c.seed,
         optimizer: c.adam,
@@ -627,7 +710,7 @@ pub fn replay(
     if c.loss.id() != p.loss {
         return Err(stale("loss graph"));
     }
-    if data_digest(ids, &c.data) != p.data {
+    if training_data_digest(ids, &c.data, control.batch_size) != p.data {
         return Err(stale("data"));
     }
     if c.seed != p.seed || !c.adam.same_bits(&p.optimizer) || !c.deriv.same_bits(&p.deriv) {

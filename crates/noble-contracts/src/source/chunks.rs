@@ -1655,6 +1655,256 @@ pub struct Request {
     pub budget: Budget,
 }
 
+/// One member of the finite shortlex candidate queue. `ordinal` is the
+/// original queue position and `sequence` contains indices into the exact
+/// library snapshot supplied to the completion call.
+#[derive(Clone, Debug, PartialEq)]
+pub struct QueueCandidate {
+    pub ordinal: u32,
+    pub sequence: alloc::vec::Vec<u16>,
+    score: Option<f32>,
+    identity: Option<CandidateId>,
+    feature_extraction_ns: u64,
+    scorer_elapsed_ns: u64,
+}
+
+/// A bounded prefix of the canonical shortlex queue. `has_more` records
+/// whether the candidate cap omitted a subsequent canonical candidate.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CandidateQueue {
+    candidates: alloc::vec::Vec<QueueCandidate>,
+    next_candidate: Option<QueueCandidate>,
+}
+
+impl CandidateQueue {
+    /// The candidates in original shortlex order.
+    pub fn candidates(&self) -> &[QueueCandidate] {
+        &self.candidates
+    }
+
+    /// Whether at least one candidate follows this bounded prefix.
+    pub const fn has_more(&self) -> bool {
+        self.next_candidate.is_some()
+    }
+}
+
+/// One attempted candidate outcome observed by a caller-owned collector.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CandidateOutcome {
+    pub request_identity: [u8; REVISION_BYTES],
+    pub candidate: CandidateId,
+    pub ordinal: u32,
+    pub sequence: alloc::vec::Vec<u16>,
+    pub accepted: bool,
+    pub refusal_class: Option<Class>,
+    pub fixture_agreement: Option<bool>,
+    pub cost: CandidateAttemptCost,
+}
+
+/// Per-attempt scorer and ordinary re-admission provenance. Resource deltas
+/// follow [`Resource::ALL`]; elapsed fields are monotonic nanoseconds.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct CandidateAttemptCost {
+    pub feature_extraction_ns: u64,
+    pub scorer_elapsed_ns: u64,
+    pub re_admission_ns: u64,
+    pub resource_deltas: [u32; Resource::COUNT],
+}
+
+/// Caller-owned sink for the bounded candidate attempt stream.
+pub type CandidateOutcomeObserver<'a> = dyn FnMut(&CandidateOutcome) + 'a;
+
+/// Exact, opaque identity of one candidate in a bounded ranking request.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CandidateId {
+    /// Original position in the canonical shortlex queue.
+    pub ordinal: u32,
+    /// Digest of the library identity and ordered chunk identities.
+    pub digest: [u8; REVISION_BYTES],
+}
+
+/// Immutable trust-boundary identities bound to a scorer request and response.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RankingIdentity {
+    /// Digest of every field in this identity, including the frozen model id.
+    pub request: [u8; REVISION_BYTES],
+    /// Ordered stack/effect contract identity.
+    pub task_interface: [u8; REVISION_BYTES],
+    /// Opaque digest of independently owned goal and fixture values.
+    pub independent_goal: [u8; REVISION_BYTES],
+    /// Digest of every candidate ID in this bounded queue and any overflow witness.
+    pub candidate_set: [u8; REVISION_BYTES],
+    /// Exact immutable chunk library revision.
+    pub library_revision: [u8; REVISION_BYTES],
+    /// Feature-vector schema revision.
+    pub feature_revision: &'static str,
+    /// Source semantics used by #73.
+    pub semantic_revision: u32,
+    /// Policy, profile, request-envelope and caller-budget identity.
+    pub policy: [u8; REVISION_BYTES],
+    /// Exact editor tree and hole-path identity.
+    pub editor_request: [u8; REVISION_BYTES],
+    /// Caller-pinned scorer artifact identity, or `None` for an absent scorer.
+    pub model_identity: Option<[u8; REVISION_BYTES]>,
+    /// Exact caller-supplied budget (the profile still lowers it unchanged).
+    pub budget: Budget,
+}
+
+/// A persisted ordering for one exact ranking request. Replay validates the
+/// complete identity and candidate membership before it can affect search.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct StoredRanking {
+    pub identity: RankingIdentity,
+    pub ordered_candidates: alloc::vec::Vec<CandidateId>,
+    pub invalid_scores: u32,
+}
+
+/// One candidate-scoring request. The scorer receives no source or expected result.
+pub struct CandidateScoreRequest<'a> {
+    /// Opaque token the adapter must echo; it is not a score feature.
+    pub request_identity: [u8; REVISION_BYTES],
+    /// Consumer-pinned model id, supplied only for response validation.
+    pub model_identity: [u8; REVISION_BYTES],
+    /// Current eligible candidate id, supplied only for response echo.
+    pub candidate: CandidateId,
+    /// The only scoring input.
+    pub features: &'a CandidateFeatureVector,
+}
+
+/// Adapter reply bound to the exact request, model artifact and eligible candidate.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct CandidateScoreResponse {
+    pub request_identity: [u8; REVISION_BYTES],
+    pub model_identity: [u8; REVISION_BYTES],
+    pub candidate: CandidateId,
+    pub score: f32,
+}
+
+/// Host-pinned model identity and one optional local scorer adapter.
+pub struct RankerSession<'a> {
+    ranker: &'a mut dyn CandidateRanker,
+    expected_model_identity: [u8; REVISION_BYTES],
+}
+
+impl<'a> RankerSession<'a> {
+    /// Bind an adapter to the consumer-selected immutable model identity.
+    pub const fn new(
+        ranker: &'a mut dyn CandidateRanker,
+        expected_model_identity: [u8; REVISION_BYTES],
+    ) -> Self {
+        Self {
+            ranker,
+            expected_model_identity,
+        }
+    }
+}
+
+/// Exact fixed-width feature record a candidate scorer may observe.
+pub const FEATURE_LANES: usize = 64;
+/// Revision of the request/queue/admitted-metadata feature layout.
+pub const FEATURE_REVISION: &str = "tchunk-features/1";
+/// One shared checking-work unit is charged for each encoded feature lane.
+pub const FEATURE_EXTRACTION_WORK: u32 = 64;
+/// One shared checking-work unit for binding the complete scorer request.
+pub const RANKING_CONTEXT_WORK: u32 = 1;
+/// One shared checking-work unit per candidate queue-management pass.
+pub const RANKING_QUEUE_WORK: u32 = 5;
+/// One shared checking-work unit for each candidate's opaque identity digest.
+pub const RANKING_CANDIDATE_ID_WORK: u32 = 1;
+/// One shared checking-work unit for each scorer invocation.
+pub const RANKING_SCORE_WORK: u32 = 1;
+pub type CandidateFeatureVector = [f32; FEATURE_LANES];
+
+/// Why the optional untrusted ranking scorer could not be used.
+#[octet::sealed_enum]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ScorerFailure {
+    Unavailable,
+    StaleProvenance,
+    InvalidFeature,
+    InvalidResponse,
+    Evaluation,
+}
+
+/// A bounded scorer that can only assign a score to a candidate already in
+/// the canonical queue. Implementations must bind their own model/feature
+/// provenance; the completion engine still owns all candidate admission.
+pub trait CandidateRanker {
+    /// The immutable model artifact identity exposed by this adapter.
+    fn model_identity(&self) -> [u8; REVISION_BYTES];
+
+    /// Check graph, feature, training, tool, and library lineage against the request.
+    fn provenance_matches(&self, identity: &RankingIdentity) -> bool;
+
+    /// Score one eligible candidate. The response must echo all identity bindings;
+    /// failure selects fixed shortlex and no source or expected result is exposed.
+    fn score(
+        &mut self,
+        request: &CandidateScoreRequest<'_>,
+    ) -> Result<CandidateScoreResponse, ScorerFailure>;
+}
+
+/// Outcome of applying a scorer to the bounded queue.
+#[octet::sealed_enum]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RankingDisposition {
+    NotEvaluated,
+    Applied,
+    AppliedWithInvalidScores,
+    FallbackStaleProvenance,
+    FallbackScorerFailure,
+    FallbackInvalidResponse,
+    FallbackAllInvalidScores,
+}
+
+/// A ranked completion response plus non-authoritative scorer status.
+#[derive(Clone, Debug)]
+pub struct RankedResponse {
+    pub response: Response,
+    pub disposition: RankingDisposition,
+    pub invalid_scores: u32,
+    pub identity: Option<RankingIdentity>,
+    /// IDs in the effective order, including shortlex fallbacks.
+    pub ranked_candidates: alloc::vec::Vec<CandidateId>,
+}
+
+impl RankedResponse {
+    /// Preserve a scorer-produced order for identity-checked replay.
+    #[must_use]
+    pub fn stored_ranking(&self) -> Option<StoredRanking> {
+        if !matches!(
+            self.disposition,
+            RankingDisposition::Applied | RankingDisposition::AppliedWithInvalidScores
+        ) {
+            return None;
+        }
+        Some(StoredRanking {
+            identity: self.identity.clone()?,
+            ordered_candidates: self.ranked_candidates.clone(),
+            invalid_scores: self.invalid_scores,
+        })
+    }
+}
+
+struct StoredRankingControl<'a> {
+    ranking: &'a StoredRanking,
+    expected_model_identity: [u8; REVISION_BYTES],
+}
+
+struct CompletionControl<'session, 'ranker, 'observer, 'stored> {
+    ranker: Option<&'session mut RankerSession<'ranker>>,
+    observer: Option<&'observer mut CandidateOutcomeObserver<'observer>>,
+    stored: Option<StoredRankingControl<'stored>>,
+    monotonic_now_ns: fn() -> u64,
+}
+
+struct RankingStatus {
+    disposition: RankingDisposition,
+    invalid_scores: u32,
+    identity: Option<RankingIdentity>,
+    ranked_candidates: alloc::vec::Vec<CandidateId>,
+}
+
 /// The complete ordered stack equation one accepted proposal satisfies.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Equation {
@@ -2039,7 +2289,7 @@ fn add_encoded_size(total: &mut u64, amount: u64, at: Location) -> Result<(), Re
     Ok(())
 }
 
-fn encoded_len(count: usize) -> u64 {
+const fn encoded_len(count: usize) -> u64 {
     // Supported host and Wasm targets have at most 64-bit usize lengths.
     count as u64
 }
@@ -3215,6 +3465,7 @@ struct Search<'a> {
     library: &'a Library,
     request: &'a Request,
     flat: FlatRequest,
+    hole_context: HoleFeatureContext,
     stack_in: alloc::vec::Vec<Ty>,
     ledger: Ledger,
     diagnostics: alloc::vec::Vec<Refusal>,
@@ -3586,6 +3837,71 @@ fn canonical_order(library: &Library) -> alloc::vec::Vec<u16> {
         .windows(2)
         .all(|pair| canonical_pair_is_ordered(library, pair)));
     order
+}
+
+/// The canonical library identity order used by the shortlex search.
+pub fn canonical_entry_order(library: &Library) -> alloc::vec::Vec<u16> {
+    canonical_order(library)
+}
+
+/// Materialize at most `candidate_limit_count` members of the canonical shortlex
+/// queue, plus a boolean indicating that a later canonical candidate exists.
+pub fn candidate_queue(library: &Library, candidate_limit_count: u32) -> CandidateQueue {
+    let bounded_candidate_count =
+        usize::try_from(candidate_limit_count.min(MAX_CANDIDATES)).unwrap_or(0);
+    let order = canonical_entry_order(library);
+    debug_assert!(u32::try_from(bounded_candidate_count).is_ok_and(|count| count <= MAX_CANDIDATES));
+    debug_assert!(encoded_len(order.len()) <= u64::from(MAX_LIBRARY_ENTRIES));
+    let mut candidates = alloc::vec::Vec::with_capacity(bounded_candidate_count);
+    for chunk_count in 0..=MAX_COMPOSED_CHUNKS {
+        let count = usize::try_from(chunk_count).unwrap_or(0);
+        if count > 0 && order.is_empty() {
+            break;
+        }
+        let mut digits: alloc::vec::Vec<u16> = alloc::vec![0; count];
+        loop {
+            let mut sequence = alloc::vec::Vec::with_capacity(count);
+            for digit in &digits {
+                if let Some(index) = order.get(usize::from(*digit)) {
+                    sequence.push(*index);
+                }
+            }
+            let ordinal = u32::try_from(candidates.len()).unwrap_or(MAX_CANDIDATES);
+            if candidates.len() == bounded_candidate_count {
+                debug_assert!(candidates.len() <= bounded_candidate_count);
+                return CandidateQueue {
+                    candidates,
+                    next_candidate: Some(QueueCandidate {
+                        ordinal,
+                        sequence,
+                        score: None,
+                        identity: None,
+                        feature_extraction_ns: 0,
+                        scorer_elapsed_ns: 0,
+                    }),
+                };
+            }
+            candidates.push(QueueCandidate {
+                ordinal,
+                sequence,
+                score: None,
+                identity: None,
+                feature_extraction_ns: 0,
+                scorer_elapsed_ns: 0,
+            });
+            if !advance(&mut digits, order.len()) {
+                break;
+            }
+        }
+    }
+    debug_assert!(candidates.len() <= bounded_candidate_count);
+    debug_assert!(candidates
+        .windows(2)
+        .all(|pair| pair[0].ordinal < pair[1].ordinal));
+    CandidateQueue {
+        candidates,
+        next_candidate: None,
+    }
 }
 
 #[expect(
@@ -3975,11 +4291,18 @@ fn charge_request_retention(
 
 /// Reuse the editor's source-aware analysis for context, charging its measured
 /// work to the same request ledger as later replay and candidate admission.
+#[derive(Clone, Copy)]
+struct HoleFeatureContext {
+    required_output_suffix_height: usize,
+    known_effect_count: usize,
+    unresolved_effect: bool,
+}
+
 fn analyze_editor_context(
     namespace: &super::Session,
     request: &Request,
     ledger: &mut Ledger,
-) -> Result<(), Refusal> {
+) -> Result<HoleFeatureContext, Refusal> {
     let at = Location::field("request.editor");
     let limits = crate::Limits {
         work: ledger.remaining(Resource::CheckingWork),
@@ -4024,7 +4347,17 @@ fn analyze_editor_context(
     }
     debug_assert_eq!(analysis.holes.len(), 1);
     debug_assert!(analysis.known_effects.is_empty());
-    Ok(())
+    let Some(hole) = analysis.holes.first() else {
+        return Err(internal(
+            at,
+            "source editor analysis lost the bounded one-hole constraint",
+        ));
+    };
+    Ok(HoleFeatureContext {
+        required_output_suffix_height: hole.required_output_suffix.len(),
+        known_effect_count: hole.known_effects.len(),
+        unresolved_effect: hole.unresolved_effect,
+    })
 }
 
 /// Advance one shortlex odometer over `width` canonical positions. Returns
@@ -4046,14 +4379,100 @@ fn advance(digits: &mut [u16], width: usize) -> bool {
     false
 }
 
+struct CandidateObservation<'a> {
+    binding: Option<([u8; REVISION_BYTES], CandidateId)>,
+    ordinal: u32,
+    sequence: &'a [u16],
+    accepted: bool,
+    refusal_class: Option<Class>,
+    fixture_agreement: Option<bool>,
+    cost: CandidateAttemptCost,
+}
+
+fn resource_snapshot(ledger: &Ledger) -> [u32; Resource::COUNT] {
+    let mut snapshot = [0; Resource::COUNT];
+    for resource in Resource::ALL {
+        if let Some(value) = snapshot.get_mut(resource.slot()) {
+            *value = ledger.observed(resource);
+        }
+    }
+    snapshot
+}
+
+fn candidate_attempt_cost(
+    search: &Search<'_>,
+    before: &[u32; Resource::COUNT],
+    started_ns: u64,
+    feature_extraction_ns: u64,
+    scorer_elapsed_ns: u64,
+    monotonic_now_ns: fn() -> u64,
+) -> CandidateAttemptCost {
+    let mut resource_deltas = [0; Resource::COUNT];
+    for resource in Resource::ALL {
+        if let (Some(before), Some(delta)) = (
+            before.get(resource.slot()),
+            resource_deltas.get_mut(resource.slot()),
+        ) {
+            *delta = search.ledger.observed(resource).saturating_sub(*before);
+        }
+    }
+    CandidateAttemptCost {
+        feature_extraction_ns,
+        scorer_elapsed_ns,
+        re_admission_ns: monotonic_now_ns().saturating_sub(started_ns),
+        resource_deltas,
+    }
+}
+
+fn observe_candidate(
+    observer: &mut Option<&mut CandidateOutcomeObserver<'_>>,
+    observation: CandidateObservation<'_>,
+) {
+    debug_assert!(encoded_len(observation.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
+    debug_assert_eq!(observation.accepted, observation.refusal_class.is_none());
+    if let Some(observer) = observer.as_mut() {
+        let Some((request_identity, candidate)) = observation.binding else {
+            debug_assert!(
+                false,
+                "observed candidates must have a bound request identity"
+            );
+            return;
+        };
+        let outcome = CandidateOutcome {
+            request_identity,
+            candidate,
+            ordinal: observation.ordinal,
+            sequence: observation.sequence.to_vec(),
+            accepted: observation.accepted,
+            refusal_class: observation.refusal_class,
+            fixture_agreement: observation.fixture_agreement,
+            cost: observation.cost,
+        };
+        (**observer)(&outcome);
+    }
+}
+
 /// Visit every sequence of one length in canonical shortlex order.
 fn run_length(
     search: &mut Search<'_>,
     order: &[u16],
     chunk_count: u32,
+    next_ordinal: &mut u32,
+    observer: &mut Option<&mut CandidateOutcomeObserver<'_>>,
+    identity: Option<&RankingIdentity>,
+    monotonic_now_ns: fn() -> u64,
 ) -> Result<(), alloc::boxed::Box<Response>> {
     let width = order.len();
     debug_assert!(u32::try_from(width).is_ok_and(|count| count <= MAX_LIBRARY_ENTRIES));
+    debug_assert!(chunk_count <= MAX_COMPOSED_CHUNKS);
+    debug_assert!(*next_ordinal <= MAX_CANDIDATES);
+    if observer.is_some() && identity.is_none() {
+        let refusal = internal(
+            Location::field("ranking.identity"),
+            "an observation request has no immutable identity",
+        );
+        return Err(alloc::boxed::Box::new(response_of_search(refusal, search)));
+    }
     if chunk_count > 0 && width == 0 {
         return Ok(());
     }
@@ -4077,8 +4496,45 @@ fn run_length(
             }
         }
         debug_assert_eq!(sequence.len(), digits.len());
-        match search.candidate(&sequence) {
+        let ordinal = *next_ordinal;
+        *next_ordinal = (*next_ordinal).saturating_add(1);
+        let binding = if observer.is_some() {
+            identity.map(|identity| {
+                (
+                    identity.request,
+                    candidate_identity(search.library, ordinal, &sequence),
+                )
+            })
+        } else {
+            None
+        };
+        let before = observer
+            .is_some()
+            .then(|| resource_snapshot(&search.ledger));
+        let started_ns = if before.is_some() {
+            monotonic_now_ns()
+        } else {
+            0
+        };
+        let result = search.candidate(&sequence);
+        let cost = before.map_or_else(CandidateAttemptCost::default, |before| {
+            candidate_attempt_cost(search, &before, started_ns, 0, 0, monotonic_now_ns)
+        });
+        match result {
             Ok(Step::Admitted(accepted)) => {
+                let fixture_agreement = search.fixtures.as_ref().map(|fixtures| fixtures.agreement);
+                observe_candidate(
+                    observer,
+                    CandidateObservation {
+                        binding,
+                        ordinal,
+                        sequence: &sequence,
+                        accepted: true,
+                        refusal_class: None,
+                        fixture_agreement,
+                        cost,
+                    },
+                );
                 let report = search.report(1);
                 return Err(alloc::boxed::Box::new(Response::Accepted {
                     accepted,
@@ -4086,6 +4542,19 @@ fn run_length(
                 }));
             }
             Ok(Step::Refused(refusal)) => {
+                let refusal_class = refusal.class;
+                observe_candidate(
+                    observer,
+                    CandidateObservation {
+                        binding,
+                        ordinal,
+                        sequence: &sequence,
+                        accepted: false,
+                        refusal_class: Some(refusal_class),
+                        fixture_agreement: None,
+                        cost,
+                    },
+                );
                 search.rejected = search.rejected.saturating_add(1);
                 if let Err(exhausted) = record(&mut search.ledger, &mut search.diagnostics, refusal)
                 {
@@ -4095,7 +4564,20 @@ fn run_length(
                 }
             }
             Err(refusal) => {
-                return Err(alloc::boxed::Box::new(response_of_search(refusal, search)))
+                let refusal_class = refusal.class;
+                observe_candidate(
+                    observer,
+                    CandidateObservation {
+                        binding,
+                        ordinal,
+                        sequence: &sequence,
+                        accepted: false,
+                        refusal_class: Some(refusal_class),
+                        fixture_agreement: None,
+                        cost,
+                    },
+                );
+                return Err(alloc::boxed::Box::new(response_of_search(refusal, search)));
             }
         }
         if !advance(&mut digits, width) {
@@ -4103,6 +4585,865 @@ fn run_length(
         }
     }
     Ok(())
+}
+
+const fn feature_ratio(value: u64, maximum: u32) -> f32 {
+    if maximum == 0 {
+        0.0
+    } else {
+        let maximum_value = maximum as u64;
+        let bounded = if value < maximum_value {
+            value
+        } else {
+            maximum_value
+        };
+        bounded as f32 / maximum as f32
+    }
+}
+
+const fn feature_bit(value: bool) -> f32 {
+    if value {
+        1.0
+    } else {
+        0.0
+    }
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the bounded slice scan compares kernel Ty with its runtime PartialEq implementation"
+)]
+fn feature_type_count(stack: &[Ty], ty: Ty) -> u64 {
+    encoded_len(stack.iter().filter(|item| **item == ty).count())
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; applying an admitted interface must truncate and append to the owned working stack"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; applying an interface mutates the bounded runtime stack"
+)]
+fn feature_apply_interface(stack: &mut alloc::vec::Vec<Ty>, interface: &Interface) -> bool {
+    let input_len = interface.stack_in.len();
+    if stack.len() < input_len
+        || stack.get(stack.len().saturating_sub(input_len)..) != Some(interface.stack_in.as_slice())
+    {
+        return false;
+    }
+    stack.truncate(stack.len().saturating_sub(input_len));
+    stack.extend_from_slice(&interface.stack_out);
+    match usize::try_from(MAX_STACK_HEIGHT) {
+        Ok(maximum) => stack.len() <= maximum,
+        Err(_) => false,
+    }
+}
+
+const fn recipe_node_bytes(node: &Node) -> u64 {
+    match node {
+        Node::I64(_) => 9,
+        Node::Bool(_) => 2,
+        Node::Capture { .. } => 3,
+        Node::Operation { .. } => 4,
+        Node::Invoke { .. } => 5,
+        Node::Quotation { body, .. } => {
+            7u64.saturating_add(encoded_len(body.len()).saturating_mul(4))
+        }
+    }
+}
+
+fn recipe_quotation_depth(recipe: &Recipe) -> Option<u32> {
+    debug_assert!(encoded_len(recipe.nodes.len()) <= u64::from(MAX_RECIPE_NODES));
+    debug_assert!(encoded_len(recipe.entry.len()) <= u64::from(MAX_RECIPE_NODES));
+    let mut node_depths = [0u32; 64];
+    for (node_index, node) in recipe.nodes.iter().enumerate() {
+        if node_index >= node_depths.len() {
+            return None;
+        }
+        if let Node::Quotation { body, .. } = node {
+            let mut nested_depth = 0u32;
+            for reference in body {
+                let child_index = usize::try_from(*reference).ok()?;
+                if child_index >= node_index {
+                    return None;
+                }
+                nested_depth = nested_depth.max(node_depths[child_index]);
+            }
+            node_depths[node_index] = nested_depth.saturating_add(1);
+        }
+    }
+    let mut deepest = 0u32;
+    for reference in &recipe.entry {
+        let index = usize::try_from(*reference).ok()?;
+        deepest = deepest.max(*node_depths.get(index)?);
+    }
+    Some(deepest)
+}
+
+#[derive(Default)]
+struct CandidateFeatureCounts {
+    stack_after: alloc::vec::Vec<Ty>,
+    expanded_nodes: u64,
+    capture_count: u64,
+    dependency_count: u64,
+    instantiation_count: u64,
+    source_bytes: u64,
+    recipe_bytes: u64,
+    literals: u64,
+    routing: u64,
+    arithmetic: u64,
+    boolean_ops: u64,
+    quotations: u64,
+    runs: u64,
+    quote_depth: u64,
+    stack_matches: bool,
+    effects_match: bool,
+}
+
+fn feature_recipe_metrics(recipe: &Recipe, counts: &mut CandidateFeatureCounts) {
+    debug_assert!(encoded_len(recipe.nodes.len()) <= u64::from(MAX_RECIPE_NODES));
+    debug_assert!(encoded_len(recipe.entry.len()) <= u64::from(MAX_RECIPE_NODES));
+    counts.recipe_bytes = counts.recipe_bytes.saturating_add(8);
+    for node in &recipe.nodes {
+        counts.recipe_bytes = counts.recipe_bytes.saturating_add(recipe_node_bytes(node));
+        match node {
+            Node::I64(_) | Node::Bool(_) => counts.literals = counts.literals.saturating_add(1),
+            Node::Operation { op, .. } => match op {
+                Op::Dup | Op::Drop | Op::Swap => counts.routing = counts.routing.saturating_add(1),
+                Op::Add | Op::Sub | Op::Mul => {
+                    counts.arithmetic = counts.arithmetic.saturating_add(1)
+                }
+                Op::Eq => counts.boolean_ops = counts.boolean_ops.saturating_add(1),
+                Op::Run => counts.runs = counts.runs.saturating_add(1),
+            },
+            Node::Quotation { .. } => counts.quotations = counts.quotations.saturating_add(1),
+            Node::Capture { .. } | Node::Invoke { .. } => {}
+        }
+    }
+    counts.recipe_bytes = counts
+        .recipe_bytes
+        .saturating_add(encoded_len(recipe.entry.len()).saturating_mul(4));
+}
+
+#[derive(Default)]
+struct FeatureMetadataMatches {
+    body: bool,
+    dependencies: bool,
+    instantiations: bool,
+}
+
+fn feature_metadata_matches(
+    library: &Library,
+    candidate: &QueueCandidate,
+) -> FeatureMetadataMatches {
+    debug_assert!(encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
+    debug_assert!(encoded_len(library.entries().len()) <= u64::from(MAX_LIBRARY_ENTRIES));
+    let mut matches = FeatureMetadataMatches {
+        body: true,
+        dependencies: true,
+        instantiations: true,
+    };
+    for index in &candidate.sequence {
+        let Some(entry) = library.entries().get(usize::from(*index)) else {
+            matches.body = false;
+            matches.dependencies = false;
+            matches.instantiations = false;
+            return matches;
+        };
+        let envelope = entry.envelope();
+        let is_dependencies_match = envelope
+            .dependencies
+            .iter()
+            .all(|dependency| library.find(dependency).is_some());
+        let is_instantiations_match = envelope.instantiations.iter().all(|instantiation| {
+            instantiation
+                .bindings
+                .windows(2)
+                .all(|pair| pair[0].variable < pair[1].variable)
+                && instantiation.bindings.iter().all(|binding| {
+                    binding.kind == noble_kernel::words::VariableKind::Value
+                        && profile_type(&binding.ty)
+                })
+        });
+        matches.body &= envelope.chunk_id == chunk_identity_of(envelope)
+            && envelope.source_revision == canonical_revision(entry.source());
+        matches.dependencies &= is_dependencies_match;
+        matches.instantiations &= is_instantiations_match;
+    }
+    matches
+}
+
+fn candidate_features(
+    search: &Search<'_>,
+    candidate: &QueueCandidate,
+) -> Result<CandidateFeatureVector, ScorerFailure> {
+    let mut features = [0.0f32; FEATURE_LANES];
+    feature_request_lanes(&mut features, search)?;
+    let counts = collect_candidate_features(&mut features, search, candidate)?;
+    feature_candidate_lanes(&mut features, search.request, candidate, &counts);
+    feature_budget_lanes(&mut features, search, candidate);
+    feature_identity_lanes(&mut features, search, candidate)?;
+    if features.iter().all(|feature| feature.is_finite()) {
+        Ok(features)
+    } else {
+        Err(ScorerFailure::InvalidFeature)
+    }
+}
+
+fn feature_request_lanes(
+    features: &mut CandidateFeatureVector,
+    search: &Search<'_>,
+) -> Result<(), ScorerFailure> {
+    let request = search.request;
+    let input_height = encoded_len(request.task.stack_in.len());
+    let output_height = encoded_len(request.task.stack_out.len());
+    let required_output_suffix_height =
+        encoded_len(search.hole_context.required_output_suffix_height);
+    let known_effect_count = encoded_len(search.hole_context.known_effect_count);
+    debug_assert!(input_height <= u64::from(MAX_STACK_HEIGHT));
+    debug_assert!(output_height <= u64::from(MAX_STACK_HEIGHT));
+    let stack_max = MAX_STACK_HEIGHT;
+    features[0] = feature_ratio(input_height, stack_max);
+    features[1] = feature_ratio(output_height, stack_max);
+    features[2] = feature_ratio(encoded_len(request.hole_path.len()), MAX_QUOTATION_DEPTH);
+    features[3] = feature_ratio(encoded_len(search.flat.hole), MAX_SOURCE_BYTES);
+    features[4] = feature_ratio(
+        feature_type_count(&request.task.stack_in, Ty::I64),
+        stack_max,
+    );
+    features[5] = feature_ratio(
+        feature_type_count(&request.task.stack_in, Ty::Bool),
+        stack_max,
+    );
+    features[6] = feature_ratio(
+        feature_type_count(&request.task.stack_out, Ty::I64),
+        stack_max,
+    );
+    features[7] = feature_ratio(
+        feature_type_count(&request.task.stack_out, Ty::Bool),
+        stack_max,
+    );
+    features[8] = feature_ratio(encoded_len(search.stack_in.len()), stack_max);
+    features[9] = feature_ratio(required_output_suffix_height, stack_max);
+    features[10] = feature_ratio(known_effect_count, MAX_DIAGNOSTICS);
+    features[11] = feature_bit(search.hole_context.unresolved_effect);
+    Ok(())
+}
+
+fn collect_candidate_features(
+    features: &mut CandidateFeatureVector,
+    search: &Search<'_>,
+    candidate: &QueueCandidate,
+) -> Result<CandidateFeatureCounts, ScorerFailure> {
+    debug_assert!(encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
+    debug_assert!(encoded_len(search.library.entries().len()) <= u64::from(MAX_LIBRARY_ENTRIES));
+    let mut counts = CandidateFeatureCounts {
+        stack_after: search.stack_in.clone(),
+        stack_matches: true,
+        effects_match: true,
+        ..CandidateFeatureCounts::default()
+    };
+    let mut chunk_at = 0usize;
+    for index in &candidate.sequence {
+        let entry = search
+            .library
+            .entries()
+            .get(usize::from(*index))
+            .ok_or(ScorerFailure::InvalidFeature)?;
+        let envelope = entry.envelope();
+        let interface = entry.interface();
+        counts.stack_matches &= feature_apply_interface(&mut counts.stack_after, interface);
+        counts.effects_match &= interface.effects == search.request.task.allowed_effects;
+        counts.expanded_nodes = counts
+            .expanded_nodes
+            .saturating_add(u64::from(entry.expanded_nodes()));
+        counts.capture_count = counts
+            .capture_count
+            .saturating_add(encoded_len(envelope.captures.len()));
+        counts.dependency_count = counts
+            .dependency_count
+            .saturating_add(encoded_len(envelope.dependencies.len()));
+        counts.instantiation_count = counts
+            .instantiation_count
+            .saturating_add(encoded_len(envelope.instantiations.len()));
+        counts.source_bytes = counts
+            .source_bytes
+            .saturating_add(encoded_len(entry.source().len()));
+        feature_recipe_metrics(&envelope.body, &mut counts);
+        counts.quote_depth = counts.quote_depth.max(u64::from(
+            recipe_quotation_depth(&envelope.body).ok_or(ScorerFailure::InvalidFeature)?,
+        ));
+        let base = 32usize.saturating_add(chunk_at.saturating_mul(4));
+        let input = &interface.stack_in;
+        let output = &interface.stack_out;
+        let stack_max = MAX_STACK_HEIGHT;
+        features[base] = feature_ratio(encoded_len(input.len()), stack_max);
+        features[base.saturating_add(1)] = feature_ratio(encoded_len(output.len()), stack_max);
+        features[base.saturating_add(2)] = feature_ratio(
+            feature_type_count(input, Ty::I64).saturating_add(feature_type_count(output, Ty::I64)),
+            stack_max,
+        );
+        features[base.saturating_add(3)] = feature_ratio(
+            feature_type_count(input, Ty::Bool)
+                .saturating_add(feature_type_count(output, Ty::Bool)),
+            stack_max,
+        );
+        chunk_at = chunk_at.saturating_add(1);
+    }
+    Ok(counts)
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; exact typed stack equality and request fields are checked at runtime"
+)]
+fn feature_candidate_lanes(
+    features: &mut CandidateFeatureVector,
+    request: &Request,
+    candidate: &QueueCandidate,
+    counts: &CandidateFeatureCounts,
+) {
+    debug_assert!(encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
+    debug_assert!(encoded_len(counts.stack_after.len()) <= u64::from(MAX_STACK_HEIGHT));
+    let current_stack_height = encoded_len(counts.stack_after.len());
+    let output_height = encoded_len(request.task.stack_out.len());
+    let stack_max = MAX_STACK_HEIGHT;
+    features[12] = feature_ratio(encoded_len(candidate.sequence.len()), MAX_COMPOSED_CHUNKS);
+    features[13] = feature_ratio(u64::from(candidate.ordinal), MAX_CANDIDATES);
+    features[14] = feature_ratio(current_stack_height, stack_max);
+    features[15] = feature_ratio(
+        output_height.saturating_sub(current_stack_height),
+        stack_max,
+    );
+    features[16] = feature_ratio(encoded_len(candidate.sequence.len()), MAX_COMPOSED_CHUNKS);
+    features[17] = feature_ratio(counts.expanded_nodes, MAX_EXPANDED_NODES);
+    features[18] = feature_ratio(counts.quote_depth, MAX_QUOTATION_DEPTH);
+    features[19] = feature_ratio(counts.capture_count, MAX_CAPTURES.saturating_mul(4));
+    features[20] = feature_ratio(counts.dependency_count, MAX_DEPENDENCY_STEPS);
+    features[21] = feature_ratio(counts.instantiation_count, MAX_TOTAL_INSTANTIATION_BINDINGS);
+    features[22] = feature_ratio(counts.source_bytes, MAX_SOURCE_BYTES);
+    features[23] = feature_ratio(counts.recipe_bytes, MAX_LIBRARY_BYTES);
+    let max_recipe_nodes = MAX_RECIPE_NODES.saturating_mul(4);
+    features[24] = feature_ratio(counts.literals, max_recipe_nodes);
+    features[25] = feature_ratio(counts.routing, max_recipe_nodes);
+    features[26] = feature_ratio(counts.arithmetic, max_recipe_nodes);
+    features[27] = feature_ratio(counts.boolean_ops, max_recipe_nodes);
+    features[28] = feature_ratio(counts.quotations, max_recipe_nodes);
+    features[29] = feature_ratio(counts.runs, max_recipe_nodes);
+    features[30] =
+        feature_bit(counts.stack_matches && counts.stack_after == request.task.stack_out);
+    features[31] = feature_bit(counts.effects_match);
+}
+
+fn feature_budget_lanes(
+    features: &mut CandidateFeatureVector,
+    search: &Search<'_>,
+    candidate: &QueueCandidate,
+) {
+    let limits = search.ledger.limits();
+    debug_assert!(limits.candidates <= MAX_CANDIDATES);
+    debug_assert!(candidate.ordinal < MAX_CANDIDATES);
+    let remaining_candidates = limits
+        .candidates
+        .saturating_sub(search.ledger.observed(Resource::Candidates))
+        .saturating_sub(candidate.ordinal);
+    features[48] = feature_ratio(u64::from(remaining_candidates), MAX_CANDIDATES);
+    features[49] = feature_ratio(
+        u64::from(search.ledger.remaining(Resource::ExpandedNodes)),
+        MAX_EXPANDED_NODES,
+    );
+    features[50] = feature_ratio(
+        u64::from(search.ledger.remaining(Resource::CheckingWork)),
+        MAX_CHECKING_WORK,
+    );
+    features[51] = feature_ratio(
+        u64::from(search.ledger.remaining(Resource::SourceBytes)),
+        MAX_SOURCE_BYTES,
+    );
+    features[52] = feature_ratio(
+        u64::from(search.ledger.remaining(Resource::EvaluationSteps)),
+        MAX_EVALUATION_STEPS,
+    );
+    features[53] = feature_ratio(
+        u64::from(search.ledger.remaining(Resource::Diagnostics)),
+        MAX_DIAGNOSTICS,
+    );
+    features[54] = feature_ratio(
+        u64::from(search.ledger.remaining(Resource::RetainedBytes)),
+        MAX_RETAINED_BYTES,
+    );
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; identity lanes invoke canonical source and envelope digest calculations at runtime"
+)]
+fn feature_identity_lanes(
+    features: &mut CandidateFeatureVector,
+    search: &Search<'_>,
+    candidate: &QueueCandidate,
+) -> Result<(), ScorerFailure> {
+    features[55] = feature_bit(search.request.library_revision == *search.library.revision());
+    features[56] = feature_bit(search.request.profile == PROFILE);
+    features[57] = feature_bit(search.request.format == ENVELOPE_FORMAT);
+    features[58] = feature_bit(search.request.semantic_revision == SEMANTIC_REVISION);
+    let metadata_matches = feature_metadata_matches(search.library, candidate);
+    if !metadata_matches.body || !metadata_matches.dependencies || !metadata_matches.instantiations
+    {
+        return Err(ScorerFailure::InvalidFeature);
+    }
+    features[59] = feature_bit(metadata_matches.body);
+    features[60] = feature_bit(metadata_matches.dependencies);
+    features[61] = feature_bit(metadata_matches.instantiations);
+    features[62] = 1.0;
+    features[63] = 0.0;
+    Ok(())
+}
+
+const DOMAIN_RANKING_INTERFACE: u64 = 0x7463_7261_6e6b_0001;
+const DOMAIN_RANKING_GOAL: u64 = 0x7463_7261_6e6b_0002;
+const DOMAIN_RANKING_CANDIDATE: u64 = 0x7463_7261_6e6b_0003;
+const DOMAIN_RANKING_CANDIDATES: u64 = 0x7463_7261_6e6b_0004;
+const DOMAIN_RANKING_POLICY: u64 = 0x7463_7261_6e6b_0005;
+const DOMAIN_RANKING_EDITOR: u64 = 0x7463_7261_6e6b_0006;
+const DOMAIN_RANKING_REQUEST: u64 = 0x7463_7261_6e6b_0007;
+
+fn ranking_digest(domain: u64, input: &[u8]) -> [u8; REVISION_BYTES] {
+    let mut digest = [0u8; REVISION_BYTES];
+    absorb_bytes_lanes(domain, input, REVISION_BYTES / 8, &mut digest);
+    digest
+}
+
+fn identity_push_count(bytes: &mut alloc::vec::Vec<u8>, count: usize) {
+    bytes.extend_from_slice(&encoded_len(count).to_le_bytes());
+}
+
+fn identity_push_type(bytes: &mut alloc::vec::Vec<u8>, ty: &Ty) {
+    bytes.push(match ty {
+        Ty::I64 => 1,
+        Ty::Bool => 2,
+        _ => 255,
+    });
+}
+
+fn identity_push_stack(bytes: &mut alloc::vec::Vec<u8>, stack: &[Ty]) {
+    identity_push_count(bytes, stack.len());
+    for ty in stack {
+        identity_push_type(bytes, ty);
+    }
+}
+
+fn identity_push_budget(bytes: &mut alloc::vec::Vec<u8>, budget: Budget) {
+    for limit in [
+        budget.library_bytes,
+        budget.entries,
+        budget.recipe_nodes,
+        budget.stack_height,
+        budget.dependency_steps,
+        budget.instantiation_bindings,
+        budget.quotation_depth,
+        budget.expanded_nodes,
+        budget.composed_chunks,
+        budget.source_bytes,
+        budget.candidates,
+        budget.diagnostics,
+        budget.checking_work,
+        budget.evaluation_steps,
+        budget.retained_bytes,
+    ] {
+        bytes.extend_from_slice(&limit.to_le_bytes());
+    }
+}
+
+fn identity_push_editor_nodes(bytes: &mut alloc::vec::Vec<u8>, nodes: &[super::editor::Node]) {
+    struct Frame<'a> {
+        nodes: &'a [super::editor::Node],
+        next: usize,
+    }
+    identity_push_count(bytes, nodes.len());
+    let mut frames = alloc::vec![Frame { nodes, next: 0 }];
+    while let Some(frame) = frames.last_mut() {
+        if frame.next == frame.nodes.len() {
+            bytes.push(0);
+            frames.pop();
+            continue;
+        }
+        let Some(node) = frame.nodes.get(frame.next) else {
+            bytes.push(255);
+            break;
+        };
+        frame.next = frame.next.saturating_add(1);
+        match node {
+            super::editor::Node::Integer(value) => {
+                bytes.push(1);
+                bytes.extend_from_slice(&value.to_le_bytes());
+            }
+            super::editor::Node::Boolean(value) => {
+                bytes.push(2);
+                bytes.push(u8::from(*value));
+            }
+            super::editor::Node::Word(word) => {
+                bytes.push(3);
+                identity_push_count(bytes, word.len());
+                bytes.extend_from_slice(word.as_bytes());
+            }
+            super::editor::Node::Quotation(children) => {
+                bytes.push(4);
+                identity_push_count(bytes, children.len());
+                frames.push(Frame {
+                    nodes: children,
+                    next: 0,
+                });
+            }
+            super::editor::Node::Hole => bytes.push(5),
+        }
+    }
+}
+
+fn task_interface_identity(request: &Request) -> [u8; REVISION_BYTES] {
+    let mut bytes = alloc::vec::Vec::new();
+    identity_push_stack(&mut bytes, &request.task.stack_in);
+    identity_push_stack(&mut bytes, &request.task.stack_out);
+    identity_push_count(&mut bytes, request.task.allowed_effects.as_slice().len());
+    for effect in request.task.allowed_effects.as_slice() {
+        bytes.extend_from_slice(&effect.0.to_le_bytes());
+    }
+    ranking_digest(DOMAIN_RANKING_INTERFACE, &bytes)
+}
+
+fn independent_goal_identity(request: &Request) -> [u8; REVISION_BYTES] {
+    let mut bytes = alloc::vec::Vec::new();
+    if let Some(fixtures) = &request.fixtures {
+        bytes.push(1);
+        bytes.extend_from_slice(&fixtures.id);
+        identity_push_count(&mut bytes, fixtures.cases.len());
+        for case in &fixtures.cases {
+            identity_push_count(&mut bytes, case.inputs.len());
+            for value in &case.inputs {
+                identity_push_scalar(&mut bytes, *value);
+            }
+            identity_push_count(&mut bytes, case.outputs.len());
+            for value in &case.outputs {
+                identity_push_scalar(&mut bytes, *value);
+            }
+        }
+    } else {
+        bytes.push(0);
+    }
+    ranking_digest(DOMAIN_RANKING_GOAL, &bytes)
+}
+
+fn identity_push_scalar(bytes: &mut alloc::vec::Vec<u8>, value: Scalar) {
+    match value {
+        Scalar::I64(value) => {
+            bytes.push(1);
+            bytes.extend_from_slice(&value.to_le_bytes());
+        }
+        Scalar::Bool(value) => {
+            bytes.push(2);
+            bytes.push(u8::from(value));
+        }
+    }
+}
+
+fn candidate_identity(library: &Library, ordinal: u32, sequence: &[u16]) -> CandidateId {
+    let mut bytes = alloc::vec::Vec::with_capacity(
+        REVISION_BYTES
+            .saturating_add(core::mem::size_of::<u32>())
+            .saturating_add(sequence.len().saturating_mul(core::mem::size_of::<u16>())),
+    );
+    bytes.extend_from_slice(library.revision());
+    bytes.extend_from_slice(&ordinal.to_le_bytes());
+    identity_push_count(&mut bytes, sequence.len());
+    for chunk_index in sequence {
+        bytes.extend_from_slice(&chunk_index.to_le_bytes());
+        match library.entries().get(usize::from(*chunk_index)) {
+            Some(entry) => {
+                bytes.push(1);
+                bytes.extend_from_slice(&entry.envelope().chunk_id);
+                bytes.extend_from_slice(&entry.envelope().source_revision);
+            }
+            None => bytes.push(0),
+        }
+    }
+    CandidateId {
+        ordinal,
+        digest: ranking_digest(DOMAIN_RANKING_CANDIDATE, &bytes),
+    }
+}
+
+fn candidate_set_identity(library: &Library, queue: &CandidateQueue) -> [u8; REVISION_BYTES] {
+    let mut bytes = alloc::vec::Vec::with_capacity(
+        queue
+            .candidates
+            .len()
+            .saturating_add(usize::from(queue.next_candidate.is_some()))
+            .saturating_mul(REVISION_BYTES),
+    );
+    bytes.extend_from_slice(library.revision());
+    identity_push_count(&mut bytes, queue.candidates.len());
+    for candidate in &queue.candidates {
+        bytes.extend_from_slice(
+            &candidate_identity(library, candidate.ordinal, &candidate.sequence).digest,
+        );
+    }
+    match &queue.next_candidate {
+        Some(candidate) => {
+            bytes.push(1);
+            bytes.extend_from_slice(
+                &candidate_identity(library, candidate.ordinal, &candidate.sequence).digest,
+            );
+        }
+        None => bytes.push(0),
+    }
+    ranking_digest(DOMAIN_RANKING_CANDIDATES, &bytes)
+}
+
+fn ranking_identity(
+    request: &Request,
+    library: &Library,
+    queue: &CandidateQueue,
+    model_identity: Option<[u8; REVISION_BYTES]>,
+) -> RankingIdentity {
+    let mut editor_bytes = alloc::vec::Vec::new();
+    editor_bytes.extend_from_slice(&request.editor.format.to_le_bytes());
+    identity_push_count(&mut editor_bytes, request.hole_path.len());
+    for part in &request.hole_path {
+        editor_bytes.extend_from_slice(&part.to_le_bytes());
+    }
+    identity_push_editor_nodes(&mut editor_bytes, &request.editor.nodes);
+    let editor_request = ranking_digest(DOMAIN_RANKING_EDITOR, &editor_bytes);
+    let task_interface = task_interface_identity(request);
+    let independent_goal = independent_goal_identity(request);
+    let candidate_set = candidate_set_identity(library, queue);
+    let mut policy_bytes = alloc::vec::Vec::new();
+    policy_bytes.extend_from_slice(&request.format.to_le_bytes());
+    policy_bytes.extend_from_slice(&request.semantic_revision.to_le_bytes());
+    identity_push_count(&mut policy_bytes, request.profile.len());
+    policy_bytes.extend_from_slice(request.profile.as_bytes());
+    identity_push_budget(&mut policy_bytes, request.budget);
+    let policy = ranking_digest(DOMAIN_RANKING_POLICY, &policy_bytes);
+    let mut request_bytes = alloc::vec::Vec::new();
+    request_bytes.extend_from_slice(&task_interface);
+    request_bytes.extend_from_slice(&independent_goal);
+    request_bytes.extend_from_slice(&candidate_set);
+    request_bytes.extend_from_slice(library.revision());
+    identity_push_count(&mut request_bytes, FEATURE_REVISION.len());
+    request_bytes.extend_from_slice(FEATURE_REVISION.as_bytes());
+    request_bytes.extend_from_slice(&request.semantic_revision.to_le_bytes());
+    request_bytes.extend_from_slice(&policy);
+    request_bytes.extend_from_slice(&editor_request);
+    identity_push_budget(&mut request_bytes, request.budget);
+    match model_identity {
+        Some(identity) => {
+            request_bytes.push(1);
+            request_bytes.extend_from_slice(&identity);
+        }
+        None => request_bytes.push(0),
+    }
+    RankingIdentity {
+        request: ranking_digest(DOMAIN_RANKING_REQUEST, &request_bytes),
+        task_interface,
+        independent_goal,
+        candidate_set,
+        library_revision: *library.revision(),
+        feature_revision: FEATURE_REVISION,
+        semantic_revision: request.semantic_revision,
+        policy,
+        editor_request,
+        model_identity,
+        budget: request.budget,
+    }
+}
+
+fn run_candidate_queue(
+    search: &mut Search<'_>,
+    queue: &CandidateQueue,
+    observer: &mut Option<&mut CandidateOutcomeObserver<'_>>,
+    identity: &RankingIdentity,
+    monotonic_now_ns: fn() -> u64,
+) -> Result<(), alloc::boxed::Box<Response>> {
+    debug_assert!(encoded_len(queue.candidates.len()) <= u64::from(MAX_CANDIDATES));
+    debug_assert!(queue.candidates.iter().all(|candidate| {
+        encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS)
+    }));
+    debug_assert_eq!(identity.library_revision, *search.library.revision());
+    debug_assert!(observer.is_none() || identity.model_identity.is_some());
+    for candidate in &queue.candidates {
+        run_ranked_candidate(search, candidate, observer, identity, monotonic_now_ns)?;
+    }
+    if let Some(candidate) = &queue.next_candidate {
+        let before = observer
+            .is_some()
+            .then(|| resource_snapshot(&search.ledger));
+        let started_ns = if before.is_some() {
+            monotonic_now_ns()
+        } else {
+            0
+        };
+        let result = search.candidate(&candidate.sequence);
+        let cost = before.map_or_else(CandidateAttemptCost::default, |before| {
+            candidate_attempt_cost(
+                search,
+                &before,
+                started_ns,
+                candidate.feature_extraction_ns,
+                candidate.scorer_elapsed_ns,
+                monotonic_now_ns,
+            )
+        });
+        match result {
+            Err(refusal) => {
+                let refusal_class = refusal.class;
+                observe_candidate(
+                    observer,
+                    CandidateObservation {
+                        binding: Some((
+                            identity.request,
+                            candidate_identity(
+                                search.library,
+                                candidate.ordinal,
+                                &candidate.sequence,
+                            ),
+                        )),
+                        ordinal: candidate.ordinal,
+                        sequence: &candidate.sequence,
+                        accepted: false,
+                        refusal_class: Some(refusal_class),
+                        fixture_agreement: None,
+                        cost,
+                    },
+                );
+                return Err(alloc::boxed::Box::new(response_of_search(refusal, search)));
+            }
+            Ok(_) => {
+                let refusal = internal(
+                    Location::field("request.budget.candidates"),
+                    "the bounded queue overflow was not refused by the shared candidate budget",
+                );
+                return Err(alloc::boxed::Box::new(response_of_search(refusal, search)));
+            }
+        }
+    }
+    Ok(())
+}
+
+fn run_ranked_candidate(
+    search: &mut Search<'_>,
+    candidate: &QueueCandidate,
+    observer: &mut Option<&mut CandidateOutcomeObserver<'_>>,
+    identity: &RankingIdentity,
+    monotonic_now_ns: fn() -> u64,
+) -> Result<(), alloc::boxed::Box<Response>> {
+    debug_assert!(candidate.ordinal < MAX_CANDIDATES);
+    debug_assert!(encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
+    let before = observer
+        .is_some()
+        .then(|| resource_snapshot(&search.ledger));
+    let started_ns = if before.is_some() {
+        monotonic_now_ns()
+    } else {
+        0
+    };
+    let result = search.candidate(&candidate.sequence);
+    let cost = before.map_or_else(CandidateAttemptCost::default, |before| {
+        candidate_attempt_cost(
+            search,
+            &before,
+            started_ns,
+            candidate.feature_extraction_ns,
+            candidate.scorer_elapsed_ns,
+            monotonic_now_ns,
+        )
+    });
+    match result {
+        Ok(Step::Admitted(accepted)) => {
+            let fixture_agreement = search.fixtures.as_ref().map(|fixtures| fixtures.agreement);
+            observe_candidate(
+                observer,
+                CandidateObservation {
+                    binding: Some((
+                        identity.request,
+                        candidate.identity.unwrap_or_else(|| {
+                            candidate_identity(
+                                search.library,
+                                candidate.ordinal,
+                                &candidate.sequence,
+                            )
+                        }),
+                    )),
+                    ordinal: candidate.ordinal,
+                    sequence: &candidate.sequence,
+                    accepted: true,
+                    refusal_class: None,
+                    fixture_agreement,
+                    cost,
+                },
+            );
+            let report = search.report(1);
+            Err(alloc::boxed::Box::new(Response::Accepted {
+                accepted,
+                report: alloc::boxed::Box::new(report),
+            }))
+        }
+        Ok(Step::Refused(refusal)) => {
+            let refusal_class = refusal.class;
+            observe_candidate(
+                observer,
+                CandidateObservation {
+                    binding: Some((
+                        identity.request,
+                        candidate.identity.unwrap_or_else(|| {
+                            candidate_identity(
+                                search.library,
+                                candidate.ordinal,
+                                &candidate.sequence,
+                            )
+                        }),
+                    )),
+                    ordinal: candidate.ordinal,
+                    sequence: &candidate.sequence,
+                    accepted: false,
+                    refusal_class: Some(refusal_class),
+                    fixture_agreement: None,
+                    cost,
+                },
+            );
+            search.rejected = search.rejected.saturating_add(1);
+            if let Err(exhausted) = record(&mut search.ledger, &mut search.diagnostics, refusal) {
+                return Err(alloc::boxed::Box::new(response_of_search(
+                    exhausted, search,
+                )));
+            }
+            Ok(())
+        }
+        Err(refusal) => {
+            let refusal_class = refusal.class;
+            observe_candidate(
+                observer,
+                CandidateObservation {
+                    binding: Some((
+                        identity.request,
+                        candidate.identity.unwrap_or_else(|| {
+                            candidate_identity(
+                                search.library,
+                                candidate.ordinal,
+                                &candidate.sequence,
+                            )
+                        }),
+                    )),
+                    ordinal: candidate.ordinal,
+                    sequence: &candidate.sequence,
+                    accepted: false,
+                    refusal_class: Some(refusal_class),
+                    fixture_agreement: None,
+                    cost,
+                },
+            );
+            Err(alloc::boxed::Box::new(response_of_search(refusal, search)))
+        }
+    }
 }
 
 /// Run one bounded one-hole completion request.
@@ -4117,54 +5458,617 @@ pub fn complete(
     monotonic_now_ns: fn() -> u64,
 ) -> Response {
     let started = monotonic_now_ns();
-    let mut response = complete_inner(namespace, library, request);
+    let mut ranking = RankingStatus {
+        disposition: RankingDisposition::NotEvaluated,
+        invalid_scores: 0,
+        identity: None,
+        ranked_candidates: alloc::vec::Vec::new(),
+    };
+    let mut response = complete_inner(
+        namespace,
+        library,
+        request,
+        CompletionControl {
+            ranker: None,
+            observer: None,
+            stored: None,
+            monotonic_now_ns,
+        },
+        &mut ranking,
+    );
     response.report_mut().total_latency_ns = monotonic_now_ns().saturating_sub(started);
     response
 }
 
-fn complete_inner(namespace: &super::Session, library: &Library, request: &Request) -> Response {
+/// Run the deterministic shortlex completion while streaming attempted
+/// candidate outcomes to a caller-owned observer.
+pub fn complete_observed(
+    namespace: &super::Session,
+    library: &Library,
+    request: &Request,
+    observer: &mut CandidateOutcomeObserver<'_>,
+    monotonic_now_ns: fn() -> u64,
+) -> Response {
+    let started = monotonic_now_ns();
+    let mut ranking = RankingStatus {
+        disposition: RankingDisposition::NotEvaluated,
+        invalid_scores: 0,
+        identity: None,
+        ranked_candidates: alloc::vec::Vec::new(),
+    };
+    let mut response = complete_inner(
+        namespace,
+        library,
+        request,
+        CompletionControl {
+            ranker: None,
+            observer: Some(observer),
+            stored: None,
+            monotonic_now_ns,
+        },
+        &mut ranking,
+    );
+    response.report_mut().total_latency_ns = monotonic_now_ns().saturating_sub(started);
+    response
+}
+
+/// Run completion with a bounded untrusted scorer that can only reorder the
+/// canonical finite queue. Every selected candidate follows the ordinary
+/// #73 re-admission path; scorer failures use fixed shortlex.
+pub fn complete_ranked(
+    namespace: &super::Session,
+    library: &Library,
+    request: &Request,
+    ranker: &mut RankerSession<'_>,
+    monotonic_now_ns: fn() -> u64,
+) -> RankedResponse {
+    let started = monotonic_now_ns();
+    let mut ranking = RankingStatus {
+        disposition: RankingDisposition::NotEvaluated,
+        invalid_scores: 0,
+        identity: None,
+        ranked_candidates: alloc::vec::Vec::new(),
+    };
+    let mut response = complete_inner(
+        namespace,
+        library,
+        request,
+        CompletionControl {
+            ranker: Some(ranker),
+            observer: None,
+            stored: None,
+            monotonic_now_ns,
+        },
+        &mut ranking,
+    );
+    debug_assert!(ranking.invalid_scores <= MAX_CANDIDATES);
+    debug_assert!(
+        ranking.disposition != RankingDisposition::Applied || ranking.invalid_scores == 0
+    );
+    response.report_mut().total_latency_ns = monotonic_now_ns().saturating_sub(started);
+    RankedResponse {
+        response,
+        disposition: ranking.disposition,
+        invalid_scores: ranking.invalid_scores,
+        identity: ranking.identity,
+        ranked_candidates: ranking.ranked_candidates,
+    }
+}
+
+/// Ranked completion with the same candidate-outcome stream as
+/// [`complete_observed`].
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; this one-shot public API explicitly binds namespace, immutable library/request, scorer, consumer observer and monotonic clock trust boundaries"
+)]
+pub fn complete_ranked_observed(
+    namespace: &super::Session,
+    library: &Library,
+    request: &Request,
+    ranker: &mut RankerSession<'_>,
+    observer: &mut CandidateOutcomeObserver<'_>,
+    monotonic_now_ns: fn() -> u64,
+) -> RankedResponse {
+    let started = monotonic_now_ns();
+    let mut ranking = RankingStatus {
+        disposition: RankingDisposition::NotEvaluated,
+        invalid_scores: 0,
+        identity: None,
+        ranked_candidates: alloc::vec::Vec::new(),
+    };
+    let mut response = complete_inner(
+        namespace,
+        library,
+        request,
+        CompletionControl {
+            ranker: Some(ranker),
+            observer: Some(observer),
+            stored: None,
+            monotonic_now_ns,
+        },
+        &mut ranking,
+    );
+    debug_assert!(ranking.invalid_scores <= MAX_CANDIDATES);
+    debug_assert!(
+        ranking.disposition != RankingDisposition::Applied || ranking.invalid_scores == 0
+    );
+    response.report_mut().total_latency_ns = monotonic_now_ns().saturating_sub(started);
+    RankedResponse {
+        response,
+        disposition: ranking.disposition,
+        invalid_scores: ranking.invalid_scores,
+        identity: ranking.identity,
+        ranked_candidates: ranking.ranked_candidates,
+    }
+}
+
+/// Replay a stored candidate-ID ordering without invoking a model. A stale
+/// request or malformed candidate set falls back to the canonical shortlex
+/// queue; every attempted proposal still uses ordinary #73 re-admission.
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; this replay entry point binds the request, immutable library, persisted ranking, current model identity, optional consumer observer and monotonic clock"
+)]
+pub fn complete_replayed<'observer>(
+    namespace: &super::Session,
+    library: &Library,
+    request: &Request,
+    stored_ranking: &StoredRanking,
+    expected_model_identity: [u8; REVISION_BYTES],
+    observer: Option<&'observer mut CandidateOutcomeObserver<'observer>>,
+    monotonic_now_ns: fn() -> u64,
+) -> RankedResponse {
+    let started = monotonic_now_ns();
+    let mut ranking = RankingStatus {
+        disposition: RankingDisposition::NotEvaluated,
+        invalid_scores: 0,
+        identity: None,
+        ranked_candidates: alloc::vec::Vec::new(),
+    };
+    let mut response = complete_inner(
+        namespace,
+        library,
+        request,
+        CompletionControl {
+            ranker: None,
+            observer,
+            stored: Some(StoredRankingControl {
+                ranking: stored_ranking,
+                expected_model_identity,
+            }),
+            monotonic_now_ns,
+        },
+        &mut ranking,
+    );
+    response.report_mut().total_latency_ns = monotonic_now_ns().saturating_sub(started);
+    RankedResponse {
+        response,
+        disposition: ranking.disposition,
+        invalid_scores: ranking.invalid_scores,
+        identity: ranking.identity,
+        ranked_candidates: ranking.ranked_candidates,
+    }
+}
+
+fn charge_ranking_queue(search: &mut Search<'_>, queue: &CandidateQueue) -> Result<(), Refusal> {
+    let bounded_candidate_count = queue
+        .candidates
+        .len()
+        .saturating_add(usize::from(queue.next_candidate.is_some()));
+    let queue_work_count = u32::try_from(bounded_candidate_count)
+        .map_err(|_| {
+            internal(
+                Location::field("ranking.queue"),
+                "candidate queue exceeds profile",
+            )
+        })?
+        .saturating_mul(RANKING_QUEUE_WORK);
+    search.ledger.charge(
+        Resource::CheckingWork,
+        RANKING_CONTEXT_WORK,
+        Location::field("ranking.identity"),
+    )?;
+    search.ledger.charge(
+        Resource::CheckingWork,
+        queue_work_count,
+        Location::field("ranking.queue"),
+    )
+}
+
+fn ranked_candidate_ids(queue: &CandidateQueue, library: &Library) -> alloc::vec::Vec<CandidateId> {
+    queue
+        .candidates
+        .iter()
+        .map(|candidate| {
+            candidate.identity.unwrap_or_else(|| {
+                candidate_identity(library, candidate.ordinal, &candidate.sequence)
+            })
+        })
+        .collect()
+}
+
+fn replay_candidate_queue(
+    search: &mut Search<'_>,
+    stored: &StoredRankingControl<'_>,
+) -> Result<(CandidateQueue, RankingDisposition, RankingIdentity), Refusal> {
+    let mut queue = candidate_queue(search.library, search.ledger.limits().candidates);
+    let identity = ranking_identity(
+        search.request,
+        search.library,
+        &queue,
+        Some(stored.expected_model_identity),
+    );
+    charge_ranking_queue(search, &queue)?;
+    let bounded_candidate_count = queue
+        .candidates
+        .len()
+        .saturating_add(usize::from(queue.next_candidate.is_some()));
+    let candidate_id_work = u32::try_from(bounded_candidate_count)
+        .map_err(|_| {
+            internal(
+                Location::field("ranking.queue"),
+                "candidate queue exceeds profile",
+            )
+        })?
+        .saturating_mul(RANKING_CANDIDATE_ID_WORK);
+    search.ledger.charge(
+        Resource::CheckingWork,
+        candidate_id_work,
+        Location::field("ranking.candidate_identity"),
+    )?;
+    if identity != stored.ranking.identity {
+        return Ok((queue, RankingDisposition::FallbackStaleProvenance, identity));
+    }
+    if stored.ranking.ordered_candidates.len() != queue.candidates.len() {
+        return Ok((queue, RankingDisposition::FallbackInvalidResponse, identity));
+    }
+    if usize::try_from(stored.ranking.invalid_scores).unwrap_or(usize::MAX) > queue.candidates.len()
+        || (!queue.candidates.is_empty()
+            && stored.ranking.invalid_scores
+                == u32::try_from(queue.candidates.len()).unwrap_or(u32::MAX))
+    {
+        return Ok((queue, RankingDisposition::FallbackInvalidResponse, identity));
+    }
+    let mut positions = alloc::vec![usize::MAX; queue.candidates.len()];
+    for (position, candidate_id) in stored.ranking.ordered_candidates.iter().enumerate() {
+        let Some(index) = usize::try_from(candidate_id.ordinal).ok() else {
+            return Ok((queue, RankingDisposition::FallbackInvalidResponse, identity));
+        };
+        let Some(candidate) = queue.candidates.get_mut(index) else {
+            return Ok((queue, RankingDisposition::FallbackInvalidResponse, identity));
+        };
+        if positions.get(index).copied() != Some(usize::MAX)
+            || candidate.ordinal != candidate_id.ordinal
+            || candidate_identity(search.library, candidate.ordinal, &candidate.sequence)
+                != *candidate_id
+        {
+            return Ok((queue, RankingDisposition::FallbackInvalidResponse, identity));
+        }
+        candidate.identity = Some(*candidate_id);
+        if let Some(slot) = positions.get_mut(index) {
+            *slot = position;
+        }
+    }
+    if positions.contains(&usize::MAX) {
+        return Ok((queue, RankingDisposition::FallbackInvalidResponse, identity));
+    }
+    queue.candidates.sort_unstable_by_key(|candidate| {
+        usize::try_from(candidate.ordinal)
+            .ok()
+            .and_then(|index| positions.get(index).copied())
+            .unwrap_or(usize::MAX)
+    });
+    Ok((queue, RankingDisposition::Applied, identity))
+}
+
+fn rank_candidate_queue(
+    search: &mut Search<'_>,
+    session: &mut RankerSession<'_>,
+    measure_candidate_time: bool,
+    monotonic_now_ns: fn() -> u64,
+) -> Result<(CandidateQueue, RankingDisposition, u32, RankingIdentity), Refusal> {
+    let candidate_limit_count = search.ledger.limits().candidates;
+    debug_assert!(candidate_limit_count <= MAX_CANDIDATES);
+    let mut queue = candidate_queue(search.library, candidate_limit_count);
+    debug_assert!(encoded_len(queue.candidates.len()) <= u64::from(MAX_CANDIDATES));
+    let identity = ranking_identity(
+        search.request,
+        search.library,
+        &queue,
+        Some(session.expected_model_identity),
+    );
+    charge_ranking_queue(search, &queue)?;
+    if session.ranker.model_identity() != session.expected_model_identity
+        || !session.ranker.provenance_matches(&identity)
+    {
+        return Ok((
+            queue,
+            RankingDisposition::FallbackStaleProvenance,
+            0,
+            identity,
+        ));
+    }
+    let (invalid_scores, fallback) = score_candidate_queue(
+        search,
+        &mut queue,
+        session,
+        &identity,
+        measure_candidate_time,
+        monotonic_now_ns,
+    )?;
+    if let Some(disposition) = fallback {
+        return Ok((queue, disposition, invalid_scores, identity));
+    }
+    let disposition = sort_ranked_candidates(&mut queue, invalid_scores);
+    Ok((queue, disposition, invalid_scores, identity))
+}
+
+fn score_candidate_queue(
+    search: &mut Search<'_>,
+    queue: &mut CandidateQueue,
+    session: &mut RankerSession<'_>,
+    identity: &RankingIdentity,
+    measure_candidate_time: bool,
+    monotonic_now_ns: fn() -> u64,
+) -> Result<(u32, Option<RankingDisposition>), Refusal> {
+    debug_assert!(encoded_len(queue.candidates.len()) <= u64::from(MAX_CANDIDATES));
+    debug_assert!(queue.candidates.iter().all(|candidate| {
+        encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS)
+    }));
+    let mut invalid_scores = 0u32;
+    for candidate in &mut queue.candidates {
+        let candidate_identity =
+            candidate_identity(search.library, candidate.ordinal, &candidate.sequence);
+        candidate.identity = Some(candidate_identity);
+        search.ledger.charge(
+            Resource::CheckingWork,
+            RANKING_CANDIDATE_ID_WORK,
+            Location::at("ranking.candidate_identity", candidate.ordinal),
+        )?;
+        search.ledger.charge(
+            Resource::CheckingWork,
+            FEATURE_EXTRACTION_WORK,
+            Location::at("ranking.features", candidate.ordinal),
+        )?;
+        let feature_started_ns = if measure_candidate_time {
+            monotonic_now_ns()
+        } else {
+            0
+        };
+        let feature_result = candidate_features(search, candidate);
+        if measure_candidate_time {
+            candidate.feature_extraction_ns = monotonic_now_ns().saturating_sub(feature_started_ns);
+        }
+        let features = match feature_result {
+            Ok(features) => features,
+            Err(failure) => {
+                let fallback = if failure == ScorerFailure::StaleProvenance {
+                    RankingDisposition::FallbackStaleProvenance
+                } else {
+                    RankingDisposition::FallbackScorerFailure
+                };
+                return Ok((invalid_scores, Some(fallback)));
+            }
+        };
+        search.ledger.charge(
+            Resource::CheckingWork,
+            RANKING_SCORE_WORK,
+            Location::at("ranking.score", candidate.ordinal),
+        )?;
+        let score_request = CandidateScoreRequest {
+            request_identity: identity.request,
+            model_identity: session.expected_model_identity,
+            candidate: candidate_identity,
+            features: &features,
+        };
+        let score_started_ns = if measure_candidate_time {
+            monotonic_now_ns()
+        } else {
+            0
+        };
+        let score_result = session.ranker.score(&score_request);
+        if measure_candidate_time {
+            candidate.scorer_elapsed_ns = monotonic_now_ns().saturating_sub(score_started_ns);
+        }
+        match score_result {
+            Ok(response)
+                if response.request_identity == identity.request
+                    && response.model_identity == session.expected_model_identity
+                    && response.candidate == candidate_identity =>
+            {
+                let score = response.score;
+                if !score.is_finite() {
+                    invalid_scores = invalid_scores.saturating_add(1);
+                }
+                candidate.score = Some(score);
+            }
+            Ok(response) if response.model_identity != session.expected_model_identity => {
+                let _ = response;
+                return Ok((
+                    invalid_scores,
+                    Some(RankingDisposition::FallbackStaleProvenance),
+                ));
+            }
+            Ok(_) => {
+                return Ok((
+                    invalid_scores,
+                    Some(RankingDisposition::FallbackInvalidResponse),
+                ));
+            }
+            Err(failure) => {
+                let fallback = match failure {
+                    ScorerFailure::StaleProvenance => RankingDisposition::FallbackStaleProvenance,
+                    ScorerFailure::InvalidResponse => RankingDisposition::FallbackInvalidResponse,
+                    ScorerFailure::Unavailable
+                    | ScorerFailure::InvalidFeature
+                    | ScorerFailure::Evaluation => RankingDisposition::FallbackScorerFailure,
+                };
+                return Ok((invalid_scores, Some(fallback)));
+            }
+        }
+    }
+    Ok((invalid_scores, None))
+}
+
+fn sort_ranked_candidates(queue: &mut CandidateQueue, invalid_scores: u32) -> RankingDisposition {
+    debug_assert!(encoded_len(queue.candidates.len()) <= u64::from(MAX_CANDIDATES));
+    debug_assert!(u32::try_from(queue.candidates.len()).is_ok_and(|count| invalid_scores <= count));
+    if !queue.candidates.is_empty()
+        && u32::try_from(queue.candidates.len()).is_ok_and(|count| invalid_scores == count)
+    {
+        return RankingDisposition::FallbackAllInvalidScores;
+    }
+    let disposition = if invalid_scores == 0 {
+        RankingDisposition::Applied
+    } else {
+        RankingDisposition::AppliedWithInvalidScores
+    };
+    queue.candidates.sort_unstable_by(|left, right| {
+        let left_score = left.score.unwrap_or(f32::NAN);
+        let right_score = right.score.unwrap_or(f32::NAN);
+        match (left_score.is_finite(), right_score.is_finite()) {
+            (true, true) => right_score
+                .partial_cmp(&left_score)
+                .unwrap_or(core::cmp::Ordering::Equal)
+                .then_with(|| left.ordinal.cmp(&right.ordinal)),
+            (true, false) => core::cmp::Ordering::Less,
+            (false, true) => core::cmp::Ordering::Greater,
+            (false, false) => left.ordinal.cmp(&right.ordinal),
+        }
+    });
+    disposition
+}
+
+fn initialize_search<'a>(
+    namespace: &'a super::Session,
+    library: &'a Library,
+    request: &'a Request,
+) -> Result<Search<'a>, Response> {
     let mut ledger = Ledger::new(request.budget.lowered(&Budget::PROFILE));
     debug_assert!(ledger.remaining(Resource::CheckingWork) <= MAX_CHECKING_WORK);
     let flat = match check_request(request, library, &mut ledger) {
         Ok(flat) => flat,
-        Err(refusal) => return response_of(refusal, &ledger),
+        Err(refusal) => return Err(response_of(refusal, &ledger)),
     };
-    if let Err(refusal) = analyze_editor_context(namespace, request, &mut ledger) {
-        return response_of(refusal, &ledger);
-    }
+    let hole_context = match analyze_editor_context(namespace, request, &mut ledger) {
+        Ok(context) => context,
+        Err(refusal) => return Err(response_of(refusal, &ledger)),
+    };
     let mut prefix = Replay::new(&request.task.stack_in);
     let up_to = match flat.elements.get(..flat.hole) {
         Some(slice) => slice,
         None => {
-            return response_of(
+            return Err(response_of(
                 internal(
                     Location::field("request.editor"),
                     "hole index is outside the tree",
                 ),
                 &ledger,
-            )
+            ));
         }
     };
     if let Err(refusal) = prefix.run(up_to, None, &mut ledger, false, Location::field("editor")) {
-        return response_of(refusal, &ledger);
+        return Err(response_of(refusal, &ledger));
     }
     let stack_in = prefix.stack.clone();
-    let mut search = Search {
+    debug_assert!(stack_in.len() <= MAX_STACK_HEIGHT as usize);
+    debug_assert!(flat.hole <= flat.elements.len());
+    Ok(Search {
         namespace,
         library,
         request,
         flat,
+        hole_context,
         stack_in,
         ledger,
         diagnostics: alloc::vec::Vec::new(),
         rejected: 0,
         checked_candidates: 0,
         fixtures: None,
+    })
+}
+
+fn complete_inner(
+    namespace: &super::Session,
+    library: &Library,
+    request: &Request,
+    control: CompletionControl<'_, '_, '_, '_>,
+    ranking: &mut RankingStatus,
+) -> Response {
+    let mut search = match initialize_search(namespace, library, request) {
+        Ok(search) => search,
+        Err(response) => return response,
     };
+    debug_assert!(search.request.budget.candidates <= MAX_CANDIDATES);
+    let monotonic_now_ns = control.monotonic_now_ns;
+    let mut observer = control.observer;
+    let mut observation_identity = None;
+    if let Some(ranker) = control.ranker {
+        let (queue, status, invalid, identity) =
+            match rank_candidate_queue(&mut search, ranker, observer.is_some(), monotonic_now_ns) {
+                Ok(ranked) => ranked,
+                Err(refusal) => return response_of_search(refusal, &search),
+            };
+        ranking.disposition = status;
+        ranking.invalid_scores = invalid;
+        ranking.identity = Some(identity.clone());
+        ranking.ranked_candidates = ranked_candidate_ids(&queue, library);
+        debug_assert!(ranking.invalid_scores <= MAX_CANDIDATES);
+        if let Err(response) = run_candidate_queue(
+            &mut search,
+            &queue,
+            &mut observer,
+            &identity,
+            monotonic_now_ns,
+        ) {
+            return *response;
+        }
+        return Response::NoResult {
+            report: alloc::boxed::Box::new(search.report(0)),
+        };
+    }
+    if let Some(stored) = control.stored {
+        let (queue, disposition, identity) = match replay_candidate_queue(&mut search, &stored) {
+            Ok(replayed) => replayed,
+            Err(refusal) => return response_of_search(refusal, &search),
+        };
+        ranking.disposition = disposition;
+        if disposition == RankingDisposition::Applied {
+            ranking.invalid_scores = stored.ranking.invalid_scores;
+        }
+        ranking.identity = Some(identity.clone());
+        ranking.ranked_candidates = ranked_candidate_ids(&queue, library);
+        if let Err(response) = run_candidate_queue(
+            &mut search,
+            &queue,
+            &mut observer,
+            &identity,
+            monotonic_now_ns,
+        ) {
+            return *response;
+        }
+        return Response::NoResult {
+            report: alloc::boxed::Box::new(search.report(0)),
+        };
+    }
+    if observer.is_some() {
+        let queue = candidate_queue(library, search.ledger.limits().candidates);
+        observation_identity = Some(ranking_identity(request, library, &queue, None));
+    }
     let order = canonical_order(library);
+    debug_assert!(encoded_len(order.len()) <= u64::from(MAX_LIBRARY_ENTRIES));
     let mut chunk_count = 0u32;
+    let mut next_ordinal = 0u32;
     while chunk_count <= MAX_COMPOSED_CHUNKS {
-        if let Err(response) = run_length(&mut search, &order, chunk_count) {
+        if let Err(response) = run_length(
+            &mut search,
+            &order,
+            chunk_count,
+            &mut next_ordinal,
+            &mut observer,
+            observation_identity.as_ref(),
+            monotonic_now_ns,
+        ) {
             return *response;
         }
         chunk_count = chunk_count.saturating_add(1);

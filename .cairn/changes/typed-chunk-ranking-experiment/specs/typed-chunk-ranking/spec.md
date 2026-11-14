@@ -156,9 +156,29 @@ Latency MUST be monotonic request-to-outcome latency including feature
 extraction, scorer evaluation, queue management, cold and warm model loading,
 source preparation, checking, behavioral evaluation and report encoding. Median
 and p95 latency and paired task-level deltas MUST be retained. Offline
-training MUST separately report elapsed CPU time, rows, optimizer steps, model
+training MUST separately report elapsed wall time, rows, optimizer steps, model
 selection time, parameter/state bytes and peak memory; it MUST NOT be hidden in
 inference or uncharged savings.
+
+The primary total charged work MUST be exactly `Report.checking_work` in
+shared-budget units. Other resource dimensions MUST be reported separately,
+not summed across unlike units. A work or retained-memory quantity that the
+observer cannot measure MUST be `null` with an explicit reason, never an
+invented zero. A lower-bound serialized-payload proxy MUST NOT satisfy the
+retained-memory GO condition. The maximum expanded-program size MUST be
+reported as the maximum per-admission expanded-node delta; primitive-only
+expansion size MUST be `null` when its preparation path exposes no such
+counter. Offline training memory MUST distinguish measured scratch/state
+bytes from an unavailable process/allocator peak.
+
+Training rows MUST retain refused attempts and exact immutable-library
+candidate provenance for every chunk-backed row, including re-admission
+timing; the empty-sequence row MUST explicitly identify that it has no library
+entry. Reports MUST separate
+teacher-assisted training labels, teacher-call count and verification cost
+from student-only inference; held-out inference MUST make zero teacher calls.
+The training artifact MUST contain no held-out tasks or expected fixture
+values.
 
 Controls MUST include NaN/infinity scores and invalid features; reverse,
 always-last and equal-score adversarial rankings; stale model/graph/feature/
