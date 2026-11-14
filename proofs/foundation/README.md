@@ -220,6 +220,7 @@ Status words:
 | Encoded-layout claim/cost controls (issue #80, unit 3) | `NobleFoundation.PackedLayoutCorpus.nodesOnlyEncoding_is_not_injective`, `NobleFoundation.PackedLayoutCorpus.finiteFixtureLookup_misses_model_accepted_extension`, `NobleFoundation.PackedLayoutCorpus.node_count_does_not_measure_encoded_input` | Generated finite-model controls only; see verification/complexity-pilot/README.md for Rust pass/accounting inventory, metadata trust boundary, exclusions, empirical context and the isolated toolchain pins | control claims **proved** in Lean; asymptotic cost table **documented**, not a costed-machine theorem; Rust refinement **open** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
 | Collision-safe cache lookup and length-prefixed subject encoding | `NobleFoundation.CacheLookup.lookup_some_implies_manifest_eq`, `colliding_index_equal`, `colliding_index_wrong_manifest_misses`, `colliding_index_hit_skips_wrong_manifest`, `matching_entry_hits`, `stale_manifest_entry_refused`, `corrupt_entry_refused`, `lookup_after_erase_subset`, `lengthBytes_injective_of_lt`, `encodeParts_injective_of_lt`, `changed_field_changes_encoding`, `naive_concat_field_collision` | model only; `Subject::derive` byte correspondence and all cache integration boundaries remain open | **proved** (model) |
+| Arbitrary-run soundness of the bounded matrix size-change criterion (issue #101) | `NobleFoundation.SizeChangeSound.matrix_closure_sct_terminates_classical`, `NobleFoundation.SizeChangeSound.infinite_pair_homogeneous` | the exact NobleM2.SizeChange certificate and run structures; no Rust classifier or source-execution correspondence | model **proved** with the foundation axiom set; a choice-free proof in the strict size-change family and implementation correspondence remain **open** |
 
 | Bounded typed program synthesis with counterexample-guided refinement (issue #116) | `NobleFoundation.Synthesis.not_certifiable_of_refuted`, `NobleFoundation.Synthesis.arithCommuted_certified`, `NobleFoundation.Synthesis.arithSubtract_certified`, `NobleFoundation.Synthesis.arithScaled_certified`, `NobleFoundation.Synthesis.overBoundControl_certified`, `NobleFoundation.Synthesis.bitOr_refused_witness_refutes`, `NobleFoundation.Synthesis.bitOr_refused_not_certifiable`, `NobleFoundation.Synthesis.bitXor_refused_witness_refutes`, `NobleFoundation.Synthesis.bitXor_refused_not_certifiable` | `verification/synthesis/cegis.mjs` and finite re-admission through the existing CLI; no production synthesis implementation theorem | model **proved** (four affine graph-pair certificates and two exact-witness refusal controls); bounded search/refinement and held-out behavior **tested** only on the frozen tasks and budgets; nonlinear, Bool, 0/1-domain and list cases are **unproven** or run-only; general synthesis and source-to-model refinement remain **open** |
 
@@ -3866,11 +3867,34 @@ corpus evidence; it does not close these universal claims.
 
 The clean foundation receipt for this model is attached with unit 1.
 
+## Classical arbitrary-run size-change soundness (issue #101, phase 1)
+
+`NobleFoundation.SizeChangeSound.matrix_closure_sct_terminates_classical` proves that every
+`MatrixSiteRun` satisfying a `MatrixClosureCertificate`'s site matrices is impossible. The module
+imports the existing NobleM2 size-change certificate and run types directly through the foundation
+Lake project; these are not restated or connected through a second equivalence model.
+
+The proof colors an increasing pair of run positions by the matrix product over the intervening
+segment. The finite-color Ramsey lemma
+`NobleFoundation.SizeChangeSound.infinite_pair_homogeneous` gives a strictly increasing homogeneous
+sequence. Segment concatenation makes its common graph idempotent, and the exact closure certificate
+places that graph in the generated closure. Its checked strict diagonal then decreases one
+natural-valued measure at each selected step, contradicting the impossibility of an infinite strict
+descent in Nat. The theorem's transitive axioms are within the foundation allow-list
+`{propext, Classical.choice, Quot.sound}`; `Classical.choice` is needed for the infinite Ramsey
+construction.
+
+**Open, and deliberately not closed:** a choice-free arbitrary-run theorem inside the strict
+`SizeChange*.lean` family. That lane still accepts only `propext` and `Quot.sound`, and the
+periodic-run theorem remains its in-family result. The foundation result is about the exact abstract
+certificate/run model, not the Rust classifier's correspondence to source execution, list lengths,
+wrapped I64 counters, or mutual recursion.
+
 ## Status by phase
 
 | Phase | Done (checked) | Open |
 |---|---|---|
-| 1 | whitelist/representation/observation table; signed ZMod/BitVec/K-NUM-01 correspondence; universal add/sub/mul with preserved typed prefix and orientation; literal refusal vs wrapping (spec and transcription); lifting to sequences and quote/compose/run; regressions; inventory and axiom audit | Rust frontend ↔ transcription refinement; MC1 `CodeTyped` ↔ kernel acceptance |
+| 1 | whitelist/representation/observation table; signed ZMod/BitVec/K-NUM-01 correspondence; universal add/sub/mul with preserved typed prefix and orientation; literal refusal vs wrapping (spec and transcription); lifting to sequences and quote/compose/run; regressions; issue #101 arbitrary-run soundness for checked matrix runs under the foundation axiom set; inventory and axiom audit | Rust frontend ↔ transcription refinement; MC1 `CodeTyped` ↔ kernel acceptance; choice-free arbitrary-run SCT proof in the strict size-change family and source/model correspondence |
 | 3 | one example from Lean spec to acquired bytes (opt off/on), helper model, ACORR-mapped refusals | E5 lowering, E7 assembler, E8 optimizer, E10 loader/engine, E12 PAA-1 envelope, ACORR-CASE-09, quote/compose/run helper models |
 | 4 | seeded differential comparator; separate fixed-input scalar if/case EMI; Lean-checked expectations, opt off/on, shrinking and replay, mutation controls, checker lanes, source-bound receipts, `--verify`, retained in-repo receipts, `ci.sh` recipe | Nix-sandbox CI check (see "CI": networked Mathlib cache, absent offline inputs, host services for the slice); rebuilt Mathlib `.olean` files; Rust renderer/lowering refinement and universal compiler equivalence |
 | 2 | MC1: preservation and primitive progress, pure laws and negative cases. Effects/resource layer: preservation, total progress, effect soundness for every prefix including denied/failed, ownership preservation with declared transitions, resource-free capture, resource negative cases | the whole language and implementation, abnormal cleanup, aggregates/borrowing, effectful equivalence laws, normalization |
