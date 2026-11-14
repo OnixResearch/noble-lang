@@ -1734,14 +1734,18 @@ fn issue125_structured_interaction_matrix() {
             "semantic mutant must fail its selected property after reaching the divergence"
         );
     }
-    assert!(
-        invalid_refused,
-        "one-premise guard refusal control must be observed by every leg"
-    );
-    assert!(
-        invalid_index_refused,
-        "one-premise index-fact refusal must be observed by every leg"
-    );
+    // The guard-edge mutant deliberately invalidates both guard-based refusal
+    // controls; retain their observations, but keep the kill bound to its target.
+    if mutation_id.as_deref() != Some("p2-inverted-guard-edge") {
+        assert!(
+            invalid_refused,
+            "one-premise guard refusal control must be observed by every leg"
+        );
+        assert!(
+            invalid_index_refused,
+            "one-premise index-fact refusal must be observed by every leg"
+        );
+    }
     assert!(
         earlier_refusal_rejected_by_shrinker,
         "shrinker accepted an earlier input-fact refusal"
