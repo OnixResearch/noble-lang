@@ -30,7 +30,9 @@ const stable = value => JSON.stringify(value);
 
 const signed = ['--signed-self-recursion', '--retained-source-bytes', '262144'];
 const profile = 'Signed-Declared-Text-v1';
-const sizeChangeIds = ['REC-SC-01', 'REC-SC-02', 'REC-SC-03', 'REC-SC-04'];
+const sizeChangeIds = [
+  'REC-SC-01', 'REC-SC-02', 'REC-SC-03', 'REC-SC-04', 'REC-SC-05', 'REC-SC-06', 'REC-SC-07',
+];
 const caseFlags = ['--framed', '--declared-modules', '--text-byte-cursor', ...signed,
   '--size-change-evidence', '--size-change-certificate', '<new-directory>'];
 
@@ -117,7 +119,7 @@ function importClosure(rootModule) {
 
 /// Build the isolated Lean project that gives the certificate its library.
 function buildLibrary(leanBin) {
-  const closure = importClosure('NobleM2.SizeChangeFixtures');
+  const closure = importClosure('NobleM2.SizeChangeSCT');
   const project = join(out, 'lean');
   mkdirSync(join(project, 'NobleM2'), { recursive: true });
   for (const name of closure) {
@@ -148,10 +150,21 @@ function checkCertificate(leanBin, library, certificate) {
 function observed(entry, expected) {
   const record = {
     definition: entry.definition, measures: entry.measures, verdict: entry.verdict,
-    sites: (entry.sites ?? []).map(site => ({ arguments: site.arguments, guarded: site.guarded })),
+    sites: (entry.sites ?? []).map(site => ({
+      arguments: site.arguments, guarded: site.guarded, graph: site.graph,
+    })),
   };
-  if (entry.verdict === 'accepted') record.measure = entry.measure;
-  if (entry.verdict === 'refused') record.witnesses = entry.witnesses;
+  if (entry.verdict === 'accepted') {
+    if (entry.shared_measure !== undefined) record.measure = entry.shared_measure;
+    record.closure = entry.closure;
+    record.strict_witnesses = entry.strict_witnesses;
+  }
+  if (entry.verdict === 'refused') {
+    record.witnesses = entry.witnesses;
+    record.closure = entry.closure;
+    record.idempotent_cycle = entry.idempotent_cycle;
+  }
+  if (entry.verdict === 'bound-exceeded') record.bound = entry.bound;
   const wanted = {};
   for (const key of Object.keys(expected)) wanted[key] = record[key];
   return wanted;
@@ -175,7 +188,7 @@ function assertDefinition(report, id, expected, leanChecked = false) {
   assertLinked(report, id);
   const field = report.size_change;
   requireThat(field?.schema === 'noble-size-change/v1', `${id}: missing size_change field`);
-  requireThat(field.criterion === 'shared-measure: one declared measure decreases at every self-call site'
+  requireThat(field.criterion === 'bounded-closure: every idempotent call-graph matrix has a strict diagonal'
     && field.profile === 'list structure and guarded i64 counters under one stack prefix',
   `${id}: unexpected criterion or profile`);
   requireThat(leanChecked ? field.lean_check?.passed === true : field.lean_check === null,
@@ -286,7 +299,8 @@ function main() {
   const before = state();
   requireThat(before.status === '', `the source worktree is dirty:\n${before.status}`);
   const cases = loadCases();
-  mkdirSync(join(out, 'evidence'));
+  const evidenceRoot = join(out, 'evidence', before.commit);
+  mkdirSync(evidenceRoot, { recursive: true });
   const version = run('lean-version', join(leanBin, 'lean'), ['--version'], { env }).stdout.trim();
   requireThat(version.includes('version 4.35.0'), `the selected Lean is not 4.35.0: ${version}`);
   const { closure, library } = buildLibrary(leanBin);
@@ -297,8 +311,8 @@ function main() {
   const signedBase = ['session', '--framed', '--declared-modules', '--text-byte-cursor', ...signed];
   const evidenceBase = [...signedBase, '--size-change-evidence'];
   const results = cases.map(entry => {
-    const plain = join(out, 'evidence', entry.id);
-    const checked = join(out, 'evidence', `${entry.id}-lean`);
+    const plain = join(evidenceRoot, entry.id);
+    const checked = join(evidenceRoot, `${entry.id}-lean`);
     const submissions = framed([entry.module]);
     const first = run(`session-${entry.id}`, cli,
       [...evidenceBase, '--size-change-certificate', plain], { env, input: submissions });
@@ -343,7 +357,7 @@ function main() {
   });
   const controls = {
     ordinary: ordinaryControl(cli, env, cases, signedBase),
-    multi_report: multiReportControl(cli, env, cases, evidenceBase, join(out, 'evidence', 'multi')),
+    multi_report: multiReportControl(cli, env, cases, evidenceBase, join(evidenceRoot, 'multi')),
   };
   requireThat(stable(state()) === stable(before), 'the source changed during the run');
   const modelSources = closure.map(name => `proofs/m3/NobleM2/${name.replace(/^NobleM2\./, '')}.lean`);
@@ -362,6 +376,7 @@ function main() {
     'crates/noble-contracts/tests/declared/sizechange.rs',
     'specs/conformance/recursion-cases.json',
     'verification/size-change/README.md',
+    'verification/size-change/decision.md',
     'verification/size-change/scenarios.mjs',
   ];
   const caseRegistrySha256 = digest(Buffer.from(stable(cases.map(entry => ({

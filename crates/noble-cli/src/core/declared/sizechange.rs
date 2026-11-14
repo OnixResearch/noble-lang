@@ -379,7 +379,7 @@ pub(super) fn report(
         ("schema", string("noble-size-change/v1")),
         (
             "criterion",
-            string("shared-measure: one declared measure decreases at every self-call site"),
+            string("bounded-closure: every idempotent call-graph matrix has a strict diagonal"),
         ),
         (
             "profile",

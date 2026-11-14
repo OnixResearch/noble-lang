@@ -1341,6 +1341,30 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
 
+#### Scenario: REC-SC-05 for K-CHECK-02
+
+- GIVEN the `Signed-Declared-Text-v1` profile and every field of `input` in [REC-SC-05](../../../specs/conformance/recursion-cases.json)
+- WHEN the `static` procedure for case `REC-SC-05` runs against those inputs
+- THEN the observations match every field of `expected` in case `REC-SC-05`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: REC-SC-06 for K-CHECK-02
+
+- GIVEN the `Signed-Declared-Text-v1` profile and every field of `input` in [REC-SC-06](../../../specs/conformance/recursion-cases.json)
+- WHEN the `static` procedure for case `REC-SC-06` runs against those inputs
+- THEN the observations match every field of `expected` in case `REC-SC-06`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
+#### Scenario: REC-SC-07 for K-CHECK-02
+
+- GIVEN the `Signed-Declared-Text-v1` profile and every field of `input` in [REC-SC-07](../../../specs/conformance/recursion-cases.json)
+- WHEN the `static` procedure for case `REC-SC-07` runs against those inputs
+- THEN the observations match every field of `expected` in case `REC-SC-07`
+
+This is a scenario design, not an execution result. The case's `state` and `evidence` fields record its status.
+
 <!-- cairn:scenario-links:end -->
 
 ### Requirement: K-CHECK-03

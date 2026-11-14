@@ -1,9 +1,9 @@
-//! Opt-in size-change termination evidence for signature-checked recursive definitions
+//! Opt-in bounded size-change closure evidence for signature-checked recursive definitions
 //! (issue #101).
 //!
 //! The specification and its proof live in `proofs/m3/NobleM2/SizeChange*.lean`. This module is the
 //! front end that builds the model's call graphs from a checked definition: it classifies what each
-//! it classifies what each self-call site passes for each declared measure, builds a size-change
+//! self-call site passes for each declared measure, builds a size-change
 //! matrix, closes the bounded call graph under composition, and checks the idempotent strict-edge
 //! criterion. Refusals identify an idempotent closure graph with no strict self-edge.
 //!

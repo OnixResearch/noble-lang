@@ -199,6 +199,29 @@ fn argument_permutation_is_accepted_by_composed_closure() -> Result<(), String> 
     Ok(())
 }
 
+/// A permutation without a decrease exposes an idempotent identity graph as its refusal witness.
+#[test]
+fn argument_swap_is_refused_with_idempotent_cycle() -> Result<(), String> {
+    let entry = only(analyze(&module(
+        "signature cycle forall<S:stack> [ S I64 I64 -- S I64 I64 ! pure ] export cycle \
+         def cycle [ swap cycle ]",
+    ))?);
+    assert_eq!(entry.sites.len(), 1);
+    assert_eq!(entry.sites[0].arguments, vec![Argument::Opaque, Argument::Opaque]);
+    assert_eq!(entry.sites[0].graph.get(0, 1), Relation::Same);
+    assert_eq!(entry.sites[0].graph.get(1, 0), Relation::Same);
+    match entry.verdict {
+        Verdict::Refused { closure, cycle, .. } => {
+            assert_eq!(closure.len(), 2);
+            assert_eq!(cycle.path, vec![0, 0]);
+            assert_eq!(cycle.graph.get(0, 0), Relation::Same);
+            assert_eq!(cycle.graph.get(1, 1), Relation::Same);
+        }
+        other => return Err(std::format!("expected an idempotent-cycle refusal, got {other:?}")),
+    }
+    Ok(())
+}
+
 /// A measure cap is a distinct incomplete-analysis result, not a divergence verdict.
 #[test]
 fn excess_parameters_report_bound_exceeded() -> Result<(), String> {
