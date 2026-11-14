@@ -14,6 +14,8 @@
 // Check independently re-extracts, byte-compares generated files and compares
 // every source/tool/inventory/dependency/axiom entry with that reviewed lock.
 //
+// Charon's Cargo calls use a fresh CARGO_HOME containing only the selected
+// reviewed offline vendor and a fixed six-job limit; ambient Cargo config/jobs are refused.
 // The independent Octet all-target source-coverage/quality gates, historical
 // MC1 application/source-equation gates and M3 semantic/refusal gates remain
 // required integration checks; this gate neither replaces nor weakens them.
@@ -180,6 +182,10 @@ function validateSelection() {
   equal(selection.configuration.features, [], 'SELECTION', 'features');
   equal(selection.sources.aeneas.rev, aeneasRevision, 'SELECTION', 'Aeneas source');
   equal(selection.sources.charon.rev, '9e95cf318e3a2964fcf5e03104cde5b718f98ea5', 'SELECTION', 'Charon source');
+  if (!path.isAbsolute(selection.component_sync?.vendor ?? '') ||
+      !/^sha256-[A-Za-z0-9+/=]+$/.test(selection.component_sync?.vendor_nar_hash ?? '')) {
+    fail('SELECTION', 'reviewed offline Cargo vendor');
+  }
   equal(selection.lean.toolchain, 'leanprover/lean4:v4.35.0', 'SELECTION', 'Lean toolchain');
   for (const name of ['lakefile.toml', 'lake-manifest.json', 'lean-toolchain']) {
     if (!selection.file_sha256[`proofs/m4/${name}`]) fail('SELECTION', `missing proofs/m4/${name} binding`);
@@ -223,11 +229,27 @@ try {
   const home = path.join(artifacts, 'home');
   fs.mkdirSync(cargoHome);
   fs.mkdirSync(home);
+  const vendorDirectory = path.join(selection.component_sync.vendor, 'source-registry-0');
+  if (!fs.statSync(vendorDirectory).isDirectory()) fail('SELECTION', 'reviewed Cargo vendor registry');
+  const cargoConfig = path.join(cargoHome, 'config.toml');
+  fs.writeFileSync(cargoConfig, [
+    '[source.crates-io]',
+    'replace-with = "reviewed-vendor"',
+    '[source.reviewed-vendor]',
+    `directory = ${JSON.stringify(vendorDirectory)}`,
+    '[net]',
+    'offline = true',
+    '',
+  ].join('\n'), { flag: 'wx' });
   environment = { ...process.env, HOME: home, CARGO_HOME: cargoHome, RUSTC_WRAPPER: '',
+    CARGO_BUILD_JOBS: '6',
     CARGO_TARGET_DIR: path.join(artifacts, 'cargo-target'), GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null',
     PATH: `${pins.extraction_rust}/bin:${pins.lean}/bin:${process.env.PATH ?? ''}` };
   evidence.environment = { HOME: home, CARGO_HOME: cargoHome, CARGO_TARGET_DIR: environment.CARGO_TARGET_DIR,
+    CARGO_BUILD_JOBS: environment.CARGO_BUILD_JOBS,
     PATH: environment.PATH, RUSTC_WRAPPER: '', GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null' };
+  evidence.cargo_configuration = { path: cargoConfig, sha256: fileSha(cargoConfig), vendor: selection.component_sync.vendor,
+    vendor_nar_hash: selection.component_sync.vendor_nar_hash };
   sourceFiles = snapshot();
   evidence.source_files = sourceFiles;
   evidence.source_revision = `sha256:${sha(canonical(sourceFiles))}`;
