@@ -512,3 +512,13 @@ check, the claims audit and its comparison with the retained `claims.json`, the 
 the differential, EMI, linking and host-locality lanes and their verifiers; the stale-receipt
 control refused, as required. The check audits 1450 inventoried theorems (55 private helpers)
 with `clean_source: true` under Lean 4.35.0. The receipt is evidence for that commit and tree only.
+
+## d94aaeae4 — campaign batch 3
+
+`d94aaeae4/` records the clean run of `verification/foundation/ci.sh` after batch 3 merged
+issues #41, #35, #50, #105, #108, #43, #58, #59, #107, #57, #62, #122, #113, #78, #115 and #101.
+Every stage reported 0 (`overall=0`): the check, the claims audit and its comparison with the
+retained `claims.json`, the Phase 3 slice, the differential, EMI, linking and host-locality lanes
+and their verifiers; the stale-receipt control refused, as required. The check audits 1836
+inventoried theorems (86 private helpers) with `clean_source: true` under Lean 4.35.0. The
+receipt is evidence for that commit and tree only.
