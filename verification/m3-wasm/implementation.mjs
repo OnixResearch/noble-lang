@@ -236,12 +236,32 @@ try {
   requireNoCargoConfiguration(artifacts);
   fs.mkdirSync(workspace);
   const cargoHome = path.join(artifacts, 'cargo-home');
-  fs.mkdirSync(cargoHome); // The locked workspace uses only local path dependencies; no ambient Cargo config/cache.
-  environment = { ...process.env, RUSTC_WRAPPER: '', CARGO_HOME: cargoHome,
+  fs.mkdirSync(cargoHome);
+  const vendor = selection.component_sync?.vendor;
+  const vendorNarHash = selection.component_sync?.vendor_nar_hash;
+  if (!path.isAbsolute(vendor ?? '') || !/^sha256-[A-Za-z0-9+/=]+$/.test(vendorNarHash ?? '')) {
+    throw Error('unreviewed offline Cargo vendor');
+  }
+  const vendorDirectory = path.join(vendor, 'source-registry-0');
+  if (!fs.statSync(vendorDirectory).isDirectory()) throw Error('missing reviewed Cargo vendor registry');
+  const cargoConfig = path.join(cargoHome, 'config.toml');
+  fs.writeFileSync(cargoConfig, [
+    '[source.crates-io]',
+    'replace-with = "reviewed-vendor"',
+    '[source.reviewed-vendor]',
+    `directory = ${JSON.stringify(vendorDirectory)}`,
+    '[net]',
+    'offline = true',
+    '',
+  ].join('\n'), { flag: 'wx' });
+  environment = { ...process.env, RUSTC_WRAPPER: '', CARGO_HOME: cargoHome, CARGO_BUILD_JOBS: '6',
     CARGO_TARGET_DIR: path.join(artifacts, 'cargo-target'),
     PATH: `${pins.extraction_rust}/bin:${pins.lean}/bin:${process.env.PATH ?? ''}` };
   evidence.environment = { PATH: environment.PATH, HOME: environment.HOME,
-    CARGO_HOME: cargoHome, CARGO_TARGET_DIR: environment.CARGO_TARGET_DIR, RUSTC_WRAPPER: '' };
+    CARGO_HOME: cargoHome, CARGO_TARGET_DIR: environment.CARGO_TARGET_DIR,
+    CARGO_BUILD_JOBS: environment.CARGO_BUILD_JOBS, RUSTC_WRAPPER: '' };
+  evidence.cargo_configuration = { path: cargoConfig, sha256: fileSha(cargoConfig),
+    vendor, vendor_nar_hash: vendorNarHash };
   sourceFiles = snapshot();
   evidence.source_files = sourceFiles;
   evidence.source_revision = `sha256:${sha(JSON.stringify(sourceFiles))}`;
