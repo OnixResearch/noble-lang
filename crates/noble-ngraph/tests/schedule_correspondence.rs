@@ -43,6 +43,8 @@ mod belt_target_controls;
 mod belt_target_mutations;
 #[path = "belt_target_dir/corpus.rs"]
 mod belt_target_corpus;
+#[path = "belt_target_dir/measure.rs"]
+mod belt_target_measure;
 mod common;
 #[path = "schedule_lean_dir/corpus.rs"]
 mod corpus;
