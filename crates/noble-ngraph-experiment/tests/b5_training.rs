@@ -199,3 +199,6 @@ fn nonfinite_update_publishes_nothing() {
 
 #[path = "b5_training/transaction_cases.rs"]
 mod transaction_cases;
+
+#[path = "b5_training/ranking.rs"]
+mod ranking;
