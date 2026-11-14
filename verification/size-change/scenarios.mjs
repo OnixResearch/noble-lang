@@ -165,8 +165,15 @@ function observed(entry, expected) {
     record.idempotent_cycle = entry.idempotent_cycle;
   }
   if (entry.verdict === 'bound-exceeded') record.bound = entry.bound;
-  const wanted = {};
-  for (const key of Object.keys(expected)) wanted[key] = record[key];
+  const select = (actual, shape) => {
+    if (Array.isArray(shape)) return shape.map((row, index) => select(actual?.[index], row));
+    if (shape !== null && typeof shape === 'object') {
+      return Object.fromEntries(Object.entries(shape).map(([key, value]) =>
+        [key, select(actual?.[key], value)]));
+    }
+    return actual;
+  };
+  const wanted = select(record, expected);
   return wanted;
 }
 
