@@ -106,3 +106,32 @@ port has one producer endpoint (and fanout is represented by an explicit `dup` a
   corpus of real lowered nets are evidence, not a refinement proof), the host for timing.
 - Identities: the contract revision `ngraph-net-i64/3`, the graph identity, the lowering revision
   and the input vector bind every retained net and result.
+
+## 6. Pinned IVM comparison and mapping decision (#37)
+
+The external comparison is to Vine/Ivy/IVM at
+[`cf0c325834d5bf4c8d43aa36f7fb76faf2496988`](https://github.com/VineLang/vine/tree/cf0c325834d5bf4c8d43aa36f7fb76faf2496988),
+specifically its [interaction dispatcher](https://github.com/VineLang/vine/blob/cf0c325834d5bf4c8d43aa36f7fb76faf2496988/ivm/src/runtime/interact.rs)
+and [Ivy-to-IVM encoder](https://github.com/VineLang/vine/blob/cf0c325834d5bf4c8d43aa36f7fb76faf2496988/ivm/src/program.rs).
+This is a comparison of contracts, **not** a translation or equivalence claim.
+
+| Boundary | Pinned IVM path | Selected Noble revision 3 |
+|---|---|---|
+| Numeric active pair | `ExtFn` meets `ExtVal`; `call` invokes a registered split function on one argument, or a merge function when a second `ExtVal` is already available through the right-hand-side wire. Otherwise it creates a swapped `ExtFn` to await that value. The function and value representations are host registrations. | `op2 k ⋈ num a` creates `op1 k a`; `op1 k a ⋈ num b` computes the *built-in* wrapping `BitVec 64` operation. `Sub` is `a - b` in source-operand port order. No external arithmetic callback, N32 truncation or floating conversion is selected. An IVM merge would need a separately checked argument-order and exact-two-word I64 mapping. |
+| Principal and auxiliary ports | `link` queues non-wire active ports on fast/slow worklists; `interact` dispatches principal-port pairs by `Tag` (`Comb`, `ExtFn`, `ExtVal`, `Erase`, `Graft`). The encoder's `Instruction::Binary(tag, label, [reg, ra, rb])` records its root and two children. | inets port 0 is principal and ports 1..arity are auxiliaries. Operand one faces `op2`'s principal, operand two joins auxiliary 1; the result leaves auxiliary 2. A value **must** meet the operation's principal in the first stage. IVM tag/label and register conventions cannot be treated as this port map without a checked adapter. |
+| Duplication and erasure | Equal-label combinators annihilate; other `Comb`/`ExtFn` pairs can commute, creating four nodes. `Erase` goes through `copy`, and copying an `ExtVal` checks its registered copyability, setting a flag for non-copyable values. Grafts have their own copy/graft path. | Only `dup ⋈ num v` makes two ordered `num v` copies and only `era ⋈ num v` drops a value. Commutation, equal-label annihilation, grafts, effectful/non-copyable values and all other pairs are **not** equivalent Noble rules. |
+| Ordered observations | `Encoder::encode` requires exactly **one** `TreeNet.free` root and constructs one `Register::ROOT`; it does not itself supply Noble's multi-output ordered read-back. | The checked graph declares an ordered output list; every free port at that index must meet a distinct numeric agent and no other agent may remain. Mapping an Ivy root or external result sink to this list would require a separately checked interface and independent ordered-output oracle. |
+
+This decision is **revision 3, not IVM-as-backend and not a silent revision of the old model**.
+Revision 1's [orientation counterexamples](../proofs/foundation/NobleFoundation/InteractionNetOrientation.lean)
+remain regression subjects: `oriented_active_pair` and
+`deeper_minus_top_has_only_the_output_pair` show result-facing arithmetic cannot fire on a
+numeric principal partner; `value_into_result_port_is_accepted` shows the old structural validator
+does not enforce its intended orientation; `fanout_cannot_feed_an_operand` prevents a shared
+value reaching an operand; and `identity_agents_bypass_the_operand_rule` shows input slot
+comparison is not source operand correspondence. Revision 2's LIFO operand stacks and
+auxiliary-to-auxiliary value delivery were a superseded **dataflow** alternative, not an inets
+step rule. Revision 3 instead uses operand-facing `op2`/`op1`, explicit `dup`/`era`, one
+producer per wire, source-node/port-order validation and separately checked ordered read-back.
+The historical fixtures do not establish a Rust refinement proof; no IVM run is evidence for
+Noble reduction, progress or read-back.
