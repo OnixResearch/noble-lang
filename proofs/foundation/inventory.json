@@ -12434,6 +12434,18 @@
       "phase": 1,
       "role": "lowering-corpus",
       "claim": "the empty finite graph has the retained exact interaction count"
+    },
+    {
+      "name": "NobleFoundation.SizeChangeSound.infinite_pair_homogeneous",
+      "phase": 1,
+      "role": "size-change-termination",
+      "claim": "every finite coloring of increasing natural pairs has an infinite homogeneous sequence"
+    },
+    {
+      "name": "NobleFoundation.SizeChangeSound.matrix_closure_sct_terminates_classical",
+      "phase": 1,
+      "role": "size-change-termination",
+      "claim": "a checked matrix closure certificate and any satisfying site run are incompatible"
     }
   ],
   "private_theorems": [

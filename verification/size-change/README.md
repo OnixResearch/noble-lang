@@ -34,16 +34,19 @@ walk at 65,536 word steps, and quotation nesting at 32. Exceeding an analysis ca
 For a retained finite closure, the model checks that every call-site graph is present, every listed
 matrix has a non-empty site path, the list is composition-closed and duplicate-free, and each
 idempotent matrix has a strict diagonal witness. A refusal retains an exact idempotent closure entry
-without such a diagonal. The arbitrary-run size-change soundness theorem is **open**: the existing
-Lean run theorem covers periodic site sequences only. Therefore `accepted` means that the bounded
-closure criterion holds in the checked matrix model; it does not establish termination of every
-possible call sequence. A refusal means **not shown terminating**, not divergence.
+without such a diagonal. Arbitrary-run soundness is proved in the separate Mathlib-backed foundation
+lane by `NobleFoundation.SizeChangeSound.matrix_closure_sct_terminates_classical`: for any checked
+`MatrixClosureCertificate` and any `MatrixSiteRun` over the same site matrices, an infinite model run
+is impossible. The proof imports the existing m3 certificate and run definitions directly, colors
+each increasing pair of run positions by its segment product, applies infinite Ramsey for pairs, and
+uses the resulting idempotent closure graph's strict diagonal to obtain an impossible descending
+Nat chain. Its axiom set is `{propext, Classical.choice, Quot.sound}`.
 
-The missing theorem is `matrix_closure_sct_terminates`: for any `MatrixClosureCertificate` and any
-`MatrixSiteRun` over the same site matrices, the checked strict-diagonal condition for every idempotent
-closure member must imply `False`. The existing `periodic_site_run_terminates` proves only the case
-where the run's site sequence is periodic and its period product is idempotent; that hypothesis is not
-established for an arbitrary run.
+The `verification/size-change/check.mjs` lane remains choice-free: it still admits only
+`{propext, Quot.sound}` for the `SizeChange*.lean` family. The separate foundation theorem does not
+weaken that restriction or change the meaning of the model certificate. `periodic_site_run_terminates`
+remains the periodic-run theorem inside that strict family. A refusal means **not shown terminating**,
+not divergence.
 
 The current checked source profile admits direct `SelfOwner` calls only. Named/helper calls are
 unsupported; mutual-recursion groups are not admitted by the current source resolver and are not
@@ -101,10 +104,11 @@ version and binary digest, the isolated library's source digests, and the CLI bi
 ## What the evidence does and does not claim
 
 **Model.** The finite certificate checker proves the listed closure exactly matches its matrix
-algebra and checks the criterion's idempotent witnesses. The termination theorem in this lane covers
-periodic site sequences only; arbitrary-run SCT soundness remains open. The older shared-measure and
-guarded-run theorems retain their own narrower contracts. A refusal means **not shown terminating**,
-not diverging.
+algebra and checks the criterion's idempotent witnesses. The strict size-change family proves
+periodic-run termination without `Classical.choice`; the foundation theorem additionally proves
+arbitrary-run soundness with the foundation axiom set. The older shared-measure and guarded-run
+theorems retain their own narrower contracts. A refusal means **not shown terminating**, not
+diverging.
 
 **Front end.** The Rust classifier (`crates/noble-contracts/src/source/sizechange.rs`) is an
 over-approximation of the body: values are tracked only as far as the classifier needs (the measure,
@@ -114,11 +118,12 @@ an active `0 <` guard *on that measure* at the site; a list tail counts without 
 cons tail is structurally shorter. Named helper calls are unsupported rather than assumed to return,
 so an unanalyzed recursive helper cannot be hidden behind a decreasing direct self-call.
 
-**Not claimed.** There is no arbitrary-run soundness theorem for the bounded closure criterion, no
-correspondence theorem between the classifier and Rust source execution, and none between `List`
-structure and its length or between a wrapped `I64` counter and a natural number. No mutual-recursion
-analysis is performed. These boundaries are explicit so the receipts are not read as a verified
-refinement or a general termination result.
+**Not claimed.** A choice-free arbitrary-run soundness theorem within the strict
+`SizeChange*.lean` family is not claimed: its lane continues to reject `Classical.choice`. There is
+also no correspondence theorem between the classifier and Rust source execution, nor one between
+`List` structure and its length or between a wrapped `I64` counter and a natural number. No
+mutual-recursion analysis is performed. These boundaries are explicit so the receipts are not read
+as a verified refinement or a general source-level termination result.
 
 ## Receipts
 
