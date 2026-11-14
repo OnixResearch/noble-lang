@@ -34,6 +34,8 @@ mod belt_measure;
 #[path = "belt_dir/mutations.rs"]
 mod belt_mutations;
 mod common;
+#[path = "schedule_lean_dir/layout_corpus.rs"]
+mod layout_corpus;
 #[path = "schedule_lean_dir/corpus.rs"]
 mod corpus;
 #[path = "schedule_lean_dir/corpus_guard.rs"]

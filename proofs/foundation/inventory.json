@@ -10784,6 +10784,114 @@
       "phase": 2,
       "role": "packed-layout",
       "claim": "The unary-prefixed binary-width natural decoder consumes exactly one natural code and preserves the remaining suffix."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.interleaved_real_encoded_accepted",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The actual Rust-checked interleaved_real layout is accepted by layout::check and the encoded model's acceptance predicate is kernel-decided true."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_real_encoded_accepted",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The actual Rust-checked two_constants_real layout is accepted by layout::check and the encoded model's acceptance predicate is kernel-decided true."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_stale_revision_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated stale revision layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_register_map_shape_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated register map shape layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_register_out_of_range_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated register out of range layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_aliased_registers_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated aliased registers layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_register_count_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated register count layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_one_register_held_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated one register held layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_constant_entry_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated constant entry layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_constant_count_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated constant count layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_constant_duplicate_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated constant duplicate layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_slot_entry_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated slot entry layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_slot_count_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated slot count layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_slot_duplicate_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated slot duplicate layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_layer_shape_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated layer shape layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_layer_order_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated layer order layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_failure_suffix_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated failure suffix layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.two_constants_layer_coverage_encoded_rejected",
+      "phase": 2,
+      "role": "packed-layout-corpus",
+      "claim": "The Rust-generated layer coverage layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
     }
   ],
   "private_theorems": [

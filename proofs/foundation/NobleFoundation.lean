@@ -44,6 +44,7 @@ import NobleFoundation.CertificateCodec
 import NobleFoundation.CertificateCorpus
 import NobleFoundation.PackedLayout
 import NobleFoundation.PackedLayoutEncoded
+import NobleFoundation.PackedLayoutCorpus
 import NobleFoundation.LlvmLowering
 import NobleFoundation.LlvmLoweringCorpus
 import NobleFoundation.Regressions
