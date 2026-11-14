@@ -19,7 +19,7 @@ impl EvaluationMode {
     }
 }
 
-pub(crate) fn ranking_disposition_name(disposition: chunks::RankingDisposition) -> &'static str {
+pub(crate) fn disposition_name(disposition: chunks::RankingDisposition) -> &'static str {
     match disposition {
         chunks::RankingDisposition::NotEvaluated => "not-evaluated",
         chunks::RankingDisposition::Applied => "applied",
@@ -78,7 +78,9 @@ pub(crate) fn scored_candidate_json(candidate: &ScoredCandidate) -> Value {
     })
 }
 
-pub(crate) fn ranking_identity_json(identity: &chunks::RankingIdentity) -> Value {
+pub(crate) fn identity_json(identity: &chunks::RankingIdentity) -> Value {
+    debug_assert_eq!(identity.feature_revision, chunks::FEATURE_REVISION);
+    debug_assert!(identity.budget.candidates <= Budget::PROFILE.candidates);
     let budgets: Vec<Value> = chunks::Resource::ALL
         .iter()
         .map(|resource| {
@@ -126,6 +128,8 @@ pub(crate) fn independent_replay_agrees(
                 spec.id()
             )
         })?;
+    debug_assert_eq!(accepted.selected.len(), 1);
+    debug_assert_eq!(envelope.chunk_id, selected);
     for case in &spec.cases {
         let actual = independent_recipe_output(envelope, &case.inputs)?;
         if actual != case.outputs {

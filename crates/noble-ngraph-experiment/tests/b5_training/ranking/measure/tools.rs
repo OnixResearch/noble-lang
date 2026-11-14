@@ -1,12 +1,23 @@
 use super::*;
 
 pub(crate) fn write_json_lines(path: &std::path::Path, records: &[Value]) -> Result<(), String> {
-    let mut contents = String::new();
+    use std::io::Write;
+    let file = std::fs::File::create(path).map_err(|error| error.to_string())?;
+    let mut writer = std::io::BufWriter::new(file);
     for record in records {
-        contents.push_str(&serde_json::to_string(record).map_err(|error| error.to_string())?);
-        contents.push('\n');
+        serde_json::to_writer(&mut writer, record).map_err(|error| error.to_string())?;
+        writer.write_all(b"\n").map_err(|error| error.to_string())?;
     }
-    std::fs::write(path, contents).map_err(|error| error.to_string())
+    writer.flush().map_err(|error| error.to_string())
+}
+
+pub(crate) fn write_json_pretty(path: &std::path::Path, value: &Value) -> Result<(), String> {
+    use std::io::Write;
+    let file = std::fs::File::create(path).map_err(|error| error.to_string())?;
+    let mut writer = std::io::BufWriter::new(file);
+    serde_json::to_writer_pretty(&mut writer, value).map_err(|error| error.to_string())?;
+    writer.write_all(b"\n").map_err(|error| error.to_string())?;
+    writer.flush().map_err(|error| error.to_string())
 }
 
 pub(crate) fn command_text(program: &str, arguments: &[&str]) -> Result<String, String> {
@@ -43,16 +54,18 @@ pub(crate) fn score_graph_counts(graph: &CheckedGraph) -> Result<Value, String> 
         let count = counts.entry(name).or_default();
         *count = count.saturating_add(1);
     }
-    if counts.get("input") != Some(&64)
-        || counts.get("param") != Some(&65)
-        || counts.get("f32.mul") != Some(&64)
-        || counts.get("f32.add") != Some(&64)
-        || graph.graph().outputs.len() != 1
-    {
+    let is_fixed_shape = counts.get("input") == Some(&64)
+        && counts.get("param") == Some(&65)
+        && counts.get("f32.mul") == Some(&64)
+        && counts.get("f32.add") == Some(&64)
+        && graph.graph().outputs.len() == 1;
+    if !is_fixed_shape {
         return Err(format!(
             "scorer graph shape differs from fixed contract: {counts:?}"
         ));
     }
+    debug_assert_eq!(counts.len(), 4);
+    debug_assert_eq!(graph.graph().outputs.len(), 1);
     Ok(json!({
         "input_nodes": counts.get("input"),
         "param_nodes": counts.get("param"),
@@ -72,7 +85,9 @@ pub(crate) fn loss_graph_counts(graph: &CheckedGraph) -> Result<Value, String> {
         match &node.op {
             noble_ngraph::ir::Op::Input(_) => inputs = inputs.saturating_add(1),
             noble_ngraph::ir::Op::F32Sub(_, _) => subtractions = subtractions.saturating_add(1),
-            noble_ngraph::ir::Op::F32Mul(_, _) => multiplications = multiplications.saturating_add(1),
+            noble_ngraph::ir::Op::F32Mul(_, _) => {
+                multiplications = multiplications.saturating_add(1)
+            }
             _ => {
                 return Err(format!(
                     "forbidden operation in frozen MSE loss graph: {}",
@@ -81,12 +96,17 @@ pub(crate) fn loss_graph_counts(graph: &CheckedGraph) -> Result<Value, String> {
             }
         }
     }
-    if inputs != 2 || subtractions != 1 || multiplications != 1 || graph.graph().outputs.len() != 1
-    {
+    let is_mse_shape = inputs == 2
+        && subtractions == 1
+        && multiplications == 1
+        && graph.graph().outputs.len() == 1;
+    if !is_mse_shape {
         return Err(String::from(
             "MSE loss graph differs from the two-input stored-order contract",
         ));
     }
+    debug_assert_eq!(inputs, 2);
+    debug_assert_eq!(graph.graph().outputs.len(), 1);
     Ok(json!({
         "input_nodes": inputs,
         "f32_subtraction_nodes": subtractions,
@@ -99,9 +119,10 @@ pub(crate) fn loss_graph_counts(graph: &CheckedGraph) -> Result<Value, String> {
 
 #[test]
 #[ignore = "materializes the frozen corpus only; not an experiment measurement"]
-pub(crate) fn materialize_tchunk_ranking_corpus() -> Result<(), String> {
+pub(crate) fn write_frozen_corpus() -> Result<(), String> {
     let output = std::env::var_os("NOBLE_TCRANK_CORPUS_OUT")
         .ok_or_else(|| String::from("NOBLE_TCRANK_CORPUS_OUT must name an external output file"))?;
-    let bytes = serde_json::to_vec_pretty(&corpus_manifest()).map_err(|error| error.to_string())?;
+    let mut bytes = serde_json::to_vec(&corpus_manifest()).map_err(|error| error.to_string())?;
+    bytes.push(b'\n');
     std::fs::write(output, bytes).map_err(|error| error.to_string())
 }

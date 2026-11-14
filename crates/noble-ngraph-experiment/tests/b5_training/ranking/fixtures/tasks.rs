@@ -43,140 +43,177 @@ impl TaskSpec {
     }
 }
 
-pub(crate) fn task_spec(family: usize, block: u8, within_block: u8) -> TaskSpec {
-    let case_seed = i64::try_from(family.saturating_add(1)).unwrap_or(0) * 1_000_003
-        + i64::from(block) * 8_191
-        + i64::from(within_block) * 257;
-    let (stack_in, stack_out, target, primitive_source, cases) = match family {
-        0 => {
-            let operation = (block + within_block) % 3;
-            let op = [Op::Add, Op::Sub, Op::Mul][usize::from(operation)];
-            let source = op.spelling().as_bytes().to_vec();
-            let cases = (0..FIXTURE_CASES)
-                .map(|case| {
-                    let delta = i64::try_from(case).unwrap_or(0);
-                    let left = (case_seed + delta * 19) % 97 - 48;
-                    let right = (case_seed * 3 - delta * 11) % 89 - 44;
-                    let output = match op {
-                        Op::Add => left.wrapping_add(right),
-                        Op::Sub => left.wrapping_sub(right),
-                        Op::Mul => left.wrapping_mul(right),
-                        _ => 0,
-                    };
-                    TaskCase {
-                        inputs: vec![Scalar::I64(left), Scalar::I64(right)],
-                        outputs: vec![Scalar::I64(output)],
-                    }
-                })
-                .collect();
-            (
-                vec![Ty::I64, Ty::I64],
-                vec![Ty::I64],
-                Target::Arithmetic(op),
-                source,
-                cases,
-            )
-        }
-        1 => {
-            let reversed = !within_block.is_multiple_of(2);
-            let stack_in = if reversed {
-                vec![Ty::Bool, Ty::I64]
-            } else {
-                vec![Ty::I64, Ty::Bool]
+#[derive(Clone, Copy)]
+pub(crate) struct TaskCoordinate {
+    pub(crate) family: usize,
+    pub(crate) block: u8,
+    pub(crate) within_block: u8,
+}
+
+fn task_case_seed(coordinate: TaskCoordinate) -> i64 {
+    i64::try_from(coordinate.family.saturating_add(1)).expect("five families") * 1_000_003
+        + i64::from(coordinate.block) * 8_191
+        + i64::from(coordinate.within_block) * 257
+}
+
+fn arithmetic_task(coordinate: TaskCoordinate) -> TaskSpec {
+    let seed = task_case_seed(coordinate);
+    let operation = (coordinate.block + coordinate.within_block) % 3;
+    let op = [Op::Add, Op::Sub, Op::Mul][usize::from(operation)];
+    let cases = (0..FIXTURE_CASES)
+        .map(|case| {
+            let delta = i64::try_from(case).expect("four fixture cases");
+            let left = (seed + delta * 19) % 97 - 48;
+            let right = (seed * 3 - delta * 11) % 89 - 44;
+            let output = match operation {
+                0 => left.wrapping_add(right),
+                1 => left.wrapping_sub(right),
+                _ => left.wrapping_mul(right),
             };
-            let stack_out = if reversed {
-                vec![Ty::I64, Ty::Bool]
-            } else {
-                vec![Ty::Bool, Ty::I64]
-            };
-            let cases = (0..FIXTURE_CASES)
-                .map(|case| {
-                    let delta = i64::try_from(case).unwrap_or(0);
-                    let integer = case_seed + delta * 31;
-                    let boolean =
-                        (block + within_block + u8::try_from(case).unwrap_or(0)).is_multiple_of(2);
-                    let inputs = if reversed {
-                        vec![Scalar::Bool(boolean), Scalar::I64(integer)]
-                    } else {
-                        vec![Scalar::I64(integer), Scalar::Bool(boolean)]
-                    };
-                    let outputs = if reversed {
-                        vec![Scalar::I64(integer), Scalar::Bool(boolean)]
-                    } else {
-                        vec![Scalar::Bool(boolean), Scalar::I64(integer)]
-                    };
-                    TaskCase { inputs, outputs }
-                })
-                .collect();
-            (stack_in, stack_out, Target::Swap, b"swap".to_vec(), cases)
-        }
-        2 => {
-            let mode = (block + within_block) % 3;
-            let source = match mode {
-                0 => b"=".to_vec(),
-                1 => b"+ 0 =".to_vec(),
-                _ => b"- 0 =".to_vec(),
-            };
-            let cases = (0..FIXTURE_CASES)
-                .map(|case| {
-                    let delta = i64::try_from(case).unwrap_or(0);
-                    let left = case_seed + delta * 13;
-                    let right = case_seed / 3 - delta * 7;
-                    let compared = match mode {
-                        0 => left == right,
-                        1 => left.wrapping_add(right) == 0,
-                        _ => left.wrapping_sub(right) == 0,
-                    };
-                    TaskCase {
-                        inputs: vec![Scalar::I64(left), Scalar::I64(right)],
-                        outputs: vec![Scalar::Bool(compared)],
-                    }
-                })
-                .collect();
-            (
-                vec![Ty::I64, Ty::I64],
-                vec![Ty::Bool],
-                Target::Boolean(mode),
-                source,
-                cases,
-            )
-        }
-        3 | 4 => {
-            let value = i64::from((block * 8 + within_block) % 3);
-            let source = if family == 3 {
-                match value {
-                    0 => b"0".to_vec(),
-                    1 => b"[ 1 ] run".to_vec(),
-                    _ => b"[ [ 2 ] ] run run".to_vec(),
-                }
-            } else {
-                value.to_string().into_bytes()
-            };
-            let cases = (0..FIXTURE_CASES)
-                .map(|_| TaskCase {
-                    inputs: Vec::new(),
-                    outputs: vec![Scalar::I64(value)],
-                })
-                .collect();
-            (
-                Vec::new(),
-                vec![Ty::I64],
-                Target::Integer(value),
-                source,
-                cases,
-            )
-        }
-        _ => unreachable!(),
-    };
+            TaskCase {
+                inputs: vec![Scalar::I64(left), Scalar::I64(right)],
+                outputs: vec![Scalar::I64(output)],
+            }
+        })
+        .collect();
+    debug_assert_eq!(operation, (coordinate.block + coordinate.within_block) % 3);
+    debug_assert!(matches!(op, Op::Add | Op::Sub | Op::Mul));
     TaskSpec {
-        family,
-        block,
-        within_block,
+        family: coordinate.family,
+        block: coordinate.block,
+        within_block: coordinate.within_block,
+        stack_in: vec![Ty::I64, Ty::I64],
+        stack_out: vec![Ty::I64],
+        cases,
+        primitive_source: op.spelling().as_bytes().to_vec(),
+        target: Target::Arithmetic(op),
+    }
+}
+
+fn routing_task(coordinate: TaskCoordinate) -> TaskSpec {
+    let seed = task_case_seed(coordinate);
+    let is_reversed = !coordinate.within_block.is_multiple_of(2);
+    let stack_in = if is_reversed {
+        vec![Ty::Bool, Ty::I64]
+    } else {
+        vec![Ty::I64, Ty::Bool]
+    };
+    let stack_out = if is_reversed {
+        vec![Ty::I64, Ty::Bool]
+    } else {
+        vec![Ty::Bool, Ty::I64]
+    };
+    let cases = (0..FIXTURE_CASES)
+        .map(|case| {
+            let delta = i64::try_from(case).expect("four fixture cases");
+            let integer = seed + delta * 31;
+            let is_even = (coordinate.block
+                + coordinate.within_block
+                + u8::try_from(case).expect("four fixture cases"))
+            .is_multiple_of(2);
+            let inputs = if is_reversed {
+                vec![Scalar::Bool(is_even), Scalar::I64(integer)]
+            } else {
+                vec![Scalar::I64(integer), Scalar::Bool(is_even)]
+            };
+            let outputs = if is_reversed {
+                vec![Scalar::I64(integer), Scalar::Bool(is_even)]
+            } else {
+                vec![Scalar::Bool(is_even), Scalar::I64(integer)]
+            };
+            TaskCase { inputs, outputs }
+        })
+        .collect();
+    debug_assert_eq!(stack_in.len(), 2);
+    debug_assert_eq!(stack_out.len(), 2);
+    TaskSpec {
+        family: coordinate.family,
+        block: coordinate.block,
+        within_block: coordinate.within_block,
         stack_in,
         stack_out,
         cases,
-        primitive_source,
-        target,
+        primitive_source: b"swap".to_vec(),
+        target: Target::Swap,
+    }
+}
+
+fn boolean_task(coordinate: TaskCoordinate) -> TaskSpec {
+    let seed = task_case_seed(coordinate);
+    let mode = (coordinate.block + coordinate.within_block) % 3;
+    let source = match mode {
+        0 => b"=".to_vec(),
+        1 => b"+ 0 =".to_vec(),
+        _ => b"- 0 =".to_vec(),
+    };
+    let cases = (0..FIXTURE_CASES)
+        .map(|case| {
+            let delta = i64::try_from(case).expect("four fixture cases");
+            let left = seed + delta * 13;
+            let right = seed / 3 - delta * 7;
+            let is_match = match mode {
+                0 => left == right,
+                1 => left.wrapping_add(right) == 0,
+                _ => left.wrapping_sub(right) == 0,
+            };
+            TaskCase {
+                inputs: vec![Scalar::I64(left), Scalar::I64(right)],
+                outputs: vec![Scalar::Bool(is_match)],
+            }
+        })
+        .collect();
+    debug_assert!(!source.is_empty());
+    debug_assert!(mode < 3);
+    TaskSpec {
+        family: coordinate.family,
+        block: coordinate.block,
+        within_block: coordinate.within_block,
+        stack_in: vec![Ty::I64, Ty::I64],
+        stack_out: vec![Ty::Bool],
+        cases,
+        primitive_source: source,
+        target: Target::Boolean(mode),
+    }
+}
+
+fn integer_task(coordinate: TaskCoordinate) -> TaskSpec {
+    let value = i64::from((coordinate.block * 8 + coordinate.within_block) % 3);
+    let source = if coordinate.family == 3 {
+        match value {
+            0 => b"0".to_vec(),
+            1 => b"[ 1 ] run".to_vec(),
+            _ => b"[ [ 2 ] ] run run".to_vec(),
+        }
+    } else {
+        value.to_string().into_bytes()
+    };
+    let cases = (0..FIXTURE_CASES)
+        .map(|_| TaskCase {
+            inputs: Vec::new(),
+            outputs: vec![Scalar::I64(value)],
+        })
+        .collect();
+    debug_assert!(matches!(coordinate.family, 3 | 4));
+    debug_assert!(value < 3);
+    TaskSpec {
+        family: coordinate.family,
+        block: coordinate.block,
+        within_block: coordinate.within_block,
+        stack_in: Vec::new(),
+        stack_out: vec![Ty::I64],
+        cases,
+        primitive_source: source,
+        target: Target::Integer(value),
+    }
+}
+
+fn task_spec(coordinate: TaskCoordinate) -> TaskSpec {
+    match coordinate.family {
+        0 => arithmetic_task(coordinate),
+        1 => routing_task(coordinate),
+        2 => boolean_task(coordinate),
+        3 | 4 => integer_task(coordinate),
+        _ => unreachable!("only the five frozen families are enumerated"),
     }
 }
 
@@ -185,7 +222,11 @@ pub(crate) fn corpus_tasks() -> Vec<TaskSpec> {
     for family in 0..FAMILY_NAMES.len() {
         for block in 0..12 {
             for within_block in 0..8 {
-                tasks.push(task_spec(family, block, within_block));
+                tasks.push(task_spec(TaskCoordinate {
+                    family,
+                    block,
+                    within_block,
+                }));
             }
         }
     }

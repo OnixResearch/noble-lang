@@ -3,7 +3,9 @@
     tigerstyle::no_unwrap,
     tigerstyle::non_trait_imports,
     tigerstyle::raw_arithmetic_overflow,
-    reason = "Owner: noble-maintainers; the experiment harness serializes a fixed deterministic corpus and checks its independent rows."
+    tigerstyle::ambient_clock,
+    tigerstyle::ambient_env,
+    reason = "Owner: noble-maintainers; this opt-in test-only experiment measures monotonic wall time, reads the caller-selected output path, serializes its fixed deterministic corpus, and checks independent rows."
 )]
 
 use noble_contracts::source::chunks;
@@ -56,4 +58,3 @@ use execution::*;
 
 #[path = "ranking/measure.rs"]
 mod measure;
-use measure::*;
