@@ -69,8 +69,9 @@ function snapshot() {
     ...Object.keys(selection.file_sha256), 'policy/tool-selection.json',
     'nix/tool-selection-files.nix', 'verification/m3-wasm/implementation.mjs',
     'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml',
-    ...files('crates/noble-kernel'), ...files('crates/noble-wasm'),
-    ...files('crates/noble-contracts'), ...files('crates/noble-cli'),
+    // Cargo resolves every workspace member and local path dependency, even
+    // when the selected extraction subject is only noble-kernel or noble-wasm.
+    ...files('crates'),
     ...files('proofs/m3-wasm'), ...files('proofs/m3/NobleKernel'),
     'proofs/m3/NobleKernel.lean', 'proofs/m3/lake-manifest.json',
     'proofs/m3/lakefile.toml', 'proofs/m3/lean-toolchain',
