@@ -328,7 +328,6 @@ impl Session {
         };
         let mut lookup_entries = 0usize;
         let mut is_corrupted = false;
-        let mut candidate = None;
         let mut candidate_index = None;
         let mut index = 0usize;
         while index < self.entries.len() {
@@ -339,20 +338,17 @@ impl Session {
                 index += 1;
                 continue;
             }
-            candidate = self.load_candidate(
+            candidate_index = Some(index);
+            break;
+        }
+        let candidate = candidate_index.and_then(|index| {
+            self.load_candidate(
                 index,
                 &invocation,
                 &specialization_manifest,
                 &subject_manifest,
-            );
-            if candidate.is_some() {
-                candidate_index = Some(index);
-            } else {
-                self.remove(index);
-                is_corrupted = true;
-            }
-            break;
-        }
+            )
+        });
         observe(StageEvent::End(Stage::Lookup));
         if let Some(candidate) = candidate {
             observe(StageEvent::Begin(Stage::Admission));
@@ -370,9 +366,9 @@ impl Session {
                     retained_bytes: self.retained_bytes,
                 });
             }
-            if let Some(index) = candidate_index {
-                self.remove(index);
-            }
+        }
+        if let Some(index) = candidate_index {
+            self.remove(index);
             is_corrupted = true;
         }
 

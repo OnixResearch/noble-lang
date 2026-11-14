@@ -1,11 +1,11 @@
 use super::*;
-use crate::identity::{IdentityHasher, IdentityScheme};
+use crate::identity::IdentityScheme;
 
 struct TestIds;
 
 struct TestHasher([u64; 4]);
 
-impl IdentityHasher for TestHasher {
+impl crate::identity::IdentityHasher for TestHasher {
     fn update(&mut self, bytes: &[u8]) {
         for (index, byte) in bytes.iter().enumerate() {
             let lane = index % 4;
@@ -30,7 +30,7 @@ impl IdentityScheme for TestIds {
         "cache-test"
     }
 
-    fn start(&self) -> alloc::boxed::Box<dyn IdentityHasher + '_> {
+    fn start(&self) -> alloc::boxed::Box<dyn crate::identity::IdentityHasher + '_> {
         alloc::boxed::Box::new(TestHasher([0x6a09_e667_f3bc_c908; 4]))
     }
 }
@@ -116,9 +116,13 @@ fn evaluate(
     }
 }
 
+#[path = "tests/adversarial.rs"]
+mod adversarial;
 #[path = "tests/identity.rs"]
 mod identity;
 #[path = "tests/matrix.rs"]
 mod matrix;
+#[path = "tests/resources.rs"]
+mod resources;
 #[path = "tests/reuse.rs"]
 mod reuse;
