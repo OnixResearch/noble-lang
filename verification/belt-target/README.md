@@ -34,7 +34,9 @@ The cycle/utilization/preservation fields are abstract-machine model outputs.
 Nanosecond fields measure this local Rust test-profile implementation path, not
 optimized production code. Neither is hardware performance evidence: no
 processor was measured and no frequency, power, area, or speedup claim follows.
-The target descriptors are not an ISA specification. The Lean theorem is about
-the symbolic model only; Rust artifact and operand-age correctness are covered
-by separate finite tests, not a Rust-to-Lean refinement theorem. Outputs wider
-than a target belt are refused rather than streamed.
+The target descriptors are not an ISA specification. The Lean theorem proves only latency-derived output availability and ordered
+mapping; the symbolic run obtains node values from the graph reference and
+does not independently execute arithmetic or belt/save transitions. Rust
+artifact and operand-age correctness are covered by separate finite tests, not
+a Rust-to-Lean refinement theorem. Outputs wider than a target belt are
+refused rather than streamed.

@@ -2,9 +2,11 @@ import NobleFoundation.PackedSchedule
 
 /-!
 Timed target-schedule model for #114. This models only two fixed descriptor records, issue cycles,
-latency-derived completion, issue resources, graph-node references, and ordered final reads. Event
-operand identities are the graph nodes named by each operation; wire operand ages and Rust artifact
-bytes are checked/tested separately. The model and theorem do not establish Rust refinement or
+latency-derived completion, issue resources, graph-node references, and ordered final reads. Its
+symbolic run gates graph-reference values on latency-derived completion; it does not independently
+evaluate operation values or simulate belt/save state. Event operand identities are graph nodes
+named by each operation; wire operand ages and Rust artifact bytes are checked/tested separately.
+The model and theorem do not establish an arithmetic-machine refinement, Rust refinement, or
 hardware behavior.
 -/
 namespace NobleFoundation.BeltTarget
@@ -164,23 +166,27 @@ def graphAdmissible (graph : Graph) : Bool :=
     (List.range graph.arity).all fun index =>
       (graph.node index).operands.all fun operand => operand < index
 
+/-- A definition is visible to final reads only after its latency-derived completion. -/
+def outputCompleted (target : Target) (events : List Issue) (horizon node : Nat) : Bool :=
+  events.any fun event =>
+    event.node = node && isDefinition event.operation && completionCycle target event ≤ horizon
+
 def outputsReady (graph : Graph) (target : Target) (events : List Issue)
     (horizon : Nat) (outputs : List Nat) : Bool :=
   outputs.all fun output =>
-    output < graph.arity && events.any fun event =>
-      event.node = output && isDefinition event.operation && completionCycle target event ≤ horizon
+    output < graph.arity && outputCompleted target events horizon output
 
 def baseChecks (graph : Graph) (target : Target) (schedule : Schedule) : Bool :=
   schedule.target = target && graphAdmissible graph &&
     schedule.events.length ≤ 65536 && schedule.horizon ≤ 65536 &&
     issueSorted schedule.events && uniqueLaneAndUnit schedule.events &&
     definitionCoverage graph schedule.events &&
-    schedule.events.all (eventLegal graph target schedule.events schedule.horizon) &&
-    outputsReady graph target schedule.events schedule.horizon schedule.outputs
+    schedule.events.all (eventLegal graph target schedule.events schedule.horizon)
 
 /-- The checker additionally requires the requested output sequence verbatim. -/
 def validate (graph : Graph) (target : Target) (outputs : List Nat) (schedule : Schedule) : Bool :=
-  baseChecks graph target schedule && decide (schedule.outputs = outputs)
+  outputsReady graph schedule.target schedule.events schedule.horizon schedule.outputs &&
+    (baseChecks graph target schedule && decide (schedule.outputs = outputs))
 
 /-- Deterministic completion key: completion cycle, issue cycle, then physical unit. -/
 def completionBefore (target : Target) (left right : Issue) : Bool :=
@@ -202,9 +208,30 @@ def completionOrder (target : Target) (events : List Issue) : List Issue :=
 def completingAt (target : Target) (cycle : Nat) (events : List Issue) : List Issue :=
   (completionOrder target events).filter fun event => completionCycle target event = cycle
 
-/-- The symbolic timed run reads completed graph values in the declared output order. -/
+/-- The symbolic timed run exposes a graph result only after a matching definition completes. -/
 def runOutputs (graph : Graph) (inputs : Nat → BitVec 64) (schedule : Schedule) : List (Option Val) :=
-  schedule.outputs.map (value graph inputs)
+  schedule.outputs.map fun output =>
+    if outputCompleted schedule.target schedule.events schedule.horizon output then
+      value graph inputs output
+    else none
+
+/-- Completed-output gating preserves the reference order for any ready output list. -/
+theorem mapReadyOutputs (graph : Graph) (inputs : Nat → BitVec 64) (target : Target)
+    (events : List Issue) (horizon : Nat) :
+    ∀ (outputs : List Nat),
+      (∀ node ∈ outputs, outputCompleted target events horizon node = true) →
+      outputs.map (fun node =>
+        if outputCompleted target events horizon node then value graph inputs node else none) =
+        outputs.map (value graph inputs) := by
+  intro outputs hready
+  induction outputs with
+  | nil => rfl
+  | cons node rest ih =>
+      have hnode := hready node (by simp)
+      have hrest : ∀ item ∈ rest, outputCompleted target events horizon item = true := by
+        intro item hitem
+        exact hready item (by simp [hitem])
+      simp [hnode, ih hrest]
 
 /-- Every accepted timed schedule returns exactly the requested graph-reference values.
 This is a theorem about the symbolic target model, not Rust refinement. -/
@@ -212,11 +239,35 @@ theorem validate_sound (graph : Graph) (inputs : Nat → BitVec 64) (outputs : L
     (target : Target) (schedule : Schedule)
     (hvalid : validate graph target outputs schedule = true) :
     runOutputs graph inputs schedule = referenceOutputs graph inputs outputs := by
-  have hparts : baseChecks graph target schedule = true ∧
-      decide (schedule.outputs = outputs) = true := by
+  have hparts : outputsReady graph schedule.target schedule.events schedule.horizon schedule.outputs = true ∧
+      (baseChecks graph target schedule = true ∧ decide (schedule.outputs = outputs) = true) := by
     simpa only [validate, Bool.and_eq_true] using hvalid
-  have houtputs : schedule.outputs = outputs := of_decide_eq_true hparts.2
-  simp [runOutputs, houtputs, referenceOutputs]
+  have houtputs : schedule.outputs = outputs := of_decide_eq_true hparts.2.2
+  have hcompleted : ∀ node ∈ outputs,
+      outputCompleted schedule.target schedule.events schedule.horizon node = true := by
+    intro node hnode
+    have hready := (List.all_eq_true.mp hparts.1) node (by simpa [houtputs] using hnode)
+    have hparts' : decide (node < graph.arity) = true ∧
+        outputCompleted schedule.target schedule.events schedule.horizon node = true := by
+      simpa only [Bool.and_eq_true] using hready
+    exact hparts'.2
+  unfold runOutputs referenceOutputs
+  rw [houtputs]
+  exact mapReadyOutputs graph inputs schedule.target schedule.events schedule.horizon outputs hcompleted
+
+def completionGraph : Graph where
+  arity := 1
+  output := 0
+  node := fun _ => .input 0
+
+def incompleteSchedule : Schedule where
+  target := .t1
+  horizon := 0
+  events := [{ cycle := 1, lane := 0, unit := 2, node := 0, operation := .input 0 }]
+  outputs := [0]
+
+example : runOutputs completionGraph (fun _ => 42) incompleteSchedule = [none] := by decide
+example : validate completionGraph .t1 [0] incompleteSchedule = false := by decide
 
 example : descriptor .t1 = ⟨1, 4, 8, 1, 1, 1, 1, 3, 1, 1⟩ := by decide
 example : descriptor .t2 = ⟨2, 8, 8, 2, 1, 2, 1, 2, 1, 1⟩ := by decide
