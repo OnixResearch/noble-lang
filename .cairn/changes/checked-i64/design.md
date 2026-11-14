@@ -55,3 +55,12 @@ Signed `i64.lt` is the sole comparison primitive. `≤` is derived as `if a < b 
 - The Lean model and generated Wasm are not connected by a proof in this slice. Keep model proof, implementation testing, refinement and residual trusted edges separately labelled.
 - Adding new `Behavior` variants changes the kernel extraction subject and requires the integrator's source-inventory/extraction-policy renewal; no existing proof receipt is silently extended.
 - The runtime must avoid WebAssembly's `i64.div_s` trap for zero and `MIN / -1` by classifying both inputs first.
+
+## Evidence boundary
+
+| Claim class | Status | Evidence and limits |
+|---|---|---|
+| Model semantics | Proved | `verification/checked-i64/receipts/foundation-summary.json` records the kernel-checked retained-expectations theorem within the 1,451-theorem foundation audit. It establishes model semantics, not runtime correspondence. |
+| Implementation behavior | Tested | `verification/checked-i64/receipts/replay-2026-11-13.json` binds a clean source commit and records 57 retained vectors through real source-to-Wasm execution with optimization off and on, plus stack-prefix, refusal and resource-limit controls. The refusal cases expect zero host requests. `verification/checked-i64/receipts/mutants-2026-11-13.json` records all five implementation mutants caught by the retained-vector test. |
+| Rust/Wasm refinement | Not proved | The finite replay and mutants do not establish a universal theorem that the implementation refines the Lean model. No such correspondence theorem is included in this slice. |
+| Open integration work | Pending integrator | Rust source-inventory renewal and the kernel extraction-policy re-pin are required before integration. These repository-wide bindings are not changed by this slice. |
