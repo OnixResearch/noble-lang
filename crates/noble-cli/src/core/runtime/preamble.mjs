@@ -14,6 +14,8 @@ const names = ['dup', 'drop', 'swap', 'dip', 'i64.add', 'i64.sub', 'i64.mul', 'i
   'quote', 'compose', 'run', 'reflect', 'unit', 'pair', 'unpair', 'inl', 'inr', 'case',
   'if', 'nil', 'cons', 'list.case', 'test.emit', 'test.abort', 'self.propose', 'self.generation',
   'text.byte', 'iterate', 'i64.cmp', 'i64.div-rem', 'text.from-ascii', 'text.length'];
+const checkedI64Names = ['i64.checked-add', 'i64.checked-sub', 'i64.checked-mul',
+  'i64.checked-neg', 'i64.checked-abs', 'i64.lt', 'i64.checked-div-rem'];
 const fail = message => { throw Error(message); };
 const integer = (value, maximum, label) => {
   if (!Number.isSafeInteger(value) || value < 0 || value > maximum) fail(`invalid ${label}`);

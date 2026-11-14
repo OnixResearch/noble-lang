@@ -62,6 +62,7 @@ impl Report {
         signed: bool,
         declared_text: bool,
         text_byte_cursor: bool,
+        checked_i64: bool,
     ) -> Self {
         if declared {
             Self::declared_static(
@@ -81,6 +82,8 @@ impl Report {
                 None,
                 if text_byte_cursor {
                     "Text-Byte-Cursor-v1"
+                } else if checked_i64 {
+                    "Checked-I64-v1"
                 } else {
                     "Core-Bootstrap"
                 },
@@ -105,13 +108,14 @@ impl Report {
     }
 
     pub fn source_error(error: &noble_contracts::source::Error, submission: u64) -> Self {
-        Self::source_error_for_profile(error, submission, false)
+        Self::source_error_for_profile(error, submission, false, false)
     }
 
     pub fn source_error_for_profile(
         error: &noble_contracts::source::Error,
         submission: u64,
         text_byte_cursor: bool,
+        checked_i64: bool,
     ) -> Self {
         let diagnostic = error.diagnostic();
         Self::static_report(
@@ -123,18 +127,19 @@ impl Report {
             submission,
             Some(diagnostic.span),
             diagnostic.join(),
-            profile(text_byte_cursor),
+            profile(text_byte_cursor, checked_i64),
         )
     }
 
     pub fn backend_error(error: noble_wasm::Diagnostic, submission: u64) -> Self {
-        Self::backend_error_for_profile(error, submission, false)
+        Self::backend_error_for_profile(error, submission, false, false)
     }
 
     pub fn backend_error_for_profile(
         error: noble_wasm::Diagnostic,
         submission: u64,
         text_byte_cursor: bool,
+        checked_i64: bool,
     ) -> Self {
         let failure = Failure::backend(error);
         Self::static_report(
@@ -143,15 +148,15 @@ impl Report {
             submission,
             None,
             None,
-            profile(text_byte_cursor),
+            profile(text_byte_cursor, checked_i64),
         )
     }
 
     pub fn defined(submission: u64) -> Self {
-        Self::defined_for_profile(submission, false)
+        Self::defined_for_profile(submission, false, false)
     }
 
-    pub fn defined_for_profile(submission: u64, text_byte_cursor: bool) -> Self {
+    pub fn defined_for_profile(submission: u64, text_byte_cursor: bool, checked_i64: bool) -> Self {
         Self::static_report(
             ErrorContext {
                 stage: "check",
@@ -161,7 +166,7 @@ impl Report {
             submission,
             None,
             None,
-            profile(text_byte_cursor),
+            profile(text_byte_cursor, checked_i64),
         )
     }
 
@@ -323,9 +328,11 @@ impl Report {
     }
 }
 
-const fn profile(text_byte_cursor: bool) -> &'static str {
+const fn profile(text_byte_cursor: bool, checked_i64: bool) -> &'static str {
     if text_byte_cursor {
         "Text-Byte-Cursor-v1"
+    } else if checked_i64 {
+        "Checked-I64-v1"
     } else {
         "Core-Bootstrap"
     }

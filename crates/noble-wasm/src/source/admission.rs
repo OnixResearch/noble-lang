@@ -267,6 +267,7 @@ pub(super) fn check(
     live_slots: bool,
     text_cursor: bool,
     calculator: bool,
+    checked_i64: bool,
     declared_text: bool,
     signed: bool,
     work: &mut super::Work,
@@ -274,16 +275,32 @@ pub(super) fn check(
     attempt!(work.charge(1));
     // Only the combined declared-text profile pairs declared modules with the
     // text cursor; live and the calculator never do.
-    if (submission.environment.declared_modules || calculator)
-        && (live || (text_cursor && (calculator || !declared_text)))
-    {
+    let is_declared_or_calculator_profile = submission.environment.declared_modules || calculator;
+    let is_cursor_conflicting_with_calculator = text_cursor && calculator;
+    let is_cursor_conflicting_with_non_declared_text = text_cursor && !declared_text;
+    let is_cursor_profile_conflict = live
+        || is_cursor_conflicting_with_calculator
+        || is_cursor_conflicting_with_non_declared_text;
+    let is_existing_profile_conflict =
+        is_declared_or_calculator_profile && is_cursor_profile_conflict;
+    let is_runtime_profile_conflict = live || live_slots || text_cursor;
+    let is_checked_i64_runtime_conflict = checked_i64 && is_runtime_profile_conflict;
+    let is_source_profile_conflict =
+        calculator || declared_text || submission.environment.declared_modules;
+    let is_checked_i64_source_conflict = checked_i64 && is_source_profile_conflict;
+    let is_checked_i64_profile_conflict =
+        is_checked_i64_runtime_conflict || is_checked_i64_source_conflict;
+    if is_existing_profile_conflict || is_checked_i64_profile_conflict {
         return Err(crate::Diagnostic::Invalid);
     }
     let environment_work = attempt!(environment::work(
         &submission.environment,
-        calculator,
-        text_cursor,
-        declared_text,
+        super::ProfileSelection {
+            calculator,
+            checked_i64,
+            text_cursor,
+            declared_text,
+        },
         work
     ));
     attempt!(work.charge(environment_work));
@@ -293,6 +310,7 @@ pub(super) fn check(
         live_slots,
         text_cursor,
         calculator,
+        checked_i64,
         declared_text
     ));
     if calculator {

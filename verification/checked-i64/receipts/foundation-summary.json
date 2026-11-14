@@ -1,0 +1,40 @@
+{
+  "schema": "noble-checked-i64-foundation-summary/v1",
+  "source_commit": "46c6e7af09b6eeb90f43a3d65d9f94dad836ef2d",
+  "source_tree": "b9c7c42980ca258fef208e4477e0557d05209109",
+  "clean_source": true,
+  "command": [
+    "/home/brittonr/.cache/noble-iss/slot.sh",
+    "lean",
+    "3",
+    "verification/ci/lean-proofs.sh",
+    "--allow-dirty",
+    "/home/brittonr/.cache/noble-iss/scratch/checked-39/lean-proofs-final"
+  ],
+  "results": {
+    "m3-build": 0,
+    "m3-gate": 0,
+    "foundation-build": 0,
+    "foundation-check": 0,
+    "overall": 0,
+    "theorem_count": 1451,
+    "theorem": {
+      "name": "NobleFoundation.CheckedI64Expectations.retained_expectations_checked",
+      "phase": 1,
+      "role": "checked-i64",
+      "claim": "every retained external scalar-boundary proposal agrees with the kernel-checked checked-I64 model",
+      "status": "proved",
+      "statement": "NobleFoundation.CheckedI64Expectations.retained.all fun x => match x with | (operation, left, right, expected) => NobleFoundation.CheckedI64Expectations.evaluate operation left right == expected",
+      "axioms": [
+        "propext"
+      ]
+    }
+  },
+  "sha256": {
+    "foundation_check_json": "015a2ccca8d340c01a72ee4a4d86dff9f72e91a1c2707ee6d2e17dd167a3131b",
+    "foundation_audit_lean": "ba9d4ab73a8a98f6a2d742f6d3ec8f286d8ec89bd587fc8ab7901b993c09f2da",
+    "summary": "6d2ba8f00dfc3d34ea5274843c3adc6df384f36481106d34e41d6714d35875e3",
+    "expectations_source": "6185f67b319f713839efa412f226e0033cce074bce2b79c7f60bc4070af4c76c"
+  },
+  "claim_boundary": "Kernel-checked expectation rows agree with the existing model; no Rust/Wasm/compiler refinement theorem is claimed."
+}

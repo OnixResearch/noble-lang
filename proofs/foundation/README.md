@@ -1052,13 +1052,35 @@ The clean-source receipt for the checked I64 reference is
 (646 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
 
-Open, and deliberately not closed:
+At the phase-1 receipt above, the following remained open; that receipt is
+still only the model evidence for its named source commit:
 
 - no Rust implementation, frontend, runtime helper, API name, error
-  representation, or overflow-policy correspondence is claimed;
-- no library division operation is selected by this reference, and no
-  compiler or generated-artifact theorem follows from these model laws;
-- the signed order definition is a mathematical `BitVec.toInt` relation only.
+  representation, or overflow-policy correspondence was claimed there;
+- no library division operation was selected by that reference, and no
+  compiler or generated-artifact theorem followed from those model laws;
+- its signed order definition is a mathematical `BitVec.toInt` relation only.
+
+## Checked I64 selected-profile expectations and runtime tests (issue #39)
+
+`NobleFoundation.CheckedI64Expectations.retained_expectations_checked` checks
+the 57 arithmetic proposals in `verification/checked-i64/proposals.json` by
+kernel reduction against the model above. The proposals are generated
+independently by the BigInt script; kernel checking establishes their expected
+values in the model, not their correspondence to Rust or Wasm.
+
+The CLI smoke suite runs those vectors through the selected source-to-Wasm
+path with optimization off and on, and separately checks stack-prefix
+preservation, rejection, and resource-exhaustion refusal before guest,
+protected-operation, or candidate-preparation requests. The source-bound
+finite replay and the five implementation mutants are retained in
+`verification/checked-i64/receipts/`. The implementation is **tested** for
+those finite cases; Rust/WAT/compiler/optimizer/engine refinement is **open**.
+The runtime transcript, loader, and execution tooling remain trusted edges;
+resource exhaustion remains distinct from arithmetic-domain results. These
+receipts do not promote the Core-14 wrapping scenario or establish a general
+compiler theorem.
+
 ## Exact and RNE decimal import (issue #40, phase 1)
 
 `NobleFoundation/DecimalImport.lean` is the name-neutral model for an explicit

@@ -97,6 +97,15 @@ pub(in crate::source::emit) fn runtime(
             ))
         ));
     }
+    if plan.checked_i64 {
+        attempt!(super::fragment(
+            out,
+            include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/runtime/checked-i64.wat"
+            ))
+        ));
+    }
     attempt!(super::fragment(
         out,
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/data.wat"))

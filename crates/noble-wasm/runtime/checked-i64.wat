@@ -1,0 +1,88 @@
+;; Checked-I64-v1 uses only pure stack/cell operations. Domain failures become
+;; the right Sum arm; every operation classifies overflow before exposing a value.
+(func $checked_i64_error (param $code i64)
+ (call $push_i64 (local.get $code))
+ (call $op_inr))
+
+(func $checked_i64_success (param $value i64)
+ (call $push_i64 (local.get $value))
+ (call $op_inl))
+
+(func $op_checked_i64_add (local $right i64) (local $left i64) (local $result i64)
+ (local.set $right (call $pop_kind (i32.const 1)))
+ (local.set $left (call $pop_kind (i32.const 1)))
+ (if (global.get $failure) (then (return)))
+ (local.set $result (i64.add (local.get $left) (local.get $right)))
+ (if (i32.and
+       (i64.lt_s (i64.xor (local.get $left) (local.get $result)) (i64.const 0))
+       (i64.lt_s (i64.xor (local.get $right) (local.get $result)) (i64.const 0)))
+  (then (call $checked_i64_error (i64.const 1)) (return)))
+ (call $checked_i64_success (local.get $result)))
+
+(func $op_checked_i64_sub (local $right i64) (local $left i64) (local $result i64)
+ (local.set $right (call $pop_kind (i32.const 1)))
+ (local.set $left (call $pop_kind (i32.const 1)))
+ (if (global.get $failure) (then (return)))
+ (local.set $result (i64.sub (local.get $left) (local.get $right)))
+ (if (i32.and
+       (i64.lt_s (i64.xor (local.get $left) (local.get $right)) (i64.const 0))
+       (i64.lt_s (i64.xor (local.get $left) (local.get $result)) (i64.const 0)))
+  (then (call $checked_i64_error (i64.const 1)) (return)))
+ (call $checked_i64_success (local.get $result)))
+
+(func $op_checked_i64_mul (local $right i64) (local $left i64) (local $result i64)
+ (local.set $right (call $pop_kind (i32.const 1)))
+ (local.set $left (call $pop_kind (i32.const 1)))
+ (if (global.get $failure) (then (return)))
+ (local.set $result (i64.mul (local.get $left) (local.get $right)))
+ (if (i64.eq (local.get $right) (i64.const 0))
+  (then (call $checked_i64_success (local.get $result)) (return)))
+ (if (i32.and
+       (i64.eq (local.get $left) (i64.const -9223372036854775808))
+       (i64.eq (local.get $right) (i64.const -1)))
+  (then (call $checked_i64_error (i64.const 1)) (return)))
+ ;; The zero and MIN/-1 divisors are excluded before this overflow check.
+ (if (i64.ne (i64.div_s (local.get $result) (local.get $right)) (local.get $left))
+  (then (call $checked_i64_error (i64.const 1)) (return)))
+ (call $checked_i64_success (local.get $result)))
+
+(func $op_checked_i64_neg (local $value i64)
+ (local.set $value (call $pop_kind (i32.const 1)))
+ (if (global.get $failure) (then (return)))
+ (if (i64.eq (local.get $value) (i64.const -9223372036854775808))
+  (then (call $checked_i64_error (i64.const 1)) (return)))
+ (call $checked_i64_success (i64.sub (i64.const 0) (local.get $value))))
+
+(func $op_checked_i64_abs (local $value i64) (local $result i64)
+ (local.set $value (call $pop_kind (i32.const 1)))
+ (if (global.get $failure) (then (return)))
+ (if (i64.eq (local.get $value) (i64.const -9223372036854775808))
+  (then (call $checked_i64_error (i64.const 1)) (return)))
+ (local.set $result (local.get $value))
+ (if (i64.lt_s (local.get $value) (i64.const 0))
+  (then (local.set $result (i64.sub (i64.const 0) (local.get $value)))))
+ (call $checked_i64_success (local.get $result)))
+
+(func $op_checked_i64_less (local $right i64) (local $left i64)
+ (local.set $right (call $pop_kind (i32.const 1)))
+ (local.set $left (call $pop_kind (i32.const 1)))
+ (if (global.get $failure) (then (return)))
+ (call $push_bool (i64.lt_s (local.get $left) (local.get $right))))
+
+(func $op_checked_i64_div_rem
+ (local $right i64) (local $left i64) (local $quotient i64) (local $remainder i64)
+ (local.set $right (call $pop_kind (i32.const 1)))
+ (local.set $left (call $pop_kind (i32.const 1)))
+ (if (global.get $failure) (then (return)))
+ (if (i64.eq (local.get $right) (i64.const 0))
+  (then (call $checked_i64_error (i64.const 2)) (return)))
+ (if (i32.and
+       (i64.eq (local.get $left) (i64.const -9223372036854775808))
+       (i64.eq (local.get $right) (i64.const -1)))
+  (then (call $checked_i64_error (i64.const 1)) (return)))
+ (local.set $quotient (i64.div_s (local.get $left) (local.get $right)))
+ (local.set $remainder (i64.rem_s (local.get $left) (local.get $right)))
+ (call $push_i64 (local.get $quotient))
+ (call $push_i64 (local.get $remainder))
+ (call $op_pair)
+ (call $op_inl))

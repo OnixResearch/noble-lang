@@ -1,6 +1,6 @@
 // Host-owned ABI, immutable adapter dispatch and effect accounting.
 function configureDeclaredAbi(engine, abi, declared_modules, declared_extension, bindings,
-    text_byte_cursor, calculator, signed_self_recursion) {
+    text_byte_cursor, checked_i64, calculator, signed_self_recursion) {
     if (typeof declared_modules !== 'boolean') fail('invalid declared module selection');
     const declaredText = text_byte_cursor && declared_modules;
     if (typeof text_byte_cursor !== 'boolean'
@@ -9,6 +9,11 @@ function configureDeclaredAbi(engine, abi, declared_modules, declared_extension,
     }
     if (typeof calculator !== 'boolean'
       || calculator && (declared_modules || text_byte_cursor || engine.inProcessLive)) {
+      fail('selected runtime profiles are disjoint');
+    }
+    if (typeof checked_i64 !== 'boolean'
+      || checked_i64 && (declared_modules || text_byte_cursor || calculator
+        || engine.inProcessLive || signed_self_recursion)) {
       fail('selected runtime profiles are disjoint');
     }
     if (declaredText
@@ -22,6 +27,7 @@ function configureDeclaredAbi(engine, abi, declared_modules, declared_extension,
     }
     engine.declaredModules = declared_modules;
     engine.profile = calculator ? 'Calculator-v1'
+      : checked_i64 ? 'Checked-I64-v1'
       : declaredText ? signed_self_recursion
         ? 'Signed-Declared-Text-v1' : 'Declared-Text-v1'
       : signed_self_recursion ? 'Signed-Self-Modules-v1'

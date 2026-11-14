@@ -32,6 +32,7 @@ impl crate::core::companions::Driver {
             size_change_lean: None,
             size_change_lean_library: None,
             text_byte_cursor: false,
+            checked_i64: false,
             bindings: None,
             manifest: None,
             framed: false,

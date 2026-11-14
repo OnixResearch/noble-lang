@@ -32,7 +32,8 @@ async function protocol(config) {
       session_state: 'terminated-after-internal-failure' }
     : ({ schema: 'noble-core-report/v1',
     profile: config.calculator === true ? 'Calculator-v1'
-      : engine?.declaredLive ? engine.profile : 'Core-Bootstrap',
+      : config.checked_i64 === true ? 'Checked-I64-v1'
+        : engine?.declaredLive ? engine.profile : 'Core-Bootstrap',
     backend: 'managed-linear-memory', stage: 'wasm', outcome: 'internal-failure',
     diagnostic: `${error.name}: ${error.message}`,
     request_trace: engine ? engine.trace.slice(engine.lastTraceStart) : [],

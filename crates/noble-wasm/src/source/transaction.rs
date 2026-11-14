@@ -7,6 +7,7 @@ pub(super) struct Base {
     text_cursor: bool,
     declared_text: bool,
     calculator: bool,
+    checked_i64: bool,
     worker_inputs: bool,
     worker_interruption: bool,
     generation: u32,
@@ -43,6 +44,7 @@ impl Base {
             text_cursor: compiler.text_cursor,
             declared_text: compiler.declared_text,
             calculator: compiler.calculator,
+            checked_i64: compiler.checked_i64,
             worker_inputs: compiler.worker_inputs,
             worker_interruption: compiler.worker_interruption,
             generation: compiler.generation,
@@ -84,6 +86,8 @@ impl Base {
             && self.declared_text == next.declared_text
             && self.calculator == current.calculator
             && self.calculator == next.calculator
+            && self.checked_i64 == current.checked_i64
+            && self.checked_i64 == next.checked_i64
             && self.worker_inputs == current.worker_inputs
             && self.worker_inputs == next.worker_inputs
             && self.worker_interruption == current.worker_interruption

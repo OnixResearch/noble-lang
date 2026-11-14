@@ -13,6 +13,7 @@ pub(super) struct Options {
     pub size_change_lean: Option<std::path::PathBuf>,
     pub size_change_lean_library: Option<std::path::PathBuf>,
     pub text_byte_cursor: bool,
+    pub checked_i64: bool,
     pub bindings: Option<std::path::PathBuf>,
     pub manifest: Option<bindings::Manifest>,
     pub framed: bool,
@@ -68,6 +69,7 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
         size_change_lean: None,
         size_change_lean_library: None,
         text_byte_cursor: false,
+        checked_i64: false,
         bindings: None,
         manifest: None,
         framed: false,
@@ -82,7 +84,7 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
             .ok_or_else(usage))));
         at = attempt!(at.checked_add(1).ok_or_else(usage));
     }
-    let mut seen = [""; 16];
+    let mut seen = [""; 17];
     let mut seen_count = 0_usize;
     while at < arguments.len() {
         let name = attempt!(arguments[at].to_str().ok_or_else(usage));
@@ -117,11 +119,27 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
             options.text_byte_cursor = true;
             continue;
         }
+        if name == "--checked-i64" {
+            if !is_session && !options.compile_only {
+                return Err(usage());
+            }
+            options.checked_i64 = true;
+            continue;
+        }
         let value = attempt!(arguments.get(at).ok_or_else(usage));
         at = attempt!(at.checked_add(1).ok_or_else(usage));
         attempt!(set(&mut options, name, value, maximum));
     }
     if options.declared_text() && options.bindings.is_some() {
+        return Err(usage());
+    }
+    if options.checked_i64
+        && (options.declared_modules
+            || options.text_byte_cursor
+            || options.signed_self_recursion
+            || !options.modules.is_empty()
+            || options.bindings.is_some())
+    {
         return Err(usage());
     }
     if !options.declared_text() && options.declared_modules != options.bindings.is_some() {
@@ -283,6 +301,34 @@ mod tests {
             .map(|argument| std::ffi::OsString::from(*argument))
             .collect();
         super::parse(&arguments).map_err(|failure| failure.message)
+    }
+
+    #[test]
+    fn checked_i64_is_an_exclusive_compile_or_session_profile() -> Result<(), std::string::String> {
+        assert!(flags(&["compile", "expression.noble", "--checked-i64"])?.checked_i64);
+        assert!(flags(&["session", "--checked-i64"])?.checked_i64);
+        for arguments in [
+            &[
+                "compile",
+                "expression.noble",
+                "--checked-i64",
+                "--text-byte-cursor",
+            ][..],
+            &[
+                "compile",
+                "expression.noble",
+                "--checked-i64",
+                "--declared-modules",
+            ][..],
+            &["run", "expression.noble", "--checked-i64"][..],
+        ] {
+            if flags(arguments).is_ok() {
+                return Err(std::format!(
+                    "accepted incompatible checked-I64 flags: {arguments:?}"
+                ));
+            }
+        }
+        Ok(())
     }
 
     #[test]

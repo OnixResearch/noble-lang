@@ -1,0 +1,69 @@
+{
+  "schema": "noble-checked-i64-mutants/v1",
+  "source_commit": "306a2715188386ceb37c1b87ec4cf1df94d8bacd",
+  "source_tree": "188963bf4f382d3e570a235261912c285be958e3",
+  "clean_source": true,
+  "restored_clean_source": true,
+  "test": "checked_i64::retained_vectors_match_lean_and_real_source_wasm",
+  "command": [
+    "/home/brittonr/.cache/noble-iss/cargo.sh",
+    "test",
+    "-p",
+    "noble-cli",
+    "--test",
+    "smoke",
+    "checked_i64::retained_vectors_match_lean_and_real_source_wasm",
+    "--offline",
+    "--locked",
+    "--",
+    "--exact"
+  ],
+  "wat_sha256": "aab3f6a8486f3f41385a9453f8179276df5d76bab2f3e5b5b77bb1e7ad01ddc1",
+  "baseline": {
+    "exit_status": 0,
+    "test_result": "test checked_i64::retained_vectors_match_lean_and_real_source_wasm ... ok"
+  },
+  "mutants": [
+    {
+      "id": "inclusive-overflow-boundary",
+      "purpose": "classifying a zero sign-difference as overflow",
+      "function": "$op_checked_i64_add",
+      "outcome": "caught",
+      "exit_status": 101,
+      "test_result": "test checked_i64::retained_vectors_match_lean_and_real_source_wasm ... FAILED"
+    },
+    {
+      "id": "unsigned-comparison",
+      "purpose": "using unsigned rather than signed I64 order",
+      "function": "$op_checked_i64_less",
+      "outcome": "caught",
+      "exit_status": 101,
+      "test_result": "test checked_i64::retained_vectors_match_lean_and_real_source_wasm ... FAILED"
+    },
+    {
+      "id": "floor-divrem",
+      "purpose": "adjusting truncating division to floor quotient and divisor-signed remainder",
+      "function": "$op_checked_i64_div_rem",
+      "outcome": "caught",
+      "exit_status": 101,
+      "test_result": "test checked_i64::retained_vectors_match_lean_and_real_source_wasm ... FAILED"
+    },
+    {
+      "id": "reversed-subtraction-operands",
+      "purpose": "swapping the operands of subtraction",
+      "function": "$op_checked_i64_sub",
+      "outcome": "caught",
+      "exit_status": 101,
+      "test_result": "test checked_i64::retained_vectors_match_lean_and_real_source_wasm ... FAILED"
+    },
+    {
+      "id": "exposed-overflow-partial-result",
+      "purpose": "pushing the wrapped intermediate before returning an overflow sum",
+      "function": "$op_checked_i64_add",
+      "outcome": "caught",
+      "exit_status": 101,
+      "test_result": "test checked_i64::retained_vectors_match_lean_and_real_source_wasm ... FAILED"
+    }
+  ],
+  "claim_boundary": "The mutations are caught by tested source-to-Wasm behavior; this is not a Rust/Wasm refinement proof."
+}

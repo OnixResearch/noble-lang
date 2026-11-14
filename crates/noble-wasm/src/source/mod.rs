@@ -33,6 +33,14 @@ const DEFINITION_LIMIT: usize = 256;
 // whose 321 reachable named bodies exceed the older 256-definition profile.
 const CALCULATOR_DEFINITION_LIMIT: usize = 512;
 
+#[derive(Clone, Copy)]
+pub(in crate::source) struct ProfileSelection {
+    calculator: bool,
+    checked_i64: bool,
+    text_cursor: bool,
+    declared_text: bool,
+}
+
 /// The environment row cap of a selected profile: its definition limit plus the
 /// fixed rows only that profile installs (calculator 32, text cursor 27,
 /// declared text 28, ordinary 26). Borrowed preflight, admission's environment
@@ -42,9 +50,12 @@ pub(crate) const fn maximum_rows(
     calculator: bool,
     text_cursor: bool,
     declared_text: bool,
+    checked_i64: bool,
 ) -> usize {
     if calculator {
         noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
+    } else if checked_i64 {
+        DEFINITION_LIMIT.saturating_add(30)
     } else if declared_text {
         DEFINITION_LIMIT.saturating_add(28)
     } else if text_cursor {
@@ -63,6 +74,9 @@ pub(super) const CALCULATOR_COMPILER_WORK_LIMIT: u64 = 2_000_000_000;
 // Core live sessions reserve 24/25 for their two checked operations.
 // Ordinary and declared sessions retain their original fixed prefixes.
 fn builtin_count(env: &noble_kernel::contracts::Env) -> u32 {
+    if env.has_checked_i64() {
+        return 30;
+    }
     if env.calculator && env.declared_modules {
         return 32;
     }
@@ -231,6 +245,7 @@ pub struct Compiler {
     text_cursor: bool,
     declared_text: bool,
     calculator: bool,
+    checked_i64: bool,
     worker_inputs: bool,
     /// Typed-worker profile: a host interruption point every eighth unit.
     worker_interruption: bool,
@@ -737,6 +752,7 @@ impl Compiler {
             text_cursor: false,
             declared_text: false,
             calculator: false,
+            checked_i64: false,
             worker_inputs: false,
             worker_interruption: false,
             generation: 0,
@@ -783,6 +799,14 @@ impl Compiler {
     pub fn new_text_cursor() -> Self {
         Self {
             text_cursor: true,
+            ..Self::new()
+        }
+    }
+
+    /// The checked-I64-v1 operation table is selected independently of Core.
+    pub fn new_checked_i64() -> Self {
+        Self {
+            checked_i64: true,
             ..Self::new()
         }
     }
@@ -835,6 +859,9 @@ impl Compiler {
         if self.declared_text || (self.declared_live && !submission.environment.declared_modules) {
             return Err(crate::Diagnostic::Unsupported);
         }
+        if submission.environment.has_checked_i64() != self.checked_i64 {
+            return Err(crate::Diagnostic::Invalid);
+        }
         self.prepare_from(submission, None, self.functions, false, false, false)
     }
 
@@ -853,6 +880,7 @@ impl Compiler {
             || self.text_cursor
             || self.declared_text
             || self.calculator
+            || self.checked_i64
             || self.worker_inputs
         {
             return Err(crate::Diagnostic::Unsupported);
@@ -885,6 +913,7 @@ impl Compiler {
             || self.text_cursor
             || self.declared_text
             || self.calculator
+            || self.checked_i64
         {
             return Err(crate::Diagnostic::Unsupported);
         }
@@ -909,6 +938,7 @@ impl Compiler {
             || self.declared_live
             || self.live_slots
             || self.calculator
+            || self.checked_i64
             || self.worker_inputs
         {
             return Err(crate::Diagnostic::Unsupported);
@@ -1005,9 +1035,12 @@ impl Compiler {
         };
         attempt!(preflight::check(
             submission,
-            self.calculator,
-            self.text_cursor,
-            self.declared_text,
+            ProfileSelection {
+                calculator: self.calculator,
+                checked_i64: self.checked_i64,
+                text_cursor: self.text_cursor,
+                declared_text: self.declared_text,
+            },
             &mut work
         ));
         work.calculator_preflight = false;
@@ -1029,6 +1062,7 @@ impl Compiler {
             self.live_slots,
             self.text_cursor,
             self.calculator,
+            self.checked_i64,
             self.declared_text,
             signed,
             &mut work,
@@ -1083,6 +1117,7 @@ impl Compiler {
             text_cursor: self.text_cursor,
             declared_text: self.declared_text,
             calculator: self.calculator,
+            checked_i64: self.checked_i64,
             worker_inputs: self.worker_inputs,
             worker_interruption: self.worker_interruption,
             generation: match self.generation.checked_add(1) {
@@ -1406,6 +1441,7 @@ impl Compiler {
             || self.declared_live
             || self.live_slots
             || self.calculator
+            || self.checked_i64
             || self.worker_inputs
             || self.generation != generation
             || self.functions != code_end
@@ -2039,12 +2075,24 @@ mod declared_text_ingress_tests {
         let compiler = Compiler::new_declared_text();
         let mut work = budget(original.request.limits.work);
         assert!(
-            preflight::check(&original, false, true, true, &mut work).is_ok(),
+            preflight::check(
+                &original,
+                super::ProfileSelection {
+                    calculator: false,
+                    checked_i64: false,
+                    text_cursor: true,
+                    declared_text: true,
+                },
+                &mut work,
+            )
+            .is_ok(),
             "whole-source preflight exhausted before declared-text admission"
         );
-        let checked = admission::check(&original, false, false, true, false, true, true, &mut work)
-            .ok()
-            .expect("declared-text whole-submission admission exhausted");
+        let checked = admission::check(
+            &original, false, false, true, false, false, true, true, &mut work,
+        )
+        .ok()
+        .expect("declared-text whole-submission admission exhausted");
         assert!(
             admission::meter::compilation(&checked, &compiler.signatures, &mut work).is_ok(),
             "checked derivation compilation meter exhausted"
