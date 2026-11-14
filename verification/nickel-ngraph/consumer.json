@@ -1,8 +1,8 @@
 {
   "schema": "noble-ngraph-nickel-consumer/v1",
-  "receipt_sha256": "4480202311c239a99d313f832202b4adb45d21f7fda8e4274b58774437e45d2d",
+  "receipt_sha256": "ab05ff0b5f787f303ff75d6225b95ad093f2340f892e5b22e7b237d103bc16df",
   "bindings": {
-    "source_commit": "36275357a066d4fbd317751c48fbc13f9edcac01",
+    "source_commit": "96bdc0dd6129577f78e15e38e6391b54b033e7a9",
     "source_bytes_sha256": "4f248775679cff08ca6024774f686e15fcafe31eb352298256659b7bd9ce52b4",
     "import_bytes_sha256": "98aa76836b509b8ad09418a68d504a68d9d0639074665501462261e691e70254",
     "import_closures_sha256": "66d23e0108b71eeb1fb19797c4c20e2f77822d08394ca90440725528560eb20b",
@@ -11,7 +11,7 @@
     "evaluator_identity_sha256": "79eb3118dc2035b3c5097b050978d1a33037d3cd68f3fb70aad15295febbd66a",
     "exported_constructor_bytes_sha256": "0409745d5278a21e86c52e60bc30738725dcd185cd67461f4a9fe313856a0f8a",
     "lowerer_revision": "noble-ngraph-nickel-lowerer/1",
-    "lowerer_source_sha256": "0bd093c2fb416902a82f695f09458965d079b621054fa980fbcf0b7b7223e8b3",
+    "lowerer_source_sha256": "9f0ceb0f72cea30264f57607dae349606bfbfa0f564fc266ee1368ceb18b2e8d",
     "profile": "ngraph-i64/0",
     "graphs": [
       {
@@ -58,5 +58,5 @@
       }
     ]
   },
-  "sha256": "53c126663d3805b49b7191e9984db5dad236fd4accbc2f19531a77d2508854a1"
+  "sha256": "7a7a2141c07630bc6513d7f80aa61627b91014669b258838e1cfd734bf87ab14"
 }

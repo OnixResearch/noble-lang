@@ -2,7 +2,7 @@
   "schema": "noble-ngraph-nickel-stale-controls/v1",
   "current_receipt_accepted": true,
   "current_consumer_accepted": true,
-  "mutation_count": 12,
+  "mutation_count": 16,
   "mutations": [
     {
       "field": "source bytes",
@@ -11,7 +11,13 @@
       "changed_consumer_record_refused": true
     },
     {
-      "field": "import bytes",
+      "field": "library import bytes",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    },
+    {
+      "field": "contract import bytes",
       "stale_receipt_refused": true,
       "stale_consumer_refused": true,
       "changed_consumer_record_refused": true
@@ -41,7 +47,19 @@
       "changed_consumer_record_refused": true
     },
     {
+      "field": "Nickel evaluator identity",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    },
+    {
       "field": "import closure",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    },
+    {
+      "field": "observed import closure",
       "stale_receipt_refused": true,
       "stale_consumer_refused": true,
       "changed_consumer_record_refused": true
@@ -54,6 +72,12 @@
     },
     {
       "field": "lowerer revision",
+      "stale_receipt_refused": true,
+      "stale_consumer_refused": true,
+      "changed_consumer_record_refused": true
+    },
+    {
+      "field": "lowerer source bytes",
       "stale_receipt_refused": true,
       "stale_consumer_refused": true,
       "changed_consumer_record_refused": true

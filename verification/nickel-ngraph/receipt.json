@@ -1,7 +1,7 @@
 {
   "schema": "noble-ngraph-nickel-receipt/v1",
   "payload": {
-    "source_commit": "36275357a066d4fbd317751c48fbc13f9edcac01",
+    "source_commit": "96bdc0dd6129577f78e15e38e6391b54b033e7a9",
     "source_bytes": [
       {
         "path": "nickel/ngraph/fixtures/arithmetic.ncl",
@@ -235,8 +235,8 @@
     "lowerer": {
       "revision": "noble-ngraph-nickel-lowerer/1",
       "source": "crates/noble-cli/src/ngraph/nickel.rs",
-      "sha256": "0bd093c2fb416902a82f695f09458965d079b621054fa980fbcf0b7b7223e8b3",
-      "bytes": 17230
+      "sha256": "9f0ceb0f72cea30264f57607dae349606bfbfa0f564fc266ee1368ceb18b2e8d",
+      "bytes": 17381
     },
     "profile": "ngraph-i64/0",
     "graphs": [
@@ -291,5 +291,5 @@
       }
     ]
   },
-  "sha256": "4480202311c239a99d313f832202b4adb45d21f7fda8e4274b58774437e45d2d"
+  "sha256": "ab05ff0b5f787f303ff75d6225b95ad093f2340f892e5b22e7b237d103bc16df"
 }

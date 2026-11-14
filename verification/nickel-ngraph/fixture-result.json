@@ -1,6 +1,6 @@
 {
   "schema": "noble-ngraph-nickel-fixture-result/v1",
-  "source_commit": "36275357a066d4fbd317751c48fbc13f9edcac01",
+  "source_commit": "96bdc0dd6129577f78e15e38e6391b54b033e7a9",
   "source": {
     "path": "nickel/ngraph/fixtures/arithmetic.ncl",
     "sha256": "8530ff178be31b3af2f67a6717af03a4bd8ba6bfe55f9fc91b3e2c0fa0e78c35",
@@ -1149,9 +1149,9 @@
     ]
   },
   "provenance": {
-    "receipt_sha256": "4480202311c239a99d313f832202b4adb45d21f7fda8e4274b58774437e45d2d",
-    "consumer_sha256": "53c126663d3805b49b7191e9984db5dad236fd4accbc2f19531a77d2508854a1",
-    "stale_controls": 12
+    "receipt_sha256": "ab05ff0b5f787f303ff75d6225b95ad093f2340f892e5b22e7b237d103bc16df",
+    "consumer_sha256": "7a7a2141c07630bc6513d7f80aa61627b91014669b258838e1cfd734bf87ab14",
+    "stale_controls": 16
   },
   "non_claims": [
     "Finite implementation observations do not prove source-to-IR correspondence.",
