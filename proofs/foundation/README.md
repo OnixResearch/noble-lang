@@ -401,7 +401,7 @@ explicit sufficient-budget relation; this matrix makes no resource-equivalence
 claim.
 
 The clean P1 model-basis receipt is retained at
-[`verification/foundation/receipts/7ed66b5/foundation-check.json`](../../verification/foundation/receipts/7ed66b5/foundation-check.json).
+[`receipts/7ed66b5/foundation-check.json`](receipts/7ed66b5/foundation-check.json).
 The bounded P1/P2 campaign for source commit `7ed66b5d` is retained at
 [`verification/differential-interactions/receipts/7ed66b5/campaign.json`](../../verification/differential-interactions/receipts/7ed66b5/campaign.json);
 these are finite test receipts, not an implementation theorem.
