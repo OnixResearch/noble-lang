@@ -433,9 +433,11 @@ function checkWorkloadExpected(row) {
   } else if (row.workload === 'runtime-captured-quote-and-composition') {
     deepEqual(stack, [{ type: 'I64', value: '8' }], 'runtime-captured composition result');
   } else if (row.workload === 'reflection-only-reachable-recipe') {
-    equal(stack.length, 1, 'reflection output height');
-    equal(stack[0].type, 'Syntax', 'reflection output type');
-    deepEqual(stack[0].recipe, [
+    equal(stack.length, 2, 'reflection preserves the input below its output');
+    equal(stack[0].type, 'I64', 'reflection preserves the input type');
+    equal(stack[0].value, '9', 'reflection preserves the runtime input');
+    equal(stack[1].type, 'Syntax', 'reflection output type');
+    deepEqual(stack[1].recipe, [
       { literal: { type: 'I64', value: '9' } },
       { invoke: 'builtin:i64.add' },
     ], 'exact reflection-only reachable recipe and captured value');
