@@ -318,7 +318,7 @@ try {
             selected_table_index: target.selected_table_index, selected_table_node: target.selected_table_node,
             original_input_bits: target.input_bits, minimized_input_bits: target.minimized_witness.input_bits,
             expected_output_bits: target.expected_output_bits, expected_mismatch_class: target.mismatch_class,
-            failure_identity: probe.failure_identity, snapshot: null,
+            failure_identity: probe.failure_identity, snapshot: null, limits: target.limits,
             candidate_test_executable_blake3: probe.candidate_test_executable_blake3,
             historical_test_executable_blake3: p2BaselineHash,
             candidate_source_sha256: afterSha256, baseline_source_sha256: beforeSha256,

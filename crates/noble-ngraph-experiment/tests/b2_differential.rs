@@ -1430,6 +1430,13 @@ fn issue125_structured_interaction_matrix() {
                 .expect("structured node-work receipt")
         })
         .sum();
+    for cell in &mut cells {
+        cell["limits"]["graph_admission"] =
+            serde_json::json!("noble_ngraph::check::check with Budgets::default (/0)");
+        cell["limits"]["vectors_per_cell"] = serde_json::json!(1);
+        cell["limits"]["l3_node_work"] = cell["l3_nodes_evaluated"].clone();
+        cell["limits"]["matrix_l3_node_work_cap"] = serde_json::json!(structured_node_budget);
+    }
     let comparison_seed = 125_u64;
     let mut current_ops = 48_usize;
     let (current_random_graph, current_random_checked) = loop {
@@ -1830,6 +1837,29 @@ fn issue125_replay_retained_witness() {
             .expect("graph byte digest")
     );
     assert!(retained["snapshot"].is_null(), "P2 matrix has no snapshot");
+    let selected_limits = &retained["limits"];
+    assert_eq!(
+        selected_limits["graph_admission"],
+        "noble_ngraph::check::check with Budgets::default (/0)"
+    );
+    assert_eq!(selected_limits["control"], "Control::default()");
+    assert!(selected_limits["fuel"].is_null());
+    assert_eq!(selected_limits["cancellation"], false);
+    assert_eq!(selected_limits["scratch_instrumentation"], false);
+    assert!(selected_limits["forward_scratch_override"].is_null());
+    assert_eq!(
+        selected_limits["effective_forward_scratch"].as_u64(),
+        Some(noble_ngraph::check::Budgets::default().forward_scratch)
+    );
+    assert_eq!(selected_limits["vectors_per_cell"], 1);
+    assert_eq!(
+        selected_limits["l3_node_work"].as_u64(),
+        Some(checked.node_count() as u64)
+    );
+    assert!(
+        selected_limits["l3_node_work"].as_u64().unwrap()
+            <= selected_limits["matrix_l3_node_work_cap"].as_u64().unwrap()
+    );
     let family = retained["interaction_family"]
         .as_str()
         .expect("interaction family");
@@ -2005,6 +2035,7 @@ fn issue125_replay_retained_witness() {
         "graph_text_blake3": blake3::hash(graph_text.as_bytes()).to_hex().to_string(),
         "replayed": replayed,
         "failure_identity": retained["failure_identity"],
+        "limits": retained["limits"],
         "candidate_test_executable_blake3": executable_hash,
         "historical_executable_refused": executable_hash != historical_hash,
         "corpus_regenerated": false,
