@@ -386,6 +386,10 @@ pub fn decode(wire: &str) -> Result<Envelope, Refusal> {
     })
 }
 
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers; direct String append avoids a temporary allocation or copy"
+)]
 fn push_digest(out: &mut alloc::string::String, digest: &crate::ir::Digest) {
     for byte in digest {
         out.push(' ');
@@ -801,20 +805,19 @@ fn remap_op(
     op: &crate::ir::Op,
     mapping: &[Option<crate::ir::NodeId>],
 ) -> Result<crate::ir::Op, Refusal> {
-    use crate::ir::Op;
     let remap = |node| remap_node(mapping, node);
     Ok(match op {
-        Op::Input(slot) => Op::Input(*slot),
-        Op::Param(slot) => Op::Param(*slot),
-        Op::Const(literal) => Op::Const(*literal),
-        Op::I64Add(a, b) => Op::I64Add(remap(*a)?, remap(*b)?),
-        Op::I64Sub(a, b) => Op::I64Sub(remap(*a)?, remap(*b)?),
-        Op::I64Mul(a, b) => Op::I64Mul(remap(*a)?, remap(*b)?),
-        Op::I64Eq(a, b) => Op::I64Eq(remap(*a)?, remap(*b)?),
-        Op::F32Add(a, b) => Op::F32Add(remap(*a)?, remap(*b)?),
-        Op::F32Sub(a, b) => Op::F32Sub(remap(*a)?, remap(*b)?),
-        Op::F32Mul(a, b) => Op::F32Mul(remap(*a)?, remap(*b)?),
-        Op::F32Affine { bias, terms } => Op::F32Affine {
+        crate::ir::Op::Input(slot) => crate::ir::Op::Input(*slot),
+        crate::ir::Op::Param(slot) => crate::ir::Op::Param(*slot),
+        crate::ir::Op::Const(literal) => crate::ir::Op::Const(*literal),
+        crate::ir::Op::I64Add(a, b) => crate::ir::Op::I64Add(remap(*a)?, remap(*b)?),
+        crate::ir::Op::I64Sub(a, b) => crate::ir::Op::I64Sub(remap(*a)?, remap(*b)?),
+        crate::ir::Op::I64Mul(a, b) => crate::ir::Op::I64Mul(remap(*a)?, remap(*b)?),
+        crate::ir::Op::I64Eq(a, b) => crate::ir::Op::I64Eq(remap(*a)?, remap(*b)?),
+        crate::ir::Op::F32Add(a, b) => crate::ir::Op::F32Add(remap(*a)?, remap(*b)?),
+        crate::ir::Op::F32Sub(a, b) => crate::ir::Op::F32Sub(remap(*a)?, remap(*b)?),
+        crate::ir::Op::F32Mul(a, b) => crate::ir::Op::F32Mul(remap(*a)?, remap(*b)?),
+        crate::ir::Op::F32Affine { bias, terms } => crate::ir::Op::F32Affine {
             bias: *bias,
             terms: terms
                 .iter()
@@ -831,23 +834,23 @@ fn remap_op(
                 })
                 .collect::<Result<_, Refusal>>()?,
         },
-        Op::F32Relu(node) => Op::F32Relu(remap(*node)?),
-        Op::F32Reglu { left, gate } => Op::F32Reglu {
+        crate::ir::Op::F32Relu(node) => crate::ir::Op::F32Relu(remap(*node)?),
+        crate::ir::Op::F32Reglu { left, gate } => crate::ir::Op::F32Reglu {
             left: remap(*left)?,
             gate: remap(*gate)?,
         },
-        Op::F32Step(node) => Op::F32Step(remap(*node)?),
-        Op::F32Select { bit, off, on } => Op::F32Select {
+        crate::ir::Op::F32Step(node) => crate::ir::Op::F32Step(remap(*node)?),
+        crate::ir::Op::F32Select { bit, off, on } => crate::ir::Op::F32Select {
             bit: remap(*bit)?,
             off: remap(*off)?,
             on: remap(*on)?,
         },
-        Op::F32Index {
+        crate::ir::Op::F32Index {
             index,
             table,
             below,
             above,
-        } => Op::F32Index {
+        } => crate::ir::Op::F32Index {
             index: remap(*index)?,
             table: table
                 .iter()
@@ -856,7 +859,7 @@ fn remap_op(
             below: *below,
             above: *above,
         },
-        Op::Guard { fact, value } => Op::Guard {
+        crate::ir::Op::Guard { fact, value } => crate::ir::Op::Guard {
             fact: remap_fact(fact, mapping)?,
             value: remap(*value)?,
         },
@@ -1014,18 +1017,16 @@ fn record_chained_rule(
     ids: &dyn IdentityScheme,
     graph: &mut crate::ir::Graph,
     step: Step,
-    transitions: &mut alloc::vec::Vec<ChainedStep>,
-) -> Result<(), Refusal> {
+) -> Result<ChainedStep, Refusal> {
     let before = graph.logical_id(ids);
     validate_chained_rule(graph, step)?;
     *graph = replay_chained_rule(graph, step)?;
     let after = graph.logical_id(ids);
-    transitions.push(ChainedStep {
+    Ok(ChainedStep {
         action: ChainedAction::Rewrite(step),
         before,
         after,
-    });
-    Ok(())
+    })
 }
 
 /// Proposes a chained derivation and its result graph under `ngraph-cert/2`.
@@ -1033,7 +1034,7 @@ fn record_chained_rule(
 /// Unlike the legacy profile, each rewrite premise is checked against the state produced by
 /// the preceding step. A final certified prune is emitted only when it removes unreachable
 /// non-interface nodes; admission itself is unchanged and still runs on both endpoints.
-#[must_use]
+#[must_use = "chained rewrite proposals must be checked before execution"]
 pub fn propose_chained(
     ids: &dyn IdentityScheme,
     proposer: Proposer,
@@ -1046,7 +1047,7 @@ pub fn propose_chained(
         Proposer::FirstEligible => {
             if let Some(step) = (0..result.nodes.len()).find_map(|index| fold_site(&result, index))
             {
-                record_chained_rule(ids, &mut result, step, &mut steps)?;
+                steps.push(record_chained_rule(ids, &mut result, step)?);
             }
         }
         Proposer::SinglePass => {
@@ -1054,14 +1055,14 @@ pub fn propose_chained(
                 .filter_map(|index| fold_site(graph, index))
                 .collect();
             for step in sites {
-                record_chained_rule(ids, &mut result, step, &mut steps)?;
+                steps.push(record_chained_rule(ids, &mut result, step)?);
             }
         }
         Proposer::FixedPoint => {
             while let Some(step) =
                 (0..result.nodes.len()).find_map(|index| fold_site(&result, index))
             {
-                record_chained_rule(ids, &mut result, step, &mut steps)?;
+                steps.push(record_chained_rule(ids, &mut result, step)?);
             }
         }
     }
@@ -1109,14 +1110,14 @@ pub fn check_chained(
     }
     let mut current = graph.clone();
     let mut previous = None;
-    let mut pruned = false;
+    let mut is_pruned = false;
     for (position, transition) in derivation.steps.iter().enumerate() {
         if current.logical_id(ids) != transition.before {
             return Err(Refusal::EndpointMismatch);
         }
         current = match &transition.action {
             ChainedAction::Rewrite(step) => {
-                if pruned || previous.is_some_and(|prior| step.node.0 <= prior) {
+                if is_pruned || previous.is_some_and(|prior| step.node.0 <= prior) {
                     return Err(Refusal::Order);
                 }
                 previous = Some(step.node.0);
@@ -1124,10 +1125,10 @@ pub fn check_chained(
                 replay_chained_rule(&current, *step)?
             }
             ChainedAction::PruneUnreachable => {
-                if pruned || position + 1 != derivation.steps.len() {
+                if is_pruned || position + 1 != derivation.steps.len() {
                     return Err(Refusal::Order);
                 }
-                pruned = true;
+                is_pruned = true;
                 prune_unreachable(&current)?
             }
         };

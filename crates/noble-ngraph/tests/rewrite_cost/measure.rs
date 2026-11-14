@@ -69,11 +69,11 @@ fn sample(graph: &Graph, proposer: Proposer, samples: usize) -> Measured {
     let (propose_median, propose_iqr) = warm_stats(
         samples,
         || {
-            // Preserve proposal-plus-artifact-drop timing from the original lane.
-            let _ =
-                std::hint::black_box(cert::propose_chained(&super::common::IDS, proposer, graph));
+            // Drop proposal artifacts inside the timed closure and check refusal afterward.
+            std::hint::black_box(cert::propose_chained(&super::common::IDS, proposer, graph))
+                .map(drop)
         },
-        |()| {},
+        |outcome| assert!(outcome.is_ok(), "bounded chained proposal during sampling"),
     );
     let (check_median, check_iqr) = warm_stats(
         samples,

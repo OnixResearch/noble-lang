@@ -50,7 +50,7 @@ mod multi_step;
 #[path = "cert/chained/mod.rs"]
 mod chained;
 
-#[path = "cert/admission.rs"]
+#[path = "cert/admission/mod.rs"]
 mod admission;
 #[path = "cert/llvm.rs"]
 mod llvm;

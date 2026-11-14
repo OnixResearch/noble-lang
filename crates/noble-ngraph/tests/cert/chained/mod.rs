@@ -2,6 +2,9 @@ use crate::differential::{self, TestIds};
 use noble_ngraph::cert::{self, ChainedAction, ChainedDerivation, ChainedStep, Proposer, Refusal};
 use noble_ngraph::ir::{Graph, GraphBuilder, NodeId, Op, SubProfile, Subject};
 
+#[path = "liveness.rs"]
+mod liveness;
+
 fn chain_graph() -> Graph {
     let mut builder = GraphBuilder::new(
         SubProfile::I64,
@@ -39,7 +42,7 @@ const COMMITTED: &str =
     include_str!("../../../../../proofs/foundation/NobleFoundation/CertificateChainedCorpus.lean");
 
 #[test]
-fn the_chained_lean_corpus_is_fresh_from_real_rust_certificates() {
+fn the_lean_corpus_is_fresh_from_real_rust_certificates() {
     assert_eq!(
         corpus::lean_file(),
         COMMITTED,
@@ -49,7 +52,7 @@ fn the_chained_lean_corpus_is_fresh_from_real_rust_certificates() {
 
 #[test]
 #[ignore = "writes CertificateChainedCorpus.lean from emitted Rust certificate wire bytes"]
-fn write_certificate_chained_lean() {
+fn write_certificate_lean() {
     std::fs::write(
         concat!(
             env!("CARGO_MANIFEST_DIR"),
@@ -72,7 +75,7 @@ fn certified() -> (Graph, ChainedDerivation, Graph) {
 }
 
 #[test]
-fn chained_codec_refuses_stale_overbound_truncated_and_trailing_envelopes() {
+fn codec_refuses_stale_overbound_truncated_and_trailing_envelopes() {
     assert_eq!(
         cert::decode_chained("ngraph-cert/1 ngraph-sem/0 0"),
         Err(Refusal::StaleRevision)
@@ -100,7 +103,7 @@ fn chained_codec_refuses_stale_overbound_truncated_and_trailing_envelopes() {
 }
 
 #[test]
-fn chained_checker_binds_each_transition_and_requires_a_final_single_prune() {
+fn checker_binds_each_transition_and_requires_a_final_single_prune() {
     let (graph, derivation, result) = certified();
 
     let mut wrong_before = derivation.clone();
@@ -135,7 +138,7 @@ fn chained_checker_binds_each_transition_and_requires_a_final_single_prune() {
 }
 
 #[test]
-fn chained_fixed_point_and_pruning_round_trip_and_execute() {
+fn fixed_point_and_pruning_round_trip_and_execute() {
     let (graph, derivation, result) = certified();
     assert_eq!(derivation.revision, cert::CHAINED_REVISION);
     assert_eq!(derivation.steps.len(), 3, "two folds and a final prune");

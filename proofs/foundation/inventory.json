@@ -3292,6 +3292,24 @@
       "claim": "The model's replay endpoint theorem applies to the fixture: every node's denotation is preserved."
     },
     {
+      "name": "NobleFoundation.CertificateChainedCorpus.rustChainedFixedPoint_wire_decodes",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "The retained Rust-generated fixed-point rewrite-and-prune body decodes under the Lean ngraph-cert/2 model."
+    },
+    {
+      "name": "NobleFoundation.CertificateChainedCorpus.rustOrderedFirstEligible_wire_decodes",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "The retained Rust-generated ordered first-eligible chain body decodes under the Lean ngraph-cert/2 model."
+    },
+    {
+      "name": "NobleFoundation.CertificateChainedCorpus.rustIdentity_wire_decodes",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "The retained Rust-generated zero-transition identity body decodes under the Lean ngraph-cert/2 model."
+    },
+    {
       "name": "NobleFoundation.PackedLayout.count_inflated_refused",
       "phase": 2,
       "role": "packed-layout",

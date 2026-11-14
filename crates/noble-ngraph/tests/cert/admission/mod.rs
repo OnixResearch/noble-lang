@@ -1,3 +1,5 @@
+//! Certificate endpoint-substitution and graph-admission refusal controls.
+
 fn redigested(
     derivation: &noble_ngraph::cert::Derivation,
     result: &noble_ngraph::ir::Graph,
