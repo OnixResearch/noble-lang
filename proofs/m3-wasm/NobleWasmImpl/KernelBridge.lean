@@ -1,5 +1,8 @@
-import NobleWasmImpl.Types
-import NobleKernel.Funs
+module
+public import Aeneas
+public import NobleWasmImpl.Types
+public import NobleKernel.Funs
+@[expose] public section
 
 open Aeneas Aeneas.Std Result
 open Aeneas.Data.ListN

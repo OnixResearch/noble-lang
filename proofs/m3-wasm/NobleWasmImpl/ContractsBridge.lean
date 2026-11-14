@@ -1,6 +1,9 @@
-import NobleContractImpl.Funs
-import NobleContractImpl.KernelBridge
-import NobleWasmImpl.KernelBridge
+module
+public import Aeneas
+public import NobleContractImpl.Funs
+public import NobleContractImpl.KernelBridge
+public import NobleWasmImpl.KernelBridge
+@[expose] public section
 
 open Aeneas Aeneas.Std Result
 

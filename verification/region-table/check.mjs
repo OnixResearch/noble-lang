@@ -85,7 +85,8 @@ function checkedSources(profile) {
   const files = [
     codeFile, inventoryFile, profileFile, 'verification/region-table/check.mjs', modelFile, adapterFile,
     'proofs/m5/M5Resources.lean', 'proofs/m5/lake-manifest.json', 'proofs/m5/lean-toolchain',
-    profile.source, profile.historical_extraction_receipt, 'policy/tool-selection.json', compatibilitySource,
+    profile.source, profile.historical_extraction_receipt, 'policy/tool-selection.json',
+    'verification/aeneas-library-compatibility.mjs', compatibilitySource,
     ...sourceFiles('crates/noble-kernel/src/resources'),
   ];
   return Object.fromEntries(files.map(file => [file, fileHash(join(root, file))]));
@@ -162,7 +163,7 @@ function prepareProject(profile) {
     const name = member.split('/m3/')[1];
     writeFileSync(join(project, name), readFileSync(join(extracted, member.slice(2))));
   }
-  // The archived subject names library declarations the selected Aeneas Lean library dropped (#86).
+  // Archived M5-only aliases cover library declarations absent from the retained generated subject.
   const compatibility = libraryCompatibility(root);
   appendCompatibility(join(project, 'NobleKernel/TypesExternal.lean'), compatibility);
   writeFileSync(join(project, 'M5Resources.lean'), readFileSync(join(root, 'proofs/m5/M5Resources.lean')));
@@ -280,7 +281,7 @@ try {
     assumptions: ['Pinned Lean and imported Aeneas/Mathlib dependency libraries are trusted; downloaded dependency .oleans are not rebuilt by this audit.',
       'The retained Charon/Aeneas translation is trusted to model the bound Rust sources; this lane does not re-run the translation.',
       'The retained generated M5 sources are compiled anew, not replaced with a handwritten table; all six resource source files must retain their extraction-recorded bytes.',
-      'The reviewed Aeneas library compatibility block is appended to the archived TypesExternal.lean; it restates library names the selected library dropped as the library\'s own definitions (VT-PIN-02 exception, #86).',
+      'The temporary M5 proof root appends aliases from verification/m5-archived-library-compatibility.lean solely for the archived generated subject; current checked-in subjects do not use them.',
       `The per-request table call sequence (tableCalls) is read off ${adapterFile}; that the Rust host follows it and performs the identity and bounds checks the model states is T5 and stays open.`,
       'The model\'s lower oracle is the guest lowering (T6) and stays free; Wasmtime, the Canonical ABI and the CLI wrapper are not modeled.'],
     artifact_directory: output, command_count: commandSerial,

@@ -1,1 +1,2 @@
-import NobleContractImpl.Funs
+module
+public import NobleContractImpl.Funs

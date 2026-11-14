@@ -33,4 +33,5 @@
 --   example : (match contracts.environment.match with
 --     | .ok (core.result.Result.Ok env) => ... acceptance.check env ... ) = true := by
 --     native_decide
-import NobleKernel.Funs
+module
+public import NobleKernel.Funs

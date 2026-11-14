@@ -17,6 +17,10 @@ pub use clone_budget::{
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Definition(pub u32);
 
+fn empty_dependency_list() -> alloc::vec::Vec<Definition> {
+    alloc::vec::Vec::new()
+}
+
 /// The reserved identity of the resource-free `test.emit` effect.
 pub const TEST_EMIT: crate::types::EffId = crate::types::EffId(0);
 /// The reserved identity of the opt-in scripted `test.clock` effect.
@@ -643,8 +647,9 @@ pub fn text_cursor_environment() -> Result<Env, crate::shapes::Defect> {
         .extend(core::iter::repeat_n(reserved.clone(), reserved_rows));
     env.kinds
         .extend(core::iter::repeat_n(Behavior::Reserved, reserved_rows));
+    // Aeneas 1238879f rejects generic Vec::new function items with bound regions (SymbolicToPureTypes.ml:411).
     env.deps
-        .extend(core::iter::repeat_with(alloc::vec::Vec::new).take(reserved_rows));
+        .extend(core::iter::repeat_with(empty_dependency_list).take(reserved_rows));
     env.definition_owners
         .extend(core::iter::repeat_n(None, reserved_rows));
     let tail = crate::shapes::Pattern::StackVar(crate::words::Variable(0));
@@ -825,8 +830,9 @@ pub fn calculator_environment() -> Result<Env, crate::shapes::Defect> {
         env.defs.push(scheme);
         env.kinds.push(behavior);
     }
+    // Aeneas 1238879f rejects generic Vec::new function items with bound regions (SymbolicToPureTypes.ml:411).
     env.deps
-        .extend(core::iter::repeat_with(alloc::vec::Vec::new).take(rows));
+        .extend(core::iter::repeat_with(empty_dependency_list).take(rows));
     env.definition_owners
         .extend(core::iter::repeat_n(None, rows));
     Ok(env)

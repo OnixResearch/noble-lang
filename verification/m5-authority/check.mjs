@@ -175,7 +175,7 @@ function makeProject(directory, generated, moduleText, dependencies, profile) {
   const project = join(directory, 'project');
   mkdirSync(join(project, 'NobleKernel'), { recursive: true });
   for (const [name, bytes] of Object.entries(generated)) writeFileSync(join(project, name), bytes);
-  // The archived subject names library declarations the selected Aeneas Lean library dropped (#86).
+  // Archived M5-only aliases cover library declarations absent from the retained generated subject.
   appendCompatibility(join(project, 'NobleKernel/TypesExternal.lean'), compatibility);
   writeFileSync(join(project, 'M5Authority.lean'), moduleText);
   writeFileSync(join(project, 'lean-toolchain'), readFileSync(join(root, 'proofs/m5/lean-toolchain')));
@@ -492,7 +492,8 @@ try {
   const historical = verifyProfile(profile);
   const checkedFiles = [codeFile, inventoryFile, profileFile, 'verification/m5-authority/check.mjs',
     'proofs/m5/lake-manifest.json', 'proofs/m5/lean-toolchain', profile.source,
-    profile.historical_extraction_receipt, 'policy/tool-selection.json', compatibilitySource];
+    profile.historical_extraction_receipt, 'policy/tool-selection.json',
+    'verification/aeneas-library-compatibility.mjs', compatibilitySource];
   const sources = Object.fromEntries(checkedFiles.map(file => [file, fileHash(join(root, file))]));
   const version = run(join(leanBin, 'lean'), ['--version']).trim();
   requireThat(version.includes('version 4.35.0') && version.includes('eb6cafb7290e8bd5f2937522d8d804f58f02bafc'),
@@ -538,7 +539,7 @@ try {
     assumptions: [
       'Pinned Lean and imported Aeneas/Mathlib dependency libraries are trusted; downloaded dependency .oleans are not rebuilt by this audit.',
       'The retained Charon/Aeneas translation is trusted to model the bound Rust sources; this lane does not re-run the translation.',
-      'The reviewed Aeneas library compatibility block is appended to the archived TypesExternal.lean; it restates library names the selected library dropped as the library\'s own definitions (VT-PIN-02 exception, #86).',
+      'The temporary M5 proof root appends aliases from verification/m5-archived-library-compatibility.lean solely for the archived generated subject; current checked-in subjects do not use them.',
       'Reachable handwritten external models are part of the trusted base and are listed in binding.external_models.',
       'Checkpoint renewal is a host premise: a fresh checkpoint opens fresh quota records from fresh host snapshots.',
     ],

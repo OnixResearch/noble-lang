@@ -1,5 +1,8 @@
-import NobleContractImpl.Types
-import NobleKernel.Funs
+module
+public import Aeneas
+public import NobleContractImpl.Types
+public import NobleKernel.Funs
+@[expose] public section
 
 open Aeneas Aeneas.Std Result
 open Aeneas.Data.ListN

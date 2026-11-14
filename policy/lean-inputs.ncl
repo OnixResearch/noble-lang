@@ -4,7 +4,7 @@
   schema_version | String = "noble-lean-backend-inputs/v1",
   owner | String = "noble-maintainers",
   source | String = "proofs/m1/lake-manifest.json",
-  note | String = "Each narHash was captured by resolving the reviewed revision on the operator host. The aeneas narHash equals the reviewed tool-selection `aeneas_lean` pin (the Lean library; the extractor is pinned separately).",
+  note | String = "Each narHash was captured by resolving the reviewed revision on the operator host. The Aeneas narHash matches the reviewed tool-selection `aeneas_lean` pin; the selected `aeneas` extractor and `aeneas_lean` backend resolve to the same revision under VT-PIN-02.",
   sources | { _ : { url | String, rev | String, narHash | String, narSize | Number } } = {
     aeneas = {
       url = "https://github.com/AeneasVerif/aeneas",

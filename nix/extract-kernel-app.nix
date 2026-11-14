@@ -208,7 +208,7 @@ pkgs.writeShellApplication {
 
       (
         cd "$root"
-        timeout 300 charon cargo --preset=aeneas --error-on-warnings \
+        timeout 300 charon cargo --preset=aeneas --error-on-warnings --inline-anon-consts \
           --start-from "$start_from" \
           --dest-file "$artifacts/llbc/noble_kernel.llbc" -- \
           --manifest-path "$subject_manifest" --lib --all-features --target "$target" --locked --offline

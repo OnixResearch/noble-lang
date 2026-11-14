@@ -8,7 +8,9 @@
 -- extracted type or function definitions of this crate (the extraction of the
 -- reachable code never mentions it); we still give it a faithful model: a
 -- value which is either uninitialized or holds a `T`.
-import Aeneas
+module
+public import Aeneas
+@[expose] public section
 open Aeneas Aeneas.Std Result ControlFlow Error
 set_option linter.dupNamespace false
 set_option linter.hashCommand false
@@ -16,6 +18,7 @@ set_option linter.unusedVariables false
 set_option linter.style.whitespace false
 set_option linter.style.setOption false
 set_option linter.style.longLine false
+set_option linter.internalConstructors false
 
 /- You can set the `maxHeartbeats` value with the `-max-heartbeats` CLI option -/
 set_option maxHeartbeats 1000000

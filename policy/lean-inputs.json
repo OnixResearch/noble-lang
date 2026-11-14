@@ -1,5 +1,5 @@
 {
-  "note": "Each narHash was captured by resolving the reviewed revision on the operator host. The aeneas narHash equals the reviewed tool-selection `aeneas_lean` pin (the Lean library; the extractor is pinned separately).",
+  "note": "Each narHash was captured by resolving the reviewed revision on the operator host. The Aeneas narHash matches the reviewed tool-selection `aeneas_lean` pin; the selected `aeneas` extractor and `aeneas_lean` backend resolve to the same revision under VT-PIN-02.",
   "owner": "noble-maintainers",
   "schema_version": "noble-lean-backend-inputs/v1",
   "source": "proofs/m1/lake-manifest.json",
