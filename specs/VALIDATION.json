@@ -1513,7 +1513,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "28269470ace50bf486fb55a2fb43acdcedbef3297a343f8a20134659771828ff"
+      "sha256": "a1d10ccaabbe921655139a3a696c7e6fc444f88d5b3c2ccedcb154e6be0daa61"
     },
     {
       "file": "proofs/inets/README.md",
@@ -2157,7 +2157,7 @@
     },
     {
       "file": "verification/size-change/README.md",
-      "sha256": "64076163cc6799c145c1c34eb1ed31f0e06a1221c66dda0f2b66ef8f9b4e49ed"
+      "sha256": "fb8ec17308503e7857951e3066010d826f8590af529f680986c692e59c30035c"
     },
     {
       "file": "verification/source-inventory.md",
