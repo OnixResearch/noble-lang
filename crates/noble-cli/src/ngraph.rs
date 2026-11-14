@@ -11,6 +11,7 @@
 
 mod arguments;
 mod files;
+mod literals;
 mod report;
 
 use crate::workflow::encoding::{string, Json};
@@ -21,6 +22,8 @@ use report::Line;
 
 pub(crate) const USAGE: &str = "usage:
   noble ngraph check GRAPH [--budget-KIND N]...
+  noble ngraph import GRAPH --out RECEIPT
+  noble ngraph export RECEIPT --out GRAPH [--source]
   noble ngraph extract SOURCE --inputs T[,T...] --out GRAPH [--framed] [--profile ngraph-i64/0]
       [--budget-KIND N]...
   noble ngraph eval GRAPH VECTORS [--reference] [--snapshot FILE [--snapshot-id HEX]] [--fuel N]
@@ -37,6 +40,9 @@ pub(crate) const USAGE: &str = "usage:
       (each subcommand accepts the kinds it charges; a value may only lower the /0 default).
   Reports are noble-ngraph-report/v1 JSON lines. Exit: 0 normal, 1 trap, 2 reject or usage,
       4 unsupported, 5 exhausted.";
+
+const LITERAL_IMPORT_BYTES: u64 = 1_048_576;
+const IMPORT_RECEIPT_BYTES: u64 = 16_777_216;
 
 /// BLAKE3-256, the identity scheme of `Numeric-Graph-v1` reports and files.
 struct Blake3;
@@ -116,11 +122,13 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
     let rest = arguments.get(2..).unwrap_or(&[]);
     let result = match arguments.get(1).and_then(|s| s.to_str()) {
         Some("check") => check(rest),
+        Some("import") => import_graph(rest),
+        Some("export") => export_graph(rest),
         Some("extract") => extract(rest),
         Some("eval") => eval(rest, &mut observed),
         Some("train") => train(rest, &mut observed),
         Some("verify") => verify(rest, &mut observed),
-        _ => usage("expected check, extract, eval, train or verify"),
+        _ => usage("expected check, import, export, extract, eval, train or verify"),
     };
     let lines = match result {
         Ok(lines) => lines,
@@ -147,6 +155,92 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         return std::process::ExitCode::from(2);
     }
     std::process::ExitCode::from(exit)
+}
+
+/// Records an explicitly v2-selected graph import and its original bytes.
+fn import_graph(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop> {
+    const SPEC: Spec<'static> = Spec {
+        positional: &["GRAPH"],
+        values: &["--out"],
+        repeated: &[],
+        switches: &[],
+        budgets: &[],
+    };
+    let parsed = arguments::parse(&SPEC, arguments).map_err(Stop::Usage)?;
+    let output = parsed
+        .path_value("--out")
+        .ok_or_else(|| Stop::Usage("--out is required".into()))?;
+    let source_bytes = read(
+        "import",
+        &parsed.path(0),
+        LITERAL_IMPORT_BYTES,
+        "graph file",
+    )?;
+    let source = text(
+        "import",
+        source_bytes,
+        "graph file",
+        Code::GraphMalformed(noble_ngraph::Malformed::Syntax),
+    )?;
+    let graph = noble_ngraph::format::graph::parse(&IDS, &source)
+        .map_err(|diagnostic| Line::diagnostic("import", "input", &diagnostic))?;
+    let canonical = noble_ngraph::format::graph::print(&graph);
+    let (receipt, literal_count) = literals::encode(&source, &canonical)
+        .map_err(|diagnostic| Line::diagnostic("import", "input", &diagnostic))?;
+    if u64::try_from(receipt.len()).map_or(true, |bytes| bytes > IMPORT_RECEIPT_BYTES) {
+        return Err(Line::host("import", "input", "import receipt exceeds its byte limit").into());
+    }
+    publish("import", &output, receipt.as_bytes())?;
+    let source_digest = *blake3::hash(source.as_bytes()).as_bytes();
+    let canonical_digest = *blake3::hash(canonical.as_bytes()).as_bytes();
+    Ok(vec![Line::normal("import", "publication")
+        .with("source_blake3", report::digest(&source_digest))
+        .with("canonical_blake3", report::digest(&canonical_digest))
+        .with("literal_count", report::count(literal_count))
+        .with("receipt_bytes", report::count(receipt.len()))])
+}
+
+/// Replays either the canonical graph or the original source from a receipt.
+fn export_graph(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop> {
+    const SPEC: Spec<'static> = Spec {
+        positional: &["RECEIPT"],
+        values: &["--out"],
+        repeated: &[],
+        switches: &["--source"],
+        budgets: &[],
+    };
+    let parsed = arguments::parse(&SPEC, arguments).map_err(Stop::Usage)?;
+    let output = parsed
+        .path_value("--out")
+        .ok_or_else(|| Stop::Usage("--out is required".into()))?;
+    let receipt_bytes = read(
+        "export",
+        &parsed.path(0),
+        IMPORT_RECEIPT_BYTES,
+        "import receipt",
+    )?;
+    let receipt_text = text("export", receipt_bytes, "import receipt", Code::Format)?;
+    let receipt = literals::decode(&receipt_text, &IDS)
+        .map_err(|diagnostic| Line::diagnostic("export", "input", &diagnostic))?;
+    let source_form = parsed.switch("--source");
+    let bytes = if source_form {
+        &receipt.source
+    } else {
+        &receipt.canonical
+    };
+    publish("export", &output, bytes)?;
+    Ok(vec![Line::normal("export", "publication")
+        .with(
+            "form",
+            string(if source_form { "source" } else { "canonical" }),
+        )
+        .with("source_blake3", report::digest(&receipt.source_digest))
+        .with(
+            "canonical_blake3",
+            report::digest(&receipt.canonical_digest),
+        )
+        .with("literal_count", report::count(receipt.literal_count))
+        .with("bytes", report::count(bytes.len()))])
 }
 
 fn kinds(groups: &[&[Kind]]) -> std::vec::Vec<Kind> {

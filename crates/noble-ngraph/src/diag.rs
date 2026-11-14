@@ -40,6 +40,8 @@ pub enum BudgetKind {
     Steps,
     /// Host evaluation fuel (node evaluations) — runtime exhaustion, `Obs::Exhausted`.
     Fuel,
+    /// Explicit decimal RNE token length.
+    LiteralBytes,
 }
 
 impl BudgetKind {
@@ -64,6 +66,7 @@ impl BudgetKind {
             Self::BackwardScratch => "BACKWARD-SCRATCH",
             Self::Steps => "STEPS",
             Self::Fuel => "FUEL",
+            Self::LiteralBytes => "LITERAL-BYTES",
         }
     }
 }
@@ -150,6 +153,14 @@ pub enum Code {
     LiteralInexact,
     /// `E-LITERAL-NONFINITE`.
     LiteralNonfinite,
+    /// `E-LITERAL-OVERFLOW`.
+    LiteralOverflow,
+    /// `E-CONVERT-INEXACT`.
+    ConversionInexact,
+    /// `E-CONVERT-NONFINITE`.
+    ConversionNonfinite,
+    /// `E-CONVERT-OVERFLOW`.
+    ConversionOverflow,
     /// `E-BUDGET-<kind>`.
     Budget(BudgetKind),
     /// `E-FACT-UNCHECKED`.
@@ -218,6 +229,10 @@ impl Code {
             Self::TypeMix => "E-TYPE-MIX",
             Self::LiteralInexact => "E-LITERAL-INEXACT",
             Self::LiteralNonfinite => "E-LITERAL-NONFINITE",
+            Self::LiteralOverflow => "E-LITERAL-OVERFLOW",
+            Self::ConversionInexact => "E-CONVERT-INEXACT",
+            Self::ConversionNonfinite => "E-CONVERT-NONFINITE",
+            Self::ConversionOverflow => "E-CONVERT-OVERFLOW",
             Self::Budget(_) => "E-BUDGET",
             Self::FactUnchecked => "E-FACT-UNCHECKED",
             Self::FactInput => "E-FACT-INPUT",
@@ -264,6 +279,10 @@ impl Code {
             | Self::TypeMix
             | Self::LiteralInexact
             | Self::LiteralNonfinite
+            | Self::LiteralOverflow
+            | Self::ConversionInexact
+            | Self::ConversionNonfinite
+            | Self::ConversionOverflow
             | Self::FactUnchecked
             | Self::FactInput
             | Self::GraphMalformed(_)

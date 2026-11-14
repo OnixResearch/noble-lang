@@ -170,6 +170,55 @@ fn printed_graphs_parse_back_to_the_same_graph_and_identity() {
 }
 
 #[test]
+fn graph_rne_literals_require_v2_and_print_as_exact_bits() {
+    let source = "ngraph-ir/0 ngraph-f32/0\nliteral-modes noble-graph-literal-modes/v2\nsubject authored-name rne-import\n%0 = const f32 rne:0.1\nout %0\n";
+    let graph = parse(&IDS, source).expect("v2 RNE graph");
+    assert_eq!(graph.nodes[0].op, Op::Const(Literal::F32(0x3dcc_cccd)));
+    let canonical = print(&graph);
+    assert!(canonical.contains("const f32 0x3dcccccd\n"));
+    assert!(!canonical.contains("literal-modes"));
+    assert_eq!(parse(&IDS, &canonical).expect("exact printed graph"), graph);
+
+    let stale = source.replace("literal-modes noble-graph-literal-modes/v2\n", "");
+    assert_eq!(
+        parse(&IDS, &stale)
+            .expect_err("v1 cannot round")
+            .code_string(),
+        "E-PROFILE"
+    );
+    let stale_version = source.replace(
+        "noble-graph-literal-modes/v2",
+        "noble-graph-literal-modes/v1",
+    );
+    assert_eq!(
+        parse(&IDS, &stale_version)
+            .expect_err("the v1 policy cannot enable RNE")
+            .code_string(),
+        "E-PROFILE"
+    );
+    let overflow = source.replace("rne:0.1", "rne:1e39");
+    assert_eq!(
+        parse(&IDS, &overflow)
+            .expect_err("overflow refuses")
+            .code_string(),
+        "E-LITERAL-OVERFLOW"
+    );
+    let late_mode = source
+        .replace("literal-modes noble-graph-literal-modes/v2\n", "")
+        .replace(
+            "subject authored-name rne-import\n",
+            "subject authored-name rne-import\nliteral-modes noble-graph-literal-modes/v2\n",
+        )
+        .replace("rne:0.1", "0.5");
+    assert_eq!(
+        parse(&IDS, &late_mode)
+            .expect_err("the declaration is after the schema position")
+            .code_string(),
+        "E-PROFILE"
+    );
+}
+
+#[test]
 fn extracted_graphs_round_trip_without_origins() {
     let cases: [(&[&str], &str, usize); 4] = [
         (&[], "dup * swap 3 * + 7 -", 2),

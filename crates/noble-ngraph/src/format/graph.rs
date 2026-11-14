@@ -61,6 +61,7 @@ struct Toks<'a> {
     t: alloc::vec::Vec<&'a str>,
     i: usize,
     line: usize,
+    mode: super::LiteralMode,
 }
 
 impl<'a> Toks<'a> {
@@ -106,7 +107,7 @@ impl<'a> Toks<'a> {
     }
     fn f32_bits(&mut self) -> Result<u32, crate::diag::Diagnostic> {
         let t = self.next()?;
-        parse_f32(t, self.line)
+        parse_f32_with_mode(t, self.line, self.mode)
     }
     fn i64(&mut self) -> Result<i64, crate::diag::Diagnostic> {
         let t = self.next()?;
@@ -121,7 +122,15 @@ impl<'a> Toks<'a> {
 /// # Errors
 /// `E-LITERAL-NONFINITE`, `E-LITERAL-INEXACT` or a syntax error.
 pub fn parse_f32(t: &str, line: usize) -> Result<u32, crate::diag::Diagnostic> {
-    super::value::f32_token(t).map_err(|r| match r {
+    parse_f32_with_mode(t, line, super::LiteralMode::Exact)
+}
+
+fn parse_f32_with_mode(
+    t: &str,
+    line: usize,
+    mode: super::LiteralMode,
+) -> Result<u32, crate::diag::Diagnostic> {
+    super::value::f32_token_with_mode(t, mode).map_err(|r| match r {
         super::value::F32Refusal::Malformed => {
             syntax(line, alloc::format!("bad f32 literal {t:?}"))
         }
@@ -134,6 +143,24 @@ pub fn parse_f32(t: &str, line: usize) -> Result<u32, crate::diag::Diagnostic> {
             crate::diag::Code::LiteralInexact,
             crate::diag::Site::Line(line),
             alloc::format!("{t} is not exactly representable in binary32"),
+        ),
+        super::value::F32Refusal::ModeRequired => crate::diag::Diagnostic::new(
+            crate::diag::Code::Profile,
+            crate::diag::Site::Line(line),
+            "rne: literals require literal-modes noble-graph-literal-modes/v2",
+        ),
+        super::value::F32Refusal::Overflow => crate::diag::Diagnostic::new(
+            crate::diag::Code::LiteralOverflow,
+            crate::diag::Site::Line(line),
+            alloc::format!("{t} rounds beyond finite binary32 range"),
+        ),
+        super::value::F32Refusal::TooLong => crate::diag::Diagnostic::new(
+            crate::diag::Code::Budget(crate::diag::BudgetKind::LiteralBytes),
+            crate::diag::Site::Line(line),
+            alloc::format!(
+                "{t} exceeds the {} byte RNE literal limit",
+                crate::sem::MAX_RNE_DECIMAL_BYTES
+            ),
         ),
     })
 }
@@ -171,7 +198,9 @@ fn range_literal(
     let tok = t.next()?;
     let line = t.line;
     if tok.starts_with("0x") {
-        return Ok(crate::ir::Literal::F32(parse_f32(tok, line)?));
+        return Ok(crate::ir::Literal::F32(parse_f32_with_mode(
+            tok, line, t.mode,
+        )?));
     }
     match tok {
         "true" => return Ok(crate::ir::Literal::Bool(true)),
@@ -184,7 +213,9 @@ fn range_literal(
             .ok_or_else(|| syntax(line, alloc::format!("expected i64, got {tok:?}")));
     }
     match profile {
-        crate::ir::SubProfile::F32 => Ok(crate::ir::Literal::F32(parse_f32(tok, line)?)),
+        crate::ir::SubProfile::F32 => Ok(crate::ir::Literal::F32(parse_f32_with_mode(
+            tok, line, t.mode,
+        )?)),
         crate::ir::SubProfile::I64 => super::decimal_i64(tok)
             .map(crate::ir::Literal::I64)
             .ok_or_else(|| syntax(line, alloc::format!("expected i64, got {tok:?}"))),
@@ -572,15 +603,41 @@ pub fn parse_within(
     let mut subject: Option<crate::ir::Subject> = None;
     let mut input_shape: Option<alloc::vec::Vec<crate::ir::ShapeTree>> = None;
     let mut output_shape: Option<alloc::vec::Vec<crate::ir::ShapeTree>> = None;
+    let mut literal_mode = super::LiteralMode::Exact;
+    let mut is_literal_mode_declared = false;
+    let mut is_record_started = false;
     for l in lines {
         let line = l.number;
         let mut t = Toks {
             t: l.tokens,
             i: 0,
             line,
+            mode: literal_mode,
         };
         let head = t.next()?;
         match head {
+            "literal-modes" => {
+                if is_literal_mode_declared {
+                    return Err(syntax(line, "duplicate literal-modes line"));
+                }
+                if is_record_started {
+                    return Err(crate::diag::Diagnostic::new(
+                        crate::diag::Code::Profile,
+                        crate::diag::Site::Line(line),
+                        "literal-modes must immediately follow the schema line",
+                    ));
+                }
+                let name = t.next()?;
+                literal_mode = super::LiteralMode::from_name(name).ok_or_else(|| {
+                    crate::diag::Diagnostic::new(
+                        crate::diag::Code::Profile,
+                        crate::diag::Site::Line(line),
+                        alloc::format!("unknown graph literal mode version {name:?}"),
+                    )
+                })?;
+                t.mode = literal_mode;
+                is_literal_mode_declared = true;
+            }
             "subject" => {
                 if subject.is_some() {
                     return Err(syntax(line, "duplicate subject line"));
@@ -649,6 +706,9 @@ pub fn parse_within(
             other => return Err(syntax(line, alloc::format!("unknown line kind {other:?}"))),
         }
         t.done()?;
+        if head != "literal-modes" {
+            is_record_started = true;
+        }
     }
     let mut g = b.finish();
     g.subject = subject.ok_or_else(|| syntax(hl, "missing subject line"))?;

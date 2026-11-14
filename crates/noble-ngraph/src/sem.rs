@@ -388,6 +388,224 @@ pub fn exact_f32_decimal(text: &str) -> Option<u32> {
     (lhs.0 == rhs.0).then_some(v.to_bits())
 }
 
+/// Maximum byte length accepted by the explicit decimal-to-binary32 RNE path.
+pub const MAX_RNE_DECIMAL_BYTES: usize = 4096;
+
+/// Refusal reasons for explicit decimal RNE import.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DecimalRefusal {
+    /// The token is not in the graph decimal grammar.
+    Malformed,
+    /// The decimal rounds to infinity; v2 chooses a checked refusal.
+    Overflow,
+    /// The token exceeds [`MAX_RNE_DECIMAL_BYTES`].
+    TooLong,
+}
+
+/// Parse an explicit decimal as an exact base-ten rational and round it once
+/// to binary32 using round-to-nearest, ties-to-even. No host floating-point
+/// parser or intermediate binary format participates in this result.
+///
+/// Exponents are saturated by [`decimal`], the decimal order is classified
+/// before any big-integer expansion, and the remaining exact work is bounded
+/// by the token-length cap.
+pub fn rne_f32_decimal(text: &str) -> Result<u32, DecimalRefusal> {
+    if text.len() > MAX_RNE_DECIMAL_BYTES {
+        return Err(DecimalRefusal::TooLong);
+    }
+    let d = decimal(text).ok_or(DecimalRefusal::Malformed)?;
+    let digits = d.int.len().saturating_add(d.frac.len());
+    if digits == 0 {
+        return Ok(if d.negative { NEG_ZERO } else { POS_ZERO });
+    }
+    let digit_count = i64::try_from(digits).map_err(|_| DecimalRefusal::TooLong)?;
+    let decimal_order = digit_count.saturating_sub(1).saturating_add(d.exponent);
+    if decimal_order > 38 {
+        return Err(DecimalRefusal::Overflow);
+    }
+    if decimal_order < -46 {
+        return Ok(if d.negative { NEG_ZERO } else { POS_ZERO });
+    }
+
+    let mut numerator = Big::from_decimal(d.int.bytes().chain(d.frac.bytes()));
+    let mut denominator = Big::from_u64(1);
+    if d.exponent >= 0 {
+        let power = u32::try_from(d.exponent).map_err(|_| DecimalRefusal::TooLong)?;
+        numerator.mul_pow(10, power);
+    } else {
+        let power =
+            u32::try_from(d.exponent.unsigned_abs()).map_err(|_| DecimalRefusal::TooLong)?;
+        denominator.mul_pow(10, power);
+    }
+
+    let exponent = floor_log2_ratio(&numerator, &denominator);
+    let magnitude = if exponent >= -126 {
+        let scale = 23 - exponent;
+        let (scaled_numerator, scaled_denominator) = scale_ratio(&numerator, &denominator, scale);
+        let rounded = round_quotient(&scaled_numerator, &scaled_denominator, 1 << 24);
+        let (significand, exponent) = if rounded == 1 << 24 {
+            (1 << 23, exponent + 1)
+        } else {
+            (rounded, exponent)
+        };
+        if exponent > 127 {
+            return Err(DecimalRefusal::Overflow);
+        }
+        let exponent = u32::try_from(exponent + 127).map_err(|_| DecimalRefusal::Overflow)?;
+        (exponent << 23) | (significand - (1 << 23))
+    } else {
+        let scaled_numerator = scaled_by_power(&numerator, 149);
+        let rounded = round_quotient(&scaled_numerator, &denominator, (1 << 23) + 1);
+        rounded.min(1 << 23)
+    };
+    Ok(if d.negative {
+        magnitude | 0x8000_0000
+    } else {
+        magnitude
+    })
+}
+
+/// Errors shared by the explicit scalar conversion adapters.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ConversionError {
+    /// The requested exact conversion would discard information.
+    Inexact,
+    /// The source encoding is NaN or infinity.
+    NotFinite,
+    /// The destination integer range cannot contain the result.
+    Overflow,
+}
+
+impl ConversionError {
+    /// Stable diagnostic code for callers that surface a refused conversion.
+    #[must_use]
+    pub const fn code(self) -> crate::diag::Code {
+        match self {
+            Self::Inexact => crate::diag::Code::ConversionInexact,
+            Self::NotFinite => crate::diag::Code::ConversionNonfinite,
+            Self::Overflow => crate::diag::Code::ConversionOverflow,
+        }
+    }
+}
+
+/// I64 to binary32 round-to-nearest, ties-to-even conversion, implemented on
+/// integer bits and valid for every signed 64-bit input.
+#[must_use]
+pub fn i64_to_f32_rne(value: i64) -> u32 {
+    let is_negative = value < 0;
+    let magnitude = value.unsigned_abs();
+    if magnitude == 0 {
+        return POS_ZERO;
+    }
+    let exponent = 63 - i32::try_from(magnitude.leading_zeros()).unwrap_or(64);
+    let shift = u32::try_from((exponent - 23).max(0)).unwrap_or(0);
+    let mut significand = if exponent < 23 {
+        magnitude << u32::try_from(23 - exponent).unwrap_or(0)
+    } else {
+        magnitude >> shift
+    };
+    if exponent > 23 {
+        let remainder = magnitude & ((1u64 << shift) - 1);
+        let halfway = 1u64 << (shift - 1);
+        if remainder > halfway || (remainder == halfway && significand & 1 == 1) {
+            significand += 1;
+        }
+    }
+    let mut encoded_exponent = exponent;
+    if significand == 1 << 24 {
+        significand >>= 1;
+        encoded_exponent += 1;
+    }
+    let fraction = u32::try_from(significand - (1 << 23)).unwrap_or(0);
+    let mut bits = (u32::try_from(encoded_exponent + 127).unwrap_or(0) << 23) | fraction;
+    if is_negative {
+        bits |= 0x8000_0000;
+    }
+    bits
+}
+
+/// I64 to binary32 conversion that refuses an inexact rounded result.
+pub fn i64_to_f32_exact(value: i64) -> Result<u32, ConversionError> {
+    let bits = i64_to_f32_rne(value);
+    let magnitude = value.unsigned_abs();
+    let exponent = 63 - i32::try_from(magnitude.leading_zeros()).unwrap_or(64);
+    let shift = u32::try_from((exponent - 23).max(0)).unwrap_or(0);
+    if shift != 0 && magnitude & ((1u64 << shift) - 1) != 0 {
+        Err(ConversionError::Inexact)
+    } else {
+        Ok(bits)
+    }
+}
+
+/// Binary32 to I64 checked truncation-toward-zero conversion.
+pub fn f32_to_i64_trunc(bits: u32) -> Result<i64, ConversionError> {
+    f32_to_i64(bits, false)
+}
+
+/// Binary32 to I64 conversion that accepts only integral, in-range finite
+/// values.
+pub fn f32_to_i64_exact(bits: u32) -> Result<i64, ConversionError> {
+    f32_to_i64(bits, true)
+}
+
+fn f32_to_i64(bits: u32, require_exact: bool) -> Result<i64, ConversionError> {
+    let is_negative = bits >> 31 != 0;
+    let encoded_exponent = (bits >> 23) & 0xff;
+    if encoded_exponent == 0xff {
+        return Err(ConversionError::NotFinite);
+    }
+    let fraction = bits & 0x7f_ffff;
+    let significand = if encoded_exponent == 0 {
+        fraction
+    } else {
+        fraction | 0x80_0000
+    };
+    if significand == 0 {
+        return Ok(0);
+    }
+    let exponent = if encoded_exponent == 0 {
+        -149
+    } else {
+        i32::try_from(encoded_exponent).unwrap_or(0) - 150
+    };
+    let magnitude = if exponent >= 0 {
+        let shift = u32::try_from(exponent).unwrap_or(u32::MAX);
+        if shift >= 64 || u64::from(significand) > (u64::MAX >> shift) {
+            return Err(ConversionError::Overflow);
+        }
+        u64::from(significand) << shift
+    } else {
+        let shift = u32::try_from(-exponent).unwrap_or(u32::MAX);
+        if require_exact && (shift >= 32 || significand & ((1u32 << shift) - 1) != 0) {
+            return Err(ConversionError::Inexact);
+        }
+        if shift >= 32 {
+            0
+        } else {
+            u64::from(significand >> shift)
+        }
+    };
+    let bound = if is_negative {
+        1u64 << 63
+    } else {
+        u64::try_from(i64::MAX).unwrap_or(0)
+    };
+    if magnitude > bound {
+        return Err(ConversionError::Overflow);
+    }
+    if is_negative {
+        if magnitude == 1u64 << 63 {
+            Ok(i64::MIN)
+        } else {
+            i64::try_from(magnitude)
+                .map(|v| -v)
+                .map_err(|_| ConversionError::Overflow)
+        }
+    } else {
+        i64::try_from(magnitude).map_err(|_| ConversionError::Overflow)
+    }
+}
+
 /// Minimal unsigned big integer for exact literal checks.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 struct Big(alloc::vec::Vec<u32>);
@@ -415,6 +633,38 @@ impl Big {
         while self.0.last() == Some(&0) {
             self.0.pop();
         }
+    }
+    fn compare(&self, other: &Self) -> core::cmp::Ordering {
+        self.0
+            .len()
+            .cmp(&other.0.len())
+            .then_with(|| self.0.iter().rev().cmp(other.0.iter().rev()))
+    }
+    fn assign_mul_small(&mut self, value: &Self, factor: u32) {
+        self.0.clear();
+        self.0.resize(value.0.len(), 0);
+        let mut carry = 0u64;
+        for (out, limb) in self.0.iter_mut().zip(&value.0) {
+            let product = u64::from(*limb) * u64::from(factor) + carry;
+            *out = u32::try_from(product & 0xffff_ffff).unwrap_or(0);
+            carry = product >> 32;
+        }
+        if carry != 0 {
+            self.0.push(u32::try_from(carry).unwrap_or(0));
+        }
+        self.trim();
+    }
+    fn subtract_assign(&mut self, other: &Self) {
+        debug_assert!(self.compare(other) != core::cmp::Ordering::Less);
+        let mut borrow = 0u64;
+        for (index, limb) in self.0.iter_mut().enumerate() {
+            let subtrahend = u64::from(other.0.get(index).copied().unwrap_or(0)) + borrow;
+            let minuend = u64::from(*limb);
+            *limb = u32::try_from(minuend.wrapping_sub(subtrahend) & 0xffff_ffff).unwrap_or(0);
+            borrow = u64::from(minuend < subtrahend);
+        }
+        debug_assert_eq!(borrow, 0);
+        self.trim();
     }
     #[expect(
         tigerstyle::unchecked_narrowing,
@@ -454,6 +704,83 @@ impl Big {
             self.mul_small(base);
         }
         self.trim();
+    }
+}
+
+fn scaled_by_power(value: &Big, exponent: u32) -> Big {
+    let mut scaled = value.clone();
+    scaled.mul_pow(2, exponent);
+    scaled
+}
+
+fn scale_ratio(numerator: &Big, denominator: &Big, exponent: i32) -> (Big, Big) {
+    if exponent >= 0 {
+        (
+            scaled_by_power(numerator, u32::try_from(exponent).unwrap_or(0)),
+            denominator.clone(),
+        )
+    } else {
+        (
+            numerator.clone(),
+            scaled_by_power(denominator, exponent.unsigned_abs()),
+        )
+    }
+}
+
+fn ratio_at_least_power(numerator: &Big, denominator: &Big, exponent: i32) -> bool {
+    if exponent >= 0 {
+        numerator.compare(&scaled_by_power(
+            denominator,
+            u32::try_from(exponent).unwrap_or(0),
+        )) != core::cmp::Ordering::Less
+    } else {
+        scaled_by_power(numerator, exponent.unsigned_abs()).compare(denominator)
+            != core::cmp::Ordering::Less
+    }
+}
+
+fn floor_log2_ratio(numerator: &Big, denominator: &Big) -> i32 {
+    let mut lower = -256;
+    let mut upper = 256;
+    while lower + 1 < upper {
+        let middle = lower + (upper - lower) / 2;
+        if ratio_at_least_power(numerator, denominator, middle) {
+            lower = middle;
+        } else {
+            upper = middle;
+        }
+    }
+    lower
+}
+
+fn quotient_at_most(numerator: &Big, denominator: &Big, maximum: u32) -> u32 {
+    let mut lower = 0u32;
+    let mut upper = maximum + 1;
+    let mut product = Big::default();
+    while lower + 1 < upper {
+        let middle = lower + (upper - lower) / 2;
+        product.assign_mul_small(denominator, middle);
+        if product.compare(numerator) != core::cmp::Ordering::Greater {
+            lower = middle;
+        } else {
+            upper = middle;
+        }
+    }
+    lower
+}
+
+fn round_quotient(numerator: &Big, denominator: &Big, maximum: u32) -> u32 {
+    let quotient = quotient_at_most(numerator, denominator, maximum);
+    let mut remainder = numerator.clone();
+    let mut product = Big::default();
+    product.assign_mul_small(denominator, quotient);
+    remainder.subtract_assign(&product);
+    let mut doubled_remainder = remainder;
+    doubled_remainder.mul_small(2);
+    match doubled_remainder.compare(denominator) {
+        core::cmp::Ordering::Greater => quotient + 1,
+        core::cmp::Ordering::Equal if quotient & 1 == 1 => quotient + 1,
+        core::cmp::Ordering::Equal | core::cmp::Ordering::Less => quotient,
     }
 }
 

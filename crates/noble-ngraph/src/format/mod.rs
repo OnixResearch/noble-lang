@@ -14,6 +14,27 @@ pub mod snapshot;
 pub mod value;
 pub mod vectors;
 
+/// Explicit `F32` decimal-literal policy selected by a file declaration.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum LiteralMode {
+    /// Accept exact decimals and preserve the v1 refusal behavior.
+    #[default]
+    Exact,
+    /// Accept `rne:<decimal>` only, with one exact-rational RNE rounding.
+    RneV2,
+}
+
+impl LiteralMode {
+    /// Name recorded by the v2 file declaration.
+    pub const V2_NAME: &'static str = "noble-graph-literal-modes/v2";
+
+    /// Parses the version token after `literal-modes`.
+    #[must_use]
+    pub fn from_name(name: &str) -> Option<Self> {
+        (name == Self::V2_NAME).then_some(Self::RneV2)
+    }
+}
+
 /// Appends formatted text to `out`.
 ///
 /// `String`'s `core::fmt::Write` implementation is infallible. This

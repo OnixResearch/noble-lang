@@ -17,6 +17,9 @@ use noble_ngraph::format::{data, value, vectors};
 use noble_ngraph::ir::ScalarType;
 use noble_ngraph::Value;
 
+#[path = "format_values_dir/conversions.rs"]
+mod conversions;
+
 fn code<T: std::fmt::Debug>(r: Result<T, noble_ngraph::Diagnostic>) -> String {
     match r {
         Ok(v) => format!("accepted {v:?}"),
@@ -193,14 +196,30 @@ fn vector_files_are_typed_and_refused_as_a_whole() {
         ),
         ("noble-ngraph-vectors/0\ntypes f32\nw 1\n", "E-FORMAT"),
         (
-            "noble-ngraph-vectors/0\ntypes f32\nv 1\nv 0.1\n",
+            "noble-ngraph-vectors/0\ntypes f32\nv 0.1\n",
             "E-LITERAL-INEXACT",
+        ),
+        (
+            "noble-ngraph-vectors/0\ntypes f32\nliteral-modes noble-graph-literal-modes/v2\nv 0.5\n",
+            "E-FORMAT",
         ),
         ("noble-ngraph-vectors/0 extra\ntypes f32\n", "E-FORMAT"),
     ];
     for (text, want) in cases {
         assert_eq!(code(vectors::parse(text)), want, "{text:?}");
     }
+    let rounded = vectors::parse(
+        "noble-ngraph-vectors/0\nliteral-modes noble-graph-literal-modes/v2\ntypes f32\nv rne:0.1\n",
+    )
+    .expect("v2 RNE row");
+    assert_eq!(rounded.rows, vec![vec![Value::F32(0x3dcc_cccd)]]);
+    assert!(vectors::print(&rounded).contains("v 0x3dcccccd\n"));
+    assert_eq!(
+        code(vectors::parse(
+            "noble-ngraph-vectors/0\ntypes f32\nv rne:0.1\n"
+        )),
+        "E-PROFILE"
+    );
 }
 
 #[test]
@@ -239,10 +258,23 @@ fn data_files_split_inputs_and_targets_at_one_separator() {
             "noble-ngraph-data/0\ntypes f32 ; f32\npoint 0.1 ; 2\n",
             "E-LITERAL-INEXACT",
         ),
+        (
+            "noble-ngraph-data/0\ntypes f32 ; f32\nliteral-modes noble-graph-literal-modes/v2\npoint 0.5 ; 2\n",
+            "E-FORMAT",
+        ),
     ];
     for (text, want) in cases {
         assert_eq!(code(data::parse(text)), want, "{text:?}");
     }
+    let rounded = data::parse(
+        "noble-ngraph-data/0\nliteral-modes noble-graph-literal-modes/v2\ntypes f32 ; f32\npoint rne:0.1 ; rne:-0\n",
+    )
+    .expect("v2 RNE point");
+    assert_eq!(
+        rounded.points,
+        vec![(vec![Value::F32(0x3dcc_cccd)], vec![Value::F32(0x8000_0000)])]
+    );
+    assert!(data::print(&rounded).contains("point 0x3dcccccd ; 0x80000000\n"));
     let ints = data::parse("noble-ngraph-data/0\ntypes i64 ; f32\npoint 1 ; 2\n").expect("parses");
     assert_eq!(code(ints.to_points()), "E-INTERFACE");
 }

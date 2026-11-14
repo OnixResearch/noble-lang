@@ -47,10 +47,29 @@ pub fn parse(text: &str) -> Result<Vectors, crate::diag::Diagnostic> {
             "missing noble-ngraph-vectors/0 schema line",
         ));
     }
+    let mut mode = super::LiteralMode::Exact;
+    let mut is_mode_declared = false;
+    let mut is_record_started = false;
     let mut declared: Option<alloc::vec::Vec<crate::ir::ScalarType>> = None;
     let mut rows = alloc::vec::Vec::new();
     for l in lines {
         match l.tokens[0] {
+            "literal-modes" => {
+                if is_mode_declared {
+                    return Err(super::value::format_diag(
+                        l.number,
+                        "duplicate literal-modes line",
+                    ));
+                }
+                if is_record_started {
+                    return Err(super::value::format_diag(
+                        l.number,
+                        "literal-modes must immediately follow the schema line",
+                    ));
+                }
+                mode = super::value::literal_mode(&l.tokens, l.number)?;
+                is_mode_declared = true;
+            }
             "types" => {
                 if declared.is_some() {
                     return Err(super::value::format_diag(l.number, "duplicate types line"));
@@ -61,7 +80,12 @@ pub fn parse(text: &str) -> Result<Vectors, crate::diag::Diagnostic> {
                 let t = declared.as_ref().ok_or_else(|| {
                     super::value::format_diag(l.number, "a v row before the types line")
                 })?;
-                rows.push(super::value::row(t, &l.tokens[1..], l.number)?);
+                rows.push(super::value::row_with_mode(
+                    t,
+                    &l.tokens[1..],
+                    l.number,
+                    mode,
+                )?);
             }
             o => {
                 return Err(super::value::format_diag(
@@ -69,6 +93,9 @@ pub fn parse(text: &str) -> Result<Vectors, crate::diag::Diagnostic> {
                     alloc::format!("unknown line kind {o:?}"),
                 ))
             }
+        }
+        if l.tokens[0] != "literal-modes" {
+            is_record_started = true;
         }
     }
     let types =
