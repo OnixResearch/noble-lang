@@ -32,6 +32,9 @@ const SLOT_HOST: &str = concat!(
 );
 #[cfg(feature = "live-test-barrier")]
 fn slot_host() -> std::borrow::Cow<'static, str> {
+    if !std::env::var("NOBLE_LIVE_TEST_CURRENT_MAP").is_ok_and(|value| value == "1") {
+        return std::borrow::Cow::Borrowed(SLOT_HOST);
+    }
     const BEFORE: &str = "const selected = root.state.map.get(ref.slotId);";
     const AFTER: &str =
         "const selected = this.#current.map.get(ref.slotId); /* noble-test-current-map-seam/v1 */";

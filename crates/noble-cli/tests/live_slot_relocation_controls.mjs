@@ -226,6 +226,8 @@ export const run = async (binary, mode = 'pinned') => {
 };
 
 if (process.argv[1]?.endsWith('live_slot_relocation_controls.mjs') === true) {
-  const measured = await run(process.argv[2], process.argv[3] ?? 'pinned');
+  const mode = process.argv[3] ?? 'pinned';
+  if (mode === 'current-map') process.env.NOBLE_LIVE_TEST_CURRENT_MAP = '1';
+  const measured = await run(process.argv[2], mode);
   process.stdout.write(`${JSON.stringify(measured)}\n`);
 }

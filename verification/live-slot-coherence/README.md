@@ -92,16 +92,21 @@ callee slot `E` changes from inert to emitting. Its asserted observation is the 
 
 The counterfactual is isolated behind the existing Cargo feature `live-test-barrier`, which is not
 a default feature and is already the repository's explicit test-only safepoint instrumentation.
-Only that feature-built worker substitutes current-map selection into its embedded host; the
-default `live_slot` test scans the selected default `noble` binary for the unique seam marker and
-requires it absent. A feature-enabled integration test runs the duplicate/omission lane against the
-deliberately broken binary. Do not enable this feature in shipped builds. Neither these finite
-observations nor the receipt prove correspondence with `LiveDispatch.lean`.
+Even in a feature-built binary, current-map selection is enabled only when the dedicated
+`current-map` control lane sets `NOBLE_LIVE_TEST_CURRENT_MAP=1`; ordinary lanes retain the pinned
+map, including under `--all-features`. The default `live_slot` test scans the selected default
+`noble` binary for the unique seam marker and requires it absent. The feature-enabled integration
+test runs the duplicate/omission lane against the deliberately broken binary. Do not enable this
+feature in shipped builds. Neither these finite observations nor the receipt prove correspondence
+with `LiveDispatch.lean`.
 
-The source/model/artifact-bound dated receipt is
-[`receipts/2026-11-13/receipt.json`](receipts/2026-11-13/receipt.json). It binds the clean source
-commit, both CLI digests, lane outputs and source digests while keeping model results, runtime
-observations and non-claims separate. Reproduce it from a clean commit with the pinned Node 24:
+The final source/model/artifact-bound dated receipt is
+[`receipts/2026-11-13-current-map-opt-in/receipt.json`](receipts/2026-11-13-current-map-opt-in/receipt.json).
+The earlier [`receipts/2026-11-13/receipt.json`](receipts/2026-11-13/receipt.json) is retained
+unchanged; it predates the per-lane opt-in refinement and is not evidence for the final source
+commit. The final receipt binds the clean source commit, both CLI digests, lane outputs and source
+digests while keeping model results, runtime observations and non-claims separate. Reproduce it
+from a clean commit with the pinned Node 24:
 
 ```sh
 env -i PATH=<pinned Node 24 directory>:/run/current-system/sw/bin HOME=<home directory> \

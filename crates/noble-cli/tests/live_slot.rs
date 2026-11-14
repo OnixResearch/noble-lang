@@ -22,6 +22,7 @@ fn run_lane_args(lane: &str, arguments: &[&str]) {
         .arg(std::format!("{}/tests/{lane}", env!("CARGO_MANIFEST_DIR")))
         .arg(env!("CARGO_BIN_EXE_noble"))
         .args(arguments)
+        .env_remove("NOBLE_LIVE_TEST_CURRENT_MAP")
         .output()
         .expect("launch selected Node/V8 lane child");
     assert!(

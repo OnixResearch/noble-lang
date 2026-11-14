@@ -145,7 +145,7 @@ const receipt = {
     does_not_establish: 'behavior of other binaries, source revisions, or authority shapes',
   },
   non_claims: [
-    'the current-map implementation behavior is measured only in a binary built with the existing non-default live-test-barrier feature',
+    'the current-map implementation behavior is measured only in a binary built with the existing non-default live-test-barrier feature and explicitly selected by the current-map lane',
     'the default selected CLI excludes the test-only current-map seam marker; release builds must not enable that feature',
     'the three event traces are finite runtime observations, not a universal property or a Lean-to-runtime correspondence proof',
     'no LSLOT conformance case is promoted',
