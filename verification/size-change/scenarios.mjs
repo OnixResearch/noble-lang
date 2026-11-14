@@ -408,7 +408,7 @@ function main() {
     assumptions: [
       'Each case is one link report of a production framed session of the CLI built from this commit.',
       'The unflagged signed-recursion control carries no size_change field; the multi-report control proves one fresh certificate directory serves distinct reports in one session.',
-      'The verdict is the front end classification of the checked body; it is not a theorem about an execution. The model soundness, exactness and refusal-completeness theorems are verification/size-change/check.mjs.',
+      'The verdict is the front end classification of the checked body; it is not a theorem about an execution. The model validates finite closure exactness and refusal-witness correctness; only periodic-run termination is proved, and arbitrary-run SCT soundness remains open (verification/size-change/check.mjs).',
       'The certificate is accepted by the pinned Lean against an isolated library built from these sources; the CLI records the binary digest, its version line and the library path, and the library sources are bound by digest above.',
     ],
   };
