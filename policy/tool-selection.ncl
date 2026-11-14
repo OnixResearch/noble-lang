@@ -69,6 +69,8 @@ let Pin = { rev | String, narHash | String } in
     charon_args | Array String = ["--preset=aeneas", "--error-on-warnings", "--inline-anon-consts"],
     cargo_args | Array String = ["--lib", "--all-features", "--target", "x86_64-unknown-linux-gnu", "--locked", "--offline"],
     aeneas_args | Array String = ["-backend", "lean", "-abort-on-error", "-warnings-as-errors", "-no-progress-bar", "-emit-json"],
+    # Charon's Cargo subcommand compiles the selected Rust subject before extraction.
+    charon_timeout_seconds | Number = 900,
     translator_timeout_seconds | Number = 120,
     lean_timeout_seconds | Number = 900,
     lean_heartbeats | Number = 1000000,

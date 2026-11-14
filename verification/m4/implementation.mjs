@@ -176,7 +176,8 @@ function validateSelection() {
   for (const [name, expected] of Object.entries({ target: 'x86_64-unknown-linux-gnu', word_bits: 64,
     extraction_rust: 'nightly-2026-09-17', extraction_profile: 'dev', all_features: true,
     default_features: true, overflow_checks: true, panic: 'unwind', lean_heartbeats: 1000000,
-    lean_recursion_depth: 2048, lean_timeout_seconds: 900, translator_timeout_seconds: 120 })) {
+    lean_recursion_depth: 2048, charon_timeout_seconds: 900, lean_timeout_seconds: 900,
+    translator_timeout_seconds: 120 })) {
     equal(selection.configuration[name], expected, 'SELECTION', name);
   }
   equal(selection.configuration.features, [], 'SELECTION', 'features');
@@ -309,7 +310,7 @@ try {
     const manifest = `crates/${lane.package}/Cargo.toml`;
     run(`${lane.id}-charon`, binaries.charon, ['cargo', ...selection.configuration.charon_args,
       '--dest-file', llbc, '--', '--manifest-path', manifest, ...selection.configuration.cargo_args], workspace,
-    {}, false, selection.configuration.translator_timeout_seconds * 1000);
+    {}, false, selection.configuration.charon_timeout_seconds * 1000);
     run(`${lane.id}-aeneas`, binaries.aeneas, [...selection.configuration.aeneas_args,
       '-split-files', '-gen-lib-entry', '-all-computable', '-dest', generated, llbc], workspace,
     {}, false, selection.configuration.translator_timeout_seconds * 1000);
