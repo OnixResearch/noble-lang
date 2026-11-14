@@ -1,7 +1,7 @@
 use super::common::rewrite_corpus;
 use super::pipeline;
 use super::report;
-use noble_ngraph::cert::{self, Derivation, Proposer, Refusal, Step};
+use noble_ngraph::cert::{self, ChainedDerivation, ChainedStep, Proposer, Refusal};
 use noble_ngraph::ir::Graph;
 
 /// Median and interquartile range of warm samples, in nanoseconds.
@@ -59,20 +59,29 @@ pub(super) struct Measured {
     reason = "Owner: noble-maintainers; this runtime helper invokes graph proposal and certificate checking."
 )]
 fn sample(graph: &Graph, proposer: Proposer, samples: usize) -> Measured {
-    let (derivation, result): (Derivation, Graph) =
-        cert::propose(&super::common::IDS, proposer, graph);
-    let expected_refusal = cert::check(&super::common::IDS, graph, &result, &derivation).err();
+    let (derivation, result): (ChainedDerivation, Graph) =
+        cert::propose_chained(&super::common::IDS, proposer, graph)
+            .expect("bounded chained proposal");
+    let wire = cert::encode_chained(&derivation);
+    let expected_refusal = cert::decode_chained(&wire)
+        .and_then(|decoded| cert::check_chained(&super::common::IDS, graph, &result, &decoded))
+        .err();
     let (propose_median, propose_iqr) = warm_stats(
         samples,
         || {
-            // Preserve proposal-plus-artifact-drop timing from the original lane.
-            std::hint::black_box(cert::propose(&super::common::IDS, proposer, graph));
+            // Drop proposal artifacts inside the timed closure and check refusal afterward.
+            std::hint::black_box(cert::propose_chained(&super::common::IDS, proposer, graph))
+                .map(drop)
         },
-        |()| {},
+        |outcome| assert!(outcome.is_ok(), "bounded chained proposal during sampling"),
     );
     let (check_median, check_iqr) = warm_stats(
         samples,
-        || cert::check(&super::common::IDS, graph, &result, &derivation),
+        || {
+            cert::decode_chained(&wire).and_then(|decoded| {
+                cert::check_chained(&super::common::IDS, graph, &result, &decoded)
+            })
+        },
         |outcome| {
             // Handle every sampled Result without pricing the assertion as checker work.
             assert_eq!(outcome.as_ref().err(), expected_refusal.as_ref());
@@ -80,11 +89,11 @@ fn sample(graph: &Graph, proposer: Proposer, samples: usize) -> Measured {
     );
     // Structural in-memory estimate: one `Step` per step plus the derivation header. This is not
     // the wire size; `wire_bytes` below is the encoded envelope the checker's codec transports.
-    let footprint_bytes = std::mem::size_of::<Derivation>()
-        + std::mem::size_of::<Step>() * derivation.steps.len()
+    let footprint_bytes = std::mem::size_of::<ChainedDerivation>()
+        + std::mem::size_of::<ChainedStep>() * derivation.steps.len()
         + derivation.revision.capacity()
         + derivation.model.capacity();
-    let wire_bytes = cert::encode(&derivation).len();
+    let wire_bytes = wire.len();
     Measured {
         steps: derivation.steps.len(),
         footprint_bytes,

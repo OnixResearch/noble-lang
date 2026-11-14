@@ -2,7 +2,7 @@ use std::path::Path;
 
 use super::common::rewrite_corpus;
 
-/// The v3 output vectors and node declarations are fixed independently of each run's report.
+/// The inherited v2 output vectors and node declarations are fixed independently of each run.
 const REVIEWED_FIXTURES: [(&str, &[&str], &[usize]); 8] = [
     (
         "independent-folds",
@@ -44,7 +44,7 @@ pub(super) fn load(
 ) -> Result<(rewrite_corpus::Manifest, rewrite_corpus::Manifest), Box<dyn std::error::Error>> {
     let manifest = rewrite_corpus::parse(Path::new(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../verification/ngraph/rewrite-cost-v3.txt"
+        "/../../verification/ngraph/rewrite-cost-v4.txt"
     )))?;
     validate_cost_manifest(&manifest)?;
     let corpus = rewrite_corpus::parse(Path::new(concat!(
@@ -58,7 +58,7 @@ pub(super) fn load(
 fn validate_cost_manifest(
     manifest: &rewrite_corpus::Manifest,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    assert_eq!(manifest.schema, "noble-rewrite-cost/v3");
+    assert_eq!(manifest.schema, "noble-rewrite-cost/v4");
     assert_eq!(manifest.corpus, "rewrite-quality-v2.txt");
     let threshold = manifest.threshold.as_ref().ok_or("threshold")?;
     assert_eq!(threshold.residual, "no-foldable-sites");

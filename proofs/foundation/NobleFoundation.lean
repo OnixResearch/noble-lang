@@ -47,6 +47,8 @@ import NobleFoundation.SymbolicRefusalsReplay
 import NobleFoundation.SymbolicEncoderCorpus
 import NobleFoundation.Certificate
 import NobleFoundation.CertificateCodec
+import NobleFoundation.CertificateChained
+import NobleFoundation.CertificateChainedCorpus
 import NobleFoundation.CertificateCorpus
 import NobleFoundation.PackedLayout
 import NobleFoundation.PackedLayoutEncoded

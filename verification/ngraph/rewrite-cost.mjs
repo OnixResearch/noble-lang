@@ -1,6 +1,6 @@
 // Issue #64 cost-lane receipt runner.  This runner deliberately stays outside the Rust
 // measurement path: it binds the selected offline toolchain and source snapshot, executes the
-// real rewrite_cost integration test, and retains the unmodified process streams beside the v3
+// real rewrite_cost integration test, and retains the unmodified process streams beside the v4
 // receipt. A failed process is evidence, not a reason to retry with a different environment.
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
@@ -12,7 +12,7 @@ import { reviewedVendorRecipe, selectedVendor } from '../selected-vendor.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const scriptRelative = 'verification/ngraph/rewrite-cost.mjs';
-const manifestRelative = 'verification/ngraph/rewrite-cost-v3.txt';
+const manifestRelative = 'verification/ngraph/rewrite-cost-v4.txt';
 const corpusRelative = 'verification/ngraph/rewrite-quality-v2.txt';
 const policyRelative = 'policy/tool-selection.json';
 const commandArgs = Object.freeze([
@@ -37,7 +37,7 @@ const pipelineStages = Object.freeze([
   'full_fresh_attempt', 'warm_execution',
 ]);
 const unmeasuredPipelineStages = Object.freeze([
-  'decoding_replay', 'retained_memory',
+  'certificate_wire_encoding_time', 'retained_memory',
 ]);
 
 function requireThat(condition, message) {
@@ -103,7 +103,7 @@ function gitRun(...argv) {
 function parseManifest(text) {
   const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
   const schema = lines.find(line => line.startsWith('schema '));
-  requireThat(schema === 'schema noble-rewrite-cost/v3', 'rewrite cost manifest is not v3');
+  requireThat(schema === 'schema noble-rewrite-cost/v4', 'rewrite cost manifest is not v4');
   const corpus = lines.find(line => line.startsWith('corpus '));
   requireThat(corpus === `corpus ${path.basename(corpusRelative)}`, 'rewrite cost corpus binding changed');
   const lens = [];
@@ -134,7 +134,7 @@ function parseManifest(text) {
   requireThat(new Set(stages.map(stage => stage.name)).size === stages.length,
     'rewrite cost manifest repeats a stage');
   requireThat(threshold !== null, 'rewrite cost manifest has no retention threshold');
-  return { schema: 'noble-rewrite-cost/v3', corpus: path.basename(corpusRelative), lens, stages, threshold };
+  return { schema: 'noble-rewrite-cost/v4', corpus: path.basename(corpusRelative), lens, stages, threshold };
 }
 
 function parseCorpus(text) {
@@ -396,7 +396,7 @@ function extractReport(text) {
         const candidate = text.slice(start, index + 1);
         try {
           const parsed = JSON.parse(candidate);
-          if (plainObject(parsed) && parsed.schema === 'noble-rewrite-cost-report/v2') return parsed;
+          if (plainObject(parsed) && parsed.schema === 'noble-rewrite-cost-report/v3') return parsed;
         } catch {
           // Cargo diagnostics may contain balanced braces that are not JSON; continue scanning.
         }
@@ -404,7 +404,7 @@ function extractReport(text) {
       }
     }
   }
-  throw new Error('v2 report object is absent from both process streams');
+  throw new Error('v3 report object is absent from both process streams');
 }
 
 function reportFromStreams(stdout, stderr) {
@@ -415,7 +415,7 @@ function reportFromStreams(stdout, stderr) {
       // The test harness may place the report on either stream; retain both streams unchanged.
     }
   }
-  throw new Error('v2 report object is absent from both process streams');
+  throw new Error('v3 report object is absent from both process streams');
 }
 
 function finiteNumber(value, label) {
@@ -472,6 +472,25 @@ function validatePipeline(row, index) {
     requireThat(pipeline.candidate_execution_calls === 0,
       `${label} records candidate execution for a refused pipeline`);
   }
+  if (row.refused) {
+    requireThat(pipeline.candidate_execution_calls === 0,
+      `${label} executes a raw certificate refusal`);
+  }
+  if (pipeline.disposition === 'executed') {
+    requireThat(pipeline.candidate_execution_calls > 0,
+      `${label} reports execution without an executed candidate call`);
+    const referenceOutputs = pipeline.source.reference.outputs;
+    requireThat(Array.isArray(referenceOutputs), `${label} source reference has no ordered outputs`);
+    for (const output of [
+      pipeline.baseline.fresh_output,
+      pipeline.baseline.warm_output,
+      pipeline.certified.fresh_output,
+      pipeline.certified.warm_output,
+    ]) {
+      requireThat(JSON.stringify(output) === JSON.stringify(referenceOutputs),
+        `${label} executed outputs differ from the complete ordered source-reference vector`);
+    }
+  }
   for (const [name, attempt] of [['baseline', pipeline.baseline], ['certified', pipeline.certified]]) {
     requireThat(plainObject(attempt.stages), `${label}.${name}.stages is not an object`);
     for (const stageName of pipelineStages) {
@@ -503,16 +522,16 @@ function validatePipeline(row, index) {
 }
 
 function validateReport(report, manifest, corpus) {
-  requireThat(report.schema === 'noble-rewrite-cost-report/v2', 'wrong rewrite cost report schema');
+  requireThat(report.schema === 'noble-rewrite-cost-report/v3', 'wrong rewrite cost report schema');
   requireThat(report.corpus === corpusRelative.split('/').pop(), 'report corpus changed');
   requireThat(report.samples_per_row === 200, 'report sample count is not 200');
   requireThat(report.identity_scheme === 'test-siphash13x4', 'report identity scheme changed');
   requireThat(plainObject(report.threshold), 'report threshold is missing');
   requireThat(report.threshold.residual === manifest.threshold.residual &&
     report.threshold.check_per_step_us === manifest.threshold.check_per_step_us,
-  'report threshold differs from frozen v3 plan');
+  'report threshold differs from frozen v4 plan');
   requireThat(Array.isArray(report.stages) && report.stages.length === manifest.stages.length,
-    'report stage roster differs from frozen v3 plan');
+    'report stage roster differs from frozen v4 plan');
   for (const [index, expected] of manifest.stages.entries()) {
     const actual = report.stages[index];
     requireThat(actual.name === expected.name && actual.status === expected.status,
@@ -528,6 +547,9 @@ function validateReport(report, manifest, corpus) {
   const dispositionCounts = Object.fromEntries(dispositions.map(disposition => [disposition, 0]));
   let rawRefused = 0;
   let rawTargetReached = 0;
+  let executedNonIdentity = 0;
+  let nonIdentityTargetReached = 0;
+  let breakEvenEstimates = 0;
   for (const [index, row] of report.rows.entries()) {
     requireThat(plainObject(row), `row ${index} is not an object`);
     for (const field of rawRowFields) requireThat(Object.hasOwn(row, field), `row ${index} lacks ${field}`);
@@ -555,7 +577,17 @@ function validateReport(report, manifest, corpus) {
     validatePipeline(row, index);
     dispositionCounts[row.pipeline.disposition]++;
     if (row.refused) rawRefused++;
-    if (!row.refused && row.residual === 0) rawTargetReached++;
+    if (!row.refused && row.residual === 0) {
+      rawTargetReached++;
+      if (row.proposer !== 'identity' && row.pipeline.disposition === 'executed') {
+        nonIdentityTargetReached++;
+      }
+    }
+    if (row.proposer !== 'identity' && row.steps > 0 &&
+        row.pipeline.disposition === 'executed' && row.pipeline.candidate_execution_calls > 0) {
+      executedNonIdentity++;
+    }
+    if (row.pipeline.comparison?.break_even?.status === 'estimated') breakEvenEstimates++;
   }
   requireThat(rowKeys.size === expectedRows && [...fixtureNames].every(fixture =>
     proposers.every(proposer => rowKeys.has(`${fixture}\0${proposer}`))),
@@ -586,6 +618,17 @@ function validateReport(report, manifest, corpus) {
   }
   const total = dispositions.reduce((sum, disposition) => sum + dispositionCounts[disposition], 0);
   requireThat(total === expectedRows, 'pipeline disposition counts do not cover all rows');
+  requireThat(executedNonIdentity > 0,
+    'no non-identity candidate reached actual execution');
+  requireThat(nonIdentityTargetReached > 0,
+    'no executed non-identity candidate reached the unchanged residual target');
+  return {
+    rows: expectedRows,
+    raw_refusals: rawRefused,
+    executed_non_identity_candidates: executedNonIdentity,
+    non_identity_residual_targets_reached: nonIdentityTargetReached,
+    break_even_estimates: breakEvenEstimates,
+  };
 }
 
 function evidenceHashes(evidence) {
@@ -606,7 +649,7 @@ function failureRecord(evidence, phase, error, before, processRecord) {
   if (fs.existsSync(file)) return;
   try {
     writeJsonExclusive(file, {
-      schema: 'noble-rewrite-cost-failure/v3',
+      schema: 'noble-rewrite-cost-failure/v4',
       phase,
       error: { message: error.message, name: error.name },
       source_before: before,
@@ -678,13 +721,13 @@ if (options !== undefined) {
 
     phase = 'report-validation';
     const report = reportFromStreams(run.stdout, run.stderr);
-    validateReport(report, initial.manifest, initial.corpus);
+    const measurement = validateReport(report, initial.manifest, initial.corpus);
     const custodyCheck = readSourceSnapshot();
     requireThat(JSON.stringify(custodyCheck.snapshot) === JSON.stringify(before),
       'source commit/tree/status or bound source hashes changed before receipt write');
     const files = evidenceHashes(evidence);
     const receipt = {
-      schema: 'noble-rewrite-cost-receipt/v3',
+      schema: 'noble-rewrite-cost-receipt/v4',
       issue: 64,
       source_commit: before.source_commit,
       source_tree: before.source_tree,
@@ -730,8 +773,9 @@ if (options !== undefined) {
         fresh_extraction: false,
         deployment_timing: false,
         wire_bytes: true,
-        wire_decoder: false,
+        wire_decoder: true,
       },
+      measurement,
       evidence: {
         directory: evidence,
         files,
@@ -748,10 +792,11 @@ if (options !== undefined) {
       rows: report.rows.length,
       certificate_coverage: report.certificate_coverage,
       pipeline_coverage: report.pipeline_coverage,
+      measurement,
     }));
   } catch (error) {
     failureRecord(evidence, phase, error, before, processRecord);
-    console.error(`rewrite-cost v3 failed (${phase}): ${error.message}`);
+    console.error(`rewrite-cost v4 failed (${phase}): ${error.message}`);
     process.exitCode = 1;
   }
 }

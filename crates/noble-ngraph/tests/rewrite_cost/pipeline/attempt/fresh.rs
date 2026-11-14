@@ -53,12 +53,24 @@ fn admit(graph: Graph, proposer: Option<Proposer>, run: &mut FreshRun) -> Option
     let Some(proposer) = proposer else {
         return Some(checked);
     };
-    let (derivation, candidate) = timed(run, Stage::ProposalSearch, || {
-        cert::propose(&IDS, proposer, checked.graph())
+    let proposal = timed(run, Stage::ProposalSearch, || {
+        cert::propose_chained(&IDS, proposer, checked.graph())
     });
-    run.details.certificate = Some(super::certificate_info(&derivation));
+    let (derivation, candidate) = match proposal {
+        Ok(proposal) => proposal,
+        Err(refusal) => {
+            run.refuse(
+                super::CERTIFICATE_REFUSED,
+                super::certificate_reason(&refusal),
+            );
+            return None;
+        }
+    };
+    let wire = cert::encode_chained(&derivation);
+    run.details.certificate = Some(super::certificate_info(&derivation, wire.len()));
     let verdict = timed(run, Stage::CertificateChecking, || {
-        cert::check(&IDS, checked.graph(), &candidate, &derivation)
+        cert::decode_chained(&wire)
+            .and_then(|decoded| cert::check_chained(&IDS, checked.graph(), &candidate, &decoded))
     });
     if let Err(refusal) = verdict {
         run.refuse(

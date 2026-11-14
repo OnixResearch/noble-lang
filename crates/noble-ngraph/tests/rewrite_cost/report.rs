@@ -71,7 +71,7 @@ pub(super) fn render(
     std::format!(
         concat!(
             "{{\n",
-            "  \"schema\": \"noble-rewrite-cost-report/v2\",\n",
+            "  \"schema\": \"noble-rewrite-cost-report/v3\",\n",
             "  \"corpus\": \"{}\",\n",
             "  \"samples_per_row\": {},\n",
             "  \"identity_scheme\": \"test-siphash13x4\",\n",
@@ -89,9 +89,11 @@ pub(super) fn render(
             "compiled artifact or workspace; warm execution reuses the admitted artifact and workspace. ",
             "Median and IQR over {} samples after 64 priming iterations; not OS-cache-cold\",\n",
             "  \"comparison\": \"raw-graph certificate component coverage is separate from ",
-            "full pipeline admission. Refused cases retain their measured prefix cost and ",
-            "never execute a candidate. Baseline/certified paths use identical fixture inputs. ",
-            "No BLAKE3 deployment, Lean correspondence or allocator/RSS claim\"\n",
+            "full pipeline admission. Every executed candidate has exact ordered output agreement; ",
+            "refused cases retain their measured prefix cost and never execute a candidate. ",
+            "The chained wire decoder and checker share one measured checking stage. Baseline/certified ",
+            "paths use identical fixture inputs. No BLAKE3 deployment, Lean correspondence or ",
+            "allocator/RSS claim\"\n",
             "}}"
         ),
         manifest.corpus,

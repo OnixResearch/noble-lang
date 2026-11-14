@@ -1764,6 +1764,98 @@
           ]
         }
       ]
+    },
+    {
+      "id": "NGRAPH-CASE-16",
+      "profile": "Numeric-Graph-v1",
+      "kind": "runtime",
+      "requirements": [
+        "NGRAPH-PROOF-01"
+      ],
+      "input": {
+        "harness": "noble-ngraph-rewrite-cost-v4",
+        "corpus": "verification/ngraph/rewrite-quality-v2.txt",
+        "certificate_revisions": [
+          "ngraph-cert/0",
+          "ngraph-cert/1",
+          "ngraph-cert/2"
+        ],
+        "variants": [
+          "fixed-point chain whose second premise uses the first replacement",
+          "dead operands removed while the complete output sequence remains",
+          "repeated output indices",
+          "changed intermediate before or after identity",
+          "removed live node",
+          "wrong survivor numbering",
+          "reordered outputs",
+          "non-final pruning transition",
+          "over-bound transition count"
+        ],
+        "execution": "compare complete ordered outputs against source reference; a refused candidate receives zero execution calls"
+      },
+      "expected": {
+        "stage": "certificate-check-candidate-admission-and-execution",
+        "outcome": "exact-versioned-chain-admitted-or-invalid-chain-refused",
+        "legacy_original_premise_semantics_unchanged": true,
+        "each_transition_identity_bound": true,
+        "prune_map_derived_by_checker": true,
+        "creation_order_survivors_and_operand_order_preserved": true,
+        "ordered_outputs_and_multiplicity_preserved": true,
+        "candidate_admission_unchanged": true,
+        "refused_candidate_execution_calls": 0,
+        "Rust_to_Lean_correspondence": "open"
+      },
+      "state": {
+        "implementation": "implemented",
+        "execution": "passed",
+        "proof": "open",
+        "trust": "unassessed"
+      },
+      "evidence": [
+        {
+          "claim": "Clean-source v4 integrated measurement executed all 32 fixture/proposer rows, including 24 non-identity candidates; 20 reached the frozen residual target and all complete ordered outputs matched the source reference.",
+          "subject": "NGRAPH-CASE-16",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "bbcfd3170a0e81ca3543a55830f764a8270b4cd1",
+          "configuration": {
+            "command": "node verification/ngraph/rewrite-cost.mjs --output <new directory outside the repository>/rewrite-cost-v4-2026-11-13.json",
+            "receipt": "verification/ngraph/rewrite-cost-v4-2026-11-13.json",
+            "receipt_sha256": "a078a5efa58bf1ec4fc8f9f020eb3e69580605d9b8ccd7e9558a5c0676a9335e",
+            "attempts": 32,
+            "accepted": 32,
+            "executed_non_identity_candidates": 24,
+            "residual_targets": 20,
+            "break_even_estimates": 20
+          },
+          "assumptions": [
+            "One pinned x86_64 Linux shared host/toolchain; elapsed values are informational and not production performance claims.",
+            "Finite Rust execution and output agreement are evidence for the implementation, not a Lean correspondence theorem."
+          ]
+        },
+        {
+          "claim": "The Rust chained-certificate integration target exercises stale and over-bound envelopes, intermediate graph identity, final-prune ordering, live-node and survivor-map refusals, guard-root retention, output ordering, and execution agreement.",
+          "subject": "NGRAPH-CASE-16",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "baa8c6ee3d42ce6735275023fe9657c2ae4dbad8",
+          "configuration": {
+            "command": "cargo test -p noble-ngraph -p noble-ngraph-experiment -p noble-cli --all-targets --all-features --offline --locked",
+            "test_target": "cert_differential",
+            "result_line": "test result: ok. 47 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out",
+            "full_targets": [
+              "noble-ngraph",
+              "noble-cli",
+              "noble-ngraph-experiment"
+            ]
+          },
+          "assumptions": [
+            "Pinned x86_64 Linux Rust 1.96 nightly with the reviewed offline vendor; tests are finite implementation evidence, not universal correctness or Rust-to-Lean correspondence."
+          ]
+        }
+      ]
     }
   ]
 }

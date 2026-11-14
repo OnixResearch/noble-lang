@@ -186,6 +186,21 @@ theorem replacement_lift (graph₁ graph₂ : Graph) (inputs : Nat → BitVec 64
         exact congruence graph₁ graph₂ inputs hwf₁ hwf₂ index (habove index hgt)
           (fun operand hmem => ih operand (hmem₂ operand hmem))
 
+/-- A pruning map preserves the entire ordered output vector when it maps each
+output to a survivor with the same denotation. The mapping premise is the
+survivor-bijection and nodewise soundness obligation re-derived by the checker;
+this theorem does not claim the implementation constructs that map. -/
+theorem ordered_outputs_preserved_by_pruning
+    (sourceValue targetValue : Nat → Option Val) (mapping : Nat → Nat)
+    (outputs : List Nat)
+    (hvalue : ∀ node ∈ outputs, sourceValue node = targetValue (mapping node)) :
+    outputs.map sourceValue = (outputs.map mapping).map targetValue := by
+  calc
+    outputs.map sourceValue = outputs.map (fun node => targetValue (mapping node)) := by
+      apply List.map_congr_left
+      exact hvalue
+    _ = (outputs.map mapping).map targetValue := by simp
+
 
 
 /-! ### Checker and fixtures

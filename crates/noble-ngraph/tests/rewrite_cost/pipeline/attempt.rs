@@ -241,9 +241,11 @@ pub(super) fn agreement(observation: &Obs, expected: Option<&Obs>) -> bool {
         && expected.is_some_and(|reference| observation.obs_eq(reference))
 }
 
-fn certificate_info(derivation: &cert::Derivation) -> CertificateInfo {
-    let in_memory_bytes = std::mem::size_of::<cert::Derivation>()
-        .saturating_add(std::mem::size_of::<cert::Step>().saturating_mul(derivation.steps.len()))
+fn certificate_info(derivation: &cert::ChainedDerivation, wire_bytes: usize) -> CertificateInfo {
+    let in_memory_bytes = std::mem::size_of::<cert::ChainedDerivation>()
+        .saturating_add(
+            std::mem::size_of::<cert::ChainedStep>().saturating_mul(derivation.steps.len()),
+        )
         .saturating_add(derivation.revision.capacity())
         .saturating_add(derivation.model.capacity());
     CertificateInfo {
@@ -253,7 +255,7 @@ fn certificate_info(derivation: &cert::Derivation) -> CertificateInfo {
         left: hex(&derivation.left),
         right: hex(&derivation.right),
         in_memory_bytes,
-        wire_bytes: cert::encode(derivation).len(),
+        wire_bytes,
     }
 }
 

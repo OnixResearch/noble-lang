@@ -1,0 +1,47 @@
+# noble-rewrite-cost/v4
+# Issue #64: pre-registered before any v4 measurement; the v2 corpus and v2/v3 plans and receipts remain historical.
+# Reuse rewrite-quality-v2.txt, its eight explicit ordered-output fixtures, and the v2 continuation
+# thresholds unchanged: residual no-foldable-sites and informational certificate-check cost <= 50 us/step.
+# Preserve all four proposers for all eight fixtures (32 fixture/proposer rows); refusals stay in the
+# denominator and any refused candidate receives zero execution calls. No fixture, output, target,
+# or acceptance boundary is weakened to improve coverage.
+# Identity scheme: existing test-siphash13x4; these are library measurements, not deployed BLAKE3,
+# source compiler, Wasm execution, or a Lean-to-Rust implementation-correspondence result.
+#
+# Per row: 64 unrecorded priming iterations, then 200 samples; alternate baseline/certified order.
+# Fresh means no admitted graph, compiled artifact or workspace reused, not OS/page-cache cold.
+# Baseline: input admission -> packed preparation -> actual-layout export/validation -> first run.
+# Certified: same source admission -> ngraph-cert/2 proposal and pruning -> chained wire encoding ->
+# wire decode and independent per-transition replay -> exact pruned candidate admission -> backend,
+# layout validation and first run. The checker re-derives the creation-order survivor mapping from
+# the current graph at the prune transition; candidates themselves must pass unchanged admission.
+# Encoding time is not separately timed; exact transported wire bytes are retained. Decode plus
+# certificate replay is one measured checking stage. A refused attempt retains its measured prefix;
+# never sum independently sampled stage medians into a fictitious end-to-end total.
+# Warm execution reuses the admitted compiled artifact and workspace and checks the complete ordered
+# output vector against the source reference. Compare values, not sets; repeated outputs remain.
+#
+# Report raw chained-certificate coverage separately from the full integrated pipeline. Report
+# executed non-identity candidates, exact output agreement, residual-target attainment, warm saving,
+# and a conditional median-based break-even estimate only when the candidate executes, reaches the
+# unchanged residual target and has positive measured warm saving. Report cached warm and uncached
+# fresh costs separately. Wire-byte length is observed; allocator/RSS and OS-cache-cold costs remain
+# unmeasured. No elapsed-time assertion is a pass/fail gate on the shared host.
+
+schema noble-rewrite-cost/v4
+corpus rewrite-quality-v2.txt
+lens crates/noble-ngraph/src/cert.rs
+threshold retention | residual no-foldable-sites | check-per-step-us 50
+
+stage input-admission | status measured | reason check::check on the exact owned source graph
+stage proposal-search | status measured | reason cert::propose_chained after successful source admission
+stage certificate-construction | status measured | reason chained rewrite and certified prune transitions are produced by the proposal search
+stage certificate-wire-bytes | status measured | reason exact ngraph-cert/2 decimal-token envelope length is recorded; encoding time is not separately timed
+stage decoding-replay | status measured | reason decode_chained and check_chained re-derive each before/after graph state in one timed certificate-check stage
+stage candidate-admission | status measured | reason unchanged check::check consumes the exact certificate-checked pruned endpoint
+stage backend-preparation | status measured | reason Compiled::new from the independently admitted graph
+stage schedule-validation | status measured | reason packed_layout export plus layout::check on the object that executes; not instruction-byte correspondence
+stage first-execution | status measured | reason Compiled::evaluate with a fresh workspace after all admission stages succeed
+stage warm-execution | status measured | reason Compiled::evaluate_in reuses the accepted compiled object and workspace
+stage full-fresh-attempt | status measured | reason directly timed successful or refused baseline/certified pipeline; no sums of medians
+stage retained-memory | status unmeasured | reason no allocator or RSS accounting; graph/code estimates and scratch lease observations are separately labeled

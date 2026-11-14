@@ -47,13 +47,17 @@ mod tamper;
 #[path = "cert/multi_step.rs"]
 mod multi_step;
 
-#[path = "cert/admission.rs"]
+#[path = "cert/chained/mod.rs"]
+mod chained;
+
+#[path = "cert/admission/mod.rs"]
 mod admission;
 
 #[path = "cert/llvm.rs"]
 mod llvm;
 #[path = "cert/scoped.rs"]
 mod scoped;
+
 
 #[test]
 fn a_folded_endpoint_evaluates_identically_with_a_constant() -> Result<(), noble_ngraph::Diagnostic>

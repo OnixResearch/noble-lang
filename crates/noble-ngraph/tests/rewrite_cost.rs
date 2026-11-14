@@ -20,7 +20,7 @@
 //! derivations stay in the denominator, with later stages explicitly not reached.
 //!
 //! The continuation thresholds come from the frozen manifest
-//! `verification/ngraph/rewrite-cost-v3.txt`. Fresh attempts and reused compiled/workspace execution
+//! `verification/ngraph/rewrite-cost-v4.txt`. Fresh attempts and reused compiled/workspace execution
 //! are measured separately; no OS-cache-cold, allocator/RSS or Lean correspondence claim is made.
 
 mod common;
@@ -47,10 +47,8 @@ fn certified_rewrite_costs_are_reported_apart_from_validity_and_coverage(
         run.reached_target > 0,
         "the corpus must contain at least one reachable target, or the thresholds are vacuous"
     );
-    assert!(
-        run.refused > 0,
-        "refused derivations stay in the denominator rather than being dropped"
-    );
+    assert_eq!(run.accepted + run.refused, corpus.fixtures.len() * 4);
+    assert!(run.pipeline.executed > 0, "candidate execution is measured");
     let report = report::render(&manifest, threshold, samples, &run);
     println!("{report}");
     Ok(())
@@ -75,20 +73,21 @@ fn corpus_graph(name: &str) -> noble_ngraph::Graph {
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; this regression calls the runtime proposer, admission checks and measured execution pipeline."
 )]
-fn a_valid_certificate_cannot_bypass_candidate_admission() {
+fn a_chained_non_identity_certificate_passes_admission_and_executes() {
     let graph = corpus_graph("single-fold");
-    let (certificate, candidate) = noble_ngraph::cert::propose(
+    let (certificate, candidate) = noble_ngraph::cert::propose_chained(
         &common::IDS,
         noble_ngraph::cert::Proposer::FirstEligible,
         &graph,
-    );
+    )
+    .expect("bounded chained proposal");
     assert_eq!(
-        noble_ngraph::cert::check(&common::IDS, &graph, &candidate, &certificate),
+        noble_ngraph::cert::check_chained(&common::IDS, &graph, &candidate, &certificate),
         Ok(())
     );
     let measured = pipeline::measure(&graph, noble_ngraph::cert::Proposer::FirstEligible, 2);
-    assert_eq!(measured.disposition, "candidate-refused");
-    assert_eq!(measured.candidate_execution_calls, 0);
+    assert_eq!(measured.disposition, "executed");
+    assert!(measured.candidate_execution_calls > 0);
     assert!(measured.baseline_execution_calls > 0);
 }
 
@@ -97,7 +96,7 @@ fn a_valid_certificate_cannot_bypass_candidate_admission() {
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; this regression executes source and certificate refusal paths and observes actual evaluation counters."
 )]
-fn source_and_certificate_refusals_stop_at_their_own_boundaries() {
+fn source_refusals_stop_and_chained_candidates_execute() {
     let mut invalid_source = corpus_graph("independent-folds");
     invalid_source.outputs = vec![noble_ngraph::ir::NodeId(5)];
     let input = pipeline::measure(&invalid_source, noble_ngraph::cert::Proposer::Identity, 2);
@@ -107,16 +106,17 @@ fn source_and_certificate_refusals_stop_at_their_own_boundaries() {
 
     let chained = corpus_graph("chained-folds");
     let certificate = pipeline::measure(&chained, noble_ngraph::cert::Proposer::FixedPoint, 2);
-    assert_eq!(certificate.disposition, "certificate-refused");
+    assert_eq!(certificate.disposition, "executed");
     assert!(certificate.baseline_execution_calls > 0);
-    assert_eq!(certificate.candidate_execution_calls, 0);
+    assert!(certificate.candidate_execution_calls > 0);
 }
 
 #[test]
-fn v2_ordered_and_repeated_outputs_are_source_admitted() {
-    let cases: [(&str, &[u32], &[i64]); 3] = [
+fn v2_ordered_repeated_and_chained_candidates_execute_in_output_order() {
+    let cases: [(&str, &[u32], &[i64]); 4] = [
         ("independent-folds", &[2, 5], &[12, 7]),
         ("ordered-outputs", &[4, 2], &[12, 5]),
+        ("chained-folds", &[4], &[15]),
         ("repeated-outputs", &[2, 2], &[12, 12]),
     ];
     for (name, expected_nodes, expected_values) in cases {
@@ -130,7 +130,7 @@ fn v2_ordered_and_repeated_outputs_are_source_admitted() {
             expected_nodes,
             "{name}: output order and multiplicity are frozen"
         );
-        let checked = noble_ngraph::check(&common::IDS, graph)
+        let checked = noble_ngraph::check(&common::IDS, graph.clone())
             .expect("each explicit-output graph is admitted by the source checker");
         let observed =
             noble_ngraph::reference(&checked, &[], None, &mut noble_ngraph::Control::default());
@@ -145,6 +145,20 @@ fn v2_ordered_and_repeated_outputs_are_source_admitted() {
             ),
             "{name}: evaluated values preserve the declared output vector"
         );
+        let (certificate, candidate) = noble_ngraph::cert::propose_chained(
+            &common::IDS,
+            noble_ngraph::cert::Proposer::FixedPoint,
+            &graph,
+        )
+        .expect("bounded chained proposal");
+        assert_eq!(
+            noble_ngraph::cert::check_chained(&common::IDS, &graph, &candidate, &certificate),
+            Ok(()),
+            "{name}: the independent v2 checker accepts its pruned endpoint"
+        );
+        let measured = pipeline::measure(&graph, noble_ngraph::cert::Proposer::FixedPoint, 2);
+        assert_eq!(measured.disposition, "executed", "{name}");
+        assert!(measured.candidate_execution_calls > 0, "{name}");
     }
 }
 

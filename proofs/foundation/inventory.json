@@ -2776,6 +2776,12 @@
       "claim": "One local replacement with an unchanged denotation lifts to agreement over every node of the graph, preserving shared uses."
     },
     {
+      "name": "NobleFoundation.GraphRewrite.ordered_outputs_preserved_by_pruning",
+      "phase": 1,
+      "role": "graph-rewrite",
+      "claim": "A survivor mapping with nodewise denotation preservation preserves the complete ordered output vector, including duplicates."
+    },
+    {
       "name": "NobleFoundation.GraphRewrite.checked_sound_const_add",
       "phase": 1,
       "role": "certificate-checker",
@@ -3124,6 +3130,18 @@
       "claim": "Replaying every fold in an accepted derivation preserves every graph node denotation."
     },
     {
+      "name": "NobleFoundation.Certificate.accepted_rewrite_chain_preserves_all_nodes",
+      "phase": 2,
+      "role": "certificate",
+      "claim": "Nodewise soundness of each accepted certificate composes across an arbitrarily long graph-chained rewrite sequence."
+    },
+    {
+      "name": "NobleFoundation.Certificate.accepted_rewrite_chain_preserves_ordered_outputs",
+      "phase": 2,
+      "role": "certificate",
+      "claim": "An accepted chained rewrite sequence preserves the exact ordered output list and its multiplicity."
+    },
+    {
       "name": "NobleFoundation.Certificate.multiFoldGraph_wellFormed",
       "phase": 2,
       "role": "fixture",
@@ -3272,6 +3290,24 @@
       "phase": 2,
       "role": "fixture",
       "claim": "The model's replay endpoint theorem applies to the fixture: every node's denotation is preserved."
+    },
+    {
+      "name": "NobleFoundation.CertificateChainedCorpus.rustChainedFixedPoint_wire_decodes",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "The retained Rust-generated fixed-point rewrite-and-prune body decodes under the Lean ngraph-cert/2 model."
+    },
+    {
+      "name": "NobleFoundation.CertificateChainedCorpus.rustOrderedFirstEligible_wire_decodes",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "The retained Rust-generated ordered first-eligible chain body decodes under the Lean ngraph-cert/2 model."
+    },
+    {
+      "name": "NobleFoundation.CertificateChainedCorpus.rustIdentity_wire_decodes",
+      "phase": 2,
+      "role": "certificate-codec",
+      "claim": "The retained Rust-generated zero-transition identity body decodes under the Lean ngraph-cert/2 model."
     },
     {
       "name": "NobleFoundation.PackedLayout.count_inflated_refused",

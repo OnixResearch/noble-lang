@@ -1,0 +1,186 @@
+{
+  "source_commit": "bbcfd3170a0e81ca3543a55830f764a8270b4cd1",
+  "source_tree": "53fbe98889645f6685dc5872122a759f78657ea9",
+  "status": "",
+  "clean_source": true,
+  "plan_commit": "eb3a04b321906d60bc95141d36aa793467e8d021",
+  "plan_sha256": "fb17e8aadc678d35ce47d3d4b4f388bd2fd0f769e398574b3405bac93839dccc",
+  "files": {
+    "verification/ngraph/rewrite-cost-v4.txt": {
+      "sha256": "fb17e8aadc678d35ce47d3d4b4f388bd2fd0f769e398574b3405bac93839dccc"
+    },
+    "verification/ngraph/rewrite-quality-v2.txt": {
+      "sha256": "a12868237708aa177636ce63f9ee6dd98edd2ba2e8fd321106d696a239e02ea3"
+    },
+    "policy/tool-selection.json": {
+      "sha256": "39a77ed51d4bd94bcfed70cb8937ca2ebd95435204549869c67ecbacca10b5db"
+    },
+    "verification/ngraph/rewrite-cost.mjs": {
+      "sha256": "ca37682936fde0995469a98eb336009213ce63a2b1d1d5e3acb24c83cda8c1ab"
+    }
+  },
+  "lens": [
+    {
+      "lens": "crates/noble-ngraph/src/cert.rs",
+      "crate": "noble-ngraph",
+      "files": [
+        {
+          "path": "crates/noble-ngraph/src/batch.rs",
+          "sha256": "245f18603e260161a79d212c412840ab420e72f7c4efb486275ce577d1a2ea06"
+        },
+        {
+          "path": "crates/noble-ngraph/src/belt.rs",
+          "sha256": "ea5edfcf2750085e60ee5150da6612bf3716b0bf351f4ffb07d53bcfcb893ab0"
+        },
+        {
+          "path": "crates/noble-ngraph/src/belt/codec.rs",
+          "sha256": "f09a45622ff0f2cacee5d81c0ba7b8f339c5569c7f515d592bf80d3997605e7d"
+        },
+        {
+          "path": "crates/noble-ngraph/src/belt/codec/hashing.rs",
+          "sha256": "4c85e17b633cbc034cb97058d1f258333abc9237a31380c3f381e04cdbdc278d"
+        },
+        {
+          "path": "crates/noble-ngraph/src/belt/codec/instructions.rs",
+          "sha256": "be49cd132c4d15d0770ff0e5d099c81ae29613c25271e5ddd157d02a73345ee0"
+        },
+        {
+          "path": "crates/noble-ngraph/src/belt/execution.rs",
+          "sha256": "ae12152c6de2906d2211e1e6561e6270e08ee04ebb00e40f2819c5c85e2ed741"
+        },
+        {
+          "path": "crates/noble-ngraph/src/belt/lower.rs",
+          "sha256": "9641cdd1488d1aba97701a4c76899c3dab577e2b94f3b74ef803e4e23ebc5b62"
+        },
+        {
+          "path": "crates/noble-ngraph/src/belt/support.rs",
+          "sha256": "de3c96198958f77341e3b7a270081cc129f090890c4e0750d6a7b1f103083280"
+        },
+        {
+          "path": "crates/noble-ngraph/src/belt/types.rs",
+          "sha256": "601dc595b8f50995abed0c12a9ce3eb3191cc7af284e9744fac5ebf411201ee2"
+        },
+        {
+          "path": "crates/noble-ngraph/src/belt/validate.rs",
+          "sha256": "77f82b832072792a4a36d49ae26f8b622a9ba911089cedf11bdd711fdc51a65f"
+        },
+        {
+          "path": "crates/noble-ngraph/src/belt/validate/machine.rs",
+          "sha256": "1fcb894fbfa1b2a3b8abb89347143294edde2b11e9fa27ded32baba47a0ccc42"
+        },
+        {
+          "path": "crates/noble-ngraph/src/cert.rs",
+          "sha256": "e774b25cbfb8c2aadf1958afcc48fb4944d48c5cc5e452448d32891256667d6f"
+        },
+        {
+          "path": "crates/noble-ngraph/src/cert/scoped.rs",
+          "sha256": "d5993616fc8de0b12360b724573b3fa7365fb0fba68c97bd6b278ec0ac9648e1"
+        },
+        {
+          "path": "crates/noble-ngraph/src/check.rs",
+          "sha256": "5a3f6f165ee145f957833f29fcefcfe0cdbe93013ead9d65005bc6554290e4a1"
+        },
+        {
+          "path": "crates/noble-ngraph/src/compiled.rs",
+          "sha256": "3ef981b38e1b85aa3f74c823c9f72cdf4d9da28ecc354ce7b8207fa7067a9064"
+        },
+        {
+          "path": "crates/noble-ngraph/src/diag.rs",
+          "sha256": "3659c2409d9b044c85a691c6fb81361c04868d564a8851a02bb88af33bbf9fd2"
+        },
+        {
+          "path": "crates/noble-ngraph/src/eval.rs",
+          "sha256": "4641b787d61a61e49d5c703a50f6f295713d2d428776f4f8c9559feb2b2865f4"
+        },
+        {
+          "path": "crates/noble-ngraph/src/extract/admission.rs",
+          "sha256": "d9d0253d19b95f6cd8f6e61393150a0758efda7d8d7acede084f8f3135188b24"
+        },
+        {
+          "path": "crates/noble-ngraph/src/extract/mod.rs",
+          "sha256": "6c408354fb8c7ad1a8670a54ed7fc0962cbb09f959c2431d6ab68174e1f59622"
+        },
+        {
+          "path": "crates/noble-ngraph/src/extract/source.rs",
+          "sha256": "e60f7140c9177e2d0d4e596a72444d7de6c70c7d3ccbb2db866c7d690b62cd65"
+        },
+        {
+          "path": "crates/noble-ngraph/src/extract/symbolic.rs",
+          "sha256": "7563d095785560603977133878ff9ca4f51ee21535d1611ac3fd9bb425099def"
+        },
+        {
+          "path": "crates/noble-ngraph/src/facts.rs",
+          "sha256": "f9900ffe518c6b7d0f466f3935825da6da9e0c0465d8658a5fc4fc1ce177364c"
+        },
+        {
+          "path": "crates/noble-ngraph/src/format/data.rs",
+          "sha256": "c66c6b4656e1ee7e00283d28eae9dd00b4725b19b531c4cd4894809a8abfe0a2"
+        },
+        {
+          "path": "crates/noble-ngraph/src/format/graph.rs",
+          "sha256": "04f150558aa6b0a31f6b1d2ea245269ec0a69b7b7277dc74445cbcad5b87db01"
+        },
+        {
+          "path": "crates/noble-ngraph/src/format/mod.rs",
+          "sha256": "83ac1186c2487f668b452668f0168ec03130e9fe35b84d3b9541dcaded4665ed"
+        },
+        {
+          "path": "crates/noble-ngraph/src/format/snapshot.rs",
+          "sha256": "7faf873e93b88e050c5407c2a39b2178f0757181d0e2be85e055ec8a1a513262"
+        },
+        {
+          "path": "crates/noble-ngraph/src/format/value.rs",
+          "sha256": "c90ee474484e528df0d78d13c8a686c1b53e134c5977e31262e332678dac6107"
+        },
+        {
+          "path": "crates/noble-ngraph/src/format/vectors.rs",
+          "sha256": "272d53db03d82301f17b64d1989bf9b64c172d220c04baa85cf0cbb86e4daedd"
+        },
+        {
+          "path": "crates/noble-ngraph/src/grad.rs",
+          "sha256": "ead442676020992e87acd5344b934e0501b7f01b0bbe93496b4bd8000d63dcbf"
+        },
+        {
+          "path": "crates/noble-ngraph/src/identity.rs",
+          "sha256": "364a30534dcd00a27e550332ae642c564cb0456d56716ade0d420d87d8cad6fb"
+        },
+        {
+          "path": "crates/noble-ngraph/src/ir.rs",
+          "sha256": "0fb05a68e7eb1b860e51e71598e2fd61a7a638a68b274023feb4234fc5e682a4"
+        },
+        {
+          "path": "crates/noble-ngraph/src/layout.rs",
+          "sha256": "62058025d4bc266e0c0b82e9c59e4111c4e8421299d63cdc8d2177974ebc383d"
+        },
+        {
+          "path": "crates/noble-ngraph/src/lib.rs",
+          "sha256": "473dd396f08eb6ec5a92afef4c512ac29bd512badb7963c7bf379ef3210f500b"
+        },
+        {
+          "path": "crates/noble-ngraph/src/llvm.rs",
+          "sha256": "746e7051fe28d43bce82c7325956d2719d3f6a2fec510d48d3e623f2123d584a"
+        },
+        {
+          "path": "crates/noble-ngraph/src/prng.rs",
+          "sha256": "e60a58dc0320d747437fb5cb8069d333591ac7d30d35f1ec111daa2045911e85"
+        },
+        {
+          "path": "crates/noble-ngraph/src/schedule.rs",
+          "sha256": "b9c370c2ca41322a486d2229c9d37088214bec892185bd0460b3092dc95f098e"
+        },
+        {
+          "path": "crates/noble-ngraph/src/sem.rs",
+          "sha256": "c8deb1b337f989e3561d68020928496c37abc71fd3bf0b995298050f457ef21c"
+        },
+        {
+          "path": "crates/noble-ngraph/src/snapshot.rs",
+          "sha256": "c2b91ccd45b6fa8168ef19fdd7b1ab77e6177c3ebd2b8bbbd1cc834896819924"
+        },
+        {
+          "path": "crates/noble-ngraph/src/train.rs",
+          "sha256": "f2ccd5027fc551804dba261df3e2e0b035666f95cddfdb28924ed43654f2e59f"
+        }
+      ]
+    }
+  ]
+}
