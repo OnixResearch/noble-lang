@@ -62,12 +62,18 @@ const runNode = (argv, label, tmp) => {
   writeProcess(join(output, 'commands', label), node, argv, result);
   return result;
 };
-const cargoEnv = (tmp, mutation = {}) => ({ ...selectedEnv(tmp), NOBLE_ROOT: root, NOBLE_TARGET: targetDir,
-  ...mutation });
-const runCargo = (argv, label, tmp, mutation = {}) => {
-  const result = spawnSync(cargo, argv, { cwd: root, env: cargoEnv(tmp, mutation), encoding: 'utf8',
+const cargoEnv = tmp => ({ ...selectedEnv(tmp), NOBLE_ROOT: root, NOBLE_TARGET: targetDir });
+const runCargo = (argv, label, tmp) => {
+  const result = spawnSync(cargo, argv, { cwd: root, env: cargoEnv(tmp), encoding: 'utf8',
     maxBuffer: 128 * 1024 * 1024, timeout: 3600000 });
   writeProcess(join(output, 'commands', label), cargo, argv, result);
+  return result;
+};
+const runTestBinary = (binary, argv, label, tmp, mutation) => {
+  const result = spawnSync(binary, argv, { cwd: root,
+    env: { ...selectedEnv(tmp), ...mutation }, encoding: 'utf8', maxBuffer: 128 * 1024 * 1024,
+    timeout: 3600000 });
+  writeProcess(join(output, 'commands', label), binary, argv, result);
   return result;
 };
 const markerJson = (text, marker) => {
@@ -159,6 +165,8 @@ try {
 
   const p2Command = ['test', '--locked', '--offline', '-p', 'noble-ngraph-experiment',
     '--test', 'b2_differential', 'issue125_structured_interaction_matrix', '--', '--nocapture'];
+  const p2BuildCommand = ['test', '--locked', '--offline', '-p', 'noble-ngraph-experiment',
+    '--test', 'b2_differential', '--no-run', '--message-format=json'];
   const p2BaseResult = runCargo(p2Command, 'p2-baseline', tmp);
   requireThat(p2BaseResult.status === 0, `P2 baseline failed: ${p2BaseResult.stderr}`);
   const p2Baseline = markerJson(p2BaseResult.stdout, 'ISSUE125_INTERACTION_RECEIPT=');
@@ -256,8 +264,17 @@ try {
       try {
         try {
           entry = apply(mutant, ({ beforeSha256, afterSha256 }) => {
-        const mutationResult = runCargo(p2Command, `${mutantLabel}-mutation`, tmp,
-          { NOBLE_ISSUE125_MUTATION_ID: mutant.id, NOBLE_ISSUE125_MUTATION_CELL: mutant.cell });
+        const buildResult = runCargo(p2BuildCommand, `${mutantLabel}-build`, tmp);
+        const executable = buildResult.stdout.split('\n').flatMap(line => {
+          try { return [JSON.parse(line)]; } catch { return []; }
+        }).find(event => event.reason === 'compiler-artifact' && event.target?.name === 'b2_differential' &&
+          event.executable)?.executable;
+        const mutationResult = buildResult.status === 0 && executable
+          ? runTestBinary(executable, ['issue125_structured_interaction_matrix', '--nocapture'],
+            `${mutantLabel}-mutation`, tmp,
+            { NOBLE_ISSUE125_MUTATION_ID: mutant.id, NOBLE_ISSUE125_MUTATION_CELL: mutant.cell })
+          : { ...buildResult, status: buildResult.status ?? 1,
+            stderr: `${buildResult.stderr}\n${executable ? '' : 'P2 mutant test executable was not emitted'}` };
         const receipt = markerJson(mutationResult.stdout, 'ISSUE125_INTERACTION_RECEIPT=');
         const probe = receipt?.mutation_probe;
         let replay = null;
@@ -319,7 +336,7 @@ try {
           shrink_work: probe?.shrink_work ?? null,
           replay: replay && { fresh_process: replay.fresh_process_replay === true,
             replayed: replay.replayed ?? null, historical_executable_refused: replay.historical_executable_refused ?? false },
-          error: mutationResult.status !== 0 ? mutationResult.stderr : null };
+          error: mutationResult.status !== 0 ? `${mutationResult.stderr}\n${mutationResult.stdout}` : null };
         allKilled &&= result.outcome === 'killed' && replay?.fresh_process_replay === true &&
           replay?.historical_executable_refused === true && replay?.replayed?.length === 2;
           return result;
