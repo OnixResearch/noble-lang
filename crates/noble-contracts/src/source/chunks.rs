@@ -28,11 +28,6 @@
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-maintainers; all mutation in this host-owned module is limited to the bounded Library snapshot, the per-request budget ledger, and fresh expansion/evaluation scratch; borrowed source, requests, recipes, namespace state and host state are never mutated"
 )]
-#![expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; every public input is untrusted or host-retained and every invariant is checked with a typed refusal or explicit budget result; assertions would turn malformed requests, stale chunks and resource exhaustion into panics"
-)]
-
 #[expect(
     tigerstyle::non_trait_imports,
     reason = "Owner: noble-contracts; the closed typed-chunk profile uses kernel Ty in its public interfaces and checked stack helpers, and qualifying every occurrence would obscure the ordered type signatures without changing ownership"
@@ -811,6 +806,10 @@ fn absorb_identity_interface(fold: &mut crate::companion::digest::Fold, envelope
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; identity folding must hash even malformed public envelope inputs without panicking, leaving validation to typed refusal paths"
+)]
 fn absorb_identity_retained_values(fold: &mut crate::companion::digest::Fold, envelope: &Envelope) {
     fold.absorb_count(envelope.captures.len());
     for capture in &envelope.captures {
@@ -848,6 +847,10 @@ fn absorb_identity_retained_values(fold: &mut crate::companion::digest::Fold, en
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; identity folding must hash even malformed public envelope inputs without panicking, leaving validation to typed refusal paths"
+)]
 fn absorb_identity_recipe(fold: &mut crate::companion::digest::Fold, envelope: &Envelope) {
     fold.absorb_count(envelope.body.nodes.len());
     for node in &envelope.body.nodes {
@@ -1127,6 +1130,8 @@ fn expand_recipe(
             "recipe expansion ended mid-quotation",
         ));
     }
+    debug_assert_eq!(depth, 0);
+    debug_assert!(spent <= MAX_EXPANDED_NODES);
     Ok(Expansion {
         elements,
         expanded_nodes: spent,
@@ -1227,6 +1232,8 @@ fn emit_i64(value: i64, digits: &mut [u8; 20]) -> usize {
             *slot = b'-';
         }
     }
+    debug_assert!(start < digits.len());
+    debug_assert!(magnitude == 0);
     start
 }
 
@@ -1259,6 +1266,8 @@ fn emit(elements: &[Element], at: Location) -> Result<alloc::vec::Vec<u8>, Refus
             return Err(byte_budget_refusal(encoded_len(out.len()), at));
         }
     }
+    debug_assert!(out.len() >= elements.len());
+    debug_assert!(u32::try_from(out.len()).is_ok_and(|length| length <= MAX_SOURCE_BYTES));
     Ok(out)
 }
 
@@ -1309,6 +1318,16 @@ fn editor_context_bytes(elements: &[Element], at: Location) -> Result<u32, Refus
             return Err(byte_budget_refusal(bytes, at));
         }
     }
+    debug_assert!(bytes <= u64::from(MAX_SOURCE_BYTES));
+    debug_assert!(
+        bytes
+            >= encoded_len(
+                elements
+                    .iter()
+                    .filter(|element| !matches!(element, Element::Hole))
+                    .count()
+            )
+    );
     u32::try_from(bytes).map_err(|_| byte_budget_refusal(u64::MAX, at))
 }
 
@@ -1982,6 +2001,8 @@ fn check_envelope(envelope: &Envelope, ledger: &mut Ledger) -> Result<(), Refusa
             "declared chunk identity is not the canonical body identity",
         ));
     }
+    debug_assert_eq!(envelope.format, ENVELOPE_FORMAT);
+    debug_assert!(envelope.interface.effects.is_empty());
     Ok(())
 }
 
@@ -2013,6 +2034,8 @@ fn add_encoded_size(total: &mut u64, amount: u64, at: Location) -> Result<(), Re
         return Err(refusal);
     }
     *total = next;
+    debug_assert!(next >= amount);
+    debug_assert!(*total <= u64::from(MAX_RETAINED_BYTES));
     Ok(())
 }
 
@@ -2036,6 +2059,10 @@ fn envelope_size(envelope: &Envelope, at: Location) -> Result<u32, Refusal> {
     })
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; this size walker must return bounded refusals for malformed retained metadata rather than assert on caller-owned fields"
+)]
 fn add_envelope_metadata_size(
     encoded_bytes: &mut u64,
     envelope: &Envelope,
@@ -2096,6 +2123,10 @@ fn add_envelope_metadata_size(
     Ok(())
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; this size walker must return bounded refusals for malformed retained recipes rather than assert on caller-owned fields"
+)]
 fn add_recipe_size(encoded_bytes: &mut u64, recipe: &Recipe, at: Location) -> Result<(), Refusal> {
     add_encoded_size(encoded_bytes, 4, at)?;
     for node in &recipe.nodes {
@@ -2169,6 +2200,10 @@ fn check_captures(envelope: &Envelope) -> Result<(), Refusal> {
             ));
         }
     }
+    debug_assert!(u32::try_from(envelope.captures.len()).is_ok_and(|count| count <= MAX_CAPTURES));
+    debug_assert!(envelope.captures.last().is_none_or(|capture| {
+        usize::from(capture.index).saturating_add(1) == envelope.captures.len()
+    }));
     Ok(())
 }
 
@@ -2217,6 +2252,17 @@ fn check_instantiations(envelope: &Envelope, ledger: &mut Ledger) -> Result<(), 
             previous = Some(binding.variable);
         }
     }
+    debug_assert!(envelope.instantiations.iter().all(|instantiation| {
+        u32::try_from(instantiation.bindings.len())
+            .is_ok_and(|count| count <= MAX_INSTANTIATION_BINDINGS)
+    }));
+    debug_assert!(envelope
+        .instantiations
+        .iter()
+        .flat_map(|item| &item.bindings)
+        .all(|binding| {
+            binding.kind == noble_kernel::words::VariableKind::Value && profile_type(&binding.ty)
+        }));
     Ok(())
 }
 
@@ -2258,6 +2304,12 @@ fn check_recipe(envelope: &Envelope) -> Result<(), Refusal> {
         };
         check_recipe_node(envelope, node, own, position)?;
     }
+    debug_assert!(!envelope.body.entry.is_empty());
+    debug_assert!(envelope
+        .body
+        .entry
+        .iter()
+        .all(|reference| { reference_precedes(*reference, envelope.body.nodes.len()) }));
     Ok(())
 }
 
@@ -2272,6 +2324,10 @@ fn reference_precedes(reference: u32, boundary: usize) -> bool {
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; recipe references are untrusted and each invalid ordinal must return its located refusal instead of panicking"
+)]
 fn check_recipe_node(
     envelope: &Envelope,
     node: &Node,
@@ -2401,6 +2457,10 @@ struct CandidateFrame<'a> {
     at: usize,
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; source preparation output is checked with fail-closed located refusals and must not panic on malformed or adversarial parser output"
+)]
 fn check_invocation_targets(
     candidate: &noble_kernel::untrusted::Candidate,
     expected: &[noble_kernel::contracts::Definition],
@@ -2516,6 +2576,8 @@ fn derived_interface(
     };
     check_bootstrap_targets(&submission.body.candidate, elements, context.at)?;
     let candidate = independently_accept(submission, &derived, context.ledger, context.at)?;
+    debug_assert_eq!(derived.stack_in, declared.stack_in);
+    debug_assert!(derived.effects.is_empty());
     Ok((derived, candidate))
 }
 
@@ -2530,8 +2592,12 @@ fn prepare_candidate(
     if remaining_work == 0 {
         return Err(exhaust_checking_work(ledger, at));
     }
+    debug_assert!(remaining_work > 0);
     match namespace.prepare(source, inputs, ledger.prepare_limits(remaining_work)) {
         Ok(prepared) => {
+            debug_assert!(prepared.work_used() <= remaining_work);
+            debug_assert!(prepared.checked().is_some());
+            debug_assert!(prepared.submission().is_some());
             ledger.charge(Resource::CheckingWork, prepared.work_used(), at)?;
             Ok(prepared)
         }
@@ -2577,6 +2643,8 @@ fn prepared_interface(
             "declared ordered interface differs from the interface source admission derived",
         ));
     }
+    debug_assert!(derived.effects.is_empty());
+    debug_assert_eq!(derived, *declared);
     Ok(derived)
 }
 
@@ -2592,6 +2660,7 @@ fn independently_accept(
         return Err(exhaust_checking_work(ledger, at));
     }
     request.limits.work = remaining_work;
+    debug_assert!(request.limits.work <= ledger.remaining(Resource::CheckingWork));
     let (outcome, work_used) = noble_kernel::acceptance::check_with_work(
         &submission.environment,
         &request,
@@ -2604,6 +2673,9 @@ fn independently_accept(
                 && again.interface.stack_out == derived.stack_out
                 && again.interface.effects.is_empty()
             {
+                debug_assert!(work_used <= remaining_work);
+                debug_assert!(again.interface.effects.is_empty());
+                debug_assert_eq!(again.interface.stack_in, derived.stack_in);
                 Ok(submission.body.candidate.clone())
             } else {
                 Err(internal(
@@ -2913,60 +2985,97 @@ fn collect_quotation(program: &[Element], start: usize) -> Option<(&[Element], u
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-contracts; fixture operations must push and pop the bounded evaluation stack"
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; fixture dispatch invokes runtime-only Vec mutation and bounded evaluation helpers"
+)]
 fn eval_operation<'a>(
     op: Op,
     stack: &mut alloc::vec::Vec<Value<'a>>,
     frames: &mut alloc::vec::Vec<(&'a [Element], usize)>,
     at: Location,
 ) -> Result<(), Refusal> {
-    match op {
-        Op::Dup => {
-            let Some(value) = stack.last().cloned() else {
-                return Err(Refusal::new(
-                    Class::Invalid,
-                    at,
-                    "fixture evaluation underflowed",
-                ));
-            };
-            stack.push(value);
-            Ok(())
-        }
-        Op::Drop => {
-            if stack.pop().is_none() {
-                return Err(Refusal::new(
-                    Class::Invalid,
-                    at,
-                    "fixture evaluation underflowed",
-                ));
-            }
-            Ok(())
-        }
-        Op::Swap => {
-            let (Some(top), Some(next)) = (stack.pop(), stack.pop()) else {
-                return Err(Refusal::new(
-                    Class::Invalid,
-                    at,
-                    "fixture evaluation underflowed",
-                ));
-            };
-            stack.push(top);
-            stack.push(next);
-            Ok(())
-        }
+    debug_assert!(stack.len() <= MAX_STACK_CAPACITY);
+    let outcome = match op {
+        Op::Dup => eval_duplicate(stack, at),
+        Op::Drop => eval_drop(stack, at),
+        Op::Swap => eval_swap(stack, at),
         Op::Add | Op::Sub | Op::Mul | Op::Eq => eval_binary(op, stack, at),
-        Op::Run => {
-            let value = pop_value(stack, at)?;
-            let Value::Program(body) = value else {
-                return Err(Refusal::new(
-                    Class::Invalid,
-                    at,
-                    "fixture run operand is not a quotation value",
-                ));
-            };
-            frames.push((body, 0));
-            Ok(())
-        }
+        Op::Run => eval_run(stack, frames, at),
+    };
+    if outcome.is_ok() {
+        debug_assert!(stack.len() <= MAX_STACK_CAPACITY);
     }
+    outcome
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; fixture duplication must push onto the bounded owned evaluation stack"
+)]
+fn eval_duplicate<'a>(stack: &mut alloc::vec::Vec<Value<'a>>, at: Location) -> Result<(), Refusal> {
+    let Some(value) = stack.last().cloned() else {
+        return Err(Refusal::new(
+            Class::Invalid,
+            at,
+            "fixture evaluation underflowed",
+        ));
+    };
+    stack.push(value);
+    Ok(())
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; fixture drop consumes an owned value from the bounded evaluation stack"
+)]
+fn eval_drop<'a>(stack: &mut alloc::vec::Vec<Value<'a>>, at: Location) -> Result<(), Refusal> {
+    if stack.pop().is_none() {
+        return Err(Refusal::new(
+            Class::Invalid,
+            at,
+            "fixture evaluation underflowed",
+        ));
+    }
+    Ok(())
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; fixture swap transfers ownership of two values through the bounded evaluation stack"
+)]
+fn eval_swap<'a>(stack: &mut alloc::vec::Vec<Value<'a>>, at: Location) -> Result<(), Refusal> {
+    let (Some(top), Some(next)) = (stack.pop(), stack.pop()) else {
+        return Err(Refusal::new(
+            Class::Invalid,
+            at,
+            "fixture evaluation underflowed",
+        ));
+    };
+    stack.push(top);
+    stack.push(next);
+    Ok(())
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; fixture run transfers an owned quotation value into the bounded evaluation frame stack"
+)]
+fn eval_run<'a>(
+    stack: &mut alloc::vec::Vec<Value<'a>>,
+    frames: &mut alloc::vec::Vec<(&'a [Element], usize)>,
+    at: Location,
+) -> Result<(), Refusal> {
+    let value = pop_value(stack, at)?;
+    let Value::Program(body) = value else {
+        return Err(Refusal::new(
+            Class::Invalid,
+            at,
+            "fixture run operand is not a quotation value",
+        ));
+    };
+    frames.push((body, 0));
+    Ok(())
 }
 
 #[expect(
@@ -2978,6 +3087,7 @@ fn eval_binary<'a>(
     stack: &mut alloc::vec::Vec<Value<'a>>,
     at: Location,
 ) -> Result<(), Refusal> {
+    let initial_len = stack.len();
     let (Value::I64(right), Value::I64(left)) = (pop_value(stack, at)?, pop_value(stack, at)?)
     else {
         return Err(Refusal::new(
@@ -2998,6 +3108,11 @@ fn eval_binary<'a>(
             ));
         }
     }
+    debug_assert_eq!(stack.len().saturating_add(1), initial_len);
+    debug_assert!(matches!(
+        stack.last(),
+        Some(Value::I64(_)) | Some(Value::Bool(_))
+    ));
     Ok(())
 }
 
@@ -3081,6 +3196,7 @@ fn evaluate<'a>(
         }
         ledger.observe_count(Resource::StackHeight, encoded_len(stack.len()), at)?;
     }
+    debug_assert!(stack.len() <= MAX_STACK_CAPACITY);
     let mut out = alloc::vec::Vec::with_capacity(stack.len());
     for value in stack {
         match value {
@@ -3089,6 +3205,7 @@ fn evaluate<'a>(
             Value::Program(_) => return Ok(None),
         }
     }
+    debug_assert!(out.len() <= MAX_STACK_CAPACITY);
     Ok(Some(out))
 }
 
@@ -3464,7 +3581,28 @@ fn canonical_order(library: &Library) -> alloc::vec::Vec<u16> {
             (None, None) => core::cmp::Ordering::Equal,
         }
     });
+    debug_assert!(order.len() <= library.entries().len());
+    debug_assert!(order
+        .windows(2)
+        .all(|pair| canonical_pair_is_ordered(library, pair)));
     order
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; this invariant checks runtime library entries through the non-const canonical comparator"
+)]
+fn canonical_pair_is_ordered(library: &Library, pair: &[u16]) -> bool {
+    let (Some(left_index), Some(right_index)) = (pair.first(), pair.get(1)) else {
+        return false;
+    };
+    let (Some(left), Some(right)) = (
+        library.entries().get(usize::from(*left_index)),
+        library.entries().get(usize::from(*right_index)),
+    ) else {
+        return false;
+    };
+    comes_before(left, right) != core::cmp::Ordering::Greater
 }
 
 fn check_task(task: &Task, ledger: &mut Ledger) -> Result<(), Refusal> {
@@ -3505,6 +3643,14 @@ fn check_fixtures(request: &Request) -> Result<(), Refusal> {
             ));
         }
     }
+    debug_assert!(set
+        .cases
+        .iter()
+        .all(|fixture| { fixture.inputs.len() == request.task.stack_in.len() }));
+    debug_assert!(set
+        .cases
+        .iter()
+        .all(|fixture| { fixture.outputs.len() == request.task.stack_out.len() }));
     Ok(())
 }
 
@@ -3541,6 +3687,8 @@ fn refusal_encoded_size(refusal: &Refusal) -> Result<u32, Refusal> {
     )?;
     add_encoded_size(&mut encoded_bytes, 12, at)?;
     add_encoded_size(&mut encoded_bytes, encoded_len(refusal.message.len()), at)?;
+    debug_assert!(encoded_bytes > 0);
+    debug_assert!(encoded_bytes <= u64::from(MAX_RETAINED_BYTES));
     u32::try_from(encoded_bytes).map_err(|_| {
         let mut exhausted = Refusal::new(
             Class::Exhausted,
@@ -3584,6 +3732,8 @@ fn fixture_report_size(set: &FixtureSet) -> Result<u32, Refusal> {
         }
         add_encoded_size(&mut encoded_bytes, 1, at)?;
     }
+    debug_assert!(encoded_bytes > 0);
+    debug_assert!(encoded_bytes <= u64::from(MAX_RETAINED_BYTES));
     u32::try_from(encoded_bytes).map_err(|_| {
         let mut exhausted = Refusal::new(
             Class::Exhausted,
@@ -3656,6 +3806,7 @@ fn add_editor_tree_size(
             return Err(internal(at, "request size walk lost an editor node"));
         };
         *index = index.saturating_add(1);
+        debug_assert!(*index <= nodes.len());
         let mut nested = None;
         match node {
             super::editor::Node::Integer(_) => add_encoded_size(encoded_bytes, 9, at)?,
@@ -3677,11 +3828,16 @@ fn add_editor_tree_size(
         }
         if let Some((children, next_depth)) = nested {
             frames.push((children, 0, next_depth));
+            debug_assert!(frames.len() <= MAX_QUOTATION_FRAMES);
         }
     }
     Ok(())
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; request tail size is derived from hostile caller data and over-budget inputs must return typed refusals instead of assertion panics"
+)]
 fn add_request_tail_size(
     encoded_bytes: &mut u64,
     request: &Request,
@@ -3754,6 +3910,8 @@ fn check_request(
             "request pins a library revision the snapshot does not hold",
         ));
     }
+    debug_assert!(flat.hole < flat.elements.len());
+    debug_assert_eq!(request.library_revision, *library.revision());
     Ok(flat)
 }
 
@@ -3779,6 +3937,10 @@ fn check_request_versions(request: &Request) -> Result<(), Refusal> {
     Ok(())
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; request and library retention are charged through the shared bounded ledger, which must refuse oversized caller data rather than assert"
+)]
 fn charge_request_retention(
     request: &Request,
     library: &Library,
@@ -3860,6 +4022,8 @@ fn analyze_editor_context(
             "completion editor context contains a known effect",
         ));
     }
+    debug_assert_eq!(analysis.holes.len(), 1);
+    debug_assert!(analysis.known_effects.is_empty());
     Ok(())
 }
 
@@ -3889,6 +4053,7 @@ fn run_length(
     chunk_count: u32,
 ) -> Result<(), alloc::boxed::Box<Response>> {
     let width = order.len();
+    debug_assert!(u32::try_from(width).is_ok_and(|count| count <= MAX_LIBRARY_ENTRIES));
     if chunk_count > 0 && width == 0 {
         return Ok(());
     }
@@ -3911,6 +4076,7 @@ fn run_length(
                 sequence.push(*index);
             }
         }
+        debug_assert_eq!(sequence.len(), digits.len());
         match search.candidate(&sequence) {
             Ok(Step::Admitted(accepted)) => {
                 let report = search.report(1);
@@ -3958,6 +4124,7 @@ pub fn complete(
 
 fn complete_inner(namespace: &super::Session, library: &Library, request: &Request) -> Response {
     let mut ledger = Ledger::new(request.budget.lowered(&Budget::PROFILE));
+    debug_assert!(ledger.remaining(Resource::CheckingWork) <= MAX_CHECKING_WORK);
     let flat = match check_request(request, library, &mut ledger) {
         Ok(flat) => flat,
         Err(refusal) => return response_of(refusal, &ledger),
@@ -4002,6 +4169,7 @@ fn complete_inner(namespace: &super::Session, library: &Library, request: &Reque
         }
         chunk_count = chunk_count.saturating_add(1);
     }
+    debug_assert!(chunk_count > MAX_COMPOSED_CHUNKS);
     Response::NoResult {
         report: alloc::boxed::Box::new(search.report(0)),
     }

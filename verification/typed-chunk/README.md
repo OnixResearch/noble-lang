@@ -39,7 +39,7 @@ NOBLE_TYPED_CHUNK_RECEIPT="<absolute directory outside the repository>/typed-chu
 TMPDIR="<private temporary directory>" \
   cargo test -p noble-contracts --test editor \
     --all-features --offline --locked \
-    chunks_completion::fixed_baseline_measurement_reports_bounded_work -- --exact
+    chunks_completion::core::fixed_baseline_measurement_reports_bounded_work -- --exact
 ```
 
 The generated receipt is copied into this directory only after the command

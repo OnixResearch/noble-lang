@@ -1,3 +1,18 @@
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+#![expect(
+    tigerstyle::non_trait_imports,
+    reason = "Owner: noble-contracts; editor integration tests use their domain names directly so independent fixtures and expected interfaces stay readable"
+)]
+#![expect(
+    tigerstyle::renamed_imports,
+    reason = "Owner: noble-contracts; test-only aliases distinguish the typed-chunk API from the editor API while implementation paths remain canonical"
+)]
+#![expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; #[test] functions exercise runtime sessions and the standard test harness"
+)]
+
 fn limits() -> noble_contracts::Limits {
     noble_contracts::Limits {
         bytes: 65_536,
