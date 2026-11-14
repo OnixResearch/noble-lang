@@ -503,14 +503,14 @@ impl Budget {
     pub fn lowered(&self, profile: &Budget) -> Budget {
         let mut out = *profile;
         for resource in Resource::ALL {
-            let profile_limit = profile.limit(resource);
-            let requested_limit = self.limit(resource);
-            let limit = if profile_limit < requested_limit {
-                profile_limit
+            let profile_cap = profile.limit(resource);
+            let requested_cap = self.limit(resource);
+            let cap = if profile_cap < requested_cap {
+                profile_cap
             } else {
-                requested_limit
+                requested_cap
             };
-            out.set(resource, limit);
+            out.set(resource, cap);
         }
         out
     }
@@ -721,7 +721,7 @@ impl Ledger {
 
     /// The compiler-facing limits for one preparation. The caller supplies the
     /// remaining request work; no field ever exceeds the profile.
-    fn prepare_limits(&self, work: u32) -> crate::Limits {
+    const fn prepare_limits(&self, work: u32) -> crate::Limits {
         crate::Limits {
             bytes: MAX_SOURCE_BYTES,
             // The recipe expansion counter is charged separately. Bound the
@@ -1561,7 +1561,10 @@ impl Replay {
         let mut index = 0usize;
         while index < elements.len() {
             let Some(element) = elements.get(index) else {
-                return Err(internal(context, "replay index exceeds the checked element slice"));
+                return Err(internal(
+                    context,
+                    "replay index exceeds the checked element slice",
+                ));
             };
             let position = index as u32;
             self.steps = self.steps.saturating_add(1);
@@ -1590,20 +1593,11 @@ fn witness_matches(witness: Option<&Instantiation>, expected: &[(u16, Ty)]) -> b
     if witness.bindings.len() != expected.len() {
         return false;
     }
-    for index in 0..expected.len() {
-        let (Some(binding), Some((variable, ty))) =
-            (witness.bindings.get(index), expected.get(index))
-        else {
-            return false;
-        };
-        if binding.variable != *variable
-            || binding.kind != noble_kernel::words::VariableKind::Value
-            || !binding.ty.eq(ty)
-        {
-            return false;
-        }
-    }
-    true
+    witness.bindings.iter().zip(expected).all(|(binding, (variable, ty))| {
+        binding.variable == *variable
+            && binding.kind == noble_kernel::words::VariableKind::Value
+            && binding.ty.eq(ty)
+    })
 }
 
 #[expect(
@@ -2469,7 +2463,10 @@ fn check_captures(envelope: &Envelope) -> Result<(), Refusal> {
     }
     for position in 0..envelope.captures.len() {
         let Some(capture) = envelope.captures.get(position) else {
-            return Err(internal(at, "capture index exceeds the checked capture slice"));
+            return Err(internal(
+                at,
+                "capture index exceeds the checked capture slice",
+            ));
         };
         let expected = match u16::try_from(position) {
             Ok(expected) => expected,
@@ -2500,7 +2497,10 @@ fn check_instantiations(envelope: &Envelope, ledger: &mut Ledger) -> Result<(), 
     for position in 0..envelope.instantiations.len() {
         let at = Location::at("envelope.instantiations", position as u32);
         let Some(instantiation) = envelope.instantiations.get(position) else {
-            return Err(internal(at, "instantiation index exceeds the checked slice"));
+            return Err(internal(
+                at,
+                "instantiation index exceeds the checked slice",
+            ));
         };
         if u64::try_from(instantiation.bindings.len())
             .map_or(true, |count| count > u64::from(MAX_INSTANTIATION_BINDINGS))
@@ -2544,18 +2544,18 @@ fn check_instantiations(envelope: &Envelope, ledger: &mut Ledger) -> Result<(), 
             previous = Some(binding.variable);
         }
     }
-    let mut instantiations_bounded = true;
-    let mut bindings_supported = true;
+    let mut has_bounded_instantiations = true;
+    let mut has_supported_bindings = true;
     for instantiation in &envelope.instantiations {
-        instantiations_bounded &= u32::try_from(instantiation.bindings.len())
+        has_bounded_instantiations &= u32::try_from(instantiation.bindings.len())
             .is_ok_and(|count| count <= MAX_INSTANTIATION_BINDINGS);
         for binding in &instantiation.bindings {
-            bindings_supported &= binding.kind == noble_kernel::words::VariableKind::Value
+            has_supported_bindings &= binding.kind == noble_kernel::words::VariableKind::Value
                 && profile_type(&binding.ty);
         }
     }
-    debug_assert!(instantiations_bounded);
-    debug_assert!(bindings_supported);
+    debug_assert!(has_bounded_instantiations);
+    debug_assert!(has_supported_bindings);
     Ok(())
 }
 
@@ -2570,7 +2570,10 @@ fn check_recipe(envelope: &Envelope) -> Result<(), Refusal> {
     }
     for position in 0..envelope.body.entry.len() {
         let Some(reference) = envelope.body.entry.get(position) else {
-            return Err(internal(at, "recipe entry index exceeds the checked entry slice"));
+            return Err(internal(
+                at,
+                "recipe entry index exceeds the checked entry slice",
+            ));
         };
         if !reference_precedes(*reference, envelope.body.nodes.len()) {
             let Ok(position) = u32::try_from(position) else {
@@ -2589,7 +2592,10 @@ fn check_recipe(envelope: &Envelope) -> Result<(), Refusal> {
     }
     for position in 0..envelope.body.nodes.len() {
         let Some(node) = envelope.body.nodes.get(position) else {
-            return Err(internal(at, "recipe node index exceeds the checked node arena"));
+            return Err(internal(
+                at,
+                "recipe node index exceeds the checked node arena",
+            ));
         };
         let own = match u32::try_from(position) {
             Ok(position) => position,
@@ -2604,11 +2610,11 @@ fn check_recipe(envelope: &Envelope) -> Result<(), Refusal> {
         check_recipe_node(envelope, node, own, position)?;
     }
     debug_assert!(!envelope.body.entry.is_empty());
-    let mut references_precede = true;
+    let mut has_preceding_references = true;
     for reference in &envelope.body.entry {
-        references_precede &= reference_precedes(*reference, envelope.body.nodes.len());
+        has_preceding_references &= reference_precedes(*reference, envelope.body.nodes.len());
     }
-    debug_assert!(references_precede);
+    debug_assert!(has_preceding_references);
     Ok(())
 }
 
@@ -2735,10 +2741,7 @@ fn expected_bootstrap_targets(
     at: Location,
 ) -> Result<alloc::vec::Vec<noble_kernel::contracts::Definition>, Refusal> {
     let mut expected = alloc::vec::Vec::with_capacity(elements.len());
-    for index in 0..elements.len() {
-        let Some(element) = elements.get(index) else {
-            return Err(internal(at, "bootstrap element index exceeds the checked slice"));
-        };
+    for (index, element) in elements.iter().enumerate() {
         let Element::Op { op, .. } = element else {
             continue;
         };
@@ -3905,15 +3908,15 @@ fn canonical_order(library: &Library) -> alloc::vec::Vec<u16> {
         }
     });
     debug_assert!(order.len() <= library.entries().len());
-    let mut ordered = true;
+    let mut is_ordered = true;
     for index in 0..order.len().saturating_sub(1) {
         let Some(pair) = order.get(index..index.saturating_add(2)) else {
-            ordered = false;
+            is_ordered = false;
             break;
         };
-        ordered &= canonical_pair_is_ordered(library, pair);
+        is_ordered &= canonical_pair_is_ordered(library, pair);
     }
-    debug_assert!(ordered);
+    debug_assert!(is_ordered);
     order
 }
 
@@ -3925,12 +3928,12 @@ pub fn canonical_entry_order(library: &Library) -> alloc::vec::Vec<u16> {
 /// Materialize at most the requested prefix of the canonical shortlex queue,
 /// plus a boolean indicating that a later canonical candidate exists.
 pub fn candidate_queue(library: &Library, candidate_limit: CandidateLimit) -> CandidateQueue {
-    let limited_candidates = if candidate_limit.0 < MAX_CANDIDATES {
+    let capped_candidates = if candidate_limit.0 < MAX_CANDIDATES {
         candidate_limit.0
     } else {
         MAX_CANDIDATES
     };
-    let bounded_candidate_count = usize::try_from(limited_candidates).unwrap_or(0);
+    let bounded_candidate_count = usize::try_from(capped_candidates).unwrap_or(0);
     let order = canonical_entry_order(library);
     debug_assert!(u32::try_from(bounded_candidate_count).is_ok_and(|count| count <= MAX_CANDIDATES));
     debug_assert!(encoded_len(order.len()) <= u64::from(MAX_LIBRARY_ENTRIES));
@@ -3979,15 +3982,18 @@ pub fn candidate_queue(library: &Library, candidate_limit: CandidateLimit) -> Ca
         }
     }
     debug_assert!(candidates.len() <= bounded_candidate_count);
-    let mut ordinals_are_ordered = true;
+    let mut has_ordered_ordinals = true;
     for index in 0..candidates.len().saturating_sub(1) {
-        let (Some(left), Some(right)) = (candidates.get(index), candidates.get(index + 1)) else {
-            ordinals_are_ordered = false;
+        let (Some(left), Some(right)) = (
+            candidates.get(index),
+            candidates.get(index.saturating_add(1)),
+        ) else {
+            has_ordered_ordinals = false;
             break;
         };
-        ordinals_are_ordered &= left.ordinal < right.ordinal;
+        has_ordered_ordinals &= left.ordinal < right.ordinal;
     }
-    debug_assert!(ordinals_are_ordered);
+    debug_assert!(has_ordered_ordinals);
     CandidateQueue {
         candidates,
         next_candidate: None,
@@ -4050,10 +4056,8 @@ fn check_fixtures(request: &Request) -> Result<(), Refusal> {
                 "fixture index exceeds the checked case slice",
             ));
         };
-        let is_input_match =
-            fixture_values_match_types(&fixture.inputs, &request.task.stack_in);
-        let is_output_match =
-            fixture_values_match_types(&fixture.outputs, &request.task.stack_out);
+        let is_input_match = fixture_values_match_types(&fixture.inputs, &request.task.stack_in);
+        let is_output_match = fixture_values_match_types(&fixture.outputs, &request.task.stack_out);
         if !is_input_match || !is_output_match {
             return Err(Refusal::new(
                 Class::Invalid,
@@ -4062,14 +4066,14 @@ fn check_fixtures(request: &Request) -> Result<(), Refusal> {
             ));
         }
     }
-    let mut fixtures_have_matching_inputs = true;
-    let mut fixtures_have_matching_outputs = true;
+    let mut has_matching_fixture_inputs = true;
+    let mut has_matching_fixture_outputs = true;
     for fixture in &set.cases {
-        fixtures_have_matching_inputs &= fixture.inputs.len() == request.task.stack_in.len();
-        fixtures_have_matching_outputs &= fixture.outputs.len() == request.task.stack_out.len();
+        has_matching_fixture_inputs &= fixture.inputs.len() == request.task.stack_in.len();
+        has_matching_fixture_outputs &= fixture.outputs.len() == request.task.stack_out.len();
     }
-    debug_assert!(fixtures_have_matching_inputs);
-    debug_assert!(fixtures_have_matching_outputs);
+    debug_assert!(has_matching_fixture_inputs);
+    debug_assert!(has_matching_fixture_outputs);
     Ok(())
 }
 
@@ -4798,10 +4802,6 @@ const fn feature_bit(value: bool) -> f32 {
     }
 }
 
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-contracts; the bounded slice scan compares kernel Ty with its runtime PartialEq implementation"
-)]
 fn feature_type_count(stack: &[Ty], ty: Ty) -> u64 {
     let mut count = 0usize;
     for item in stack {
@@ -5011,14 +5011,7 @@ fn candidate_features(
     feature_candidate_lanes(&mut features, search.request, candidate, &counts);
     feature_budget_lanes(&mut features, search, candidate);
     feature_identity_lanes(&mut features, search, candidate)?;
-    let mut features_are_finite = true;
-    for feature in &features {
-        if !feature.is_finite() {
-            features_are_finite = false;
-            break;
-        }
-    }
-    if features_are_finite {
+    if features.iter().all(|feature| feature.is_finite()) {
         Ok(features)
     } else {
         Err(ScorerFailure::InvalidFeature)
@@ -5105,9 +5098,8 @@ fn collect_candidate_features(
             .source_bytes
             .saturating_add(encoded_len(entry.source().len()));
         feature_recipe_metrics(&envelope.body, &mut counts);
-        let quote_depth = u64::from(
-            recipe_quotation_depth(&envelope.body).ok_or(ScorerFailure::InvalidFeature)?,
-        );
+        let quote_depth =
+            u64::from(recipe_quotation_depth(&envelope.body).ok_or(ScorerFailure::InvalidFeature)?);
         if quote_depth > counts.quote_depth {
             counts.quote_depth = quote_depth;
         }
@@ -5582,14 +5574,6 @@ fn candidate_sequences_are_bounded(queue: &CandidateQueue) -> bool {
     true
 }
 
-const fn later_timestamp(started: u64, finished: u64) -> u64 {
-    if finished > started {
-        finished
-    } else {
-        started
-    }
-}
-
 fn run_candidate_queue(
     search: &mut Search<'_>,
     queue: &CandidateQueue,
@@ -5737,7 +5721,7 @@ pub fn complete(
     let total_latency_ns = finished.saturating_sub(started);
     debug_assert_eq!(
         started.saturating_add(total_latency_ns),
-        later_timestamp(started, finished)
+        finished.max(started)
     );
     response.report_mut().total_latency_ns = total_latency_ns;
     debug_assert_eq!(response.report_mut().total_latency_ns, total_latency_ns);
@@ -5776,7 +5760,7 @@ pub fn complete_observed(
     let total_latency_ns = finished.saturating_sub(started);
     debug_assert_eq!(
         started.saturating_add(total_latency_ns),
-        later_timestamp(started, finished)
+        finished.max(started)
     );
     response.report_mut().total_latency_ns = total_latency_ns;
     debug_assert_eq!(response.report_mut().total_latency_ns, total_latency_ns);
@@ -5816,7 +5800,7 @@ pub fn complete_ranked(
     let total_latency_ns = finished.saturating_sub(started);
     debug_assert_eq!(
         started.saturating_add(total_latency_ns),
-        later_timestamp(started, finished)
+        finished.max(started)
     );
     response.report_mut().total_latency_ns = total_latency_ns;
     debug_assert_eq!(response.report_mut().total_latency_ns, total_latency_ns);
@@ -5870,7 +5854,7 @@ pub fn complete_ranked_observed(
     let total_latency_ns = finished.saturating_sub(started);
     debug_assert_eq!(
         started.saturating_add(total_latency_ns),
-        later_timestamp(started, finished)
+        finished.max(started)
     );
     response.report_mut().total_latency_ns = total_latency_ns;
     debug_assert_eq!(response.report_mut().total_latency_ns, total_latency_ns);
@@ -5929,7 +5913,7 @@ pub fn complete_replayed<'observer>(
     let total_latency_ns = finished.saturating_sub(started);
     debug_assert_eq!(
         started.saturating_add(total_latency_ns),
-        later_timestamp(started, finished)
+        finished.max(started)
     );
     response.report_mut().total_latency_ns = total_latency_ns;
     debug_assert_eq!(response.report_mut().total_latency_ns, total_latency_ns);
