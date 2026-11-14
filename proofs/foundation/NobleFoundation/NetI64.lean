@@ -2223,4 +2223,39 @@ theorem Program.translateChecked_interface {program : Program} {inputs : List (B
   rw [← (Program.translateChecked_parts h).2.1]
   exact Program.translate_interface program inputs
 
+theorem fanout_two_active_pair (value : BitVec 64) :
+    Redex system ((fanoutProgram 2).translate [value]).toNet
+      (dupId 0 0) (valueId 0) .dup (.num value) (dupNumData value).toX.toRhs := by
+  refine ⟨?_, ?_, ?_, ?_, ?_⟩
+  · simp [fanoutProgram, Program.translate, Program.baseAgent, Program.nodeAt,
+      Program.inputValue, Program.extraAgents, Program.usesOf, nodeUses,
+      nodeConsumers, outputConsumers, Program.sourceRoute, Program.sourcePort,
+      fanoutWires, valueId, dupId, outputPort, Consumer.port,
+      XNet.ofWires, XNet.toNet, List.range, List.range.loop, List.flatMap]
+  · simp [fanoutProgram, Program.translate, Program.baseAgent, Program.nodeAt,
+      Program.inputValue, Program.extraAgents, Program.usesOf, nodeUses,
+      nodeConsumers, outputConsumers, Program.sourceRoute, Program.sourcePort,
+      fanoutWires, valueId, dupId, outputPort, Consumer.port,
+      XNet.ofWires, XNet.toNet, List.range, List.range.loop, List.flatMap]
+  · decide
+  · change ∃ v x,
+      INet.Walk ((fun p q => (p, q) ∈ ((fanoutProgram 2).translate [value]).wires))
+        ((fun p => ((fanoutProgram 2).translate [value]).toNet.End arity p))
+        (dupId 0 0, 0) v x (valueId 0, 0)
+    refine ⟨(valueId 0, 0), (dupId 0 0, 0), ?_⟩
+    apply INet.Walk.single
+    simp [fanoutProgram, Program.translate, Program.baseAgent, Program.nodeAt,
+      Program.inputValue, Program.extraAgents, Program.usesOf, nodeUses,
+      nodeConsumers, outputConsumers, Program.sourceRoute, Program.sourcePort,
+      fanoutWires, valueId, dupId, outputPort, Consumer.port,
+      XNet.ofWires, List.range, List.range.loop, List.flatMap]
+  · rfl
+
+theorem fanout_two_abstract_step (value : BitVec 64) :
+    Step system ((fanoutProgram 2).translate [value]).toNet
+      (((fanoutProgram 2).translate [value]).toNet.fire
+        (dupId 0 0) (valueId 0) (dupNumData value).toX.toRhs) :=
+  ⟨dupId 0 0, valueId 0, .dup, .num value, (dupNumData value).toX.toRhs,
+    fanout_two_active_pair value, rfl⟩
+
 end NobleFoundation.NetI64

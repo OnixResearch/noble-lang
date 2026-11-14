@@ -12320,6 +12320,18 @@
       "phase": 1,
       "role": "translation-interface",
       "claim": "checked lowering preserves the exact ordered output interface"
+    },
+    {
+      "name": "NobleFoundation.NetI64.fanout_two_active_pair",
+      "phase": 1,
+      "role": "abstract-reduction-step",
+      "claim": "two-output fanout exposes the duplicator and numeric-symbol active pair as a rule redex"
+    },
+    {
+      "name": "NobleFoundation.NetI64.fanout_two_abstract_step",
+      "phase": 1,
+      "role": "abstract-reduction-step",
+      "claim": "the two-output fanout duplicator firing is one abstract Step of the selected system"
     }
   ],
   "private_theorems": [
