@@ -277,19 +277,24 @@ fn static_result(op: &crate::ir::Op, known: &[Option<Known>]) -> Option<Known> {
 fn admit_slice(checked: &crate::check::CheckedGraph) -> Result<(), crate::diag::Diagnostic> {
     let graph = checked.graph();
     if graph.profile != crate::ir::SubProfile::I64 {
-        return Err(refuse(
-            crate::diag::Code::Profile,
-            alloc::format!(
+        return Err(refuse(crate::diag::Code::Profile, {
+            let mut detail = alloc::string::String::new();
+            crate::format::write_text!(
+                detail,
                 "static-input specialization admits ngraph-i64/0 graphs; this graph is {}",
                 graph.profile.name()
-            ),
-        ));
+            );
+            detail
+        }));
     }
+    let mut detail = alloc::string::String::new();
     for (k, slot) in graph.slots.iter().enumerate() {
         if slot.kind == crate::ir::SlotKind::Param {
+            detail.clear();
+            crate::format::write_text!(detail, "param slot {k} is outside the ngraph-pe/0 slice");
             return Err(refuse(
                 crate::diag::Code::Profile,
-                alloc::format!("param slot {k} is outside the ngraph-pe/0 slice"),
+                core::mem::take(&mut detail),
             ));
         }
     }
@@ -300,27 +305,36 @@ fn admit_slice(checked: &crate::check::CheckedGraph) -> Result<(), crate::diag::
         ));
     }
     if !graph.facts.is_empty() {
-        return Err(refuse(
-            crate::diag::Code::Profile,
-            alloc::format!(
+        return Err(refuse(crate::diag::Code::Profile, {
+            let mut detail = alloc::string::String::new();
+            crate::format::write_text!(
+                detail,
                 "{} fact record(s) are outside the ngraph-pe/0 slice",
                 graph.facts.len()
-            ),
-        ));
+            );
+            detail
+        }));
     }
     for (i, node) in graph.nodes.iter().enumerate() {
         match node.op {
-            crate::ir::Op::Input(_) | crate::ir::Op::Const(_) | crate::ir::Op::I64Add(..) | crate::ir::Op::I64Sub(..) | crate::ir::Op::I64Mul(..)
+            crate::ir::Op::Input(_)
+            | crate::ir::Op::Const(_)
+            | crate::ir::Op::I64Add(..)
+            | crate::ir::Op::I64Sub(..)
+            | crate::ir::Op::I64Mul(..)
             | crate::ir::Op::I64Eq(..) => {}
             _ => {
+                detail.clear();
+                crate::format::write_text!(
+                    detail,
+                    "{} is outside the ngraph-pe/0 slice: a guard or failing node is an observation the residual cannot preserve",
+                    node.op.name()
+                );
                 return Err(at(
                     crate::diag::Code::Profile,
                     crate::diag::Site::Node(crate::ir::NodeId(i as u32)),
-                    alloc::format!(
-                        "{} is outside the ngraph-pe/0 slice: a guard or failing node is an observation the residual cannot preserve",
-                        node.op.name()
-                    ),
-                ))
+                    core::mem::take(&mut detail),
+                ));
             }
         }
     }
@@ -390,10 +404,15 @@ pub fn specialize(
         return Err(at(
             crate::diag::Code::Interface,
             crate::diag::Site::Graph,
-            alloc::format!(
-                "the static map has {} entr(y/ies) for {leaves} input leaf/leaves",
-                request.static_inputs.len()
-            ),
+            {
+                let mut detail = alloc::string::String::new();
+                crate::format::write_text!(
+                    detail,
+                    "the static map has {} entr(y/ies) for {leaves} input leaf/leaves",
+                    request.static_inputs.len()
+                );
+                detail
+            },
         ));
     }
     if request.budgets.variants < 1 {
@@ -449,6 +468,7 @@ pub fn specialize(
     // Substitution and folding, index-preserving (D2, D3).
     let mut known: alloc::vec::Vec<Option<Known>> = alloc::vec![None; original_nodes];
     let mut built: alloc::vec::Vec<crate::ir::Op> = alloc::vec::Vec::with_capacity(original_nodes);
+    let mut detail = alloc::string::String::new();
     let mut folded = 0u64;
     for (index, node) in graph.nodes.iter().enumerate() {
         let mut value = None;
@@ -459,10 +479,12 @@ pub fn specialize(
                     .copied()
                     .flatten()
                     .ok_or_else(|| {
+                        detail.clear();
+                        crate::format::write_text!(detail, "input node names undeclared slot {k}");
                         at(
                             crate::diag::Code::Interface,
                             crate::diag::Site::Node(crate::ir::NodeId(index as u32)),
-                            alloc::format!("input node names undeclared slot {k}"),
+                            core::mem::take(&mut detail),
                         )
                     })?;
                 match request.static_inputs[position] {
@@ -472,10 +494,12 @@ pub fn specialize(
                         crate::ir::Op::Const(crate::ir::Literal::I64(v))
                     }
                     None => crate::ir::Op::Input(rank_of[*k as usize].ok_or_else(|| {
+                        detail.clear();
+                        crate::format::write_text!(detail, "slot {k} has no dynamic rank");
                         at(
                             crate::diag::Code::Interface,
                             crate::diag::Site::Node(crate::ir::NodeId(index as u32)),
-                            alloc::format!("slot {k} has no dynamic rank"),
+                            core::mem::take(&mut detail),
                         )
                     })?),
                 }
@@ -546,13 +570,16 @@ pub fn specialize(
         }
     }
     let mut outputs = alloc::vec::Vec::with_capacity(graph.outputs.len());
+    let mut detail = alloc::string::String::new();
     for output in &graph.outputs {
         let id = map[output.index()];
         if id == u32::MAX {
+            detail.clear();
+            crate::format::write_text!(detail, "%{} is an output but was pruned", output.0);
             return Err(at(
                 crate::diag::Code::Interface,
                 crate::diag::Site::Graph,
-                alloc::format!("%{} is an output but was pruned", output.0),
+                core::mem::take(&mut detail),
             ));
         }
         outputs.push(crate::ir::NodeId(id));
@@ -665,12 +692,12 @@ pub fn emit_source(
 ) -> Result<alloc::string::String, crate::diag::Diagnostic> {
     admit_slice(checked)?;
     let graph = checked.graph();
-    let capacity = graph
+    let capacity_bytes = graph
         .nodes
         .len()
         .saturating_mul(44)
         .saturating_add(graph.outputs.len().saturating_mul(12));
-    let mut text = alloc::string::String::with_capacity(capacity);
+    let mut text = alloc::string::String::with_capacity(capacity_bytes);
     let mut bound = alloc::vec![false; graph.nodes.len()];
     // Inputs are bound deepest last: the residual's stack enters bottom-first.
     for (k, slot) in graph.slots.iter().enumerate().rev() {
@@ -681,7 +708,7 @@ pub fn emit_source(
         match graph.nodes[node.index()].op {
             crate::ir::Op::Input(slot_index) if slot_index == k as u32 => {
                 bound[node.index()] = true;
-                crate::format::push_fmt(&mut text, core::format_args!("let v{}\n", node.0));
+                crate::format::write_text!(text, "let v{}\n", node.0);
             }
             _ => {
                 return Err(at(
@@ -692,6 +719,7 @@ pub fn emit_source(
             }
         }
     }
+    let mut detail = alloc::string::String::new();
     for (index, node) in graph.nodes.iter().enumerate() {
         if bound[index] {
             continue;
@@ -706,7 +734,7 @@ pub fn emit_source(
                 ))
             }
             crate::ir::Op::Const(crate::ir::Literal::I64(value)) => {
-                crate::format::push_fmt(&mut text, core::format_args!("{value}"));
+                crate::format::write_text!(text, "{value}");
             }
             crate::ir::Op::Const(crate::ir::Literal::Bool(value)) => {
                 if *value {
@@ -724,9 +752,9 @@ pub fn emit_source(
             }
             crate::ir::Op::I64Add(first, second)
             | crate::ir::Op::I64Sub(first, second)
-            | crate::ir::Op::I64Mul(first, second) => crate::format::push_fmt(
-                &mut text,
-                core::format_args!(
+            | crate::ir::Op::I64Mul(first, second) => {
+                crate::format::write_text!(
+                    text,
                     "v{} v{} {}",
                     first.0,
                     second.0,
@@ -735,25 +763,30 @@ pub fn emit_source(
                         crate::ir::Op::I64Sub(..) => "-",
                         _ => "*",
                     }
-                ),
-            ),
-            crate::ir::Op::I64Eq(first, second) => crate::format::push_fmt(
-                &mut text,
-                core::format_args!("v{} v{} =", first.0, second.0),
-            ),
+                );
+            }
+            crate::ir::Op::I64Eq(first, second) => {
+                crate::format::write_text!(text, "v{} v{} =", first.0, second.0);
+            }
             other => {
+                detail.clear();
+                crate::format::write_text!(
+                    detail,
+                    "{} cannot be emitted as Noble source",
+                    other.name()
+                );
                 return Err(at(
                     crate::diag::Code::Profile,
                     crate::diag::Site::Node(id),
-                    alloc::format!("{} cannot be emitted as Noble source", other.name()),
-                ))
+                    core::mem::take(&mut detail),
+                ));
             }
         }
         bound[index] = true;
-        crate::format::push_fmt(&mut text, core::format_args!(" let v{}\n", id.0));
+        crate::format::write_text!(text, " let v{}\n", id.0);
     }
     for output in &graph.outputs {
-        crate::format::push_fmt(&mut text, core::format_args!("v{}\n", output.0));
+        crate::format::write_text!(text, "v{}\n", output.0);
     }
     if graph.nodes.is_empty() && graph.slots.is_empty() && graph.outputs.is_empty() {
         text.push_str("0 drop\n");
@@ -762,10 +795,11 @@ pub fn emit_source(
 }
 
 fn source_refusal(error: noble_contracts::source::Error) -> crate::diag::Diagnostic {
-    refuse(
-        crate::diag::Code::Subject,
-        alloc::format!("the residual source was refused: {error:?}"),
-    )
+    refuse(crate::diag::Code::Subject, {
+        let mut detail = alloc::string::String::new();
+        crate::format::write_text!(detail, "the residual source was refused: {error:?}");
+        detail
+    })
 }
 
 /// Independently re-accepts emitted residual source on the ordinary path (D9).
@@ -894,7 +928,7 @@ mod tests {
         }
     }
 
-    fn specialize_with(
+    fn with_static_map(
         checked: &crate::check::CheckedGraph,
         static_inputs: &[Option<i64>],
     ) -> Result<Residual, crate::diag::Diagnostic> {
@@ -912,7 +946,7 @@ mod tests {
     #[test]
     fn no_static_inputs_keeps_the_graph_and_index_order() {
         let original = product_plus();
-        let residual = specialize_with(&original, &[None, None]).expect("specialized");
+        let residual = with_static_map(&original, &[None, None]).expect("specialized");
         assert_eq!(residual.report.folded_nodes, 0);
         assert_eq!(residual.report.pruned_nodes, 0);
         assert_eq!(residual.report.residual_nodes, 4);
@@ -939,7 +973,7 @@ mod tests {
         let _unused = builder.input(crate::ir::ScalarType::I64);
         builder.output(used);
         let original = checked(builder.finish());
-        let residual = specialize_with(&original, &[None, None]).expect("specialized");
+        let residual = with_static_map(&original, &[None, None]).expect("specialized");
         assert_eq!(residual.report.pruned_nodes, 0);
         assert_eq!(
             residual.report.dynamic_inputs,
@@ -966,7 +1000,7 @@ mod tests {
     fn static_prefix_leaf_becomes_a_constant_and_collapses() {
         let original = product_plus();
         // `x = 5` static: `%2 = 5·y` stays residual, `%3 = %2 + 5`.
-        let residual = specialize_with(&original, &[Some(5), None]).expect("specialized");
+        let residual = with_static_map(&original, &[Some(5), None]).expect("specialized");
         assert_eq!(residual.report.folded_nodes, 1);
         assert_eq!(
             residual.report.dynamic_inputs,
@@ -989,7 +1023,7 @@ mod tests {
     fn non_prefix_static_slot_is_ranked_and_the_prefix_control_disagrees() {
         let original = product_plus();
         // `y = 7` static, `x` dynamic: the residual's only input is `x` (rank 0).
-        let residual = specialize_with(&original, &[None, Some(7)]).expect("specialized");
+        let residual = with_static_map(&original, &[None, Some(7)]).expect("specialized");
         assert_eq!(
             residual.report.dynamic_inputs,
             alloc::vec![crate::ir::ScalarType::I64; 1]
@@ -1020,7 +1054,7 @@ mod tests {
     #[test]
     fn all_static_inputs_fold_the_whole_graph() {
         let original = product_plus();
-        let residual = specialize_with(&original, &[Some(6), Some(7)]).expect("specialized");
+        let residual = with_static_map(&original, &[Some(6), Some(7)]).expect("specialized");
         // Two static leaves and two folded arithmetic nodes.
         assert_eq!(residual.report.folded_nodes, 4);
         assert_eq!(residual.report.dynamic_inputs, alloc::vec::Vec::new());
@@ -1043,7 +1077,7 @@ mod tests {
         let original = checked(builder.finish());
         assert!(original.graph().outputs.is_empty());
 
-        let residual = specialize_with(&original, &[None]).expect("specialized");
+        let residual = with_static_map(&original, &[None]).expect("specialized");
         let source = emit_source(&residual.checked).expect("residual source");
         assert_eq!(source, "let v0\n");
         let readmitted = readmit(
@@ -1057,7 +1091,7 @@ mod tests {
         assert!(readmitted.graph().outputs.is_empty());
         assert_eq!(run(&readmitted, &[17]), alloc::vec::Vec::new());
 
-        let closed = specialize_with(&original, &[Some(17)]).expect("all-static residual");
+        let closed = with_static_map(&original, &[Some(17)]).expect("all-static residual");
         let closed_source = emit_source(&closed.checked).expect("zero-effect residual source");
         assert_eq!(closed_source, "0 drop\n");
         let closed_readmitted = readmit(
@@ -1084,7 +1118,26 @@ mod tests {
         let sum = builder.op(crate::ir::Op::I64Add(max, one));
         builder.output(sum);
         let original = checked(builder.finish());
-        let residual = specialize_with(&original, &[]).expect("specialized");
+        let residual = with_static_map(&original, &[]).expect("specialized");
+        assert_eq!(
+            run(&residual.checked, &[]),
+            alloc::vec![crate::sem::Value::I64(i64::MIN)]
+        );
+        assert_eq!(run(&residual.checked, &[]), run(&original, &[]));
+    }
+
+    #[test]
+    fn minimum_times_negative_one_folds_with_wrapping_semantics() {
+        let mut builder = crate::ir::GraphBuilder::new(
+            crate::ir::SubProfile::I64,
+            crate::ir::Subject::authored(&TestIds, "pe-wrap-mul"),
+        );
+        let minimum = builder.i64_const(i64::MIN);
+        let negative_one = builder.i64_const(-1);
+        let product = builder.op(crate::ir::Op::I64Mul(minimum, negative_one));
+        builder.output(product);
+        let original = checked(builder.finish());
+        let residual = with_static_map(&original, &[]).expect("specialized");
         assert_eq!(
             run(&residual.checked, &[]),
             alloc::vec![crate::sem::Value::I64(i64::MIN)]
@@ -1103,14 +1156,14 @@ mod tests {
         let same = builder.op(crate::ir::Op::I64Eq(x, three));
         builder.output(same);
         let original = checked(builder.finish());
-        let residual = specialize_with(&original, &[Some(3)]).expect("specialized");
+        let residual = with_static_map(&original, &[Some(3)]).expect("specialized");
         assert_eq!(residual.report.folded_nodes, 2);
         assert_eq!(
             run(&residual.checked, &[]),
             alloc::vec![crate::sem::Value::Bool(true)]
         );
         assert_eq!(run(&residual.checked, &[]), run(&original, &[3]));
-        let unequal = specialize_with(&original, &[Some(4)]).expect("specialized");
+        let unequal = with_static_map(&original, &[Some(4)]).expect("specialized");
         assert_eq!(
             run(&unequal.checked, &[]),
             alloc::vec![crate::sem::Value::Bool(false)]
@@ -1129,7 +1182,7 @@ mod tests {
         let difference = builder.op(crate::ir::Op::I64Sub(x, y));
         builder.output(difference);
         let original = checked(builder.finish());
-        let residual = specialize_with(&original, &[Some(10), None]).expect("specialized");
+        let residual = with_static_map(&original, &[Some(10), None]).expect("specialized");
         assert_eq!(residual.report.folded_nodes, 1);
         assert_eq!(run(&residual.checked, &[4]), run(&original, &[10, 4]));
         assert_eq!(
@@ -1152,7 +1205,7 @@ mod tests {
         let outer = builder.op(crate::ir::Op::I64Add(inner, three));
         builder.output(outer);
         let original = checked(builder.finish());
-        let residual = specialize_with(&original, &[None]).expect("specialized");
+        let residual = with_static_map(&original, &[None]).expect("specialized");
         assert_eq!(residual.report.folded_nodes, 0);
         assert_eq!(residual.report.residual_nodes, 5);
         assert_eq!(residual.report.pruned_nodes, 0);
@@ -1180,7 +1233,7 @@ mod tests {
             run(&original, &[4, 3]),
             alloc::vec![crate::sem::Value::I64(10)]
         );
-        let residual = specialize_with(&original, &[Some(2), None]).expect("specialized");
+        let residual = with_static_map(&original, &[Some(2), None]).expect("specialized");
         assert_eq!(residual.report.pruned_nodes, 2);
         assert_eq!(residual.report.residual_nodes, 3);
         assert_eq!(
@@ -1216,7 +1269,7 @@ mod tests {
     #[test]
     fn residual_identity_is_new_and_the_closure_is_kept() {
         let original = product_plus();
-        let residual = specialize_with(&original, &[Some(5), None]).expect("specialized");
+        let residual = with_static_map(&original, &[Some(5), None]).expect("specialized");
         assert_ne!(
             residual.report.residual_graph,
             residual.report.original_graph
@@ -1234,7 +1287,7 @@ mod tests {
         assert_eq!(residual.report.accounting, ACCOUNTING_REVISION);
         assert_eq!(residual.report.variants, 1);
         // A different static map is a different residual identity (D11).
-        let other = specialize_with(&original, &[Some(6), None]).expect("specialized");
+        let other = with_static_map(&original, &[Some(6), None]).expect("specialized");
         assert_ne!(other.report.residual_graph, residual.report.residual_graph);
     }
 
@@ -1252,7 +1305,7 @@ mod tests {
         builder.output(first);
         builder.shapes(Some(alloc::vec![pair]), None);
         let original = checked(builder.finish());
-        let refusal = specialize_with(&original, &[None, None]).expect_err("pair is excluded");
+        let refusal = with_static_map(&original, &[None, None]).expect_err("pair is excluded");
         assert_eq!(refusal.code, crate::diag::Code::Aggregate, "{refusal}");
     }
 
@@ -1269,7 +1322,7 @@ mod tests {
         builder.output(input);
         builder.shapes(None, Some(alloc::vec![unit_pair]));
         let original = checked(builder.finish());
-        let refusal = specialize_with(&original, &[None]).expect_err("Unit is excluded");
+        let refusal = with_static_map(&original, &[None]).expect_err("Unit is excluded");
         assert_eq!(refusal.code, crate::diag::Code::Aggregate, "{refusal}");
     }
 
@@ -1283,7 +1336,7 @@ mod tests {
         builder.output(input);
         builder.output(input);
         let original = checked(builder.finish());
-        let residual = specialize_with(&original, &[None]).expect("specialized");
+        let residual = with_static_map(&original, &[None]).expect("specialized");
         assert_eq!(
             residual.checked.graph().outputs,
             alloc::vec![crate::ir::NodeId(0), crate::ir::NodeId(0)]
@@ -1309,7 +1362,7 @@ mod tests {
     fn wrong_arity_is_refused_with_interface() {
         let original = product_plus();
         for map in [&[Some(1)][..], &[Some(1), None, None][..]] {
-            let refusal = specialize_with(&original, map).expect_err("refused");
+            let refusal = with_static_map(&original, map).expect_err("refused");
             assert_eq!(refusal.code, crate::diag::Code::Interface, "{refusal}");
             assert_eq!(refusal.site, crate::diag::Site::Graph);
         }
@@ -1437,7 +1490,7 @@ mod tests {
         );
         builder.output(sum);
         let graph = checked(builder.finish());
-        let refusal = specialize_with(&graph, &[None]).expect_err("refused");
+        let refusal = with_static_map(&graph, &[None]).expect_err("refused");
         assert_eq!(refusal.code, crate::diag::Code::Profile, "{refusal}");
         assert!(refusal.detail.contains("fact record"), "{refusal}");
     }
@@ -1445,7 +1498,7 @@ mod tests {
     #[test]
     fn emitting_and_readmitting_a_residual_agrees_with_the_residual() {
         let original = product_plus();
-        let residual = specialize_with(&original, &[Some(5), None]).expect("specialized");
+        let residual = with_static_map(&original, &[Some(5), None]).expect("specialized");
         let source = emit_source(&residual.checked).expect("emitted");
         assert!(source.contains("let v0"), "{source}");
         assert!(source.contains("5 let"), "{source}");
@@ -1521,7 +1574,7 @@ mod tests {
         builder.output(bool_input);
         builder.output(i64_input);
         let original = checked(builder.finish());
-        let residual = specialize_with(&original, &[None, None]).expect("specialized");
+        let residual = with_static_map(&original, &[None, None]).expect("specialized");
         let dynamic = [crate::sem::Value::Bool(true), crate::sem::Value::I64(9)];
         assert_eq!(residual.merge(&dynamic), Some(dynamic.to_vec()));
         assert_eq!(residual.merge_i64(&[9]), None);
@@ -1558,7 +1611,7 @@ mod tests {
         };
         assert_eq!(observe(&residual.checked), dynamic.to_vec());
         assert_eq!(observe(&readmitted), dynamic.to_vec());
-        let refusal = specialize_with(&original, &[Some(1), None]).expect_err("Bool is not static");
+        let refusal = with_static_map(&original, &[Some(1), None]).expect_err("Bool is not static");
         assert_eq!(refusal.code, crate::diag::Code::Interface);
         assert_eq!(refusal.site, crate::diag::Site::Slot(0));
     }

@@ -73,8 +73,9 @@ accounting, the public syntax, and the residual's representation.
 
 - **Files (this change):**
   - `.cairn/changes/partial-evaluation-v1/{proposal,design,tasks}.md` and `metadata.json`;
-  - an ADDED delta at `specs/developer-experience/spec.md` (`NGRAPH-PE-01..07`) with
-    scenario blocks naming the case IDs this change will register at sync.
+  - a MODIFIED `NGRAPH-CLI-01` requirement and ADDED `NGRAPH-PE-01..07` requirements in
+    `specs/developer-experience/spec.md`, with scenario blocks naming the case IDs this change
+    will register at sync.
   - No canonical requirement, registered scenario, generated view or ledger row changes on
     this design turn. The canonical sync, the case records and the generated views belong to
     the integrator's promotion.

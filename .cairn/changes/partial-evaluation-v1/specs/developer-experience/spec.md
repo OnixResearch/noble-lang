@@ -1,5 +1,61 @@
 # Numeric graph partial evaluation
 
+## MODIFIED Requirements
+
+### Requirement: NGRAPH-CLI-01
+r[NGRAPH-CLI-01]
+
+**NGRAPH-CLI-01.**
+
+`Numeric-Graph-v1` MUST expose exactly the `noble ngraph` subcommands `check`, `extract`,
+`eval`, `train`, `verify` and `specialize`.
+
+**Effects.**
+
+- Each subcommand MUST read only the files named by its arguments, each under a stated byte
+  bound checked before parsing, and MUST write only its explicitly named output file.
+- It MUST NOT spawn a process, execute Wasm or open a network connection.
+- The `noble-ngraph` library MUST NOT execute any filesystem, process, environment, clock,
+  thread or output effect, and MUST NOT depend on a third-party package.
+- Identity digests MUST be computed through a hashing scheme that the composition root
+  supplies.
+
+**Reports.**
+
+- Every outcome other than a usage error MUST be reported as a JSON line with the schema
+  `noble-ngraph-report/v1`. A usage error MUST print its usage on standard error and nothing
+  on standard output.
+- A refusal MUST carry one stable code and a stable site. The codes are the D6 codes of
+  `NumericGraph-Design`, `E-FORMAT`, `E-SNAPSHOT-INTEGRITY`, `E-SNAPSHOT-ID` and
+  `E-SNAPSHOT-REPLAY`. Run-time observations that have no site (host-fuel exhaustion and
+  cancellation) and host conditions MAY report a null site.
+- A refusal that belongs to admission, snapshot binding or input validation MUST occur before
+  any graph node is evaluated.
+
+**Exit status.** The exit status MUST follow the outcome class:
+
+- 0 for `normal`;
+- 1 for `trap` (a guard failure or a non-finite update);
+- 2 for `reject` (malformed or inconsistent inputs, snapshot binding refusals, usage errors,
+  host I/O failures, exceeded input bounds and an existing output path);
+- 4 for `unsupported` (effect, resource, dynamic, control, aggregate, reflection,
+  Program-output, recursion and default-refused derivative classes);
+- 5 for `exhausted` (every `E-BUDGET-<kind>`).
+
+For `eval`, the exit status MUST be that of the first non-normal vector in file order.
+
+**Budgets.** Every D5 budget MUST be settable by an explicit flag whose default is the `/0`
+value. A flag MAY only lower a budget; a raised value MUST be refused with `E-PROFILE`.
+
+**Output.**
+
+- For identical arguments and input bytes, standard output MUST be byte-identical across runs.
+- An `F32` value MUST be rendered as its exact binary32 encoding, except that every NaN
+  encoding MUST be rendered as the single NaN class.
+- The compiled evaluator MUST be the default, and the reference interpreter MUST be
+  selectable. Both MUST produce identical output except for the evaluator-specific point of
+  host-fuel exhaustion.
+
 ## ADDED Requirements
 
 ### Requirement: NGRAPH-PE-01
@@ -137,17 +193,18 @@ nodes, and the measurement MUST report both sides separately.
 
 - GIVEN a fixed graph and static map
 - WHEN the residual-node cap is one below the created-node count, exactly equal to it, and
-  one above it, and when the variant cap is zero
+  one above it, and the variant cap is zero, exactly one, and one above the `/0` value
 - THEN the first MUST be refused with `E-BUDGET-RESIDUAL-NODES`, the second and third MUST be
-  accepted, the fourth MUST be refused with `E-BUDGET-VARIANTS`, and every raised cap MUST be
-  refused with `E-PROFILE`
+  accepted, the variant cap of zero MUST be refused with `E-BUDGET-VARIANTS`, its exact `/0`
+  value MUST be accepted, and every raised cap MUST be refused with `E-PROFILE`
 
 #### Scenario: NGRAPH-PE-CASE-10 separate accounting
 
 - GIVEN one measurement record of an original and its residual
 - WHEN the record is read
-- THEN it MUST carry the two node counts, the folded and pruned counts and per-side evaluator
-  node visits separately, and it MUST NOT carry a normalized or equal-fuel figure
+- THEN it MUST carry the two node counts, the folded and pruned counts, per-side evaluator
+  node visits, retained bytes, cold first-evaluation time and warmed batch time separately,
+  and it MUST NOT carry a normalized or equal-fuel figure
 
 ### Requirement: NGRAPH-PE-06
 r[NGRAPH-PE-06]
@@ -161,6 +218,8 @@ that refusal, and then no residual file, graph file or source file may be create
 
 The specialization path MUST perform zero host requests: the library MUST execute no host
 effect, and the command MUST spawn no process, execute no Wasm and open no network connection.
+Every `noble ngraph` report MUST expose `guest_requests: 0`, including an extraction refusal,
+so the existing host-request accounting makes the no-request result observable.
 Effectful, resource, recursive, aggregate and control subjects MUST be refused by the
 profile's extraction stage at or before admission, with no graph, no residual and no published
 output, and such a subject MUST NOT be able to reach specialization at all: specialization
@@ -180,7 +239,8 @@ accepts only an already admitted graph.
 - WHEN the profile's extraction stage runs on each
 - THEN extraction MUST refuse each with `E-EFFECT`, `E-RESOURCE` or `E-RECURSION` before any
   graph exists, the profile MUST create no graph file, residual or output, and specialization
-  MUST be unreachable because its only entry takes an admitted graph
+  MUST be unreachable because its only entry takes an admitted graph; any CLI report MUST
+  record `guest_requests: 0`
 
 ### Requirement: NGRAPH-PE-07
 r[NGRAPH-PE-07]
@@ -188,7 +248,8 @@ r[NGRAPH-PE-07]
 Every residual request MUST return a derivation record naming the accounting revision, the
 original graph identity, the residual graph identity, the accepted static map, the residual
 interface types, the node, folded, pruned and residual counts, and the variant count; the
-command MUST additionally name the residual source digest and the re-admitted graph identity.
+command MUST additionally name the BLAKE3 digest of the residual source (`source_blake3`) and
+the re-admitted graph identity.
 A consumer MUST be able to recompute every identity in the record from the files it reads,
 and MUST NOT rely on the record's self-description as evidence of the relation between the
 two graphs.

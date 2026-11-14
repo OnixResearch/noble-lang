@@ -29,6 +29,9 @@ use crate::scheme::BLAKE3;
 pub struct Specialized {
     /// The checked residual and its derivation record.
     pub residual: Residual,
+    /// Elapsed time of the `specialize::specialize` call, measured by this
+    /// harness and not by the production library.
+    pub specialization_ns: u64,
     /// L4 of the residual.
     pub compiled: Compiled,
     /// The emitted `let`-based source.
@@ -76,6 +79,7 @@ impl Lowered {
     /// rendered.
     pub fn specialized(&self, static_inputs: &[Option<i64>]) -> Result<Specialized, String> {
         let budgets = Budgets::default();
+        let started = std::time::Instant::now();
         let residual = specialize::specialize(
             &BLAKE3,
             &self.extraction.checked,
@@ -85,14 +89,23 @@ impl Lowered {
             },
         )
         .map_err(|d| d.to_string())?;
+        let specialization_ns = u64::try_from(started.elapsed().as_nanos())
+            .expect("elapsed specialization nanoseconds fit in u64");
         let compiled = Compiled::new(&BLAKE3, &residual.checked);
         let source = specialize::emit_source(&residual.checked).map_err(|d| d.to_string())?;
         let types = specialize::interface_types(&residual.checked).map_err(|d| d.to_string())?;
-        let readmitted =
-            specialize::readmit(&BLAKE3, &source, &types, &budgets).map_err(|d| d.to_string())?;
+        let readmitted = specialize::readmit(
+            &BLAKE3,
+            &source,
+            &types,
+            noble_contracts::Limits::default(),
+            &budgets,
+        )
+        .map_err(|d| d.to_string())?;
         let readmitted_compiled = Compiled::new(&BLAKE3, &readmitted);
         Ok(Specialized {
             residual,
+            specialization_ns,
             compiled,
             source,
             readmitted,
@@ -137,7 +150,7 @@ impl Specialized {
     /// The original input vector a dynamic vector stands for.
     #[must_use]
     pub fn merge(&self, dynamic: &[i64]) -> Option<Vec<Value>> {
-        self.residual.merge(dynamic)
+        self.residual.merge_i64(dynamic)
     }
 }
 

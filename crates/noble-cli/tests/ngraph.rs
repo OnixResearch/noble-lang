@@ -3227,6 +3227,7 @@ fn specialize_publishes_a_re_admitted_residual_program() -> TestResult {
     )?;
     let line = expect_normal(&run, "specialize")?;
     assert_eq!(line["stage"], "specialization", "{line}");
+    assert_eq!(line["guest_requests"], 0, "{line}");
     assert_eq!(line["accounting"], "ngraph-pe/0", "{line}");
     assert_eq!(
         line["static_inputs"],
@@ -3576,6 +3577,12 @@ fn ngraph_extract_refuses_effectful_and_control_sources_without_a_graph() -> Tes
             "E-CONTROL",
             "extraction",
         ),
+        (
+            "recursive-source",
+            "def f [ f ]\n5 f\n",
+            "E-SUBJECT",
+            "admission",
+        ),
         ("program", "drop [ 1 + ]\n", "E-PROGRAM-OUTPUT", "admission"),
     ] {
         let path = scratch.write(&format!("{name}.noble"), source)?;
@@ -3619,7 +3626,8 @@ fn ngraph_extract_refuses_effectful_and_control_sources_without_a_graph() -> Tes
         child.stdin.as_mut().ok_or("missing session stdin")?,
         b"\"hi\" test.emit 5\n",
     )?;
-    drop(child.stdin.take());
+    let stdin = child.stdin.take().ok_or("missing session stdin")?;
+    drop(stdin);
     let session = child.wait_with_output()?;
     let report: Value = serde_json::from_slice(
         std::str::from_utf8(&session.stdout)?
