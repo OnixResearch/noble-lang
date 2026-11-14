@@ -1,7 +1,7 @@
 {
   "schema": "noble-aeneas-re-extraction-failure/v1",
   "subject": "vec-new-function-item-1238879f",
-  "source_commit": "1fcc664",
+  "source_commit": "1fcc6642f595e446a6c78b3bedd3f2f7643881c4",
   "tool_selection": {
     "aeneas_rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
     "aeneas_narHash": "sha256-HXAeoR35sHdqQj9FEz4ulPvVAdxqZlBcMG2ly7OYNDk=",
