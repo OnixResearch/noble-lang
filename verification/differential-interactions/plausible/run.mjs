@@ -35,7 +35,7 @@ const target = option('--target-dir') && resolve(option('--target-dir'));
 const replayPath = option('--replay') && resolve(option('--replay'));
 const foundation = option('--foundation') && resolve(option('--foundation'));
 const env = { HOME: home, USER: username, LOGNAME: username, LANG: 'C.UTF-8', CI: '1',
-  GIT_TERMINAL_PROMPT: '0', PATH: [join(policy.tool_paths.lean.output, 'bin'),
+  PATH: [join(policy.tool_paths.lean.output, 'bin'),
     join(policy.tool_paths.quality_rust.output, 'bin'), dirname(git),
     '/run/current-system/sw/bin', '/usr/bin', '/bin'].join(':') };
 function run(command, argv, options = {}) {
