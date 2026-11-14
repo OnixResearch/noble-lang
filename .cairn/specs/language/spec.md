@@ -597,10 +597,6 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 <!-- cairn:scenario-links:end -->
 
-## 5. Evaluation and observable behavior
-
-### 5.1 Evaluation order
-
 ### Requirement: K-EVAL-01
 r[K-EVAL-01]
 
