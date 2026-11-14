@@ -877,21 +877,35 @@ mod checked_i64_tests {
             .len();
         let cursor = super::text_cursor_environment().expect("cursor environment");
         assert_eq!(cursor.deps.len(), cursor.defs.len());
-        assert_eq!(cursor.deps.len(), base + 4);
-        assert!(cursor.deps[base..base + 3]
-            .iter()
-            .all(alloc::vec::Vec::is_empty));
+        assert_eq!(
+            cursor.deps.len(),
+            base.checked_add(4).expect("cursor row bound")
+        );
+        assert!(
+            cursor.deps[base..base.checked_add(3).expect("cursor row bound")]
+                .iter()
+                .all(alloc::vec::Vec::is_empty)
+        );
 
         let mut calculator = super::calculator_environment().expect("calculator environment");
         assert_eq!(calculator.deps.len(), calculator.defs.len());
-        assert_eq!(calculator.deps.len(), cursor.deps.len() + 5);
+        assert_eq!(
+            calculator.deps.len(),
+            cursor
+                .deps
+                .len()
+                .checked_add(5)
+                .expect("calculator row bound")
+        );
         assert!(calculator.deps[base..]
             .iter()
             .all(alloc::vec::Vec::is_empty));
         calculator.deps[base].push(super::Definition(0));
-        assert!(calculator.deps[base + 1..]
-            .iter()
-            .all(alloc::vec::Vec::is_empty));
+        assert!(
+            calculator.deps[base.checked_add(1).expect("calculator row bound")..]
+                .iter()
+                .all(alloc::vec::Vec::is_empty)
+        );
     }
 
     #[test]
