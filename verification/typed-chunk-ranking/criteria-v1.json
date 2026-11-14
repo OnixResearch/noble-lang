@@ -1,0 +1,146 @@
+{
+  "schema": "tchunk-ranking-criteria/1",
+  "experiment": "typed-chunk-ranking-experiment",
+  "source_base": "272a41f472a46792430d3bd3e531a7c1fa295008",
+  "corpus": {
+    "schema": "tchunk-ranking-corpus/1",
+    "task_count": 480,
+    "families": [
+      { "id": "arithmetic", "tasks": 96, "blocks": 12, "tasks_per_block": 8 },
+      { "id": "ordered-stack-routing", "tasks": 96, "blocks": 12, "tasks_per_block": 8 },
+      { "id": "boolean", "tasks": 96, "blocks": 12, "tasks_per_block": 8 },
+      { "id": "nested-quotation", "tasks": 96, "blocks": 12, "tasks_per_block": 8 },
+      { "id": "equal-signature-contrast", "tasks": 96, "blocks": 12, "tasks_per_block": 8 }
+    ],
+    "task_id_format": "<family>/b<00..11>/t<00..07>",
+    "split": {
+      "train_blocks": [0, 1, 2, 3, 4, 5, 6],
+      "train_tasks": 280,
+      "validation_blocks": [7, 8],
+      "validation_tasks": 80,
+      "test_blocks": [9, 10, 11],
+      "test_tasks": 120,
+      "split_unit": "family-provenance-block",
+      "row_randomization": false
+    },
+    "deduplicate_by": [
+      "canonical-source-bytes",
+      "normalized-recipe-bytes",
+      "ordered-interface",
+      "independent-expected-trace",
+      "generator-provenance",
+      "chunk-library-identity"
+    ],
+    "held_out_inputs_excluded_from": [
+      "features",
+      "training-targets",
+      "training-queue",
+      "optimizer-updates",
+      "validation-selection",
+      "model-selection-logs"
+    ],
+    "expected_values_owner": "independent-consumer-fixture",
+    "expected_values_are_features": false
+  },
+  "features": {
+    "revision": "tchunk-features/1",
+    "lanes": 64,
+    "encoding": "finite-f32-saturating-counts-divided-by-frozen-maxima; booleans-exact-0-or-1; categorical-one-hot",
+    "groups": [
+      { "lanes": "0-3", "fields": ["request-input-height", "request-output-height", "hole-depth", "prefix-node-count"] },
+      { "lanes": "4-7", "fields": ["i64-input-count", "bool-input-count", "i64-output-count", "bool-output-count"] },
+      { "lanes": "8-11", "fields": ["incoming-suffix-height", "required-output-suffix-height", "known-effect-count", "unresolved-effect-bit"] },
+      { "lanes": "12-15", "fields": ["partial-sequence-length", "current-queue-ordinal", "current-stack-height", "residual-output-height"] },
+      { "lanes": "16-23", "fields": ["candidate-chunk-count", "expanded-node-count", "quotation-depth", "capture-count", "dependency-count", "instantiation-count", "source-byte-count", "candidate-recipe-byte-count"] },
+      { "lanes": "24-31", "fields": ["literal-node-count", "stack-routing-count", "i64-arithmetic-count", "boolean-op-count", "quotation-node-count", "run-count", "exact-stack-match-bit", "effect-match-bit"] },
+      { "lanes": "32-47", "fields": ["four-chunk-position-tuples-of-input-height-output-height-i64-count-bool-count"] },
+      { "lanes": "48-55", "fields": ["remaining-candidate-fraction", "remaining-expansion-fraction", "remaining-checking-work-fraction", "remaining-source-byte-fraction", "remaining-fixture-step-fraction", "remaining-diagnostic-fraction", "remaining-retained-byte-fraction", "library-revision-match-bit"] },
+      { "lanes": "56-63", "fields": ["profile-match-bit", "format-match-bit", "semantic-revision-match-bit", "body-metadata-match-bit", "dependency-metadata-match-bit", "instantiation-metadata-match-bit", "fresh-proposal-bit", "reserved-zero"] }
+    ],
+    "excluded": ["source-bytes", "expected-values", "fixture-outputs", "test-membership", "chunk-identity-bytes", "evaluator-results"]
+  },
+  "scorer": {
+    "graph_profile": "ngraph-ir/0",
+    "subprofile": "ngraph-f32/0",
+    "input_slots": 64,
+    "trainable_param_slots": 65,
+    "operation_shape": "64-f32-multiplies-then-ordered-f32-add-reduction-with-bias",
+    "forbidden_operations": ["select", "index", "step", "guard", "host-call", "data-access"],
+    "target": "1.0 iff normal #73 admission and independent finite fixture agreement; otherwise 0.0; training blocks only",
+    "loss": "f32-mse-(score-target)*(score-target)-stored-order",
+    "derivative_policy": "grad::admit default exact-real; no boolean/index surrogate",
+    "optimizer": {
+      "id": "adam/0",
+      "lr_bits": "0x3f947ae147ae147b",
+      "beta1_bits": "0x3feccccccccccccd",
+      "beta2_bits": "0x3feff7ced916872b",
+      "eps_bits": "0x3e45798ee2308c3a",
+      "weight_decay": false,
+      "clipping": false,
+      "clamp": false,
+      "batch_size": 32,
+      "steps": 256,
+      "rng": "splitmix64/0",
+      "training_seeds": ["0x74031a7e20261029", "0x74031a7e2026102a", "0x74031a7e2026102b"]
+    },
+    "snapshot_selection": "lowest-validation-mean-loss; exact-f32-loss-ties-choose-lowest-seed",
+    "frozen_before_test": ["graph", "feature-revision", "parameter-bytes", "optimizer-state-and-provenance", "library-identity", "tool-identities"]
+  },
+  "modes": ["primitive-only", "fixed-chunk-shortlex", "learned-ranking", "splitmix64-shuffled-control"],
+  "ranking": {
+    "authority": "queue-permutation-only",
+    "finite_order": "descending-score-then-original-shortlex-ordinal",
+    "invalid_score_or_feature": "deterministic-original-ordinal-fallback",
+    "stale_provenance": "record-invalid-scorer-provenance-and-use-fixed-chunk-fallback",
+    "exhaustion": "fail-closed-exhausted-no-fallback-work-no-partial-publication",
+    "checker_contracts_effects_budgets": "identical-across-modes"
+  },
+  "evaluation": {
+    "test_tasks": 120,
+    "paired_repetitions": 10,
+    "seeds": ["0x7403000000000001", "0x7403000000000002", "0x7403000000000003", "0x7403000000000004", "0x7403000000000005", "0x7403000000000006", "0x7403000000000007", "0x7403000000000008", "0x7403000000000009", "0x740300000000000a"],
+    "task_and_model_order": "frozen",
+    "aggregate": "all-tasks-all-repetitions-no-cherry-picking",
+    "reports": ["per-task", "per-family", "paired-bootstrap-95-percent-intervals"]
+  },
+  "measurements": {
+    "primary": ["total-charged-work", "warm-scorer-inclusive-latency"],
+    "latency_scope": "monotonic-request-to-outcome-including-feature-score-queue-model-load-source-check-fixture-and-report",
+    "latency_summaries": ["median", "p95", "paired-task-deltas"],
+    "work_fields": ["feature-extraction", "score-evaluation", "queue-management", "candidate-proposals", "candidate-checks", "expanded-nodes", "dependency-work", "instantiation-work", "source-preparation-work", "kernel-check-work", "fixture-steps", "total-shared-work"],
+    "outcomes": ["structural-acceptance", "finite-fixture-success", "independent-replay", "no-result", "invalid", "unsupported", "exhausted"],
+    "memory": ["peak-scratch-bytes", "peak-retained-bytes", "model-load-cold", "model-load-warm"],
+    "training_cost_separate": ["elapsed-cpu-time", "training-rows", "optimizer-steps", "model-selection-time", "parameter-bytes", "optimizer-state-bytes", "peak-training-memory"]
+  },
+  "decision": {
+    "default": "NO-GO",
+    "go_requires_all": true,
+    "work_reduction_median_percent_min": 15,
+    "work_reduction_paired_bootstrap_95_lower_bound_percent_min_exclusive": 5,
+    "warm_latency_reduction_median_percent_min": 10,
+    "warm_latency_paired_bootstrap_95_lower_bound_percent_min_exclusive": 0,
+    "finite_fixture_success_regression_overall_percentage_points_max": 1,
+    "finite_fixture_success_regression_per_family_percentage_points_max": 5,
+    "structural_acceptance_regression_percentage_points_max": 1,
+    "independent_replay_regression_percentage_points_max": 1,
+    "retained_bytes_ratio_max": 1.25,
+    "invalid_or_fallback_candidate_rows_percent_max": 1,
+    "must_beat_shuffled_control_on_both_primary_reductions": true,
+    "proposal_count_alone_is_not_a_go_criterion": true,
+    "finite_success_is_not_proof": true,
+    "compiled_select_is_not_sparse_compute": true
+  },
+  "system_one": {
+    "consumer_owns_observation": true,
+    "identity_linkage": ["ordered-task-interface", "independent-goal", "exact-candidate-set-and-library-digest", "feature-schema", "semantic-revision", "policy-and-model-digest", "budget", "candidate-id-membership"],
+    "stale_candidate_library_model_or_unknown_id": "cannot-change-queue",
+    "training_retains": ["refused-attempts", "slow-proposer-provenance"],
+    "teacher_reporting": ["student-only", "teacher-assisted", "teacher-calls", "verification-cost"],
+    "selection_learning_is_not_generation_learning": true,
+    "procedure_identity": "exact-body-and-dependency-identity-never-signature-only",
+    "library-growth-gains_separate_from_fixed-library_ranking_gains": true,
+    "serving_absent_or_failed": "bounded-deterministic-completion-with-unchanged-authority-boundaries",
+    "recurrent_state": "optional-stateless-scorer-sufficient; any-checkpoint-must-bind-model-feature-task-lineage-and-be-isolated-per-episode"
+  },
+  "scope_limit": "compiled-select-chooses-between-already-computed-values; no-branch-skipping-claim-no-topology-backend-or-conditional-execution-rewrite"
+}
