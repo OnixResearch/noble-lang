@@ -3,14 +3,15 @@
 This package is grounded at worktree HEAD `fed77835` (2026-11-13). Issue #118
 was filed against the same repository state; the cited facts below were
 re-read at this HEAD, not inherited from the issue text. The package adds a
-design record and no executable behavior.
+design record; the implementation that followed is recorded separately below.
 
 ### #73 is the store
 
 `.cairn/changes/typed-chunk-completion/` already owns the host-owned immutable
-chunk library. Its Phase 1 is complete (5/5) and its Phase 2 implementation is
-untouched (0/10), so the envelope, request, enumerator and budgets exist as
-normative design text only. The facts this package consumes verbatim:
+chunk library. At this design snapshot its Phase 1 was complete (5/5) and its
+Phase 2 implementation was untouched (0/10). The later implementation builds
+on the now-admitted substrate, not on a new store. The facts this package
+consumes verbatim:
 
 - the `typed-chunk/1` / `pure-i64-bool/1` envelope fixed in
   `design.md:52-96`, including canonical recipe nodes, zero through eight
@@ -514,8 +515,8 @@ explicit assumptions stay in separate fields.
 
 ## Test plan for acceptance 1–3
 
-The plan names the exact interfaces it consumes. It is a design; no row is
-executed by this package, and the implementation rows are blocked as noted.
+The original plan names the exact interfaces consumed. Execution status is
+recorded below rather than inferred from the design's historical blockers.
 
 Consumed interfaces:
 
@@ -564,10 +565,15 @@ Acceptance 3 — transfer on held-out composed tasks:
 | `LPL-T15` no teacher fallback | evaluation with proposer and teacher disabled; a deliberately attempted call | run reports `teacher_calls = 0`; the attempt fails closed; a nonzero count invalidates the transfer claim |
 | `LPL-T16` regression and restart | earlier families re-run after each update; restart before follow-on tasks | regression counts and restart identity match reported per arm |
 
-Status of the plan: `LPL-T01`–`LPL-T12` require #73 Phase 2 (TCHUNK-01/02
-implementation) plus the record layer; `LPL-T13`–`LPL-T16` additionally require
-#116's synthesis producer or an equivalent producer contract. No row is
-claimed as executed.
+Implementation status: `LPL-T01`–`LPL-T03`, `LPL-T05`–`LPL-T12` have
+source-level fixtures in `crates/noble-contracts/tests/editor/procedures/`
+covering the corresponding mechanics and refusals. `LPL-T04` is covered by
+the effect-widening refusal in `admission.rs`. The positive exact-pair
+certificate alias portion of `LPL-T07` remains **NOT DONE**: `admission.rs`
+exercises its fail-closed refusal, not alias success. `LPL-T13` is frozen in
+`verification/procedure-library/criteria-2026-11-13.json` ahead of the
+one-shot measurement. `LPL-T14`–`LPL-T16` require that source-bound receipt.
+No fixture is evidence of Rust/Lean correspondence or a #56 certificate.
 
 ## Acceptance mapping
 
@@ -585,9 +591,13 @@ claimed as executed.
 
 ## Proof obligations
 
-This package proves none of the following; each is a planned obligation for a
-later slice, and each must keep model proof, implementation test,
-correspondence and assumption separate.
+The abstract Lean model at
+`proofs/foundation/NobleFoundation/ProcedureLibrary.lean` proves typed-tuple
+injectivity, reload determinism, dedup/evidence append and exact retained
+rollback (`LPL-O1`–`LPL-O4`) at the model boundary. Rust fixtures test the
+separate executed mechanics (`LPL-O5`/`LPL-O6` included), but no
+implementation-to-model correspondence or byte-encoder refinement is proved.
+An experimental digest is not an injective proof of a language-wide identity.
 
 | ID | Obligation | Suggested route |
 |---|---|---|
@@ -599,19 +609,20 @@ correspondence and assumption separate.
 | `LPL-O6` | the export carries every tested/proved distinction and no capability | schema-level executed check over generated libraries |
 
 VC-LIB-01..04 supply the rule-library route for `LPL-O1`–`LPL-O4`; EV-BIND-01
-and VC-TOOL-04 supply the evidence-binding route for their receipts. No Lean
-declaration, receipt or conformance case is added by this change.
+and VC-TOOL-04 supply the evidence-binding route for their receipts. The Lean
+declarations are inventoried in `proofs/foundation/inventory.json`; their
+checked model proof must not be presented as a runtime verifier.
 
 ## Non-claims
 
-No implementation, compiled store, CLI surface or production path. No canonical
-Noble encoding, hash algorithm, test vectors or cross-implementation content
-hash. No behavioral equivalence of equal-signature records, no substitution of
-an entry into an existing Program, no automatic merge, no deletion of retained
-evidence. No claim that a promotion proves correctness: a promotion records
-that a consumer policy's demanded obligations have cited evidence, and holding a
-reference is not validity. No claim that library growth is lifelong learning,
-that a library arm transfers without a preregistered paired comparison, or that
-any transfer result is teacher-free when a teacher contributed. No benchmark,
-speedup, amortization or break-even claim. No progress on #73 Phase 2, #116,
-#56 or #74 is implied.
+No canonical Noble encoding, hash algorithm, test vectors or
+cross-implementation content hash; no new CLI command. No behavioral
+equivalence of equal-signature records, no substitution of an entry into an
+existing Program, no automatic merge, no deletion of retained evidence. No
+claim that a promotion proves correctness: a promotion records that a consumer
+policy's demanded obligations have cited evidence, and holding a reference is
+not validity. No claim that library growth is lifelong learning, that a library
+arm transfers without a preregistered paired comparison, or that any transfer
+result is teacher-free when a teacher contributed. No speedup or amortization
+claim; break-even is unestimated without measured per-invocation cost
+difference. No new progress on #73 Phase 2, #116, #56 or #74 is implied.
