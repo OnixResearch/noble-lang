@@ -16,6 +16,9 @@ use noble_ngraph::schedule::I64Instruction;
 use super::corpus_shared;
 use super::emit::{Artifact, HEADER};
 
+#[path = "layout_corpus.rs"]
+mod checks;
+
 /// An input created after an addition it does not feed, moved ahead of it in packed order.
 fn late_input() -> Graph {
     let scheme = super::common::IDS;
