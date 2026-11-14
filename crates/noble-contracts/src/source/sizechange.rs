@@ -41,12 +41,12 @@
 
 /// Maximum number of concrete measures in one analyzed declaration.
 const MAX_MEASURES: usize = 8;
+/// The exclusive upper bound for a fixed-width measure index.
+const MAX_MEASURE_INDEX: u8 = MAX_MEASURES as u8;
 /// The most self-call sites one definition's report carries.
 const MAX_SITES: usize = 256;
 /// The most distinct matrices retained by one positive closure.
 const MAX_CLOSURE: usize = 256;
-/// Fixed row stride for the bounded graph matrix.
-const GRAPH_STRIDE: usize = MAX_MEASURES;
 /// The most stack cells the symbolic walk tracks; a checked body needs far fewer.
 const MAX_FRAME: usize = 64;
 /// The most word steps one definition's walk spends before refusing.
@@ -124,29 +124,63 @@ impl Relation {
     }
 }
 
-/// One row-major size-change matrix with a fixed stride of eight parameters.
+/// One fixed-width parameter index in a size-change graph.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct MeasureIndex(u8);
+
+impl MeasureIndex {
+    /// Construct an index inside the graph's fixed eight-measure domain.
+    pub const fn new(index: u8) -> Option<Self> {
+        if index < MAX_MEASURE_INDEX {
+            Some(Self(index))
+        } else {
+            None
+        }
+    }
+
+    fn from_usize(index: usize) -> Option<Self> {
+        Self::new(u8::try_from(index).ok()?)
+    }
+
+    fn as_usize(self) -> usize {
+        usize::from(self.0)
+    }
+}
+
+/// A named pair of graph axes, preventing source and target indices from being swapped.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct GraphEdge {
+    /// The old measure's row.
+    pub source: MeasureIndex,
+    /// The new measure's column.
+    pub target: MeasureIndex,
+}
+
+/// One size-change matrix with a fixed eight-by-eight representation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Graph {
-    /// Relation from old measure `i` to new measure `j` at `i * 8 + j`.
-    pub relations: [Relation; GRAPH_STRIDE * GRAPH_STRIDE],
+    /// Relation from each old measure to each new measure.
+    pub relations: [[Relation; MAX_MEASURES]; MAX_MEASURES],
 }
 
 impl Graph {
     /// An all-unknown matrix.
     pub const fn unknown() -> Self {
         Self {
-            relations: [Relation::Unknown; GRAPH_STRIDE * GRAPH_STRIDE],
+            relations: [[Relation::Unknown; MAX_MEASURES]; MAX_MEASURES],
         }
     }
 
-    /// Read one relation using the fixed matrix stride.
-    pub const fn get(&self, from: usize, to: usize) -> Relation {
-        self.relations[from * GRAPH_STRIDE + to]
+    /// Read one relation using a validated pair of fixed-width graph axes.
+    pub fn get(&self, edge: GraphEdge) -> Relation {
+        self.relations[edge.source.as_usize()][edge.target.as_usize()]
     }
 
-    /// Set one relation using the fixed matrix stride.
-    pub fn set(&mut self, from: usize, to: usize, relation: Relation) {
-        self.relations[from * GRAPH_STRIDE + to] = relation;
+    /// Return a graph with one relation replaced.
+    pub fn with_relation(self, edge: GraphEdge, relation: Relation) -> Self {
+        let mut graph = self;
+        graph.relations[edge.source.as_usize()][edge.target.as_usize()] = relation;
+        graph
     }
 }
 
@@ -508,6 +542,9 @@ impl<'a> Walker<'a> {
         let mut guarded = alloc::vec::Vec::with_capacity(measures.len());
         let mut graph = Graph::unknown();
         for (index, measure) in measures.iter().enumerate() {
+            let Some(target) = MeasureIndex::from_usize(index) else {
+                return self.fail(Unsupported::SelfArityMismatch, span);
+            };
             let is_guarded = self.guard & Self::measure_bit(index) != 0;
             let value = match self.stack.get(index.saturating_add(1)) {
                 Some(value) => value,
@@ -518,36 +555,42 @@ impl<'a> Walker<'a> {
             guarded.push(is_guarded);
             match value {
                 Value::Formal(source) => {
-                    let source_index = match usize::try_from(*source) {
-                        Ok(source) if source < measures.len() => source,
-                        _ => continue,
+                    let Some(source_index) = Self::measure_index(*source, measures.len()) else {
+                        continue;
                     };
                     if measures[source_index] == *measure {
-                        graph.set(source_index, index, Relation::Same);
+                        let Some(source) = MeasureIndex::from_usize(source_index) else {
+                            continue;
+                        };
+                        graph = graph.with_relation(GraphEdge { source, target }, Relation::Same);
                     }
                 }
                 Value::Predecessor(source) => {
-                    let source_index = match usize::try_from(*source) {
-                        Ok(source) if source < measures.len() => source,
-                        _ => continue,
+                    let Some(source_index) = Self::measure_index(*source, measures.len()) else {
+                        continue;
                     };
-                    let source_guarded = self.guard & Self::measure_bit(source_index) != 0;
-                    if source_guarded
+                    let is_source_guarded = self.guard & Self::measure_bit(source_index) != 0;
+                    if is_source_guarded
                         && measures[source_index] == Measure::Counter
                         && *measure == Measure::Counter
                     {
-                        graph.set(source_index, index, Relation::Strict);
+                        let Some(source) = MeasureIndex::from_usize(source_index) else {
+                            continue;
+                        };
+                        graph = graph.with_relation(GraphEdge { source, target }, Relation::Strict);
                     }
                 }
                 Value::Tail(source) => {
-                    let source_index = match usize::try_from(*source) {
-                        Ok(source) if source < measures.len() => source,
-                        _ => continue,
+                    let Some(source_index) = Self::measure_index(*source, measures.len()) else {
+                        continue;
                     };
                     if measures[source_index] == Measure::Structural
                         && *measure == Measure::Structural
                     {
-                        graph.set(source_index, index, Relation::Strict);
+                        let Some(source) = MeasureIndex::from_usize(source_index) else {
+                            continue;
+                        };
+                        graph = graph.with_relation(GraphEdge { source, target }, Relation::Strict);
                     }
                 }
                 _ => {}
@@ -947,6 +990,7 @@ fn concrete_positions(stack: &[noble_kernel::shapes::Pattern]) -> Option<usize> 
     Some(fixed.len())
 }
 
+#[octet::sealed_enum]
 #[derive(Clone, Copy)]
 enum ProfileError {
     Outside,
@@ -997,10 +1041,6 @@ pub fn calls_self(definition: &crate::source::Named) -> bool {
 }
 
 /// Build the size-change evidence for one checked definition.
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; evidence() treats checked source signatures and bodies as bounded analysis inputs, returning an Unsupported verdict for out-of-profile forms and walk failures. Assertions would turn expected user-program refusals into panics."
-)]
 pub fn evidence(
     definition: &crate::source::Named,
     environment: &noble_kernel::contracts::Env,
@@ -1012,57 +1052,78 @@ pub fn evidence(
         .unwrap_or(Err(ProfileError::Outside));
     let (measures, result_frame) = match profile {
         Ok(profile) => profile,
-        Err(ProfileError::BoundExceeded) => {
-            return Evidence {
-                definition: definition.name.clone(),
-                measures: alloc::vec::Vec::new(),
-                sites: alloc::vec::Vec::new(),
-                verdict: Verdict::BoundExceeded {
-                    bound: Bound::Parameters,
-                    span: definition.tree.span,
-                },
-            }
-        }
-        Err(ProfileError::Outside) => {
-            return Evidence {
-                definition: definition.name.clone(),
-                measures: alloc::vec::Vec::new(),
-                sites: alloc::vec::Vec::new(),
-                verdict: Verdict::Unsupported {
-                    reason: Unsupported::SignatureOutsideProfile,
-                    span: definition.tree.span,
-                },
-            }
-        }
+        Err(error) => return profile_refusal(definition, error),
     };
-    let (halt, sites) = {
-        let mut walker = Walker {
-            tree: &definition.tree,
-            environment,
-            measures: &measures,
-            result_frame,
-            stack: alloc::vec::Vec::with_capacity(MAX_FRAME),
-            guard: 0,
-            sites: alloc::vec::Vec::new(),
-            halt: None,
-            steps: 0,
-        };
-        walker.stack.push(Value::Prefix);
-        for index in 0..measures.len() {
-            walker
-                .stack
-                .push(Value::Formal(u32::try_from(index).unwrap_or(0)));
-        }
-        let walked = walker.sequence(&definition.tree.body, 0);
-        let halt = match walker.halt {
-            Some(halt) => Some(halt),
-            None => match walked {
-                Err(()) => Some((Unsupported::UnhandledWord, definition.tree.span)),
-                Ok(()) => final_shape(&walker),
-            },
-        };
-        (halt, walker.sites)
+    let (halt, sites) = walk_definition(definition, environment, &measures, result_frame);
+    finish_evidence(definition, measures, sites, halt)
+}
+
+fn profile_refusal(definition: &crate::source::Named, error: ProfileError) -> Evidence {
+    let verdict = match error {
+        ProfileError::BoundExceeded => Verdict::BoundExceeded {
+            bound: Bound::Parameters,
+            span: definition.tree.span,
+        },
+        ProfileError::Outside => Verdict::Unsupported {
+            reason: Unsupported::SignatureOutsideProfile,
+            span: definition.tree.span,
+        },
     };
+    Evidence {
+        definition: definition.name.clone(),
+        measures: alloc::vec::Vec::new(),
+        sites: alloc::vec::Vec::new(),
+        verdict,
+    }
+}
+
+fn walk_definition(
+    definition: &crate::source::Named,
+    environment: &noble_kernel::contracts::Env,
+    measures: &[Measure],
+    result_frame: usize,
+) -> (Option<(Unsupported, crate::Span)>, alloc::vec::Vec<Site>) {
+    assert!(!measures.is_empty());
+    assert!(measures.len() <= MAX_MEASURES);
+    let mut walker = Walker {
+        tree: &definition.tree,
+        environment,
+        measures,
+        result_frame,
+        stack: alloc::vec::Vec::with_capacity(MAX_FRAME),
+        guard: 0,
+        sites: alloc::vec::Vec::new(),
+        halt: None,
+        steps: 0,
+    };
+    walker.stack.push(Value::Prefix);
+    for index in 0..MAX_MEASURE_INDEX {
+        if usize::from(index) >= measures.len() {
+            break;
+        }
+        walker.stack.push(Value::Formal(u32::from(index)));
+    }
+    let walked = walker.sequence(&definition.tree.body, 0);
+    let halt = match walker.halt {
+        Some(halt) => Some(halt),
+        None => match walked {
+            Err(()) => Some((Unsupported::UnhandledWord, definition.tree.span)),
+            Ok(()) => final_shape(&walker),
+        },
+    };
+    (halt, walker.sites)
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; finishing evidence clones an owned definition name and transfers runtime Vec allocations into the public report."
+)]
+fn finish_evidence(
+    definition: &crate::source::Named,
+    measures: alloc::vec::Vec<Measure>,
+    sites: alloc::vec::Vec<Site>,
+    halt: Option<(Unsupported, crate::Span)>,
+) -> Evidence {
     match halt {
         Some((Unsupported::CallSiteLimit, span)) => Evidence {
             definition: definition.name.clone(),
@@ -1120,17 +1181,43 @@ const fn join_relation(left: Relation, right: Relation) -> Relation {
 
 /// Compose two bounded matrices in the same row/column orientation as `MGraph`.
 fn compose_graph(left: &Graph, right: &Graph, measure_count: usize) -> Graph {
+    assert!(measure_count > 0);
+    assert!(measure_count <= MAX_MEASURES);
     let mut product = Graph::unknown();
-    for from in 0..measure_count {
-        for to in 0..measure_count {
+    for source in 0..MAX_MEASURE_INDEX {
+        if usize::from(source) >= measure_count {
+            break;
+        }
+        for target in 0..MAX_MEASURE_INDEX {
+            if usize::from(target) >= measure_count {
+                break;
+            }
             let mut joined = Relation::Unknown;
-            for middle in 0..measure_count {
+            for middle in 0..MAX_MEASURE_INDEX {
+                if usize::from(middle) >= measure_count {
+                    break;
+                }
                 joined = join_relation(
-                    compose_relation(left.get(from, middle), right.get(middle, to)),
+                    compose_relation(
+                        left.get(GraphEdge {
+                            source: MeasureIndex(source),
+                            target: MeasureIndex(middle),
+                        }),
+                        right.get(GraphEdge {
+                            source: MeasureIndex(middle),
+                            target: MeasureIndex(target),
+                        }),
+                    ),
                     joined,
                 );
             }
-            product.set(from, to, joined);
+            product = product.with_relation(
+                GraphEdge {
+                    source: MeasureIndex(source),
+                    target: MeasureIndex(target),
+                },
+                joined,
+            );
         }
     }
     product
@@ -1138,6 +1225,10 @@ fn compose_graph(left: &Graph, right: &Graph, measure_count: usize) -> Graph {
 
 /// Build the positive closure by breadth-first right-composition with each site matrix.
 fn close_graphs(sites: &[Site], measure_count: usize) -> Result<alloc::vec::Vec<ClosureEntry>, ()> {
+    assert!(!sites.is_empty());
+    assert!(sites.len() <= MAX_SITES);
+    assert!(measure_count > 0);
+    assert!(measure_count <= MAX_MEASURES);
     let mut closure = alloc::vec::Vec::with_capacity(sites.len().min(MAX_CLOSURE));
     for (site_index, site) in sites.iter().enumerate() {
         if closure
@@ -1155,6 +1246,8 @@ fn close_graphs(sites: &[Site], measure_count: usize) -> Result<alloc::vec::Vec<
             path: alloc::vec![site_index],
         });
     }
+    assert!(!closure.is_empty());
+    assert!(closure.len() <= MAX_CLOSURE);
     let mut cursor = 0;
     while cursor < closure.len() {
         let graph = closure[cursor].graph;
@@ -1170,6 +1263,7 @@ fn close_graphs(sites: &[Site], measure_count: usize) -> Result<alloc::vec::Vec<
             let site_index = u32::try_from(site_index).map_err(|_| ())?;
             let mut product_path = path.clone();
             product_path.push(site_index);
+            assert!(product_path.len() <= MAX_CLOSURE);
             closure.push(ClosureEntry {
                 graph: product,
                 path: product_path,
@@ -1180,6 +1274,7 @@ fn close_graphs(sites: &[Site], measure_count: usize) -> Result<alloc::vec::Vec<
     Ok(closure)
 }
 
+#[octet::sealed_enum]
 enum ClosureCriterion {
     Accepted(alloc::vec::Vec<StrictWitness>),
     Refused(ClosureEntry),
@@ -1188,15 +1283,26 @@ enum ClosureCriterion {
 
 /// Evaluate the idempotent strict-diagonal criterion over a completed finite closure.
 fn check_closure(closure: &[ClosureEntry], measure_count: usize) -> ClosureCriterion {
-    let mut found_idempotent = false;
-    let mut strict_witnesses = alloc::vec::Vec::new();
+    assert!(closure.len() <= MAX_CLOSURE);
+    assert!(measure_count > 0);
+    assert!(measure_count <= MAX_MEASURES);
+    let mut has_idempotent = false;
+    let mut strict_witnesses = alloc::vec::Vec::with_capacity(closure.len().min(MAX_CLOSURE));
     for (closure_index, entry) in closure.iter().enumerate() {
-        if compose_graph(&entry.graph, &entry.graph, measure_count) != entry.graph {
+        let square = compose_graph(&entry.graph, &entry.graph, measure_count);
+        if square != entry.graph {
             continue;
         }
-        found_idempotent = true;
-        let measure = (0..measure_count)
-            .find(|measure| entry.graph.get(*measure, *measure) == Relation::Strict);
+        has_idempotent = true;
+        let measure = (0..measure_count).find(|measure| {
+            let Some(index) = MeasureIndex::from_usize(*measure) else {
+                return false;
+            };
+            entry.graph.get(GraphEdge {
+                source: index,
+                target: index,
+            }) == Relation::Strict
+        });
         let Some(measure) = measure else {
             return ClosureCriterion::Refused(entry.clone());
         };
@@ -1205,12 +1311,15 @@ fn check_closure(closure: &[ClosureEntry], measure_count: usize) -> ClosureCrite
         else {
             return ClosureCriterion::MissingIdempotent;
         };
+        if strict_witnesses.len() >= MAX_CLOSURE {
+            return ClosureCriterion::MissingIdempotent;
+        }
         strict_witnesses.push(StrictWitness {
             closure_entry,
             measure,
         });
     }
-    if found_idempotent {
+    if has_idempotent {
         ClosureCriterion::Accepted(strict_witnesses)
     } else {
         ClosureCriterion::MissingIdempotent
@@ -1227,6 +1336,10 @@ fn verdict(
     measures: alloc::vec::Vec<Measure>,
     sites: alloc::vec::Vec<Site>,
 ) -> Evidence {
+    assert!(!measures.is_empty());
+    assert!(measures.len() <= MAX_MEASURES);
+    assert!(!sites.is_empty());
+    assert!(sites.len() <= MAX_SITES);
     let outcome = match close_graphs(&sites, measures.len()) {
         Err(()) => Verdict::BoundExceeded {
             bound: Bound::ClosureSize,
@@ -1300,216 +1413,620 @@ fn refusal_witnesses(measures: &[Measure], sites: &[Site]) -> alloc::vec::Vec<Wi
     witnesses
 }
 
-/// Write one Lean matrix function from the bounded row-major representation.
-fn append_graph_definition(
+fn append_named_index(
     mut output: alloc::string::String,
     name: &str,
+    index: usize,
+) -> alloc::string::String {
+    output.push_str(name);
+    append_decimal(output, index)
+}
+
+fn append_named_u32(
+    mut output: alloc::string::String,
+    name: &str,
+    index: u32,
+) -> alloc::string::String {
+    output.push_str(name);
+    append_u32(output, index)
+}
+
+#[derive(Clone, Copy)]
+struct CertificateShape {
+    site_count: usize,
+    measure_count: usize,
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; this renderer grows an owned String through runtime push_str calls to emit a concrete Lean definition."
+)]
+fn append_graph_header(
+    mut output: alloc::string::String,
+    name: &str,
+    index: usize,
+    shape: CertificateShape,
+) -> alloc::string::String {
+    output.push_str("def ");
+    output = append_named_index(output, name, index);
+    output.push_str(" : MGraph ");
+    output = append_decimal(output, shape.measure_count);
+    output.push_str(" := fun oldIndex newIndex =>\n  match oldIndex.val, newIndex.val with\n");
+    output
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; this renderer appends dynamic matrix indices and relation names to an owned runtime String."
+)]
+fn append_graph_edge(
+    mut output: alloc::string::String,
+    graph: &Graph,
+    edge: GraphEdge,
+) -> alloc::string::String {
+    let relation = graph.get(edge);
+    if relation != Relation::Unknown {
+        output.push_str("  | ");
+        output = append_decimal(output, edge.source.as_usize());
+        output.push_str(", ");
+        output = append_decimal(output, edge.target.as_usize());
+        output.push_str(" => .");
+        output.push_str(relation.constructor());
+        output.push('\n');
+    }
+    output
+}
+
+fn append_graph_edges(
+    mut output: alloc::string::String,
     graph: &Graph,
     measure_count: usize,
 ) -> alloc::string::String {
-    output.push_str("def ");
-    output.push_str(name);
-    output.push_str(" : MGraph ");
-    output = append_decimal(output, measure_count);
-    output.push_str(" := fun oldIndex newIndex =>\n  match oldIndex.val, newIndex.val with\n");
-    for from in 0..measure_count {
-        for to in 0..measure_count {
-            let relation = graph.get(from, to);
-            if relation != Relation::Unknown {
-                output.push_str("  | ");
-                output = append_decimal(output, from);
-                output.push_str(", ");
-                output = append_decimal(output, to);
-                output.push_str(" => .");
-                output.push_str(relation.constructor());
-                output.push('\n');
+    assert!(measure_count > 0);
+    assert!(measure_count <= MAX_MEASURES);
+    for source in 0..MAX_MEASURE_INDEX {
+        if usize::from(source) >= measure_count {
+            break;
+        }
+        for target in 0..MAX_MEASURE_INDEX {
+            if usize::from(target) >= measure_count {
+                break;
             }
+            output = append_graph_edge(
+                output,
+                graph,
+                GraphEdge {
+                    source: MeasureIndex(source),
+                    target: MeasureIndex(target),
+                },
+            );
         }
     }
+    output
+}
+
+fn append_graph_definition(
+    output: alloc::string::String,
+    name: &str,
+    index: usize,
+    graph: &Graph,
+    shape: CertificateShape,
+) -> alloc::string::String {
+    let output = append_graph_header(output, name, index, shape);
+    let mut output = append_graph_edges(output, graph, shape.measure_count);
     output.push_str("  | _, _ => .unknown\n\n");
     output
 }
 
-/// Emit graph definitions, the site function, and path-bearing closure entries.
-fn append_closure_model(
-    mut output: alloc::string::String,
-    name: &str,
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; path validation traverses a runtime slice iterator with all, which is not const on the pinned compiler."
+)]
+fn is_valid_site_path(path: &[u32], site_count: u32) -> bool {
+    !path.is_empty() && path.len() <= MAX_CLOSURE && path.iter().all(|site| *site < site_count)
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; closure validation performs checked TryFrom and runtime slice iteration with derived Graph equality."
+)]
+fn is_valid_closure_model(sites: &[Site], measure_count: usize, closure: &[ClosureEntry]) -> bool {
+    if !closure_dimensions_valid(sites, measure_count, closure) {
+        return false;
+    }
+    let Some(site_count) = u32::try_from(sites.len()).ok() else {
+        return false;
+    };
+    sites
+        .iter()
+        .all(|site| closure.iter().any(|entry| entry.graph == site.graph))
+        && closure
+            .iter()
+            .all(|entry| is_valid_site_path(&entry.path, site_count))
+}
+
+const fn closure_dimensions_valid(
     sites: &[Site],
     measure_count: usize,
     closure: &[ClosureEntry],
+) -> bool {
+    if sites.is_empty() || sites.len() > MAX_SITES {
+        return false;
+    }
+    if measure_count == 0 || measure_count > MAX_MEASURES {
+        return false;
+    }
+    !closure.is_empty() && closure.len() <= MAX_CLOSURE
+}
+
+fn append_closure_graphs(
+    mut output: alloc::string::String,
+    name: &str,
+    shape: CertificateShape,
+    closure: &[ClosureEntry],
 ) -> alloc::string::String {
     for (index, entry) in closure.iter().enumerate() {
-        let graph_name = append_decimal(alloc::string::String::from(name), index);
-        output = append_graph_definition(output, &graph_name, &entry.graph, measure_count);
+        output = append_graph_definition(output, name, index, &entry.graph, shape);
     }
+    output
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; Lean site-table emission grows an owned String through runtime push_str calls."
+)]
+fn append_site_table_header(
+    mut output: alloc::string::String,
+    name: &str,
+    shape: CertificateShape,
+) -> alloc::string::String {
     output.push_str("def ");
     output.push_str(name);
     output.push_str("Sites : Fin ");
-    output = append_decimal(output, sites.len());
+    output = append_decimal(output, shape.site_count);
     output.push_str(" → MGraph ");
-    output = append_decimal(output, measure_count);
+    output = append_decimal(output, shape.measure_count);
     output.push_str(" := fun site =>\n  match site.val with\n");
+    output
+}
+
+fn append_site_table_rows(
+    mut output: alloc::string::String,
+    name: &str,
+    sites: &[Site],
+    closure: &[ClosureEntry],
+) -> alloc::string::String {
     for (site_index, site) in sites.iter().enumerate() {
+        let Some(graph_index) = closure.iter().position(|entry| entry.graph == site.graph) else {
+            return output;
+        };
         output.push_str("  | ");
         output = append_decimal(output, site_index);
         output.push_str(" => ");
-        let graph_index = closure.iter().position(|entry| entry.graph == site.graph);
-        if let Some(graph_index) = graph_index {
-            let graph_name = append_decimal(alloc::string::String::from(name), graph_index);
-            output.push_str(&graph_name);
-        } else {
-            output.push_str("(fun _ _ => .unknown)");
-        }
+        output = append_named_index(output, name, graph_index);
         output.push('\n');
     }
-    output.push_str("  | _ => (fun _ _ => .unknown)\n\n");
+    output
+}
+
+fn append_closure_entry(
+    mut output: alloc::string::String,
+    name: &str,
+    index: usize,
+    entry: &ClosureEntry,
+    has_next: bool,
+) -> alloc::string::String {
+    output.push_str("    ⟨");
+    output = append_named_index(output, name, index);
+    output.push_str(", [");
+    output = append_site_path(output, &entry.path);
+    output.push_str("]⟩");
+    if has_next {
+        output.push(',');
+    }
+    output.push('\n');
+    output
+}
+
+fn append_closure_entries(
+    output: alloc::string::String,
+    name: &str,
+    shape: CertificateShape,
+    closure: &[ClosureEntry],
+) -> alloc::string::String {
+    let output = append_closure_entries_header(output, name, shape);
+    let output = append_closure_entries_rows(output, name, closure);
+    append_closure_entries_footer(output)
+}
+
+fn append_closure_entries_header(
+    mut output: alloc::string::String,
+    name: &str,
+    shape: CertificateShape,
+) -> alloc::string::String {
     output.push_str("def ");
     output.push_str(name);
     output.push_str("Entries : List (MatrixClosureEntry ");
-    output = append_decimal(output, sites.len());
+    output = append_decimal(output, shape.site_count);
     output.push(' ');
-    output = append_decimal(output, measure_count);
+    output = append_decimal(output, shape.measure_count);
     output.push_str(") :=\n  [\n");
+    output
+}
+
+fn append_closure_entries_rows(
+    mut output: alloc::string::String,
+    name: &str,
+    closure: &[ClosureEntry],
+) -> alloc::string::String {
     for (index, entry) in closure.iter().enumerate() {
-        output.push_str("    ⟨");
-        let graph_name = append_decimal(alloc::string::String::from(name), index);
-        output.push_str(&graph_name);
-        output.push_str(", [");
-        for (path_index, site) in entry.path.iter().enumerate() {
-            if path_index > 0 {
-                output.push_str(", ");
-            }
-            let site = usize::try_from(*site).unwrap_or(usize::MAX);
-            output = append_decimal(output, site);
-        }
-        output.push_str("]⟩");
-        if index + 1 < closure.len() {
-            output.push(',');
-        }
-        output.push('\n');
+        output = append_closure_entry(
+            output,
+            name,
+            index,
+            entry,
+            index < closure.len().saturating_sub(1),
+        );
     }
+    output
+}
+
+fn append_closure_entries_footer(mut output: alloc::string::String) -> alloc::string::String {
     output.push_str("  ]\n\n");
     output
 }
 
-/// Render Lean-checkable closure certificates and idempotent refusal witnesses for one report.
+/// Emit graph definitions, the site function, and path-bearing closure entries.
 #[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; certificate serializes already-classified report data into Lean source and deliberately emits no assertion about front-end input. The isolated Lean checker is the authority that accepts or rejects the generated theorem text."
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; closure-model serialization performs runtime collection traversal and owned String growth."
 )]
+fn append_closure_model(
+    mut output: alloc::string::String,
+    name: &str,
+    sites: &[Site],
+    shape: CertificateShape,
+    closure: &[ClosureEntry],
+) -> (alloc::string::String, bool) {
+    if shape.site_count != sites.len()
+        || !is_valid_closure_model(sites, shape.measure_count, closure)
+    {
+        return (output, false);
+    }
+    output = append_closure_graphs(output, name, shape, closure);
+    output = append_site_table_header(output, name, shape);
+    output = append_site_table_rows(output, name, sites, closure);
+    output.push_str("  | _ => (fun _ _ => .unknown)\n\n");
+    output = append_closure_entries(output, name, shape, closure);
+    (output, true)
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; validation uses non-const TryFrom and runtime Vec indexing over the bounded certificate."
+)]
+fn valid_accepted_evidence(
+    measures: &[Measure],
+    sites: &[Site],
+    closure: &[ClosureEntry],
+    witnesses: &[StrictWitness],
+) -> bool {
+    if !is_valid_closure_model(sites, measures.len(), closure) || witnesses.len() > closure.len() {
+        return false;
+    }
+    let Some(measure_count) = u32::try_from(measures.len()).ok() else {
+        return false;
+    };
+    witnesses.iter().all(|witness| {
+        let Some(closure_index) = usize::try_from(witness.closure_entry).ok() else {
+            return false;
+        };
+        closure.get(closure_index).is_some() && witness.measure < measure_count
+    })
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; validation traverses runtime closure entries and uses derived Graph equality and TryFrom."
+)]
+fn valid_refused_evidence(
+    measures: &[Measure],
+    sites: &[Site],
+    closure: &[ClosureEntry],
+    cycle: &ClosureEntry,
+) -> bool {
+    is_valid_closure_model(sites, measures.len(), closure)
+        && closure.iter().any(|entry| entry.graph == cycle.graph)
+        && u32::try_from(sites.len())
+            .ok()
+            .is_some_and(|site_count| is_valid_site_path(&cycle.path, site_count))
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; certificate validation delegates to runtime collection checks and derived enum/Graph equality."
+)]
+fn is_valid_certificate_entry(evidence: &Evidence) -> bool {
+    match &evidence.verdict {
+        Verdict::Accepted {
+            closure,
+            strict_witnesses,
+            ..
+        } => valid_accepted_evidence(
+            &evidence.measures,
+            &evidence.sites,
+            closure,
+            strict_witnesses,
+        ),
+        Verdict::Refused { closure, cycle, .. } => {
+            valid_refused_evidence(&evidence.measures, &evidence.sites, closure, cycle)
+        }
+        Verdict::BoundExceeded { .. } | Verdict::Unsupported { .. } => false,
+    }
+}
+
+fn append_certificate_comment(
+    mut output: alloc::string::String,
+    index: usize,
+    shape: CertificateShape,
+) -> alloc::string::String {
+    output.push_str("\n/-- Bounded size-change evidence for definition ");
+    output = append_decimal(output, index);
+    output.push_str(": ");
+    output = append_decimal(output, shape.site_count);
+    output.push_str(" self-call site(s) over ");
+    output = append_decimal(output, shape.measure_count);
+    output.push_str(
+        " declared measure(s). The matrices and paths below are checked by the model. -/\n",
+    );
+    output
+}
+
+fn append_one_certificate(
+    output: alloc::string::String,
+    entry: &Evidence,
+    entry_index: usize,
+) -> alloc::string::String {
+    if !is_valid_certificate_entry(entry) {
+        return output;
+    }
+    let name = append_decimal(alloc::string::String::from("definition_"), entry_index);
+    let shape = CertificateShape {
+        site_count: entry.sites.len(),
+        measure_count: entry.measures.len(),
+    };
+    let output = append_certificate_comment(output, entry_index, shape);
+    append_validated_certificate(output, entry, &name, shape)
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; this renderer appends runtime-owned String output while validating dynamically sized report data."
+)]
+fn append_validated_certificate(
+    output: alloc::string::String,
+    entry: &Evidence,
+    name: &str,
+    shape: CertificateShape,
+) -> alloc::string::String {
+    let closure = match &entry.verdict {
+        Verdict::Accepted { closure, .. } | Verdict::Refused { closure, .. } => closure.as_slice(),
+        Verdict::BoundExceeded { .. } | Verdict::Unsupported { .. } => return output,
+    };
+    let (model, is_valid) = append_closure_model(output, name, &entry.sites, shape, closure);
+    if !is_valid {
+        return model;
+    }
+    append_certificate_proof(model, entry, name, shape)
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; accepted/refused proof emission builds runtime String output from dynamically sized witnesses and paths."
+)]
+fn append_certificate_proof(
+    output: alloc::string::String,
+    entry: &Evidence,
+    name: &str,
+    shape: CertificateShape,
+) -> alloc::string::String {
+    match &entry.verdict {
+        Verdict::Accepted {
+            strict_witnesses, ..
+        } => append_accepted_proof(output, name, shape, strict_witnesses),
+        Verdict::Refused { closure, cycle, .. } => {
+            append_refused_proof(output, name, shape, closure, cycle)
+        }
+        Verdict::BoundExceeded { .. } | Verdict::Unsupported { .. } => output,
+    }
+}
+
+/// Render Lean-checkable closure certificates and idempotent refusal witnesses for one report.
 pub fn certificate(evidence: &[Evidence]) -> alloc::string::String {
     let mut output = alloc::string::String::with_capacity(4096);
     output.push_str(
         "/-\n  Generated bounded size-change closure certificate (issue #101).\n\n  The finite matrix set and each call-site path are checked in the Lean model. Accepted\n  definitions carry one strict diagonal witness for every idempotent matrix; refusals name a\n  real idempotent closure entry without such an edge. Front-end/source correspondence is separate.\n-/\nimport NobleM2.SizeChangeSCT\n\nnamespace NobleSizeChangeCertificate\n\nopen NobleM2.SizeChange\n",
     );
     for (entry_index, entry) in evidence.iter().enumerate() {
-        let (closure, refusal_cycle) = match &entry.verdict {
-            Verdict::Accepted { closure, .. } => (closure.as_slice(), None),
-            Verdict::Refused { closure, cycle, .. } => (closure.as_slice(), Some(cycle)),
-            Verdict::BoundExceeded { .. } | Verdict::Unsupported { .. } => continue,
-        };
-        let name = append_decimal(alloc::string::String::from("definition_"), entry_index);
-        let measures = entry.measures.len();
-        let sites = entry.sites.len();
-        output.push_str("\n/-- Bounded size-change evidence for definition ");
-        output = append_decimal(output, entry_index);
-        output.push_str(": ");
-        output = append_decimal(output, sites);
-        output.push_str(" self-call site(s) over ");
-        output = append_decimal(output, measures);
-        output.push_str(
-            " declared measure(s). The matrices and paths below are checked by the model. -/\n",
-        );
-        output = append_closure_model(output, &name, &entry.sites, measures, closure);
-        if let Verdict::Accepted {
-            strict_witnesses, ..
-        } = &entry.verdict
-        {
-            output.push_str("def ");
-            output.push_str(&name);
-            output.push_str("Certificate : MatrixClosureCertificate ");
-            output = append_decimal(output, sites);
-            output.push(' ');
-            output = append_decimal(output, measures);
-            output.push(' ');
-            output.push_str(&name);
-            output.push_str("Sites :=\n  ⟨");
-            output.push_str(&name);
-            output.push_str("Entries, [");
-            for (witness_index, witness) in strict_witnesses.iter().enumerate() {
-                let closure_index = usize::try_from(witness.closure_entry).unwrap_or(usize::MAX);
-                if closure.get(closure_index).is_none() {
-                    continue;
-                }
-                if witness_index > 0 {
-                    output.push_str(", ");
-                }
-                let graph_name = append_decimal(alloc::string::String::from(&name), closure_index);
-                output.push_str("⟨");
-                output.push_str(&graph_name);
-                output.push_str(", ");
-                output = append_decimal(
-                    output,
-                    usize::try_from(witness.measure).unwrap_or(usize::MAX),
-                );
-                output.push_str("⟩");
-            }
-            output.push_str("], by decide, by decide⟩\n\ntheorem ");
-            output.push_str(&name);
-            output.push_str("Criterion : ∀ {graph : MGraph ");
-            output = append_decimal(output, measures);
-            output.push_str("}, MatrixClosure ");
-            output.push_str(&name);
-            output.push_str("Sites graph → composeMatrix graph graph = graph → HasStrictDiagonal graph := by\n  intro graph member idempotent\n  exact certificate_closure_criterion ");
-            output.push_str(&name);
-            output.push_str("Certificate member idempotent\n");
-        } else if let Some(cycle) = refusal_cycle {
-            let graph_index = closure
-                .iter()
-                .position(|entry| entry.graph == cycle.graph)
-                .unwrap_or(usize::MAX);
-            output.push_str("def ");
-            output.push_str(&name);
-            output.push_str("ClosureSetCertificate : MatrixClosureSetCertificate ");
-            output = append_decimal(output, sites);
-            output.push(' ');
-            output = append_decimal(output, measures);
-            output.push(' ');
-            output.push_str(&name);
-            output.push_str("Sites := ⟨");
-            output.push_str(&name);
-            output.push_str("Entries, by decide⟩\n\ndef ");
-            output.push_str(&name);
-            output.push_str("Refusal : MatrixIdempotentRefusal ");
-            output.push_str(&name);
-            output.push_str("ClosureSetCertificate :=\n  ⟨⟨");
-            let graph_name = append_decimal(alloc::string::String::from(&name), graph_index);
-            output.push_str(&graph_name);
-            output.push_str(", [");
-            for (path_index, site) in cycle.path.iter().enumerate() {
-                if path_index > 0 {
-                    output.push_str(", ");
-                }
-                output = append_decimal(output, usize::try_from(*site).unwrap_or(usize::MAX));
-            }
-            output.push_str("]⟩, by decide, by decide, by decide⟩\n\ntheorem ");
-            output.push_str(&name);
-            output.push_str("RefusalGraphIsClosure : MatrixClosure ");
-            output.push_str(&name);
-            output.push_str("Sites ");
-            output.push_str(&name);
-            output.push_str("Refusal.entry.graph := refusal_graph_in_closure ");
-            output.push_str(&name);
-            output.push_str("Refusal\n\ntheorem ");
-            output.push_str(&name);
-            output.push_str("RefusalHasNoStrictDiagonal : ¬ HasStrictDiagonal ");
-            output.push_str(&name);
-            output.push_str("Refusal.entry.graph := refusal_no_strict_diagonal ");
-            output.push_str(&name);
-            output.push_str("Refusal\n");
-        }
+        output = append_one_certificate(output, entry, entry_index);
     }
     output.push_str("\nend NobleSizeChangeCertificate");
+    output
+}
+
+fn append_accepted_proof(
+    output: alloc::string::String,
+    name: &str,
+    shape: CertificateShape,
+    witnesses: &[StrictWitness],
+) -> alloc::string::String {
+    let output = append_accepted_definition(output, name, shape, witnesses);
+    append_criterion_theorem(output, name, shape.measure_count)
+}
+
+fn append_accepted_definition(
+    output: alloc::string::String,
+    name: &str,
+    shape: CertificateShape,
+    witnesses: &[StrictWitness],
+) -> alloc::string::String {
+    let output = append_accepted_head(output, name, shape);
+    let mut output = append_strict_witnesses(output, name, witnesses);
+    output.push_str("], by decide, by decide⟩\n\n");
+    output
+}
+
+fn append_accepted_head(
+    mut output: alloc::string::String,
+    name: &str,
+    shape: CertificateShape,
+) -> alloc::string::String {
+    output.push_str("def ");
+    output.push_str(name);
+    output.push_str("Certificate : MatrixClosureCertificate ");
+    output = append_decimal(output, shape.site_count);
+    output.push(' ');
+    output = append_decimal(output, shape.measure_count);
+    output.push(' ');
+    output.push_str(name);
+    output.push_str("Sites :=\n  ⟨");
+    output.push_str(name);
+    output.push_str("Entries, [");
+    output
+}
+
+fn append_strict_witnesses(
+    mut output: alloc::string::String,
+    name: &str,
+    witnesses: &[StrictWitness],
+) -> alloc::string::String {
+    for (witness_index, witness) in witnesses.iter().enumerate() {
+        if witness_index > 0 {
+            output.push_str(", ");
+        }
+        output.push('⟨');
+        output = append_named_u32(output, name, witness.closure_entry);
+        output.push_str(", ");
+        output = append_u32(output, witness.measure);
+        output.push('⟩');
+    }
+    output
+}
+
+fn append_criterion_theorem(
+    mut output: alloc::string::String,
+    name: &str,
+    measure_count: usize,
+) -> alloc::string::String {
+    output.push_str("theorem ");
+    output.push_str(name);
+    output.push_str("Criterion : ∀ {graph : MGraph ");
+    output = append_decimal(output, measure_count);
+    output.push_str("}, MatrixClosure ");
+    output.push_str(name);
+    output.push_str("Sites graph → composeMatrix graph graph = graph → HasStrictDiagonal graph := by\n  intro graph member idempotent\n  exact certificate_closure_criterion ");
+    output.push_str(name);
+    output.push_str("Certificate member idempotent\n");
+    output
+}
+
+fn append_refused_proof(
+    output: alloc::string::String,
+    name: &str,
+    shape: CertificateShape,
+    closure: &[ClosureEntry],
+    cycle: &ClosureEntry,
+) -> alloc::string::String {
+    let output = append_closure_set_certificate(output, name, shape);
+    let output = append_refusal_definition(output, name, closure, cycle);
+    append_refusal_theorems(output, name)
+}
+
+fn append_closure_set_certificate(
+    mut output: alloc::string::String,
+    name: &str,
+    shape: CertificateShape,
+) -> alloc::string::String {
+    output.push_str("def ");
+    output.push_str(name);
+    output.push_str("ClosureSetCertificate : MatrixClosureSetCertificate ");
+    output = append_decimal(output, shape.site_count);
+    output.push(' ');
+    output = append_decimal(output, shape.measure_count);
+    output.push(' ');
+    output.push_str(name);
+    output.push_str("Sites := ⟨");
+    output.push_str(name);
+    output.push_str("Entries, by decide⟩\n\ndef ");
+    output
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; refusal emission searches runtime closure entries and grows an owned String for the selected path."
+)]
+fn append_refusal_definition(
+    mut output: alloc::string::String,
+    name: &str,
+    closure: &[ClosureEntry],
+    cycle: &ClosureEntry,
+) -> alloc::string::String {
+    let Some(graph_index) = closure.iter().position(|entry| entry.graph == cycle.graph) else {
+        return output;
+    };
+    output.push_str(name);
+    output.push_str("Refusal : MatrixIdempotentRefusal ");
+    output.push_str(name);
+    output.push_str("ClosureSetCertificate :=\n  ⟨⟨");
+    output = append_named_index(output, name, graph_index);
+    output.push_str(", [");
+    output = append_site_path(output, &cycle.path);
+    output.push_str("]⟩, by decide, by decide, by decide⟩\n\n");
+    output
+}
+
+fn append_site_path(mut output: alloc::string::String, path: &[u32]) -> alloc::string::String {
+    for (path_index, site) in path.iter().enumerate() {
+        if path_index > 0 {
+            output.push_str(", ");
+        }
+        output = append_u32(output, *site);
+    }
+    output
+}
+
+fn append_refusal_theorems(output: alloc::string::String, name: &str) -> alloc::string::String {
+    let output = append_refusal_closure_theorem(output, name);
+    append_refusal_diagonal_theorem(output, name)
+}
+
+fn append_refusal_closure_theorem(
+    mut output: alloc::string::String,
+    name: &str,
+) -> alloc::string::String {
+    output.push_str("theorem ");
+    output.push_str(name);
+    output.push_str("RefusalGraphIsClosure : MatrixClosure ");
+    output.push_str(name);
+    output.push_str("Sites ");
+    output.push_str(name);
+    output.push_str("Refusal.entry.graph := refusal_graph_in_closure ");
+    output.push_str(name);
+    output.push_str("Refusal\n\n");
+    output
+}
+
+fn append_refusal_diagonal_theorem(
+    mut output: alloc::string::String,
+    name: &str,
+) -> alloc::string::String {
+    output.push_str("theorem ");
+    output.push_str(name);
+    output.push_str("RefusalHasNoStrictDiagonal : ¬ HasStrictDiagonal ");
+    output.push_str(name);
+    output.push_str("Refusal.entry.graph := refusal_no_strict_diagonal ");
+    output.push_str(name);
+    output.push_str("Refusal\n");
     output
 }
 
@@ -1534,6 +2051,36 @@ fn append_decimal(mut output: alloc::string::String, mut value: usize) -> alloc:
             Some(ascii) => ascii,
             None => return output,
         };
+        value /= 10;
+        if value == 0 {
+            break;
+        }
+    }
+    for digit in &digits[at..] {
+        output.push(char::from(*digit));
+    }
+    output
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; append_u32 is a total serializer for a fixed-width report index and returns without asserting if its digit buffer or conversion invariant is broken."
+)]
+fn append_u32(mut output: alloc::string::String, mut value: u32) -> alloc::string::String {
+    let mut digits = [0_u8; 10];
+    let mut at = digits.len();
+    loop {
+        let Some(previous) = at.checked_sub(1) else {
+            return output;
+        };
+        at = previous;
+        let Some(digit) = u8::try_from(value % 10).ok() else {
+            return output;
+        };
+        let Some(ascii) = b'0'.checked_add(digit) else {
+            return output;
+        };
+        digits[at] = ascii;
         value /= 10;
         if value == 0 {
             break;

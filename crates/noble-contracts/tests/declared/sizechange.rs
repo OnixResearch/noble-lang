@@ -4,8 +4,8 @@
 //! front end reports, which the Lean lane re-checks by evaluating the generated certificate.
 
 use noble_contracts::source::{
-    Argument, Bound, Evidence, Measure, ModuleSession, Relation, RetainedSourceLimit, Unsupported,
-    Verdict,
+    Argument, Bound, Evidence, GraphEdge, Measure, MeasureIndex, ModuleSession, Relation,
+    RetainedSourceLimit, Unsupported, Verdict,
 };
 
 const LIMITS: noble_contracts::Limits = noble_contracts::Limits {
@@ -40,6 +40,15 @@ fn module(body: &str) -> Vec<u8> {
     std::format!("module m@1 [ {body} ]").into_bytes()
 }
 
+fn graph_edge(indices: (u8, u8)) -> Result<GraphEdge, String> {
+    let (source_index, target_index) = indices;
+    let source =
+        MeasureIndex::new(source_index).ok_or_else(|| "source index is out of range".to_owned())?;
+    let target =
+        MeasureIndex::new(target_index).ok_or_else(|| "target index is out of range".to_owned())?;
+    Ok(GraphEdge { source, target })
+}
+
 /// Structural list recursion: the cons branch passes the tail, a structural decrease.
 #[test]
 fn structural_list_recursion_is_accepted() -> Result<(), String> {
@@ -52,7 +61,7 @@ fn structural_list_recursion_is_accepted() -> Result<(), String> {
     assert_eq!(entry.sites.len(), 1);
     assert_eq!(entry.sites[0].arguments, vec![Argument::Tail]);
     assert_eq!(
-        entry.sites[0].graph.get(0, 0),
+        entry.sites[0].graph.get(graph_edge((0, 0))?),
         noble_contracts::source::Relation::Strict
     );
     assert!(matches!(
@@ -119,7 +128,7 @@ fn non_decreasing_self_call_is_refused_with_its_site() -> Result<(), String> {
             assert_eq!(witnesses[0].argument, Argument::Same);
             assert_eq!(cycle.path, vec![0]);
             assert_eq!(
-                cycle.graph.get(0, 0),
+                cycle.graph.get(graph_edge((0, 0))?),
                 noble_contracts::source::Relation::Same
             );
         }
@@ -181,8 +190,14 @@ fn argument_permutation_is_accepted_by_composed_closure() -> Result<(), String> 
         entry.sites[0].arguments,
         vec![Argument::Opaque, Argument::Opaque]
     );
-    assert_eq!(entry.sites[0].graph.get(1, 0), Relation::Strict);
-    assert_eq!(entry.sites[0].graph.get(0, 1), Relation::Same);
+    assert_eq!(
+        entry.sites[0].graph.get(graph_edge((1, 0))?),
+        Relation::Strict
+    );
+    assert_eq!(
+        entry.sites[0].graph.get(graph_edge((0, 1))?),
+        Relation::Same
+    );
     match entry.verdict {
         Verdict::Accepted {
             shared_measure,
@@ -211,14 +226,20 @@ fn argument_swap_is_refused_with_idempotent_cycle() -> Result<(), String> {
         entry.sites[0].arguments,
         vec![Argument::Opaque, Argument::Opaque]
     );
-    assert_eq!(entry.sites[0].graph.get(0, 1), Relation::Same);
-    assert_eq!(entry.sites[0].graph.get(1, 0), Relation::Same);
+    assert_eq!(
+        entry.sites[0].graph.get(graph_edge((0, 1))?),
+        Relation::Same
+    );
+    assert_eq!(
+        entry.sites[0].graph.get(graph_edge((1, 0))?),
+        Relation::Same
+    );
     match entry.verdict {
         Verdict::Refused { closure, cycle, .. } => {
             assert_eq!(closure.len(), 2);
             assert_eq!(cycle.path, vec![0, 0]);
-            assert_eq!(cycle.graph.get(0, 0), Relation::Same);
-            assert_eq!(cycle.graph.get(1, 1), Relation::Same);
+            assert_eq!(cycle.graph.get(graph_edge((0, 0))?), Relation::Same);
+            assert_eq!(cycle.graph.get(graph_edge((1, 1))?), Relation::Same);
         }
         other => {
             return Err(std::format!(

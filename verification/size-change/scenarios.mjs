@@ -1,4 +1,4 @@
-// Execute the size-change conformance scenarios REC-SC-01…REC-SC-04 (#101) through the production
+// Execute the size-change conformance scenarios REC-SC-01…REC-SC-07 (#101) through the production
 // framed session of the CLI built from the checked-out commit, and retain a receipt with every
 // report and certificate.
 //

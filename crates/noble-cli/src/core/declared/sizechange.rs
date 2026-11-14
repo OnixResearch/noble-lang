@@ -174,11 +174,15 @@ fn graph_json(
 ) -> crate::workflow::encoding::Json {
     use crate::workflow::encoding::{string, Json};
     Json::Array(
-        (0..measure_count)
-            .map(|from| {
+        graph
+            .relations
+            .iter()
+            .take(measure_count)
+            .map(|row| {
                 Json::Array(
-                    (0..measure_count)
-                        .map(|to| string(graph.get(from, to).spelling()))
+                    row.iter()
+                        .take(measure_count)
+                        .map(|relation| string(relation.spelling()))
                         .collect(),
                 )
             })
