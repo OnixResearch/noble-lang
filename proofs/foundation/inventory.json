@@ -12502,6 +12502,18 @@
       "claim": "committing a captured plan publishes exactly the local principal-pair image and retained worklist"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.Plan.commit_frame_agent",
+      "phase": 1,
+      "role": "representation",
+      "claim": "agents outside a plan's consumed pair and declared result image are untouched by commit"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.commit_frame_wire",
+      "phase": 1,
+      "role": "representation",
+      "claim": "wires outside a plan's captured two-way boundary and declared writes are untouched by commit"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.Plan.precommit_stutters",
       "phase": 1,
       "role": "abstract-reduction-step",
@@ -12682,6 +12694,8 @@
     "NobleFoundation.PackedLayoutEncoded.decodeListPairs_encode_append",
     "NobleFoundation.PackedLayoutEncoded.decodeTablesPrefix_encodeTables_append",
     "NobleFoundation.PackedLayoutEncoded.decodeInputPrefix_encodeInput_append",
-    "NobleFoundation.PackedLayoutEncoded.decodeInputPrefix_encodeInput"
+    "NobleFoundation.PackedLayoutEncoded.decodeInputPrefix_encodeInput",
+    "NobleFoundation.NetI64Plans.insert_frame",
+    "NobleFoundation.NetI64Plans.erase_frame"
   ]
 }

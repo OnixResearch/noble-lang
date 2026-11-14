@@ -3878,6 +3878,11 @@ reservation counts. Commit applies those captured fields to the HNet maps;
 the compiled-image equation identifies that update with the vendored HNet
 worklist firing. Its pre-commit phases are observational stutters; commit
 refines to one `CStep` and publishes exactly the captured local pair list.
+The `Plan.commit_frame_agent` and `Plan.commit_frame_wire` theorems additionally
+prove that commit leaves the map lookup at each agent or port outside its
+consumed/result or captured-boundary/write footprint unchanged, respectively.
+The wire frame excludes both directions of each captured boundary edge; it
+does not assume away any otherwise valid local loop in the inets model.
 
 The Lean model, Rust implementation correspondence, and finite Rust tests are
 separate claims. The Lean proof establishes the inets worklist model only; it

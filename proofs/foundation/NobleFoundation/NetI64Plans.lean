@@ -139,6 +139,59 @@ def Plan.commit (H : HNet NetSym) (p : Plan) (rest : List (Id × Id)) : HNet Net
     free := H.free
     work := p.newlyActive ++ rest }
 
+/-- A sequence of map inserts leaves keys outside the declared image unchanged. -/
+private theorem insert_frame {K V : Type} [BEq K] [LawfulBEq K] [Hashable K] [DecidableEq K]
+    (entries : List (K × V)) (base : Std.HashMap K V) (key : K)
+    (outside : ∀ entry ∈ entries, entry.1 ≠ key) :
+    (entries.foldl (fun m entry => m.insert entry.1 entry.2) base)[key]? = base[key]? := by
+  induction entries generalizing base with
+  | nil => rfl
+  | cons entry rest ih =>
+    have outsideRest : ∀ e ∈ rest, e.1 ≠ key := by
+      intro e he
+      exact outside e (List.mem_cons_of_mem _ he)
+    simp only [List.foldl_cons]
+    rw [ih (base := base.insert entry.1 entry.2) outsideRest, hget_insert]
+    simp [outside entry (by simp)]
+
+/-- A sequence of map erases leaves keys outside the captured boundary unchanged. -/
+private theorem erase_frame {K V : Type} [BEq K] [LawfulBEq K] [Hashable K] [DecidableEq K]
+    (entries : List (K × V)) (base : Std.HashMap K V) (key : K)
+    (outside : ∀ entry ∈ entries, entry.1 ≠ key) :
+    (entries.foldl (fun m entry => m.erase entry.1) base)[key]? = base[key]? := by
+  induction entries generalizing base with
+  | nil => rfl
+  | cons entry rest ih =>
+    have outsideRest : ∀ e ∈ rest, e.1 ≠ key := by
+      intro e he
+      exact outside e (List.mem_cons_of_mem _ he)
+    simp only [List.foldl_cons]
+    rw [ih (base := base.erase entry.1) outsideRest, hget_erase]
+    simp [outside entry (by simp)]
+
+/-- A plan leaves every agent outside the consumed pair and the result image untouched. -/
+theorem Plan.commit_frame_agent (H : HNet NetSym) (p : Plan)
+    (rest : List (Id × Id)) (id : Id)
+    (left : id ≠ p.redex.1) (right : id ≠ p.redex.2.1)
+    (outside : ∀ entry ∈ p.initializedAgents, entry.1 ≠ id) :
+    (Plan.commit H p rest).agents[id]? = H.agents[id]? := by
+  change (p.initializedAgents.foldl (fun m entry => m.insert entry.1 entry.2)
+    ((H.agents.erase p.redex.1).erase p.redex.2.1))[id]? = H.agents[id]?
+  rw [insert_frame _ _ _ outside, hget_erase, hget_erase]
+  simp [Ne.symm left, Ne.symm right]
+
+/-- A plan leaves every wire outside its captured boundary and declared writes untouched. -/
+theorem Plan.commit_frame_wire (H : HNet NetSym) (p : Plan)
+    (rest : List (Id × Id)) (port : Port)
+    (oldOutside : ∀ entry ∈ p.capturedBoundary ++
+      p.capturedBoundary.map (fun edge => (edge.2, edge.1)), entry.1 ≠ port)
+    (newOutside : ∀ entry ∈ p.wireWrites, entry.1 ≠ port) :
+    (Plan.commit H p rest).wires[port]? = H.wires[port]? := by
+  change (p.wireWrites.foldl (fun m entry => m.insert entry.1 entry.2)
+    ((p.capturedBoundary ++ p.capturedBoundary.map (fun edge => (edge.2, edge.1))).foldl
+      (fun m entry => m.erase entry.1) H.wires))[port]? = H.wires[port]?
+  rw [insert_frame _ _ _ newOutside, erase_frame _ _ _ oldOutside]
+
 /-- Executing a compiled plan image is exactly the corresponding inets worklist firing. -/
 theorem Plan.compile_commit (H : HNet NetSym) (r : XRedex NetSym)
     (hRule : NetI64.xRule r.2.2.1 r.2.2.2.1 = some r.2.2.2.2)
