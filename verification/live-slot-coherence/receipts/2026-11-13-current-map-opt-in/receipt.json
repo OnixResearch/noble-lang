@@ -1,0 +1,1126 @@
+{
+  "schema": "noble-live-slot-relocation-receipt/v1",
+  "measured_on": "2026-11-13",
+  "source_commit": "a14b1ee89ef74d212acaac7017db14eb0126e4c7",
+  "claim": "implementation-side live-slot event-relocation observations for issue #47; not an independently proved model/runtime correspondence and not a conformance promotion",
+  "model": {
+    "theorems": [
+      "NobleFoundation.LiveDispatch.coherent_pins_emit_exactly_once",
+      "NobleFoundation.LiveDispatch.current_map_selection_duplicates_and_omits",
+      "NobleFoundation.LiveDispatch.a_root_pinned_between_sequential_publications_can_mix",
+      "NobleFoundation.LiveDispatch.denials_only_truncate"
+    ],
+    "retained_receipt": {
+      "directory": "verification/foundation/receipts/1d4113e6c",
+      "theorem_count": 563,
+      "clean_source": true
+    },
+    "does_not_establish": "that the selected runtime behaves as modelled"
+  },
+  "implementation_observation": {
+    "caller_callee_relocation": {
+      "lane": "crates/noble-cli/tests/live_slot_caller_emits.mjs",
+      "argv": [
+        "node",
+        "/home/brittonr/.cache/noble-iss/scratch/live-47c/noble-default-opt-in"
+      ],
+      "status": 0,
+      "stdout_sha256": "559be60324543a902ea7eb08e0251fbdc5c27c495d692704ce92abd7f6297ac7",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "observed": {
+        "old": {
+          "name": "reloc-caller-emits",
+          "epoch": "1",
+          "rootSite": {
+            "effects": [
+              "test.emit",
+              "live.dispatch"
+            ],
+            "input": [
+              "I64",
+              "LiveRef([I64]->[I64]!{test.emit})"
+            ],
+            "instruction": "slot.invoke",
+            "output": [
+              "I64"
+            ],
+            "siteId": 0
+          },
+          "exit": 0,
+          "rootEpoch": "1",
+          "stack": [
+            {
+              "kind": 1,
+              "value": "21"
+            }
+          ],
+          "guestRequests": 3,
+          "operations": [
+            "dispatch:A",
+            "effect:A",
+            "dispatch:E"
+          ],
+          "effects": [
+            {
+              "slotId": "A",
+              "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+              "definitionId": null,
+              "request": "relocated",
+              "response": "emitted:relocated",
+              "rootEpoch": "1",
+              "allowed": true
+            }
+          ],
+          "dispatches": [
+            {
+              "slotId": "A",
+              "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121"
+            },
+            {
+              "slotId": "E",
+              "programValueId": "artifact:fdf6696cea3c8404a869ef38002d297d53f77266a3444829bb5d436732cdbe78:cell:4112"
+            }
+          ]
+        },
+        "next": {
+          "name": "reloc-callee-emits",
+          "epoch": "1",
+          "rootSite": {
+            "effects": [
+              "test.emit",
+              "live.dispatch"
+            ],
+            "input": [
+              "I64",
+              "LiveRef([I64]->[I64]!{test.emit})"
+            ],
+            "instruction": "slot.invoke",
+            "output": [
+              "I64"
+            ],
+            "siteId": 0
+          },
+          "exit": 0,
+          "rootEpoch": "1",
+          "stack": [
+            {
+              "kind": 1,
+              "value": "21"
+            }
+          ],
+          "guestRequests": 3,
+          "operations": [
+            "dispatch:A",
+            "dispatch:E",
+            "effect:E"
+          ],
+          "effects": [
+            {
+              "slotId": "E",
+              "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4108",
+              "definitionId": null,
+              "request": "relocated",
+              "response": "emitted:relocated",
+              "rootEpoch": "1",
+              "allowed": true
+            }
+          ],
+          "dispatches": [
+            {
+              "slotId": "A",
+              "programValueId": "artifact:97a96d585a45a75dfddd54364aea08278dd51c71bcb84978ec83dd188328e837:cell:4123"
+            },
+            {
+              "slotId": "E",
+              "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4108"
+            }
+          ]
+        },
+        "omission": {
+          "name": "reloc-both-inert",
+          "epoch": "1",
+          "rootSite": {
+            "effects": [
+              "test.emit",
+              "live.dispatch"
+            ],
+            "input": [
+              "I64",
+              "LiveRef([I64]->[I64]!{test.emit})"
+            ],
+            "instruction": "slot.invoke",
+            "output": [
+              "I64"
+            ],
+            "siteId": 0
+          },
+          "exit": 0,
+          "rootEpoch": "1",
+          "stack": [
+            {
+              "kind": 1,
+              "value": "21"
+            }
+          ],
+          "guestRequests": 2,
+          "operations": [
+            "dispatch:A",
+            "dispatch:E"
+          ],
+          "effects": [],
+          "dispatches": [
+            {
+              "slotId": "A",
+              "programValueId": "artifact:97a96d585a45a75dfddd54364aea08278dd51c71bcb84978ec83dd188328e837:cell:4123"
+            },
+            {
+              "slotId": "E",
+              "programValueId": "artifact:fdf6696cea3c8404a869ef38002d297d53f77266a3444829bb5d436732cdbe78:cell:4112"
+            }
+          ]
+        }
+      }
+    },
+    "coherent_map_retention": {
+      "lane": "crates/noble-cli/tests/live_slot_coherent_maps.mjs",
+      "argv": [
+        "node",
+        "/home/brittonr/.cache/noble-iss/scratch/live-47c/noble-default-opt-in"
+      ],
+      "status": 0,
+      "stdout_sha256": "46f0b8fc273acad826c6497228fdd1106616e2d0ae6b9c1c69ebdb8a8c73a136",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "observed": {
+        "leafFirstCounts": {
+          "dispatches": 1,
+          "effects": 1
+        },
+        "callerFirstCounts": {
+          "dispatches": 1,
+          "effects": 1
+        },
+        "pinnedEpoch": "2",
+        "heldPublicationOutcome": "published",
+        "publishedEpoch": "3",
+        "heldRootCounts": {
+          "dispatches": 1,
+          "effects": 1
+        },
+        "heldRootDefinition": "checked:0:1:2",
+        "freshRootCounts": {
+          "dispatches": 1,
+          "effects": 1
+        },
+        "freshRootDefinition": "checked:2:1:5",
+        "withoutCompareAndSetOutcome": "stale-reject",
+        "halfPublishedOutcome": "execution-failed",
+        "halfPublishedRows": 0,
+        "halfPublishedSessionState": "terminated-after-guest-failure",
+        "omissionCounts": {
+          "dispatches": 1,
+          "effects": 0
+        }
+      }
+    },
+    "sequential_publication_mixed_pair": {
+      "allOld": {
+        "epoch": "1",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "21"
+          }
+        ],
+        "dispatches": [
+          {
+            "slotId": "A",
+            "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+            "definitionId": null,
+            "policyEpoch": "1"
+          },
+          {
+            "slotId": "E",
+            "programValueId": "artifact:fdf6696cea3c8404a869ef38002d297d53f77266a3444829bb5d436732cdbe78:cell:4112",
+            "definitionId": null,
+            "policyEpoch": "1"
+          }
+        ],
+        "effects": [
+          {
+            "slotId": "A",
+            "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+            "definitionId": null,
+            "request": "relocated",
+            "response": "emitted:relocated",
+            "allowed": true,
+            "policyEpoch": "1"
+          }
+        ]
+      },
+      "mixed": {
+        "epoch": "2",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "21"
+          }
+        ],
+        "dispatches": [
+          {
+            "slotId": "A",
+            "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+            "definitionId": null,
+            "policyEpoch": "2"
+          },
+          {
+            "slotId": "E",
+            "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4106",
+            "definitionId": "checked:0:1:1",
+            "policyEpoch": "2"
+          }
+        ],
+        "effects": [
+          {
+            "slotId": "A",
+            "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+            "definitionId": null,
+            "request": "relocated",
+            "response": "emitted:relocated",
+            "allowed": true,
+            "policyEpoch": "2"
+          },
+          {
+            "slotId": "E",
+            "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4106",
+            "definitionId": "checked:0:1:1",
+            "request": "relocated",
+            "response": "emitted:relocated",
+            "allowed": true,
+            "policyEpoch": "2"
+          }
+        ]
+      },
+      "allNew": {
+        "epoch": "3",
+        "stack": [
+          {
+            "kind": 1,
+            "value": "21"
+          }
+        ],
+        "dispatches": [
+          {
+            "slotId": "A",
+            "programValueId": "artifact:97a96d585a45a75dfddd54364aea08278dd51c71bcb84978ec83dd188328e837:cell:4123",
+            "definitionId": null,
+            "policyEpoch": "3"
+          },
+          {
+            "slotId": "E",
+            "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4106",
+            "definitionId": "checked:0:1:1",
+            "policyEpoch": "3"
+          }
+        ],
+        "effects": [
+          {
+            "slotId": "E",
+            "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4106",
+            "definitionId": "checked:0:1:1",
+            "request": "relocated",
+            "response": "emitted:relocated",
+            "allowed": true,
+            "policyEpoch": "3"
+          }
+        ]
+      },
+      "leafPublication": "2",
+      "callerPublication": "3"
+    },
+    "pinned_dispatch_control": {
+      "lane": "crates/noble-cli/tests/live_slot_relocation_controls.mjs",
+      "argv": [
+        "node",
+        "/home/brittonr/.cache/noble-iss/scratch/live-47c/noble-default-opt-in"
+      ],
+      "status": 0,
+      "stdout_sha256": "5cc02cc33f07e78680afcac974bf6e4f9629ca58fb290499e157d6bc9ef95959",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "observed": {
+        "mode": "pinned",
+        "sequential": {
+          "allOld": {
+            "epoch": "1",
+            "stack": [
+              {
+                "kind": 1,
+                "value": "21"
+              }
+            ],
+            "dispatches": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "policyEpoch": "1"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:fdf6696cea3c8404a869ef38002d297d53f77266a3444829bb5d436732cdbe78:cell:4112",
+                "definitionId": null,
+                "policyEpoch": "1"
+              }
+            ],
+            "effects": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "1"
+              }
+            ]
+          },
+          "mixed": {
+            "epoch": "2",
+            "stack": [
+              {
+                "kind": 1,
+                "value": "21"
+              }
+            ],
+            "dispatches": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "policyEpoch": "2"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4106",
+                "definitionId": "checked:0:1:1",
+                "policyEpoch": "2"
+              }
+            ],
+            "effects": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "2"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4106",
+                "definitionId": "checked:0:1:1",
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "2"
+              }
+            ]
+          },
+          "allNew": {
+            "epoch": "3",
+            "stack": [
+              {
+                "kind": 1,
+                "value": "21"
+              }
+            ],
+            "dispatches": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:97a96d585a45a75dfddd54364aea08278dd51c71bcb84978ec83dd188328e837:cell:4123",
+                "definitionId": null,
+                "policyEpoch": "3"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4106",
+                "definitionId": "checked:0:1:1",
+                "policyEpoch": "3"
+              }
+            ],
+            "effects": [
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4106",
+                "definitionId": "checked:0:1:1",
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "3"
+              }
+            ]
+          },
+          "leafPublication": "2",
+          "callerPublication": "3"
+        },
+        "duplicate": {
+          "before": {
+            "epoch": "1",
+            "stack": [
+              {
+                "kind": 1,
+                "value": "21"
+              }
+            ],
+            "dispatches": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "policyEpoch": "1"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:fdf6696cea3c8404a869ef38002d297d53f77266a3444829bb5d436732cdbe78:cell:4112",
+                "definitionId": null,
+                "policyEpoch": "1"
+              }
+            ],
+            "effects": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "1"
+              }
+            ]
+          },
+          "held": {
+            "epoch": "1",
+            "stack": [
+              {
+                "kind": 1,
+                "value": "21"
+              }
+            ],
+            "dispatches": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "policyEpoch": "1"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:fdf6696cea3c8404a869ef38002d297d53f77266a3444829bb5d436732cdbe78:cell:4112",
+                "definitionId": null,
+                "policyEpoch": "1"
+              }
+            ],
+            "effects": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "1"
+              }
+            ]
+          },
+          "fresh": {
+            "epoch": "3",
+            "stack": [
+              {
+                "kind": 1,
+                "value": "21"
+              }
+            ],
+            "dispatches": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:97a96d585a45a75dfddd54364aea08278dd51c71bcb84978ec83dd188328e837:cell:4123",
+                "definitionId": null,
+                "policyEpoch": "3"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4106",
+                "definitionId": "checked:0:1:1",
+                "policyEpoch": "3"
+              }
+            ],
+            "effects": [
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4106",
+                "definitionId": "checked:0:1:1",
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "3"
+              }
+            ]
+          },
+          "oldCaller": "callerEmits",
+          "oldLeaf": "leafInert",
+          "nextCaller": "callerDelegates",
+          "nextLeaf": "leafEmitting",
+          "pinnedEpoch": "1",
+          "publishedEpoch": "3",
+          "mode": "pinned",
+          "name": "duplicate"
+        },
+        "omission": {
+          "before": {
+            "epoch": "1",
+            "stack": [
+              {
+                "kind": 1,
+                "value": "21"
+              }
+            ],
+            "dispatches": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:97a96d585a45a75dfddd54364aea08278dd51c71bcb84978ec83dd188328e837:cell:4123",
+                "definitionId": null,
+                "policyEpoch": "1"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4108",
+                "definitionId": null,
+                "policyEpoch": "1"
+              }
+            ],
+            "effects": [
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4108",
+                "definitionId": null,
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "1"
+              }
+            ]
+          },
+          "held": {
+            "epoch": "1",
+            "stack": [
+              {
+                "kind": 1,
+                "value": "21"
+              }
+            ],
+            "dispatches": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:97a96d585a45a75dfddd54364aea08278dd51c71bcb84978ec83dd188328e837:cell:4123",
+                "definitionId": null,
+                "policyEpoch": "1"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4108",
+                "definitionId": null,
+                "policyEpoch": "1"
+              }
+            ],
+            "effects": [
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4108",
+                "definitionId": null,
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "1"
+              }
+            ]
+          },
+          "fresh": {
+            "epoch": "3",
+            "stack": [
+              {
+                "kind": 1,
+                "value": "21"
+              }
+            ],
+            "dispatches": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "policyEpoch": "3"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:fdf6696cea3c8404a869ef38002d297d53f77266a3444829bb5d436732cdbe78:cell:4112",
+                "definitionId": null,
+                "policyEpoch": "3"
+              }
+            ],
+            "effects": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "3"
+              }
+            ]
+          },
+          "oldCaller": "callerDelegates",
+          "oldLeaf": "leafEmitting",
+          "nextCaller": "callerEmits",
+          "nextLeaf": "leafInert",
+          "pinnedEpoch": "1",
+          "publishedEpoch": "3",
+          "mode": "pinned",
+          "name": "omission"
+        }
+      }
+    },
+    "deliberately_broken_current_map_control": {
+      "lane": "crates/noble-cli/tests/live_slot_relocation_controls.mjs",
+      "argv": [
+        "node",
+        "/home/brittonr/.cache/noble-iss/scratch/live-47c/noble-test-current-map-opt-in",
+        "current-map"
+      ],
+      "status": 0,
+      "stdout_sha256": "4992ab0cf682df82b9cfb66c33214563107189b991f217e9e5ced1ccedc1a571",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "observed": {
+        "mode": "current-map",
+        "sequential": {
+          "allOld": {
+            "epoch": "1",
+            "stack": [
+              {
+                "kind": 1,
+                "value": "21"
+              }
+            ],
+            "dispatches": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "policyEpoch": "1"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:fdf6696cea3c8404a869ef38002d297d53f77266a3444829bb5d436732cdbe78:cell:4112",
+                "definitionId": null,
+                "policyEpoch": "1"
+              }
+            ],
+            "effects": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "1"
+              }
+            ]
+          },
+          "mixed": {
+            "epoch": "2",
+            "stack": [
+              {
+                "kind": 1,
+                "value": "21"
+              }
+            ],
+            "dispatches": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "policyEpoch": "2"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4106",
+                "definitionId": "checked:0:1:1",
+                "policyEpoch": "2"
+              }
+            ],
+            "effects": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "2"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4106",
+                "definitionId": "checked:0:1:1",
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "2"
+              }
+            ]
+          },
+          "allNew": {
+            "epoch": "3",
+            "stack": [
+              {
+                "kind": 1,
+                "value": "21"
+              }
+            ],
+            "dispatches": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:97a96d585a45a75dfddd54364aea08278dd51c71bcb84978ec83dd188328e837:cell:4123",
+                "definitionId": null,
+                "policyEpoch": "3"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4106",
+                "definitionId": "checked:0:1:1",
+                "policyEpoch": "3"
+              }
+            ],
+            "effects": [
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4106",
+                "definitionId": "checked:0:1:1",
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "3"
+              }
+            ]
+          },
+          "leafPublication": "2",
+          "callerPublication": "3"
+        },
+        "duplicate": {
+          "before": {
+            "epoch": "1",
+            "stack": [
+              {
+                "kind": 1,
+                "value": "21"
+              }
+            ],
+            "dispatches": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "policyEpoch": "1"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:fdf6696cea3c8404a869ef38002d297d53f77266a3444829bb5d436732cdbe78:cell:4112",
+                "definitionId": null,
+                "policyEpoch": "1"
+              }
+            ],
+            "effects": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "1"
+              }
+            ]
+          },
+          "held": {
+            "epoch": "1",
+            "stack": [
+              {
+                "kind": 1,
+                "value": "21"
+              }
+            ],
+            "dispatches": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "policyEpoch": "1"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4106",
+                "definitionId": "checked:0:1:1",
+                "policyEpoch": "1"
+              }
+            ],
+            "effects": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "1"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4106",
+                "definitionId": "checked:0:1:1",
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "1"
+              }
+            ]
+          },
+          "fresh": {
+            "epoch": "3",
+            "stack": [
+              {
+                "kind": 1,
+                "value": "21"
+              }
+            ],
+            "dispatches": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:97a96d585a45a75dfddd54364aea08278dd51c71bcb84978ec83dd188328e837:cell:4123",
+                "definitionId": null,
+                "policyEpoch": "3"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4106",
+                "definitionId": "checked:0:1:1",
+                "policyEpoch": "3"
+              }
+            ],
+            "effects": [
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4106",
+                "definitionId": "checked:0:1:1",
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "3"
+              }
+            ]
+          },
+          "oldCaller": "callerEmits",
+          "oldLeaf": "leafInert",
+          "nextCaller": "callerDelegates",
+          "nextLeaf": "leafEmitting",
+          "pinnedEpoch": "1",
+          "publishedEpoch": "3",
+          "mode": "current-map",
+          "name": "duplicate"
+        },
+        "omission": {
+          "before": {
+            "epoch": "1",
+            "stack": [
+              {
+                "kind": 1,
+                "value": "21"
+              }
+            ],
+            "dispatches": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:97a96d585a45a75dfddd54364aea08278dd51c71bcb84978ec83dd188328e837:cell:4123",
+                "definitionId": null,
+                "policyEpoch": "1"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4108",
+                "definitionId": null,
+                "policyEpoch": "1"
+              }
+            ],
+            "effects": [
+              {
+                "slotId": "E",
+                "programValueId": "artifact:5b4a4ec123981f50ea12f6f68e0bc7394fe4bc9825f1e3145c6e242f8508356f:cell:4108",
+                "definitionId": null,
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "1"
+              }
+            ]
+          },
+          "held": {
+            "epoch": "1",
+            "stack": [
+              {
+                "kind": 1,
+                "value": "21"
+              }
+            ],
+            "dispatches": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:97a96d585a45a75dfddd54364aea08278dd51c71bcb84978ec83dd188328e837:cell:4123",
+                "definitionId": null,
+                "policyEpoch": "1"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:fdf6696cea3c8404a869ef38002d297d53f77266a3444829bb5d436732cdbe78:cell:4112",
+                "definitionId": null,
+                "policyEpoch": "1"
+              }
+            ],
+            "effects": []
+          },
+          "fresh": {
+            "epoch": "3",
+            "stack": [
+              {
+                "kind": 1,
+                "value": "21"
+              }
+            ],
+            "dispatches": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "policyEpoch": "3"
+              },
+              {
+                "slotId": "E",
+                "programValueId": "artifact:fdf6696cea3c8404a869ef38002d297d53f77266a3444829bb5d436732cdbe78:cell:4112",
+                "definitionId": null,
+                "policyEpoch": "3"
+              }
+            ],
+            "effects": [
+              {
+                "slotId": "A",
+                "programValueId": "artifact:c70b7c7b0135bb3d94759c7b21a9f08adcae03f8fc12d768fec84d86c6ea54b5:cell:4121",
+                "definitionId": null,
+                "request": "relocated",
+                "response": "emitted:relocated",
+                "allowed": true,
+                "policyEpoch": "3"
+              }
+            ]
+          },
+          "oldCaller": "callerDelegates",
+          "oldLeaf": "leafEmitting",
+          "nextCaller": "callerEmits",
+          "nextLeaf": "leafInert",
+          "pinnedEpoch": "1",
+          "publishedEpoch": "3",
+          "mode": "current-map",
+          "name": "omission"
+        }
+      }
+    },
+    "does_not_establish": "a proof that the Lean model corresponds to the JavaScript runtime outside these measured fixtures"
+  },
+  "host_correspondence": {
+    "binaries": [
+      {
+        "path": "/home/brittonr/.cache/noble-iss/scratch/live-47c/noble-default-opt-in",
+        "sha256": "e784470dbc3ef55dede1be3ddd9a0f91bc309acd672b43eb9c95680c7d13ddd4"
+      },
+      {
+        "path": "/home/brittonr/.cache/noble-iss/scratch/live-47c/noble-test-current-map-opt-in",
+        "sha256": "624bddd8da895726b83d9514ca295ce478f26dc48a1109e4080dfbf7d4e61e53"
+      }
+    ],
+    "test_only_marker": "noble-test-current-map-seam/v1",
+    "marker_presence": [
+      {
+        "binary_sha256": "e784470dbc3ef55dede1be3ddd9a0f91bc309acd672b43eb9c95680c7d13ddd4",
+        "present": false
+      },
+      {
+        "binary_sha256": "624bddd8da895726b83d9514ca295ce478f26dc48a1109e4080dfbf7d4e61e53",
+        "present": true
+      }
+    ],
+    "source_files": [
+      {
+        "path": "crates/noble-cli/Cargo.toml",
+        "sha256": "bbe29fbfed58575dc59dc5498dbee188e9505f9147face8234c13629312de339"
+      },
+      {
+        "path": "crates/noble-cli/src/core/worker.rs",
+        "sha256": "2fd3e8ccc8b3ae8b3177a40acce9615e05a665104520727f198c2949101c11e2"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot.rs",
+        "sha256": "c23c15752485c115c2243cd12b7ead38e00bb310750d0c66357651816f453b4c"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_caller_emits.mjs",
+        "sha256": "f65329ae24bc0c9164940cf544bf130eeca79a35d952c33ccdb8241d08e47a06"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_coherent_maps.mjs",
+        "sha256": "ca050321563c2ede42372689036ce29f6843fbcdb32f958a1d26b9bed4d18f70"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_relocation_controls.mjs",
+        "sha256": "89b4a2ba9417642f5f83039a82fca7d0e06a83ec3fb1fcbc93342208bd8db1e5"
+      },
+      {
+        "path": "crates/noble-cli/tests/live_slot_resource_ref_cli.mjs",
+        "sha256": "0b9c588fbb19fe1b479a57331b60a7b2ad87f2a225ab474a2fffb22e013204a9"
+      },
+      {
+        "path": "crates/noble-cli/src/core/runtime/slot-registry.mjs",
+        "sha256": "67fe4007d69b0592fcf2ae70c0db17293d09275c77ea1cb09e476c1b7ee9a10a"
+      },
+      {
+        "path": "proofs/foundation/NobleFoundation/LiveDispatch.lean",
+        "sha256": "668f572e09ff40d7e233d613c733120e010ac34e1e37f77e8854a6dca75a1d96"
+      },
+      {
+        "path": "proofs/foundation/inventory.json",
+        "sha256": "28d1e396cde5b1b4fc393d678ea18413b5fef5b51b7beea91a07f090c8413f4c"
+      },
+      {
+        "path": "verification/live-slot-coherence/README.md",
+        "sha256": "9da4d1c66cfe9f47289ac3549058f38a56e5b84ff8c805ec1c8a290d5123b183"
+      },
+      {
+        "path": "verification/live-slot-coherence/receipt-2026-11-13.mjs",
+        "sha256": "b1aede837691c887ca70e687dc099feb340f9207dbae44645190f3b72955637a"
+      }
+    ],
+    "does_not_establish": "behavior of other binaries, source revisions, or authority shapes"
+  },
+  "non_claims": [
+    "the current-map implementation behavior is measured only in a binary built with the existing non-default live-test-barrier feature and explicitly selected by the current-map lane",
+    "the default selected CLI excludes the test-only current-map seam marker; release builds must not enable that feature",
+    "the three event traces are finite runtime observations, not a universal property or a Lean-to-runtime correspondence proof",
+    "no LSLOT conformance case is promoted"
+  ]
+}

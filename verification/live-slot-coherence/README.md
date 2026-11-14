@@ -66,5 +66,54 @@ extra events. It is a finite control on one build, not a correspondence proof be
 A caller version that both emits and dispatches is expressible after all (an earlier recon said
 callers never emit; that holds only for a root frame).
 `crates/noble-cli/tests/live_slot_caller_emits.mjs` moves the distinguished event from caller
-version `A` into callee version `E`, with identical stack results and reflected sites, and runs
+version `A` to callee version `E`, with identical stack results and reflected sites, and runs
 in the `live_slot` test target.
+
+## Issue #47 follow-up (2026-11-13)
+
+`crates/noble-cli/tests/live_slot_caller_emits.mjs` is the exact caller/callee relocation fixture:
+the same checked caller slot `A` changes from emitting before its call to delegating, while the
+callee slot `E` changes from inert to emitting. Its asserted observation is the effect row's
+`slotId` and `programValueId`, with the same reflected root site and stack result.
+
+`crates/noble-cli/tests/live_slot_relocation_controls.mjs` measures the remaining controls:
+
+- A root pinned to a coherent all-old pair emits once, and a fresh root after both publications
+  emits once from the coherent all-new pair.
+- The test-only current-map build is held after selecting old caller `A`, then receives compatible
+  replacements of `E` and `A` during the hold. In the caller-to-callee direction, the old caller
+  and new callee each emit (two rows); in the reverse direction, the old emitting callee is
+  replaced before selection by an inert callee (zero rows). The ordinary build retains its old
+  map and emits exactly once in both cases.
+- Without the test seam, a root is actually invoked after only the callee publication and before
+  the caller publication. Its trace shows old caller `A` plus new callee `E` and two effect rows;
+  after the next publication, the all-new pair emits once. The intermediate root is a real mixed
+  compatible map, not the earlier empty-slot failed invocation.
+
+The counterfactual is isolated behind the existing Cargo feature `live-test-barrier`, which is not
+a default feature and is already the repository's explicit test-only safepoint instrumentation.
+Even in a feature-built binary, current-map selection is enabled only when the dedicated
+`current-map` control lane sets `NOBLE_LIVE_TEST_CURRENT_MAP=1`; ordinary lanes retain the pinned
+map, including under `--all-features`. The default `live_slot` test scans the selected default
+`noble` binary for the unique seam marker and requires it absent. The feature-enabled integration
+test runs the duplicate/omission lane against the deliberately broken binary. Do not enable this
+feature in shipped builds. Neither these finite observations nor the receipt prove correspondence
+with `LiveDispatch.lean`.
+
+The final source/model/artifact-bound dated receipt is
+[`receipts/2026-11-13-current-map-opt-in/receipt.json`](receipts/2026-11-13-current-map-opt-in/receipt.json).
+The earlier [`receipts/2026-11-13/receipt.json`](receipts/2026-11-13/receipt.json) is retained
+unchanged; it predates the per-lane opt-in refinement and is not evidence for the final source
+commit. The final receipt binds the clean source commit, both CLI digests, lane outputs and source
+digests while keeping model results, runtime observations and non-claims separate. Reproduce it
+from a clean commit with the pinned Node 24:
+
+```sh
+env -i PATH=<pinned Node 24 directory>:/run/current-system/sw/bin HOME=<home directory> \
+  <pinned Node 24 executable> verification/live-slot-coherence/receipt-2026-11-13.mjs \
+  <absolute path of default noble CLI> <absolute path of feature-built test CLI> \
+  <new directory outside the repository>
+```
+
+The default binary must not contain `noble-test-current-map-seam/v1`; the explicitly
+feature-built counterfactual must contain it. The receipt does not promote an LSLOT case.
