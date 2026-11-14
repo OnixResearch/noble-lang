@@ -1,0 +1,51 @@
+{
+  "schema": "noble-issue62-compiled-replay/v1",
+  "measured_on": "2026-11-14",
+  "scope": "Full NobleFoundation producer-independent replay on exactly copied, digest-pinned compiled artifacts; separate local manifest corruption controls",
+  "holds": true,
+  "lean_release": "4.35.0",
+  "tool_selection": "policy/tool-selection.json",
+  "manifest": "verification/independent-replay/olean-integrity.txt",
+  "manifest_sha256": "e984144a0108e21c46387e4c621945e98a82d246805c6fae3733acb3d1f2050c",
+  "artifact_set": {
+    "internal_oleans": 112,
+    "external_aggregates": 9
+  },
+  "integrity_controls": {
+    "source_commit": "1182857b38703434c0ed5e4c026c1e21c8e9dd8e",
+    "command": "node verification/independent-replay/replay.mjs --controls",
+    "raw_result_sha256": "d791b9b36427dee61434703eaf133fcac918964cc79e59efae7ad0836e3e9352",
+    "exit_status": 0,
+    "holds": true,
+    "intact_copy": "artifact-intact; checker not invoked",
+    "single_byte_flip": "artifact-integrity; checker not invoked",
+    "removed_artifact": "artifact-integrity; checker not invoked",
+    "extra_artifact": "artifact-integrity; checker not invoked",
+    "external_aggregate_flip": "artifact-integrity; checker not invoked"
+  },
+  "full_root": {
+    "copied_from_clean_source_commit": "1dbc2bf93628c73158a8227e000d30ab092b9445",
+    "source_commit_in_remote_runner_output": "",
+    "source_binding_note": "Only the scoped foundation project, its exact built artifacts, the replay runner and the digest manifest were copied. No Git metadata was copied. The byte-identical manifest was checked before and after transfer; the runner checked all pinned artifacts before invoking the kernel. The remote runner did not report a source commit and none is attributed to it.",
+    "command": "node verification/independent-replay/replay.mjs",
+    "raw_result_sha256": "ae169bad6865167d9c0002c60c59e7eeed81ed5be244d84c70f3afe02d28cfa4",
+    "exit_status": 0,
+    "result": "kernel-accepted",
+    "checker_invoked": true,
+    "silent": true,
+    "elapsed_ms": 104079
+  },
+  "local_resource_refusal": {
+    "source_commit": "1dbc2bf93628c73158a8227e000d30ab092b9445",
+    "runner_class": "replay-rejected",
+    "exit_status": 137,
+    "journal_line_without_host_prefix": "Out of memory: Killed process 786028 (leanchecker) total-vm:83061472kB, anon-rss:42432012kB, file-rss:268kB, shmem-rss:0kB, UID:1555 pgtables:137320kB oom_score_adj:200",
+    "classification": "global-OOM resource refusal, not a kernel verdict"
+  },
+  "non_claims": [
+    "Lean's own kernel replay is not an independent kernel implementation.",
+    "The copied remote run has no Git metadata; the runner did not itself attest the source commit.",
+    "No checker's correctness, completeness or equivalence to Lean is established.",
+    "This replay does not prove any Rust, Wasm or runtime correspondence."
+  ]
+}
