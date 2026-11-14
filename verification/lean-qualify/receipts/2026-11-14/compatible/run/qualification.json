@@ -1,0 +1,890 @@
+{
+  "schema": "noble-lean-qualification/v1",
+  "plan": "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-plan-32c909a/plan.json",
+  "plan_sha256": "8383a5ff2e854aef0f86cd8886399c296cf3613fcbaaf48f1ccf0b6851305dc3",
+  "source_revision": "bfd0fabc19e9942412a28f6f4f5fee1c6eadf133",
+  "source_tree": "90f8151724c192c0d11b9c9020cb37fb32c807cb",
+  "profile": {
+    "name": "inets-foundation",
+    "explanation": "Foundation build/inventory/axiom gate and its seeded differential replay; omits the M3/Aeneas consumer build because its checked-in Aeneas cache trace is for a different build context and rebuilding Aeneas is forbidden.",
+    "projects": [
+      "proofs/foundation"
+    ],
+    "proof_sources": [
+      "proofs/mc1"
+    ],
+    "required_checkers": [
+      "verification/foundation/check.mjs",
+      "verification/foundation/differential.mjs"
+    ],
+    "required_tools": [
+      "lean",
+      "node",
+      "quality_rust",
+      "binaryen",
+      "wasm_tools"
+    ]
+  },
+  "candidate_patch": {
+    "path": "candidate.patch",
+    "sha256": "291ac55886575011809b09e04be2141f694e44b0260569ac42d68f90e9ac4cb6"
+  },
+  "candidate_change_classes": {
+    "proposed_pin_changes": [
+      "proofs/inets/UPSTREAM.json"
+    ],
+    "proof_only_repairs": [],
+    "semantic_changes": [
+      "proofs/inets/InteractionNets.lean"
+    ],
+    "verifier_policy_changes": []
+  },
+  "proposed_pin_changes": [
+    "proofs/inets/UPSTREAM.json"
+  ],
+  "proof_only_repairs": [],
+  "semantic_changes": [
+    "proofs/inets/InteractionNets.lean"
+  ],
+  "verifier_policy_changes": [],
+  "pre_update_plan": {
+    "evaluator": "native data-only Lakefile parser; no Lakefile or package code executed",
+    "limitations": [
+      "Dynamic Lean lakefile declarations and dependencies introduced only by a newly resolved upstream package cannot be predicted by the static pre-update plan.",
+      "After the approved source diff, Lake resolution is run in the disposable proposal worktree and its complete manifest is compared exactly with this prediction."
+    ],
+    "discrepancies": [],
+    "toolchain_discrepancies": [],
+    "incomplete_upstream_configs": [
+      {
+        "side": "baseline",
+        "project": "proofs/foundation",
+        "package": "aeneas",
+        "config_path": "backends/lean/lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      },
+      {
+        "side": "baseline",
+        "project": "proofs/foundation",
+        "package": "aesop",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "baseline",
+        "project": "proofs/foundation",
+        "package": "importGraph",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "baseline",
+        "project": "proofs/foundation",
+        "package": "mathlib",
+        "config_path": "lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      },
+      {
+        "side": "baseline",
+        "project": "proofs/m3",
+        "package": "aeneas",
+        "config_path": "backends/lean/lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      },
+      {
+        "side": "baseline",
+        "project": "proofs/m3",
+        "package": "aesop",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "baseline",
+        "project": "proofs/m3",
+        "package": "importGraph",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "baseline",
+        "project": "proofs/m3",
+        "package": "mathlib",
+        "config_path": "lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/foundation",
+        "package": "aeneas",
+        "config_path": "backends/lean/lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/foundation",
+        "package": "aesop",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/foundation",
+        "package": "importGraph",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/foundation",
+        "package": "mathlib",
+        "config_path": "lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/m3",
+        "package": "aeneas",
+        "config_path": "backends/lean/lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/m3",
+        "package": "aesop",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/m3",
+        "package": "importGraph",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/m3",
+        "package": "mathlib",
+        "config_path": "lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      }
+    ]
+  },
+  "policy": {
+    "adapters": "native implementation; paranoid-lake-update and hopscotch are not used",
+    "localization": "native monotone bisection plus a complete linear scan; bisection assumes a good start and monotonic outcomes"
+  },
+  "baseline": {
+    "side": "baseline",
+    "revision": "16daeaa32cae954d902411ff5fd37497ef57e273",
+    "tree": "d8d2d846b874414232c1407cad26558d4cdc381a",
+    "toolchain": "leanprover/lean4:v4.35.0",
+    "outcome": "pass",
+    "stages": [
+      {
+        "name": "foundation-proof-inventory-axiom",
+        "command": [
+          "/run/current-system/sw/bin/env",
+          "-i",
+          "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+          "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-scratch-32c909a/worktree-baseline-16daeaa32cae-1794697361444/verification/foundation/check.mjs",
+          "--output",
+          "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-32c909a/baseline/lean-proofs"
+        ],
+        "cwd": "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-scratch-32c909a/worktree-baseline-16daeaa32cae-1794697361444",
+        "required": true,
+        "exit": 0,
+        "signal": null,
+        "stdout_sha256": "7ff859e0a3c69845c80da6658a87bcbc9f4d15730aabe869f85c8a90e4b9a42d",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log": "stages/baseline-foundation-check.log",
+        "timed_out": false
+      },
+      {
+        "name": "foundation-differential",
+        "command": [
+          "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+          "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-scratch-32c909a/worktree-baseline-16daeaa32cae-1794697361444/verification/foundation/differential.mjs",
+          "--seed",
+          "15",
+          "--count",
+          "80",
+          "--foundation",
+          "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-32c909a/baseline/lean-proofs/foundation-check.json",
+          "--output",
+          "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-32c909a/baseline/foundation-differential",
+          "--target-dir",
+          "/dev/shm/noble-iss/target/qualify-126"
+        ],
+        "cwd": "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-scratch-32c909a/worktree-baseline-16daeaa32cae-1794697361444",
+        "required": true,
+        "exit": 0,
+        "signal": null,
+        "stdout_sha256": "c399604fcc2777f77a736f78f3b0c918e56fe56c8da69738f7d8f7e213ac82a3",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log": "stages/baseline-foundation-differential.log",
+        "timed_out": false
+      },
+      {
+        "name": "foundation-differential-verify",
+        "command": [
+          "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+          "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-scratch-32c909a/worktree-baseline-16daeaa32cae-1794697361444/verification/foundation/differential.mjs",
+          "--verify",
+          "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-32c909a/baseline/foundation-differential/differential.json"
+        ],
+        "cwd": "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-scratch-32c909a/worktree-baseline-16daeaa32cae-1794697361444",
+        "required": true,
+        "exit": 0,
+        "signal": null,
+        "stdout_sha256": "8ef13a34fbd2049e5121b5069e37af2ab2e1664a836829813146ad17fc3dbcb1",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log": "stages/baseline-foundation-differential-verify.log",
+        "timed_out": false
+      }
+    ],
+    "diagnostics": [],
+    "actual_toolchain": "leanprover/lean4:v4.35.0",
+    "package_cache_isolation": "every manifest package checkout and its .lake cache are private cp -a --reflink=always copies inside the disposable worktree",
+    "executables": {
+      "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+      "node": "v24.13.0"
+    },
+    "manifests": {
+      "proofs/foundation": {
+        "resolution_method": "locked-manifest-exact-comparison",
+        "predicted_sha256": "e671b5dc2013b13457446893f6ce912e319999f1108675efaa8dfa4e0395c1e9",
+        "actual_sha256": "7b0ec9c6609ec6f055252a0eefda4d0eeec1e49cd20f340b3c8213eca36fc30e",
+        "equal": true,
+        "discrepancies": [],
+        "resolution_patch": {
+          "path": "baseline-proofs-foundation-resolution.patch",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      }
+    },
+    "proof_receipt": "baseline/lean-proofs/foundation-check.json",
+    "replay_receipt": "baseline/foundation-differential/differential.json",
+    "replay_verified": true,
+    "build_cache_changes": [
+      {
+        "kind": "proof-project",
+        "project": "proofs/foundation",
+        "package": "proofs/foundation",
+        "revision": null,
+        "changed": true,
+        "before_files": 712,
+        "after_files": 920,
+        "changed_files": 448,
+        "removed_files": 0,
+        "rebuilt_bytes": 78847331,
+        "before_cache_sha256": "cf7ef9fbb744399224140b8d32443e5e74523521abf4c74427bf619263d407d2",
+        "after_cache_sha256": "4ec525e9d1ab6cb354e9be0d069fc503811f4c9b2f6b588d372ab1836ef68b9b",
+        "changed_path_sample": [
+          "ir/NobleFoundation.c",
+          "ir/NobleFoundation.c.hash",
+          "ir/NobleFoundation.setup.json",
+          "ir/NobleFoundation/Belt.c",
+          "ir/NobleFoundation/Belt.c.hash",
+          "ir/NobleFoundation/Belt.setup.json",
+          "ir/NobleFoundation/BeltCorpus.c",
+          "ir/NobleFoundation/BeltCorpus.c.hash",
+          "ir/NobleFoundation/BeltCorpus.setup.json",
+          "ir/NobleFoundation/BeltTarget.c",
+          "ir/NobleFoundation/BeltTarget.c.hash",
+          "ir/NobleFoundation/BeltTarget.setup.json",
+          "ir/NobleFoundation/BeltTargetCorpus.c",
+          "ir/NobleFoundation/BeltTargetCorpus.c.hash",
+          "ir/NobleFoundation/BeltTargetCorpus.setup.json",
+          "ir/NobleFoundation/Binary32Binding.c",
+          "ir/NobleFoundation/Binary32Binding.c.hash",
+          "ir/NobleFoundation/Binary32Binding.setup.json",
+          "ir/NobleFoundation/Binary32Checker.c",
+          "ir/NobleFoundation/Binary32Checker.c.hash"
+        ],
+        "changed_paths_truncated": true
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "aeneas",
+        "revision": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+        "changed": false,
+        "before_files": 4303,
+        "after_files": 4303,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "6276f5e2bff9d93f428735145476fa7e21ec56d4c005120859bd086b6b0d62c2",
+        "after_cache_sha256": "6276f5e2bff9d93f428735145476fa7e21ec56d4c005120859bd086b6b0d62c2",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "mathlib",
+        "revision": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+        "changed": false,
+        "before_files": 30408,
+        "after_files": 30408,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "057e99edeb285cdddc6eebb21703f9b8035a9e060aec51291916f91aa99ad792",
+        "after_cache_sha256": "057e99edeb285cdddc6eebb21703f9b8035a9e060aec51291916f91aa99ad792",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "plausible",
+        "revision": "dfa4f38190d07c37e315953e08b90fe2d95b3c24",
+        "changed": false,
+        "before_files": 208,
+        "after_files": 208,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "be4ba7408b4d322e97bc059b4bb46803b3708fcc5a0312625fdc2e79c8eabd9a",
+        "after_cache_sha256": "be4ba7408b4d322e97bc059b4bb46803b3708fcc5a0312625fdc2e79c8eabd9a",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "LeanSearchClient",
+        "revision": "d6b4c7be5be75ec4917c873ac50c756dc1436372",
+        "changed": false,
+        "before_files": 64,
+        "after_files": 64,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "753099c11b4d4859cfb5b665dd4ca1c4e39053cd686445fc1b42faa60c6d3912",
+        "after_cache_sha256": "753099c11b4d4859cfb5b665dd4ca1c4e39053cd686445fc1b42faa60c6d3912",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "importGraph",
+        "revision": "a41f0e9a4dea23188ea9cc1c41ac9f8bbafe0b93",
+        "changed": false,
+        "before_files": 737,
+        "after_files": 737,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "d0d79b9377aab76d4d49a004ba98fca83e0696fbe93f5292e5b9edebc56c999d",
+        "after_cache_sha256": "d0d79b9377aab76d4d49a004ba98fca83e0696fbe93f5292e5b9edebc56c999d",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "proofwidgets",
+        "revision": "df72b022e558978a1c50264cfc4d7fec86fa8e04",
+        "changed": false,
+        "before_files": 314,
+        "after_files": 314,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "f76fed65fed23a9765079d9eb185c54c2bf05ac495a31136a58688d175a2bc37",
+        "after_cache_sha256": "f76fed65fed23a9765079d9eb185c54c2bf05ac495a31136a58688d175a2bc37",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "aesop",
+        "revision": "4a174c490d8707121c4a9290800489f105d85e07",
+        "changed": false,
+        "before_files": 2112,
+        "after_files": 2112,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "982107759193c15452868cfd3ecdf60d3fa566f57cec96286d4eb5d4f52daef8",
+        "after_cache_sha256": "982107759193c15452868cfd3ecdf60d3fa566f57cec96286d4eb5d4f52daef8",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "Qq",
+        "revision": "dce0ad79c486cb1fb504af04f953c3466b0c6db8",
+        "changed": false,
+        "before_files": 224,
+        "after_files": 224,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "c638b00d2fe3654e366d1a7893959645324d4096566d1dd84b106a2f06790fbd",
+        "after_cache_sha256": "c638b00d2fe3654e366d1a7893959645324d4096566d1dd84b106a2f06790fbd",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "batteries",
+        "revision": "66e469188fe07963e5cf666c7d4433f45b8131c5",
+        "changed": false,
+        "before_files": 1288,
+        "after_files": 1288,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "6b1a6e41a2a53ffc015778ce19de26c017f7fc202c6f2d9047af3eea88a6a5f4",
+        "after_cache_sha256": "6b1a6e41a2a53ffc015778ce19de26c017f7fc202c6f2d9047af3eea88a6a5f4",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "Cli",
+        "revision": "c24fe6078c630e89b489bffe59b3e20ac30d12c8",
+        "changed": false,
+        "before_files": 0,
+        "after_files": 0,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "after_cache_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      }
+    ],
+    "packages_rebuilt": [
+      {
+        "kind": "proof-project",
+        "project": "proofs/foundation",
+        "package": "proofs/foundation",
+        "revision": null,
+        "changed": true,
+        "before_files": 712,
+        "after_files": 920,
+        "changed_files": 448,
+        "removed_files": 0,
+        "rebuilt_bytes": 78847331,
+        "before_cache_sha256": "cf7ef9fbb744399224140b8d32443e5e74523521abf4c74427bf619263d407d2",
+        "after_cache_sha256": "4ec525e9d1ab6cb354e9be0d069fc503811f4c9b2f6b588d372ab1836ef68b9b",
+        "changed_path_sample": [
+          "ir/NobleFoundation.c",
+          "ir/NobleFoundation.c.hash",
+          "ir/NobleFoundation.setup.json",
+          "ir/NobleFoundation/Belt.c",
+          "ir/NobleFoundation/Belt.c.hash",
+          "ir/NobleFoundation/Belt.setup.json",
+          "ir/NobleFoundation/BeltCorpus.c",
+          "ir/NobleFoundation/BeltCorpus.c.hash",
+          "ir/NobleFoundation/BeltCorpus.setup.json",
+          "ir/NobleFoundation/BeltTarget.c",
+          "ir/NobleFoundation/BeltTarget.c.hash",
+          "ir/NobleFoundation/BeltTarget.setup.json",
+          "ir/NobleFoundation/BeltTargetCorpus.c",
+          "ir/NobleFoundation/BeltTargetCorpus.c.hash",
+          "ir/NobleFoundation/BeltTargetCorpus.setup.json",
+          "ir/NobleFoundation/Binary32Binding.c",
+          "ir/NobleFoundation/Binary32Binding.c.hash",
+          "ir/NobleFoundation/Binary32Binding.setup.json",
+          "ir/NobleFoundation/Binary32Checker.c",
+          "ir/NobleFoundation/Binary32Checker.c.hash"
+        ],
+        "changed_paths_truncated": true
+      }
+    ],
+    "rebuilt_bytes": 78847331,
+    "disposable_tree_usage": {
+      "apparent_bytes": 6045747494,
+      "allocated_bytes": 2827860992,
+      "allocated_note": "reflink-shared blocks are counted per file and may overstate unique filesystem allocation"
+    }
+  },
+  "proposal": {
+    "side": "proposal",
+    "revision": "bfd0fabc19e9942412a28f6f4f5fee1c6eadf133",
+    "tree": "90f8151724c192c0d11b9c9020cb37fb32c807cb",
+    "toolchain": "leanprover/lean4:v4.35.0",
+    "outcome": "pass",
+    "stages": [
+      {
+        "name": "foundation-proof-inventory-axiom",
+        "command": [
+          "/run/current-system/sw/bin/env",
+          "-i",
+          "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+          "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-scratch-32c909a/worktree-proposal-bfd0fabc19e9-1794697849984/verification/foundation/check.mjs",
+          "--output",
+          "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-32c909a/proposal/lean-proofs"
+        ],
+        "cwd": "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-scratch-32c909a/worktree-proposal-bfd0fabc19e9-1794697849984",
+        "required": true,
+        "exit": 0,
+        "signal": null,
+        "stdout_sha256": "005bcdd477d759a6a54ef1dc5a2c6eda150e1149b4398412769e23a0e52b0cd1",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log": "stages/proposal-foundation-check.log",
+        "timed_out": false
+      },
+      {
+        "name": "foundation-differential",
+        "command": [
+          "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+          "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-scratch-32c909a/worktree-proposal-bfd0fabc19e9-1794697849984/verification/foundation/differential.mjs",
+          "--seed",
+          "15",
+          "--count",
+          "80",
+          "--foundation",
+          "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-32c909a/proposal/lean-proofs/foundation-check.json",
+          "--output",
+          "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-32c909a/proposal/foundation-differential",
+          "--target-dir",
+          "/dev/shm/noble-iss/target/qualify-126"
+        ],
+        "cwd": "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-scratch-32c909a/worktree-proposal-bfd0fabc19e9-1794697849984",
+        "required": true,
+        "exit": 0,
+        "signal": null,
+        "stdout_sha256": "50d71a3d0e86a5097798ffdb85581ace2acc6615fc4767245a6f044456ee6aee",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log": "stages/proposal-foundation-differential.log",
+        "timed_out": false
+      },
+      {
+        "name": "foundation-differential-verify",
+        "command": [
+          "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+          "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-scratch-32c909a/worktree-proposal-bfd0fabc19e9-1794697849984/verification/foundation/differential.mjs",
+          "--verify",
+          "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-32c909a/proposal/foundation-differential/differential.json"
+        ],
+        "cwd": "/home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-scratch-32c909a/worktree-proposal-bfd0fabc19e9-1794697849984",
+        "required": true,
+        "exit": 0,
+        "signal": null,
+        "stdout_sha256": "b1769a2fac3becf45d53b18b8bb961b6289bbe9f683426a18aaf4c941f49181b",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log": "stages/proposal-foundation-differential-verify.log",
+        "timed_out": false
+      }
+    ],
+    "diagnostics": [],
+    "actual_toolchain": "leanprover/lean4:v4.35.0",
+    "package_cache_isolation": "every manifest package checkout and its .lake cache are private cp -a --reflink=always copies inside the disposable worktree",
+    "executables": {
+      "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+      "node": "v24.13.0"
+    },
+    "manifests": {
+      "proofs/foundation": {
+        "resolution_method": "locked-manifest-exact-comparison",
+        "predicted_sha256": "e671b5dc2013b13457446893f6ce912e319999f1108675efaa8dfa4e0395c1e9",
+        "actual_sha256": "7b0ec9c6609ec6f055252a0eefda4d0eeec1e49cd20f340b3c8213eca36fc30e",
+        "equal": true,
+        "discrepancies": [],
+        "resolution_patch": {
+          "path": "proposal-proofs-foundation-resolution.patch",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      }
+    },
+    "proof_receipt": "proposal/lean-proofs/foundation-check.json",
+    "replay_receipt": "proposal/foundation-differential/differential.json",
+    "replay_verified": true,
+    "build_cache_changes": [
+      {
+        "kind": "proof-project",
+        "project": "proofs/foundation",
+        "package": "proofs/foundation",
+        "revision": null,
+        "changed": true,
+        "before_files": 712,
+        "after_files": 920,
+        "changed_files": 456,
+        "removed_files": 0,
+        "rebuilt_bytes": 204195414,
+        "before_cache_sha256": "cf7ef9fbb744399224140b8d32443e5e74523521abf4c74427bf619263d407d2",
+        "after_cache_sha256": "f1e2edc0b7200c24278bfcad0557c6938be4bc0210e7a640d40b75595d83aff3",
+        "changed_path_sample": [
+          "ir/InteractionNets.c",
+          "ir/InteractionNets.c.hash",
+          "ir/InteractionNets.setup.json",
+          "ir/NobleFoundation.c",
+          "ir/NobleFoundation.c.hash",
+          "ir/NobleFoundation.setup.json",
+          "ir/NobleFoundation/Belt.c",
+          "ir/NobleFoundation/Belt.c.hash",
+          "ir/NobleFoundation/Belt.setup.json",
+          "ir/NobleFoundation/BeltCorpus.c",
+          "ir/NobleFoundation/BeltCorpus.c.hash",
+          "ir/NobleFoundation/BeltCorpus.setup.json",
+          "ir/NobleFoundation/BeltTarget.c",
+          "ir/NobleFoundation/BeltTarget.c.hash",
+          "ir/NobleFoundation/BeltTarget.setup.json",
+          "ir/NobleFoundation/BeltTargetCorpus.c",
+          "ir/NobleFoundation/BeltTargetCorpus.c.hash",
+          "ir/NobleFoundation/BeltTargetCorpus.setup.json",
+          "ir/NobleFoundation/Binary32Binding.c",
+          "ir/NobleFoundation/Binary32Binding.c.hash"
+        ],
+        "changed_paths_truncated": true
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "aeneas",
+        "revision": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+        "changed": false,
+        "before_files": 4303,
+        "after_files": 4303,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "6276f5e2bff9d93f428735145476fa7e21ec56d4c005120859bd086b6b0d62c2",
+        "after_cache_sha256": "6276f5e2bff9d93f428735145476fa7e21ec56d4c005120859bd086b6b0d62c2",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "mathlib",
+        "revision": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+        "changed": false,
+        "before_files": 30408,
+        "after_files": 30408,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "057e99edeb285cdddc6eebb21703f9b8035a9e060aec51291916f91aa99ad792",
+        "after_cache_sha256": "057e99edeb285cdddc6eebb21703f9b8035a9e060aec51291916f91aa99ad792",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "plausible",
+        "revision": "dfa4f38190d07c37e315953e08b90fe2d95b3c24",
+        "changed": false,
+        "before_files": 208,
+        "after_files": 208,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "be4ba7408b4d322e97bc059b4bb46803b3708fcc5a0312625fdc2e79c8eabd9a",
+        "after_cache_sha256": "be4ba7408b4d322e97bc059b4bb46803b3708fcc5a0312625fdc2e79c8eabd9a",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "LeanSearchClient",
+        "revision": "d6b4c7be5be75ec4917c873ac50c756dc1436372",
+        "changed": false,
+        "before_files": 64,
+        "after_files": 64,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "753099c11b4d4859cfb5b665dd4ca1c4e39053cd686445fc1b42faa60c6d3912",
+        "after_cache_sha256": "753099c11b4d4859cfb5b665dd4ca1c4e39053cd686445fc1b42faa60c6d3912",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "importGraph",
+        "revision": "a41f0e9a4dea23188ea9cc1c41ac9f8bbafe0b93",
+        "changed": false,
+        "before_files": 737,
+        "after_files": 737,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "d0d79b9377aab76d4d49a004ba98fca83e0696fbe93f5292e5b9edebc56c999d",
+        "after_cache_sha256": "d0d79b9377aab76d4d49a004ba98fca83e0696fbe93f5292e5b9edebc56c999d",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "proofwidgets",
+        "revision": "df72b022e558978a1c50264cfc4d7fec86fa8e04",
+        "changed": false,
+        "before_files": 314,
+        "after_files": 314,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "f76fed65fed23a9765079d9eb185c54c2bf05ac495a31136a58688d175a2bc37",
+        "after_cache_sha256": "f76fed65fed23a9765079d9eb185c54c2bf05ac495a31136a58688d175a2bc37",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "aesop",
+        "revision": "4a174c490d8707121c4a9290800489f105d85e07",
+        "changed": false,
+        "before_files": 2112,
+        "after_files": 2112,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "982107759193c15452868cfd3ecdf60d3fa566f57cec96286d4eb5d4f52daef8",
+        "after_cache_sha256": "982107759193c15452868cfd3ecdf60d3fa566f57cec96286d4eb5d4f52daef8",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "Qq",
+        "revision": "dce0ad79c486cb1fb504af04f953c3466b0c6db8",
+        "changed": false,
+        "before_files": 224,
+        "after_files": 224,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "c638b00d2fe3654e366d1a7893959645324d4096566d1dd84b106a2f06790fbd",
+        "after_cache_sha256": "c638b00d2fe3654e366d1a7893959645324d4096566d1dd84b106a2f06790fbd",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "batteries",
+        "revision": "66e469188fe07963e5cf666c7d4433f45b8131c5",
+        "changed": false,
+        "before_files": 1288,
+        "after_files": 1288,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "6b1a6e41a2a53ffc015778ce19de26c017f7fc202c6f2d9047af3eea88a6a5f4",
+        "after_cache_sha256": "6b1a6e41a2a53ffc015778ce19de26c017f7fc202c6f2d9047af3eea88a6a5f4",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      },
+      {
+        "kind": "dependency-package",
+        "project": "proofs/foundation",
+        "package": "Cli",
+        "revision": "c24fe6078c630e89b489bffe59b3e20ac30d12c8",
+        "changed": false,
+        "before_files": 0,
+        "after_files": 0,
+        "changed_files": 0,
+        "removed_files": 0,
+        "rebuilt_bytes": 0,
+        "before_cache_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "after_cache_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "changed_path_sample": [],
+        "changed_paths_truncated": false
+      }
+    ],
+    "packages_rebuilt": [
+      {
+        "kind": "proof-project",
+        "project": "proofs/foundation",
+        "package": "proofs/foundation",
+        "revision": null,
+        "changed": true,
+        "before_files": 712,
+        "after_files": 920,
+        "changed_files": 456,
+        "removed_files": 0,
+        "rebuilt_bytes": 204195414,
+        "before_cache_sha256": "cf7ef9fbb744399224140b8d32443e5e74523521abf4c74427bf619263d407d2",
+        "after_cache_sha256": "f1e2edc0b7200c24278bfcad0557c6938be4bc0210e7a640d40b75595d83aff3",
+        "changed_path_sample": [
+          "ir/InteractionNets.c",
+          "ir/InteractionNets.c.hash",
+          "ir/InteractionNets.setup.json",
+          "ir/NobleFoundation.c",
+          "ir/NobleFoundation.c.hash",
+          "ir/NobleFoundation.setup.json",
+          "ir/NobleFoundation/Belt.c",
+          "ir/NobleFoundation/Belt.c.hash",
+          "ir/NobleFoundation/Belt.setup.json",
+          "ir/NobleFoundation/BeltCorpus.c",
+          "ir/NobleFoundation/BeltCorpus.c.hash",
+          "ir/NobleFoundation/BeltCorpus.setup.json",
+          "ir/NobleFoundation/BeltTarget.c",
+          "ir/NobleFoundation/BeltTarget.c.hash",
+          "ir/NobleFoundation/BeltTarget.setup.json",
+          "ir/NobleFoundation/BeltTargetCorpus.c",
+          "ir/NobleFoundation/BeltTargetCorpus.c.hash",
+          "ir/NobleFoundation/BeltTargetCorpus.setup.json",
+          "ir/NobleFoundation/Binary32Binding.c",
+          "ir/NobleFoundation/Binary32Binding.c.hash"
+        ],
+        "changed_paths_truncated": true
+      }
+    ],
+    "rebuilt_bytes": 204195414,
+    "disposable_tree_usage": {
+      "apparent_bytes": 6094891887,
+      "allocated_bytes": 2844302336,
+      "allocated_note": "reflink-shared blocks are counted per file and may overstate unique filesystem allocation"
+    }
+  },
+  "localization": {
+    "status": "not-requested",
+    "probes": []
+  },
+  "target_dir": "/dev/shm/noble-iss/target/qualify-126",
+  "source_preservation": {
+    "before": {
+      "head": "32c909a31a92dbb4e93c8993e7372ab13036eb4c",
+      "tree": "65905a5e282292d01b748e19f30cec6cda030bd9",
+      "status": ""
+    },
+    "after": {
+      "head": "32c909a31a92dbb4e93c8993e7372ab13036eb4c",
+      "tree": "65905a5e282292d01b748e19f30cec6cda030bd9",
+      "status": ""
+    },
+    "unchanged": true
+  },
+  "qualification_status": "qualified",
+  "completed_at": "2026-11-14T23:24:09.856Z",
+  "report_sha256": "e04632e42d2da275a54a13a23421e8ef279035000e32f8940203109e96036cf8"
+}

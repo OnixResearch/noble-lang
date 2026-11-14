@@ -1,0 +1,22 @@
+diff --git a/proofs/inets/UPSTREAM.json b/proofs/inets/UPSTREAM.json
+index 0b574cf4..78d572b9 100644
+--- a/proofs/inets/UPSTREAM.json
++++ b/proofs/inets/UPSTREAM.json
+@@ -2,13 +2,13 @@
+   "schema": "noble-vendored-lean-library/v1",
+   "library": "InteractionNets",
+   "upstream": "https://github.com/OnixResearch/inets",
+-  "commit": "98bbb01070664e4462a35efa5d62de6f27143572",
++  "commit": "171c886606e8862aa22cfd43951dd6754901ccbd",
+   "path": "InteractionNets.lean",
+-  "sha256": "c7a35dad49822583a9ee209b47d8ba5617d5abcb5a7f9f96df05e8502f362f54",
+-  "bytes": 1926441,
++  "sha256": "efe23a75b45cef7598d05b365df2899dcf00cb65020e599883397964d72a0329",
++  "bytes": 2943085,
+   "lean_toolchain": "leanprover/lean4:v4.35.0",
+   "imports": ["Std.Data.HashMap", "Std.Data.TreeMap"],
+-  "selected": "2026-11-13, owner decision: the interaction-net issues are re-based on inets",
++  "selected": "2026-11-14 qualification fixture only; not a production pin recommendation",
+   "compiled_by": "proofs/foundation (lean_lib InteractionNets, srcDir ../inets)",
+   "verified_by": "verification/foundation/check.mjs refuses a vendored file whose SHA-256 differs from this record or that contains a forbidden construct; every foundation theorem that uses it has its transitive axioms audited",
+   "licence": "upstream carries no licence file; it is published by the same organisation as this repository"

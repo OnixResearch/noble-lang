@@ -1,0 +1,10 @@
+$ /nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node /home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-scratch-32c909a/worktree-baseline-16daeaa32cae-1794697361444/verification/foundation/differential.mjs --verify /home/brittonr/.cache/noble-iss/scratch/qualify-126/compat-final-run-32c909a/baseline/foundation-differential/differential.json
+{
+  "verified": true,
+  "receipt_tree": "d8d2d846b874414232c1407cad26558d4cdc381a",
+  "current_tree": "d8d2d846b874414232c1407cad26558d4cdc381a",
+  "clean": true,
+  "drift": []
+}
+
+--- stderr ---

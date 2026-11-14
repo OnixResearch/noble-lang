@@ -1,0 +1,1371 @@
+{
+  "schema": "noble-lean-qualification-plan/v1",
+  "created_at": "2026-11-14T22:55:59.383Z",
+  "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126",
+  "invoking_source": {
+    "head": "32c909a31a92dbb4e93c8993e7372ab13036eb4c",
+    "tree": "65905a5e282292d01b748e19f30cec6cda030bd9",
+    "status": ""
+  },
+  "profile": {
+    "name": "mc1-export",
+    "projects": [
+      "proofs/mc1"
+    ],
+    "proof_sources": [
+      "proofs/mc1"
+    ],
+    "required_checkers": [
+      "verification/mc1/gate.mjs"
+    ],
+    "required_tools": [
+      "lean",
+      "node",
+      "quality_rust"
+    ]
+  },
+  "baseline": {
+    "revision": "16daeaa32cae954d902411ff5fd37497ef57e273",
+    "profile": "mc1-export",
+    "snapshot": {
+      "revision": "16daeaa32cae954d902411ff5fd37497ef57e273",
+      "tree": "d8d2d846b874414232c1407cad26558d4cdc381a",
+      "files": {
+        "policy/lean-inputs.json": "b4a2f7832af27287bc0cb968b17f4615b821680eb5f4401a6a53b539132f2ea4",
+        "policy/tool-selection.json": "5bf44ed56b69bd159cc0b823bcba75dce2f33f0538277db86a4c5cabe46b92c9",
+        "proofs/inets/InteractionNets.lean": "c7a35dad49822583a9ee209b47d8ba5617d5abcb5a7f9f96df05e8502f362f54",
+        "proofs/inets/README.md": "2b880041594701b80551d7d5560e01faa4f0ad8aa25f9448260dba72951463e1",
+        "proofs/inets/UPSTREAM.json": "654f5532f65eadf66c5a6f8f783ed228f8648c7c0cb47b09fed79c3e8d329822",
+        "proofs/mc1/ContractGate.lean": "353dcb3acf8337b02643cfb18acd9527612d06188c82d58c4f7fcef5223fb8bd",
+        "proofs/mc1/ImplementationGate.lean": "173c9bd7be87568c47f85dfc38c8c6b2b2e66c449bc86642580815ab0ae3fc78",
+        "proofs/mc1/IntrinsicTypeWitness.lean": "127a3910e2acdffa1d97b175054ad83b59aeb84c03b748e58aa2cbafbd1156e1",
+        "proofs/mc1/NobleContractImpl.lean": "cf6f4521fc49a1524beb2a7179ff3cf022fe658161d6004bcc5022ac3f5f4c13",
+        "proofs/mc1/NobleContractImpl/Funs.lean": "f8debefbf5c164900f0963410e26d668a50befc571b0a5c7dd644a003e80e0d2",
+        "proofs/mc1/NobleContractImpl/FunsExternal.lean": "727cf16ab0d0320cb26c620b59845fa431f9ccfacab3bbe10757fcf160fbf87f",
+        "proofs/mc1/NobleContractImpl/KernelBridge.lean": "ccea950872abaabd560aaa585ec0ddc232e427fdf6894d4ed74e218c661bf52e",
+        "proofs/mc1/NobleContractImpl/Projection.lean": "e4ac835476c593bc91c79e830d0941aaddf5244303c8f7dce2a6f5bfdbc29e7b",
+        "proofs/mc1/NobleContractImpl/Statement.lean": "bc97483e5bf942e9d7039df2b135b61f8901a71a40a2bee70d94f32a6cc1b818",
+        "proofs/mc1/NobleContractImpl/StdModels.lean": "23df15f575826429ac749094a47aa24cc59070ae4ee0f81c9d2daf7df5cd7d2a",
+        "proofs/mc1/NobleContractImpl/Types.lean": "acb9f8f6998972f53e069c46a450f4840dd8cec4eaa36db8a1d330820d13f464",
+        "proofs/mc1/NobleContractImpl/TypesExternal.lean": "ac491553ab0b1685b6dc706495c6df2200556e68c00feb1f816bb296a0ff1082",
+        "proofs/mc1/NobleContracts.lean": "f975ac8220689ea0e9937480d60ad2c252d1cce2b151874c18ee618930981fc2",
+        "proofs/mc1/NobleContracts/Composition.lean": "baae47050f6d445dc7b85ebff72a6bfe40a1f96de92c310ad6ae507bcb0b1d89",
+        "proofs/mc1/NobleContracts/Examples.lean": "280088bedaac3432addc18cb03ec97659c71dca7507fd112623844a09f4ae549",
+        "proofs/mc1/NobleContracts/Expression.lean": "4638c9b146da69b5d0a545734fd5bdc690288f86d1c3a2a40a235007a70561db",
+        "proofs/mc1/NobleContracts/Model.lean": "368cad7d6d86db4b182bd6b9e2bd0d3a354559c04579e3e27b789bb69313a7c3",
+        "proofs/mc1/NobleContracts/NamedSubject.lean": "ab1a1a3e46c60fb8179f714806a2c5f3e6005d201f9e0943d340bcf571aa3d26",
+        "proofs/mc1/NobleContracts/NamedSubjectConservative.lean": "6687488747d13f13c881a81b38d9b2e94ec3b42a7247a038ee9ad98a45066ea5",
+        "proofs/mc1/NobleContracts/NamedSubjectTests.lean": "6d8ce097c124512935d48cc1ba22cffea13676f9f799c597944eed0b408ab739",
+        "proofs/mc1/NobleContracts/NamedV2.lean": "7bf6a15f6f5da56861a284ad41eae4a2957926f35e2f96437293e65cce8adaf9",
+        "proofs/mc1/NobleContracts/NamedV2Examples.lean": "4370fb90cbe3b2244683cc119574ce63515c0fa7d880188e2ad3971f8280bb7e",
+        "proofs/mc1/NobleContracts/NamedV3.lean": "3c7920a318fd10fe3ef3361b80752aa66beb5cac32d63a5bd027ef91032fcf01",
+        "proofs/mc1/NobleContracts/Obligation.lean": "13dddb8d47346ba648eb2dd372031ccd2f2e090f3312f1797a1ca567ab9cd616",
+        "proofs/mc1/NobleContracts/Rules.lean": "1d5802ddec13fcfcbba70e6c75f46ab051ea569e6f30fe92d61e3b5dec8d877b",
+        "proofs/mc1/NobleContracts/SpecQuality.lean": "5068de2a817aa0311381aa68852c1f0c9c30aed96d5a5d709809d6c448a15372",
+        "proofs/mc1/NobleContracts/Wire.lean": "403e8e662d079f92b08d4debf82ca3f7e8ab82e6ae6acd9b15188957b84d98ff",
+        "proofs/mc1/lake-manifest.json": "7b0ec9c6609ec6f055252a0eefda4d0eeec1e49cd20f340b3c8213eca36fc30e",
+        "proofs/mc1/lakefile.toml": "7518fd24bc8f4204da8002aa87a18382eecbe29583382c068485f3b75988f514",
+        "proofs/mc1/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+        "verification/ci/lean-proofs.sh": "7d3cb97cfa5c2d1a99c0f442c50838b93fa830fe708f62b6482635f1a9e37d97",
+        "verification/foundation/arithmetic.mjs": "ba98f8b1f7efad87e218011e708ccc2feee185587b1717966ec23f10dd48370f",
+        "verification/foundation/check.mjs": "a3d4afec79e70a1820f93f072867c72b4cd3855bb94dac0cd02be3e2d34f0561",
+        "verification/foundation/claims.mjs": "29a33be79ce2e8fea8239435f1a534cb343017ca68cce4b41cf4a471d6f373b2",
+        "verification/foundation/control-ids.mjs": "d374417dc2ea16cd4773b9ad84d551af4830ddb7d94bcad29d5419c6f2f93eb6",
+        "verification/foundation/differential.mjs": "c2f14df5fa9d667e49a2914c05dca241aec5c9c55acb14cb83a9c644c6f487bf",
+        "verification/foundation/emi-controls.mjs": "430c26d6535127963aebf57f5b5732372448f238b74b47fb230a844a1a28837f",
+        "verification/foundation/execution.mjs": "32cc4412522e01f9a8d668b6bdc1c5ba5fb331eb1e4558c0ff76750934eebe3a",
+        "verification/lean-qualify/README.md": "83dbbdd8ef1e2d83d18d5f95b51df434865fca34176b4cf8019f98740a797fc9",
+        "verification/lean-qualify/core.mjs": "07b11849b6a47ab1c2586e0870610b35fd7977ca8c8ab38976af018484371c2b",
+        "verification/lean-qualify/qualify.mjs": "86512f4db706b8f4ee7ea181f98e9da14c0f8997eea0e17756b50e7dcb9d334b",
+        "verification/lean-qualify/qualify.test.mjs": "999fab86d645aff11b70813d721bc075c76a1783b2437a664cdebb90bcdac421",
+        "verification/lean-source-scan.mjs": "03b3b013483c32c1e433d5fbcf72b297baf23da40dc05bec6aede2d95b6b197e",
+        "verification/m3-proof-gate.sh": "95eee303fc882818a18d9ad5304f32787acdc78317b06addab0fd09e221a6fb4",
+        "verification/mc1/gate.mjs": "df1f556c2085fcd752aa7a21e19889cf63d55f333072df6a5edceaa53596f840"
+      },
+      "projects": {
+        "proofs/mc1": {
+          "project": "proofs/mc1",
+          "manifest_path": "proofs/mc1/lake-manifest.json",
+          "manifest_sha256": "7b0ec9c6609ec6f055252a0eefda4d0eeec1e49cd20f340b3c8213eca36fc30e",
+          "lakefile_path": "proofs/mc1/lakefile.toml",
+          "lakefile_sha256": "7518fd24bc8f4204da8002aa87a18382eecbe29583382c068485f3b75988f514",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "toolchain_sha256": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+          "manifest": {
+            "version": "1.3.0",
+            "packagesDir": ".lake/packages",
+            "packages": [
+              {
+                "url": "https://github.com/AeneasVerif/aeneas",
+                "type": "git",
+                "subDir": "backends/lean",
+                "scope": "",
+                "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+                "name": "aeneas",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+                "inherited": false,
+                "configFile": "lakefile.lean"
+              },
+              {
+                "url": "https://github.com/leanprover-community/mathlib4.git",
+                "type": "git",
+                "subDir": null,
+                "scope": "",
+                "rev": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+                "name": "mathlib",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "v4.35.0",
+                "inherited": true,
+                "configFile": "lakefile.lean"
+              },
+              {
+                "url": "https://github.com/leanprover-community/plausible",
+                "type": "git",
+                "subDir": null,
+                "scope": "leanprover-community",
+                "rev": "dfa4f38190d07c37e315953e08b90fe2d95b3c24",
+                "name": "plausible",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "main",
+                "inherited": true,
+                "configFile": "lakefile.toml"
+              },
+              {
+                "url": "https://github.com/leanprover-community/LeanSearchClient",
+                "type": "git",
+                "subDir": null,
+                "scope": "leanprover-community",
+                "rev": "d6b4c7be5be75ec4917c873ac50c756dc1436372",
+                "name": "LeanSearchClient",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "main",
+                "inherited": true,
+                "configFile": "lakefile.toml"
+              },
+              {
+                "url": "https://github.com/leanprover-community/import-graph",
+                "type": "git",
+                "subDir": null,
+                "scope": "leanprover-community",
+                "rev": "a41f0e9a4dea23188ea9cc1c41ac9f8bbafe0b93",
+                "name": "importGraph",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "main",
+                "inherited": true,
+                "configFile": "lakefile.toml"
+              },
+              {
+                "url": "https://github.com/leanprover-community/ProofWidgets4",
+                "type": "git",
+                "subDir": null,
+                "scope": "leanprover-community",
+                "rev": "df72b022e558978a1c50264cfc4d7fec86fa8e04",
+                "name": "proofwidgets",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "main",
+                "inherited": true,
+                "configFile": "lakefile.lean"
+              },
+              {
+                "url": "https://github.com/leanprover-community/aesop",
+                "type": "git",
+                "subDir": null,
+                "scope": "leanprover-community",
+                "rev": "4a174c490d8707121c4a9290800489f105d85e07",
+                "name": "aesop",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "master",
+                "inherited": true,
+                "configFile": "lakefile.toml"
+              },
+              {
+                "url": "https://github.com/leanprover-community/quote4",
+                "type": "git",
+                "subDir": null,
+                "scope": "leanprover-community",
+                "rev": "dce0ad79c486cb1fb504af04f953c3466b0c6db8",
+                "name": "Qq",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "master",
+                "inherited": true,
+                "configFile": "lakefile.toml"
+              },
+              {
+                "url": "https://github.com/leanprover-community/batteries",
+                "type": "git",
+                "subDir": null,
+                "scope": "leanprover-community",
+                "rev": "66e469188fe07963e5cf666c7d4433f45b8131c5",
+                "name": "batteries",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "main",
+                "inherited": true,
+                "configFile": "lakefile.toml"
+              },
+              {
+                "url": "https://github.com/leanprover/lean4-cli",
+                "type": "git",
+                "subDir": null,
+                "scope": "leanprover",
+                "rev": "c24fe6078c630e89b489bffe59b3e20ac30d12c8",
+                "name": "Cli",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "v4.35.0",
+                "inherited": true,
+                "configFile": "lakefile.toml"
+              }
+            ],
+            "name": "«noble-m1-extraction»",
+            "lakeDir": ".lake",
+            "fixedToolchain": false
+          },
+          "direct": {
+            "entries": [
+              {
+                "name": "aeneas",
+                "url": "https://github.com/AeneasVerif/aeneas",
+                "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+                "kind": "git",
+                "complete": true
+              }
+            ],
+            "complete": true,
+            "evaluator": "toml-data-parser"
+          },
+          "direct_comparison": {
+            "equal": true,
+            "discrepancies": [],
+            "visibility": "static-declarations-complete"
+          },
+          "packages": [
+            {
+              "url": "https://github.com/AeneasVerif/aeneas",
+              "type": "git",
+              "subDir": "backends/lean",
+              "scope": "",
+              "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+              "name": "aeneas",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+              "inherited": false,
+              "configFile": "lakefile.lean"
+            },
+            {
+              "url": "https://github.com/leanprover-community/aesop",
+              "type": "git",
+              "subDir": null,
+              "scope": "leanprover-community",
+              "rev": "4a174c490d8707121c4a9290800489f105d85e07",
+              "name": "aesop",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "master",
+              "inherited": true,
+              "configFile": "lakefile.toml"
+            },
+            {
+              "url": "https://github.com/leanprover-community/batteries",
+              "type": "git",
+              "subDir": null,
+              "scope": "leanprover-community",
+              "rev": "66e469188fe07963e5cf666c7d4433f45b8131c5",
+              "name": "batteries",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "main",
+              "inherited": true,
+              "configFile": "lakefile.toml"
+            },
+            {
+              "url": "https://github.com/leanprover/lean4-cli",
+              "type": "git",
+              "subDir": null,
+              "scope": "leanprover",
+              "rev": "c24fe6078c630e89b489bffe59b3e20ac30d12c8",
+              "name": "Cli",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "v4.35.0",
+              "inherited": true,
+              "configFile": "lakefile.toml"
+            },
+            {
+              "url": "https://github.com/leanprover-community/import-graph",
+              "type": "git",
+              "subDir": null,
+              "scope": "leanprover-community",
+              "rev": "a41f0e9a4dea23188ea9cc1c41ac9f8bbafe0b93",
+              "name": "importGraph",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "main",
+              "inherited": true,
+              "configFile": "lakefile.toml"
+            },
+            {
+              "url": "https://github.com/leanprover-community/LeanSearchClient",
+              "type": "git",
+              "subDir": null,
+              "scope": "leanprover-community",
+              "rev": "d6b4c7be5be75ec4917c873ac50c756dc1436372",
+              "name": "LeanSearchClient",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "main",
+              "inherited": true,
+              "configFile": "lakefile.toml"
+            },
+            {
+              "url": "https://github.com/leanprover-community/mathlib4.git",
+              "type": "git",
+              "subDir": null,
+              "scope": "",
+              "rev": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+              "name": "mathlib",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "v4.35.0",
+              "inherited": true,
+              "configFile": "lakefile.lean"
+            },
+            {
+              "url": "https://github.com/leanprover-community/plausible",
+              "type": "git",
+              "subDir": null,
+              "scope": "leanprover-community",
+              "rev": "dfa4f38190d07c37e315953e08b90fe2d95b3c24",
+              "name": "plausible",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "main",
+              "inherited": true,
+              "configFile": "lakefile.toml"
+            },
+            {
+              "url": "https://github.com/leanprover-community/ProofWidgets4",
+              "type": "git",
+              "subDir": null,
+              "scope": "leanprover-community",
+              "rev": "df72b022e558978a1c50264cfc4d7fec86fa8e04",
+              "name": "proofwidgets",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "main",
+              "inherited": true,
+              "configFile": "lakefile.lean"
+            },
+            {
+              "url": "https://github.com/leanprover-community/quote4",
+              "type": "git",
+              "subDir": null,
+              "scope": "leanprover-community",
+              "rev": "dce0ad79c486cb1fb504af04f953c3466b0c6db8",
+              "name": "Qq",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "master",
+              "inherited": true,
+              "configFile": "lakefile.toml"
+            }
+          ]
+        }
+      },
+      "package_sources": [
+        {
+          "project": "proofs/mc1",
+          "package": "aeneas",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/aeneas",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/aeneas",
+          "revision": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+          "cached_head": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+          "cached_tree": "6b9c1d973dbdd9e74415fe8b8d7e0f8388a4f2e4",
+          "cached_status": "",
+          "config_path": "backends/lean/lakefile.lean",
+          "config_sha256": "62a7e7d0bf1c78ee3d73a564fe81a89f190268be920132f097101e9b54e0b1d1",
+          "nested_manifest_path": "backends/lean/lake-manifest.json",
+          "nested_manifest_sha256": "14e04fb0abf42c95fabccc050f11715f9cb7e86316a26a55a87c89b95a72a5a3",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [],
+            "complete": false,
+            "evaluator": "lean-lakefile-static-require-scan"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        },
+        {
+          "project": "proofs/mc1",
+          "package": "aesop",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/aesop",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/aesop",
+          "revision": "4a174c490d8707121c4a9290800489f105d85e07",
+          "cached_head": "4a174c490d8707121c4a9290800489f105d85e07",
+          "cached_tree": "883b9af90cca8b2d83811a507a62be85b2f3c312",
+          "cached_status": "",
+          "config_path": "lakefile.toml",
+          "config_sha256": "17a39597618a5b30440ce9d1fb62267a23b7134327a6df0ce46f243f25a03f00",
+          "nested_manifest_path": "lake-manifest.json",
+          "nested_manifest_sha256": "c138ac5b8a9610a9ded30fbb5417a57b393b922e863c2fbb3c7b69be4e60f0b9",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [
+              {
+                "name": "batteries",
+                "url": null,
+                "rev": null,
+                "kind": "path",
+                "complete": false
+              }
+            ],
+            "complete": false,
+            "evaluator": "toml-data-parser"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        },
+        {
+          "project": "proofs/mc1",
+          "package": "batteries",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/batteries",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/batteries",
+          "revision": "66e469188fe07963e5cf666c7d4433f45b8131c5",
+          "cached_head": "66e469188fe07963e5cf666c7d4433f45b8131c5",
+          "cached_tree": "8b834e0208f1bc8eb66f1816519aef3982e7fb8b",
+          "cached_status": "",
+          "config_path": "lakefile.toml",
+          "config_sha256": "acadcd8beb13a53a4ac9399e6706c829309d2380f338d13b037886666f978015",
+          "nested_manifest_path": "lake-manifest.json",
+          "nested_manifest_sha256": "67a8bbfcd0c742e05e198714b2d0f3602a3103d838e7427d773a5587555f88a2",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [],
+            "complete": true,
+            "evaluator": "toml-data-parser"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        },
+        {
+          "project": "proofs/mc1",
+          "package": "Cli",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/Cli",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/Cli",
+          "revision": "c24fe6078c630e89b489bffe59b3e20ac30d12c8",
+          "cached_head": "c24fe6078c630e89b489bffe59b3e20ac30d12c8",
+          "cached_tree": "915a71e36b9b7067b2bdf21c7362ec883bcbb214",
+          "cached_status": "",
+          "config_path": "lakefile.toml",
+          "config_sha256": "188aaec6ddb57f411c11b95c3ece85ff26ab9ae8085371fee47e1dc855c4e186",
+          "nested_manifest_path": "lake-manifest.json",
+          "nested_manifest_sha256": "f608bac5ccb22b59292584eb7fb4497c327e780a17e7afb8d584ce5d79ad0b70",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [],
+            "complete": true,
+            "evaluator": "toml-data-parser"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        },
+        {
+          "project": "proofs/mc1",
+          "package": "importGraph",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/importGraph",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/importGraph",
+          "revision": "a41f0e9a4dea23188ea9cc1c41ac9f8bbafe0b93",
+          "cached_head": "a41f0e9a4dea23188ea9cc1c41ac9f8bbafe0b93",
+          "cached_tree": "c50cb794df9a6a8618884d0ea5151f0a26c59257",
+          "cached_status": "",
+          "config_path": "lakefile.toml",
+          "config_sha256": "022463f7dbaaba8273aa66a4e86a8004ed678b162cb14bf08f74011cb7c812ff",
+          "nested_manifest_path": "lake-manifest.json",
+          "nested_manifest_sha256": "f571382e971fb4c63889189e7e560a9a7942b16041df16c70ee6c58ca65197bc",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [
+              {
+                "name": "Cli",
+                "url": null,
+                "rev": null,
+                "kind": "path",
+                "complete": false
+              }
+            ],
+            "complete": false,
+            "evaluator": "toml-data-parser"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        },
+        {
+          "project": "proofs/mc1",
+          "package": "LeanSearchClient",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/LeanSearchClient",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/LeanSearchClient",
+          "revision": "d6b4c7be5be75ec4917c873ac50c756dc1436372",
+          "cached_head": "d6b4c7be5be75ec4917c873ac50c756dc1436372",
+          "cached_tree": "bf548235194a21930a91aa9ab852dea26ca0f039",
+          "cached_status": "",
+          "config_path": "lakefile.toml",
+          "config_sha256": "cb5d6c80c4ffd4b3be99294a911ebf2f6a2fee4eb9f840d96f0f813bd484c05d",
+          "nested_manifest_path": "lake-manifest.json",
+          "nested_manifest_sha256": "a9b5fc5e76254f415e49b04b7049f58c6cb42e76a0e31b0aed2ddf4af6882033",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [],
+            "complete": true,
+            "evaluator": "toml-data-parser"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        },
+        {
+          "project": "proofs/mc1",
+          "package": "mathlib",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/mathlib",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/mathlib",
+          "revision": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+          "cached_head": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+          "cached_tree": "0db52fa68e6b0c5b917c22bc6383325391a00610",
+          "cached_status": "",
+          "config_path": "lakefile.lean",
+          "config_sha256": "6083173bc380adea0cfd26f9a7813637ae0fd2c38c6a0d4536626e82a9538ef6",
+          "nested_manifest_path": "lake-manifest.json",
+          "nested_manifest_sha256": "6fcb8417bf0d6056cebf3c9f9bacd4569f21f3b9c571c60649150b9118b55147",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [],
+            "complete": false,
+            "evaluator": "lean-lakefile-static-require-scan"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        },
+        {
+          "project": "proofs/mc1",
+          "package": "plausible",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/plausible",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/plausible",
+          "revision": "dfa4f38190d07c37e315953e08b90fe2d95b3c24",
+          "cached_head": "dfa4f38190d07c37e315953e08b90fe2d95b3c24",
+          "cached_tree": "4cb8bf2ba49da888f56e270a08c7803000c1da89",
+          "cached_status": "",
+          "config_path": "lakefile.toml",
+          "config_sha256": "4147957012320a3afe8f041662202b7a3453c8a0df4311c1698da029a3b4834f",
+          "nested_manifest_path": "lake-manifest.json",
+          "nested_manifest_sha256": "99a17603b60cd9af445e5689b572b8441aaeaed149f3760dc52595a0c4b128db",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [],
+            "complete": true,
+            "evaluator": "toml-data-parser"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        },
+        {
+          "project": "proofs/mc1",
+          "package": "proofwidgets",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/proofwidgets",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/proofwidgets",
+          "revision": "df72b022e558978a1c50264cfc4d7fec86fa8e04",
+          "cached_head": "df72b022e558978a1c50264cfc4d7fec86fa8e04",
+          "cached_tree": "6f39a3ce916f1cd8c298b85695b620444719e14b",
+          "cached_status": "",
+          "config_path": "lakefile.lean",
+          "config_sha256": "0a319fffbf511dab4c3307dc105f8e8fdb4f6160020995cef5f442061cc0abca",
+          "nested_manifest_path": "lake-manifest.json",
+          "nested_manifest_sha256": "cfa8a1535cd79fbd868bcc67eb22efdab57568248a437fa5dda567234f1f03e2",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [],
+            "complete": true,
+            "evaluator": "lean-lakefile-static-require-scan"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        },
+        {
+          "project": "proofs/mc1",
+          "package": "Qq",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/Qq",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/Qq",
+          "revision": "dce0ad79c486cb1fb504af04f953c3466b0c6db8",
+          "cached_head": "dce0ad79c486cb1fb504af04f953c3466b0c6db8",
+          "cached_tree": "356cde3a20d62d1008736a4bb98c632a799c4aa6",
+          "cached_status": "",
+          "config_path": "lakefile.toml",
+          "config_sha256": "42826e4e06221f41fcd863e19d937a0a68be7d54df90abd7800a3c09f4557a15",
+          "nested_manifest_path": "lake-manifest.json",
+          "nested_manifest_sha256": "460e7ce76c58edfd8ba59428f23e908c5860e8bbca8883ff6c1262980e364d30",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [],
+            "complete": true,
+            "evaluator": "toml-data-parser"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        }
+      ],
+      "tool_policy": {
+        "sha256": "5bf44ed56b69bd159cc0b823bcba75dce2f33f0538277db86a4c5cabe46b92c9",
+        "selected": {
+          "schema": "noble-tool-selection-policy/v1",
+          "lean": {
+            "toolchain": "leanprover/lean4:v4.35.0",
+            "version": "4.35.0",
+            "revision": "eb6cafb7290e8bd5f2937522d8d804f58f02bafc",
+            "output": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0"
+          },
+          "node": {
+            "output": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0",
+            "version": "24.13.0"
+          },
+          "quality_rust": {
+            "output": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21"
+          },
+          "binaryen": {
+            "output": "/nix/store/9jkpw0sws1134333z8690i1plw5xzbyb-binaryen-125"
+          },
+          "wasm_tools": {
+            "output": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1"
+          }
+        }
+      }
+    }
+  },
+  "proposal": {
+    "revision": "16daeaa32cae954d902411ff5fd37497ef57e273",
+    "profile": "mc1-export",
+    "snapshot": {
+      "revision": "16daeaa32cae954d902411ff5fd37497ef57e273",
+      "tree": "d8d2d846b874414232c1407cad26558d4cdc381a",
+      "files": {
+        "policy/lean-inputs.json": "b4a2f7832af27287bc0cb968b17f4615b821680eb5f4401a6a53b539132f2ea4",
+        "policy/tool-selection.json": "5bf44ed56b69bd159cc0b823bcba75dce2f33f0538277db86a4c5cabe46b92c9",
+        "proofs/inets/InteractionNets.lean": "c7a35dad49822583a9ee209b47d8ba5617d5abcb5a7f9f96df05e8502f362f54",
+        "proofs/inets/README.md": "2b880041594701b80551d7d5560e01faa4f0ad8aa25f9448260dba72951463e1",
+        "proofs/inets/UPSTREAM.json": "654f5532f65eadf66c5a6f8f783ed228f8648c7c0cb47b09fed79c3e8d329822",
+        "proofs/mc1/ContractGate.lean": "353dcb3acf8337b02643cfb18acd9527612d06188c82d58c4f7fcef5223fb8bd",
+        "proofs/mc1/ImplementationGate.lean": "173c9bd7be87568c47f85dfc38c8c6b2b2e66c449bc86642580815ab0ae3fc78",
+        "proofs/mc1/IntrinsicTypeWitness.lean": "127a3910e2acdffa1d97b175054ad83b59aeb84c03b748e58aa2cbafbd1156e1",
+        "proofs/mc1/NobleContractImpl.lean": "cf6f4521fc49a1524beb2a7179ff3cf022fe658161d6004bcc5022ac3f5f4c13",
+        "proofs/mc1/NobleContractImpl/Funs.lean": "f8debefbf5c164900f0963410e26d668a50befc571b0a5c7dd644a003e80e0d2",
+        "proofs/mc1/NobleContractImpl/FunsExternal.lean": "727cf16ab0d0320cb26c620b59845fa431f9ccfacab3bbe10757fcf160fbf87f",
+        "proofs/mc1/NobleContractImpl/KernelBridge.lean": "ccea950872abaabd560aaa585ec0ddc232e427fdf6894d4ed74e218c661bf52e",
+        "proofs/mc1/NobleContractImpl/Projection.lean": "e4ac835476c593bc91c79e830d0941aaddf5244303c8f7dce2a6f5bfdbc29e7b",
+        "proofs/mc1/NobleContractImpl/Statement.lean": "bc97483e5bf942e9d7039df2b135b61f8901a71a40a2bee70d94f32a6cc1b818",
+        "proofs/mc1/NobleContractImpl/StdModels.lean": "23df15f575826429ac749094a47aa24cc59070ae4ee0f81c9d2daf7df5cd7d2a",
+        "proofs/mc1/NobleContractImpl/Types.lean": "acb9f8f6998972f53e069c46a450f4840dd8cec4eaa36db8a1d330820d13f464",
+        "proofs/mc1/NobleContractImpl/TypesExternal.lean": "ac491553ab0b1685b6dc706495c6df2200556e68c00feb1f816bb296a0ff1082",
+        "proofs/mc1/NobleContracts.lean": "f975ac8220689ea0e9937480d60ad2c252d1cce2b151874c18ee618930981fc2",
+        "proofs/mc1/NobleContracts/Composition.lean": "baae47050f6d445dc7b85ebff72a6bfe40a1f96de92c310ad6ae507bcb0b1d89",
+        "proofs/mc1/NobleContracts/Examples.lean": "280088bedaac3432addc18cb03ec97659c71dca7507fd112623844a09f4ae549",
+        "proofs/mc1/NobleContracts/Expression.lean": "4638c9b146da69b5d0a545734fd5bdc690288f86d1c3a2a40a235007a70561db",
+        "proofs/mc1/NobleContracts/Model.lean": "368cad7d6d86db4b182bd6b9e2bd0d3a354559c04579e3e27b789bb69313a7c3",
+        "proofs/mc1/NobleContracts/NamedSubject.lean": "ab1a1a3e46c60fb8179f714806a2c5f3e6005d201f9e0943d340bcf571aa3d26",
+        "proofs/mc1/NobleContracts/NamedSubjectConservative.lean": "6687488747d13f13c881a81b38d9b2e94ec3b42a7247a038ee9ad98a45066ea5",
+        "proofs/mc1/NobleContracts/NamedSubjectTests.lean": "6d8ce097c124512935d48cc1ba22cffea13676f9f799c597944eed0b408ab739",
+        "proofs/mc1/NobleContracts/NamedV2.lean": "7bf6a15f6f5da56861a284ad41eae4a2957926f35e2f96437293e65cce8adaf9",
+        "proofs/mc1/NobleContracts/NamedV2Examples.lean": "4370fb90cbe3b2244683cc119574ce63515c0fa7d880188e2ad3971f8280bb7e",
+        "proofs/mc1/NobleContracts/NamedV3.lean": "3c7920a318fd10fe3ef3361b80752aa66beb5cac32d63a5bd027ef91032fcf01",
+        "proofs/mc1/NobleContracts/Obligation.lean": "13dddb8d47346ba648eb2dd372031ccd2f2e090f3312f1797a1ca567ab9cd616",
+        "proofs/mc1/NobleContracts/Rules.lean": "1d5802ddec13fcfcbba70e6c75f46ab051ea569e6f30fe92d61e3b5dec8d877b",
+        "proofs/mc1/NobleContracts/SpecQuality.lean": "5068de2a817aa0311381aa68852c1f0c9c30aed96d5a5d709809d6c448a15372",
+        "proofs/mc1/NobleContracts/Wire.lean": "403e8e662d079f92b08d4debf82ca3f7e8ab82e6ae6acd9b15188957b84d98ff",
+        "proofs/mc1/lake-manifest.json": "7b0ec9c6609ec6f055252a0eefda4d0eeec1e49cd20f340b3c8213eca36fc30e",
+        "proofs/mc1/lakefile.toml": "7518fd24bc8f4204da8002aa87a18382eecbe29583382c068485f3b75988f514",
+        "proofs/mc1/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+        "verification/ci/lean-proofs.sh": "7d3cb97cfa5c2d1a99c0f442c50838b93fa830fe708f62b6482635f1a9e37d97",
+        "verification/foundation/arithmetic.mjs": "ba98f8b1f7efad87e218011e708ccc2feee185587b1717966ec23f10dd48370f",
+        "verification/foundation/check.mjs": "a3d4afec79e70a1820f93f072867c72b4cd3855bb94dac0cd02be3e2d34f0561",
+        "verification/foundation/claims.mjs": "29a33be79ce2e8fea8239435f1a534cb343017ca68cce4b41cf4a471d6f373b2",
+        "verification/foundation/control-ids.mjs": "d374417dc2ea16cd4773b9ad84d551af4830ddb7d94bcad29d5419c6f2f93eb6",
+        "verification/foundation/differential.mjs": "c2f14df5fa9d667e49a2914c05dca241aec5c9c55acb14cb83a9c644c6f487bf",
+        "verification/foundation/emi-controls.mjs": "430c26d6535127963aebf57f5b5732372448f238b74b47fb230a844a1a28837f",
+        "verification/foundation/execution.mjs": "32cc4412522e01f9a8d668b6bdc1c5ba5fb331eb1e4558c0ff76750934eebe3a",
+        "verification/lean-qualify/README.md": "83dbbdd8ef1e2d83d18d5f95b51df434865fca34176b4cf8019f98740a797fc9",
+        "verification/lean-qualify/core.mjs": "07b11849b6a47ab1c2586e0870610b35fd7977ca8c8ab38976af018484371c2b",
+        "verification/lean-qualify/qualify.mjs": "86512f4db706b8f4ee7ea181f98e9da14c0f8997eea0e17756b50e7dcb9d334b",
+        "verification/lean-qualify/qualify.test.mjs": "999fab86d645aff11b70813d721bc075c76a1783b2437a664cdebb90bcdac421",
+        "verification/lean-source-scan.mjs": "03b3b013483c32c1e433d5fbcf72b297baf23da40dc05bec6aede2d95b6b197e",
+        "verification/m3-proof-gate.sh": "95eee303fc882818a18d9ad5304f32787acdc78317b06addab0fd09e221a6fb4",
+        "verification/mc1/gate.mjs": "df1f556c2085fcd752aa7a21e19889cf63d55f333072df6a5edceaa53596f840"
+      },
+      "projects": {
+        "proofs/mc1": {
+          "project": "proofs/mc1",
+          "manifest_path": "proofs/mc1/lake-manifest.json",
+          "manifest_sha256": "7b0ec9c6609ec6f055252a0eefda4d0eeec1e49cd20f340b3c8213eca36fc30e",
+          "lakefile_path": "proofs/mc1/lakefile.toml",
+          "lakefile_sha256": "7518fd24bc8f4204da8002aa87a18382eecbe29583382c068485f3b75988f514",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "toolchain_sha256": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+          "manifest": {
+            "version": "1.3.0",
+            "packagesDir": ".lake/packages",
+            "packages": [
+              {
+                "url": "https://github.com/AeneasVerif/aeneas",
+                "type": "git",
+                "subDir": "backends/lean",
+                "scope": "",
+                "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+                "name": "aeneas",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+                "inherited": false,
+                "configFile": "lakefile.lean"
+              },
+              {
+                "url": "https://github.com/leanprover-community/mathlib4.git",
+                "type": "git",
+                "subDir": null,
+                "scope": "",
+                "rev": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+                "name": "mathlib",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "v4.35.0",
+                "inherited": true,
+                "configFile": "lakefile.lean"
+              },
+              {
+                "url": "https://github.com/leanprover-community/plausible",
+                "type": "git",
+                "subDir": null,
+                "scope": "leanprover-community",
+                "rev": "dfa4f38190d07c37e315953e08b90fe2d95b3c24",
+                "name": "plausible",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "main",
+                "inherited": true,
+                "configFile": "lakefile.toml"
+              },
+              {
+                "url": "https://github.com/leanprover-community/LeanSearchClient",
+                "type": "git",
+                "subDir": null,
+                "scope": "leanprover-community",
+                "rev": "d6b4c7be5be75ec4917c873ac50c756dc1436372",
+                "name": "LeanSearchClient",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "main",
+                "inherited": true,
+                "configFile": "lakefile.toml"
+              },
+              {
+                "url": "https://github.com/leanprover-community/import-graph",
+                "type": "git",
+                "subDir": null,
+                "scope": "leanprover-community",
+                "rev": "a41f0e9a4dea23188ea9cc1c41ac9f8bbafe0b93",
+                "name": "importGraph",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "main",
+                "inherited": true,
+                "configFile": "lakefile.toml"
+              },
+              {
+                "url": "https://github.com/leanprover-community/ProofWidgets4",
+                "type": "git",
+                "subDir": null,
+                "scope": "leanprover-community",
+                "rev": "df72b022e558978a1c50264cfc4d7fec86fa8e04",
+                "name": "proofwidgets",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "main",
+                "inherited": true,
+                "configFile": "lakefile.lean"
+              },
+              {
+                "url": "https://github.com/leanprover-community/aesop",
+                "type": "git",
+                "subDir": null,
+                "scope": "leanprover-community",
+                "rev": "4a174c490d8707121c4a9290800489f105d85e07",
+                "name": "aesop",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "master",
+                "inherited": true,
+                "configFile": "lakefile.toml"
+              },
+              {
+                "url": "https://github.com/leanprover-community/quote4",
+                "type": "git",
+                "subDir": null,
+                "scope": "leanprover-community",
+                "rev": "dce0ad79c486cb1fb504af04f953c3466b0c6db8",
+                "name": "Qq",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "master",
+                "inherited": true,
+                "configFile": "lakefile.toml"
+              },
+              {
+                "url": "https://github.com/leanprover-community/batteries",
+                "type": "git",
+                "subDir": null,
+                "scope": "leanprover-community",
+                "rev": "66e469188fe07963e5cf666c7d4433f45b8131c5",
+                "name": "batteries",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "main",
+                "inherited": true,
+                "configFile": "lakefile.toml"
+              },
+              {
+                "url": "https://github.com/leanprover/lean4-cli",
+                "type": "git",
+                "subDir": null,
+                "scope": "leanprover",
+                "rev": "c24fe6078c630e89b489bffe59b3e20ac30d12c8",
+                "name": "Cli",
+                "manifestFile": "lake-manifest.json",
+                "inputRev": "v4.35.0",
+                "inherited": true,
+                "configFile": "lakefile.toml"
+              }
+            ],
+            "name": "«noble-m1-extraction»",
+            "lakeDir": ".lake",
+            "fixedToolchain": false
+          },
+          "direct": {
+            "entries": [
+              {
+                "name": "aeneas",
+                "url": "https://github.com/AeneasVerif/aeneas",
+                "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+                "kind": "git",
+                "complete": true
+              }
+            ],
+            "complete": true,
+            "evaluator": "toml-data-parser"
+          },
+          "direct_comparison": {
+            "equal": true,
+            "discrepancies": [],
+            "visibility": "static-declarations-complete"
+          },
+          "packages": [
+            {
+              "url": "https://github.com/AeneasVerif/aeneas",
+              "type": "git",
+              "subDir": "backends/lean",
+              "scope": "",
+              "rev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+              "name": "aeneas",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+              "inherited": false,
+              "configFile": "lakefile.lean"
+            },
+            {
+              "url": "https://github.com/leanprover-community/aesop",
+              "type": "git",
+              "subDir": null,
+              "scope": "leanprover-community",
+              "rev": "4a174c490d8707121c4a9290800489f105d85e07",
+              "name": "aesop",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "master",
+              "inherited": true,
+              "configFile": "lakefile.toml"
+            },
+            {
+              "url": "https://github.com/leanprover-community/batteries",
+              "type": "git",
+              "subDir": null,
+              "scope": "leanprover-community",
+              "rev": "66e469188fe07963e5cf666c7d4433f45b8131c5",
+              "name": "batteries",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "main",
+              "inherited": true,
+              "configFile": "lakefile.toml"
+            },
+            {
+              "url": "https://github.com/leanprover/lean4-cli",
+              "type": "git",
+              "subDir": null,
+              "scope": "leanprover",
+              "rev": "c24fe6078c630e89b489bffe59b3e20ac30d12c8",
+              "name": "Cli",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "v4.35.0",
+              "inherited": true,
+              "configFile": "lakefile.toml"
+            },
+            {
+              "url": "https://github.com/leanprover-community/import-graph",
+              "type": "git",
+              "subDir": null,
+              "scope": "leanprover-community",
+              "rev": "a41f0e9a4dea23188ea9cc1c41ac9f8bbafe0b93",
+              "name": "importGraph",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "main",
+              "inherited": true,
+              "configFile": "lakefile.toml"
+            },
+            {
+              "url": "https://github.com/leanprover-community/LeanSearchClient",
+              "type": "git",
+              "subDir": null,
+              "scope": "leanprover-community",
+              "rev": "d6b4c7be5be75ec4917c873ac50c756dc1436372",
+              "name": "LeanSearchClient",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "main",
+              "inherited": true,
+              "configFile": "lakefile.toml"
+            },
+            {
+              "url": "https://github.com/leanprover-community/mathlib4.git",
+              "type": "git",
+              "subDir": null,
+              "scope": "",
+              "rev": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+              "name": "mathlib",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "v4.35.0",
+              "inherited": true,
+              "configFile": "lakefile.lean"
+            },
+            {
+              "url": "https://github.com/leanprover-community/plausible",
+              "type": "git",
+              "subDir": null,
+              "scope": "leanprover-community",
+              "rev": "dfa4f38190d07c37e315953e08b90fe2d95b3c24",
+              "name": "plausible",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "main",
+              "inherited": true,
+              "configFile": "lakefile.toml"
+            },
+            {
+              "url": "https://github.com/leanprover-community/ProofWidgets4",
+              "type": "git",
+              "subDir": null,
+              "scope": "leanprover-community",
+              "rev": "df72b022e558978a1c50264cfc4d7fec86fa8e04",
+              "name": "proofwidgets",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "main",
+              "inherited": true,
+              "configFile": "lakefile.lean"
+            },
+            {
+              "url": "https://github.com/leanprover-community/quote4",
+              "type": "git",
+              "subDir": null,
+              "scope": "leanprover-community",
+              "rev": "dce0ad79c486cb1fb504af04f953c3466b0c6db8",
+              "name": "Qq",
+              "manifestFile": "lake-manifest.json",
+              "inputRev": "master",
+              "inherited": true,
+              "configFile": "lakefile.toml"
+            }
+          ]
+        }
+      },
+      "package_sources": [
+        {
+          "project": "proofs/mc1",
+          "package": "aeneas",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/aeneas",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/aeneas",
+          "revision": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+          "cached_head": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+          "cached_tree": "6b9c1d973dbdd9e74415fe8b8d7e0f8388a4f2e4",
+          "cached_status": "",
+          "config_path": "backends/lean/lakefile.lean",
+          "config_sha256": "62a7e7d0bf1c78ee3d73a564fe81a89f190268be920132f097101e9b54e0b1d1",
+          "nested_manifest_path": "backends/lean/lake-manifest.json",
+          "nested_manifest_sha256": "14e04fb0abf42c95fabccc050f11715f9cb7e86316a26a55a87c89b95a72a5a3",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [],
+            "complete": false,
+            "evaluator": "lean-lakefile-static-require-scan"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        },
+        {
+          "project": "proofs/mc1",
+          "package": "aesop",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/aesop",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/aesop",
+          "revision": "4a174c490d8707121c4a9290800489f105d85e07",
+          "cached_head": "4a174c490d8707121c4a9290800489f105d85e07",
+          "cached_tree": "883b9af90cca8b2d83811a507a62be85b2f3c312",
+          "cached_status": "",
+          "config_path": "lakefile.toml",
+          "config_sha256": "17a39597618a5b30440ce9d1fb62267a23b7134327a6df0ce46f243f25a03f00",
+          "nested_manifest_path": "lake-manifest.json",
+          "nested_manifest_sha256": "c138ac5b8a9610a9ded30fbb5417a57b393b922e863c2fbb3c7b69be4e60f0b9",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [
+              {
+                "name": "batteries",
+                "url": null,
+                "rev": null,
+                "kind": "path",
+                "complete": false
+              }
+            ],
+            "complete": false,
+            "evaluator": "toml-data-parser"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        },
+        {
+          "project": "proofs/mc1",
+          "package": "batteries",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/batteries",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/batteries",
+          "revision": "66e469188fe07963e5cf666c7d4433f45b8131c5",
+          "cached_head": "66e469188fe07963e5cf666c7d4433f45b8131c5",
+          "cached_tree": "8b834e0208f1bc8eb66f1816519aef3982e7fb8b",
+          "cached_status": "",
+          "config_path": "lakefile.toml",
+          "config_sha256": "acadcd8beb13a53a4ac9399e6706c829309d2380f338d13b037886666f978015",
+          "nested_manifest_path": "lake-manifest.json",
+          "nested_manifest_sha256": "67a8bbfcd0c742e05e198714b2d0f3602a3103d838e7427d773a5587555f88a2",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [],
+            "complete": true,
+            "evaluator": "toml-data-parser"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        },
+        {
+          "project": "proofs/mc1",
+          "package": "Cli",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/Cli",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/Cli",
+          "revision": "c24fe6078c630e89b489bffe59b3e20ac30d12c8",
+          "cached_head": "c24fe6078c630e89b489bffe59b3e20ac30d12c8",
+          "cached_tree": "915a71e36b9b7067b2bdf21c7362ec883bcbb214",
+          "cached_status": "",
+          "config_path": "lakefile.toml",
+          "config_sha256": "188aaec6ddb57f411c11b95c3ece85ff26ab9ae8085371fee47e1dc855c4e186",
+          "nested_manifest_path": "lake-manifest.json",
+          "nested_manifest_sha256": "f608bac5ccb22b59292584eb7fb4497c327e780a17e7afb8d584ce5d79ad0b70",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [],
+            "complete": true,
+            "evaluator": "toml-data-parser"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        },
+        {
+          "project": "proofs/mc1",
+          "package": "importGraph",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/importGraph",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/importGraph",
+          "revision": "a41f0e9a4dea23188ea9cc1c41ac9f8bbafe0b93",
+          "cached_head": "a41f0e9a4dea23188ea9cc1c41ac9f8bbafe0b93",
+          "cached_tree": "c50cb794df9a6a8618884d0ea5151f0a26c59257",
+          "cached_status": "",
+          "config_path": "lakefile.toml",
+          "config_sha256": "022463f7dbaaba8273aa66a4e86a8004ed678b162cb14bf08f74011cb7c812ff",
+          "nested_manifest_path": "lake-manifest.json",
+          "nested_manifest_sha256": "f571382e971fb4c63889189e7e560a9a7942b16041df16c70ee6c58ca65197bc",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [
+              {
+                "name": "Cli",
+                "url": null,
+                "rev": null,
+                "kind": "path",
+                "complete": false
+              }
+            ],
+            "complete": false,
+            "evaluator": "toml-data-parser"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        },
+        {
+          "project": "proofs/mc1",
+          "package": "LeanSearchClient",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/LeanSearchClient",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/LeanSearchClient",
+          "revision": "d6b4c7be5be75ec4917c873ac50c756dc1436372",
+          "cached_head": "d6b4c7be5be75ec4917c873ac50c756dc1436372",
+          "cached_tree": "bf548235194a21930a91aa9ab852dea26ca0f039",
+          "cached_status": "",
+          "config_path": "lakefile.toml",
+          "config_sha256": "cb5d6c80c4ffd4b3be99294a911ebf2f6a2fee4eb9f840d96f0f813bd484c05d",
+          "nested_manifest_path": "lake-manifest.json",
+          "nested_manifest_sha256": "a9b5fc5e76254f415e49b04b7049f58c6cb42e76a0e31b0aed2ddf4af6882033",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [],
+            "complete": true,
+            "evaluator": "toml-data-parser"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        },
+        {
+          "project": "proofs/mc1",
+          "package": "mathlib",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/mathlib",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/mathlib",
+          "revision": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+          "cached_head": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+          "cached_tree": "0db52fa68e6b0c5b917c22bc6383325391a00610",
+          "cached_status": "",
+          "config_path": "lakefile.lean",
+          "config_sha256": "6083173bc380adea0cfd26f9a7813637ae0fd2c38c6a0d4536626e82a9538ef6",
+          "nested_manifest_path": "lake-manifest.json",
+          "nested_manifest_sha256": "6fcb8417bf0d6056cebf3c9f9bacd4569f21f3b9c571c60649150b9118b55147",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [],
+            "complete": false,
+            "evaluator": "lean-lakefile-static-require-scan"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        },
+        {
+          "project": "proofs/mc1",
+          "package": "plausible",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/plausible",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/plausible",
+          "revision": "dfa4f38190d07c37e315953e08b90fe2d95b3c24",
+          "cached_head": "dfa4f38190d07c37e315953e08b90fe2d95b3c24",
+          "cached_tree": "4cb8bf2ba49da888f56e270a08c7803000c1da89",
+          "cached_status": "",
+          "config_path": "lakefile.toml",
+          "config_sha256": "4147957012320a3afe8f041662202b7a3453c8a0df4311c1698da029a3b4834f",
+          "nested_manifest_path": "lake-manifest.json",
+          "nested_manifest_sha256": "99a17603b60cd9af445e5689b572b8441aaeaed149f3760dc52595a0c4b128db",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [],
+            "complete": true,
+            "evaluator": "toml-data-parser"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        },
+        {
+          "project": "proofs/mc1",
+          "package": "proofwidgets",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/proofwidgets",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/proofwidgets",
+          "revision": "df72b022e558978a1c50264cfc4d7fec86fa8e04",
+          "cached_head": "df72b022e558978a1c50264cfc4d7fec86fa8e04",
+          "cached_tree": "6f39a3ce916f1cd8c298b85695b620444719e14b",
+          "cached_status": "",
+          "config_path": "lakefile.lean",
+          "config_sha256": "0a319fffbf511dab4c3307dc105f8e8fdb4f6160020995cef5f442061cc0abca",
+          "nested_manifest_path": "lake-manifest.json",
+          "nested_manifest_sha256": "cfa8a1535cd79fbd868bcc67eb22efdab57568248a437fa5dda567234f1f03e2",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [],
+            "complete": true,
+            "evaluator": "lean-lakefile-static-require-scan"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        },
+        {
+          "project": "proofs/mc1",
+          "package": "Qq",
+          "available": true,
+          "path": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/Qq",
+          "repository": "/home/brittonr/.cache/noble-iss/wt/qualify-126/proofs/mc1/.lake/packages/Qq",
+          "revision": "dce0ad79c486cb1fb504af04f953c3466b0c6db8",
+          "cached_head": "dce0ad79c486cb1fb504af04f953c3466b0c6db8",
+          "cached_tree": "356cde3a20d62d1008736a4bb98c632a799c4aa6",
+          "cached_status": "",
+          "config_path": "lakefile.toml",
+          "config_sha256": "42826e4e06221f41fcd863e19d937a0a68be7d54df90abd7800a3c09f4557a15",
+          "nested_manifest_path": "lake-manifest.json",
+          "nested_manifest_sha256": "460e7ce76c58edfd8ba59428f23e908c5860e8bbca8883ff6c1262980e364d30",
+          "toolchain": "leanprover/lean4:v4.35.0",
+          "direct": {
+            "entries": [],
+            "complete": true,
+            "evaluator": "toml-data-parser"
+          },
+          "direct_dependencies_not_in_root_manifest": []
+        }
+      ],
+      "tool_policy": {
+        "sha256": "5bf44ed56b69bd159cc0b823bcba75dce2f33f0538277db86a4c5cabe46b92c9",
+        "selected": {
+          "schema": "noble-tool-selection-policy/v1",
+          "lean": {
+            "toolchain": "leanprover/lean4:v4.35.0",
+            "version": "4.35.0",
+            "revision": "eb6cafb7290e8bd5f2937522d8d804f58f02bafc",
+            "output": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0"
+          },
+          "node": {
+            "output": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0",
+            "version": "24.13.0"
+          },
+          "quality_rust": {
+            "output": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21"
+          },
+          "binaryen": {
+            "output": "/nix/store/9jkpw0sws1134333z8690i1plw5xzbyb-binaryen-125"
+          },
+          "wasm_tools": {
+            "output": "/nix/store/2n9b5yzj7n8jlnglp60gd5nmfjnf4xhf-wasm-tools-1.245.1"
+          }
+        }
+      }
+    }
+  },
+  "source_diff": {
+    "file": "candidate.patch",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0,
+    "changed_paths": [],
+    "classes": {
+      "proposed_pin_changes": [],
+      "proof_only_repairs": [],
+      "semantic_changes": [],
+      "verifier_policy_changes": []
+    },
+    "class_patches": {
+      "pins": {
+        "file": "change-classes/pins.patch",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0,
+        "paths": []
+      },
+      "repairs": {
+        "file": "change-classes/repairs.patch",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0,
+        "paths": []
+      },
+      "semantics": {
+        "file": "change-classes/semantics.patch",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0,
+        "paths": []
+      },
+      "verifier_policy": {
+        "file": "change-classes/verifier_policy.patch",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0,
+        "paths": []
+      }
+    }
+  },
+  "package_source_diffs": [],
+  "pre_update_plan": {
+    "evaluator": "native data-only Lakefile parser; no Lakefile or package code executed",
+    "limitations": [
+      "Dynamic Lean lakefile declarations and dependencies introduced only by a newly resolved upstream package cannot be predicted by the static pre-update plan.",
+      "After the approved source diff, Lake resolution is run in the disposable proposal worktree and its complete manifest is compared exactly with this prediction."
+    ],
+    "discrepancies": [],
+    "toolchain_discrepancies": [],
+    "incomplete_upstream_configs": [
+      {
+        "side": "baseline",
+        "project": "proofs/mc1",
+        "package": "aeneas",
+        "config_path": "backends/lean/lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      },
+      {
+        "side": "baseline",
+        "project": "proofs/mc1",
+        "package": "aesop",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "baseline",
+        "project": "proofs/mc1",
+        "package": "importGraph",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "baseline",
+        "project": "proofs/mc1",
+        "package": "mathlib",
+        "config_path": "lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/mc1",
+        "package": "aeneas",
+        "config_path": "backends/lean/lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/mc1",
+        "package": "aesop",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/mc1",
+        "package": "importGraph",
+        "config_path": "lakefile.toml",
+        "evaluator": "toml-data-parser",
+        "scope": "upstream"
+      },
+      {
+        "side": "proposal",
+        "project": "proofs/mc1",
+        "package": "mathlib",
+        "config_path": "lakefile.lean",
+        "evaluator": "lean-lakefile-static-require-scan",
+        "scope": "upstream"
+      }
+    ]
+  },
+  "review": {
+    "required": true,
+    "sha256": "57b725aeb12045e398ce15129ac52ae50b6ae34f60ccc2b128fae016c9b4780c",
+    "approval_flag": "--approve-diff",
+    "approval_covers": [
+      "candidate.patch",
+      "external package source diffs",
+      "baseline/proposal snapshots"
+    ]
+  },
+  "blockers": [
+    {
+      "code": "REQUIRED_CHECKER_UNAVAILABLE",
+      "message": "The MC1 export/checker runner is Bun-driven and Bun has no tool-selection pin in policy/tool-selection.json; it cannot be treated as an optional pass after Lake succeeds."
+    }
+  ],
+  "no_op": true,
+  "projects_requiring_resolution": [],
+  "policy": {
+    "adapters": "native implementation; paranoid-lake-update and hopscotch are not used",
+    "localization": "native monotone bisection plus a complete linear scan; bisection assumes a good start and monotonic outcomes"
+  },
+  "qualification_status": "unqualified",
+  "plan_sha256": "7140743c5cc77ca9c839e08ef224709cfc64bb059d379067a37cefa068260ca5"
+}
