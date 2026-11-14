@@ -961,10 +961,7 @@ enum ProfileError {
 fn measures_of(
     scheme: &noble_kernel::words::Scheme,
 ) -> Result<(alloc::vec::Vec<Measure>, usize), ProfileError> {
-    let (prefix, fixed) = scheme
-        .stack_in
-        .split_first()
-        .ok_or(ProfileError::Outside)?;
+    let (prefix, fixed) = scheme.stack_in.split_first().ok_or(ProfileError::Outside)?;
     if !matches!(prefix, noble_kernel::shapes::Pattern::StackVar(_)) {
         return Err(ProfileError::Outside);
     }
@@ -1143,7 +1140,10 @@ fn compose_graph(left: &Graph, right: &Graph, measure_count: usize) -> Graph {
 fn close_graphs(sites: &[Site], measure_count: usize) -> Result<alloc::vec::Vec<ClosureEntry>, ()> {
     let mut closure = alloc::vec::Vec::with_capacity(sites.len().min(MAX_CLOSURE));
     for (site_index, site) in sites.iter().enumerate() {
-        if closure.iter().any(|entry: &ClosureEntry| entry.graph == site.graph) {
+        if closure
+            .iter()
+            .any(|entry: &ClosureEntry| entry.graph == site.graph)
+        {
             continue;
         }
         if closure.len() >= MAX_CLOSURE {
@@ -1417,7 +1417,9 @@ pub fn certificate(evidence: &[Evidence]) -> alloc::string::String {
         output = append_decimal(output, sites);
         output.push_str(" self-call site(s) over ");
         output = append_decimal(output, measures);
-        output.push_str(" declared measure(s). The matrices and paths below are checked by the model. -/\n");
+        output.push_str(
+            " declared measure(s). The matrices and paths below are checked by the model. -/\n",
+        );
         output = append_closure_model(output, &name, &entry.sites, measures, closure);
         if let Verdict::Accepted {
             strict_witnesses, ..

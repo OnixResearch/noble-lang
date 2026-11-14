@@ -207,7 +207,10 @@ fn argument_swap_is_refused_with_idempotent_cycle() -> Result<(), String> {
          def cycle [ swap cycle ]",
     ))?);
     assert_eq!(entry.sites.len(), 1);
-    assert_eq!(entry.sites[0].arguments, vec![Argument::Opaque, Argument::Opaque]);
+    assert_eq!(
+        entry.sites[0].arguments,
+        vec![Argument::Opaque, Argument::Opaque]
+    );
     assert_eq!(entry.sites[0].graph.get(0, 1), Relation::Same);
     assert_eq!(entry.sites[0].graph.get(1, 0), Relation::Same);
     match entry.verdict {
@@ -217,7 +220,11 @@ fn argument_swap_is_refused_with_idempotent_cycle() -> Result<(), String> {
             assert_eq!(cycle.graph.get(0, 0), Relation::Same);
             assert_eq!(cycle.graph.get(1, 1), Relation::Same);
         }
-        other => return Err(std::format!("expected an idempotent-cycle refusal, got {other:?}")),
+        other => {
+            return Err(std::format!(
+                "expected an idempotent-cycle refusal, got {other:?}"
+            ))
+        }
     }
     Ok(())
 }

@@ -58,10 +58,7 @@ fn definition(entry: &noble_contracts::source::Evidence) -> crate::workflow::enc
                                         .collect(),
                                 ),
                             ),
-                            (
-                                "graph",
-                                graph_json(&site.graph, entry.measures.len()),
-                            ),
+                            ("graph", graph_json(&site.graph, entry.measures.len())),
                         ]))
                     })
                     .collect(),
@@ -133,7 +130,9 @@ fn definition(entry: &noble_contracts::source::Evidence) -> crate::workflow::enc
                 Json::Array(
                     closure
                         .iter()
-                        .map(|closure_entry| closure_entry_json(closure_entry, entry.measures.len()))
+                        .map(|closure_entry| {
+                            closure_entry_json(closure_entry, entry.measures.len())
+                        })
                         .collect(),
                 ),
             ));
