@@ -12380,6 +12380,60 @@
       "phase": 1,
       "role": "abstract-reduction-step",
       "claim": "the two-output fanout duplicator firing is one abstract Step of the selected system"
+    },
+    {
+      "name": "NobleFoundation.NetI64Corpus.fanout_overflow_translation",
+      "phase": 1,
+      "role": "lowering-corpus",
+      "claim": "the finite overflow and fanout input graph lowers to the independently retained canonical inets net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Corpus.fanout_overflow_normalization",
+      "phase": 1,
+      "role": "lowering-corpus",
+      "claim": "the finite overflow and fanout input normalizes to the retained Rust outputs and step count"
+    },
+    {
+      "name": "NobleFoundation.NetI64Corpus.fanout_overflow_interaction_count",
+      "phase": 1,
+      "role": "lowering-corpus",
+      "claim": "the finite overflow and fanout graph has the retained exact interaction count"
+    },
+    {
+      "name": "NobleFoundation.NetI64Corpus.discarded_unit_translation",
+      "phase": 1,
+      "role": "lowering-corpus",
+      "claim": "the finite discarded-unit graph lowers to the independently retained canonical inets net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Corpus.discarded_unit_normalization",
+      "phase": 1,
+      "role": "lowering-corpus",
+      "claim": "the finite discarded-unit input normalizes to the retained empty output and step count"
+    },
+    {
+      "name": "NobleFoundation.NetI64Corpus.discarded_unit_interaction_count",
+      "phase": 1,
+      "role": "lowering-corpus",
+      "claim": "the finite discarded-unit graph has the retained exact interaction count"
+    },
+    {
+      "name": "NobleFoundation.NetI64Corpus.empty_translation",
+      "phase": 1,
+      "role": "lowering-corpus",
+      "claim": "the empty finite graph lowers to the independently retained empty inets net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Corpus.empty_normalization",
+      "phase": 1,
+      "role": "lowering-corpus",
+      "claim": "the empty finite graph normalizes to empty outputs in zero interactions"
+    },
+    {
+      "name": "NobleFoundation.NetI64Corpus.empty_interaction_count",
+      "phase": 1,
+      "role": "lowering-corpus",
+      "claim": "the empty finite graph has the retained exact interaction count"
     }
   ],
   "private_theorems": [
