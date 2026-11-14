@@ -32,7 +32,8 @@ pub use declared::{
     RebuiltImportDefinition, SignedSourceOwner,
 };
 pub use sizechange::{
-    certificate, Argument, Evidence, Measure, Site, Unsupported, Verdict, Witness,
+    certificate, Argument, Bound, ClosureEntry, Evidence, Graph, GraphEdge, Measure, MeasureIndex,
+    Relation, Site, StrictWitness, Unsupported, Verdict, Witness,
 };
 
 /// Core vocabulary resolved by the same checker as a worker's pure source.
