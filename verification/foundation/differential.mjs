@@ -713,7 +713,8 @@ try {
     { claim: 'Mathlib .olean imports', status: 'assumed', note: 'downloaded cache, not rebuilt' },
   ];
   receipt.commands = commandLog.length;
-  writeFileSync(join(out, 'differential.json'), JSON.stringify(receipt, null, 2) + '\n');
+  writeFileSync(join(out, 'differential.json'), JSON.stringify(receipt,
+    (_key, value) => typeof value === 'bigint' ? value.toString() : value, 2) + '\n');
   console.log(JSON.stringify({ ok: true, receipt: join(out, 'differential.json'), source_commit: receipt.source_commit,
     seed: receipt.seed, cases: receipt.cases.length, all_matched: receipt.all_matched,
     opt_on_off_same_stack: receipt.opt_on_off_same_stack, coverage: receipt.coverage,

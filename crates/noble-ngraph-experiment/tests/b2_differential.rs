@@ -1217,8 +1217,10 @@ fn issue125_shrink_inputs(
         let legs = run_pair(left, right);
         if issue125_shrink_candidate_allowed(case, &inputs, &legs, expected, mismatch_class) {
             issue125_observation_code(&legs.l3_reference)
-        } else {
+        } else if issue125_property(&legs.l2_apfloat, expected) {
             issue125_observation_code(&legs.l2_apfloat)
+        } else {
+            0
         }
     };
     let witness = minimize(
