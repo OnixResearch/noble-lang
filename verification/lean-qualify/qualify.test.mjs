@@ -389,3 +389,11 @@ test('SIGINT cancellation terminates an active child and leaves the fixture tree
   assert.equal(existsSync(logPath), true);
   assert.deepEqual(localState(history), before);
 });
+
+test('a missing tool spawn leaves the fixture tree byte-identical', async () => {
+  const before = localState(history);
+  await assert.rejects(runProcess(join(testRoot, 'missing-tool'), [], {
+    cwd: history, env: { ...process.env }, logPath: join(testRoot, 'missing-tool.log'),
+  }), /ENOENT/);
+  assert.deepEqual(localState(history), before);
+});
