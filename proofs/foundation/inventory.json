@@ -12076,6 +12076,12 @@
       "claim": "one requested fanout copy has an empty normal abstract trace and reads back the input in order"
     },
     {
+      "name": "NobleFoundation.NetI64Families.fanoutProgram_zero_trace",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "zero requested fanout copies erase the input in one normal abstract interaction and read back an empty list"
+    },
+    {
       "name": "NobleFoundation.NetI64.balancedProgram_opCount",
       "phase": 1,
       "role": "family-formula",
