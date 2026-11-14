@@ -517,12 +517,22 @@ function verifyFallback(row) {
     `${row.workload} candidate reports baseline-fallback operations`);
 }
 
-function boundaryLimits(source, arm, optimized, rows, runtimeConfig, watArtifact) {
+function boundaryReference(source, arm, optimized, rows, runtimeConfig, watArtifact) {
+  const id = 'allocation-boundary-reference';
+  const row = runEngineCell(runtimeConfig, source, arm, optimized,
+    watArtifact, keyFor(id, arm, optimized), { observationId: id });
+  verifyFallback(row);
+  expectNormal(row, keyFor(id, arm, optimized));
+  rows.push(row);
+  return row;
+}
+
+function boundaryLimits(source, arm, optimized, baseCharge, rows, runtimeConfig, watArtifact) {
   for (const allocationBytes of [47, 48, 49]) {
     const id = `allocation-boundary-${allocationBytes}`;
     const inputs = [];
     const row = runEngineCell(runtimeConfig, source, arm, optimized,
-      watArtifact, keyFor(id, arm, optimized), { limits: { allocation_bytes: allocationBytes }, inputs,
+      watArtifact, keyFor(id, arm, optimized), { limits: { allocation_bytes: baseCharge + allocationBytes }, inputs,
         observationId: id });
     verifyFallback(row);
     rows.push(row);
@@ -549,20 +559,47 @@ function matrixObservations(workloadRows, mode) {
   return cells;
 }
 
-function checkBoundaryGroups(boundaries, mode) {
+function checkBoundaryGroups(boundaries, references, mode) {
   const arms = mode === 'full' ? ['baseline', 'candidate'] : ['baseline'];
+  for (const optimized of [false, true]) {
+    const baselineReference = references.find(row => row.workload === 'allocation-boundary-reference'
+      && row.arm === 'baseline' && row.optimized === optimized);
+    check(baselineReference !== undefined, `baseline/opt-${optimized ? 'on' : 'off'} boundary reference exists`);
+    const baselineCharge = baselineReference.metrics.allocated_since_begin_bytes;
+    equal(baselineReference.metrics.allocation_peak_bytes, baselineCharge,
+      `baseline/opt-${optimized ? 'on' : 'off'} boundary total charge equals its peak live bytes`);
+    if (mode === 'full') {
+      const candidateReference = references.find(row => row.workload === 'allocation-boundary-reference'
+        && row.arm === 'candidate' && row.optimized === optimized);
+      check(candidateReference !== undefined, `candidate/opt-${optimized ? 'on' : 'off'} boundary reference exists`);
+      equal(baselineCharge - candidateReference.metrics.allocated_since_begin_bytes, logicalCellBytes,
+        `opt-${optimized ? 'on' : 'off'} boundary reference saves exactly one variant-wrapper cell`);
+      equal(baselineReference.metrics.allocation_peak_bytes - candidateReference.metrics.allocation_peak_bytes,
+        logicalCellBytes, `opt-${optimized ? 'on' : 'off'} boundary peak saves one variant-wrapper cell`);
+      equal(candidateReference.metrics.allocation_peak_bytes, candidateReference.metrics.allocated_since_begin_bytes,
+        `candidate/opt-${optimized ? 'on' : 'off'} boundary total charge equals its peak live bytes`);
+    }
+  }
   for (const arm of arms) {
     for (const optimized of [false, true]) {
       const rows = boundaries.filter(row => row.arm === arm && row.optimized === optimized);
       equal(rows.length, 3, `${arm}/opt-${optimized ? 'on' : 'off'} boundary controls count`);
       const byLimit = new Map(rows.map(row => [Number(row.workload.slice('allocation-boundary-'.length)), row]));
-      const chargeRow = byLimit.get(48);
-      const measuredCharge = chargeRow.metrics.allocated_since_begin_bytes;
-      equal(measuredCharge, arm === 'baseline' ? logicalCellBytes : 0,
-        `${arm}/opt-${optimized ? 'on' : 'off'} checked specialized-wrapper charge`);
+      const reference = references.find(row => row.workload === 'allocation-boundary-reference'
+        && row.arm === arm && row.optimized === optimized);
+      check(reference !== undefined, `${arm}/opt-${optimized ? 'on' : 'off'} boundary reference exists`);
+      const baseCharge = mode === 'full'
+        ? references.find(row => row.workload === 'allocation-boundary-reference'
+          && row.arm === 'candidate' && row.optimized === optimized).metrics.allocation_peak_bytes
+        : reference.metrics.allocation_peak_bytes - logicalCellBytes;
+      const measuredCharge = reference.metrics.allocation_peak_bytes;
+      check(baseCharge >= 0 && baseCharge % logicalCellBytes === 0,
+        `${arm}/opt-${optimized ? 'on' : 'off'} non-wrapper reference charge is whole guest cells`);
       for (const limit of [47, 48, 49]) {
         const row = byLimit.get(limit);
-        const expectedStatus = limit < measuredCharge ? 2 : 0;
+        equal(row.runtime_limits.allocation_bytes, baseCharge + limit,
+          `${arm}/opt-${optimized ? 'on' : 'off'} offset ${limit} allocation budget`);
+        const expectedStatus = baseCharge + limit < measuredCharge ? 2 : 0;
         equal(row.observation.status, expectedStatus, `${arm}/opt-${optimized ? 'on' : 'off'} allocation limit ${limit} status`);
         equal(row.observation.quota_reason, expectedStatus === 2 ? 'allocation' : null,
           `${arm}/opt-${optimized ? 'on' : 'off'} allocation limit ${limit} reason`);
@@ -703,6 +740,8 @@ function main() {
   }
   matrixObservations(warmMatrix, mode);
   const controlRows = [];
+  const boundaryReferenceRows = [];
+  const boundaryRuns = [];
   const boundaryRows = [];
   for (const arm of mode === 'full' ? ['baseline', 'candidate'] : ['baseline']) {
     for (const optimized of [false, true]) {
@@ -738,10 +777,24 @@ function main() {
         }
       }
       const boundary = controls.find(row => row.id === 'boundary-single-variant');
-      // This is an additional control, separate from the five canonical case controls.
-      boundaryLimits(sources.get(boundary.form), arm, optimized, boundaryRows, runtimeConfig,
-        compiled.get(`${boundary.form}/${arm}`));
+      const boundarySource = sources.get(boundary.form);
+      const boundaryWat = compiled.get(`${boundary.form}/${arm}`);
+      boundaryReference(boundarySource, arm, optimized, boundaryReferenceRows, runtimeConfig, boundaryWat);
+      boundaryRuns.push({ source: boundarySource, arm, optimized, watArtifact: boundaryWat });
     }
+  }
+  for (const boundaryRun of boundaryRuns) {
+    const referenceArm = mode === 'full' ? 'candidate' : 'baseline';
+    const reference = boundaryReferenceRows.find(row => row.workload === 'allocation-boundary-reference'
+      && row.arm === referenceArm && row.optimized === boundaryRun.optimized);
+    check(reference !== undefined, `opt-${boundaryRun.optimized ? 'on' : 'off'} boundary budget reference exists`);
+    const baseCharge = mode === 'full'
+      ? reference.metrics.allocation_peak_bytes
+      : reference.metrics.allocation_peak_bytes - logicalCellBytes;
+    check(baseCharge >= 0 && baseCharge % logicalCellBytes === 0,
+      `opt-${boundaryRun.optimized ? 'on' : 'off'} boundary reference charge is whole guest cells`);
+    boundaryLimits(boundaryRun.source, boundaryRun.arm, boundaryRun.optimized, baseCharge,
+      boundaryRows, runtimeConfig, boundaryRun.watArtifact);
   }
   for (const row of controlRows) {
     if (mode === 'full') {
@@ -750,7 +803,7 @@ function main() {
       if (row.arm === 'candidate') compareSemantic(baseline, row, keyFor(row.workload, row.arm, row.optimized));
     }
   }
-  checkBoundaryGroups(boundaryRows, mode);
+  checkBoundaryGroups(boundaryRows, boundaryReferenceRows, mode);
   let decision = { outcome: 'pending-candidate-comparison', reasons: [] };
   if (mode === 'full') {
     const completeMatrix = Object.values(warmMatrix);
@@ -832,7 +885,8 @@ function main() {
       runtime_config_sha256: sha256(fs.readFileSync(path.join(runtimeConfig.runtime, 'config.json'))),
     },
     workloads: Object.fromEntries(Object.entries(warmMatrix)),
-    controls: { case_controls: controlRows, allocation_limit_boundaries: boundaryRows,
+    controls: { case_controls: controlRows, allocation_reference_runs: boundaryReferenceRows,
+      allocation_limit_boundaries: boundaryRows,
       shared_alias_and_branch_laziness_are_additional_controls: true,
       runtime_capture_control: 'runtime-captured-quote-and-composition is included in the workload matrix' },
     compiler: compilerRecords,
@@ -843,8 +897,8 @@ function main() {
   const receiptPath = path.join(artifacts, 'receipt.json');
   fs.writeFileSync(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, { flag: 'wx' });
   const summary = mode === 'baseline-only'
-    ? `ADAPT17_GATE baseline-only: workloads=${workloads.length * 2}, controls=${controlRows.length + boundaryRows.length}, checks=${checks.length}, result=PASS`
-    : `ADAPT17_GATE full: workloads=${workloads.length * 4}, controls=${controlRows.length + boundaryRows.length}, checks=${checks.length}, decision=${decision.outcome}`;
+    ? `ADAPT17_GATE baseline-only: workloads=${workloads.length * 2}, controls=${controlRows.length + boundaryReferenceRows.length + boundaryRows.length}, checks=${checks.length}, result=PASS`
+    : `ADAPT17_GATE full: workloads=${workloads.length * 4}, controls=${controlRows.length + boundaryReferenceRows.length + boundaryRows.length}, checks=${checks.length}, decision=${decision.outcome}`;
   console.log(`${summary} receipt=${receiptPath} source=${sourceIdentity.commit}`);
 }
 
