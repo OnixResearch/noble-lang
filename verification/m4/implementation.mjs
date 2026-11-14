@@ -280,6 +280,13 @@ try {
     lean: tool('lean', 'lean'), lake: tool('lean', 'lake'), node: process.execPath, git };
   evidence.tools = Object.fromEntries(Object.entries(binaries).map(([name, binary]) => [name, identity(binary)]));
   if (expectedLock) equal(evidence.tools, expectedLock.tools, 'TOOL', 'reviewed binary identity drift');
+  const sourceCommit = run('source-commit', binaries.git,
+    ['--no-optional-locks', '--no-replace-objects', 'rev-parse', 'HEAD'], root).output.trim();
+  if (!/^[0-9a-f]{40}$/.test(sourceCommit)) fail('SOURCE', 'invalid source commit');
+  evidence.source_commit = sourceCommit;
+  const sourceStatus = run('source-clean', binaries.git, ['--no-optional-locks', '--no-replace-objects',
+    '-c', 'core.fsmonitor=false', 'status', '--porcelain=v1', '--untracked-files=all', '--ignore-submodules=none'], root).output;
+  if (sourceStatus) fail('SOURCE', 'dirty worktree; commit before producing extraction evidence');
   run('opaque-model-review', binaries.node, ['--test', 'verification/m4/opaque-model-review.test.mjs'],
     workspace, {}, false, 30_000);
   evidence.versions = Object.fromEntries(Object.entries(binaries).map(([name, binary]) => [name,
