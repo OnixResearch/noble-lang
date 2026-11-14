@@ -124,11 +124,12 @@ export const inheritedOpaque = [
 // structural Clone; nominal identity and shape are copied, not re-resolved.
 // Formatting remains observational and propagates formatter failure; pretty
 // layout and allocator success remain outside the extracted claim.
-// Selected rustfmt and the 300-line cap renew the complete-file source pin;
-// both inherited opaque helper bodies retain their exact reviewed hashes.
+// Recent bounded structural-equality refactors changed adjacent non-opaque
+// code in both impls.rs files. Re-pin the current file bytes only after the
+// five separately hashed opaque helper bodies are verified unchanged.
 export const inheritedOpaqueSources = {
-  'crates/noble-kernel/src/types/impls.rs': '27f120e09d1931e4c52919988316e2324e33bc9a1c707ca02478178c43d30f7d',
-  'crates/noble-kernel/src/shapes/impls.rs': '47b18106144c0004abec92a0fb3ef3364797bee3b57e774e39e6a2b55970b30a',
+  'crates/noble-kernel/src/types/impls.rs': '636c0927667693891485be5bf1d57527975c8e7b13e217000f234c152e11a02f',
+  'crates/noble-kernel/src/shapes/impls.rs': 'c5e01ec491af3ac46488e567ff2d3c0b9531a22e11cc842ecab7604544620413',
 };
 export const inheritedOpaqueBodies = {
   'crates/noble-kernel/src/types/impls.rs': {
