@@ -7,6 +7,8 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { bisectRegression, classifyChanges, compareDirectToManifest, compareManifests,
   dependencyToolchainMismatches, directDependencies, linearScan } from './core.mjs';
+import { requiredDifferentialControlIds, verifyRequiredDifferentialControls }
+  from '../foundation/control-ids.mjs';
 import { buildCacheInventory, compareBuildCaches, planQualification, profileDefinitions,
   replayEnvironment, requestCancellation, runProcess, seedProjectCaches } from './qualify.mjs';
 
@@ -250,6 +252,57 @@ test('differential replay process receives a sanitized environment', () => {
     CARGO_TARGET_DIR: '/dev/shm/target', GIT_TERMINAL_PROMPT: '0', LEAN_ABORT_ON_PANIC: '1' });
   assert.deepEqual(replay, { HOME: '/home/test', USER: 'test', LOGNAME: 'test', LANG: 'C.UTF-8',
     CI: '1', PATH: '/pinned/bin', TMPDIR: '/scratch' });
+});
+
+test('differential gate rejects a missing required negative control', () => {
+  const controls = requiredDifferentialControlIds.map(id => ({ id, demonstrably_fails: true }));
+  assert.deepEqual(verifyRequiredDifferentialControls(controls).required_control_ids,
+    requiredDifferentialControlIds);
+  assert.throws(() => verifyRequiredDifferentialControls(controls.filter(control =>
+    control.id !== 'trace-mismatch')), /missing or invalid required negative controls.*trace-mismatch/);
+});
+
+test('foundation gate self-test refuses a missing theorem root and an extra axiom', () => {
+  const node = join(policy.tool_paths.node.output, 'bin/node');
+  const result = spawnSync(node, [join(root, 'verification/foundation/check.mjs'), '--self-test'], {
+    cwd: root, env: lakeEnv, encoding: 'utf8',
+  });
+  assert.equal(result.status, 0, result.stderr);
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.self_test, true);
+  for (const caseName of ['extra axiom declaration is refused',
+    'missing module removes its inventoried theorem root',
+    'changed theorem root does not satisfy the inventory']) {
+    assert.ok(report.cases.some(item => item.case === caseName && item.refused), `missing control ${caseName}`);
+  }
+});
+
+test('Lake rejects a stale compiled artifact and a missing imported module', () => {
+  const fixture = join(testRoot, 'stale-lean-artifact');
+  const childSource = join(fixture, 'Mini/Child.lean');
+  const childArtifact = join(fixture, '.lake/build/lib/lean/Mini/Child.olean');
+  write(fixture, 'lean-toolchain', 'leanprover/lean4:v4.35.0\n');
+  write(fixture, 'lakefile.toml', 'name = "stale-fixture"\ndefaultTargets = ["Mini"]\n[[lean_lib]]\nname = "Mini"\n');
+  write(fixture, 'Mini.lean', 'import Mini.Child\nnamespace Mini\ntheorem root : True := child\nend Mini\n');
+  const child = 'namespace Mini\ntheorem child : True := trivial\nend Mini\n';
+  write(fixture, 'Mini/Child.lean', child);
+  const lake = join(leanBin, 'lake');
+  const build = () => spawnSync(lake, ['build', 'Mini'], { cwd: fixture, env: lakeEnv, encoding: 'utf8' });
+  const initial = build();
+  assert.equal(initial.status, 0, `initial synthetic proof build failed: ${initial.stderr}`);
+  assert.equal(existsSync(childArtifact), true, 'fixture did not produce the compiled child module');
+
+  writeFileSync(childSource, 'namespace Mini\ntheorem child : False := by trivial\nend Mini\n');
+  assert.equal(existsSync(childArtifact), true, 'invalid source mutation did not leave a stale compiled artifact');
+  const stale = build();
+  assert.notEqual(stale.status, 0, 'Lake accepted the stale compiled artifact after its source changed');
+
+  writeFileSync(childSource, child);
+  const restored = build();
+  assert.equal(restored.status, 0, `restored synthetic proof build failed: ${restored.stderr}`);
+  rmSync(childSource);
+  const missing = build();
+  assert.notEqual(missing.status, 0, 'Lake accepted a missing imported source module from cached outputs');
 });
 
 test('package build cache copies are private and cache changes are reported', () => {

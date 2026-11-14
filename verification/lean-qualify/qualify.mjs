@@ -115,6 +115,7 @@ function affectedPath(path, profile) {
       'verification/ci/lean-proofs.sh', 'verification/m3-proof-gate.sh',
       'verification/lean-source-scan.mjs', 'verification/foundation/check.mjs',
       'verification/foundation/claims.mjs', 'verification/foundation/differential.mjs',
+      'verification/foundation/control-ids.mjs',
       'verification/foundation/arithmetic.mjs', 'verification/foundation/execution.mjs',
       'verification/foundation/emi-controls.mjs', 'verification/mc1/gate.mjs',
     ].includes(path);
