@@ -39,6 +39,12 @@ Lean run theorem covers periodic site sequences only. Therefore `accepted` means
 closure criterion holds in the checked matrix model; it does not establish termination of every
 possible call sequence. A refusal means **not shown terminating**, not divergence.
 
+The missing theorem is `matrix_closure_sct_terminates`: for any `MatrixClosureCertificate` and any
+`MatrixSiteRun` over the same site matrices, the checked strict-diagonal condition for every idempotent
+closure member must imply `False`. The existing `periodic_site_run_terminates` proves only the case
+where the run's site sequence is periodic and its period product is idempotent; that hypothesis is not
+established for an arbitrary run.
+
 The current checked source profile admits direct `SelfOwner` calls only. Named/helper calls are
 unsupported; mutual-recursion groups are not admitted by the current source resolver and are not
 part of this profile. There is no correspondence theorem from the Rust classifier to source
