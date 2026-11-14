@@ -1,0 +1,70 @@
+{
+  "schema": "noble-issue62-strength-join/v1",
+  "measured_on": "2026-11-14",
+  "host": "Linux 6.18.60 x86_64",
+  "source_commit": "586e1db3d079de3bccbb7e9e717d4471e265a7ae",
+  "clean_worktree_at_start": true,
+  "assertion": "On the clean source commit, the authoritative M2 and M3 strength joins pass with every current citation classified; the joined strength labels describe theorem statement shape, not reference-model correctness.",
+  "holds": true,
+  "toolchain": {
+    "lean": "4.35.0",
+    "bun": "1.4.4",
+    "lean_bin": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin"
+  },
+  "commands": [
+    {
+      "command": "PATH=/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:/nix/store/7py3q3rn0qbcyzwqk6mdbyd8r1m9x54r-bun-1.4.4/bin:/run/current-system/sw/bin:/usr/bin:/bin ~/.cache/noble-iss/slot.sh lean 3 verification/m2-coverage-gate.sh",
+      "exit_status": 0,
+      "result": "PASS (all checks)",
+      "record": "verification/m2-coverage.json",
+      "record_sha256": "69be2eda1393cf54f54d00661a22c46ea370750eacdeeb5543a29c994a957916",
+      "summary": {
+        "total": 515,
+        "classified": 515,
+        "extracted": 491,
+        "proved": 0,
+        "fixture_checked": 1,
+        "modeled": 18,
+        "excepted": 5,
+        "open": 0,
+        "citations": 13,
+        "fixture": 12,
+        "conditional": 1,
+        "universal": 0,
+        "strict": 1,
+        "native": 12,
+        "strict_universal": 0
+      }
+    },
+    {
+      "command": "PATH=/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:/nix/store/7py3q3rn0qbcyzwqk6mdbyd8r1m9x54r-bun-1.4.4/bin:/run/current-system/sw/bin:/usr/bin:/bin ~/.cache/noble-iss/slot.sh lean 3 verification/m3-coverage-gate.sh",
+      "exit_status": 0,
+      "result": "PASS (all checks, no handoff mode)",
+      "record": "verification/m3-coverage.json",
+      "record_sha256": "7ec32943c30d8ea053a0e94c36c7ede1a0c05354e16b7aff70e0b894d6aae7ff",
+      "summary": {
+        "total": 1983,
+        "classified": 1983,
+        "extracted": 1919,
+        "proved": 0,
+        "fixture_checked": 1,
+        "modeled": 58,
+        "excepted": 5,
+        "open": 0,
+        "citations": 29,
+        "fixture": 26,
+        "conditional": 3,
+        "universal": 0,
+        "strict": 3,
+        "native": 26,
+        "strict_universal": 0
+      }
+    }
+  ],
+  "replay_lane_binding_change": "none",
+  "non_claims": [
+    "Strength labels measure statement shape, not reference-model correctness.",
+    "A native evaluation fixture is not thereby a universal proof.",
+    "This receipt does not claim correctness of extracted Noble code."
+  ]
+}
