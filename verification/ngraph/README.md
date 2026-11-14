@@ -300,6 +300,42 @@ The runner refuses dirty source or pre-existing output/evidence paths and retain
 streams and source snapshots beside the receipt. This is the historical v3 result; it does not
 include the separate `ngraph-cert/2` follow-up or its v4 integrated measurement below.
 
+### Issue #64 v4 clean-source integrated measurement
+
+The frozen [v4 pre-registration](rewrite-cost-v4.txt) was committed at
+`eb3a04b321906d60bc95141d36aa793467e8d021` before the measurement. It binds the unchanged v2 corpus
+(`a12868237708aa177636ce63f9ee6dd98edd2ba2e8fd321106d696a239e02ea3`) and reuses the v2 residual
+target `no-foldable-sites` and 50 µs/step checker threshold unchanged. The v2/v3 plans and receipts
+remain untouched. The clean-source [v4 receipt](rewrite-cost-v4-2026-11-13.json) binds source commit
+`bbcfd3170a0e81ca3543a55830f764a8270b4cd1`, tree
+`53fbe98889645f6685dc5872122a759f78657ea9`, and the v4 plan digest
+`fb17e8aadc678d35ce47d3d4b4f388bd2fd0f769e398574b3405bac93839dccc`. The sibling
+`.evidence` directory retains the source snapshots, process record, raw stdout/stderr, and Cargo
+configuration; the receipt binds each file by digest. The initial clean attempt exposed a summary
+bug that counted break-even estimates at the wrong JSON level. That attempt was retained outside the
+repository; the runner fix was committed before the corrected receipt below was produced.
+
+| Observation | Result |
+|---|---|
+| Raw certificate coverage | 32 attempts, 32 accepted, 0 refused; 20 reached the residual target. |
+| Integrated pipeline | 32/32 executed; 0 input, certificate, candidate-admission, layout, or execution refusals. |
+| Executed non-identity candidates | 24; 20 reached the unchanged residual target, with at least one target-reaching candidate on each of the eight fixtures. All 32 complete ordered output vectors agree with the source reference, including repeated output indices. |
+| Certificate-check cost per step | 25.44–37.54 µs across all 24 step-bearing rows, below the unchanged 50 µs/step threshold. Identity rows have no step cost. |
+| Fresh full-attempt medians, 32 rows | Baseline 18.134–25.939 µs; certified 68.879–221.164 µs. `Fresh` reuses no admitted graph, compiled artifact, or workspace; it is not OS-cache-cold. |
+| Cached warm-execution medians, 32 rows | Baseline 0.271–0.400 µs; certified 0.231–0.400 µs. Warm reuses the admitted compiled artifact and workspace. |
+| Break-even | 20 conditional median-based estimates on target-reaching rows; measured warm saving 0.031–0.080 µs and additional fresh cost 50.745–196.307 µs imply 2,124–4,374 total runs including the first. These are estimates, not observed amortization. |
+| Continuation decision | **GO** under the frozen continuation criteria: every fixture has an executed non-identity target-reaching candidate and every step-bearing check is under 50 µs. This is not a general speedup claim: certified fresh attempts are slower in every row, break-even is only estimated, and allocator/RSS and OS-cache-cold costs remain unmeasured. |
+
+The first run's receipt summary reported zero break-even estimates even though its per-row records
+contained them. The fix corrected this summary to 20 before the retained clean-source run; the
+corrected run's raw output and source snapshots are bound by the receipt. Reproduce from a clean
+committed checkout, using the selected Node executable in `policy/tool-selection.json` and a new
+output path outside the repository:
+
+```text
+node verification/ngraph/rewrite-cost.mjs --output <new directory outside the repository>/rewrite-cost-v4-2026-11-13.json
+```
+
 ### Issue #64 effects-as-laws controls
 
 `crates/noble-kernel/tests/acceptance/rewrite/effect/laws.rs` adds controls to the existing kernel
@@ -321,6 +357,8 @@ by this kernel interface, and no guarantee about them is made.
 
 | File | Content |
 |---|---|
+| [rewrite-cost-v4.txt](rewrite-cost-v4.txt) | Frozen v4 preregistration, binding the v2 corpus and unchanged quality/cost thresholds. |
+| [rewrite-cost-v4-2026-11-13.json](rewrite-cost-v4-2026-11-13.json) and its sibling `.evidence/` directory | Clean-source issue #64 v4 integrated cost/quality receipt and hash-bound process/source evidence. |
 | [phase-b-core.json](phase-b-core.json) | Core receipt (schema `noble-ngraph-phase-b-core-evidence/v1`): BE-CONFIG-01 run fields and one EV-STATE-01 record per item, each with `implementation`, `execution`, `proof`, `trust`, open obligations, trusted boundaries and its result. |
 | [phase-b-extract.json](phase-b-extract.json) | `I64` extraction-leg receipt (schema `noble-ngraph-phase-b-extract-evidence/v1`): BE-CONFIG-01 run fields (including the pinned CLI and Node with their SHA-256) and the EV-STATE-01 records `B1-I64-lowering`, `B2-I64-differential` and `B3-I64-source-controls`. |
 | [phase-b-extract-2026-11-12.json](phase-b-extract-2026-11-12.json) | The same extraction leg rerun at source revision `83ff2654` with a release `noble` built from that commit (SHA-256 `6d7a4b1d…60c8`), after B2 began requiring every L1 program to have at least one agreement and every L1 vector to be an agreement or a recorded quota outcome. All three records pass. L1 agrees on 562 of 562 vectors in both `--opt` legs, with 0 quota outcomes and 3 session restarts; `random-1`, whose 24 vectors the `eccbc02` CLI of `phase-b-extract.json` refused as `exhausted`, agrees on all 24, as the 2026-10-30 re-check found for newer CLIs. Under the current rule the 2026-10-15 run would record `B2-I64-differential` as failed, because `random-1` had no ordinary-path agreement. `phase-b-extract.json` stays the baseline that `l1-attribution-2026-10-30.json` binds. |

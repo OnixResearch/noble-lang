@@ -19,6 +19,8 @@ The v3 measurement leaves the issue's executable-optimization claim unresolved: 
 
 **Rationale:** This isolates the effect of enabling real non-identity execution without moving goalposts or changing the fixture population. A refusal is not an execution; proposal cost does not substitute for certified candidate cost. Report GO only if the frozen threshold and residual target are attained with non-identity candidates actually executed; otherwise retain the measured result as NO-GO without tuning the plan.
 
+**Measured outcome:** **GO to continue** under the frozen quality/check criteria. The clean-source [v4 receipt](../../../verification/ngraph/rewrite-cost-v4-2026-11-13.json), source commit `bbcfd3170a0e81ca3543a55830f764a8270b4cd1`, records 32 accepted/executed rows, including 24 non-identity candidates; 20 rows reach `no-foldable-sites`, with at least one target-reaching candidate for each of the eight fixtures. Every step-bearing row stays below the unchanged 50 µs/step threshold (25.44–37.54 µs). Twenty qualifying rows yield only conditional break-even estimates: 2,124–4,374 total runs including the first. Certified fresh attempts are slower than the baseline in every row, so this is a GO for continued correctness/quality work, not a production speedup or cost-benefit claim. Reopen D3 only for an identified registration error, not to move the frozen thresholds in response to these results.
+
 ## Risks / Trade-offs
 
 - A complete chain can change intermediate node numbering only through the certified rewrite/prune rules; all transitions and the final pruned endpoint must remain bound to exact graph digests.
