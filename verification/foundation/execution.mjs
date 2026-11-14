@@ -18,18 +18,20 @@ export function buildCli({ root, out, selection, childBase, run, targetDir }) {
   writeFileSync(join(cargoHome, 'config.toml'),
     '[source.crates-io]\nreplace-with = "reviewed-vendor"\n[source.reviewed-vendor]\n' +
     `directory = ${JSON.stringify(vendor.directory)}\n[net]\noffline = true\n`);
+  const selectedTarget = targetDir ?? join(root, 'target');
   const env = { ...childBase, TMPDIR: out, CARGO_HOME: cargoHome,
+    NOBLE_TARGET: selectedTarget,
     PATH: `${selection.component_sync.linker_bin}:${childBase.PATH}`,
     RUSTC_WRAPPER: '', RUSTC_WORKSPACE_WRAPPER: '', CARGO_BUILD_RUSTC_WRAPPER: '',
     RUSTFLAGS: '', CARGO_ENCODED_RUSTFLAGS: '', CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS: '',
-    CARGO_TARGET_DIR: targetDir ?? join(root, 'target') };
+    CARGO_TARGET_DIR: selectedTarget };
   const cargo = join(selection.tool_paths.quality_rust.output, 'bin/cargo');
   const built = run(cargo, ['build', '--locked', '--offline', '-j', '4', '-p', 'noble-cli'],
     { cwd: root, env, allowFailure: true });
   writeFileSync(join(out, 'cargo-build.stdout'), built.stdout);
   writeFileSync(join(out, 'cargo-build.stderr'), built.stderr);
   requireThat(built.status === 0, `CLI build failed: ${built.stderr}`);
-  return { cli: join(targetDir ?? join(root, 'target'), 'debug/noble'), env, vendor };
+  return { cli: join(selectedTarget, 'debug/noble'), env, vendor };
 }
 
 export function observation(report) {

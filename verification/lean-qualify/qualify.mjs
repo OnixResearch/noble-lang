@@ -392,6 +392,11 @@ function childEnvironment(tools, output, targetDir) {
     RUSTC_WRAPPER: '', RUSTFLAGS: '', LEAN_ABORT_ON_PANIC: '1' };
 }
 
+function replayEnvironment(env) {
+  return { HOME: env.HOME, USER: env.USER, LOGNAME: env.LOGNAME, LANG: env.LANG,
+    CI: env.CI, PATH: env.PATH, TMPDIR: env.TMPDIR };
+}
+
 function walkTree(root, visit) {
   const stack = [root];
   while (stack.length) {
@@ -708,7 +713,8 @@ async function runOneRevision({ revision, side, plan, output, scratch, profileNa
     const replayArgs = [differential, '--seed', '15', '--count', '80', '--foundation', foundationReceipt,
       '--output', replayOut, '--target-dir', env.NOBLE_TARGET];
     const replayRecord = { name: 'foundation-differential', command: [tools.node, ...replayArgs], cwd: worktree, required: true };
-    const replayResult = await stage(tools.node, replayArgs, { cwd: worktree, env,
+    const replayEnv = replayEnvironment(env);
+    const replayResult = await stage(tools.node, replayArgs, { cwd: worktree, env: replayEnv,
       logPath: join(output, 'stages', `${side}-foundation-differential.log`), outputRoot: output }, replayRecord);
     row.stages.push(replayRecord);
     if (replayResult.status !== 0) throw new QualificationError('REPLAY_CONTROL_FAILED',
@@ -719,7 +725,7 @@ async function runOneRevision({ revision, side, plan, output, scratch, profileNa
       'differential checker succeeded without a retained receipt');
     const verifyArgs = [differential, '--verify', receipt];
     const verifyRecord = { name: 'foundation-differential-verify', command: [tools.node, ...verifyArgs], cwd: worktree, required: true };
-    const verifyResult = await stage(tools.node, verifyArgs, { cwd: worktree, env,
+    const verifyResult = await stage(tools.node, verifyArgs, { cwd: worktree, env: replayEnv,
       logPath: join(output, 'stages', `${side}-foundation-differential-verify.log`), outputRoot: output }, verifyRecord);
     row.stages.push(verifyRecord);
     if (verifyResult.status !== 0) throw new QualificationError('REPLAY_CONTROL_FAILED',
@@ -966,4 +972,4 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
 
 export { profileDefinitions, snapshotRevision, planQualification, runQualification, runOneRevision,
   verifyReviewPlan, localize, runProcess, buildCacheInventory, compareBuildCaches,
-  seedProjectCaches, treeUsage };
+  replayEnvironment, seedProjectCaches, treeUsage };

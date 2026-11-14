@@ -8,7 +8,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { bisectRegression, classifyChanges, compareDirectToManifest, compareManifests,
   dependencyToolchainMismatches, directDependencies, linearScan } from './core.mjs';
 import { buildCacheInventory, compareBuildCaches, planQualification, profileDefinitions,
-  requestCancellation, runProcess, seedProjectCaches } from './qualify.mjs';
+  replayEnvironment, requestCancellation, runProcess, seedProjectCaches } from './qualify.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const policy = JSON.parse(readFileSync(join(root, 'policy/tool-selection.json'), 'utf8'));
@@ -242,6 +242,14 @@ test('foundation compatibility profile does not build M3/Aeneas but retains its 
   assert.deepEqual(profile.requiredCheckers,
     ['verification/foundation/check.mjs', 'verification/foundation/differential.mjs']);
   assert.match(profile.explanation, /rebuilding Aeneas is forbidden/);
+});
+
+test('differential replay process receives a sanitized environment', () => {
+  const replay = replayEnvironment({ HOME: '/home/test', USER: 'test', LOGNAME: 'test', LANG: 'C.UTF-8',
+    CI: '1', PATH: '/pinned/bin', TMPDIR: '/scratch', NOBLE_TARGET: '/dev/shm/target',
+    CARGO_TARGET_DIR: '/dev/shm/target', GIT_TERMINAL_PROMPT: '0', LEAN_ABORT_ON_PANIC: '1' });
+  assert.deepEqual(replay, { HOME: '/home/test', USER: 'test', LOGNAME: 'test', LANG: 'C.UTF-8',
+    CI: '1', PATH: '/pinned/bin', TMPDIR: '/scratch' });
 });
 
 test('package build cache copies are private and cache changes are reported', () => {
