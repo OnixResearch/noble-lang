@@ -457,16 +457,19 @@ function checkControlExpected(controlId, row) {
   const name = `${controlId}/${row.arm}/opt-${row.optimized ? 'on' : 'off'}`;
   if (controlId === 'shared-alias') {
     expectNormal(row, name);
-    equal(row.observation.stack.length, 1, `${name} stack height`);
-    equal(row.observation.stack[0].type, 'Pair', `${name} alias result type`);
-    equal(row.observation.stack[0].value[0].type, 'Program', `${name} aliased Program retained`);
-    equal(row.observation.stack[0].value[1].type, 'I64', `${name} selected branch result type`);
-    equal(row.observation.stack[0].value[1].value, '1', `${name} selected branch result`);
-    deepEqual(row.observation.stack[0].value[0].recipe, [
+    equal(row.observation.stack.length, 2, `${name} retains its Program and Pair roots`);
+    equal(row.observation.stack[0].type, 'Program', `${name} captured Program root type`);
+    deepEqual(row.observation.stack[0].recipe, [
       { literal: { type: 'I64', value: '7' } },
+    ], `${name} captured Program recipe`);
+    equal(row.observation.stack[1].type, 'Pair', `${name} alias result type`);
+    equal(row.observation.stack[1].value[0].type, 'Program', `${name} aliased Program retained`);
+    equal(row.observation.stack[1].value[1].type, 'I64', `${name} selected branch result type`);
+    equal(row.observation.stack[1].value[1].value, '1', `${name} selected branch result`);
+    deepEqual(row.observation.stack[1].value[0].recipe, [
       { literal: { type: 'I64', value: '1' } },
       { invoke: 'builtin:i64.add' },
-    ], `${name} exact aliased capture recipe`);
+    ], `${name} exact retained branch Program recipe`);
   } else if (controlId === 'branch-laziness') {
     expectNormal(row, name);
     deepEqual(row.observation.stack, [{ type: 'Pair', value: [
