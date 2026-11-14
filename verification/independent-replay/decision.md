@@ -58,24 +58,20 @@ result.
 
 ## (d) Remaining `native_decide` conversions
 
-The previous deferral awaited #97's extraction merge so the conversion inventory would not describe
-stale source. Reopened against the current slice base: the in-flight #97 branch changes only
-`proofs/foundation/NobleFoundation.lean`, its foundation modules, README, and inventory; it does not
-change `proofs/m2/` or `proofs/m3/`. Therefore the remaining M2/M3 candidates in this worktree are
-current for the requested conversion trial and do not need an unmerged foundation source.
+**Deferred by the integrator's scope direction until #97 lands.** This slice is limited to items
+(a)–(c); the conversion inventory and gates must be resumed against the post-extraction source, not
+treated as completed here. Existing bounded trials and their reasons remain in the README's
+conversion table.
 
-Before measuring, the still-untried bounded targets in the existing README table are the three
-direct `native_decide` acceptance fixtures in `proofs/m3/NobleM2/SignedSelf.lean`:
-`forever_accepted`, `polymorphic_ordinary_check_accepts`, and `monomorphic_accepted`. The M3 proof
-gate separately lists the dependent `forever_signed_derives` theorem in its native-axiom allowance;
-that theorem will become strict automatically only if its `forever_accepted` dependency becomes
-strict. Try each direct proposition with `decide +kernel` under 1,000,000 heartbeats and recursion
-depth 4,096. Change only proofs that complete within this fixed budget; retain native evaluation for
-any target that does not. Do not add any of these declarations to the external replay corpus: the
-three compiled-environment roots in `statements.json` remain the only selected roots.
+One exploratory `decide +kernel` trial ran before the scope reminder, on the clean source commit
+`9aef4bc`, for `NobleM2.SignedSelf.forever_accepted` in `proofs/m3/NobleM2/SignedSelf.lean`. The
+pinned Lean 4.35.0 invocation used 1,000,000 heartbeats and recursion depth 4,096. It failed with
+“Tactic `decide` failed to reduce”; reduction was stuck at the `checkSigned` result match inside
+`acceptsWith`, not reported as a heartbeat timeout. The two other still-native SignedSelf
+acceptance fixtures were not tried. This single observation is not a conversion or strength-join
+result, and did not change any proof source.
 
-Previously measured conversion attempts and their reduction limits remain documented in the README
-table above; this follow-up does not repeat the known failed trials. After the SignedSelf trial,
-record exact results and re-run M2/M3 proof and coverage gates, their refusal matrices, and the
-strength joins before updating the conversion counts. Revisit further sites only if a reduction
-definition or the declared budget changes.
+Reopen after #97's re-extraction merges: re-inventory its resulting candidates, attempt the remaining
+bounded conversions file by file, and run the M2/M3 proof and coverage gates, refusal harnesses, and
+strength join after each conversion commit. Keep the external replay roots unchanged unless a
+separate claim-selection decision authorizes new roots.
