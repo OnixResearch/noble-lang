@@ -727,8 +727,17 @@
           "lean_check": null
         }
       },
-      "state": {"implementation": "implemented", "execution": "not-run", "proof": "open", "trust": "unassessed"},
-      "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "kind": "test",
+        "subject": "REC-SC-01",
+        "claim": "The clean source-built CLI accepted structural list-tail recursion under the bounded size-change closure checker, with the REC-SC-01 report and Lean certificate retained.",
+        "revision": "0.1.0-draft.5",
+        "result": "passed",
+        "source_revision": "git-tree:6d8fa7f959edfa19bae50f775c758cbdace25417",
+        "configuration": {"profile": "Signed-Declared-Text-v1", "receipt": "../../verification/size-change/scenarios-c205fa42b76239a94a75998a924956b1c36eb52e.json", "receipt_sha256": "50837190b4529f8bcc217a2355a36cb62c73e3b2423c21363c1df6c0479f5036", "gate": "../../verification/size-change/scenarios.mjs", "case": "REC-SC-01"},
+        "assumptions": ["One clean production-session result from source commit c205fa4; evidence is limited to that execution.", "The reference-model audit does not prove arbitrary-run size-change soundness or correspondence to Rust, so proof remains open."]
+      }]
     },
     {
       "id": "REC-SC-02",
@@ -764,8 +773,17 @@
           "lean_check": null
         }
       },
-      "state": {"implementation": "implemented", "execution": "not-run", "proof": "open", "trust": "unassessed"},
-      "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "kind": "test",
+        "subject": "REC-SC-02",
+        "claim": "The clean source-built CLI accepted guarded counter-predecessor recursion under the bounded size-change closure checker, with the REC-SC-02 report and Lean certificate retained.",
+        "revision": "0.1.0-draft.5",
+        "result": "passed",
+        "source_revision": "git-tree:6d8fa7f959edfa19bae50f775c758cbdace25417",
+        "configuration": {"profile": "Signed-Declared-Text-v1", "receipt": "../../verification/size-change/scenarios-c205fa42b76239a94a75998a924956b1c36eb52e.json", "receipt_sha256": "50837190b4529f8bcc217a2355a36cb62c73e3b2423c21363c1df6c0479f5036", "gate": "../../verification/size-change/scenarios.mjs", "case": "REC-SC-02"},
+        "assumptions": ["One clean production-session result from source commit c205fa4; evidence is limited to that execution.", "The reference-model audit does not prove arbitrary-run size-change soundness or correspondence to Rust, so proof remains open."]
+      }]
     },
     {
       "id": "REC-SC-03",
@@ -801,8 +819,17 @@
           "lean_check": null
         }
       },
-      "state": {"implementation": "implemented", "execution": "not-run", "proof": "open", "trust": "unassessed"},
-      "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "kind": "test",
+        "subject": "REC-SC-03",
+        "claim": "The clean source-built CLI refused non-decreasing self-recursion with the reported non-decreasing-site witness, preserving the existing REC-SC-03 result.",
+        "revision": "0.1.0-draft.5",
+        "result": "passed",
+        "source_revision": "git-tree:6d8fa7f959edfa19bae50f775c758cbdace25417",
+        "configuration": {"profile": "Signed-Declared-Text-v1", "receipt": "../../verification/size-change/scenarios-c205fa42b76239a94a75998a924956b1c36eb52e.json", "receipt_sha256": "50837190b4529f8bcc217a2355a36cb62c73e3b2423c21363c1df6c0479f5036", "gate": "../../verification/size-change/scenarios.mjs", "case": "REC-SC-03"},
+        "assumptions": ["One clean production-session result from source commit c205fa4; evidence is limited to that execution.", "The reference-model audit does not prove arbitrary-run size-change soundness or correspondence to Rust, so proof remains open."]
+      }]
     },
     {
       "id": "REC-SC-04",
@@ -838,8 +865,17 @@
           "lean_check": null
         }
       },
-      "state": {"implementation": "implemented", "execution": "not-run", "proof": "open", "trust": "unassessed"},
-      "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "kind": "test",
+        "subject": "REC-SC-04",
+        "claim": "The clean source-built CLI refused wrapping counter recursion as opaque, preserving the existing REC-SC-04 result.",
+        "revision": "0.1.0-draft.5",
+        "result": "passed",
+        "source_revision": "git-tree:6d8fa7f959edfa19bae50f775c758cbdace25417",
+        "configuration": {"profile": "Signed-Declared-Text-v1", "receipt": "../../verification/size-change/scenarios-c205fa42b76239a94a75998a924956b1c36eb52e.json", "receipt_sha256": "50837190b4529f8bcc217a2355a36cb62c73e3b2423c21363c1df6c0479f5036", "gate": "../../verification/size-change/scenarios.mjs", "case": "REC-SC-04"},
+        "assumptions": ["One clean production-session result from source commit c205fa4; evidence is limited to that execution.", "The reference-model audit does not prove arbitrary-run size-change soundness or correspondence to Rust, so proof remains open."]
+      }]
     },
     {
       "id": "REC-SC-05",
@@ -884,8 +920,17 @@
           "lean_check": null
         }
       },
-      "state": {"implementation": "implemented", "execution": "not-run", "proof": "open", "trust": "unassessed"},
-      "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "kind": "test",
+        "subject": "REC-SC-05",
+        "claim": "The clean source-built CLI accepted the argument-permuting recursive definition by the bounded composed-graph criterion, with closure paths and a strict diagonal witness retained.",
+        "revision": "0.1.0-draft.5",
+        "result": "passed",
+        "source_revision": "git-tree:6d8fa7f959edfa19bae50f775c758cbdace25417",
+        "configuration": {"profile": "Signed-Declared-Text-v1", "receipt": "../../verification/size-change/scenarios-c205fa42b76239a94a75998a924956b1c36eb52e.json", "receipt_sha256": "50837190b4529f8bcc217a2355a36cb62c73e3b2423c21363c1df6c0479f5036", "gate": "../../verification/size-change/scenarios.mjs", "case": "REC-SC-05"},
+        "assumptions": ["One clean production-session result from source commit c205fa4; evidence is limited to that execution.", "The reference-model audit does not prove arbitrary-run size-change soundness or correspondence to Rust, so proof remains open."]
+      }]
     },
     {
       "id": "REC-SC-06",
@@ -936,8 +981,17 @@
           "lean_check": null
         }
       },
-      "state": {"implementation": "implemented", "execution": "not-run", "proof": "open", "trust": "unassessed"},
-      "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "kind": "test",
+        "subject": "REC-SC-06",
+        "claim": "The clean source-built CLI refused argument swapping without decrease and emitted the idempotent identity graph as its cycle witness.",
+        "revision": "0.1.0-draft.5",
+        "result": "passed",
+        "source_revision": "git-tree:6d8fa7f959edfa19bae50f775c758cbdace25417",
+        "configuration": {"profile": "Signed-Declared-Text-v1", "receipt": "../../verification/size-change/scenarios-c205fa42b76239a94a75998a924956b1c36eb52e.json", "receipt_sha256": "50837190b4529f8bcc217a2355a36cb62c73e3b2423c21363c1df6c0479f5036", "gate": "../../verification/size-change/scenarios.mjs", "case": "REC-SC-06"},
+        "assumptions": ["One clean production-session result from source commit c205fa4; evidence is limited to that execution.", "The reference-model audit does not prove arbitrary-run size-change soundness or correspondence to Rust, so proof remains open."]
+      }]
     },
     {
       "id": "REC-SC-07",
@@ -972,8 +1026,17 @@
           "lean_check": null
         }
       },
-      "state": {"implementation": "implemented", "execution": "not-run", "proof": "open", "trust": "unassessed"},
-      "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "kind": "test",
+        "subject": "REC-SC-07",
+        "claim": "The clean source-built CLI returned a parameter-bound-exceeded result for the over-cap recursive definition rather than claiming termination or divergence.",
+        "revision": "0.1.0-draft.5",
+        "result": "passed",
+        "source_revision": "git-tree:6d8fa7f959edfa19bae50f775c758cbdace25417",
+        "configuration": {"profile": "Signed-Declared-Text-v1", "receipt": "../../verification/size-change/scenarios-c205fa42b76239a94a75998a924956b1c36eb52e.json", "receipt_sha256": "50837190b4529f8bcc217a2355a36cb62c73e3b2423c21363c1df6c0479f5036", "gate": "../../verification/size-change/scenarios.mjs", "case": "REC-SC-07"},
+        "assumptions": ["One clean production-session result from source commit c205fa4; evidence is limited to that execution.", "The reference-model audit does not prove arbitrary-run size-change soundness or correspondence to Rust, so proof remains open."]
+      }]
     }
   ]
 }

@@ -2405,7 +2405,10 @@
         "REC-SC-01",
         "REC-SC-02",
         "REC-SC-03",
-        "REC-SC-04"
+        "REC-SC-04",
+        "REC-SC-05",
+        "REC-SC-06",
+        "REC-SC-07"
       ],
       "test_design": "scenario-described-not-executed"
     },
