@@ -184,7 +184,8 @@ if (replayPath) {
     required_prefix_dropped_rejected: !p1Eligible({ ...targetModel, prefix: targetModel.prefix.slice(0, 1) }),
     earlier_refusal_substitution_rejected: mismatch(original.expected, { outcome: 'reject' }) !== identity,
     unrelated_failure_substitution_rejected: mismatch(original.expected,
-      { outcome: 'normal', stack: [] }) !== identity,
+      { outcome: 'normal', stack: original.expected.stack.map((entry, index) =>
+        index === original.expected.stack.length - 1 ? ['I64', '999'] : entry) }) !== identity,
   };
   requireThat(Object.values(controls).every(Boolean), 'the shrink substitution controls accepted an invalid candidate');
   let minimized = original;
