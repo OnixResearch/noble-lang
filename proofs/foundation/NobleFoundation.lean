@@ -29,6 +29,7 @@ import NobleFoundation.PackedScheduleGuardCorpus
 import NobleFoundation.Belt
 import NobleFoundation.BeltCorpus
 import NobleFoundation.NetI64
+import NobleFoundation.NetI64Corpus
 import NobleFoundation.BeltTarget
 import NobleFoundation.BeltTargetCorpus
 import NobleFoundation.GraphRewrite
