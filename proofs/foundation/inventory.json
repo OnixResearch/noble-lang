@@ -10786,6 +10786,12 @@
       "claim": "The unary-prefixed binary-width natural decoder consumes exactly one natural code and preserves the remaining suffix."
     },
     {
+      "name": "NobleFoundation.PackedLayoutEncoded.encodeNat_length",
+      "phase": 2,
+      "role": "packed-layout",
+      "claim": "A natural code occupies exactly two times its binary width plus the unary-prefix terminator bits."
+    },
+    {
       "name": "NobleFoundation.PackedLayoutCorpus.interleaved_real_encoded_accepted",
       "phase": 2,
       "role": "packed-layout-corpus",
@@ -10892,6 +10898,24 @@
       "phase": 2,
       "role": "packed-layout-corpus",
       "claim": "The Rust-generated layer coverage layout copy is refused by layout::check and its encoded model acceptance predicate is kernel-decided false."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.nodesOnlyEncoding_is_not_injective",
+      "phase": 2,
+      "role": "packed-layout-cost-control",
+      "claim": "Omitting revision metadata from the packed-layout encoding admits distinct valid and stale-revision model inputs with the same node-only encoding."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.finiteFixtureLookup_misses_model_accepted_extension",
+      "phase": 2,
+      "role": "packed-layout-cost-control",
+      "claim": "A finite fixture layer-count lookup misses a model-accepted input with an additional empty layer."
+    },
+    {
+      "name": "NobleFoundation.PackedLayoutCorpus.node_count_does_not_measure_encoded_input",
+      "phase": 2,
+      "role": "packed-layout-cost-control",
+      "claim": "Two model-accepted inputs with the same graph node count can differ in complete encoded bit length."
     }
   ],
   "private_theorems": [
@@ -10982,6 +11006,10 @@
     "NobleFoundation.NetLabelled.op1SupWF",
     "NobleFoundation.NetLabelled.ruleDataSlots",
     "NobleFoundation.PackedLayoutEncoded.decodeBoolPrefix_encodeBool_append",
+    "NobleFoundation.PackedLayoutEncoded.encodeUnary_length",
+    "NobleFoundation.PackedLayoutEncoded.decodeUnaryPrefix_encodeUnary_append",
+    "NobleFoundation.PackedLayoutEncoded.encodeFixedBits_length",
+    "NobleFoundation.PackedLayoutEncoded.encodeList_length",
     "NobleFoundation.PackedLayoutEncoded.nat_lt_pow_width",
     "NobleFoundation.PackedLayoutEncoded.decodeFixedBitsPrefix_encodeFixedBits_append",
     "NobleFoundation.PackedLayoutEncoded.decodeWordPrefix_encodeWord_append",

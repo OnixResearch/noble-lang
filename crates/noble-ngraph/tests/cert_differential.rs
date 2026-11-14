@@ -49,11 +49,10 @@ mod multi_step;
 
 #[path = "cert/admission.rs"]
 mod admission;
-#[path = "cert/scoped.rs"]
-mod scoped;
-
 #[path = "cert/llvm.rs"]
 mod llvm;
+#[path = "cert/scoped.rs"]
+mod scoped;
 
 #[test]
 fn a_folded_endpoint_evaluates_identically_with_a_constant() -> Result<(), noble_ngraph::Diagnostic>

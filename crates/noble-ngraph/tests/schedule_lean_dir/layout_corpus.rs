@@ -30,6 +30,53 @@ open NobleFoundation.PackedLayoutEncoded
 
 "#;
 
+const CONTROLS: &str = r#"/-! These controls demonstrate why the input encoding and size claim
+must retain every field. The metadata extension below is model-only: its extra layer is not
+derived by Rust `CheckedGraph` and is deliberately outside the Rust correspondence boundary. -/
+
+def nodesOnlyEncoding (input : Input) : List Bool :=
+  encodeList encodeNode input.nodes
+
+theorem nodesOnlyEncoding_is_not_injective :
+    ∃ first second, first ≠ second ∧ nodesOnlyEncoding first = nodesOnlyEncoding second := by
+  refine ⟨two_constants_real, two_constants_stale_revision, ?_, ?_⟩
+  · intro same
+    have revisionSame := congrArg (fun input : Input => input.tables.revisionOk) same
+    simp [two_constants_real, two_constants_stale_revision] at revisionSame
+  · rfl
+
+def finiteFixtureLookup (input : Input) : Bool :=
+  [interleaved_real.layerCount, two_constants_real.layerCount].contains input.layerCount
+
+def two_constants_with_trusted_layer_extension : Input :=
+  { two_constants_real with
+    layerCount := 5,
+    tables := { two_constants_real.tables with
+      layers := two_constants_real.tables.layers ++ [(5, 5)],
+      failSuffixMin := two_constants_real.tables.failSuffixMin ++ [maxRegister] } }
+
+theorem finiteFixtureLookup_misses_model_accepted_extension :
+    acceptedInput two_constants_with_trusted_layer_extension = true ∧
+      finiteFixtureLookup two_constants_with_trusted_layer_extension = false := by
+  decide
+
+theorem node_count_does_not_measure_encoded_input :
+    two_constants_real.nodes.length = two_constants_with_trusted_layer_extension.nodes.length ∧
+      encodedSize two_constants_real <
+        encodedSize two_constants_with_trusted_layer_extension := by
+  constructor
+  · rfl
+  · have hsize :
+        encodedSize two_constants_with_trusted_layer_extension =
+          encodedSize two_constants_real + 79 := by
+      simp [encodedSize, encodeInput, encodeTables, encodeNatPair,
+        encodeConstant, encodeRegister, encodeWord, encodeNode, encodeBool, natWidth,
+        maxRegister,
+        two_constants_with_trusted_layer_extension, two_constants_real]
+    omega
+
+"#;
+
 type LayoutMutation = (&'static str, Refusal, PackedLayout);
 
 fn layout_sample() -> Graph {
@@ -54,7 +101,11 @@ fn layout_sample() -> Graph {
 fn checked_layout(graph: Graph) -> (CheckedGraph, PackedLayout) {
     let checked = check::check(&common::IDS, graph).expect("the corpus graph checks");
     let layout = Compiled::new(&common::IDS, &checked).packed_layout();
-    assert_eq!(layout::check(&checked, &layout), Ok(()), "the real layout is accepted");
+    assert_eq!(
+        layout::check(&checked, &layout),
+        Ok(()),
+        "the real layout is accepted"
+    );
     (checked, layout)
 }
 
@@ -67,11 +118,19 @@ fn mutation_cases(layout: &PackedLayout) -> Vec<LayoutMutation> {
 
     let mut short_register_map = layout.clone();
     short_register_map.reg.pop();
-    cases.push(("register_map_shape", Refusal::RegisterMapShape, short_register_map));
+    cases.push((
+        "register_map_shape",
+        Refusal::RegisterMapShape,
+        short_register_map,
+    ));
 
     let mut out_of_range = layout.clone();
     out_of_range.reg[0] = layout.regs;
-    cases.push(("register_out_of_range", Refusal::RegisterOutOfRange, out_of_range));
+    cases.push((
+        "register_out_of_range",
+        Refusal::RegisterOutOfRange,
+        out_of_range,
+    ));
 
     let mut aliased = layout.clone();
     aliased.reg[1] = layout.reg[0];
@@ -83,9 +142,13 @@ fn mutation_cases(layout: &PackedLayout) -> Vec<LayoutMutation> {
 
     let mut reserved_one_held = layout.clone();
     let last_node = reserved_one_held.reg.len() - 1;
-    reserved_one_held.reg[last_node] = u32::try_from(reserved_one_held.reg.len())
-        .expect("reserved register fits");
-    cases.push(("one_register_held", Refusal::OneRegisterHeld, reserved_one_held));
+    reserved_one_held.reg[last_node] =
+        u32::try_from(reserved_one_held.reg.len()).expect("reserved register fits");
+    cases.push((
+        "one_register_held",
+        Refusal::OneRegisterHeld,
+        reserved_one_held,
+    ));
 
     let mut wrong_constant = layout.clone();
     wrong_constant.consts[0].1 = wrong_constant.consts[0].1.wrapping_add(1);
@@ -97,7 +160,11 @@ fn mutation_cases(layout: &PackedLayout) -> Vec<LayoutMutation> {
 
     let mut repeated_constant = layout.clone();
     repeated_constant.consts[1] = repeated_constant.consts[0];
-    cases.push(("constant_duplicate", Refusal::ConstantTable, repeated_constant));
+    cases.push((
+        "constant_duplicate",
+        Refusal::ConstantTable,
+        repeated_constant,
+    ));
 
     let mut wrong_slot = layout.clone();
     wrong_slot.slot_regs[0].1 = 99;
@@ -175,7 +242,11 @@ fn input_definition(name: &str, checked: &CheckedGraph, layout: &PackedLayout) -
         .map(|node| super::emit::node_term(graph, &node.op))
         .collect();
     let layer_of: Vec<u32> = (0..graph.nodes.len())
-        .map(|index| checked.layer(noble_ngraph::ir::NodeId(u32::try_from(index).expect("node index fits"))))
+        .map(|index| {
+            checked.layer(noble_ngraph::ir::NodeId(
+                u32::try_from(index).expect("node index fits"),
+            ))
+        })
         .collect();
     let consts: Vec<(u32, u64)> = layout
         .consts
@@ -233,6 +304,7 @@ fn lean_file() -> String {
         text.push_str(&input_definition(&name, &checked, &mutated));
         text.push_str(&refused_theorems(&name));
     }
+    text.push_str(CONTROLS);
     text.push_str("end NobleFoundation.PackedLayoutCorpus\n");
     text
 }

@@ -24,6 +24,7 @@ structure Tables where
   slotRegs : List (Nat × Nat)
   layers : List (Nat × Nat)
   failSuffixMin : List Nat
+deriving DecidableEq
 
 /-- A finite graph, its checking metadata, and the declared layout tables. -/
 structure Input where
@@ -32,6 +33,7 @@ structure Input where
   failNodes : List Node
   layerOf : List Nat
   tables : Tables
+deriving DecidableEq
 
 /-- Self-delimiting unary width encoding, terminated by `false`. -/
 def encodeUnary : Nat → List Bool
@@ -74,6 +76,23 @@ def natWidth : Nat → Nat
 def encodeNat (value : Nat) : List Bool :=
   encodeUnary (natWidth value) ++ encodeFixedBits (natWidth value) value
 
+private theorem encodeUnary_length (width : Nat) : (encodeUnary width).length = width + 1 := by
+  induction width with
+  | zero => rfl
+  | succ width ih => simp [encodeUnary, ih]
+
+@[simp] private theorem encodeFixedBits_length (width value : Nat) :
+    (encodeFixedBits width value).length = width := by
+  induction width generalizing value with
+  | zero => rfl
+  | succ width ih => simp [encodeFixedBits, ih]
+
+@[simp]
+theorem encodeNat_length (value : Nat) :
+    (encodeNat value).length = 2 * natWidth value + 1 := by
+  simp only [encodeNat, List.length_append, encodeUnary_length, encodeFixedBits_length]
+  omega
+
 /-- Read a self-delimiting natural and preserve the unconsumed suffix. -/
 def decodeNatPrefix (bits : List Bool) : Option (Nat × List Bool) :=
   match decodeUnaryPrefix bits with
@@ -94,6 +113,13 @@ def decodeWordPrefix (bits : List Bool) : Option (BitVec 64 × List Bool) :=
 /-- Prefix a list's elements with its unary length. -/
 def encodeList (encodeElement : α → List Bool) (values : List α) : List Bool :=
   encodeNat values.length ++ values.flatMap encodeElement
+
+@[simp] private theorem encodeList_length (encodeElement : α → List Bool)
+    (values : List α) :
+    (encodeList encodeElement values).length =
+      2 * natWidth values.length + 1 +
+        (values.map fun value => (encodeElement value).length).sum := by
+  simp only [encodeList, List.length_append, List.length_flatMap, encodeNat_length]
 
 def decodeListFrom (decodeElement : List Bool → Option (α × List Bool)) : Nat →
     List Bool → Option (List α × List Bool)
