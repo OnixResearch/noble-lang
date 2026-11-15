@@ -540,6 +540,23 @@ def PhysicalState.queueCapacityExcluded (state : PhysicalState)
   decide (state.slots.size + plan.arenaReservation - state.work.length <
     plan.worklistReservation)
 
+/-- The negated queue exclusion reserves exactly the post-allocation physical
+headroom, including stale old entries. This only admits a journal; execution
+and the semantic post-state are independent obligations. -/
+theorem PhysicalState.reserve_if_queue_capacity
+    {state : PhysicalState} {plan : BytePlan}
+    (hscratch : plan.scratchReservation = 256)
+    (hcap : state.queueCapacityExcluded plan = false) :
+    ∃ transaction, state.reserve plan plan.arenaReservation 256
+      (state.slots.size + plan.arenaReservation - state.work.length) =
+      some transaction := by
+  have hqueue : plan.worklistReservation ≤
+      state.slots.size + plan.arenaReservation - state.work.length := by
+    simp only [PhysicalState.queueCapacityExcluded, decide_eq_false_iff_not] at hcap
+    omega
+  refine ⟨{current := state, journal := some state}, ?_⟩
+  simp [PhysicalState.reserve, hscratch, hqueue]
+
 /-- With no more available worklist entries than the actual slot-derived
 headroom, a queue-capacity exclusion refuses before any physical mutation. -/
 theorem BytePlan.semanticCheck_refuses_queue_capacity

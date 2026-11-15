@@ -13546,6 +13546,12 @@
       "claim": "every emitted image with a logical-boundary witness meets the first eight semantic fields without checker assumptions"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.reserve_if_queue_capacity",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the negated physical queue exclusion admits an exact-headroom journal given the emitted scratch reservation"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refuses_exhausted",
       "phase": 1,
       "role": "representation",
