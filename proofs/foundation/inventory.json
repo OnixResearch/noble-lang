@@ -12709,7 +12709,7 @@
       "name": "NobleFoundation.NetI64Plans.PhysicalState.project_boundary_frame",
       "phase": 1,
       "role": "representation",
-      "claim": "writing outside ordered external boundary slots leaves its projected port list unchanged"
+      "claim": "retagging any physical arena slot preserves the stable ordered identities of the external free ports"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.project_work_frame",

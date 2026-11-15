@@ -1001,12 +1001,19 @@ structure PhysicalPair where
   second : Nat
   secondGeneration : UInt64
 
-/-- Concrete single-engine storage, including empty-slot inventory and ordered
-boundary and worklist; the abstract net has no counterpart of the free slots. -/
+/-- A stable abstract external port with its mutable physical arena target.
+Rust stores the target under the output index; the stable `label` is the
+logical free-port identity required by the inets representation relation. -/
+structure PhysicalOutput where
+  label : Port
+  target : Nat × Nat
+
+/-- Concrete single-engine storage, including empty-slot inventory, stable
+external output identities with mutable targets and the ordered worklist. -/
 structure PhysicalState where
   slots : Array PhysicalSlot
   freeSlots : List Nat
-  outputs : List (Nat × Nat)
+  outputs : List PhysicalOutput
   work : List PhysicalPair
 
 /-- Retag one existing physical slot; an out-of-range index cannot silently
@@ -1066,12 +1073,19 @@ def PhysicalState.agents (state : PhysicalState) : Std.HashMap Id NetSym :=
     | none => agents
     | some (logical, symbol) => agents.insert logical symbol) {}
 
-/-- Decode physical port references into logical inets wires. -/
+/-- Decode physical port references and both directions of an output link into
+logical inets wires. Output labels remain fixed when their arena targets are
+retargeted by an admitted plan. -/
 def PhysicalState.wires (state : PhysicalState) : Std.HashMap Port Port :=
-  state.slots.toList.foldl (fun wires slot =>
+  let internal := state.slots.toList.foldl (fun wires slot =>
     match slot.agent with
     | none => wires
     | some (logical, _) => state.portWires logical 0 slot.ports wires) {}
+  state.outputs.foldl (fun wires output =>
+    match state.logicalPort output.target with
+    | none => wires
+    | some endpoint => (wires.insert output.label endpoint).insert endpoint output.label)
+    internal
 
 def PhysicalState.logicalPair (state : PhysicalState)
     (pair : PhysicalPair) : Option (Id × Id) := do
@@ -1107,7 +1121,7 @@ generation-checked queued pairs, not from a ghost abstract net. -/
 def PhysicalState.project (state : PhysicalState) : HNet NetSym :=
   { agents := state.agents
     wires := state.wires
-    free := state.outputs.filterMap state.logicalPort
+    free := state.outputs.map PhysicalOutput.label
     work := state.work.filterMap state.logicalPair }
 
 /-- Follow Rust's `ActiveWorklist.entries.push` after a checked commit: retain
@@ -1145,16 +1159,27 @@ theorem PhysicalState.appendPublications_project_net
     (state : PhysicalState) (published : List PhysicalPair) :
     (state.appendPublications published).project.toNet = state.project.toNet := by
   have hwire : (state.appendPublications published).wires = state.wires := by
-    change state.slots.toList.foldl (fun wires slot =>
+    have hlogical (port : Nat × Nat) :
+        (state.appendPublications published).logicalPort port =
+          state.logicalPort port := rfl
+    change state.outputs.foldl (fun wires output =>
+      match (state.appendPublications published).logicalPort output.target with
+      | none => wires
+      | some endpoint => (wires.insert output.label endpoint).insert endpoint output.label)
+      (state.slots.toList.foldl (fun wires slot =>
       match slot.agent with
       | none => wires
       | some (logical, _) =>
-        (state.appendPublications published).portWires logical 0 slot.ports wires) {} =
-      state.slots.toList.foldl (fun wires slot =>
+        (state.appendPublications published).portWires logical 0 slot.ports wires) {}) =
+      state.outputs.foldl (fun wires output =>
+        match state.logicalPort output.target with
+        | none => wires
+        | some endpoint => (wires.insert output.label endpoint).insert endpoint output.label)
+      (state.slots.toList.foldl (fun wires slot =>
         match slot.agent with
         | none => wires
-        | some (logical, _) => state.portWires logical 0 slot.ports wires) {}
-    simp only [PhysicalState.portWires_appendPublications]
+        | some (logical, _) => state.portWires logical 0 slot.ports wires) {})
+    simp only [PhysicalState.portWires_appendPublications, hlogical]
   apply Net.ext'
   · intro _ _
     rfl
@@ -1163,28 +1188,13 @@ theorem PhysicalState.appendPublications_project_net
   · intro _
     rfl
 
-/-- Ordered external boundary ports are unchanged by a physical slot write
-whose index is absent from the boundary, not merely equal as an unordered set. -/
+/-- Ordered external free-port identities survive a physical slot write,
+including one that retags a slot formerly targeted by an output. Only the
+physical output target may change, never the external free-port identity. -/
 theorem PhysicalState.project_boundary_frame {state : PhysicalState}
-    {index : Nat} {replacement : PhysicalSlot}
-    (outside : ∀ port ∈ state.outputs, index ≠ port.1) :
+    {index : Nat} {replacement : PhysicalSlot} :
     (state.writeSlot index replacement).project.free = state.project.free := by
-  have preserve : ∀ ports : List (Nat × Nat),
-      (∀ port ∈ ports, index ≠ port.1) →
-      ports.filterMap (state.writeSlot index replacement).logicalPort =
-        ports.filterMap state.logicalPort := by
-    intro ports
-    induction ports with
-    | nil => intro _; rfl
-    | cons port rest ih =>
-      intro hports
-      have hrest := ih (by
-        intro entry he
-        exact hports entry (List.mem_cons_of_mem _ he))
-      simp only [List.filterMap_cons]
-      rw [PhysicalState.logicalPort_writeSlot_away (hports port (by simp))]
-      rw [hrest]
-  exact preserve state.outputs outside
+  rfl
 
 /-- The ordered active-pair worklist is unchanged by a write away from both
 slots named by every queued pair. -/
