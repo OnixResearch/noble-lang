@@ -12448,6 +12448,18 @@
       "claim": "every selected oriented rule preserves or decreases the one-cell-per-agent space potential"
     },
     {
+      "name": "NobleFoundation.NetI64Resource.XNet.fire_time_spends_one",
+      "phase": 1,
+      "role": "resource-potential",
+      "claim": "every selected firing spends at least one unit of the exact live-agent time potential"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.XNet.steps_resource_le",
+      "phase": 1,
+      "role": "resource-bound",
+      "claim": "every finite legal reduction prefix spends within initial time potential and never increases committed live agents, without normalization"
+    },
+    {
       "name": "NobleFoundation.NetI64Resource.op2_stage_spends_one",
       "phase": 1,
       "role": "resource-potential",
@@ -12481,7 +12493,13 @@
       "name": "NobleFoundation.NetI64Resource.accepted_prefix_bounds_every_schedule",
       "phase": 1,
       "role": "resource-bound",
-      "claim": "every legal prefix of an accepted normalizing net stays below the exact interaction and live-agent bounds"
+      "claim": "every legal prefix stays within independently checked initial time and committed live-agent bounds without assuming normalization"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.accepted_exact_count_every_normal_schedule",
+      "phase": 1,
+      "role": "resource-bound",
+      "claim": "an accepted semantic certificate supplies the exact count for a terminal normal form"
     },
     {
       "name": "NobleFoundation.NetI64Resource.accepted_bytes_bound_every_schedule",
@@ -12643,6 +12661,10 @@
     "NobleFoundation.NetI64.fanoutProgram_dupCount",
     "NobleFoundation.NetI64.fanoutProgram_eraCount",
     "NobleFoundation.NetI64.Program.translateChecked_parts",
+    "NobleFoundation.NetI64Resource.filter_time_le",
+    "NobleFoundation.NetI64Resource.filter_time_drop",
+    "NobleFoundation.NetI64Resource.rhs_time_agents",
+    "NobleFoundation.NetI64Resource.selected_xRule",
     "NobleFoundation.NetLabelled.rhsSwapInvolutive",
     "NobleFoundation.NetLabelled.duplicateNumberWF",
     "NobleFoundation.NetLabelled.duplicateEraseWF",
