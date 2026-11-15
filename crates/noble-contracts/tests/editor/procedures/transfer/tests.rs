@@ -11,7 +11,7 @@ fn frozen_heldout_measurement_once() -> Result<(), String> {
     for (seed_index, seed) in SEEDS.iter().copied().enumerate() {
         for arm in TRANSFER_ARMS {
             let (row, metrics, is_control_size_matched) =
-                super::runner::run_arm_seed(arm, seed_index, &control)?;
+                super::runner::run_arm_seed(arm, seed_index, &control, &FROZEN_TARGET_SET)?;
             has_runtime_agent_calls |= metrics.proposer_calls != 0 || metrics.teacher_calls != 0;
             if arm == "accumulated_learned_library" {
                 is_learned_passed &= metrics.transfer_passed == 2;
@@ -46,6 +46,57 @@ fn frozen_heldout_measurement_once() -> Result<(), String> {
     if !is_learned_passed {
         return Err(String::from(
             "accumulated learned library did not meet the frozen 8/8 task-cell transfer threshold",
+        ));
+    }
+    Ok(())
+}
+
+#[test]
+#[ignore = "second one-shot producer-generated target measurement; run only from a clean frozen source commit"]
+fn producer_generated_heldout_measurement_once() -> Result<(), String> {
+    let selection_namespace = Session::without_test_hosts();
+    let control = super::selection::choose_control_pair(&selection_namespace)?;
+    let producer = super::producer_targets::load()?;
+    let mut rows = Vec::with_capacity(TRANSFER_ROW_CAPACITY);
+    let mut probes = Vec::with_capacity(SEEDS.len());
+    let mut is_go = control.within_ten_percent;
+    for (seed_index, seed) in SEEDS.iter().copied().enumerate() {
+        for arm in TRANSFER_ARMS {
+            let (row, metrics, is_matched) =
+                super::runner::run_arm_seed(arm, seed_index, &control, &producer.set)?;
+            is_go &= metrics.proposer_calls == 0
+                && metrics.teacher_calls == 0
+                && metrics.regression_failed == 0
+                && metrics.restart_identity_match;
+            if arm == "accumulated_learned_library" {
+                is_go &= metrics.transfer_passed == 2;
+            }
+            if arm == "size_matched_nontransfer" {
+                is_go &= is_matched;
+            }
+            rows.push(
+                serde_json::from_str::<serde_json::Value>(&row)
+                    .map_err(|error| format!("decode arm row: {error}"))?,
+            );
+        }
+        probes.push(super::producer_targets::refusal_probe(seed)?);
+    }
+    let report = serde_json::json!({
+        "schema": "noble-procedure-library-producer-transfer-run/1",
+        "criteria": "verification/procedure-library/criteria-producer-targets-v2.json",
+        "producer_receipt": "verification/procedure-library/receipts/producer-targets-v2.json",
+        "target_producer": producer.summary,
+        "paired_seeds": SEEDS,
+        "control_pair": [control.tasks[0].name(), control.tasks[1].name()],
+        "control_size_match": control.within_ten_percent,
+        "rows": rows,
+        "runtime_refusal_controls": probes,
+        "decision": if is_go { "GO" } else { "NO-GO" },
+    });
+    println!("PRODUCER_TRANSFER_JSON={report}");
+    if !is_go {
+        return Err(String::from(
+            "NO-GO: producer-target transfer missed its frozen success rule",
         ));
     }
     Ok(())
