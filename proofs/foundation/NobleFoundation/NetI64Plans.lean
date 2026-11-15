@@ -1039,7 +1039,7 @@ structure PhysicalState where
 
 /-- Retarget a Rust-indexed output while retaining the abstract free-port
 label. Out-of-range indices refuse instead of creating a new output. -/
-private def retargetOutputList : Nat → (Nat × Nat) → List PhysicalOutput →
+def retargetOutputList : Nat → (Nat × Nat) → List PhysicalOutput →
     Option (List PhysicalOutput)
   | _, _, [] => none
   | 0, target, output :: rest =>
@@ -1161,7 +1161,8 @@ theorem PhysicalState.writeSlot_frame {state : PhysicalState}
     (state.writeSlot index replacement).slots[other]? = state.slots[other]? := by
   simp [PhysicalState.writeSlot, Array.getElem?_setIfInBounds_ne h]
 
-private theorem PhysicalState.writeSlot_self
+/-- Updating an existing physical slot stores exactly the replacement. -/
+theorem PhysicalState.writeSlot_self
     {state : PhysicalState} {index : Nat} {old replacement : PhysicalSlot}
     (hslot : state.slots[index]? = some old) :
     (state.writeSlot index replacement).slots[index]? = some replacement := by
@@ -1192,7 +1193,7 @@ theorem PhysicalState.logicalPort_writeSlot_away {state : PhysicalState}
   simp [PhysicalState.logicalPort, PhysicalState.writeSlot,
     Array.getElem?_setIfInBounds_ne h]
 
-private def PhysicalState.portWires (state : PhysicalState) (logical : Id) :
+def PhysicalState.portWires (state : PhysicalState) (logical : Id) :
     Nat → List (Option (Nat × Nat)) → Std.HashMap Port Port → Std.HashMap Port Port
   | _, [], wires => wires
   | index, target :: rest, wires =>
@@ -1381,7 +1382,7 @@ theorem PhysicalState.logicalPair_dead_endpoint
 
 /-- The vendored inets worklist records both directed principal wires,
 whereas Rust queues each canonical physical pair only once. -/
-private def PhysicalState.pairOrientations (state : PhysicalState)
+def PhysicalState.pairOrientations (state : PhysicalState)
     (pair : PhysicalPair) : List (Id × Id) :=
   match state.logicalPair pair with
   | none => []
@@ -1529,7 +1530,7 @@ theorem PhysicalState.appendPublications_project_net
 
 /-- Turn one result-port boundary reference into its physical peer address.
 Output boundaries are represented by the separate mutable output table. -/
-private def BytePlan.resultTarget (plan : BytePlan) :
+def BytePlan.resultTarget (plan : BytePlan) :
     Option Nat → Option (Option (Nat × Nat))
   | none => some none
   | some index => do
@@ -1565,7 +1566,7 @@ theorem BytePlan.single_peer_result_ports
 allocated result must occupy the next slot; reuse must name a live slot with
 room to increment its generation. The new logical identity is the inets
 rule-slot identity, not the reused physical index. -/
-private def PhysicalState.installResult (state : PhysicalState)
+def PhysicalState.installResult (state : PhysicalState)
     (plan : BytePlan) (logical : Id)
     (result : Bool × Nat × NetSym × Nat × List (Option Nat)) :
     Option PhysicalState := do
@@ -1732,7 +1733,7 @@ theorem PhysicalState.installResult_external_slot_frame
 
 /-- Decode each selected rule slot's stable child identity and install its
 physical result image in the same order as the checked Rust executor. -/
-private def PhysicalState.installResults (plan : BytePlan)
+def PhysicalState.installResults (plan : BytePlan)
     (left right : Id) (rhs : XRhs NetSym) :
     Nat → PhysicalState → List (Bool × Nat × NetSym × Nat × List (Option Nat)) →
       Option PhysicalState
@@ -1802,7 +1803,7 @@ theorem PhysicalState.installResults_preserves_queued_generations_bound
 
 /-- Retire a consumed slot not reused by a result, refusing stale or
 overflowing generations rather than publishing an invalid free slot. -/
-private def PhysicalState.retire (state : PhysicalState) (index : Nat)
+def PhysicalState.retire (state : PhysicalState) (index : Nat)
     (reuse : Bool) : Option PhysicalState := do
   if reuse then some state else do
     let old ← state.slots[index]?
@@ -1868,7 +1869,7 @@ theorem PhysicalState.retire_erases_agent
 /-- Apply the reciprocal side of one checked boundary wire: either update an
 external agent's exact prior physical endpoint or retarget a checked output.
 The result's own port was installed by `installResult`. -/
-private def PhysicalState.writeExternal (state : PhysicalState)
+def PhysicalState.writeExternal (state : PhysicalState)
     (plan : BytePlan) (write : Nat × Nat × Nat) : Option PhysicalState := do
   let result ← plan.results[write.1]?
   let boundary ← plan.boundaries[write.2.2]?
@@ -2072,7 +2073,7 @@ theorem PhysicalState.install_then_write_peer
   exact PhysicalState.writeExternal_peer_success hresult hboundary hport
     hkind hleft hright (by rw [hsame]; exact hpeer) hlive htarget
 
-private def PhysicalState.writeExternals (state : PhysicalState)
+def PhysicalState.writeExternals (state : PhysicalState)
     (plan : BytePlan) : List (Nat × Nat × Nat) → Option PhysicalState
   | [] => some state
   | write :: rest => do
@@ -2103,7 +2104,7 @@ theorem PhysicalState.writeExternals_preserves_queued_generations_bound
 both current generations. Old pending entries and old-generation marks do not
 block a new publication: Rust may leave those stale entries to be skipped
 when popped. -/
-private def PhysicalState.publish (state : PhysicalState)
+def PhysicalState.publish (state : PhysicalState)
     (pair : PhysicalPair) : Option PhysicalState := do
   if pair.first >= pair.second then none else do
     let first ← state.slots[pair.first]?
@@ -2197,7 +2198,7 @@ theorem PhysicalState.publish_preserves_queued_generations_bound
         rw [← h.2]
         exact hafter
 
-private def PhysicalState.publishAll (state : PhysicalState) :
+def PhysicalState.publishAll (state : PhysicalState) :
     List PhysicalPair → Option PhysicalState
   | [] => some state
   | pair :: rest => do

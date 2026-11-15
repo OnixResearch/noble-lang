@@ -14008,6 +14008,18 @@
       "claim": "every initial arena with an empty pending queue satisfies the generation bound independent of slot contents"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeSlot_self",
+      "phase": 1,
+      "role": "representation",
+      "claim": "updating an existing physical slot stores exactly the replacement slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_has_candidate",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a successful lowering returns exactly the candidate assembled before its byte roundtrip check"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.queuedGenerationsBound_iff",
       "phase": 1,
       "role": "representation",
@@ -14618,7 +14630,6 @@
     "NobleFoundation.NetI64Plans.PhysicalState.publish_work",
     "NobleFoundation.NetI64Plans.PhysicalState.publishAll_work",
     "NobleFoundation.NetI64Plans.PhysicalState.logicalPair_pairSlotView",
-    "NobleFoundation.NetI64Plans.PhysicalState.writeSlot_self",
     "NobleFoundation.NetI64Plans.PhysicalState.installResult_output_labels",
     "NobleFoundation.NetI64Plans.PhysicalState.installResults_output_labels",
     "NobleFoundation.NetI64Plans.PhysicalState.retire_output_labels",
@@ -14657,7 +14668,6 @@
     "NobleFoundation.NetI64Plans.lookup_eq_of_some_iff",
     "NobleFoundation.NetI64Plans.BytePlan.semanticFieldsCheck_iff",
     "NobleFoundation.NetI64Plans.mapM_preserves_projection",
-    "NobleFoundation.NetI64Plans.mapM_filterMap_symbols",
-    "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_has_candidate"
+    "NobleFoundation.NetI64Plans.mapM_filterMap_symbols"
   ]
 }

@@ -84,7 +84,7 @@ def PhysicalState.consumedBoundaryAlias (state : PhysicalState)
 
 /-- Fill both reciprocal write inventories from exactly the initialized
 result ports; this helper is the only place the model constructs write lists. -/
-private def BytePlan.withRequiredWrites (plan : BytePlan) : BytePlan :=
+def BytePlan.withRequiredWrites (plan : BytePlan) : BytePlan :=
   let writes := plan.requiredWrites
   { plan with writes, externalWrites := writes }
 
@@ -99,7 +99,7 @@ theorem BytePlan.withRequiredWrites_exact (plan : BytePlan) :
 
 /-- The selected rule agent and consumed number slot in either principal
 orientation; unsupported rule pairs have no physical result assignment. -/
-private def BytePlan.ruleSlots (left right : NetSym)
+def BytePlan.ruleSlots (left right : NetSym)
     (pair : PhysicalPair) : Option (Nat × Nat) :=
   match left, right with
   | .op2 _, .num _ | .op1 _ _, .num _ | .dup, .num _ | .era, .num _ =>
@@ -110,7 +110,7 @@ private def BytePlan.ruleSlots (left right : NetSym)
 
 /-- Once a selected rule and orientation have been decoded, construct the
 ordered boundary and all physical fields without inspecting a ghost net. -/
-private def PhysicalState.candidateBody (state : PhysicalState) (pair : PhysicalPair)
+def PhysicalState.candidateBody (state : PhysicalState) (pair : PhysicalPair)
     (redex : XRedex NetSym) (reuse : Bool) (rhs : XRhs NetSym)
     (opcode : UInt8) (ruleSlot valueSlot : Nat) : Option BytePlan := do
   let boundaryPorts := if opcode == 1 || opcode == 3 then [1, 2]
@@ -347,7 +347,7 @@ theorem PhysicalState.candidateBody_fields
 
 /-- Construct all physical fields from a matched pair; the final wrapper
 derives the two write inventories from the initialized result ports. -/
-private def PhysicalState.planCandidateCore (state : PhysicalState) (pair : PhysicalPair)
+def PhysicalState.planCandidateCore (state : PhysicalState) (pair : PhysicalPair)
     (redex : XRedex NetSym) (reuse : Bool) : Option BytePlan := do
   let rhs ← NetI64.xRule redex.2.2.1 redex.2.2.2.1
   if state.logicalPair pair != some (redex.1, redex.2.1) then none else do
@@ -365,7 +365,7 @@ private def PhysicalState.planCandidateCore (state : PhysicalState) (pair : Phys
 
 /-- Materialize both ordered wire inventories before checking the version-one
 byte decoder. There is no second, independent implementation of the writes. -/
-private def PhysicalState.planCandidate (state : PhysicalState) (pair : PhysicalPair)
+def PhysicalState.planCandidate (state : PhysicalState) (pair : PhysicalPair)
     (redex : XRedex NetSym) (reuse : Bool) : Option BytePlan :=
   (state.planCandidateCore pair redex reuse).map BytePlan.withRequiredWrites
 
@@ -1413,7 +1413,7 @@ theorem PhysicalState.planCandidate_fields {state : PhysicalState}
 
 /-- Successful lowering retains the exact candidate it constructed before
 the independent image decoder checked its roundtrip. -/
-private theorem PhysicalState.lowerPlan_has_candidate
+theorem PhysicalState.lowerPlan_has_candidate
     {state : PhysicalState} {pair : PhysicalPair}
     {redex : XRedex NetSym} {reuse : Bool} {plan : BytePlan}
     (hLower : state.lowerPlan pair redex reuse = some plan) :
