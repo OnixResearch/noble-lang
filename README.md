@@ -407,6 +407,8 @@ a new CLI command, Core construct, graph feedback edge or F32 parameter mode.
 Its frozen continuation criteria and source-bound comparison are separate
 from the historical numeric-graph Phase C STOP and independent-row batch
 NO-GO; neither historical decision is reopened by this different workload.
+The [retained decision and raw receipts](verification/tick-runner/decision.md)
+record a NO-GO for further optimization under the preregistered tick rule.
 
 Extraction from Core source produces `ngraph-i64/0` graphs only. The existing
 `noble ngraph check` command also accepts versioned Nickel constructor JSON and

@@ -1,0 +1,68 @@
+{
+  "schema": "noble-tick-replay/v1",
+  "profile": "noble-tick-i64/v1",
+  "source_commit": "597d228cea3f8e2e7f8f35400aa101ae13bd1c21",
+  "source_tree": "257bc150c869657e746d646a46eec83b0d6acbeb",
+  "rustc": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)",
+  "rustc_sha256": "00a496ec0c5b2eb8f55539ad743fbb8dfc60d8c99480a5e3fa761a9f4b83f361",
+  "cargo_sha256": "862f9dd92f6d1065dbda15da68138db4432ad85581bceadf568ba2749171ddd4",
+  "identity_scheme": "test-siphash13x4",
+  "producer_sha256": "bf5f8fda92c6390cf7d5d3e883b70ef957f46b100b9e72c058f30182ba20c737",
+  "runner_artifact_sha256": "af108bf56048d8fd50f4586b256dab4704cccfd3cb08e0df8ef7658684973fae",
+  "raw_trace_sha256": "a4be16fca6e6e5a0f8d297c1d9c24a79ff725e3978133cffe1532ad3a9778a83",
+  "raw_trace_bytes": 7323,
+  "graphs": [
+    {
+      "key": "add",
+      "graph_logical_id": "4dbae907478ce553dcb6cf784caa73efdc3e892419d294986fa80f0b4b19051a",
+      "selected_schedule_id": "507d25f5c4aaa41323c810e70fd0550a307d180bdb1ff127c0c1ee3b40043ada",
+      "export_sha256": "c9179ddcf758415fd4a1652fe4e1e63d7297b1d97167cf728bc66b78ce4d0dd3"
+    },
+    {
+      "key": "sub",
+      "graph_logical_id": "f91122f990809279041fb3462d16b3dfceb4135079fa58bc1fcf03ccdf7acd29",
+      "selected_schedule_id": "1444323804e194bcb289b9630b6e51092224718875c401a92b8729204ebaea8d",
+      "export_sha256": "686240fb730b6fc36ac9ef71e7c7d963fdc3eacf9eb8e0132734c7479f74bac1"
+    },
+    {
+      "key": "two",
+      "graph_logical_id": "f1e546313b02846718d8e37f26fa17a0c243a77ab922c8b81f2bfcdd221b972a",
+      "selected_schedule_id": "79df0cb49d8fdd0737f530025ff052c9b0e5be8075d034547da68368450da217",
+      "export_sha256": "b2856da4086e810fdebc6595ca3ad8d1417be043e855d254fedbe9a84ea69e10"
+    }
+  ],
+  "limits": {
+    "max_graphs": 16,
+    "max_nodes": 4096,
+    "max_words": 256,
+    "max_events": 65536,
+    "max_ticks": 3,
+    "max_work_per_tick": 4096,
+    "max_trace_bytes": 16777216
+  },
+  "counts": {
+    "tick": 11,
+    "update_controls": 3,
+    "reset": 3,
+    "refused": 7
+  },
+  "final_observation": {
+    "graph_epoch": 2,
+    "control_epoch": 4,
+    "next_tick": 3,
+    "graph_key": "two",
+    "state": [
+      "16",
+      "-900"
+    ],
+    "controls": [
+      "9",
+      "-7"
+    ],
+    "output": [
+      "-900",
+      "16"
+    ]
+  },
+  "comparison": "finite independent I64 model replay only; not a benchmark or refinement theorem"
+}

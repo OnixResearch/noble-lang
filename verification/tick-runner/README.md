@@ -59,7 +59,13 @@ An operation row has `{seq, op, expected_graph_epoch, expected_control_epoch, ou
 
 ## Measurement and historical decisions
 
-Run identical finite scenarios through Runner, ordinarily repeated checked graph evaluation with host-managed state/controls, and direct native wrapping-I64 code. Keep graph preparation/reset, control admission/activation, first and warm tick, full trace, allocations if actually instrumented, scratch/retained memory and cleanup distinct. The frozen file defines the cost categories, break-even against **both** comparators, thresholds and NO-GO conditions; no timing or receipt is claimed here. #14 Phase C STOP and #41 independent-row batch NO-GO are retained, not reopened by this separate sequential pilot.
+Run identical finite scenarios through Runner, ordinarily repeated checked graph evaluation with host-managed state/controls, and direct native wrapping-I64 code. Keep graph preparation/reset, control admission/activation, first and warm tick, full trace, allocations if actually instrumented, scratch/retained memory and cleanup distinct. The frozen file defines the cost categories, break-even against **both** comparators, thresholds and NO-GO conditions; only the linked decision below reports the measured timing and receipts. #14 Phase C STOP and #41 independent-row batch NO-GO are retained, not reopened by this separate sequential pilot.
+
+The [retained comparison and acceptance decision](decision.md) records the
+clean-source trace, independent replay, nine matched benchmark cases and raw
+allocation observations. Its frozen continuation outcome is **NO-GO** for
+further optimization; this does not change the opt-in protocol or either
+historical decision.
 
 The opt-in integration test runs only after source and criteria have been committed cleanly, and writes outside the repository:
 
