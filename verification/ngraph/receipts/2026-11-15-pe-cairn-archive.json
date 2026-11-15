@@ -1,0 +1,81 @@
+{
+  "schema": "noble-ngraph-pe-cairn-archive-receipt/1",
+  "source_commit": "116a5bbb58a8008e68b3c0c3594a35ee2696e64c",
+  "source_tree": "2d72fcec804a98dbdecc61504ae52c6c20466081",
+  "source_clean_before_checks": true,
+  "base_commit": "57b02d38",
+  "before_archive_source_commit": "73571c8e0681f523c1c01ce3cb3fd860769be7da",
+  "before_archive_tree": "dc6971abe4ce1d5d7d67779aee57af66ff98f26e",
+  "tool": {
+    "path": "/nix/store/bvz6kl88qkfi15n8ml1xr7p22syykggd-cairn-0.1.0/bin/cairn",
+    "sha256": "570eeae7f5abd5ec0259ced4776bf6e4a19c2e82864935fb59c91d08221ce8c6",
+    "policy_path": "/nix/store/jqz083ahq10fdrakci9xzvf7bl4nh075-source/cairn-policy/generated/cairn-policy.json",
+    "policy_sha256": "62b9ade2bc8af10b2c68776dba8abb374a6c7331aae7ad8bb41ca938ef100d27"
+  },
+  "tasks": {
+    "done": 18,
+    "todo": 0,
+    "original_final_row_preserved": true,
+    "integration_annotation": "batch 10: source inventory renewed in 7dc54bad (+425/-106 subjects) and e4c80854 (relocation, no subject change); reviewed-file re-pin in bd540979 (proofs/m5/lakefile.toml) and again after relocation (no pin moved); workspace Octet clean with 0 lint and 0 architecture findings, 110/110 units, no capacity change; foundation CI at 022a17127 passed (overall=0); 16 flake gates passed at 57b02d38; boundary-controls on a sequential rerun",
+    "archived_tasks_path": ".cairn/archive/2026-11-15-partial-evaluation-v1/tasks.md",
+    "archived_tasks_sha256": "7fab6c590a90950e7ff6813b1d804a2da0166a9a3ac58602b0004a6e09524894",
+    "archived_design_sha256": "8005a07adf7890f30b9dc2d49a5ce771fd50e68a89a757bebba4f05aa234ca8e",
+    "archived_delta_spec_sha256": "faad1f80574a07318390646a8c696c8dcc5c67484c902011b2920097d0bb27ad"
+  },
+  "archive_actions": [
+    "pinned Cairn sync partial-evaluation-v1 preview: blocked=true, mutated=false; eight delta_merge.add_conflict diagnostics for ADDED NGRAPH-PE-01..08 because they and MODIFIED NGRAPH-CLI-01 were already synced canonically in a32505f7; merge preflight changed=false with accepted_before_hash=expected_after_hash=676743cce642669ab678bc74ce17cfb8f75841ebf2d1417257cfa1010e02849a; every delta requirement block equals its canonical block modulo line reflow, the requirement anchor and generated scenario links; sync was not executed",
+    "pinned Cairn archive partial-evaluation-v1 preview: blocked=false, plan_hash=0af3eeeb138e8ef6c6028013b84ad0c9ad1c131bdc56ef2283c00244ce3736c4; execute: mutated=true, moved five active files",
+    "Cairn emitted the deterministic epoch path .cairn/archive/1970-01-01-partial-evaluation-v1; moved the unchanged five files to the repository actual-date 2026-11-15 archive convention; no empty epoch directory remained",
+    "compatibility views and requirement ledger regenerated with no change; specs/VALIDATION.json re-reported to index the archive paths; verification/ngraph/README.md D14-D17 design links repointed to the archive"
+  ],
+  "after_archive": {
+    "active_change_absent": true,
+    "archive_path": ".cairn/archive/2026-11-15-partial-evaluation-v1",
+    "canonical_spec_path": ".cairn/specs/developer-experience/spec.md",
+    "canonical_spec_sha256": "d74e1a4a4e07181cd5a299e9d34040b8e0b9be71f454cc7b983f19b133aaa0b8",
+    "compatibility_view_path": "specs/DEVELOPER-EXPERIENCE.md",
+    "compatibility_view_sha256": "b4a01fe6eb4d6f434a8f8a40a1c8c69ce8976e603f231130d0c21654086c7440",
+    "cases_path": "specs/conformance/numeric-graph-pe-cases.json",
+    "cases_sha256": "9bda892e00d8ac1801a9790383fcd24cb2e768d9dbb5b622ef51b79cc18e0dc1",
+    "requirement_ledger_sha256": "0bce5965255d1eab1f357476e0f42a054684e914ea00ee59f45dd62db23550be",
+    "validation_report_sha256": "98c2e35b3415d78199d743c888a0b5cfd91ad80b5b87c1aa6b1e44cbfa53df9e"
+  },
+  "checks_from_clean_source": [
+    {
+      "command": "cairn validate --root . --policy <pinned-policy>",
+      "exit": 0,
+      "result": "valid=true, issues=[], findings=[], change_issues=[], spec_issues=[]"
+    },
+    {
+      "command": "cairn compact verify --root . --policy <pinned-policy>",
+      "exit": 0,
+      "result": "valid=true, issues=[], latest_chain_hash=8b02f7ffe23f41feda7625b6a7f4d782d082736cc39626af807328d127828bc7"
+    },
+    {
+      "command": "bun tools/cairn-specs.mjs --self-test",
+      "exit": 0,
+      "result": "passed; 16 specs, 274 scenarios, 26 self-tests"
+    },
+    {
+      "command": "bun tools/check-specs.mjs --self-test",
+      "exit": 0,
+      "result": "passed; 16 documents, 612 requirements, 274 scenarios, 230 self-tests"
+    },
+    {
+      "command": "bun test tools/cairn-specs.test.mjs tools/check-specs.test.mjs tools/calculator-headroom.test.mjs tools/source-inventory-renew.test.mjs",
+      "exit": 0,
+      "result": "114 pass, 0 fail"
+    },
+    {
+      "command": "node tools/check-specs.mjs (pinned Node 24.13.0)",
+      "exit": 0,
+      "result": "passed; 16 documents, 612 requirements, 274 scenarios"
+    }
+  ],
+  "non_claims": [
+    "Cairn structure and document checks do not establish runtime correctness or proof validity",
+    "The eighteen executed PE cases are finite case evidence, not universal partial-evaluation correctness; proof remains open except the measurement-review case",
+    "The flake-gate annotation records the integrator report: boundary-controls was on a sequential rerun after a load-induced timeout when this receipt was written",
+    "D15/D17 retain NO-GO for an efficiency claim or default adoption; archiving does not change that decision"
+  ]
+}
