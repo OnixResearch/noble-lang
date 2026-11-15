@@ -159,9 +159,9 @@ theorem normalize_sound (values : Nat → BitVec 64) (expr : Expr) :
   | constant bits => simp [normalize, evalForm, atomSum, evalExpr]
   | atom node => simp [normalize, evalForm, atomSum, contribution, evalExpr]
   | add first second ihFirst ihSecond =>
-      simpa only [normalize, evalExpr, addForm_eval, ihFirst, ihSecond]
+      simp only [normalize, evalExpr, addForm_eval, ihFirst, ihSecond]
   | sub first second ihFirst ihSecond =>
-      simpa only [normalize, evalExpr, subForm_eval, ihFirst, ihSecond]
+      simp only [normalize, evalExpr, subForm_eval, ihFirst, ihSecond]
 
 /-- The same law holds with original ordered inputs reconstructed by rank/merge. -/
 theorem normalize_sound_merge (static : Nat → Option (BitVec 64))
@@ -216,16 +216,14 @@ theorem packed_sub_step (graph : PackedSchedule.Graph)
 theorem fold_offset_2_3 (node : Nat) :
     normalize (.add (.add (.atom node) (.constant 2)) (.constant 3)) =
       ⟨5, [⟨node, false⟩]⟩ := by
-  have h23 : (2 : BitVec 64) + 3 = 5 := by decide
-  simp [normalize, addForm, h23]
+  simp [normalize, addForm]
 
 /-- The offset wraps modulo 2^64, without saturating or signed overflow refusal. -/
 theorem wrapping_offset_boundary (node : Nat) :
     normalize (.add (.add (.atom node)
       (.constant (BitVec.ofNat 64 (2 ^ 64 - 1)))) (.constant 1)) =
       ⟨0, [⟨node, false⟩]⟩ := by
-  have hwrap : (BitVec.ofNat 64 (2 ^ 64 - 1) : BitVec 64) + 1 = 0 := by decide
-  simp [normalize, addForm, hwrap]
+  simp [normalize, addForm]
 
 /-- A wrapped offset does not change the symbolic input's value. -/
 theorem wrapping_offset_eval (values : Nat → BitVec 64) (node : Nat) :
