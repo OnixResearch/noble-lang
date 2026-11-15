@@ -77,6 +77,62 @@ fn corpus_path() -> std::path::PathBuf {
         .join("../../proofs/foundation/NobleFoundation/NetI64ResourceCorpus.lean")
 }
 
+fn retain_followup_evidence(
+    checked: &noble_ngraph::CheckedGraph,
+    issued: &resource::Artifact,
+) -> TestResult {
+    let corpus = std::fs::read_to_string(corpus_path())?;
+    assert_eq!(
+        corpus,
+        accepted_corpus()?,
+        "kernel fixture must match freshly accepted bytes before receipt production"
+    );
+    let evidence = json!({
+        "graph_id": hex(&checked.id()),
+        "net_blake3": blake3::hash(&issued.net_bytes).to_hex().to_string(),
+        "certificate_blake3": blake3::hash(&issued.certificate_bytes).to_hex().to_string(),
+        "lean_corpus_blake3": blake3::hash(corpus.as_bytes()).to_hex().to_string(),
+        "controls": {
+            "omitted_dup_cost": "StaleRuleTable",
+            "negative_cost_annotation": "StaleRuleTable",
+            "negative_potential": "WrongCostModel",
+            "disconnected_rebound_net": "InvalidNet"
+        }
+    });
+    let retained_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../verification/ngraph/resource-followup-receipt.json");
+    if retained_path.exists() {
+        let retained: serde_json::Value = serde_json::from_slice(&std::fs::read(&retained_path)?)?;
+        assert_eq!(retained["schema"], "ngraph-resource-followup/1");
+        assert_eq!(
+            retained["evidence"], evidence,
+            "follow-up resource evidence drift"
+        );
+        assert_eq!(
+            retained["source_commit"].as_str().map(str::len),
+            Some(40),
+            "retained source commit must be a full digest"
+        );
+    }
+    if let Some(output) = std::env::var_os("NOBLE_RESOURCE_FOLLOWUP_RECEIPT") {
+        assert!(
+            !retained_path.exists(),
+            "do not overwrite immutable evidence"
+        );
+        let source = std::env::var("NOBLE_RESOURCE_SOURCE_COMMIT")?;
+        assert_eq!(source.len(), 40, "source commit must be a full SHA");
+        std::fs::write(
+            output,
+            serde_json::to_vec_pretty(&json!({
+                "schema": "ngraph-resource-followup/1",
+                "source_commit": source,
+                "evidence": evidence
+            }))?,
+        )?;
+    }
+    Ok(())
+}
+
 fn certificate_digest_offset() -> usize {
     8 + [
         resource::CERTIFICATE_REVISION,
@@ -352,6 +408,7 @@ fn byte_checker_refuses_missing_dup_negative_costs_and_false_premise() -> TestRe
         check(&rebound, &false_premise, resource::RULE_TABLE_BYTES),
         Err(resource::Refusal::InvalidNet)
     );
+    retain_followup_evidence(&checked, &issued)?;
     Ok(())
 }
 
