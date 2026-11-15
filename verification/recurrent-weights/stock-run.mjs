@@ -83,13 +83,14 @@ const pythonStdout = exec(python, pythonArgs, {
     HTTP_PROXY: 'http://127.0.0.1:1', HTTPS_PROXY: 'http://127.0.0.1:1', NO_PROXY: '*' },
 });
 const lines = pythonStdout.trim().split('\n');
-if (lines.length !== 1) throw new Error('expected one stock-runtime JSON result');
+if (lines.length !== 1) throw new Error('expected one runtime JSON result');
 const report = JSON.parse(lines[0]);
 if (report.schema !== (modelState ? 'noble.recurrent-model-state/v1' :
       'noble.recurrent-stock-runtime/v1') || report.results.length !== 2 ||
-    report.results.some(result => {
+    report.results.some((result, index) => {
       const controls = modelState ? result.controls : result.refusals;
-      return (modelState ? report.runtime.provider !== 'CPUExecutionProvider' ||
+      return result.program !== ['accumulator', 'stack-swap'][index] ||
+        (modelState ? report.runtime.provider !== 'CPUExecutionProvider' ||
         result.coverage.free_running.host_calls !== 1 ||
         result.coverage.free_running.scan_steps !== 1000 ||
         result.resume.index !== 2 || !result.seeded_fault.first_counterexample :
@@ -97,10 +98,30 @@ if (report.schema !== (modelState ? 'noble.recurrent-model-state/v1' :
         controls.length !== (modelState ? result.program === 'stack-swap' ? 32 : 31 : 25) ||
         !controls.every(control => control.refused) ||
         result.coverage.tiny.transitions !== 16 ||
+        result.coverage.boundary.transitions !== (index ? 0 : 6) ||
         result.coverage.teacher_forced.transitions !== 1000 ||
         result.coverage.free_running.transitions !== 1000;
     })) {
-  throw new Error('stock result omitted a required coverage or refusal');
+  throw new Error('runtime result omitted a required coverage or refusal');
+}
+let authored = null;
+if (modelState) {
+  const script = join(root, 'verification/recurrent-weights/authored-checker.py');
+  const stdout = exec(python, ['-I', script], {
+    cwd: root,
+    env: { HOME: work, TMPDIR: work, PATH: '/usr/bin:/bin', PYTHONNOUSERSITE: '1',
+      HTTP_PROXY: 'http://127.0.0.1:1', HTTPS_PROXY: 'http://127.0.0.1:1', NO_PROXY: '*' },
+  });
+  const lines = stdout.trim().split('\n');
+  if (lines.length !== 1) throw new Error('expected one authored-checker JSON result');
+  authored = JSON.parse(lines[0]);
+  if (authored.schema !== 'noble.recurrent-authored-checker/v1' ||
+      authored.accepted.kind !== 'ACCEPT' || authored.accepted.passed !== 16 ||
+      authored.refused.kind !== 'REFUSE' || !authored.refused.first_counterexample ||
+      Object.values(authored.controls).length !== 4 ||
+      !Object.values(authored.controls).every(control => control.kind === 'REFUSE')) {
+    throw new Error('independent checker result omitted a required verdict');
+  }
 }
 const receipt = {
   schema: modelState ? 'noble.recurrent-model-state-receipt/v1' : 'noble.recurrent-stock-receipt/v1',
@@ -117,6 +138,12 @@ const receipt = {
   [modelState ? 'model_state' : 'stock']: {
     command: [python, ...pythonArgs], exit_code: 0, ...report
   },
+  ...(modelState ? { authored: {
+    command: [python, '-I', join(root, 'verification/recurrent-weights/authored-checker.py')],
+    criterion: 'verification/recurrent-weights/authored-criteria.txt',
+    criterion_sha256: sha(readFileSync(join(root, 'verification/recurrent-weights/authored-criteria.txt'))),
+    exit_code: 0, ...authored
+  } } : {}),
   note: modelState ?
     'Single-call ONNX Scan body carries recurrence; explicit boundary state is not persistent session or hybrid KV state.' :
     'Separate bounded ONNX stock CPU execution, not dense/sparse optimized model coverage or a hybrid serving checkpoint.',

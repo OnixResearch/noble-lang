@@ -253,16 +253,21 @@ def controls(engine, spec, model_bytes, output_dir):
             "codec": stock.CODEC, "model_sha256": engine.model_sha,
             "state": state, "remaining_budget": 1000}
     stock.require(stock.restore(base, engine) == state, "initial recurrent restore")
-    stock.require(stock.restore({**base, "index": 1000, "remaining_budget": 0}, engine) == state,
-                  "request-end recurrent restore")
     raw = spec["vectors"]["free_running"]
+    final_state = vector(raw[-1])[2]
+    stock.require(stock.restore({**base, "index": 1000, "remaining_budget": 0,
+                                 "state": final_state}, engine) == final_state,
+                  "request-end recurrent restore")
     second_state = vector(raw[2])[0]
     restored = stock.restore({**base, "index": 2, "remaining_budget": 998,
                               "state": second_state}, engine)
     remaining = [vector(row)[1] for row in raw[2:]]
     resumed, resume_cost = engine.run(restored, remaining, budget=998)
-    stock.require(len(resumed) == 998 and resumed[-1] == vector(raw[-1])[2]
-                  and resume_cost["host_calls"] == 1, "boundary resume mismatch")
+    stock.require(len(resumed) == 998 and resume_cost["host_calls"] == 1,
+                  "boundary resume shape mismatch")
+    for offset, resumed_state in enumerate(resumed):
+        stock.require(resumed_state == vector(raw[offset + 2])[2],
+                      f"boundary resume mismatch at index {offset + 2}")
     for label, checkpoint in [
         ("missing-recurrent-state", {k: v for k, v in base.items() if k != "state"}),
         ("kv-only", {**{k: v for k, v in base.items() if k != "state"}, "kv": [1]}),
