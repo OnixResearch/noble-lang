@@ -602,10 +602,12 @@ criterion. Its receipt is
 `verification/procedure-library/receipts/2026-11-13/transfer-repeat.json`.
 The learned arm met 8/8 task cells and 24/24 examples, but tied the frozen
 hand-library arm; the empty and size-matched non-transfer arms each passed
-0/8. `LPL-T15` is **PARTIAL**: runtime teacher/proposer counts are zero and a
-nonzero count invalidates the metrics claim; an independent non-held-out
-attempted-call test now proves both library requests refuse before any host
-callback, but the frozen run did not exercise an attempt. The #116 producer
+0/8. The original frozen run's `LPL-T15` attempted-call clause remains
+**NOT DONE for that historical run**: its counts were zero but no request was
+attempted. The separate v3 one-shot run completes the current boundary
+check: zero attempts/calls in all 16 scored rows and four fresh-library
+controls each refusing proposer and teacher attempts before callbacks. The
+#116 producer
 receipt binds acquisition source tasks **and their non-held-out reference
 examples**; the source program, grammar, budget and verifier-status fields
 are checked against the receipt, and a mutated reference or program is
@@ -613,7 +615,12 @@ refused. The v1/v2 composed target references were
 fixture-authored; the v2 pair mapping was defective. The separately frozen
 v3 targets are derived directly from the #116 receipt's source programs
 before generation, and a non-held-out independent Rust evaluator checks each
-reference; their transfer receipt is recorded separately. No fixture is
+reference. The clean-source producer receipt retains both target candidates,
+grammar and budget, search/solver traces, held-out producer checks and normal
+CLI re-admission; a single clean-source four-arm transfer receipt reports GO,
+with 8/8 learned and frozen-hand task cells, 0/8 for both other arms, and all
+restart/regression checks passing. This does **not** show an improvement over
+the hand-written library. No fixture is
 evidence of a universal Rust/Lean correspondence or a #56 certificate. The
 exact decision and non-claims are in
 `verification/procedure-library/decision.md`.

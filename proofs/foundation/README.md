@@ -2637,7 +2637,8 @@ generates immutable-subject bytes; a Rust differential test compares those
 bytes with `ProcedureRecord::identity_subject_bytes` after independently
 re-deriving chunk and source identities. It also rejects an oversized closure
 and distinguishes two dependency orders. The earlier two-case receipt stays
-immutable; the expanded corpus has its own separately retained receipt. The
+immutable; the expanded source-bound receipt is retained at
+verification/procedure-library/receipts/encoder-corpus-v2.json. The
 kernel-checked wire theorems establish only two fixture lengths and one prefix.
 This is **not** universal Rust encoder correspondence or a total encode/decode
 roundtrip: captures, chunk dependencies, other body variants, digests and

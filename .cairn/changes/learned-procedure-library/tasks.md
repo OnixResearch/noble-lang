@@ -51,7 +51,7 @@ a proof-demanding promotion or an implementation-to-Lean refinement.
 ## Phase 3: Transfer evaluation (the original #73/#116 blockers have cleared)
 
 - [x] [serial] Freeze the transfer protocol before any run: task families, held-out composition split, four arms (no library, frozen hand library, accumulated learned library, size-matched non-transfer control), paired seeds, success threshold, and the exact library sweeps. Commit the criterion before measuring. r[LPL-08]
-- [ ] [serial] Generate held-out composed tasks from #116's producer with its grammar revision, budget, witness/counterexample trace and verifier status retained, and prove no held-out answer, body or evaluator state reaches an entry or the retrieval index. r[LPL-08]
+- [x] [serial] Generate held-out composed tasks from #116's producer with its grammar revision, budget, witness/counterexample trace and verifier status retained, and prove no held-out answer, body or evaluator state reaches an entry or the retrieval index. r[LPL-08]
 - [x] [serial] Run the arms with the proposer and teacher disabled, record `proposer_calls` and `teacher_calls`, make any attempted call fail closed, and withdraw any transfer claim from a run with a nonzero count. r[LPL-08]
 - [x] [serial] Report acquisition, retention, transfer, regression, growth, retrieval overhead, restart reuse and the break-even invocation count per arm and per seed, with model/synthesis behavior, executed mechanics, correspondence and assumptions kept separate; claim no lifelong learning, speedup or universal transfer. r[LPL-08]
 - [ ] [serial] Discharge the planned proof obligations `LPL-O1`–`LPL-O4` and the executed properties `LPL-O5`/`LPL-O6` as their own obligations before any promotion of a record to `promoted` under a proof-demanding policy. r[LPL-01] r[LPL-03] r[LPL-07]
@@ -74,14 +74,17 @@ Its four separate fresh-library negative controls each deliberately attempted
 both requests and refused `Unsupported` before either callback; the original
 receipt's missed clause remains missed. The v2 target references were paired
 to the wrong source-order semantics; v2's 0/8 learned outcome is a
-**defective-criterion NO-GO, not evidence against the library**. The first
-unticked Phase 3 row still needs a valid #116-generated held-out transfer
-measurement under a new criterion mechanically derived from producer source
-semantics before generation; v1's correct pairing was never run. V3's
-criterion and manifest are frozen from the #116 source receipt before any
-v3 target generation.
-The other unticked Phase 3 row still needs a universal checked Rust
-byte-encoder refinement before a proof-demanding promotion may claim `LPL-O1`
+**defective-criterion NO-GO, not evidence against the library**. V3's
+criterion and manifest were mechanically derived and committed from the
+#116 source programs before new target generation. One clean-source producer
+run emitted `verification/procedure-library/receipts/producer-targets-v3.json`;
+one clean-source four-arm run emitted `receipts/producer-transfer-v3.json`
+with its raw log. Learned and frozen-hand each passed 8/8 paired seed-task
+cells and 24/24 examples; both other arms passed 0/8. All 16 scored rows
+recorded zero teacher/proposer attempts and calls, and each seed's isolated
+attempted-call controls refused before callbacks. Neither older run was
+repeated. The sole unticked Phase 3 row still needs a universal checked Rust
+byte-encoder refinement before proof-demanding promotion may claim `LPL-O1`
 for the actual encoder. A local exact-pair validation result alone cannot
 authorize such promotion. The abstract model at
 `proofs/foundation/NobleFoundation/ProcedureLibrary.lean` discharges typed
@@ -90,6 +93,6 @@ refinement. A separate
 `NobleFoundation/ProcedureLibraryWire.lean` subprofile and digest-bound
 `verification/procedure-library/receipts/encoder-corpus-v1.json` compare
 two finite kernel-checked model encodings with Rust subject bytes; the
-expanded v2 corpus spans 36 cases and retains the universal obligation.
-The v3 #116 target run and transfer result remain to be recorded; keep this
-Cairn change active until all obligations are genuinely discharged.
+expanded v2 corpus spans 36 source/provenance/ordered-closure cases and
+explicitly retains the universal obligation. Keep this Cairn change active
+until that obligation is genuinely discharged.
