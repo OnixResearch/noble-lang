@@ -1416,6 +1416,17 @@ theorem BytePlan.single_output_result_ports
       some [none, none, none] := by
   simp [BytePlan.resultTarget, hbound, hkind]
 
+/-- One result port connected to a live external peer resolves to the
+captured physical slot/port, unlike an output-table boundary. -/
+theorem BytePlan.single_peer_result_ports
+    {plan : BytePlan}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)} {peer port : Nat}
+    (hbound : plan.boundaries[0]? = some boundary)
+    (hkind : boundary.2 = (0, peer, port)) :
+    ([some 0, none, none] : List (Option Nat)).mapM plan.resultTarget =
+      some [some (peer, port), none, none] := by
+  simp [BytePlan.resultTarget, hbound, hkind]
+
 /-- Install one checked result into its declared physical slot. A freshly
 allocated result must occupy the next slot; reuse must name a live slot with
 room to increment its generation. The new logical identity is the inets
@@ -2022,10 +2033,150 @@ theorem PhysicalState.execute_empty_image_retires_pair
     exact PhysicalState.retire_erases_agent hf
   · exact PhysicalState.retire_erases_agent hs
 
-/-- A decoded one-result, one-output image completes from local prestate
-guards, for fresh append or either consumed-slot reuse. Installation and
-retargeting preserve the other consumed slot until its retirement; no
-execution-success or semantic-checker premise is used. -/
+/-- A one-result, one-external-write image completes from local prestate
+guards when that write succeeds after installation and preserves the two
+consumed slots. This shared pipeline covers output and nonprincipal peer
+boundaries in either storage policy, without checker or execution premises. -/
+theorem PhysicalState.execute_single_external_image_success
+    {state : PhysicalState} {bytes : List UInt8}
+    {redex : XRedex NetSym} {plan : BytePlan}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    {ruleSlot : Option Bool × Nat}
+    {first second donor : PhysicalSlot}
+    {ports : List (Option (Nat × Nat))}
+    (hdecode : BytePlan.decode bytes = some plan)
+    (hcurrent : state.logicalPair
+      { first := plan.pair.1,
+        firstGeneration := UInt64.ofNat plan.pair.2.1,
+        second := plan.pair.2.2.1,
+        secondGeneration := UInt64.ofNat plan.pair.2.2.2 } =
+      some (redex.1, redex.2.1))
+    (hresults : plan.results = [result])
+    (hslot : redex.2.2.2.2.slots[0]? = some ruleSlot)
+    (hlab : redex.2.2.2.2.lab ruleSlot.1 ruleSlot.2 =
+      some result.2.2.1)
+    (hwrites : plan.externalWrites = [(0, 0, 0)])
+    (hpubs : plan.publications = [])
+    (hpolicy : (result.1 = true ∧ result.2.1 = state.slots.size ∧
+        plan.action = (0, 0)) ∨
+      (result.1 = false ∧ result.2.1 = plan.pair.1 ∧
+        plan.action = (1, 0)) ∨
+      (result.1 = false ∧ result.2.1 = plan.pair.2.2.1 ∧
+        plan.action = (0, 1)))
+    (hdonor : state.slots[result.2.2.2.1]? = some donor)
+    (hdonorLive : donor.agent.isSome = true)
+    (hports : result.2.2.2.2.mapM plan.resultTarget = some ports)
+    (hreuse : result.1 = false →
+      ∃ old, state.slots[result.2.1]? = some old ∧
+        old.agent.isSome = true ∧
+        old.generation ≠ UInt64.ofNat (UInt64.size - 1))
+    (hwriteAvailable : ∀ installed : PhysicalState,
+      state.installResult plan
+        (child redex.1 redex.2.1 ruleSlot.1 ruleSlot.2) result =
+        some installed →
+      ∃ rewired, installed.writeExternal plan (0, 0, 0) = some rewired)
+    (hwriteFrames : ∀ installed rewired : PhysicalState,
+      installed.writeExternal plan (0, 0, 0) = some rewired →
+      rewired.slots[plan.pair.1]? = installed.slots[plan.pair.1]? ∧
+        rewired.slots[plan.pair.2.2.1]? =
+          installed.slots[plan.pair.2.2.1]?)
+    (hf : state.slots[plan.pair.1]? = some first)
+    (hs : state.slots[plan.pair.2.2.1]? = some second)
+    (hfirstLive : first.agent.isSome = true)
+    (hsecondLive : second.agent.isSome = true)
+    (hfirstRoom : first.generation ≠ UInt64.ofNat (UInt64.size - 1))
+    (hsecondRoom : second.generation ≠ UInt64.ofNat (UInt64.size - 1))
+    (hdistinct : plan.pair.1 ≠ plan.pair.2.2.1) :
+    ∃ next, state.executeCheckedImage bytes redex = some next := by
+  have hfresh : result.1 = true → result.2.1 = state.slots.size := by
+    intro ht
+    rcases hpolicy with ⟨ht', hi, _⟩ | ⟨hf', _, _⟩ | ⟨hf', _, _⟩
+    · exact hi
+    · simp [ht] at hf'
+    · simp [ht] at hf'
+  obtain ⟨installed, hsingle⟩ := PhysicalState.install_single_result_success
+    hslot hlab hdonor hdonorLive hports hfresh hreuse
+  have hinstall : state.installResult plan
+      (child redex.1 redex.2.1 ruleSlot.1 ruleSlot.2) result =
+      some installed := by
+    simpa [PhysicalState.installResults, hslot, hlab] using hsingle
+  obtain ⟨rewired, hwrite⟩ := hwriteAvailable installed hinstall
+  have ⟨hwriteFirst, hwriteSecond⟩ :=
+    hwriteFrames installed rewired hwrite
+  have hfirstBound : plan.pair.1 < state.slots.size :=
+    (getElem?_eq_some_iff.mp hf).1
+  have hsecondBound : plan.pair.2.2.1 < state.slots.size :=
+    (getElem?_eq_some_iff.mp hs).1
+  rcases hpolicy with ⟨_, hindex, haction⟩ |
+      ⟨_, hindex, haction⟩ | ⟨_, hindex, haction⟩
+  · have hfirstAway : result.2.1 ≠ plan.pair.1 := by omega
+    have hsecondAway : result.2.1 ≠ plan.pair.2.2.1 := by omega
+    have hfirst :
+        rewired.slots[plan.pair.1]? = some first := by
+      rw [hwriteFirst, PhysicalState.installResult_external_slot_frame
+        hinstall hfirstBound hfirstAway]
+      exact hf
+    have hsecond :
+        rewired.slots[plan.pair.2.2.1]? = some second := by
+      rw [hwriteSecond, PhysicalState.installResult_external_slot_frame
+        hinstall hsecondBound hsecondAway]
+      exact hs
+    obtain ⟨retiredFirst, hretireFirst, hframe⟩ :=
+      PhysicalState.retire_live_success_frame
+        hfirst hfirstLive hfirstRoom
+    have hsecondAfter :
+        retiredFirst.slots[plan.pair.2.2.1]? = some second := by
+      rw [hframe _ hdistinct]
+      exact hsecond
+    obtain ⟨retiredSecond, hretireSecond, _⟩ :=
+      PhysicalState.retire_live_success_frame
+        hsecondAfter hsecondLive hsecondRoom
+    refine ⟨retiredSecond, ?_⟩
+    simp [PhysicalState.executeCheckedImage, hdecode, hcurrent,
+      hresults, hslot, hlab, hinstall, hwrites, hwrite,
+      hpubs, haction, hretireFirst, hretireSecond,
+      PhysicalState.installResults, PhysicalState.writeExternals,
+      PhysicalState.publishAll]
+  · have hsecondAway : result.2.1 ≠ plan.pair.2.2.1 := by
+      rw [hindex]
+      exact hdistinct
+    have hsecond :
+        rewired.slots[plan.pair.2.2.1]? = some second := by
+      rw [hwriteSecond, PhysicalState.installResult_external_slot_frame
+        hinstall hsecondBound hsecondAway]
+      exact hs
+    obtain ⟨retiredSecond, hretireSecond, _⟩ :=
+      PhysicalState.retire_live_success_frame
+        hsecond hsecondLive hsecondRoom
+    have hskip : rewired.retire plan.pair.1 true = some rewired := rfl
+    refine ⟨retiredSecond, ?_⟩
+    simp [PhysicalState.executeCheckedImage, hdecode, hcurrent,
+      hresults, hslot, hlab, hinstall, hwrites, hwrite,
+      hpubs, haction, hskip, hretireSecond,
+      PhysicalState.installResults, PhysicalState.writeExternals,
+      PhysicalState.publishAll]
+  · have hfirstAway : result.2.1 ≠ plan.pair.1 := by
+      rw [hindex]
+      exact hdistinct.symm
+    have hfirst :
+        rewired.slots[plan.pair.1]? = some first := by
+      rw [hwriteFirst, PhysicalState.installResult_external_slot_frame
+        hinstall hfirstBound hfirstAway]
+      exact hf
+    obtain ⟨retiredFirst, hretireFirst, _⟩ :=
+      PhysicalState.retire_live_success_frame
+        hfirst hfirstLive hfirstRoom
+    have hskip : retiredFirst.retire plan.pair.2.2.1 true =
+        some retiredFirst := rfl
+    refine ⟨retiredFirst, ?_⟩
+    simp [PhysicalState.executeCheckedImage, hdecode, hcurrent,
+      hresults, hslot, hlab, hinstall, hwrites, hwrite,
+      hpubs, haction, hskip, hretireFirst,
+      PhysicalState.installResults, PhysicalState.writeExternals,
+      PhysicalState.publishAll]
+
+/-- The single-external-write pipeline specializes to an output boundary.
+No physical slot changes during the reciprocal output retargeting. -/
 theorem PhysicalState.execute_single_output_image_success
     {state : PhysicalState} {bytes : List UInt8}
     {redex : XRedex NetSym} {plan : BytePlan}
@@ -2077,97 +2228,123 @@ theorem PhysicalState.execute_single_output_image_success
   have hports : result.2.2.2.2.mapM plan.resultTarget =
       some [none, none, none] := by
     simpa [hportShape] using BytePlan.single_output_result_ports hbound hkind
-  have hfresh : result.1 = true → result.2.1 = state.slots.size := by
-    intro ht
-    rcases hpolicy with ⟨ht', hi, _⟩ | ⟨hf', _, _⟩ | ⟨hf', _, _⟩
-    · exact hi
-    · simp [ht] at hf'
-    · simp [ht] at hf'
-  obtain ⟨installed, hsingle⟩ := PhysicalState.install_single_result_success
-    hslot hlab hdonor hdonorLive hports hfresh hreuse
-  have hinstall : state.installResult plan
-      (child redex.1 redex.2.1 ruleSlot.1 ruleSlot.2) result =
-      some installed := by
-    simpa [PhysicalState.installResults, hslot, hlab] using hsingle
-  have hresult : plan.results[0]? = some result := by simp [hresults]
-  obtain ⟨rewired, hwrite⟩ := PhysicalState.install_then_write_output
-    (write := (0, 0, 0))
-    hinstall hresult hbound hport hkind houtput htarget
-  have hwriteFrame (index : Nat) :
-      rewired.slots[index]? = installed.slots[index]? :=
-    PhysicalState.writeExternal_slot_frame (write := (0, 0, 0)) hbound
-      (by intro peer port he; simp [hkind] at he) hwrite
-  have hfirstBound : plan.pair.1 < state.slots.size :=
-    (getElem?_eq_some_iff.mp hf).1
-  have hsecondBound : plan.pair.2.2.1 < state.slots.size :=
-    (getElem?_eq_some_iff.mp hs).1
-  rcases hpolicy with ⟨_, hindex, haction⟩ |
-      ⟨_, hindex, haction⟩ | ⟨_, hindex, haction⟩
-  · have hfirstAway : result.2.1 ≠ plan.pair.1 := by omega
-    have hsecondAway : result.2.1 ≠ plan.pair.2.2.1 := by omega
-    have hfirst :
-        rewired.slots[plan.pair.1]? = some first := by
-      rw [hwriteFrame, PhysicalState.installResult_external_slot_frame
-        hinstall hfirstBound hfirstAway]
-      exact hf
-    have hsecond :
-        rewired.slots[plan.pair.2.2.1]? = some second := by
-      rw [hwriteFrame, PhysicalState.installResult_external_slot_frame
-        hinstall hsecondBound hsecondAway]
-      exact hs
-    obtain ⟨retiredFirst, hretireFirst, hframe⟩ :=
-      PhysicalState.retire_live_success_frame
-        hfirst hfirstLive hfirstRoom
-    have hsecondAfter :
-        retiredFirst.slots[plan.pair.2.2.1]? = some second := by
-      rw [hframe _ hdistinct]
-      exact hsecond
-    obtain ⟨retiredSecond, hretireSecond, _⟩ :=
-      PhysicalState.retire_live_success_frame
-        hsecondAfter hsecondLive hsecondRoom
-    refine ⟨retiredSecond, ?_⟩
-    simp [PhysicalState.executeCheckedImage, hdecode, hcurrent,
-      hresults, hslot, hlab, hinstall, hwrites, hwrite,
-      hpubs, haction, hretireFirst, hretireSecond,
-      PhysicalState.installResults, PhysicalState.writeExternals,
-      PhysicalState.publishAll]
-  · have hsecondAway : result.2.1 ≠ plan.pair.2.2.1 := by
-      rw [hindex]
-      exact hdistinct
-    have hsecond :
-        rewired.slots[plan.pair.2.2.1]? = some second := by
-      rw [hwriteFrame, PhysicalState.installResult_external_slot_frame
-        hinstall hsecondBound hsecondAway]
-      exact hs
-    obtain ⟨retiredSecond, hretireSecond, _⟩ :=
-      PhysicalState.retire_live_success_frame
-        hsecond hsecondLive hsecondRoom
-    have hskip : rewired.retire plan.pair.1 true = some rewired := rfl
-    refine ⟨retiredSecond, ?_⟩
-    simp [PhysicalState.executeCheckedImage, hdecode, hcurrent,
-      hresults, hslot, hlab, hinstall, hwrites, hwrite,
-      hpubs, haction, hskip, hretireSecond,
-      PhysicalState.installResults, PhysicalState.writeExternals,
-      PhysicalState.publishAll]
-  · have hfirstAway : result.2.1 ≠ plan.pair.1 := by
-      rw [hindex]
-      exact hdistinct.symm
-    have hfirst :
-        rewired.slots[plan.pair.1]? = some first := by
-      rw [hwriteFrame, PhysicalState.installResult_external_slot_frame
-        hinstall hfirstBound hfirstAway]
-      exact hf
-    obtain ⟨retiredFirst, hretireFirst, _⟩ :=
-      PhysicalState.retire_live_success_frame
-        hfirst hfirstLive hfirstRoom
-    have hskip : retiredFirst.retire plan.pair.2.2.1 true =
-        some retiredFirst := rfl
-    refine ⟨retiredFirst, ?_⟩
-    simp [PhysicalState.executeCheckedImage, hdecode, hcurrent,
-      hresults, hslot, hlab, hinstall, hwrites, hwrite,
-      hpubs, haction, hskip, hretireFirst,
-      PhysicalState.installResults, PhysicalState.writeExternals,
-      PhysicalState.publishAll]
+  have hwriteAvailable (installed : PhysicalState)
+      (hinstall : state.installResult plan
+        (child redex.1 redex.2.1 ruleSlot.1 ruleSlot.2) result =
+        some installed) :
+      ∃ rewired, installed.writeExternal plan (0, 0, 0) = some rewired :=
+    PhysicalState.install_then_write_output hinstall
+      (by simp [hresults]) hbound hport hkind houtput htarget
+  have hwriteFrames (installed rewired : PhysicalState)
+      (hwrite : installed.writeExternal plan (0, 0, 0) = some rewired) :
+      rewired.slots[plan.pair.1]? = installed.slots[plan.pair.1]? ∧
+        rewired.slots[plan.pair.2.2.1]? =
+          installed.slots[plan.pair.2.2.1]? := by
+    have frame (index : Nat) :
+        rewired.slots[index]? = installed.slots[index]? :=
+      PhysicalState.writeExternal_slot_frame hbound
+        (by intro peer port he; simp [hkind] at he) hwrite
+    exact ⟨frame _, frame _⟩
+  exact PhysicalState.execute_single_external_image_success
+    hdecode hcurrent hresults hslot hlab hwrites hpubs hpolicy
+    hdonor hdonorLive hports hreuse hwriteAvailable hwriteFrames
+    hf hs hfirstLive hsecondLive hfirstRoom hsecondRoom hdistinct
+
+/-- A nonpublishing live-peer boundary uses the same one-result pipeline.
+The prestate peer is outside the consumed pair, so its reciprocal write
+cannot invalidate either retirement. -/
+theorem PhysicalState.execute_single_peer_image_success
+    {state : PhysicalState} {bytes : List UInt8}
+    {redex : XRedex NetSym} {plan : BytePlan}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    {ruleSlot : Option Bool × Nat}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {first second donor oldPeer : PhysicalSlot}
+    {peer port : Nat}
+    (hdecode : BytePlan.decode bytes = some plan)
+    (hcurrent : state.logicalPair
+      { first := plan.pair.1,
+        firstGeneration := UInt64.ofNat plan.pair.2.1,
+        second := plan.pair.2.2.1,
+        secondGeneration := UInt64.ofNat plan.pair.2.2.2 } =
+      some (redex.1, redex.2.1))
+    (hresults : plan.results = [result])
+    (hslot : redex.2.2.2.2.slots[0]? = some ruleSlot)
+    (hlab : redex.2.2.2.2.lab ruleSlot.1 ruleSlot.2 =
+      some result.2.2.1)
+    (hbound : plan.boundaries[0]? = some boundary)
+    (hportShape : result.2.2.2.2 = [some 0, none, none])
+    (hkind : boundary.2 = (0, peer, port))
+    (hpeer : state.slots[peer]? = some oldPeer)
+    (hpeerLive : oldPeer.agent.isSome = true)
+    (htarget : oldPeer.ports[port]? = some (some boundary.1))
+    (hleft : peer ≠ plan.pair.1)
+    (hright : peer ≠ plan.pair.2.2.1)
+    (hwrites : plan.externalWrites = [(0, 0, 0)])
+    (hpubs : plan.publications = [])
+    (hpolicy : (result.1 = true ∧ result.2.1 = state.slots.size ∧
+        plan.action = (0, 0)) ∨
+      (result.1 = false ∧ result.2.1 = plan.pair.1 ∧
+        plan.action = (1, 0)) ∨
+      (result.1 = false ∧ result.2.1 = plan.pair.2.2.1 ∧
+        plan.action = (0, 1)))
+    (hdonor : state.slots[result.2.2.2.1]? = some donor)
+    (hdonorLive : donor.agent.isSome = true)
+    (hreuse : result.1 = false →
+      ∃ old, state.slots[result.2.1]? = some old ∧
+        old.agent.isSome = true ∧
+        old.generation ≠ UInt64.ofNat (UInt64.size - 1))
+    (hf : state.slots[plan.pair.1]? = some first)
+    (hs : state.slots[plan.pair.2.2.1]? = some second)
+    (hfirstLive : first.agent.isSome = true)
+    (hsecondLive : second.agent.isSome = true)
+    (hfirstRoom : first.generation ≠ UInt64.ofNat (UInt64.size - 1))
+    (hsecondRoom : second.generation ≠ UInt64.ofNat (UInt64.size - 1))
+    (hdistinct : plan.pair.1 ≠ plan.pair.2.2.1) :
+    ∃ next, state.executeCheckedImage bytes redex = some next := by
+  have hport : result.2.2.2.2[0]? = some (some 0) := by
+    simp [hportShape]
+  have hports : result.2.2.2.2.mapM plan.resultTarget =
+      some [some (peer, port), none, none] := by
+    simpa [hportShape] using BytePlan.single_peer_result_ports hbound hkind
+  have hpeerBound : peer < state.slots.size :=
+    (getElem?_eq_some_iff.mp hpeer).1
+  have haway : result.2.1 ≠ peer := by
+    rcases hpolicy with ⟨_, hindex, _⟩ |
+        ⟨_, hindex, _⟩ | ⟨_, hindex, _⟩
+    · omega
+    · rw [hindex]
+      exact hleft.symm
+    · rw [hindex]
+      exact hright.symm
+  have hwriteAvailable (installed : PhysicalState)
+      (hinstall : state.installResult plan
+        (child redex.1 redex.2.1 ruleSlot.1 ruleSlot.2) result =
+        some installed) :
+      ∃ rewired, installed.writeExternal plan (0, 0, 0) = some rewired :=
+    PhysicalState.install_then_write_peer hinstall
+      (by simp [hresults]) hbound hport hkind hleft hright
+      hpeer hpeerLive htarget haway
+  have hwriteFrames (installed rewired : PhysicalState)
+      (hwrite : installed.writeExternal plan (0, 0, 0) = some rewired) :
+      rewired.slots[plan.pair.1]? = installed.slots[plan.pair.1]? ∧
+        rewired.slots[plan.pair.2.2.1]? =
+          installed.slots[plan.pair.2.2.1]? := by
+    have frame (index : Nat)
+        (hnot : index ≠ peer) :
+        rewired.slots[index]? = installed.slots[index]? :=
+      PhysicalState.writeExternal_slot_frame hbound
+        (by intro external externalPort he
+            have heq : peer = external := by
+              have ht : (0, peer, port) = (0, external, externalPort) :=
+                hkind.symm.trans he
+              simpa using congrArg (fun t : Nat × Nat × Nat => t.2.1) ht
+            simpa [← heq] using hnot) hwrite
+    exact ⟨frame _ hleft.symm, frame _ hright.symm⟩
+  exact PhysicalState.execute_single_external_image_success
+    hdecode hcurrent hresults hslot hlab hwrites hpubs hpolicy
+    hdonor hdonorLive hports hreuse hwriteAvailable hwriteFrames
+    hf hs hfirstLive hsecondLive hfirstRoom hsecondRoom hdistinct
 
 /-- Installing any admitted result, whether recycled or freshly appended,
 cannot alter the ordered external-output identities. -/
