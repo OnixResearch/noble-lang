@@ -124,6 +124,7 @@ fn tampered_wire_is_refused_on_reload() -> Result<(), String> {
     marker.push(2);
     marker.extend_from_slice(&alias.procedure_id);
     marker.extend_from_slice(&pair.left_closure);
+    assert_eq!(marker.len(), ALIAS_WIRE_MARKER_BYTES);
     let offset_bytes = bytes
         .windows(marker.len())
         .position(|window| window == marker)
