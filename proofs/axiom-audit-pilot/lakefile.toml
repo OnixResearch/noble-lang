@@ -7,3 +7,7 @@ version = "0.1.0"
 name = "axiomAudit"
 git = "https://github.com/leanprover-community/axiom-audit"
 rev = "0b885d88a69982cd76990b502742690b80b1a685"
+
+[[lean_exe]]
+name = "noble-axiom-compare"
+root = "AuditCompare"
