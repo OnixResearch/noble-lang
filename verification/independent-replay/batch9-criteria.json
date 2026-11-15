@@ -1,0 +1,28 @@
+{
+  "schema": "noble-issue62-batch9-criteria/v1",
+  "frozen_before_measurement": true,
+  "selected_lean": "4.35.0",
+  "selected_export_format": "3.1.0",
+  "allowed_axioms": ["propext", "Classical.choice", "Quot.sound"],
+  "source_commit_before_followup": "4620b0a5e5ed347fa864c91df970744ff3884af4",
+  "items": {
+    "compiler217": {
+      "reference": "https://github.com/brittonr/compiler-lab/issues/217",
+      "cases": ["function eta accepted", "function eta parseable semantic rejection", "structure eta accepted", "structure eta parseable semantic rejection", "ordinary proof accepted", "native_decide direct forbidden axiom", "native_decide transitive helper forbidden axiom"],
+      "admission": "Record exact upstream fixture source revision and bytes if the shared corpus exists. Otherwise label local equivalents as such and record shared-corpus consumption as NO-GO; never invent an upstream result. Each negative must be valid NDJSON, reach semantic checking, and refuse at the intended layer. Both official Lean kernel and independent Nanoda must accept all strictly permitted positives on the same exports; unsupported, parse failure, process error, timeout and resource exhaustion never count as semantic rejection. The native-generated axiom must be observed and refused by the generic allowlist, without changing it. Retain raw exports, tool/source digests, argv, wall and observed RSS."
+    },
+    "protected": {
+      "cases": ["real solution", "alternate valid proof", "weakened predicate", "changed imported semantics", "wrong statement", "forbidden assumption", "kernel-invalid proof", "missing definition", "checked amendment and fresh approval identity"],
+      "admission": "Require separately selected challenge and solution sources; bound exact root statements and protected semantic closure; independently replay both valid solutions with pinned Nanoda and official kernel against the same retained export with positive checked-declaration counts and permitted transitive axioms. Unsupported and resource stops refuse; forbidden assumptions cannot be approved. A specification amendment has an independently approved, immutable new identity; old approval must not authorize the amended semantics, nor new approval the old semantics. A valid new proof for the amended challenge must be checked, not merely hashed. Retain proof and semantic closure identities, raw exports, commands and timings."
+    },
+    "historical": {
+      "negative": "A retained 4.31.0 receipt with matching root names but different toolchain/source/profile must be refused through the same receipt-admission boundary as a current receipt, before any checker success is counted.",
+      "positive": "An authentic current-source/current-profile receipt must be accepted by that boundary to exclude an always-rejecting control. Preserve the historical receipt unchanged and record each exact field causing refusal."
+    },
+    "source_builds": {
+      "required_profiles": ["nanoda", "con-leche", "con-ron", "lean4lean", "ocaml4lean"],
+      "admission": "For each configured required checker, pin the exact upstream source revision, license, source hash, compiler/runtime revision, reproducible build invocation and produced executable digest; actually source-build and replay the selected positive/negative input with it, or explicitly NO-GO that checker with measured missing input or incompatible build reason. A release-bundled executable digest alone is not source provenance. Do not silently replace or waive any required checker."
+    }
+  },
+  "non_claims": ["No checker proves its own correctness or equivalence to Lean.", "These fixtures do not prove source authenticity or compiled Rust/Wasm execution correspondence.", "Historical receipts remain immutable and are not rebound to a current source cohort."]
+}

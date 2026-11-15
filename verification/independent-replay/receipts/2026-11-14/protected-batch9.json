@@ -1,0 +1,25 @@
+{
+  "schema": "noble-independent-replay-protected-batch9/v1",
+  "proposal_source_commit": "92763fec7902ea9d879255fb3f39a1ac5926af64",
+  "approval_commit": "e08ae2c7076513c52ece8a2038e30c98fbda2d5f",
+  "proposal_raw_receipt_sha256": "dd07d1c647133bd09b0f3508149604f33e2fc1f8d7624a2a3871122f1649218d",
+  "full_replay_raw_receipt_sha256": "36503582053adfe2d50912a0775d2892a90dbb5905e7b358690e9245fa385799",
+  "raw_receipt_scratch_suffixes": ["b9-amendment-proposal.json", "b9-protected.json"],
+  "both_receipts_hold": true,
+  "selected_lean": "4.35.0",
+  "selected_export_format": "3.1.0",
+  "allowed_axioms": ["propext", "Classical.choice", "Quot.sound"],
+  "old_approval": {"challenge_id": "noble-issue-62-protected-bound/v1", "threshold": 32, "semantic_closure_sha256": "7cc25479566cb12a3192812f4cd789da4e9f6ed4d8030b854fb9b228fb8ae605"},
+  "amended_approval": {"challenge_id": "noble-issue-62-protected-bound/v2-64", "threshold": 64, "approval_manifest_sha256": "12eb94ebd37f6cf3748504edbc2374ac62d0c218a4b0e3607a59534acc7c908e", "semantic_closure_sha256": "16ef779b7065d1c52003674bc9626c3574249922be625916c499a3d6d3523aae"},
+  "replayed_actual_exports": [
+    {"id": "challenge", "sha256": "edb9ff5fa5160397d57d36d75eaeee2186a16e4b64981a6ae752410a0e4136c6", "nanoda_checked": 1501, "official_eligible_input": 1498},
+    {"id": "real", "sha256": "f3a1737fc664ce4f42348296b6d58ea047dea029afe42da853903002cb989aaa", "nanoda_checked": 1500, "official_eligible_input": 1497},
+    {"id": "alternate", "sha256": "eea2f28effee69d3779870ce9eea4f6e41cf4d185b4f44ccf846c2868e97528e", "nanoda_checked": 135, "official_eligible_input": 135},
+    {"id": "amended-challenge", "sha256": "689b8023b1be554ab5feddee20e9dac0fe598cef846e118805d83176392ca72d", "nanoda_checked": 1501, "official_eligible_input": 1498},
+    {"id": "amended-solution", "sha256": "71406076d82d9a1a212761417be6206b8d42e51f890791c9fd6f0a38277ce03d", "nanoda_checked": 1500, "official_eligible_input": 1497}
+  ],
+  "official_count_origin": "parsed eligible input count minus regenerated quotient declarations; official kernel prints acceptance/rejection, never a numeric count",
+  "historical_eight_fixture_verdicts": {"real": "accepted", "alternate": "accepted", "weakened-predicate": "definition-mismatch:Protected.allowed", "changed-semantics": "definition-mismatch:Protected.threshold", "wrong-statement": "statement-mismatch:Protected.zero_allowed", "forbidden-assumption": "forbidden-axiom:Protected.external_zero", "kernel-rejection": "kernel-rejection", "missing-definition": "const-missing-in-solution:Protected.threshold"},
+  "amendment_verdicts": {"amended-solution": "accepted", "old-solution-under-new-approval": "definition-mismatch:Protected.threshold", "amended-solution-under-old-approval": "definition-mismatch:Protected.threshold", "old-challenge-under-new-approval": "definition-mismatch:Protected.threshold", "amended-challenge-under-old-approval": "definition-mismatch:Protected.threshold"},
+  "claim_boundary": "The new bound-64 challenge was separately built, exported and checked by both kernels before its own approval manifest was committed. The amended proof was built only after approval, and each approval refuses the other bound. No claim of lake comparator equivalence or checker correctness follows."
+}

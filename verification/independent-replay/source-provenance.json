@@ -1,0 +1,107 @@
+{
+  "schema": "noble-independent-replay-source-provenance/v1",
+  "source_of_release_pins": {
+    "repository": "https://github.com/leanprover/lean4",
+    "revision": "eb6cafb7290e8bd5f2937522d8d804f58f02bafc",
+    "path": "src/CMakeLists.txt",
+    "lean4lean_patch_path": "script/lean4lean-minimal-init.sh",
+    "claim": "The four release-bundled checker sources are identified by the Lean 4.35.0 release build recipe, not inferred from the bundled binary strings. A reconstructed executable is only byte-identical to the release executable if its measured digest matches checkers.json."
+  },
+  "source_build_admission_erratum": {
+    "prior_source_commit": "3ddce2d0da2357cae300e8018474109cac6677b9",
+    "prior_receipt_sha256": "dd80be206796580182718a6e906eb08239ae5bf157189812669a5c021d0ea74e",
+    "observed": "Nanoda, con-leche and OCaml4Lean source builds and paired replays passed. Con-ron was blocked before build by the custody hasher treating its Git submodule gitlink as a regular file. Lean4Lean built successfully but a trimmed git status string made its expected single reviewed source patch look like an unexpected edit; no replay ran.",
+    "repair": "Record the pinned gitlink object ID without fetching or building the unused submodule, and compare the already trimmed status against the trimmed expected patch marker. Preserve every selected source revision, compiler, export, checker run, and positive/negative expectation."
+  },
+  "selected_export": {
+    "toolchain": "4.35.0",
+    "format": "3.1.0",
+    "module": "Init",
+    "root": "Nat.add_comm",
+    "positive": "leanexport Init -- Nat.add_comm",
+    "negative": "On the same valid export, replace the unique root theorem proof expression index with its type expression index. The NDJSON and all remaining declarations stay unchanged; semantic kernel rejection, not parse failure, is required."
+  },
+  "sources": [
+    {
+      "id": "nanoda",
+      "repository": "https://github.com/ammkrn/nanoda_lib",
+      "revision": "3a2407216ee84a75f9e1aead6803d0578be06ae7",
+      "source_tree_git_sha1": "e806ef6d8ca32d0b37dde01bc737eab3a22482b0",
+      "license": "Apache-2.0",
+      "license_file": "LICENSE",
+      "build": ["cargo", "build", "--release", "--locked", "--bin", "nanoda_bin"],
+      "binary": "target/release/nanoda_bin",
+      "compiler": "repo-rust-toolchain"
+    },
+    {
+      "id": "con-leche",
+      "repository": "https://github.com/leanprover/con-leche",
+      "revision": "67f04630d88718e81aa4d07ab64501f68f105398",
+      "source_tree_git_sha1": "1daed3b54f0c43accd953145db2db4d82756720d",
+      "license": "Apache-2.0",
+      "license_file": "LICENSE",
+      "declared_lean_toolchain": "leanprover/lean4:v4.35.0-rc3",
+      "build": ["lake", "build", "con-leche"],
+      "binary": ".lake/build/bin/con-leche",
+      "compiler": "selected-lean-4.35.0",
+      "build_note": "The released source declares an earlier release candidate. Build with the policy-selected final 4.35.0 compiler explicitly; if it cannot compile, record build-incompatible rather than silently switching toolchains."
+    },
+    {
+      "id": "con-ron",
+      "repository": "https://github.com/leanprover/con-ron",
+      "revision": "dd8d8218892c871276b1e569d3decbb368bba1b6",
+      "source_tree_git_sha1": "34597e3c2599de72584bb38a98449b2ed04313b6",
+      "license": "Apache-2.0",
+      "license_file": "LICENSE",
+      "build": ["cargo", "build", "--release", "--locked", "--bin", "con-ron"],
+      "binary": "target/release/con-ron",
+      "compiler": "repo-rust-toolchain",
+      "build_note": "The release CMake rule sets GIT_SUBMODULES empty (Aeneas is not needed for the binary)."
+    },
+    {
+      "id": "lean4lean",
+      "repository": "https://github.com/Kha/lean4lean",
+      "release_tag": "lean4-bundle-4.35",
+      "revision": "456abe5015fc8f54ea595561fc39523d7733c93f",
+      "source_tree_git_sha1": "4b31419c5329f16357ae287d46667b69ded73fa1",
+      "license": "Apache-2.0",
+      "license_file": "LICENSE",
+      "declared_lean_toolchain": "leanprover/lean4-nightly:nightly-2026-09-06",
+      "patch": "Insert moreLinkArgs = [\"-linitialize_minimal\"] immediately after the first [[lean_exe]] in lakefile.toml, as in Lean 4.35.0 script/lean4lean-minimal-init.sh; record old and new bytes in the receipt.",
+      "dependencies": [
+        {
+          "name": "lean4export",
+          "repository": "https://github.com/leanprover/lean4export",
+          "revision": "411dce7db58a3afc60ecab2d211acd1042b593dc",
+          "source_tree_git_sha1": "bdf8216bb22fe9728a906c62f2773b6bf13e00d4"
+        },
+        {
+          "name": "batteries",
+          "repository": "https://github.com/leanprover-community/batteries",
+          "revision": "f8e1f4b2e1478e39113d32d0af75234aa86423fb",
+          "source_tree_git_sha1": "c834dd412c382c64d480c613d35ea516ea7e1036"
+        }
+      ],
+      "build": ["lake", "build", "lean4lean"],
+      "binary": ".lake/build/bin/lean4lean",
+      "compiler": "selected-lean-4.35.0",
+      "build_note": "The released fork declares an older nightly and its lockfile pins two dependencies. This lane uses selected Lean 4.35.0 and records an incompatible build as NO-GO; it does not substitute a different source revision or runtime."
+    },
+    {
+      "id": "ocaml4lean",
+      "repository": "https://github.com/yoonwoojeong/ocaml4lean",
+      "revision": "6f94226df5b91e51af692d05e00b001ee8e0f2fd",
+      "source_tree_git_sha1": "14c2c13ed4156135c48a30feb36b001fd74b16f4",
+      "license": "Apache-2.0",
+      "license_file": "LICENSE",
+      "build_derivation": "verification/independent-replay/ocaml4lean.nix",
+      "source_nar_hash": "sha256-JMMcTdpEpYpXYxT7OLIAL1yJ76Fh/etp1+QOwzcGtww=",
+      "nixpkgs_revision": "9cf7092bdd603554bd8b63c216e8943cf9b12512",
+      "nixpkgs_nar_hash": "sha256-9tpvMGFteZnd3gRQZFlRCohVpqooygFuy9yjuyRL2C0=",
+      "build": ["nix", "build", "--no-link", "--print-out-paths", "--file", "verification/independent-replay/ocaml4lean.nix"],
+      "binary": "bin/ocaml4lean",
+      "compiler": "nixpkgs-pinned-ocaml",
+      "build_note": "This checker is not bundled with the Lean release; the existing source- and Nixpkgs-pinned derivation is the build recipe. Its binary must also match the pre-existing source-built executable digest in checkers.json."
+    }
+  ]
+}

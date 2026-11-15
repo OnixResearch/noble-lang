@@ -1,0 +1,112 @@
+{
+  "schema": "noble-compiler217-local-equivalents/v1",
+  "issue": "https://github.com/brittonr/compiler-lab/issues/217",
+  "provenance": {
+    "kind": "local-equivalents-not-upstream-corpus",
+    "upstream_shared_corpus_revision": null,
+    "upstream_shared_fixture_sha256": null,
+    "shared_corpus_consumption": "NO-GO",
+    "reason": "Issue #217 describes proposed fixtures, explicitly reports no produced fixtures or runs, and publishes no versioned shared corpus bytes. These seven local equivalents do not exercise upstream fixtures."
+  },
+  "lean": "4.35.0",
+  "export_format": "3.1.0",
+  "module": "Compiler217",
+  "source": "compiler217/Compiler217.lean",
+  "source_sha256": "da865c8f798f7122c9079b2476045e721be07397c6fcc53b31bcf00e341a4555",
+  "official_checker_sha256": "ec7d3c6574b27f0db2319da5cb015d3ea7806b0302c3a70c7164c517487937e7",
+  "allowed_axioms": ["propext", "Classical.choice", "Quot.sound"],
+  "resource_bound_amendment": {
+    "prior_source_commit": "e08ae2c7076513c52ece8a2038e30c98fbda2d5f",
+    "prior_receipt_sha256": "eebc588438596c0de029c4cb49aa7bad186ee63482688ce9416936daa8be4986",
+    "prior_outcome": "resource-exhausted before any fixture export or checker execution",
+    "prior_address_space_bytes": 2147483648,
+    "new_address_space_bytes": 17179869184,
+    "reason": "The initially frozen virtual-address-space limit prevented Lean from creating a thread (libc++abi: failed to create thread: Resource temporarily unavailable). This changes only the compilation and checker resource ceiling, not the seven selected fixtures, roots, expected verdicts, permitted axioms, Lean version or export format. No fixture exported and no checker verdict was observed under the original ceiling."
+  },
+  "warning_only_amendment": {
+    "prior_source_commit": "e5ded0849a1c46cf46396061dbe4d718bed0a80f",
+    "prior_receipt_sha256": "b9604039262aeb5b4528b8f53a8507813cbd3d4c13c8263c950a5e5fbad7c8bb",
+    "prior_outcome": "fixture compiled with exit 0, but the unused second function argument triggered the frozen warning-free compilation check; no fixture exported or checker ran",
+    "source_change": "Rename the intentionally unused explicit second function binder from g to _g. Its binder position, type, body, exported proposition and expected semantic mutation are unchanged."
+  },
+  "encoding_amendment": {
+    "prior_source_commit": "f45b7197166438c7699e4cf4baeca07ef5381722",
+    "prior_receipt_sha256": "1d5668a0de53990a6ee0bfe78d1182ae74b2184433cc91363adb2f38cae57a52",
+    "prior_outcomes": {
+      "function-eta-wrong-function": "Lean kernel rejected; Nanoda declined the malformed back-reference ordering as unsupported, not a semantic rejection",
+      "structure-eta-wrong-field": "No mutated export or checker run: the root type uses a Prod.snd constant rather than a direct projection"
+    },
+    "repair": "Copy only the theorem statement expression path after the existing expression table, in continuous back-reference order, and redirect only its type index; leave its proof expression and all preexisting records intact. Alter the Prod.snd constant to Prod.fst in the copied root type path."
+  },
+  "interning_amendment": {
+    "prior_source_commit": "45aef5d417d7806ab0b0d2b42dbc1791021c2a86",
+    "prior_receipt_sha256": "c361bd0ff7c893ce2aa111c25f1fb04e85752c3113b12eb9fb905609e9196b9e",
+    "prior_outcome": "Official Lean rejected both counterexamples, but Nanoda refused them at parsing (attempted duplicate Expr), not kernel semantics",
+    "repair": "Intern every copied expression against the original NDJSON table and earlier newly emitted records. Existing expressions keep their IDs; only genuinely new unique expressions receive consecutive back-references."
+  },
+  "bounds": {
+    "compile_timeout_ms": 120000,
+    "export_timeout_ms": 120000,
+    "checker_timeout_ms": 120000,
+    "address_space_bytes": 17179869184,
+    "max_captured_output_bytes": 8388608
+  },
+  "cases": [
+    {
+      "id": "function-eta-positive",
+      "category": "function-eta",
+      "root": "Compiler217.functionEta",
+      "mutation": null,
+      "expected": {"official-kernel": "accepted", "nanoda": "accepted", "lane": "accepted"},
+      "rationale": "The lambda applies f to its bound variable; eta converts it to f for arbitrary f and unused g."
+    },
+    {
+      "id": "function-eta-wrong-function",
+      "category": "function-eta",
+      "root": "Compiler217.functionEta",
+      "mutation": "function-eta-wrong-function",
+      "expected": {"official-kernel": "kernel-rejection", "nanoda": "kernel-rejection", "lane": "kernel-rejection"},
+      "rationale": "Replace f with the distinct, same-typed g inside the lambda; eta now yields g, not the claimed f. The proof and every other export record stay unchanged."
+    },
+    {
+      "id": "structure-eta-positive",
+      "category": "structure-eta",
+      "root": "Compiler217.structureEta",
+      "mutation": null,
+      "expected": {"official-kernel": "accepted", "nanoda": "accepted", "lane": "accepted"},
+      "rationale": "For p : Nat × Nat, the constructor of its first and second projections is definitionally p."
+    },
+    {
+      "id": "structure-eta-wrong-field",
+      "category": "structure-eta",
+      "root": "Compiler217.structureEta",
+      "mutation": "structure-eta-wrong-field",
+      "expected": {"official-kernel": "kernel-rejection", "nanoda": "kernel-rejection", "lane": "kernel-rejection"},
+      "rationale": "Replace the second projection by the same-typed first projection. The reconstructed pair need not be p; the original reflexivity proof no longer has the claimed type."
+    },
+    {
+      "id": "ordinary-proof-positive",
+      "category": "native-axiom-control",
+      "root": "Compiler217.ordinary",
+      "mutation": null,
+      "expected": {"official-kernel": "accepted", "nanoda": "accepted", "lane": "accepted"},
+      "rationale": "The ordinary decide proof of 2 + 2 = 4 contains no forbidden axiom."
+    },
+    {
+      "id": "native-decide-direct",
+      "category": "native-axiom-control",
+      "root": "Compiler217.nativeDirect",
+      "mutation": null,
+      "expected": {"official-kernel": "accepted", "nanoda": "forbidden-axiom", "lane": "forbidden-axiom"},
+      "rationale": "The same proposition proved with native_decide exports a per-invocation native axiom; Lean may replay the axiom, but the existing strict generic allowlist must refuse it."
+    },
+    {
+      "id": "native-decide-transitive",
+      "category": "native-axiom-control",
+      "root": "Compiler217.nativeTransitive",
+      "mutation": null,
+      "expected": {"official-kernel": "accepted", "nanoda": "forbidden-axiom", "lane": "forbidden-axiom"},
+      "rationale": "The public theorem uses a private helper that invokes native_decide; the transitive proof closure must expose its forbidden generated axiom."
+    }
+  ]
+}

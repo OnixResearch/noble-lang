@@ -1,0 +1,19 @@
+{
+  "schema": "noble-independent-replay-multi-batch9/v1",
+  "source_commit": "93505d5b1df4ab22614432380681038568b26a9c",
+  "raw_receipt_sha256": "5e8935eaf599be2a0babd478d04b6da122b3e2d7bd78b9be0c464cbcc4bf21f7",
+  "raw_receipt_scratch_suffix": "b9-multi.json",
+  "selected_lean": "4.35.0",
+  "selected_export_format": "3.1.0",
+  "checker_ids_in_count_order": ["nanoda", "con-leche", "con-ron", "lean4lean", "ocaml4lean"],
+  "baselines": [
+    {"root": "NobleFoundation.toInt_add", "export_sha256": "6bf49d7871d537afc125467c5467bf9211e0bb22ae988f093efb3e1d609597ab", "accepted_counts": [2780, 2462, 2462, 2459, 2780]},
+    {"root": "NobleFoundation.LinkBoundary.vertical_simulation_compose", "export_sha256": "7cfd9a6559ed8d30ba3cd620bac6d373cf3829771b3a04f9066328ff1ddba9fb", "accepted_counts": [16, 9, 9, 9, 16]},
+    {"root": "Nat.add_comm", "export_sha256": "6aa6de21984e6c060d8d7c5e674ced9766553089c0568783753564bbf4f2617f", "accepted_counts": [52, 37, 37, 37, 52]}
+  ],
+  "holds": true,
+  "all_25_receipt_checks_hold": true,
+  "controls": "Every configured checker has baseline and control rows. The executed proof-mutation, dropped-dependency, substituted-claim, format, custom-axiom, parser and resource controls retain distinct lane/checker refusals; unsupported capabilities remain explicit. Raw exit/stdout/stderr, wall and max RSS are in the byte-pinned receipt.",
+  "foundation_source_equivalence": "The remote compiled foundation project and the checked-out source cohort were bytewise identical outside generated .lake artifacts before replay. The three-root run did not lower a memory requirement or remove any selected root.",
+  "limitation": "This multi-checker control used pinned release-bundled binaries (plus the separately source-built OCaml checker), whereas source-builds-batch9.json independently establishes five source-built executables on a selected ordinary root and semantic negative. It does not establish bitwise provenance of four release bundles."
+}

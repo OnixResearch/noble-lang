@@ -1,0 +1,35 @@
+{
+  "schema": "noble-independent-replay-protected-approval/v1",
+  "challenge_id": "noble-issue-62-protected-bound/v2-64",
+  "proposal_source_commit": "92763fec7902ea9d879255fb3f39a1ac5926af64",
+  "model": {
+    "name": "bounded-natural-allowance",
+    "version": "2",
+    "semantic_root": "Protected.threshold",
+    "predicate": "allowed n iff n < threshold",
+    "parameters": {
+      "threshold": 64
+    }
+  },
+  "source_sha256": {
+    "verification/independent-replay/protected/amendment/challenge.json": "ccfb6beaf3631382f4a8bec88f84d44ff36c581eaa0ce2103048147a16c714d6",
+    "verification/independent-replay/protected/amendment/challenge/Challenge.lean": "631fb78f3f2dac8e8c18effdbf6d655c8f7c95cac4983ba30a8f1c0881990504",
+    "verification/independent-replay/protected/amendment/challenge/Protected/Semantics.lean": "f47934b14213674b489d8079cf810d42396db25b9c3503b285015f4c67b5e061",
+    "verification/independent-replay/protected/amendment/challenge/lake-manifest.json": "f509d7723dc1f040069ae7cf8b786c4b4a4d13139061956d14e150d8b1599e84",
+    "verification/independent-replay/protected/amendment/challenge/lakefile.toml": "42694b015a6239255bfba13cd47b410d40d201c2a6075f8af2e6e8d61214edb1",
+    "verification/independent-replay/protected/amendment/challenge/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c"
+  },
+  "root_statement_sha256": {
+    "Protected.zero_allowed": "e43bfa9d66cf17cd764f070189ef5130c753ea79885e2a07ca3485edff79b63f",
+    "Protected.succ_of_lt": "7b74e6a62a1a67ac8ae4f40e0e428b9495764f781fb9addd61b0a059ac9a57cd",
+    "Protected.add_allowed": "d1d44851fd9edded72e48941f06af5bc6e91fe26325f3f9db690bef8ccea5c71"
+  },
+  "semantic_closure_sha256": "16ef779b7065d1c52003674bc9626c3574249922be625916c499a3d6d3523aae",
+  "permitted_axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "toolchain": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0",
+  "export_format": "3.1.0"
+}

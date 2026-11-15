@@ -1,0 +1,31 @@
+{
+  "schema": "noble-independent-replay-compiler217-batch9/v1",
+  "source_commit": "3ddce2d0da2357cae300e8018474109cac6677b9",
+  "lean": "4.35.0",
+  "export_format": "3.1.0",
+  "permitted_axioms": ["propext", "Classical.choice", "Quot.sound"],
+  "raw_receipt_sha256": "28816012fcf0495c7eb6ad30339f545eab7d52d02cae748c1a80709b72060937",
+  "raw_receipt_scratch_suffix": "b9-compiler217-work5/receipt.json",
+  "local_equivalents_hold": true,
+  "cases": [
+    {"id": "function-eta-positive", "lane": "accepted", "nanoda_checked": 9, "official_eligible_input": 9, "export_sha256": "58ac8bdcf4507723ff81d1c87014312d84de886534b637822f18f22958849af4"},
+    {"id": "function-eta-wrong-function", "lane": "kernel-rejection", "official": "kernel-rejection", "nanoda": "kernel-rejection", "export_sha256": "ec7b9c92b7c9965176de0f45fc4ab7e33e24f8e06ab2d99dbb8f8ea36b04fb6c"},
+    {"id": "structure-eta-positive", "lane": "accepted", "nanoda_checked": 14, "official_eligible_input": 14, "export_sha256": "5843c69c16666ef6d922688e453b7f6f5a5dffcf33a49d707c2c2249205a5e7f"},
+    {"id": "structure-eta-wrong-field", "lane": "kernel-rejection", "official": "kernel-rejection", "nanoda": "kernel-rejection", "export_sha256": "de1ab4e6d0c95601704b6ad1eb12bd26bae2ceb9b18c3ac52226372595cd317b"},
+    {"id": "ordinary-proof-positive", "lane": "accepted", "nanoda_checked": 84, "official_eligible_input": 84, "export_sha256": "1ba2af99566f83c2dbc9d4ec9e27c6c2388c125f47b4c7beca145991eb5d3974"},
+    {"id": "native-decide-direct", "lane": "forbidden-axiom", "official": "accepted", "nanoda": "forbidden-axiom", "generated_axiom": "Compiler217.nativeDirect._native.native_decide.ax_1_1", "export_sha256": "92f075fd110adf4d757ecb8bcfada396f9566d94c7266142fd3356fa6d5e2208"},
+    {"id": "native-decide-transitive", "lane": "forbidden-axiom", "official": "accepted", "nanoda": "forbidden-axiom", "dependency_path": ["Compiler217.nativeTransitive", "_private.Compiler217.0.Compiler217.nativeHelper", "_private.Compiler217.0.Compiler217.nativeHelper._native.native_decide.ax_1_1"], "export_sha256": "8e7de255f4a30207552bac8ed051406f48357ac6fc64878a825684498b9e09b1"}
+  ],
+  "official_count_origin": "parsed eligible input count minus regenerated quotient declarations; official kernel prints acceptance/rejection, never a numeric count",
+  "predecessor_refusals": [
+    {"class": "resource-exhausted", "raw_receipt_sha256": "eebc588438596c0de029c4cb49aa7bad186ee63482688ce9416936daa8be4986", "observation": "2 GiB virtual limit prevented Lean from creating a thread before export"},
+    {"class": "warning-only-compile", "raw_receipt_sha256": "b9604039262aeb5b4528b8f53a8507813cbd3d4c13c8263c950a5e5fbad7c8bb", "observation": "unused binder warning; no export"},
+    {"class": "unsupported-and-missing-mutation", "raw_receipt_sha256": "1d5668a0de53990a6ee0bfe78d1182ae74b2184433cc91363adb2f38cae57a52", "observation": "Nanoda declined noncanonical expression order; structure mutation had no target"},
+    {"class": "parse-failure", "raw_receipt_sha256": "c361bd0ff7c893ce2aa111c25f1fb04e85752c3113b12eb9fb905609e9196b9e", "observation": "Nanoda rejected duplicate expression records; official rejected both changed claims"}
+  ],
+  "upstream_shared_corpus_consumption": {
+    "decision": "NO-GO",
+    "reference": "https://github.com/brittonr/compiler-lab/issues/217",
+    "reason": "The upstream issue describes proposed cases but has published no source revision, manifest or fixture bytes to consume. The seven cases above are expressly local equivalents, not shared-corpus replay."
+  }
+}
