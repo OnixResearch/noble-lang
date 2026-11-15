@@ -91,13 +91,16 @@ fn retain_followup_evidence(
         "lean_corpus_blake3": blake3::hash(corpus.as_bytes()).to_hex().to_string(),
         "controls": {
             "omitted_dup_cost": "StaleRuleTable",
+            "omitted_era_cost": "StaleRuleTable",
+            "missing_era_rule": "StaleRuleTable",
             "negative_cost_annotation": "StaleRuleTable",
             "negative_potential": "WrongCostModel",
+            "insufficient_stage_potential": "WrongCostModel",
             "disconnected_rebound_net": "InvalidNet"
         }
     });
     let retained_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../verification/ngraph/resource-followup-2026-11-15.json");
+        .join("../../verification/ngraph/resource-followup-2026-11-15-expanded.json");
     if retained_path.exists() {
         let retained: serde_json::Value = serde_json::from_slice(&std::fs::read(&retained_path)?)?;
         assert_eq!(retained["schema"], "ngraph-resource-followup/1");
@@ -322,7 +325,7 @@ fn regenerate_lean_corpus() -> TestResult {
 }
 
 #[test]
-fn byte_checker_refuses_missing_dup_negative_costs_and_false_premise() -> TestResult {
+fn byte_checker_refuses_omitted_costs_and_false_premise() -> TestResult {
     let (graph, inputs) = fanout_erase(4);
     let checked = noble_ngraph::check(&IDS, graph).map_err(|error| format!("{error:?}"))?;
     let limits = net::Limits {
@@ -354,6 +357,31 @@ fn byte_checker_refuses_missing_dup_negative_costs_and_false_premise() -> TestRe
     omitted_dup.drain(at..at + b"dup-num:".len());
     assert_eq!(
         check(&issued.certificate_bytes, &issued.net_bytes, &omitted_dup),
+        Err(resource::Refusal::StaleRuleTable)
+    );
+
+    let mut missing_era = resource::RULE_TABLE_BYTES.to_vec();
+    let at = missing_era
+        .windows(b"era-num:".len())
+        .position(|window| window == b"era-num:")
+        .ok_or("missing ERA rule")?;
+    missing_era.drain(at..at + b"era-num:".len());
+    assert_eq!(
+        check(&issued.certificate_bytes, &issued.net_bytes, &missing_era),
+        Err(resource::Refusal::StaleRuleTable)
+    );
+
+    let mut omitted_era = resource::RULE_TABLE_BYTES.to_vec();
+    let marker = b"era-num: era + num(v) -> empty; cost=1";
+    let at = omitted_era
+        .windows(marker.len())
+        .position(|window| window == marker)
+        .ok_or("missing ERA charge")?
+        + marker.len()
+        - 1;
+    omitted_era[at] = b'0';
+    assert_eq!(
+        check(&issued.certificate_bytes, &issued.net_bytes, &omitted_era),
         Err(resource::Refusal::StaleRuleTable)
     );
 
@@ -391,6 +419,22 @@ fn byte_checker_refuses_missing_dup_negative_costs_and_false_premise() -> TestRe
     );
     assert_eq!(
         check(&stale_cost, &issued.net_bytes, resource::RULE_TABLE_BYTES),
+        Err(resource::Refusal::WrongCostModel)
+    );
+
+    let mut underweight_stage = resource::COST_MODEL_BYTES.to_vec();
+    let at = underweight_stage
+        .windows(b"op2=2".len())
+        .position(|window| window == b"op2=2")
+        .ok_or("missing first arithmetic stage potential")?
+        + b"op2=".len();
+    underweight_stage[at] = b'1';
+    let mut forged_cost = issued.certificate_bytes.clone();
+    forged_cost[digest_offset_bytes + 64..digest_offset_bytes + 96].copy_from_slice(
+        &certificate_digest(b"noble.ngraph.resource.cost.v0", &underweight_stage)?,
+    );
+    assert_eq!(
+        check(&forged_cost, &issued.net_bytes, resource::RULE_TABLE_BYTES),
         Err(resource::Refusal::WrongCostModel)
     );
 

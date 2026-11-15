@@ -4089,11 +4089,13 @@ byte fields, source translation to the retained net, and four interactions/six i
 fields extracted from those literal accepted bytes to the Lean translation; the kernel does not
 recompute BLAKE3 or prove the Rust byte decoder agrees on *all* possible inputs. The generated
 fixture and freshness test bind one exact subject rather than universally refining the checker.
-The separate [audited-source follow-up receipt](../../verification/ngraph/resource-followup-2026-11-15.json)
-retains that fixture's BLAKE3 identity and the four newly exercised refusal classes without
-rewriting the original six-family receipt. The earlier resource-followup-receipt.json remains
-immutable evidence of the same controls from its prior source commit; its corpus digest
-predates a proof-audit lexical correction and is superseded by the dated receipt.
+The separate [audited-source expanded follow-up receipt](../../verification/ngraph/resource-followup-2026-11-15-expanded.json)
+retains that fixture's BLAKE3 identity and seven refusal controls: missing DUP/ERA rule or
+charge, negative rule charge or potential, insufficient first-stage potential, and a
+digest-rebound disconnected net. The cost model is fixed by the checker, so the malformed
+potential controls cannot supply a new accepted model; they are refusals, not theorem
+instances. The earlier follow-up receipts remain immutable historical evidence; the
+undated receipt's corpus digest predates a proof-audit lexical correction.
 
 `NobleFoundation.NetI64Resource.chain_family_resources`,
 `NobleFoundation.NetI64Resource.balanced_family_resources`, and
