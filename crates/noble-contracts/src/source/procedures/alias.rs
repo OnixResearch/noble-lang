@@ -192,7 +192,7 @@ fn push(stack: &mut Vec<Polynomial>, value: Polynomial) -> Result<(), Refusal> {
     Ok(())
 }
 
-fn normalize(record: &ProcedureRecord) -> Result<Vec<Polynomial>, Refusal> {
+fn check_fragment(record: &ProcedureRecord) -> Result<(), Refusal> {
     let chunk = &record.chunk;
     if !record.library_dependencies.is_empty() || !chunk.dependencies.is_empty() {
         return Err(refused(
@@ -202,87 +202,124 @@ fn normalize(record: &ProcedureRecord) -> Result<Vec<Polynomial>, Refusal> {
     }
     if chunk.interface.stack_in.len() > MAX_ALIAS_INPUTS
         || chunk.interface.stack_out.len() > MAX_ALIAS_OUTPUTS
-        || chunk.interface.stack_in.iter().any(|ty| *ty != Ty::I64)
-        || chunk.interface.stack_out.iter().any(|ty| *ty != Ty::I64)
-        || chunk.body.entry.len() > 64
     {
         return Err(refused(
             RefusalKind::Unsupported,
-            "alias interface or recipe exceeds the I64 polynomial fragment",
+            "alias interface exceeds the polynomial input or output limit",
         ));
     }
+    if chunk.interface.stack_in.iter().any(|ty| *ty != Ty::I64)
+        || chunk.interface.stack_out.iter().any(|ty| *ty != Ty::I64)
+    {
+        return Err(refused(
+            RefusalKind::Unsupported,
+            "alias interface is not entirely I64",
+        ));
+    }
+    if chunk.body.entry.len() > 64 {
+        return Err(refused(
+            RefusalKind::Unsupported,
+            "alias recipe exceeds the bounded polynomial fragment",
+        ));
+    }
+    debug_assert!(chunk.interface.stack_in.len() <= MAX_ALIAS_INPUTS);
+    Ok(())
+}
+
+fn normalize_op(
+    op: chunks::Op,
+    stack: &mut Vec<Polynomial>,
+    work: &mut u32,
+) -> Result<(), Refusal> {
+    debug_assert!(stack.len() <= 32);
+    match op {
+        chunks::Op::Dup => {
+            let top = stack.last().cloned().ok_or_else(|| {
+                refused(RefusalKind::Unsupported, "alias duplicate needs a value")
+            })?;
+            push(stack, top)
+        }
+        chunks::Op::Drop => {
+            let _ = pop(stack)?;
+            Ok(())
+        }
+        chunks::Op::Swap => {
+            let top = pop(stack)?;
+            let below = pop(stack)?;
+            push(stack, top)?;
+            push(stack, below)
+        }
+        chunks::Op::Add | chunks::Op::Sub | chunks::Op::Mul => {
+            let right = pop(stack)?;
+            let left = pop(stack)?;
+            let result = if op == chunks::Op::Mul {
+                left.multiply(&right, work)?
+            } else {
+                left.combine(&right, op == chunks::Op::Sub, work)?
+            };
+            push(stack, result)
+        }
+        chunks::Op::Eq | chunks::Op::Run => Err(refused(
+            RefusalKind::Unsupported,
+            "Boolean or quotation alias operation is outside the polynomial fragment",
+        )),
+    }
+}
+
+fn normalize_node(
+    chunk: &chunks::Envelope,
+    index: u32,
+    stack: &mut Vec<Polynomial>,
+    work: &mut u32,
+) -> Result<(), Refusal> {
+    debug_assert!(stack.len() <= 32);
+    charge(work, 1)?;
+    let node_index = usize::try_from(index).map_err(|_| {
+        refused(RefusalKind::Unsupported, "alias node index exceeds the host domain")
+    })?;
+    let node = chunk.body.nodes.get(node_index).ok_or_else(|| {
+        refused(RefusalKind::Unsupported, "alias references a missing recipe node")
+    })?;
+    match node {
+        chunks::Node::I64(value) => push(stack, Polynomial::constant(*value as u64)),
+        chunks::Node::Capture { index } => {
+            let capture = chunk.captures.get(usize::from(*index)).ok_or_else(|| {
+                refused(RefusalKind::Unsupported, "alias references a missing capture")
+            })?;
+            let chunks::Scalar::I64(value) = capture.value else {
+                return Err(refused(RefusalKind::Unsupported, "Boolean alias capture"));
+            };
+            push(stack, Polynomial::constant(value as u64))
+        }
+        chunks::Node::Operation { op, instantiation } => {
+            if chunk.instantiations.get(usize::from(*instantiation)).is_none() {
+                return Err(refused(
+                    RefusalKind::Unsupported,
+                    "alias references a missing instantiation witness",
+                ));
+            }
+            normalize_op(*op, stack, work)
+        }
+        chunks::Node::Bool(_) | chunks::Node::Invoke { .. } | chunks::Node::Quotation { .. } => {
+            Err(refused(
+                RefusalKind::Unsupported,
+                "alias recipe node is outside the I64 polynomial fragment",
+            ))
+        }
+    }
+}
+
+fn normalize(record: &ProcedureRecord) -> Result<Vec<Polynomial>, Refusal> {
+    check_fragment(record)?;
+    let chunk = &record.chunk;
     let mut stack = Vec::with_capacity(chunk.interface.stack_in.len());
     for index in 0..chunk.interface.stack_in.len() {
         push(&mut stack, Polynomial::variable(index))?;
     }
     let mut work = 0;
     for index in &chunk.body.entry {
-        charge(&mut work, 1)?;
-        let node_index = usize::try_from(*index).map_err(|_| {
-            refused(RefusalKind::Unsupported, "alias node index exceeds the host domain")
-        })?;
-        let node = chunk.body.nodes.get(node_index).ok_or_else(|| {
-            refused(RefusalKind::Unsupported, "alias references a missing recipe node")
-        })?;
-        match node {
-            chunks::Node::I64(value) => push(&mut stack, Polynomial::constant(*value as u64))?,
-            chunks::Node::Capture { index } => {
-                let capture = chunk.captures.get(usize::from(*index)).ok_or_else(|| {
-                    refused(RefusalKind::Unsupported, "alias references a missing capture")
-                })?;
-                let chunks::Scalar::I64(value) = capture.value else {
-                    return Err(refused(RefusalKind::Unsupported, "Boolean alias capture"));
-                };
-                push(&mut stack, Polynomial::constant(value as u64))?;
-            }
-            chunks::Node::Operation { op, instantiation } => {
-                if chunk.instantiations.get(usize::from(*instantiation)).is_none() {
-                    return Err(refused(
-                        RefusalKind::Unsupported,
-                        "alias references a missing instantiation witness",
-                    ));
-                }
-                match op {
-                    chunks::Op::Dup => {
-                        let top = stack.last().cloned().ok_or_else(|| {
-                            refused(RefusalKind::Unsupported, "alias duplicate needs a value")
-                        })?;
-                        push(&mut stack, top)?;
-                    }
-                    chunks::Op::Drop => {
-                        let _ = pop(&mut stack)?;
-                    }
-                    chunks::Op::Swap => {
-                        let top = pop(&mut stack)?;
-                        let below = pop(&mut stack)?;
-                        push(&mut stack, top)?;
-                        push(&mut stack, below)?;
-                    }
-                    chunks::Op::Add | chunks::Op::Sub | chunks::Op::Mul => {
-                        let right = pop(&mut stack)?;
-                        let left = pop(&mut stack)?;
-                        let result = if *op == chunks::Op::Mul {
-                            left.multiply(&right, &mut work)?
-                        } else {
-                            left.combine(&right, *op == chunks::Op::Sub, &mut work)?
-                        };
-                        push(&mut stack, result)?;
-                    }
-                    chunks::Op::Eq | chunks::Op::Run => {
-                        return Err(refused(
-                            RefusalKind::Unsupported,
-                            "Boolean or quotation alias operation is outside the polynomial fragment",
-                        ));
-                    }
-                }
-            }
-            chunks::Node::Bool(_) | chunks::Node::Invoke { .. } | chunks::Node::Quotation { .. } => {
-                return Err(refused(
-                    RefusalKind::Unsupported,
-                    "alias recipe node is outside the I64 polynomial fragment",
-                ));
-            }
-        }
+        normalize_node(chunk, *index, &mut stack, &mut work)?;
+        debug_assert!(stack.len() <= 32);
     }
     if stack.len() != chunk.interface.stack_out.len() {
         return Err(refused(
@@ -379,39 +416,62 @@ pub(super) fn verify(records: &[ProcedureRecord]) -> Result<(), Refusal> {
             .iter()
             .find(|candidate| candidate.procedure_id == alias.procedure_id)
             .ok_or_else(|| refused(RefusalKind::StaleContext, "alias target is not retained"))?;
-        if record.procedure_id == target.procedure_id || record.chunk.interface != target.chunk.interface {
-            return Err(refused(
-                RefusalKind::Invalid,
-                "alias pair has unequal identities or stack interfaces",
-            ));
-        }
-        let evidence = alias.evidence(record.procedure_id);
-        let mut own_evidence = record
-            .evidence
-            .iter()
-            .filter(|entry| entry.obligation == ALIAS_EVIDENCE_OBLIGATION);
-        if own_evidence.next() != Some(&evidence) || own_evidence.next().is_some() {
-            return Err(refused(
-                RefusalKind::Invalid,
-                "alias lacks its own exact-pair validation evidence binding",
-            ));
-        }
-        // The only accepted closure is exactly empty on both subjects. A
-        // digest can never substitute for the dependency inspection above.
-        let left = normalize(record)?;
-        let right = normalize(target)?;
-        let empty_closure = persistence::empty_alias_closure_digest();
-        if certificate.left_closure != empty_closure
-            || certificate.right_closure != empty_closure
-            || certificate.left != left
-            || certificate.right != right
-            || left != right
-        {
-            return Err(refused(
-                RefusalKind::Invalid,
-                "alias certificate or exact-pair polynomial differs from recomputation",
-            ));
-        }
+        verify_pair(record, alias, target, certificate)?;
     }
+    Ok(())
+}
+
+fn verify_evidence(record: &ProcedureRecord, alias: &Alias) -> Result<(), Refusal> {
+    let evidence = alias.evidence(record.procedure_id);
+    let mut own_evidence = record
+        .evidence
+        .iter()
+        .filter(|entry| entry.obligation == ALIAS_EVIDENCE_OBLIGATION);
+    if own_evidence.next() != Some(&evidence) || own_evidence.next().is_some() {
+        return Err(refused(
+            RefusalKind::Invalid,
+            "alias lacks its own exact-pair validation evidence binding",
+        ));
+    }
+    Ok(())
+}
+
+fn verify_pair(
+    record: &ProcedureRecord,
+    alias: &Alias,
+    target: &ProcedureRecord,
+    certificate: &ExactPairCertificate,
+) -> Result<(), Refusal> {
+    if record.procedure_id == target.procedure_id || record.chunk.interface != target.chunk.interface {
+        return Err(refused(
+            RefusalKind::Invalid,
+            "alias pair has unequal identities or stack interfaces",
+        ));
+    }
+    verify_evidence(record, alias)?;
+    // The only accepted closure is exactly empty on both subjects. A
+    // digest can never substitute for the dependency inspection in normalize.
+    let left = normalize(record)?;
+    let right = normalize(target)?;
+    let empty_closure = persistence::empty_alias_closure_digest();
+    if certificate.left_closure != empty_closure || certificate.right_closure != empty_closure {
+        return Err(refused(
+            RefusalKind::Invalid,
+            "alias certificate closure differs from independently checked empty closures",
+        ));
+    }
+    if certificate.left != left || certificate.right != right {
+        return Err(refused(
+            RefusalKind::Invalid,
+            "alias certificate normal forms differ from recomputation",
+        ));
+    }
+    if left != right {
+        return Err(refused(
+            RefusalKind::Invalid,
+            "alias pair has unequal polynomials",
+        ));
+    }
+    debug_assert_eq!(certificate.left, certificate.right);
     Ok(())
 }
