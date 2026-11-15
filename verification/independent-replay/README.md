@@ -155,9 +155,32 @@ tried with `decide +kernel` under 1,000,000 heartbeats and recursion depth 4,096
 changes. All 12 M2 and 14 M3 candidate proofs stopped at the extracted/reference `Outcome` match
 before the extracted `Result` computation reduced; these were reduction failures, not heartbeat
 timeouts. No conversion or replay-root change was made. The per-theorem locations, measurements,
-reopen condition, clean-commit M2/M3 strength receipt, and scoped deferral of community axiom-audit
+reopen condition, and clean-commit M2/M3 strength receipt
 are recorded in [`decision.md`](decision.md#d-remaining-native_decide-conversions) and
 [`receipts/2026-11-14/strength-join.json`](receipts/2026-11-14/strength-join.json).
+
+### Community axiom-audit comparison
+
+The isolated [pilot](../../proofs/axiom-audit-pilot/lakefile.toml) pins upstream
+`axiom-audit@0b885d88` without changing the main foundation project. The
+[frozen criteria](axiom-audit-criteria.json), [121-module roster](receipts/2026-11-14/axiom-audit-modules.json),
+and [source-bound comparison](receipts/2026-11-14/axiom-audit-comparison.json) retain the four-library
+experiment on Lean 4.35.0. All 2,071 selected public theorem sets and 168 private helpers were
+accounted for, but 53 generated/inductive declaration axiom sets disagreed with Lean's stock
+collector; four mutual-inductive fixture rows missed an imported custom axiom. The preregistered
+exact `Lean.ofReduceBool` control also did not materialize under 4.35.0, which generated a different
+native axiom name. Thus `go=false`: keep the inventory-bound audit as deciding reference. The full
+counterexamples, measured wall/RSS, trust boundary, and reopen condition are in
+[`decision.md`](decision.md#e-community-axiom-audit-comparison).
+
+To reproduce, build both executables with the selected Lean 4.35.0 under
+`proofs/axiom-audit-pilot` (`lake build axiomAudit/axiom-audit noble-axiom-compare`), then run
+`node verification/independent-replay/axiom-audit-run.mjs --out <fresh-output-directory>
+--baseline <clean-foundation-check.json> --source-commit <clean-source-sha>` from the repository
+root. The runner builds every source module in the independent roster and retains raw logs and
+generated negative-control source only in the caller-owned output directory. The comparison
+audits compiled assumptions at upstream `trustLevel := 1024`; it is neither proof-term replay nor
+compiler/runtime correspondence.
 
 ### Compiled-artifact binding after batch 4
 
