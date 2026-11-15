@@ -34,6 +34,8 @@ use serde_json::Value;
 
 #[path = "ngraph/nickel/construction.rs"]
 mod construction;
+#[path = "../../noble-ngraph-experiment/tests/extract_b2/net_i64_corpus/serialization.rs"]
+mod corpus_codec;
 #[path = "ngraph/resource.rs"]
 mod net_resource;
 

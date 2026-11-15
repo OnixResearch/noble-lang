@@ -1,14 +1,11 @@
 //! Source-bound byte-certificate replay against the opt-in CLI net backend.
 //! The only test target is the existing `ngraph` integration target.
 
-use super::{eval_lines, vector_file, Ngraph, Scratch, TestResult};
+use super::{corpus_codec, eval_lines, vector_file, Ngraph, Scratch, TestResult};
 use noble_ngraph::identity::{IdentityHasher, IdentityScheme};
 use noble_ngraph::{net, resource, GraphBuilder, ScalarType, SubProfile, Value};
 use serde_json::json;
 use std::fmt::Write as _;
-
-#[path = "../../../noble-ngraph-experiment/tests/extract_b2/net_i64_corpus/serialization.rs"]
-mod corpus_codec;
 
 const CORPUS_PREAMBLE: &str = r#"import NobleFoundation.NetI64Resource
 import NobleFoundation.NetI64Corpus
@@ -145,23 +142,24 @@ fn certificate_digest_offset() -> usize {
     .sum::<usize>()
 }
 
-fn certificate_digest(domain: &[u8], bytes: &[u8]) -> [u8; 32] {
+fn certificate_digest(domain: &[u8], bytes: &[u8]) -> Result<[u8; 32], Box<dyn std::error::Error>> {
     let mut hasher = IDS.start();
     hasher.update(domain);
-    hasher.update(
-        &u64::try_from(bytes.len())
-            .expect("bounded fixture length")
-            .to_le_bytes(),
-    );
+    hasher.update(&u64::try_from(bytes.len())?.to_le_bytes());
     hasher.update(bytes);
-    hasher.finish()
+    Ok(hasher.finish())
 }
 
 fn accepted_corpus() -> Result<String, Box<dyn std::error::Error>> {
     let (graph, inputs) = fanout_erase(4);
     let checked = noble_ngraph::check(&IDS, graph).map_err(|error| format!("{error:?}"))?;
-    let lowered = net::lower(&IDS, &checked, &inputs, &net::Limits::default())
-        .map_err(|error| format!("{error:?}"))?;
+    let limits = net::Limits {
+        max_agent_slots: 1_048_576,
+        max_wires: 2_097_152,
+        interaction_fuel: 2_097_152,
+    };
+    let lowered =
+        net::lower(&IDS, &checked, &inputs, &limits).map_err(|error| format!("{error:?}"))?;
     let artifact =
         resource::issue(&IDS, &checked, &lowered, &inputs).map_err(|error| format!("{error:?}"))?;
     let verified = resource::check(
@@ -254,7 +252,7 @@ fn accepted_corpus() -> Result<String, Box<dyn std::error::Error>> {
         "def certificateCostDigest : List Nat := [{}]",
         byte_list(&artifact.certificate_bytes[versions_bytes + 64..versions_bytes + 96])
     )?;
-    let mut offset = 8;
+    let mut offset_bytes = 8;
     let mut schema = vec!["certificateBytes.take 8 = [78, 71, 82, 83, 67, 49, 0, 0]".to_owned()];
     for revision in [
         resource::CERTIFICATE_REVISION,
@@ -262,20 +260,20 @@ fn accepted_corpus() -> Result<String, Box<dyn std::error::Error>> {
         resource::PROOF_MODEL_REVISION,
         resource::COST_MODEL_REVISION,
     ] {
-        let length = u16::try_from(revision.len()).expect("fixed revision length");
+        let length_bytes = u16::try_from(revision.len())?;
         schema.push(format!(
-            "(certificateBytes.drop {offset}).take 2 = [{}]",
-            byte_list(&length.to_le_bytes())
+            "(certificateBytes.drop {offset_bytes}).take 2 = [{}]",
+            byte_list(&length_bytes.to_le_bytes())
         ));
-        offset += 2;
+        offset_bytes += 2;
         schema.push(format!(
-            "(certificateBytes.drop {offset}).take {} = [{}]",
+            "(certificateBytes.drop {offset_bytes}).take {} = [{}]",
             revision.len(),
             byte_list(revision.as_bytes())
         ));
-        offset += revision.len();
+        offset_bytes += revision.len();
     }
-    assert_eq!(offset, versions_bytes);
+    assert_eq!(offset_bytes, versions_bytes);
     writeln!(
         source,
         "\n/-- The magic and all four length-prefixed identity revisions are byte-exact. -/\ntheorem fixture_schema :\n    {} := by decide",
@@ -307,7 +305,7 @@ fn accepted_corpus() -> Result<String, Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn accepted_lean_resource_corpus_is_fresh() -> TestResult {
+fn accepted_lean_corpus_is_fresh() -> TestResult {
     assert_eq!(
         std::fs::read_to_string(corpus_path())?,
         accepted_corpus()?,
@@ -318,7 +316,7 @@ fn accepted_lean_resource_corpus_is_fresh() -> TestResult {
 
 #[test]
 #[ignore = "explicitly regenerate the source-bound Lean fixture after changing the Rust producer"]
-fn regenerate_lean_resource_corpus() -> TestResult {
+fn regenerate_lean_corpus() -> TestResult {
     std::fs::write(corpus_path(), accepted_corpus()?)?;
     Ok(())
 }
@@ -327,8 +325,13 @@ fn regenerate_lean_resource_corpus() -> TestResult {
 fn byte_checker_refuses_missing_dup_negative_costs_and_false_premise() -> TestResult {
     let (graph, inputs) = fanout_erase(4);
     let checked = noble_ngraph::check(&IDS, graph).map_err(|error| format!("{error:?}"))?;
-    let lowered = net::lower(&IDS, &checked, &inputs, &net::Limits::default())
-        .map_err(|error| format!("{error:?}"))?;
+    let limits = net::Limits {
+        max_agent_slots: 1_048_576,
+        max_wires: 2_097_152,
+        interaction_fuel: 2_097_152,
+    };
+    let lowered =
+        net::lower(&IDS, &checked, &inputs, &limits).map_err(|error| format!("{error:?}"))?;
     let issued =
         resource::issue(&IDS, &checked, &lowered, &inputs).map_err(|error| format!("{error:?}"))?;
     let check = |certificate: &[u8], net_bytes: &[u8], rules: &[u8]| {
@@ -382,11 +385,10 @@ fn byte_checker_refuses_missing_dup_negative_costs_and_false_premise() -> TestRe
         + b"dup=".len();
     negative_potential.splice(at..at + 1, b"-1".iter().copied());
     let mut stale_cost = issued.certificate_bytes.clone();
-    let digest_offset = certificate_digest_offset();
-    stale_cost[digest_offset + 64..digest_offset + 96].copy_from_slice(&certificate_digest(
-        b"noble.ngraph.resource.cost.v0",
-        &negative_potential,
-    ));
+    let digest_offset_bytes = certificate_digest_offset();
+    stale_cost[digest_offset_bytes + 64..digest_offset_bytes + 96].copy_from_slice(
+        &certificate_digest(b"noble.ngraph.resource.cost.v0", &negative_potential)?,
+    );
     assert_eq!(
         check(&stale_cost, &issued.net_bytes, resource::RULE_TABLE_BYTES),
         Err(resource::Refusal::WrongCostModel)
@@ -400,10 +402,10 @@ fn byte_checker_refuses_missing_dup_negative_costs_and_false_premise() -> TestRe
     let false_premise = resource::encode_net(&disconnected)
         .map_err(|error| format!("encoding forged structural premise: {error:?}"))?;
     let mut rebound = issued.certificate_bytes.clone();
-    rebound[digest_offset..digest_offset + 32].copy_from_slice(&certificate_digest(
+    rebound[digest_offset_bytes..digest_offset_bytes + 32].copy_from_slice(&certificate_digest(
         b"noble.ngraph.resource.net.v0",
         &false_premise,
-    ));
+    )?);
     assert_eq!(
         check(&rebound, &false_premise, resource::RULE_TABLE_BYTES),
         Err(resource::Refusal::InvalidNet)
