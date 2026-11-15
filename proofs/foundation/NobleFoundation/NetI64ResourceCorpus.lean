@@ -2,7 +2,7 @@ import NobleFoundation.NetI64Resource
 import NobleFoundation.NetI64Corpus
 
 /-!
-Finite byte fixture emitted from the admitted Rust net and independently accepted resource
+Finite byte fixture emitted from the checked Rust net and independently accepted resource
 certificate. The Rust freshness test binds the literals to exact bytes and BLAKE3 digests.
 The kernel checks the certificate field offsets, the translated net, and its cost/agent claims.
 BLAKE3, the Rust binary decoder, and universal Rust/Lean correspondence are NOT proved here.

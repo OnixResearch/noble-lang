@@ -330,7 +330,7 @@ theorem checkResourceCertificate_iff (hash : List Nat → List Nat) (hashScheme 
       NobleFoundation.NetI64.checkCertificate program inputs certificate.semantic = true := by
   simp [checkResourceCertificate, Bool.and_eq_true, decide_eq_true_eq, and_assoc]
 
-/-- Any legal finite schedule prefix fits the budget checked against its exact admitted source.
+/-- Any legal finite schedule prefix fits the budget checked against its exact accepted source.
 No normalization, terminal normal form, or successful semantic certificate is required. -/
 theorem accepted_prefix_bounds_every_schedule {program : Program} {inputs : List (BitVec 64)}
     {certificate : Certificate}
@@ -386,11 +386,11 @@ theorem accepted_bytes_bound_every_schedule (hash : List Nat → List Nat) (hash
   rcases fields with ⟨_, _, _, _, _, _, _, _, netDigest, ruleDigest, _, selectedRules,
     decoded, sourceTime, _, sourceLive, _, _, semanticCount, liveBound, semanticAccepted⟩
   have sourceEq : program.translate inputs = source := by
-    by_cases admitted : program.acceptanceCheck inputs = true
+    by_cases acceptedInput : program.acceptanceCheck inputs = true
     · by_cases checked : (program.translate inputs).check arity = true
-      · simpa [Program.translateChecked, admitted, checked] using translated
-      · simp [Program.translateChecked, admitted, checked] at translated
-    · simp [Program.translateChecked, admitted] at translated
+      · simpa [Program.translateChecked, acceptedInput, checked] using translated
+      · simp [Program.translateChecked, acceptedInput, checked] at translated
+    · simp [Program.translateChecked, acceptedInput] at translated
   have sourceTime' : agentsTimePotential source.agents ≤
       certificate.semantic.declaredInteractions := by
     calc
