@@ -1,0 +1,7 @@
+
+running 1 test
+test pe_cases::case_09 ... PE_CASE_OBSERVATION:{"harness":"ngraph-specialize-budget-ladder","id":"NGRAPH-PE-CASE-09","observed":{"checks":{"boundary_specific":true},"runs":[{"code":"E-BUDGET-RESIDUAL-NODES","exit":5,"guest_requests":0,"kind":"cli","name":"one-below","outcome":"exhausted","protected_operations":0,"published_output":false,"stage":"specialization"},{"code":null,"exit":0,"guest_requests":0,"kind":"cli","name":"at","outcome":"normal","protected_operations":0,"published_output":true,"stage":"specialization"},{"code":null,"exit":0,"guest_requests":0,"kind":"cli","name":"one-above","outcome":"normal","protected_operations":0,"published_output":true,"stage":"specialization"},{"code":"E-BUDGET-VARIANTS","exit":5,"guest_requests":0,"kind":"cli","name":"zero","outcome":"exhausted","protected_operations":0,"published_output":false,"stage":"specialization"},{"code":null,"exit":0,"guest_requests":0,"kind":"cli","name":"default-one","outcome":"normal","protected_operations":0,"published_output":true,"stage":"specialization"},{"code":"E-PROFILE","exit":2,"guest_requests":0,"kind":"cli","name":"above-default","outcome":"reject","protected_operations":0,"published_output":false,"stage":"request"}]},"variants":{"residual_node_caps":["one-below","at","one-above"],"variant_caps":["zero","default-one","above-default"]}}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.02s
+

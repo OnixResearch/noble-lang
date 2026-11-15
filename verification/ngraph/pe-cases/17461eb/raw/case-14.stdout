@@ -1,0 +1,7 @@
+
+running 1 test
+test pe_cases::case_14 ... PE_CASE_OBSERVATION:{"harness":"ngraph-specialize-cache-key-inputs","id":"NGRAPH-PE-CASE-14","observed":{"checks":{"binding_fields_distinct":true,"residual_identities_distinct":true},"runs":[{"code":null,"exit":null,"guest_requests":0,"kind":"library","name":"only-static-map","outcome":"normal","protected_operations":0,"published_output":false,"stage":"residual-derivation"},{"code":null,"exit":null,"guest_requests":0,"kind":"library","name":"only-original-graph","outcome":"normal","protected_operations":0,"published_output":false,"stage":"residual-derivation"}]},"variants":{"paired_differences":["only-static-map","only-original-graph"]}}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.00s
+

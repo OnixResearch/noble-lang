@@ -4418,6 +4418,14 @@ The residualization extension has a separate
 (source commit a92b343c5, 2,091 inventoried theorems, including 20 new
 theorems; each new theorem's axioms are a subset of `propext`,
 `Classical.choice` and `Quot.sound`; `implementation_theorem: false`).
+The eighteen exact registered PE cases have a separate
+[source-bound execution receipt](../../verification/ngraph/pe-cases/17461eb/acceptance.json)
+from clean source commit 17461ebf59d0348ae609427d07237e1162b9a2d7:
+18/18 cases and seven auxiliary tests passed, with the raw stdout/stderr
+retained beside it. The case states are finite execution/review evidence;
+CASE-10 reviews the older measurement rather than repeating it. The receipt
+does not prove the Rust implementation refines the Lean graph model or that
+the compiler/backend refines the checked Program.
 
 The implementation phase of the same issue keeps the four kinds of result apart:
 

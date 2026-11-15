@@ -1,0 +1,7 @@
+
+running 1 test
+test pe_cases::case_10 ... PE_CASE_OBSERVATION:{"harness":"ngraph-specialize-measurement-review","id":"NGRAPH-PE-CASE-10","observed":{"checks":{"equal_fuel_or_normalized_figure":false,"fields":["original_nodes","residual_nodes","folded_nodes","pruned_nodes","per-side-evaluator-visits","per-side-retained-bytes","per-side-cold-latency","per-side-warm-batch-latency"],"measurement_file":"verification/ngraph/pe-2026-11-13.json","measurement_records":11},"measurement_file":"verification/ngraph/pe-2026-11-13.json","measurement_records":11,"runs":[{"exit":null,"kind":"review","name":"retained-measurement-record"}]},"variants":{}}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.00s
+

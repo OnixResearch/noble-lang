@@ -1,0 +1,7 @@
+
+running 1 test
+test pe_cases::case_13 ... PE_CASE_OBSERVATION:{"harness":"ngraph-specialize-derivation-recompute","id":"NGRAPH-PE-CASE-13","observed":{"checks":{"all_recorded_identities_match":true,"each_mutated_record_reproduces_residual_identity":false},"runs":[{"code":null,"exit":null,"guest_requests":0,"kind":"library","name":"static-map","outcome":"normal","protected_operations":0,"published_output":false,"stage":"residual-derivation"},{"code":null,"exit":null,"guest_requests":0,"kind":"library","name":"accounting-revision","outcome":"normal","protected_operations":0,"published_output":false,"stage":"residual-derivation"},{"code":null,"exit":null,"guest_requests":0,"kind":"library","name":"original-identity","outcome":"normal","protected_operations":0,"published_output":false,"stage":"residual-derivation"}]},"variants":{"files":["original-graph","residual-graph","residual-source"],"mutations":["static-map","accounting-revision","original-identity"]}}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.01s
+

@@ -1,0 +1,7 @@
+
+running 1 test
+test pe_cases::case_01 ... PE_CASE_OBSERVATION:{"harness":"ngraph-specialize-admitted-slice","id":"NGRAPH-PE-CASE-01","observed":{"checks":{"checked_residuals":2,"report_fields":["accounting_revision","original_identity","residual_identity","static_map","node_counts"],"static_map_verified":true},"runs":[{"code":null,"exit":0,"guest_requests":0,"kind":"cli","name":"authored-flat-i64-controls","outcome":"normal","protected_operations":0,"published_output":true,"stage":"specialization"},{"code":null,"exit":0,"guest_requests":0,"kind":"cli","name":"extracted-flat-i64-Core-roots","outcome":"normal","protected_operations":0,"published_output":true,"stage":"specialization"}]},"variants":{"graphs":["extracted-flat-i64-Core-roots","authored-flat-i64-controls"]}}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.04s
+

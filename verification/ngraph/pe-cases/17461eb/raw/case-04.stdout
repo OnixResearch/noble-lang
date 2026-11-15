@@ -1,0 +1,7 @@
+
+running 1 test
+test pe_cases::case_04 ... PE_CASE_OBSERVATION:{"harness":"ngraph-specialize-static-arity","id":"NGRAPH-PE-CASE-04","observed":{"checks":{"library_arity_code":"E-INTERFACE","residual_created":false},"runs":[{"code":"E-INTERFACE","exit":null,"guest_requests":0,"kind":"library","name":"input-leaf-count-minus-one","outcome":"reject","protected_operations":0,"published_output":false,"stage":"static-map-admission"},{"code":"E-INTERFACE","exit":null,"guest_requests":0,"kind":"library","name":"input-leaf-count-plus-one","outcome":"reject","protected_operations":0,"published_output":false,"stage":"static-map-admission"}]},"variants":{"map_lengths":["input-leaf-count-minus-one","input-leaf-count-plus-one"]}}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.00s
+

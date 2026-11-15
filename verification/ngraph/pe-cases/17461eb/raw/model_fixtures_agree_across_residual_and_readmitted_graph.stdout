@@ -1,0 +1,6 @@
+
+running 1 test
+test specialization::differential::model_fixtures_agree_across_residual_and_readmitted_graph ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 33 filtered out; finished in 0.09s
+

@@ -1,0 +1,7 @@
+
+running 1 test
+test pe_cases::case_07 ... PE_CASE_OBSERVATION:{"harness":"ngraph-specialize-differential","id":"NGRAPH-PE-CASE-07","observed":{"checks":{"compared_graphs":2,"compared_vectors":6,"evaluators":["L3-reference","L4-compiled"],"observations_agree":true,"record_compared_vectors_and_graphs":true},"runs":[{"code":null,"exit":0,"guest_requests":0,"kind":"cli","name":"fixture-graphs","outcome":"normal","protected_operations":0,"published_output":true,"stage":"specialization"},{"code":null,"exit":0,"guest_requests":0,"kind":"cli","name":"seeded-Core-programs","outcome":"normal","protected_operations":0,"published_output":true,"stage":"specialization"}]},"variants":{"graphs":["fixture-graphs","seeded-Core-programs"]}}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.05s
+

@@ -1,0 +1,7 @@
+
+running 1 test
+test pe_cases::case_08 ... PE_CASE_OBSERVATION:{"harness":"ngraph-specialize-identity","id":"NGRAPH-PE-CASE-08","observed":{"checks":{"fresh_graph":true,"fresh_subject":true,"record_binds_both_identities":true,"residual_closure_matches_original":true},"runs":[{"code":null,"exit":null,"guest_requests":0,"kind":"library","name":"subject-and-graph-identities","outcome":"normal","protected_operations":0,"published_output":false,"stage":"residual-derivation"}]},"variants":{}}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.00s
+
