@@ -3900,6 +3900,35 @@ fn specialize_reports_no_input_when_every_leaf_is_dynamic() -> TestResult {
     Ok(())
 }
 
+#[test]
+fn specialize_cache_is_opt_in_and_preserves_the_residual_program() -> TestResult {
+    let scratch = Scratch::new("pe-cache-opt-in")?;
+    let graph = scratch.write("pe.graph", PE_GRAPH)?;
+    let uncached_out = scratch.path("uncached.noble");
+    let uncached = expect_normal(
+        &scratch.run(&specialize(&graph, "0=5", &uncached_out))?,
+        "specialize",
+    )?;
+    assert_eq!(uncached["cache_status"], Value::Null);
+
+    let cached_out = scratch.path("cached.noble");
+    let cached = expect_normal(
+        &scratch.run(&specialize(&graph, "0=5", &cached_out).arg("--cache"))?,
+        "specialize",
+    )?;
+    assert_eq!(cached["cache_status"], "miss-stored", "{cached}");
+    for key in ["specialization_key", "program_key"] {
+        assert!(hex64(&cached[key]), "{key} is a full key digest: {cached}");
+    }
+    assert_eq!(cached["graph"], uncached["graph"]);
+    assert_eq!(cached["residual_graph"], uncached["residual_graph"]);
+    assert_eq!(cached["readmitted_graph"], uncached["readmitted_graph"]);
+    assert_eq!(std::fs::read(&cached_out)?, std::fs::read(&uncached_out)?);
+    assert_eq!(cached["cache_lookup_entries"], 0);
+    assert!(cached["cache_retained_bytes"].as_u64().unwrap_or(0) > 0);
+    Ok(())
+}
+
 // NGRAPH-PE-06: the profile's extraction stage refuses effectful, control and
 // Program-output subjects before any graph exists, and the profile publishes
 // nothing. The Core-Bootstrap profile is a different profile: it grants

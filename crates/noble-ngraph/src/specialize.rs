@@ -32,6 +32,9 @@
 
 use crate::identity::IdentityScheme;
 
+/// Session-local exact-key reuse of successful residual Programs.
+pub mod cache;
+
 /// Accounting revision of every cap this module charges and every count it
 /// reports (`ngraph-pe/0`, D7).
 pub const ACCOUNTING_REVISION: &str = "ngraph-pe/0";
@@ -379,6 +382,41 @@ fn renumber(op: &crate::ir::Op, map: &[u32]) -> crate::ir::Op {
     }
 }
 
+/// Derives the residual subject identity from the same fields used by the
+/// specializer. The cache rechecks this relation before it accepts a retained
+/// residual; it is not a proof of specialization correctness.
+pub(super) fn derive_residual_subject(
+    ids: &dyn IdentityScheme,
+    original_graph: crate::ir::Digest,
+    closure: alloc::vec::Vec<u64>,
+    static_inputs: &[Option<i64>],
+) -> crate::ir::Subject {
+    let mut encoded: alloc::vec::Vec<u8> = alloc::vec::Vec::with_capacity(
+        1usize.saturating_add(9usize.saturating_mul(static_inputs.len())),
+    );
+    encoded.push(0x01);
+    for entry in static_inputs {
+        match entry {
+            Some(value) => {
+                encoded.push(0x01);
+                encoded.extend_from_slice(&value.to_le_bytes());
+            }
+            None => encoded.push(0x00),
+        }
+    }
+    crate::ir::Subject::derive(
+        ids,
+        crate::ir::SubjectKind::Extracted,
+        &[
+            b"partial-evaluation",
+            ACCOUNTING_REVISION.as_bytes(),
+            &original_graph,
+            &encoded,
+        ],
+        closure,
+    )
+}
+
 /// Specializes `checked` under `request.static_inputs` (D1–D7, D11).
 ///
 /// # Errors
@@ -584,30 +622,12 @@ pub fn specialize(
         }
         outputs.push(crate::ir::NodeId(id));
     }
-    // The residual is a new subject: the original identity, the accounting
-    // revision and the static map under one derivation domain (D5).
-    let mut encoded: alloc::vec::Vec<u8> = alloc::vec::Vec::with_capacity(1 + 9 * leaves);
-    encoded.push(0x01);
-    for entry in request.static_inputs {
-        match entry {
-            Some(value) => {
-                encoded.push(0x01);
-                encoded.extend_from_slice(&value.to_le_bytes());
-            }
-            None => encoded.push(0x00),
-        }
-    }
     let original_graph = checked.id();
-    let subject = crate::ir::Subject::derive(
+    let subject = derive_residual_subject(
         ids,
-        crate::ir::SubjectKind::Extracted,
-        &[
-            b"partial-evaluation",
-            ACCOUNTING_REVISION.as_bytes(),
-            &original_graph,
-            &encoded,
-        ],
+        original_graph,
         graph.subject.closure.clone(),
+        request.static_inputs,
     );
     let residual = crate::ir::Graph {
         profile: crate::ir::SubProfile::I64,
