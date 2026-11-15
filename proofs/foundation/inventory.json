@@ -13522,10 +13522,28 @@
       "claim": "every successful model emitter candidate derives both complete ordered write inventories from result ports"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.candidateBody_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the physical candidate builder derives ordered capture and rule-slot result symbols, opcode and exact reservation counters"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.planCandidate_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every successful model candidate derives rule opcode, ordered physical capture, result payloads, reciprocal write inventory and reservations without semantic-checker assumptions"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refuses_exhausted",
       "phase": 1,
       "role": "representation",
       "claim": "generation-headroom exhaustion refuses plan emission for every selected rule and storage mode"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refuses_unrepresentable",
+      "phase": 1,
+      "role": "representation",
+      "claim": "an arena or output table exceeding the conservative 32-bit image envelope refuses any model lowering"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.planCandidate_refuses_alias",

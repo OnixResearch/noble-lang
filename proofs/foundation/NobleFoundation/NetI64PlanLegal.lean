@@ -28,11 +28,6 @@ def PhysicalState.Legal (state : PhysicalState) : Prop :=
     state.reciprocalPorts = true ∧ state.outputOwners = true
 
 
-/-- A pair's append mode may need two new indices in the 32-bit byte format.
-This is independent from a legal physical graph and from generation headroom.
-Rust slot/output references use `u32`; the Lean arena uses arbitrary `Nat`. -/
-def PhysicalState.planIndicesEncodable (state : PhysicalState) : Bool :=
-  state.slots.size + 2 ≤ 2 ^ 32 && state.outputs.length < 2 ^ 32
 
 set_option synthInstance.maxSize 1024 in
 /-- The five independently modeled initial layouts satisfy all finite
