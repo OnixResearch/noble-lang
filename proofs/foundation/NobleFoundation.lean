@@ -55,6 +55,7 @@ import NobleFoundation.NetI64PlanCandidates
 import NobleFoundation.NetI64PlanEra
 import NobleFoundation.NetI64PlanOp1
 import NobleFoundation.NetI64PlanDup
+import NobleFoundation.NetI64PlanEncode
 import NobleFoundation.NetI64PlanClassify
 import NobleFoundation.BeltTarget
 import NobleFoundation.BeltTargetCorpus

@@ -3,6 +3,7 @@ import NobleFoundation.NetI64PlanOp1
 import NobleFoundation.NetI64PlanDup
 import NobleFoundation.NetI64PlanEra
 import NobleFoundation.NetI64PlanCandidates
+import NobleFoundation.NetI64PlanEncode
 
 /-!
 # Universal emitter classification (issue #110)
@@ -13,12 +14,14 @@ projection in which the pair is a redex of the selected revision-3 rule. For
 every such instance, every selected rule and orientation (OP2, OP1, DUP, ERA)
 and either storage policy, the Lean model emitter is classified exhaustively:
 either one named exclusion refuses it (consumed-boundary alias, unencodable
-32-bit index table or byte image, exhausted generation, physical queue
-capacity), or `lowerPlan` returns an image that `BytePlan.semanticCheck`
-admits at its exact reservations, and that admitted commit refines one
-abstract `CStep` with a directed-pair queue permutation and stable free
-ports. This concerns the Lean model emitter, executor and checker only; it is
-not a statement about the Rust compiler, checker or executor.
+32-bit index table, exhausted generation, physical queue capacity), or
+`lowerPlan` returns an image that `BytePlan.semanticCheck` admits at its exact
+reservations, and that admitted commit refines one abstract `CStep` with a
+directed-pair queue permutation and stable free ports. The emitter's byte
+roundtrip check is not an exclusion: inside the index envelope every
+candidate decodes exactly (`PhysicalState.planCandidate_decodes`). This
+concerns the Lean model emitter, executor and checker only; it is not a
+statement about the Rust compiler, checker or executor.
 -/
 
 namespace NobleFoundation.NetI64Plans
@@ -113,10 +116,11 @@ theorem PhysicalState.emitted_image_physical_fields_on_representable_layout
 /-- **Universal emitter classification.** For every representable instance of
 a selected revision-3 rule, in either orientation and storage policy, one of
 the following holds: a named exclusion refuses it (consumed-boundary alias;
-unencodable index table; exhausted generation; unencodable byte image;
-physical queue capacity, which the checker refuses before any mutation at
-every queue limit up to the slot-derived headroom), or the lowered image is
-admitted by `BytePlan.semanticCheck` at its exact reservations. -/
+unencodable index table; exhausted generation; physical queue capacity, which
+the checker refuses before any mutation at every queue limit up to the
+slot-derived headroom), or the lowered image is admitted by
+`BytePlan.semanticCheck` at its exact reservations. No byte-roundtrip case
+remains: an encodable candidate always decodes to itself. -/
 theorem PhysicalState.emitter_classification
     {state : PhysicalState} {pair : PhysicalPair} {redex : XRedex NetSym}
     (hRule : NetI64.xRule redex.2.2.1 redex.2.2.2.1 = some redex.2.2.2.2)
@@ -126,9 +130,6 @@ theorem PhysicalState.emitter_classification
       state.lowerPlan pair redex reuse = none) ∨
     (state.planIndicesEncodable = false ∧ state.lowerPlan pair redex reuse = none) ∨
     (state.pairHeadroom pair = false ∧ state.lowerPlan pair redex reuse = none) ∨
-    (∃ candidate, state.planCandidate pair redex reuse = some candidate ∧
-      BytePlan.decode candidate.emit ≠ some candidate ∧
-      state.lowerPlan pair redex reuse = none) ∨
     (∃ plan, state.lowerPlan pair redex reuse = some plan ∧
       state.queueCapacityExcluded plan = true ∧
       ∀ arena scratch queue,
@@ -142,13 +143,13 @@ theorem PhysicalState.emitter_classification
   | some plan =>
     cases hcap : state.queueCapacityExcluded plan with
     | true =>
-      refine .inr (.inr (.inr (.inr (.inl ⟨plan, rfl, hcap, ?_⟩))))
+      refine .inr (.inr (.inr (.inl ⟨plan, rfl, hcap, ?_⟩)))
       intro arena scratch queue hqueue
       exact BytePlan.semanticCheck_refuses_queue_capacity hRule
         (PhysicalState.lowerPlan_decodes hLower) hcap hqueue
     | false =>
       obtain ⟨next, hnext⟩ := PhysicalState.accepted_of_representable hRule hRep hLower hcap
-      exact .inr (.inr (.inr (.inr (.inr ⟨plan, next, rfl, hcap, hnext⟩))))
+      exact .inr (.inr (.inr (.inr ⟨plan, next, rfl, hcap, hnext⟩)))
   | none =>
     cases hencode : state.planIndicesEncodable with
     | false => exact .inr (.inl ⟨rfl, rfl⟩)
@@ -161,9 +162,8 @@ theorem PhysicalState.emitter_classification
         | false =>
           obtain ⟨candidate, hcandidate⟩ :=
             PhysicalState.candidate_of_representable hRule reuse hRep halias hroom
-          refine .inr (.inr (.inr (.inl ⟨candidate, hcandidate, ?_, rfl⟩)))
-          intro hdecode
-          simp [PhysicalState.lowerPlan, hencode, hroom, hcandidate, hdecode] at hLower
+          rw [PhysicalState.lowerPlan_eq_candidate hencode hroom, hcandidate] at hLower
+          cases hLower
 
 /-- **Unconditional refinement corollary.** Every representable instance whose
 lowering is not refused by a named exclusion is admitted, and its admitted

@@ -15038,6 +15038,48 @@
       "phase": 1,
       "role": "representation",
       "claim": "reverse DUP emitted acceptance"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.admissible_of_bounds",
+      "phase": 1,
+      "role": "representation",
+      "claim": "admissibility from field bounds. The total-length field of BytePlan.Admissible follows from the others: with at most two entries in every counted field and three ports per result, an emitted image has at most 175 bytes, below the 256-byte version-one bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.planIndicesEncodable_bounds",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the encodability gate's two numeric bounds"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.captureAux_encodable",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a captured boundary of an encodable arena fits the version-one boundary fields: an in-range source slot and port, and either a live peer slot with a port byte or an in-range output index"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.publicationFor_encodable",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one result's publications in an encodable arena: at most one canonical pair, whose slot indices and generations fit the version-one pair fields, provided the result's own slot index fits"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.planCandidate_admissible",
+      "phase": 1,
+      "role": "representation",
+      "claim": "encodable candidates are admissible. Every candidate the model emitter assembles in an arena inside the version-one 32-bit index envelope satisfies BytePlan.Admissible, for every selected rule, orientation and storage policy, without any legality premise"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.planCandidate_decodes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the byte-roundtrip exclusion is uninhabited. In an arena inside the version-one index envelope, every model-emitter candidate decodes back to exactly itself"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_eq_candidate",
+      "phase": 1,
+      "role": "representation",
+      "claim": "lowering an encodable pair with generation headroom returns exactly the model-emitter candidate: its byte-roundtrip check never refuses"
     }
   ],
   "private_theorems": [
@@ -15406,6 +15448,16 @@
     "NobleFoundation.NetI64Plans.PhysicalState.canonicalPair_ends",
     "NobleFoundation.NetI64Plans.PhysicalState.canonicalPair_ends_nodup",
     "NobleFoundation.NetI64Plans.PhysicalState.canonicalPairs_ends_nodup",
-    "NobleFoundation.NetI64Plans.PhysicalState.canonicalPairs_nodup"
+    "NobleFoundation.NetI64Plans.PhysicalState.canonicalPairs_nodup",
+    "NobleFoundation.NetI64Plans.emitWord_length",
+    "NobleFoundation.NetI64Plans.emitPair_length",
+    "NobleFoundation.NetI64Plans.emitBoundary_length_le",
+    "NobleFoundation.NetI64Plans.emitResult_length",
+    "NobleFoundation.NetI64Plans.emitWrite_length",
+    "NobleFoundation.NetI64Plans.flatMap_length_le",
+    "NobleFoundation.NetI64Plans.arity_le_two",
+    "NobleFoundation.NetI64Plans.mapM_some_mem",
+    "NobleFoundation.NetI64Plans.ruleOpcode_cases",
+    "NobleFoundation.NetI64Plans.ruleSlots_cases"
   ]
 }

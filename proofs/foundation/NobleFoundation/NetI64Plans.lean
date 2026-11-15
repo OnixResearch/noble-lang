@@ -810,6 +810,106 @@ theorem BytePlan.decode_emit (plan : BytePlan)
     publicationSound, BytePlan.readWord_emitWord, valid.arena,
     valid.scratch, valid.worklist]
 
+/-- A little-endian word of `size` bytes has exactly `size` bytes. -/
+private theorem emitWord_length : ∀ (size value : Nat), (emitWord size value).length = size
+  | 0, _ => rfl
+  | size + 1, value => by
+    simp [emitWord, emitWord_length size (value / 256)]
+
+/-- An emitted queued pair always occupies 24 bytes. -/
+private theorem emitPair_length (pair : Nat × Nat × Nat × Nat) :
+    (emitPair pair).length = 24 := by
+  simp [emitPair, emitWord_length]
+
+/-- An emitted boundary occupies at most 11 bytes. -/
+private theorem emitBoundary_length_le
+    (boundary : (Nat × Nat) × (Nat × Nat × Nat)) :
+    (emitBoundary boundary).length ≤ 11 := by
+  rcases boundary with ⟨⟨slot, port⟩, tag, index, endpointPort⟩
+  rcases tag with _ | _ | tag <;>
+    simp [emitBoundary, emitEndpoint, emitWord_length]
+
+/-- An emitted result occupies 18 bytes plus one byte per result port. -/
+private theorem emitResult_length
+    (result : Bool × Nat × NetSym × Nat × List (Option Nat)) :
+    (emitResult result).length = 18 + result.2.2.2.2.length := by
+  rcases result with ⟨fresh, slot, symbol, donor, ports⟩
+  rcases hsymbol : emitSymbol symbol with ⟨tag, payload⟩
+  simp [emitResult, hsymbol, emitWord_length]
+  omega
+
+/-- An emitted connection write always occupies three bytes. -/
+private theorem emitWrite_length (write : Nat × Nat × Nat) :
+    (emitWrite write).length = 3 := by
+  simp [emitWrite]
+
+/-- A flattened list of at most `bound`-element pieces has at most
+`items.length * bound` elements. -/
+private theorem flatMap_length_le {α β : Type} (items : List α) (f : α → List β)
+    (bound : Nat) (h : ∀ item ∈ items, (f item).length ≤ bound) :
+    (items.flatMap f).length ≤ items.length * bound := by
+  induction items with
+  | nil => simp
+  | cons item rest ih =>
+    have hhead := h item (by simp)
+    have hrest := ih (fun other hother => h other (by simp [hother]))
+    simp only [List.flatMap_cons, List.length_append, List.length_cons, Nat.succ_mul]
+    omega
+
+/-- **Admissibility from field bounds.** The total-length field of
+`BytePlan.Admissible` follows from the others: with at most two entries in
+every counted field and three ports per result, an emitted image has at most
+175 bytes, below the 256-byte version-one bound. -/
+theorem BytePlan.admissible_of_bounds (plan : BytePlan)
+    (hactionFirst : plan.action.1.toNat ≤ 1)
+    (hactionSecond : plan.action.2.toNat ≤ 1)
+    (hpair : plan.pair.1 < 256 ^ 4 ∧ plan.pair.2.1 < 256 ^ 8 ∧
+      plan.pair.2.2.1 < 256 ^ 4 ∧ plan.pair.2.2.2 < 256 ^ 8)
+    (hboundaries : plan.boundaries.length ≤ 2)
+    (hboundariesValid : ∀ boundary ∈ plan.boundaries,
+      boundary.1.1 < 256 ^ 4 ∧ boundary.1.2 < UInt8.size ∧
+      ((boundary.2.1 = 0 ∧ boundary.2.2.1 < 256 ^ 4 ∧ boundary.2.2.2 < UInt8.size) ∨
+        (boundary.2.1 = 1 ∧ boundary.2.2.1 < 256 ^ 4 ∧ boundary.2.2.2 = 0)))
+    (hresults : plan.results.length ≤ 2)
+    (hresultsValid : ∀ result ∈ plan.results,
+      result.2.1 < 256 ^ 4 ∧ result.2.2.2.1 < 256 ^ 4 ∧
+      result.2.2.2.2.length = 3 ∧
+      ∀ port ∈ result.2.2.2.2, ∀ value, port = some value → value < 255)
+    (hwrites : plan.writes.length ≤ 2)
+    (hwritesValid : ∀ write ∈ plan.writes,
+      write.1 < UInt8.size ∧ write.2.1 < UInt8.size ∧ write.2.2 < UInt8.size)
+    (hexternal : plan.externalWrites.length ≤ 2)
+    (hexternalValid : ∀ write ∈ plan.externalWrites,
+      write.1 < UInt8.size ∧ write.2.1 < UInt8.size ∧ write.2.2 < UInt8.size)
+    (harena : plan.arenaReservation < 256 ^ 4)
+    (hscratch : plan.scratchReservation < 256 ^ 4)
+    (hworklist : plan.worklistReservation < 256 ^ 4)
+    (hpublications : plan.publications.length ≤ 2)
+    (hpublicationsValid : ∀ pair ∈ plan.publications,
+      pair.1 < 256 ^ 4 ∧ pair.2.1 < 256 ^ 8 ∧
+        pair.2.2.1 < 256 ^ 4 ∧ pair.2.2.2 < 256 ^ 8) :
+    plan.Admissible := by
+  have hb := flatMap_length_le plan.boundaries emitBoundary 11
+    (fun boundary _ => emitBoundary_length_le boundary)
+  have hr := flatMap_length_le plan.results emitResult 21 (by
+    intro result hmem
+    have hports := (hresultsValid result hmem).2.2.1
+    rw [emitResult_length]
+    omega)
+  have hw := flatMap_length_le plan.writes emitWrite 3
+    (fun write _ => Nat.le_of_eq (emitWrite_length write))
+  have hx := flatMap_length_le plan.externalWrites emitWrite 3
+    (fun write _ => Nat.le_of_eq (emitWrite_length write))
+  have hp := flatMap_length_le plan.publications emitPair 24
+    (fun pair _ => Nat.le_of_eq (emitPair_length pair))
+  have hsize : plan.emit.length ≤ 256 := by
+    simp only [BytePlan.emit, List.length_append, List.length_cons, List.length_nil,
+      emitPair_length, emitWord_length]
+    omega
+  exact ⟨hsize, hactionFirst, hactionSecond, hpair, hboundaries, hboundariesValid,
+    hresults, hresultsValid, hwrites, hwritesValid, hexternal, hexternalValid,
+    harena, hscratch, hworklist, hpublications, hpublicationsValid⟩
+
 /-- Every accepted byte plan has the exact version-one magic and version header. -/
 theorem BytePlan.decode_header {bytes : List UInt8} {plan : BytePlan}
     (h : BytePlan.decode bytes = some plan) :
