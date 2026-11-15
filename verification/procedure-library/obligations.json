@@ -1,7 +1,7 @@
 {
   "schema": "noble-procedure-library-obligation-evidence/1",
-  "source_commit": "3d90a566269d41f60cb0b8d76d9d2f932f4b8027",
-  "source_tree": "1e795f9b3fdb82e6cd530666134b62e8db552843",
+  "source_commit": "0d47dbd8a5cb2419ea48c448e8456d026647cb3f",
+  "source_tree": "89396cf343b16fd3bb3fd7a09297eeee703fa5ad",
   "model_audit": {
     "path": "verification/foundation/receipts/d4e5304af/foundation-check.json",
     "sha256": "7d73d8db9738c00b44090b944689dcefb1a8c360480eee9f2b34591fae61deb1",
@@ -17,10 +17,11 @@
     "scope": "Four producer-derived I64 source bodies, three provenance branches and zero/one/two ordered library edges; excludes arbitrary captures, chunk dependencies, other chunks and universal Rust byte-encoder refinement"
   },
   "executed_tests": {
-    "raw_path": "verification/procedure-library/receipts/2026-11-15-obligations.raw.log",
-    "raw_sha256": "8c1c4c46889bce491865ae88c41a33ed44eda7026b4b8ef988fb9333267b6044",
-    "command": "NOBLE_ROOT=/home/brittonr/.cache/noble-iss/wt/procedures-118d NOBLE_TARGET=/home/brittonr/.cache/noble-iss/target/procedures-118d /home/brittonr/.cache/noble-iss/cargo.sh test -p noble-contracts --test editor --offline --locked",
-    "source_commit": "3d90a566269d41f60cb0b8d76d9d2f932f4b8027",
+    "raw_path": "verification/procedure-library/receipts/2026-11-15-obligations-final.raw.log",
+    "raw_sha256": "ce67adef5d241c4f0110133f224283bfd2f6059df67a7d14028e5f5989215a8e",
+    "cargo_arguments": "test -p noble-contracts --test editor --offline --locked",
+    "runner": "pinned nightly Rust toolchain, reviewed offline vendor and private Cargo target",
+    "source_commit": "0d47dbd8a5cb2419ea48c448e8456d026647cb3f",
     "clean_source": true,
     "exit_status": 0,
     "passed": 107,
@@ -109,7 +110,7 @@
     }
   ],
   "promotion_refusal": {
-    "rust_test": "procedures::admission::proof_policy::proof_demanding_promotion_requires_every_selected_obligation",
+    "rust_test": "procedures::admission::criteria::proof_demanding_promotion_requires_every_selected_obligation",
     "receipt": "executed_tests",
     "refusals": "eight missing/stale/forged/class/outcome cases plus a separately demanded Rust-encoder refinement absent despite model-only O1/O3 records",
     "positive_control": "all six synthetic proof-class evidence records accepted when each required ID is declared and matched; this verifies policy bookkeeping only, not proof validity",
