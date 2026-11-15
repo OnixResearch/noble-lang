@@ -21,6 +21,109 @@ The harness refuses a caller environment carrying `LEAN*`, `LAKE*`, `BASH*`, `GI
 `ELAN*` variables, refuses an output directory inside the source tree, and refuses a dirty worktree
 unless `--allow-dirty` is passed explicitly (a dirty receipt records it, it does not hide it).
 
+## Synchronous `Host::read_region` implementation cut
+
+The production wrapper in `crates/noble-cli/src/component/bounded_region.rs` calls
+`noble_kernel::region_read::preflight` (physically in
+`crates/noble-kernel/src/resources/region_read.rs`) before the table borrow and
+`region_read::authorize_copy` after `table.native_access`, before the protected
+copy. The pinned Charon/Aeneas M5 lane freshly extracts these **same Rust
+functions** and the existing `resources::table::access` module. Its
+`verification/region-trace/region-cut-check.mjs` verifies that the generated
+decision core equals `RegionCutExtracted.lean` byte for byte and that the
+generated `Table.begin`, `Table.native_access`, `Table.complete` and
+`Table.commit` bodies equal the already checked-in M5 extracted bodies byte for
+byte. The only new external model is the explicit width-sensitive
+`i64`-to-`usize` conversion; the two Option/Result external models are inherited
+from M5. `RegionCutProof.lean` proves exact handle and native-scope identity,
+range bounds, negative-conversion refusal, signed successful-range binding, a
+RegionTrace read-commit range bridge, failed-access refusal, and the exact
+extracted table completion/owner return.
+The inventory audits every theorem statement and its transitive axioms.
+
+**Abstraction and effects.** The retained `Host.owner` handle and `Host.table`
+records correspond to `Request.retained` and M5 `resources.table.Table`; the
+guest representation and signed offset/length map unchanged in value to
+`Request.representation`, `Request.offset_bytes` and `Request.length_bytes`.
+The stored
+`Host.bytes.len()` is the preflight `regionSize`; the accepted `Range.start` and
+`Range.finish` are the exact converted interval.
+`successful_preflight_matches_region_trace_commit` proves that an accepted
+interval's start and byte count equal the existing RegionTrace
+`CommitKind.regionRead` arguments under those signed inputs. This does not
+prove an observed event was emitted. A successful `Table.begin`
+places the selected record in `Busy(scope.serial)` with its `last_scope` set
+and native pin held. The `native_access` snapshot and the admitted borrow's
+scope feed `authorize_copy`. The RegionTrace target `hostDecision` represents
+this authorization, while `protectedCopy` represents the shell's subsequent
+`safety_observe::event("protected-operation")` and byte copy. `Host.read`
+records the separate response; `Host.read_region` records `HostEvent::Commit`
+only *after* `Table.complete` returns the owner. The source `Commit` is the
+projection of that recorded event, not the event that performs the copy.
+`RegionTrace.Identity` comes from the exact `claim.table.0` recorded by the
+host, not from the guest representation. This is an explicitly scoped
+abstraction of retained table state and observed effects, **not** a proved
+refinement of the entire imperative wrapper, allocator, ABI or engine.
+
+**Completion obligation.** `authorized_copy_exact_identity_and_bounds` derives
+the exact snapshot/borrow handle, busy serial, last scope and in-storage interval from a successful
+extracted decision. `admitted_complete_restores_owner` proves that the *actual
+extracted* `Table.complete` returns the matching owner when its retained
+selected record is valid and busy at the scope serial, its scope check passes
+and a native pin is held; `admitted_completion_decision` reuses
+`HostLocality.m5_table_complete_exact`, and
+`owner_return_commit_succeeds` discharges the pin-decrement/commit step.
+Those are explicit reachable-admission premises, not a theorem that every
+arbitrary table is well formed. The synchronous wrapper makes no table update
+between `native_access` and `complete`; its Rust test proves the valid path
+returns the original owner and a deliberately wrong scope does not pretend to
+restore it. If an admitted completion error becomes reachable despite these
+premises, the already executed byte copy and `region_reads` still happened
+even though no `HostEvent::Commit` follows; the observation relation must
+then be extended to report that effect, rather than using an absent commit as
+evidence it did not happen. This conditional proof does not cover a corrupted
+table or unmodelled external mutation.
+
+| Secure Exclaves addition | Status and concrete boundary |
+|---|---|
+| 1. Actual retained-state abstraction and reuse | **DONE for the selected cut:** mapping above, checked-in M5 table bodies and `HostLocality` lemma; full wrapper refinement **open**. |
+| 2. Native access, copy, restoration, response, commit | **DONE for the selected cut:** distinct wrapper operations above, extracted authorization/identity/bounds proof; wrapper ordering checked by controls, not machine-proved. |
+| 3. Reachable admitted completion | **DONE conditionally:** extracted table completion and owner theorem under the stated valid selected busy record/authentic scope/held pin premises; corrupt or externally mutated tables excluded. |
+| 4. Signed range | **DONE:** real `checked_add` and `try_from` paths are extracted; `successful_preflight_binds_signed_range` carries exact nonnegative assumptions only after success, `successful_preflight_matches_region_trace_commit` identifies the existing model's exact read-commit interval, and `conversion_refuses_negative` refuses a negative source. |
+| 5. Mutation controls and positive path | **DONE:** `region-cut-controls.mjs` refuses authorization removed/moved after copy, substituted owner, omitted commit and false restoration; Rust host test covers authentic valid access and refused variants. Mutation controls are structural discrimination, not a reachability proof. |
+| 6. Production decision inside boundary | **DONE for the selected decision core:** the real `Host::read_region` calls both extracted functions; shell effects are named above, not claimed as extracted. |
+| 7. Historical cleanup evidence | **DONE:** `evidence-1bf39a52.json` and the existing synthetic refused-retirement generator control are unchanged; no production fault seam was added. |
+
+The original five acceptance items remain separately accounted for:
+
+| Original acceptance | Status and retained evidence |
+|---|---|
+| 1. Named relation, prefix transfer and explicit premises | **DONE at model level:** `RegionTrace.lean`, the theorem inventory and strict-axiom region-trace receipt; not a compiled-component theorem. |
+| 2. Success/error/refusal/trap/quota and cancellation | **DONE as finite observations:** the 18 related and two registration-related `RegionTraceRuntime.lean` fixtures include the v2 **refused 65th read**; host cancellation has executed controls but no general cancellation API or correspondence is claimed. |
+| 3. Forgery and missing-commit controls | **DONE at the relation/host-observation level:** named `related_rejects_*` theorems, runtime fixture forgeries and the five new shell-order mutation controls; emitted-step correspondence stays separate. |
+| 4. Cleanup selection/invocation/outcome and refusal | **DONE at host-method level:** `HostLocality.lean` cleanup theorems and `verification/host-locality/evidence-1bf39a52.json` retain a failed release/owner; a guest-reachable failure is not observed. A production fault seam is **NO-GO** unless a reachable counterexample or need for such an effect witness is established. |
+| 5. Exact revision bindings and statuses | **DONE:** the receipt binds the source, observed components, helper, engine and model, with `proved`/`tested`/`assumed`/`open` kept separate. Their emitted-step correspondence is **NO-GO in this cut**, on the explicit reopen conditions below. |
+
+The pinned full-kernel Aeneas attempt on `noble_kernel.llbc` exited 2:
+`Unimplemented: found an occurrence of a lifetime constraint relating a
+higher-ranked lifetime to a free lifetime. Source:
+'/rustc/library/core/src/slice/iter/macros.rs', lines 338:12-341:46;
+Compiler source: llbc/TypesAnalysis.ml, line 994`. Selecting the
+two real decision functions and the table-access module was the closest
+admissible extractable route. It succeeds with the pinned tools. No
+handwritten second host model replaces the generated M5 declarations.
+
+**Decision boundary for the larger correspondence.** **NO-GO in this cut**
+for a claim that an emitted component's steps refine RegionTrace: the wrapper,
+Canonical ABI and Wasmtime execution are not extracted, and the observed
+`hostDecision` is still an observation premise rather than an independent
+runtime decision event. Reopen #10's route only with a pinned emitted-step
+semantics or execution instrumentation that binds the actual guest request,
+admission, protected copy, completion/error and response to these steps,
+plus a proof that no reachable error after the copy can be erased. The tested
+component/helper/engine digests and finite runtime fixtures are necessary
+bindings, not a substitute for that proof.
+
 ## What is proved
 
 The source alphabet is `RegionProtocol-v1`'s `Req`/`Resp`/`Commit`; the target alphabet is a
@@ -147,10 +250,24 @@ The fixtures are finite tests of recorded traces. The region-trace receipt binds
 receipt and the component, helper and engine revisions; neither that binding nor these finite tests
 proves emitted-step correspondence.
 
-The current clean replay receipt `verification/region-trace/receipt-20261113-b7984635.json` was
+The bounded-cut replay retains `verification/region-trace/receipt-20261115-region-cut-v2.json`
+and `verification/region-trace/receipt-20261115-region-cut-v2-extraction.json`
+from a clean committed source tree. The former's `bindings.implementation_cut`
+carries the SHA-256 of the latter fresh selected-extraction receipt (including all
+generated-body comparisons and the sixteen strictly audited implementation
+theorems); the 135 model/runtime fixture theorems stay in their own inventory.
+The source commit, generated artifacts and actual tool commands are retained
+in those receipts; the emitted-component correspondence remains open.
+
+The first selected-cut receipts, `receipt-20261115-region-cut.json` and
+`receipt-20261115-region-cut-extraction.json`, remain immutable evidence for
+their earlier clean source `10c39e48` (135 model and 15 implementation
+theorems), before the explicit RegionTrace commit-range bridge was added.
+
+The earlier clean replay receipt `verification/region-trace/receipt-20261113-b7984635.json` was
 produced from clean commit `b798463548bdf72563ac7f0d16281b1984cf1a4c` with Lean 4.35.0. It records
-**135** kernel-audited theorem declarations: 93 relation/model theorems and 42 generated runtime
-fixture theorems; implementation theorems remain 0. The runtime fixtures comprise 18 related traces
+**135** kernel-audited theorem declarations *at that source revision*: 93 relation/model theorems and 42 generated runtime
+fixture theorems; that historical receipt had 0 implementation theorems. The runtime fixtures comprise 18 related traces
 and 2 related under registration. The receipt reports `propext` and `Quot.sound`, both within the
 standard allow-list. It binds the effect-protocol observation receipt and the component, helper and
 engine selections; all eight stale-binding controls and the refused-retirement fixture control have
@@ -231,16 +348,23 @@ a corrupted host context, which the WIT interface cannot produce. The model ther
 refused-retirement observation (`ObservedEvent.retirementRefused`) that the generator accepts and
 that lowers to the cleanup-failure class with no commit. The checker pins that generator branch
 with a synthetic control, but no executed case records one. The
-decision *not* to add a production fault-injection seam for it is recorded in the change's
+**NO-GO** decision not to add a production fault-injection seam for it is recorded in the change's
 `design.md`; a test-only seam in the shipped adapter would be a larger risk than the gap.
+Reopen only if a guest-reachable failure is reproduced without test-only corruption, or a
+proof obligation requires an effect witness this host-method test cannot supply.
 
 ## Lentil is not pinned
 
-#50's follow-on comment (infinite-trace projection, weak fairness) is recorded as a decision, not a
-dependency: Lentil main needs Lean 4.34.1 while this pilot is on 4.35.0, and the comment itself
-defers the progress gate to #46. The finite-trace embedding it sketches is only meaningful once a
-progressing transition system and its observation mapping exist, so nothing is pinned here and no
-temporal property is claimed.
+#50's follow-on comment (infinite-trace projection, weak fairness) is a **NO-GO for
+this synchronous cut**, not a dependency: Lentil main needs Lean 4.34.1 while
+this pilot is on 4.35.0, and the comment itself defers the progress gate to
+#46. A GO requires an isolated compatible pinned Lean/Lentil closure, a
+progressing transition system with a runtime observation mapping, terminal
+labels that cannot falsely pad an incomplete trace, and explicit
+scheduler/delivery/environment/cleanup assumptions with starvation
+countermodels. Reopen the temporal lane when #46 supplies that state machine
+and the pinned compatible closure; no infinite-trace or liveness property is
+claimed here.
 
 ## Non-claims
 

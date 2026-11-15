@@ -3,7 +3,7 @@
 //! an offset into its own Wasm memory. Only the host invoker selects the bytes.
 
 use anyhow::{bail, Context as _, Result};
-use noble_kernel::{resources as ownership, types::ResourceKind};
+use noble_kernel::{region_read, resources as ownership, types::ResourceKind};
 use std::ffi::OsString;
 use wasmtime::{
     component::{
@@ -15,7 +15,7 @@ use wasmtime::{
 use crate::workflow::encoding::{self, Json};
 
 const INTERFACE: &str = "noble-test:bounded-region/regions@1.0.0";
-const MAX_REGION_BYTES: usize = 4096;
+const MAX_REGION_BYTES: usize = region_read::MAX_REGION_BYTES;
 const KIND: ResourceKind = ResourceKind(1);
 const READ: ownership::Rights = ownership::Rights(1);
 
@@ -206,6 +206,18 @@ impl Refusal {
             reason: "invalid-handle",
             class,
         }
+    }
+}
+
+impl From<region_read::Refusal> for Refusal {
+    fn from(refusal: region_read::Refusal) -> Self {
+        let class = match refusal {
+            region_read::Refusal::Representation => RefusalClass::ForeignRepresentation,
+            region_read::Refusal::NoOwner => RefusalClass::NoOwner,
+            region_read::Refusal::Identity => RefusalClass::Identity,
+            region_read::Refusal::Bounds => return Self::BOUNDS,
+        };
+        Self::invalid(class)
     }
 }
 
@@ -523,28 +535,20 @@ impl Host {
         offset: i64,
         length: i64,
     ) -> Result<Vec<u8>, Refusal> {
-        if rep != 1 {
-            return Err(Refusal::invalid(RefusalClass::ForeignRepresentation));
-        }
-        let actual = self
-            .owner
-            .as_ref()
-            .ok_or(Refusal::invalid(RefusalClass::NoOwner))?
-            .handle();
         let required = self.required();
-        self.table
-            .validate(claim, required)
-            .map_err(|_| Refusal::invalid(RefusalClass::Identity))?;
-        if claim != actual {
-            return Err(Refusal::invalid(RefusalClass::Identity));
-        }
-        let end = offset.checked_add(length).ok_or(Refusal::BOUNDS)?;
-        let start = usize::try_from(offset).map_err(|_| Refusal::BOUNDS)?;
-        let count = usize::try_from(length).map_err(|_| Refusal::BOUNDS)?;
-        let finish = usize::try_from(end).map_err(|_| Refusal::BOUNDS)?;
-        if start > self.bytes.len() || finish > self.bytes.len() || count > MAX_REGION_BYTES {
-            return Err(Refusal::BOUNDS);
-        }
+        let range = region_read::preflight(
+            &self.table,
+            required,
+            region_read::Request {
+                representation: rep,
+                claim,
+                retained: self.owner.as_ref().map(ownership::Owner::handle),
+                offset_bytes: offset,
+                length_bytes: length,
+            },
+            self.bytes.len(),
+        )
+        .map_err(Refusal::from)?;
         let owner = self
             .owner
             .take()
@@ -561,16 +565,23 @@ impl Host {
                 return Err(Refusal::invalid(class));
             }
         };
-        let authorized = self.table.native_access(&admitted.borrow).is_ok();
+        let scope = admitted.borrow.scope();
+        let authorized = region_read::authorize_copy(
+            self.table.native_access(&admitted.borrow),
+            claim,
+            scope,
+            range,
+            self.bytes.len(),
+        );
         let output = if authorized {
             crate::safety_observe::event("protected-operation");
             self.region_reads += 1;
-            Some(self.bytes[start..finish].to_vec())
+            Some(self.bytes[range.start..range.finish].to_vec())
         } else {
             None
         };
         let Ok(completed) = self.table.complete(
-            admitted.borrow.scope(),
+            scope,
             if authorized {
                 ownership::Completion::Success
             } else {
@@ -1269,6 +1280,102 @@ mod tests {
         assert_eq!(host.region_reads, 1);
         host.release(1, Release::Guest).unwrap();
         assert_eq!(host.table.observation().live, 0);
+    }
+
+    #[test]
+    fn native_copy_requires_the_admitted_identity_scope_and_checked_range() {
+        let mut host = Host::new(vec![0, 1, 2]).unwrap();
+        let claim = host.owner.as_ref().unwrap().handle();
+        let required = host.required();
+        let range = region_read::preflight(
+            &host.table,
+            required,
+            region_read::Request {
+                representation: 1,
+                claim,
+                retained: Some(claim),
+                offset_bytes: 1,
+                length_bytes: 2,
+            },
+            host.bytes.len(),
+        )
+        .unwrap();
+        assert_eq!(
+            range,
+            region_read::Range {
+                start: 1,
+                finish: 3
+            }
+        );
+        let owner = host.owner.take().unwrap();
+        let admitted = host.table.begin(owner, required).unwrap();
+        let scope = admitted.borrow.scope();
+        let access = host.table.native_access(&admitted.borrow);
+        assert!(region_read::authorize_copy(
+            access,
+            claim,
+            scope,
+            range,
+            host.bytes.len()
+        ));
+        let mut substituted = claim;
+        substituted.table.0 += 1;
+        assert!(!region_read::authorize_copy(
+            access,
+            substituted,
+            scope,
+            range,
+            host.bytes.len()
+        ));
+        assert!(!region_read::authorize_copy(
+            access,
+            claim,
+            ownership::Scope {
+                serial: scope.serial + 1,
+                ..scope
+            },
+            range,
+            host.bytes.len(),
+        ));
+        assert!(!region_read::authorize_copy(
+            access,
+            claim,
+            scope,
+            region_read::Range {
+                start: 1,
+                finish: 4
+            },
+            host.bytes.len(),
+        ));
+        assert!(!region_read::authorize_copy(
+            Err(ownership::Error::WrongScope),
+            claim,
+            scope,
+            range,
+            host.bytes.len(),
+        ));
+        assert!(host
+            .table
+            .complete(
+                ownership::Scope {
+                    serial: scope.serial + 1,
+                    ..scope
+                },
+                ownership::Completion::Success,
+            )
+            .is_err());
+        assert!(host.owner.is_none());
+        assert_eq!(host.table.observation().native_pins, 1);
+        let completed = host
+            .table
+            .complete(scope, ownership::Completion::Success)
+            .unwrap();
+        assert_eq!(
+            completed.owner.as_ref().map(ownership::Owner::handle),
+            Some(claim)
+        );
+        host.owner = completed.owner;
+        assert_eq!(host.table.observation().native_pins, 0);
     }
 
     #[test]
