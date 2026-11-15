@@ -14738,6 +14738,36 @@
       "phase": 1,
       "role": "representation",
       "claim": "a selected reverse DUP candidate takes its donors in rule-slot, number-slot order, i.e. second then first physical slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.free_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the free-slot inventory stays exact, duplicate-free and in bounds"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.work_canonical",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every physical queue entry stays in canonical slot order"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.reciprocalPorts",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every live port of the executed arena has a reciprocal owner"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.outputOwners",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every output keeps a unique label and a unique empty live target"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.work_perm",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the projected physical queue permutes the abstract live pending pairs"
     }
   ],
   "private_theorems": [
@@ -14996,6 +15026,58 @@
     "NobleFoundation.NetI64Plans.filter_zipIdx_map_fst",
     "NobleFoundation.NetI64Plans.logicalPair_eq_some",
     "NobleFoundation.NetI64Plans.not_output_target_of_live_wire",
-    "NobleFoundation.NetI64Plans.port_of_live_wire"
+    "NobleFoundation.NetI64Plans.port_of_live_wire",
+    "NobleFoundation.NetI64Plans.array_lt_of_some",
+    "NobleFoundation.NetI64Plans.inj_of_nodup_map",
+    "NobleFoundation.NetI64Plans.index_inj_of_nodup",
+    "NobleFoundation.NetI64Plans.nodup_of_index_inj",
+    "NobleFoundation.NetI64Plans.filter_length_one",
+    "NobleFoundation.NetI64Plans.filter_length_congr",
+    "NobleFoundation.NetI64Plans.prestate_free_iff",
+    "NobleFoundation.NetI64Plans.prestate_reciprocal",
+    "NobleFoundation.NetI64Plans.edge_inj",
+    "NobleFoundation.NetI64Plans.edge_peer",
+    "NobleFoundation.NetI64Plans.edge_output",
+    "NobleFoundation.NetI64Plans.not_result_of_other",
+    "NobleFoundation.NetI64Plans.slot_cases",
+    "NobleFoundation.NetI64Plans.rule_aux",
+    "NobleFoundation.NetI64Plans.untouched_output",
+    "NobleFoundation.NetI64Plans.untouched_not_result",
+    "NobleFoundation.NetI64Plans.next_output",
+    "NobleFoundation.NetI64Plans.result_port_outputs",
+    "NobleFoundation.NetI64Plans.other_no_output",
+    "NobleFoundation.NetI64Plans.edge_result_port",
+    "NobleFoundation.NetI64Plans.label_not_live",
+    "NobleFoundation.NetI64Plans.result_reciprocal",
+    "NobleFoundation.NetI64Plans.other_reciprocal",
+    "NobleFoundation.NetI64Plans.generation_succ_toNat",
+    "NobleFoundation.NetI64Plans.eq_of_mem_of_map_nodup",
+    "NobleFoundation.NetI64Plans.flatMap_congr_mem",
+    "NobleFoundation.NetI64Plans.nodup_filterMap",
+    "NobleFoundation.NetI64Plans.mem_principalPairs_iff",
+    "NobleFoundation.NetI64Plans.principal_some",
+    "NobleFoundation.NetI64Plans.logicalPair_some",
+    "NobleFoundation.NetI64Plans.logicalPair_none_first",
+    "NobleFoundation.NetI64Plans.logicalPair_none_second",
+    "NobleFoundation.NetI64Plans.logicalPair_congr",
+    "NobleFoundation.NetI64Plans.mem_orientations",
+    "NobleFoundation.NetI64Plans.nodup_orientations",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_consumed_live",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_agents",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_dead",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_live_result",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_live_state",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_dead_label",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_consumed_stale",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_consumed_id",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_old",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_peer_edge",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_edge_resultId",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_endpoint_ne",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_edge_eq",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_orientations",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_published",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_edge_published",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_new"
   ]
 }

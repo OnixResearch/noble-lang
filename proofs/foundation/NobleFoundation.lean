@@ -44,6 +44,9 @@ import NobleFoundation.NetI64PlanProjection
 import NobleFoundation.NetI64PlanExecute
 import NobleFoundation.NetI64PlanCompose
 import NobleFoundation.NetI64PlanShape
+import NobleFoundation.NetI64PlanRewrite
+import NobleFoundation.NetI64PlanRewriteOwners
+import NobleFoundation.NetI64PlanRewriteQueue
 import NobleFoundation.BeltTarget
 import NobleFoundation.BeltTargetCorpus
 import NobleFoundation.GraphRewrite
