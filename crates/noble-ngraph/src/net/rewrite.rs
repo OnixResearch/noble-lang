@@ -29,6 +29,17 @@ impl PlanBytes {
     pub(super) fn as_mut_bytes(&mut self) -> &mut [u8] {
         &mut self.bytes[..self.len]
     }
+
+    #[cfg(test)]
+    pub(super) fn remove_bytes_for_test(&mut self, start: usize, count: usize) {
+        self.bytes.copy_within(start + count..self.len, start);
+        self.len -= count;
+    }
+
+    #[cfg(test)]
+    pub(super) fn decodes_for_test(&self) -> bool {
+        decode(self.as_bytes()).is_ok()
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
