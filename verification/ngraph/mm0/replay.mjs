@@ -20,6 +20,12 @@ const generated = path.resolve(generatedArg);
 const report = path.resolve(reportArg);
 assert.ok(!report.startsWith(`${root}${path.sep}`) && report !== root, 'report must be outside repo');
 mkdirSync(report, { recursive: true, mode: 0o700 });
+const git = (args) => spawnSync('git', args, { cwd: root, encoding: 'utf8' });
+const source = git(['rev-parse', 'HEAD']);
+assert.equal(source.status, 0, 'consumer source revision unavailable');
+const dirty = git(['status', '--porcelain']);
+assert.equal(dirty.status, 0, 'consumer source status unavailable');
+assert.equal(dirty.stdout, '', 'commit consumer source before producing a replay receipt');
 const policy = JSON.parse(readFileSync(path.join(root, 'policy/tool-selection.json'))).experimental_mm0;
 const profile = JSON.parse(readFileSync(path.join(lane, 'profile.json')));
 const production = JSON.parse(readFileSync(path.join(generated, 'production.json')));
@@ -281,7 +287,11 @@ rows['no-parser-tool'].raw_checker = timedChecker('raw-no-parser-changed-arithme
     'def uadd (a b: nat): nat = $ (a * b) % modulus $;'),
   path.join(generated, 'proof.mmb'), profile.build_profile.checker_memory_bytes,
   profile.build_profile.checker_wall_ms, noParser);
+assert.equal(rows['no-parser-tool'].raw_checker.status, 0,
+  'disabled parser did not demonstrate changed-definition raw acceptance');
 const receipt = { schema: 'noble-mm0-replay/v1', source_commit: production.source_commit,
+  consumer_source_commit: source.stdout.trim(),
+  consumer_script_sha256: fileSha(fileURLToPath(import.meta.url)),
   retained_spec_sha256: profile.spec_sha256, retained_proof_sha256: sha(proof),
   checker_binary_sha256: fileSha(checker), producer_invoked: false,
   qualified_compiler_lab_backend: false, rows };
