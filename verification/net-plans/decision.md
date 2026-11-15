@@ -28,4 +28,17 @@ The reuse/allocate plan streams differ under the same rule revision; both the ex
 
 **Open correspondence obligation:** prove that decoding every admitted `ngraph-net-plan/1` byte stream yields the kernel's rule image, and that each actual Rust arena/worklist microstep (including saved boundary, generation changes, queue marks, reservations, rollback and finite counter overflow) represents the same committed abstract net as the Lean model until its unique commit, then represents exactly that model's one abstract rewrite. The current Lean `HNet` hash-map is not the generation-tagged Rust vector arena. Neither the model theorem nor the finite tests discharges this Rust↔Lean obligation; hardware/concurrency are outside the issue.
 
+## Acceptance status by evidence class
+
+| Issue #110 acceptance item | Kernel model | Safe-Rust / finite evidence | Rust-to-model correspondence |
+|---|---|---|---|
+| Actual OP2/OP1, DUP, ERA plans and consumed-slot reuse | **Proved** for every abstract rule orientation and payload | **Passed:** emitted bytes and zero-allocation reuse controls | **Open** for the emitted bytes |
+| Emitted-plan semantics, frame and ordered boundary refinement | **Partial:** HNet image, stutter and outside-frame theorems; no physical slot/byte semantics | **Passed:** independent decoder/checker and boundary-alias refusal controls | **Open:** concrete arena relation and decoded-byte refinement |
+| Explicit safe-Rust execution correspondence | **Proved** only for the abstract HNet plan commit | **Passed** on finite checked graph fixtures | **Open:** universal microstep/commit relation |
+| Forged-map, stale/free, write, operand, alias, enqueue and reservation refusals | No model claim about forged bytes | **Passed:** adversarial byte and state controls | **Open** beyond tested cases |
+| Zero-free-slot reuse, every interruption boundary, resource-limit boundaries, rollback | No physical-resource theorem | **Passed:** finite reservation/interruption/limit controls | **Open** beyond tested cases |
+| Same-net allocating/reusing comparisons on five frozen families | No workload-wide theorem | **Passed:** complete observations and abstract interaction counts match in 31 pairs per family | **Open** beyond tested cases |
+| Alloc/reuse/free, live/transient/high-water/scratch/time report | Not a proof obligation | **Measured:** all counters and raw timings retained in the current receipt | Not claimed |
+| Fresh replay identity rejects changed plans under the same rule | Not a semantic theorem | **Passed:** source/executable/formal pins and distinct plan/replay digests | Not claimed |
+
 Reopen the performance decision only with a separately frozen comparison on realistic workloads that shows a material end-to-end gain over the existing packed backend **including** lowering, validation and readback, and with the Rust↔model correspondence obligation discharged before claiming proved implementation refinement. The plan path remains optional regardless of these finite microbenchmarks.
