@@ -101,11 +101,13 @@ The model checker runs a shadow physical execution and compares the complete
 projected post-state with the independently compiled abstract image. Its
 kernel soundness theorem is **not** a theorem that a bare list of plan fields
 by itself entails refinement, nor that every legal image from the Rust
-compiler passes these checks. A model-only execution probe returned `true`
-for each of the five existing Lean physical fixtures and `false` for the
-omitted-write counterexample; these are executable probes, **not** additional
-kernel proofs of checker completeness. The accepted-image theorem is not
-based on their finite enumeration. The Rust checker does not currently run
+compiler passes these checks. Five additional kernel theorems prove checker
+admission at exact reservations for the output-only OP2, published-peer OP2,
+wrapping OP1, DUP and ERA physical fixtures; the omitted-write image is
+kernel-refused. These fixed positive witnesses prove admission is
+nonvacuous, not that every legal model or Rust emitted image passes. The
+accepted-image theorem is not based on their finite enumeration. The Rust
+checker does not currently run
 this model semantic check: the existing four exact Rust-byte/model matches
 and 16 emitted-field cases remain finite evidence only. NO-GO for calling
 the Rust implementation universally proved until a source-bound theorem

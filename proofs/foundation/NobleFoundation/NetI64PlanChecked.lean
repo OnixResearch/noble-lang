@@ -455,4 +455,210 @@ theorem BytePlan.op2_output_fixture_admitted :
     ⟨{ current := op2PhysicalStart, journal := some op2PhysicalStart }, by rfl⟩
     PhysicalState.op2_output_execution_exact fields
 
+/-- The staged wrapping subtraction image also passes independent semantic
+admission at its exact arena, scratch and queue reservations. -/
+theorem BytePlan.op1_output_fixture_admitted :
+    BytePlan.semanticCheck op1PhysicalStart op1OutputFixture.emit
+      op1PhysicalRedex (by rfl) 0 256 0 = some op1PhysicalAfter := by
+  have fields :
+      op1OutputFixture.SemanticFields op1PhysicalStart op1PhysicalAfter
+        op1PhysicalRedex (by rfl) := by
+    have maps := PhysicalState.projected_maps_perm_of_toNet_eq
+      _ _ PhysicalState.op1_wrapping_refines
+    have observables := PhysicalState.op1_output_compiled_observables
+    have wireLookup (port : Port) :
+        op1PhysicalAfter.project.wires[port]? =
+          (Plan.commit op1PhysicalStart.project
+            (Plan.compile op1PhysicalStart.project op1PhysicalRedex (by rfl))
+            op1PhysicalStart.project.work).wires[port]? :=
+      (Std.HashMap.Equiv.of_toList_perm maps.2).getElem?_eq
+    have agentLookup (id : Id) :
+        op1PhysicalAfter.project.agents[id]? =
+          (Plan.commit op1PhysicalStart.project
+            (Plan.compile op1PhysicalStart.project op1PhysicalRedex (by rfl))
+            op1PhysicalStart.project.work).agents[id]? :=
+      (Std.HashMap.Equiv.of_toList_perm maps.1).getElem?_eq
+    have noOutput :
+        (Plan.commit op1PhysicalStart.project
+          (Plan.compile op1PhysicalStart.project op1PhysicalRedex (by rfl))
+          op1PhysicalStart.project.work).agents[[100]]? = none := by
+      rw [←agentLookup]
+      simp [PhysicalState.project, PhysicalState.agents, op1PhysicalAfter,
+        show child [1] [2] (some false) 0 = [0, 1] from rfl]
+    have noMem :
+        ¬ [100] ∈ (Plan.commit op1PhysicalStart.project
+          (Plan.compile op1PhysicalStart.project op1PhysicalRedex (by rfl))
+          op1PhysicalStart.project.work).agents := by
+      simpa using noOutput
+    have outputs : op1PhysicalAfter.outputs.all (fun output =>
+        decide (op1PhysicalAfter.logicalPort output.target =
+          (Plan.commit op1PhysicalStart.project
+            (Plan.compile op1PhysicalStart.project op1PhysicalRedex (by rfl))
+            op1PhysicalStart.project.work).wires[output.label]?)) = true := by
+      apply List.all_eq_true.mpr
+      intro output hmem
+      have before := (List.all_eq_true.mp observables.2.2) output hmem
+      simpa only [←wireLookup output.label] using before
+    dsimp only [BytePlan.SemanticFields]
+    refine ⟨by decide, ?_, by decide, by decide, by decide, by decide,
+      by decide, by decide, by decide, outputs, by decide, by decide,
+      by decide, by decide, by decide, maps.1, maps.2, ?_⟩
+    · rw [observables.1]
+      decide
+    · change ([] : List (Id × Id)).Perm
+        (Plan.pendingPairs (Plan.commit op1PhysicalStart.project
+          (Plan.compile op1PhysicalStart.project op1PhysicalRedex (by rfl))
+          op1PhysicalStart.project.work))
+      simp only [Plan.pendingPairs, observables.2.1]
+      simp [noMem]
+  exact BytePlan.semanticCheck_of_fields (by rfl)
+    BytePlan.op1_wrapping_output_image
+    ⟨{ current := op1PhysicalStart, journal := some op1PhysicalStart }, by rfl⟩
+    PhysicalState.op1_wrapping_execution_exact fields
+
+/-- Both independently captured DUP outputs point to their corresponding
+physical replacement number after the decoded two-result image executes. -/
+theorem BytePlan.dup_output_fixture_admitted :
+    BytePlan.semanticCheck dupPhysicalStart dupOutputFixture.emit
+      dupPhysicalRedex (by rfl) 0 256 0 = some dupPhysicalAfter := by
+  have fields :
+      dupOutputFixture.SemanticFields dupPhysicalStart dupPhysicalAfter
+        dupPhysicalRedex (by rfl) := by
+    have maps := PhysicalState.projected_maps_perm_of_toNet_eq
+      _ _ PhysicalState.dup_refines
+    have observables := PhysicalState.dup_output_compiled_observables
+    have wireLookup (port : Port) :
+        dupPhysicalAfter.project.wires[port]? =
+          (Plan.commit dupPhysicalStart.project
+            (Plan.compile dupPhysicalStart.project dupPhysicalRedex (by rfl))
+            dupPhysicalStart.project.work).wires[port]? :=
+      (Std.HashMap.Equiv.of_toList_perm maps.2).getElem?_eq
+    have agentLookup (id : Id) :
+        dupPhysicalAfter.project.agents[id]? =
+          (Plan.commit dupPhysicalStart.project
+            (Plan.compile dupPhysicalStart.project dupPhysicalRedex (by rfl))
+            dupPhysicalStart.project.work).agents[id]? :=
+      (Std.HashMap.Equiv.of_toList_perm maps.1).getElem?_eq
+    have noOutput (id : Id) (hid : id = [100] ∨ id = [101]) :
+        (Plan.commit dupPhysicalStart.project
+          (Plan.compile dupPhysicalStart.project dupPhysicalRedex (by rfl))
+          dupPhysicalStart.project.work).agents[id]? = none := by
+      rw [←agentLookup]
+      rcases hid with h | h <;> subst id <;>
+        simp [PhysicalState.project, PhysicalState.agents, dupPhysicalAfter,
+          show child [1] [2] (some false) 0 = [0, 1] from rfl,
+          show child [1] [2] (some false) 1 = [2, 1] from rfl]
+    have noMem100 :
+        ¬ [100] ∈ (Plan.commit dupPhysicalStart.project
+          (Plan.compile dupPhysicalStart.project dupPhysicalRedex (by rfl))
+          dupPhysicalStart.project.work).agents := by
+      simpa using noOutput [100] (Or.inl rfl)
+    have noMem101 :
+        ¬ [101] ∈ (Plan.commit dupPhysicalStart.project
+          (Plan.compile dupPhysicalStart.project dupPhysicalRedex (by rfl))
+          dupPhysicalStart.project.work).agents := by
+      simpa using noOutput [101] (Or.inr rfl)
+    have outputs : dupPhysicalAfter.outputs.all (fun output =>
+        decide (dupPhysicalAfter.logicalPort output.target =
+          (Plan.commit dupPhysicalStart.project
+            (Plan.compile dupPhysicalStart.project dupPhysicalRedex (by rfl))
+            dupPhysicalStart.project.work).wires[output.label]?)) = true := by
+      apply List.all_eq_true.mpr
+      intro output hmem
+      have before := (List.all_eq_true.mp observables.2.2) output hmem
+      simpa only [←wireLookup output.label] using before
+    dsimp only [BytePlan.SemanticFields]
+    refine ⟨by decide, ?_, by decide, by decide, by decide, by decide,
+      by decide, by decide, by decide, outputs, by decide, by decide,
+      by decide, by decide, by decide, maps.1, maps.2, ?_⟩
+    · rw [observables.1]
+      decide
+    · change ([] : List (Id × Id)).Perm
+        (Plan.pendingPairs (Plan.commit dupPhysicalStart.project
+          (Plan.compile dupPhysicalStart.project dupPhysicalRedex (by rfl))
+          dupPhysicalStart.project.work))
+      simp only [Plan.pendingPairs, observables.2.1]
+      simp [noMem100, noMem101]
+  exact BytePlan.semanticCheck_of_fields (by rfl) BytePlan.dup_output_image
+    ⟨{ current := dupPhysicalStart, journal := some dupPhysicalStart }, by rfl⟩
+    PhysicalState.dup_execution_exact fields
+
+/-- An actually newly active external peer keeps both directed queue entries
+under admission; the output-only cases above filter non-agent candidates. -/
+theorem BytePlan.op2_published_fixture_admitted :
+    BytePlan.semanticCheck op2PublishedStart op2PublishedFixture.emit
+      op2PhysicalRedex (by rfl) 0 256 1 = some op2PublishedAfter := by
+  have fields :
+      op2PublishedFixture.SemanticFields op2PublishedStart op2PublishedAfter
+        op2PhysicalRedex (by rfl) := by
+    have maps := PhysicalState.projected_maps_perm_of_toNet_eq
+      _ _ PhysicalState.op2_published_refines.1
+    have observables := PhysicalState.op2_published_compiled_observables
+    have wireLookup (port : Port) :
+        op2PublishedAfter.project.wires[port]? =
+          (Plan.commit op2PublishedStart.project
+            (Plan.compile op2PublishedStart.project op2PhysicalRedex (by rfl))
+            op2PublishedStart.project.work).wires[port]? :=
+      (Std.HashMap.Equiv.of_toList_perm maps.2).getElem?_eq
+    have agentLookup (id : Id) :
+        op2PublishedAfter.project.agents[id]? =
+          (Plan.commit op2PublishedStart.project
+            (Plan.compile op2PublishedStart.project op2PhysicalRedex (by rfl))
+            op2PublishedStart.project.work).agents[id]? :=
+      (Std.HashMap.Equiv.of_toList_perm maps.1).getElem?_eq
+    have liveChild :
+        ((Plan.commit op2PublishedStart.project
+          (Plan.compile op2PublishedStart.project op2PhysicalRedex (by rfl))
+          op2PublishedStart.project.work).agents[
+            child [1] [2] (some false) 0]?).isSome = true := by
+      rw [←agentLookup]
+      simp [PhysicalState.project, PhysicalState.agents, op2PublishedAfter,
+        show child [1] [2] (some false) 0 = [0, 1] from rfl]
+    have livePeer :
+        ((Plan.commit op2PublishedStart.project
+          (Plan.compile op2PublishedStart.project op2PhysicalRedex (by rfl))
+          op2PublishedStart.project.work).agents[[3]]?).isSome = true := by
+      rw [←agentLookup]
+      simp [PhysicalState.project, PhysicalState.agents, op2PublishedAfter,
+        show child [1] [2] (some false) 0 = [0, 1] from rfl]
+    have liveChildMem :
+        child [1] [2] (some false) 0 ∈
+          (Plan.commit op2PublishedStart.project
+            (Plan.compile op2PublishedStart.project op2PhysicalRedex (by rfl))
+            op2PublishedStart.project.work).agents := by
+      simpa using liveChild
+    have livePeerMem :
+        [3] ∈ (Plan.commit op2PublishedStart.project
+          (Plan.compile op2PublishedStart.project op2PhysicalRedex (by rfl))
+          op2PublishedStart.project.work).agents := by
+      simpa using livePeer
+    have outputs : op2PublishedAfter.outputs.all (fun output =>
+        decide (op2PublishedAfter.logicalPort output.target =
+          (Plan.commit op2PublishedStart.project
+            (Plan.compile op2PublishedStart.project op2PhysicalRedex (by rfl))
+            op2PublishedStart.project.work).wires[output.label]?)) = true := by
+      apply List.all_eq_true.mpr
+      intro output hmem
+      have before := (List.all_eq_true.mp observables.2.2) output hmem
+      simpa only [←wireLookup output.label] using before
+    dsimp only [BytePlan.SemanticFields]
+    refine ⟨by decide, ?_, by decide, by decide, by decide, by decide,
+      by decide, by decide, by decide, outputs, by decide, by decide,
+      by decide, by decide, by decide, maps.1, maps.2, ?_⟩
+    · rw [observables.1]
+      decide
+    · have filtered :
+          Plan.pendingPairs (Plan.commit op2PublishedStart.project
+            (Plan.compile op2PublishedStart.project op2PhysicalRedex (by rfl))
+            op2PublishedStart.project.work) =
+          (Plan.commit op2PublishedStart.project
+            (Plan.compile op2PublishedStart.project op2PhysicalRedex (by rfl))
+            op2PublishedStart.project.work).work := by
+        simp [Plan.pendingPairs, observables.2.1, liveChildMem, livePeerMem]
+      rw [filtered]
+      exact PhysicalState.op2_published_refines.2
+  exact BytePlan.semanticCheck_of_fields (by rfl) BytePlan.op2_published_image
+    ⟨{ current := op2PublishedStart, journal := some op2PublishedStart }, by rfl⟩
+    PhysicalState.op2_published_execution_exact fields
+
 end NobleFoundation.NetI64Plans

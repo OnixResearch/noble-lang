@@ -2345,6 +2345,31 @@ theorem PhysicalState.op2_published_refines :
     simp only [Plan.commit, op2_published_plan_pair, List.append_nil]
     exact List.Perm.refl _
 
+/-- The published OP2 image captures one live peer, retains an output
+boundary, and declares both orientations of the newly active pair. -/
+theorem PhysicalState.op2_published_compiled_observables :
+    (Plan.compile op2PublishedStart.project op2PhysicalRedex (by rfl)).capturedBoundary.filter
+      (fun edge => edge.1.2 != 0) =
+        [(([1], 1), ([3], 0)), (([1], 2), ([100], 0))] ∧
+    (Plan.commit op2PublishedStart.project
+      (Plan.compile op2PublishedStart.project op2PhysicalRedex (by rfl))
+      op2PublishedStart.project.work).work =
+        [(child [1] [2] (some false) 0, [3]),
+          ([3], child [1] [2] (some false) 0)] ∧
+    op2PublishedAfter.outputs.all (fun output =>
+      decide (op2PublishedAfter.logicalPort output.target =
+        op2PublishedAfter.project.wires[output.label]?)) = true := by
+  refine ⟨?_, ?_, ?_⟩
+  · rw [op2_published_plan_boundary]
+    decide
+  · change (Plan.compile op2PublishedStart.project op2PhysicalRedex
+      (by rfl)).newlyActive ++ [] = _
+    rw [op2_published_plan_pair]
+    rfl
+  · simp [PhysicalState.project, PhysicalState.wires,
+      PhysicalState.portWires, PhysicalState.logicalPort,
+      op2PublishedAfter, hget_insert]
+
 /-- The zero-result erasure image has no boundaries and retires both
 generation-zero slots without leaving a live agent or active pair. -/
 def eraPhysicalStart : PhysicalState :=
@@ -2614,6 +2639,47 @@ theorem PhysicalState.op1_wrapping_refines :
   · intro p
     rfl
 
+/-- The wrapping subtraction fixture's captured external port and directed
+candidate work are independent of its physical reused-slot representation. -/
+theorem PhysicalState.op1_output_compiled_observables :
+    (Plan.compile op1PhysicalStart.project op1PhysicalRedex (by rfl)).capturedBoundary.filter
+      (fun edge => edge.1.2 != 0) =
+        [(([1], 1), ([100], 0))] ∧
+    (Plan.commit op1PhysicalStart.project
+      (Plan.compile op1PhysicalStart.project op1PhysicalRedex (by rfl))
+      op1PhysicalStart.project.work).work =
+        [(child [1] [2] (some false) 0, [100]),
+          ([100], child [1] [2] (some false) 0)] ∧
+    op1PhysicalAfter.outputs.all (fun output =>
+      decide (op1PhysicalAfter.logicalPort output.target =
+        op1PhysicalAfter.project.wires[output.label]?)) = true := by
+  refine ⟨?_, ?_, ?_⟩
+  · rw [op1_plan_boundary]
+    decide
+  · have published :
+        (Plan.compile op1PhysicalStart.project op1PhysicalRedex
+          (by rfl)).newlyActive =
+          [(child [1] [2] (some false) 0, [100]),
+            ([100], child [1] [2] (some false) 0)] := by
+      change principalPairs
+        ((HNet.nbhd NetI64.arity op1PhysicalStart.project [1] [2]
+          (.op1 .sub (BitVec.ofNat 64 7))
+          (.num (BitVec.ofNat 64 13))).fire
+          NetI64.arity [1] [2]
+          (.op1 .sub (BitVec.ofNat 64 7))
+          (.num (BitVec.ofNat 64 13))
+          (NetI64.op1NumData .sub (BitVec.ofNat 64 7)
+            (BitVec.ofNat 64 13)).toX).wires = _
+      rw [op1_nbhd]
+      set_option maxRecDepth 3000 in decide
+    change (Plan.compile op1PhysicalStart.project op1PhysicalRedex
+      (by rfl)).newlyActive ++ [] = _
+    rw [published]
+    rfl
+  · simp [PhysicalState.project, PhysicalState.wires,
+      PhysicalState.portWires, PhysicalState.logicalPort,
+      op1PhysicalAfter, hget_insert]
+
 /-- Two-result DUP stages both replacement numbers in the original physical
 slots and preserves each output's stable logical label separately. -/
 def dupPhysicalStart : PhysicalState :=
@@ -2760,6 +2826,49 @@ theorem PhysicalState.dup_refines :
       hleft2', hright0']
   · intro p
     rfl
+
+/-- The independent two-result plan captures both outputs in order, and
+the physical result points each stable label at its own replacement. -/
+theorem PhysicalState.dup_output_compiled_observables :
+    (Plan.compile dupPhysicalStart.project dupPhysicalRedex (by rfl)).capturedBoundary.filter
+      (fun edge => edge.1.2 != 0) =
+        [(([1], 1), ([100], 0)), (([1], 2), ([101], 0))] ∧
+    (Plan.commit dupPhysicalStart.project
+      (Plan.compile dupPhysicalStart.project dupPhysicalRedex (by rfl))
+      dupPhysicalStart.project.work).work =
+        [(child [1] [2] (some false) 0, [100]),
+          (child [1] [2] (some false) 1, [101]),
+          ([100], child [1] [2] (some false) 0),
+          ([101], child [1] [2] (some false) 1)] ∧
+    dupPhysicalAfter.outputs.all (fun output =>
+      decide (dupPhysicalAfter.logicalPort output.target =
+        dupPhysicalAfter.project.wires[output.label]?)) = true := by
+  refine ⟨?_, ?_, ?_⟩
+  · rw [dup_plan_boundary]
+    decide
+  · have published :
+        (Plan.compile dupPhysicalStart.project dupPhysicalRedex
+          (by rfl)).newlyActive =
+          [(child [1] [2] (some false) 0, [100]),
+            (child [1] [2] (some false) 1, [101]),
+            ([100], child [1] [2] (some false) 0),
+            ([101], child [1] [2] (some false) 1)] := by
+      change principalPairs
+        ((HNet.nbhd NetI64.arity dupPhysicalStart.project [1] [2]
+          .dup (.num (BitVec.ofNat 64 42))).fire
+          NetI64.arity [1] [2] .dup (.num (BitVec.ofNat 64 42))
+          (NetI64.dupNumData (BitVec.ofNat 64 42)).toX).wires = _
+      rw [dup_nbhd]
+      set_option maxRecDepth 3000 in decide
+    change (Plan.compile dupPhysicalStart.project dupPhysicalRedex
+      (by rfl)).newlyActive ++ [] = _
+    rw [published]
+    rfl
+  · simp [PhysicalState.project, PhysicalState.wires,
+      PhysicalState.portWires, PhysicalState.logicalPort,
+      dupPhysicalAfter, hget_insert,
+      show child [1] [2] (some false) 0 = [0, 1] from rfl,
+      show child [1] [2] (some false) 1 = [2, 1] from rfl]
 
 /-- Ordered external free-port identities survive a physical slot write,
 including one that retags a slot formerly targeted by an output. Only the

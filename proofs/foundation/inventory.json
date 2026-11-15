@@ -13132,6 +13132,24 @@
       "claim": "the complete decoded OP2 output physical fixture passes the model semantic checker at exact resource reservations"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op1_output_fixture_admitted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the complete decoded wrapping OP1 physical fixture passes the model semantic checker at exact resource reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.dup_output_fixture_admitted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the complete decoded two-output DUP physical fixture passes the model semantic checker at exact resource reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op2_published_fixture_admitted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the decoded OP2 image publishing an active external peer passes the semantic checker with both directed queue entries"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.project_boundary_frame",
       "phase": 1,
       "role": "representation",
@@ -13261,7 +13279,13 @@
       "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_published_refines",
       "phase": 1,
       "role": "abstract-reduction-step",
-      "claim": "the finite OP2 active publication projects to the checked abstract net and matching directed-pair worklist"
+      "claim": "the finite OP2 physical publication projects to the selected abstract net and both directed pending pairs"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_published_compiled_observables",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the fixed OP2 peer-publication plan's captured boundary, directed work candidates and physical output target"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_execution_exact",
@@ -13273,7 +13297,13 @@
       "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_refines",
       "phase": 1,
       "role": "abstract-reduction-step",
-      "claim": "the finite OP1 subtraction rewrite projects to the selected abstract plan's whole net"
+      "claim": "the finite wrapping OP1 physical rewrite projects to the selected abstract result net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_output_compiled_observables",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the fixed OP1 output plan's captured boundary, directed work candidates and physical output target"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_execution_exact",
@@ -13285,7 +13315,13 @@
       "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_refines",
       "phase": 1,
       "role": "abstract-reduction-step",
-      "claim": "the finite DUP physical rewrite projects to the selected abstract plan's whole net"
+      "claim": "the finite DUP physical rewrite projects to the selected two-result abstract net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_output_compiled_observables",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the fixed DUP output plan's two ordered boundary ports, directed work candidates and physical output targets"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.era_execution_exact",
