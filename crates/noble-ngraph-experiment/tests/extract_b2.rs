@@ -1,4 +1,5 @@
 #![feature(register_tool)]
+#![register_tool(octet)]
 #![register_tool(tigerstyle)]
 #![allow(
     tigerstyle::assertion_density,
