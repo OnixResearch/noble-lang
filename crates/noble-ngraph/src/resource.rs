@@ -220,9 +220,21 @@ pub fn check(
         &crate::net::Limits::default(),
     )
     .map_err(|_| Refusal::InvalidNet)?;
-    let interactions = decoded
-        .expected_interactions()
-        .ok_or(Refusal::ArithmeticOverflow)?;
+    // Derive the charged interaction potential directly from the decoded agent symbols,
+    // independently of the producer's graph-level rule-count formula.
+    let interactions = decoded.agents.iter().try_fold(0_u64, |total, agent| {
+        let charge = match agent.symbol {
+            crate::net::Symbol::Num(_) => 0_u64,
+            crate::net::Symbol::Op2(_) => 2,
+            crate::net::Symbol::Op1(..)
+            | crate::net::Symbol::Dup
+            | crate::net::Symbol::Era => 1,
+        };
+        total.checked_add(charge).ok_or(Refusal::ArithmeticOverflow)
+    })?;
+    if decoded.expected_interactions() != Some(interactions) {
+        return Err(Refusal::InvalidNet);
+    }
     let live_agent_bound =
         u64::try_from(decoded.agents.len()).map_err(|_| Refusal::ArithmeticOverflow)?;
     let initial_wires = decoded.wire_count().ok_or(Refusal::Malformed)?;
