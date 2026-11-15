@@ -15,11 +15,19 @@
   "source_sha256": "b1ba166f773a2209454be56c0fb58527242e6bc8d3681f3835fdad97f1aa9582",
   "official_checker_sha256": "ec7d3c6574b27f0db2319da5cb015d3ea7806b0302c3a70c7164c517487937e7",
   "allowed_axioms": ["propext", "Classical.choice", "Quot.sound"],
+  "resource_bound_amendment": {
+    "prior_source_commit": "e08ae2c7076513c52ece8a2038e30c98fbda2d5f",
+    "prior_receipt_sha256": "eebc588438596c0de029c4cb49aa7bad186ee63482688ce9416936daa8be4986",
+    "prior_outcome": "resource-exhausted before any fixture export or checker execution",
+    "prior_address_space_bytes": 2147483648,
+    "new_address_space_bytes": 17179869184,
+    "reason": "The initially frozen virtual-address-space limit prevented Lean from creating a thread (libc++abi: failed to create thread: Resource temporarily unavailable). This changes only the compilation and checker resource ceiling, not the seven selected fixtures, roots, expected verdicts, permitted axioms, Lean version or export format. No fixture exported and no checker verdict was observed under the original ceiling."
+  },
   "bounds": {
     "compile_timeout_ms": 120000,
     "export_timeout_ms": 120000,
     "checker_timeout_ms": 120000,
-    "address_space_bytes": 2147483648,
+    "address_space_bytes": 17179869184,
     "max_captured_output_bytes": 8388608
   },
   "cases": [

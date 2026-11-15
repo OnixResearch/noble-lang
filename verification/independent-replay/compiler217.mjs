@@ -96,6 +96,14 @@ function bindInputs() {
   requireThat(manifest.source === 'compiler217/Compiler217.lean'
     && fileSha256(fixture) === manifest.source_sha256, 'source-pin-mismatch',
   'local fixture bytes differ from the frozen manifest');
+  requireThat(manifest.resource_bound_amendment?.prior_source_commit
+      === 'e08ae2c7076513c52ece8a2038e30c98fbda2d5f'
+    && manifest.resource_bound_amendment?.prior_receipt_sha256
+      === 'eebc588438596c0de029c4cb49aa7bad186ee63482688ce9416936daa8be4986'
+    && manifest.resource_bound_amendment?.prior_address_space_bytes === 2147483648
+    && manifest.resource_bound_amendment?.new_address_space_bytes === bounds.address_space_bytes
+    && bounds.address_space_bytes === 17179869184, 'configuration-error',
+  'resource ceiling amendment must retain its exact pre-export refusal receipt');
   requireThat(manifest.cases.length === 7
     && new Set(manifest.cases.map((entry) => entry.id)).size === 7
     && same(manifest.cases.map((entry) => `${entry.category}:${entry.expected.lane}`),
@@ -491,6 +499,7 @@ function run() {
     supported_profile: { lean: manifest.lean, export_format: manifest.export_format,
       allowed_axioms: STANDARD_AXIOMS, checkers: ['official-kernel', 'nanoda'] },
     resource_bounds: bounds,
+    resource_bound_amendment: manifest.resource_bound_amendment,
     compile: null, exports: [], cases: [],
     shared_corpus_consumption: {
       decision: 'NO-GO',
