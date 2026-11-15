@@ -2,16 +2,17 @@ use super::super::procedures::support::{
     add_record, envelope, literal_record, provenance, revision,
 };
 use noble_contracts::source::chunks;
-use noble_contracts::source::chunks::{DefinitionRef, Node};
+use noble_contracts::source::chunks::{DefinitionRef, Node, Op};
 use noble_contracts::source::procedures::{
-    Alias, CapabilityMarker, ConsumerObligation, ConsumerPolicy, EvidenceClass, EvidenceOutcome,
-    EvidenceRecord, LibraryDependency, ProcedureLibrary, ProcedureRecord, Producer, RefusalKind,
-    Status,
+    Alias, AliasCertificate, CapabilityMarker, ConsumerObligation, ConsumerPolicy, EvidenceClass,
+    EvidenceOutcome, EvidenceRecord, LibraryDependency, ProcedureLibrary, ProcedureRecord,
+    Producer, RefusalKind, Status,
 };
 use noble_contracts::source::Session;
 use noble_kernel::types::{EffId, EffSet, Ty};
 use std::string::String;
 use std::vec;
+use std::vec::Vec;
 
 fn evidence(
     record: &ProcedureRecord,
@@ -263,7 +264,7 @@ fn an_alias_digest_cannot_replace_a_verified_exact_pair_certificate() -> Result<
         literal_record(10, Producer::Chunk).map_err(|error| format!("record: {error:?}"))?;
     record.alias_of = Some(Alias {
         procedure_id: [0x91; 32],
-        certificate: [0x92; 32],
+        certificate: AliasCertificate::LegacyDigest([0x92; 32]),
     });
     let refusal = library
         .admit(&namespace, None, record)
@@ -271,5 +272,280 @@ fn an_alias_digest_cannot_replace_a_verified_exact_pair_certificate() -> Result<
     assert_eq!(refusal.kind, RefusalKind::Unsupported);
     assert_eq!(refusal.location.field, "alias_of");
     assert!(library.records().is_empty());
+    Ok(())
+}
+
+fn polynomial_record(added: &[i64]) -> Result<ProcedureRecord, String> {
+    let mut source = String::new();
+    let mut nodes = Vec::new();
+    let mut entry = Vec::new();
+    for value in added {
+        source.push_str(&format!("{value} + "));
+        entry.push(u32::try_from(nodes.len()).map_err(|error| error.to_string())?);
+        nodes.push(Node::I64(*value));
+        entry.push(u32::try_from(nodes.len()).map_err(|error| error.to_string())?);
+        nodes.push(Node::Operation {
+            op: Op::Add,
+            instantiation: 0,
+        });
+    }
+    ProcedureRecord::candidate(
+        envelope(&[Ty::I64], &[Ty::I64], source.as_bytes(), nodes, entry),
+        provenance(Producer::Chunk),
+    )
+    .map_err(|error| format!("polynomial record: {error:?}"))
+}
+
+#[test]
+fn exact_pair_alias_normalizes_distinct_bodies_and_survives_reload() -> Result<(), String> {
+    let namespace = Session::without_test_hosts();
+    let mut library = ProcedureLibrary::new(revision(7));
+    let target = polynomial_record(&[5])?;
+    let mut candidate = polynomial_record(&[2, 3])?;
+    assert_ne!(target.procedure_id, candidate.procedure_id);
+    Alias::certify(&candidate, &target)
+        .map_err(|error| format!("certificate: {error:?}"))?
+        .attach(&mut candidate)
+        .map_err(|error| format!("attach: {error:?}"))?;
+    let AliasCertificate::ExactPair(pair) = &candidate
+        .alias_of
+        .as_ref()
+        .expect("claim")
+        .certificate
+    else {
+        return Err(String::from("a real alias requires a pair certificate"));
+    };
+    assert_eq!(pair.left, pair.right);
+    assert_eq!(pair.left_closure, pair.right_closure);
+    library
+        .admit(&namespace, None, target)
+        .map_err(|error| format!("target: {error:?}"))?;
+    library
+        .admit(&namespace, None, candidate.clone())
+        .map_err(|error| format!("alias: {error:?}"))?;
+    let encoded = library.encode().map_err(|error| format!("encode: {error:?}"))?;
+    let loaded = ProcedureLibrary::load(&encoded, &namespace)
+        .map_err(|error| format!("reload: {error:?}"))?;
+    assert_eq!(
+        loaded.encode().map_err(|error| format!("re-encode: {error:?}"))?,
+        encoded
+    );
+    assert!(loaded.records().iter().any(|record| record == &candidate));
+    Ok(())
+}
+
+#[test]
+fn exact_pair_alias_normalizes_distribution_and_wrapping_i64() -> Result<(), String> {
+    let namespace = Session::without_test_hosts();
+    let mut library = ProcedureLibrary::new(revision(7));
+    let left = ProcedureRecord::candidate(
+        envelope(
+            &[Ty::I64],
+            &[Ty::I64],
+            b"2 + 3 * ",
+            vec![
+                Node::I64(2),
+                Node::Operation {
+                    op: Op::Add,
+                    instantiation: 0,
+                },
+                Node::I64(3),
+                Node::Operation {
+                    op: Op::Mul,
+                    instantiation: 0,
+                },
+            ],
+            vec![0, 1, 2, 3],
+        ),
+        provenance(Producer::Chunk),
+    )
+    .map_err(|error| format!("left distributive: {error:?}"))?;
+    let right = ProcedureRecord::candidate(
+        envelope(
+            &[Ty::I64],
+            &[Ty::I64],
+            b"3 * 6 + ",
+            vec![
+                Node::I64(3),
+                Node::Operation {
+                    op: Op::Mul,
+                    instantiation: 0,
+                },
+                Node::I64(6),
+                Node::Operation {
+                    op: Op::Add,
+                    instantiation: 0,
+                },
+            ],
+            vec![0, 1, 2, 3],
+        ),
+        provenance(Producer::Chunk),
+    )
+    .map_err(|error| format!("right distributive: {error:?}"))?;
+    let mut aliased = left;
+    Alias::certify(&aliased, &right)
+        .map_err(|error| format!("distributive pair: {error:?}"))?
+        .attach(&mut aliased)
+        .map_err(|error| format!("attach distributive pair: {error:?}"))?;
+    library
+        .admit(&namespace, None, right)
+        .map_err(|error| format!("right: {error:?}"))?;
+    library
+        .admit(&namespace, None, aliased)
+        .map_err(|error| format!("distributed alias: {error:?}"))?;
+
+    let wrapped = polynomial_record(&[i64::MAX, 1])?;
+    let minimum = polynomial_record(&[i64::MIN])?;
+    let mut wrapped_alias = wrapped;
+    Alias::certify(&wrapped_alias, &minimum)
+        .map_err(|error| format!("wrapping pair: {error:?}"))?
+        .attach(&mut wrapped_alias)
+        .map_err(|error| format!("attach wrapping pair: {error:?}"))?;
+    library
+        .admit(&namespace, None, minimum)
+        .map_err(|error| format!("minimum: {error:?}"))?;
+    library
+        .admit(&namespace, None, wrapped_alias)
+        .map_err(|error| format!("wrapping alias: {error:?}"))?;
+    Ok(())
+}
+
+#[test]
+fn unequal_polynomials_and_unsupported_alias_bodies_are_refused() -> Result<(), String> {
+    let target = polynomial_record(&[5])?;
+    let mut different = polynomial_record(&[6])?;
+    let refused = Alias::certify(&different, &target)
+        .expect_err("different polynomial must not produce a certificate");
+    assert_eq!(refused.kind, RefusalKind::Invalid);
+    Alias::certify(&polynomial_record(&[2, 3])?, &target)
+        .map_err(|error| format!("good pair: {error:?}"))?
+        .attach(&mut different)
+        .map_err(|error| format!("attach: {error:?}"))?;
+    let namespace = Session::without_test_hosts();
+    let mut library = ProcedureLibrary::new(revision(7));
+    library
+        .admit(&namespace, None, target.clone())
+        .map_err(|error| format!("target: {error:?}"))?;
+    let refusal = library
+        .admit(&namespace, None, different)
+        .expect_err("a borrowed valid pair certificate cannot claim a different body");
+    assert_eq!(refusal.kind, RefusalKind::Invalid);
+    assert_eq!(refusal.location.field, "alias_of");
+
+    let mut boolean = literal_record(50, Producer::Chunk)
+        .map_err(|error| format!("literal: {error:?}"))?;
+    boolean.chunk.body.nodes.push(Node::Bool(true));
+    boolean.chunk.body.entry.push(1);
+    boolean.chunk.interface.stack_out.push(Ty::Bool);
+    let refused = Alias::certify(&boolean, &target)
+        .expect_err("Boolean body is outside the alias fragment");
+    assert_eq!(refused.kind, RefusalKind::Unsupported);
+
+    let mut dependent = polynomial_record(&[5])?;
+    dependent.library_dependencies.push(LibraryDependency {
+        procedure_id: target.procedure_id,
+        chunk_id: target.chunk.chunk_id,
+        source_revision: target.chunk.source_revision,
+    });
+    let refused = Alias::certify(&dependent, &target)
+        .expect_err("dependency-bearing body is outside the verified fragment");
+    assert_eq!(refused.kind, RefusalKind::Unsupported);
+    Ok(())
+}
+
+#[test]
+fn alias_closure_and_normal_forms_are_recomputed_on_admission_and_reload() -> Result<(), String> {
+    let namespace = Session::without_test_hosts();
+    let target = polynomial_record(&[5])?;
+    let mut candidate = polynomial_record(&[2, 3])?;
+    let alias = Alias::certify(&candidate, &target)
+        .map_err(|error| format!("certificate: {error:?}"))?;
+    let mut library = ProcedureLibrary::new(revision(7));
+    library
+        .admit(&namespace, None, target.clone())
+        .map_err(|error| format!("target: {error:?}"))?;
+
+    let mut closure_forgery = alias.clone();
+    if let AliasCertificate::ExactPair(pair) = &mut closure_forgery.certificate {
+        pair.left_closure[0] ^= 1;
+    }
+    closure_forgery
+        .attach(&mut candidate)
+        .map_err(|error| format!("attach closure: {error:?}"))?;
+    let refusal = library
+        .admit(&namespace, None, candidate.clone())
+        .expect_err("forged closure digest must not be an authorization");
+    assert_eq!(refusal.kind, RefusalKind::Invalid);
+    assert_eq!(refusal.location.field, "alias_of");
+
+    let mut stale_form = alias.clone();
+    if let AliasCertificate::ExactPair(pair) = &mut stale_form.certificate {
+        pair.left[0].terms[0].coefficient ^= 1;
+    }
+    candidate.alias_of = Some(stale_form);
+    let refusal = library
+        .admit(&namespace, None, candidate.clone())
+        .expect_err("forged polynomial form must not be an authorization");
+    assert_eq!(refusal.kind, RefusalKind::Invalid);
+    assert_eq!(refusal.location.field, "alias_of");
+
+    let mut stale_target = alias.clone();
+    stale_target.procedure_id[0] ^= 1;
+    candidate.alias_of = Some(stale_target);
+    let refusal = library
+        .admit(&namespace, None, candidate.clone())
+        .expect_err("stale pair target is not retained");
+    assert_eq!(refusal.kind, RefusalKind::StaleContext);
+    assert_eq!(refusal.location.field, "alias_of");
+
+    candidate.alias_of = Some(alias.clone());
+    candidate.evidence.clear();
+    let refusal = library
+        .admit(&namespace, None, candidate.clone())
+        .expect_err("missing exact-pair evidence must be refused");
+    assert_eq!(refusal.kind, RefusalKind::Invalid);
+    assert_eq!(refusal.location.field, "alias_of");
+
+    candidate.evidence.push(evidence(
+        &candidate,
+        EvidenceClass::Validation,
+        EvidenceOutcome::Passed,
+    ));
+    let refusal = library
+        .admit(&namespace, None, candidate.clone())
+        .expect_err("unrelated validation evidence must be refused");
+    assert_eq!(refusal.kind, RefusalKind::Invalid);
+    assert_eq!(refusal.location.field, "alias_of");
+
+    // A raw wire mutation also fails reload; the earlier admission forgeries
+    // exercised pair recomputation with coherent newly computed state digests.
+    candidate.alias_of = Some(alias);
+    candidate.evidence.clear();
+    let certificate = candidate.alias_of.take().expect("pair certificate");
+    certificate
+        .attach(&mut candidate)
+        .map_err(|error| format!("attach good: {error:?}"))?;
+    library
+        .admit(&namespace, None, candidate)
+        .map_err(|error| format!("good alias: {error:?}"))?;
+    let mut bytes = library.encode().map_err(|error| format!("encode: {error:?}"))?;
+    let alias = library
+        .records()
+        .iter()
+        .find_map(|record| record.alias_of.as_ref())
+        .ok_or_else(|| String::from("missing retained alias"))?;
+    let AliasCertificate::ExactPair(pair) = &alias.certificate else {
+        return Err(String::from("missing pair certificate"));
+    };
+    let marker: Vec<u8> = [vec![2], alias.procedure_id.to_vec(), pair.left_closure.to_vec()]
+        .concat();
+    let offset = bytes
+        .windows(marker.len())
+        .position(|window| window == marker)
+        .ok_or_else(|| String::from("pair wire marker absent"))?;
+    bytes[offset + 33] ^= 1;
+    let refusal = ProcedureLibrary::load(&bytes, &namespace)
+        .expect_err("tampered persisted closure cannot reload");
+    assert_eq!(refusal.kind, RefusalKind::Invalid);
     Ok(())
 }

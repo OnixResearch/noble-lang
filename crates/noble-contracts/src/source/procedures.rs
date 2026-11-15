@@ -18,10 +18,15 @@
     reason = "Owner: noble-contracts; library transitions mutate their explicitly owned generation state after all candidate checks succeed"
 )]
 
+mod alias;
 mod composition;
 mod persistence;
 mod retrieval;
 
+pub use alias::{
+    AliasCertificate, ExactPairCertificate, Monomial, Polynomial, MAX_ALIAS_INPUTS,
+    MAX_ALIAS_OUTPUTS, MAX_ALIAS_TERMS,
+};
 pub use composition::{BoundOperand, CertifiedComposedProgram, ComposeContext, ComposedProgram};
 pub use persistence::{ArmMetrics, Metrics};
 pub use retrieval::{Query, QueryBudget, QueryResult, RuntimeProducer};
@@ -241,10 +246,10 @@ pub struct RetrievalSignature {
     pub cost_key: [u32; 3],
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Alias {
     pub procedure_id: ProcedureId,
-    pub certificate: [u8; 32],
+    pub certificate: AliasCertificate,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -998,7 +1003,7 @@ impl ProcedureLibrary {
             incoming.supersedes = existing.supersedes;
         }
         if incoming.alias_of.is_none() {
-            incoming.alias_of = existing.alias_of;
+            incoming.alias_of.clone_from(&existing.alias_of);
         }
         if incoming.cost == Cost::default() {
             incoming.cost = existing.cost;
@@ -1264,11 +1269,13 @@ impl ProcedureLibrary {
                 },
             ));
         }
-        if let Some(alias) = record.alias_of {
-            if alias.procedure_id == record.procedure_id || alias.certificate == [0; 32] {
-                return Err(Refusal::new(RefusalKind::Invalid, Diagnostic { field: "alias_of", message: "alias requires a distinct exact-pair identity and nonzero certificate digest" }));
+        if let Some(alias) = &record.alias_of {
+            if alias.procedure_id == record.procedure_id {
+                return Err(Refusal::new(RefusalKind::Invalid, Diagnostic { field: "alias_of", message: "alias requires a distinct exact-pair identity" }));
             }
-            return Err(Refusal::new(RefusalKind::Unsupported, Diagnostic { field: "alias_of", message: "semantic aliases require a verified noble-ngraph certificate; a digest alone is not proof" }));
+            if matches!(&alias.certificate, AliasCertificate::LegacyDigest(_)) {
+                return Err(Refusal::new(RefusalKind::Unsupported, Diagnostic { field: "alias_of", message: "a digest alone is not a verified exact-pair certificate" }));
+            }
         }
         Ok(())
     }
@@ -1449,6 +1456,7 @@ impl ProcedureLibrary {
                 .map_err(Refusal::from_chunk)?;
             admitted.push(record.clone());
         }
+        alias::verify(records)?;
         if library.revision() != &revision {
             return Err(Refusal::new(
                 RefusalKind::Invalid,
