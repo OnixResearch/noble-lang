@@ -14,6 +14,6 @@
   "holds": true,
   "all_25_receipt_checks_hold": true,
   "controls": "Every configured checker has baseline and control rows. The executed proof-mutation, dropped-dependency, substituted-claim, format, custom-axiom, parser and resource controls retain distinct lane/checker refusals; unsupported capabilities remain explicit. Raw exit/stdout/stderr, wall and max RSS are in the byte-pinned receipt.",
-  "foundation_source_equivalence": "The remote compiled foundation project and the checked-out source cohort were bytewise identical outside generated .lake artifacts before replay. The full-root run did not lower a memory or root requirement.",
+  "foundation_source_equivalence": "The remote compiled foundation project and the checked-out source cohort were bytewise identical outside generated .lake artifacts before replay. The three-root run did not lower a memory requirement or remove any selected root.",
   "limitation": "This multi-checker control used pinned release-bundled binaries (plus the separately source-built OCaml checker), whereas source-builds-batch9.json independently establishes five source-built executables on a selected ordinary root and semantic negative. It does not establish bitwise provenance of four release bundles."
 }

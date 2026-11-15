@@ -123,7 +123,7 @@ commands, built-binary digests, positive counts, and semantic-negative refusals 
 [source-build receipt](receipts/2026-11-14/source-builds-batch9.json). The four rebuilt
 release-bundled checkers differ bytewise from their release executables: the source-built
 compatibility control **does not** prove those release binaries came from the pinned sources or
-that they pass the full foundation corpus. The [current full-root multi-checker control](receipts/2026-11-14/multi-batch9.json)
+that they pass the three selected foundation roots and controls. The [current three-root multi-checker control](receipts/2026-11-14/multi-batch9.json)
 uses the release executables plus source-built OCaml, retains 25 passed checks, and did not
 reduce its roots or memory requirements. The [historical admission control](receipts/2026-11-14/historical-admission-batch9.json)
 accepts the new clean-source receipt while explicitly refusing the retained Lean 4.31 receipt
