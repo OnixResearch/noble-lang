@@ -244,10 +244,10 @@ fn normalize(record: &ProcedureRecord) -> Result<Vec<Polynomial>, Refusal> {
                 }
                 match op {
                     chunks::Op::Dup => {
-                        let top = stack.last().ok_or_else(|| {
+                        let top = stack.last().cloned().ok_or_else(|| {
                             refused(RefusalKind::Unsupported, "alias duplicate needs a value")
                         })?;
-                        push(&mut stack, top.clone())?;
+                        push(&mut stack, top)?;
                     }
                     chunks::Op::Drop => {
                         let _ = pop(&mut stack)?;
