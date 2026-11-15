@@ -13558,6 +13558,18 @@
       "claim": "a successful decoded empty-result image with no external writes or publications preserves the entire output-target table"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.installResult_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one physical result installs from independent live donor, port resolution, slot capacity and generation headroom guards"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.install_single_result_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "an OP1 or OP2 one-result RHS installs from source-slot label agreement and concrete per-result guards"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.lowered_empty_image_completes",
       "phase": 1,
       "role": "representation",

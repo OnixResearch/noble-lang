@@ -1325,6 +1325,40 @@ private def PhysicalState.installResult (state : PhysicalState)
           queuedGeneration := none
           ports })
 
+/-- A generated result installs whenever its donor is live, every declared
+port resolves, and the selected fresh/reused slot has the exact physical
+capacity and generation headroom. No semantic post-state is assumed. -/
+theorem PhysicalState.installResult_success
+    {state : PhysicalState} {plan : BytePlan} {logical : Id}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    {donor : PhysicalSlot}
+    {ports : List (Option (Nat × Nat))}
+    (hdonor : state.slots[result.2.2.2.1]? = some donor)
+    (hlive : donor.agent.isSome = true)
+    (hports : result.2.2.2.2.mapM plan.resultTarget = some ports)
+    (hfresh : result.1 = true → result.2.1 = state.slots.size)
+    (hreuse : result.1 = false →
+      ∃ old, state.slots[result.2.1]? = some old ∧
+        old.agent.isSome = true ∧
+        old.generation ≠ UInt64.ofNat (UInt64.size - 1)) :
+    ∃ next, state.installResult plan logical result = some next := by
+  cases ha : donor.agent with
+  | none => simp [ha] at hlive
+  | some owner =>
+    cases hr : result.1 with
+    | true =>
+      have hindex := hfresh hr
+      simp [PhysicalState.installResult, hdonor, ha,
+        hports, hr, hindex]
+    | false =>
+      obtain ⟨old, ho, hold, hroom⟩ := hreuse hr
+      cases hb : old.agent with
+      | none => simp [hb] at hold
+      | some live =>
+        simp [PhysicalState.installResult, hdonor, ha,
+          hports, hr, ho, hb]
+        simpa using hroom
+
 /-- Decode each selected rule slot's stable child identity and install its
 physical result image in the same order as the checked Rust executor. -/
 private def PhysicalState.installResults (plan : BytePlan)
@@ -1337,6 +1371,33 @@ private def PhysicalState.installResults (plan : BytePlan)
       if rhs.lab slot.1 slot.2 != some result.2.2.1 then none else do
         let installed ← state.installResult plan (child left right slot.1 slot.2) result
         PhysicalState.installResults plan left right rhs (index + 1) installed rest
+
+/-- The one-result OP1/OP2 shape installs successfully from a selected RHS
+slot and a concrete donor/target/generation witness. This is a physical
+microstep guarantee, not the whole image or its abstract projection. -/
+theorem PhysicalState.install_single_result_success
+    {state : PhysicalState} {plan : BytePlan}
+    {left right : Id} {rhs : XRhs NetSym}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    {ruleSlot : Option Bool × Nat} {donor : PhysicalSlot}
+    {ports : List (Option (Nat × Nat))}
+    (hslot : rhs.slots[0]? = some ruleSlot)
+    (hlab : rhs.lab ruleSlot.1 ruleSlot.2 = some result.2.2.1)
+    (hdonor : state.slots[result.2.2.2.1]? = some donor)
+    (hlive : donor.agent.isSome = true)
+    (hports : result.2.2.2.2.mapM plan.resultTarget = some ports)
+    (hfresh : result.1 = true → result.2.1 = state.slots.size)
+    (hreuse : result.1 = false →
+      ∃ old, state.slots[result.2.1]? = some old ∧
+        old.agent.isSome = true ∧
+        old.generation ≠ UInt64.ofNat (UInt64.size - 1)) :
+    ∃ next, PhysicalState.installResults plan left right rhs 0 state
+      [result] = some next := by
+  obtain ⟨next, hinstall⟩ := PhysicalState.installResult_success
+    (logical := child left right ruleSlot.1 ruleSlot.2)
+    hdonor hlive hports hfresh hreuse
+  refine ⟨next, ?_⟩
+  simp [PhysicalState.installResults, hslot, hlab, hinstall]
 
 /-- Retire a consumed slot not reused by a result, refusing stale or
 overflowing generations rather than publishing an invalid free slot. -/
