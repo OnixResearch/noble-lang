@@ -13534,6 +13534,54 @@
       "claim": "every successful model candidate derives rule opcode, ordered physical capture, result payloads, reciprocal write inventory and reservations without semantic-checker assumptions"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_forward_candidate_exists",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any current and reciprocal forward ERA pair with correct physical symbols creates a candidate in both storage policies"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_reverse_candidate_exists",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any current and reciprocal reverse ERA pair with correct physical symbols creates a candidate in both storage policies"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_candidate_exists",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any forward OP1 pair with a valid prestate capture and publication creates a candidate independent of the checker"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_reverse_candidate_exists",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any reverse OP1 pair with a valid prestate capture and publication creates a candidate independent of the checker"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_forward_candidate_exists",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any forward OP2 pair with two distinct valid captures and a prestate publication creates a candidate"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_reverse_candidate_exists",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any reverse OP2 pair with two distinct valid captures and a prestate publication creates a candidate"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_forward_candidate_exists",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any forward DUP pair with two distinct valid captures and both prestate publications creates a candidate"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_reverse_candidate_exists",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any reverse DUP pair with two distinct valid captures and both prestate publications creates a candidate"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.rule_result_symbols",
       "phase": 1,
       "role": "representation",

@@ -290,6 +290,272 @@ private def PhysicalState.planCandidate (state : PhysicalState) (pair : Physical
     (redex : XRedex NetSym) (reuse : Bool) : Option BytePlan :=
   (state.planCandidateCore pair redex reuse).map BytePlan.withRequiredWrites
 
+/-- Erasure has no auxiliary capture, result installation, reciprocal write or
+publication. A current principal pair with the stated physical symbols
+therefore always produces an erasure candidate, in either storage policy. -/
+theorem PhysicalState.era_forward_candidate_exists
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {value : BitVec 64} {reuse : Bool}
+    {first second : PhysicalSlot}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some .era)
+    (hsa : second.agent.map Prod.snd = some (.num value))
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0))) :
+    ∃ plan, state.planCandidate pair
+      (a, b, .era, .num value, eraNumData.toX) reuse = some plan := by
+  unfold PhysicalState.planCandidate PhysicalState.planCandidateCore
+  simp [NetI64.xRule, hpair, hf, hs, hfa, hsa, hfp, hsp,
+    BytePlan.ruleSlots, BytePlan.ruleOpcode, PhysicalState.candidateBody,
+    PhysicalState.consumedBoundaryAlias, NetI64.arity,
+    eraNumData, RuleData.toX, RuleData.ofWires]
+
+/-- The reverse erasure orientation has the same empty physical image and
+requires only the corresponding current principal and symbol fields. -/
+theorem PhysicalState.era_reverse_candidate_exists
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {value : BitVec 64} {reuse : Bool}
+    {first second : PhysicalSlot}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some (.num value))
+    (hsa : second.agent.map Prod.snd = some .era)
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0))) :
+    ∃ plan, state.planCandidate pair
+      (a, b, .num value, .era, eraNumData.toX.swap) reuse = some plan := by
+  unfold PhysicalState.planCandidate PhysicalState.planCandidateCore
+  simp [NetI64.xRule, hpair, hf, hs, hfa, hsa, hfp, hsp,
+    BytePlan.ruleSlots, BytePlan.ruleOpcode, PhysicalState.candidateBody,
+    PhysicalState.consumedBoundaryAlias, NetI64.arity,
+    eraNumData, RuleData.toX, RuleData.ofWires, XRhs.swap]
+
+/-- A forward one-operand rule has exactly one captured auxiliary endpoint,
+one result symbol, and one potential physical publication. The capture and
+publication premises inspect only the prestate, not the semantic checker. -/
+theorem PhysicalState.op1_forward_candidate_exists
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {op : Op} {firstValue secondValue : BitVec 64}
+    {reuse : Bool} {first second : PhysicalSlot}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {published : List (Nat × Nat × Nat × Nat)}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some (.op1 op firstValue))
+    (hsa : second.agent.map Prod.snd = some (.num secondValue))
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0)))
+    (hcap : state.captureAux pair.first 1 = some boundary)
+    (halias : state.consumedBoundaryAlias pair
+      (a, b, .op1 op firstValue, .num secondValue,
+        (op1NumData op firstValue secondValue).toX) = false)
+    (hpub : state.publicationFor pair [boundary]
+      (not reuse, if reuse then pair.first else state.slots.size,
+        .num (op.apply firstValue secondValue), pair.first,
+        [some 0, none, none]) = some published) :
+    ∃ plan, state.planCandidate pair
+      (a, b, .op1 op firstValue, .num secondValue,
+        (op1NumData op firstValue secondValue).toX) reuse = some plan := by
+  unfold PhysicalState.planCandidate PhysicalState.planCandidateCore
+  simp [NetI64.xRule, hpair, hf, hs, hfa, hsa, hfp, hsp,
+    BytePlan.ruleSlots, BytePlan.ruleOpcode, PhysicalState.candidateBody,
+    hcap, hpub,
+    op1NumData, RuleData.toX, RuleData.ofWires, assoc]
+  refine ⟨_, _, ⟨?_, rfl⟩, rfl⟩
+  simpa [op1NumData, RuleData.toX, RuleData.ofWires, assoc]
+    using halias
+
+/-- The mirrored one-operand rule captures the second physical slot's
+auxiliary port while keeping the single result and publication order. -/
+theorem PhysicalState.op1_reverse_candidate_exists
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {op : Op} {firstValue secondValue : BitVec 64}
+    {reuse : Bool} {first second : PhysicalSlot}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {published : List (Nat × Nat × Nat × Nat)}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some (.num secondValue))
+    (hsa : second.agent.map Prod.snd = some (.op1 op firstValue))
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0)))
+    (hcap : state.captureAux pair.second 1 = some boundary)
+    (halias : state.consumedBoundaryAlias pair
+      (a, b, .num secondValue, .op1 op firstValue,
+        (op1NumData op firstValue secondValue).toX.swap) = false)
+    (hpub : state.publicationFor pair [boundary]
+      (not reuse, if reuse then pair.second else state.slots.size,
+        .num (op.apply firstValue secondValue), pair.second,
+        [some 0, none, none]) = some published) :
+    ∃ plan, state.planCandidate pair
+      (a, b, .num secondValue, .op1 op firstValue,
+        (op1NumData op firstValue secondValue).toX.swap) reuse = some plan := by
+  unfold PhysicalState.planCandidate PhysicalState.planCandidateCore
+  simp [NetI64.xRule, hpair, hf, hs, hfa, hsa, hfp, hsp,
+    BytePlan.ruleSlots, BytePlan.ruleOpcode, PhysicalState.candidateBody,
+    hcap, hpub,
+    op1NumData, RuleData.toX, RuleData.ofWires, XRhs.swap, assoc]
+  refine ⟨_, _, ⟨?_, rfl⟩, rfl⟩
+  simpa [op1NumData, RuleData.toX, RuleData.ofWires, XRhs.swap, assoc]
+    using halias
+
+/-- Forward OP2 candidate existence requires two distinct physical captures
+and only the independently computed publication of its one result. -/
+theorem PhysicalState.op2_forward_candidate_exists
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {op : Op} {value : BitVec 64}
+    {reuse : Bool} {first second : PhysicalSlot}
+    {boundaryOne boundaryTwo : (Nat × Nat) × (Nat × Nat × Nat)}
+    {published : List (Nat × Nat × Nat × Nat)}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some (.op2 op))
+    (hsa : second.agent.map Prod.snd = some (.num value))
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0)))
+    (hcap1 : state.captureAux pair.first 1 = some boundaryOne)
+    (hcap2 : state.captureAux pair.first 2 = some boundaryTwo)
+    (hdistinct : [boundaryOne.2, boundaryTwo.2].Nodup)
+    (halias : state.consumedBoundaryAlias pair
+      (a, b, .op2 op, .num value, (op2NumData op value).toX) = false)
+    (hpub : state.publicationFor pair [boundaryOne, boundaryTwo]
+      (not reuse, if reuse then pair.first else state.slots.size,
+        .op1 op value, pair.first, [some 0, some 1, none]) =
+      some published) :
+    ∃ plan, state.planCandidate pair
+      (a, b, .op2 op, .num value, (op2NumData op value).toX)
+      reuse = some plan := by
+  unfold PhysicalState.planCandidate PhysicalState.planCandidateCore
+  simp [NetI64.xRule, hpair, hf, hs, hfa, hsa, hfp, hsp,
+    BytePlan.ruleSlots, BytePlan.ruleOpcode, PhysicalState.candidateBody,
+    hcap1, hcap2, hdistinct, hpub,
+    op2NumData, RuleData.toX, RuleData.ofWires, assoc]
+  refine ⟨_, _, ⟨?_, rfl⟩, rfl⟩
+  simpa [op2NumData, RuleData.toX, RuleData.ofWires, assoc]
+    using halias
+
+/-- Reverse OP2 candidate existence captures the second physical slot's
+ports in order, without changing the selected RHS result symbol. -/
+theorem PhysicalState.op2_reverse_candidate_exists
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {op : Op} {value : BitVec 64}
+    {reuse : Bool} {first second : PhysicalSlot}
+    {boundaryOne boundaryTwo : (Nat × Nat) × (Nat × Nat × Nat)}
+    {published : List (Nat × Nat × Nat × Nat)}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some (.num value))
+    (hsa : second.agent.map Prod.snd = some (.op2 op))
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0)))
+    (hcap1 : state.captureAux pair.second 1 = some boundaryOne)
+    (hcap2 : state.captureAux pair.second 2 = some boundaryTwo)
+    (hdistinct : [boundaryOne.2, boundaryTwo.2].Nodup)
+    (halias : state.consumedBoundaryAlias pair
+      (a, b, .num value, .op2 op, (op2NumData op value).toX.swap) = false)
+    (hpub : state.publicationFor pair [boundaryOne, boundaryTwo]
+      (not reuse, if reuse then pair.second else state.slots.size,
+        .op1 op value, pair.second, [some 0, some 1, none]) =
+      some published) :
+    ∃ plan, state.planCandidate pair
+      (a, b, .num value, .op2 op, (op2NumData op value).toX.swap)
+      reuse = some plan := by
+  unfold PhysicalState.planCandidate PhysicalState.planCandidateCore
+  simp [NetI64.xRule, hpair, hf, hs, hfa, hsa, hfp, hsp,
+    BytePlan.ruleSlots, BytePlan.ruleOpcode, PhysicalState.candidateBody,
+    hcap1, hcap2, hdistinct, hpub,
+    op2NumData, RuleData.toX, RuleData.ofWires, XRhs.swap, assoc]
+  refine ⟨_, _, ⟨?_, rfl⟩, rfl⟩
+  simpa [op2NumData, RuleData.toX, RuleData.ofWires, XRhs.swap, assoc]
+    using halias
+
+/-- DUP produces two ordered number results, potentially at both consumed
+slots, and each result's publication is checked against the prestate. -/
+theorem PhysicalState.dup_forward_candidate_exists
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {value : BitVec 64}
+    {reuse : Bool} {first second : PhysicalSlot}
+    {boundaryOne boundaryTwo : (Nat × Nat) × (Nat × Nat × Nat)}
+    {firstPublished secondPublished : List (Nat × Nat × Nat × Nat)}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some .dup)
+    (hsa : second.agent.map Prod.snd = some (.num value))
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0)))
+    (hcap1 : state.captureAux pair.first 1 = some boundaryOne)
+    (hcap2 : state.captureAux pair.first 2 = some boundaryTwo)
+    (hdistinct : [boundaryOne.2, boundaryTwo.2].Nodup)
+    (halias : state.consumedBoundaryAlias pair
+      (a, b, .dup, .num value, (dupNumData value).toX) = false)
+    (hpub1 : state.publicationFor pair [boundaryOne, boundaryTwo]
+      (not reuse, if reuse then pair.first else state.slots.size,
+        .num value, pair.first, [some 0, none, none]) =
+      some firstPublished)
+    (hpub2 : state.publicationFor pair [boundaryOne, boundaryTwo]
+      (not reuse, if reuse then pair.second else state.slots.size + 1,
+        .num value, pair.second, [some 1, none, none]) =
+      some secondPublished) :
+    ∃ plan, state.planCandidate pair
+      (a, b, .dup, .num value, (dupNumData value).toX)
+      reuse = some plan := by
+  unfold PhysicalState.planCandidate PhysicalState.planCandidateCore
+  simp [NetI64.xRule, hpair, hf, hs, hfa, hsa, hfp, hsp,
+    BytePlan.ruleSlots, BytePlan.ruleOpcode, PhysicalState.candidateBody,
+    hcap1, hcap2, hdistinct, hpub1, hpub2,
+    dupNumData, RuleData.toX, RuleData.ofWires, assoc]
+  refine ⟨_, _, ⟨?_, rfl⟩, rfl⟩
+  simpa [dupNumData, RuleData.toX, RuleData.ofWires, assoc]
+    using halias
+
+/-- The mirrored DUP emits the same two ordered symbols but takes donor
+slots in rule-slot, number-slot order. -/
+theorem PhysicalState.dup_reverse_candidate_exists
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {value : BitVec 64}
+    {reuse : Bool} {first second : PhysicalSlot}
+    {boundaryOne boundaryTwo : (Nat × Nat) × (Nat × Nat × Nat)}
+    {firstPublished secondPublished : List (Nat × Nat × Nat × Nat)}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some (.num value))
+    (hsa : second.agent.map Prod.snd = some .dup)
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0)))
+    (hcap1 : state.captureAux pair.second 1 = some boundaryOne)
+    (hcap2 : state.captureAux pair.second 2 = some boundaryTwo)
+    (hdistinct : [boundaryOne.2, boundaryTwo.2].Nodup)
+    (halias : state.consumedBoundaryAlias pair
+      (a, b, .num value, .dup, (dupNumData value).toX.swap) = false)
+    (hpub1 : state.publicationFor pair [boundaryOne, boundaryTwo]
+      (not reuse, if reuse then pair.second else state.slots.size,
+        .num value, pair.second, [some 0, none, none]) =
+      some firstPublished)
+    (hpub2 : state.publicationFor pair [boundaryOne, boundaryTwo]
+      (not reuse, if reuse then pair.first else state.slots.size + 1,
+        .num value, pair.first, [some 1, none, none]) =
+      some secondPublished) :
+    ∃ plan, state.planCandidate pair
+      (a, b, .num value, .dup, (dupNumData value).toX.swap)
+      reuse = some plan := by
+  unfold PhysicalState.planCandidate PhysicalState.planCandidateCore
+  simp [NetI64.xRule, hpair, hf, hs, hfa, hsa, hfp, hsp,
+    BytePlan.ruleSlots, BytePlan.ruleOpcode, PhysicalState.candidateBody,
+    hcap1, hcap2, hdistinct, hpub1, hpub2,
+    dupNumData, RuleData.toX, RuleData.ofWires, XRhs.swap, assoc]
+  refine ⟨_, _, ⟨?_, rfl⟩, rfl⟩
+  simpa [dupNumData, RuleData.toX, RuleData.ofWires, XRhs.swap, assoc]
+    using halias
+
 /-- Independently detected aliases are refused for any rule orientation,
 payload, physical layout, or storage mode before a result can be emitted. -/
 theorem PhysicalState.planCandidate_refuses_alias
