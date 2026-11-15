@@ -319,6 +319,12 @@ impl ProcedureRecord {
         )
     }
 
+    /// The experimental, versioned immutable-subject wire bytes used by the
+    /// identity digest. This is not a language-wide canonical encoding.
+    pub fn identity_subject_bytes(&self) -> Result<Vec<u8>, Refusal> {
+        persistence::identity_bytes(self)
+    }
+
     /// Recompute the public retrieval projection after a state-only edit. This
     /// does not alter content identity or make the edited record admissible.
     pub fn refresh_retrieval_signature(&mut self) {

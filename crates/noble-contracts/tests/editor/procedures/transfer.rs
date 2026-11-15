@@ -47,6 +47,12 @@ const HELD_OUT_TASKS: [HeldOutTask; 2] = [
         kind: TargetKind::SubtractThenCommuted,
     },
 ];
+const FROZEN_TARGET_SET: TargetSet = TargetSet {
+    tasks: HELD_OUT_TASKS,
+    inputs: HELD_OUT_INPUTS,
+    programs: [None, None],
+    references: [None, None],
+};
 const CONTROL_POOL: [SourceTask; 2] = [SourceTask::Product, SourceTask::Scaled];
 const TRANSFER_ARMS: [&str; 4] = [
     "no_library",
@@ -187,6 +193,13 @@ struct HeldOutTask {
     kind: TargetKind,
 }
 
+struct TargetSet {
+    tasks: [HeldOutTask; 2],
+    inputs: [[[i64; 3]; 3]; 4],
+    programs: [Option<String>; 2],
+    references: [Option<String>; 2],
+}
+
 #[derive(Clone, Copy)]
 struct RetainedSource {
     task: SourceTask,
@@ -215,6 +228,8 @@ struct Counts {
     heldout_examples_passed: u32,
     earlier_tasks: u32,
     regression_failed: u32,
+    proposer_attempts: u32,
+    teacher_attempts: u32,
 }
 
 struct ReportInput<'a> {
@@ -226,6 +241,7 @@ struct ReportInput<'a> {
     build_ns: u64,
     sweeps: &'a [(String, Counts)],
     control: &'a ControlSelection,
+    target_set: &'a TargetSet,
 }
 
 struct SweepInput<'a> {
@@ -236,6 +252,7 @@ struct SweepInput<'a> {
     sources: &'a [RetainedSource],
     label: &'a str,
     control: &'a ControlSelection,
+    target_set: &'a TargetSet,
 }
 
 struct TaskReport<'a> {
@@ -249,10 +266,14 @@ struct TaskReport<'a> {
 
 const TRANSFER_ROW_CAPACITY: usize = 16;
 
+#[path = "transfer/encoder/corpus.rs"]
+mod encoder_corpus;
 #[path = "transfer/fixtures.rs"]
 mod fixtures;
 #[path = "transfer/producer.rs"]
 mod producer;
+#[path = "transfer/producer/targets.rs"]
+mod producer_targets;
 #[path = "transfer/report.rs"]
 mod report;
 #[path = "transfer/runner.rs"]
@@ -261,5 +282,7 @@ mod runner;
 mod selection;
 #[path = "transfer/sweep.rs"]
 mod sweep;
+#[path = "transfer/target/reference.rs"]
+mod target_reference;
 #[path = "transfer/tests.rs"]
 mod tests;

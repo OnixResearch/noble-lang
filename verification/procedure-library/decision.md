@@ -3,7 +3,7 @@
 **Decision: accept the executed store/retrieval/composition mechanics and the narrowly
 measured frozen-fixture result; do not close the full Cairn change or claim
 incremental learning, general transfer, a teacher-attempt refusal in the
-frozen run, semantic aliasing, or implementation/model correspondence.** The remaining acceptance
+original frozen run, semantic aliasing, or universal implementation/model correspondence.** The remaining acceptance
 obligations are explicit below. The frozen criterion is
 `criteria-2026-11-13.json` (SHA-256
 `36b8efc1d7f99485f3e1764a596ce014ab24dcb62d6f029bf32456c196a4dc79`),
@@ -62,6 +62,76 @@ the callbacks record zero calls. The library identity manifest is unchanged.
 This independently checks the disabled boundary, not the earlier frozen
 measurement or its one-shot teacher-attempt clause; no held-out task was rerun.
 
+## Separate #116-produced target trial: defective criterion, not library failure
+
+The first proposed producer criterion (`criteria-producer-targets-v1.json`) and
+manifest were committed before any target generation and never run. Its
+pre-run static-source erratum asserted that the two source-order/reference
+pairs were wrong. The executed composition witness later **disproved that
+assertion**: the first source consumes the top two inputs `(y,z)`, not the
+bottom two `(x,y)`. For `[4,9,2]`, Commuted→Subtract yields `-7 = x-y-z`,
+and Subtract→Commuted yields `25 = x+y-z+14`, exactly v1's references. The
+correction is appended to `criteria-producer-targets-v1.erratum.json`; v1's
+criteria and manifest remain byte-identical, and no v1 outcome is asserted.
+
+The separately committed v2 criterion SHA-256
+`884c2e51e3101107dbf6eca241339c9770970fb54a6349e8d9be7280cd834c81`
+and manifest froze the **incorrectly swapped** reference pairing before
+generation. A clean-source producer invocation failed after target generation,
+before writing its receipt, because its pinned Bitwuzla store path had been
+collected; `criteria-producer-targets-v2.run-erratum.json` records this
+non-measurement. Exact pinned Bitwuzla, Z3 and GNU time store outputs were
+restored and verified against the prior receipt's executable SHA-256 digests.
+The authorized producer repeat from clean source `e323919` emitted
+`receipts/producer-targets-v2.json`: both three-input candidates passed
+producer-heldout examples and normal CLI re-admission, with solver answers
+and round traces retained. Solver UNSAT does not independently certify them.
+
+The first transfer invocation from clean source `b6b358c` failed before a
+scored arm because the harness still restated a stale reference formula.
+Its raw output and null-report receipt remain unchanged in
+`receipts/producer-transfer-v2-failed.{raw.log,json}`, with an adjacent
+erratum. The harness was then bound to references checked against both the
+criterion and manifest, with a regression for every fixture target; the v2
+criterion and manifest were not changed. The **final** authorized run from
+clean source `b2c0fcf` is
+`receipts/producer-transfer-v2-final.{raw.log,json}`. It completed all
+16 rows, but its learned arm passed **0/8** task cells and **0/24**
+examples. All scored arms recorded zero proposer/teacher attempts and
+callbacks, matching restart identities, zero earlier-task regressions and a
+size-matched control. The same one-shot execution attempted one proposer and
+one teacher request on a separate fresh library for each of four seeds:
+all eight attempts refused `Unsupported` before callback invocation, left
+the library identity unchanged and retained zero records.
+
+The v2 result is **NO-GO under its unchanged threshold, but is a
+defective-criterion outcome, NOT evidence against transfer by the library**:
+the accepted compositions agree with v1's reference pairing, not v2's.
+`receipts/producer-transfer-v2-disposition.json` binds the observation. The
+#116-generated held-out **transfer measurement remains NOT DONE**. Reopen
+only after committing a new frozen criterion whose target references are
+derived mechanically from the #116 producer's declared source semantics
+and actual top-of-stack composition order, never manually restated, followed
+by exactly one clean-source run. Do not rerun v2.
+
+## Finite byte-encoder correspondence, not universal refinement
+
+The kernel-checked `NobleFoundation/ProcedureLibraryWire.lean` models exactly
+two restricted source records, including length-prefixed UTF-8, big-endian
+integers, fixed chunk IDs and revisions, typed interfaces, body node tags,
+provenance options and zero library dependencies. Its three inventoried
+theorems check the two resulting byte lengths and an encoder prefix. The
+separate clean-source Lean emitter produced
+`receipts/encoder-corpus-v1.json` (SHA-256
+`3936d12dc1ee017ce6b0d10ec7ec22cee60e29868ffb9814e5b15cb772e1dd4e`);
+its verifier binds the model/emitter and Rust encoder/fixture digests.
+`transfer::encoder_corpus::finite_subject_bytes_match_lean_generated`
+reconstructs both Rust records, checks their chunk IDs and source revisions,
+then compares the full immutable-subject bytes. Both cases passed. This is a
+finite implementation/model **differential fixture**, not a universal
+correspondence theorem for arbitrary chunks, dependencies, captures, digests,
+semantic aliases or proof-demanding promotion. Those obligations remain open.
+
 ## Acceptance and remaining obligations
 
 | Item | Status | Evidence / release condition |
@@ -72,10 +142,10 @@ measurement or its one-shot teacher-attempt clause; no held-out task was rerun.
 | Positive semantic alias of distinct records with an exact #56 certificate (LPL-04) | **NOT DONE** | #56 currently supplies a verification lane, not a runtime exact-pair verifier of both actual bodies and both closures. Admission refuses alias requests. Reopen only with an exact-pair verifier callable without adding a contracts→ngraph dependency (or a higher-crate verifier trait), validating the pair and both closures before an alias edge or evidence is retained. |
 | Two-process reload equality, deterministic dependency order, mutation/encoder-drift refusals, replacement and rollback | DONE | `tests/editor/procedures/identity.rs`, `reload-negative.rs`, `generations.rs`. Two child processes compare the exact identity manifest against the parent. |
 | Frozen held-out composed-task evaluation and per-seed library growth/retrieval overhead | DONE for the **repaired fixture** | Criterion SHA-256 above; both attempts retained separately; one repaired repeat meets 8/8 and 24/24. Per-arm rows, bytes, query counts, restart, retention, regression and null break-even reasons are in `transfer-repeat.json`. This is not an incremental benefit over the frozen-hand library. |
-| Held-out task generation by #116 with producer grammar/budget/trace/verifier status, and no target leakage | PARTIAL | The **non-held-out acquisition** source references and examples are now read from `verification/synthesis/receipts/2026-11-13/synthesis-v2.json`, not fixture-authored arrays. `tests/editor/procedures/transfer/producer.rs` checks the receipt schema, grammar, budget, exact source program, reference presence, verifier status, example totals and observed/expected agreement; `transfer/tests.rs` tests typed execution and refuses mutated references/programs. The frozen composed target references and input triples remain fixture-authored and untouched; no new #116 producer run generated those targets. The harness checks no target id, composed target record or evaluator state enters the index. Reopen with a bound producer-generated target set and negative trace independent of this fixture, under a new criterion before any new measurement. |
-| No runtime teacher/proposer fallback, including an attempted-call refusal | PARTIAL | All 16 frozen-arm counts are zero; `tests/editor/procedures/metrics.rs` withdraws transfer metrics if an actual count is nonzero. The later non-held-out `retrieval::attempted_runtime_proposer_and_teacher_calls_refuse_before_invocation` test deliberately attempts both calls through the library's disabled boundary, observes both refusals, one attempt per kind and zero host callbacks. The **frozen repeat did not attempt a call**, and no later test retroactively establishes its negative-control clause or claim withdrawal for an attempted call in that run. Reopen with a separately frozen criterion for an attempted-call arm; keep the original one-shot receipt unchanged. |
-| Proof obligations O1–O6 and proof-demanding promotion | PARTIAL | `proofs/foundation/NobleFoundation/ProcedureLibrary.lean` proves abstract typed-subject identity, reload, append/dedup and rollback; Rust tests exercise O5/O6. No checked refinement from Rust bytes/hash to Lean or #56 runtime exact-pair proof exists. Do not promote under a proof-demanding policy on the strength of the model alone. |
-| Cairn validation and archive | PARTIAL | Pinned `cairn validate` passes; unchecked positive exact-pair alias, its `LPL-T07` fixture, #116 composed-target generation, the frozen-run teacher-attempt clause and Rust/Lean correspondence remain in `.cairn/changes/learned-procedure-library/tasks.md`. Keep the change active; archive only after those rows are honestly discharged. |
+| #116-generated held-out **transfer measurement**, with grammar/budget/trace/verifier status and no target leakage | **NOT DONE** | Acquisition sources remain bound to `verification/synthesis/receipts/2026-11-13/synthesis-v2.json`. V2 produced two three-input targets with retained trace, solver status and normal CLI re-admission; its final four-arm run covered every seed and isolated attempted-call refusal. But v2's source-order/reference pairing was defective and passed 0/8 for that reason; this is **not** a valid measurement of the library. V1's mapping was correct but never run. Reopen only under a new precommitted criterion deriving references mechanically from #116 source semantics and actual top-of-stack composition order, then exactly one clean-source run. |
+| No runtime teacher/proposer fallback, including an attempted-call refusal | DONE for the v2 boundary; original frozen clause NOT DONE | The original frozen repeat records zero calls but no attempted call. The independent non-held-out refusal test remains. Separately, v2's final one-shot run records all 16 scored arms with zero attempts/calls and four fresh-library negative controls with one attempted call of each kind per seed, each refused before callbacks. No scored arm inherits those attempts. This establishes the attempted-call boundary in that execution, **not** successful transfer under v2's defective criterion or the original receipt's missed clause. |
+| Proof obligations O1–O6 and proof-demanding promotion | PARTIAL | `proofs/foundation/NobleFoundation/ProcedureLibrary.lean` proves abstract typed-subject identity, reload, append/dedup and rollback; Rust tests exercise O5/O6. `NobleFoundation/ProcedureLibraryWire.lean` plus `receipts/encoder-corpus-v1.json` and the Rust differential test bind **two finite** subject encodings to kernel-checked model fixtures. No universal refinement from Rust bytes/hash to Lean or #56 runtime exact-pair proof exists. Do not promote under a proof-demanding policy on the strength of this finite corpus. |
+| Cairn validation and archive | PARTIAL | Pinned `cairn validate` passes; unchecked positive exact-pair alias, its `LPL-T07` fixture, a **valid** #116-generated composed-target measurement and universal Rust/Lean correspondence remain in `.cairn/changes/learned-procedure-library/tasks.md`. The original frozen run's missed teacher-attempt clause is not retroactively discharged; v2 independently exercised that refusal boundary. Keep the change active; archive only after the open rows are honestly discharged. |
 
 Model proof, implementation tests, producer provenance, the observed repaired
 fixture, and correspondence assumptions are separate evidence classes. The

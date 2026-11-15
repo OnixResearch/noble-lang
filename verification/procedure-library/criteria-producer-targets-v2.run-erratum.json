@@ -1,0 +1,10 @@
+{
+  "schema": "noble-procedure-library-run-erratum/1",
+  "criteria": "verification/procedure-library/criteria-producer-targets-v2.json",
+  "source_commit": "2b152fb",
+  "attempt": "first clean-source producer invocation of verification/synthesis/cegis.mjs with the v2 target manifest",
+  "failure": "ENOENT lstat /nix/store/5i2dxw5dxqx73sb235zgb904yc3jlh49-bitwuzla-0.8.2 while cegis.mjs:1165-1166 attempted to hash the declared pinned solver output",
+  "receipt": "No synthesis receipt was written. The generated scratch Lean emission was not opened or used, and no target candidates, search traces or held-out outcomes were inspected.",
+  "instrument_status": "Infrastructure failure: the exact solver store output used by the prior #116 lane had been garbage-collected. This attempt is not a measurement of the procedure library, and cannot receive a GO/NO-GO from absent output.",
+  "authorized_repeat": "Restore the exact pinned solver store path and verify its identity; a single clean-source repeat under the unchanged v2 criterion and manifest is authorized. No additional repeats or target substitutions."
+}

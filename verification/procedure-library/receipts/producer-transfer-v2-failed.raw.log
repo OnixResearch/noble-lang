@@ -1,0 +1,15 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.07s
+     Running tests/editor.rs (/home/brittonr/.cache/noble-iss/target/procedures-118b/debug/deps/editor-7d71197fe9877370)
+
+running 1 test
+Error: "arithComposeShifted generated candidate disagrees with declared reference at [4, 9, 2]"
+test procedures::transfer::tests::producer_generated_heldout_measurement_once ... FAILED
+
+failures:
+
+failures:
+    procedures::transfer::tests::producer_generated_heldout_measurement_once
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 73 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p noble-contracts --test editor`

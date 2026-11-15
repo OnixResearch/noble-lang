@@ -105,6 +105,7 @@ pub(super) fn evaluate(input: SweepInput<'_>) -> Result<(String, Counts), String
         sources,
         label,
         control,
+        target_set,
     } = input;
     let mut output = format!(
         "{{\"sweep\":\"{label}\",\"generation\":{},\"records\":{},\"tasks\":[",
@@ -122,14 +123,21 @@ pub(super) fn evaluate(input: SweepInput<'_>) -> Result<(String, Counts), String
         limits: super::limits(),
     };
     let empty_cases = Vec::new();
-    for (task_index, task) in HELD_OUT_TASKS.iter().copied().enumerate() {
+    for (task_index, task) in target_set.tasks.iter().copied().enumerate() {
         if task_index != 0 {
             output.push(',');
         }
         let order = super::fixtures::target_order(task, arm, control);
         let retrieved_steps = retrieve_source_steps(library, &mut budget, &mut counts)?;
         counts.heldout_tasks = counts.heldout_tasks.saturating_add(1);
-        let (fixtures, references) = super::fixtures::heldout_cases(task, seed_index);
+        let (fixtures, references) = super::fixtures::heldout_cases(
+            task,
+            super::fixtures::CaseIndex {
+                task: task_index,
+                seed: seed_index,
+            },
+            target_set,
+        )?;
         let reference_count = u32::try_from(references.len())
             .map_err(|_| String::from("held-out fixture count exceeds the metrics domain"))?;
         counts.heldout_examples = counts.heldout_examples.saturating_add(reference_count);
@@ -186,6 +194,8 @@ pub(super) fn evaluate(input: SweepInput<'_>) -> Result<(String, Counts), String
         super::fixtures::earlier_regression(namespace, library, sources)?;
     counts.earlier_tasks = earlier_tasks;
     counts.regression_failed = regression_failed;
+    counts.proposer_attempts = budget.proposer_attempts();
+    counts.teacher_attempts = budget.teacher_attempts();
     output.push_str(&format!(
         "],\"earlier_tasks\":{earlier_tasks},\"regression_failed\":{regression_failed}}}"
     ));

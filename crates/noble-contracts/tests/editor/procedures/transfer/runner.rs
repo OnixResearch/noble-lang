@@ -4,6 +4,7 @@ pub(super) fn run_arm_seed(
     arm: &str,
     seed_index: usize,
     control: &ControlSelection,
+    target_set: &TargetSet,
 ) -> Result<(String, ArmMetrics, bool), String> {
     let namespace = Session::without_test_hosts();
     let mut library = ProcedureLibrary::new(super::revision(7));
@@ -20,6 +21,7 @@ pub(super) fn run_arm_seed(
                 sources: &sources,
                 label: "empty",
                 control,
+                target_set,
             })?);
         }
         "frozen_hand_library" => {
@@ -48,6 +50,7 @@ pub(super) fn run_arm_seed(
                 sources: &sources,
                 label: "final",
                 control,
+                target_set,
             })?);
         }
         "accumulated_learned_library" => {
@@ -59,6 +62,7 @@ pub(super) fn run_arm_seed(
                 sources: &sources,
                 label: "zero",
                 control,
+                target_set,
             })?);
             sources.push(super::producer::admit_source(
                 &mut library,
@@ -75,6 +79,7 @@ pub(super) fn run_arm_seed(
                 sources: &sources,
                 label: "one",
                 control,
+                target_set,
             })?);
             sources.push(super::producer::admit_source(
                 &mut library,
@@ -91,6 +96,7 @@ pub(super) fn run_arm_seed(
                 sources: &sources,
                 label: "two",
                 control,
+                target_set,
             })?);
         }
         "size_matched_nontransfer" => {
@@ -102,6 +108,7 @@ pub(super) fn run_arm_seed(
                 sources: &sources,
                 label: "zero",
                 control,
+                target_set,
             })?);
             for task in control.tasks {
                 sources.push(super::producer::admit_source(
@@ -120,6 +127,7 @@ pub(super) fn run_arm_seed(
                     sources: &sources,
                     label,
                     control,
+                    target_set,
                 })?);
             }
         }
@@ -134,5 +142,6 @@ pub(super) fn run_arm_seed(
         build_ns,
         sweeps: &sweeps,
         control,
+        target_set,
     })
 }

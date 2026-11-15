@@ -1,0 +1,34 @@
+# Frozen #118 producer-target declaration for a second held-out transfer run.
+# This is an input specification, not a synthesis outcome or a transfer result.
+# The #116 CEGIS lane must search and re-admit the two three-input programs
+# under these exact bounds; its generated bodies must never enter the library.
+
+grammar synth-i64/0
+grammar-list synth-list/0
+seed 0x9e3779b97f4a7c15
+consts 0 1 2 3 5 7
+list-consts 1 2 3
+size 8
+max-stack 4
+max-candidates 400000
+max-rounds 4
+solver-ms 10000
+list-max-stack 4
+
+task arithComposeDifference arithmetic i64 inputs=3 bound=8
+  ref (- (- x y) z)
+  train 0 0 0 = 0
+  train 5 -5 7 = 3
+  train 1 2 3 = -4
+  heldout 7 4 -2 = 5
+  heldout -2 -3 5 = -4
+  heldout 3 9 -8 = 2
+
+task arithComposeShifted arithmetic i64 inputs=3 bound=8
+  ref (+ (- (+ x y) z) (+ 7 7))
+  train 0 0 0 = 14
+  train 5 -5 7 = 7
+  train 1 2 3 = 14
+  heldout 7 4 -2 = 27
+  heldout -2 -3 5 = 4
+  heldout 3 9 -8 = 34
