@@ -119,6 +119,21 @@ let Pin = { rev | String, narHash | String } in
       role = "recurrent-weights-stock-cpu-inference-runtime",
     },
   },
+  # Experimental issue #127 verifier; this is not a selected Nix tool or a
+  # production/Lean gate. The MM0 replay adapter verifies the archived source
+  # digest and the built binary before any experimental certificate is accepted.
+  experimental_mm0 = {
+    source_url = "https://github.com/digama0/mm0.git",
+    source_rev = "0d414c0bfdaaeb7fea571895127abc1fa5a3d956",
+    git_archive_sha256 = "741ee2b6e13eb189dcf75dead7dbbfc6f818e33800ea781bda99926b1dcf01db",
+    checker_source = "mm0-c/main.c",
+    checker_build = "gcc -O2 mm0-c/main.c -o mm0-c",
+    checker_flags = ["-O2"],
+    parser_enabled = true,
+    producer_source = "mm0-rs/Cargo.toml",
+    producer_build = "cargo build --locked --manifest-path mm0-rs/Cargo.toml --bin mm0-rs",
+    role = "opt-in-experimental-graph-certificate-only",
+  },
   owned_wasm_runtime = {
     assets | Array String = [
       "crates/noble-wasm/runtime/accounting.wat",

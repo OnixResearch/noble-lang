@@ -96,6 +96,20 @@
       "safety-observe"
     ]
   },
+  "experimental_mm0": {
+    "checker_build": "gcc -O2 mm0-c/main.c -o mm0-c",
+    "checker_flags": [
+      "-O2"
+    ],
+    "checker_source": "mm0-c/main.c",
+    "git_archive_sha256": "741ee2b6e13eb189dcf75dead7dbbfc6f818e33800ea781bda99926b1dcf01db",
+    "parser_enabled": true,
+    "producer_build": "cargo build --locked --manifest-path mm0-rs/Cargo.toml --bin mm0-rs",
+    "producer_source": "mm0-rs/Cargo.toml",
+    "role": "opt-in-experimental-graph-certificate-only",
+    "source_rev": "0d414c0bfdaaeb7fea571895127abc1fa5a3d956",
+    "source_url": "https://github.com/digama0/mm0.git"
+  },
   "file_sha256": {
     ".pre-commit-config.yaml": "548cb1a1e56a47c8154dd20e58256033f4fa4d6f94fc20445ff5af45f9c1bdf4",
     "Cargo.lock": "582a7c91d10c3a6cbdaec2968b61e878821acc9781dfb84d53df096a778a862c",

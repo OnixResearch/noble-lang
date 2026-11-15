@@ -1,0 +1,11 @@
+ngraph-ir/0 ngraph-i64/0
+subject authored 9551e321f433f40d000000000000000000000000000000000000000000000000 closure -
+slot input i64
+%0 = input 0
+%1 = const i64 3
+%2 = const i64 5
+%3 = const i64 8
+%4 = i64.mul %0 %3
+out %1
+out %2
+out %4

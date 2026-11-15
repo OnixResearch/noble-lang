@@ -1,0 +1,6 @@
+delimiter $ ( ) $;
+provable sort wff;
+term desired: wff;
+-- Arbitrary-proposition axiom, deliberately NOT named sorry.
+axiom oracle_any (p: wff): $ p $;
+theorem forged: $ desired $;

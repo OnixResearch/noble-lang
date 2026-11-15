@@ -1,0 +1,23 @@
+import "peano_hex.mm0";
+
+-- The modular model is separate from the untrusted proof producer. The
+-- positional hexadecimal numeral below is exactly 2^64 in the Peano theory.
+def modulus: nat = $ x1 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 $;
+def uadd (a b: nat): nat = $ (a + b) % modulus $;
+def umul (a b: nat): nat = $ (a * b) % modulus $;
+def wmax: nat = $ x7 :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf $;
+def wmin: nat = $ x8 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 $;
+-- Scalar facts are lemmas; neither is an axiom or the final conclusion.
+theorem fold_small: $ 3 + 5 = 8 $;
+theorem fold_boundary: $ (x7 :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf) + 1 =
+  (x8 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0) $;
+theorem ufold_small: $ uadd 3 5 = 8 $;
+theorem ufold_boundary: $ uadd wmax 1 = wmin $;
+-- One symbolic input slot and ALL three ordered outputs, including both
+-- constants also shared with the folded node. The symbols describe the
+-- denotation of the exact retained graph topology; graph-to-term projection
+-- is checked by the adapter, not proved by this MM0 theorem.
+theorem endpoint_small (a: nat):
+  $ 3 : 5 : umul a (uadd 3 5) : 0 = 3 : 5 : umul a 8 : 0 $;
+theorem endpoint_boundary (a: nat):
+  $ wmax : 1 : umul a (uadd wmax 1) : 0 = wmax : 1 : umul a wmin : 0 $;
