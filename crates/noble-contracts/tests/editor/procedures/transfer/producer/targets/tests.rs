@@ -14,8 +14,7 @@ fn nonheldout_three_input_stack_evaluator_has_refusals() -> Result<(), String> {
 #[test]
 fn derived_criterion_matches_source_programs_on_nonheldout_inputs() -> Result<(), String> {
     let criterion = read_json("verification/procedure-library/criteria-producer-targets-v3.json")?;
-    let acquisition =
-        read_json("verification/synthesis/receipts/2026-11-13/synthesis-v2.json")?;
+    let acquisition = read_json("verification/synthesis/receipts/2026-11-13/synthesis-v2.json")?;
     let source_tasks = acquisition["tasks"]
         .as_array()
         .ok_or_else(|| String::from("source producer has no task array"))?;

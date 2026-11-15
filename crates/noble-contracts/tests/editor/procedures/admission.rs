@@ -276,4 +276,3 @@ fn an_alias_digest_cannot_replace_a_verified_exact_pair_certificate() -> Result<
     assert!(library.records().is_empty());
     Ok(())
 }
-

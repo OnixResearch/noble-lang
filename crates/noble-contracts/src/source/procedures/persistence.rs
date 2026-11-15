@@ -1409,14 +1409,12 @@ fn read_alias(reader: &mut Reader<'_>) -> Result<Option<Alias>, Refusal> {
         }),
         2 => Some(Alias {
             procedure_id: reader.raw("alias.procedure_id")?,
-            certificate: Certificate::ExactPair(alloc::boxed::Box::new(
-                ExactPairCertificate {
-                    left_closure: reader.raw("alias.left_closure")?,
-                    right_closure: reader.raw("alias.right_closure")?,
-                    left: read_alias_form(reader)?,
-                    right: read_alias_form(reader)?,
-                },
-            )),
+            certificate: Certificate::ExactPair(alloc::boxed::Box::new(ExactPairCertificate {
+                left_closure: reader.raw("alias.left_closure")?,
+                right_closure: reader.raw("alias.right_closure")?,
+                left: read_alias_form(reader)?,
+                right: read_alias_form(reader)?,
+            })),
         }),
         _ => {
             return Err(Refusal::new(

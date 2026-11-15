@@ -72,11 +72,15 @@ fn equal_polynomial_distinct_bodies_survive_reload() -> Result<(), String> {
     library
         .admit(&namespace, None, candidate.clone())
         .map_err(|error| format!("alias: {error:?}"))?;
-    let encoded = library.encode().map_err(|error| format!("encode: {error:?}"))?;
+    let encoded = library
+        .encode()
+        .map_err(|error| format!("encode: {error:?}"))?;
     let loaded = ProcedureLibrary::load(&encoded, &namespace)
         .map_err(|error| format!("reload: {error:?}"))?;
     assert_eq!(
-        loaded.encode().map_err(|error| format!("re-encode: {error:?}"))?,
+        loaded
+            .encode()
+            .map_err(|error| format!("re-encode: {error:?}"))?,
         encoded
     );
     assert!(loaded.records().iter().any(|record| record == &candidate));
@@ -191,13 +195,13 @@ fn unequal_polynomials_and_unsupported_bodies_are_refused() -> Result<(), String
     assert_eq!(refusal.kind, RefusalKind::Invalid);
     assert_eq!(refusal.location.field, "alias_of");
 
-    let mut boolean = literal_record(50, Producer::Chunk)
-        .map_err(|error| format!("literal: {error:?}"))?;
+    let mut boolean =
+        literal_record(50, Producer::Chunk).map_err(|error| format!("literal: {error:?}"))?;
     boolean.chunk.body.nodes.push(Node::Bool(true));
     boolean.chunk.body.entry.push(1);
     boolean.chunk.interface.stack_out.push(Ty::Bool);
-    let refused = Alias::certify(&boolean, &target)
-        .expect_err("Boolean body is outside the alias fragment");
+    let refused =
+        Alias::certify(&boolean, &target).expect_err("Boolean body is outside the alias fragment");
     assert_eq!(refused.kind, RefusalKind::Unsupported);
 
     let mut dependent = polynomial_record(&[5])?;

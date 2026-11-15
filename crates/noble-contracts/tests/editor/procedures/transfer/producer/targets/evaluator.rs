@@ -73,7 +73,9 @@ pub(crate) fn evaluate_composed(programs: [&str; 2], inputs: [i64; 3]) -> Result
     stack.extend_from_slice(&inputs);
     let stack = execute_words(programs[0], stack)?;
     if stack.len() != 2 {
-        return Err(String::from("first source does not leave a composable stack"));
+        return Err(String::from(
+            "first source does not leave a composable stack",
+        ));
     }
     let stack = execute_words(programs[1], stack)?;
     match stack.as_slice() {

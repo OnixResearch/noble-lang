@@ -7,8 +7,8 @@ fn pair_fixture() -> Result<(Session, ProcedureLibrary, ProcedureRecord, Alias),
     let namespace = Session::without_test_hosts();
     let target = polynomial_record(&[5])?;
     let candidate = polynomial_record(&[2, 3])?;
-    let alias = Alias::certify(&candidate, &target)
-        .map_err(|error| format!("certificate: {error:?}"))?;
+    let alias =
+        Alias::certify(&candidate, &target).map_err(|error| format!("certificate: {error:?}"))?;
     let mut library = ProcedureLibrary::new(revision(7));
     library
         .admit(&namespace, None, target)
@@ -111,7 +111,9 @@ fn tampered_wire_is_refused_on_reload() -> Result<(), String> {
     library
         .admit(&namespace, None, candidate)
         .map_err(|error| format!("good alias: {error:?}"))?;
-    let mut bytes = library.encode().map_err(|error| format!("encode: {error:?}"))?;
+    let mut bytes = library
+        .encode()
+        .map_err(|error| format!("encode: {error:?}"))?;
     let alias = library
         .records()
         .iter()

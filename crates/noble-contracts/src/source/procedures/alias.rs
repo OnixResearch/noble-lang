@@ -61,10 +61,16 @@ fn refused(kind: RefusalKind, message: &'static str) -> Refusal {
 
 fn charge(work: &mut u32, amount: usize) -> Result<(), Refusal> {
     let amount = u32::try_from(amount).map_err(|_| {
-        refused(RefusalKind::Exhausted, "alias polynomial work count exceeds its domain")
+        refused(
+            RefusalKind::Exhausted,
+            "alias polynomial work count exceeds its domain",
+        )
     })?;
     *work = work.checked_add(amount).ok_or_else(|| {
-        refused(RefusalKind::Exhausted, "alias polynomial work count overflow")
+        refused(
+            RefusalKind::Exhausted,
+            "alias polynomial work count overflow",
+        )
     })?;
     if *work > MAX_ALIAS_WORK {
         return Err(refused(
@@ -163,7 +169,10 @@ impl Polynomial {
                         ));
                     }
                     *exponent = u8::try_from(next).map_err(|_| {
-                        refused(RefusalKind::Exhausted, "alias exponent overflows the wire domain")
+                        refused(
+                            RefusalKind::Exhausted,
+                            "alias exponent overflows the wire domain",
+                        )
                     })?;
                 }
                 result.insert(
@@ -191,12 +200,9 @@ impl PolynomialStack {
     }
 
     fn pop(&mut self) -> Result<Polynomial, Refusal> {
-        self.values.pop().ok_or_else(|| {
-            refused(
-                RefusalKind::Unsupported,
-                "alias symbolic stack underflow",
-            )
-        })
+        self.values
+            .pop()
+            .ok_or_else(|| refused(RefusalKind::Unsupported, "alias symbolic stack underflow"))
     }
 
     fn push(&mut self, value: Polynomial) -> Result<(), Refusal> {
@@ -294,16 +300,25 @@ fn normalize_node(
     debug_assert!(stack.values.len() <= 32);
     charge(work, 1)?;
     let node_index = usize::try_from(index).map_err(|_| {
-        refused(RefusalKind::Unsupported, "alias node index exceeds the host domain")
+        refused(
+            RefusalKind::Unsupported,
+            "alias node index exceeds the host domain",
+        )
     })?;
     let node = chunk.body.nodes.get(node_index).ok_or_else(|| {
-        refused(RefusalKind::Unsupported, "alias references a missing recipe node")
+        refused(
+            RefusalKind::Unsupported,
+            "alias references a missing recipe node",
+        )
     })?;
     match node {
         chunks::Node::I64(value) => stack.push(Polynomial::constant(*value as u64)),
         chunks::Node::Capture { index } => {
             let capture = chunk.captures.get(usize::from(*index)).ok_or_else(|| {
-                refused(RefusalKind::Unsupported, "alias references a missing capture")
+                refused(
+                    RefusalKind::Unsupported,
+                    "alias references a missing capture",
+                )
             })?;
             let chunks::Scalar::I64(value) = capture.value else {
                 return Err(refused(RefusalKind::Unsupported, "Boolean alias capture"));
@@ -311,7 +326,11 @@ fn normalize_node(
             stack.push(Polynomial::constant(value as u64))
         }
         chunks::Node::Operation { op, instantiation } => {
-            if chunk.instantiations.get(usize::from(*instantiation)).is_none() {
+            if chunk
+                .instantiations
+                .get(usize::from(*instantiation))
+                .is_none()
+            {
                 return Err(refused(
                     RefusalKind::Unsupported,
                     "alias references a missing instantiation witness",
@@ -356,7 +375,8 @@ impl Alias {
     pub fn certify(left: &ProcedureRecord, right: &ProcedureRecord) -> Result<Self, Refusal> {
         let left_form = normalize(left)?;
         let right_form = normalize(right)?;
-        if left.procedure_id == right.procedure_id || left.chunk.interface != right.chunk.interface {
+        if left.procedure_id == right.procedure_id || left.chunk.interface != right.chunk.interface
+        {
             return Err(refused(
                 RefusalKind::Invalid,
                 "alias requires distinct subjects with the same exact stack interface",
@@ -461,7 +481,9 @@ fn verify_pair(
     target: &ProcedureRecord,
     certificate: &ExactPairCertificate,
 ) -> Result<(), Refusal> {
-    if record.procedure_id == target.procedure_id || record.chunk.interface != target.chunk.interface {
+    if record.procedure_id == target.procedure_id
+        || record.chunk.interface != target.chunk.interface
+    {
         return Err(refused(
             RefusalKind::Invalid,
             "alias pair has unequal identities or stack interfaces",

@@ -24,8 +24,8 @@ mod persistence;
 mod retrieval;
 
 pub use alias::{
-    Certificate, ExactPairCertificate, Monomial, Polynomial, MAX_ALIAS_INPUTS,
-    MAX_ALIAS_OUTPUTS, MAX_ALIAS_TERMS,
+    Certificate, ExactPairCertificate, Monomial, Polynomial, MAX_ALIAS_INPUTS, MAX_ALIAS_OUTPUTS,
+    MAX_ALIAS_TERMS,
 };
 pub use composition::{BoundOperand, CertifiedComposedProgram, ComposeContext, ComposedProgram};
 pub use persistence::{ArmMetrics, Metrics};
@@ -1271,10 +1271,22 @@ impl ProcedureLibrary {
         }
         if let Some(alias) = &record.alias_of {
             if alias.procedure_id == record.procedure_id {
-                return Err(Refusal::new(RefusalKind::Invalid, Diagnostic { field: "alias_of", message: "alias requires a distinct exact-pair identity" }));
+                return Err(Refusal::new(
+                    RefusalKind::Invalid,
+                    Diagnostic {
+                        field: "alias_of",
+                        message: "alias requires a distinct exact-pair identity",
+                    },
+                ));
             }
             if matches!(&alias.certificate, Certificate::LegacyDigest(_)) {
-                return Err(Refusal::new(RefusalKind::Unsupported, Diagnostic { field: "alias_of", message: "a digest alone is not a verified exact-pair certificate" }));
+                return Err(Refusal::new(
+                    RefusalKind::Unsupported,
+                    Diagnostic {
+                        field: "alias_of",
+                        message: "a digest alone is not a verified exact-pair certificate",
+                    },
+                ));
             }
         }
         Ok(())
