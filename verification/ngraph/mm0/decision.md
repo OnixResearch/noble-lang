@@ -62,7 +62,15 @@ equivalence is an axiom. The proof producer took **344.8 ms** wall
 8–10 ms each on this run. The focused warm Rust graph-admission and
 certificate-replay test took 0.12 seconds and 37,892 KiB peak RSS **for the
 whole Cargo command**, so these differently scoped process measurements
-do not establish a matched-budget performance advantage.
+do not establish a matched-budget performance advantage. The unchanged
+whole-tree Lean m3/foundation build and axiom/inventory audit passed all
+four stages (`m3-build`, `m3-gate`, `foundation-build`,
+`foundation-check`, each exit 0); the external timing of that **whole**
+script was 301.55 seconds and 4,133,296 KiB maximum RSS, including
+global build-slot waiting and thousands of unrelated declarations. It
+is **not** a per-fixture comparator. The existing model-level
+`accepted_fold_step_denotes` and `accepted_endpoint_equivalence`
+theorems are preserved, not replaced or derived from MM0.
 
 The MM0 model encodes an I64 value as a Peano natural modulo $2^{64}$,
 reads the high bit as a negative Rust I64 solely in the independent consumer,
