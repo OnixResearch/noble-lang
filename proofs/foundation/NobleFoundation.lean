@@ -47,6 +47,9 @@ import NobleFoundation.NetI64PlanShape
 import NobleFoundation.NetI64PlanRewrite
 import NobleFoundation.NetI64PlanRewriteOwners
 import NobleFoundation.NetI64PlanRewriteQueue
+import NobleFoundation.NetI64PlanRewriteMaps
+import NobleFoundation.NetI64PlanAdmit
+import NobleFoundation.NetI64PlanInstance
 import NobleFoundation.BeltTarget
 import NobleFoundation.BeltTargetCorpus
 import NobleFoundation.GraphRewrite

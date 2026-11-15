@@ -14768,6 +14768,126 @@
       "phase": 1,
       "role": "representation",
       "claim": "the projected physical queue permutes the abstract live pending pairs"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.liveIds_nodup",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the executed arena keeps one live slot per logical identity"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.keysSeparated",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the executed arena's projected key spaces remain separated"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.agents_eq",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every projected agent lookup equals the abstract commit's lookup"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.wires_eq",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every projected wire lookup equals the abstract commit's lookup"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.outputs_field",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every output's current target resolves to the abstract wire of its label"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.semanticCheck_of_local_rewrite",
+      "phase": 1,
+      "role": "representation",
+      "claim": "admission from a local rewrite"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.resultTarget_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a result port naming a captured peer or output resolves to that boundary's physical reference"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.publicationFor_quiet",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a result whose principal port reads an output or a nonprincipal peer port publishes no pair"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.publicationFor_fresh_active",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a fresh result whose principal port reads a live peer's principal port publishes exactly the canonical tuple at generation zero"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.publicationFor_reuse_active",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a reused result whose principal port reads a live peer's principal port publishes exactly the canonical tuple at the reused slot's next generation"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.capture_edge",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one non-aliased auxiliary port of a legal live rule slot yields a captured edge: its physical endpoint is a reciprocal live peer outside the consumed pair or its unique output, and the prestate projection wires the rule port to that endpoint's logical port or stable label"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.captured_targets_distinct",
+      "phase": 1,
+      "role": "representation",
+      "claim": "captured edges leaving two different ports of the same rule slot have different physical endpoints"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.install_one_result",
+      "phase": 1,
+      "role": "representation",
+      "claim": "installing the single result of an OP1/OP2 image, donated by a live rule slot with headroom, either rewrites that slot at the next generation (reuse) or appends it at generation zero (fresh)"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.logicalBoundary_eq_mapM",
+      "phase": 1,
+      "role": "representation",
+      "claim": "bytePlan.logicalBoundary decodes entry by entry"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.logicalBoundary_entry",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a captured boundary decodes against the prestate to the rule agent's logical port and the captured endpoint's logical port or stable label"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_admitted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "emitted OP2 admission, for either orientation and storage policy: an actually lowered OP2 image of a legal, current, matched arena that is not excluded by queue capacity executes and passes the independent semantic checker at its exact reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_no_alias",
+      "phase": 1,
+      "role": "representation",
+      "claim": "an actually emitted image is not refused by the consumed-boundary alias"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_slot_headroom",
+      "phase": 1,
+      "role": "representation",
+      "claim": "an actually emitted image has generation headroom at both consumed slots"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.captured_endpoint_away",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a captured endpoint never names either consumed agent: a peer endpoint is a live identity outside the consumed slots and an output label is not live"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.publicationFor_defined",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the single result's publication of a one-result image is always defined when its principal port reads a captured endpoint: quiet for outputs and nonprincipal peers, one canonical tuple for a live peer's principal port"
     }
   ],
   "private_theorems": [
@@ -15078,6 +15198,57 @@
     "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_orientations",
     "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_published",
     "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_edge_published",
-    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_new"
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_new",
+    "NobleFoundation.NetI64Plans.index_eq_of_nodup",
+    "NobleFoundation.NetI64Plans.nodup_of_index_eq",
+    "NobleFoundation.NetI64Plans.index_eq_of_nodup_map",
+    "NobleFoundation.NetI64Plans.filterMap_nodup",
+    "NobleFoundation.NetI64Plans.liveIds_nodup_of",
+    "NobleFoundation.NetI64Plans.triple_eq",
+    "NobleFoundation.NetI64Plans.assoc_some",
+    "NobleFoundation.NetI64Plans.assoc_none",
+    "NobleFoundation.NetI64Plans.port_above_arity",
+    "NobleFoundation.NetI64Plans.reciprocal_ref",
+    "NobleFoundation.NetI64Plans.state_target_empty",
+    "NobleFoundation.NetI64Plans.logicalPort_congr",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.stateRecip",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.rule_live",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.value_live",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.consumed_iff",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.edge_resultId",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.result_slot_ne",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.edge_of_port",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.edge_peer",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.edge_output",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.edge_port",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.endpoint_ne_result",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.endpoint_target",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.untouched_output",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.ref_into_pair",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.next_live",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.mem_next_liveIds",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.next_labels",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.next_label_mem",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.next_output",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.next_output_result",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.next_output_old",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.next_logicalPort_result",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.next_logicalPort_old",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.next_logicalPort_edge",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.writes_nodup",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.not_forward",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.unwritten",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.commit_forward",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.commit_backward",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.commit_unwritten_captured",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.commit_unwritten_none",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.commit_unwritten_plain",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.state_wires_above",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.wires_result",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.wires_edge_endpoint",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.wires_consumed",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.wires_label_free",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.wires_old",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.wires_dead"
   ]
 }
