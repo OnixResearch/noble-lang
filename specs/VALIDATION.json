@@ -15,8 +15,8 @@
     "node_api": "24.13.0"
   },
   "documents": 15,
-  "requirements": 596,
-  "scenarios": 256,
+  "requirements": 604,
+  "scenarios": 274,
   "scenarios_executed": 176,
   "open_test_design": 226,
   "proof_obligations": 30,
@@ -1077,7 +1077,7 @@
     },
     {
       "file": ".cairn/changes/learned-procedure-library/tasks.md",
-      "sha256": "8be3af32a7deef53f66679fb0f3a87de474a697291efd608a77f9b696a93730e"
+      "sha256": "655f9498b0bf0f85ce7df4e12cc68f56e0ea519e639cae7d947a7bdc295f0fa1"
     },
     {
       "file": ".cairn/changes/live-reference-lifetimes/design.md",
@@ -1221,7 +1221,7 @@
     },
     {
       "file": ".cairn/changes/partial-evaluation-v1/design.md",
-      "sha256": "fa0db6aaee90b425906fec546748905c8a5f64f6a821ff3c37accff38885f544"
+      "sha256": "d9432b0967db4aa6a1edf0f8547bb491ea53c85c4eddcd6293d61c3f02cc334a"
     },
     {
       "file": ".cairn/changes/partial-evaluation-v1/proposal.md",
@@ -1229,11 +1229,11 @@
     },
     {
       "file": ".cairn/changes/partial-evaluation-v1/specs/developer-experience/spec.md",
-      "sha256": "9edeb500abc8a0d621ef19cbbc63af8519f802728754d9dbba35da3bf982bcc9"
+      "sha256": "853b45353c17408cb48142d617e3a465f5e2a8b8c4e74a5a48c9dc2dd3d01693"
     },
     {
       "file": ".cairn/changes/partial-evaluation-v1/tasks.md",
-      "sha256": "d447974127dad52aa3f3e4f14b2a86e2acdbecebe3efb8c3f4ca01be7c9ae4c7"
+      "sha256": "aaef30ba881e085328315c687984e839d43d5a3e24fa85fc2fc078fd9b400d26"
     },
     {
       "file": ".cairn/changes/proof-automation-diagnostics/design.md",
@@ -1449,7 +1449,7 @@
     },
     {
       "file": ".cairn/specs/developer-experience/spec.md",
-      "sha256": "3059105575189369fad8e11e1175147feb0697daed7ecbf3a9169a0fb4b4a29a"
+      "sha256": "39f5e6f3184809bb5452ae162d50315a02685af88346a59c04592fc087fc1e7e"
     },
     {
       "file": ".cairn/specs/erlang-abstract-backend/spec.md",
@@ -1517,7 +1517,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "0dd84f53235a2875fe766fec2c51a4552e548c2e730fdb9f4860a5e9f0feee86"
+      "sha256": "e27743716562036fc7c6495a0bc395b50afb054e1eef150635fa95b738265c50"
     },
     {
       "file": "proofs/inets/README.md",
@@ -1600,6 +1600,10 @@
       "sha256": "7bf1910c9ede4bd90c9068524a871f0edffb43a31cc579ca3b2671d8af66037b"
     },
     {
+      "file": "specs/conformance/numeric-graph-pe-cases.json",
+      "sha256": "42a743f5ca4e3cf4db9cd629568bb6574e0c05781ccea5213df89986cef490d7"
+    },
+    {
       "file": "specs/conformance/octet-adoption-cases.json",
       "sha256": "aecb5abd22516925a36f99c0c7b9afda66b686f485f0bdde99bfa5472c4c1203"
     },
@@ -1641,7 +1645,7 @@
     },
     {
       "file": "specs/DEVELOPER-EXPERIENCE.md",
-      "sha256": "f816795a2a98bda0e26528652c25e7cad86b2d74c0f84e96f85d201ececb8a14"
+      "sha256": "f3df75b117263c8eddacfd33262c6f3c259ec4de7d6263a86d9d5170787245ce"
     },
     {
       "file": "specs/ERLANG-ABSTRACT-BACKEND.md",
@@ -1665,7 +1669,7 @@
     },
     {
       "file": "specs/requirements.json",
-      "sha256": "a362285969e3d05ef7c835bf06ffc158af9e85731a02f2275daf2b8a10fc8f05"
+      "sha256": "1165bb62d217a1930b4d6b131ee30f2dd6bf78e5afa24c7c468d891c5e9662da"
     },
     {
       "file": "specs/RESOURCE-ADAPTERS.md",
@@ -1697,7 +1701,7 @@
     },
     {
       "file": "specs/spec-family.json",
-      "sha256": "65462e922541126c9b5458719efe7d6aad7fdfe2d2bae8edb9507a7f9315d029"
+      "sha256": "a6c081003cc07ac44598c88170b6630affe7a931dc507f566c08f21e9d32da59"
     },
     {
       "file": "specs/STATUS.json",
@@ -1901,11 +1905,11 @@
     },
     {
       "file": "verification/independent-replay/decision.md",
-      "sha256": "5d6a39d416d229ab0e337140574b98c6ec6652138c3244f1bdad5a04d4009815"
+      "sha256": "38ba1c4fb0cee11461f5eb2f061b40009cd4b085290d414e18d6df6678f395fc"
     },
     {
       "file": "verification/independent-replay/README.md",
-      "sha256": "26520074917666342448ca6581c519cb81bcc2b1b707a724d686d83ee8119d4a"
+      "sha256": "4aff6722cc2c6254e2ebb66790b3cb583db36cbc1a4d528dc222d45fb3ff7592"
     },
     {
       "file": "verification/interpreter-specialization/criteria.md",
@@ -2053,7 +2057,7 @@
     },
     {
       "file": "verification/net-plans/decision.md",
-      "sha256": "b979a25cc58f495d6d58da206a880b0d8acdc8bb3a1cf70546f7aa08be392653"
+      "sha256": "4ff5d1a8946daf2fd07cbc5bbdfb96b3851df05e3f6d9ee57fc22fb8c23f4541"
     },
     {
       "file": "verification/ngraph-bytes-issue-31/README.md",
@@ -2153,7 +2157,7 @@
     },
     {
       "file": "verification/procedure-library/decision.md",
-      "sha256": "705b52dedd971b318790cefa229f81ac8f2dcf78f7cadc64d4b157e233939237"
+      "sha256": "aa5ae2b7b32e771dae4f4cd06eab46547df05784311fc3ea6ad4403f65fad26f"
     },
     {
       "file": "verification/program-inspection/README.md",
@@ -2165,11 +2169,11 @@
     },
     {
       "file": "verification/recurrent-weights/decision.md",
-      "sha256": "fbb3778026998cd64d2ec80d8896f55f4949fceb74752fc26ad65ad1205ad81e"
+      "sha256": "92acdc114ca20e92e036aac3699c871b0ab7489dccf77de2e67c53068b67c351"
     },
     {
       "file": "verification/recurrent-weights/design.md",
-      "sha256": "e49b1f42c50df48d9dd3c4da7805d54045c497c5275ee1992af94d2e237db97c"
+      "sha256": "1eae87987a9cb4229b2467ce9b3ae0cfbd1a1286e8382d7478dc105a972a60b1"
     },
     {
       "file": "verification/refinement-links/README.md",
