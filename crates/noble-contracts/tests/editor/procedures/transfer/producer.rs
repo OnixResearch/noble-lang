@@ -1,20 +1,25 @@
 use super::*;
 use std::sync::OnceLock;
 
-pub(super) const SYNTHESIS_RECEIPT: &str = include_str!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/../../verification/synthesis/receipts/2026-11-13/synthesis-v2.json"
-));
-
 static SOURCE_RECEIPT: OnceLock<Result<serde_json::Value, String>> = OnceLock::new();
 
-pub(super) fn source_reference_cases(task: SourceTask) -> Result<Vec<([i64; 2], i64)>, String> {
+pub(super) fn synthesis_receipt() -> Result<&'static serde_json::Value, String> {
     let receipt = SOURCE_RECEIPT.get_or_init(|| {
-        serde_json::from_str(SYNTHESIS_RECEIPT)
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(2)
+            .ok_or_else(|| String::from("worktree root unavailable"))?;
+        let path = root.join("verification/synthesis/receipts/2026-11-13/synthesis-v2.json");
+        let bytes = std::fs::read_to_string(path)
+            .map_err(|error| format!("read #116 producer receipt: {error}"))?;
+        serde_json::from_str(&bytes)
             .map_err(|error| format!("decode #116 producer receipt: {error}"))
     });
-    let receipt = receipt.as_ref().map_err(Clone::clone)?;
-    source_reference_cases_in(receipt, task)
+    receipt.as_ref().map_err(Clone::clone)
+}
+
+pub(super) fn source_reference_cases(task: SourceTask) -> Result<Vec<([i64; 2], i64)>, String> {
+    source_reference_cases_in(synthesis_receipt()?, task)
 }
 
 pub(super) fn source_reference_cases_in(
@@ -51,14 +56,14 @@ pub(super) fn source_reference_cases_in(
         return Err(format!("{} source or reference drifted", task.name()));
     }
     let (class, outcome, claim) = task.evidence();
-    let status_matches = match (class, outcome) {
+    let is_status_consistent = match (class, outcome) {
         (EvidenceClass::Lean, EvidenceOutcome::Proved) => {
             entry["status"] == "proved" && entry["certificate"]["theorem"] == claim
         }
         (EvidenceClass::Test, EvidenceOutcome::Passed) => entry["status"] == "unproven",
         _ => false,
     };
-    if !status_matches {
+    if !is_status_consistent {
         return Err(format!("{} producer verifier status drifted", task.name()));
     }
     let heldout = &entry["heldout"];
@@ -67,11 +72,16 @@ pub(super) fn source_reference_cases_in(
         .ok_or_else(|| format!("{} producer examples missing", task.name()))?;
     let example_count = u64::try_from(examples.len())
         .map_err(|_| format!("{} producer example count exceeds U64", task.name()))?;
-    if heldout["status"] != "pass"
-        || heldout["passed"].as_u64() != Some(example_count)
-        || heldout["total"].as_u64() != Some(example_count)
-        || examples.len() != 2
-    {
+    if heldout["status"] != "pass" {
+        return Err(format!("{} producer example totals drifted", task.name()));
+    }
+    if heldout["passed"].as_u64() != Some(example_count) {
+        return Err(format!("{} producer example totals drifted", task.name()));
+    }
+    if heldout["total"].as_u64() != Some(example_count) {
+        return Err(format!("{} producer example totals drifted", task.name()));
+    }
+    if examples.len() != 2 {
         return Err(format!("{} producer example totals drifted", task.name()));
     }
     examples

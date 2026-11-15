@@ -167,7 +167,12 @@ fn attempted_runtime_proposer_and_teacher_calls_refuse_before_invocation() -> Re
     for producer in [RuntimeProducer::Proposer, RuntimeProducer::Teacher] {
         let refusal = library
             .request_runtime_producer(producer, &mut budget, || {
-                calls.set(calls.get() + 1);
+                calls.set(
+                    calls
+                        .get()
+                        .checked_add(1)
+                        .expect("producer call count overflow"),
+                );
                 source.clone()
             })
             .expect_err("the disabled runtime producer must refuse before calling the host");

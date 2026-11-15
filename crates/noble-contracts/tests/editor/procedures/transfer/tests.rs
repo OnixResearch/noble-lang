@@ -92,8 +92,7 @@ fn producer_task_candidates_are_source_readmitted_and_fixture_bound() -> Result<
 
 #[test]
 fn acquisition_references_refuse_a_mutated_producer_receipt() -> Result<(), String> {
-    let mut receipt: serde_json::Value = serde_json::from_str(super::producer::SYNTHESIS_RECEIPT)
-        .map_err(|error| format!("producer receipt: {error}"))?;
+    let mut receipt = super::producer::synthesis_receipt()?.clone();
     let task_index = receipt["tasks"]
         .as_array()
         .and_then(|tasks| {
