@@ -13528,6 +13528,36 @@
       "claim": "generation-headroom exhaustion refuses plan emission for every selected rule and storage mode"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.planCandidate_refuses_alias",
+      "phase": 1,
+      "role": "representation",
+      "claim": "consumed-agent auxiliary boundary aliases refuse every model candidate before any bytes are emitted"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refuses_alias",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the consumed-pair boundary-alias exclusion refuses model lowering in either storage mode"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.decode_refuses_oversized_emit",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any emitted byte image longer than the version-one maximum of 256 bytes refuses decoding"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refuses_unencodable_candidate",
+      "phase": 1,
+      "role": "representation",
+      "claim": "model lowering refuses an assembled plan whenever its independently decoded image differs"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refuses_oversized_candidate",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a model candidate whose byte image exceeds 256 bytes refuses plan lowering"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_requires_headroom",
       "phase": 1,
       "role": "representation",

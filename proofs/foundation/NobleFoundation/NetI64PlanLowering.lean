@@ -120,8 +120,7 @@ private def PhysicalState.planCandidateCore (state : PhysicalState) (pair : Phys
       let boundaryPorts := if opcode == 1 || opcode == 3 then [1, 2]
         else if opcode == 2 then [1] else []
       let boundaries ← boundaryPorts.mapM (state.captureAux ruleSlot)
-      if boundaries.any (fun boundary => boundary.2.1 == 0 &&
-          (boundary.2.2.1 == pair.first || boundary.2.2.1 == pair.second)) ||
+      if state.consumedBoundaryAlias pair redex ||
           !(decide (boundaries.map Prod.snd).Nodup)
       then none else do
         let symbols ← rhs.slots.mapM (fun slot => rhs.lab slot.1 slot.2)
@@ -158,6 +157,17 @@ private def PhysicalState.planCandidate (state : PhysicalState) (pair : Physical
     (redex : XRedex NetSym) (reuse : Bool) : Option BytePlan :=
   (state.planCandidateCore pair redex reuse).map BytePlan.withRequiredWrites
 
+/-- Independently detected aliases are refused for any rule orientation,
+payload, physical layout, or storage mode before a result can be emitted. -/
+theorem PhysicalState.planCandidate_refuses_alias
+    {state : PhysicalState} {pair : PhysicalPair}
+    {redex : XRedex NetSym} {reuse : Bool}
+    (h : state.consumedBoundaryAlias pair redex = true) :
+    state.planCandidate pair redex reuse = none := by
+  simp [PhysicalState.planCandidate, PhysicalState.planCandidateCore, h]
+  intros
+  split <;> rfl
+
 /-- Lower one physically matched revision-3 rule to the actual version-one
 byte representation. The rule supplies result symbols; the arena supplies
 endpoints, generations, output indices and publications. `reuse` selects
@@ -178,6 +188,44 @@ theorem PhysicalState.lowerPlan_refuses_exhausted
     (h : state.pairHeadroom pair = false) :
     state.lowerPlan pair redex reuse = none := by
   simp [PhysicalState.lowerPlan, h]
+
+/-- The explicit consumed-pair auxiliary alias has priority over encoding
+and physical execution: even an otherwise roundtrippable byte plan refuses. -/
+theorem PhysicalState.lowerPlan_refuses_alias
+    {state : PhysicalState} {pair : PhysicalPair}
+    {redex : XRedex NetSym} {reuse : Bool}
+    (h : state.consumedBoundaryAlias pair redex = true) :
+    state.lowerPlan pair redex reuse = none := by
+  simp [PhysicalState.lowerPlan, PhysicalState.planCandidate_refuses_alias h]
+
+/-- Independently computed byte images longer than the version-one maximum
+cannot be decoded, irrespective of rule or physical-state assertions. -/
+theorem BytePlan.decode_refuses_oversized_emit (plan : BytePlan)
+    (h : plan.emit.length > 256) :
+    BytePlan.decode plan.emit = none := by
+  simp [BytePlan.decode, h]
+
+/-- An assembled candidate whose byte image cannot roundtrip is explicitly
+refused, not silently truncated into a different plan. -/
+theorem PhysicalState.lowerPlan_refuses_unencodable_candidate
+    {state : PhysicalState} {pair : PhysicalPair}
+    {redex : XRedex NetSym} {reuse : Bool} {plan : BytePlan}
+    (hc : state.planCandidate pair redex reuse = some plan)
+    (hd : BytePlan.decode plan.emit ≠ some plan) :
+    state.lowerPlan pair redex reuse = none := by
+  cases hh : state.pairHeadroom pair <;>
+    simp [PhysicalState.lowerPlan, hh, hc, hd]
+
+/-- The concrete 256-byte length exclusion is a sufficient instance of
+the general encoder roundtrip refusal. -/
+theorem PhysicalState.lowerPlan_refuses_oversized_candidate
+    {state : PhysicalState} {pair : PhysicalPair}
+    {redex : XRedex NetSym} {reuse : Bool} {plan : BytePlan}
+    (hc : state.planCandidate pair redex reuse = some plan)
+    (h : plan.emit.length > 256) :
+    state.lowerPlan pair redex reuse = none := by
+  exact PhysicalState.lowerPlan_refuses_unencodable_candidate hc
+    (by rw [BytePlan.decode_refuses_oversized_emit plan h]; simp)
 
 /-- Every actually emitted plan has checked counter headroom for both
 consumed slots; successful byte parsing alone does not prove this fact. -/
