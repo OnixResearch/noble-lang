@@ -13120,31 +13120,31 @@
       "claim": "every model-semantic-checker-admitted physical byte image commits one selected abstract rewrite with the entire net, stable ordered free-port labels, and directed live-agent pending-pair permutation"
     },
     {
-      "name": "NobleFoundation.NetI64Plans.BytePlan.era_fixture_admitted",
+      "name": "NobleFoundation.NetI64Plans.BytePlan.era_fixture_accepted",
       "phase": 1,
       "role": "representation",
       "claim": "the complete decoded ERA physical fixture passes the model semantic checker at exact resource reservations"
     },
     {
-      "name": "NobleFoundation.NetI64Plans.BytePlan.op2_output_fixture_admitted",
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op2_output_fixture_accepted",
       "phase": 1,
       "role": "representation",
       "claim": "the complete decoded OP2 output physical fixture passes the model semantic checker at exact resource reservations"
     },
     {
-      "name": "NobleFoundation.NetI64Plans.BytePlan.op1_output_fixture_admitted",
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op1_output_fixture_accepted",
       "phase": 1,
       "role": "representation",
       "claim": "the complete decoded wrapping OP1 physical fixture passes the model semantic checker at exact resource reservations"
     },
     {
-      "name": "NobleFoundation.NetI64Plans.BytePlan.dup_output_fixture_admitted",
+      "name": "NobleFoundation.NetI64Plans.BytePlan.dup_output_fixture_accepted",
       "phase": 1,
       "role": "representation",
       "claim": "the complete decoded two-output DUP physical fixture passes the model semantic checker at exact resource reservations"
     },
     {
-      "name": "NobleFoundation.NetI64Plans.BytePlan.op2_published_fixture_admitted",
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op2_published_fixture_accepted",
       "phase": 1,
       "role": "representation",
       "claim": "the decoded OP2 image publishing an active external peer passes the semantic checker with both directed queue entries"
@@ -13510,7 +13510,7 @@
       "claim": "every model-lowered physical plan roundtrips through the independent versioned byte decoder"
     },
     {
-      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refines_if_admitted",
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refines_if_checked",
       "phase": 1,
       "role": "representation",
       "claim": "every semantically admitted model-emitted plan decodes and refines the selected whole-net rewrite"
@@ -13528,7 +13528,7 @@
       "claim": "model lowering derives the exact five independently specified physical fixture images"
     },
     {
-      "name": "NobleFoundation.NetI64Plans.PhysicalState.five_lowered_images_admitted",
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.five_lowered_images_accepted",
       "phase": 1,
       "role": "representation",
       "claim": "all five model-emitted physical fixture images pass the complete semantic admission checker"

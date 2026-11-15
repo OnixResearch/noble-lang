@@ -364,7 +364,7 @@ theorem BytePlan.semanticCheck_refines {state next : PhysicalState}
 /-- The already decoded erasure fixture has a kernel-checked positive
 semantic-admission witness; this is stronger than merely executing its
 physical image or evaluating its checker result. -/
-theorem BytePlan.era_fixture_admitted :
+theorem BytePlan.era_fixture_accepted :
     BytePlan.semanticCheck eraPhysicalStart eraPlanBytes
       eraPhysicalRedex (by rfl) 0 256 0 = some eraPhysicalAfter := by
   let image : BytePlan :=
@@ -397,7 +397,7 @@ theorem BytePlan.era_fixture_admitted :
 
 /-- The complete output-connected OP2 image is admitted. In contrast, the
 parser-valid image omitting one external write is rejected for every bound. -/
-theorem BytePlan.op2_output_fixture_admitted :
+theorem BytePlan.op2_output_fixture_accepted :
     BytePlan.semanticCheck op2PhysicalStart op2OutputFixture.emit
       op2PhysicalRedex (by rfl) 0 256 0 = some op2PhysicalAfter := by
   have fields :
@@ -457,7 +457,7 @@ theorem BytePlan.op2_output_fixture_admitted :
 
 /-- The staged wrapping subtraction image also passes independent semantic
 admission at its exact arena, scratch and queue reservations. -/
-theorem BytePlan.op1_output_fixture_admitted :
+theorem BytePlan.op1_output_fixture_accepted :
     BytePlan.semanticCheck op1PhysicalStart op1OutputFixture.emit
       op1PhysicalRedex (by rfl) 0 256 0 = some op1PhysicalAfter := by
   have fields :
@@ -518,7 +518,7 @@ theorem BytePlan.op1_output_fixture_admitted :
 
 /-- Both independently captured DUP outputs point to their corresponding
 physical replacement number after the decoded two-result image executes. -/
-theorem BytePlan.dup_output_fixture_admitted :
+theorem BytePlan.dup_output_fixture_accepted :
     BytePlan.semanticCheck dupPhysicalStart dupOutputFixture.emit
       dupPhysicalRedex (by rfl) 0 256 0 = some dupPhysicalAfter := by
   have fields :
@@ -585,7 +585,7 @@ theorem BytePlan.dup_output_fixture_admitted :
 
 /-- An actually newly active external peer keeps both directed queue entries
 under admission; the output-only cases above filter non-agent candidates. -/
-theorem BytePlan.op2_published_fixture_admitted :
+theorem BytePlan.op2_published_fixture_accepted :
     BytePlan.semanticCheck op2PublishedStart op2PublishedFixture.emit
       op2PhysicalRedex (by rfl) 0 256 1 = some op2PublishedAfter := by
   have fields :

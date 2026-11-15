@@ -158,12 +158,12 @@ def PhysicalState.lowerBytes (state : PhysicalState) (pair : PhysicalPair)
 /-- The physical emitter needs a *separate* completeness proof: decoding a
 model-emitted image and observing that admission succeeded imply one whole-net
 rewrite, but the decoder alone does not establish semantic admission. -/
-theorem PhysicalState.lowerPlan_refines_if_admitted {state next : PhysicalState}
+theorem PhysicalState.lowerPlan_refines_if_checked {state next : PhysicalState}
     {pair : PhysicalPair} {redex : XRedex NetSym} {reuse : Bool}
     {plan : BytePlan} {arena scratch queue : Nat}
     (hRule : NetI64.xRule redex.2.2.1 redex.2.2.2.1 = some redex.2.2.2.2)
     (hLower : state.lowerPlan pair redex reuse = some plan)
-    (hAdmitted : BytePlan.semanticCheck state plan.emit redex hRule
+    (hChecked : BytePlan.semanticCheck state plan.emit redex hRule
       arena scratch queue = some next)
     (hm : state.project.toNet.Matching NetI64.arity)
     (hredex : Redex NetI64.system state.project.toNet
@@ -175,7 +175,7 @@ theorem PhysicalState.lowerPlan_refines_if_admitted {state next : PhysicalState}
         (Plan.compile state.project redex hRule) state.project.work)) ∧
     next.project.free = state.project.free := by
   exact ⟨PhysicalState.lowerPlan_decodes hLower,
-    BytePlan.semanticCheck_refines hRule hAdmitted hm hredex⟩
+    BytePlan.semanticCheck_refines hRule hChecked hm hredex⟩
 
 /-- The independently modeled five physical layouts lower to precisely
 their original byte images, including the live-peer publication case. -/
@@ -200,7 +200,7 @@ theorem PhysicalState.five_fixture_images_from_lowering :
 
 /-- Five actual lowered model byte streams pass full semantic admission;
 this does not establish completeness for all physically representable nets. -/
-theorem PhysicalState.five_lowered_images_admitted :
+theorem PhysicalState.five_lowered_images_accepted :
     (∃ bytes, op2PhysicalStart.lowerBytes
       { first := 0, firstGeneration := 0, second := 1, secondGeneration := 0 }
         op2PhysicalRedex true = some bytes ∧
@@ -228,11 +228,11 @@ theorem PhysicalState.five_lowered_images_admitted :
         (by rfl) 0 256 0 = some eraPhysicalAfter) := by
   rcases PhysicalState.five_fixture_images_from_lowering with
     ⟨op2, published, op1, dup, era⟩
-  exact ⟨⟨op2OutputFixture.emit, op2, BytePlan.op2_output_fixture_admitted⟩,
-    ⟨op2PublishedFixture.emit, published, BytePlan.op2_published_fixture_admitted⟩,
-    ⟨op1OutputFixture.emit, op1, BytePlan.op1_output_fixture_admitted⟩,
-    ⟨dupOutputFixture.emit, dup, BytePlan.dup_output_fixture_admitted⟩,
-    ⟨eraPlanBytes, era, BytePlan.era_fixture_admitted⟩⟩
+  exact ⟨⟨op2OutputFixture.emit, op2, BytePlan.op2_output_fixture_accepted⟩,
+    ⟨op2PublishedFixture.emit, published, BytePlan.op2_published_fixture_accepted⟩,
+    ⟨op1OutputFixture.emit, op1, BytePlan.op1_output_fixture_accepted⟩,
+    ⟨dupOutputFixture.emit, dup, BytePlan.dup_output_fixture_accepted⟩,
+    ⟨eraPlanBytes, era, BytePlan.era_fixture_accepted⟩⟩
 
 /-- Same abstract rule and active pair, but the first physical generation
 has reached its finite maximum; no retirement or reuse can increment it. -/
