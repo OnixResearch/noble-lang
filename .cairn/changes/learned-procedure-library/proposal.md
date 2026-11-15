@@ -81,8 +81,10 @@ r[LPL-01] r[LPL-02] r[LPL-03] r[LPL-04] r[LPL-05] r[LPL-06] r[LPL-07] r[LPL-08]
   to a changed subject.
 - **ADDED** `LPL-04`: deduplication. Byte-identical records reuse one identity;
   equal signatures with different bodies stay distinct; semantic
-  deduplication requires a certified equivalence for the exact pair from #56's
-  lane and produces an alias edge plus a retained certificate, never a merge
+  deduplication requires a checked exact-pair certificate binding both
+  retained bodies and dependency closures. The local verifier accepts a
+  bounded pure-I64 polynomial fragment; other pairs refuse. An accepted pair
+  produces an alias edge and independent validation evidence, never a merge
   that erases an identity or a dependency.
 - **ADDED** `LPL-05`: deterministic retrieval by signature and contract with a
   total order independent of map, file, insertion and wall-clock order, a
@@ -123,8 +125,8 @@ classes are consumed verbatim rather than redefined.
   `LPL-08`. No `.cairn/specs/` file and no generated compatibility view
   changes.
 - **Coordination**: #73 owns the chunk envelope, library snapshot and one-hole
-  enumerator; #116 owns program synthesis; #56 owns the only
-  certified-equivalence route that may support semantic deduplication; #74
+  enumerator; #116 owns program synthesis; #56 remains separate from the local
+  bounded exact-pair verifier and is not an alias admission dependency; #74
   (`typed-chunk-ranking-experiment`) consumes the same chunk library for
   learned ranking and must not be redefined here; RSI Lab #64/#66 own the
   research protocol the export serves.

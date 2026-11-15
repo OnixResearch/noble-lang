@@ -11,6 +11,7 @@ use core::cmp::Ordering;
 const DOMAIN_ID: u64 = 0x4e_50_52_4f_43_00_00_01;
 const DOMAIN_STATE: u64 = 0x4e_50_52_4f_43_00_00_02;
 const DOMAIN_LIBRARY: u64 = 0x4e_50_52_4f_43_00_00_03;
+const DOMAIN_ALIAS_CLOSURE: u64 = 0x4e_50_52_4f_43_00_00_04;
 const MAX_STRING_BYTES: u32 = 4_096;
 const MAX_TOOLCHAINS: u32 = 16;
 const MAX_BINDINGS: u32 = 16;
@@ -529,6 +530,10 @@ pub(super) fn state_digest(record: &ProcedureRecord) -> Result<ProcedureId, Refu
 
 pub(super) fn empty_procedure_revision() -> ProcedureId {
     digest32(DOMAIN_LIBRARY, &[])
+}
+
+pub(super) fn empty_alias_closure_digest() -> ProcedureId {
+    digest32(DOMAIN_ALIAS_CLOSURE, &[])
 }
 
 pub(super) fn procedure_revision(records: &[ProcedureRecord]) -> Result<ProcedureId, Refusal> {
@@ -1120,7 +1125,7 @@ fn write_state(writer: &mut Writer, record: &ProcedureRecord) -> Result<(), Refu
     write_cost(writer, record.cost);
     write_retrieval_signature(writer, &record.retrieval)?;
     write_supersedes(writer, record.supersedes);
-    write_alias(writer, record.alias_of);
+    write_alias(writer, record.alias_of.as_ref())?;
     Ok(())
 }
 
@@ -1229,15 +1234,42 @@ fn write_supersedes(writer: &mut Writer, supersedes: Option<ProcedureId>) {
     }
 }
 
-fn write_alias(writer: &mut Writer, alias: Option<Alias>) {
+fn write_alias(writer: &mut Writer, alias: Option<&Alias>) -> Result<(), Refusal> {
     match alias {
         Some(alias) => {
-            writer.byte(1);
-            writer.raw(&alias.procedure_id);
-            writer.raw(&alias.certificate);
+            match &alias.certificate {
+                Certificate::LegacyDigest(digest) => {
+                    // Preserve the historical tag and exact bytes. These
+                    // records remain explicitly unsupported on admission.
+                    writer.byte(1);
+                    writer.raw(&alias.procedure_id);
+                    writer.raw(digest);
+                }
+                Certificate::ExactPair(pair) => {
+                    writer.byte(2);
+                    writer.raw(&alias.procedure_id);
+                    writer.raw(&pair.left_closure);
+                    writer.raw(&pair.right_closure);
+                    write_alias_form(writer, &pair.left)?;
+                    write_alias_form(writer, &pair.right)?;
+                }
+            }
         }
         None => writer.byte(0),
     }
+    Ok(())
+}
+
+fn write_alias_form(writer: &mut Writer, form: &[Polynomial]) -> Result<(), Refusal> {
+    writer.bounded_count(form.len(), MAX_ALIAS_OUTPUTS, "alias.form.outputs")?;
+    for polynomial in form {
+        writer.bounded_count(polynomial.terms.len(), MAX_ALIAS_TERMS, "alias.form.terms")?;
+        for term in &polynomial.terms {
+            writer.u64(term.coefficient);
+            writer.raw(&term.powers);
+        }
+    }
+    Ok(())
 }
 
 fn read_state(reader: &mut Reader<'_>, record: &mut ProcedureRecord) -> Result<(), Refusal> {
@@ -1369,15 +1401,49 @@ fn read_supersedes(reader: &mut Reader<'_>) -> Result<Option<ProcedureId>, Refus
 }
 
 fn read_alias(reader: &mut Reader<'_>) -> Result<Option<Alias>, Refusal> {
-    let alias = if reader.bool("alias.present")? {
-        Some(Alias {
+    let alias = match reader.byte("alias.present")? {
+        0 => None,
+        1 => Some(Alias {
             procedure_id: reader.raw("alias.procedure_id")?,
-            certificate: reader.raw("alias.certificate")?,
-        })
-    } else {
-        None
+            certificate: Certificate::LegacyDigest(reader.raw("alias.certificate")?),
+        }),
+        2 => Some(Alias {
+            procedure_id: reader.raw("alias.procedure_id")?,
+            certificate: Certificate::ExactPair(alloc::boxed::Box::new(ExactPairCertificate {
+                left_closure: reader.raw("alias.left_closure")?,
+                right_closure: reader.raw("alias.right_closure")?,
+                left: read_alias_form(reader)?,
+                right: read_alias_form(reader)?,
+            })),
+        }),
+        _ => {
+            return Err(Refusal::new(
+                RefusalKind::Invalid,
+                super::Diagnostic {
+                    field: "alias.present",
+                    message: "unknown alias certificate tag",
+                },
+            ))
+        }
     };
     Ok(alias)
+}
+
+fn read_alias_form(reader: &mut Reader<'_>) -> Result<Vec<Polynomial>, Refusal> {
+    let output_count = reader.count("alias.form.outputs", MAX_ALIAS_OUTPUTS)?;
+    let mut form = Vec::with_capacity(output_count);
+    for _ in 0..output_count {
+        let term_count = reader.count("alias.form.terms", MAX_ALIAS_TERMS)?;
+        let mut terms = Vec::with_capacity(term_count);
+        for _ in 0..term_count {
+            terms.push(Monomial {
+                coefficient: reader.u64("alias.term.coefficient")?,
+                powers: reader.raw("alias.term.powers")?,
+            });
+        }
+        form.push(Polynomial { terms });
+    }
+    Ok(form)
 }
 
 fn write_record(writer: &mut Writer, record: &ProcedureRecord) -> Result<(), Refusal> {
@@ -2310,15 +2376,57 @@ fn write_manifest_cost_and_links(out: &mut BoundedJson, record: &ProcedureRecord
         out.push_str("null");
     }
     out.push_str(",\"alias_of\":");
-    if let Some(alias) = record.alias_of {
+    if let Some(alias) = &record.alias_of {
         out.push_str("{\"procedure_id\":\"");
         out.push_hex(&alias.procedure_id);
-        out.push_str("\",\"certificate\":\"");
-        out.push_hex(&alias.certificate);
-        out.push_str("\"}");
+        match &alias.certificate {
+            Certificate::LegacyDigest(digest) => {
+                out.push_str("\",\"certificate\":\"");
+                out.push_hex(digest);
+                out.push_str("\"}");
+            }
+            Certificate::ExactPair(pair) => {
+                out.push_str("\",\"certificate\":{\"kind\":\"exact-pair\",\"left_closure\":\"");
+                out.push_hex(&pair.left_closure);
+                out.push_str("\",\"right_closure\":\"");
+                out.push_hex(&pair.right_closure);
+                out.push_str("\",\"left\":");
+                write_manifest_alias_form(out, &pair.left);
+                out.push_str(",\"right\":");
+                write_manifest_alias_form(out, &pair.right);
+                out.push_str("}}");
+            }
+        }
     } else {
         out.push_str("null");
     }
+}
+
+fn write_manifest_alias_form(out: &mut BoundedJson, form: &[Polynomial]) {
+    out.push('[');
+    for (output_index, polynomial) in form.iter().enumerate() {
+        if output_index != 0 {
+            out.push(',');
+        }
+        out.push('[');
+        for (term_index, term) in polynomial.terms.iter().enumerate() {
+            if term_index != 0 {
+                out.push(',');
+            }
+            out.push_str("{\"coefficient\":");
+            out.push_u64(term.coefficient);
+            out.push_str(",\"powers\":[");
+            for (index, exponent) in term.powers.iter().enumerate() {
+                if index != 0 {
+                    out.push(',');
+                }
+                out.push_u64(u64::from(*exponent));
+            }
+            out.push_str("]}");
+        }
+        out.push(']');
+    }
+    out.push(']');
 }
 
 fn generation_kind_code(kind: GenerationKind) -> &'static str {

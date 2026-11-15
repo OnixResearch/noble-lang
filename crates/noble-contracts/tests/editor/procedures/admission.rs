@@ -4,14 +4,17 @@ use super::super::procedures::support::{
 use noble_contracts::source::chunks;
 use noble_contracts::source::chunks::{DefinitionRef, Node};
 use noble_contracts::source::procedures::{
-    Alias, CapabilityMarker, ConsumerObligation, ConsumerPolicy, EvidenceClass, EvidenceOutcome,
-    EvidenceRecord, LibraryDependency, ProcedureLibrary, ProcedureRecord, Producer, RefusalKind,
-    Status,
+    Alias, CapabilityMarker, Certificate, ConsumerObligation, ConsumerPolicy, EvidenceClass,
+    EvidenceOutcome, EvidenceRecord, LibraryDependency, ProcedureLibrary, ProcedureRecord,
+    Producer, RefusalKind, Status,
 };
 use noble_contracts::source::Session;
 use noble_kernel::types::{EffId, EffSet, Ty};
 use std::string::String;
 use std::vec;
+
+#[path = "admission/alias/mod.rs"]
+mod alias;
 
 fn evidence(
     record: &ProcedureRecord,
@@ -263,7 +266,7 @@ fn an_alias_digest_cannot_replace_a_verified_exact_pair_certificate() -> Result<
         literal_record(10, Producer::Chunk).map_err(|error| format!("record: {error:?}"))?;
     record.alias_of = Some(Alias {
         procedure_id: [0x91; 32],
-        certificate: [0x92; 32],
+        certificate: Certificate::LegacyDigest([0x92; 32]),
     });
     let refusal = library
         .admit(&namespace, None, record)

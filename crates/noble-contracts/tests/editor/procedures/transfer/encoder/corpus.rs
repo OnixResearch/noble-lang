@@ -1,34 +1,44 @@
 use super::*;
 
-const CORPUS: &str = "verification/procedure-library/receipts/encoder-corpus-v1.json";
+const CORPUS: &str = "verification/procedure-library/receipts/encoder-corpus-v2.json";
 
 #[test]
-fn finite_subject_bytes_match_lean_generated() -> Result<(), String> {
+fn finite_subject_matrix_matches_lean_generated() -> Result<(), String> {
     let receipt = super::producer_targets::read_json(CORPUS)?;
-    if receipt["schema"] != "noble-procedure-library-lean-byte-receipt/1"
-        || receipt["corpus"]["schema"] != "noble-procedure-library-lean-byte-corpus/1"
+    if receipt["schema"] != "noble-procedure-library-lean-byte-receipt/2"
+        || receipt["corpus"]["schema"] != "noble-procedure-library-lean-byte-corpus/2"
     {
         return Err(String::from("finite Lean byte corpus schema drifted"));
     }
     let cases = receipt["corpus"]["cases"]
         .as_array()
-        .filter(|cases| cases.len() == 2)
+        .filter(|cases| cases.len() == 36)
         .ok_or_else(|| String::from("finite Lean byte corpus case count drifted"))?;
-    for (index, (task, producer, name)) in [
-        (
-            SourceTask::Commuted,
-            Producer::Synthesis,
-            "arithCommuted/Synthesis",
-        ),
-        (SourceTask::Subtract, Producer::Chunk, "arithSubtract/Chunk"),
-    ]
-    .iter()
-    .copied()
-    .enumerate()
-    {
-        let row = &cases[index];
-        if row["name"] != name {
-            return Err(format!("{name}: finite Lean corpus order drifted"));
+
+    let chunk_sources = [
+        super::producer::task_record(SourceTask::Subtract, Producer::Chunk)?,
+        super::producer::task_record(SourceTask::Commuted, Producer::Chunk)?,
+    ];
+    let mut observed = Vec::with_capacity(cases.len());
+    for (index, row) in cases.iter().enumerate() {
+        let task = SOURCE_TASKS[index / 9];
+        let producer_index = (index / 3) % 3;
+        let producer =
+            [Producer::Chunk, Producer::Synthesis, Producer::Composition][producer_index];
+        let closure_count = index % 3;
+        let name = format!("{}/{producer_index}/{closure_count}", task.name());
+        let expected_tag = Some([0_u64, 1, 2][producer_index]);
+        let expected_closure = Some([0_u64, 1, 2][closure_count]);
+        if ![
+            row["name"] == name,
+            row["source_task"] == task.name(),
+            row["producer_tag"].as_u64() == expected_tag,
+            row["closure_count"].as_u64() == expected_closure,
+        ]
+        .into_iter()
+        .all(|matches| matches)
+        {
+            return Err(format!("{name}: finite Lean corpus matrix drifted"));
         }
         let chunk_id: Vec<u8> = serde_json::from_value(row["chunk_id"].clone())
             .map_err(|error| format!("{name}: decode Lean chunk id: {error}"))?;
@@ -36,18 +46,123 @@ fn finite_subject_bytes_match_lean_generated() -> Result<(), String> {
             .map_err(|error| format!("{name}: decode Lean source revision: {error}"))?;
         let subject: Vec<u8> = serde_json::from_value(row["subject_bytes"].clone())
             .map_err(|error| format!("{name}: decode Lean subject bytes: {error}"))?;
-        let actual = super::producer::task_record(task, producer)?;
-        if actual.chunk.chunk_id.as_slice() != chunk_id
-            || actual.source_revision().as_slice() != source_revision
-            || actual
-                .identity_subject_bytes()
-                .map_err(|error| format!("{name}: encode Rust immutable subject: {error:?}"))?
-                != subject
+        let source = super::producer::task_record(task, producer)?;
+        if source.chunk.chunk_id.as_slice() != chunk_id
+            || source.source_revision().as_slice() != source_revision
         {
             return Err(format!(
-                "{name}: Rust subject bytes differ from Lean generated fixture"
+                "{name}: producer chunk id or source revision drifted"
             ));
         }
+        let declared_dependencies = row["library_dependencies"]
+            .as_array()
+            .filter(|dependencies| dependencies.len() == closure_count)
+            .ok_or_else(|| format!("{name}: Lean dependency closure count drifted"))?;
+        let mut dependencies = Vec::with_capacity(closure_count);
+        for (source_record, declared) in chunk_sources.iter().zip(declared_dependencies) {
+            let model_procedure: Vec<u8> = serde_json::from_value(declared["procedure_id"].clone())
+                .map_err(|error| format!("{name}: decode model procedure id: {error}"))?;
+            let model_chunk: Vec<u8> = serde_json::from_value(declared["chunk_id"].clone())
+                .map_err(|error| format!("{name}: decode model dependency chunk id: {error}"))?;
+            let model_revision: Vec<u8> =
+                serde_json::from_value(declared["source_revision"].clone()).map_err(|error| {
+                    format!("{name}: decode model dependency revision: {error}")
+                })?;
+            if source_record.procedure_id.as_slice() != model_procedure
+                || source_record.chunk.chunk_id.as_slice() != model_chunk
+                || source_record.source_revision().as_slice() != model_revision
+            {
+                return Err(format!(
+                    "{name}: Lean dependency differs from producer record"
+                ));
+            }
+            dependencies.push(noble_contracts::source::procedures::LibraryDependency {
+                procedure_id: source_record.procedure_id,
+                chunk_id: source_record.chunk.chunk_id,
+                source_revision: *source_record.source_revision(),
+            });
+        }
+        let actual = ProcedureRecord::candidate_with_dependencies(
+            source.chunk,
+            source.provenance,
+            dependencies,
+        )
+        .map_err(|error| format!("{name}: construct Rust record: {error:?}"))?
+        .identity_subject_bytes()
+        .map_err(|error| format!("{name}: encode Rust immutable subject: {error:?}"))?;
+        if actual != subject {
+            return Err(format!(
+                "{name}: Rust subject differs from Lean generated bytes"
+            ));
+        }
+        if observed.iter().any(|earlier| earlier == &actual) {
+            return Err(format!(
+                "{name}: distinct matrix inputs collapsed to equal bytes"
+            ));
+        }
+        observed.push(actual);
+    }
+    Ok(())
+}
+
+#[test]
+fn dependency_closure_order_changes_subject_bytes() -> Result<(), String> {
+    let source = super::producer::task_record(SourceTask::Commuted, Producer::Chunk)?;
+    let dependency_records = [
+        super::producer::task_record(SourceTask::Subtract, Producer::Chunk)?,
+        super::producer::task_record(SourceTask::Commuted, Producer::Chunk)?,
+    ];
+    let mut dependencies: Vec<_> = dependency_records
+        .iter()
+        .map(
+            |record| noble_contracts::source::procedures::LibraryDependency {
+                procedure_id: record.procedure_id,
+                chunk_id: record.chunk.chunk_id,
+                source_revision: *record.source_revision(),
+            },
+        )
+        .collect();
+    let ordered = ProcedureRecord::candidate_with_dependencies(
+        source.chunk.clone(),
+        source.provenance.clone(),
+        dependencies.clone(),
+    )
+    .map_err(|error| format!("ordered dependency record: {error:?}"))?
+    .identity_subject_bytes()
+    .map_err(|error| format!("encode ordered dependencies: {error:?}"))?;
+    dependencies.reverse();
+    let reversed =
+        ProcedureRecord::candidate_with_dependencies(source.chunk, source.provenance, dependencies)
+            .map_err(|error| format!("reversed dependency record: {error:?}"))?
+            .identity_subject_bytes()
+            .map_err(|error| format!("encode reversed dependencies: {error:?}"))?;
+    if ordered == reversed {
+        return Err(String::from(
+            "the immutable subject lost dependency closure order",
+        ));
+    }
+    Ok(())
+}
+
+#[test]
+fn oversized_dependency_closure_is_not_encoded() -> Result<(), String> {
+    let source = super::producer::task_record(SourceTask::Commuted, Producer::Chunk)?;
+    let dependency_record = super::producer::task_record(SourceTask::Subtract, Producer::Chunk)?;
+    let dependency = noble_contracts::source::procedures::LibraryDependency {
+        procedure_id: dependency_record.procedure_id,
+        chunk_id: dependency_record.chunk.chunk_id,
+        source_revision: *dependency_record.source_revision(),
+    };
+    let refusal = ProcedureRecord::candidate_with_dependencies(
+        source.chunk,
+        source.provenance,
+        vec![dependency; 17],
+    )
+    .expect_err("the 17th library dependency exceeds the subject encoder's declared bound");
+    if refusal.kind != noble_contracts::source::procedures::RefusalKind::Exhausted
+        || refusal.location.field != "library_dependencies"
+    {
+        return Err(format!("unexpected oversized closure refusal: {refusal:?}"));
     }
     Ok(())
 }

@@ -6586,6 +6586,48 @@
       "claim": "the finite Commuted fixture begins with the checked encoder identifier length prefix"
     },
     {
+      "name": "NobleFoundation.ProcedureLibraryAlias.wrapping_i64_add",
+      "phase": 2,
+      "role": "library-alias",
+      "claim": "signed integer injection into the wrapping I64 ring preserves addition"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibraryAlias.wrapping_i64_sub",
+      "phase": 2,
+      "role": "library-alias",
+      "claim": "signed integer injection into the wrapping I64 ring preserves subtraction"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibraryAlias.wrapping_i64_mul",
+      "phase": 2,
+      "role": "library-alias",
+      "claim": "signed integer injection into the wrapping I64 ring preserves multiplication"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibraryAlias.step_sound",
+      "phase": 2,
+      "role": "library-alias",
+      "claim": "each supported stack instruction has equal runtime and normalized polynomial evaluations"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibraryAlias.body_sound",
+      "phase": 2,
+      "role": "library-alias",
+      "claim": "normalization preserves full stack evaluation or refusal for every supported instruction sequence"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibraryAlias.initial_polynomials_sound",
+      "phase": 2,
+      "role": "library-alias",
+      "claim": "formal input polynomials evaluate to the original ordered I64 input stack"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibraryAlias.exact_pair_sound",
+      "phase": 2,
+      "role": "library-alias",
+      "claim": "equal normalized full stacks imply equal wrapping I64 evaluation for every modeled input"
+    },
+    {
       "name": "NobleFoundation.Synthesis.not_certifiable_of_refuted",
       "phase": 2,
       "role": "symbolic-solver",

@@ -195,13 +195,19 @@ deleting a retained one, and publish the change only in a new generation.
 
 Records with identical ordered interfaces and different bodies MUST remain
 distinct, and a signature match MUST NOT transfer behavioral evidence.
-Semantic deduplication MUST require an equivalence certificate produced by
-#56's certified-equivalence lane for the exact pair. The resulting alias
-relation MUST retain both identities and both complete dependency closures,
-MUST record the certificate as its own evidence record naming its class, scope,
-checker identity, toolchain and outcome, and MUST NOT substitute the alias into
-an existing Program, delete or rewrite a record, or change the retrieval order
-of either identity.
+Semantic deduplication MUST require an exact-pair certificate checked against
+both retained bodies and both complete dependency closures. A local
+`noble-contracts` verifier MAY establish equivalence for a closed, pure I64
+fragment by recomputing each canonical polynomial under wrapping 64-bit ring
+operations and each closure digest; the pair MUST match, and unsupported
+bodies or closures MUST refuse. A digest supplied by the caller, matching
+signature, or finite fixture result MUST NOT be treated as such a certificate.
+The resulting alias relation MUST retain both identities and both complete
+dependency closures, MUST record separately bound evidence naming its class,
+scope, versioned checker identity and outcome, and MUST NOT substitute the
+alias into an existing Program, delete or rewrite a record, or change the
+retrieval order of either identity. Local validation outcome `passed` MUST NOT
+be promoted to `proved` or borrowed by a different consumer policy.
 
 #### Scenario: exact duplicates reuse one identity
 
@@ -234,6 +240,21 @@ of either identity.
 - THEN it MUST be refused; with a certificate for the exact pair it MUST add
   only an alias relation and MUST preserve both identities, both closures and
   the certificate's own evidence binding
+
+#### Scenario: normalizer recognizes a supported equal pair
+
+- GIVEN two distinct, admitted pure I64 records with no dependencies and
+  equivalent canonical polynomials under wrapping arithmetic
+- WHEN a local exact-pair certificate is constructed and rechecked on admission
+- THEN the alias edge MUST be accepted without replacing either record, while
+  evidence MUST remain `validation/passed`, not a borrowed universal proof
+
+#### Scenario: unsupported or altered exact pair refuses
+
+- GIVEN an altered body, a changed closure or a body outside the supported
+  polynomial fragment
+- WHEN an alias certificate is presented or reloaded
+- THEN recomputation MUST refuse it before any alias or evidence is retained
 
 ### Requirement: LPL-05
 r[LPL-05]

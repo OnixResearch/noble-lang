@@ -85,6 +85,7 @@ import NobleFoundation.FirstProjection
 import NobleFoundation.SynthesisCertified
 import NobleFoundation.ProcedureLibrary
 import NobleFoundation.ProcedureLibraryWire
+import NobleFoundation.ProcedureLibraryAlias
 import NobleFoundation.OperandForwarding
 import NobleFoundation.Binary32Scale
 import NobleFoundation.ReverseADMutations

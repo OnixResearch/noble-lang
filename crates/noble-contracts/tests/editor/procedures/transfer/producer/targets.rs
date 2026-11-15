@@ -2,9 +2,9 @@ use super::*;
 use noble_contracts::source::procedures::{RefusalKind, RuntimeProducer};
 use std::cell::Cell;
 
-const CRITERIA: &str = "verification/procedure-library/criteria-producer-targets-v2.json";
-const TARGET_RECEIPT: &str = "verification/procedure-library/receipts/producer-targets-v2.json";
-const TARGET_NAMES: [&str; 2] = ["arithComposeShifted", "arithComposeOffsetDifference"];
+const CRITERIA: &str = "verification/procedure-library/criteria-producer-targets-v3.json";
+const TARGET_RECEIPT: &str = "verification/procedure-library/receipts/producer-targets-v3.json";
+const TARGET_NAMES: [&str; 2] = ["arithCommutedThenSubtract", "arithSubtractThenCommuted"];
 const TARGET_SOURCE_ORDERS: [[&str; 2]; 2] = [
     ["arithCommuted", "arithSubtract"],
     ["arithSubtract", "arithCommuted"],
@@ -129,7 +129,7 @@ pub(super) fn load() -> Result<ProducerTargets, String> {
     let criteria = read_json(CRITERIA)?;
     let receipt = read_json(TARGET_RECEIPT)?;
     let manifest = super::target_reference::manifest_targets()?;
-    if criteria["schema"] != "noble-procedure-library-producer-targets-criteria/2" {
+    if criteria["schema"] != "noble-procedure-library-producer-targets-criteria/3" {
         return Err(String::from("producer target criterion schema drifted"));
     }
     if criteria["producer"]["manifest"] != super::target_reference::MANIFEST {
@@ -148,7 +148,7 @@ pub(super) fn load() -> Result<ProducerTargets, String> {
         }
     }
     if receipt["schema"] != "noble-synthesis-receipt/v1"
-        || receipt["source"]["manifest"] != "verification/procedure-library/producer-targets-v2.txt"
+        || receipt["source"]["manifest"] != "verification/procedure-library/producer-targets-v3.txt"
     {
         return Err(String::from("producer target source or budget drifted"));
     }

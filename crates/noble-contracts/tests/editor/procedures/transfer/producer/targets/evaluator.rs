@@ -1,16 +1,14 @@
 use std::string::String;
 use std::vec::Vec;
 
-pub(crate) fn evaluate_program(program: &str, inputs: [i64; 3]) -> Result<i64, String> {
-    let words = program.split_whitespace().collect::<Vec<_>>();
-    if words.is_empty() || words.len() > 8 {
+fn execute_words(program: &str, mut stack: Vec<i64>) -> Result<Vec<i64>, String> {
+    let word_count = program.split_whitespace().count();
+    if word_count == 0 || word_count > 8 {
         return Err(String::from(
             "producer target exceeds the declared word bound",
         ));
     }
-    let mut stack = Vec::with_capacity(4);
-    stack.extend_from_slice(&inputs);
-    for word in words {
+    for word in program.split_whitespace() {
         match word {
             "dup" => {
                 let top = *stack.last().ok_or_else(|| String::from("dup underflow"))?;
@@ -55,10 +53,33 @@ pub(crate) fn evaluate_program(program: &str, inputs: [i64; 3]) -> Result<i64, S
             return Err(String::from("producer target exceeds max-stack 4"));
         }
     }
+    Ok(stack)
+}
+
+pub(crate) fn evaluate_program(program: &str, inputs: [i64; 3]) -> Result<i64, String> {
+    let mut stack = Vec::with_capacity(4);
+    stack.extend_from_slice(&inputs);
+    let stack = execute_words(program, stack)?;
     match stack.as_slice() {
         [result] => Ok(*result),
         _ => Err(String::from(
             "producer target does not leave exactly one I64",
         )),
+    }
+}
+
+pub(crate) fn evaluate_composed(programs: [&str; 2], inputs: [i64; 3]) -> Result<i64, String> {
+    let mut stack = Vec::with_capacity(4);
+    stack.extend_from_slice(&inputs);
+    let stack = execute_words(programs[0], stack)?;
+    if stack.len() != 2 {
+        return Err(String::from(
+            "first source does not leave a composable stack",
+        ));
+    }
+    let stack = execute_words(programs[1], stack)?;
+    match stack.as_slice() {
+        [result] => Ok(*result),
+        _ => Err(String::from("second source does not leave a single I64")),
     }
 }

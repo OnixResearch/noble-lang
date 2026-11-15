@@ -83,8 +83,8 @@ fn producer_generated_heldout_measurement_once() -> Result<(), String> {
     }
     let report = serde_json::json!({
         "schema": "noble-procedure-library-producer-transfer-run/1",
-        "criteria": "verification/procedure-library/criteria-producer-targets-v2.json",
-        "producer_receipt": "verification/procedure-library/receipts/producer-targets-v2.json",
+        "criteria": "verification/procedure-library/criteria-producer-targets-v3.json",
+        "producer_receipt": "verification/procedure-library/receipts/producer-targets-v3.json",
         "target_producer": producer.summary,
         "paired_seeds": SEEDS,
         "control_pair": [control.tasks[0].name(), control.tasks[1].name()],
@@ -106,7 +106,7 @@ fn producer_generated_heldout_measurement_once() -> Result<(), String> {
 fn frozen_target_fixtures_match_criterion_and_manifest() -> Result<(), String> {
     let producer = super::producer_targets::load()?;
     let criterion = super::producer_targets::read_json(
-        "verification/procedure-library/criteria-producer-targets-v2.json",
+        "verification/procedure-library/criteria-producer-targets-v3.json",
     )?;
     let manifest = super::target_reference::manifest_targets()?;
     for (seed_index, seed) in SEEDS.iter().copied().enumerate() {
