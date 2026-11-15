@@ -51,5 +51,7 @@ mod pairs;
 mod plancomparison;
 #[path = "plancomparison/fixtures.rs"]
 mod plancomparison_fixtures;
+#[path = "tick_runner/mod.rs"]
+mod tick_runner;
 use base::{declared, interleaved, packed};
 mod common;
