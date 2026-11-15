@@ -184,7 +184,7 @@ pub(super) fn earlier_regression(
         checker
             .admit(namespace, record.chunk.clone())
             .map_err(|error| format!("regression re-admit {}: {error:?}", source.task.name()))?;
-        let cases = source.task.earlier_cases();
+        let cases = super::producer::source_reference_cases(source.task)?;
         let fixture_set = FixtureSet {
             id: [0x61; chunks::IDENTITY_BYTES],
             cases: cases

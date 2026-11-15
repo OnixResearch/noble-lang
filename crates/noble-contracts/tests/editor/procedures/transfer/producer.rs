@@ -1,4 +1,107 @@
 use super::*;
+use std::sync::OnceLock;
+
+pub(super) const SYNTHESIS_RECEIPT: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../verification/synthesis/receipts/2026-11-13/synthesis-v2.json"
+));
+
+static SOURCE_RECEIPT: OnceLock<Result<serde_json::Value, String>> = OnceLock::new();
+
+pub(super) fn source_reference_cases(task: SourceTask) -> Result<Vec<([i64; 2], i64)>, String> {
+    let receipt = SOURCE_RECEIPT.get_or_init(|| {
+        serde_json::from_str(SYNTHESIS_RECEIPT)
+            .map_err(|error| format!("decode #116 producer receipt: {error}"))
+    });
+    let receipt = receipt.as_ref().map_err(Clone::clone)?;
+    source_reference_cases_in(receipt, task)
+}
+
+pub(super) fn source_reference_cases_in(
+    receipt: &serde_json::Value,
+    task: SourceTask,
+) -> Result<Vec<([i64; 2], i64)>, String> {
+    if receipt["schema"] != "noble-synthesis-receipt/v1"
+        || receipt["grammar"]["i64"]["name"] != "synth-i64/0"
+        || receipt["budget"]["max_candidates"].as_u64() != Some(400_000)
+    {
+        return Err(String::from("#116 producer schema, grammar or budget drifted"));
+    }
+    let tasks = receipt["tasks"]
+        .as_array()
+        .ok_or_else(|| String::from("#116 producer task list missing"))?;
+    let mut matching = tasks.iter().filter(|entry| entry["name"] == task.name());
+    let entry = matching
+        .next()
+        .ok_or_else(|| format!("{} missing in #116 producer receipt", task.name()))?;
+    if matching.next().is_some() {
+        return Err(format!("{} is duplicated in #116 producer receipt", task.name()));
+    }
+    let source = core::str::from_utf8(task.source())
+        .map_err(|error| format!("source program utf8: {error}"))?;
+    if entry["search"]["grammar"] != "synth-i64/0"
+        || entry["search"]["program"] != source.trim()
+        || entry["reference"].as_str().is_none_or(str::is_empty)
+    {
+        return Err(format!("{} source or reference drifted", task.name()));
+    }
+    let (class, outcome, claim) = task.evidence();
+    let status_matches = match (class, outcome) {
+        (EvidenceClass::Lean, EvidenceOutcome::Proved) => {
+            entry["status"] == "proved" && entry["certificate"]["theorem"] == claim
+        }
+        (EvidenceClass::Test, EvidenceOutcome::Passed) => entry["status"] == "unproven",
+        _ => false,
+    };
+    if !status_matches {
+        return Err(format!("{} producer verifier status drifted", task.name()));
+    }
+    let heldout = &entry["heldout"];
+    let examples = heldout["entries"]
+        .as_array()
+        .ok_or_else(|| format!("{} producer examples missing", task.name()))?;
+    let example_count = u64::try_from(examples.len())
+        .map_err(|_| format!("{} producer example count exceeds U64", task.name()))?;
+    if heldout["status"] != "pass"
+        || heldout["passed"].as_u64() != Some(example_count)
+        || heldout["total"].as_u64() != Some(example_count)
+        || examples.len() != 2
+    {
+        return Err(format!("{} producer example totals drifted", task.name()));
+    }
+    examples
+        .iter()
+        .map(|example| parse_source_example(example, task))
+        .collect()
+}
+
+fn parse_source_example(
+    example: &serde_json::Value,
+    task: SourceTask,
+) -> Result<([i64; 2], i64), String> {
+    let inputs = example["inputs"]
+        .as_array()
+        .filter(|inputs| inputs.len() == 2)
+        .ok_or_else(|| format!("{} producer input arity drifted", task.name()))?;
+    let parse = |value: &serde_json::Value| {
+        value
+            .as_str()
+            .ok_or_else(|| String::from("producer scalar is not a decimal string"))?
+            .parse::<i64>()
+            .map_err(|error| format!("producer scalar exceeds I64: {error}"))
+    };
+    let first = inputs
+        .first()
+        .ok_or_else(|| String::from("first producer input missing"))?;
+    let second = inputs
+        .get(1)
+        .ok_or_else(|| String::from("second producer input missing"))?;
+    let expected = parse(&example["expected"])?;
+    if example["agrees"] != true || parse(&example["observed"])? != expected {
+        return Err(format!("{} producer example does not agree", task.name()));
+    }
+    Ok(([parse(first)?, parse(second)?], expected))
+}
 
 pub(super) fn task_record(task: SourceTask, producer: Producer) -> Result<ProcedureRecord, String> {
     let nodes = task.nodes();

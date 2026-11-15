@@ -62,8 +62,7 @@ fn producer_task_candidates_are_source_readmitted_and_fixture_bound() -> Result<
             .map_err(|error| format!("{} typed-chunk admission: {error:?}", task.name()))?;
         let fixtures = FixtureSet {
             id: [0x71; chunks::IDENTITY_BYTES],
-            cases: task
-                .earlier_cases()
+            cases: super::producer::source_reference_cases(task)?
                 .iter()
                 .map(|(inputs, expected)| Fixture {
                     inputs: inputs.iter().copied().map(Scalar::I64).collect(),
@@ -88,5 +87,37 @@ fn producer_task_candidates_are_source_readmitted_and_fixture_bound() -> Result<
             task.name()
         );
     }
+    Ok(())
+}
+
+#[test]
+fn acquisition_references_refuse_a_mutated_producer_receipt() -> Result<(), String> {
+    let mut receipt: serde_json::Value =
+        serde_json::from_str(super::producer::SYNTHESIS_RECEIPT)
+            .map_err(|error| format!("producer receipt: {error}"))?;
+    let task_index = receipt["tasks"]
+        .as_array()
+        .and_then(|tasks| {
+            tasks
+                .iter()
+                .position(|item| item["name"] == SourceTask::Commuted.name())
+        })
+        .ok_or_else(|| String::from("producer source task missing"))?;
+    receipt["tasks"][task_index]["heldout"]["entries"][0]["expected"] =
+        serde_json::Value::String(String::from("8"));
+    assert!(super::producer::source_reference_cases_in(
+        &receipt,
+        SourceTask::Commuted
+    )
+    .is_err());
+    receipt["tasks"][task_index]["heldout"]["entries"][0]["expected"] =
+        serde_json::Value::String(String::from("7"));
+    receipt["tasks"][task_index]["search"]["program"] =
+        serde_json::Value::String(String::from("7 - +"));
+    assert!(super::producer::source_reference_cases_in(
+        &receipt,
+        SourceTask::Commuted
+    )
+    .is_err());
     Ok(())
 }
