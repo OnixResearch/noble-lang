@@ -1,0 +1,231 @@
+{
+  "schema": "noble.recurrent-bitcell-proof-audit/v1",
+  "source_commit": "f3a2323978f247d69aed4b10f6b6121628ddeed4",
+  "source_tree": "dd1cae1ad5ffbcfaa0ba8d5b97d91cf899a7a6fc",
+  "clean_source": true,
+  "source_files_sha256": {
+    "proofs/foundation/NobleFoundation.lean": "65ccaa902045fcaecb4ca9aa45a0467aaa318a0d5aed11f8ebfcc2a4781e1a6f",
+    "proofs/foundation/NobleFoundation/ArithmeticModels.lean": "2b8fe13d05bb44b46237763c69a7ce8d4626fa0a468087a9034959971d2979f6",
+    "proofs/foundation/NobleFoundation/AuthorityLedger.lean": "eaac9102e7d707765dff7fdaba7e2e4ed638bb779a08baf66006cfb7d0778b37",
+    "proofs/foundation/NobleFoundation/BatchRows.lean": "0cb06c996c3df01edbe417813fbf168df53da475099ba5a3eb2a9c8d7c66568f",
+    "proofs/foundation/NobleFoundation/Belt.lean": "564f8e82bf2cb6bbf83c71030e7b3d7b4a5789a189a66cd9cc90142ef50ed28b",
+    "proofs/foundation/NobleFoundation/BeltCorpus.lean": "adfafb9f99a35fd0e925268258e181afceb401b397990b0032d60dd173f0e199",
+    "proofs/foundation/NobleFoundation/BeltTarget.lean": "7e7d9fe7be60ed4008f51ddb461113478a50f4d284be638549bede98e33288d0",
+    "proofs/foundation/NobleFoundation/BeltTargetCorpus.lean": "ef2cddc8383b6c441a83e8a1e3b8a8e7ceba0e61b476d846c5e93064e07952f1",
+    "proofs/foundation/NobleFoundation/Binary32.lean": "5a95176815989e3ff34f18fe62d5b4f4579bc1f946638f111b571e37f093e412",
+    "proofs/foundation/NobleFoundation/Binary32Binding.lean": "6cfe059190b5b65f8e217d35194b6d3f4467a8704c36e3702c3706d1ed234152",
+    "proofs/foundation/NobleFoundation/Binary32Checker.lean": "d89748ef49f0477dd472804296217c13dea0e59327d2492f149cbc60e866794c",
+    "proofs/foundation/NobleFoundation/Binary32CheckerBound.lean": "2a6a69b7c87255c0f3406a5fa2385c8d81311e634f2d9ab37a33dccbf57c5094",
+    "proofs/foundation/NobleFoundation/Binary32CheckerEncoded.lean": "fa0521b765f772175875d2042fc6cb026cd0621052fedc63875689dd252d09d4",
+    "proofs/foundation/NobleFoundation/Binary32Convert.lean": "0e00f2b1055df274af67df2aff713f29f9253ca59f54937a27a39ba62431c4f9",
+    "proofs/foundation/NobleFoundation/Binary32ConvertCorpus.lean": "915456be1a19dba6dccce33d3f7dd34207eb198b8826ba37621119e2377668d6",
+    "proofs/foundation/NobleFoundation/Binary32Error.lean": "34c1295b3ac1a9a267c6e0ae660a2156b4fc46d837087b28fc408c851262b43d",
+    "proofs/foundation/NobleFoundation/Binary32Expectations.lean": "d492d19ca70097ec4ffd76919d5ead227b5ee268bb4267eb032b52e82d162a98",
+    "proofs/foundation/NobleFoundation/Binary32Mutations.lean": "23bd16cd91d0b92c44ac2a36a7b3286df1fbb708c06a332b6d5d5988b7e2b148",
+    "proofs/foundation/NobleFoundation/Binary32Scale.lean": "08ad78ebfd478ba9745d117fef5f31082cebd7a71ac8a827ba45f1e170dbddb4",
+    "proofs/foundation/NobleFoundation/Binary32Sequence.lean": "48346bdef6a007cb54741912f4b7e4ba0ad947ea46dce3de9b90d2a0c4d79700",
+    "proofs/foundation/NobleFoundation/Binary32SequenceFinite.lean": "f3b743814d57455148679acf79cb643d33b9ec1949dac6e25fefafc36d310ecc",
+    "proofs/foundation/NobleFoundation/Binary32Subnormal.lean": "4d43f898c8a9d8b9cb49badf3cdea6d70bf76ce0512bd4d6644770a9f1c016f4",
+    "proofs/foundation/NobleFoundation/Branch.lean": "a5eac8de95048bf5603969b1a8fc1658aec318b35552fa599047a3f03aa0799d",
+    "proofs/foundation/NobleFoundation/CacheLookup.lean": "904ee13066a365bc9b299329bd172101cec544bafbfd2eaee502da7ce734bbb1",
+    "proofs/foundation/NobleFoundation/Certificate.lean": "5b4c532feed1ae8df2e33ff55ae983f13997d158c365e08d38f422081dee527e",
+    "proofs/foundation/NobleFoundation/CertificateChained.lean": "31fcd2a14db6dbf883bf02a8d7465e49e724981c36646758f4910bf47a0d9418",
+    "proofs/foundation/NobleFoundation/CertificateChainedCorpus.lean": "6454020b03652c15d1b43fb4c002213037a0d18946ea89f292dc442ed9d8dcac",
+    "proofs/foundation/NobleFoundation/CertificateCodec.lean": "2970885583aabfe60a37f66d3c2f6fb8e68613a2870f35991321dd57d37b3a37",
+    "proofs/foundation/NobleFoundation/CertificateCorpus.lean": "46c5a56228816c8473fb0d10a7830a9955e1f86e45785cbf1ac40ec642a5b5be",
+    "proofs/foundation/NobleFoundation/CheckedI64.lean": "5970d22aa27be43305a1664d4ab401ce36e7b351f9acb7271c3104ef88406927",
+    "proofs/foundation/NobleFoundation/CheckedI64Expectations.lean": "6185f67b319f713839efa412f226e0033cce074bce2b79c7f60bc4070af4c76c",
+    "proofs/foundation/NobleFoundation/ConstructorReuse.lean": "54253c0465a27ac3202971de66a4c22af09786e64e255ff18cd1ba724ac212f4",
+    "proofs/foundation/NobleFoundation/DecimalImport.lean": "93ed8db961c43aecd8bcf3f0d53a5ec7733046cb815510b0eac55dfd15d7f83d",
+    "proofs/foundation/NobleFoundation/DecimalImportCorpus.lean": "bc3ea2025d4867bb95813cb2f00a7442acbdb858d0d42f194bc751bdf4fc328a",
+    "proofs/foundation/NobleFoundation/DecimalImportSpec.lean": "238a693c31773c580334cc9c35f7d55b70f1fe1174b067b8de56176b00e7bfde",
+    "proofs/foundation/NobleFoundation/Effects.lean": "db6ba1b65b13a69f79d6aa32ada805612c2e7f6ad5040b77f3d20c4ad7eacbe6",
+    "proofs/foundation/NobleFoundation/FirstProjection.lean": "17073143a8a107f30b8e428f960336c78a974420e26edec80f8fdbe214e85b9f",
+    "proofs/foundation/NobleFoundation/GraphRewrite.lean": "151638b4f46f9eb2031f5b34692877bba9ecc7e97d154df45d8411afa4eebf1d",
+    "proofs/foundation/NobleFoundation/GuardedRewrite.lean": "d592aa1e13b51ff4e63ff8e44c13a7a28d63c81de02afd3814c52f2957c73649",
+    "proofs/foundation/NobleFoundation/GuardedRewriteCorpus.lean": "b92e681556fe13bde19d0d8b49404678a2f3623c243c81d9856ebbd0447141f8",
+    "proofs/foundation/NobleFoundation/Helper.lean": "a801146e7ad9905dde393b60093d6c654eb2bacc4d6f5ba1eedc2c7f3441c3d7",
+    "proofs/foundation/NobleFoundation/ImplicitPropositions.lean": "0ff1b46f0610895459001a488fd3c8d39997e34939af4bd6531b31629a882503",
+    "proofs/foundation/NobleFoundation/ImplicitScope.lean": "dfda904f2c10f3deb51536cc65204e777ae460c06c7ea8a3c8a85530a3cbaed9",
+    "proofs/foundation/NobleFoundation/ImplicitUnification.lean": "6e2913f5d563b50e21ecbbfa051af53a55964f49471b286707141525def22408",
+    "proofs/foundation/NobleFoundation/Instr.lean": "793416b20827d2c0ef5c8ecca6996fdade3447a51486363d58f4ae36eb3100e9",
+    "proofs/foundation/NobleFoundation/InteractionNet.lean": "b070d6f517793a8e85b8aac2de5479c10020f03fb4cf5fcdef86209680aa4f78",
+    "proofs/foundation/NobleFoundation/InteractionNetOrientation.lean": "5bc6e663811879c2486dbd439de5f248101aa2556b16ac8ab686d78aadc091c9",
+    "proofs/foundation/NobleFoundation/Isop.lean": "e4b15733d4c3ee9a9b5aa59a7942c253a12fb6431ae8769aca5b432943a45883",
+    "proofs/foundation/NobleFoundation/IsopInterval.lean": "6990c35b9be8499aab30d6d1fb1b6676518edf98f0f7eb2a3c11838c657b9148",
+    "proofs/foundation/NobleFoundation/Laws.lean": "fdaf9eafaea872645a7e744380b8346fb3fe7a0a82af83bf2ad2d4e42c20acc2",
+    "proofs/foundation/NobleFoundation/LinkBoundary.lean": "af189ce07e2d14c92cbfa705e4fb249313910fd4fb7e1b9379827e0c50a17ce5",
+    "proofs/foundation/NobleFoundation/Literal.lean": "e6a2053848b738c7d1a7a0fcd6e6328c2199fc179a86344f032a038e33865d1f",
+    "proofs/foundation/NobleFoundation/LiveDispatch.lean": "668f572e09ff40d7e233d613c733120e010ac34e1e37f77e8854a6dca75a1d96",
+    "proofs/foundation/NobleFoundation/LlvmLowering.lean": "e9cd1cb7ed7560b6a7a441c5499a57130391b6c62561cc3d5abd628ba7e37dad",
+    "proofs/foundation/NobleFoundation/LlvmLoweringCorpus.lean": "fd0898b48c271742cf3adf8fc80f55b7f98752a066c3636bbd5f93fd9332f86a",
+    "proofs/foundation/NobleFoundation/NetI64.lean": "60329b179985ebd045d3f4d87a172c0b2a04a52c8748349f979a24609453512f",
+    "proofs/foundation/NobleFoundation/NetI64Corpus.lean": "3209be1302c8f8d5c858599437c538bb1015560b34957f4ba847f56cf9c9848d",
+    "proofs/foundation/NobleFoundation/NetLabelled.lean": "9a3bbb2e5d497b2d99b592f98c8b74973c28c306a585982fa8f563232d17a3db",
+    "proofs/foundation/NobleFoundation/OperandForwarding.lean": "beaaef847e886e6d11fdd100801c1045a87301107d5d9b19f78dca243023ae94",
+    "proofs/foundation/NobleFoundation/Ownership.lean": "53e4b0bb95927746d06f8037653a09102c24b154efeb11a11d712475fdd2dbfc",
+    "proofs/foundation/NobleFoundation/OwnershipConservation.lean": "0f8da9b7091825d8b422df8f36cb56369ec9a45da8a789eb82a1cbf4680843a3",
+    "proofs/foundation/NobleFoundation/OwnershipCorpus.lean": "7e04f37e168b2163c6206d45e4883b3c43dfae4e3c12d6fbcf21c0696ba0633d",
+    "proofs/foundation/NobleFoundation/OwnershipJudgment.lean": "c5d8ccb41e4ec939606056e7f2fe871cf15e52daa8d5c8f67a6406c2097846ad",
+    "proofs/foundation/NobleFoundation/OwnershipTrace.lean": "3edfeb2d08f8a3e1bb15ae43f44f8766f943bbace641b55f6ce7efb9b6520fe0",
+    "proofs/foundation/NobleFoundation/PackedLayout.lean": "1edc32e5665d284187e89676e2b17b20364399046440984dc94428c4f1555f88",
+    "proofs/foundation/NobleFoundation/PackedLayoutCorpus.lean": "f8a005e6932984ab9bd679e3da22a44f3a7f3010f95ca89d8d197d620454844f",
+    "proofs/foundation/NobleFoundation/PackedLayoutEncoded.lean": "b80ec0289d1ff9ff229a678ce78dd424b59b663ebdeebe170282c318c68f0da1",
+    "proofs/foundation/NobleFoundation/PackedSchedule.lean": "0e1db688aeec829d207fc640f06ece9cdf47dac4d2d98e1f0ea329c187de2757",
+    "proofs/foundation/NobleFoundation/PackedScheduleCorpus.lean": "293db89e26479b48bdc66bc03dd9d55d5f49a1464a423ef43c3b4115925fb467",
+    "proofs/foundation/NobleFoundation/PackedScheduleGuard.lean": "e05aecb8de1469eac08fc0eae95182ed7ccdd238b998ba4c6d8e566b4cb19bd1",
+    "proofs/foundation/NobleFoundation/PackedScheduleGuardCorpus.lean": "68e58a30880d1ef278b9cf3a63483bed3111e44c24e533c4251e12c219f3a53b",
+    "proofs/foundation/NobleFoundation/Preservation.lean": "eca891529026afc160fb72313224253cd3624f8581f4171b37405cfca2b4a46f",
+    "proofs/foundation/NobleFoundation/RecurrentBitCell.lean": "8558f2c3c58729c33627f5154835fe65fb04d0050fa1c89ebc0f29a6f2414ff4",
+    "proofs/foundation/NobleFoundation/RegionProtocol.lean": "d65767c6cb0f9f4593fd987b35f40e09cbed4d0952e7ce68600b7472656cb52b",
+    "proofs/foundation/NobleFoundation/Regressions.lean": "5a945960477c2692fa0d714e88624cb5c3257ee21dc1c8c0f0ebd24092f8d727",
+    "proofs/foundation/NobleFoundation/Repr.lean": "b8fb9ab30fb80e75c4df5d51b56fe3b178eef1415e7f09ba85a3a2b1d08d93f8",
+    "proofs/foundation/NobleFoundation/ReverseAD.lean": "9c4a43022a600bdbb29473eb015f109b602541521eb541f6590ec37d82350ebf",
+    "proofs/foundation/NobleFoundation/ReverseADAdjoint.lean": "3510bdbc634917e30882ff207f765804848d39d7a857db4feaac31abc4657697",
+    "proofs/foundation/NobleFoundation/ReverseADMutations.lean": "a3b50c2df05ea26332e8407bfae7f77d6fa4059376aab54c0ab237b8878d7480",
+    "proofs/foundation/NobleFoundation/ReverseADOrdered.lean": "9a4aeaa81122c6b25fda9fab7e0de747d2dccecd658b6983aa2a80bb4d283d81",
+    "proofs/foundation/NobleFoundation/ReverseADTranspose.lean": "06c5a0b555081af3adbad29b09a44872b4dbc8da17ebab382639ae0c7af86f3e",
+    "proofs/foundation/NobleFoundation/Sequence.lean": "4b2d84b438845b345b7a8a98232a82dedda79d19d1c05e12b0d8a2972c02d73e",
+    "proofs/foundation/NobleFoundation/ServiceWire.lean": "3e61096e8ecd7e95b0d640007455d626d89c759b53b303d5dbe46991487ed863",
+    "proofs/foundation/NobleFoundation/SgdReference.lean": "c2d64930d7d61666f6989312577ea0197e1da02c080979a14bbdf9a87beb6102",
+    "proofs/foundation/NobleFoundation/SgdReferenceCorpus.lean": "b4e11731adec97bb4523b6b19eb21767984988f62b0b3f0f31b6caa8f0fa4dd4",
+    "proofs/foundation/NobleFoundation/SizeChangeSound.lean": "7bbc9fd7c670c49dea11ab9019bb137d783d7eb7cdcccb9138130938e2825551",
+    "proofs/foundation/NobleFoundation/Slice.lean": "ba0408f65203afc6f6f527742aa435ea550cdc3f0ad466a29ed02ec1d5c8577c",
+    "proofs/foundation/NobleFoundation/SpecQuality.lean": "4c63c40f7e84f946897fe6d1793816a1a20e88531bcc7c8818725690ae973c30",
+    "proofs/foundation/NobleFoundation/Specialize.lean": "c7e6b571ac2ec4522705e0e7e2e6aa2f2f7535c960ce6607b24b8f41bb659887",
+    "proofs/foundation/NobleFoundation/SymbolicEncoder.lean": "091ee8c83bdc49cd925e5d49bcbb877eaf8f9272c31db56e7e22583b000ae0d7",
+    "proofs/foundation/NobleFoundation/SymbolicEncoderCorpus.lean": "1002666bc2d01b4cd6c2cc1578c311c7cff1f27733acb938eb02b31ac6548d04",
+    "proofs/foundation/NobleFoundation/SymbolicMutations.lean": "b8bdc098d721984760ea07c8b12402bf009916eef224cefcadf6a3bc9a153c90",
+    "proofs/foundation/NobleFoundation/SymbolicPair.lean": "a6284fc2d4bf94fcfe23639634ed922f1484e40857609cdacb9914cdb905066f",
+    "proofs/foundation/NobleFoundation/SymbolicPairCertified.lean": "90164d9661cdaa441e42022c3db3273fd08d8acb286b2ce79aa3591f0be518c9",
+    "proofs/foundation/NobleFoundation/SymbolicPairCorpus.lean": "2111d03077e847879c2bc90234887b17cbe8dec71357ca7d3461a00e7e893ff1",
+    "proofs/foundation/NobleFoundation/SymbolicRefusals.lean": "18d80ccbb9d1efe6313d2afddbe734edab809a30d5206d0ba5aedda1db5507d8",
+    "proofs/foundation/NobleFoundation/SymbolicRefusalsReplay.lean": "630ab62cdce9d67310e6e85101e6231fcf0e33f813825e651e2b076e4844cb40",
+    "proofs/foundation/NobleFoundation/SymbolicShrink.lean": "82db7c4e167340231d9b6b8b57b34de6e12e78eca978d454d1de735a09bffc1a",
+    "proofs/foundation/NobleFoundation/SymbolicShrinkCorpus.lean": "c364a741cefccfd25f435917e63c57cf1a25e229f623e051bb583f2595035961",
+    "proofs/foundation/NobleFoundation/SymbolicSolver.lean": "749f1d1f80057f578c985f0f04e162bf26e4d59319912714ccc85b9b412e1fa8",
+    "proofs/foundation/NobleFoundation/SymbolicSolverReplay.lean": "23a4b790b6ca5787f6fdbd8e95b4a213d409f2d0e4a6d962cc859e50d9ba8a5a",
+    "proofs/foundation/NobleFoundation/SynthesisCertified.lean": "ba6c03baef3e1f497bf87334c1a04f72fb962ef4e55661bc178d89e868d7a64f",
+    "proofs/foundation/NobleFoundation/TaskInterleaving.lean": "de82ce9252d5c1b44bd7387f96ce40bf418090dc4ec852e83b57c37d29c9775c",
+    "proofs/foundation/NobleFoundation/TaskScope.lean": "07d99947405cd9c166d38d8801ccfdfa53df801d016e45831e26b9f7e3024157",
+    "proofs/foundation/NobleFoundation/TaskScopeCorpus.lean": "13ac3e59c35719f069a3bdd834847752126cb728222487026b54826124701052",
+    "proofs/foundation/NobleFoundation/UsePermissions.lean": "92b2c6ad1d55f637e6c52028f7d8c2cd4d312717ad2dc75284c78b65f4e4bed2",
+    "proofs/foundation/inventory.json": "7aaacfca96850f8a6fc58568fd1e7df614530d00e76bba603af732c11232ba28",
+    "proofs/foundation/lakefile.toml": "86e3085b4533d11474eed77c9ae95aef07e54515fc28f64302e03563b1ca3775",
+    "proofs/foundation/lake-manifest.json": "7b0ec9c6609ec6f055252a0eefda4d0eeec1e49cd20f340b3c8213eca36fc30e",
+    "proofs/foundation/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+    "proofs/m3/MathlibI64.lean": "deb32a80f4593d042b20c636ffebaeed69347f0b248e4a19490e0133048dc618",
+    "proofs/mc1/NobleContracts/Model.lean": "368cad7d6d86db4b182bd6b9e2bd0d3a354559c04579e3e27b789bb69313a7c3",
+    "proofs/mc1/NobleContracts/NamedSubject.lean": "ab1a1a3e46c60fb8179f714806a2c5f3e6005d201f9e0943d340bcf571aa3d26",
+    "proofs/mc1/NobleContracts/Rules.lean": "1d5802ddec13fcfcbba70e6c75f46ab051ea569e6f30fe92d61e3b5dec8d877b",
+    "proofs/mc1/NobleContracts/Obligation.lean": "13dddb8d47346ba648eb2dd372031ccd2f2e090f3312f1797a1ca567ab9cd616",
+    "proofs/mc1/NobleContracts/Composition.lean": "baae47050f6d445dc7b85ebff72a6bfe40a1f96de92c310ad6ae507bcb0b1d89",
+    "proofs/mc1/NobleContracts/Examples.lean": "280088bedaac3432addc18cb03ec97659c71dca7507fd112623844a09f4ae549",
+    "proofs/inets/InteractionNets.lean": "c7a35dad49822583a9ee209b47d8ba5617d5abcb5a7f9f96df05e8502f362f54",
+    "proofs/inets/UPSTREAM.json": "654f5532f65eadf66c5a6f8f783ed228f8648c7c0cb47b09fed79c3e8d329822",
+    "policy/tool-selection.json": "efd41089fc20f0228f24fbbe10af0a232325109e953da6f91e59bef02647f621",
+    "verification/foundation/check.mjs": "0cf49ad0f72efcfc0325a2c5c3cfa388902af35b9b517f0fb528e44257f5bdec"
+  },
+  "full_foundation_audit_sha256": "856ae0caac04dead0b43a69e60c7afa4856c3201e76772041e1d8cabeb33a3d4",
+  "lean_proofs_summary_sha256": "6d2ba8f00dfc3d34ea5274843c3adc6df384f36481106d34e41d6714d35875e3",
+  "lean_proofs_summary": [
+    "m3-build=0",
+    "m3-gate=0",
+    "foundation-build=0",
+    "foundation-check=0",
+    "overall=0"
+  ],
+  "audit_theorem_count": 2085,
+  "allowed_axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "recurrent_theorems": [
+    {
+      "name": "NobleFoundation.RecurrentBitCell.decode_encode_word",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.encode_decode_word",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.sumGate_xor",
+      "axioms": []
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.carryGate_majority",
+      "axioms": []
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.graphAdder_correct",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.graphAdder_decodes",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.accumulator_initialization",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.accumulator_one_step",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.stack_initialization",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.stack_swap_one_step",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.step_bound_before_limit",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.step_bound_halts_at_limit",
+      "axioms": [
+        "propext"
+      ]
+    }
+  ],
+  "scope": "Universal Boolean-cell model proof; no Rust-to-Lean, ONNX-emitter, runtime-refinement or hybrid-state theorem."
+}
