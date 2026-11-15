@@ -200,7 +200,7 @@ mod tests {
     fn nonheldout_source_steps_retrieve_each_admitted_source() -> Result<(), String> {
         let namespace = Session::without_test_hosts();
         let mut library = ProcedureLibrary::new(super::super::revision(7));
-        let mut ids = Vec::new();
+        let mut ids = Vec::with_capacity(2);
         for task in [SourceTask::Scaled, SourceTask::Product] {
             let record = super::super::producer::task_record(task, Producer::Synthesis)?;
             ids.push(
