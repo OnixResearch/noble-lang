@@ -2021,6 +2021,10 @@ fn read_back(
 mod tests {
     use super::*;
 
+    mod emission {
+        include!("net/plan/corpus.rs");
+    }
+
     const REQUIRED_ALLOCATION_ARENA_SLOTS: u64 = 4;
 
     struct TestIds;
@@ -2646,6 +2650,32 @@ mod tests {
         assert!(
             rewrite::check(&omitted_write, &slots, &outputs, pair, StoragePolicy::Reuse).is_err()
         );
+
+        let mut omitted_external =
+            rewrite::compile(&slots, &outputs, pair, StoragePolicy::Reuse).expect("op2 plan");
+        // Remove one three-byte reciprocal output write while keeping the
+        // version-one field grammar, reservations and commit marker intact.
+        let write_count_offset_bytes = 76;
+        assert_eq!(omitted_external.as_bytes()[write_count_offset_bytes], 2);
+        let external_count_offset_bytes = write_count_offset_bytes + 1 + 3 * 2;
+        assert_eq!(omitted_external.as_bytes()[external_count_offset_bytes], 2);
+        let second_external_offset_bytes = external_count_offset_bytes + 1 + 3;
+        omitted_external.as_mut_bytes()[external_count_offset_bytes] = 1;
+        omitted_external.remove_bytes_for_test(second_external_offset_bytes, 3);
+        assert!(
+            omitted_external.decodes_for_test(),
+            "syntax must still decode"
+        );
+        assert!(matches!(
+            rewrite::check(
+                &omitted_external,
+                &slots,
+                &outputs,
+                pair,
+                StoragePolicy::Reuse
+            ),
+            Err(Invalid::PlanMismatch)
+        ));
 
         let mut extra_write =
             rewrite::compile(&slots, &outputs, pair, StoragePolicy::Reuse).expect("op2 plan");

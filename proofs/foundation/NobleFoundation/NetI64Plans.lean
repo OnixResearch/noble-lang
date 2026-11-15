@@ -829,7 +829,7 @@ theorem BytePlan.decode_header {bytes : List UInt8} {plan : BytePlan}
 
 /-- OP2/number: reuse the consumed rule slot, initialize one staged I64
 result, and retarget two ordered output boundaries. -/
-private def op2OutputFixture : BytePlan :=
+def op2OutputFixture : BytePlan :=
   { reuse := true
     opcode := 1
     pair := (0, 0, 1, 0)
@@ -865,7 +865,7 @@ theorem BytePlan.op2_rule_symbols :
 
 /-- One OP2 principal result wired to a live external number, hence a new
 active pair, while the other result port remains connected to an output. -/
-private def op2PublishedFixture : BytePlan :=
+def op2PublishedFixture : BytePlan :=
   { op2OutputFixture with
     boundaries := [((0, 1), (0, 2, 0)), ((0, 2), (1, 0, 0))]
     worklistReservation := 1
@@ -882,7 +882,7 @@ theorem BytePlan.op2_published_image :
 
 /-- OP1/subtract: stage the wrapped result into the reused consumed rule slot,
 retargeting one external output. -/
-private def op1OutputFixture : BytePlan :=
+def op1OutputFixture : BytePlan :=
   { reuse := true
     opcode := 2
     pair := (0, 0, 1, 0)
@@ -919,7 +919,7 @@ theorem BytePlan.op1_wrapping_rule_symbols :
 
 /-- DUP/number: reuse both consumed slots, retag both with the numeric
 payload, and retarget the two external outputs separately. -/
-private def dupOutputFixture : BytePlan :=
+def dupOutputFixture : BytePlan :=
   { reuse := true
     opcode := 3
     pair := (0, 0, 1, 0)
@@ -958,7 +958,7 @@ theorem BytePlan.dup_rule_symbols :
 /-- One erasure image with physical slots zero and one, both at generation zero.
 The same 51-byte layout is used by the Rust writer for the no-result erasure
 rule; its Rust identity remains a separate, finite differential obligation. -/
-private def eraPlanBytes : List UInt8 :=
+def eraPlanBytes : List UInt8 :=
   [78, 80, 76, 78, 1, 0, 4] ++
   [0, 0, 0, 0] ++ List.replicate 8 0 ++
   [1, 0, 0, 0] ++ List.replicate 8 0 ++
@@ -1553,7 +1553,7 @@ private theorem PhysicalState.publishAll_output_labels
   | nil =>
     simp [PhysicalState.publishAll] at h
     cases h
-    rfl
+    simp
   | cons pair rest ih =>
     cases hp : state.publish pair with
     | none => simp [PhysicalState.publishAll, hp] at h
@@ -1682,9 +1682,262 @@ theorem PhysicalState.executeCheckedImage_preserves_free
                   PhysicalState.installResults_output_labels hi
     · simp [hd, pair, hp] at h
 
+/-- Installing a result does not modify the pending physical queue, even
+when the result reuses one of the consumed physical slots. -/
+private theorem PhysicalState.installResult_work
+    {state next : PhysicalState} {plan : BytePlan} {logical : Id}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    (h : state.installResult plan logical result = some next) :
+    next.work = state.work := by
+  unfold PhysicalState.installResult at h
+  cases hd : state.slots[result.2.2.2.1]? with
+  | none => simp [hd] at h
+  | some donor =>
+    cases ha : donor.agent with
+    | none => simp [hd, ha] at h
+    | some data =>
+      cases hports : result.2.2.2.2.mapM plan.resultTarget with
+      | none => simp [hd, hports] at h
+      | some ports =>
+        by_cases hfresh : result.1
+        · simp [hd, ha, hports, hfresh, PhysicalState.appendSlot] at h
+          rcases h with ⟨_, heq⟩
+          cases heq
+          rfl
+        · cases ho : state.slots[result.2.1]? with
+          | none => simp [hd, hports, hfresh, ho] at h
+          | some old =>
+            simp [hd, ha, hports, hfresh, ho,
+              PhysicalState.writeSlot] at h
+            rcases h with ⟨_, heq⟩
+            cases heq
+            rfl
+
+/-- Any finite sequence of checked result installations leaves the existing
+physical worklist in place, independently of slot allocation strategy. -/
+private theorem PhysicalState.installResults_work
+    {plan : BytePlan} {left right : Id} {rhs : XRhs NetSym}
+    {index : Nat} {state next : PhysicalState}
+    {results : List (Bool × Nat × NetSym × Nat × List (Option Nat))}
+    (h : PhysicalState.installResults plan left right rhs index state results =
+      some next) :
+    next.work = state.work := by
+  induction results generalizing index state next with
+  | nil =>
+    simp [PhysicalState.installResults] at h
+    subst next
+    rfl
+  | cons result rest ih =>
+    cases hs : rhs.slots[index]? with
+    | none => simp [PhysicalState.installResults, hs] at h
+    | some slot =>
+      by_cases hlab : rhs.lab slot.1 slot.2 = some result.2.2.1
+      · cases hi : state.installResult plan
+          (child left right slot.1 slot.2) result with
+        | none =>
+          simp [PhysicalState.installResults, hs, hlab, hi] at h
+        | some installed =>
+          have hrest : PhysicalState.installResults plan left right rhs
+              (index + 1) installed rest = some next := by
+            simpa [PhysicalState.installResults, hs, hlab, hi] using h
+          exact (ih hrest).trans (PhysicalState.installResult_work hi)
+      · simp [PhysicalState.installResults, hs, hlab] at h
+
+/-- Neither a consumed-slot retirement nor its free-list update can remove
+or reorder an existing pending pair. -/
+private theorem PhysicalState.retire_work
+    {state next : PhysicalState} {index : Nat} {reuse : Bool}
+    (h : state.retire index reuse = some next) :
+    next.work = state.work := by
+  by_cases hr : reuse
+  · simp [PhysicalState.retire, hr] at h
+    cases h
+    rfl
+  · cases ho : state.slots[index]? with
+    | none => simp [PhysicalState.retire, hr, ho] at h
+    | some old =>
+      simp [PhysicalState.retire, hr, ho, PhysicalState.writeSlot] at h
+      rcases h with ⟨_, heq⟩
+      cases heq
+      rfl
+
+/-- An output retarget preserves the pending physical queue. -/
+private theorem PhysicalState.retargetOutput_work
+    {state next : PhysicalState} {index : Nat} {target : Nat × Nat}
+    (h : state.retargetOutput index target = some next) :
+    next.work = state.work := by
+  unfold PhysicalState.retargetOutput at h
+  cases ho : retargetOutputList index target state.outputs with
+  | none => simp [ho] at h
+  | some outputs =>
+    simp [ho] at h
+    cases h
+    rfl
+
+/-- A reciprocal external peer write or output retarget has no physical
+worklist effect; publication is a distinct, later step. -/
+private theorem PhysicalState.writeExternal_work
+    {state next : PhysicalState} {plan : BytePlan}
+    {write : Nat × Nat × Nat}
+    (h : state.writeExternal plan write = some next) :
+    next.work = state.work := by
+  unfold PhysicalState.writeExternal at h
+  cases hr : plan.results[write.1]? with
+  | none => simp [hr] at h
+  | some result =>
+    cases hb : plan.boundaries[write.2.2]? with
+    | none => simp [hr, hb] at h
+    | some boundary =>
+      by_cases hp : result.2.2.2.2[write.2.1]? = some (some write.2.2)
+      · cases boundary with
+        | mk physical tag =>
+          cases tag with
+          | mk kind peerAndPort =>
+            cases peerAndPort with
+            | mk peer port =>
+              cases kind with
+              | zero =>
+                cases hs : state.slots[peer]? with
+                | none => simp [hr, hb, hs] at h
+                | some old =>
+                  simp [hr, hb, hp, hs, PhysicalState.writeSlot] at h
+                  rcases h with ⟨_, _, heq⟩
+                  cases heq
+                  rfl
+              | succ kind =>
+                cases kind with
+                | zero =>
+                  cases port with
+                  | zero =>
+                    cases ho : state.outputs[peer]? with
+                    | none => simp [hr, hb, ho] at h
+                    | some old =>
+                      simp [hr, hb, hp, ho] at h
+                      rcases h with ⟨_, hretarget⟩
+                      exact PhysicalState.retargetOutput_work hretarget
+                  | succ port => simp [hr, hb] at h
+                | succ kind => simp [hr, hb] at h
+      · simp [hr, hb, hp] at h
+
+/-- Every finite sequence of reciprocal writes keeps all old physical
+worklist entries, including entries unrelated to the selected pair. -/
+private theorem PhysicalState.writeExternals_work
+    {state next : PhysicalState} {plan : BytePlan}
+    {writes : List (Nat × Nat × Nat)}
+    (h : state.writeExternals plan writes = some next) :
+    next.work = state.work := by
+  induction writes generalizing state next with
+  | nil =>
+    simp [PhysicalState.writeExternals] at h
+    cases h
+    rfl
+  | cons write rest ih =>
+    cases hw : state.writeExternal plan write with
+    | none => simp [PhysicalState.writeExternals, hw] at h
+    | some rewired =>
+      have hrest : rewired.writeExternals plan rest = some next := by
+        simpa [PhysicalState.writeExternals, hw] using h
+      exact (ih hrest).trans (PhysicalState.writeExternal_work hw)
+
+/-- Publishing one checked physical pair appends it after every old entry;
+the queue is not reordered by generation-mark writes. -/
+private theorem PhysicalState.publish_work
+    {state next : PhysicalState} {pair : PhysicalPair}
+    (h : state.publish pair = some next) :
+    next.work = state.work ++ [pair] := by
+  by_cases hp : pair.first >= pair.second
+  · simp [PhysicalState.publish, hp] at h
+  · cases hf : state.slots[pair.first]? with
+    | none => simp [PhysicalState.publish, hp, hf] at h
+    | some first =>
+      cases hs : state.slots[pair.second]? with
+      | none => simp [PhysicalState.publish, hp, hf, hs] at h
+      | some second =>
+        simp [PhysicalState.publish, hp, hf, hs,
+          PhysicalState.writeSlot, PhysicalState.appendPublications] at h
+        rcases h with ⟨_, heq⟩
+        cases heq
+        rfl
+
+/-- All successful publications append in byte-plan order, even if the
+pre-existing pending worklist is nonempty. -/
+private theorem PhysicalState.publishAll_work
+    {state next : PhysicalState} {pairs : List PhysicalPair}
+    (h : state.publishAll pairs = some next) :
+    next.work = state.work ++ pairs := by
+  induction pairs generalizing state next with
+  | nil =>
+    simp [PhysicalState.publishAll] at h
+    cases h
+    simp
+  | cons pair rest ih =>
+    cases hp : state.publish pair with
+    | none => simp [PhysicalState.publishAll, hp] at h
+    | some published =>
+      have hrest : published.publishAll rest = some next := by
+        simpa [PhysicalState.publishAll, hp] using h
+      calc
+        next.work = published.work ++ rest := ih hrest
+        _ = (state.work ++ [pair]) ++ rest := by rw [PhysicalState.publish_work hp]
+        _ = state.work ++ (pair :: rest) := by simp [List.append_assoc]
+
+/-- A successful physical execution preserves the entire old physical
+worklist as a prefix and appends precisely the decoded publication tuples.
+This is independent of the number of results, reused/fresh slots, rule
+orientation, peer/output boundaries and prior pending entries. It says
+nothing about whether the bytes were emitted by Rust or checker-admitted. -/
+theorem PhysicalState.executeCheckedImage_work_append
+    {state next : PhysicalState} {bytes : List UInt8}
+    {redex : XRedex NetSym} {plan : BytePlan}
+    (hdecode : BytePlan.decode bytes = some plan)
+    (h : state.executeCheckedImage bytes redex = some next) :
+    next.work = state.work ++
+      plan.publications.map fun (first, firstGeneration, second, secondGeneration) =>
+        { first, firstGeneration := UInt64.ofNat firstGeneration,
+          second, secondGeneration := UInt64.ofNat secondGeneration : PhysicalPair } := by
+  unfold PhysicalState.executeCheckedImage at h
+  let pair : PhysicalPair :=
+    { first := plan.pair.1
+      firstGeneration := UInt64.ofNat plan.pair.2.1
+      second := plan.pair.2.2.1
+      secondGeneration := UInt64.ofNat plan.pair.2.2.2 }
+  by_cases hp : state.logicalPair pair = some (redex.1, redex.2.1)
+  · simp [hdecode, pair, hp] at h
+    cases hi : PhysicalState.installResults plan redex.1 redex.2.1
+        redex.2.2.2.2 0 state plan.results with
+    | none => simp [hi] at h
+    | some installed =>
+      simp [hi] at h
+      cases hw : installed.writeExternals plan plan.externalWrites with
+      | none => simp [hw] at h
+      | some rewired =>
+        simp [hw] at h
+        cases hf : rewired.retire plan.pair.1 (plan.action.1 == 1) with
+        | none => simp [hf] at h
+        | some retiredFirst =>
+          simp [hf] at h
+          cases hs : retiredFirst.retire plan.pair.2.2.1
+              (plan.action.2 == 1) with
+          | none => simp [hs] at h
+          | some retiredSecond =>
+            simp [hs] at h
+            calc
+              next.work = retiredSecond.work ++
+                plan.publications.map fun (first, firstGeneration, second, secondGeneration) =>
+                  { first, firstGeneration := UInt64.ofNat firstGeneration,
+                    second, secondGeneration := UInt64.ofNat secondGeneration : PhysicalPair } :=
+                PhysicalState.publishAll_work h
+              _ = state.work ++
+                plan.publications.map fun (first, firstGeneration, second, secondGeneration) =>
+                  { first, firstGeneration := UInt64.ofNat firstGeneration,
+                    second, secondGeneration := UInt64.ofNat secondGeneration : PhysicalPair } := by
+                rw [PhysicalState.retire_work hs, PhysicalState.retire_work hf,
+                  PhysicalState.writeExternals_work hw, PhysicalState.installResults_work hi]
+  · simp [hdecode, pair, hp] at h
+
 /-- An output-connected OP2/number instance with a selected active pair at
 generation zero. External identities remain stable when its two targets move. -/
-private def op2PhysicalStart : PhysicalState :=
+def op2PhysicalStart : PhysicalState :=
   { slots := #[
       { agent := some ([1], .op2 .add)
         generation := 0
@@ -1700,7 +1953,7 @@ private def op2PhysicalStart : PhysicalState :=
       { label := ([101], 0), target := (0, 2) }]
     work := [] }
 
-private def op2PhysicalRedex : XRedex NetSym :=
+def op2PhysicalRedex : XRedex NetSym :=
   ([1], [2], .op2 .add, .num (BitVec.ofNat 64 27),
     (NetI64.op2NumData .add (BitVec.ofNat 64 27)).toX)
 
@@ -1765,7 +2018,7 @@ private theorem op2_plan_writes :
 
 /-- Expected result of executing the decoded OP2 image, including the
 generation increment, freed consumed slot and both exact output retargets. -/
-private def op2PhysicalAfter : PhysicalState :=
+def op2PhysicalAfter : PhysicalState :=
   { slots := #[
       { agent := some (child [1] [2] (some false) 0,
           .op1 .add (BitVec.ofNat 64 27))
@@ -1841,9 +2094,41 @@ theorem PhysicalState.op2_output_refines :
   · intro p
     rfl
 
+/-- The byte grammar alone accepts an image omitting the second output write.
+The independent semantic plan checker must rule this out: successful physical
+decoding and execution do not themselves establish abstract refinement. -/
+def op2OmittedExternalFixture : BytePlan :=
+  { op2OutputFixture with externalWrites := [(0, 0, 0)] }
+
+theorem BytePlan.op2_omitted_external_decodes :
+    BytePlan.decode op2OmittedExternalFixture.emit =
+      some op2OmittedExternalFixture := by
+  set_option maxRecDepth 3000 in decide
+
+def op2OmittedExternalAfter : PhysicalState :=
+  { op2PhysicalAfter with
+    outputs := [
+      { label := ([100], 0), target := (0, 0) },
+      { label := ([101], 0), target := (0, 2) }] }
+
+theorem PhysicalState.op2_omitted_external_execution_exact :
+    op2PhysicalStart.executeCheckedImage op2OmittedExternalFixture.emit
+      op2PhysicalRedex = some op2OmittedExternalAfter := by
+  set_option maxRecDepth 2000 in decide
+
+/-- The parser-only image successfully executes but leaves the second
+ordered output at the consumed node's old port, not the rule's result port. -/
+theorem PhysicalState.op2_omitted_external_miswires :
+    op2OmittedExternalAfter.project.wires[([101], 0)]? ≠
+      op2PhysicalAfter.project.wires[([101], 0)]? := by
+  simp [PhysicalState.project, PhysicalState.wires,
+    PhysicalState.portWires, PhysicalState.logicalPort,
+    op2OmittedExternalAfter, op2PhysicalAfter,
+    Std.HashMap.getElem_insert]
+
 /-- A nonempty publication: the resulting OP1's principal is connected to a
 third live number, while its auxiliary still points at an ordered output. -/
-private def op2PublishedStart : PhysicalState :=
+def op2PublishedStart : PhysicalState :=
   { slots := #[
       { agent := some ([1], .op2 .add)
         generation := 0
@@ -1867,7 +2152,7 @@ private def op2PublishedPair : PhysicalPair :=
     second := 2
     secondGeneration := 0 }
 
-private def op2PublishedAfter : PhysicalState :=
+def op2PublishedAfter : PhysicalState :=
   { slots := #[
       { agent := some (child [1] [2] (some false) 0,
           .op1 .add (BitVec.ofNat 64 27))
@@ -2025,7 +2310,7 @@ theorem PhysicalState.op2_published_refines :
 
 /-- The zero-result erasure image has no boundaries and retires both
 generation-zero slots without leaving a live agent or active pair. -/
-private def eraPhysicalStart : PhysicalState :=
+def eraPhysicalStart : PhysicalState :=
   { slots := #[
       { agent := some ([1], .era)
         generation := 0
@@ -2039,11 +2324,11 @@ private def eraPhysicalStart : PhysicalState :=
     outputs := []
     work := [] }
 
-private def eraPhysicalRedex : XRedex NetSym :=
+def eraPhysicalRedex : XRedex NetSym :=
   ([1], [2], .era, .num (BitVec.ofNat 64 42),
     NetI64.eraNumData.toX)
 
-private def eraPhysicalAfter : PhysicalState :=
+def eraPhysicalAfter : PhysicalState :=
   { slots := #[
       { agent := none
         generation := 1
@@ -2134,7 +2419,7 @@ theorem PhysicalState.era_refines :
 
 /-- A checked OP1 subtraction output image replaces the consumed operation
 with the wrapped I64 result and frees the second slot. -/
-private def op1PhysicalStart : PhysicalState :=
+def op1PhysicalStart : PhysicalState :=
   { slots := #[
       { agent := some ([1], .op1 .sub (BitVec.ofNat 64 7))
         generation := 0
@@ -2148,13 +2433,13 @@ private def op1PhysicalStart : PhysicalState :=
     outputs := [{ label := ([100], 0), target := (0, 1) }]
     work := [] }
 
-private def op1PhysicalRedex : XRedex NetSym :=
+def op1PhysicalRedex : XRedex NetSym :=
   ([1], [2], .op1 .sub (BitVec.ofNat 64 7),
     .num (BitVec.ofNat 64 13),
     (NetI64.op1NumData .sub (BitVec.ofNat 64 7)
       (BitVec.ofNat 64 13)).toX)
 
-private def op1PhysicalAfter : PhysicalState :=
+def op1PhysicalAfter : PhysicalState :=
   { slots := #[
       { agent := some (child [1] [2] (some false) 0,
           .num (BitVec.ofInt 64 (-6)))
@@ -2264,7 +2549,7 @@ theorem PhysicalState.op1_wrapping_refines :
 
 /-- Two-result DUP stages both replacement numbers in the original physical
 slots and preserves each output's stable logical label separately. -/
-private def dupPhysicalStart : PhysicalState :=
+def dupPhysicalStart : PhysicalState :=
   { slots := #[
       { agent := some ([1], .dup)
         generation := 0
@@ -2280,11 +2565,11 @@ private def dupPhysicalStart : PhysicalState :=
       { label := ([101], 0), target := (0, 2) }]
     work := [] }
 
-private def dupPhysicalRedex : XRedex NetSym :=
+def dupPhysicalRedex : XRedex NetSym :=
   ([1], [2], .dup, .num (BitVec.ofNat 64 42),
     (NetI64.dupNumData (BitVec.ofNat 64 42)).toX)
 
-private def dupPhysicalAfter : PhysicalState :=
+def dupPhysicalAfter : PhysicalState :=
   { slots := #[
       { agent := some (child [1] [2] (some false) 0,
           .num (BitVec.ofNat 64 42))
@@ -2443,6 +2728,141 @@ theorem PhysicalState.project_work_frame {state : PhysicalState}
           simp [PhysicalState.pairOrientations,
             PhysicalState.logicalPair_writeSlot_away hpair.1 hpair.2], hrest]
   exact preserve state.work outside
+
+/-- The only fields of a physical slot used to decode a pending active pair.
+Port retargets and queued-generation marks are deliberately absent. -/
+def PhysicalState.pairSlotView (state : PhysicalState)
+    (index : Nat) : Option (UInt64 × Option Id) :=
+  (state.slots[index]?).map fun slot =>
+    (slot.generation, slot.agent.map Prod.fst)
+
+/-- Pending-pair representation is stable when its two slot generations and
+agent identities are unchanged; other physical fields may differ. -/
+def PhysicalState.SamePairSlots (before after : PhysicalState)
+    (pair : PhysicalPair) : Prop :=
+  before.pairSlotView pair.first = after.pairSlotView pair.first ∧
+    before.pairSlotView pair.second = after.pairSlotView pair.second
+
+/-- A write outside a queued pair's endpoint leaves the endpoint's physical
+generation and logical agent identity unchanged. -/
+theorem PhysicalState.pairSlotView_writeSlot_away
+    {state : PhysicalState} {index other : Nat}
+    {replacement : PhysicalSlot} (h : index ≠ other) :
+    (state.writeSlot index replacement).pairSlotView other =
+      state.pairSlotView other := by
+  unfold PhysicalState.pairSlotView
+  rw [PhysicalState.writeSlot_frame h]
+
+/-- Fresh allocation cannot change an existing queued slot's identity. -/
+theorem PhysicalState.pairSlotView_appendSlot_existing
+    {state : PhysicalState} {fresh : PhysicalSlot} {index : Nat}
+    (h : index < state.slots.size) :
+    (state.appendSlot fresh).pairSlotView index =
+      state.pairSlotView index := by
+  unfold PhysicalState.pairSlotView
+  rw [PhysicalState.appendSlot_frame h]
+
+/-- Disjoint physical writes preserve both endpoints of one queued pair. -/
+theorem PhysicalState.samePairSlots_writeSlot_away
+    {state : PhysicalState} {index : Nat} {replacement : PhysicalSlot}
+    {pair : PhysicalPair} (first : index ≠ pair.first)
+    (second : index ≠ pair.second) :
+    state.SamePairSlots (state.writeSlot index replacement) pair :=
+  ⟨(PhysicalState.pairSlotView_writeSlot_away first).symm,
+   (PhysicalState.pairSlotView_writeSlot_away second).symm⟩
+
+/-- Any in-bounds old pair survives a fresh slot append with both slot
+generation and logical identity unchanged. -/
+theorem PhysicalState.samePairSlots_appendSlot
+    {state : PhysicalState} {fresh : PhysicalSlot} {pair : PhysicalPair}
+    (first : pair.first < state.slots.size)
+    (second : pair.second < state.slots.size) :
+    state.SamePairSlots (state.appendSlot fresh) pair :=
+  ⟨(PhysicalState.pairSlotView_appendSlot_existing first).symm,
+   (PhysicalState.pairSlotView_appendSlot_existing second).symm⟩
+
+/-- The generation-checked pair decoder reads exactly `pairSlotView`, not
+ports, queue markers, free-list bookkeeping or output targets. -/
+private theorem PhysicalState.logicalPair_pairSlotView
+    (state : PhysicalState) (pair : PhysicalPair) :
+    state.logicalPair pair = (do
+      let (firstGeneration, firstAgent) ← state.pairSlotView pair.first
+      let (secondGeneration, secondAgent) ← state.pairSlotView pair.second
+      if firstGeneration != pair.firstGeneration ||
+          secondGeneration != pair.secondGeneration then none else do
+        let left ← firstAgent
+        let right ← secondAgent
+        some (left, right)) := by
+  cases hf : state.slots[pair.first]? with
+  | none => simp [PhysicalState.logicalPair, PhysicalState.pairSlotView, hf]
+  | some first =>
+    cases hs : state.slots[pair.second]? with
+    | none => simp [PhysicalState.logicalPair, PhysicalState.pairSlotView, hf, hs]
+    | some second =>
+      cases ha : first.agent with
+      | none =>
+        simp [PhysicalState.logicalPair, PhysicalState.pairSlotView, hf, hs, ha]
+      | some left =>
+        cases hb : second.agent with
+        | none =>
+          simp [PhysicalState.logicalPair, PhysicalState.pairSlotView, hf, hs, ha, hb]
+        | some right =>
+          simp [PhysicalState.logicalPair, PhysicalState.pairSlotView, hf, hs, ha, hb]
+
+/-- Field-level equality of a queued pair's two physical slot identities
+preserves its decoded logical endpoints, including its stale/valid status. -/
+theorem PhysicalState.logicalPair_of_same_pair_slots
+    {before after : PhysicalState} {pair : PhysicalPair}
+    (h : before.SamePairSlots after pair) :
+    before.logicalPair pair = after.logicalPair pair := by
+  simp only [PhysicalState.logicalPair_pairSlotView, h.1, h.2]
+
+/-- Each Rust canonical pair has two orientations in the inets worklist;
+unchanged slot tags preserve both, including for an unrelated old pair. -/
+theorem PhysicalState.pairOrientations_of_same_pair_slots
+    {before after : PhysicalState} {pair : PhysicalPair}
+    (h : before.SamePairSlots after pair) :
+    before.pairOrientations pair = after.pairOrientations pair := by
+  simp [PhysicalState.pairOrientations,
+    PhysicalState.logicalPair_of_same_pair_slots h]
+
+/-- A successful plan execution leaves every existing physical queue entry
+in place. If its two physical slot identities remain stable, their projected
+two orientations stay ahead of the newly published orientations, even when
+the pending queue was already nonempty. The tag premise is field-level and
+does not assume equality of either complete represented net. -/
+theorem PhysicalState.executeCheckedImage_project_work_split
+    {state next : PhysicalState} {bytes : List UInt8}
+    {redex : XRedex NetSym} {plan : BytePlan}
+    (hdecode : BytePlan.decode bytes = some plan)
+    (h : state.executeCheckedImage bytes redex = some next)
+    (hpending : ∀ pair ∈ state.work, state.SamePairSlots next pair) :
+    next.project.work = state.project.work ++
+      (plan.publications.map fun (first, firstGeneration, second, secondGeneration) =>
+        { first, firstGeneration := UInt64.ofNat firstGeneration,
+          second, secondGeneration := UInt64.ofNat secondGeneration : PhysicalPair }).flatMap
+        next.pairOrientations := by
+  have hpreserve (pairs : List PhysicalPair)
+      (hids : ∀ pair ∈ pairs, state.SamePairSlots next pair) :
+      pairs.flatMap next.pairOrientations =
+        pairs.flatMap state.pairOrientations := by
+    induction pairs with
+    | nil => rfl
+    | cons pair rest ih =>
+      have hrest : ∀ other ∈ rest, state.SamePairSlots next other := by
+        intro other ho
+        exact hids other (List.mem_cons_of_mem _ ho)
+      simp only [List.flatMap_cons]
+      rw [← PhysicalState.pairOrientations_of_same_pair_slots
+        (hids pair (by simp)), ih hrest]
+  change next.work.flatMap next.pairOrientations =
+    state.work.flatMap state.pairOrientations ++
+      (plan.publications.map fun (first, firstGeneration, second, secondGeneration) =>
+        { first, firstGeneration := UInt64.ofNat firstGeneration,
+          second, secondGeneration := UInt64.ofNat secondGeneration : PhysicalPair }).flatMap
+        next.pairOrientations
+  rw [PhysicalState.executeCheckedImage_work_append hdecode h, List.flatMap_append,
+    hpreserve state.work hpending]
 
 /-- Pending pairs retain canonical slot order even if their generations have
 gone stale. The ghost free-slot inventory exactly classifies retired slots. -/
