@@ -10,9 +10,9 @@ node verification/net-plans/regenerate-lean-corpus.mjs
 -- rules=noble-net-i64-rules/3; representation=noble-net-arena/1
 -- checker=noble-net-plan-checker/1; executor=noble-net-plan-executor/1
 -- source crates/noble-ngraph/src/net/rewrite.rs test-net-digest=2bdc30ff2aa3118e7c3dcb8bff53aa751133392b7a2df9c1a3d9671cfb96dd62
--- source crates/noble-ngraph/src/net.rs test-net-digest=55ac9cfe4dc883398ee710fb73a5e25abfbf92a49bb9dbff87ff1f0cb2d103de
+-- source crates/noble-ngraph/src/net.rs test-net-digest=c4e959a52256e503d129f78d8d14a64eae4170e2d5b9aa555b0ca42831d6c4c1
 -- source crates/noble-ngraph/src/net/plan/corpus.rs test-net-digest=a0da2bed6e19aa8560d0a532a0220038da2a154b691aa71dbf2a0498ab039770
--- source proofs/foundation/NobleFoundation/NetI64Plans.lean + NetI64PlanLowering.lean test-net-digest=0b172ab90a67cf1b097ca99fa7efa065540e66394688350498af0917e252faeb
+-- source proofs/foundation/NobleFoundation/NetI64Plans.lean + NetI64PlanLowering.lean test-net-digest=c973a6329dc15be751df8a6ff7ea356ab7f5e3b61e1a735ac37bc365e36d7bfc
 -- length-framed emitted byte stream + revisions test-net-digest=cb66e2b1601e964ef5f830d94880b89588f39d9ea1b3b063e92050070dbb44fc
 -- test-net is a test-only identity scheme, not a cryptographic signature.
 
