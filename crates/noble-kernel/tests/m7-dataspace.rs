@@ -20,6 +20,9 @@
 //! the decoder's; three control cases separate it from a counting-only scan.
 //! Seeded decoder faults, each the decoder with one rule changed, run through the
 //! same cases, and every one must disagree with at least one expectation.
+#[path = "../../../verification/m7/trace130/kernel.rs"]
+mod trace130;
+
 const LIMITS: noble_kernel::dataspace::Limits = noble_kernel::dataspace::Limits {
     facets: 8,
     assertions: 8,

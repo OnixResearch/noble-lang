@@ -1,3 +1,6 @@
+#[path = "../../../verification/m7/trace130/host.rs"]
+mod trace130_host;
+
 const PUBLISHER: noble_kernel::dataspace::Rights = noble_kernel::dataspace::Rights {
     publish: true,
     observe: false,
