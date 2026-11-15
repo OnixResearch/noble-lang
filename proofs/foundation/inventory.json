@@ -12058,6 +12058,60 @@
       "claim": "every 64-bit input to the three-operation chain lowers to an XNet accepted by the executable invariant checker"
     },
     {
+      "name": "NobleFoundation.NetI64Families.balancedProgram_zero_translation_checked",
+      "phase": 1,
+      "role": "translation-admission",
+      "claim": "every input to the depth-zero balanced tree lowers to an XNet accepted by the executable invariant checker"
+    },
+    {
+      "name": "NobleFoundation.NetI64Families.balancedProgram_zero_trace",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "the depth-zero balanced tree has an empty normal abstract trace and reads back its sole input"
+    },
+    {
+      "name": "NobleFoundation.NetI64Families.balancedProgram_one_trace",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "for every pair of 64-bit leaves, the depth-one balanced tree fires op2 then op1, normalizes in two abstract interactions, and reads back the packed reference"
+    },
+    {
+      "name": "NobleFoundation.NetI64Families.chainProgram_zero_trace",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "a zero-operation chain has an empty normal abstract trace and reads back the input"
+    },
+    {
+      "name": "NobleFoundation.NetI64Families.fanoutTraceSlots_length",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "a fanout trace continuation contains exactly the requested number of output slots"
+    },
+    {
+      "name": "NobleFoundation.NetI64Families.fanoutTracePlan_length",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "a nonempty fanout trace plan uses two wires per output slot minus one"
+    },
+    {
+      "name": "NobleFoundation.NetI64Families.fanoutProgram_one_trace",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "one requested fanout copy has an empty normal abstract trace and reads back the input in order"
+    },
+    {
+      "name": "NobleFoundation.NetI64Families.fanoutProgram_zero_trace",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "zero requested fanout copies erase the input in one normal abstract interaction and read back an empty list"
+    },
+    {
+      "name": "NobleFoundation.NetI64Families.fanoutProgram_two_trace",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "two requested fanout copies fire one duplicator, reach a normal abstract net, and read back both outputs in order"
+    },
+    {
       "name": "NobleFoundation.NetI64.balancedProgram_opCount",
       "phase": 1,
       "role": "family-formula",
