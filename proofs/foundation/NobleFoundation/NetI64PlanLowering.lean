@@ -169,6 +169,44 @@ private theorem mapM_preserves_projection {α β γ : Type}
     cases h
     simp [pointwise input output head, ih restResult]
 
+/-- A total RHS slot traversal has exactly the symbols retained by the
+compiled result image; child identities do not affect symbol ordering. -/
+private theorem mapM_filterMap_symbols {α β γ : Type}
+    (xs : List α) (f : α → Option β)
+    (g : α → β → γ) (project : γ → β)
+    (hproject : ∀ x y, project (g x y) = y) {ys : List β}
+    (h : xs.mapM f = some ys) :
+    (xs.filterMap (fun x => (f x).map (g x))).map project = ys := by
+  induction xs generalizing ys with
+  | nil =>
+    simp at h
+    cases h
+    rfl
+  | cons x xs ih =>
+    simp only [List.mapM_cons] at h
+    obtain ⟨head, hhead, h⟩ := Option.bind_eq_some_iff.mp h
+    obtain ⟨tail, htail, h⟩ := Option.bind_eq_some_iff.mp h
+    simp at h
+    cases h
+    simp [hhead, hproject, ih htail]
+
+/-- Every total selected RHS slot labeling produces the abstract compiler's
+result symbols in exactly that order, for either orientation of every rule. -/
+theorem PhysicalState.rule_result_symbols {H : HNet NetSym}
+    {redex : XRedex NetSym} {symbols : List NetSym}
+    (hRule : NetI64.xRule redex.2.2.1 redex.2.2.2.1 =
+      some redex.2.2.2.2)
+    (h : redex.2.2.2.2.slots.mapM
+      (fun slot => redex.2.2.2.2.lab slot.1 slot.2) = some symbols) :
+    (Plan.compile H redex hRule).initializedAgents.map Prod.snd =
+      symbols := by
+  have hm := mapM_filterMap_symbols redex.2.2.2.2.slots
+    (fun slot => redex.2.2.2.2.lab slot.1 slot.2)
+    (fun slot symbol =>
+      (child redex.1 redex.2.1 slot.1 slot.2, symbol)) Prod.snd
+    (by intros; rfl) h
+  simpa [Plan.compile, localResult, XNet.fire, HNet.nbhd] using hm
+
 /-- Derive the opcode, ordered physical capture and all reservation counters
 from the builder's inputs, not from the later semantic-admission predicate. -/
 theorem PhysicalState.candidateBody_fields
@@ -435,6 +473,58 @@ theorem PhysicalState.planCandidate_fields {state : PhysicalState}
     · simpa [BytePlan.withRequiredWrites] using harena
     · simpa [BytePlan.withRequiredWrites] using hscratch
     · simpa [BytePlan.withRequiredWrites] using hqueue
+
+/-- The actual lowered byte image already satisfies the first eight
+independently checked semantic fields when its physical capture denotes the
+abstract selected boundary. The remaining fields concern the physical
+post-state, not result-symbol or reciprocal-write construction. -/
+theorem PhysicalState.lowerPlan_semantic_prefix {state : PhysicalState}
+    {pair : PhysicalPair} {redex : XRedex NetSym} {reuse : Bool}
+    {plan : BytePlan}
+    (hRule : NetI64.xRule redex.2.2.1 redex.2.2.2.1 =
+      some redex.2.2.2.2)
+    (hLower : state.lowerPlan pair redex reuse = some plan)
+    (hBoundary : plan.logicalBoundary state = some
+      ((Plan.compile state.project redex hRule).capturedBoundary.filter
+        fun edge => edge.1.2 != 0)) :
+    let selected := Plan.compile state.project redex hRule
+    some plan.opcode =
+      BytePlan.ruleOpcode redex.2.2.1 redex.2.2.2.1 ∧
+    plan.logicalBoundary state = some (selected.capturedBoundary.filter
+      fun edge => edge.1.2 != 0) ∧
+    plan.results.map (fun result => result.2.2.1) =
+      selected.initializedAgents.map Prod.snd ∧
+    plan.writes = plan.requiredWrites ∧
+    plan.externalWrites = plan.requiredWrites ∧
+    plan.arenaReservation =
+      (plan.results.filter fun result => result.1).length ∧
+    256 ≤ plan.scratchReservation ∧
+    plan.publications.length ≤ plan.worklistReservation := by
+  have hc : state.planCandidate pair redex reuse = some plan := by
+    unfold PhysicalState.lowerPlan at hLower
+    cases he : state.planIndicesEncodable with
+    | false => simp [he] at hLower
+    | true =>
+      cases hh : state.pairHeadroom pair with
+      | false => simp [he, hh] at hLower
+      | true =>
+        cases hp : state.planCandidate pair redex reuse with
+        | none => simp [he, hh, hp] at hLower
+        | some candidate =>
+          by_cases hd : BytePlan.decode candidate.emit = some candidate
+          · simp [he, hh, hp, hd] at hLower
+            cases hLower
+            rfl
+          · simp [he, hh, hp, hd] at hLower
+  obtain ⟨hop, _, ⟨rhs, hrule, hsymbols⟩, hw, hew,
+    harena, hscratch, hqueue⟩ := PhysicalState.planCandidate_fields hc
+  have hrhs : rhs = redex.2.2.2.2 := by
+    rw [hRule] at hrule
+    exact (Option.some.inj hrule).symm
+  subst rhs
+  exact ⟨hop.symm, hBoundary,
+    (PhysicalState.rule_result_symbols hRule hsymbols).symm,
+    hw, hew, harena, by omega, by omega⟩
 
 /-- Exact bytes from the model lowering, with decoder roundtrip checked
 before return. These are comparable byte-for-byte to a Rust-emitted stream. -/

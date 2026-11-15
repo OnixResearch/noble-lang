@@ -13534,6 +13534,18 @@
       "claim": "every successful model candidate derives rule opcode, ordered physical capture, result payloads, reciprocal write inventory and reservations without semantic-checker assumptions"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.rule_result_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any total selected rule-slot labeling matches the abstract compiler result-symbol order"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_semantic_prefix",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every emitted image with a logical-boundary witness meets the first eight semantic fields without checker assumptions"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refuses_exhausted",
       "phase": 1,
       "role": "representation",
@@ -14205,6 +14217,7 @@
     "NobleFoundation.NetI64Plans.dup_plan_writes",
     "NobleFoundation.NetI64Plans.lookup_eq_of_some_iff",
     "NobleFoundation.NetI64Plans.BytePlan.semanticFieldsCheck_iff",
-    "NobleFoundation.NetI64Plans.mapM_preserves_projection"
+    "NobleFoundation.NetI64Plans.mapM_preserves_projection",
+    "NobleFoundation.NetI64Plans.mapM_filterMap_symbols"
   ]
 }
