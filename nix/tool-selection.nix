@@ -59,6 +59,8 @@ let
     "octet_standards"
     "nickel"
     "node"
+    "onnx_python"
+    "onnx_runtime"
     "cairn"
     "upstream_pin_check"
     "wasm_tools"
@@ -78,6 +80,16 @@ let
       source = "nixpkgs";
       attribute = "binaryen";
       role = "core-bootstrap-and-verification-wasm-optimizer";
+    };
+    onnx_python = {
+      source = "nixpkgs";
+      attribute = "python3.withPackages(onnx,onnxruntime)";
+      role = "recurrent-weights-stock-model-export-and-execution";
+    };
+    onnx_runtime = {
+      source = "nixpkgs";
+      attribute = "onnxruntime";
+      role = "recurrent-weights-stock-cpu-inference-runtime";
     };
   };
   verificationChecks = concatLists (

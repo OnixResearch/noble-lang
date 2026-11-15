@@ -1,6 +1,8 @@
 use crate::common;
 #[path = "recurrent/checker.rs"]
 mod checker;
+#[path = "recurrent/export.rs"]
+mod export;
 #[path = "recurrent/measurement.rs"]
 mod measurement;
 #[path = "recurrent/programs.rs"]
@@ -170,6 +172,38 @@ fn stack_swap_trajectory_reports_teacher_forced_and_free_running_separately() {
 
 fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
+#[test]
+#[ignore = "produces checked graph data for the separately pinned stock-runtime lane"]
+fn stock_runtime_export() {
+    for (name, program, graph, weights) in [
+        (
+            "accumulator",
+            Program::Accumulator,
+            programs::one_step_adder(),
+            vec![0.0, 1.0],
+        ),
+        (
+            "stack-swap",
+            Program::StackSwap,
+            programs::swap_graph(),
+            vec![],
+        ),
+    ] {
+        let checked = checker::Candidate::new(program, graph.clone(), &weights)
+            .expect("export only after checked graph and snapshot admission");
+        println!(
+            "RECURRENT_STOCK_EXPORT\t{}",
+            export::document(
+                name,
+                &graph,
+                &weights,
+                &checked,
+                &export::vectors(program, &checked)
+            )
+        );
+    }
 }
 
 #[test]

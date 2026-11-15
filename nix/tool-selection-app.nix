@@ -11,6 +11,8 @@
   node,
   wasmTools,
   binaryen,
+  onnxRuntime,
+  onnxPython,
 }:
 pkgs.writeShellApplication {
   name = "noble-toolchain-check";
@@ -57,10 +59,18 @@ pkgs.writeShellApplication {
     # Binaryen may append its immutable release tag after the numeric version.
     [[ "$version" = ${pkgs.lib.escapeShellArg "wasm-opt version ${policy.verification_tools.binaryen.version}"} \
       || "$version" = ${pkgs.lib.escapeShellArg "wasm-opt version ${policy.verification_tools.binaryen.version} ("}*")" ]]
+    test -e ${onnxRuntime}/lib/libonnxruntime.so
+    version=$(${onnxPython}/bin/python -I -c 'import onnxruntime; print(onnxruntime.__version__)')
+    printf '%s\n' "onnxruntime $version"
+    test "$version" = ${pkgs.lib.escapeShellArg policy.verification_tools.onnx_runtime.version}
+    version=$(${onnxPython}/bin/python -I -c 'import onnx, sys; print(onnx.__version__, ".".join(map(str, sys.version_info[:3])))')
+    printf '%s\n' "onnx-python $version"
+    test "$version" = ${pkgs.lib.escapeShellArg "1.20.1 ${policy.verification_tools.onnx_python.version}"}
     b3sum ${rust}/bin/rustc ${extractionRust}/bin/rustc \
       ${extractionRust}/bin/cargo-miri ${extractionRust}/bin/miri ${charon}/bin/charon \
       ${aeneas}/bin/aeneas ${lean}/bin/lean ${lean}/bin/lake \
-      ${node}/bin/node ${wasmTools}/bin/wasm-tools ${binaryen}/bin/wasm-opt
+      ${node}/bin/node ${wasmTools}/bin/wasm-tools ${binaryen}/bin/wasm-opt \
+      ${onnxRuntime}/lib/libonnxruntime.so
     echo "tool-selection: pinned tools available; compatibility execution still required"
   '';
 }
