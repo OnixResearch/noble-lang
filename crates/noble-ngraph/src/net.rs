@@ -2646,6 +2646,28 @@ mod tests {
     }
 
     #[test]
+    fn enqueue_refuses_full_stale_queue_without_mutating_pair_marks() {
+        let (mut slots, _, _) = principal_boundary_fixture();
+        let stale = Pair {
+            first: 0,
+            first_generation: 1,
+            second: 2,
+            second_generation: 0,
+        };
+        let mut worklist = ActiveWorklist {
+            entries: alloc::vec![stale; slots.len()],
+        };
+        let before_slots = slots.clone();
+        let before_worklist = worklist.entries.clone();
+        assert_eq!(
+            enqueue_active(&mut slots, &mut worklist, 0),
+            Err(Invalid::WorklistBound)
+        );
+        assert_eq!(slots, before_slots);
+        assert_eq!(worklist.entries, before_worklist);
+    }
+
+    #[test]
     fn independent_plan_checker_rejects_forged_bytes() {
         let (slots, outputs, pair) = plan_fixture(Symbol::Op2(Op::Sub), 8, false);
         let mut bytes =
