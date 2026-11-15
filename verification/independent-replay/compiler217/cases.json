@@ -38,6 +38,12 @@
     },
     "repair": "Copy only the theorem statement expression path after the existing expression table, in continuous back-reference order, and redirect only its type index; leave its proof expression and all preexisting records intact. Alter the Prod.snd constant to Prod.fst in the copied root type path."
   },
+  "interning_amendment": {
+    "prior_source_commit": "45aef5d417d7806ab0b0d2b42dbc1791021c2a86",
+    "prior_receipt_sha256": "c361bd0ff7c893ce2aa111c25f1fb04e85752c3113b12eb9fb905609e9196b9e",
+    "prior_outcome": "Official Lean rejected both counterexamples, but Nanoda refused them at parsing (attempted duplicate Expr), not kernel semantics",
+    "repair": "Intern every copied expression against the original NDJSON table and earlier newly emitted records. Existing expressions keep their IDs; only genuinely new unique expressions receive consecutive back-references."
+  },
   "bounds": {
     "compile_timeout_ms": 120000,
     "export_timeout_ms": 120000,

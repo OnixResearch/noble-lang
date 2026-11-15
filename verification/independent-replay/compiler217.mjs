@@ -114,6 +114,11 @@ function bindInputs() {
     && manifest.encoding_amendment?.prior_receipt_sha256
       === '1d5668a0de53990a6ee0bfe78d1182ae74b2184433cc91363adb2f38cae57a52',
   'configuration-error', 'NDJSON encoding amendment must retain its exact checker-decline receipt');
+  requireThat(manifest.interning_amendment?.prior_source_commit
+      === '45aef5d417d7806ab0b0d2b42dbc1791021c2a86'
+    && manifest.interning_amendment?.prior_receipt_sha256
+      === 'c361bd0ff7c893ce2aa111c25f1fb04e85752c3113b12eb9fb905609e9196b9e',
+  'configuration-error', 'expression interning amendment must retain its exact checker-decline receipt');
   requireThat(manifest.cases.length === 7
     && new Set(manifest.cases.map((entry) => entry.id)).size === 7
     && same(manifest.cases.map((entry) => `${entry.category}:${entry.expected.lane}`),
@@ -363,9 +368,17 @@ function replaceTypeLeaf(parsed, rootName, rootType, targetId, makeLeaf, lines) 
     'root theorem must be the last record of the export');
   let nextId = Math.max(...parsed.exprs.keys()) + 1;
   const appended = [];
+  const withoutIndex = ({ ie: _index, ...record }) => record;
+  const interned = new Map([...parsed.exprs].map(([id, record]) =>
+    [JSON.stringify(withoutIndex(record)), id]));
   const emit = (record) => {
+    const shape = withoutIndex(record);
+    const key = JSON.stringify(shape);
+    const previous = interned.get(key);
+    if (previous !== undefined) return previous;
     const id = nextId++;
-    appended.push(JSON.stringify({ ...record, ie: id }));
+    appended.push(JSON.stringify({ ...shape, ie: id }));
+    interned.set(key, id);
     return id;
   };
   const replacementId = makeLeaf(emit, parsed.exprs.get(targetId));
@@ -562,6 +575,7 @@ function run() {
     resource_bound_amendment: manifest.resource_bound_amendment,
     warning_only_amendment: manifest.warning_only_amendment,
     encoding_amendment: manifest.encoding_amendment,
+    interning_amendment: manifest.interning_amendment,
     compile: null, exports: [], cases: [],
     shared_corpus_consumption: {
       decision: 'NO-GO',
