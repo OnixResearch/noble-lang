@@ -168,7 +168,8 @@ theorem PhysicalState.execute_observations
       pair = PhysicalState.canonicalPair result.slot result.generation
         peer peerSlot.generation)
     (hpubDisjoint : (plan.publishedPairs.flatMap fun pair => [pair.first, pair.second]).Nodup)
-    (hcapacity : state.work.length + plan.publishedPairs.length ≤ state.slots.size + fresh)
+    (hcapacity : plan.publishedPairs = [] ∨
+      state.work.length + plan.publishedPairs.length ≤ state.slots.size + fresh)
     (hbound : state.queuedGenerationsBound = true) :
     ∃ next, state.executeCheckedImage plan.emit redex = some next ∧
       state.RewriteObservations next ruleSlot valueSlot results edges
@@ -332,8 +333,24 @@ theorem PhysicalState.execute_observations
       simp [PhysicalState.logicalPair, hresultAfter, hpeerAfter, PhysicalState.resultSlot,
         hpeerGen, howner]
   obtain ⟨next, hpublish, hworkNext, houtsNext, hfreeNext, hsizeNext, hkeepNext,
-    hframeNext⟩ := PhysicalState.publishAll_success plan.publishedPairs retiredSecond
-      hpubReady hpubDisjoint (by rw [hworkRetired, hsizeRetired]; exact hcapacity)
+    hframeNext⟩ : ∃ next, retiredSecond.publishAll plan.publishedPairs = some next ∧
+      next.work = retiredSecond.work ++ plan.publishedPairs ∧
+      next.outputs = retiredSecond.outputs ∧
+      next.freeSlots = retiredSecond.freeSlots ∧
+      next.slots.size = retiredSecond.slots.size ∧
+      (∀ (index : Nat) (old : PhysicalSlot), retiredSecond.slots[index]? = some old →
+        ∃ slot : PhysicalSlot, next.slots[index]? = some slot ∧
+          slot.agent = old.agent ∧ slot.generation = old.generation ∧
+          slot.ports = old.ports) ∧
+      ∀ index : Nat, (∀ pair ∈ plan.publishedPairs,
+          pair.first ≠ index ∧ pair.second ≠ index) →
+        next.slots[index]? = retiredSecond.slots[index]? := by
+    rcases hcapacity with hnone | hroom
+    · rw [hnone]
+      exact ⟨retiredSecond, rfl, by simp, rfl, rfl, rfl,
+        fun _ old hold => ⟨old, hold, rfl, rfl, rfl⟩, fun _ _ => rfl⟩
+    · exact PhysicalState.publishAll_success plan.publishedPairs retiredSecond
+        hpubReady hpubDisjoint (by rw [hworkRetired, hsizeRetired]; exact hroom)
   refine ⟨next, PhysicalState.executeCheckedImage_phases hdecode hcurrent hinstall
     hrewired hretireFirst hretireSecond hpublish, ?_⟩
   -- helper: an old slot that is not consumed reaches `retiredSecond` through
