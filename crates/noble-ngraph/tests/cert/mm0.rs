@@ -2,16 +2,21 @@
 //! The ordinary test regenerates and checks every retained byte and admits both
 //! endpoints. MM0 proof production and verification are separate Node commands.
 
-const LANE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../verification/ngraph/mm0/subjects");
+const LANE: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../verification/ngraph/mm0/subjects"
+);
 
 fn fixture(first: i64, second: i64) -> [(String, String); 3] {
     let ids = crate::differential::TestIds;
-    let before = crate::differential::constant_sum(crate::differential::SumOperands {
-        first,
-        second,
-    });
+    let before =
+        crate::differential::constant_sum(crate::differential::SumOperands { first, second });
     let (derivation, after) = crate::differential::fold(&before);
-    assert_eq!(derivation.steps.len(), 1, "exactly one FoldAddConstants step");
+    assert_eq!(
+        derivation.steps.len(),
+        1,
+        "exactly one FoldAddConstants step"
+    );
     assert_eq!(
         derivation.steps[0].rule,
         noble_ngraph::cert::Rule::FoldAddConstants
@@ -40,10 +45,7 @@ fn fixture(first: i64, second: i64) -> [(String, String); 3] {
 }
 
 fn fixtures() -> [(&'static str, [(String, String); 3]); 2] {
-    [
-        ("small", fixture(3, 5)),
-        ("boundary", fixture(i64::MAX, 1)),
-    ]
+    [("small", fixture(3, 5)), ("boundary", fixture(i64::MAX, 1))]
 }
 
 #[test]

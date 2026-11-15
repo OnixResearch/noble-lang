@@ -59,6 +59,10 @@ if (profile) {
   assert.equal(fileSha(checker), profile.checker_sha256, 'MM0 checker is not selected');
   assert.equal(fileSha(path.join(source, 'mm0-rs/Cargo.lock')), profile.producer_lock_sha256);
   assert.equal(fileSha(path.join(source, 'mm0-c/main.c')), profile.checker_source_sha256);
+  assert.equal(fileSha(profile.build_profile.checker_compiler),
+    profile.build_profile.checker_compiler_sha256, 'selected GCC wrapper differs');
+  assert.ok(command(profile.build_profile.checker_compiler, ['--version']).stdout.startsWith('gcc (GCC) 15.2.0'),
+    'selected GCC version differs');
 }
 mkdirSync(output, { recursive: true, mode: 0o700 });
 for (const file of ['peano.mm0', 'peano_hex.mm0', 'peano.mm1', 'peano_hex.mm1']) {
@@ -100,6 +104,10 @@ if (mode === 'freeze') {
       proof_bytes: statSync(path.join(controlsDir, `${name}.mmb`)).size,
       producer_status: run.status, producer_stderr: run.stderr };
   }
+  const noParser = path.join(controlsDir, 'no-parser');
+  const noParserBuild = command(profile.build_profile.checker_compiler, ['-O2', '-DNO_PARSER',
+    path.join(source, 'mm0-c/main.c'), '-o', noParser]);
+  requireSuccess(noParserBuild, 'build negative NO_PARSER checker control');
   const proof = path.join(output, 'proof.mmb');
   assert.equal(fileSha(proof), profile.retained_proof_sha256,
     'produced proof differs from caller-frozen retained artifact');
@@ -116,11 +124,16 @@ if (mode === 'freeze') {
       checker_source_sha256: profile.checker_source_sha256,
       producer_binary_sha256: fileSha(producer), producer_lock_sha256: profile.producer_lock_sha256,
       checker_build: policy.checker_build, producer_build: policy.producer_build,
-      compiler: command('gcc', ['--version']).stdout.split('\n')[0],
+      compiler: command(profile.build_profile.checker_compiler, ['--version']).stdout.split('\n')[0],
+      compiler_store_path: profile.build_profile.checker_compiler,
+      compiler_wrapper_sha256: profile.build_profile.checker_compiler_sha256,
       checker_flags: policy.checker_flags, parser_enabled: true },
     artifact: { spec_sha256: fileSha(spec), spec_bytes: statSync(spec).size,
       proof_sha256: fileSha(proof), proof_bytes: statSync(proof).size },
     control_proofs: controlProofs,
+    no_parser_control: { binary_sha256: fileSha(noParser),
+      binary_bytes: statSync(noParser).size, build_wall_ms: noParserBuild.wall_ms,
+      selected: false },
     generation: { wall_ms: generation.wall_ms, status: generation.status,
       stderr: generation.stderr, stdout: generation.stdout },
     checking: { wall_ms: checking.wall_ms, checker_elapsed_s: Number(elapsed),

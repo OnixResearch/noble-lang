@@ -32,13 +32,13 @@ function requireAt(stage, condition, reason) {
   if (!condition) throw new Refusal(stage, reason);
 }
 function timedChecker(name, spec, proof, addressBytes = profile.build_profile.checker_memory_bytes,
-  wallMs = profile.build_profile.checker_wall_ms) {
+  wallMs = profile.build_profile.checker_wall_ms, binary = checker) {
   const label = name.replace(/[^a-zA-Z0-9_-]/g, '_');
   const time = path.join(report, `${label}.time`);
   const start = process.hrtime.bigint();
   const run = spawnSync('/usr/bin/time', ['-f', '%e %M', '-o', time,
     'prlimit', `--as=${addressBytes}`, `--cpu=${profile.build_profile.checker_cpu_seconds}`,
-    '--', checker, proof], { input: spec, encoding: 'utf8', maxBuffer: 4 * 1024 * 1024,
+    '--', binary, proof], { input: spec, encoding: 'utf8', maxBuffer: 4 * 1024 * 1024,
     timeout: wallMs, killSignal: 'SIGKILL' });
   const metrics = statSync(time, { throwIfNoEntry: false }) ? readFileSync(time, 'utf8').trim().split(' ') : [];
   return { status: run.status, signal: run.signal, error: run.error?.message ?? null,
@@ -269,6 +269,18 @@ const deadline = timedChecker('exhausted-wall-clock', spec,
 rows['exhausted-wall-clock'] = { stage: deadline.status === 0 ? 'accepted' : 'resource-limit',
   raw_checker: deadline };
 assert.notEqual(deadline.status, 0, 'checker accepted under exhausted 1ms wall limit');
+const noParser = path.join(generated, 'controls', 'no-parser');
+assert.equal(fileSha(noParser), production.no_parser_control.binary_sha256,
+  'negative NO_PARSER binary differs from production');
+rows['no-parser-tool'] = assertRefusal('no-parser-tool', outcome(() => {
+  requireAt('tool-identity', fileSha(noParser) === profile.checker_sha256,
+    'NO_PARSER binary is not the pinned parser-enabled checker');
+}), 'tool-identity');
+rows['no-parser-tool'].raw_checker = timedChecker('raw-no-parser-changed-arithmetic',
+  mutate(spec, 'def uadd (a b: nat): nat = $ (a + b) % modulus $;',
+    'def uadd (a b: nat): nat = $ (a * b) % modulus $;'),
+  path.join(generated, 'proof.mmb'), profile.build_profile.checker_memory_bytes,
+  profile.build_profile.checker_wall_ms, noParser);
 const receipt = { schema: 'noble-mm0-replay/v1', source_commit: production.source_commit,
   retained_spec_sha256: profile.spec_sha256, retained_proof_sha256: sha(proof),
   checker_binary_sha256: fileSha(checker), producer_invoked: false,
