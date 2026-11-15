@@ -4175,9 +4175,22 @@ constants, renumbers dynamic inputs by their original order, and folds only
 add/sub/mul nodes whose two operands are statically known. Mixed nodes remain
 residual nodes with their original operand positions.
 
+`NobleFoundation/SpecializeResidual.lean` starts from that index-preserving
+specialization model and extends the proof boundary through exact I64 equality
+folding and output-preserving pruning/renumbering. Its `PruneMap` premise
+requires a dense, order-preserving survivor map: output roots and all surviving
+operands are kept, dynamic input nodes are retained, and both index directions
+are inverse on the dense residual range. The theorem does not require that the
+kept set is *minimal*. `residualize_outputs_sound` proves the
+ordered output values agree under merged inputs when this map is valid. The
+theorem proves the residualization semantics conditional on a valid map; it does
+not prove that the Rust reachability walk constructs such a map for every graph.
+
 The kernel-checked model claims are `staticValuesUpTo_eq_staticValue`,
 `staticValue_sound`, `specialize_wellFormed`, `congruenceWithInputs`,
-`residual_specialize_sound`, and `specialize_sound`. The fixtures cover no
+`residual_specialize_sound`, and `specialize_sound`, plus the residualization
+theorems `foldEqualities_sound`, `pruneRenumber_outputs`, and
+`residualize_outputs_sound`. The fixtures cover no
 static inputs, all static inputs, mixed static inputs, a non-prefix static
 slot, deeper-minus-top subtraction order, and the `2^64 - 1 + 1` wrapping
 boundary. `prefix_merge_control` is a negative control: treating static
@@ -4185,24 +4198,36 @@ slots as a prefix gives a different result on the non-prefix fixture.
 
 | Claim | Model / theorem(s) | Implementation boundary | Status |
 |---|---|---|---|
-| Bounded static-input specialization for checked packed graphs | `staticValue_sound`, `specialize_wellFormed`, `congruenceWithInputs`, `residual_specialize_sound`, `specialize_sound` prove only the index-preserving graph model's add/sub/mul value relation; the I64Eq fold is unproved, and pruning/renumbering is not modelled | The Rust entry point noble_ngraph::specialize and noble ngraph specialize implement substitution, rank/merge renumbering, add/sub/mul/eq folding, dead-node pruning and independent graph re-check for checked ngraph-i64/0 graphs. The emitted residual source is re-admitted through the ordinary frontend, kernel and extractor path. Effects and unsupported graph shapes are refused. Finite B2 tests compare the original, residual, re-admitted residual and both evaluators; this is not Rust/model correspondence or a Program-refinement proof. The source-bound receipt at [verification/ngraph/pe-2026-11-13.json](../../verification/ngraph/pe-2026-11-13.json) records 11 fixture/map rows × 1,000 seeded vectors (11,000 total): L3 and L4 each visit 49,000 original vs 33,000 residual/re-admitted nodes in aggregate; both evaluators visit fewer nodes in 6/11 rows. Residual source is 12–71 bytes; aggregate specialization is 811,014 ns and the residual pipeline is 55,785,995 ns. Per-row retained bytes and cold/warm timings are in the receipt. These finite measurements claim neither equal budgets nor universal speedup. | **model: proved**; **Rust/model correspondence: unproved**; **differential: finite tests**; **runtime: measured, see source-bound receipt** |
+| Bounded static-input specialization for checked packed graphs | `staticValue_sound`, `specialize_wellFormed`, `congruenceWithInputs`, `residual_specialize_sound`, `specialize_sound` prove the existing index-preserving add/sub/mul model; `foldEqualities_sound`, `pruneRenumber_outputs`, and `residualize_outputs_sound` extend the model to exact I64 equality and ordered outputs under a valid survivor map. `rust_fixture_equal_shape`, `rust_fixture_unequal_shape`, `rust_fixture_equal_values`, and `rust_fixture_unequal_values` pin the paired fixture in the Lean model. The proof does not establish the Rust map builder's universal validity. | The Rust entry point noble_ngraph::specialize and noble ngraph specialize implement substitution, rank/merge renumbering, add/sub/mul/eq folding, dead-node pruning and independent graph re-check for checked ngraph-i64/0 graphs. rust_model_fixture_eq_prune_renumber pins the same equality true/false, dead-node and operand-renumbering fixture and checks dynamic input retention. The emitted residual source is re-admitted and compiled through the ordinary Declared-Text-v1 path. Rust/model and Rust/backend correspondence remain open; no arbitrary stack-tail or exact dependency-preservation contract is claimed. The source-bound measurement receipt at [verification/ngraph/pe-2026-11-13.json](../../verification/ngraph/pe-2026-11-13.json) records 11 fixture/map rows × 1,000 vectors; those finite measurements claim neither equal budgets nor universal speedup. | **model: proved under PruneMap premises**; **Rust/model correspondence: open**; **differential: finite tests**; **runtime: measured, see source-bound receipt** |
 
 The clean-source receipt for the specialization model is
 [`verification/foundation/receipts/84753c99e/`](../../verification/foundation/receipts/84753c99e/foundation-check.json)
 (692 theorems, `clean_source: true`, axiom sets inside the allow-list,
 `implementation_theorem: false`).
+The residualization extension has a separate
+[clean-source receipt](../../verification/foundation/receipts/a92b343c5/foundation-check.json)
+(source commit a92b343c5, 2,091 inventoried theorems, including 20 new
+theorems; each new theorem's axioms are a subset of `propext`,
+`Classical.choice` and `Quot.sound`; `implementation_theorem: false`).
 
 The implementation phase of the same issue keeps the four kinds of result apart:
 
-- **Model proof.** `specialize_sound` and its supporting lemmas are unchanged and
-  still cover only `add`/`sub`/`mul` on index-preserving packed graphs.
+- **Model proof.** `specialize_sound` still covers input substitution and
+  add/sub/mul folding on index-preserving packed graphs. The new
+  `foldEqualities_sound` proves exact equality folding; `pruneRenumber_outputs`
+  and `residualize_outputs_sound` prove ordered-output preservation under an
+  explicit valid survivor-map premise. The latter does not establish that the
+  Rust map builder satisfies those premises for every admitted graph.
 - **Rust implementation, no correspondence claim.** `crates/noble-ngraph/src/specialize.rs`
   implements the model's map, `rank`/`merge` and folding on a checked graph, adds an
   `I64Eq` fold and a pruning/renumbering step, bounds the work with the `ngraph-pe/0`
   accounting revision (`residual-nodes`, `variants`), and renders the residual as
   `let`-based Noble source that `readmit` re-accepts through the ordinary
   Declared-Text-v1 frontend, the kernel and the extractor. Nothing here relates the
-  Rust code to the Lean definitions.
+  Rust code to the Lean definitions. The paired `rust_model_fixture_eq_prune_renumber`
+  test and `rust_fixture_equal_shape`/`rust_fixture_unequal_shape` Lean fixtures
+  pin one exact true/false case, dead-node set and dense operand renumbering; this
+  is a finite cross-language fixture, not correspondence.
 - **Finite differential tests.** The `extract_b2` issue-#32 leg compares the original
   under the merged input vector, the checked residual and the re-admitted graph on L3,
   L4 and (when `NOBLE_NODE` is set) the Node BigInt oracle. Agreement is finite
@@ -4215,16 +4240,27 @@ Open, and deliberately not closed:
 
 - pairs and `Unit` values, and `quote`/`compose`/`run`, are outside this graph
   model;
-- preservation of an arbitrary stack tail is not represented;
-- the `I64Eq` fold and the dead-node pruning step are implementation extensions with
-  no model theorem; pruning is justified only because the admitted slice has no
-  failing node;
+- preservation of an arbitrary stack tail is not represented: the graph model
+  has explicit input slots and ordered outputs, not an arbitrary stack prefix;
+- the model conditions pruning correctness on a valid dense survivor map;
+  the Rust-to-map construction and Rust/backend correspondence remain open;
+- exact source dependency preservation is not represented. The residual receives
+  a new graph identity and records the emitted source digest/re-admitted graph id,
+  but the original Program's full dependency set is not a field of this graph
+  contract;
+- the original ordinary compile path remains opt-in-separate: specialization is
+  entered only by `noble ngraph specialize`; generated residual text is accepted
+  and compiled through the ordinary Declared-Text-v1 frontend path;
+- the original Program-to-residual-Program stack-tail and exact dependency/identity
+  contract remains open; D13 scopes this graph operation rather than claiming
+  that Program-level acceptance is complete;
 - budgets, thresholds, refusal/adoption criteria and other owner-reserved
   contracts remain the change's proposal, not an accepted policy;
 - effects, host calls, resource ownership and effect-aware partial execution
   are not modelled here;
 - no correspondence claim relates this model to Rust, Wasm, the certificate
   emitter, or any retained runtime artifact.
+
 ## Collision-safe cache lookup and subject key encoding (issue #33, phase 1)
 
 `NobleFoundation/CacheLookup.lean` is a generic model of two parts of the

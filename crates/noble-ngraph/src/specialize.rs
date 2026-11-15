@@ -1171,6 +1171,68 @@ mod tests {
     }
 
     #[test]
+    fn rust_model_fixture_eq_prune_renumber() {
+        // Shared with `SpecializeResidual.rust_fixture_{equal,unequal}_shape`:
+        // %0=input 0; %1=input 1; %2=const 3; %3=eq %0 %2; %4=add %1 %1;
+        // outputs=[%3,%4], static map=[3,None]. The residual keeps the dynamic
+        // input and both outputs, drops %0/%2, folds %3, and renumbers %4's
+        // operands from %1 to %0.
+        let mut builder = crate::ir::GraphBuilder::new(
+            crate::ir::SubProfile::I64,
+            crate::ir::Subject::authored(&TestIds, "pe-rust-model-eq-prune-v1"),
+        );
+        let static_input = builder.input(crate::ir::ScalarType::I64);
+        let dynamic_input = builder.input(crate::ir::ScalarType::I64);
+        let three = builder.i64_const(3);
+        let equality = builder.op(crate::ir::Op::I64Eq(static_input, three));
+        let doubled = builder.op(crate::ir::Op::I64Add(dynamic_input, dynamic_input));
+        builder.output(equality);
+        builder.output(doubled);
+        let original = checked(builder.finish());
+
+        for (static_value, expected_bool) in [(3, true), (4, false)] {
+            let residual = with_static_map(&original, &[Some(static_value), None])
+                .expect("the shared equality/pruning fixture specializes");
+            assert_eq!(residual.report.folded_nodes, 2);
+            assert_eq!(residual.report.pruned_nodes, 2);
+            assert_eq!(residual.report.residual_nodes, 3);
+            assert_eq!(residual.report.dynamic_inputs, [crate::ir::ScalarType::I64]);
+            assert_eq!(
+                residual.checked.graph().outputs,
+                [crate::ir::NodeId(1), crate::ir::NodeId(2),]
+            );
+            assert_eq!(
+                residual.checked.graph().nodes[0].op,
+                crate::ir::Op::Input(0),
+                "the unused dynamic input remains defined"
+            );
+            assert_eq!(
+                residual.checked.graph().nodes[1].op,
+                crate::ir::Op::Const(crate::ir::Literal::Bool(expected_bool))
+            );
+            assert_eq!(
+                residual.checked.graph().nodes[2].op,
+                crate::ir::Op::I64Add(crate::ir::NodeId(0), crate::ir::NodeId(0))
+            );
+            for dynamic in [0, 1, -9, i64::MAX, i64::MIN] {
+                assert_eq!(
+                    run(&residual.checked, &[dynamic]),
+                    alloc::vec![
+                        crate::sem::Value::Bool(expected_bool),
+                        crate::sem::Value::I64(dynamic.wrapping_add(dynamic)),
+                    ],
+                    "static={static_value}, dynamic={dynamic}"
+                );
+                assert_eq!(
+                    run(&residual.checked, &[dynamic]),
+                    run(&original, &[static_value, dynamic]),
+                    "static={static_value}, dynamic={dynamic}"
+                );
+            }
+        }
+    }
+
+    #[test]
     fn operand_order_survives_subtraction() {
         // `%0 = input 0; %1 = input 1; %2 = i64.sub %0 %1` keeps deeper-first.
         let mut builder = crate::ir::GraphBuilder::new(

@@ -5512,6 +5512,126 @@
       "claim": "prefix-based dynamic renumbering disagrees on a non-prefix static fixture"
     },
     {
+      "name": "NobleFoundation.SpecializeResidual.ofPacked_wellFormed",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "lifting a packed graph preserves checked operand order and selected output bounds"
+    },
+    {
+      "name": "NobleFoundation.SpecializeResidual.ofPacked_value",
+      "phase": 1,
+      "role": "specialization-congruence",
+      "claim": "lifting packed nodes into the Boolean-capable residual model preserves their values"
+    },
+    {
+      "name": "NobleFoundation.SpecializeResidual.valuesUpTo_eq_value",
+      "phase": 1,
+      "role": "static-prefix",
+      "claim": "a residual node in a strict evaluation prefix has its standalone value"
+    },
+    {
+      "name": "NobleFoundation.SpecializeResidual.value_eq_evalStep",
+      "phase": 1,
+      "role": "specialization-congruence",
+      "claim": "a residual node value is its operation evaluated over the preceding nodes"
+    },
+    {
+      "name": "NobleFoundation.SpecializeResidual.i64Constant_value",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "a literal I64 residual node evaluates to its exact bit pattern"
+    },
+    {
+      "name": "NobleFoundation.SpecializeResidual.foldEqNode_operands_subset",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "exact I64 equality folding does not introduce operand dependencies"
+    },
+    {
+      "name": "NobleFoundation.SpecializeResidual.foldEqualities_wellFormed",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "exact I64 equality folding preserves checked operand and output bounds"
+    },
+    {
+      "name": "NobleFoundation.SpecializeResidual.evalNode_congr",
+      "phase": 1,
+      "role": "specialization-congruence",
+      "claim": "equal residual operations and operand values yield equal node evaluations"
+    },
+    {
+      "name": "NobleFoundation.SpecializeResidual.value_congr",
+      "phase": 1,
+      "role": "specialization-congruence",
+      "claim": "well-formed graphs with matching node and predecessor values agree at that node"
+    },
+    {
+      "name": "NobleFoundation.SpecializeResidual.foldEqualities_sound",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "folding exact I64 equalities to Boolean constants preserves every node value"
+    },
+    {
+      "name": "NobleFoundation.SpecializeResidual.renumberNode_operands",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "node renumbering maps only the ordered operand indices"
+    },
+    {
+      "name": "NobleFoundation.SpecializeResidual.pruneRenumber_wellFormed",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "a valid dense survivor map preserves output bounds and earlier-operand order"
+    },
+    {
+      "name": "NobleFoundation.SpecializeResidual.pruneRenumber_value",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "each retained node keeps its value under a valid survivor map"
+    },
+    {
+      "name": "NobleFoundation.SpecializeResidual.pruneRenumber_outputs",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "pruning and dense renumbering preserve the ordered output vector"
+    },
+    {
+      "name": "NobleFoundation.SpecializeResidual.residualize_outputs_sound",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "merged inputs and ordered outputs agree after arithmetic and equality folding and valid pruning"
+    },
+    {
+      "name": "NobleFoundation.SpecializeResidual.eqPruneGraph_wellFormed",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the paired equality/pruning source graph has earlier operands"
+    },
+    {
+      "name": "NobleFoundation.SpecializeResidual.rust_fixture_equal_shape",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "equal static operands fold true, prune two nodes and renumber the dynamic add"
+    },
+    {
+      "name": "NobleFoundation.SpecializeResidual.rust_fixture_unequal_shape",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "unequal static operands fold false with the same live-node and output layout"
+    },
+    {
+      "name": "NobleFoundation.SpecializeResidual.rust_fixture_equal_values",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "true-equality fixture outputs include the wrapping double of any dynamic input"
+    },
+    {
+      "name": "NobleFoundation.SpecializeResidual.rust_fixture_unequal_values",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "false-equality fixture outputs include the wrapping double of any dynamic input"
+    },
+    {
       "name": "NobleFoundation.Binary32.DecimalImport.decimalRatio_den_pos",
       "phase": 1,
       "role": "binary32-decimal-import",
