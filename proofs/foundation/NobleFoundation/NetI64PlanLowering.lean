@@ -97,9 +97,9 @@ theorem BytePlan.withRequiredWrites_exact (plan : BytePlan) :
       (plan.withRequiredWrites).requiredWrites := by
   simp [BytePlan.withRequiredWrites, BytePlan.requiredWrites]
 
-/-- Construct all physical fields from a matched pair; a separate admission
-step rejects any image that the version-one decoder cannot read back. -/
-private def PhysicalState.planCandidate (state : PhysicalState) (pair : PhysicalPair)
+/-- Construct all physical fields from a matched pair; the final wrapper
+derives the two write inventories from the initialized result ports. -/
+private def PhysicalState.planCandidateCore (state : PhysicalState) (pair : PhysicalPair)
     (redex : XRedex NetSym) (reuse : Bool) : Option BytePlan := do
   let rhs ← NetI64.xRule redex.2.2.1 redex.2.2.2.1
   if state.logicalPair pair != some (redex.1, redex.2.1) then none else do
@@ -143,7 +143,7 @@ private def PhysicalState.planCandidate (state : PhysicalState) (pair : Physical
             (if reused.contains pair.first then 1 else 0,
              if reused.contains pair.second then 1 else 0)
           let publications ← results.flatMapM (state.publicationFor pair boundaries)
-          let plan : BytePlan := BytePlan.withRequiredWrites
+          let plan : BytePlan :=
             { reuse, opcode, pair := (pair.first, pair.firstGeneration.toNat,
                 pair.second, pair.secondGeneration.toNat), action,
               boundaries, results, writes := [], externalWrites := [],
@@ -151,6 +151,12 @@ private def PhysicalState.planCandidate (state : PhysicalState) (pair : Physical
               scratchReservation := 256,
               worklistReservation := publications.length, publications }
           some plan
+
+/-- Materialize both ordered wire inventories before checking the version-one
+byte decoder. There is no second, independent implementation of the writes. -/
+private def PhysicalState.planCandidate (state : PhysicalState) (pair : PhysicalPair)
+    (redex : XRedex NetSym) (reuse : Bool) : Option BytePlan :=
+  (state.planCandidateCore pair redex reuse).map BytePlan.withRequiredWrites
 
 /-- Lower one physically matched revision-3 rule to the actual version-one
 byte representation. The rule supplies result symbols; the arena supplies
@@ -202,6 +208,20 @@ theorem PhysicalState.lowerPlan_decodes {state : PhysicalState}
         cases h
         exact hd
       · simp [hh, hp, hd] at h
+
+/-- A successful candidate is assembled with both exact ordered write lists. -/
+theorem PhysicalState.planCandidate_writes_exact {state : PhysicalState}
+    {pair : PhysicalPair} {redex : XRedex NetSym} {reuse : Bool}
+    {plan : BytePlan}
+    (h : state.planCandidate pair redex reuse = some plan) :
+    plan.writes = plan.requiredWrites ∧
+      plan.externalWrites = plan.requiredWrites := by
+  cases hc : state.planCandidateCore pair redex reuse with
+  | none => simp [PhysicalState.planCandidate, hc] at h
+  | some candidate =>
+    simp [PhysicalState.planCandidate, hc] at h
+    cases h
+    exact BytePlan.withRequiredWrites_exact candidate
 
 /-- Exact bytes from the model lowering, with decoder roundtrip checked
 before return. These are comparable byte-for-byte to a Rust-emitted stream. -/

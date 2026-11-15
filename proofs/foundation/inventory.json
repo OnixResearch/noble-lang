@@ -13516,6 +13516,12 @@
       "claim": "construction of both reciprocal write lists from result ports yields exact ordered inventories"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.planCandidate_writes_exact",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every successful model emitter candidate derives both complete ordered write inventories from result ports"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refuses_exhausted",
       "phase": 1,
       "role": "representation",
