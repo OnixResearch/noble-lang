@@ -14014,6 +14014,66 @@
       "claim": "updating an existing physical slot stores exactly the replacement slot"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.Plan.op2_forward_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP2 compiles to an explicit captured boundary, one op1 child and four symbolic reciprocal wire writes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.op2_reverse_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP2 compiles to an explicit captured boundary, one op1 child and four symbolic reciprocal wire writes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.op1_forward_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP1 compiles to an explicit captured boundary, one number child and two symbolic reciprocal wire writes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.op1_reverse_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP1 compiles to an explicit captured boundary, one number child and two symbolic reciprocal wire writes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.dup_forward_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward DUP compiles to an explicit captured boundary, two number children and four symbolic reciprocal wire writes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.dup_reverse_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse DUP compiles to an explicit captured boundary, two number children and four symbolic reciprocal wire writes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.era_forward_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward ERA compiles to the principal-only captured boundary with no children or wire writes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.era_reverse_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse ERA compiles to the principal-only captured boundary with no children or wire writes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.commit_agents_getElem?",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one committed abstract agent lookup is the initialized child, else absent for the consumed pair, else the prestate agent"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.commit_wires_getElem?",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one committed abstract wire lookup is the declared write, else absent at a captured wire end, else the prestate wire"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_has_candidate",
       "phase": 1,
       "role": "representation",
@@ -14668,6 +14728,8 @@
     "NobleFoundation.NetI64Plans.lookup_eq_of_some_iff",
     "NobleFoundation.NetI64Plans.BytePlan.semanticFieldsCheck_iff",
     "NobleFoundation.NetI64Plans.mapM_preserves_projection",
-    "NobleFoundation.NetI64Plans.mapM_filterMap_symbols"
+    "NobleFoundation.NetI64Plans.mapM_filterMap_symbols",
+    "NobleFoundation.NetI64Plans.foldl_insert_getElem?",
+    "NobleFoundation.NetI64Plans.foldl_erase_getElem?"
   ]
 }
