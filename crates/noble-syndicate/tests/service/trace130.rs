@@ -111,7 +111,7 @@ fn issued_child_drop_foreign_profile_and_physical_exhaustion() -> Result<(), Str
         profile.publish(&child, "clock", true),
         Ok(true),
         (4, 1, 1),
-        &[add_clock.clone()],
+        std::slice::from_ref(&add_clock),
     )?;
     record(
         &profile,
@@ -119,7 +119,7 @@ fn issued_child_drop_foreign_profile_and_physical_exhaustion() -> Result<(), Str
         profile.publish(&unrelated, "alarm", false),
         Ok(true),
         (4, 2, 1),
-        &[add_clock.clone()],
+        std::slice::from_ref(&add_clock),
     )?;
 
     // Cross-profile refusal is before any table mutation, on either profile.
@@ -138,7 +138,7 @@ fn issued_child_drop_foreign_profile_and_physical_exhaustion() -> Result<(), Str
         Ok(true),
         Ok(true),
         (4, 2, 1),
-        &[add_clock.clone()],
+        std::slice::from_ref(&add_clock),
     )?;
 
     drop(root); // normal or trap cleanup commits child removal; unrelated root survives.
