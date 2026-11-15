@@ -12524,6 +12524,36 @@
       "phase": 1,
       "role": "resource-family",
       "claim": "fanout and erasure shape has exact parameterized interaction and agent formulas"
+    },
+    {
+      "name": "NobleFoundation.NetI64ResourceCorpus.fixture_schema",
+      "phase": 1,
+      "role": "resource-byte-corpus",
+      "claim": "a Rust-accepted resource certificate has the exact expected magic and four versioned identities"
+    },
+    {
+      "name": "NobleFoundation.NetI64ResourceCorpus.fixture_byte_fields",
+      "phase": 1,
+      "role": "resource-byte-corpus",
+      "claim": "kernel reduction reads graph identity, build identity, and digests from the retained literal net and certificate bytes"
+    },
+    {
+      "name": "NobleFoundation.NetI64ResourceCorpus.fixture_translation",
+      "phase": 1,
+      "role": "resource-byte-corpus",
+      "claim": "one retained Rust net literal matches its admitted source-program translation"
+    },
+    {
+      "name": "NobleFoundation.NetI64ResourceCorpus.fixture_resources",
+      "phase": 1,
+      "role": "resource-byte-corpus",
+      "claim": "the retained source program has a kernel-checked four-interaction, six-agent accepted semantic certificate"
+    },
+    {
+      "name": "NobleFoundation.NetI64ResourceCorpus.fixture_byte_claims_match_translation",
+      "phase": 1,
+      "role": "resource-byte-corpus",
+      "claim": "decoded integer claims in exact Rust-accepted bytes match the independently translated Lean program"
     }
   ],
   "private_theorems": [

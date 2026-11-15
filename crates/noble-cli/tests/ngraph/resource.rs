@@ -2,10 +2,10 @@
 //! The only test target is the existing `ngraph` integration target.
 
 use super::{eval_lines, vector_file, Ngraph, Scratch, TestResult};
-use std::fmt::Write as _;
 use noble_ngraph::identity::{IdentityHasher, IdentityScheme};
 use noble_ngraph::{net, resource, GraphBuilder, ScalarType, SubProfile, Value};
 use serde_json::json;
+use std::fmt::Write as _;
 
 #[path = "../../../noble-ngraph-experiment/tests/extract_b2/net_i64_corpus/serialization.rs"]
 mod corpus_codec;
@@ -65,7 +65,11 @@ private def littleEndian (bytes : List Nat) : Nat :=
 "#;
 
 fn byte_list(bytes: &[u8]) -> String {
-    bytes.iter().map(u8::to_string).collect::<Vec<_>>().join(", ")
+    bytes
+        .iter()
+        .map(u8::to_string)
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 fn corpus_path() -> std::path::PathBuf {
@@ -102,8 +106,8 @@ fn accepted_corpus() -> Result<String, Box<dyn std::error::Error>> {
     let checked = noble_ngraph::check(&IDS, graph).map_err(|error| format!("{error:?}"))?;
     let lowered = net::lower(&IDS, &checked, &inputs, &net::Limits::default())
         .map_err(|error| format!("{error:?}"))?;
-    let artifact = resource::issue(&IDS, &checked, &lowered, &inputs)
-        .map_err(|error| format!("{error:?}"))?;
+    let artifact =
+        resource::issue(&IDS, &checked, &lowered, &inputs).map_err(|error| format!("{error:?}"))?;
     let verified = resource::check(
         &IDS,
         &checked,
@@ -145,13 +149,40 @@ fn accepted_corpus() -> Result<String, Box<dyn std::error::Error>> {
     writeln!(source, "def program : Program := {{ inputArity := {}, nodes := [{nodes}], outputs := [{outputs}] }}", graph.slots.len())?;
     writeln!(source, "def inputs : List (BitVec 64) := [{lean_inputs}]")?;
     writeln!(source, "def rustNet : INet.XNet NetSym := {rust_net}")?;
-    writeln!(source, "def rustOutputs : List NobleFoundation.PackedSchedule.Val := [{expected_outputs}]")?;
-    writeln!(source, "def certificateBytes : List Nat := [{}]", byte_list(&artifact.certificate_bytes))?;
-    writeln!(source, "def netBytes : List Nat := [{}]", byte_list(&artifact.net_bytes))?;
-    writeln!(source, "def netBlake3 : List Nat := [{}]", byte_list(blake3::hash(&artifact.net_bytes).as_bytes()))?;
-    writeln!(source, "def certificateBlake3 : List Nat := [{}]", byte_list(blake3::hash(&artifact.certificate_bytes).as_bytes()))?;
-    writeln!(source, "def graphId : List Nat := [{}]", byte_list(&checked.id()))?;
-    writeln!(source, "def buildKey : List Nat := [{}]", byte_list(&lowered.build_key))?;
+    writeln!(
+        source,
+        "def rustOutputs : List NobleFoundation.PackedSchedule.Val := [{expected_outputs}]"
+    )?;
+    writeln!(
+        source,
+        "def certificateBytes : List Nat := [{}]",
+        byte_list(&artifact.certificate_bytes)
+    )?;
+    writeln!(
+        source,
+        "def netBytes : List Nat := [{}]",
+        byte_list(&artifact.net_bytes)
+    )?;
+    writeln!(
+        source,
+        "def netBlake3 : List Nat := [{}]",
+        byte_list(blake3::hash(&artifact.net_bytes).as_bytes())
+    )?;
+    writeln!(
+        source,
+        "def certificateBlake3 : List Nat := [{}]",
+        byte_list(blake3::hash(&artifact.certificate_bytes).as_bytes())
+    )?;
+    writeln!(
+        source,
+        "def graphId : List Nat := [{}]",
+        byte_list(&checked.id())
+    )?;
+    writeln!(
+        source,
+        "def buildKey : List Nat := [{}]",
+        byte_list(&lowered.build_key)
+    )?;
     writeln!(
         source,
         "def certificateNetDigest : List Nat := [{}]",
@@ -194,7 +225,10 @@ fn accepted_corpus() -> Result<String, Box<dyn std::error::Error>> {
         "\n/-- The magic and all four length-prefixed identity revisions are byte-exact. -/\ntheorem fixture_schema :\n    {} := by decide",
         schema.join(" ∧\n    ")
     )?;
-    writeln!(source, "\n/-- Binary field positions are decoded from the literal, rather than postulated. -/")?;
+    writeln!(
+        source,
+        "\n/-- Binary field positions are decoded from the literal, rather than postulated. -/"
+    )?;
     writeln!(source, "theorem fixture_byte_fields :\n    netBytes.take 8 = [78, 71, 82, 78, 69, 84, 51, 0] ∧\n    (netBytes.drop 8).take 32 = graphId ∧\n    (netBytes.drop 40).take 32 = buildKey ∧\n    (certificateBytes.drop {versions_bytes}).take 32 = certificateNetDigest ∧\n    (certificateBytes.drop {}).take 32 = certificateRuleDigest ∧\n    (certificateBytes.drop {}).take 32 = certificateCostDigest ∧\n    littleEndian ((certificateBytes.drop {}).take 8) = {} ∧\n    littleEndian ((certificateBytes.drop {}).take 8) = {} := by decide",
         versions_bytes + 32,
         versions_bytes + 64,
@@ -203,7 +237,10 @@ fn accepted_corpus() -> Result<String, Box<dyn std::error::Error>> {
         versions_bytes + 104,
         verified.live_agent_bound
     )?;
-    writeln!(source, "\n/-- The independently accepted decoded net agrees with this source translation. -/")?;
+    writeln!(
+        source,
+        "\n/-- The independently accepted decoded net agrees with this source translation. -/"
+    )?;
     writeln!(source, "theorem fixture_translation :\n    (Program.translateChecked program inputs).map canonicalNet = some (canonicalNet rustNet) := by decide")?;
     writeln!(source, "\ntheorem fixture_resources :\n    program.interactionCount = {} ∧\n    (program.translate inputs).agents.length = {} ∧\n    NobleFoundation.NetI64.checkCertificate program inputs (Certificate.forProgram program inputs) = true := by decide",
         verified.interactions, verified.live_agent_bound)?;
@@ -236,8 +273,8 @@ fn byte_checker_refuses_missing_dup_negative_costs_and_false_premise() -> TestRe
     let checked = noble_ngraph::check(&IDS, graph).map_err(|error| format!("{error:?}"))?;
     let lowered = net::lower(&IDS, &checked, &inputs, &net::Limits::default())
         .map_err(|error| format!("{error:?}"))?;
-    let issued = resource::issue(&IDS, &checked, &lowered, &inputs)
-        .map_err(|error| format!("{error:?}"))?;
+    let issued =
+        resource::issue(&IDS, &checked, &lowered, &inputs).map_err(|error| format!("{error:?}"))?;
     let check = |certificate: &[u8], net_bytes: &[u8], rules: &[u8]| {
         resource::check(
             &IDS,
@@ -267,7 +304,8 @@ fn byte_checker_refuses_missing_dup_negative_costs_and_false_premise() -> TestRe
         .windows(marker.len())
         .position(|window| window == marker)
         .ok_or("missing DUP charge")?
-        + marker.len() - 1;
+        + marker.len()
+        - 1;
     negative_annotation.splice(at..at + 1, b"-1".iter().copied());
     assert_eq!(
         check(
@@ -298,10 +336,13 @@ fn byte_checker_refuses_missing_dup_negative_costs_and_false_premise() -> TestRe
         Err(resource::Refusal::WrongCostModel)
     );
 
-    // Recompute the digest after forging a validly encoded but wrong graph identity: the
-    // independent structural check, not the digest check, must reject the false premise.
-    let mut false_premise = issued.net_bytes.clone();
-    false_premise[8] ^= 1;
+    // Recompute the digest after breaking a live port's reciprocal wire while retaining
+    // well-formed field encodings and the original graph/build identity. A digest match
+    // cannot establish the fully connected structural premise.
+    let mut disconnected = lowered.clone();
+    disconnected.agents[0].ports[0] = Some(net::Endpoint::Output(0));
+    let false_premise = resource::encode_net(&disconnected)
+        .map_err(|error| format!("encoding forged structural premise: {error:?}"))?;
     let mut rebound = issued.certificate_bytes.clone();
     rebound[digest_offset..digest_offset + 32].copy_from_slice(&certificate_digest(
         b"noble.ngraph.resource.net.v0",

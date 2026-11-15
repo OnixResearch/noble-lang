@@ -31,6 +31,7 @@ import NobleFoundation.BeltCorpus
 import NobleFoundation.NetI64
 import NobleFoundation.NetI64Resource
 import NobleFoundation.NetI64Corpus
+import NobleFoundation.NetI64ResourceCorpus
 import NobleFoundation.BeltTarget
 import NobleFoundation.BeltTargetCorpus
 import NobleFoundation.GraphRewrite

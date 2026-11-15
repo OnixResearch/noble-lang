@@ -116,7 +116,7 @@ private theorem filter_time_drop (agents : List (Id × NetSym)) (id : Id) (symbo
     · have symbolEq := unique agent (by simp) head
       have keep : decide (agent.1 ≠ id) = false := by simp [head]
       simp only [List.filter_cons]
-      simp only [keep, ↓reduceIte]
+      simp only [keep]
       have tailBound := filter_time_le rest (fun e => decide (e.1 ≠ id))
       simp only [agentsTimePotential, List.map_cons, List.sum_cons] at *
       simpa [symbolEq] using Nat.add_le_add_left tailBound (timePotential symbol)
@@ -398,11 +398,13 @@ theorem accepted_bytes_bound_every_schedule (hash : List Nat → List Nat) (hash
           agentsTimePotential (program.translate inputs).agents := by rw [sourceEq]
       _ ≤ certificate.declaredInteractions := sourceTime
       _ = certificate.semantic.declaredInteractions := semanticCount.symm
-  have sourceLive' : source.agents.length ≤ certificate.semantic.declaredAgentBound := by
+  have sourceLiveEq : source.agents.length = certificate.semantic.declaredAgentBound := by
     calc
       source.agents.length = (program.translate inputs).agents.length := by rw [sourceEq]
       _ = certificate.declaredLiveAgents := sourceLive.symm
       _ = certificate.semantic.declaredAgentBound := liveBound.symm
+  have sourceLive' : source.agents.length ≤ certificate.semantic.declaredAgentBound :=
+    Nat.le_of_eq sourceLiveEq
   have ⟨prefixBound, reached, htarget, hlive⟩ :=
     accepted_prefix_bounds_every_schedule translated sourceTime' sourceLive' reduction
   exact ⟨decoded, selectedRules, netDigest, ruleDigest,

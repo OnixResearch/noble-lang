@@ -226,9 +226,7 @@ pub fn check(
         let charge = match agent.symbol {
             crate::net::Symbol::Num(_) => 0_u64,
             crate::net::Symbol::Op2(_) => 2,
-            crate::net::Symbol::Op1(..)
-            | crate::net::Symbol::Dup
-            | crate::net::Symbol::Era => 1,
+            crate::net::Symbol::Op1(..) | crate::net::Symbol::Dup | crate::net::Symbol::Era => 1,
         };
         total.checked_add(charge).ok_or(Refusal::ArithmeticOverflow)
     })?;
