@@ -13072,6 +13072,54 @@
       "claim": "every successful decoded physical image preserves the complete ordered abstract external free-port labels"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.projected_maps_perm_of_toNet_eq",
+      "phase": 1,
+      "role": "representation",
+      "claim": "whole-net equality implies exact finite agent and wire map inventories, independent of hash-table insertion order"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.semanticCheck_of_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "decoded and reserved physical execution with verified exact semantic fields is admitted by the independent model checker"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.semanticCheck_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "semantic admission entails decoded bytes, a successful reservation, actual physical execution, and all checked field conditions"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.semanticCheck_frame",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every admitted image reserves resources, has complete reciprocal-write inventories, and preserves each untouched physical slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op2_omitted_external_semantically_refused",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the model semantic checker refuses the parser-valid OP2 image with a missing reciprocal output write at every resource bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.semanticCheck_ownership",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every admitted image has unique live owners, an exact bounded free inventory and canonical physical queue entries"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.semanticCheck_journal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reserved model execution stages invisibly and rollback restores the original complete physical snapshot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.semanticCheck_refines",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every model-semantic-checker-admitted physical byte image commits one selected abstract rewrite with the entire net, stable ordered free-port labels, and directed live-agent pending-pair permutation"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.project_boundary_frame",
       "phase": 1,
       "role": "representation",
@@ -13824,6 +13872,8 @@
     "NobleFoundation.NetI64Plans.dup_nbhd",
     "NobleFoundation.NetI64Plans.dup_plan_agents",
     "NobleFoundation.NetI64Plans.dup_plan_boundary",
-    "NobleFoundation.NetI64Plans.dup_plan_writes"
+    "NobleFoundation.NetI64Plans.dup_plan_writes",
+    "NobleFoundation.NetI64Plans.lookup_eq_of_some_iff",
+    "NobleFoundation.NetI64Plans.BytePlan.semanticFieldsCheck_iff"
   ]
 }

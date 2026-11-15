@@ -22,7 +22,7 @@ All paired full observations agree with the independent reference evaluator; abs
 
 The reuse/allocate plan streams differ under the same rule revision; both the exact-byte plan digest and the replay digest change. The Rust replay digest binds the graph/input-bound net key, rule, plan, representation, checker and executor revisions and the emitted plan stream. The receipt's separate evidence key additionally binds the clean source commit, test executable SHA-256, pinned inets upstream commit `98bbb01070664e4462a35efa5d62de6f27143572`, verified vendored theorem bytes (SHA-256 `c7a35dad49822583a9ee209b47d8ba5617d5abcb5a7f9f96df05e8502f362f54`) and current foundation plan-model source (SHA-256 `692862f23af90024d249e2814ede99babbd9bd590805deb5740dbc4eb9110d84`). A rule name alone cannot authenticate a prior result. These formal-reference hashes are provenance, not a Rust-to-Lean refinement proof.
 
-## Correctness scope and reopen conditions
+## Previous correctness scope and reopen conditions (before semantic admission)
 
 **Model proof:** the kernel-checked foundation model preserves the selected revision-3 right-hand side for both orientations of OP2, OP1, DUP and ERA. The compiled local image commits as one inets `HNet` firing, with observational pre-commit stutters, frame preservation outside declared agents/wires, and one abstract `CStep` under the stated matching/redex premises. The independent version-one Lean writer/parser roundtrip covers any bounded/admissible field image, including I64 payloads and both endpoint kinds. Five fixed Lean byte images decode: OP2 output-only, OP2 with one newly active external peer, wrapping OP1, DUP and ERA. A model physical executor decodes each image, and kernel proofs establish exact post-state and equality to the corresponding `Plan.commit.toNet` for all five; the nonempty OP2 case also proves the directed-pair worklist. For every successful decoded image, a separate theorem proves that physical execution preserves the ordered abstract free-port identities. The fixed model images are not exported Rust bytes or a theorem for every checker-admitted image. Generation-tagged slots, stable output labels, queue orientation and journaled pre-commit/rollback are modeled separately. A universal Rust-to-model refinement is **not** proved.
 
@@ -50,7 +50,7 @@ checker-admitted. A theorem using only successful decoding/execution as
 its premise would be false; the general refinement must derive exact-write
 completeness from an independently specified semantic checker.
 
-## Acceptance status by evidence class
+## Prior acceptance status by evidence class (superseded where noted below)
 
 | Issue #110 acceptance item | Kernel model | Safe-Rust / finite evidence | Rust-to-model correspondence |
 |---|---|---|---|
@@ -64,3 +64,86 @@ completeness from an independently specified semantic checker.
 | Fresh replay identity rejects changed plans under the same rule | Not a semantic theorem | **Passed:** source/executable/formal pins and distinct plan/replay digests | Not claimed |
 
 Reopen the performance decision only with a separately frozen comparison on realistic workloads that shows a material end-to-end gain over the existing packed backend **including** lowering, validation and readback, and with the Rust↔model correspondence obligation discharged before claiming proved implementation refinement. The plan path remains optional regardless of these finite microbenchmarks.
+
+## Semantic-checker generalization and decision
+
+**GO for the universal *Lean semantic-checker* refinement alternative; NO-GO
+for a universal Rust implementation-refinement claim.** The new
+NetI64PlanChecked.lean checker consumes the actual version-one byte *format*,
+decodes it, reserves arena/scratch/queue before simulating the model physical
+executor, and admits the result only if every independent semantic comparison
+passes. The kernel theorem `BytePlan.semanticCheck_refines` quantifies over
+arbitrary decoded bytes, any physical arena/output/worklist state, every
+selected revision-3 OP2/OP1/DUP/ERA rule and both orientations, subject to
+checker admission and explicit matching/redex premises. It proves an entire
+projected agent/wire/free-port net equality to the abstract compiled plan's
+commit, one abstract `CStep`, ordered stable free-port labels and permutation
+of directed **live-agent** pending pairs. The checker also checks the exact
+ordered write and reciprocal-write inventory computed from result ports,
+ordered captured boundary, result symbols, selected opcode, physical
+outside-frame slots, each output's current target, distinct live logical
+owners, exact in-bounds free-slot inventory, canonical queued slot order and
+resource reservations. `BytePlan.semanticCheck_frame`,
+`BytePlan.semanticCheck_ownership` and `BytePlan.semanticCheck_journal`
+separately expose these checked facts, precommit stutter and exact rollback.
+`BytePlan.op2_omitted_external_semantically_refused` rejects the known
+grammar-valid missing-write counterexample for *all* resource limits.
+
+The inets `principalPairs` candidate list includes a port-zero connection to
+an external free output, even though no second agent can fire there. This is
+why the old full worklist-permutation premise is false for the output-only
+OP2/OP1/DUP fixtures. The new checker filters abstract candidates to
+live-agent directed pending pairs before comparing them to the physical
+generation-checked queue; it does not erase real active agent-agent pairs or
+claim exact scheduling order.
+
+The model checker runs a shadow physical execution and compares the complete
+projected post-state with the independently compiled abstract image. Its
+kernel soundness theorem is **not** a theorem that a bare list of plan fields
+by itself entails refinement, nor that every legal image from the Rust
+compiler passes these checks. A model-only execution probe returned `true`
+for each of the five existing Lean physical fixtures and `false` for the
+omitted-write counterexample; these are executable probes, **not** additional
+kernel proofs of checker completeness. The accepted-image theorem is not
+based on their finite enumeration. The Rust checker does not currently run
+this model semantic check: the existing four exact Rust-byte/model matches
+and 16 emitted-field cases remain finite evidence only. NO-GO for calling
+the Rust implementation universally proved until a source-bound theorem
+establishes, for every admitted rule instance, that its emitted bytes and
+independent checker map into this predicate and that its executor's
+reservation, microsteps, commit, generation handling and rollback correspond
+to the physical model. Reopen that NO-GO only with this proof plus clean
+foundation/implementation gates; do not infer it from additional finite
+fixtures, a matching rule name or a successful parser roundtrip.
+
+### Six numbered refinement properties
+
+| # | Status and exact scope |
+|---|---|
+| 1. Selected pair | **DONE for checker-admitted model images:** the executable physical step requires generation-current logical pair identities; the kernel theorem separately requires the real rule and matched-redex premises. Rust universality remains NO-GO as above. |
+| 2. Untouched frame and ordered boundary | **DONE for checker-admitted model images:** exact ordered prestate boundary and each unchanged old physical slot are checked; complete post-map comparisons and target checks enforce the output boundary, while stable free labels are proved for every successful physical execution. Unsupported Rust loop/identical-endpoint aliases continue to refuse. |
+| 3. Declared payload and wiring only | **DONE for checker-admitted model images:** result symbols agree with the selected rule; both ordered wire lists equal the entire result-port inventory; simulated final agents, wires and output targets must match the independent abstract image. |
+| 4. Stutter then one rewrite | **DONE in the model:** resource admission returns an unchanged journal, staged internal changes are invisible, rollback restores the original physical snapshot, and the checker-admitted commit produces exactly one `CStep`. |
+| 5. Ownership and queued inventory | **DONE for checker-admitted model images:** distinct live identities, in-bounds exact free-slot membership and canonical physical queued pairs are checked; projected generation-valid pairs are a permutation of the abstract live-agent directed pending candidates. Stale old physical entries remain skippable, not reidentified. |
+| 6. Reserved completion | **DONE for checker-admitted successful model executions:** arena, scratch and queue reservations are checked *before* execution, and admission requires the physical execution to return a completed state. This does not prove termination of every Rust run or reserve capacity on all host machines. |
+
+### Eight acceptance items and owner follow-ups
+
+| Item | Disposition |
+|---|---|
+| 1. Arithmetic-stage, fanout, erasure reuse | **DONE:** existing safe-Rust plans and five-family paired receipt demonstrate consumed-slot reuse and avoided allocations; no default switch. |
+| 2. Emitted-format semantics and frame/boundary refinement | **DONE via the checker-admitted-image alternative:** the new general kernel theorem covers *every* image admitted by the executable Lean semantic checker, not all grammar-valid bytes or all Rust-emitted bytes. The exact-write negative control is kernel-proved. |
+| 3. Safe-Rust correspondence obligation | **DONE as an explicit obligation; DECIDED NO-GO for universal implementation proof claims:** finite emitted-byte matches and Rust tests are not a proof of compiler/checker/executor correspondence. Reopen criteria are above. |
+| 4. Forged/stale/duplicate/missing controls | **DONE as finite Rust refusals:** existing negative tests; model missing-write counterexample is additionally refused for every resource limit. No assertion of universal Rust refusal theorem. |
+| 5. No-free-slot, interruptions, resource edges, rollback | **DONE as finite Rust executions:** existing controls; model reservation/journal/rollback theorems remain separate. |
+| 6. Matched five-family observations | **DONE:** prior clean-source 31-pair receipts compare complete results and abstract interactions. |
+| 7. Counters, peaks, timing and regressions | **DONE:** retained receipts retain the older 1.1402 chain regression; opt-in path remains NO-GO for performance adoption. Reopen only under the separately frozen full-path criterion above. |
+| 8. Fresh replay and same-rule changed plan | **DONE:** exact bytes and net/rule/representation/checker/executable bindings retained; the two storage policies yield distinct plan and replay digests. |
+
+The earlier unwired m3 local reducer theorems are **DECIDED not evidence** for
+this wired revision-3 backend: they discard computed values and cannot prove
+delivery. Reconsider their use only after a separately proved wiring/value
+refinement. #37/#124's selected rule and boundary remain authoritative;
+#109's physical peak integration is **DECIDED optional**, reopened only if a
+downstream consumer requires a capacity bound. Hardware, host effects,
+concurrency and a default evaluator switch remain outside this issue.
