@@ -1,0 +1,119 @@
+{
+  "schema": "noble-procedure-library-obligation-evidence/1",
+  "source_commit": "0d47dbd8a5cb2419ea48c448e8456d026647cb3f",
+  "source_tree": "89396cf343b16fd3bb3fd7a09297eeee703fa5ad",
+  "model_audit": {
+    "path": "verification/foundation/receipts/d4e5304af/foundation-check.json",
+    "sha256": "7d73d8db9738c00b44090b944689dcefb1a8c360480eee9f2b34591fae61deb1",
+    "source_commit": "d4e5304afa55012ba0a4732c6b55bc65eccc597c",
+    "inventory": "proofs/foundation/inventory.json",
+    "scope": "Kernel-checked abstract subject, state and generation model; not a Rust refinement or runtime proof checker"
+  },
+  "finite_encoder_corpus": {
+    "path": "verification/procedure-library/receipts/encoder-corpus-v3.json",
+    "sha256": "94e6cac8f1234790c3f139cf54d8c84062e19632b607880361c384f5b8a6cfe8",
+    "source_commit": "3d90a566269d41f60cb0b8d76d9d2f932f4b8027",
+    "cases": 36,
+    "scope": "Four producer-derived I64 source bodies, three provenance branches and zero/one/two ordered library edges; excludes arbitrary captures, chunk dependencies, other chunks and universal Rust byte-encoder refinement"
+  },
+  "executed_tests": {
+    "raw_path": "verification/procedure-library/receipts/2026-11-15-obligations-final.raw.log",
+    "raw_sha256": "ce67adef5d241c4f0110133f224283bfd2f6059df67a7d14028e5f5989215a8e",
+    "cargo_arguments": "test -p noble-contracts --test editor --offline --locked",
+    "runner": "pinned nightly Rust toolchain, reviewed offline vendor and private Cargo target",
+    "source_commit": "0d47dbd8a5cb2419ea48c448e8456d026647cb3f",
+    "clean_source": true,
+    "exit_status": 0,
+    "passed": 107,
+    "failed": 0,
+    "ignored_historical_one_shots": 2
+  },
+  "obligations": [
+    {
+      "id": "LPL-O1",
+      "claim": "Immutable typed subject identity is injective and insensitive to mutable evidence/status in the abstract model; actual Rust bytes refine it only for the finite recorded corpus.",
+      "model_status": "proved-abstract",
+      "inventoried_theorems": [
+        "NobleFoundation.ProcedureLibrary.decode_encode_subject",
+        "NobleFoundation.ProcedureLibrary.encode_subject_injective",
+        "NobleFoundation.ProcedureLibrary.identity_injective_on_subjects",
+        "NobleFoundation.ProcedureLibrary.identity_binds_body",
+        "NobleFoundation.ProcedureLibrary.identity_binds_dependency_closure",
+        "NobleFoundation.ProcedureLibrary.identity_ignores_mutable_state"
+      ],
+      "receipts": ["model_audit", "finite_encoder_corpus", "executed_tests"],
+      "rust_tests": ["procedures::identity::binds_body_dependencies_and_provenance", "procedures::transfer::encoder_corpus::finite_subject_matrix_matches_lean_generated"],
+      "implementation_refinement": "NO-GO: no universal Rust encoder correspondence, no hash injectivity theorem; the experimental digest is an integrity/index aid only"
+    },
+    {
+      "id": "LPL-O2",
+      "claim": "Persistence and reload reproduce ordered identities at the model boundary and in the executed two-process fixture.",
+      "model_status": "proved-abstract",
+      "inventoried_theorems": [
+        "NobleFoundation.ProcedureLibrary.reload_recomputes_identity",
+        "NobleFoundation.ProcedureLibrary.reload_repeated_identity"
+      ],
+      "receipts": ["model_audit", "executed_tests"],
+      "rust_tests": ["procedures::identity::duplicate_is_idempotent_and_reload_reproduces_all_views", "procedures::reload_negative::body_mutation::refuses_changed_record_encoder_drift_and_evidence_deletion"],
+      "implementation_refinement": "not proved for arbitrary Rust persistence bytes; no universal theorem inferred from two-process execution"
+    },
+    {
+      "id": "LPL-O3",
+      "claim": "Exact dedup preserves identity, closure and prior evidence; subject-bound evidence appends in a new model generation and the Rust fixture executes the corresponding bounded cases.",
+      "model_status": "proved-abstract",
+      "inventoried_theorems": [
+        "NobleFoundation.ProcedureLibrary.deduplicate_reuses_exact_subject",
+        "NobleFoundation.ProcedureLibrary.deduplicate_reuse_preserves_dependency_closures",
+        "NobleFoundation.ProcedureLibrary.deduplicate_reuse_preserves_all_evidence",
+        "NobleFoundation.ProcedureLibrary.appended_evidence_preserves_identity",
+        "NobleFoundation.ProcedureLibrary.appended_evidence_preserves_prior_obligations",
+        "NobleFoundation.ProcedureLibrary.evidence_publication_appends_a_generation",
+        "NobleFoundation.ProcedureLibrary.evidence_publication_retains_prior_generation"
+      ],
+      "receipts": ["model_audit", "executed_tests"],
+      "rust_tests": ["procedures::identity::duplicate_is_idempotent_and_reload_reproduces_all_views", "procedures::generations::replacements_and_rollback_append_exact_history"],
+      "implementation_refinement": "not proved for all Rust state transitions; checked model and executed cases remain distinct"
+    },
+    {
+      "id": "LPL-O4",
+      "claim": "Rollback restores exactly the retained record closure without rewriting earlier model history, with Rust refusal and exact-history fixtures.",
+      "model_status": "proved-abstract",
+      "inventoried_theorems": [
+        "NobleFoundation.ProcedureLibrary.rollback_restores_exact_retained_closure",
+        "NobleFoundation.ProcedureLibrary.rollback_never_rewrites_retained_history"
+      ],
+      "receipts": ["model_audit", "executed_tests"],
+      "rust_tests": ["procedures::generations::replacements_and_rollback_append_exact_history", "procedures::reload_negative::dependency_order::refuses_reordered_edges_at_the_edge_field"],
+      "implementation_refinement": "not proved for every Rust generation transition; executed refusal is not a theorem"
+    },
+    {
+      "id": "LPL-O5",
+      "claim": "Generated retrieval filters return only ordered identities; every selected identity re-enters ordinary source/kernel admission and cannot authorize a live capability.",
+      "model_status": "not-claimed",
+      "inventoried_theorems": [],
+      "context_theorem_not_a_retrieval_proof": "NobleFoundation.ProcedureLibrary.identity_binds_body",
+      "receipts": ["model_audit", "executed_tests"],
+      "rust_tests": ["procedures::retrieval::generated::generated_queries_return_only_ids_and_require_readmission"],
+      "generated_scope": "Four seeds 1/7/23/101 times 16 filter-presence masks = 64 generated queries over five admitted records; independent ordered-subsequence oracle, fresh ordinary re-admission for returned IDs, budget and capability refusals",
+      "result": "executed-bounded; no theorem or universal retrieval authority claim"
+    },
+    {
+      "id": "LPL-O6",
+      "claim": "Generated library exports retain all per-obligation test/proof/assumption distinctions and exclude live capabilities and training-policy fields.",
+      "model_status": "not-claimed",
+      "inventoried_theorems": [],
+      "context_theorem_not_an_export_proof": "NobleFoundation.ProcedureLibrary.identity_ignores_mutable_state",
+      "receipts": ["model_audit", "executed_tests"],
+      "rust_tests": ["procedures::metrics::schema::generated_libraries_preserve_evidence_distinctions_without_capabilities"],
+      "generated_scope": "Three seeds 1/7/23, four retained records in five generations each; JSON evidence tuples checked against independent expected rows; nine injected capability markers refuse without changing retained bytes or manifest",
+      "result": "executed-bounded; synthetic proof-reference strings are not independent proof attestations"
+    }
+  ],
+  "promotion_refusal": {
+    "rust_test": "procedures::admission::criteria::proof_demanding_promotion_requires_every_selected_obligation",
+    "receipt": "executed_tests",
+    "refusals": "eight missing/stale/forged/class/outcome cases plus a separately demanded Rust-encoder refinement absent despite model-only O1/O3 records",
+    "positive_control": "all six synthetic proof-class evidence records accepted when each required ID is declared and matched; this verifies policy bookkeeping only, not proof validity",
+    "decision": "NO-GO for real proof-demanding promotion until independently checked implementation-refinement evidence is available and selected by the consumer policy"
+  }
+}

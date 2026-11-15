@@ -4,7 +4,7 @@ Revision: 0.1.0-draft.5
 
 **Implement from [the Cairn specifications](../.cairn/README.md), not from the archived previews.** This is one canonical working family with explicit open contracts. It is not a stable language release.
 
-The fourteen normative documents now live under `.cairn/specs/`. Their old paths contain generated compatibility views, not separate authority. This directory retains the scenario designs, proof ledger, roadmap, status, and supporting documents.
+The sixteen normative documents now live under `.cairn/specs/`. Their old paths contain generated compatibility views, not separate authority. This directory retains the scenario designs, proof ledger, roadmap, status, and supporting documents.
 
 The repository now contains the bounded checker, experimental MC1 contract frontend,
 M3 compiled-program representation experiment, M4 source-to-Wasm Core-Bootstrap,
@@ -122,6 +122,7 @@ not automatic completion.
 | [Developer experience](DEVELOPER-EXPERIENCE.md) | SPEC-DX001 | Scoped language ergonomics, libraries, module boundaries, protocol types, and development tools |
 | [Exact calculator](CALCULATOR.md) | SPEC-CALC001 | First reference application: exact arithmetic, lexical functions, and bounded AI-authoring evaluation |
 | [Typed-chunk ranking](TYPED-CHUNK-RANKING.md) | SPEC-TCRANK001 | Bounded learned-ranking experiment over checked #73 chunks; the retained [NO-GO decision](../verification/typed-chunk-ranking/decision.md) does not select a production scorer |
+| [Learned-procedure library](LEARNED-PROCEDURE-LIBRARY.md) | SPEC-LPL001 | Bounded typed records, composition, retrieval, generation, export and proof-evidence policies; [decision](../verification/procedure-library/decision.md) keeps universal implementation refinement NO-GO |
 
 ## Verification and evidence
 

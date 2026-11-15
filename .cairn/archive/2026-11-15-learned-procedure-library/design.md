@@ -666,6 +666,43 @@ and VC-TOOL-04 supply the evidence-binding route for their receipts. The Lean
 declarations are inventoried in `proofs/foundation/inventory.json`; their
 checked model proof must not be presented as a runtime verifier.
 
+### Decision D14 (2026-11-15): keep proof-demanding promotion closed
+
+The six obligations have separate evidence records in
+`verification/procedure-library/obligations.json`. `LPL-O1`–`LPL-O4` have
+inventoried, audited Lean theorems **about the abstract model** and separate
+Rust execution checks. `LPL-O5` and `LPL-O6` require generated-query and
+generated-library execution respectively, not a purported Lean proof. The
+36-case Rust/Lean byte comparison is finite: it excludes arbitrary captures,
+chunk dependencies and source shapes. Neither an injective experimental
+32-byte digest over all possible subjects nor universal Rust encoder or
+bounded Rust polynomial-normalizer refinement is established.
+
+**NO-GO** for promoting this library's records under a policy that demands
+those implementation refinements. A consumer must name every demanded
+obligation, including the implementation-specific refinement separately from
+the model theorem; omission, `validation/passed`, `test/passed`, a stale
+subject/policy, or a proof-class record without `proved` cannot meet that
+policy. The library checks the declared evidence class, outcome and binding
+at admission; the library does **not** independently run a proof checker on
+an arbitrary claim string. Proof validity requires the existing independent
+MC2 checked-evidence route, not trust in the library's status field. Ordinary
+candidate/tested reuse and the bounded alias verifier remain available but
+must not be described as proof-demanding promotion.
+
+Reopen for a **new GO decision** only when an extractable pinned Aeneas
+Rust-to-model route or equivalent independently checked route covers every
+admitted subject, including captures, ordered dependency closure, all encoder
+branches and revisions; the analogous checked route covers every admitted
+normalizer input and wrapping-I64 operation; proof receipts are bound to the
+exact immutable subject, toolchain and policy; and negative admission tests
+still reject every missing, stale or forged demanded obligation. Selecting a
+canonical language encoding would also require revisiting this decision and
+its test vectors, not automatically establish the missing refinement. Until
+then model proof, finite differential agreement and executed controls remain
+distinct evidence classes. Resolving this gated change by an explicit NO-GO
+does not declare a universal implementation proof.
+
 ## Non-claims
 
 No canonical Noble encoding, hash algorithm, test vectors or

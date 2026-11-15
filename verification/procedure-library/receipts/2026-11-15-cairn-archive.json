@@ -1,0 +1,67 @@
+{
+  "schema": "noble-procedure-library-cairn-archive-receipt/1",
+  "source_commit": "bbd9d1b5fb08affb5412de7fab639a33408325f5",
+  "source_tree": "8a670b6d6ed1a5dcac88154bf7ca90f0c2c9f1bd",
+  "source_clean_before_checks": true,
+  "base_commit": "d1383164",
+  "before_archive_source_commit": "0d47dbd8a5cb2419ea48c448e8456d026647cb3f",
+  "before_archive_tree": "89396cf343b16fd3bb3fd7a09297eeee703fa5ad",
+  "tool": {
+    "path": "/nix/store/bvz6kl88qkfi15n8ml1xr7p22syykggd-cairn-0.1.0/bin/cairn",
+    "sha256": "570eeae7f5abd5ec0259ced4776bf6e4a19c2e82864935fb59c91d08221ce8c6",
+    "policy_path": "/nix/store/jqz083ahq10fdrakci9xzvf7bl4nh075-source/cairn-policy/generated/cairn-policy.json",
+    "policy_sha256": "62b9ade2bc8af10b2c68776dba8abb374a6c7331aae7ad8bb41ca938ef100d27"
+  },
+  "tasks": {
+    "done": 28,
+    "todo": 0,
+    "original_final_row_preserved": true,
+    "decision": "D14: NO-GO for proof-demanding promotion without independently checked Rust encoder/normalizer implementation refinement",
+    "archived_tasks_path": ".cairn/archive/2026-11-15-learned-procedure-library/tasks.md",
+    "archived_tasks_sha256": "0509cb4a224f20d43be520de3765a39ca6a27b7939422844c5ca0b3d4cbea1fd",
+    "archived_design_sha256": "b964d969eb7668b07c521b77608fa63d9257b9ecd9e01168fe03a8176b490390"
+  },
+  "archive_actions": [
+    "pinned Cairn sync learned-procedure-library preview: blocked=false; execute: mutated=true, one delta-spec merge",
+    "pinned Cairn archive learned-procedure-library preview: blocked=false; execute: mutated=true, moved five active files",
+    "Cairn emitted the deterministic epoch path .cairn/archive/1970-01-01-learned-procedure-library; moved the unchanged five files to the repository's actual-date 2026-11-15 archive convention and removed the empty epoch directories",
+    "generated the sixteenth compatibility view, refreshed the requirement ledger and registered all eight LPL evidence routes"
+  ],
+  "after_archive": {
+    "active_change_absent": true,
+    "archive_path": ".cairn/archive/2026-11-15-learned-procedure-library",
+    "canonical_spec_path": ".cairn/specs/learned-procedure-library/spec.md",
+    "canonical_spec_sha256": "c568d46444c419a367def306c7146bad468041c00eef19911b4d5f07ca688a2e",
+    "compatibility_view_path": "specs/LEARNED-PROCEDURE-LIBRARY.md",
+    "obligations_path": "verification/procedure-library/obligations.json",
+    "obligations_sha256": "48fe9fdaaff8bfec6dc5e04d7912b9ae9bd621fe0adaf196248133df29f95cde",
+    "final_raw_test_sha256": "ce67adef5d241c4f0110133f224283bfd2f6059df67a7d14028e5f5989215a8e"
+  },
+  "checks_from_clean_source": [
+    {
+      "command": "cairn validate --root . --policy <pinned-policy>",
+      "result": "valid=true, issues=[], findings=[], change_issues=[], spec_issues=[]"
+    },
+    {
+      "command": "cairn compact verify --root . --policy <pinned-policy>",
+      "result": "valid=true, issues=[], latest_chain_hash=8b02f7ffe23f41feda7625b6a7f4d782d082736cc39626af807328d127828bc7"
+    },
+    {
+      "command": "bun tools/cairn-specs.mjs --self-test",
+      "result": "passed; 16 specs, 274 scenarios, 26 self-tests"
+    },
+    {
+      "command": "bun tools/check-specs.mjs --self-test",
+      "result": "passed; 16 documents, 612 requirements, 274 scenarios, 230 self-tests"
+    },
+    {
+      "command": "bun test tools/cairn-specs.test.mjs tools/check-specs.test.mjs tools/calculator-headroom.test.mjs tools/source-inventory-renew.test.mjs",
+      "result": "114 pass, 0 fail"
+    }
+  ],
+  "non_claims": [
+    "Cairn structure and document checks do not establish runtime correctness or proof validity",
+    "The finite Rust/Lean byte corpus is not universal encoder or normalizer refinement",
+    "The original frozen transfer run did not execute its attempted-teacher control; a separately frozen v3 run did"
+  ]
+}

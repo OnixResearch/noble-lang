@@ -54,7 +54,7 @@ a proof-demanding promotion or an implementation-to-Lean refinement.
 - [x] [serial] Generate held-out composed tasks from #116's producer with its grammar revision, budget, witness/counterexample trace and verifier status retained, and prove no held-out answer, body or evaluator state reaches an entry or the retrieval index. r[LPL-08]
 - [x] [serial] Run the arms with the proposer and teacher disabled, record `proposer_calls` and `teacher_calls`, make any attempted call fail closed, and withdraw any transfer claim from a run with a nonzero count. r[LPL-08]
 - [x] [serial] Report acquisition, retention, transfer, regression, growth, retrieval overhead, restart reuse and the break-even invocation count per arm and per seed, with model/synthesis behavior, executed mechanics, correspondence and assumptions kept separate; claim no lifelong learning, speedup or universal transfer. r[LPL-08]
-- [ ] [serial] Discharge the planned proof obligations `LPL-O1`–`LPL-O4` and the executed properties `LPL-O5`/`LPL-O6` as their own obligations before any promotion of a record to `promoted` under a proof-demanding policy. r[LPL-01] r[LPL-03] r[LPL-07]
+- [x] [serial] Discharge the planned proof obligations `LPL-O1`–`LPL-O4` and the executed properties `LPL-O5`/`LPL-O6` as their own obligations before any promotion of a record to `promoted` under a proof-demanding policy. r[LPL-01] r[LPL-03] r[LPL-07] Decision D14 (NO-GO for unproved implementation refinement); `verification/procedure-library/obligations.json`.
 
 Phase 3 frozen criteria: `verification/procedure-library/criteria-2026-11-13.json`
 (committed before measurement); source candidates from
@@ -83,16 +83,15 @@ with its raw log. Learned and frozen-hand each passed 8/8 paired seed-task
 cells and 24/24 examples; both other arms passed 0/8. All 16 scored rows
 recorded zero teacher/proposer attempts and calls, and each seed's isolated
 attempted-call controls refused before callbacks. Neither older run was
-repeated. The sole unticked Phase 3 row still needs a universal checked Rust
-byte-encoder refinement before proof-demanding promotion may claim `LPL-O1`
-for the actual encoder. A local exact-pair validation result alone cannot
-authorize such promotion. The abstract model at
-`proofs/foundation/NobleFoundation/ProcedureLibrary.lean` discharges typed
-identity, reload, append and rollback lemmas, **not** a Rust byte-encoder
-refinement. A separate
-`NobleFoundation/ProcedureLibraryWire.lean` subprofile and digest-bound
-`verification/procedure-library/receipts/encoder-corpus-v1.json` compare
-two finite kernel-checked model encodings with Rust subject bytes; the
-expanded v2 corpus spans 36 source/provenance/ordered-closure cases and
-explicitly retains the universal obligation. Keep this Cairn change active
-until that obligation is genuinely discharged.
+repeated. The final Phase 3 row records a decision, **not** a universal
+implementation proof. Decision D14 and the six separate records in
+`verification/procedure-library/obligations.json` bind inventoried, audited
+abstract-model theorems for O1–O4, generated execution for O5/O6, and
+clean-source refusal of proof-demanding promotion when a consumer demands
+missing implementation-refinement evidence. The 36-case finite Rust/Lean
+encoder comparison is retained at `verification/procedure-library/receipts/encoder-corpus-v3.json`;
+it does not prove universal Rust encoder or normalizer correspondence.
+Proof validity remains the independent MC2 route, not a trusted status field.
+Do not claim proof-demanding promotion for those implementation refinements
+until D14's explicit reopening conditions are met; archiving this bounded
+change does not change the original frozen run's missed teacher-attempt clause.

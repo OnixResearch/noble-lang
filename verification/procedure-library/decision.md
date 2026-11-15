@@ -2,11 +2,13 @@
 
 **Decision: accept the executed store/retrieval/composition mechanics, the
 bounded exact-pair alias fragment and the one-shot GO for #116-generated
-held-out tasks under mechanically derived references. Do not close the full
-Cairn change or claim incremental learning, general transfer, a
-teacher-attempt refusal in the original frozen run, a speedup or universal
-implementation/model correspondence.** The remaining proof obligation is
-explicit below. The original frozen criterion is
+held-out tasks under mechanically derived references. Archive the completed
+bounded Cairn change with an explicit NO-GO for proof-demanding promotion
+without independently checked Rust implementation-refinement evidence. Do not
+claim incremental learning, general transfer, a teacher-attempt refusal in
+the original frozen run, a speedup or universal implementation/model
+correspondence.** Decision D14 in the archived design names the criteria and
+reopening conditions. The original frozen criterion is
 `criteria-2026-11-13.json` (SHA-256
 `36b8efc1d7f99485f3e1764a596ce014ab24dcb62d6f029bf32456c196a4dc79`),
 committed before either transfer attempt.
@@ -185,12 +187,32 @@ its source-digest verifier and
 check **36 full-byte cases**, spanning four producer-derived I64 source
 bodies, three provenance tags and zero/one/two ordered library edges. The
 Rust tests also check dependency-order sensitivity and over-limit refusal.
-The explicit **universal obligation remains open**: no Rust/Lean refinement
-for arbitrary chunks, captures, dependency closures, hash injectivity or
+The clean-source regenerated `receipts/encoder-corpus-v3.json` (36 cases)
+tracks the later proof-policy admission code without broadening the tested
+profile. The explicit **universal implementation refinement remains NO-GO**:
+no Rust/Lean refinement for arbitrary chunks, captures, dependency closures,
+hash injectivity or
 proof-demanding promotion follows from this finite differential matrix.
 `NobleFoundation/ProcedureLibraryAlias.lean` independently proves equality
 of wrapping-I64 outputs from equal formal polynomial normal forms; it does
 not prove the Rust bounded sparse normalizer implements that model.
+
+The six records in `obligations.json` separately bind O1–O4 to inventoried,
+audited abstract-model theorems and bounded Rust checks, and O5/O6 to
+generated execution without claiming new Lean theorems. The clean-source
+`receipts/2026-11-15-obligations-final.raw.log` records 107 passing editor
+tests and two deliberately ignored historical one-shots. O5 exercises four
+seeds × sixteen retrieval-filter masks, ordered identity-only results, fresh
+ordinary re-admission, a bounded query budget and a capability refusal.
+O6 exercises three seeded libraries, five generations per seed, preserved
+test/proof/assumption evidence distinctions, and nine attempted capability
+injections that refuse without storage mutation. Its proof-reference strings
+are synthetic test data, not independently checked proof attestations.
+The proof-demanding admission test refuses omitted, stale, wrong-class and
+wrong-outcome obligations; a consumer policy additionally demanding Rust
+encoder refinement refuses promotion with only model O1/O3 evidence. A positive
+six-record bookkeeping control does not establish validity of an arbitrary
+proof claim: independent MC2 checked-evidence remains required.
 
 ## Acceptance and remaining obligations
 
@@ -203,9 +225,9 @@ not prove the Rust bounded sparse normalizer implements that model.
 | Two-process reload equality, deterministic dependency order, mutation/encoder-drift refusals, replacement and rollback | DONE | `tests/editor/procedures/identity.rs`, `reload-negative.rs`, `generations.rs`. Two child processes compare the exact identity manifest against the parent. |
 | Frozen held-out composed-task evaluation and per-seed library growth/retrieval overhead | DONE for the **repaired fixture** | Criterion SHA-256 above; both attempts retained separately; one repaired repeat meets 8/8 and 24/24. Per-arm rows, bytes, query counts, restart, retention, regression and null break-even reasons are in `transfer-repeat.json`. This is not an incremental benefit over the frozen-hand library. |
 | #116-generated held-out **transfer measurement**, with grammar/budget/trace/verifier status and no target leakage | DONE for frozen v3 | `criteria-producer-targets-v3.json`/`producer-targets-v3.txt` were mechanically derived and committed before target generation. One clean-source #116 producer receipt retains candidates, budgets, trace, external solver answers, held-out producer examples and normal CLI re-admission. One clean-source four-arm receipt `producer-transfer-v3.json` plus raw log gives GO, learned 8/8 and 24/24, hand 8/8, other controls 0/8, all restart/regression checks passed. Generated target bodies are oracle-only; acquired source procedures alone enter the library. Neither v1 nor defective v2 was rerun. |
-| No runtime teacher/proposer fallback, including an attempted-call refusal | DONE for v3; original frozen clause NOT DONE | V3's 16 scored rows have zero attempts and calls; its four isolated negative controls each deliberately attempted both producer types and refused before any callbacks or library mutation. The original frozen repeat missed the attempted-call clause and is not retroactively repaired. |
-| Proof obligations O1–O6 and proof-demanding promotion | PARTIAL | The abstract ProcedureLibrary model proves typed identity, reload, append/dedup and rollback; Rust tests exercise O5/O6. ProcedureLibraryAlias proves the formal wrapping-I64 polynomial equivalence claim. ProcedureLibraryWire and `receipts/encoder-corpus-v2.json` compare a 36-case source/provenance/closure subprofile against actual Rust subject bytes. No **universal** Rust encoder refinement, digest injectivity or Rust normalizer refinement theorem exists; do not promote under a proof-demanding policy on those finite/model-only witnesses. |
-| Cairn validation and archive | PARTIAL | The bounded alias and valid #116-produced v3 measurement are done; `.cairn/changes/learned-procedure-library/tasks.md` retains the unchecked universal byte-encoder/proof-demanding-promotion obligation. The original frozen run's missed teacher-attempt clause is historical, not retroactively discharged; v3 independently exercises the boundary. Keep this change active until the universal obligation is proved and independently checked. |
+| No runtime teacher/proposer fallback, including an attempted-call refusal | DONE for v3; historical original frozen clause unmet | V3's 16 scored rows have zero attempts and calls; its four isolated negative controls each deliberately attempted both producer types and refused before any callbacks or library mutation. The original frozen repeat missed the attempted-call clause and is not retroactively repaired. |
+| Proof obligations O1–O6 and proof-demanding promotion | DONE for separate model and generated-execution evidence; DECIDED NO-GO for universal implementation refinement | `obligations.json`, the audited foundation receipt, `receipts/encoder-corpus-v3.json` and the clean-source `receipts/2026-11-15-obligations-final.raw.log` bind the scoped results. The policy test refuses a missing demanded Rust-refinement obligation even with O1/O3 model-only evidence. D14 in the archived design requires a checked Rust-to-model encoder and normalizer route with exact subject/policy receipts and negative admission controls before reconsidering GO; selecting a canonical encoding also reopens the decision without supplying the missing proof. |
+| Cairn validation and archive | DONE for bounded change | All 28 tasks checked, original final task text preserved with D14 citation. The pinned Cairn synced LPL-01–08 into `.cairn/specs/learned-procedure-library/spec.md`, then archived the change in `.cairn/archive/2026-11-15-learned-procedure-library/`; validation and compact verification report no issues. The original frozen run's missed teacher-attempt clause remains historical, not retroactively discharged; v3 independently exercises the boundary. |
 
 Model proof, implementation tests, producer provenance, observed results and
 correspondence assumptions are separate evidence classes. The original

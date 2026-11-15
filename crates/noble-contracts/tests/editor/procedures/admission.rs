@@ -15,6 +15,8 @@ use std::vec;
 
 #[path = "admission/alias/mod.rs"]
 mod alias;
+#[path = "admission/guards/criteria.rs"]
+mod criteria;
 
 fn evidence(
     record: &ProcedureRecord,

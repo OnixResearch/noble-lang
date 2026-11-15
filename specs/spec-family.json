@@ -96,6 +96,12 @@
       "path": "../.cairn/specs/typed-chunk-ranking/spec.md",
       "compatibility_path": "TYPED-CHUNK-RANKING.md",
       "cairn_id": "typed-chunk-ranking"
+    },
+    {
+      "id": "SPEC-LPL001",
+      "path": "../.cairn/specs/learned-procedure-library/spec.md",
+      "compatibility_path": "LEARNED-PROCEDURE-LIBRARY.md",
+      "cairn_id": "learned-procedure-library"
     }
   ],
   "scenario_files": [
