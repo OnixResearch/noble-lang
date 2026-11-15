@@ -1,5 +1,6 @@
 //! Sequential tick protocol fixtures, independently expected recurrences and export.
 
+mod benchmark;
 mod export;
 mod faults;
 mod protocol;

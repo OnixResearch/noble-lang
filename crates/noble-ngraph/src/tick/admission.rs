@@ -61,8 +61,17 @@ fn check_partition(graph: &Graph, p: Partition, limits: &Limits) -> Result<usize
 
 fn profile(checked: &crate::check::CheckedGraph, p: Partition) -> Result<(), Refusal> {
     let graph = checked.graph();
+    let interface_words = p.state_words + p.input_words + p.control_words;
     if graph.profile != SubProfile::I64
         || !graph.facts.is_empty()
+        || graph.nodes.len() < interface_words
+        || graph.nodes[..interface_words]
+            .iter()
+            .enumerate()
+            .any(|(slot, node)| !matches!(node.op, Op::Input(k) if k as usize == slot))
+        || graph.nodes[interface_words..]
+            .iter()
+            .any(|node| matches!(node.op, Op::Input(_)))
         || graph.nodes.iter().any(|n| {
             !matches!(
                 n.op,
@@ -169,6 +178,7 @@ pub(super) fn admit(
     state: &[i64],
     controls: &[i64],
     limits: &Limits,
+    reserved_bytes: u64,
 ) -> Result<Admitted, Refusal> {
     check_limits(limits)?;
     let checked = crate::check::check_with(ids, graph, &limits.graph).map_err(Refusal::Graph)?;
@@ -189,8 +199,12 @@ pub(super) fn admit(
         return Err(Refusal::Budget("forward_scratch"));
     }
     let retained_bytes = retained_bytes(&checked, &compiled, partition, input_words);
-    if retained_bytes > limits.retained_bytes {
-        return Err(Refusal::Budget("retained_bytes"));
+    if retained_bytes.saturating_add(reserved_bytes) > limits.retained_bytes {
+        return Err(Refusal::Budget(if reserved_bytes == 0 {
+            "retained_bytes"
+        } else {
+            "replacement_peak_bytes"
+        }));
     }
     let selection = Selection {
         graph: checked.id(),
@@ -213,9 +227,9 @@ pub(super) fn admit(
 #[cfg(test)]
 pub(super) mod tests {
     use super::super::{Limits, Partition, Runner};
-    use alloc::boxed::Box;
     use crate::identity::{IdentityHasher, IdentityScheme};
     use crate::ir::{Digest, Graph, GraphBuilder, Op, ScalarType, SubProfile, Subject};
+    use alloc::boxed::Box;
 
     pub(crate) struct Scheme;
     pub(crate) static IDS: Scheme = Scheme;

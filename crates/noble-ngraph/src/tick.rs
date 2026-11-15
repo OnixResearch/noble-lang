@@ -132,6 +132,16 @@ pub struct Tick<'a> {
     pub evaluated_nodes: u64,
 }
 
+/// Fully admitted but not active control words, bound to the exact graph,
+/// current graph/control epochs and tick boundary. Holding this token never
+/// changes the runner; activation rechecks its expected boundary.
+#[derive(Debug)]
+pub struct ControlUpdate {
+    expected: Selection,
+    words: Vec<i64>,
+    digest: crate::ir::Digest,
+}
+
 /// A sequential, explicitly resettable stream; one active graph/control
 /// tuple and one reusable packed workspace, with no shared mutable state.
 #[derive(Debug)]
@@ -163,7 +173,27 @@ impl Runner {
         controls: &[i64],
         limits: Limits,
     ) -> Result<Self, Refusal> {
-        let admitted = admission::admit(ids, graph, partition, state, controls, &limits)?;
+        Self::prepare_reserved(ids, graph, partition, state, controls, limits, 0)
+    }
+
+    fn prepare_reserved(
+        ids: &dyn IdentityScheme,
+        graph: crate::ir::Graph,
+        partition: Partition,
+        state: &[i64],
+        controls: &[i64],
+        limits: Limits,
+        reserved_bytes: u64,
+    ) -> Result<Self, Refusal> {
+        let admitted = admission::admit(
+            ids,
+            graph,
+            partition,
+            state,
+            controls,
+            &limits,
+            reserved_bytes,
+        )?;
         Ok(Self {
             compiled: admitted.compiled,
             workspace: admitted.workspace,
@@ -202,6 +232,13 @@ impl Runner {
     #[must_use]
     pub const fn retained_bytes(&self) -> u64 {
         self.retained_bytes
+    }
+
+    /// Admitted reusable register-workspace bytes (not including the
+    /// evaluator's separately allocated preflight and output vectors).
+    #[must_use]
+    pub fn scratch_bytes(&self) -> u64 {
+        self.compiled.scratch_bytes()
     }
 
     /// A tick pins the selected graph, controls and state at entry. The
@@ -299,11 +336,63 @@ impl Runner {
         })
     }
 
-    /// Checks the expected tuple then activates new controls between ticks.
-    /// A stale, malformed, oversized or exhausted update leaves it intact.
+    /// Validate and bind a control request without activating it. An update
+    /// admitted before a tick cannot activate after that tick.
     ///
     /// # Errors
     /// Stale epochs, partition mismatch, cap or epoch exhaustion.
+    pub fn prepare_control_update(
+        &self,
+        graph_epoch: u64,
+        control_epoch: u64,
+        controls: &[i64],
+        ids: &dyn IdentityScheme,
+    ) -> Result<ControlUpdate, Refusal> {
+        self.check_epochs(graph_epoch, control_epoch)?;
+        if ids.name() != self.scheme || controls.len() != self.partition.control_words {
+            return Err(Refusal::Partition);
+        }
+        admission::charge_words(controls.len(), self.limits.update_bytes, "update_bytes")?;
+        self.selection
+            .control_epoch
+            .checked_add(1)
+            .ok_or(Refusal::CounterExhausted)?;
+        let digest = admission::control_id(ids, self.selection.graph, self.partition, controls);
+        Ok(ControlUpdate {
+            expected: self.selection,
+            words: controls.to_vec(),
+            digest,
+        })
+    }
+
+    /// Activate an admitted update exactly at its selected boundary. The
+    /// token is consumed regardless of outcome; a refusal preserves the
+    /// complete active tuple.
+    ///
+    /// # Errors
+    /// Stale graph, controls, or tick boundary; epoch exhaustion.
+    pub fn activate_control_update(
+        &mut self,
+        admitted: ControlUpdate,
+    ) -> Result<Selection, Refusal> {
+        if admitted.expected != self.selection {
+            return Err(Refusal::Stale);
+        }
+        let next_epoch = self
+            .selection
+            .control_epoch
+            .checked_add(1)
+            .ok_or(Refusal::CounterExhausted)?;
+        self.controls = admitted.words;
+        self.selection.controls = admitted.digest;
+        self.selection.control_epoch = next_epoch;
+        Ok(self.selection)
+    }
+
+    /// Admit and activate one complete control update between ticks.
+    ///
+    /// # Errors
+    /// Stale, malformed, oversized or exhausted updates preserve the tuple.
     pub fn update_controls(
         &mut self,
         graph_epoch: u64,
@@ -311,21 +400,8 @@ impl Runner {
         controls: &[i64],
         ids: &dyn IdentityScheme,
     ) -> Result<Selection, Refusal> {
-        self.check_epochs(graph_epoch, control_epoch)?;
-        if ids.name() != self.scheme || controls.len() != self.partition.control_words {
-            return Err(Refusal::Partition);
-        }
-        admission::charge_words(controls.len(), self.limits.update_bytes, "update_bytes")?;
-        let next_epoch = self
-            .selection
-            .control_epoch
-            .checked_add(1)
-            .ok_or(Refusal::CounterExhausted)?;
-        let digest = admission::control_id(ids, self.selection.graph, self.partition, controls);
-        self.controls.copy_from_slice(controls);
-        self.selection.controls = digest;
-        self.selection.control_epoch = next_epoch;
-        Ok(self.selection)
+        let admitted = self.prepare_control_update(graph_epoch, control_epoch, controls, ids)?;
+        self.activate_control_update(admitted)
     }
 
     /// Replace graph/partition only by explicitly supplying fresh initial
@@ -355,12 +431,15 @@ impl Runner {
         let next_controls = control_epoch
             .checked_add(1)
             .ok_or(Refusal::CounterExhausted)?;
-        let mut candidate =
-            Self::prepare(ids, graph, partition, state, controls, self.limits.clone())?;
-        if self.retained_bytes.saturating_add(candidate.retained_bytes) > self.limits.retained_bytes
-        {
-            return Err(Refusal::Budget("replacement_peak_bytes"));
-        }
+        let mut candidate = Self::prepare_reserved(
+            ids,
+            graph,
+            partition,
+            state,
+            controls,
+            self.limits.clone(),
+            self.retained_bytes,
+        )?;
         candidate.selection.graph_epoch = next_graph;
         candidate.selection.control_epoch = next_controls;
         *self = candidate;

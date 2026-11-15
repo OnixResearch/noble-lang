@@ -184,9 +184,24 @@ fn malformed_stale_cancel_exhaust_reuse_and_terminal_preserve_all() {
     assert_eq!(r.state(), &[13]);
     assert_eq!(r.output(), None);
     assert_eq!(r.selection(), initial);
+    let admitted = r.prepare_control_update(0, 0, &[4], &IDS).unwrap();
     r.tick(0, 0, 0, &[3], &mut Control::default())
         .expect("reuse after refusal");
     assert_eq!(r.state(), &[19]);
+    assert_eq!(r.activate_control_update(admitted), Err(Refusal::Stale));
+    assert_eq!(r.selection().control_epoch, 0);
+    let committed = r.selection();
+    assert_eq!(
+        r.tick(0, 0, 1, &[7], &mut cancelled),
+        Err(Refusal::Evaluation(Obs::Cancelled))
+    );
+    assert_eq!(
+        r.reset(&IDS, 0, 0, sub_graph(), ONE, &[], &[7]),
+        Err(Refusal::Partition)
+    );
+    assert_eq!(r.selection(), committed);
+    assert_eq!(r.state(), &[19]);
+    assert_eq!(r.output(), Some(&[19][..]));
     assert_eq!(
         r.tick(0, 0, 0, &[3], &mut Control::default()),
         Err(Refusal::TickOrder)
@@ -269,6 +284,25 @@ fn profile_and_byte_work_boundaries_refuse_before_activation() {
     );
     assert_eq!(r.selection(), selected);
     assert_eq!(r.state(), &[0]);
+}
+
+#[test]
+fn non_prefix_input_nodes_are_outside_exportable_profile() {
+    use noble_ngraph::ir::{GraphBuilder, ScalarType, SubProfile, Subject};
+    let mut b = GraphBuilder::new(SubProfile::I64, Subject::authored(&IDS, "tick/nonprefix"));
+    let s = b.input(ScalarType::I64);
+    let constant = b.i64_const(3);
+    let x = b.input(ScalarType::I64);
+    let c = b.input(ScalarType::I64);
+    let product = b.op(Op::I64Mul(x, c));
+    let sum = b.op(Op::I64Add(s, constant));
+    let next = b.op(Op::I64Add(sum, product));
+    b.output(next);
+    b.output(next);
+    assert_eq!(
+        Runner::prepare(&IDS, b.finish(), ONE, &[0], &[1], Limits::default()).unwrap_err(),
+        Refusal::Profile
+    );
 }
 
 #[test]

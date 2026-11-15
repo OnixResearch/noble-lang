@@ -171,6 +171,9 @@ function run(path) {
   hex(h.source_commit, 'source_commit', [40, 64]);
   hex(h.source_tree, 'source_tree', [40, 64]);
   text(h.rustc, 'rustc');
+  hex(h.rustc_sha256, 'rustc_sha256');
+  hex(h.cargo_sha256, 'cargo_sha256');
+  text(h.identity_scheme, 'identity_scheme');
   hex(h.producer_sha256, 'producer_sha256');
   hex(h.runner_artifact_sha256, 'runner_artifact_sha256');
   const limits = limitsFrom(h);
@@ -207,6 +210,8 @@ function run(path) {
   return {
     schema: 'noble-tick-replay/v1', profile: h.profile,
     source_commit: h.source_commit, source_tree: h.source_tree,
+    rustc: h.rustc, rustc_sha256: h.rustc_sha256, cargo_sha256: h.cargo_sha256,
+    identity_scheme: h.identity_scheme,
     producer_sha256: h.producer_sha256, runner_artifact_sha256: h.runner_artifact_sha256,
     raw_trace_sha256: sha256(bytes), raw_trace_bytes: size,
     graphs: h.graphs.map(g => ({ key: g.key, graph_logical_id: g.graph_logical_id,

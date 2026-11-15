@@ -21,6 +21,11 @@ fn command(program: &str, args: &[&str]) -> String {
         .to_owned()
 }
 
+fn tool_digest(program: &str) -> String {
+    let path = command("sh", &["-c", &format!("command -v {program}")]);
+    digest(&std::fs::read(path).expect("exact tool bytes"))
+}
+
 fn digest(bytes: &[u8]) -> String {
     let mut child = Command::new("sha256sum")
         .stdin(Stdio::piped())
@@ -231,6 +236,8 @@ fn export_exact_clean_source_trace_when_requested() {
     let source_commit = command("git", &["rev-parse", "HEAD"]);
     let source_tree = command("git", &["rev-parse", "HEAD^{tree}"]);
     let rustc = command("rustc", &["--version"]);
+    let rustc_sha256 = tool_digest("rustc");
+    let cargo_sha256 = tool_digest("cargo");
     let test_file = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/tick_runner/export.rs");
     let producer_sha256 = digest(&std::fs::read(test_file).unwrap());
     let runner_artifact_sha256 = digest(&std::fs::read(std::env::current_exe().unwrap()).unwrap());
@@ -240,7 +247,7 @@ fn export_exact_clean_source_trace_when_requested() {
         graph_entry("two", two_graph(), TWO, &[17, -13], &[2, 3]),
     ]
     .join(",");
-    let mut lines = vec![format!("{{\"schema\":\"noble-tick-export/v1\",\"profile\":\"noble-tick-i64/v1\",\"source_commit\":\"{source_commit}\",\"source_tree\":\"{source_tree}\",\"rustc\":\"{rustc}\",\"producer_sha256\":\"{producer_sha256}\",\"runner_artifact_sha256\":\"{runner_artifact_sha256}\",\"graphs\":[{graphs}],\"initial\":{{\"graph_key\":\"add\",\"state\":[\"13\"],\"controls\":[\"2\"]}},\"limits\":{{\"max_graphs\":16,\"max_nodes\":4096,\"max_words\":256,\"max_events\":65536,\"max_ticks\":3,\"max_work_per_tick\":4096,\"max_trace_bytes\":16777216}}}}")];
+    let mut lines = vec![format!("{{\"schema\":\"noble-tick-export/v1\",\"profile\":\"noble-tick-i64/v1\",\"source_commit\":\"{source_commit}\",\"source_tree\":\"{source_tree}\",\"rustc\":\"{rustc}\",\"rustc_sha256\":\"{rustc_sha256}\",\"cargo_sha256\":\"{cargo_sha256}\",\"identity_scheme\":\"{}\",\"producer_sha256\":\"{producer_sha256}\",\"runner_artifact_sha256\":\"{runner_artifact_sha256}\",\"graphs\":[{graphs}],\"initial\":{{\"graph_key\":\"add\",\"state\":[\"13\"],\"controls\":[\"2\"]}},\"limits\":{{\"max_graphs\":16,\"max_nodes\":4096,\"max_words\":256,\"max_events\":65536,\"max_ticks\":3,\"max_work_per_tick\":4096,\"max_trace_bytes\":16777216}}}}", noble_ngraph::IdentityScheme::name(&IDS))];
     let mut r = Runner::prepare(
         &IDS,
         add_graph(),
