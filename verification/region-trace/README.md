@@ -37,7 +37,8 @@ byte. The only new external model is the explicit width-sensitive
 `i64`-to-`usize` conversion; the two Option/Result external models are inherited
 from M5. `RegionCutProof.lean` proves exact handle and native-scope identity,
 range bounds, negative-conversion refusal, signed successful-range binding, a
-failed-access refusal, and the exact extracted table completion/owner return.
+RegionTrace read-commit range bridge, failed-access refusal, and the exact
+extracted table completion/owner return.
 The inventory audits every theorem statement and its transitive axioms.
 
 **Abstraction and effects.** The retained `Host.owner` handle and `Host.table`
@@ -46,7 +47,11 @@ guest representation and signed offset/length map unchanged in value to
 `Request.representation`, `Request.offset_bytes` and `Request.length_bytes`.
 The stored
 `Host.bytes.len()` is the preflight `regionSize`; the accepted `Range.start` and
-`Range.finish` are the exact converted interval. A successful `Table.begin`
+`Range.finish` are the exact converted interval.
+`successful_preflight_matches_region_trace_commit` proves that an accepted
+interval's start and byte count equal the existing RegionTrace
+`CommitKind.regionRead` arguments under those signed inputs. This does not
+prove an observed event was emitted. A successful `Table.begin`
 places the selected record in `Busy(scope.serial)` with its `last_scope` set
 and native pin held. The `native_access` snapshot and the admitted borrow's
 scope feed `authorize_copy`. The RegionTrace target `hostDecision` represents
@@ -84,7 +89,7 @@ table or unmodelled external mutation.
 | 1. Actual retained-state abstraction and reuse | **DONE for the selected cut:** mapping above, checked-in M5 table bodies and `HostLocality` lemma; full wrapper refinement **open**. |
 | 2. Native access, copy, restoration, response, commit | **DONE for the selected cut:** distinct wrapper operations above, extracted authorization/identity/bounds proof; wrapper ordering checked by controls, not machine-proved. |
 | 3. Reachable admitted completion | **DONE conditionally:** extracted table completion and owner theorem under the stated valid selected busy record/authentic scope/held pin premises; corrupt or externally mutated tables excluded. |
-| 4. Signed range | **DONE:** real `checked_add` and `try_from` paths are extracted; `successful_preflight_binds_signed_range` carries exact nonnegative assumptions only after success, and `conversion_refuses_negative` refuses a negative source. |
+| 4. Signed range | **DONE:** real `checked_add` and `try_from` paths are extracted; `successful_preflight_binds_signed_range` carries exact nonnegative assumptions only after success, `successful_preflight_matches_region_trace_commit` identifies the existing model's exact read-commit interval, and `conversion_refuses_negative` refuses a negative source. |
 | 5. Mutation controls and positive path | **DONE:** `region-cut-controls.mjs` refuses authorization removed/moved after copy, substituted owner, omitted commit and false restoration; Rust host test covers authentic valid access and refused variants. Mutation controls are structural discrimination, not a reachability proof. |
 | 6. Production decision inside boundary | **DONE for the selected decision core:** the real `Host::read_region` calls both extracted functions; shell effects are named above, not claimed as extracted. |
 | 7. Historical cleanup evidence | **DONE:** `evidence-1bf39a52.json` and the existing synthetic refused-retirement generator control are unchanged; no production fault seam was added. |
@@ -245,14 +250,19 @@ The fixtures are finite tests of recorded traces. The region-trace receipt binds
 receipt and the component, helper and engine revisions; neither that binding nor these finite tests
 proves emitted-step correspondence.
 
-The bounded-cut replay retains `verification/region-trace/receipt-20261115-region-cut.json`
-and `verification/region-trace/receipt-20261115-region-cut-extraction.json`
+The bounded-cut replay retains `verification/region-trace/receipt-20261115-region-cut-v2.json`
+and `verification/region-trace/receipt-20261115-region-cut-v2-extraction.json`
 from a clean committed source tree. The former's `bindings.implementation_cut`
 carries the SHA-256 of the latter fresh selected-extraction receipt (including all
-generated-body comparisons and the fifteen strictly audited implementation
+generated-body comparisons and the sixteen strictly audited implementation
 theorems); the 135 model/runtime fixture theorems stay in their own inventory.
 The source commit, generated artifacts and actual tool commands are retained
 in those receipts; the emitted-component correspondence remains open.
+
+The first selected-cut receipts, `receipt-20261115-region-cut.json` and
+`receipt-20261115-region-cut-extraction.json`, remain immutable evidence for
+their earlier clean source `10c39e48` (135 model and 15 implementation
+theorems), before the explicit RegionTrace commit-range bridge was added.
 
 The earlier clean replay receipt `verification/region-trace/receipt-20261113-b7984635.json` was
 produced from clean commit `b798463548bdf72563ac7f0d16281b1984cf1a4c` with Lean 4.35.0. It records

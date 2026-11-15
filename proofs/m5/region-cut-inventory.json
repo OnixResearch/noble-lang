@@ -7,6 +7,7 @@
     { "name": "RegionCutProof.handle_eq_truth", "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"] },
     { "name": "RegionCutProof.usize_tryMkOpt_value", "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"] },
     { "name": "RegionCutProof.successful_preflight_binds_signed_range", "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"] },
+    { "name": "RegionCutProof.successful_preflight_matches_region_trace_commit", "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"] },
     { "name": "RegionCutProof.access_refusal_prevents_copy", "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"] },
     { "name": "RegionCutProof.authorized_copy_has_native_access", "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"] },
     { "name": "RegionCutProof.state_eq_with_busy_total", "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"] },

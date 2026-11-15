@@ -329,7 +329,7 @@ const bindings = {
     correspondence: 'bounded-decision-only',
     selected_roots: cut.selected_roots,
     source_commit: cut.source_commit,
-    receipt: 'verification/region-trace/receipt-20261115-region-cut-extraction.json',
+    receipt: 'verification/region-trace/receipt-20261115-region-cut-v2-extraction.json',
     receipt_sha256: digest64(readFileSync(join(cutOutput, 'receipt.json'))),
   },
   correspondence_route: [

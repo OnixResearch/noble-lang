@@ -120,6 +120,31 @@ theorem successful_preflight_binds_signed_range
     repeat (split at accepted <;> simp_all)
     grind [usize_tryMkOpt_value]
 
+/-- The admitted signed arguments determine the *existing RegionTrace* read
+    commit's start and byte count, rather than only a second local range model.
+    The wrapper's later event emission remains a separate shell observation. -/
+theorem successful_preflight_matches_region_trace_commit
+    (table : resources.table.Table) (required : resources.Requirement)
+    (request : region_read.Request) (regionSize : Std.Usize)
+    (range : region_read.Range) (snapshot : resources.Snapshot)
+    (validated : resources.table.Table.validate table request.claim required =
+      Result.ok (.Ok snapshot))
+    (retained : request.retained = some request.claim)
+    (accepted : region_read.preflight table required request regionSize =
+      Result.ok (.Ok range)) :
+    RegionTrace.CommitKind.regionRead range.start.val
+      (range.finish.val - range.start.val) =
+    RegionTrace.CommitKind.regionRead request.offset_bytes.val.toNat
+      request.length_bytes.val.toNat := by
+  rcases successful_preflight_binds_signed_range table required request
+    regionSize range snapshot validated retained accepted with
+    ⟨offsetNonnegative, lengthNonnegative, exactStart, exactFinish, _, _⟩
+  have exactLength :
+      range.finish.val - range.start.val =
+        request.length_bytes.val.toNat := by
+    omega
+  rw [exactLength, exactStart]
+
 /-- A failed native lookup cannot authorize a protected copy, even when
     externally supplied range and claim happen to look plausible. -/
 theorem access_refusal_prevents_copy (failure : resources.Error)
