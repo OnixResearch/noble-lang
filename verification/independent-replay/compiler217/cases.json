@@ -1,0 +1,83 @@
+{
+  "schema": "noble-compiler217-local-equivalents/v1",
+  "issue": "https://github.com/brittonr/compiler-lab/issues/217",
+  "provenance": {
+    "kind": "local-equivalents-not-upstream-corpus",
+    "upstream_shared_corpus_revision": null,
+    "upstream_shared_fixture_sha256": null,
+    "shared_corpus_consumption": "NO-GO",
+    "reason": "Issue #217 describes proposed fixtures, explicitly reports no produced fixtures or runs, and publishes no versioned shared corpus bytes. These seven local equivalents do not exercise upstream fixtures."
+  },
+  "lean": "4.35.0",
+  "export_format": "3.1.0",
+  "module": "Compiler217",
+  "source": "compiler217/Compiler217.lean",
+  "source_sha256": "b1ba166f773a2209454be56c0fb58527242e6bc8d3681f3835fdad97f1aa9582",
+  "official_checker_sha256": "ec7d3c6574b27f0db2319da5cb015d3ea7806b0302c3a70c7164c517487937e7",
+  "allowed_axioms": ["propext", "Classical.choice", "Quot.sound"],
+  "bounds": {
+    "compile_timeout_ms": 120000,
+    "export_timeout_ms": 120000,
+    "checker_timeout_ms": 120000,
+    "address_space_bytes": 2147483648,
+    "max_captured_output_bytes": 8388608
+  },
+  "cases": [
+    {
+      "id": "function-eta-positive",
+      "category": "function-eta",
+      "root": "Compiler217.functionEta",
+      "mutation": null,
+      "expected": {"official-kernel": "accepted", "nanoda": "accepted", "lane": "accepted"},
+      "rationale": "The lambda applies f to its bound variable; eta converts it to f for arbitrary f and unused g."
+    },
+    {
+      "id": "function-eta-wrong-function",
+      "category": "function-eta",
+      "root": "Compiler217.functionEta",
+      "mutation": "function-eta-wrong-function",
+      "expected": {"official-kernel": "kernel-rejection", "nanoda": "kernel-rejection", "lane": "kernel-rejection"},
+      "rationale": "Replace f with the distinct, same-typed g inside the lambda; eta now yields g, not the claimed f. The proof and every other export record stay unchanged."
+    },
+    {
+      "id": "structure-eta-positive",
+      "category": "structure-eta",
+      "root": "Compiler217.structureEta",
+      "mutation": null,
+      "expected": {"official-kernel": "accepted", "nanoda": "accepted", "lane": "accepted"},
+      "rationale": "For p : Nat × Nat, the constructor of its first and second projections is definitionally p."
+    },
+    {
+      "id": "structure-eta-wrong-field",
+      "category": "structure-eta",
+      "root": "Compiler217.structureEta",
+      "mutation": "structure-eta-wrong-field",
+      "expected": {"official-kernel": "kernel-rejection", "nanoda": "kernel-rejection", "lane": "kernel-rejection"},
+      "rationale": "Replace the second projection by the same-typed first projection. The reconstructed pair need not be p; the original reflexivity proof no longer has the claimed type."
+    },
+    {
+      "id": "ordinary-proof-positive",
+      "category": "native-axiom-control",
+      "root": "Compiler217.ordinary",
+      "mutation": null,
+      "expected": {"official-kernel": "accepted", "nanoda": "accepted", "lane": "accepted"},
+      "rationale": "The ordinary decide proof of 2 + 2 = 4 contains no forbidden axiom."
+    },
+    {
+      "id": "native-decide-direct",
+      "category": "native-axiom-control",
+      "root": "Compiler217.nativeDirect",
+      "mutation": null,
+      "expected": {"official-kernel": "accepted", "nanoda": "forbidden-axiom", "lane": "forbidden-axiom"},
+      "rationale": "The same proposition proved with native_decide exports a per-invocation native axiom; Lean may replay the axiom, but the existing strict generic allowlist must refuse it."
+    },
+    {
+      "id": "native-decide-transitive",
+      "category": "native-axiom-control",
+      "root": "Compiler217.nativeTransitive",
+      "mutation": null,
+      "expected": {"official-kernel": "accepted", "nanoda": "forbidden-axiom", "lane": "forbidden-axiom"},
+      "rationale": "The public theorem uses a private helper that invokes native_decide; the transitive proof closure must expose its forbidden generated axiom."
+    }
+  ]
+}
