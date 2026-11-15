@@ -177,6 +177,7 @@ Status words:
 | Physical plan slot, boundary and queue frame (issue #110) | `NobleFoundation.NetI64Plans.PhysicalState.writeSlot_frame`, `NobleFoundation.NetI64Plans.PhysicalState.appendSlot_frame`, `NobleFoundation.NetI64Plans.PhysicalState.logicalPort_writeSlot_away`, `NobleFoundation.NetI64Plans.PhysicalState.logicalPair_writeSlot_away`, `NobleFoundation.NetI64Plans.PhysicalState.retargetOutput_preserves_free`, `NobleFoundation.NetI64Plans.PhysicalState.project_boundary_frame`, `NobleFoundation.NetI64Plans.PhysicalState.project_work_frame`, `NobleFoundation.NetI64Plans.PhysicalState.appendPublications_project_work`, `NobleFoundation.NetI64Plans.PhysicalState.appendPublications_project_plan_work`, `NobleFoundation.NetI64Plans.PhysicalState.appendPublications_project_net` | A slot write/append preserves unrelated slots and queued pairs under explicit outside-footprint premises. Output labels remain stable while physical targets move. Each canonical queued Rust pair projects to two directed inets work entries; a checked publication inventory therefore permits tail-append/head-prepend permutation without claiming equal ordered queues | Local physical frame, stable external labels and queue-order relation **proved**; arbitrary emitted-plan whole-net refinement **open** |
 | Arbitrary decoded physical output identity (issue #110) | `NobleFoundation.NetI64Plans.PhysicalState.executeCheckedImage_preserves_free` | Any successful decoded image may install any number of result slots, perform peer/output writes, retire consumed slots and publish pairs; the physical executor preserves the entire ordered stable free-port identity list. It does not establish correct targets, agents, wire contents, checker admissibility or full net refinement | Free-port identity **proved** for all successful model executions; general projected-net and Rust correspondence **open** |
 | Decoded four-rule physical transaction instances (issue #110) | `NobleFoundation.NetI64Plans.PhysicalState.op2_output_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.op2_output_refines`, `NobleFoundation.NetI64Plans.PhysicalState.op2_published_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.op2_published_pair_orientations`, `NobleFoundation.NetI64Plans.PhysicalState.op2_published_refines`, `NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_refines`, `NobleFoundation.NetI64Plans.PhysicalState.dup_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.dup_refines`, `NobleFoundation.NetI64Plans.PhysicalState.era_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.era_refines` | The kernel decodes each model byte image, executes physical slot retag/reuse, external writes, retirement and publication, and proves whole-net equality to `Plan.commit` for each fixed layout. The nonempty OP2 publication also proves its two-entry directed queue matches the checked plan. These are model-internal finite fixtures, not arbitrary admitted layouts, fresh-slot cases, reverse orientations or a Rust implementation theorem | Four rule-shapes plus one nonempty publication **proved** for fixed fixtures; general physical-image refinement and Rust correspondence **open** |
+| Exact-bit recurrent one-step accumulator and two-word swap (issue #78) | `NobleFoundation.RecurrentBitCell.graphAdder_correct`, `NobleFoundation.RecurrentBitCell.accumulator_one_step`, `NobleFoundation.RecurrentBitCell.stack_swap_one_step`, `NobleFoundation.RecurrentBitCell.step_bound_halts_at_limit` | Boolean select-gate model of the checked Rust test graph; no Rust graph, ONNX emitter, Scan-body or runtime refinement theorem | model **proved** and clean-source kernel/axiom audit retained in the recurrent lane; implementation correspondence **open** |
 | Bounded sequential I64/Bool belt validator (issue #113) | `NobleFoundation.Belt.validate_sound`; real lowered program and exact-vector controls in the generated BeltCorpus module | symbolic graph identities over `PackedSchedule`; no Rust refinement theorem | model **proved**; real artifact corpus is finite model evidence; Rust lowerer/checker/interpreter and B2 comparisons remain separate **tested** evidence |
 | Fixed T1/T2 timing legality and ordered target outputs (issue #114) | `NobleFoundation.BeltTarget.mapReadyOutputs`, `NobleFoundation.BeltTarget.validate_sound` | the symbolic run gates graph-reference values on latency-derived completion; it does not evaluate operations or simulate belt/save state, and no Rust artifact/operand-age refinement theorem is claimed | completion-gate/order **proved** only; generated corpus and Rust lowerer/checker/interpreter cross-backend controls are separate **tested** evidence; machine-step refinement remains **open** |
 | ZMod/BitVec/K-NUM-01 signed decoding, range, round trips | `toZ_ofZ`, `ofZ_toZ`, `toZ_add`, `toZ_sub`, `toZ_mul`, `toZ_neg`, `signed_eq_toInt`, `signed_toZ`, `wrap_eq_bmod`, `wrap_eq_toInt_ofInt`, `wrap_eq_knum01`, `toInt_range`, `signed_range`, `intCast_signed`, `toInt_ofInt_eq_iff`, `signed_intCast_eq_iff`, `ofInt_toInt` | none (mathematics only) | **proved** |
@@ -4025,6 +4026,41 @@ implement the physical model for arbitrary nets and byte streams; and
 performance claims beyond the retained matched finite workloads.
 
 The integrator attaches the clean foundation receipt for issue #110 after integration.
+
+## Exact-bit recurrent one-step model (issue #78, phase 1)
+
+The RecurrentBitCell module represents every unsigned 64-bit word as a function
+from bit indices 0 through 63 to Boolean cells, least significant bit first.
+`decode_encode_word` and `encode_decode_word` establish both directions of the
+bit-cell round trip. `sumGate_xor` and `carryGate_majority` check the Boolean
+full-adder equations for the off/on select-gate order of the Rust test graph
+in crates/noble-ngraph/tests/models/recurrent/programs.rs. `graphAdder_correct`
+uses the kernel-proved BitVec ripple-adder specification to show the entire
+gate chain computes modulo-2^64 addition, for arbitrary cells rather than
+only measured vectors. `accumulator_initialization` and `accumulator_one_step`
+connect the encoded initial state and both post-step outputs to every source
+state and input. `stack_initialization` and `stack_swap_one_step` give the
+same universal state/observation facts for routing either pair of 64-bit
+words, including distinct and equal words. The separate `mayStep` predicate
+allows counts below 1,000 and refuses counts at or above 1,000; this is an
+abstract per-step halting bound, not an implementation-level admission proof.
+
+**Proof boundary and nonclaims:** the cell model uses Booleans, not binary32
+values; translating a Boolean cell into the exact binary32 +0/1 codec,
+rejecting negative zero/NaN/fractional cells and establishing guard closure
+remain external obligations. The Rust checked-graph builder and Param
+snapshot, its exported ONNX Scan-body bytes and ordered Gather/Where
+semantics, the selected runtime and all host-side budget/cancellation checks
+are not derived from the Lean definitions. Their existing finite differential
+and selected ORT CPU checks do not close a Rust-to-model, ONNX-emitter or
+runtime-refinement theorem. In particular no Lean theorem claims a complete
+1,000-step ONNX execution or host snapshot/resume correctness. The foundation
+axiom whitelist is propext, Classical.choice and Quot.sound. The pinned
+lean-proofs ladder on clean source f3a2323 passed all four stages; the
+recurrent-lane proof audit receipt records all twelve new theorem names,
+their transitive axioms and the digest of the full foundation checker output.
+The integrator still owns the official foundation receipt and any final-head
+source-inventory renewal.
 
 ## Status by phase
 

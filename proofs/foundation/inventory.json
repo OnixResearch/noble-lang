@@ -13274,6 +13274,78 @@
       "phase": 1,
       "role": "size-change-termination",
       "claim": "a checked matrix closure certificate and any satisfying site run are incompatible"
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.decode_encode_word",
+      "phase": 1,
+      "role": "recurrent-bitcell",
+      "claim": "decoding the 64 little-endian Boolean cells of any source word returns that word"
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.encode_decode_word",
+      "phase": 1,
+      "role": "recurrent-bitcell",
+      "claim": "encoding a decoded 64-cell Boolean function restores every cell at its original index"
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.sumGate_xor",
+      "phase": 1,
+      "role": "recurrent-bitcell",
+      "claim": "the selected off/on Boolean gate sequence computes the full-adder sum bit"
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.carryGate_majority",
+      "phase": 1,
+      "role": "recurrent-bitcell",
+      "claim": "the selected off/on Boolean gate sequence computes the full-adder carry bit"
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.graphAdder_correct",
+      "phase": 1,
+      "role": "recurrent-bitcell",
+      "claim": "for arbitrary 64-cell operands the select-gate ripple network yields the little-endian cells of their modulo-2^64 sum"
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.graphAdder_decodes",
+      "phase": 1,
+      "role": "recurrent-bitcell",
+      "claim": "decoding the separate select-gate ripple transition gives BitVec 64 addition"
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.accumulator_initialization",
+      "phase": 1,
+      "role": "recurrent-bitcell",
+      "claim": "the accumulator's initial encoded source state decodes exactly"
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.accumulator_one_step",
+      "phase": 1,
+      "role": "recurrent-bitcell",
+      "claim": "all source accumulator states and inputs have correctly decoded post-step state and observation"
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.stack_initialization",
+      "phase": 1,
+      "role": "recurrent-bitcell",
+      "claim": "the two-word stack's initial encoded source state decodes exactly"
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.stack_swap_one_step",
+      "phase": 1,
+      "role": "recurrent-bitcell",
+      "claim": "all two-word stack states have correctly routed post-swap state and observation"
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.step_bound_before_limit",
+      "phase": 1,
+      "role": "recurrent-bitcell",
+      "claim": "the abstract per-step admission predicate allows every completed count below 1000"
+    },
+    {
+      "name": "NobleFoundation.RecurrentBitCell.step_bound_halts_at_limit",
+      "phase": 1,
+      "role": "recurrent-bitcell",
+      "claim": "the abstract per-step admission predicate refuses every completed count at or above 1000"
     }
   ],
   "private_theorems": [
