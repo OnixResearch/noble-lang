@@ -208,6 +208,18 @@ theorem Plan.commit_worklist (H : HNet NetSym) (r : XRedex NetSym)
       (Plan.compile H r hRule).newlyActive ++ rest := by
   rfl
 
+/-- The actual vector queue appends newly discovered pairs after the pending
+entries; inets' abstract worklist prepends them. They carry the same multiset,
+not the same selection order. -/
+theorem Plan.commit_worklist_permutation (H : HNet NetSym)
+    (r : XRedex NetSym)
+    (hRule : NetI64.xRule r.2.2.1 r.2.2.2.1 = some r.2.2.2.2)
+    (rest : List (Id × Id)) :
+    (rest ++ (Plan.compile H r hRule).newlyActive).Perm
+      (Plan.commit H (Plan.compile H r hRule) rest).work := by
+  rw [Plan.commit_worklist]
+  exact List.perm_append_comm
+
 /-- Before the explicit commit point, every plan phase leaves the abstract net unchanged. -/
 inductive Phase where
   | captured
@@ -1098,6 +1110,59 @@ def PhysicalState.project (state : PhysicalState) : HNet NetSym :=
     free := state.outputs.filterMap state.logicalPort
     work := state.work.filterMap state.logicalPair }
 
+/-- Follow Rust's `ActiveWorklist.entries.push` after a checked commit: retain
+the existing pending entries, then append the newly published generation-
+tagged pairs, without changing slots, wires or outputs. -/
+def PhysicalState.appendPublications (state : PhysicalState)
+    (published : List PhysicalPair) : PhysicalState :=
+  { state with work := state.work ++ published }
+
+theorem PhysicalState.appendPublications_project_work
+    (state : PhysicalState) (published : List PhysicalPair) :
+    (state.appendPublications published).project.work =
+      state.project.work ++ published.filterMap state.logicalPair := by
+  change (state.work ++ published).filterMap
+      (state.appendPublications published).logicalPair =
+    state.work.filterMap state.logicalPair ++ published.filterMap state.logicalPair
+  rw [List.filterMap_append]
+  rfl
+
+private theorem PhysicalState.portWires_appendPublications
+    (state : PhysicalState) (published : List PhysicalPair)
+    (logical : Id) (start : Nat) (ports : List (Option (Nat × Nat)))
+    (wires : Std.HashMap Port Port) :
+    (state.appendPublications published).portWires logical start ports wires =
+      state.portWires logical start ports wires := by
+  induction ports generalizing start wires with
+  | nil => rfl
+  | cons target rest ih =>
+    have hport (port : Nat × Nat) :
+        (state.appendPublications published).logicalPort port =
+          state.logicalPort port := rfl
+    simp [PhysicalState.portWires, hport, ih]
+
+theorem PhysicalState.appendPublications_project_net
+    (state : PhysicalState) (published : List PhysicalPair) :
+    (state.appendPublications published).project.toNet = state.project.toNet := by
+  have hwire : (state.appendPublications published).wires = state.wires := by
+    change state.slots.toList.foldl (fun wires slot =>
+      match slot.agent with
+      | none => wires
+      | some (logical, _) =>
+        (state.appendPublications published).portWires logical 0 slot.ports wires) {} =
+      state.slots.toList.foldl (fun wires slot =>
+        match slot.agent with
+        | none => wires
+        | some (logical, _) => state.portWires logical 0 slot.ports wires) {}
+    simp only [PhysicalState.portWires_appendPublications]
+  apply Net.ext'
+  · intro _ _
+    rfl
+  · intro _ _
+    simp [HNet.toNet, PhysicalState.project, hwire]
+  · intro _
+    rfl
+
 /-- Ordered external boundary ports are unchanged by a physical slot write
 whose index is absent from the boundary, not merely equal as an unordered set. -/
 theorem PhysicalState.project_boundary_frame {state : PhysicalState}
@@ -1242,9 +1307,11 @@ theorem PhysicalTransaction.rollback_restores {transaction : PhysicalTransaction
       PhysicalTransaction.visible] using related
   · rfl
 
-/-- The physical-to-abstract commit bridge exposes its missing premise rather
+/-- The physical-to-abstract commit bridge exposes its missing premises rather
 than claiming the Rust byte executor is proved: the decoded physical image
-must be shown to project to the independently selected rule-plan commit. -/
+must project to the selected rule's observable net and its Rust-ordered queue
+must contain the abstract pending-pair multiset. The two worklists are not
+generally equal as ordered lists. -/
 theorem PhysicalTransaction.commit_refines_if_projected {transaction : PhysicalTransaction}
     {H : HNet NetSym} (r : XRedex NetSym)
     (hRule : NetI64.xRule r.2.2.1 r.2.2.2.1 = some r.2.2.2.2)
@@ -1252,10 +1319,16 @@ theorem PhysicalTransaction.commit_refines_if_projected {transaction : PhysicalT
     (hm : H.toNet.Matching NetI64.arity)
     (hredex : Redex NetI64.system H.toNet
       r.1 r.2.1 r.2.2.1 r.2.2.2.1 r.2.2.2.2.toRhs)
-    (himage : transaction.current.project =
-      Plan.commit H (Plan.compile H r hRule) rest) :
-    CStep NetI64.system H.toNet (transaction.commit).visible.project.toNet := by
-  simpa [PhysicalTransaction.commit, PhysicalTransaction.visible, himage] using
-    (Plan.commit_refines r hRule rest hm hredex)
+    (himage : transaction.current.project.toNet =
+      (Plan.commit H (Plan.compile H r hRule) rest).toNet)
+    (hqueue : transaction.current.project.work.Perm
+      (Plan.commit H (Plan.compile H r hRule) rest).work) :
+    CStep NetI64.system H.toNet (transaction.commit).visible.project.toNet ∧
+      (transaction.commit).visible.project.work.Perm
+        (Plan.commit H (Plan.compile H r hRule) rest).work := by
+  constructor
+  · simpa [PhysicalTransaction.commit, PhysicalTransaction.visible, himage] using
+      (Plan.commit_refines r hRule rest hm hredex)
+  · simpa [PhysicalTransaction.commit, PhysicalTransaction.visible] using hqueue
 
 end NobleFoundation.NetI64Plans
