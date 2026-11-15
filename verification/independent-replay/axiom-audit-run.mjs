@@ -73,7 +73,10 @@ function sourceRoster() {
 function parseJson(label, runResult) {
   if (runResult.error || runResult.signal) throw Error(`${label} did not return: ${JSON.stringify(runResult)}`);
   const text = fs.readFileSync(path.join(out, `${label}.out`), 'utf8').trim();
-  try { return JSON.parse(text); } catch { throw Error(`${label} did not emit JSON: ${text.slice(0, 1000)}`); }
+  let data;
+  try { data = JSON.parse(text); } catch { throw Error(`${label} did not emit JSON: ${text.slice(0, 1000)}`); }
+  if (data.error) throw Error(`${label}: ${data.error}`);
+  return data;
 }
 function rowsOf(report) {
   const result = new Map();
@@ -178,6 +181,8 @@ try {
   fs.writeFileSync(file, `${roster.modules.join(',')}\n${roots.join(',')}\n`);
   fs.writeFileSync(path.join(out, 'source-roster.json'), JSON.stringify(roster, null, 2));
   const lake = path.join(leanBin, 'lake');
+  const built = run(lake, ['build', ...roster.modules], 'build-roster', project, simpleEnv);
+  invariant(built.status === 0, `not every source module built: ${fs.readFileSync(path.join(out, 'build-roster.err'), 'utf8').slice(-2000)}`);
   const fp = spawnSync(lake, ['env', 'printenv', 'LEAN_PATH'], { cwd: project, env: simpleEnv, encoding: 'utf8' });
   const pp = spawnSync(lake, ['env', 'printenv', 'LEAN_PATH'], { cwd: pilot, env: simpleEnv, encoding: 'utf8' });
   invariant(fp.status === 0 && pp.status === 0, 'cannot resolve both pinned Lake search paths');
