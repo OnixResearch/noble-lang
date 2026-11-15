@@ -1,6 +1,6 @@
 # Issue #34 first projection: evidence and continuation decision
 
-Decision at source commit `aa8df373a234d384a7f649e413cdcc53221bd145`; frozen criteria were committed earlier at `e5794d7`. The source-bound receipt is `first-projection-aa8df37.json` (SHA-256 `912877dbc7b550e200fec38a7834b41dc8467a9e9228b597c013ae2133792a32`). This is a bounded first projection, not an endorsement of a replacement compiler or self-application.
+Decision at source commit `a854b7c5245a74e5a7f4585b75734b78a1c5a352`; frozen criteria were committed earlier at `e5794d7`. The current source-bound receipt is `first-projection-a854b7c.json` (SHA-256 `4868111fd02a2560412a352b312ea32d8562e430095353e21b5098c618e8ace5`). The earlier, immutable `first-projection-aa8df37.json` (source `aa8df37`, SHA-256 `912877dbc7b550e200fec38a7834b41dc8467a9e9228b597c013ae2133792a32`) remains as an independent observation of the same frozen campaign before splitting the test harness into modules. This is a bounded first projection, not an endorsement of a replacement compiler or self-application.
 
 ## First projection and correctness boundary
 
@@ -22,21 +22,21 @@ All times below are **median nanoseconds per warm batch**, not per CLI invocatio
 
 | Tagged program | Interpreter | Residual | Direct ordinary graph | Host-native | Incremental setup ns | Break-even calls |
 |---|---:|---:|---:|---:|---:|---:|
-| add, add | 1,000,800 | 444,740 | 436,125 | 7,935 | 4,107,384 | 7,564 |
-| add, sub | 824,230 | 370,973 | 377,034 | 6,792 | 3,794,047 | 8,572 |
-| add, mul | 996,401 | 475,999 | 455,842 | 7,504 | 4,207,601 | 8,280 |
-| sub, add | 901,144 | 401,370 | 397,823 | 6,863 | 4,042,882 | 8,284 |
-| sub, sub | 1,006,670 | 442,857 | 438,860 | 8,145 | 3,941,333 | 7,159 |
-| sub, mul | 824,800 | 387,995 | 435,123 | 9,278 | 4,117,000 | 9,652 |
-| mul, add | 1,610,178 | 733,240 | 743,338 | 14,467 | 7,300,998 | 8,526 |
-| mul, sub | 1,164,847 | 599,410 | 647,099 | 11,581 | 7,418,850 | **13,436** |
-| mul, mul | 2,172,669 | 924,638 | 737,859 | 13,315 | 6,172,903 | 5,065 |
+| add, add | 846,982 | 374,169 | 344,694 | 6,332 | 4,302,467 | 9,319 |
+| add, sub | 810,183 | 359,582 | 358,830 | 6,713 | 3,654,347 | 8,305 |
+| add, mul | 800,225 | 354,161 | 355,414 | 6,673 | 3,649,017 | 8,377 |
+| sub, add | 843,665 | 356,957 | 364,741 | 6,713 | 3,667,942 | 7,718 |
+| sub, sub | 829,750 | 367,947 | 364,651 | 6,723 | 3,753,983 | 8,325 |
+| sub, mul | 820,763 | 365,192 | 366,174 | 6,813 | 3,759,563 | 8,451 |
+| mul, add | 940,617 | 416,929 | 414,655 | 7,464 | 4,168,906 | 8,152 |
+| mul, sub | 928,445 | 415,175 | 414,915 | 7,344 | 4,132,620 | 8,245 |
+| mul, mul | 907,505 | 405,537 | 405,808 | 7,413 | 4,058,981 | 8,281 |
 
-The specialized sources are 47 bytes each versus the 202-byte interpreter source; all nine residuals have four nodes versus 24. The compiled evaluator retains 104 bytes per residual versus 528 for the interpreter, and needs a 40-byte workspace versus 200. Each request produces one variant; nine distinct source programs are included across the campaign. A fresh cache session per setup repetition stores one positive entry (2,883 accounted bytes) and then records a validated hit; cache hits still pay ordinary admission. These are structural/reported bytes, not peak process heap. Actual peak temporary allocation, Wasm code size, end-to-end CLI prepare/compile/instantiate, and later-stage generation costs are explicitly **unsupported with reasons** in the receipt; none is represented as zero. Shared-host variability and the failure near a 10,000-call threshold preclude generalizing these timings to another workload or host.
+The specialized sources are 47 bytes each versus the 202-byte interpreter source; all nine residuals have four nodes versus 24. The compiled evaluator retains 104 bytes per residual versus 528 for the interpreter, and needs a 40-byte workspace versus 200. Each request produces one variant; nine distinct source programs are included across the campaign. A fresh cache session per setup repetition stores one positive entry (2,883 accounted bytes) and then records a validated hit; cache hits still pay ordinary admission. These are structural/reported bytes, not peak process heap. Actual peak temporary allocation, Wasm code size, end-to-end CLI prepare/compile/instantiate, and later-stage generation costs are explicitly **unsupported with reasons** in the receipt; none is represented as zero. The older receipt recorded 13,436 break-even calls for `(mul,sub)` while the current run records 8,245, even though both use the same frozen criteria. These shared-host observations differ markedly; neither run establishes a stable economics claim for another workload or host.
 
 ## Decision on later projections
 
-**First-projection hard correctness/dispatch gate: PASS** for this finite family and tested implementation. Nine of nine warm residuals exceed the preregistered 20% saving criterion, and source size is below the original. **Second projection: NO-GO.** The preregistered condition required *every* positive-saving program to amortize within 10,000 calls; `(mul,sub)` requires 13,436. More fundamentally, the current specializer is Rust code for Noble graphs, not an accepted Noble representation of `mix` itself. No finite self-specialization/termination bound or reviewed binding-time-quality argument exists. Do not attempt `mix(mix,I)` on these results. Reopen only with (a) a new frozen out-of-sample cost campaign showing the required bound across its workload, (b) an accepted, independently checked specializer-as-subject or justified staging bridge, and (c) explicit code-growth, termination, trusted-boundary and correctness review. This is a feasibility decision, not a statement that second projection is impossible.
+**First-projection hard correctness/dispatch gate: PASS** for this finite family and tested implementation. Nine of nine warm residuals exceed the preregistered 20% saving criterion, all nine currently observed positive-saving break-even costs are below 10,000 calls, and source size is below the original. **Second projection: NO-GO.** The preregistered threshold did not pass in the earlier retained measurement (`mul,sub`: 13,436); the current measurement crosses that threshold, but does not remove the prerequisite that the specializer itself have an accepted Noble representation and a finite self-specialization/termination bound. The current specializer is Rust code for Noble graphs, not an accepted Noble representation of `mix` itself; no reviewed binding-time-quality argument exists. Do not attempt `mix(mix,I)` on these results. Reopen only with (a) a new frozen out-of-sample cost campaign showing the required bound across its workload despite the observed variability, (b) an accepted, independently checked specializer-as-subject or justified staging bridge, and (c) explicit code-growth, termination, trusted-boundary and correctness review. This is a feasibility decision, not a statement that second projection is impossible.
 
 **Third projection: NO-GO.** It depends on a valid second projection and, beyond that, an accepted representation of `mix`, measured compiler-generator cost, repeated-use economics and correctness against independently accepted generated compilers. Reopen only after that evidence passes a separately frozen gate. Neither the present graph proof nor a warm graph result makes `mix(mix,mix)` well typed or executable in the accepted profile.
 
