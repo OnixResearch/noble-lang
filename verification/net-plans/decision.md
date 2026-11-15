@@ -140,6 +140,20 @@ fixtures, a matching rule name or a successful parser roundtrip.
 | 7. Counters, peaks, timing and regressions | **DONE:** retained receipts retain the older 1.1402 chain regression; opt-in path remains NO-GO for performance adoption. Reopen only under the separately frozen full-path criterion above. |
 | 8. Fresh replay and same-rule changed plan | **DONE:** exact bytes and net/rule/representation/checker/executable bindings retained; the two storage policies yield distinct plan and replay digests. |
 
+The owner's dated follow-ups are disposed separately rather than promoting
+the older local-model results into evidence about the wired backend:
+
+| Owner follow-up | Disposition and reopen condition |
+|---|---|
+| 2026-11-11 first checked slice, named-index refusal/conditional index-zero step | **DONE in its original m3 local model:** named-index legality and conditional abstract agreement have kernel theorems; **DECIDED NO-GO** as evidence of wired output delivery. Reopen only after a wired-model representation/refinement proof, not a local size invariant. |
+| 2026-11-11 size/reducible-count schedule independence | **DONE in its original m3 local model; DECIDED NO-GO** for a revision-3 backend resource or result claim because those firings discard values. Reopen when the selected wired rules and queue/refinement are proved against that schedule criterion. |
+| 2026-11-11 plan legality | **DONE locally:** named-node refusal theorem checks legality without trusting a schedule. A Rust arena and separate independent checker now exist, but **DECIDED NO-GO** for equating this unwired index model with the Rust representation absent the same wired proof. |
+| 2026-11-11 value-reporting step and correction of its commit hash | **DONE as a correction/local theorem** (the corrected reference is 7c8be12f); **DECIDED NO-GO** for a delivered-output claim since the value is not fed to another agent. Reopen only on a proved output-delivery relation. |
+| 2026-11-11 whole-plan value log | **DONE as a local observation theorem; DECIDED NO-GO** for a wired plan result or replay theorem. Reopen only if the logged values are shown to drive the wired continuation in a representation proof. |
+| 2026-11-11 certificate bounds and mistaken absence of a Rust arena | **DONE for the m3 local-model certificate and corrected repository state:** the earlier no-backend assertion predates the current safe-Rust ngraph arena. **DECIDED NO-GO** for lifting the local potential bound to actual slot peaks without an explicit state/budget correspondence; the #109 integration is optional. Reopen when a real consumer needs such a bound and its relation is proved. |
+| 2026-11-12 errata and 2026-11-13 follow-up | **DONE:** the unwired m3 model is excluded above, and the current theorem uses the selected wired revision-3 inets plan. Reopen any m3-as-backend claim only after proving value delivery and wiring. |
+| 2026-11-15 batches 7/8 open model projection and Rust correspondence | **DONE for every Lean semantic-checker-admitted image:** the new kernel theorem includes entire projected net, output targets and live-agent pending-pair permutation. **DECIDED NO-GO** for automatic Rust emission/checker/executor correspondence, with universal-proof criterion and reopen condition stated above. |
+
 The earlier unwired m3 local reducer theorems are **DECIDED not evidence** for
 this wired revision-3 backend: they discard computed values and cannot prove
 delivery. Reconsider their use only after a separately proved wiring/value
