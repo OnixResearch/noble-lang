@@ -517,6 +517,32 @@ fn alias_closure_and_normal_forms_are_recomputed_on_admission_and_reload() -> Re
     assert_eq!(refusal.kind, RefusalKind::Invalid);
     assert_eq!(refusal.location.field, "alias_of");
 
+    let mut correctly_bound = candidate.clone();
+    correctly_bound.evidence.clear();
+    correctly_bound.alias_of = None;
+    alias
+        .clone()
+        .attach(&mut correctly_bound)
+        .map_err(|error| format!("attach evidence: {error:?}"))?;
+    for case in 0..4 {
+        let mut forged = correctly_bound.clone();
+        let record = forged
+            .evidence
+            .first_mut()
+            .ok_or_else(|| String::from("missing own evidence"))?;
+        match case {
+            0 => record.class = EvidenceClass::Review,
+            1 => record.outcome = EvidenceOutcome::Failed,
+            2 => record.toolchain = vec![String::from("unrelated-checker")],
+            _ => record.claim.push_str(":other-pair"),
+        }
+        let refusal = library
+            .admit(&namespace, None, forged)
+            .expect_err("changed class/outcome/checker/scope cannot claim this alias");
+        assert_eq!(refusal.kind, RefusalKind::Invalid);
+        assert_eq!(refusal.location.field, "alias_of");
+    }
+
     // A raw wire mutation also fails reload; the earlier admission forgeries
     // exercised pair recomputation with coherent newly computed state digests.
     candidate.alias_of = Some(alias);
