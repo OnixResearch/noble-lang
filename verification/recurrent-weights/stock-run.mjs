@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { release } from 'node:os';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 
@@ -41,7 +41,9 @@ const source_commit = git(['rev-parse', 'HEAD']);
 const source_tree = git(['rev-parse', 'HEAD^{tree}']);
 const selection = JSON.parse(readFileSync(join(root, 'policy/tool-selection.json'), 'utf8'));
 const node = selection.tool_paths.node.output + '/bin/node';
-if (process.execPath !== node) throw new Error(`unselected Node interpreter: ${process.execPath}`);
+if (realpathSync(process.execPath) !== realpathSync(node)) {
+  throw new Error(`unselected Node interpreter: ${process.execPath}`);
+}
 const runtime = selection.tool_paths.onnx_runtime;
 const interpreter = selection.tool_paths.onnx_python;
 if (selection.verification_tools.onnx_runtime.version !== '1.23.2' ||
@@ -83,7 +85,7 @@ if (lines.length !== 1) throw new Error('expected one stock-runtime JSON result'
 const report = JSON.parse(lines[0]);
 if (report.schema !== 'noble.recurrent-stock-runtime/v1' || report.results.length !== 2 ||
     report.results.some(result => result.provider.join(',') !== 'CPUExecutionProvider' ||
-      result.refusals.length !== 24 || !result.refusals.every(control => control.refused) ||
+      result.refusals.length !== 25 || !result.refusals.every(control => control.refused) ||
       result.coverage.tiny.transitions !== 16 ||
       result.coverage.teacher_forced.transitions !== 1000 ||
       result.coverage.free_running.transitions !== 1000)) {

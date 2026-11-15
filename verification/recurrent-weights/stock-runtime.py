@@ -236,7 +236,7 @@ def refused(label, operation, results):
     raise AssertionError(f"control silently accepted: {label}")
 
 
-def controls(engine, model_bytes, output_dir):
+def controls(engine, spec, model_bytes, output_dir):
     results = []
     valid = engine.step([0] if engine.program == "accumulator" else [1, 2],
                         [1] if engine.program == "accumulator" else [])
@@ -289,6 +289,12 @@ def controls(engine, model_bytes, output_dir):
     require(restore(base, engine) == state, "initial boundary restore")
     require(restore({**base, "index": 1000, "remaining_budget": 0}, engine) == state,
             "request-end boundary restore")
+    third = spec["vectors"]["teacher_forced"][2]
+    resumed = restore({**base, "index": 2, "remaining_budget": 998, "state": third[0]}, engine)
+    require(engine.step(resumed, third[1], budget=998) == third[2],
+            "resumed stock execution differs from Noble/source")
+    refused("request-end-budget-exhausted", lambda: engine.step(
+        state, [1] if engine.program == "accumulator" else [], budget=0), results)
     for label, variant in [
         ("missing-recurrent-state", {k: v for k, v in base.items() if k != "state"}),
         ("kv-without-recurrent", {**{k: v for k, v in base.items() if k != "state"},
@@ -365,7 +371,7 @@ def main():
         path.write_bytes(model_bytes)
         engine = StockEngine(spec, path, sha(model_bytes))
         coverage = compare_vectors(engine, spec)
-        refusals = controls(engine, model_bytes, output_dir)
+        refusals = controls(engine, spec, model_bytes, output_dir)
         results.append({"program": spec["program"], "model_sha256": sha(model_bytes),
                         "model_bytes": len(model_bytes), "model_path": str(path),
                         "graph_sha256": sha(bytes.fromhex(spec["canonical_graph"])),
