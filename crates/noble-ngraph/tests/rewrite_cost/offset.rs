@@ -12,6 +12,8 @@ use super::common::IDS;
 mod fixtures;
 #[path = "offset/measurement.rs"]
 mod measurement;
+#[path = "offset/scratch.rs"]
+mod scratch;
 
 use self::fixtures::{compare, graph, observed, Fixture};
 
