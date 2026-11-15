@@ -16,7 +16,7 @@ open INet
 open NobleFoundation.NetI64
 
 /-- **Forward OP2 emitted admission.** -/
-theorem PhysicalState.op2_forward_admitted
+theorem PhysicalState.op2_forward_accepted
     {state : PhysicalState} {pair : PhysicalPair} {a b : Id}
     {op : Op} {value : BitVec 64} {reuse : Bool} {plan : BytePlan}
     (hLegal : state.Legal)
@@ -82,7 +82,7 @@ theorem PhysicalState.op2_forward_admitted
   obtain ⟨hselBoundary, hselAgents, hselWrites⟩ :=
     Plan.op2_forward_fields state.project (op := op) (value := value) hw0 hwb hw1 hw2
       haway1 haway2
-  refine PhysicalState.op2_admitted (by rfl) hLegal hm hcurrent (.inl ⟨rfl, rfl⟩)
+  refine PhysicalState.op2_accepted (by rfl) hLegal hm hcurrent (.inl ⟨rfl, rfl⟩)
     (.inl ⟨rfl, rfl⟩) hf hfa hfp hroomF hs hsa hsp hroomS hdistinct
     (rhsSlot := (some false, 0)) rfl
     (by simp [op2NumData, RuleData.toX, RuleData.ofWires, assoc]) rfl
@@ -114,7 +114,7 @@ theorem PhysicalState.op2_forward_admitted
     simp [List.filter_cons]
 
 /-- **Reverse OP2 emitted admission.** -/
-theorem PhysicalState.op2_reverse_admitted
+theorem PhysicalState.op2_reverse_accepted
     {state : PhysicalState} {pair : PhysicalPair} {a b : Id}
     {op : Op} {value : BitVec 64} {reuse : Bool} {plan : BytePlan}
     (hLegal : state.Legal)
@@ -180,7 +180,7 @@ theorem PhysicalState.op2_reverse_admitted
   obtain ⟨hselBoundary, hselAgents, hselWrites⟩ :=
     Plan.op2_reverse_fields state.project (op := op) (value := value) hw0 hwb hw1 hw2
       ⟨haway1.2, haway1.1⟩ ⟨haway2.2, haway2.1⟩
-  refine PhysicalState.op2_admitted (by rfl) hLegal hm hcurrent (.inr ⟨rfl, rfl⟩)
+  refine PhysicalState.op2_accepted (by rfl) hLegal hm hcurrent (.inr ⟨rfl, rfl⟩)
     (.inr ⟨rfl, rfl⟩) hs hsa hsp hroomS hf hfa hfp hroomF (Ne.symm hdistinct)
     (rhsSlot := (some true, 0)) rfl
     (by simp [op2NumData, RuleData.toX, RuleData.ofWires, XRhs.swap, assoc]) rfl

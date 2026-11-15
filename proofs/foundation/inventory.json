@@ -14860,7 +14860,7 @@
       "claim": "a captured boundary decodes against the prestate to the rule agent's logical port and the captured endpoint's logical port or stable label"
     },
     {
-      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_admitted",
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_accepted",
       "phase": 1,
       "role": "representation",
       "claim": "emitted OP2 admission, for either orientation and storage policy: an actually lowered OP2 image of a legal, current, matched arena that is not excluded by queue capacity executes and passes the independent semantic checker at its exact reservations"
@@ -14890,13 +14890,13 @@
       "claim": "the single result's publication of a one-result image is always defined when its principal port reads a captured endpoint: quiet for outputs and nonprincipal peers, one canonical tuple for a live peer's principal port"
     },
     {
-      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_forward_admitted",
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_forward_accepted",
       "phase": 1,
       "role": "representation",
       "claim": "forward OP2 emitted admission"
     },
     {
-      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_reverse_admitted",
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_reverse_accepted",
       "phase": 1,
       "role": "representation",
       "claim": "reverse OP2 emitted admission"
@@ -14954,6 +14954,24 @@
       "phase": 1,
       "role": "representation",
       "claim": "reverse DUP has a candidate in every legal, current, matched, non-aliased arena with generation headroom"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "emitted ERA admission, for either orientation and storage policy: an actually lowered erasure image (no results, boundaries, writes or publications, both consumed slots retired) of a legal, current, matched arena that is not excluded by queue capacity executes and passes the independent semantic checker at its exact reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_forward_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward ERA emitted admission"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_reverse_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse ERA emitted admission"
     }
   ],
   "private_theorems": [

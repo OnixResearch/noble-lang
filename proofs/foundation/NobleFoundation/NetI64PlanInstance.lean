@@ -329,7 +329,7 @@ theorem PhysicalState.logicalBoundary_entry
 actually lowered OP2 image of a legal, current, matched arena that is not
 excluded by queue capacity executes and passes the independent semantic
 checker at its exact reservations. -/
-theorem PhysicalState.op2_admitted
+theorem PhysicalState.op2_accepted
     {state : PhysicalState} {pair : PhysicalPair} {redex : XRedex NetSym}
     (hRule : NetI64.xRule redex.2.2.1 redex.2.2.2.1 = some redex.2.2.2.2)
     {reuse : Bool} {plan : BytePlan}
