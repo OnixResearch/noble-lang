@@ -815,6 +815,117 @@ theorem BytePlan.decode_header {bytes : List UInt8} {plan : BytePlan}
           simp [hnone] at hh
       exact hheader
 
+/-- OP2/number: reuse the consumed rule slot, initialize one staged I64
+result, and retarget two ordered output boundaries. -/
+private def op2OutputFixture : BytePlan :=
+  { reuse := true
+    opcode := 1
+    pair := (0, 0, 1, 0)
+    action := (1, 0)
+    boundaries := [((0, 1), (1, 0, 0)), ((0, 2), (1, 1, 0))]
+    results := [(false, 0, .op1 .add (BitVec.ofNat 64 27), 0,
+      [some 0, some 1, none])]
+    writes := [(0, 1, 0), (0, 2, 1)]
+    externalWrites := [(0, 1, 0), (0, 2, 1)]
+    arenaReservation := 0
+    scratchReservation := 256
+    worklistReservation := 0
+    publications := [] }
+
+/-- The full OP2 physical image, including both reciprocal boundary writes,
+decodes without a fresh slot allocation. This is a Lean-model byte fixture. -/
+theorem BytePlan.op2_output_image :
+    BytePlan.decode op2OutputFixture.emit = some op2OutputFixture := by
+  apply BytePlan.decode_emit
+  have hbyte : UInt8.size = 256 := by decide
+  constructor
+  · decide
+  all_goals simp [hbyte, op2OutputFixture, validPair, validBoundary,
+    validEndpoint, validResult, validWrite]
+
+/-- The OP2 fixture's result symbol is exactly the selected rule's staged
+payload, independently of its physical reused-slot assignment. -/
+theorem BytePlan.op2_rule_symbols :
+    (compileRule (.op2 .add) (.num (BitVec.ofNat 64 27))).map
+      (fun rule => rule.results.map Prod.snd) =
+    some (op2OutputFixture.results.map fun result => result.2.2.1) := by
+  decide
+
+/-- OP1/subtract: stage the wrapped result into the reused consumed rule slot,
+retargeting one external output. -/
+private def op1OutputFixture : BytePlan :=
+  { reuse := true
+    opcode := 2
+    pair := (0, 0, 1, 0)
+    action := (1, 0)
+    boundaries := [((0, 1), (1, 0, 0))]
+    results := [(false, 0, .num (BitVec.ofInt 64 (-6)), 0,
+      [some 0, none, none])]
+    writes := [(0, 0, 0)]
+    externalWrites := [(0, 0, 0)]
+    arenaReservation := 0
+    scratchReservation := 256
+    worklistReservation := 0
+    publications := [] }
+
+/-- The OP1 image retains the 64-bit wrapping subtraction payload when
+decoded from its complete plan byte stream. -/
+theorem BytePlan.op1_wrapping_output_image :
+    BytePlan.decode op1OutputFixture.emit = some op1OutputFixture := by
+  apply BytePlan.decode_emit
+  have hbyte : UInt8.size = 256 := by decide
+  constructor
+  · decide
+  all_goals simp [hbyte, op1OutputFixture, validPair, validBoundary,
+    validEndpoint, validResult, validWrite]
+
+/-- The OP1 fixture's wrapped subtraction symbol is the selected revision-3
+rule result for seven minus thirteen. -/
+theorem BytePlan.op1_wrapping_rule_symbols :
+    (compileRule (.op1 .sub (BitVec.ofNat 64 7))
+      (.num (BitVec.ofNat 64 13))).map
+      (fun rule => rule.results.map Prod.snd) =
+    some (op1OutputFixture.results.map fun result => result.2.2.1) := by
+  decide
+
+/-- DUP/number: reuse both consumed slots, retag both with the numeric
+payload, and retarget the two external outputs separately. -/
+private def dupOutputFixture : BytePlan :=
+  { reuse := true
+    opcode := 3
+    pair := (0, 0, 1, 0)
+    action := (1, 1)
+    boundaries := [((0, 1), (1, 0, 0)), ((0, 2), (1, 1, 0))]
+    results := [(false, 0, .num (BitVec.ofNat 64 42), 0,
+      [some 0, none, none]),
+      (false, 1, .num (BitVec.ofNat 64 42), 1,
+      [some 1, none, none])]
+    writes := [(0, 0, 0), (1, 0, 1)]
+    externalWrites := [(0, 0, 0), (1, 0, 1)]
+    arenaReservation := 0
+    scratchReservation := 256
+    worklistReservation := 0
+    publications := [] }
+
+/-- Both DUP results and their independent physical output writes decode
+without fresh slot allocation. -/
+theorem BytePlan.dup_output_image :
+    BytePlan.decode dupOutputFixture.emit = some dupOutputFixture := by
+  apply BytePlan.decode_emit
+  have hbyte : UInt8.size = 256 := by decide
+  constructor
+  · set_option maxRecDepth 2000 in decide
+  all_goals simp [hbyte, dupOutputFixture, validPair, validBoundary,
+    validEndpoint, validResult, validWrite]
+
+/-- The two DUP result symbols agree in order with the selected right-hand
+side; this does not prove reciprocal physical port writes. -/
+theorem BytePlan.dup_rule_symbols :
+    (compileRule .dup (.num (BitVec.ofNat 64 42))).map
+      (fun rule => rule.results.map Prod.snd) =
+    some (dupOutputFixture.results.map fun result => result.2.2.1) := by
+  decide
+
 /-- One erasure image with physical slots zero and one, both at generation zero.
 The same 51-byte layout is used by the Rust writer for the no-result erasure
 rule; its Rust identity remains a separate, finite differential obligation. -/
@@ -842,6 +953,14 @@ theorem BytePlan.era_image :
       worklistReservation := 0
       publications := []
     } := by
+  decide
+
+/-- The no-result ERA plan image matches the selected rule's empty result
+list for this representative numeric payload. -/
+theorem BytePlan.era_rule_symbols :
+    (compileRule .era (.num (BitVec.ofNat 64 42))).map
+      (fun rule => rule.results.map Prod.snd) =
+    some ([] : List NetSym) := by
   decide
 
 /-- An erasure image with an appended operation is not a complete plan. -/

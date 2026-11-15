@@ -12592,6 +12592,42 @@
       "claim": "the independent plan parser recovers every admissible emitted version-one plan including arbitrary I64 payloads and all counted images"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op2_output_image",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one reused-slot OP2 plan with two output boundary writes round-trips through the version-one byte grammar"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op2_rule_symbols",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "the finite OP2 plan result symbol agrees with the selected staged right-hand side"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op1_wrapping_output_image",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one reused-slot OP1 wrapping subtraction and its output write round-trip through the plan grammar"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op1_wrapping_rule_symbols",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "the finite OP1 wrapping subtraction plan result symbol agrees with the selected right-hand side"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.dup_output_image",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one DUP plan reusing both consumed slots and two output writes round-trips through the byte grammar"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.dup_rule_symbols",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "the finite DUP plan's ordered numeric results agree with the selected right-hand side"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.BytePlan.decode_header",
       "phase": 1,
       "role": "representation",
@@ -12602,6 +12638,12 @@
       "phase": 1,
       "role": "representation",
       "claim": "the erasure byte image decodes all fixed fields and exact resource reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.era_rule_symbols",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "the finite ERA rule has no result symbols, matching its decoded no-result byte fixture"
     },
     {
       "name": "NobleFoundation.NetI64Plans.BytePlan.era_trailing_bytes_refused",
