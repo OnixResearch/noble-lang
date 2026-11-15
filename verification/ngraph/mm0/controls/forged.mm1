@@ -1,0 +1,5 @@
+delimiter $ ( ) $;
+provable sort wff;
+term desired: wff;
+axiom oracle_any (p: wff): $ p $;
+pub theorem forged: $ desired $ = 'oracle_any;

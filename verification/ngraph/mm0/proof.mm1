@@ -1,0 +1,20 @@
+import "peano_hex.mm1";
+def modulus: nat = $ x1 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 $;
+def uadd (a b: nat): nat = $ (a + b) % modulus $;
+def umul (a b: nat): nat = $ (a * b) % modulus $;
+def wmax: nat = $ x7 :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf $;
+def wmin: nat = $ x8 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 $;
+pub theorem fold_small: $ 3 + 5 = 8 $ = norm_num;
+pub theorem fold_boundary: $ ,0x7fffffffffffffff + 1 = ,0x8000000000000000 $ = norm_num;
+theorem ufold_small_expanded:
+  $ (3 + 5) % (x1 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0) = 8 $ = norm_num;
+theorem ufold_boundary_expanded:
+  $ (,0x7fffffffffffffff + 1) % (x1 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0) = ,0x8000000000000000 $ = norm_num;
+pub theorem ufold_small: $ uadd 3 5 = 8 $ = 'ufold_small_expanded;
+pub theorem ufold_boundary: $ uadd wmax 1 = wmin $ = 'ufold_boundary_expanded;
+pub theorem endpoint_small (a: nat):
+  $ 3 : 5 : umul a (uadd 3 5) : 0 = 3 : 5 : umul a 8 : 0 $ =
+  '(conseq2 (conseq2 (conseq1 (modeq1 (muleq2 ufold_small)))));
+pub theorem endpoint_boundary (a: nat):
+  $ wmax : 1 : umul a (uadd wmax 1) : 0 = wmax : 1 : umul a wmin : 0 $ =
+  '(conseq2 (conseq2 (conseq1 (modeq1 (muleq2 ufold_boundary)))));

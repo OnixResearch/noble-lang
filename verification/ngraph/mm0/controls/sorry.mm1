@@ -1,0 +1,5 @@
+delimiter $ ( ) $;
+provable sort wff;
+term desired: wff;
+-- Missing proof is intentionally encoded as the MMB Sorry opcode.
+pub theorem unproven: $ desired $;

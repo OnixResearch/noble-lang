@@ -1,0 +1,37 @@
+{
+  "schema": "noble-ngraph-mm0-pilot/v1",
+  "selected_source_rev": "0d414c0bfdaaeb7fea571895127abc1fa5a3d956",
+  "selected_source_archive_sha256": "741ee2b6e13eb189dcf75dead7dbbfc6f818e33800ea781bda99926b1dcf01db",
+  "checker_source_sha256": "ecde31379241e38ca0b375df0f40b216e9108f6cfd45952ccb282658d883de17",
+  "checker_sha256": "9fe789c00f6374dccb6f036afa38a874484e31d87c428e0a89aa1dc5530db94c",
+  "producer_lock_sha256": "3faa2cc6cc6f5e322aa3001677a6c5a28ed90827ab855bf98a6cb8b38fad621f",
+  "producer_sha256": "87c7f8a15ca8567a5ada5700b333bce23192dc741e0766661518472c892c2446",
+  "build_profile": {
+    "checker": "GCC 15.2.0, -O2, parser enabled; no BARE, HIGHWATER or NO_PARSER",
+    "producer": "Rust nightly 1.96.0 2026-03-21, --locked, RUSTFLAGS=-Zcrate-attr=feature(uint_bit_width); compile -W",
+    "checker_memory_bytes": 536870912,
+    "checker_cpu_seconds": 20,
+    "checker_wall_ms": 180000
+  },
+  "spec_sha256": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+  "required_theorems": ["fold_small", "fold_boundary", "ufold_small", "ufold_boundary", "endpoint_small", "endpoint_boundary"],
+  "approved_axioms": ["ax_1", "ax_2", "ax_3", "ax_mp", "itru", "ax_gen", "ax_4", "ax_5", "ax_6", "ax_7", "ax_10", "ax_11", "ax_12", "elab", "ax_8", "peano1", "peano2", "peano5", "theid", "the0", "addeq", "muleq", "add0", "addS", "mul0", "mulS", "h2nlt", "c2nlt", "c2nch", "s2nstr", "s2ns0", "s2ns1", "s2nsadd"],
+  "model": { "integer": "Peano naturals modulo 18446744073709551616 (2^64)", "input_slots": 1, "ordered_outputs": 3, "semantic_revision": "ngraph-sem/0", "certificate_revision": "ngraph-cert/0", "topology": "input0; const(first); const(second); add(1,2); mul(0,3); outputs [1,2,4]" },
+  "inputs": {
+    "theory.mm0": "66dab1e31835d93fe4e9ac44aabfad084655d643dbdfa80f736b56b1c288d8f9",
+    "proof.mm1": "7b9094c0d3fd005d8d6e8c56fed77b021abc41e2ed09e81f4a081140bd4f6876",
+    "subjects/small/before.graph": "3dd69fc4527c12d40cecf542a4d8e248db02ae7901b25321fad084489ec2c000",
+    "subjects/small/after.graph": "221caaec0bb54ffcf84b22c37de383d0427a42f2ee871b6b915ab4f3c29a3a40",
+    "subjects/small/certificate.wire": "33117f988d5d1e708a233b29dfafaa0ece27cfce37c902b47c1bd3852eca90c6",
+    "subjects/boundary/before.graph": "af8c7a8872b8cd53b61d52e2b47dcb67e19211518ad34af057e8d1c4f6883870",
+    "subjects/boundary/after.graph": "e01ec5c72c0497a37b233270effb98d2b751ae1b04ea14b002a7fa1cdd4026c5",
+    "subjects/boundary/certificate.wire": "f0da255c6b5b1f665c1d87e0e82c5eb7509e0e3c7bd4042f2dbcde6c13f1d749",
+    "controls/different.mm0": "257e23a09c0312821707b3e7b47b2394d430674e7214ac6bfa832effbf98f062",
+    "controls/different.mm1": "35a2479534643fa3017d8bfc6d46abfaf3767d4b7818bb217438e4ac15cecef1",
+    "controls/forged.mm0": "68df61c76184f36e2fbc897e397d56d9d9dc919f06bdd28ccf0e89f83a41ec18",
+    "controls/forged.mm1": "a9fbe1a225fd5e7f9ea30f18bd30625cc83befb36f9069f9533a06b6536cbadd",
+    "controls/sorry.mm0": "d1791f190b0f0c2f78ad955634c9372e9be16ea932a1a09c5d23d60cca28bdc2",
+    "controls/sorry.mm1": "322110aa861c73096f9626e4f1d15d96fb2ffc9767ebd9d390f9f1f917b71b36"
+  },
+  "non_claims": ["The MM0 Peano theory and the Lean denotation are separate encodings: no checked representation argument connects them.", "The direct upstream checker is not the compiler-lab #220 qualified backend.", "This experiment changes neither ordinary execution nor the independent Lean replay pilot's status."]
+}

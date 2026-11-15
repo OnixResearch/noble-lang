@@ -1,0 +1,8 @@
+delimiter $ ( ) $;
+provable sort wff;
+sort val;
+term eq: val > val > wff;
+infixl eq: $=$ prec 0;
+term one: val;
+axiom reflexive: $ a = a $;
+theorem different: $ one = one $;
