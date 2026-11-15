@@ -176,12 +176,17 @@ def commutedDependency : WireLibraryDependency := {
 /-- Producer tags 0/1/2 take the Rust Chunk/Synthesis/Composition provenance branches. -/
 def withProducer (name : String) (producer : Nat) (fixture : Fixture) : Fixture :=
   if producer = 1 then
-    { fixture with producerTag := 1, toolRevision := 2,
-      taskId := some (ascii name ++ List.replicate (32 - name.utf8ByteSize) 0),
+    { fixture with
+      producerTag := 1
+      toolRevision := 2
+      taskId := some (ascii name ++ List.replicate (32 - name.utf8ByteSize) 0)
       grammarRevision := some 0 }
   else
-    { fixture with producerTag := producer, toolRevision := 1,
-      taskId := none, grammarRevision := none }
+    { fixture with
+      producerTag := producer
+      toolRevision := 1
+      taskId := none
+      grammarRevision := none }
 
 /-- Zero, one and two closure entries; order is part of the immutable bytes. -/
 def withClosure (count : Nat) (fixture : Fixture) : Fixture :=
