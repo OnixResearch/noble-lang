@@ -9,7 +9,7 @@
   "build_profile": {
     "checker": "GCC 15.2.0, -O2, parser enabled; no BARE, HIGHWATER or NO_PARSER",
     "producer": "Rust nightly 1.96.0 2026-03-21, --locked, RUSTFLAGS=-Zcrate-attr=feature(uint_bit_width); compile -W",
-    "checker_memory_bytes": 536870912,
+    "checker_memory_bytes": 1073741824,
     "checker_cpu_seconds": 20,
     "checker_wall_ms": 180000
   },

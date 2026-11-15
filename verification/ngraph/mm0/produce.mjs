@@ -102,7 +102,8 @@ if (mode === 'freeze') {
   }
   const proof = path.join(output, 'proof.mmb');
   const checking = command('/usr/bin/time', ['-f', '%e %M', '-o', path.join(output, 'checker.time'),
-    'prlimit', '--as=536870912', '--cpu=20', '--', checker, proof],
+    'prlimit', `--as=${profile.build_profile.checker_memory_bytes}`,
+    `--cpu=${profile.build_profile.checker_cpu_seconds}`, '--', checker, proof],
   { cwd: output, input: readFileSync(spec) });
   requireSuccess(checking, 'parser-enabled MM0 checker');
   const [elapsed, rss] = readFileSync(path.join(output, 'checker.time'), 'utf8').trim().split(' ');
@@ -123,7 +124,9 @@ if (mode === 'freeze') {
     checking: { wall_ms: checking.wall_ms, checker_elapsed_s: Number(elapsed),
       checker_peak_rss_kib: Number(rss), status: checking.status, signal: checking.signal,
       stdout: checking.stdout, stderr: checking.stderr,
-      limits: { address_space_bytes: 536870912, cpu_seconds: 20, wall_ms: 180000 } },
+      limits: { address_space_bytes: profile.build_profile.checker_memory_bytes,
+        cpu_seconds: profile.build_profile.checker_cpu_seconds,
+        wall_ms: profile.build_profile.checker_wall_ms } },
   };
   writeFileSync(path.join(output, 'production.json'), `${JSON.stringify(receipt, null, 2)}\n`);
   console.log(JSON.stringify({ source_commit: receipt.source_commit,
