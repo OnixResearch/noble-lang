@@ -170,11 +170,13 @@ Status words:
 
 | Claim | Model / theorem(s) | Implementation boundary | Status |
 |---|---|---|---|
-| Checked revision-3 worklist-plan semantics (issue #110) | `NobleFoundation.NetI64Plans.compileRule_exact_rhs`, `NobleFoundation.NetI64Plans.compileRule_op2_forward`, `NobleFoundation.NetI64Plans.compileRule_op2_reverse`, `NobleFoundation.NetI64Plans.compileRule_op1_forward`, `NobleFoundation.NetI64Plans.compileRule_op1_reverse`, `NobleFoundation.NetI64Plans.compileRule_dup_forward`, `NobleFoundation.NetI64Plans.compileRule_dup_reverse`, `NobleFoundation.NetI64Plans.compileRule_era_forward`, `NobleFoundation.NetI64Plans.compileRule_era_reverse`, `NobleFoundation.NetI64Plans.Plan.compile_commit`, `NobleFoundation.NetI64Plans.Plan.commit_worklist`, `NobleFoundation.NetI64Plans.Plan.precommit_stutters`, `NobleFoundation.NetI64Plans.Plan.commit_refines` | Kernel model over the vendored inets hash-map agent/wire state and active-pair worklist; it does not model the Rust generation-tagged vector arena, encoded byte checker, physical reuse map, or allocator | Lean plan-rule/refinement model **proved**. Rust compiler/checker, adversarial controls, and storage comparisons are separate finite **tested** evidence. Rust↔Lean/plan correspondence **open**; runtime default and #37's threshold unchanged |
-| Checked plan byte grammar and journaled physical projection (issue #110) | `NobleFoundation.NetI64Plans.BytePlan.decode_header`, `NobleFoundation.NetI64Plans.BytePlan.era_image`, `NobleFoundation.NetI64Plans.BytePlan.era_trailing_bytes_refused`, `NobleFoundation.NetI64Plans.BytePlan.era_wrong_version_refused`, `NobleFoundation.NetI64Plans.PhysicalState.stale_first_refused`, `NobleFoundation.NetI64Plans.PhysicalState.reserve_snapshot`, `NobleFoundation.NetI64Plans.PhysicalState.reserve_within_limits`, `NobleFoundation.NetI64Plans.PhysicalTransaction.stage_stutters`, `NobleFoundation.NetI64Plans.PhysicalTransaction.rollback_restores`, `NobleFoundation.NetI64Plans.PhysicalTransaction.commit_refines_if_projected` | Decoder follows the version-one Rust byte-field order; the physical slot/port/queue projector reads concrete generations and carries a rollback journal, but no theorem yet proves that decoded plan writes produce the required projected commit | Byte header, finite erasure image/control, reservation, stale queue and journal stutter/rollback **proved**; emitted-plan physical commit for all rules **open** |
+| Checked revision-3 worklist-plan semantics (issue #110) | `NobleFoundation.NetI64Plans.compileRule_exact_rhs`, `NobleFoundation.NetI64Plans.compileRule_op2_forward`, `NobleFoundation.NetI64Plans.compileRule_op2_reverse`, `NobleFoundation.NetI64Plans.compileRule_op1_forward`, `NobleFoundation.NetI64Plans.compileRule_op1_reverse`, `NobleFoundation.NetI64Plans.compileRule_dup_forward`, `NobleFoundation.NetI64Plans.compileRule_dup_reverse`, `NobleFoundation.NetI64Plans.compileRule_era_forward`, `NobleFoundation.NetI64Plans.compileRule_era_reverse`, `NobleFoundation.NetI64Plans.Plan.compile_commit`, `NobleFoundation.NetI64Plans.Plan.commit_worklist`, `NobleFoundation.NetI64Plans.Plan.commit_worklist_permutation`, `NobleFoundation.NetI64Plans.Plan.precommit_stutters`, `NobleFoundation.NetI64Plans.Plan.commit_refines` | Kernel model over the vendored inets hash-map agent/wire state and active-pair worklist; its head-publication order differs from Rust's tail-publication order but the two worklists are permutations. It does not model the Rust generation-tagged vector arena, encoded byte checker, physical reuse map, or allocator | Lean plan-rule/refinement and queue-permutation model **proved**. Rust compiler/checker, adversarial controls, and storage comparisons are separate finite **tested** evidence. Rust↔Lean/plan correspondence **open**; runtime default and #37's threshold unchanged |
+| Checked plan byte grammar and journaled physical projection (issue #110) | `NobleFoundation.NetI64Plans.BytePlan.decode_header`, `NobleFoundation.NetI64Plans.BytePlan.era_image`, `NobleFoundation.NetI64Plans.BytePlan.era_trailing_bytes_refused`, `NobleFoundation.NetI64Plans.BytePlan.era_wrong_version_refused`, `NobleFoundation.NetI64Plans.PhysicalState.stale_first_refused`, `NobleFoundation.NetI64Plans.PhysicalState.reserve_snapshot`, `NobleFoundation.NetI64Plans.PhysicalState.reserve_within_limits`, `NobleFoundation.NetI64Plans.PhysicalTransaction.stage_stutters`, `NobleFoundation.NetI64Plans.PhysicalTransaction.rollback_restores`, `NobleFoundation.NetI64Plans.PhysicalTransaction.commit_refines_if_projected` | Decoder follows the version-one Rust byte-field order; the physical slot/port/queue projector reads concrete generations and carries a rollback journal. The physical commit bridge still assumes the general projected-net and queue correspondence; the finite discharged cases are listed below | Byte header, finite erasure image/control, reservation, stale queue and journal stutter/rollback **proved**; arbitrary admitted-image physical commit **open** |
 | Bounded plan writer/parser agreement (issue #110) | `NobleFoundation.NetI64Plans.BytePlan.readWord_emitWord`, `NobleFoundation.NetI64Plans.BytePlan.readMany_bytes`, `NobleFoundation.NetI64Plans.BytePlan.decodeSymbol_emitSymbol`, `NobleFoundation.NetI64Plans.BytePlan.emitSymbol_payload_bounded`, `NobleFoundation.NetI64Plans.BytePlan.readEndpoint_emitEndpoint`, `NobleFoundation.NetI64Plans.BytePlan.readBoundary_emitBoundary`, `NobleFoundation.NetI64Plans.BytePlan.resultPort_roundtrip`, `NobleFoundation.NetI64Plans.BytePlan.readResult_emitResult`, `NobleFoundation.NetI64Plans.BytePlan.readWrite_emitWrite`, `NobleFoundation.NetI64Plans.BytePlan.readPair_emitPair`, `NobleFoundation.NetI64Plans.BytePlan.decode_emit` | Independent Lean writer and parser use the selected byte-field order; admissibility requires valid field widths, counts and maximum 256 bytes. This does not establish that Rust's actual writer emits the Lean image or that the decoded image is a valid live-state rewrite | Arbitrary bounded plan-field roundtrip, including any selected I64 payload and ordered wire/worklist images, **proved**; producer correspondence and physical commit **open** |
-| Representative four-rule byte images (issue #110) | `NobleFoundation.NetI64Plans.BytePlan.op2_output_image`, `NobleFoundation.NetI64Plans.BytePlan.op2_rule_symbols`, `NobleFoundation.NetI64Plans.BytePlan.op1_wrapping_output_image`, `NobleFoundation.NetI64Plans.BytePlan.op1_wrapping_rule_symbols`, `NobleFoundation.NetI64Plans.BytePlan.dup_output_image`, `NobleFoundation.NetI64Plans.BytePlan.dup_rule_symbols`, `NobleFoundation.NetI64Plans.BytePlan.era_image`, `NobleFoundation.NetI64Plans.BytePlan.era_rule_symbols` | The Lean fixtures check bounded field images of OP2, wrapping OP1, DUP and ERA, including reuse maps, output boundary writes and result-symbol agreement with the selected rule. They are not exported Rust plan bytes, nor an execution/whole-net proof | Four representative model parser fixtures and rule-result-symbol agreements **proved**; actual Rust emission and decoded physical-commit theorem **open** |
-| Physical plan slot, boundary and queue frame (issue #110) | `NobleFoundation.NetI64Plans.PhysicalState.writeSlot_frame`, `NobleFoundation.NetI64Plans.PhysicalState.appendSlot_frame`, `NobleFoundation.NetI64Plans.PhysicalState.logicalPort_writeSlot_away`, `NobleFoundation.NetI64Plans.PhysicalState.logicalPair_writeSlot_away`, `NobleFoundation.NetI64Plans.PhysicalState.project_boundary_frame`, `NobleFoundation.NetI64Plans.PhysicalState.project_work_frame` | A slot write/append preserves unrelated physical slots, ordered outputs and queued pairs under explicit outside-footprint premises; no complete plan-footprint certificate or physical commit theorem is inferred | Local physical frame **proved**; emitted-plan whole-net refinement **open** |
+| Representative four-rule byte images (issue #110) | `NobleFoundation.NetI64Plans.BytePlan.op2_output_image`, `NobleFoundation.NetI64Plans.BytePlan.op2_published_image`, `NobleFoundation.NetI64Plans.BytePlan.op2_rule_symbols`, `NobleFoundation.NetI64Plans.BytePlan.op1_wrapping_output_image`, `NobleFoundation.NetI64Plans.BytePlan.op1_wrapping_rule_symbols`, `NobleFoundation.NetI64Plans.BytePlan.dup_output_image`, `NobleFoundation.NetI64Plans.BytePlan.dup_rule_symbols`, `NobleFoundation.NetI64Plans.BytePlan.era_image`, `NobleFoundation.NetI64Plans.BytePlan.era_rule_symbols` | Five independently authored Lean byte fixtures cover OP2 with outputs, OP2 with a newly active peer, wrapping OP1, DUP and ERA. Field images include reuse maps, output boundary writes and selected-rule symbols, but are not exported Rust plan bytes | Five model parser fixtures and four rule-result-symbol agreements **proved**; actual Rust byte-emission identity **open** |
+| Physical plan slot, boundary and queue frame (issue #110) | `NobleFoundation.NetI64Plans.PhysicalState.writeSlot_frame`, `NobleFoundation.NetI64Plans.PhysicalState.appendSlot_frame`, `NobleFoundation.NetI64Plans.PhysicalState.logicalPort_writeSlot_away`, `NobleFoundation.NetI64Plans.PhysicalState.logicalPair_writeSlot_away`, `NobleFoundation.NetI64Plans.PhysicalState.retargetOutput_preserves_free`, `NobleFoundation.NetI64Plans.PhysicalState.project_boundary_frame`, `NobleFoundation.NetI64Plans.PhysicalState.project_work_frame`, `NobleFoundation.NetI64Plans.PhysicalState.appendPublications_project_work`, `NobleFoundation.NetI64Plans.PhysicalState.appendPublications_project_plan_work`, `NobleFoundation.NetI64Plans.PhysicalState.appendPublications_project_net` | A slot write/append preserves unrelated slots and queued pairs under explicit outside-footprint premises. Output labels remain stable while physical targets move. Each canonical queued Rust pair projects to two directed inets work entries; a checked publication inventory therefore permits tail-append/head-prepend permutation without claiming equal ordered queues | Local physical frame, stable external labels and queue-order relation **proved**; arbitrary emitted-plan whole-net refinement **open** |
+| Arbitrary decoded physical output identity (issue #110) | `NobleFoundation.NetI64Plans.PhysicalState.executeCheckedImage_preserves_free` | Any successful decoded image may install any number of result slots, perform peer/output writes, retire consumed slots and publish pairs; the physical executor preserves the entire ordered stable free-port identity list. It does not establish correct targets, agents, wire contents, checker admissibility or full net refinement | Free-port identity **proved** for all successful model executions; general projected-net and Rust correspondence **open** |
+| Decoded four-rule physical transaction instances (issue #110) | `NobleFoundation.NetI64Plans.PhysicalState.op2_output_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.op2_output_refines`, `NobleFoundation.NetI64Plans.PhysicalState.op2_published_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.op2_published_pair_orientations`, `NobleFoundation.NetI64Plans.PhysicalState.op2_published_refines`, `NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_refines`, `NobleFoundation.NetI64Plans.PhysicalState.dup_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.dup_refines`, `NobleFoundation.NetI64Plans.PhysicalState.era_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.era_refines` | The kernel decodes each model byte image, executes physical slot retag/reuse, external writes, retirement and publication, and proves whole-net equality to `Plan.commit` for each fixed layout. The nonempty OP2 publication also proves its two-entry directed queue matches the checked plan. These are model-internal finite fixtures, not arbitrary admitted layouts, fresh-slot cases, reverse orientations or a Rust implementation theorem | Four rule-shapes plus one nonempty publication **proved** for fixed fixtures; general physical-image refinement and Rust correspondence **open** |
 | Bounded sequential I64/Bool belt validator (issue #113) | `NobleFoundation.Belt.validate_sound`; real lowered program and exact-vector controls in the generated BeltCorpus module | symbolic graph identities over `PackedSchedule`; no Rust refinement theorem | model **proved**; real artifact corpus is finite model evidence; Rust lowerer/checker/interpreter and B2 comparisons remain separate **tested** evidence |
 | Fixed T1/T2 timing legality and ordered target outputs (issue #114) | `NobleFoundation.BeltTarget.mapReadyOutputs`, `NobleFoundation.BeltTarget.validate_sound` | the symbolic run gates graph-reference values on latency-derived completion; it does not evaluate operations or simulate belt/save state, and no Rust artifact/operand-age refinement theorem is claimed | completion-gate/order **proved** only; generated corpus and Rust lowerer/checker/interpreter cross-backend controls are separate **tested** evidence; machine-step refinement remains **open** |
 | ZMod/BitVec/K-NUM-01 signed decoding, range, round trips | `toZ_ofZ`, `ofZ_toZ`, `toZ_add`, `toZ_sub`, `toZ_mul`, `toZ_neg`, `signed_eq_toInt`, `signed_toZ`, `wrap_eq_bmod`, `wrap_eq_toInt_ofInt`, `wrap_eq_knum01`, `toInt_range`, `signed_range`, `intCast_signed`, `toInt_ofInt_eq_iff`, `signed_intCast_eq_iff`, `ofInt_toInt` | none (mathematics only) | **proved** |
@@ -3945,19 +3947,51 @@ proof. The kernel also checks one full erasure image; a changed version or
 trailing byte is refused in that image.
 The representative OP2/OP1/DUP/ERA model fixtures check plan images with
 consumed-slot reuse, exact result symbols, and ordered output boundary writes
-where applicable. They do not purport to be a Rust byte export or a full
-physical execution proof. A separate physical state model carries
-generation-tagged slots, a free-slot inventory, ordered outputs and a queued
-pair list. Its projection derives inets agents, wires, boundary and work
-from physical fields. The representation relation uses the saved physical
+where applicable. A fifth OP2 image connects the new principal port to a live
+third agent and declares one generation-tagged publication. None is a byte
+export from the Rust producer. A separate physical state model carries
+generation-tagged slots, a free-slot inventory, ordered outputs with stable
+abstract free-port labels and mutable arena targets, and a queued pair list.
+Its projection derives inets agents and both directions of physical/internal
+and output wires, stable free-port labels, and queued pairs from physical
+fields. The representation relation uses the saved physical
 journal until commit: reservations preserve the arena and enforce all three
 bounds, and a staged microstep stutters while rollback restores the saved
-physical state. The commit theorem states its exact unproved premise:
-executing the decoded plan must make the projected physical arena equal the
-checked abstract plan image. The model has not proved that premise.
+physical state. `PhysicalState.executeCheckedImage` decodes the byte image,
+installs one or two rule results into reused or fresh slots, updates reciprocal
+external boundaries or ordered outputs, retires unretained slots, and
+publishes reciprocal generation-checked pairs at the queue tail. The
+independent checked-image predicate and Rust implementation are *not* proved
+equivalent to this executor. The conditional commit theorem requires that
+physical execution's projected `toNet` equal the checked abstract image and
+that their queues be permutations. For the five fixed, decoded model images,
+the kernel discharges the physical executor's exact post-state and the
+whole-net equality: output-connected OP2, OP1 wrapped subtraction, DUP, ERA,
+and OP2 with a nonempty publication and a live external peer. The last also
+discharges its directed-pair queue equality. These are finite model
+refinements, not a theorem for every checker-admitted plan and topology.
+Independently of those fixtures, a kernel theorem proves that **every
+successful decoded physical image** preserves the stable ordered abstract
+external free-port labels through all result installations, reciprocal peer
+and output writes, retirement and queue publications. It does not prove
+those free ports point to the correct replacement agents, nor that an
+arbitrary decoded image passes the Rust checker.
 Separate frame theorems for existing-slot writes and fresh-slot appends
-preserve unaffected generations, queue marks, ordered boundary ports and
-active-pair entries under explicit outside-footprint premises.
+preserve unaffected generations and queue marks. Retagging any slot preserves
+the ordered external free-port identities (their physical targets remain a
+separate write obligation); writing outside queued slots preserves projected
+active-pair entries.
+The physical queue follows Rust's tail-append order and stores one canonical
+slot pair, while the abstract inets plan prepends newly active pairs and
+stores *both directed orientations* of every reciprocal principal wire. The
+projection expands one current physical pair into both abstract entries,
+skipping a generation-stale pair. With a checked publication inventory the
+tail-append/head-prepend worklists are a proved permutation, not equal ordered
+lists; queue publication itself preserves `toNet`. The nonempty OP2 example
+exercises this multiplicity explicitly. A complete physical-image theorem
+must use this directed-pair multiset, not one abstract entry per Rust pair,
+and must never assert whole-`HNet` equality for nonempty pending and newly
+published queues.
 
 The Lean model, Rust implementation correspondence, and finite Rust tests are
 separate claims. The Lean proof establishes the inets worklist and byte-grammar models; it
@@ -3969,11 +4003,12 @@ only: net execution remains opt-in, and the #37 frozen 1.15 threshold is not
 changed.
 
 **Open, and deliberately not closed:** a Rust-to-Lean/plan refinement proof;
-the kernel premise that each decoded OP2/OP1/DUP/ERA plan's physical slot,
-boundary and queue writes project to its HNet firing; proof that Rust's
+the general kernel premise that *every checker-admitted* OP2/OP1/DUP/ERA
+image's slot, boundary and directed-pair queue writes project to its HNet
+firing (only five fixed model images are proved); proof that Rust's
 reservation, slot reuse, generation, rollback and queue publication transitions
-implement that physical model for arbitrary nets; and performance claims beyond
-the retained matched finite workloads.
+implement the physical model for arbitrary nets and byte streams; and
+performance claims beyond the retained matched finite workloads.
 
 The integrator attaches the clean foundation receipt for issue #110 after integration.
 
