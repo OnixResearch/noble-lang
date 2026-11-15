@@ -51,6 +51,7 @@ const FROZEN_TARGET_SET: TargetSet = TargetSet {
     tasks: HELD_OUT_TASKS,
     inputs: HELD_OUT_INPUTS,
     programs: [None, None],
+    references: [None, None],
 };
 const CONTROL_POOL: [SourceTask; 2] = [SourceTask::Product, SourceTask::Scaled];
 const TRANSFER_ARMS: [&str; 4] = [
@@ -196,6 +197,7 @@ struct TargetSet {
     tasks: [HeldOutTask; 2],
     inputs: [[[i64; 3]; 3]; 4],
     programs: [Option<String>; 2],
+    references: [Option<String>; 2],
 }
 
 #[derive(Clone, Copy)]
@@ -278,5 +280,7 @@ mod runner;
 mod selection;
 #[path = "transfer/sweep.rs"]
 mod sweep;
+#[path = "transfer/target_reference.rs"]
+mod target_reference;
 #[path = "transfer/tests.rs"]
 mod tests;

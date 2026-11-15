@@ -38,26 +38,36 @@ pub(super) fn heldout_cases(
     let mut fixtures = Vec::with_capacity(inputs.len());
     let mut references = Vec::with_capacity(inputs.len());
     for values in inputs {
-        let formula = match task.kind {
-            TargetKind::CommutedThenSubtract => {
-                values[0].wrapping_sub(values[1]).wrapping_sub(values[2])
+        let expected = match (
+            &target_set.references[task_index],
+            &target_set.programs[task_index],
+        ) {
+            (Some(reference), Some(program)) => {
+                let declared = super::target_reference::evaluate(reference, values)?;
+                let generated = super::producer_targets::evaluate_program(program, values)?;
+                if generated != declared {
+                    return Err(format!(
+                        "{} generated candidate disagrees with declared reference at {values:?}",
+                        task.name
+                    ));
+                }
+                declared
             }
-            TargetKind::SubtractThenCommuted => values[0]
-                .wrapping_add(values[1])
-                .wrapping_sub(values[2])
-                .wrapping_add(14),
-        };
-        let expected = if let Some(program) = &target_set.programs[task_index] {
-            let generated = super::producer_targets::evaluate_program(program, values)?;
-            if generated != formula {
+            (None, None) => match task.kind {
+                TargetKind::CommutedThenSubtract => {
+                    values[0].wrapping_sub(values[1]).wrapping_sub(values[2])
+                }
+                TargetKind::SubtractThenCommuted => values[0]
+                    .wrapping_add(values[1])
+                    .wrapping_sub(values[2])
+                    .wrapping_add(14),
+            },
+            _ => {
                 return Err(format!(
-                    "{} generated candidate disagrees with declared reference at {values:?}",
+                    "{} generated candidate or reference is missing",
                     task.name
                 ));
             }
-            generated
-        } else {
-            formula
         };
         fixtures.push(Fixture {
             inputs: values.iter().copied().map(Scalar::I64).collect(),

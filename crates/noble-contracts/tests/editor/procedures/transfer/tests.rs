@@ -103,6 +103,45 @@ fn producer_generated_heldout_measurement_once() -> Result<(), String> {
 }
 
 #[test]
+fn frozen_target_fixtures_match_criterion_and_manifest_before_transfer() -> Result<(), String> {
+    let producer = super::producer_targets::load()?;
+    let criterion = super::producer_targets::read_json(
+        "verification/procedure-library/criteria-producer-targets-v2.json",
+    )?;
+    let manifest = super::target_reference::manifest_targets()?;
+    for (seed_index, seed) in SEEDS.iter().copied().enumerate() {
+        let criterion_inputs: [[i64; 3]; 3] =
+            serde_json::from_value(criterion["held_out_case_inputs"][seed.to_string()].clone())
+                .map_err(|error| format!("criterion seed inputs: {error}"))?;
+        assert_eq!(producer.set.inputs[seed_index], criterion_inputs);
+        for (task_index, task) in producer.set.tasks.iter().copied().enumerate() {
+            let declared = criterion["producer"]["target_tasks"][task_index]["reference"]
+                .as_str()
+                .ok_or_else(|| String::from("frozen criterion lacks a target reference"))?;
+            assert_eq!(manifest[task_index].0, task.name);
+            assert_eq!(manifest[task_index].1, declared);
+            assert_eq!(
+                producer.set.references[task_index].as_deref(),
+                Some(declared)
+            );
+            let (cases, references) =
+                super::fixtures::heldout_cases(task, task_index, seed_index, &producer.set)?;
+            assert_eq!(cases.len(), criterion_inputs.len());
+            assert_eq!(references.len(), criterion_inputs.len());
+            for (case_index, (inputs, expected)) in references.iter().enumerate() {
+                assert_eq!(*inputs, criterion_inputs[case_index]);
+                assert_eq!(
+                    *expected,
+                    super::target_reference::evaluate(declared, *inputs)?
+                );
+                assert_eq!(cases[case_index].outputs, vec![Scalar::I64(*expected)]);
+            }
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn producer_task_candidates_are_source_readmitted_and_fixture_bound() -> Result<(), String> {
     let namespace = Session::without_test_hosts();
     for task in SOURCE_TASKS {

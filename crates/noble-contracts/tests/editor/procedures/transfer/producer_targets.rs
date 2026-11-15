@@ -5,7 +5,6 @@ use std::cell::Cell;
 const CRITERIA: &str = "verification/procedure-library/criteria-producer-targets-v2.json";
 const TARGET_RECEIPT: &str = "verification/procedure-library/receipts/producer-targets-v2.json";
 const TARGET_NAMES: [&str; 2] = ["arithComposeShifted", "arithComposeOffsetDifference"];
-const TARGET_REFERENCES: [&str; 2] = ["(+ (- (+ x y) z) (+ 7 7))", "(+ (- x y) (+ z (+ 7 7)))"];
 const TARGET_SOURCE_ORDERS: [[&str; 2]; 2] = [
     ["arithCommuted", "arithSubtract"],
     ["arithSubtract", "arithCommuted"],
@@ -16,7 +15,7 @@ pub(super) struct ProducerTargets {
     pub(super) summary: serde_json::Value,
 }
 
-fn read_json(relative: &str) -> Result<serde_json::Value, String> {
+pub(super) fn read_json(relative: &str) -> Result<serde_json::Value, String> {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
         .nth(2)
@@ -124,12 +123,17 @@ fn target_program(
 pub(super) fn load() -> Result<ProducerTargets, String> {
     let criteria = read_json(CRITERIA)?;
     let receipt = read_json(TARGET_RECEIPT)?;
+    let manifest = super::target_reference::manifest_targets()?;
     if criteria["schema"] != "noble-procedure-library-producer-targets-criteria/2" {
         return Err(String::from("producer target criterion schema drifted"));
     }
+    if criteria["producer"]["manifest"] != super::target_reference::MANIFEST {
+        return Err(String::from("producer criterion manifest path drifted"));
+    }
     for (index, name) in TARGET_NAMES.iter().copied().enumerate() {
         if criteria["producer"]["target_tasks"][index]["name"] != name
-            || criteria["producer"]["target_tasks"][index]["reference"] != TARGET_REFERENCES[index]
+            || manifest[index].0 != name
+            || criteria["producer"]["target_tasks"][index]["reference"] != manifest[index].1
             || criteria["producer"]["target_tasks"][index]["source_order"]
                 != serde_json::json!(TARGET_SOURCE_ORDERS[index])
         {
@@ -153,9 +157,9 @@ pub(super) fn load() -> Result<ProducerTargets, String> {
             serde_json::from_value(criteria["held_out_case_inputs"][seed.to_string()].clone())
                 .map_err(|error| format!("seed {seed} held-out input shape: {error}"))?;
     }
-    let (first, first_summary) = target_program(&tasks[0], TARGET_NAMES[0], TARGET_REFERENCES[0])?;
-    let (second, second_summary) =
-        target_program(&tasks[1], TARGET_NAMES[1], TARGET_REFERENCES[1])?;
+    let (first, first_summary) = target_program(&tasks[0], TARGET_NAMES[0], &manifest[0].1)?;
+    let (second, second_summary) = target_program(&tasks[1], TARGET_NAMES[1], &manifest[1].1)?;
+    let [(_, first_reference), (_, second_reference)] = manifest;
     let set = TargetSet {
         tasks: [
             HeldOutTask {
@@ -169,6 +173,7 @@ pub(super) fn load() -> Result<ProducerTargets, String> {
         ],
         inputs,
         programs: [Some(first), Some(second)],
+        references: [Some(first_reference), Some(second_reference)],
     };
     Ok(ProducerTargets {
         set,
