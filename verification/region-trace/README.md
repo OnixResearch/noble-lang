@@ -25,7 +25,7 @@ unless `--allow-dirty` is passed explicitly (a dirty receipt records it, it does
 
 The production wrapper in `crates/noble-cli/src/component/bounded_region.rs` calls
 `noble_kernel::region_read::preflight` (physically in
-`crates/noble-kernel/src/resources/region_read.rs`) before the table borrow and
+`crates/noble-kernel/src/region/read.rs`) before the table borrow and
 `region_read::authorize_copy` after `table.native_access`, before the protected
 copy. The pinned Charon/Aeneas M5 lane freshly extracts these **same Rust
 functions** and the existing `resources::table::access` module. Its
@@ -250,14 +250,22 @@ The fixtures are finite tests of recorded traces. The region-trace receipt binds
 receipt and the component, helper and engine revisions; neither that binding nor these finite tests
 proves emitted-step correspondence.
 
-The bounded-cut replay retains `verification/region-trace/receipt-20261115-region-cut-v2.json`
-and `verification/region-trace/receipt-20261115-region-cut-v2-extraction.json`
+The current bounded-cut replay retains `verification/region-trace/receipt-20261115-region-cut-v3.json`
+and `verification/region-trace/receipt-20261115-region-cut-v3-extraction.json`
 from a clean committed source tree. The former's `bindings.implementation_cut`
 carries the SHA-256 of the latter fresh selected-extraction receipt (including all
 generated-body comparisons and the sixteen strictly audited implementation
 theorems); the 135 model/runtime fixture theorems stay in their own inventory.
 The source commit, generated artifacts and actual tool commands are retained
 in those receipts; the emitted-component correspondence remains open.
+
+The immutable v2 receipts bind the earlier `d05c6c8c` source with the new
+decision file physically inside `resources/`. That placement extended the exact
+historical resource-file set and thus failed the separate host-locality source-scope
+check. The v3 source moves it under `region/`, retaining the same public Rust
+module and behavior while restoring the historical `resources/` source set.
+The v2 receipts remain evidence for that earlier source, not a passing
+host-locality check or a current-source result.
 
 The first selected-cut receipts, `receipt-20261115-region-cut.json` and
 `receipt-20261115-region-cut-extraction.json`, remain immutable evidence for

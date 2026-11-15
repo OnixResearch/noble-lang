@@ -13,7 +13,7 @@ namespace noble_kernel
 
 
 /-- [noble_kernel::region_read::Refusal]
-    Source: 'crates/noble-kernel/src/resources/region_read.rs', lines 7:0-12:1
+    Source: 'crates/noble-kernel/src/region/read.rs', lines 7:0-12:1
     Visibility: public -/
 @[discriminant isize]
 inductive region_read.Refusal where
@@ -23,7 +23,7 @@ inductive region_read.Refusal where
 | Bounds : region_read.Refusal
 
 /-- [noble_kernel::region_read::Request]
-    Source: 'crates/noble-kernel/src/resources/region_read.rs', lines 15:0-21:1
+    Source: 'crates/noble-kernel/src/region/read.rs', lines 15:0-21:1
     Visibility: public -/
 structure region_read.Request where
   representation : Std.U32
@@ -33,14 +33,14 @@ structure region_read.Request where
   length_bytes : Std.I64
 
 /-- [noble_kernel::region_read::Range]
-    Source: 'crates/noble-kernel/src/resources/region_read.rs', lines 24:0-27:1
+    Source: 'crates/noble-kernel/src/region/read.rs', lines 24:0-27:1
     Visibility: public -/
 structure region_read.Range where
   start : Std.Usize
   finish : Std.Usize
 
 /-- [noble_kernel::region_read::MAX_REGION_BYTES]
-    Source: 'crates/noble-kernel/src/resources/region_read.rs', lines 4:0-4:41
+    Source: 'crates/noble-kernel/src/region/read.rs', lines 4:0-4:41
     Visibility: public -/
 @[global_simps, irreducible]
 def region_read.MAX_REGION_BYTES : Std.Usize := 4096#usize
@@ -56,7 +56,7 @@ def Usize.Insts.CoreConvertTryFromI64TryFromIntError.try_from
     | none => ok (.Err ())
 
 /-- [noble_kernel::region_read::preflight]:
-    Source: 'crates/noble-kernel/src/resources/region_read.rs', lines 39:0-70:1
+    Source: 'crates/noble-kernel/src/region/read.rs', lines 39:0-70:1
     Visibility: public -/
 def region_read.preflight
   (table : resources.table.Table) (required : resources.Requirement)
@@ -118,7 +118,7 @@ def region_read.preflight
               ok (core.result.Result.Err region_read.Refusal.Bounds)
 
 /-- [noble_kernel::region_read::authorize_copy]:
-    Source: 'crates/noble-kernel/src/resources/region_read.rs', lines 78:0-96:1
+    Source: 'crates/noble-kernel/src/region/read.rs', lines 78:0-96:1
     Visibility: public -/
 def region_read.authorize_copy
   (access : core.result.Result resources.Snapshot resources.Error)
