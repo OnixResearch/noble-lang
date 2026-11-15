@@ -1,4 +1,24 @@
-#[path = "../../../verification/m7/trace130/host.rs"]
+#![feature(register_tool)]
+#![register_tool(tigerstyle)]
+// Test-only shared reference deliberately uses exhaustive actions and explicit
+// trace assertions; host controls retain full lifetime order in one scenario.
+#![allow(
+    tigerstyle::ambiguous_params,
+    tigerstyle::assertion_density,
+    tigerstyle::bool_naming,
+    tigerstyle::fragile_exhaustive_enum_match,
+    tigerstyle::function_length,
+    tigerstyle::missing_const_fn,
+    tigerstyle::no_panic,
+    tigerstyle::no_unwrap,
+    tigerstyle::non_trait_imports,
+    tigerstyle::platform_dependent_cast,
+    tigerstyle::raw_arithmetic_overflow,
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-maintainers; test-only M7 host lifetime fixture preserves explicit expected outcome, live counts and ordered queue in each row; no production permission or capacity policy is exempt."
+)]
+
+#[path = "service/trace130.rs"]
 mod trace130_host;
 
 const PUBLISHER: noble_kernel::dataspace::Rights = noble_kernel::dataspace::Rights {

@@ -1,7 +1,9 @@
+//! Faulted reference runs, trigger-constrained reductions and replay.
 use super::{compare, initial, trace, Action, Fault, Limits, Rights, Row};
 
 struct Witness {
     name: &'static str,
+    trigger: &'static str,
     fault: Fault,
     limits: Limits,
     actions: Vec<Action>,
@@ -31,6 +33,8 @@ fn witnesses() -> Vec<Witness> {
     vec![
         Witness {
             name: "premature-final-owner-removal",
+            trigger:
+                "two owners of clock=true; one withdraws while the other and an observer remain",
             fault: Fault::PrematureRemoval,
             limits: standard,
             fixed: 3,
@@ -48,6 +52,7 @@ fn witnesses() -> Vec<Witness> {
         },
         Witness {
             name: "duplicate-addition",
+            trigger: "second owner publishes visible clock=true to an existing observer",
             fault: Fault::DuplicateAddition,
             limits: standard,
             fixed: 3,
@@ -61,6 +66,7 @@ fn witnesses() -> Vec<Witness> {
         },
         Witness {
             name: "false-versus-absence",
+            trigger: "observer queries an asserted clock=false pair",
             fault: Fault::FalseAsAbsence,
             limits: standard,
             fixed: 3,
@@ -73,6 +79,7 @@ fn witnesses() -> Vec<Witness> {
         },
         Witness {
             name: "descendant-not-retired",
+            trigger: "retire parent with child-owned clock=true and surviving matching observer",
             fault: Fault::MissingDescendants,
             limits: standard,
             fixed: 3,
@@ -98,6 +105,7 @@ fn witnesses() -> Vec<Witness> {
         },
         Witness {
             name: "missing-removal-reservation",
+            trigger: "admit interest whose queued addition fits but future removal does not",
             fault: Fault::UnderReservedRemoval,
             limits: Limits {
                 events: 2,
@@ -200,8 +208,9 @@ fn seeded_faults_produce_minimized_replayable_mismatches() {
                 .join(";")
         };
         println!(
-            "M7FAULT\t{}\t{:?}\t{}\t{}\t{}\t{}\t{}\t{}",
+            "M7FAULT\t{}\t{}\t{:?}\t{}\t{}\t{}\t{}\t{}\t{}",
             witness.name,
+            witness.trigger,
             witness.limits,
             format_actions(&witness.actions),
             format_actions(&reduced),

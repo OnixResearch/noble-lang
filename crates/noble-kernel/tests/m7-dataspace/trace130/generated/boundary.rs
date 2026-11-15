@@ -1,3 +1,4 @@
+//! Named capacity, lifetime, ownership and membership witnesses.
 use super::super::{compare, initial, Action, Limits, Rights};
 use super::{ENUM_LIMITS, EXPANDED};
 

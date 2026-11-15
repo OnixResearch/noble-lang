@@ -1,3 +1,4 @@
+//! Frozen complete and seeded cohorts.
 use super::{compare, initial, Action, Limits, Rights};
 
 #[path = "generated/boundary.rs"]
@@ -49,18 +50,19 @@ fn enum_action(digit: u32) -> Action {
 #[test]
 fn complete_small_alphabet() {
     let mut total = 0;
+    let mut word = String::with_capacity(4);
     for length in 0..=4_u32 {
         let count = 6_u32.pow(length);
         for ordinal in 0..count {
             let mut actions = initial().to_vec();
             let mut digits = ordinal;
-            let mut word = String::new();
+            word.clear();
             for _ in 0..length {
                 let digit = digits % 6;
                 digits /= 6;
                 actions.push(enum_action(digit));
                 word.push(char::from(
-                    b'0' + u8::try_from(digit).expect("base-six digit"),
+                    b'0'.saturating_add(u8::try_from(digit).expect("base-six digit")),
                 ));
             }
             compare(&format!("enum/{length}/{word}"), ENUM_LIMITS, &actions);
@@ -89,17 +91,17 @@ fn generated_action(random: &mut Generator) -> Action {
     } else {
         "clock"
     };
-    let ready = random.draw().is_multiple_of(2);
+    let is_ready = random.draw().is_multiple_of(2);
     match pick {
         0..=5 => Action::Publish {
             who: if pick.is_multiple_of(2) { 1 } else { 2 },
             name,
-            ready,
+            ready: is_ready,
         },
         6..=8 => Action::Observe {
             who: if pick == 8 { 4 } else { 3 },
             name: "clock",
-            ready,
+            ready: is_ready,
         },
         9..=10 => Action::Retract {
             who: if pick == 9 { 1 } else { 2 },
@@ -120,7 +122,7 @@ fn generated_action(random: &mut Generator) -> Action {
         _ => Action::Observe {
             who: 4,
             name: "clock",
-            ready,
+            ready: is_ready,
         },
     }
 }

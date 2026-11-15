@@ -1,3 +1,4 @@
+//! Independent finite transition rules with explicit seeded fault variants.
 use super::{Action, Decision, Fault, Model, Refusal, Result, Scope};
 
 impl Model {
@@ -11,12 +12,13 @@ impl Model {
                     id == 0
                         || !self
                             .scopes
-                            .get(usize::from(id - 1))
+                            .get(usize::from(id.saturating_sub(1)))
                             .is_some_and(|scope| scope.live)
                 }) {
                     return Err(Refusal::InvalidFacet);
                 }
-                let id = u8::try_from(self.scopes.len() + 1).expect("selected facet limit fits u8");
+                let id = u8::try_from(self.scopes.len().saturating_add(1))
+                    .expect("selected facet limit fits u8");
                 self.scopes.push(Scope {
                     parent,
                     rights,
@@ -118,14 +120,28 @@ impl Model {
                 if who == 0
                     || !self
                         .scopes
-                        .get(usize::from(who - 1))
+                        .get(usize::from(who.saturating_sub(1)))
                         .is_some_and(|s| s.live)
                 {
                     return Err(Refusal::InvalidFacet);
                 }
                 let mut retiring = self.descendants(who);
                 let mut next = self.clone();
-                if self.fault == Fault::MissingDescendants && retiring.len() > 1 {
+                // This mutation fires only when a surviving observer can
+                // witness removal of an assertion owned by a descendant.
+                let is_observed_child = self.owned.iter().any(|((owner, name), ready)| {
+                    *owner != who
+                        && retiring.contains(owner)
+                        && self
+                            .interests
+                            .iter()
+                            .any(|(observer, observed_name, observed_ready)| {
+                                !retiring.contains(observer)
+                                    && observed_name == name
+                                    && observed_ready == ready
+                            })
+                });
+                if self.fault == Fault::MissingDescendants && is_observed_child {
                     retiring.retain(|id| *id == who);
                     next.fault_fired = true;
                 }
@@ -135,12 +151,12 @@ impl Model {
                     let (owner, name) = next.order[index];
                     if retiring.contains(&owner) {
                         next.order.swap_remove(index);
-                        let ready = next
+                        let is_ready = next
                             .owned
                             .remove(&(owner, name))
                             .expect("ordered owner has assertion");
-                        if !next.visible().contains(&(name, ready)) {
-                            next.notify(name, ready, "Removed");
+                        if !next.visible().contains(&(name, is_ready)) {
+                            next.notify(name, is_ready, "Removed");
                         }
                     } else {
                         index += 1;
@@ -149,7 +165,7 @@ impl Model {
                 next.events
                     .retain(|event| !retiring.contains(&event.observer));
                 for id in retiring {
-                    next.scopes[usize::from(id - 1)].live = false;
+                    next.scopes[usize::from(id.saturating_sub(1))].live = false;
                 }
                 // Cleanup cannot be refused: successful admission reserved its debt.
                 *self = next;

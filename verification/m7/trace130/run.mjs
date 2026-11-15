@@ -37,17 +37,16 @@ const sourcePaths = [
   'crates/noble-kernel/src/dataspace/table.rs',
   'crates/noble-kernel/src/dataspace/table/actions.rs',
   'crates/noble-kernel/tests/m7-dataspace.rs',
+  'crates/noble-kernel/tests/m7-dataspace/trace130.rs',
+  'crates/noble-kernel/tests/m7-dataspace/trace130/reference.rs',
+  'crates/noble-kernel/tests/m7-dataspace/trace130/reference/steps.rs',
+  'crates/noble-kernel/tests/m7-dataspace/trace130/generated.rs',
+  'crates/noble-kernel/tests/m7-dataspace/trace130/generated/boundary.rs',
+  'crates/noble-kernel/tests/m7-dataspace/trace130/faults.rs',
   'crates/noble-syndicate/src/lib.rs',
   'crates/noble-syndicate/tests/service.rs',
+  'crates/noble-syndicate/tests/service/trace130.rs',
   'verification/m7/trace130/profile.md',
-  'verification/m7/trace130/reference.rs',
-  'verification/m7/trace130/reference/steps.rs',
-  'verification/m7/trace130/kernel.rs',
-  'verification/m7/trace130/generated.rs',
-  'verification/m7/trace130/generated/boundary.rs',
-  'verification/m7/trace130/faults.rs',
-  'verification/m7/trace130/host.rs',
-  'verification/m7/trace130/host/compare.rs',
   'verification/m7/trace130/run.mjs',
   'verification/m7/acceptance.json',
   'verification/m7/evidence.json',
@@ -89,8 +88,8 @@ function traceRow([, id, limits, history, expected, actual]) {
     agrees: expected === actual };
 }
 const histories = lines(kernel, 'M7TRACE', 6).map(traceRow);
-const faults = lines(kernel, 'M7FAULT', 9).map(([, name, limits, full, reduced, fullExpected, fullActual, reducedExpected, reducedActual]) => ({
-  name, limits, full: { actions: full.split(';'), expected: fullExpected.split(';'), actual: fullActual.split(';') },
+const faults = lines(kernel, 'M7FAULT', 10).map(([, name, trigger, limits, full, reduced, fullExpected, fullActual, reducedExpected, reducedActual]) => ({
+  name, trigger, limits, full: { actions: full.split(';'), expected: fullExpected.split(';'), actual: fullActual.split(';') },
   reduced: { actions: reduced.split(';'), expected: reducedExpected.split(';'), actual: reducedActual.split(';') },
 }));
 const hosts = lines(host, 'M7HOST', 4).map(([, action, expected, actual]) => ({ action, expected, actual }));
@@ -139,7 +138,7 @@ const good = commands.every(command => command.status === 0 && !command.signal &
   && summary.counts.named === 8 && summary.counts.baselineFaultControls === 5
   && summary.counts.faults === 5 && summary.counts.hostSteps >= 12
   && summary.counts.disagreements === 0
-  && faults.every(row => row.full.expected.join(';') !== row.full.actual.join(';')
+  && faults.every(row => row.trigger.length > 0 && row.full.expected.join(';') !== row.full.actual.join(';')
     && row.reduced.expected.join(';') !== row.reduced.actual.join(';')
     && row.reduced.actions.length <= row.full.actions.length);
 summary.result = good ? 'passed' : 'failed';

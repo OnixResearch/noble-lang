@@ -1,4 +1,4 @@
-//! Test-only, set-based M7 reference. No production Table calls or decisions.
+//! Test-only, set-based M7 reference. No production Table calls or decisions; only the witness harness imports it.
 use std::collections::{BTreeMap, BTreeSet};
 
 #[path = "reference/steps.rs"]
@@ -145,7 +145,7 @@ impl Model {
                 self.owned.len(),
                 self.interests.len(),
             ),
-            slots: self.limits.facets - self.scopes.len(),
+            slots: self.limits.facets.saturating_sub(self.scopes.len()),
             pairs: visible.into_iter().collect(),
             queue: self.events.clone(),
         }
@@ -173,12 +173,12 @@ impl Model {
         if who == 0 || !scope.live {
             return Err(Refusal::InvalidFacet);
         }
-        let authorized = if needs_publish {
+        let is_authorized = if needs_publish {
             scope.rights.publish()
         } else {
             scope.rights.observe()
         };
-        if !authorized {
+        if !is_authorized {
             return Err(Refusal::Denied);
         }
         Ok(())
@@ -188,7 +188,7 @@ impl Model {
         let mut result = BTreeSet::new();
         result.insert(ancestor);
         for index in 0..self.scopes.len() {
-            let child = u8::try_from(index + 1).expect("bounded facet IDs fit in u8");
+            let child = u8::try_from(index.saturating_add(1)).expect("bounded facet IDs fit in u8");
             if self.scopes[index]
                 .parent
                 .is_some_and(|parent| result.contains(&parent))
@@ -221,22 +221,26 @@ impl Model {
     }
 
     fn admitted(&mut self, candidate: Self) -> Result {
-        let mut fired = candidate.fault_fired;
+        let mut is_fired = candidate.fault_fired;
         let owed = if self.fault == Fault::UnderReservedRemoval {
-            if candidate.events.len() + candidate.owed_removals() > self.limits.events
+            if candidate
+                .events
+                .len()
+                .saturating_add(candidate.owed_removals())
+                > self.limits.events
                 && candidate.events.len() <= self.limits.events
             {
-                fired = true;
+                is_fired = true;
             }
             0
         } else {
             candidate.owed_removals()
         };
-        if candidate.events.len() + owed > self.limits.events {
+        if candidate.events.len().saturating_add(owed) > self.limits.events {
             return Err(Refusal::Capacity);
         }
         *self = candidate;
-        self.fault_fired |= fired;
+        self.fault_fired |= is_fired;
         Ok(Decision::Done)
     }
 

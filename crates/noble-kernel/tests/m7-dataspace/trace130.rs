@@ -1,6 +1,9 @@
-//! Actual Table versus the independently derived bounded reference.
+//! Actual Table versus the independently derived bounded reference, in one existing test target.
+#[path = "trace130/faults.rs"]
 mod faults;
+#[path = "trace130/generated.rs"]
 mod generated;
+#[path = "trace130/reference.rs"]
 mod reference;
 
 use noble_kernel::dataspace::{self, Table};
@@ -47,7 +50,7 @@ fn refusal(error: dataspace::Error) -> Refusal {
 }
 
 fn facet(facets: &[dataspace::Facet], who: u8) -> dataspace::Facet {
-    facets[usize::from(who - 1)]
+    facets[usize::from(who.saturating_sub(1))]
 }
 
 fn actual_step(
@@ -104,7 +107,11 @@ fn actual_observation(table: &Table, facets: &[dataspace::Facet]) -> Observation
         }
     }
     Observation {
-        counts: (counts.0 as usize, counts.1 as usize, counts.2 as usize),
+        counts: (
+            usize::try_from(counts.0).expect("selected limit fits usize"),
+            usize::try_from(counts.1).expect("selected limit fits usize"),
+            usize::try_from(counts.2).expect("selected limit fits usize"),
+        ),
         slots: table.remaining_capacity().facets,
         pairs,
         queue: table
@@ -116,7 +123,7 @@ fn actual_observation(table: &Table, facets: &[dataspace::Facet]) -> Observation
                         .iter()
                         .position(|f| *f == event.observer)
                         .expect("host-issued observer")
-                        + 1,
+                        .saturating_add(1),
                 )
                 .expect("bounded facets"),
                 name: static_name(&event.service.name),

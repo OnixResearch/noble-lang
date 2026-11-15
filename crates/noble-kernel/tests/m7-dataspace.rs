@@ -1,15 +1,19 @@
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
 #![allow(
+    tigerstyle::ambiguous_params,
     tigerstyle::excessive_file_length,
     tigerstyle::assertion_density,
+    tigerstyle::borrowed_argument_types,
+    tigerstyle::fragile_exhaustive_enum_match,
+    tigerstyle::function_length,
     tigerstyle::no_unwrap,
     tigerstyle::no_panic,
     tigerstyle::missing_const_fn,
     tigerstyle::non_trait_imports,
     tigerstyle::path_segment_repetition,
     tigerstyle::unbounded_collection_growth,
-    reason = "Owner: noble-maintainers; the dataspace and ServiceRef harnesses construct boundary scenarios, parse a generated case file and assert one decision per case, so dense assertions, fully-named crate paths and checked unwraps are the readable form."
+    reason = "Owner: noble-maintainers; test-only ServiceRef and M7 trace harnesses need exhaustive actions, mutable facet handles, explicit event fields, and intact generated witness sequences; they do not change production policy."
 )]
 //! The closed ServiceRef wire format compared against the independent
 //! expectations in `verification/service-ref/cases.txt` (issue #48).
@@ -20,7 +24,7 @@
 //! the decoder's; three control cases separate it from a counting-only scan.
 //! Seeded decoder faults, each the decoder with one rule changed, run through the
 //! same cases, and every one must disagree with at least one expectation.
-#[path = "../../../verification/m7/trace130/kernel.rs"]
+#[path = "m7-dataspace/trace130.rs"]
 mod trace130;
 
 const LIMITS: noble_kernel::dataspace::Limits = noble_kernel::dataspace::Limits {
