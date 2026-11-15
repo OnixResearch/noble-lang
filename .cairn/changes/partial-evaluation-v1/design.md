@@ -507,3 +507,57 @@ on a change to the value/effect whitelist or source emission, or when a consumer
 universal refinement instead of finite regression evidence. Transparent/default
 specialization needs a separate adoption decision; the ordinary unspecialized path is
 not changed.
+
+### D14 — Frozen comparison protocol for partially-static offsets (issue #32 owner follow-up)
+
+**Experiment contract, frozen before measuring:** This is an explicitly selected
+checked-graph experiment, not a change to D3, the default specializer, Core
+execution, or an already reflected Program. Its domain is D1's pure,
+total, flat `ngraph-i64/0` slice. Represent an add/sub expression by its
+wrapping `i64` offset and an **ordered** sequence of signed, shared symbolic
+node identities. A shared expression is materialized once; an unshared
+linear chain may be flattened. Reconstruct only a new checked residual,
+with the D2 ordered input map and a distinct derivation identity. Never
+cross multiplication, equality, guards, effects or a shape boundary.
+The existing D7 residual-node cap applies to both intermediate and final
+growth; exceeding it must refuse rather than publish a partial graph.
+
+**Frozen comparison:** Compare the exact same checked graph and static map
+through D3's static-or-residual baseline and the opt-in offset path. Fixed
+families are chained addition `(x + 2) + 3`, chained subtraction
+`(x - 2) - 3`, wrapping boundary `x + i64::MAX + 1`, a shared linear
+subexpression used twice, a non-prefix static input, and a total expression
+made dead by folding/forwarding. Check every output under the same merged
+dynamic inputs at `0`, `1`, `-1`, `i64::MAX`, `i64::MIN`, and 64 fixed-seed
+vectors. Include below/at/above a reduced growth cap, and distinguish
+refusal from mismatched values. A nested partially known pair remains an
+explicit **unsupported graph experiment**: D1 rejects authored shape
+trees; D13's Program path independently supports bounded pair/Unit
+reconstruction but is not automatically routed through this new offset
+transform. Do not count a scalar flattening as pair evidence.
+
+Record **separately**: residual graph node count; L3/L4 runtime node visits
+on both sides; specialization and source emission/re-admission elapsed time;
+first and repeated replay time; compiled retained bytes, checked-graph
+retained bytes, and emitted-source bytes. Use a source-committed runner and
+a clean committed source identity; timings on a shared host are descriptive
+and never a pass condition. A positive structural result requires every
+finite vector to agree, a checked/re-admitted residual, at least one family
+with fewer graph nodes *and* runtime visits than baseline, no family with
+more than 125% of baseline runtime visits or retained compiled bytes, and
+both growth-limit refusals and input-order controls to fire. An adoption
+**GO** additionally requires a universal Rust-to-wrapping-model and
+emitter/replay correspondence result, a reviewed intentional code-inspection
+semantics for the *new* Program identity, and repeatable cost benefit under
+equivalent budgets. Without any of these, **NO-GO** for default adoption
+even if the finite experiment improves a fixture. Reopen on a completed
+proof/bridge and a new frozen matched-budget comparison, or on an admitted
+counterexample (which first requires a correctness repair).
+
+The Wei/Tan/Zhong let-insertion observation is tested here as preservation
+of graph-node identity and lexical sharing in emitted source, not as
+permission to move an effect or alter the result of code inspection. An
+inspector may distinguish old and new code; only an explicitly requested
+new residual identity is returned. The Yallop et al. partially-static
+suggestion is restricted to wrapping-I64 offsets and symbolic atoms; no
+F32, effectful value, or general recursive pair algebra is implied.
