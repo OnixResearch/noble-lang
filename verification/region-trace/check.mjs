@@ -3,7 +3,8 @@
 // `proofs/m5/RegionTraceRuntime.lean` in an isolated project with the pinned Lean toolchain and
 // audits every inventoried theorem's statement and transitive axioms. The runtime fixtures must be
 // exactly what `runtime-fixtures.mjs` generates from the retained effect-protocol receipt.
-// This is a model theorem check: no emitted-step correspondence, no Wasmtime claim.
+// The selected extraction check adds one implementation decision cut, not an
+// emitted-step correspondence or a Wasmtime claim.
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
@@ -18,11 +19,15 @@ const root = resolve(fileURLToPath(import.meta.url), '../../..');
 const selection = JSON.parse(readFileSync(join(root, 'policy/tool-selection.json')));
 const node = join(selection.tool_paths.node.output, 'bin/node');
 const leanBin = join(selection.tool_paths.lean.output, 'bin');
+const extractionRustBin = join(selection.tool_paths.extraction_rust.output, 'bin');
 const git = realpathSync('/run/current-system/sw/bin/git');
 const { homedir: home, username } = userInfo();
 const childEnv = {
   HOME: home, USER: username, LOGNAME: username, LANG: 'C.UTF-8', CI: '1',
-  PATH: [leanBin, dirname(git), '/run/current-system/sw/bin', '/usr/bin', '/bin'].join(':'),
+  CARGO_HOME: process.env.CARGO_HOME, CARGO_TARGET_DIR: process.env.CARGO_TARGET_DIR,
+  CC: process.env.CC,
+  PATH: [extractionRustBin, leanBin, dirname(git), '/run/current-system/sw/bin',
+    '/usr/bin', '/bin'].join(':'),
 };
 const requireThat = (condition, message) => { if (!condition) throw Error(message); };
 const codeFile = 'proofs/m5/RegionTrace.lean';
@@ -281,6 +286,13 @@ writeFileSync(join(project, 'lakefile.toml'),
    '[[lean_lib]]', 'name = "RegionTrace"', '', '[[lean_lib]]', 'name = "RegionTraceRuntime"', ''].join('\n'));
 run(join(leanBin, 'lake'), ['build', 'RegionTrace', 'RegionTraceRuntime'], project);
 const theorems = auditTheorems(project, inventory, names);
+const cutOutput = join(output, 'region-cut');
+run(node, ['verification/region-trace/region-cut-check.mjs',
+  ...(allowDirty ? ['--allow-dirty'] : []), '--output', cutOutput]);
+const cut = JSON.parse(readFileSync(join(cutOutput, 'receipt.json')));
+requireThat(cut.result === 'passed' && cut.source_commit === initial.commit &&
+  cut.source_tree === initial.tree && cut.clean_source === !allowDirty,
+'source-bound implementation cut failed or does not match model check');
 const final = {
   commit: run(git, ['rev-parse', 'HEAD']).trim(),
   tree: run(git, ['rev-parse', 'HEAD^{tree}']).trim(),
@@ -312,17 +324,27 @@ const bindings = {
     source_tree: observed.source.tree,
   },
   ...evidence,
+  implementation_cut: {
+    status: 'proved',
+    correspondence: 'bounded-decision-only',
+    selected_roots: cut.selected_roots,
+    source_commit: cut.source_commit,
+    receipt: 'region-cut/receipt.json',
+    receipt_sha256: digest64(readFileSync(join(cutOutput, 'receipt.json'))),
+  },
   correspondence_route: [
     'Canonical ABI lift/lower of a guest request -> importCrossing plus the host decision; its lowered result -> returned.',
     'Host::read / Host::release / Host::abnormal_exit_cleanup -> hostDecision, protectedCopy and cleanup.',
     'A Wasmtime Trap (OutOfFuel included) or a host cancellation -> abnormalExit with the class the report names; a result outside the schema -> abnormalExit outsideModel; a refused retirement -> cleanupFailure, committing nothing.',
     'The route is named, not proved. PO-17/PO-18 cover emitted-component evidence, and #10 owns any real lowering correspondence.',
+    'The pinned region-read cut proves the real extracted preflight/authorization decisions and admitted table completion, but the imperative wrapper/allocator and emitted-component correspondence are separately open.',
   ],
 };
 const claims = {
   model_theorems: names.length,
   model_theorems_status: 'proved',
-  implementation_theorems: 0,
+  implementation_theorems: cut.theorems.length,
+  implementation_theorems_status: 'proved-bounded-cut',
   runtime_fixtures: {
     status: 'tested', related: generated.related, related_under_registration: generated.registered,
   },
@@ -371,15 +393,23 @@ const receipt = {
   allow_dirty: allowDirty, lean: version,
   bindings, claims,
   sources_sha256: Object.fromEntries([codeFile, inventoryFile, runtimeFile, runtimeInventoryFile,
+    'proofs/m5/RegionCutProof.lean', 'proofs/m5/RegionCutExtracted.lean',
+    'proofs/m5/region-cut-inventory.json',
+    'crates/noble-kernel/src/region_read.rs',
+    'crates/noble-cli/src/component/bounded_region.rs',
+    'verification/region-trace/region-cut-check.mjs',
+    'verification/region-trace/region-cut-generate.mjs',
     'verification/region-trace/check.mjs', 'verification/region-trace/runtime-fixtures.mjs',
     cleanupEvidenceFile, receiptFile].map(file => [file,
       spawnSync('sha256sum', [join(root, file)], { encoding: 'utf8' }).stdout.split(' ')[0]])),
-  theorem_count: names.length, theorems, binding_controls: bindingControls,
+  theorem_count: names.length + cut.theorems.length,
+  theorems: [...theorems, ...cut.theorems], binding_controls: bindingControls,
   fixture_controls: fixtureControls, commands,
-  implementation_theorem: false,
+  implementation_theorem: true,
   scope: ['.cairn/changes/region-trace-relation WIT-TRACE-01 model: source alphabet, target ABI alphabet and the relation.',
-    'The target alphabet is a handwritten machine. No emitted ABI step correspondence, no Wasmtime/Canonical ABI claim,',
-    'no Rust host or lowering claim, and no liveness claim. The component, helper and engine bindings record',
+    'The selected pinned Aeneas cut checks the production Rust decision core and extracted M5 Table.complete.',
+    'The target alphabet remains a handwritten machine. No emitted ABI step correspondence, no Wasmtime/Canonical ABI claim,',
+    'no full imperative Rust wrapper or lowering claim, and no liveness claim. The component, helper and engine bindings record',
     'the revisions the observed traces came from and label them tested; they are not a correspondence.',
     'The host records its own ordered trace with',
     'the exact retained identity, and pairing is stated over projected source traces rather than proved',
@@ -390,4 +420,4 @@ const receipt = {
     '(relatedFrom).'],
 };
 writeFileSync(join(output, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n');
-process.stdout.write(`REGION-TRACE: ${names.length} model theorems; strict axioms accepted\n`);
+process.stdout.write(`REGION-TRACE: ${names.length} model theorems; ${cut.theorems.length} bounded implementation theorems; strict axioms accepted\n`);

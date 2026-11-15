@@ -396,14 +396,14 @@ theorem erase_preserves_commit_authority (registered decided : List Nat) (steps 
           simp [erase, eraseStep, commitAuthorityInOrder,
             tailAuthority registered decided]
       | normalReturn =>
-          simp [erase, eraseStep, commitAuthorityInOrder, List.filterMap_cons,
+          simp [erase, eraseStep, commitAuthorityInOrder,
             tailAuthority registered decided]
       | abnormalExit exitClass =>
-          simp [erase, eraseStep, commitAuthorityInOrder, List.filterMap_cons,
+          simp [erase, eraseStep, commitAuthorityInOrder,
             tailAuthority registered decided]
       | cleanup kind identity =>
           cases kind <;>
-            simp [erase, eraseStep, commitAuthorityInOrder, List.filterMap_cons,
+            simp [erase, eraseStep, commitAuthorityInOrder,
               tailAuthority registered decided]
 
 theorem commit_authority_mono (registered decided : List Nat) (steps : List AbiStep)
