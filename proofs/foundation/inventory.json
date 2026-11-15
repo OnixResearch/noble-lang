@@ -12610,6 +12610,12 @@
       "claim": "the finite OP2 plan result symbol agrees with the selected staged right-hand side"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op2_published_image",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a decoded OP2 result with a live peer carries one generation-tagged physical publication"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.BytePlan.op1_wrapping_output_image",
       "phase": 1,
       "role": "representation",
@@ -12706,6 +12712,12 @@
       "claim": "writing away from both pair slots preserves a queued pair's decoded identities and generations"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retargetOutput_preserves_free",
+      "phase": 1,
+      "role": "representation",
+      "claim": "retargeting an existing physical output keeps the ordered logical free-port labels fixed"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.project_boundary_frame",
       "phase": 1,
       "role": "representation",
@@ -12721,13 +12733,85 @@
       "name": "NobleFoundation.NetI64Plans.PhysicalState.appendPublications_project_work",
       "phase": 1,
       "role": "representation",
-      "claim": "physical queue publication appends newly decoded pairs after the pending worklist"
+      "claim": "physical queue publication appends both abstract orientations of each generation-current pair after the pending worklist"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.appendPublications_project_plan_work",
+      "phase": 1,
+      "role": "representation",
+      "claim": "if the decoded pair inventory matches the plan, Rust tail append and inets head prepend carry the same directed-pair multiset"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.appendPublications_project_net",
       "phase": 1,
       "role": "representation",
       "claim": "appending physical queue publications does not change the observable net agents wires or outputs"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_output_execution_exact",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the finite decoded OP2 output image updates reused slot generations, free inventory and two output targets exactly"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_output_refines",
+      "phase": 1,
+      "role": "abstract-reduction-step",
+      "claim": "the finite OP2 physical output rewrite projects to the selected abstract plan's whole net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_published_execution_exact",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the finite OP2 physical publication connects reciprocal principals and marks both generation-tagged slots"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_published_pair_orientations",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one canonical Rust pair projects to both oriented inets worklist entries"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_published_refines",
+      "phase": 1,
+      "role": "abstract-reduction-step",
+      "claim": "the finite OP2 active publication projects to the checked abstract net and matching directed-pair worklist"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_execution_exact",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the finite decoded OP1 wrapping subtraction retags its physical result and output exactly"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_refines",
+      "phase": 1,
+      "role": "abstract-reduction-step",
+      "claim": "the finite OP1 subtraction rewrite projects to the selected abstract plan's whole net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_execution_exact",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the finite decoded DUP image retags two reused slots and independently retargets two outputs"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_refines",
+      "phase": 1,
+      "role": "abstract-reduction-step",
+      "claim": "the finite DUP physical rewrite projects to the selected abstract plan's whole net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_execution_exact",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the finite decoded ERA image retires both consumed generation-zero slots and records both free indices"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_refines",
+      "phase": 1,
+      "role": "abstract-reduction-step",
+      "claim": "the finite ERA physical rewrite projects to the selected abstract empty-result net"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalTransaction.stage_stutters",
@@ -12924,6 +13008,34 @@
     "NobleFoundation.NetI64Plans.resultPorts_roundtrip",
     "NobleFoundation.NetI64Plans.BytePlan.readHeader_emit",
     "NobleFoundation.NetI64Plans.count_fits_byte",
-    "NobleFoundation.NetI64Plans.PhysicalState.portWires_appendPublications"
+    "NobleFoundation.NetI64Plans.PhysicalState.portWires_appendPublications",
+    "NobleFoundation.NetI64Plans.retargetOutputList_labels",
+    "NobleFoundation.NetI64Plans.op2_start_wires",
+    "NobleFoundation.NetI64Plans.op2_nearWires",
+    "NobleFoundation.NetI64Plans.op2_plan_boundary",
+    "NobleFoundation.NetI64Plans.op2_nbhd",
+    "NobleFoundation.NetI64Plans.op2_plan_agents",
+    "NobleFoundation.NetI64Plans.op2_plan_writes",
+    "NobleFoundation.NetI64Plans.op2_published_nearWires",
+    "NobleFoundation.NetI64Plans.op2_published_nbhd",
+    "NobleFoundation.NetI64Plans.op2_published_plan_agents",
+    "NobleFoundation.NetI64Plans.op2_published_plan_boundary",
+    "NobleFoundation.NetI64Plans.op2_published_plan_writes",
+    "NobleFoundation.NetI64Plans.op2_published_plan_pair",
+    "NobleFoundation.NetI64Plans.era_nearWires",
+    "NobleFoundation.NetI64Plans.era_nbhd",
+    "NobleFoundation.NetI64Plans.era_plan_agents",
+    "NobleFoundation.NetI64Plans.era_plan_boundary",
+    "NobleFoundation.NetI64Plans.era_plan_writes",
+    "NobleFoundation.NetI64Plans.op1_nearWires",
+    "NobleFoundation.NetI64Plans.op1_nbhd",
+    "NobleFoundation.NetI64Plans.op1_plan_agents",
+    "NobleFoundation.NetI64Plans.op1_plan_boundary",
+    "NobleFoundation.NetI64Plans.op1_plan_writes",
+    "NobleFoundation.NetI64Plans.dup_nearWires",
+    "NobleFoundation.NetI64Plans.dup_nbhd",
+    "NobleFoundation.NetI64Plans.dup_plan_agents",
+    "NobleFoundation.NetI64Plans.dup_plan_boundary",
+    "NobleFoundation.NetI64Plans.dup_plan_writes"
   ]
 }
