@@ -168151,6 +168151,14 @@
       "name": "octet_standards"
     },
     {
+      "category": "verification-tool",
+      "name": "onnx_python"
+    },
+    {
+      "category": "verification-tool",
+      "name": "onnx_runtime"
+    },
+    {
       "category": "rust-toolchain",
       "name": "quality_rust"
     },
