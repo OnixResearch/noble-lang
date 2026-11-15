@@ -12526,6 +12526,72 @@
       "claim": "a checked worklist-plan commit refines to one revision-3 abstract net step"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.readWord_emitWord",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a bounded little-endian word of arbitrary width round-trips through the independent parser"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.readMany_bytes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "exact-count byte decoding consumes precisely the emitted prefix"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.decodeSymbol_emitSymbol",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every selected NetI64 symbol tag and arbitrary I64 payload decodes identically"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.emitSymbol_payload_bounded",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any emitted numeric or staged operand fits its exact eight-byte payload"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.readEndpoint_emitEndpoint",
+      "phase": 1,
+      "role": "representation",
+      "claim": "both admitted external endpoint tags and bounded indices decode without truncation"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.readBoundary_emitBoundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a captured physical source and external endpoint decode exactly"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.resultPort_roundtrip",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a valid boundary index is distinct from the one-byte absent-port sentinel"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.readResult_emitResult",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a result symbol, donor, three ports, freshness and destination decode exactly"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.readWrite_emitWrite",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a declared three-index physical wire write decodes exactly"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.readPair_emitPair",
+      "phase": 1,
+      "role": "representation",
+      "claim": "both physical slot indices and 64-bit generations decode exactly"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.decode_emit",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the independent plan parser recovers every admissible emitted version-one plan including arbitrary I64 payloads and all counted images"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.BytePlan.decode_header",
       "phase": 1,
       "role": "representation",
@@ -12792,6 +12858,11 @@
     "NobleFoundation.PackedLayoutEncoded.decodeInputPrefix_encodeInput_append",
     "NobleFoundation.PackedLayoutEncoded.decodeInputPrefix_encodeInput",
     "NobleFoundation.NetI64Plans.insert_frame",
-    "NobleFoundation.NetI64Plans.erase_frame"
+    "NobleFoundation.NetI64Plans.erase_frame",
+    "NobleFoundation.NetI64Plans.readMany_emit",
+    "NobleFoundation.NetI64Plans.readCounted_emit",
+    "NobleFoundation.NetI64Plans.resultPorts_roundtrip",
+    "NobleFoundation.NetI64Plans.BytePlan.readHeader_emit",
+    "NobleFoundation.NetI64Plans.count_fits_byte"
   ]
 }

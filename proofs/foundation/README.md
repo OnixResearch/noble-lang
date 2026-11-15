@@ -172,6 +172,7 @@ Status words:
 |---|---|---|---|
 | Checked revision-3 worklist-plan semantics (issue #110) | `NobleFoundation.NetI64Plans.compileRule_exact_rhs`, `NobleFoundation.NetI64Plans.compileRule_op2_forward`, `NobleFoundation.NetI64Plans.compileRule_op2_reverse`, `NobleFoundation.NetI64Plans.compileRule_op1_forward`, `NobleFoundation.NetI64Plans.compileRule_op1_reverse`, `NobleFoundation.NetI64Plans.compileRule_dup_forward`, `NobleFoundation.NetI64Plans.compileRule_dup_reverse`, `NobleFoundation.NetI64Plans.compileRule_era_forward`, `NobleFoundation.NetI64Plans.compileRule_era_reverse`, `NobleFoundation.NetI64Plans.Plan.compile_commit`, `NobleFoundation.NetI64Plans.Plan.commit_worklist`, `NobleFoundation.NetI64Plans.Plan.precommit_stutters`, `NobleFoundation.NetI64Plans.Plan.commit_refines` | Kernel model over the vendored inets hash-map agent/wire state and active-pair worklist; it does not model the Rust generation-tagged vector arena, encoded byte checker, physical reuse map, or allocator | Lean plan-rule/refinement model **proved**. Rust compiler/checker, adversarial controls, and storage comparisons are separate finite **tested** evidence. Rust↔Lean/plan correspondence **open**; runtime default and #37's threshold unchanged |
 | Checked plan byte grammar and journaled physical projection (issue #110) | `NobleFoundation.NetI64Plans.BytePlan.decode_header`, `NobleFoundation.NetI64Plans.BytePlan.era_image`, `NobleFoundation.NetI64Plans.BytePlan.era_trailing_bytes_refused`, `NobleFoundation.NetI64Plans.BytePlan.era_wrong_version_refused`, `NobleFoundation.NetI64Plans.PhysicalState.stale_first_refused`, `NobleFoundation.NetI64Plans.PhysicalState.reserve_snapshot`, `NobleFoundation.NetI64Plans.PhysicalState.reserve_within_limits`, `NobleFoundation.NetI64Plans.PhysicalTransaction.stage_stutters`, `NobleFoundation.NetI64Plans.PhysicalTransaction.rollback_restores`, `NobleFoundation.NetI64Plans.PhysicalTransaction.commit_refines_if_projected` | Decoder follows the version-one Rust byte-field order; the physical slot/port/queue projector reads concrete generations and carries a rollback journal, but no theorem yet proves that decoded plan writes produce the required projected commit | Byte header, finite erasure image/control, reservation, stale queue and journal stutter/rollback **proved**; emitted-plan physical commit for all rules **open** |
+| Bounded plan writer/parser agreement (issue #110) | `NobleFoundation.NetI64Plans.BytePlan.readWord_emitWord`, `NobleFoundation.NetI64Plans.BytePlan.readMany_bytes`, `NobleFoundation.NetI64Plans.BytePlan.decodeSymbol_emitSymbol`, `NobleFoundation.NetI64Plans.BytePlan.emitSymbol_payload_bounded`, `NobleFoundation.NetI64Plans.BytePlan.readEndpoint_emitEndpoint`, `NobleFoundation.NetI64Plans.BytePlan.readBoundary_emitBoundary`, `NobleFoundation.NetI64Plans.BytePlan.resultPort_roundtrip`, `NobleFoundation.NetI64Plans.BytePlan.readResult_emitResult`, `NobleFoundation.NetI64Plans.BytePlan.readWrite_emitWrite`, `NobleFoundation.NetI64Plans.BytePlan.readPair_emitPair`, `NobleFoundation.NetI64Plans.BytePlan.decode_emit` | Independent Lean writer and parser use the selected byte-field order; admissibility requires valid field widths, counts and maximum 256 bytes. This does not establish that Rust's actual writer emits the Lean image or that the decoded image is a valid live-state rewrite | Arbitrary bounded plan-field roundtrip, including any selected I64 payload and ordered wire/worklist images, **proved**; producer correspondence and physical commit **open** |
 | Physical plan slot, boundary and queue frame (issue #110) | `NobleFoundation.NetI64Plans.PhysicalState.writeSlot_frame`, `NobleFoundation.NetI64Plans.PhysicalState.appendSlot_frame`, `NobleFoundation.NetI64Plans.PhysicalState.logicalPort_writeSlot_away`, `NobleFoundation.NetI64Plans.PhysicalState.logicalPair_writeSlot_away`, `NobleFoundation.NetI64Plans.PhysicalState.project_boundary_frame`, `NobleFoundation.NetI64Plans.PhysicalState.project_work_frame` | A slot write/append preserves unrelated physical slots, ordered outputs and queued pairs under explicit outside-footprint premises; no complete plan-footprint certificate or physical commit theorem is inferred | Local physical frame **proved**; emitted-plan whole-net refinement **open** |
 | Bounded sequential I64/Bool belt validator (issue #113) | `NobleFoundation.Belt.validate_sound`; real lowered program and exact-vector controls in the generated BeltCorpus module | symbolic graph identities over `PackedSchedule`; no Rust refinement theorem | model **proved**; real artifact corpus is finite model evidence; Rust lowerer/checker/interpreter and B2 comparisons remain separate **tested** evidence |
 | Fixed T1/T2 timing legality and ordered target outputs (issue #114) | `NobleFoundation.BeltTarget.mapReadyOutputs`, `NobleFoundation.BeltTarget.validate_sound` | the symbolic run gates graph-reference values on latency-derived completion; it does not evaluate operations or simulate belt/save state, and no Rust artifact/operand-age refinement theorem is claimed | completion-gate/order **proved** only; generated corpus and Rust lowerer/checker/interpreter cross-backend controls are separate **tested** evidence; machine-step refinement remains **open** |
@@ -3886,11 +3887,16 @@ consumed/result or captured-boundary/write footprint unchanged, respectively.
 The wire frame excludes both directions of each captured boundary edge; it
 does not assume away any otherwise valid local loop in the inets model.
 
-The same module now independently parses the exact version-one plan-byte
-field order, including little-endian words, bounded result/write arrays,
-resource reservations and the terminal commit marker. The kernel checks
-the byte header and one full erasure image; a changed version or trailing
-byte is refused in that image. A separate physical state model carries
+The same module models an independent version-one byte writer and parser,
+including little-endian words, bounded result/write arrays, resource
+reservations and the terminal commit marker. The kernel proves the
+writer/parser roundtrip for **every admissible plan field image**, including
+arbitrary `BitVec 64` operands, both external endpoint kinds, generations and
+ordered publication lists. Admissibility requires the valid field widths,
+counts and the 256-byte whole-plan bound, but does not imply the image matches
+a selected rule or live arena; the theorem is not a Rust-byte correspondence
+proof. The kernel also checks one full erasure image; a changed version or
+trailing byte is refused in that image. A separate physical state model carries
 generation-tagged slots, a free-slot inventory, ordered outputs and a queued
 pair list. Its projection derives inets agents, wires, boundary and work
 from physical fields. The representation relation uses the saved physical
@@ -3904,7 +3910,7 @@ preserve unaffected generations, queue marks, ordered boundary ports and
 active-pair entries under explicit outside-footprint premises.
 
 The Lean model, Rust implementation correspondence, and finite Rust tests are
-separate claims. The Lean proof establishes the inets worklist model only; it
+separate claims. The Lean proof establishes the inets worklist and byte-grammar models; it
 does **not** prove that the Rust byte compiler/checker or generation-tagged
 vector arena implements this model. Rust tests cover the versioned byte plans,
 independent decoder/checker, rejection controls, rollback/resource boundaries,

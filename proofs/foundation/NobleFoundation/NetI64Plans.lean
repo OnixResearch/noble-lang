@@ -286,6 +286,30 @@ private def readWord : Nat → List UInt8 → Option (Nat × List UInt8)
       let (high, tail) ← readWord size rest
       some (digit.toNat + 256 * high, tail)
 
+/-- The same least-significant-byte-first word layout as the plan writer. -/
+private def emitWord : Nat → Nat → List UInt8
+  | 0, _ => []
+  | size + 1, value =>
+      UInt8.ofNat (value % 256) :: emitWord size (value / 256)
+
+/-- The byte reader recovers every representable word and leaves the following
+bytes untouched; this holds for arbitrary 32-bit indices and 64-bit payloads. -/
+theorem BytePlan.readWord_emitWord (size value : Nat) (rest : List UInt8)
+    (bound : value < 256 ^ size) :
+    readWord size (emitWord size value ++ rest) = some (value, rest) := by
+  induction size generalizing value with
+  | zero =>
+    have hz : value = 0 := by simpa using bound
+    subst value
+    rfl
+  | succ size ih =>
+    have hdiv : value / 256 < 256 ^ size := by
+      rw [Nat.pow_succ] at bound
+      omega
+    simp [emitWord, readWord, readByte, ih (value / 256) hdiv,
+      UInt8.toNat_ofNat']
+    omega
+
 private def readMany {T : Type} (count : Nat)
     (reader : List UInt8 → Option (T × List UInt8)) :
     List UInt8 → Option (List T × List UInt8)
@@ -296,11 +320,50 @@ private def readMany {T : Type} (count : Nat)
         let (items, tail) ← readMany count reader rest
         some (item :: items, tail)
 
+/-- An exact byte count consumes precisely that prefix and preserves its
+following stream; this is used for fixed three-port result arrays. -/
+theorem BytePlan.readMany_bytes (bytes rest : List UInt8) :
+    readMany bytes.length readByte (bytes ++ rest) = some (bytes, rest) := by
+  induction bytes with
+  | nil => rfl
+  | cons byte tail ih =>
+    simp [readMany, readByte, ih]
+
+private theorem readMany_emit {T : Type}
+    (reader : List UInt8 → Option (T × List UInt8))
+    (emit : T → List UInt8)
+    (items : List T) (rest : List UInt8)
+    (sound : ∀ item ∈ items, ∀ rest, reader (emit item ++ rest) = some (item, rest)) :
+    readMany items.length reader (items.flatMap emit ++ rest) =
+      some (items, rest) := by
+  induction items with
+  | nil => rfl
+  | cons item tail ih =>
+    have hhead := sound item (by simp) (tail.flatMap emit ++ rest)
+    have htail : ∀ entry ∈ tail, ∀ suffix,
+        reader (emit entry ++ suffix) = some (entry, suffix) := by
+      intro entry he suffix
+      exact sound entry (List.mem_cons_of_mem _ he) suffix
+    simp [readMany, List.flatMap_cons, List.append_assoc, hhead, ih htail]
+
 private def readCounted {T : Type} (limit : Nat)
     (reader : List UInt8 → Option (T × List UInt8))
     (bytes : List UInt8) : Option (List T × List UInt8) := do
   let (count, rest) ← readByte bytes
   if count.toNat ≤ limit then readMany count.toNat reader rest else none
+
+private theorem readCounted_emit {T : Type}
+    (limit : Nat) (reader : List UInt8 → Option (T × List UInt8))
+    (emit : T → List UInt8)
+    (items : List T) (rest : List UInt8)
+    (sound : ∀ item ∈ items, ∀ suffix,
+      reader (emit item ++ suffix) = some (item, suffix))
+    (bound : items.length ≤ limit) (byteBound : items.length < UInt8.size) :
+    readCounted limit reader
+      (UInt8.ofNat items.length :: (items.flatMap emit ++ rest)) =
+      some (items, rest) := by
+  simp [readCounted, readByte, UInt8.toNat_ofNat_of_lt' byteBound,
+    bound, readMany_emit reader emit items rest sound]
 
 private def decodeSymbol (tag : UInt8) (payload : Nat) : Option NetSym :=
   match tag.toNat with
@@ -317,6 +380,42 @@ private def decodeSymbol (tag : UInt8) (payload : Nat) : Option NetSym :=
   | 10 => if payload == 0 then some .era else none
   | _ => none
 
+private def opTag : Op → Nat
+  | .add => 0
+  | .sub => 1
+  | .mul => 2
+  | .eq => 3
+
+private def emitSymbol : NetSym → UInt8 × Nat
+  | .num value => (0, value.toNat)
+  | .op2 op => (UInt8.ofNat (1 + opTag op), 0)
+  | .op1 op first => (UInt8.ofNat (5 + opTag op), first.toNat)
+  | .dup => (9, 0)
+  | .era => (10, 0)
+
+/-- Every selected revision-3 result symbol has the same tag and payload on
+the emitted byte side and the independent parser side, for every I64 value. -/
+theorem BytePlan.decodeSymbol_emitSymbol (symbol : NetSym) :
+    decodeSymbol (emitSymbol symbol).1 (emitSymbol symbol).2 = some symbol := by
+  cases symbol with
+  | num value => simp [emitSymbol, decodeSymbol]
+  | op2 op => cases op <;> rfl
+  | op1 op first => cases op <;> simp [emitSymbol, decodeSymbol, opTag]
+  | dup => rfl
+  | era => rfl
+
+/-- All emitted numeric symbols fit the exact eight-byte payload without
+truncation, including arbitrary staged first operands. -/
+theorem BytePlan.emitSymbol_payload_bounded (symbol : NetSym) :
+    (emitSymbol symbol).2 < 256 ^ 8 := by
+  have width : (256 : Nat) ^ 8 = 2 ^ 64 := by decide
+  cases symbol with
+  | num value => simpa [emitSymbol, width] using value.isLt
+  | op2 op => simp [emitSymbol]
+  | op1 op first => simpa [emitSymbol, width] using first.isLt
+  | dup => simp [emitSymbol]
+  | era => simp [emitSymbol]
+
 private def readEndpoint (bytes : List UInt8) : Option ((Nat × Nat × Nat) × List UInt8) := do
   let (tag, rest) ← readByte bytes
   if tag == 0 then do
@@ -328,12 +427,98 @@ private def readEndpoint (bytes : List UInt8) : Option ((Nat × Nat × Nat) × L
     some ((1, output, 0), rest)
   else none
 
+private def emitEndpoint : Nat × Nat × Nat → List UInt8
+  | (0, slot, port) => 0 :: (emitWord 4 slot ++ [UInt8.ofNat port])
+  | (1, output, _) => 1 :: emitWord 4 output
+  | _ => []
+
+private def validEndpoint (endpoint : Nat × Nat × Nat) : Prop :=
+  (endpoint.1 = 0 ∧ endpoint.2.1 < 256 ^ 4 ∧ endpoint.2.2 < UInt8.size) ∨
+  (endpoint.1 = 1 ∧ endpoint.2.1 < 256 ^ 4 ∧ endpoint.2.2 = 0)
+
+/-- The two admitted external endpoint tags (agent port or ordered output)
+round-trip without losing the port byte or output index. -/
+theorem BytePlan.readEndpoint_emitEndpoint (endpoint : Nat × Nat × Nat)
+    (rest : List UInt8) (valid : validEndpoint endpoint) :
+    readEndpoint (emitEndpoint endpoint ++ rest) = some (endpoint, rest) := by
+  rcases endpoint with ⟨tag, slot, port⟩
+  rcases valid with ⟨h, hs, hp⟩ | ⟨h, hs, hp⟩
+  · change tag = 0 at h
+    subst tag
+    simp [emitEndpoint, readEndpoint, readByte, List.append_assoc,
+      BytePlan.readWord_emitWord, hs, UInt8.toNat_ofNat_of_lt' hp]
+  · change tag = 1 at h
+    subst tag
+    change port = 0 at hp
+    subst port
+    simp [emitEndpoint, readEndpoint, readByte,
+      BytePlan.readWord_emitWord, hs]
+
 private def readBoundary (bytes : List UInt8) :
     Option (((Nat × Nat) × (Nat × Nat × Nat)) × List UInt8) := do
   let (slot, rest) ← readWord 4 bytes
   let (port, rest) ← readByte rest
   let (endpoint, rest) ← readEndpoint rest
   some (((slot, port.toNat), endpoint), rest)
+
+private def emitBoundary
+    (boundary : (Nat × Nat) × (Nat × Nat × Nat)) : List UInt8 :=
+  emitWord 4 boundary.1.1 ++
+    [UInt8.ofNat boundary.1.2] ++ emitEndpoint boundary.2
+
+/-- A captured external boundary tuple preserves its source port and exact
+endpoint, for arbitrary physical indices within the encoded widths. -/
+theorem BytePlan.readBoundary_emitBoundary
+    (boundary : (Nat × Nat) × (Nat × Nat × Nat)) (rest : List UInt8)
+    (hslot : boundary.1.1 < 256 ^ 4)
+    (hport : boundary.1.2 < UInt8.size)
+    (hendpoint : validEndpoint boundary.2) :
+    readBoundary (emitBoundary boundary ++ rest) = some (boundary, rest) := by
+  rcases boundary with ⟨⟨slot, port⟩, endpoint⟩
+  simp [emitBoundary, readBoundary, readByte, List.append_assoc,
+    BytePlan.readWord_emitWord, hslot, UInt8.toNat_ofNat_of_lt' hport,
+    BytePlan.readEndpoint_emitEndpoint, hendpoint]
+
+private def emitResultPort (port : Option Nat) : UInt8 :=
+  UInt8.ofNat (port.getD 255)
+
+private def decodeResultPort (port : UInt8) : Option Nat :=
+  if port.toNat == 255 then none else some port.toNat
+
+/-- A declared result-to-boundary index must be below the reserved missing-port
+sentinel; every such index survives the exact one-byte encoding. -/
+theorem BytePlan.resultPort_roundtrip (port : Option Nat)
+    (valid : ∀ value, port = some value → value < 255) :
+    decodeResultPort (emitResultPort port) = port := by
+  cases port with
+  | none => rfl
+  | some value =>
+    have h : value < 255 := valid value rfl
+    have hv : value < UInt8.size := by
+      have hsize : UInt8.size = 256 := by decide
+      omega
+    simp [emitResultPort, decodeResultPort, UInt8.toNat_ofNat_of_lt' hv,
+      Nat.ne_of_lt h]
+
+private theorem resultPorts_roundtrip (ports : List (Option Nat))
+    (valid : ∀ port ∈ ports, ∀ value, port = some value → value < 255) :
+    (ports.map emitResultPort).map decodeResultPort = ports := by
+  induction ports with
+  | nil => rfl
+  | cons port rest ih =>
+    have hp := BytePlan.resultPort_roundtrip port (valid port (by simp))
+    have hr := ih (by
+      intro other ho value hv
+      exact valid other (List.mem_cons_of_mem _ ho) value hv)
+    simp [hp, hr]
+
+private def emitResult (result : Bool × Nat × NetSym × Nat × List (Option Nat)) :
+    List UInt8 :=
+  let (fresh, slot, symbol, donor, ports) := result
+  let (tag, payload) := emitSymbol symbol
+  [if fresh then 1 else 0] ++ emitWord 4 slot ++
+    [tag] ++ emitWord 8 payload ++ emitWord 4 donor ++
+    ports.map emitResultPort
 
 private def readResult (bytes : List UInt8) :
     Option ((Bool × Nat × NetSym × Nat × List (Option Nat)) × List UInt8) := do
@@ -345,9 +530,29 @@ private def readResult (bytes : List UInt8) :
     let symbol ← decodeSymbol tag payload
     let (donor, rest) ← readWord 4 rest
     let (ports, rest) ← readMany 3 readByte rest
-    let ports := ports.map fun value =>
-      if value.toNat == 255 then none else some value.toNat
+    let ports := ports.map decodeResultPort
     some ((fresh == 1, slot, symbol, donor, ports), rest)
+
+/-- A checked emitted result has the same fresh flag, physical destination,
+symbol and arbitrary I64 payload, donor and three boundary-index bytes when
+decoded by the independent byte reader. -/
+theorem BytePlan.readResult_emitResult (fresh : Bool) (slot : Nat)
+    (symbol : NetSym) (donor : Nat) (ports : List (Option Nat))
+    (rest : List UInt8)
+    (hslot : slot < 256 ^ 4) (hdonor : donor < 256 ^ 4)
+    (hlen : ports.length = 3)
+    (hports : ∀ port ∈ ports, ∀ value, port = some value → value < 255) :
+    readResult (emitResult (fresh, slot, symbol, donor, ports) ++ rest) =
+      some ((fresh, slot, symbol, donor, ports), rest) := by
+  have hword := BytePlan.emitSymbol_payload_bounded symbol
+  have hread : readMany 3 readByte (ports.map emitResultPort ++ rest) =
+      some (ports.map emitResultPort, rest) := by
+    simpa [hlen] using BytePlan.readMany_bytes (ports.map emitResultPort) rest
+  have hround := resultPorts_roundtrip ports hports
+  cases fresh <;>
+    simp [emitResult, readResult, readByte, List.append_assoc,
+      BytePlan.readWord_emitWord, hslot, hdonor, hword,
+      BytePlan.decodeSymbol_emitSymbol, hread, hround]
 
 private def readWrite (bytes : List UInt8) :
     Option ((Nat × Nat × Nat) × List UInt8) := do
@@ -355,6 +560,24 @@ private def readWrite (bytes : List UInt8) :
   let (port, rest) ← readByte rest
   let (boundary, rest) ← readByte rest
   some ((result.toNat, port.toNat, boundary.toNat), rest)
+
+private def emitWrite (write : Nat × Nat × Nat) : List UInt8 :=
+  [UInt8.ofNat write.1, UInt8.ofNat write.2.1,
+    UInt8.ofNat write.2.2]
+
+/-- Each declared internal or reciprocal external connection write carries
+three untruncated indices in the version-one byte format. -/
+theorem BytePlan.readWrite_emitWrite (write : Nat × Nat × Nat)
+    (rest : List UInt8)
+    (result : write.1 < UInt8.size)
+    (port : write.2.1 < UInt8.size)
+    (boundary : write.2.2 < UInt8.size) :
+    readWrite (emitWrite write ++ rest) = some (write, rest) := by
+  rcases write with ⟨r, p, b⟩
+  simp [emitWrite, readWrite, readByte,
+    UInt8.toNat_ofNat_of_lt' result,
+    UInt8.toNat_ofNat_of_lt' port,
+    UInt8.toNat_ofNat_of_lt' boundary]
 
 private def readPair (bytes : List UInt8) :
     Option ((Nat × Nat × Nat × Nat) × List UInt8) := do
@@ -364,9 +587,95 @@ private def readPair (bytes : List UInt8) :
   let (secondGeneration, rest) ← readWord 8 rest
   some ((first, firstGeneration, second, secondGeneration), rest)
 
+private def emitPair (pair : Nat × Nat × Nat × Nat) : List UInt8 :=
+  emitWord 4 pair.1 ++ emitWord 8 pair.2.1 ++
+  emitWord 4 pair.2.2.1 ++ emitWord 8 pair.2.2.2
+
+/-- A physically queued pair's two 32-bit indices and two 64-bit generations
+round-trip through exactly the on-wire tuple used by the plan compiler. -/
+theorem BytePlan.readPair_emitPair (pair : Nat × Nat × Nat × Nat)
+    (rest : List UInt8)
+    (first : pair.1 < 256 ^ 4)
+    (firstGeneration : pair.2.1 < 256 ^ 8)
+    (second : pair.2.2.1 < 256 ^ 4)
+    (secondGeneration : pair.2.2.2 < 256 ^ 8) :
+    readPair (emitPair pair ++ rest) = some (pair, rest) := by
+  rcases pair with ⟨slotA, genA, slotB, genB⟩
+  simp [emitPair, readPair, List.append_assoc, BytePlan.readWord_emitWord,
+    first, firstGeneration, second, secondGeneration]
+
 private def readHeader (bytes : List UInt8) : Option (List UInt8) :=
   if bytes.take 5 == ([78, 80, 76, 78, 1] : List UInt8) &&
       bytes.length ≥ 5 then some (bytes.drop 5) else none
+
+/-- Emit the same version-one field order as the selected Rust writer. No
+truncation is claimed unless the stated admissibility bounds hold. -/
+def BytePlan.emit (plan : BytePlan) : List UInt8 :=
+  [78, 80, 76, 78, 1, if plan.reuse then 0 else 1, plan.opcode] ++
+  emitPair plan.pair ++
+  [plan.action.1, plan.action.2, UInt8.ofNat plan.boundaries.length] ++
+  plan.boundaries.flatMap emitBoundary ++
+  [UInt8.ofNat plan.results.length] ++
+  plan.results.flatMap emitResult ++
+  [UInt8.ofNat plan.writes.length] ++
+  plan.writes.flatMap emitWrite ++
+  [UInt8.ofNat plan.externalWrites.length] ++
+  plan.externalWrites.flatMap emitWrite ++
+  emitWord 4 plan.arenaReservation ++
+  emitWord 4 plan.scratchReservation ++
+  emitWord 4 plan.worklistReservation ++
+  [UInt8.ofNat plan.publications.length] ++
+  plan.publications.flatMap emitPair ++ [199]
+
+private def validPair (pair : Nat × Nat × Nat × Nat) : Prop :=
+  pair.1 < 256 ^ 4 ∧ pair.2.1 < 256 ^ 8 ∧
+  pair.2.2.1 < 256 ^ 4 ∧ pair.2.2.2 < 256 ^ 8
+
+private def validBoundary
+    (boundary : (Nat × Nat) × (Nat × Nat × Nat)) : Prop :=
+  boundary.1.1 < 256 ^ 4 ∧ boundary.1.2 < UInt8.size ∧
+  validEndpoint boundary.2
+
+private def validResult
+    (result : Bool × Nat × NetSym × Nat × List (Option Nat)) : Prop :=
+  result.2.1 < 256 ^ 4 ∧ result.2.2.2.1 < 256 ^ 4 ∧
+  result.2.2.2.2.length = 3 ∧
+  ∀ port ∈ result.2.2.2.2, ∀ value, port = some value → value < 255
+
+private def validWrite (write : Nat × Nat × Nat) : Prop :=
+  write.1 < UInt8.size ∧ write.2.1 < UInt8.size ∧
+  write.2.2 < UInt8.size
+
+/-- Exact finite bounds of an emitted plan, not an assertion about its rule
+validity: an independently checked image must additionally match the live
+selected pair, captured boundary, result symbols and write inventory. -/
+structure BytePlan.Admissible (plan : BytePlan) : Prop where
+  size : plan.emit.length ≤ 256
+  actionFirst : plan.action.1.toNat ≤ 1
+  actionSecond : plan.action.2.toNat ≤ 1
+  pair : validPair plan.pair
+  boundaries : plan.boundaries.length ≤ 2
+  boundariesValid : ∀ boundary ∈ plan.boundaries, validBoundary boundary
+  results : plan.results.length ≤ 2
+  resultsValid : ∀ result ∈ plan.results, validResult result
+  writes : plan.writes.length ≤ 2
+  writesValid : ∀ write ∈ plan.writes, validWrite write
+  externalWrites : plan.externalWrites.length ≤ 2
+  externalWritesValid : ∀ write ∈ plan.externalWrites, validWrite write
+  arena : plan.arenaReservation < 256 ^ 4
+  scratch : plan.scratchReservation < 256 ^ 4
+  worklist : plan.worklistReservation < 256 ^ 4
+  publications : plan.publications.length ≤ 2
+  publicationsValid : ∀ pair ∈ plan.publications, validPair pair
+
+private theorem BytePlan.readHeader_emit (plan : BytePlan) :
+    readHeader plan.emit = some (plan.emit.drop 5) := by
+  simp [readHeader, BytePlan.emit]
+
+private theorem count_fits_byte {count : Nat} (h : count ≤ 2) :
+    count < UInt8.size := by
+  have hsize : UInt8.size = 256 := by decide
+  omega
 
 /-- Decode the entire version-one byte grammar, rejecting malformed counts,
 invalid symbols, noncanonical flags, missing commit markers and trailing bytes.
@@ -407,6 +716,87 @@ def BytePlan.decode (bytes : List UInt8) : Option BytePlan := do
             publications
           }
         else none
+
+/-- The independent parser decodes every bounded version-one field image
+exactly, including arbitrary I64 staged operands, both endpoint tags, reused
+or freshly allocated result slots, exact writes, reservations and queue
+publications. This is byte-format agreement, not a physical commit proof. -/
+theorem BytePlan.decode_emit (plan : BytePlan)
+    (valid : plan.Admissible) :
+    BytePlan.decode plan.emit = some plan := by
+  have pairSound (suffix : List UInt8) :
+      readPair (emitPair plan.pair ++ suffix) = some (plan.pair, suffix) :=
+    BytePlan.readPair_emitPair plan.pair suffix
+      valid.pair.1 valid.pair.2.1 valid.pair.2.2.1 valid.pair.2.2.2
+  have boundarySound (suffix : List UInt8) :
+      readCounted 2 readBoundary
+        (UInt8.ofNat plan.boundaries.length ::
+          (plan.boundaries.flatMap emitBoundary ++ suffix)) =
+        some (plan.boundaries, suffix) :=
+    readCounted_emit 2 readBoundary emitBoundary plan.boundaries suffix
+      (by
+        intro boundary hb tail
+        rcases valid.boundariesValid boundary hb with ⟨hs, hp, he⟩
+        exact BytePlan.readBoundary_emitBoundary boundary tail hs hp he)
+      valid.boundaries (count_fits_byte valid.boundaries)
+  have resultSound (suffix : List UInt8) :
+      readCounted 2 readResult
+        (UInt8.ofNat plan.results.length ::
+          (plan.results.flatMap emitResult ++ suffix)) =
+        some (plan.results, suffix) :=
+    readCounted_emit 2 readResult emitResult plan.results suffix
+      (by
+        intro result hr tail
+        rcases result with ⟨fresh, slot, symbol, donor, ports⟩
+        rcases valid.resultsValid _ hr with ⟨hs, hd, hl, hp⟩
+        exact BytePlan.readResult_emitResult fresh slot symbol donor ports
+          tail hs hd hl hp)
+      valid.results (count_fits_byte valid.results)
+  have writeSound (suffix : List UInt8) :
+      readCounted 2 readWrite
+        (UInt8.ofNat plan.writes.length ::
+          (plan.writes.flatMap emitWrite ++ suffix)) =
+        some (plan.writes, suffix) :=
+    readCounted_emit 2 readWrite emitWrite plan.writes suffix
+      (by
+        intro write hw tail
+        rcases valid.writesValid write hw with ⟨hr, hp, hb⟩
+        exact BytePlan.readWrite_emitWrite write tail hr hp hb)
+      valid.writes (count_fits_byte valid.writes)
+  have externalSound (suffix : List UInt8) :
+      readCounted 2 readWrite
+        (UInt8.ofNat plan.externalWrites.length ::
+          (plan.externalWrites.flatMap emitWrite ++ suffix)) =
+        some (plan.externalWrites, suffix) :=
+    readCounted_emit 2 readWrite emitWrite plan.externalWrites suffix
+      (by
+        intro write hw tail
+        rcases valid.externalWritesValid write hw with ⟨hr, hp, hb⟩
+        exact BytePlan.readWrite_emitWrite write tail hr hp hb)
+      valid.externalWrites (count_fits_byte valid.externalWrites)
+  have publicationSound (suffix : List UInt8) :
+      readCounted 2 readPair
+        (UInt8.ofNat plan.publications.length ::
+          (plan.publications.flatMap emitPair ++ suffix)) =
+        some (plan.publications, suffix) :=
+    readCounted_emit 2 readPair emitPair plan.publications suffix
+      (by
+        intro pair hp tail
+        rcases valid.publicationsValid pair hp with ⟨ha, hga, hb, hgb⟩
+        exact BytePlan.readPair_emitPair pair tail ha hga hb hgb)
+      valid.publications (count_fits_byte valid.publications)
+  have hsize : ¬ plan.emit.length > 256 := Nat.not_lt.mpr valid.size
+  have hmode : ((if plan.reuse then (0 : UInt8) else 1) == 0) = plan.reuse := by
+    cases plan.reuse <;> decide
+  have hmodeRange : (if plan.reuse then (0 : UInt8) else 1).toNat ≤ 1 := by
+    cases plan.reuse <;> decide
+  unfold BytePlan.decode
+  simp only [hsize, ↓reduceIte]
+  simp [BytePlan.emit, readHeader, readByte,
+    List.append_assoc, hmode, hmodeRange, valid.actionFirst, valid.actionSecond,
+    pairSound, boundarySound, resultSound, writeSound, externalSound,
+    publicationSound, BytePlan.readWord_emitWord, valid.arena,
+    valid.scratch, valid.worklist]
 
 /-- Every accepted byte plan has the exact version-one magic and version header. -/
 theorem BytePlan.decode_header {bytes : List UInt8} {plan : BytePlan}
