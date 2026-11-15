@@ -13,7 +13,7 @@ let
     "verification/worker-send/peer/Cargo.lock"
   ];
   expectedLocks = {
-    "Cargo.lock" = "87a504999bc56d5080cd6fc080bb8fe06b86f18ddc446de4065032f1ddbfb63b";
+    "Cargo.lock" = "582a7c91d10c3a6cbdaec2968b61e878821acc9781dfb84d53df096a778a862c";
     "verification/m5/peer/Cargo.lock" = "0d5f4ffc5f42646cc25c539e46c565b95903813ef4cc0fe5256358b3cbf42435";
     "verification/m6/peer/Cargo.lock" = "1280a5944c2a3cd3c37cddd660ac789cfadf165d863a3c71d67e46fad8eb8fd5";
     "verification/m7/peer/Cargo.lock" = "6a90a8cccc740d6c6f8d4126ee3ca7190cdb948d13b364ed91f7af8c300b8b80";
