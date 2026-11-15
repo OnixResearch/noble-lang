@@ -1,0 +1,20 @@
+{
+  "schema": "noble-independent-replay-historical-admission-batch9/v1",
+  "selected_source_commit": "93505d5b1df4ab22614432380681038568b26a9c",
+  "selected_lean": "4.35.0",
+  "selected_export_format": "3.1.0",
+  "selected_checker_profile_sha256": "6ac82ee5ae13c96d111402a76ff5f773efa5f52bc6d8b5dfe20d9f04cdfabb26",
+  "selected_statement_profile_sha256": "7e2859d7485adbcc4d97ef89421aa0cfa2fd4317ef91271c95ef38b3e2ff98d0",
+  "frozen_criteria_sha256": "a417e324b12cd6ca79f75671a468efa0c091ff5907be9fb6e73e49fdf41a5840",
+  "raw_admission_report_sha256": "facf34f21f1b1770c1cc8a2269b57ced3a1022f28c11da1c7cd29169b5f3a5aa",
+  "raw_admission_report_scratch_suffix": "b9-receipt-admission.json",
+  "holds": true,
+  "current": {"decision": "accepted", "checker_success_counted": true, "raw_receipt_sha256": "5e8935eaf599be2a0babd478d04b6da122b3e2d7bd78b9be0c464cbcc4bf21f7", "mismatches": []},
+  "historical": {
+    "decision": "receipt-refused",
+    "checker_success_counted": false,
+    "raw_receipt_sha256": "94706cc5884d765f864f4f48dbf04cd954b17c80b4bd0c94f914562931f43040",
+    "mismatch_fields": ["source_commit", "toolchain.lean_version", "toolchain.lean_githash", "toolchain.release", "toolchain.lean_sha256", "toolchain.lake_sha256", "toolchain.leanexport_sha256", "checker_profile_sha256", "statement_profile_sha256", "checkers.nanoda.binary_sha256", "checkers.con-leche.binary_sha256", "checkers.con-ron.binary_sha256", "checkers.lean4lean.binary_sha256", "checkers.ocaml4lean.binary_sha256", "roots.count", "statements.NobleFoundation.toInt_add.count", "statements.NobleFoundation.toInt_add.environment_sha256", "statements.NobleFoundation.toInt_add.pinned_sha256", "statements.NobleFoundation.LinkBoundary.vertical_simulation_compose.count", "statements.NobleFoundation.LinkBoundary.vertical_simulation_compose.environment_sha256", "statements.NobleFoundation.LinkBoundary.vertical_simulation_compose.pinned_sha256", "roots.Nat.add_comm", "statements.Nat.add_comm.count", "statements.Nat.add_comm.environment_sha256", "statements.Nat.add_comm.pinned_sha256"]
+  },
+  "claim_boundary": "The historical Lean 4.31 receipt was compared under exactly the same externally selected 4.35 source, checker, tool and statement profile as a fresh accepted multi-checker control. It was refused, not reinterpreted as current success."
+}

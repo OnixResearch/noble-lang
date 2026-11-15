@@ -168,3 +168,35 @@ the cyclic custom-axiom fixture, and a new version-specific native control is fr
 repeat run. Rebuild the exact pinned candidate in its isolated toolchain, retain all four libraries
 and every source module, and rerun the full comparison with the same independent inventory,
 controls, wall/RSS accounting and strict GO gate. Do not promote a faster but incomplete audit.
+
+## (f) Batch-nine remaining issue #62 controls
+
+The [criteria](batch9-criteria.json) were committed before the measurements. Source inputs
+remained Lean 4.35.0, export format 3.1.0 and exactly `propext`, `Classical.choice`, `Quot.sound`.
+The selected five checker identities were not silently replaced. The local fixture runner was
+amended after *recorded* pre-success resource, lint and malformed-NDJSON refusals; exact failed
+receipt hashes and their predecessor commits are in
+[`compiler217/cases.json`](compiler217/cases.json) and the final
+[local-fixture receipt](receipts/2026-11-14/compiler217-batch9.json). None of those malformed or
+resource outcomes were counted as kernel verdicts.
+
+| Remaining item | Decision and evidence |
+|---|---|
+| compiler-lab #217 eta and native-axiom fixtures | Seven **local equivalents passed** at source `3ddce2d`: function/structure eta positives and separate parseable kernel-rejected counterexamples, ordinary proof accepted, direct and private-helper-transitive `native_decide` forbidden under the strict policy. Both checkers consumed the same export bytes per case. **NO-GO for consuming the actual upstream shared corpus:** [#217](https://github.com/brittonr/compiler-lab/issues/217) has not published a source revision, manifest or fixture bytes. Local equivalents are explicitly not its corpus. See the [case receipt](receipts/2026-11-14/compiler217-batch9.json). |
+| Independent protected replay and amended approval | **DONE:** [checked challenge proposal](receipts/2026-11-14/protected-batch9.json) at `92763fe`, separately [committed approval](protected/amendment/approval.json) at `e08ae2c`, then built the amended solution. Nanoda and Lean's official kernel replayed the old/new challenges and real/alternate/amended proof exports, all with positive eligible declarations and permitted axioms. The 32 and 64 approvals cross-refuse `Protected.threshold`; all eight old verdicts remain. The official count is derived from the parsed input, not claimed as checker stdout. No `lake comparator` parity is claimed. |
+| Stale 4.31 acceptance versus current cohort | **DONE:** [current 4.35 five-checker replay](receipts/2026-11-14/multi-batch9.json) at clean source `93505d5` passed all three roots and 25 checks. The [same admission predicate](receipts/2026-11-14/historical-admission-batch9.json) accepts that byte-pinned current receipt and refuses the retained 4.31 receipt on source commit, Lean tool/version, checker digests, statement profile and missing third root. Historical success is not current evidence. |
+| Source-build provenance for five configured checkers | **DONE for a source-built, selected-root compatibility lane:** [`source-provenance.json`](source-provenance.json) pins every source revision, tree and build recipe; the [receipt](receipts/2026-11-14/source-builds-batch9.json) records all five successful exact-source builds and paired positive/semantic-negative runs on the same Init export. The original two false harness refusals (Git submodule gitlink, a whitespace-trimmed reviewed patch) are bound to the raw prior receipt, not hidden. **NO-GO for byte-provenance of four release-bundled executables or full-root source-built parity:** their rebuilt digests differ; only source-built OCaml4Lean matches its configured binary pin. The full-root multi-checker receipt still executes release binaries, not the four rebuilt ones. |
+
+The independent official kernel replay is a second kernel execution of exported proof terms,
+not a separately designed external checker. A positive count does not prove checker soundness,
+and a checker rejection is not a mathematical refutation. The local source-built control
+demonstrates compatibility for its selected ordinary root and a semantic negative only; it
+must not be used as a substitute for the full foundation corpus or as a byte derivation of
+the Lean release bundle.
+
+**Reopen conditions:** obtain the published #217 shared-corpus manifest and immutable fixture
+bytes before claiming upstream consumption; run a separately frozen full-root multi-checker
+cohort from the source-built binaries (or reproduce release-bundle digests exactly) before
+promoting release provenance; rerun stale-receipt admission whenever the selected source,
+checker, toolchain or statements change. Do not lower root or memory requirements to make a
+replay fit on a smaller machine.

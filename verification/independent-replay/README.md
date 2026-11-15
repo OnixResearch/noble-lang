@@ -92,8 +92,50 @@ proofs passed; the weakened predicate, changed imported semantics, wrong stateme
 invalid proof, and missing-definition controls were classified separately. `lake comparator` was not
 run because `bwrap` is absent from the execution path; the receipt records that the lane used its
 exported-definition-closure fallback, which is not a claim of comparator parity. This protected
-fixture continues to use the policy-selected release binaries; source-built OCaml4Lean is specific to
-the multi-checker lane.
+fixture continues to use the policy-selected release Nanoda and Lean's official kernel; the
+source-built OCaml checker is used by the multi-checker lane.
+
+### Frozen issue #62 batch-nine follow-up
+
+The [criteria](batch9-criteria.json) predate these runs. The [local compiler-lab #217 equivalents](compiler217/cases.json)
+and [receipt](receipts/2026-11-14/compiler217-batch9.json) retain function and structure eta
+positives and kernel-rejected counterexamples through the **same** official/Nanoda export, plus
+ordinary `decide`, direct `native_decide`, and a transitive private-helper native axiom under
+the strict three-axiom policy. Nanoda refuses both native exports as forbidden axioms; Lean's
+unrestricted kernel can accept them, so its acceptance never overrides the policy. An initial
+virtual-address-space refusal, an unused-binder warning, and two malformed mutation encodings
+were retained as explicit pre-success errata, not counted as semantic rejection. The compiler-lab
+issue has not published source-pinned shared fixture bytes: upstream **shared-corpus replay is
+NO-GO**, regardless of the seven local results.
+
+The protected [receipt](receipts/2026-11-14/protected-batch9.json) preserves all eight original
+verdicts and replays the old challenge, both valid proofs, a newly selected bound-64 challenge,
+and its amended proof with Nanoda and Lean's official kernel. The new challenge alone passed
+both kernels before its [separate approval](protected/amendment/approval.json) was committed;
+the amended solution was built afterwards. Both approvals refuse the other's `Protected.threshold`
+semantics. Lean's official checker prints no count: the positive eligible-declaration number is
+derived from the parsed export after the checker's quotient exclusions, never attributed to
+checker stdout. These are exported-closure comparisons, not `lake comparator`.
+
+All five configured checker source revisions, Git trees, licenses, pinned compilers, build
+commands, built-binary digests, positive counts, and semantic-negative refusals are in
+[`source-provenance.json`](source-provenance.json) and the
+[source-build receipt](receipts/2026-11-14/source-builds-batch9.json). The four rebuilt
+release-bundled checkers differ bytewise from their release executables: the source-built
+compatibility control **does not** prove those release binaries came from the pinned sources or
+that they pass the full foundation corpus. The [current full-root multi-checker control](receipts/2026-11-14/multi-batch9.json)
+uses the release executables plus source-built OCaml, retains 25 passed checks, and did not
+reduce its roots or memory requirements. The [historical admission control](receipts/2026-11-14/historical-admission-batch9.json)
+accepts the new clean-source receipt while explicitly refusing the retained Lean 4.31 receipt
+under the very same source/tool/checker/statement profile.
+
+Run the opt-in local corpus with `node verification/independent-replay/compiler217.mjs --work
+<new-outside-repo-directory>`. The source-build runner requires its pinned Rust, C, Nix and Git
+executables as explicit `--rust-bin`, `--cc-bin`, `--nix`, `--git` arguments and writes raw logs
+outside the repository. `protected.mjs --freeze-amendment` must run on a committed challenge
+before separately committing an `approval.json`; its full mode then checks the proof and both
+cross-approval refusals. The exact boundary and reopen decisions are in
+[`decision.md`](decision.md#f-batch-nine-remaining-issue-62-controls).
 
 Each older dated section is a historical observation at its named source/toolchain revision. New
 clean-tree runs are recorded under `receipts/<date>/`; they supplement, rather than rewrite, retained

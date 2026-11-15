@@ -1,0 +1,22 @@
+{
+  "schema": "noble-independent-replay-source-builds-batch9/v1",
+  "source_commit": "93505d5b1df4ab22614432380681038568b26a9c",
+  "raw_receipt_sha256": "937b80266d64f168368ba322ad4af9ee0c128fc0b48620b22c80197031f74fcb",
+  "raw_receipt_scratch_suffix": "b9-source-builds-2.json",
+  "raw_command_logs_scratch_suffix": "b9-source-builds-2-logs/",
+  "selected_profile": {"lean": "4.35.0", "export_format": "3.1.0", "module": "Init", "root": "Nat.add_comm"},
+  "positive_export_sha256": "6aa6de21984e6c060d8d7c5e674ced9766553089c0568783753564bbf4f2617f",
+  "negative_export_sha256": "1b46cc9dca177cc85aa268e70472b5e6418633b5e6b9954e451fe36a50d0dd26",
+  "negative_mutation": "Only the theorem proof expression index was replaced with its type expression index in otherwise unchanged valid NDJSON; every checker emitted a semantic rejection, not unsupported/parse/resource refusal.",
+  "outcome": "GO",
+  "source_built_checkers": [
+    {"id": "nanoda", "source_revision": "3a2407216ee84a75f9e1aead6803d0578be06ae7", "source_tree_git_sha1": "e806ef6d8ca32d0b37dde01bc737eab3a22482b0", "binary_sha256": "a2346926180645e5f2589756df4084ca8c1337212e6887474f491c946b4416aa", "release_digest_match": false, "positive_checked": 52, "negative": "kernel-rejection"},
+    {"id": "con-leche", "source_revision": "67f04630d88718e81aa4d07ab64501f68f105398", "source_tree_git_sha1": "1daed3b54f0c43accd953145db2db4d82756720d", "binary_sha256": "be2c50408d7e8100449785861cc53fb0fca5f81e325c16717116b27142f3de6f", "release_digest_match": false, "positive_checked": 37, "negative": "kernel-rejection"},
+    {"id": "con-ron", "source_revision": "dd8d8218892c871276b1e569d3decbb368bba1b6", "source_tree_git_sha1": "34597e3c2599de72584bb38a98449b2ed04313b6", "binary_sha256": "8598b60171a56c7e26378881e6330ddd9b6506672b6290844a652053ffbd2cd3", "release_digest_match": false, "positive_checked": 37, "negative": "kernel-rejection"},
+    {"id": "lean4lean", "source_revision": "456abe5015fc8f54ea595561fc39523d7733c93f", "source_tree_git_sha1": "4b31419c5329f16357ae287d46667b69ded73fa1", "binary_sha256": "048ed42147cf84be58bdb799dd16466a4cedf4414b13ffd32a124b07bc0184e2", "release_digest_match": false, "positive_checked": 37, "negative": "kernel-rejection"},
+    {"id": "ocaml4lean", "source_revision": "6f94226df5b91e51af692d05e00b001ee8e0f2fd", "source_tree_git_sha1": "14c2c13ed4156135c48a30feb36b001fd74b16f4", "binary_sha256": "89700edec6f6d9bcf73a20a4a40a4f84c2d62e305bf7b96f9e9b487fb4cc38c1", "release_digest_match": true, "positive_checked": 52, "negative": "kernel-rejection"}
+  ],
+  "license": "Each source checkout had a pinned Apache-2.0 LICENSE file; exact source commit, Git tree, tracked-file manifest, compiler/build command, executable digest, replay argv, exit and raw log hashes are in the bound raw receipt.",
+  "prior_harness_refusal": {"raw_receipt_sha256": "dd80be206796580182718a6e906eb08239ae5bf157189812669a5c021d0ea74e", "reason": "The first run falsely refused a con-ron Git submodule gitlink as an unexpected directory and a known Lean4Lean lakefile patch as dirty after trimming git status; all three other source builds passed. The follow-on runner fixes only those custody checks."},
+  "limitation": "Four source-built binaries differ bytewise from the release-bundled executables used by multi.mjs. Their paired replays establish source-built compatibility on this selected root and semantic negative, not a byte-identity derivation of the bundled binaries or full-root parity."
+}
