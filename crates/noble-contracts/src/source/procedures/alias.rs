@@ -19,6 +19,7 @@ const MAX_ALIAS_DEGREE: u16 = 8;
 const MAX_ALIAS_WORK: u32 = 8_192;
 const ALIAS_EVIDENCE_OBLIGATION: u32 = 0x414c_4941;
 const ALIAS_CHECKER: &str = "noble-procedure-alias-poly/1";
+const CLAIM_CAPACITY_BYTES: usize = 154;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Monomial {
@@ -41,7 +42,7 @@ pub struct ExactPairCertificate {
 
 #[octet::sealed_enum]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum AliasCertificate {
+pub enum Certificate {
     /// The old 32-byte claim is kept only to parse old wire records. It can
     /// never authorize an alias, irrespective of its digest value.
     LegacyDigest([u8; 32]),
@@ -147,8 +148,14 @@ impl Polynomial {
                 let mut powers = [0; MAX_ALIAS_INPUTS];
                 let mut degree = 0u16;
                 for (index, exponent) in powers.iter_mut().enumerate() {
-                    let next = u16::from(left.powers[index]) + u16::from(right.powers[index]);
-                    degree += next;
+                    let next = u16::from(left.powers[index])
+                        .checked_add(u16::from(right.powers[index]))
+                        .ok_or_else(|| {
+                            refused(RefusalKind::Exhausted, "alias exponent overflows")
+                        })?;
+                    degree = degree.checked_add(next).ok_or_else(|| {
+                        refused(RefusalKind::Exhausted, "alias total degree overflows")
+                    })?;
                     if next > MAX_ALIAS_DEGREE || degree > MAX_ALIAS_DEGREE {
                         return Err(refused(
                             RefusalKind::Exhausted,
@@ -172,24 +179,36 @@ impl Polynomial {
     }
 }
 
-fn pop(stack: &mut Vec<Polynomial>) -> Result<Polynomial, Refusal> {
-    stack.pop().ok_or_else(|| {
-        refused(
-            RefusalKind::Unsupported,
-            "alias symbolic stack underflow",
-        )
-    })
+struct PolynomialStack {
+    values: Vec<Polynomial>,
 }
 
-fn push(stack: &mut Vec<Polynomial>, value: Polynomial) -> Result<(), Refusal> {
-    if stack.len() >= 32 {
-        return Err(refused(
-            RefusalKind::Exhausted,
-            "alias symbolic stack exceeds the profile bound",
-        ));
+impl PolynomialStack {
+    fn new(input_count: usize) -> Self {
+        Self {
+            values: Vec::with_capacity(input_count),
+        }
     }
-    stack.push(value);
-    Ok(())
+
+    fn pop(&mut self) -> Result<Polynomial, Refusal> {
+        self.values.pop().ok_or_else(|| {
+            refused(
+                RefusalKind::Unsupported,
+                "alias symbolic stack underflow",
+            )
+        })
+    }
+
+    fn push(&mut self, value: Polynomial) -> Result<(), Refusal> {
+        if self.values.len() >= 32 {
+            return Err(refused(
+                RefusalKind::Exhausted,
+                "alias symbolic stack exceeds the profile bound",
+            ));
+        }
+        self.values.push(value);
+        Ok(())
+    }
 }
 
 fn check_fragment(record: &ProcedureRecord) -> Result<(), Refusal> {
@@ -228,36 +247,36 @@ fn check_fragment(record: &ProcedureRecord) -> Result<(), Refusal> {
 
 fn normalize_op(
     op: chunks::Op,
-    stack: &mut Vec<Polynomial>,
+    stack: &mut PolynomialStack,
     work: &mut u32,
 ) -> Result<(), Refusal> {
-    debug_assert!(stack.len() <= 32);
+    debug_assert!(stack.values.len() <= 32);
     match op {
         chunks::Op::Dup => {
-            let top = stack.last().cloned().ok_or_else(|| {
+            let top = stack.values.last().cloned().ok_or_else(|| {
                 refused(RefusalKind::Unsupported, "alias duplicate needs a value")
             })?;
-            push(stack, top)
+            stack.push(top)
         }
         chunks::Op::Drop => {
-            let _ = pop(stack)?;
+            let _ = stack.pop()?;
             Ok(())
         }
         chunks::Op::Swap => {
-            let top = pop(stack)?;
-            let below = pop(stack)?;
-            push(stack, top)?;
-            push(stack, below)
+            let top = stack.pop()?;
+            let below = stack.pop()?;
+            stack.push(top)?;
+            stack.push(below)
         }
         chunks::Op::Add | chunks::Op::Sub | chunks::Op::Mul => {
-            let right = pop(stack)?;
-            let left = pop(stack)?;
+            let right = stack.pop()?;
+            let left = stack.pop()?;
             let result = if op == chunks::Op::Mul {
                 left.multiply(&right, work)?
             } else {
                 left.combine(&right, op == chunks::Op::Sub, work)?
             };
-            push(stack, result)
+            stack.push(result)
         }
         chunks::Op::Eq | chunks::Op::Run => Err(refused(
             RefusalKind::Unsupported,
@@ -269,10 +288,10 @@ fn normalize_op(
 fn normalize_node(
     chunk: &chunks::Envelope,
     index: u32,
-    stack: &mut Vec<Polynomial>,
+    stack: &mut PolynomialStack,
     work: &mut u32,
 ) -> Result<(), Refusal> {
-    debug_assert!(stack.len() <= 32);
+    debug_assert!(stack.values.len() <= 32);
     charge(work, 1)?;
     let node_index = usize::try_from(index).map_err(|_| {
         refused(RefusalKind::Unsupported, "alias node index exceeds the host domain")
@@ -281,7 +300,7 @@ fn normalize_node(
         refused(RefusalKind::Unsupported, "alias references a missing recipe node")
     })?;
     match node {
-        chunks::Node::I64(value) => push(stack, Polynomial::constant(*value as u64)),
+        chunks::Node::I64(value) => stack.push(Polynomial::constant(*value as u64)),
         chunks::Node::Capture { index } => {
             let capture = chunk.captures.get(usize::from(*index)).ok_or_else(|| {
                 refused(RefusalKind::Unsupported, "alias references a missing capture")
@@ -289,7 +308,7 @@ fn normalize_node(
             let chunks::Scalar::I64(value) = capture.value else {
                 return Err(refused(RefusalKind::Unsupported, "Boolean alias capture"));
             };
-            push(stack, Polynomial::constant(value as u64))
+            stack.push(Polynomial::constant(value as u64))
         }
         chunks::Node::Operation { op, instantiation } => {
             if chunk.instantiations.get(usize::from(*instantiation)).is_none() {
@@ -312,22 +331,22 @@ fn normalize_node(
 fn normalize(record: &ProcedureRecord) -> Result<Vec<Polynomial>, Refusal> {
     check_fragment(record)?;
     let chunk = &record.chunk;
-    let mut stack = Vec::with_capacity(chunk.interface.stack_in.len());
+    let mut stack = PolynomialStack::new(chunk.interface.stack_in.len());
     for index in 0..chunk.interface.stack_in.len() {
-        push(&mut stack, Polynomial::variable(index))?;
+        stack.push(Polynomial::variable(index))?;
     }
     let mut work = 0;
     for index in &chunk.body.entry {
         normalize_node(chunk, *index, &mut stack, &mut work)?;
-        debug_assert!(stack.len() <= 32);
+        debug_assert!(stack.values.len() <= 32);
     }
-    if stack.len() != chunk.interface.stack_out.len() {
+    if stack.values.len() != chunk.interface.stack_out.len() {
         return Err(refused(
             RefusalKind::Unsupported,
             "alias symbolic output does not match the declared stack",
         ));
     }
-    Ok(stack)
+    Ok(stack.values)
 }
 
 impl Alias {
@@ -352,7 +371,7 @@ impl Alias {
         let closure = persistence::empty_alias_closure_digest();
         Ok(Self {
             procedure_id: right.procedure_id,
-            certificate: AliasCertificate::ExactPair(Box::new(ExactPairCertificate {
+            certificate: Certificate::ExactPair(Box::new(ExactPairCertificate {
                 left: left_form,
                 right: right_form,
                 left_closure: closure,
@@ -378,7 +397,7 @@ impl Alias {
 
     fn evidence(&self, subject: ProcedureId) -> EvidenceRecord {
         const HEX: &[u8; 16] = b"0123456789abcdef";
-        let mut claim = String::with_capacity("exact-pair:".len() + 2 * 32 * 2 + 2 + "empty-closure".len());
+        let mut claim = String::with_capacity(CLAIM_CAPACITY_BYTES);
         claim.push_str("exact-pair:");
         for id in [subject, self.procedure_id] {
             for byte in id {
@@ -406,7 +425,7 @@ pub(super) fn verify(records: &[ProcedureRecord]) -> Result<(), Refusal> {
         let Some(alias) = &record.alias_of else {
             continue;
         };
-        let AliasCertificate::ExactPair(certificate) = &alias.certificate else {
+        let Certificate::ExactPair(certificate) = &alias.certificate else {
             return Err(refused(
                 RefusalKind::Unsupported,
                 "a legacy alias digest is not an exact-pair proof",

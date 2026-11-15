@@ -1238,14 +1238,14 @@ fn write_alias(writer: &mut Writer, alias: Option<&Alias>) -> Result<(), Refusal
     match alias {
         Some(alias) => {
             match &alias.certificate {
-                AliasCertificate::LegacyDigest(digest) => {
+                Certificate::LegacyDigest(digest) => {
                     // Preserve the historical tag and exact bytes. These
                     // records remain explicitly unsupported on admission.
                     writer.byte(1);
                     writer.raw(&alias.procedure_id);
                     writer.raw(digest);
                 }
-                AliasCertificate::ExactPair(pair) => {
+                Certificate::ExactPair(pair) => {
                     writer.byte(2);
                     writer.raw(&alias.procedure_id);
                     writer.raw(&pair.left_closure);
@@ -1405,11 +1405,11 @@ fn read_alias(reader: &mut Reader<'_>) -> Result<Option<Alias>, Refusal> {
         0 => None,
         1 => Some(Alias {
             procedure_id: reader.raw("alias.procedure_id")?,
-            certificate: AliasCertificate::LegacyDigest(reader.raw("alias.certificate")?),
+            certificate: Certificate::LegacyDigest(reader.raw("alias.certificate")?),
         }),
         2 => Some(Alias {
             procedure_id: reader.raw("alias.procedure_id")?,
-            certificate: AliasCertificate::ExactPair(alloc::boxed::Box::new(
+            certificate: Certificate::ExactPair(alloc::boxed::Box::new(
                 ExactPairCertificate {
                     left_closure: reader.raw("alias.left_closure")?,
                     right_closure: reader.raw("alias.right_closure")?,
@@ -2382,12 +2382,12 @@ fn write_manifest_cost_and_links(out: &mut BoundedJson, record: &ProcedureRecord
         out.push_str("{\"procedure_id\":\"");
         out.push_hex(&alias.procedure_id);
         match &alias.certificate {
-            AliasCertificate::LegacyDigest(digest) => {
+            Certificate::LegacyDigest(digest) => {
                 out.push_str("\",\"certificate\":\"");
                 out.push_hex(digest);
                 out.push_str("\"}");
             }
-            AliasCertificate::ExactPair(pair) => {
+            Certificate::ExactPair(pair) => {
                 out.push_str("\",\"certificate\":{\"kind\":\"exact-pair\",\"left_closure\":\"");
                 out.push_hex(&pair.left_closure);
                 out.push_str("\",\"right_closure\":\"");

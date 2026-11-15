@@ -4,7 +4,7 @@ use super::super::procedures::support::{
 use noble_contracts::source::chunks;
 use noble_contracts::source::chunks::{DefinitionRef, Node, Op};
 use noble_contracts::source::procedures::{
-    Alias, AliasCertificate, CapabilityMarker, ConsumerObligation, ConsumerPolicy, EvidenceClass,
+    Alias, CapabilityMarker, Certificate, ConsumerObligation, ConsumerPolicy, EvidenceClass,
     EvidenceOutcome, EvidenceRecord, LibraryDependency, ProcedureLibrary, ProcedureRecord,
     Producer, RefusalKind, Status,
 };
@@ -264,7 +264,7 @@ fn an_alias_digest_cannot_replace_a_verified_exact_pair_certificate() -> Result<
         literal_record(10, Producer::Chunk).map_err(|error| format!("record: {error:?}"))?;
     record.alias_of = Some(Alias {
         procedure_id: [0x91; 32],
-        certificate: AliasCertificate::LegacyDigest([0x92; 32]),
+        certificate: Certificate::LegacyDigest([0x92; 32]),
     });
     let refusal = library
         .admit(&namespace, None, record)
@@ -307,7 +307,7 @@ fn exact_pair_alias_normalizes_distinct_bodies_and_survives_reload() -> Result<(
         .map_err(|error| format!("certificate: {error:?}"))?
         .attach(&mut candidate)
         .map_err(|error| format!("attach: {error:?}"))?;
-    let AliasCertificate::ExactPair(pair) = &candidate
+    let Certificate::ExactPair(pair) = &candidate
         .alias_of
         .as_ref()
         .expect("claim")
@@ -466,7 +466,7 @@ fn alias_closure_and_normal_forms_are_recomputed_on_admission_and_reload() -> Re
         .map_err(|error| format!("target: {error:?}"))?;
 
     let mut closure_forgery = alias.clone();
-    if let AliasCertificate::ExactPair(pair) = &mut closure_forgery.certificate {
+    if let Certificate::ExactPair(pair) = &mut closure_forgery.certificate {
         pair.left_closure[0] ^= 1;
     }
     closure_forgery
@@ -479,7 +479,7 @@ fn alias_closure_and_normal_forms_are_recomputed_on_admission_and_reload() -> Re
     assert_eq!(refusal.location.field, "alias_of");
 
     let mut stale_form = alias.clone();
-    if let AliasCertificate::ExactPair(pair) = &mut stale_form.certificate {
+    if let Certificate::ExactPair(pair) = &mut stale_form.certificate {
         pair.left[0].terms[0].coefficient ^= 1;
     }
     candidate.alias_of = Some(stale_form);
@@ -560,7 +560,7 @@ fn alias_closure_and_normal_forms_are_recomputed_on_admission_and_reload() -> Re
         .iter()
         .find_map(|record| record.alias_of.as_ref())
         .ok_or_else(|| String::from("missing retained alias"))?;
-    let AliasCertificate::ExactPair(pair) = &alias.certificate else {
+    let Certificate::ExactPair(pair) = &alias.certificate else {
         return Err(String::from("missing pair certificate"));
     };
     let marker: Vec<u8> = [vec![2], alias.procedure_id.to_vec(), pair.left_closure.to_vec()]

@@ -24,7 +24,7 @@ mod persistence;
 mod retrieval;
 
 pub use alias::{
-    AliasCertificate, ExactPairCertificate, Monomial, Polynomial, MAX_ALIAS_INPUTS,
+    Certificate, ExactPairCertificate, Monomial, Polynomial, MAX_ALIAS_INPUTS,
     MAX_ALIAS_OUTPUTS, MAX_ALIAS_TERMS,
 };
 pub use composition::{BoundOperand, CertifiedComposedProgram, ComposeContext, ComposedProgram};
@@ -249,7 +249,7 @@ pub struct RetrievalSignature {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Alias {
     pub procedure_id: ProcedureId,
-    pub certificate: AliasCertificate,
+    pub certificate: Certificate,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -1273,7 +1273,7 @@ impl ProcedureLibrary {
             if alias.procedure_id == record.procedure_id {
                 return Err(Refusal::new(RefusalKind::Invalid, Diagnostic { field: "alias_of", message: "alias requires a distinct exact-pair identity" }));
             }
-            if matches!(&alias.certificate, AliasCertificate::LegacyDigest(_)) {
+            if matches!(&alias.certificate, Certificate::LegacyDigest(_)) {
                 return Err(Refusal::new(RefusalKind::Unsupported, Diagnostic { field: "alias_of", message: "a digest alone is not a verified exact-pair certificate" }));
             }
         }
