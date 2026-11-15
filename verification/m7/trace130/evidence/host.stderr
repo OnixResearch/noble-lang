@@ -1,0 +1,3 @@
+   Compiling noble-syndicate v0.0.0 (/home/brittonr/.cache/noble-iss/wt/m7trace-130/crates/noble-syndicate)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.22s
+     Running tests/service.rs (/dev/shm/noble-iss/target/m7trace-130/debug/deps/service-5be899d6079f7a9f)
