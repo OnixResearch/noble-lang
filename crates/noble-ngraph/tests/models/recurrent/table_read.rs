@@ -13,8 +13,7 @@ use noble_ngraph::sem::Value;
 use noble_ngraph::snapshot::ParamSnapshot;
 
 const KEYS: [&str; 15] = [
-    "", "A", "B", "AA", "AB", "BA", "BB", "AAA", "AAB", "ABA", "ABB", "BAA", "BAB",
-    "BBA", "BBB",
+    "", "A", "B", "AA", "AB", "BA", "BB", "AAA", "AAB", "ABA", "ABB", "BAA", "BAB", "BBA", "BBB",
 ];
 const CELLS: usize = 19; // state, numeric index, 17 one-hot selectors (-1, 0..14, 15).
 const MAX_STEPS: usize = 64;
@@ -111,12 +110,23 @@ impl Candidate {
         let checked = check::check(&common::IDS, graph).expect("admit the F32Index graph");
         let snapshot = ParamSnapshot::new(&common::IDS, &checked, &[]).expect("empty snapshot");
         let compiled = Compiled::new(&common::IDS, &checked);
-        Self { checked, compiled, snapshot }
+        Self {
+            checked,
+            compiled,
+            snapshot,
+        }
     }
 
     fn outcomes(&self, cells: &[Value]) -> (Obs, Obs) {
-        let compiled = self.compiled.evaluate(cells, Some(&self.snapshot), &mut Control::default());
-        let reference = eval::reference(&self.checked, cells, Some(&self.snapshot), &mut Control::default());
+        let compiled = self
+            .compiled
+            .evaluate(cells, Some(&self.snapshot), &mut Control::default());
+        let reference = eval::reference(
+            &self.checked,
+            cells,
+            Some(&self.snapshot),
+            &mut Control::default(),
+        );
         (compiled.obs, reference.obs)
     }
 
@@ -179,18 +189,37 @@ fn node(op: &Op) -> String {
         Op::Input(slot) => format!("[\"input\",{slot}]"),
         Op::Const(Literal::F32(bits)) => format!("[\"const\",{bits}]"),
         Op::F32Affine { bias, terms } => {
-            let terms = terms.iter().map(|term| match term.operand {
-                AffineOperand::Node(id) => format!("[{},{}]", term.coefficient, id.0),
-                AffineOperand::One => panic!("table query must be one-hot cells"),
-            }).collect::<Vec<_>>().join(",");
+            let terms = terms
+                .iter()
+                .map(|term| match term.operand {
+                    AffineOperand::Node(id) => format!("[{},{}]", term.coefficient, id.0),
+                    AffineOperand::One => panic!("table query must be one-hot cells"),
+                })
+                .collect::<Vec<_>>()
+                .join(",");
             format!("[\"affine\",{bias},[{terms}]]")
         }
         Op::F32Sub(left, right) => format!("[\"sub\",{},{}]", left.0, right.0),
         Op::F32Add(left, right) => format!("[\"add\",{},{}]", left.0, right.0),
-        Op::Guard { fact: Fact::Range { lo: Literal::F32(lo), hi: Literal::F32(hi) }, value }
-            if *lo == 0 && *hi == 0 => format!("[\"guard_zero\",{}]", value.0),
-        Op::F32Index { index, table, below: OutOfRange::Zero, above: OutOfRange::Zero } => {
-            let table = table.iter().map(|id| id.0.to_string()).collect::<Vec<_>>().join(",");
+        Op::Guard {
+            fact:
+                Fact::Range {
+                    lo: Literal::F32(lo),
+                    hi: Literal::F32(hi),
+                },
+            value,
+        } if *lo == 0 && *hi == 0 => format!("[\"guard_zero\",{}]", value.0),
+        Op::F32Index {
+            index,
+            table,
+            below: OutOfRange::Zero,
+            above: OutOfRange::Zero,
+        } => {
+            let table = table
+                .iter()
+                .map(|id| id.0.to_string())
+                .collect::<Vec<_>>()
+                .join(",");
             format!("[\"index_zero\",{},[{table}]]", index.0)
         }
         _ => panic!("unsupported checked table-read operator: {}", op.name()),
@@ -253,8 +282,18 @@ fn table_read_export() {
     let graph = graph();
     let candidate = Candidate::new(graph.clone());
     let (tiny, free) = rows(&candidate);
-    let nodes = graph.nodes.iter().map(|entry| node(&entry.op)).collect::<Vec<_>>().join(",");
-    let outputs = graph.outputs.iter().map(|id| id.0.to_string()).collect::<Vec<_>>().join(",");
+    let nodes = graph
+        .nodes
+        .iter()
+        .map(|entry| node(&entry.op))
+        .collect::<Vec<_>>()
+        .join(",");
+    let outputs = graph
+        .outputs
+        .iter()
+        .map(|id| id.0.to_string())
+        .collect::<Vec<_>>()
+        .join(",");
     let canonical = noble_ngraph::format::graph::print(candidate.checked.graph());
     println!("RECURRENT_TABLE_EXPORT\t{{\"schema\":\"noble.recurrent-table-export/v1\",\"program\":\"table-read\",\"codec\":\"binary32-exact/one-hot-ascii-ab-0..3/v1\",\"graph_id\":\"{}\",\"snapshot_id\":\"{}\",\"snapshot_bytes\":\"{}\",\"canonical_graph\":\"{}\",\"query_shape\":\"one-hot-17\",\"index_range\":[-1,15],\"max_steps\":64,\"slots\":19,\"nodes\":[{nodes}],\"outputs\":[{outputs}],\"vectors\":{{\"tiny\":[{tiny}],\"free_running\":[{free}]}}}}",
         hex(&candidate.checked.id()), hex(&candidate.snapshot.id()), hex(candidate.snapshot.bytes()),
