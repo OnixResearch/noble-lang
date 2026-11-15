@@ -1,7 +1,12 @@
 // Test-only Rust-emitted plan corpus; not a replacement for the independent Lean model.
 
 use super::*;
+use alloc::borrow::ToOwned;
+use alloc::format;
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
 use crate::identity::IdentityScheme;
+use core::writeln;
 use std::fmt::Write as _;
 use std::path::Path;
 
