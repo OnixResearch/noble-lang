@@ -7,9 +7,11 @@
 //! 1. a **static map** gives one optional `I64` per ordered input leaf; a
 //!    static leaf becomes a constant and the remaining leaves are renumbered
 //!    by [`rank`] — the model's `rank`/`merge` representation (D2);
-//! 2. a node is **folded** only when every operand is statically known, and
-//!    only for wrapping `I64` addition, subtraction, multiplication and
-//!    equality; nothing is reassociated, commuted or shared (D3);
+//! 2. all-static nodes are folded for wrapping `I64` arithmetic and equality;
+//!    total I64 algebraic identities (zero multiplication, addition of zero,
+//!    subtraction of zero, multiplication by one) are simplified by forwarding
+//!    operands before dead-node pruning. No operations are reordered (D3,
+//!    issue #34's separately tested dispatch elimination);
 //! 3. nodes that reach no output are **pruned** and the residual is
 //!    renumbered densely, then independently re-checked by [`crate::check`]
 //!    (D4);
@@ -33,6 +35,8 @@
 
 use crate::identity::IdentityScheme;
 
+/// Session-local exact-key reuse of successful residual Programs.
+pub mod cache;
 /// Opt-in specialization of an exact, checked source Program.
 pub mod program;
 
@@ -277,6 +281,35 @@ fn static_result(op: &crate::ir::Op, known: &[Option<Known>]) -> Option<Known> {
     }
 }
 
+/// Total wrapping-I64 identities only. The admitted slice has no guards,
+/// traps, effects, or lazily evaluated operands; these rules are not valid for
+/// an arbitrary graph profile with observable failures in an erased operand.
+enum Algebraic {
+    Zero,
+    Forward(crate::ir::NodeId),
+}
+
+fn algebraic_result(op: &crate::ir::Op, known: &[Option<Known>]) -> Option<Algebraic> {
+    let value = |id: crate::ir::NodeId| {
+        known
+            .get(id.index())
+            .copied()
+            .flatten()
+            .and_then(Known::i64)
+    };
+    match op {
+        crate::ir::Op::I64Add(a, b) if value(*a) == Some(0) => Some(Algebraic::Forward(*b)),
+        crate::ir::Op::I64Add(a, b) if value(*b) == Some(0) => Some(Algebraic::Forward(*a)),
+        crate::ir::Op::I64Sub(a, b) if value(*b) == Some(0) => Some(Algebraic::Forward(*a)),
+        crate::ir::Op::I64Mul(a, b) if value(*a) == Some(0) || value(*b) == Some(0) => {
+            Some(Algebraic::Zero)
+        }
+        crate::ir::Op::I64Mul(a, b) if value(*a) == Some(1) => Some(Algebraic::Forward(*b)),
+        crate::ir::Op::I64Mul(a, b) if value(*b) == Some(1) => Some(Algebraic::Forward(*a)),
+        _ => None,
+    }
+}
+
 /// Refuses a graph outside the `ngraph-pe/0` subject slice (D1).
 fn admit_slice(checked: &crate::check::CheckedGraph) -> Result<(), crate::diag::Diagnostic> {
     let graph = checked.graph();
@@ -383,6 +416,41 @@ fn renumber(op: &crate::ir::Op, map: &[u32]) -> crate::ir::Op {
     }
 }
 
+/// Derives the residual subject identity from the same fields used by the
+/// specializer. The cache rechecks this relation before it accepts a retained
+/// residual; it is not a proof of specialization correctness.
+pub(super) fn derive_residual_subject(
+    ids: &dyn IdentityScheme,
+    original_graph: crate::ir::Digest,
+    closure: alloc::vec::Vec<u64>,
+    static_inputs: &[Option<i64>],
+) -> crate::ir::Subject {
+    let mut encoded: alloc::vec::Vec<u8> = alloc::vec::Vec::with_capacity(
+        1usize.saturating_add(9usize.saturating_mul(static_inputs.len())),
+    );
+    encoded.push(0x01);
+    for entry in static_inputs {
+        match entry {
+            Some(value) => {
+                encoded.push(0x01);
+                encoded.extend_from_slice(&value.to_le_bytes());
+            }
+            None => encoded.push(0x00),
+        }
+    }
+    crate::ir::Subject::derive(
+        ids,
+        crate::ir::SubjectKind::Extracted,
+        &[
+            b"partial-evaluation",
+            ACCOUNTING_REVISION.as_bytes(),
+            &original_graph,
+            &encoded,
+        ],
+        closure,
+    )
+}
+
 /// Specializes `checked` under `request.static_inputs` (D1–D7, D11).
 ///
 /// # Errors
@@ -469,13 +537,17 @@ pub fn specialize(
             original_nodes as u64,
         ));
     }
-    // Substitution and folding, index-preserving (D2, D3).
+    // Substitution, folding and total identities in dependency order. Forward
+    // references always target an earlier node; aliases never enter the live
+    // graph, and consumers see their canonical operand in the same pass.
     let mut known: alloc::vec::Vec<Option<Known>> = alloc::vec![None; original_nodes];
+    let mut forward: alloc::vec::Vec<u32> = alloc::vec::Vec::with_capacity(original_nodes);
     let mut built: alloc::vec::Vec<crate::ir::Op> = alloc::vec::Vec::with_capacity(original_nodes);
     let mut detail = alloc::string::String::new();
     let mut folded = 0u64;
     for (index, node) in graph.nodes.iter().enumerate() {
         let mut value = None;
+        let mut alias = None;
         let op = match &node.op {
             crate::ir::Op::Input(k) => {
                 let position = positions
@@ -512,22 +584,38 @@ pub fn specialize(
                 value = known_literal(*literal);
                 crate::ir::Op::Const(*literal)
             }
-            other => match static_result(other, &known) {
-                Some(folded_value) => {
-                    value = Some(folded_value);
-                    folded = folded.saturating_add(1);
-                    crate::ir::Op::Const(folded_value.as_literal())
+            other => {
+                let canonical = renumber(other, &forward);
+                match static_result(&canonical, &known) {
+                    Some(folded_value) => {
+                        value = Some(folded_value);
+                        folded = folded.saturating_add(1);
+                        crate::ir::Op::Const(folded_value.as_literal())
+                    }
+                    None => match algebraic_result(&canonical, &known) {
+                        Some(Algebraic::Zero) => {
+                            value = Some(Known::I64(0));
+                            folded = folded.saturating_add(1);
+                            crate::ir::Op::Const(crate::ir::Literal::I64(0))
+                        }
+                        Some(Algebraic::Forward(target)) => {
+                            alias = Some(target.0);
+                            canonical
+                        }
+                        None => canonical,
+                    },
                 }
-                None => other.clone(),
-            },
+            }
         };
         known[index] = value;
+        forward.push(alias.unwrap_or(index as u32));
         built.push(op);
     }
     // Pruning: keep what the outputs reach, plus every dynamic input node so
     // each retained interface slot remains defined (D4).
     let mut keep = alloc::vec![false; original_nodes];
-    let mut pending: alloc::vec::Vec<u32> = graph.outputs.iter().map(|o| o.0).collect();
+    let mut pending: alloc::vec::Vec<u32> =
+        graph.outputs.iter().map(|o| forward[o.index()]).collect();
     while let Some(index) = pending.pop() {
         let slot = match keep.get_mut(index as usize) {
             Some(slot) => slot,
@@ -576,7 +664,7 @@ pub fn specialize(
     let mut outputs = alloc::vec::Vec::with_capacity(graph.outputs.len());
     let mut detail = alloc::string::String::new();
     for output in &graph.outputs {
-        let id = map[output.index()];
+        let id = map[forward[output.index()] as usize];
         if id == u32::MAX {
             detail.clear();
             crate::format::write_text!(detail, "%{} is an output but was pruned", output.0);
@@ -588,30 +676,12 @@ pub fn specialize(
         }
         outputs.push(crate::ir::NodeId(id));
     }
-    // The residual is a new subject: the original identity, the accounting
-    // revision and the static map under one derivation domain (D5).
-    let mut encoded: alloc::vec::Vec<u8> = alloc::vec::Vec::with_capacity(1 + 9 * leaves);
-    encoded.push(0x01);
-    for entry in request.static_inputs {
-        match entry {
-            Some(value) => {
-                encoded.push(0x01);
-                encoded.extend_from_slice(&value.to_le_bytes());
-            }
-            None => encoded.push(0x00),
-        }
-    }
     let original_graph = checked.id();
-    let subject = crate::ir::Subject::derive(
+    let subject = derive_residual_subject(
         ids,
-        crate::ir::SubjectKind::Extracted,
-        &[
-            b"partial-evaluation",
-            ACCOUNTING_REVISION.as_bytes(),
-            &original_graph,
-            &encoded,
-        ],
+        original_graph,
         graph.subject.closure.clone(),
+        request.static_inputs,
     );
     let residual = crate::ir::Graph {
         profile: crate::ir::SubProfile::I64,
@@ -965,6 +1035,47 @@ mod tests {
                 "no-static ({x}, {y})"
             );
         }
+    }
+
+    #[test]
+    fn total_identities_forward_chains_and_zero_mul_but_not_zero_minus_x() {
+        let mut builder = crate::ir::GraphBuilder::new(
+            crate::ir::SubProfile::I64,
+            crate::ir::Subject::authored(&TestIds, "pe-forward-total-identities"),
+        );
+        let x = builder.input(crate::ir::ScalarType::I64);
+        let y = builder.input(crate::ir::ScalarType::I64);
+        let one = builder.i64_const(1);
+        let zero = builder.i64_const(0);
+        let first = builder.op(crate::ir::Op::I64Mul(one, x));
+        let second = builder.op(crate::ir::Op::I64Add(first, zero));
+        let annihilated = builder.op(crate::ir::Op::I64Mul(zero, y));
+        let third = builder.op(crate::ir::Op::I64Add(second, annihilated));
+        let fourth = builder.op(crate::ir::Op::I64Sub(third, zero));
+        let negative = builder.op(crate::ir::Op::I64Sub(zero, x));
+        builder.output(fourth);
+        builder.output(negative);
+        let original = checked(builder.finish());
+        let residual = with_static_map(&original, &[None, None]).expect("total rewrite");
+        assert_eq!(residual.checked.graph().nodes.len(), 4);
+        assert_eq!(residual.checked.graph().outputs[0], crate::ir::NodeId(0));
+        assert!(matches!(
+            residual.checked.graph().nodes[3].op,
+            crate::ir::Op::I64Sub(..)
+        ));
+        for (x, y) in [(7, 2), (i64::MIN, -1), (0, i64::MAX)] {
+            assert_eq!(run(&residual.checked, &[x, y]), run(&original, &[x, y]));
+        }
+        let source = emit_source(&residual.checked).expect("emitted");
+        let readmitted = readmit(
+            &TestIds,
+            &source,
+            &interface_types(&residual.checked).expect("interface"),
+            noble_contracts::Limits::default(),
+            &crate::check::Budgets::default(),
+        )
+        .expect("ordinary admission");
+        assert_eq!(run(&readmitted, &[7, 2]), run(&original, &[7, 2]));
     }
 
     #[test]

@@ -2405,7 +2405,10 @@
         "REC-SC-01",
         "REC-SC-02",
         "REC-SC-03",
-        "REC-SC-04"
+        "REC-SC-04",
+        "REC-SC-05",
+        "REC-SC-06",
+        "REC-SC-07"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -3486,6 +3489,18 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "NGRAPH-NICKEL-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
       "id": "NGRAPH-OWN-01",
       "document": "../.cairn/specs/safety/spec.md",
       "document_id": "SPEC-S001",
@@ -3496,6 +3511,128 @@
       ],
       "scenarios": [
         "NGRAPH-CASE-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "NGRAPH-PE-01",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "NGRAPH-PE-CASE-01",
+        "NGRAPH-PE-CASE-02"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "NGRAPH-PE-02",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "NGRAPH-PE-CASE-03",
+        "NGRAPH-PE-CASE-04"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "NGRAPH-PE-03",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "NGRAPH-PE-CASE-05",
+        "NGRAPH-PE-CASE-06"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "NGRAPH-PE-04",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "NGRAPH-PE-CASE-07",
+        "NGRAPH-PE-CASE-08"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "NGRAPH-PE-05",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "NGRAPH-PE-CASE-09",
+        "NGRAPH-PE-CASE-10"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "NGRAPH-PE-06",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "NGRAPH-PE-CASE-11",
+        "NGRAPH-PE-CASE-12"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "NGRAPH-PE-07",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "NGRAPH-PE-CASE-13",
+        "NGRAPH-PE-CASE-14"
+      ],
+      "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "NGRAPH-PE-08",
+      "document": "../.cairn/specs/developer-experience/spec.md",
+      "document_id": "SPEC-DX001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [
+        "NGRAPH-PE-CASE-15",
+        "NGRAPH-PE-CASE-16",
+        "NGRAPH-PE-CASE-17",
+        "NGRAPH-PE-CASE-18"
       ],
       "test_design": "scenario-described-not-executed"
     },
@@ -4100,6 +4237,78 @@
     },
     {
       "id": "RA-CLEAN-04",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "RA-GROUP-01",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "RA-GROUP-02",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "RA-GROUP-03",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "RA-GROUP-04",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "RA-GROUP-05",
+      "document": "../.cairn/specs/resource-adapters/spec.md",
+      "document_id": "SPEC-R001",
+      "evidence_routes": [
+        "boundary-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "RA-GROUP-06",
       "document": "../.cairn/specs/resource-adapters/spec.md",
       "document_id": "SPEC-R001",
       "evidence_routes": [
@@ -4884,6 +5093,66 @@
         "S-CASE-15"
       ],
       "test_design": "scenario-described-not-executed"
+    },
+    {
+      "id": "TCRANK-01",
+      "document": "../.cairn/specs/typed-chunk-ranking/spec.md",
+      "document_id": "SPEC-TCRANK001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "TCRANK-02",
+      "document": "../.cairn/specs/typed-chunk-ranking/spec.md",
+      "document_id": "SPEC-TCRANK001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "TCRANK-03",
+      "document": "../.cairn/specs/typed-chunk-ranking/spec.md",
+      "document_id": "SPEC-TCRANK001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "TCRANK-04",
+      "document": "../.cairn/specs/typed-chunk-ranking/spec.md",
+      "document_id": "SPEC-TCRANK001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "TCRANK-05",
+      "document": "../.cairn/specs/typed-chunk-ranking/spec.md",
+      "document_id": "SPEC-TCRANK001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
     },
     {
       "id": "V-AUTH-01",

@@ -1,4 +1,5 @@
 #![feature(register_tool)]
+#![register_tool(octet)]
 #![register_tool(tigerstyle)]
 #![allow(
     tigerstyle::assertion_density,
@@ -42,6 +43,12 @@ mod graph_shapes;
 #[cfg(test)]
 #[path = "extract_b2/net_i64_corpus.rs"]
 mod proof;
+
+/// The source-bound first projection shares this existing integration target:
+/// the workspace's compilation-unit cap forbids a new test target.
+#[cfg(test)]
+#[path = "extract_b2_pe/interpreter.rs"]
+mod interpreter;
 
 fn i64s(v: &[i64]) -> Vec<Value> {
     v.iter().map(|x| Value::I64(*x)).collect()

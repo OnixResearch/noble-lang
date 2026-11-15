@@ -7,10 +7,23 @@
 
 use crate::identity::IdentityScheme;
 
+#[path = "net/rewrite.rs"]
+mod rewrite;
+
 /// Selected graph-to-net and rule contract.
 pub const CONTRACT_REVISION: &str = "ngraph-net-i64/3";
 /// Canonical graph-to-agent and use-order mapping.
 pub const LOWERING_REVISION: &str = "ngraph-net-i64-lowering/0";
+/// Version of the emitted, independently checked in-place rewrite plans.
+pub const PLAN_REVISION: &str = "ngraph-net-plan/1";
+/// Version of the exact arithmetic, fanout, and erasure rules compiled into plans.
+pub const PLAN_RULES_REVISION: &str = "noble-net-i64-rules/3";
+/// Version of the concrete arena/worklist representation used by the plan path.
+pub const PLAN_REPRESENTATION_REVISION: &str = "noble-net-arena/1";
+/// Version of the independent byte decoder and plan checker.
+pub const PLAN_CHECKER_REVISION: &str = "noble-net-plan-checker/1";
+/// Version of the plan executor.
+pub const PLAN_EXECUTOR_REVISION: &str = "noble-net-plan-executor/1";
 
 /// A checked I64 operation carried by an `op2`/`op1` agent.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -245,6 +258,12 @@ pub enum Limit {
     Agents,
     /// Initial wire connections.
     Wires,
+    /// Additional arena slots required by an allocating plan.
+    ArenaReservation,
+    /// Additional active-pair queue entries required by a plan.
+    WorklistReservation,
+    /// Fixed plan-decoder scratch requirement.
+    PlanScratch,
 }
 
 impl Limit {
@@ -255,8 +274,21 @@ impl Limit {
             Self::Fuel => "fuel",
             Self::Agents => "agents",
             Self::Wires => "wires",
+            Self::ArenaReservation => "arena-reservation",
+            Self::WorklistReservation => "worklist-reservation",
+            Self::PlanScratch => "plan-scratch",
         }
     }
+}
+
+/// Storage policy used by the checked plan executor.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum StoragePolicy {
+    /// Reuse consumed slots whenever possible; this is the default policy.
+    #[default]
+    Reuse,
+    /// Allocate fresh result slots and free every consumed slot, as a baseline.
+    Allocate,
 }
 
 /// A malformed candidate-net condition detected before or during reduction.
@@ -304,6 +336,24 @@ pub enum Invalid {
     CounterOverflow,
     /// The active-pair worklist exceeded its fixed agent-derived bound.
     WorklistBound,
+    /// A plan's bytes are malformed or contain an unsupported encoding.
+    PlanEncoding,
+    /// A decoded plan does not describe the selected live interaction.
+    PlanMismatch,
+    /// A plan boundary aliases a consumed slot or another captured boundary.
+    PlanBoundaryAlias,
+    /// A plan names a stale or already freed arena slot.
+    StalePlanSlot,
+    /// A plan frees one consumed slot more than once.
+    DuplicateFree,
+    /// A plan publishes an active pair more than once.
+    DoubleEnqueue,
+    /// A plan version is not supported.
+    PlanVersion,
+    /// A required memory reservation failed before commit.
+    PlanReservationFailure,
+    /// An injected in-flight interruption rolled back before commit.
+    PlanInterrupted,
 }
 
 impl Invalid {
@@ -332,6 +382,15 @@ impl Invalid {
             Self::ReadBack => "read-back",
             Self::CounterOverflow => "counter-overflow",
             Self::WorklistBound => "worklist-bound",
+            Self::PlanEncoding => "plan-encoding",
+            Self::PlanMismatch => "plan-mismatch",
+            Self::PlanBoundaryAlias => "plan-boundary-alias",
+            Self::StalePlanSlot => "stale-plan-slot",
+            Self::DuplicateFree => "duplicate-free",
+            Self::DoubleEnqueue => "double-enqueue",
+            Self::PlanVersion => "plan-version",
+            Self::PlanReservationFailure => "plan-reservation-failure",
+            Self::PlanInterrupted => "plan-interrupted",
         }
     }
 }
@@ -392,6 +451,9 @@ pub enum Schedule {
     },
 }
 
+/// Callback observing the exact emitted plan bytes after independent checking.
+pub type PlanObserver<'a> = &'a dyn Fn(&[u8]);
+
 /// Per-invocation execution controls.
 #[derive(Clone, Copy, Default)]
 pub struct Plan<'a> {
@@ -401,6 +463,14 @@ pub struct Plan<'a> {
     pub interaction_fuel: Option<u64>,
     /// Called immediately before the next firing with the completed step count.
     pub cancel: Option<&'a dyn Fn(u64) -> bool>,
+    /// Optional storage-policy override; absent selects [`StoragePolicy::Reuse`].
+    pub storage_policy: Option<StoragePolicy>,
+    /// Optional upper bound for per-plan scratch bytes.
+    pub max_plan_scratch_bytes: Option<u64>,
+    /// Optional upper bound for additional queue entries reserved by one plan.
+    pub max_worklist_entries: Option<u64>,
+    /// Optional observer for the exact plan bytes after independent checking.
+    pub plan_observer: Option<PlanObserver<'a>>,
 }
 
 /// Borrowed checked inputs and controls for one reduction.
@@ -461,6 +531,63 @@ pub struct Report {
     pub final_wires: Option<u64>,
     /// Initial net's retained storage estimate.
     pub retained_bytes: u64,
+    /// Counters and identities for the checked in-place plan path.
+    pub plan_stats: PlanStats,
+}
+
+/// Allocation, reuse, queue, scratch, and identity observations for one reduction.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct PlanStats {
+    /// Number of result slots allocated after the initial arena.
+    pub allocated_slots: u64,
+    /// Number of consumed slots reused for results.
+    pub reused_slots: u64,
+    /// Number of consumed slots freed by committed plans.
+    pub freed_slots: u64,
+    /// Live nodes at the most recent commit (zero before the first commit).
+    pub committed_live_nodes: u64,
+    /// Maximum live nodes held during any plan transaction.
+    pub transient_slots: u64,
+    /// Maximum physical arena length, including free slots.
+    pub arena_slots_high_water: u64,
+    /// Maximum pending active-pair entries.
+    pub queue_high_water: u64,
+    /// Maximum bytes in an emitted plan.
+    pub scratch_bytes_high_water: u64,
+    /// Sum of bytes emitted across all checked plans.
+    pub emitted_plan_bytes: u64,
+    /// Commit and internal microstep count (reported separately from interactions).
+    pub microsteps: u64,
+    /// Rolling digest over the exact checked plan byte stream.
+    pub plan_digest: crate::ir::Digest,
+    /// Digest of the graph/input-bound net identity followed by the plan stream.
+    pub replay_digest: crate::ir::Digest,
+}
+
+impl PlanStats {
+    fn record_commit_counts(&mut self, execution: &rewrite::Execution) -> Result<(), Invalid> {
+        let allocated = self
+            .allocated_slots
+            .checked_add(u64::from(execution.allocated_slots))
+            .ok_or(Invalid::CounterOverflow)?;
+        let reused = self
+            .reused_slots
+            .checked_add(u64::from(execution.reused_slots))
+            .ok_or(Invalid::CounterOverflow)?;
+        let freed = self
+            .freed_slots
+            .checked_add(u64::from(execution.freed_slots))
+            .ok_or(Invalid::CounterOverflow)?;
+        let microsteps = self
+            .microsteps
+            .checked_add(u64::from(execution.microsteps))
+            .ok_or(Invalid::CounterOverflow)?;
+        self.allocated_slots = allocated;
+        self.reused_slots = reused;
+        self.freed_slots = freed;
+        self.microsteps = microsteps;
+        Ok(())
+    }
 }
 
 /// Lowers a checked graph and one input row into its canonical revision-3 net.
@@ -570,21 +697,39 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
     let mut worklist = ActiveWorklist {
         entries: alloc::vec::Vec::with_capacity(net.agents.len()),
     };
+    let storage_policy = plan.storage_policy.unwrap_or(StoragePolicy::Reuse);
+    let mut plan_stats = PlanStats {
+        committed_live_nodes: initial_agents,
+        transient_slots: initial_agents,
+        arena_slots_high_water: initial_agents,
+        plan_digest: digest_bytes(
+            ids,
+            &[
+                b"noble-net-plan-stream/1",
+                PLAN_RULES_REVISION.as_bytes(),
+                PLAN_REVISION.as_bytes(),
+            ],
+        ),
+        ..PlanStats::default()
+    };
+    plan_stats.replay_digest = replay_digest(ids, net, plan_stats.plan_digest);
     let mut random = match plan.schedule.unwrap_or(Schedule::Lifo) {
         Schedule::SplitMix64 { seed } => Some(crate::prng::SplitMix64::new(seed)),
         Schedule::Lifo | Schedule::Fifo => None,
     };
     for index in 0..slots.len() {
         if let Err(invalid) = enqueue_active(&mut slots, &mut worklist, index) {
-            return report(
-                Obs::InternalInvalid(invalid),
-                0,
-                initial_agents,
-                Some(initial_wires),
+            return report_with_stats(ReportInput {
+                obs: Obs::InternalInvalid(invalid),
+                interactions: 0,
+                peak_live_agents: initial_agents,
+                final_wires: Some(initial_wires),
                 retained_bytes,
-            );
+                plan_stats,
+            });
         }
     }
+    plan_stats.queue_high_water = u64::try_from(worklist.entries.len()).unwrap_or(u64::MAX);
     let schedule = plan.schedule.unwrap_or(Schedule::Lifo);
     let fuel = plan
         .interaction_fuel
@@ -599,128 +744,236 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
             continue;
         }
         if plan.cancel.is_some_and(|cancel| cancel(interactions)) {
-            return report(
-                Obs::Cancelled,
+            return report_with_stats(ReportInput {
+                obs: Obs::Cancelled,
                 interactions,
-                initial_agents,
-                Some(live_wires),
+                peak_live_agents: initial_agents,
+                final_wires: Some(live_wires),
                 retained_bytes,
-            );
+                plan_stats,
+            });
         }
         if interactions >= fuel {
             let observed = match interactions.checked_add(1) {
                 Some(value) => value,
                 None => {
-                    return report(
-                        Obs::InternalInvalid(Invalid::CounterOverflow),
+                    return report_with_stats(ReportInput {
+                        obs: Obs::InternalInvalid(Invalid::CounterOverflow),
                         interactions,
-                        initial_agents,
-                        Some(live_wires),
+                        peak_live_agents: initial_agents,
+                        final_wires: Some(live_wires),
                         retained_bytes,
-                    );
+                        plan_stats,
+                    });
                 }
             };
-            return report(
-                Obs::Exhausted {
+            return report_with_stats(ReportInput {
+                obs: Obs::Exhausted {
                     limit: Limit::Fuel,
                     cap: fuel,
                     observed,
                 },
                 interactions,
-                initial_agents,
-                Some(live_wires),
+                peak_live_agents: initial_agents,
+                final_wires: Some(live_wires),
                 retained_bytes,
-            );
+                plan_stats,
+            });
         }
-        let fired = fire_pair(&mut slots, &mut outputs, pair);
-        let (changed, removed_agents) = match fired {
-            Ok(result) => result,
+        let bytes = match rewrite::compile(&slots, &outputs, pair, storage_policy) {
+            Ok(bytes) => bytes,
             Err(invalid) => {
-                return report(
-                    Obs::InternalInvalid(invalid),
+                return report_with_stats(ReportInput {
+                    obs: Obs::InternalInvalid(invalid),
                     interactions,
-                    initial_agents,
-                    Some(live_wires),
+                    peak_live_agents: initial_agents,
+                    final_wires: Some(live_wires),
                     retained_bytes,
-                );
+                    plan_stats,
+                });
+            }
+        };
+        let checked_plan = match rewrite::check_with_worklist(rewrite::CheckRequest {
+            bytes: &bytes,
+            slots: &slots,
+            outputs: &outputs,
+            worklist: &worklist,
+            pair,
+            policy: storage_policy,
+        }) {
+            Ok(checked) => checked,
+            Err(invalid) => {
+                return report_with_stats(ReportInput {
+                    obs: Obs::InternalInvalid(invalid),
+                    interactions,
+                    peak_live_agents: initial_agents,
+                    final_wires: Some(live_wires),
+                    retained_bytes,
+                    plan_stats,
+                });
+            }
+        };
+        if let Some(observer) = plan.plan_observer {
+            observer(bytes.as_bytes());
+        }
+        let emitted = u64::try_from(bytes.as_bytes().len()).unwrap_or(u64::MAX);
+        plan_stats.emitted_plan_bytes = match plan_stats.emitted_plan_bytes.checked_add(emitted) {
+            Some(total) => total,
+            None => {
+                return report_with_stats(ReportInput {
+                    obs: Obs::InternalInvalid(Invalid::CounterOverflow),
+                    interactions,
+                    peak_live_agents: initial_agents,
+                    final_wires: Some(live_wires),
+                    retained_bytes,
+                    plan_stats,
+                });
+            }
+        };
+        plan_stats.scratch_bytes_high_water = plan_stats
+            .scratch_bytes_high_water
+            .max(u64::from(checked_plan.scratch_reservation));
+        plan_stats.plan_digest = digest_bytes(ids, &[&plan_stats.plan_digest, bytes.as_bytes()]);
+        plan_stats.replay_digest = replay_digest(ids, net, plan_stats.plan_digest);
+        let scratch_limit_bytes = plan
+            .max_plan_scratch_bytes
+            .unwrap_or(rewrite::MAX_PLAN_BYTES as u64);
+        let max_queue_entries = plan.max_worklist_entries.unwrap_or(limits.max_agent_slots);
+        let execution = match rewrite::execute(
+            checked_plan,
+            &mut rewrite::ExecutionState {
+                slots: &mut slots,
+                outputs: &mut outputs,
+                worklist: &mut worklist,
+            },
+            rewrite::ExecutionLimits {
+                arena_slots: limits.max_agent_slots,
+                scratch_bytes: scratch_limit_bytes,
+                worklist_entries: max_queue_entries,
+            },
+        ) {
+            Ok(execution) => execution,
+            Err(rewrite::ExecuteError::Invalid(invalid)) => {
+                return report_with_stats(ReportInput {
+                    obs: Obs::InternalInvalid(invalid),
+                    interactions,
+                    peak_live_agents: initial_agents,
+                    final_wires: Some(live_wires),
+                    retained_bytes,
+                    plan_stats,
+                });
+            }
+            Err(rewrite::ExecuteError::Limited {
+                limit,
+                cap,
+                observed,
+            }) => {
+                return report_with_stats(ReportInput {
+                    obs: Obs::Exhausted {
+                        limit,
+                        cap,
+                        observed,
+                    },
+                    interactions,
+                    peak_live_agents: initial_agents,
+                    final_wires: Some(live_wires),
+                    retained_bytes,
+                    plan_stats,
+                });
             }
         };
         interactions = match interactions.checked_add(1) {
             Some(value) => value,
             None => {
-                return report(
-                    Obs::InternalInvalid(Invalid::CounterOverflow),
+                return report_with_stats(ReportInput {
+                    obs: Obs::InternalInvalid(Invalid::CounterOverflow),
                     interactions,
-                    initial_agents,
-                    Some(live_wires),
+                    peak_live_agents: initial_agents,
+                    final_wires: Some(live_wires),
                     retained_bytes,
-                );
+                    plan_stats,
+                });
             }
         };
-        live_agents = match live_agents.checked_sub(removed_agents) {
+        live_agents = match live_agents.checked_sub(u64::from(execution.live_decrease)) {
             Some(value) => value,
             None => {
-                return report(
-                    Obs::InternalInvalid(Invalid::CounterOverflow),
+                return report_with_stats(ReportInput {
+                    obs: Obs::InternalInvalid(Invalid::CounterOverflow),
                     interactions,
-                    initial_agents,
-                    Some(live_wires),
+                    peak_live_agents: initial_agents,
+                    final_wires: Some(live_wires),
                     retained_bytes,
-                );
+                    plan_stats,
+                });
             }
         };
+        if let Err(invalid) = plan_stats.record_commit_counts(&execution) {
+            return report_with_stats(ReportInput {
+                obs: Obs::InternalInvalid(invalid),
+                interactions,
+                peak_live_agents: initial_agents,
+                final_wires: Some(live_wires),
+                retained_bytes,
+                plan_stats,
+            });
+        }
+        plan_stats.committed_live_nodes = live_agents;
+        plan_stats.transient_slots = plan_stats
+            .transient_slots
+            .max(u64::from(execution.transient_live_nodes));
+        plan_stats.arena_slots_high_water = plan_stats
+            .arena_slots_high_water
+            .max(u64::try_from(slots.len()).unwrap_or(u64::MAX));
+        plan_stats.queue_high_water = plan_stats
+            .queue_high_water
+            .max(u64::try_from(worklist.entries.len()).unwrap_or(u64::MAX));
         live_wires = match live_wires.checked_sub(1) {
             Some(value) => value,
             None => {
-                return report(
-                    Obs::InternalInvalid(Invalid::CounterOverflow),
+                return report_with_stats(ReportInput {
+                    obs: Obs::InternalInvalid(Invalid::CounterOverflow),
                     interactions,
-                    initial_agents,
-                    None,
+                    peak_live_agents: initial_agents,
+                    final_wires: None,
                     retained_bytes,
-                );
+                    plan_stats,
+                });
             }
         };
-        for index in changed.into_iter().flatten() {
-            if let Err(invalid) = enqueue_active(&mut slots, &mut worklist, index as usize) {
-                return report(
-                    Obs::InternalInvalid(invalid),
-                    interactions,
-                    initial_agents,
-                    Some(live_wires),
-                    retained_bytes,
-                );
-            }
-        }
     }
     match read_back(&slots, &outputs, &net.output_types) {
         Ok(values) => {
             let actual_live = slots.iter().filter(|slot| slot.agent.is_some()).count();
             if u64::try_from(actual_live).ok() != Some(live_agents) || live_agents > initial_agents
             {
-                return report(
-                    Obs::InternalInvalid(Invalid::LeftoverAgent),
+                return report_with_stats(ReportInput {
+                    obs: Obs::InternalInvalid(Invalid::LeftoverAgent),
                     interactions,
-                    initial_agents,
-                    Some(live_wires),
+                    peak_live_agents: initial_agents,
+                    final_wires: Some(live_wires),
                     retained_bytes,
-                );
+                    plan_stats,
+                });
             }
-            report(
-                Obs::Normal(values),
+            plan_stats.replay_digest = replay_digest(ids, net, plan_stats.plan_digest);
+            report_with_stats(ReportInput {
+                obs: Obs::Normal(values),
                 interactions,
-                initial_agents,
-                Some(live_wires),
+                peak_live_agents: initial_agents,
+                final_wires: Some(live_wires),
                 retained_bytes,
-            )
+                plan_stats,
+            })
         }
-        Err(invalid) => report(
-            Obs::InternalInvalid(invalid),
+        Err(invalid) => report_with_stats(ReportInput {
+            obs: Obs::InternalInvalid(invalid),
             interactions,
-            initial_agents,
-            Some(live_wires),
+            peak_live_agents: initial_agents,
+            final_wires: Some(live_wires),
             retained_bytes,
-        ),
+            plan_stats,
+        }),
     }
 }
 
@@ -731,13 +984,64 @@ fn report(
     final_wires: Option<u64>,
     retained_bytes: u64,
 ) -> Report {
-    Report {
+    report_with_stats(ReportInput {
         obs,
         interactions,
         peak_live_agents,
         final_wires,
         retained_bytes,
+        plan_stats: PlanStats::default(),
+    })
+}
+
+struct ReportInput {
+    obs: Obs,
+    interactions: u64,
+    peak_live_agents: u64,
+    final_wires: Option<u64>,
+    retained_bytes: u64,
+    plan_stats: PlanStats,
+}
+
+fn report_with_stats(input: ReportInput) -> Report {
+    Report {
+        obs: input.obs,
+        interactions: input.interactions,
+        peak_live_agents: input.peak_live_agents,
+        final_wires: input.final_wires,
+        retained_bytes: input.retained_bytes,
+        plan_stats: input.plan_stats,
     }
+}
+
+fn digest_bytes(ids: &dyn IdentityScheme, parts: &[&[u8]]) -> crate::ir::Digest {
+    let mut hasher = ids.start();
+    for part in parts {
+        hasher.update(part);
+    }
+    hasher.finish()
+}
+
+fn replay_digest(
+    ids: &dyn IdentityScheme,
+    net: &InteractionGraph,
+    plan_digest: crate::ir::Digest,
+) -> crate::ir::Digest {
+    digest_bytes(
+        ids,
+        &[
+            b"noble-net-plan-replay/1",
+            net.build_key.as_ref(),
+            CONTRACT_REVISION.as_bytes(),
+            LOWERING_REVISION.as_bytes(),
+            PLAN_RULES_REVISION.as_bytes(),
+            PLAN_REVISION.as_bytes(),
+            PLAN_REPRESENTATION_REVISION.as_bytes(),
+            PLAN_CHECKER_REVISION.as_bytes(),
+            PLAN_EXECUTOR_REVISION.as_bytes(),
+            &plan_digest,
+        ],
+    )
 }
 
 fn admit(checked: &crate::check::CheckedGraph) -> Result<(), Refusal> {
@@ -981,21 +1285,21 @@ fn build_expected_from_i64(
         sum.checked_add(count)
     });
     let total_uses = total_uses.ok_or(Refusal::InternalInvalid(Invalid::CounterOverflow))?;
-    let mut offsets = alloc::vec::Vec::with_capacity(source_count.saturating_add(1));
-    offsets.push(0usize);
+    let mut use_entry_offsets = alloc::vec::Vec::with_capacity(source_count.saturating_add(1));
+    use_entry_offsets.push(0usize);
     for count in &use_counts {
         let count = usize::try_from(*count)
             .map_err(|_| Refusal::InternalInvalid(Invalid::CounterOverflow))?;
-        let next = offsets
+        let next_cursor = use_entry_offsets
             .last()
             .copied()
-            .and_then(|offset| offset.checked_add(count))
+            .and_then(|previous_entry_offset| previous_entry_offset.checked_add(count))
             .ok_or(Refusal::InternalInvalid(Invalid::CounterOverflow))?;
-        offsets.push(next);
+        use_entry_offsets.push(next_cursor);
     }
     let mut cursors = alloc::vec::Vec::with_capacity(source_count);
-    for offset in offsets.iter().take(source_count) {
-        cursors.push(*offset);
+    for entry_offset in use_entry_offsets.iter().take(source_count) {
+        cursors.push(*entry_offset);
     }
     let mut uses = alloc::vec![None; total_uses];
     for (index, node) in graph.nodes.iter().enumerate() {
@@ -1056,7 +1360,7 @@ fn build_expected_from_i64(
             },
             None => return Err(Refusal::InternalInvalid(Invalid::UnknownPort)),
         };
-        let use_index = *offsets
+        let use_index = *use_entry_offsets
             .get(index)
             .ok_or(Refusal::InternalInvalid(Invalid::UnknownPort))?;
         match *use_count {
@@ -1485,20 +1789,21 @@ fn wire_count(agents: &[Agent]) -> Option<u64> {
     Some(wires)
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct RuntimeAgent {
     origin: Origin,
     symbol: Symbol,
     ports: [Option<Endpoint>; 3],
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct Slot {
     agent: Option<RuntimeAgent>,
     generation: u64,
     queued_generation: Option<u64>,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct Pair {
     first: u32,
     first_generation: u64,
@@ -1506,20 +1811,8 @@ struct Pair {
     second_generation: u64,
 }
 
-struct FireState<'a> {
-    slots: &'a mut [Slot],
-    outputs: &'a mut [PortRef],
-}
-
-#[derive(Clone, Copy)]
-struct ValueInteraction {
-    rule_agent_id: u32,
-    number_agent_id: u32,
-    rule_agent: RuntimeAgent,
-    number_bits: u64,
-}
-
 /// Pending principal-port pairs, bounded by the fixed agent arena.
+#[derive(Debug, PartialEq, Eq)]
 struct ActiveWorklist {
     entries: alloc::vec::Vec<Pair>,
 }
@@ -1655,283 +1948,6 @@ fn pair_is_current(slots: &mut [Slot], pair: Pair) -> bool {
             }))
 }
 
-fn fire_pair(
-    slots: &mut [Slot],
-    outputs: &mut [PortRef],
-    pair: Pair,
-) -> Result<([Option<u32>; 2], u64), Invalid> {
-    let first_id = pair.first as usize;
-    let second_id = pair.second as usize;
-    let first = slots
-        .get(first_id)
-        .and_then(|slot| slot.agent)
-        .ok_or(Invalid::UnknownPort)?;
-    let second = slots
-        .get(second_id)
-        .and_then(|slot| slot.agent)
-        .ok_or(Invalid::UnknownPort)?;
-    let mut state = FireState { slots, outputs };
-    match (first.symbol, second.symbol) {
-        (Symbol::Op2(op), Symbol::Num(value)) => fire_op2(
-            &mut state,
-            ValueInteraction {
-                rule_agent_id: pair.first,
-                number_agent_id: pair.second,
-                rule_agent: first,
-                number_bits: value,
-            },
-            op,
-        ),
-        (Symbol::Num(value), Symbol::Op2(op)) => fire_op2(
-            &mut state,
-            ValueInteraction {
-                rule_agent_id: pair.second,
-                number_agent_id: pair.first,
-                rule_agent: second,
-                number_bits: value,
-            },
-            op,
-        ),
-        (Symbol::Op1(op, first_value), Symbol::Num(second_value)) => fire_op1(
-            &mut state,
-            ValueInteraction {
-                rule_agent_id: pair.first,
-                number_agent_id: pair.second,
-                rule_agent: first,
-                number_bits: apply(op, first_value, second_value),
-            },
-        ),
-        (Symbol::Num(second_value), Symbol::Op1(op, first_value)) => fire_op1(
-            &mut state,
-            ValueInteraction {
-                rule_agent_id: pair.second,
-                number_agent_id: pair.first,
-                rule_agent: second,
-                number_bits: apply(op, first_value, second_value),
-            },
-        ),
-        (Symbol::Dup, Symbol::Num(value)) => fire_dup(
-            &mut state,
-            ValueInteraction {
-                rule_agent_id: pair.first,
-                number_agent_id: pair.second,
-                rule_agent: first,
-                number_bits: value,
-            },
-        ),
-        (Symbol::Num(value), Symbol::Dup) => fire_dup(
-            &mut state,
-            ValueInteraction {
-                rule_agent_id: pair.second,
-                number_agent_id: pair.first,
-                rule_agent: second,
-                number_bits: value,
-            },
-        ),
-        (Symbol::Era, Symbol::Num(_)) | (Symbol::Num(_), Symbol::Era) => {
-            remove_pair(state.slots, pair.first, pair.second)?;
-            Ok(([None, None], 2))
-        }
-        _ => Err(Invalid::StuckPair),
-    }
-}
-
-fn fire_op2(
-    state: &mut FireState<'_>,
-    interaction: ValueInteraction,
-    operation: Op,
-) -> Result<([Option<u32>; 2], u64), Invalid> {
-    let op2_id = interaction.rule_agent_id;
-    let op2 = interaction.rule_agent;
-    let operand2 = op2.ports[1].ok_or(Invalid::PortArity)?;
-    let result = op2.ports[2].ok_or(Invalid::PortArity)?;
-    let new = RuntimeAgent {
-        origin: op2.origin,
-        symbol: Symbol::Op1(operation, interaction.number_bits),
-        ports: [Some(operand2), Some(result), None],
-    };
-    replace_agent(state.slots, op2_id, new)?;
-    redirect_external(
-        state.slots,
-        state.outputs,
-        PortRef {
-            agent: op2_id,
-            port_index: PortIndex::from(1),
-        },
-        PortRef {
-            agent: op2_id,
-            port_index: PortIndex::from(0),
-        },
-        operand2,
-    )?;
-    redirect_external(
-        state.slots,
-        state.outputs,
-        PortRef {
-            agent: op2_id,
-            port_index: PortIndex::from(2),
-        },
-        PortRef {
-            agent: op2_id,
-            port_index: PortIndex::from(1),
-        },
-        result,
-    )?;
-    remove_agent(state.slots, interaction.number_agent_id)?;
-    Ok(([Some(op2_id), None], 1))
-}
-
-fn fire_op1(
-    state: &mut FireState<'_>,
-    interaction: ValueInteraction,
-) -> Result<([Option<u32>; 2], u64), Invalid> {
-    let op1_id = interaction.rule_agent_id;
-    let op1 = interaction.rule_agent;
-    let target = op1.ports[1].ok_or(Invalid::PortArity)?;
-    let new = RuntimeAgent {
-        origin: op1.origin,
-        symbol: Symbol::Num(interaction.number_bits),
-        ports: [Some(target), None, None],
-    };
-    replace_agent(state.slots, op1_id, new)?;
-    redirect_external(
-        state.slots,
-        state.outputs,
-        PortRef {
-            agent: op1_id,
-            port_index: PortIndex::from(1),
-        },
-        PortRef {
-            agent: op1_id,
-            port_index: PortIndex::from(0),
-        },
-        target,
-    )?;
-    remove_agent(state.slots, interaction.number_agent_id)?;
-    Ok(([Some(op1_id), None], 1))
-}
-
-fn fire_dup(
-    state: &mut FireState<'_>,
-    interaction: ValueInteraction,
-) -> Result<([Option<u32>; 2], u64), Invalid> {
-    let dup_id = interaction.rule_agent_id;
-    let num_id = interaction.number_agent_id;
-    let dup = interaction.rule_agent;
-    let first = dup.ports[1].ok_or(Invalid::PortArity)?;
-    let second = dup.ports[2].ok_or(Invalid::PortArity)?;
-    let first_num = RuntimeAgent {
-        origin: dup.origin,
-        symbol: Symbol::Num(interaction.number_bits),
-        ports: [Some(first), None, None],
-    };
-    let second_num = RuntimeAgent {
-        origin: dup.origin,
-        symbol: Symbol::Num(interaction.number_bits),
-        ports: [Some(second), None, None],
-    };
-    replace_agent(state.slots, dup_id, first_num)?;
-    replace_agent(state.slots, num_id, second_num)?;
-    redirect_external(
-        state.slots,
-        state.outputs,
-        PortRef {
-            agent: dup_id,
-            port_index: PortIndex::from(1),
-        },
-        PortRef {
-            agent: dup_id,
-            port_index: PortIndex::from(0),
-        },
-        first,
-    )?;
-    redirect_external(
-        state.slots,
-        state.outputs,
-        PortRef {
-            agent: dup_id,
-            port_index: PortIndex::from(2),
-        },
-        PortRef {
-            agent: num_id,
-            port_index: PortIndex::from(0),
-        },
-        second,
-    )?;
-    Ok(([Some(dup_id), Some(num_id)], 0))
-}
-
-fn apply(operation: Op, first: u64, second: u64) -> u64 {
-    match operation {
-        Op::Add => first.wrapping_add(second),
-        Op::Sub => first.wrapping_sub(second),
-        Op::Mul => first.wrapping_mul(second),
-        Op::Eq => u64::from(first == second),
-    }
-}
-
-fn replace_agent(slots: &mut [Slot], index: u32, agent: RuntimeAgent) -> Result<(), Invalid> {
-    let slot = slots.get_mut(index as usize).ok_or(Invalid::UnknownPort)?;
-    slot.generation = slot
-        .generation
-        .checked_add(1)
-        .ok_or(Invalid::CounterOverflow)?;
-    slot.queued_generation = None;
-    slot.agent = Some(agent);
-    Ok(())
-}
-
-fn remove_agent(slots: &mut [Slot], index: u32) -> Result<(), Invalid> {
-    let slot = slots.get_mut(index as usize).ok_or(Invalid::UnknownPort)?;
-    slot.generation = slot
-        .generation
-        .checked_add(1)
-        .ok_or(Invalid::CounterOverflow)?;
-    slot.queued_generation = None;
-    slot.agent = None;
-    Ok(())
-}
-
-fn remove_pair(slots: &mut [Slot], first: u32, second: u32) -> Result<(), Invalid> {
-    remove_agent(slots, first)?;
-    remove_agent(slots, second)
-}
-
-fn redirect_external(
-    slots: &mut [Slot],
-    outputs: &mut [PortRef],
-    old: PortRef,
-    new: PortRef,
-    external: Endpoint,
-) -> Result<(), Invalid> {
-    match external {
-        Endpoint::Port(target) => {
-            let target_agent = slots
-                .get_mut(target.agent as usize)
-                .and_then(|slot| slot.agent.as_mut())
-                .ok_or(Invalid::UnknownPort)?;
-            let endpoint = target_agent
-                .ports
-                .get_mut(usize::from(target.port_index))
-                .ok_or(Invalid::UnknownPort)?;
-            if *endpoint != Some(Endpoint::Port(old)) {
-                return Err(Invalid::NonReciprocal);
-            }
-            *endpoint = Some(Endpoint::Port(new));
-        }
-        Endpoint::Output(output) => {
-            let endpoint = outputs
-                .get_mut(output as usize)
-                .ok_or(Invalid::OutputBoundary)?;
-            if *endpoint != old {
-                return Err(Invalid::OutputBoundary);
-            }
-            *endpoint = new;
-        }
-    }
-    Ok(())
-}
-
 fn read_back(
     slots: &[Slot],
     outputs: &[PortRef],
@@ -2004,6 +2020,8 @@ fn read_back(
 )]
 mod tests {
     use super::*;
+
+    const REQUIRED_ALLOCATION_ARENA_SLOTS: u64 = 4;
 
     struct TestIds;
 
@@ -2103,6 +2121,891 @@ mod tests {
             max_agent_slots: agent_slots,
             max_wires: wire_count,
             interaction_fuel,
+        }
+    }
+
+    fn plan_fixture(
+        rule: Symbol,
+        value: u64,
+        reverse: bool,
+    ) -> (alloc::vec::Vec<Slot>, alloc::vec::Vec<PortRef>, Pair) {
+        let rule_slot = if reverse { 1u32 } else { 0u32 };
+        let value_slot = 1 - rule_slot;
+        let symbols = if reverse {
+            [Symbol::Num(value), rule]
+        } else {
+            [rule, Symbol::Num(value)]
+        };
+        let pair = Pair {
+            first: 0,
+            first_generation: 0,
+            second: 1,
+            second_generation: 0,
+        };
+        let mut slots = alloc::vec![
+            Slot {
+                agent: None,
+                generation: 0,
+                queued_generation: None,
+            };
+            2
+        ];
+        let mut outputs = alloc::vec::Vec::with_capacity(rule.port_count().saturating_sub(1));
+        let mut output_index = 0u32;
+        for index in 0..2usize {
+            let symbol = symbols[index];
+            let peer = if index == 0 { 1 } else { 0 };
+            let mut ports = [None; 3];
+            ports[0] = Some(Endpoint::Port(PortRef {
+                agent: u32::try_from(peer).expect("two fixture slots"),
+                port_index: PortIndex::from(0),
+            }));
+            if u32::try_from(index).expect("two fixture slots") == rule_slot {
+                for (port, endpoint) in ports
+                    .iter_mut()
+                    .enumerate()
+                    .take(symbol.port_count())
+                    .skip(1)
+                {
+                    *endpoint = Some(Endpoint::Output(output_index));
+                    outputs.push(PortRef {
+                        agent: u32::try_from(index).expect("two fixture slots"),
+                        port_index: PortIndex::from(
+                            u8::try_from(port).expect("three fixture ports"),
+                        ),
+                    });
+                    output_index += 1;
+                }
+            }
+            slots[index].agent = Some(RuntimeAgent {
+                origin: Origin::Node(crate::ir::NodeId(
+                    u32::try_from(index).expect("two fixture slots"),
+                )),
+                symbol,
+                ports,
+            });
+        }
+        assert_eq!(value_slot, if reverse { 0 } else { 1 });
+        (slots, outputs, pair)
+    }
+
+    fn result_slot_range(
+        plan: &rewrite::PlanBytes,
+        result_index: usize,
+    ) -> Option<core::ops::Range<usize>> {
+        let bytes = plan.as_bytes();
+        let mut cursor = 33usize;
+        let boundary_count = usize::from(*bytes.get(cursor)?);
+        cursor = cursor.checked_add(1)?;
+        for _ in 0..boundary_count {
+            cursor = cursor.checked_add(5)?;
+            cursor = cursor.checked_add(match bytes.get(cursor).copied()? {
+                0 => 6,
+                1 => 5,
+                _ => return None,
+            })?;
+        }
+        let result_count = usize::from(*bytes.get(cursor)?);
+        if result_index >= result_count {
+            return None;
+        }
+        cursor = cursor.checked_add(1)?;
+        cursor = cursor.checked_add(result_index.checked_mul(21)?)?;
+        cursor = cursor.checked_add(1)?;
+        Some(cursor..cursor.checked_add(4)?)
+    }
+
+    fn principal_boundary_fixture() -> (alloc::vec::Vec<Slot>, alloc::vec::Vec<PortRef>, Pair) {
+        let pair = Pair {
+            first: 0,
+            first_generation: 0,
+            second: 1,
+            second_generation: 0,
+        };
+        let mut slots = alloc::vec![
+            Slot {
+                agent: None,
+                generation: 0,
+                queued_generation: None,
+            };
+            3
+        ];
+        let mut first_ports = [None; 3];
+        first_ports[0] = Some(Endpoint::Port(PortRef {
+            agent: 1,
+            port_index: PortIndex::from(0),
+        }));
+        first_ports[1] = Some(Endpoint::Port(PortRef {
+            agent: 2,
+            port_index: PortIndex::from(0),
+        }));
+        first_ports[2] = Some(Endpoint::Output(0));
+        slots[0].agent = Some(RuntimeAgent {
+            origin: Origin::Node(crate::ir::NodeId(0)),
+            symbol: Symbol::Op2(Op::Sub),
+            ports: first_ports,
+        });
+        slots[1].agent = Some(RuntimeAgent {
+            origin: Origin::Node(crate::ir::NodeId(1)),
+            symbol: Symbol::Num(3),
+            ports: [
+                Some(Endpoint::Port(PortRef {
+                    agent: 0,
+                    port_index: PortIndex::from(0),
+                })),
+                None,
+                None,
+            ],
+        });
+        slots[2].agent = Some(RuntimeAgent {
+            origin: Origin::Node(crate::ir::NodeId(2)),
+            symbol: Symbol::Op2(Op::Add),
+            ports: [
+                Some(Endpoint::Port(PortRef {
+                    agent: 0,
+                    port_index: PortIndex::from(1),
+                })),
+                Some(Endpoint::Output(1)),
+                Some(Endpoint::Output(2)),
+            ],
+        });
+        let outputs = alloc::vec![
+            PortRef {
+                agent: 0,
+                port_index: PortIndex::from(2),
+            },
+            PortRef {
+                agent: 2,
+                port_index: PortIndex::from(1),
+            },
+            PortRef {
+                agent: 2,
+                port_index: PortIndex::from(2),
+            },
+        ];
+        (slots, outputs, pair)
+    }
+
+    fn duplicate_principal_fixture() -> (alloc::vec::Vec<Slot>, alloc::vec::Vec<PortRef>, Pair) {
+        let pair = Pair {
+            first: 0,
+            first_generation: 0,
+            second: 1,
+            second_generation: 0,
+        };
+        let mut slots = alloc::vec![
+            Slot {
+                agent: None,
+                generation: 0,
+                queued_generation: None,
+            };
+            4
+        ];
+        slots[0].agent = Some(RuntimeAgent {
+            origin: Origin::Node(crate::ir::NodeId(0)),
+            symbol: Symbol::Dup,
+            ports: [
+                Some(Endpoint::Port(PortRef {
+                    agent: 1,
+                    port_index: PortIndex::from(0),
+                })),
+                Some(Endpoint::Port(PortRef {
+                    agent: 2,
+                    port_index: PortIndex::from(0),
+                })),
+                Some(Endpoint::Port(PortRef {
+                    agent: 3,
+                    port_index: PortIndex::from(0),
+                })),
+            ],
+        });
+        slots[1].agent = Some(RuntimeAgent {
+            origin: Origin::Node(crate::ir::NodeId(1)),
+            symbol: Symbol::Num(5),
+            ports: [
+                Some(Endpoint::Port(PortRef {
+                    agent: 0,
+                    port_index: PortIndex::from(0),
+                })),
+                None,
+                None,
+            ],
+        });
+        for index in [2usize, 3usize] {
+            let output_index_base = u32::try_from((index - 2) * 2).expect("two fixture agents");
+            slots[index].agent = Some(RuntimeAgent {
+                origin: Origin::Node(crate::ir::NodeId(
+                    u32::try_from(index).expect("four fixture slots"),
+                )),
+                symbol: Symbol::Op2(Op::Add),
+                ports: [
+                    Some(Endpoint::Port(PortRef {
+                        agent: 0,
+                        port_index: PortIndex::from(
+                            u8::try_from(index - 1).expect("two DUP outputs"),
+                        ),
+                    })),
+                    Some(Endpoint::Output(output_index_base)),
+                    Some(Endpoint::Output(output_index_base + 1)),
+                ],
+            });
+        }
+        let outputs = alloc::vec![
+            PortRef {
+                agent: 2,
+                port_index: PortIndex::from(1)
+            },
+            PortRef {
+                agent: 2,
+                port_index: PortIndex::from(2)
+            },
+            PortRef {
+                agent: 3,
+                port_index: PortIndex::from(1)
+            },
+            PortRef {
+                agent: 3,
+                port_index: PortIndex::from(2)
+            },
+        ];
+        (slots, outputs, pair)
+    }
+
+    fn shared_boundary_worklist_fixture() -> (
+        alloc::vec::Vec<Slot>,
+        alloc::vec::Vec<PortRef>,
+        ActiveWorklist,
+        Pair,
+    ) {
+        let mut slots = alloc::vec![
+            Slot {
+                agent: None,
+                generation: 0,
+                queued_generation: None,
+            };
+            4
+        ];
+        slots[0].agent = Some(RuntimeAgent {
+            origin: Origin::Node(crate::ir::NodeId(0)),
+            symbol: Symbol::Op2(Op::Add),
+            ports: [
+                Some(Endpoint::Port(PortRef {
+                    agent: 1,
+                    port_index: PortIndex::from(0),
+                })),
+                Some(Endpoint::Port(PortRef {
+                    agent: 2,
+                    port_index: PortIndex::from(1),
+                })),
+                Some(Endpoint::Port(PortRef {
+                    agent: 2,
+                    port_index: PortIndex::from(2),
+                })),
+            ],
+        });
+        slots[1].agent = Some(RuntimeAgent {
+            origin: Origin::Node(crate::ir::NodeId(1)),
+            symbol: Symbol::Num(9),
+            ports: [
+                Some(Endpoint::Port(PortRef {
+                    agent: 0,
+                    port_index: PortIndex::from(0),
+                })),
+                None,
+                None,
+            ],
+        });
+        slots[2].agent = Some(RuntimeAgent {
+            origin: Origin::Node(crate::ir::NodeId(2)),
+            symbol: Symbol::Dup,
+            ports: [
+                Some(Endpoint::Port(PortRef {
+                    agent: 3,
+                    port_index: PortIndex::from(0),
+                })),
+                Some(Endpoint::Port(PortRef {
+                    agent: 0,
+                    port_index: PortIndex::from(1),
+                })),
+                Some(Endpoint::Port(PortRef {
+                    agent: 0,
+                    port_index: PortIndex::from(2),
+                })),
+            ],
+        });
+        slots[3].agent = Some(RuntimeAgent {
+            origin: Origin::Node(crate::ir::NodeId(3)),
+            symbol: Symbol::Num(17),
+            ports: [
+                Some(Endpoint::Port(PortRef {
+                    agent: 2,
+                    port_index: PortIndex::from(0),
+                })),
+                None,
+                None,
+            ],
+        });
+        slots[2].queued_generation = Some(0);
+        slots[3].queued_generation = Some(0);
+        let selected = Pair {
+            first: 0,
+            first_generation: 0,
+            second: 1,
+            second_generation: 0,
+        };
+        let queued = Pair {
+            first: 2,
+            first_generation: 0,
+            second: 3,
+            second_generation: 0,
+        };
+        let outputs = alloc::vec::Vec::new();
+        let worklist = ActiveWorklist {
+            entries: alloc::vec![queued],
+        };
+        (slots, outputs, worklist, selected)
+    }
+
+    #[test]
+    fn plan_compiler_emits_checked_bytes_for_every_rule_and_orientation() {
+        for op in [Op::Add, Op::Sub, Op::Mul, Op::Eq] {
+            for reverse in [false, true] {
+                for rule in [Symbol::Op2(op), Symbol::Op1(op, 19)] {
+                    let (slots, outputs, pair) = plan_fixture(rule, 7, reverse);
+                    for policy in [StoragePolicy::Reuse, StoragePolicy::Allocate] {
+                        let bytes = rewrite::compile(&slots, &outputs, pair, policy)
+                            .expect("rule must compile");
+                        assert_eq!(&bytes.as_bytes()[..5], b"NPLN\x01");
+                        assert_eq!(bytes.as_bytes().last(), Some(&0xc7));
+                        assert!(rewrite::check(&bytes, &slots, &outputs, pair, policy).is_ok());
+                    }
+                }
+            }
+        }
+        for rule in [Symbol::Dup, Symbol::Era] {
+            for reverse in [false, true] {
+                let (slots, outputs, pair) = plan_fixture(rule, 0xfeed, reverse);
+                for policy in [StoragePolicy::Reuse, StoragePolicy::Allocate] {
+                    let bytes = rewrite::compile(&slots, &outputs, pair, policy)
+                        .expect("fanout/erasure rule must compile");
+                    assert!(rewrite::check(&bytes, &slots, &outputs, pair, policy).is_ok());
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn replay_identity_changes_for_a_new_plan_with_the_same_rule_identity() {
+        let (_checked, net, _row) = sample_interaction_graph(2, 8);
+        let (slots, outputs, pair) = principal_boundary_fixture();
+        let reused =
+            rewrite::compile(&slots, &outputs, pair, StoragePolicy::Reuse).expect("reuse plan");
+        let allocated = rewrite::compile(&slots, &outputs, pair, StoragePolicy::Allocate)
+            .expect("allocation plan");
+        let initial = digest_bytes(
+            &IDS,
+            &[
+                b"noble-net-plan-stream/1",
+                PLAN_RULES_REVISION.as_bytes(),
+                PLAN_REVISION.as_bytes(),
+            ],
+        );
+        let reuse_plan_digest = digest_bytes(&IDS, &[&initial, reused.as_bytes()]);
+        let allocate_plan_digest = digest_bytes(&IDS, &[&initial, allocated.as_bytes()]);
+        assert_ne!(reuse_plan_digest, allocate_plan_digest);
+        assert_ne!(
+            replay_digest(&IDS, &net, reuse_plan_digest),
+            replay_digest(&IDS, &net, allocate_plan_digest),
+        );
+    }
+
+    #[test]
+    fn plan_operation_counters_refuse_wrap_without_partial_accounting() {
+        let execution = rewrite::Execution {
+            live_decrease: 1,
+            transient_live_nodes: 2,
+            allocated_slots: 1,
+            reused_slots: 1,
+            freed_slots: 1,
+            microsteps: 6,
+        };
+        for mut stats in [
+            PlanStats {
+                allocated_slots: u64::MAX,
+                ..PlanStats::default()
+            },
+            PlanStats {
+                reused_slots: u64::MAX,
+                ..PlanStats::default()
+            },
+            PlanStats {
+                freed_slots: u64::MAX,
+                ..PlanStats::default()
+            },
+            PlanStats {
+                microsteps: u64::MAX - 5,
+                ..PlanStats::default()
+            },
+        ] {
+            let before = stats.clone();
+            assert_eq!(
+                stats.record_commit_counts(&execution),
+                Err(Invalid::CounterOverflow)
+            );
+            assert_eq!(stats, before);
+        }
+    }
+
+    #[test]
+    fn checker_preserves_distinct_ports_on_one_boundary_agent_and_queue_ownership() {
+        let (slots, outputs, worklist, pair) = shared_boundary_worklist_fixture();
+        let bytes = rewrite::compile(&slots, &outputs, pair, StoragePolicy::Reuse)
+            .expect("shared boundary is legal");
+        assert!(rewrite::check_with_worklist(rewrite::CheckRequest {
+            bytes: &bytes,
+            slots: &slots,
+            outputs: &outputs,
+            worklist: &worklist,
+            pair,
+            policy: StoragePolicy::Reuse,
+        })
+        .is_ok());
+
+        let mut duplicate = ActiveWorklist {
+            entries: worklist.entries.clone(),
+        };
+        duplicate.entries.push(pair);
+        assert!(matches!(
+            rewrite::check_with_worklist(rewrite::CheckRequest {
+                bytes: &bytes,
+                slots: &slots,
+                outputs: &outputs,
+                worklist: &duplicate,
+                pair,
+                policy: StoragePolicy::Reuse,
+            }),
+            Err(Invalid::DoubleEnqueue)
+        ));
+
+        let mut stale_queue = ActiveWorklist {
+            entries: worklist.entries.clone(),
+        };
+        stale_queue.entries[0].second_generation += 1;
+        assert!(matches!(
+            rewrite::check_with_worklist(rewrite::CheckRequest {
+                bytes: &bytes,
+                slots: &slots,
+                outputs: &outputs,
+                worklist: &stale_queue,
+                pair,
+                policy: StoragePolicy::Reuse,
+            }),
+            Err(Invalid::StalePlanSlot)
+        ));
+
+        let mut freed_slots = slots.clone();
+        freed_slots[3].agent = None;
+        assert!(matches!(
+            rewrite::check_with_worklist(rewrite::CheckRequest {
+                bytes: &bytes,
+                slots: &freed_slots,
+                outputs: &outputs,
+                worklist: &worklist,
+                pair,
+                policy: StoragePolicy::Reuse,
+            }),
+            Err(Invalid::StalePlanSlot)
+        ));
+    }
+
+    #[test]
+    fn independent_plan_checker_rejects_forged_bytes() {
+        let (slots, outputs, pair) = plan_fixture(Symbol::Op2(Op::Sub), 8, false);
+        let mut bytes =
+            rewrite::compile(&slots, &outputs, pair, StoragePolicy::Reuse).expect("op2 plan");
+        bytes.as_mut_bytes()[31] = 0;
+        assert!(rewrite::check(&bytes, &slots, &outputs, pair, StoragePolicy::Reuse).is_err());
+
+        let mut stale =
+            rewrite::compile(&slots, &outputs, pair, StoragePolicy::Reuse).expect("op2 plan");
+        stale.as_mut_bytes()[11] ^= 1;
+        assert!(rewrite::check(&stale, &slots, &outputs, pair, StoragePolicy::Reuse).is_err());
+
+        let mut wrong_reuse =
+            rewrite::compile(&slots, &outputs, pair, StoragePolicy::Reuse).expect("op2 plan");
+        let slot_range = result_slot_range(&wrong_reuse, 0).expect("first result slot range");
+        wrong_reuse.as_mut_bytes()[slot_range].copy_from_slice(&pair.second.to_le_bytes());
+        assert!(matches!(
+            rewrite::check(&wrong_reuse, &slots, &outputs, pair, StoragePolicy::Reuse),
+            Err(Invalid::PlanMismatch)
+        ));
+
+        let mut omitted_write =
+            rewrite::compile(&slots, &outputs, pair, StoragePolicy::Reuse).expect("op2 plan");
+        omitted_write.as_mut_bytes()[76] = 1;
+        assert!(
+            rewrite::check(&omitted_write, &slots, &outputs, pair, StoragePolicy::Reuse).is_err()
+        );
+
+        let mut extra_write =
+            rewrite::compile(&slots, &outputs, pair, StoragePolicy::Reuse).expect("op2 plan");
+        extra_write.as_mut_bytes()[76] = 3;
+        assert!(
+            rewrite::check(&extra_write, &slots, &outputs, pair, StoragePolicy::Reuse).is_err()
+        );
+
+        let mut aliased_boundary =
+            rewrite::compile(&slots, &outputs, pair, StoragePolicy::Reuse).expect("op2 plan");
+        aliased_boundary.as_mut_bytes()[50..54].copy_from_slice(&0u32.to_le_bytes());
+        assert!(rewrite::check(
+            &aliased_boundary,
+            &slots,
+            &outputs,
+            pair,
+            StoragePolicy::Reuse
+        )
+        .is_err());
+
+        let (sub_slots, sub_outputs, sub_pair) = plan_fixture(Symbol::Op1(Op::Sub, 2), 8, false);
+        let mut swapped =
+            rewrite::compile(&sub_slots, &sub_outputs, sub_pair, StoragePolicy::Reuse)
+                .expect("op1 subtraction plan");
+        swapped.as_mut_bytes()[51..59].copy_from_slice(&6u64.to_le_bytes());
+        assert!(rewrite::check(
+            &swapped,
+            &sub_slots,
+            &sub_outputs,
+            sub_pair,
+            StoragePolicy::Reuse
+        )
+        .is_err());
+
+        let (dup_slots, dup_outputs, dup_pair) = plan_fixture(Symbol::Dup, 5, false);
+        let mut duplicate_free =
+            rewrite::compile(&dup_slots, &dup_outputs, dup_pair, StoragePolicy::Reuse)
+                .expect("dup plan");
+        let first_range = result_slot_range(&duplicate_free, 0).expect("first dup slot range");
+        let second_range = result_slot_range(&duplicate_free, 1).expect("second dup slot range");
+        let mut first_destination = [0; 4];
+        first_destination.copy_from_slice(&duplicate_free.as_bytes()[first_range]);
+        duplicate_free.as_mut_bytes()[second_range].copy_from_slice(&first_destination);
+        assert!(matches!(
+            rewrite::check(
+                &duplicate_free,
+                &dup_slots,
+                &dup_outputs,
+                dup_pair,
+                StoragePolicy::Reuse
+            ),
+            Err(Invalid::DuplicateFree)
+        ));
+
+        let (fanout_slots, fanout_outputs, fanout_pair) = duplicate_principal_fixture();
+        let mut duplicate_enqueue = rewrite::compile(
+            &fanout_slots,
+            &fanout_outputs,
+            fanout_pair,
+            StoragePolicy::Reuse,
+        )
+        .expect("active fanout plan");
+        let emitted = duplicate_enqueue.as_mut_bytes();
+        for byte_index in 0..24 {
+            emitted[150 + byte_index] = emitted[126 + byte_index];
+        }
+        assert!(rewrite::check(
+            &duplicate_enqueue,
+            &fanout_slots,
+            &fanout_outputs,
+            fanout_pair,
+            StoragePolicy::Reuse,
+        )
+        .is_err());
+
+        let mut insufficient = rewrite::compile(&slots, &outputs, pair, StoragePolicy::Allocate)
+            .expect("allocating op2 plan");
+        assert_eq!(insufficient.as_bytes()[90], 1);
+        insufficient.as_mut_bytes()[90..94].copy_from_slice(&0u32.to_le_bytes());
+        assert!(rewrite::check(
+            &insufficient,
+            &slots,
+            &outputs,
+            pair,
+            StoragePolicy::Allocate
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn plan_resources_are_reserved_before_mutation_and_microsteps_roll_back() {
+        for policy in [StoragePolicy::Reuse, StoragePolicy::Allocate] {
+            for stop_at in 1..=6 {
+                let (mut slots, mut outputs, pair) = principal_boundary_fixture();
+                let bytes =
+                    rewrite::compile(&slots, &outputs, pair, policy).expect("principal plan");
+                let checked = rewrite::check(&bytes, &slots, &outputs, pair, policy)
+                    .expect("principal plan checks");
+                let slots_before = slots.clone();
+                let outputs_before = outputs.clone();
+                let mut worklist = ActiveWorklist {
+                    entries: alloc::vec::Vec::with_capacity(slots.len()),
+                };
+                let queue_before = worklist.entries.clone();
+                let interrupted = |step| step == stop_at;
+                let max_arena_slots = u64::try_from(slots.len()).expect("fixture size")
+                    + u64::from(policy == StoragePolicy::Allocate);
+                let result = rewrite::execute_with_interrupt(
+                    checked,
+                    &mut rewrite::ExecutionState {
+                        slots: &mut slots,
+                        outputs: &mut outputs,
+                        worklist: &mut worklist,
+                    },
+                    rewrite::ExecutionLimits {
+                        arena_slots: max_arena_slots,
+                        scratch_bytes: rewrite::MAX_PLAN_BYTES as u64,
+                        worklist_entries: 1,
+                    },
+                    Some(&interrupted),
+                );
+                assert!(matches!(
+                    result,
+                    Err(rewrite::ExecuteError::Invalid(Invalid::PlanInterrupted))
+                ));
+                assert_eq!(slots, slots_before);
+                assert_eq!(outputs, outputs_before);
+                assert_eq!(worklist.entries, queue_before);
+            }
+        }
+
+        let mut worklist = ActiveWorklist {
+            entries: alloc::vec::Vec::with_capacity(1),
+        };
+        for fail_after_reservations in 0..=2 {
+            let (mut slots, mut outputs, pair) = principal_boundary_fixture();
+            let bytes = rewrite::compile(&slots, &outputs, pair, StoragePolicy::Allocate)
+                .expect("allocating principal plan");
+            let checked = rewrite::check(&bytes, &slots, &outputs, pair, StoragePolicy::Allocate)
+                .expect("allocating principal plan checks");
+            let slots_before = slots.clone();
+            let outputs_before = outputs.clone();
+            worklist.entries.clear();
+            let result = rewrite::execute_with_reservation_failure(
+                checked,
+                &mut rewrite::ExecutionState {
+                    slots: &mut slots,
+                    outputs: &mut outputs,
+                    worklist: &mut worklist,
+                },
+                rewrite::ExecutionLimits {
+                    arena_slots: REQUIRED_ALLOCATION_ARENA_SLOTS,
+                    scratch_bytes: rewrite::MAX_PLAN_BYTES as u64,
+                    worklist_entries: 1,
+                },
+                fail_after_reservations,
+            );
+            assert!(matches!(
+                result,
+                Err(rewrite::ExecuteError::Invalid(
+                    Invalid::PlanReservationFailure
+                ))
+            ));
+            assert_eq!(slots, slots_before);
+            assert_eq!(outputs, outputs_before);
+            assert!(worklist.entries.is_empty());
+        }
+
+        let (mut slots, mut outputs, pair) = principal_boundary_fixture();
+        let initial_slots = slots.len();
+        let bytes = rewrite::compile(&slots, &outputs, pair, StoragePolicy::Reuse)
+            .expect("fully reusable plan");
+        let checked = rewrite::check(&bytes, &slots, &outputs, pair, StoragePolicy::Reuse)
+            .expect("fully reusable plan checks");
+        let mut worklist = ActiveWorklist {
+            entries: alloc::vec::Vec::new(),
+        };
+        let result = rewrite::execute(
+            checked,
+            &mut rewrite::ExecutionState {
+                slots: &mut slots,
+                outputs: &mut outputs,
+                worklist: &mut worklist,
+            },
+            rewrite::ExecutionLimits {
+                arena_slots: u64::try_from(initial_slots).expect("fixture arena size"),
+                scratch_bytes: rewrite::MAX_PLAN_BYTES as u64,
+                worklist_entries: 1,
+            },
+        );
+        let result = match result {
+            Ok(result) => result,
+            Err(_) => panic!("reusable plan fits with zero free arena slots"),
+        };
+        assert_eq!(result.allocated_slots, 0);
+        assert_eq!(result.reused_slots, 1);
+        assert_eq!(slots.len(), initial_slots);
+
+        let (mut slots, mut outputs, pair) = principal_boundary_fixture();
+        let bytes = rewrite::compile(&slots, &outputs, pair, StoragePolicy::Allocate)
+            .expect("allocating principal plan");
+        let checked = rewrite::check(&bytes, &slots, &outputs, pair, StoragePolicy::Allocate)
+            .expect("allocating principal plan checks");
+        let slots_before = slots.clone();
+        let outputs_before = outputs.clone();
+        let mut worklist = ActiveWorklist {
+            entries: alloc::vec::Vec::with_capacity(slots.len()),
+        };
+        let max_arena_slots = u64::try_from(slots.len()).expect("fixture size");
+        let result = rewrite::execute(
+            checked,
+            &mut rewrite::ExecutionState {
+                slots: &mut slots,
+                outputs: &mut outputs,
+                worklist: &mut worklist,
+            },
+            rewrite::ExecutionLimits {
+                arena_slots: max_arena_slots,
+                scratch_bytes: rewrite::MAX_PLAN_BYTES as u64,
+                worklist_entries: 1,
+            },
+        );
+        assert!(matches!(
+            result,
+            Err(rewrite::ExecuteError::Limited {
+                limit: Limit::ArenaReservation,
+                ..
+            })
+        ));
+        assert_eq!(slots, slots_before);
+        assert_eq!(outputs, outputs_before);
+        assert!(worklist.entries.is_empty());
+    }
+
+    #[test]
+    fn plan_resource_limits_fail_below_and_succeed_at_or_above() {
+        let required_scratch_bytes = rewrite::MAX_PLAN_BYTES as u64;
+        for scratch_limit_bytes in [
+            required_scratch_bytes - 1,
+            required_scratch_bytes,
+            required_scratch_bytes + 1,
+        ] {
+            let (mut slots, mut outputs, pair) = principal_boundary_fixture();
+            let bytes =
+                rewrite::compile(&slots, &outputs, pair, StoragePolicy::Reuse).expect("reuse plan");
+            let checked = rewrite::check(&bytes, &slots, &outputs, pair, StoragePolicy::Reuse)
+                .expect("checked plan");
+            let mut worklist = ActiveWorklist {
+                entries: alloc::vec::Vec::with_capacity(slots.len()),
+            };
+            let arena_slots = u64::try_from(slots.len()).expect("fixture arena size");
+            let result = rewrite::execute(
+                checked,
+                &mut rewrite::ExecutionState {
+                    slots: &mut slots,
+                    outputs: &mut outputs,
+                    worklist: &mut worklist,
+                },
+                rewrite::ExecutionLimits {
+                    arena_slots,
+                    scratch_bytes: scratch_limit_bytes,
+                    worklist_entries: 1,
+                },
+            );
+            if scratch_limit_bytes < required_scratch_bytes {
+                assert!(matches!(
+                    result,
+                    Err(rewrite::ExecuteError::Limited {
+                        limit: Limit::PlanScratch,
+                        ..
+                    })
+                ));
+                assert!(worklist.entries.is_empty());
+            } else {
+                assert!(result.is_ok());
+                assert_eq!(worklist.entries.len(), 1);
+            }
+        }
+        for max_queue_entries in [0u64, 1, 2] {
+            let (mut slots, mut outputs, pair) = principal_boundary_fixture();
+            let bytes =
+                rewrite::compile(&slots, &outputs, pair, StoragePolicy::Reuse).expect("reuse plan");
+            let checked = rewrite::check(&bytes, &slots, &outputs, pair, StoragePolicy::Reuse)
+                .expect("checked plan");
+            let slots_before = slots.clone();
+            let outputs_before = outputs.clone();
+            let mut worklist = ActiveWorklist {
+                entries: alloc::vec::Vec::with_capacity(slots.len()),
+            };
+            let arena_slots = u64::try_from(slots.len()).expect("fixture arena size");
+            let result = rewrite::execute(
+                checked,
+                &mut rewrite::ExecutionState {
+                    slots: &mut slots,
+                    outputs: &mut outputs,
+                    worklist: &mut worklist,
+                },
+                rewrite::ExecutionLimits {
+                    arena_slots,
+                    scratch_bytes: required_scratch_bytes,
+                    worklist_entries: max_queue_entries,
+                },
+            );
+            if max_queue_entries == 0 {
+                assert!(matches!(
+                    result,
+                    Err(rewrite::ExecuteError::Limited {
+                        limit: Limit::WorklistReservation,
+                        ..
+                    })
+                ));
+                assert_eq!(slots, slots_before);
+                assert_eq!(outputs, outputs_before);
+                assert!(worklist.entries.is_empty());
+            } else {
+                assert!(result.is_ok());
+                assert_eq!(worklist.entries.len(), 1);
+            }
+        }
+        for max_arena_slots in [
+            REQUIRED_ALLOCATION_ARENA_SLOTS - 1,
+            REQUIRED_ALLOCATION_ARENA_SLOTS,
+            REQUIRED_ALLOCATION_ARENA_SLOTS + 1,
+        ] {
+            let (mut slots, mut outputs, pair) = principal_boundary_fixture();
+            let bytes = rewrite::compile(&slots, &outputs, pair, StoragePolicy::Allocate)
+                .expect("allocating plan");
+            let checked = rewrite::check(&bytes, &slots, &outputs, pair, StoragePolicy::Allocate)
+                .expect("checked allocating plan");
+            let mut worklist = ActiveWorklist {
+                entries: alloc::vec::Vec::with_capacity(slots.len()),
+            };
+            let result = rewrite::execute(
+                checked,
+                &mut rewrite::ExecutionState {
+                    slots: &mut slots,
+                    outputs: &mut outputs,
+                    worklist: &mut worklist,
+                },
+                rewrite::ExecutionLimits {
+                    arena_slots: max_arena_slots,
+                    scratch_bytes: required_scratch_bytes,
+                    worklist_entries: 1,
+                },
+            );
+            if max_arena_slots < REQUIRED_ALLOCATION_ARENA_SLOTS {
+                assert!(matches!(
+                    result,
+                    Err(rewrite::ExecuteError::Limited {
+                        limit: Limit::ArenaReservation,
+                        ..
+                    })
+                ));
+            } else {
+                assert!(result.is_ok());
+                assert_eq!(
+                    slots.len(),
+                    usize::try_from(REQUIRED_ALLOCATION_ARENA_SLOTS).expect("arena slots")
+                );
+            }
         }
     }
 
@@ -2220,6 +3123,72 @@ mod tests {
             observations.push(report.obs);
         }
         assert!(observations.windows(2).all(|pair| pair[0] == pair[1]));
+    }
+
+    #[test]
+    fn schedule_fuel_boundary_refuses_without_partial_readback() {
+        let (checked, net, row) = sample_interaction_graph(11, 4);
+        let total = net.expected_interactions().expect("sample interactions");
+        let initial_wires = net.wire_count().expect("sample wires");
+        let reference =
+            crate::eval::reference(&checked, &row, None, &mut crate::eval::Control::default());
+        let expected = match reference.obs {
+            crate::eval::Obs::Normal(values) => values,
+            other => panic!("sample reference was not normal: {other:?}"),
+        };
+        let schedules = [
+            Schedule::Lifo,
+            Schedule::Fifo,
+            Schedule::SplitMix64 { seed: 1 },
+            Schedule::SplitMix64 { seed: 0x5eed },
+        ];
+        for cap in [total - 1, total, total + 1] {
+            for schedule in schedules {
+                let limits = Limits::default();
+                let report = reduce(
+                    &IDS,
+                    ReduceRequest {
+                        checked: &checked,
+                        candidate: &net,
+                        inputs: &row,
+                        limits: &limits,
+                        plan: Plan {
+                            schedule: Some(schedule),
+                            interaction_fuel: Some(cap),
+                            ..Plan::default()
+                        },
+                    },
+                );
+                if cap < total {
+                    assert_eq!(
+                        report.obs,
+                        Obs::Exhausted {
+                            limit: Limit::Fuel,
+                            cap,
+                            observed: cap + 1,
+                        },
+                        "{schedule:?}"
+                    );
+                    assert_eq!(report.interactions, cap, "{schedule:?}");
+                    assert_eq!(
+                        report.final_wires,
+                        Some(initial_wires - cap),
+                        "{schedule:?}"
+                    );
+                } else {
+                    assert!(
+                        matches!(&report.obs, Obs::Normal(values) if values == &expected),
+                        "{schedule:?}: {report:?}"
+                    );
+                    assert_eq!(report.interactions, total, "{schedule:?}");
+                    assert_eq!(
+                        report.final_wires,
+                        Some(initial_wires - total),
+                        "{schedule:?}"
+                    );
+                }
+            }
+        }
     }
 
     #[test]
@@ -2523,7 +3492,7 @@ mod tests {
                 None,
             ],
         };
-        let mut slots = [
+        let slots = alloc::vec![
             Slot {
                 agent: Some(first),
                 generation: 0,
@@ -2535,7 +3504,7 @@ mod tests {
                 queued_generation: None,
             },
         ];
-        let result = fire_pair(&mut slots, &mut [], pair);
+        let result = rewrite::compile(&slots, &[], pair, StoragePolicy::Reuse);
         assert_eq!(result, Err(Invalid::StuckPair));
     }
 

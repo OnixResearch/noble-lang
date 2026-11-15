@@ -148,6 +148,61 @@ The other native proofs in the requested sources remain deliberately classified 
 The M3 proof gate and its refusal matrix pass with the converted declarations. The conversions do not
 turn the remaining evaluation fixtures into strict proofs and do not expand the replay corpus.
 
+### Current strength-join follow-up (2026-11-14)
+
+The 26 currently strength-flagged native citations for `noble_kernel.acceptance.check` were each
+tried with `decide +kernel` under 1,000,000 heartbeats and recursion depth 4,096, with no statement
+changes. All 12 M2 and 14 M3 candidate proofs stopped at the extracted/reference `Outcome` match
+before the extracted `Result` computation reduced; these were reduction failures, not heartbeat
+timeouts. No conversion or replay-root change was made. The per-theorem locations, measurements,
+reopen condition, and clean-commit M2/M3 strength receipt
+are recorded in [`decision.md`](decision.md#d-remaining-native_decide-conversions) and
+[`receipts/2026-11-14/strength-join.json`](receipts/2026-11-14/strength-join.json).
+
+### Community axiom-audit comparison
+
+The isolated [pilot](../../proofs/axiom-audit-pilot/lakefile.toml) pins upstream
+`axiom-audit@0b885d88` without changing the main foundation project. The
+[frozen criteria](axiom-audit-criteria.json), [121-module roster](receipts/2026-11-14/axiom-audit-modules.json),
+and [source-bound comparison](receipts/2026-11-14/axiom-audit-comparison.json) retain the four-library
+experiment on Lean 4.35.0. All 2,071 selected public theorem sets and 168 private helpers were
+accounted for, but 53 generated/inductive declaration axiom sets disagreed with Lean's stock
+collector; four mutual-inductive fixture rows missed an imported custom axiom. The preregistered
+exact `Lean.ofReduceBool` control also did not materialize under 4.35.0, which generated a different
+native axiom name. Thus `go=false`: keep the inventory-bound audit as deciding reference. The full
+counterexamples, measured wall/RSS, trust boundary, and reopen condition are in
+[`decision.md`](decision.md#e-community-axiom-audit-comparison).
+
+To reproduce, build both executables with the selected Lean 4.35.0 under
+`proofs/axiom-audit-pilot` (`lake build axiomAudit/axiom-audit noble-axiom-compare`), then run
+`node verification/independent-replay/axiom-audit-run.mjs --out <fresh-output-directory>
+--baseline <clean-foundation-check.json> --source-commit <clean-source-sha>` from the repository
+root. The runner builds every source module in the independent roster and retains raw logs and
+generated negative-control source only in the caller-owned output directory. The comparison
+audits compiled assumptions at upstream `trustLevel := 1024`; it is neither proof-term replay nor
+compiler/runtime correspondence.
+
+### Compiled-artifact binding after batch 4
+
+The refreshed `olean-integrity.txt` binds 112 project `.olean` files and nine external search-path
+aggregates from a clean rebuild of the current foundation source under Lean 4.35.0. Reusing the
+previous 79-file pin refused the newly built modules, as intended. A previous build directory also
+contained orphan `.olean` files with incompatible headers and no source module; cleaning and
+rebuilding the project removed them before freezing the new manifest. The selected toolchain,
+theorem statements and checker-source pins did not change. The refreshed manifest must be
+regenerated from the actual compiled artifacts when the integration checkout differs; never
+silently accept a digest mismatch.
+
+The five integrity controls pass against this pin. A local full-root `leanchecker NobleFoundation`
+was killed by the **global OOM killer** (status 137, 42,432,012 kB anonymous RSS), which is a
+resource refusal, not a kernel verdict. The same pinned artifacts and runner were copied to a
+high-memory machine: the manifest digest matched, all artifact checks passed, and the full-root
+replay returned silent `kernel-accepted` with exit 0. That remote run did not have Git metadata, so
+its raw output has an empty `source_commit`; the
+[scoped receipt](receipts/2026-11-14/compiled-replay.json) states the local source commit and
+manifest digest separately rather than pretending the runner reported one. This remains Lean's
+own kernel replay, not independent-checker acceptance or proof of source/runtime correspondence.
+
 ## Historical measurements (4.31.0; 2026-10-26 through 2026-10-30)
 
 | Lane | Command | Result |

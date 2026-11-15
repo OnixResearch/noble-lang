@@ -779,9 +779,6 @@ r[VT-PIN-02]
 
 **VT-PIN-02.** The Charon revision and Lean backend configuration MUST match the selected Aeneas revision's compatibility requirements. Aeneas's README explicitly ties these dependencies together. A local symlink or manual tool override MUST NOT bypass the package's own pin checks. [R2]
 
-**Documented exception ([issue #86](https://github.com/OnixResearch/noble-lang/issues/86)).** The Aeneas Lean library MAY be pinned separately from the Aeneas extractor when no extractor revision whose library supports the pinned Lean can extract every pinned subject. The tool selection then names both. `sources.aeneas` is the extractor, and the Charon pin must still match it. `sources.aeneas_lean` is the library, and its `lean-toolchain` and `lake-manifest.json` must match the pinned Lean and every proof project's manifest; the tool-selection check enforces both. The checked-in generated subjects remain the extractor's unmodified output. A library name that the subjects use but the library no longer provides is restated, under its old name and as the library's own definition, in one named compatibility block (`proofs/m3/NobleKernel/TypesExternal.lean`), and every proof project must build against the library. The exception ends when the subjects are re-extracted with an extractor that matches the library. It is in force for extractor `505b6ca3` and library `1238879f`: Aeneas `1238879f` extracts the kernel and Wasm subjects but fails on the `noble-contracts` subject, and the then-newest `87cfe2f5`, the other revision tried that supports Lean 4.35.0, fails on it too.
-
-
 <!-- cairn:scenario-links:start -->
 Test design remains open for this requirement. No scenario or execution evidence is supplied.
 <!-- cairn:scenario-links:end -->

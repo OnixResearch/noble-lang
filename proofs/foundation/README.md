@@ -170,6 +170,13 @@ Status words:
 
 | Claim | Model / theorem(s) | Implementation boundary | Status |
 |---|---|---|---|
+| Checked revision-3 worklist-plan semantics (issue #110) | `NobleFoundation.NetI64Plans.compileRule_exact_rhs`, `NobleFoundation.NetI64Plans.compileRule_op2_forward`, `NobleFoundation.NetI64Plans.compileRule_op2_reverse`, `NobleFoundation.NetI64Plans.compileRule_op1_forward`, `NobleFoundation.NetI64Plans.compileRule_op1_reverse`, `NobleFoundation.NetI64Plans.compileRule_dup_forward`, `NobleFoundation.NetI64Plans.compileRule_dup_reverse`, `NobleFoundation.NetI64Plans.compileRule_era_forward`, `NobleFoundation.NetI64Plans.compileRule_era_reverse`, `NobleFoundation.NetI64Plans.Plan.compile_commit`, `NobleFoundation.NetI64Plans.Plan.commit_worklist`, `NobleFoundation.NetI64Plans.Plan.commit_worklist_permutation`, `NobleFoundation.NetI64Plans.Plan.precommit_stutters`, `NobleFoundation.NetI64Plans.Plan.commit_refines` | Kernel model over the vendored inets hash-map agent/wire state and active-pair worklist; its head-publication order differs from Rust's tail-publication order but the two worklists are permutations. It does not model the Rust generation-tagged vector arena, encoded byte checker, physical reuse map, or allocator | Lean plan-rule/refinement and queue-permutation model **proved**. Rust compiler/checker, adversarial controls, and storage comparisons are separate finite **tested** evidence. Rust↔Lean/plan correspondence **open**; runtime default and #37's threshold unchanged |
+| Checked plan byte grammar and journaled physical projection (issue #110) | `NobleFoundation.NetI64Plans.BytePlan.decode_header`, `NobleFoundation.NetI64Plans.BytePlan.era_image`, `NobleFoundation.NetI64Plans.BytePlan.era_trailing_bytes_refused`, `NobleFoundation.NetI64Plans.BytePlan.era_wrong_version_refused`, `NobleFoundation.NetI64Plans.PhysicalState.stale_first_refused`, `NobleFoundation.NetI64Plans.PhysicalState.reserve_snapshot`, `NobleFoundation.NetI64Plans.PhysicalState.reserve_within_limits`, `NobleFoundation.NetI64Plans.PhysicalTransaction.stage_stutters`, `NobleFoundation.NetI64Plans.PhysicalTransaction.rollback_restores`, `NobleFoundation.NetI64Plans.PhysicalTransaction.commit_refines_if_projected` | Decoder follows the version-one Rust byte-field order; the physical slot/port/queue projector reads concrete generations and carries a rollback journal. The physical commit bridge still assumes the general projected-net and queue correspondence; the finite discharged cases are listed below | Byte header, finite erasure image/control, reservation, stale queue and journal stutter/rollback **proved**; arbitrary admitted-image physical commit **open** |
+| Bounded plan writer/parser agreement (issue #110) | `NobleFoundation.NetI64Plans.BytePlan.readWord_emitWord`, `NobleFoundation.NetI64Plans.BytePlan.readMany_bytes`, `NobleFoundation.NetI64Plans.BytePlan.decodeSymbol_emitSymbol`, `NobleFoundation.NetI64Plans.BytePlan.emitSymbol_payload_bounded`, `NobleFoundation.NetI64Plans.BytePlan.readEndpoint_emitEndpoint`, `NobleFoundation.NetI64Plans.BytePlan.readBoundary_emitBoundary`, `NobleFoundation.NetI64Plans.BytePlan.resultPort_roundtrip`, `NobleFoundation.NetI64Plans.BytePlan.readResult_emitResult`, `NobleFoundation.NetI64Plans.BytePlan.readWrite_emitWrite`, `NobleFoundation.NetI64Plans.BytePlan.readPair_emitPair`, `NobleFoundation.NetI64Plans.BytePlan.decode_emit` | Independent Lean writer and parser use the selected byte-field order; admissibility requires valid field widths, counts and maximum 256 bytes. This does not establish that Rust's actual writer emits the Lean image or that the decoded image is a valid live-state rewrite | Arbitrary bounded plan-field roundtrip, including any selected I64 payload and ordered wire/worklist images, **proved**; producer correspondence and physical commit **open** |
+| Representative four-rule byte images (issue #110) | `NobleFoundation.NetI64Plans.BytePlan.op2_output_image`, `NobleFoundation.NetI64Plans.BytePlan.op2_published_image`, `NobleFoundation.NetI64Plans.BytePlan.op2_rule_symbols`, `NobleFoundation.NetI64Plans.BytePlan.op1_wrapping_output_image`, `NobleFoundation.NetI64Plans.BytePlan.op1_wrapping_rule_symbols`, `NobleFoundation.NetI64Plans.BytePlan.dup_output_image`, `NobleFoundation.NetI64Plans.BytePlan.dup_rule_symbols`, `NobleFoundation.NetI64Plans.BytePlan.era_image`, `NobleFoundation.NetI64Plans.BytePlan.era_rule_symbols` | Five independently authored Lean byte fixtures cover OP2 with outputs, OP2 with a newly active peer, wrapping OP1, DUP and ERA. Field images include reuse maps, output boundary writes and selected-rule symbols, but are not exported Rust plan bytes | Five model parser fixtures and four rule-result-symbol agreements **proved**; actual Rust byte-emission identity **open** |
+| Physical plan slot, boundary and queue frame (issue #110) | `NobleFoundation.NetI64Plans.PhysicalState.writeSlot_frame`, `NobleFoundation.NetI64Plans.PhysicalState.appendSlot_frame`, `NobleFoundation.NetI64Plans.PhysicalState.logicalPort_writeSlot_away`, `NobleFoundation.NetI64Plans.PhysicalState.logicalPair_writeSlot_away`, `NobleFoundation.NetI64Plans.PhysicalState.retargetOutput_preserves_free`, `NobleFoundation.NetI64Plans.PhysicalState.project_boundary_frame`, `NobleFoundation.NetI64Plans.PhysicalState.project_work_frame`, `NobleFoundation.NetI64Plans.PhysicalState.appendPublications_project_work`, `NobleFoundation.NetI64Plans.PhysicalState.appendPublications_project_plan_work`, `NobleFoundation.NetI64Plans.PhysicalState.appendPublications_project_net` | A slot write/append preserves unrelated slots and queued pairs under explicit outside-footprint premises. Output labels remain stable while physical targets move. Each canonical queued Rust pair projects to two directed inets work entries; a checked publication inventory therefore permits tail-append/head-prepend permutation without claiming equal ordered queues | Local physical frame, stable external labels and queue-order relation **proved**; arbitrary emitted-plan whole-net refinement **open** |
+| Arbitrary decoded physical output identity (issue #110) | `NobleFoundation.NetI64Plans.PhysicalState.executeCheckedImage_preserves_free` | Any successful decoded image may install any number of result slots, perform peer/output writes, retire consumed slots and publish pairs; the physical executor preserves the entire ordered stable free-port identity list. It does not establish correct targets, agents, wire contents, checker admissibility or full net refinement | Free-port identity **proved** for all successful model executions; general projected-net and Rust correspondence **open** |
+| Decoded four-rule physical transaction instances (issue #110) | `NobleFoundation.NetI64Plans.PhysicalState.op2_output_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.op2_output_refines`, `NobleFoundation.NetI64Plans.PhysicalState.op2_published_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.op2_published_pair_orientations`, `NobleFoundation.NetI64Plans.PhysicalState.op2_published_refines`, `NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_refines`, `NobleFoundation.NetI64Plans.PhysicalState.dup_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.dup_refines`, `NobleFoundation.NetI64Plans.PhysicalState.era_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.era_refines` | The kernel decodes each model byte image, executes physical slot retag/reuse, external writes, retirement and publication, and proves whole-net equality to `Plan.commit` for each fixed layout. The nonempty OP2 publication also proves its two-entry directed queue matches the checked plan. These are model-internal finite fixtures, not arbitrary admitted layouts, fresh-slot cases, reverse orientations or a Rust implementation theorem | Four rule-shapes plus one nonempty publication **proved** for fixed fixtures; general physical-image refinement and Rust correspondence **open** |
 | Bounded sequential I64/Bool belt validator (issue #113) | `NobleFoundation.Belt.validate_sound`; real lowered program and exact-vector controls in the generated BeltCorpus module | symbolic graph identities over `PackedSchedule`; no Rust refinement theorem | model **proved**; real artifact corpus is finite model evidence; Rust lowerer/checker/interpreter and B2 comparisons remain separate **tested** evidence |
 | Fixed T1/T2 timing legality and ordered target outputs (issue #114) | `NobleFoundation.BeltTarget.mapReadyOutputs`, `NobleFoundation.BeltTarget.validate_sound` | the symbolic run gates graph-reference values on latency-derived completion; it does not evaluate operations or simulate belt/save state, and no Rust artifact/operand-age refinement theorem is claimed | completion-gate/order **proved** only; generated corpus and Rust lowerer/checker/interpreter cross-backend controls are separate **tested** evidence; machine-step refinement remains **open** |
 | ZMod/BitVec/K-NUM-01 signed decoding, range, round trips | `toZ_ofZ`, `ofZ_toZ`, `toZ_add`, `toZ_sub`, `toZ_mul`, `toZ_neg`, `signed_eq_toInt`, `signed_toZ`, `wrap_eq_bmod`, `wrap_eq_toInt_ofInt`, `wrap_eq_knum01`, `toInt_range`, `signed_range`, `intCast_signed`, `toInt_ofInt_eq_iff`, `signed_intCast_eq_iff`, `ofInt_toInt` | none (mathematics only) | **proved** |
@@ -213,6 +220,7 @@ Status words:
 | Historical revision-1 checked interaction-net contract: versioned typed agent kinds, arity-checked ports, reciprocal unique-incidence wiring, compatible ordered operand links and ordered output boundary | `version_ok_sound`, `reciprocity_ok_sound`, `compatibility_ok_sound`, `boundary_ok_sound`, `validate_sound`, `deeper_minus_top_is_accepted`, `swapped_sub_operands_are_rejected`, `dangling_wire_is_rejected`, `aliased_incidence_is_rejected`, `two_output_boundary_is_accepted`, `wrong_output_order_is_rejected` | revision-1 validator only; reduction/read-back and graph-to-net translation are open for that superseded profile; revision-3 work is listed separately below | **proved** (model) |
 | What interaction-net contract revision 1 admits (issue #37) | `oriented_active_pair`, `value_into_result_port_is_accepted`, `fanout_cannot_feed_an_operand`, `identity_agents_bypass_the_operand_rule` | revision-1 contract model only; no reduction semantics, Rust or runtime claim | model **proved**: under the documented orientation no value meets an arithmetic agent in an active pair; the validator does not enforce the orientation, fanout cannot feed operands, and the operand rule constrains wiring shape, not the function |
 | Selected revision-3 I64 system on inets (#37/#109/#124) | `system_rule_wf`, `system_rule_symm`, the op2, op1, dup and era rules, `Program.acceptanceCheck_iff`, `Program.translateChecked_accepted`, `Program.translateChecked_wf`, `Program.translateChecked_interface`, `Program.normalize_spec`, `i64_normal_form_unique`, `i64_equal_interaction_count`, `conflicting_rule_pair_rejected`, `parallel_sub_schedules_start_differ`, `parallel_sub_schedules_same_normal_form`, `parallel_sub_schedules_agree`, `checkCertificate_iff`, `Certificate.accepted_exact_count`, `Certificate.accepted_reduction_live_agents`, `chainProgram_interactionCount`, `chainProgram_agentBound`, `balancedProgram_interactionCount`, `balancedProgram_agentBound`, `fanoutProgram_interactionCount`, `fanoutProgram_agentBound`, `fanout_two_active_pair`, `fanout_two_abstract_step`, `fifo_control_fork_not_diamond`, and `fifo_control_schedules_differ` | no Rust implementation or lowering correspondence is claimed | model **proved**: checked translation, ordered interface, exact mirrored interaction rules, schedule-independent normal-form counts, and finite-prefix live-agent bounds. Chain, balanced-tree, and fanout graph-count/resource formulas hold for arbitrary sizes. A symbolic two-output fanout instance has a proved duplicator/numeric redex and one abstract firing; this does not prove its resulting net is normal or establish read-back. The #124 two-subtraction fixture executes distinct scan-order schedules and establishes the same abstract normal form, wrapping read-back, and count; `conflicting_rule_pair_rejected` is the non-confluent rule-table control rejected by `SysData.check`. The explicitly rejected FIFO control has a non-diamond delivery fork and schedule-dependent subtraction result; it is not the selected semantics. Revision 3 has no operand stacks: each wire has exactly two port endpoints, with fanout represented by explicit `dup`. Arbitrary-size chain, balanced-tree, and fanout normalization/read-back, general graph observation, and proof that every admitted lowering reaches normal form remain **open** |
+| Revision-3 byte-bound resource certificates (#109) | `NobleFoundation.NetI64Resource.xRule_time_obligation`, `NobleFoundation.NetI64Resource.xRule_space_obligation`, `NobleFoundation.NetI64Resource.XNet.steps_resource_le`, `NobleFoundation.NetI64Resource.checkResourceCertificate_iff`, `NobleFoundation.NetI64Resource.accepted_bytes_bound_every_schedule`, `NobleFoundation.NetI64ResourceCorpus.fixture_byte_fields`, `NobleFoundation.NetI64ResourceCorpus.fixture_translation`, `NobleFoundation.NetI64ResourceCorpus.fixture_byte_claims_match_translation`, `NobleFoundation.NetI64Resource.chain_family_resources`, `NobleFoundation.NetI64Resource.balanced_family_resources`, `NobleFoundation.NetI64Resource.fanout_family_resources` | Rust byte parser/checker independently recomputes decoded-net counts and uses graph revalidation; a general Rust/Lean decoder/hash/reduction refinement theorem is not claimed | model **proved** for all selected rules and every finite legal schedule prefix without normalization; exact terminal count still depends on semantic certificate acceptance; one generated exact-byte Rust-accepted fixture is kernel-checked; controls and six CLI net-trace comparisons are finite **tested** evidence |
 | Bounded Boolean Shannon control, interval ISOP, and independent checker (issue #35) | `Isop.shannon_exact`, `Isop.majority_cover_has_a_nonprime_cube`, `Isop.equivOn_sound`; `IsopInterval.isop_bounds`, `isopCover_eval`, `isopCover_bounds`, `isopCover_exact`, `allCubes_complete`, `majority_isop_cover_prime_and_irredundant`, `intervalChecker_sound`, `isopCover_interval_checked`, interval fixtures, and seeded atom-map/care-set controls | Lean truth-table model and `crates/noble-ngraph-experiment/src/isop.rs`; standalone checked Boolean DAG only, not connected to source lowering or `Program` | Shannon control and interval ISOP semantics **proved**; Rust core/checker and seeded limits **tested**; synthetic comparison and frozen adoption decision in `verification/isop/`. Source integration **NO-GO/deferred**: the current #32 whitelist contains no Boolean-composition regions, and no lazy Bool/branch extension is admitted |
 | Constructor reuse under a unique root, matching size, and resource eligibility | `makeCell_requested`, `reuseStep_success`, `reuseStep_refuses_size_mismatch`, `reuseStep_replaces_unique_root`, `reuseStep_initializes_requested_cell`, `eligible_replacement_has_no_resource`, `eligible_replacement_requires_move`, `wrapped_resource_is_not_reuse_eligible`, `shared_alias_control` | none (finite model only; no allocator, runtime or Wasm correspondence) | **proved** (model) |
 | Encoded packed-layout validation (issue #80, unit 1) | `NobleFoundation.PackedLayoutEncoded.decodeInput_encodeInput`, `NobleFoundation.PackedLayoutEncoded.encodeInput_injective`, `NobleFoundation.PackedLayoutEncoded.validateEncoded_agrees`, `NobleFoundation.PackedLayoutEncoded.encodedSize_is_bit_length`, `NobleFoundation.PackedLayoutEncoded.encodeNat_length` | finite list-based I64/Bool graph and layout tables; unary-prefixed binary-width natural fields of exactly `2 * natWidth n + 1` bits, fixed 64-bit constants and total decoder. The revision flag and fail-node set are model inputs, not the Rust serde format | model **proved**; Rust bytes, CheckedGraph metadata and implementation refinement **open** |
@@ -220,8 +228,10 @@ Status words:
 | Encoded-layout claim/cost controls (issue #80, unit 3) | `NobleFoundation.PackedLayoutCorpus.nodesOnlyEncoding_is_not_injective`, `NobleFoundation.PackedLayoutCorpus.finiteFixtureLookup_misses_model_accepted_extension`, `NobleFoundation.PackedLayoutCorpus.node_count_does_not_measure_encoded_input` | Generated finite-model controls only; see verification/complexity-pilot/README.md for Rust pass/accounting inventory, metadata trust boundary, exclusions, empirical context and the isolated toolchain pins | control claims **proved** in Lean; asymptotic cost table **documented**, not a costed-machine theorem; Rust refinement **open** |
 | MC1 `CodeTyped` agrees with kernel acceptance | — | `noble-kernel` acceptance (PO-09/10/11 relate the Rust checker to the *NobleM2* declarative judgments, not to MC1 `CodeTyped`) | **open** |
 | Collision-safe cache lookup and length-prefixed subject encoding | `NobleFoundation.CacheLookup.lookup_some_implies_manifest_eq`, `colliding_index_equal`, `colliding_index_wrong_manifest_misses`, `colliding_index_hit_skips_wrong_manifest`, `matching_entry_hits`, `stale_manifest_entry_refused`, `corrupt_entry_refused`, `lookup_after_erase_subset`, `lengthBytes_injective_of_lt`, `encodeParts_injective_of_lt`, `changed_field_changes_encoding`, `naive_concat_field_collision` | model only; `Subject::derive` byte correspondence and all cache integration boundaries remain open | **proved** (model) |
+| Arbitrary-run soundness of the bounded matrix size-change criterion (issue #101) | `NobleFoundation.SizeChangeSound.matrix_closure_sct_terminates_classical`, `NobleFoundation.SizeChangeSound.infinite_pair_homogeneous` | the exact NobleM2.SizeChange certificate and run structures; no Rust classifier or source-execution correspondence | model **proved** with the foundation axiom set; a choice-free proof in the strict size-change family and implementation correspondence remain **open** |
 
 | Bounded typed program synthesis with counterexample-guided refinement (issue #116) | `NobleFoundation.Synthesis.not_certifiable_of_refuted`, `NobleFoundation.Synthesis.arithCommuted_certified`, `NobleFoundation.Synthesis.arithSubtract_certified`, `NobleFoundation.Synthesis.arithScaled_certified`, `NobleFoundation.Synthesis.overBoundControl_certified`, `NobleFoundation.Synthesis.bitOr_refused_witness_refutes`, `NobleFoundation.Synthesis.bitOr_refused_not_certifiable`, `NobleFoundation.Synthesis.bitXor_refused_witness_refutes`, `NobleFoundation.Synthesis.bitXor_refused_not_certifiable` | `verification/synthesis/cegis.mjs` and finite re-admission through the existing CLI; no production synthesis implementation theorem | model **proved** (four affine graph-pair certificates and two exact-witness refusal controls); bounded search/refinement and held-out behavior **tested** only on the frozen tasks and budgets; nonlinear, Bool, 0/1-domain and list cases are **unproven** or run-only; general synthesis and source-to-model refinement remain **open** |
+| Learned procedure identity, persistence, append-only state and rollback (issue #118, LPL-O1--LPL-O4) | `NobleFoundation.ProcedureLibrary.decode_encode_subject`, `NobleFoundation.ProcedureLibrary.encode_subject_injective`, `NobleFoundation.ProcedureLibrary.identity_injective_on_subjects`, `NobleFoundation.ProcedureLibrary.identity_binds_body`, `NobleFoundation.ProcedureLibrary.identity_binds_dependency_closure`, `NobleFoundation.ProcedureLibrary.identity_ignores_mutable_state`, `NobleFoundation.ProcedureLibrary.reload_recomputes_identity`, `NobleFoundation.ProcedureLibrary.reload_repeated_identity`, `NobleFoundation.ProcedureLibrary.deduplicate_reuses_exact_subject`, `NobleFoundation.ProcedureLibrary.deduplicate_reuse_preserves_dependency_closures`, `NobleFoundation.ProcedureLibrary.deduplicate_reuse_preserves_all_evidence`, `NobleFoundation.ProcedureLibrary.bound_evidence_appends_to_existing_evidence`, `NobleFoundation.ProcedureLibrary.appended_evidence_preserves_identity`, `NobleFoundation.ProcedureLibrary.appended_evidence_preserves_prior_obligations`, `NobleFoundation.ProcedureLibrary.evidence_publication_appends_a_generation`, `NobleFoundation.ProcedureLibrary.evidence_publication_retains_prior_generation`, `NobleFoundation.ProcedureLibrary.wrong_subject_evidence_does_not_publish`, `NobleFoundation.ProcedureLibrary.rollback_restores_exact_retained_closure`, `NobleFoundation.ProcedureLibrary.rollback_never_rewrites_retained_history` | The abstract canonical subject tuple and generation relation in the ProcedureLibrary model; the Rust serializer, experimental digest and implementation correspondence are outside the theorem subject | abstract model **proved**; Rust persistence, four corruption controls and restart identity are **tested** separately; no theorem claims a canonical hash, Rust implementation refinement or portability |
 
 Typing premises are stated exactly:
 - Sequences require `depthRun ops k = some k'` (static depth) for typing,
@@ -347,6 +357,81 @@ runner then uses `bubblewrap-0.12.0` and records that path in the receipt.
 
 Unsupported modes: none. Both `off` and `on` are supported by
 `Core-Bootstrap`.
+
+### Bounded interaction coverage and semantic mutants (issue #125)
+
+[`verification/differential-interactions/matrix-v1.json`](../../verification/differential-interactions/matrix-v1.json)
+freezes two disjoint finite test profiles before their campaign: P1 Core source
+through managed Wasm, and P2 numeric-graph F32 through the experiment lane.
+The clean foundation receipt used by the current campaign is retained at
+[`verification/foundation/receipts/756ccc9/index.json`](../../verification/foundation/receipts/756ccc9/index.json); it is a 1,450-
+theorem per-case expectation basis only and does not claim an implementation
+theorem. The corresponding source-bound campaign receipt is linked from the
+interaction-lane README.
+P1 expectations are independently computed and Lean-kernel-checked per case;
+its execution witness is the exact admitted source, positive runtime steps and
+the observed ordered outputs. The observer has no per-operator trace, so source
+operator labels are reported separately and do not claim direct tracing. P2
+retains the #38 observation relation and compares APFloat, binary64-per-operation,
+reference and compiled legs. Its reach witness includes the actual checked graph
+operands, runtime-selected branch/table entry and a full-node L3 execution; L4
+has no per-node trace. P2 has no Lean or source-to-Wasm claim, and immutable
+parameter snapshots are explicitly unsupported on this seeded path. Each P2
+cell and replay records `/0` graph admission, `Control::default()` controls,
+effective forward scratch, no snapshot, one vector, and L3 work relative to the
+matrix node-work cap.
+
+The fixed matrix reports reached and unreached cells plus accepted, refused,
+exhausted and unsupported outcomes separately; a refused-only run cannot pass.
+The frozen implementation-side mutants are test artifacts in a single detached
+scratch worktree, applied in place and restored after each run. Only an intended
+property failure on the same fully executed case is a kill. The retained report
+also distinguishes divergence-unreached, executed-survived, invalid/equivalent
+and incomplete outcomes. Shrinking retains the complete source or graph/input
+witness, snapshot status, selected limits and mutation site; it rechecks feature
+eligibility, expectation and failure identity, and
+reports its bounded stopping reason without claiming a global minimum. Fresh
+processes replay original and minimized bytes without regenerating the corpus;
+changed bytes are rebuilt and receive fresh expectations, while historical
+receipts are rejected for the changed candidate.
+
+Example commands (all outputs and targets are new paths outside the repository):
+
+```sh
+NODE=<absolute path of the policy-selected Node>
+OUT=<new directory outside the repository>
+FOUNDATION=<clean foundation-check.json for the source commit>
+CORPUS=<minimized source-corpus directory>
+mkdir -p "$OUT"
+$NODE verification/fuzz/export-differential.mjs --corpus "$CORPUS" \
+  --output "$OUT/cases.json"
+$NODE verification/foundation/differential.mjs --seed 125 --count 18 \
+  --foundation "$FOUNDATION" --output "$OUT/p1" --import "$OUT/cases.json"
+$NODE verification/foundation/differential.mjs --verify "$OUT/p1/differential.json"
+cargo test --locked --offline -p noble-ngraph-experiment \
+  --test b2_differential issue125_structured_interaction_matrix -- --nocapture
+$NODE verification/differential-interactions/mutant-runner.mjs \
+  --root <detached clean source worktree> --output <new external report directory> \
+  --target-dir <one external Cargo target directory> \
+  --cargo <absolute path of the selected offline Cargo command> --node "$NODE" \
+  --foundation "$FOUNDATION" --corpus "$CORPUS"
+```
+
+These are finite implementation tests, not theorems about the source frontend,
+Wasm compiler, optimizer, loader or runtime. The Lean results remain model
+theorems; the execution/correspondence boundary is tested only for the recorded
+finite cases. The lane reuses #38's pinned F32 reference and does not promote its
+remaining correspondence obligation. Certificate before/after endpoint and
+malformed-certificate checks remain owned by #42; this lane does not claim them.
+Resource equivalence remains owned by #64 and is only asserted there under its
+explicit sufficient-budget relation; this matrix makes no resource-equivalence
+claim.
+
+The clean P1 model-basis receipt is retained at
+[`verification/foundation/receipts/7ed66b5/foundation-check.json`](../../verification/foundation/receipts/7ed66b5/foundation-check.json).
+The bounded P1/P2 campaign for source commit `7ed66b5d` is retained at
+[`verification/differential-interactions/receipts/7ed66b5/campaign.json`](../../verification/differential-interactions/receipts/7ed66b5/campaign.json);
+these are finite test receipts, not an implementation theorem.
 
 ### Input-specific branch EMI (issue #53)
 
@@ -2629,6 +2714,39 @@ recorded in [`verification/synthesis/README.md`](../../verification/synthesis/RE
 source-bound receipt. All proof claims remain model-only; CEGIS, grammar conformance, and
 implementation refinement are not theorem subjects.
 
+## Learned procedure library identity and generation model (issue #118)
+
+`NobleFoundation/ProcedureLibrary.lean` models the procedure's immutable subject as the version,
+encoder, body, source revision and ordered dependency tuple. Its canonical representation is an
+abstract typed tuple, not a byte serializer or digest. LPL-O1 proves that this representation
+round-trips and is injective on immutable subjects, while mutable evidence, status and cost do not
+enter identity. The Rust tests separately exercise the experimental byte encoding and body,
+encoder, dependency and evidence corruption refusals; no Rust-to-Lean refinement theorem is claimed.
+
+LPL-O2 proves that persisting and reloading a list of abstract records recomputes the same ordered
+identities, including a repeated reload. The two fresh-process Rust tests compare the actual
+identity manifests independently. LPL-O3 proves exact duplicate reuse leaves the stored dependency
+closures and evidence unchanged, and that subject-bound evidence appends after prior evidence
+without changing identity; publication moves the previous generation intact into retained history.
+LPL-O4 proves that an available retained generation is restored as the new current closure while
+earlier generations remain retained. Rust generation, evidence and rollback fixtures remain the
+implementation evidence; the model does not establish the concrete persistence decoder, evidence
+toolchain availability checks, or runtime behavior.
+
+`NobleFoundation/ProcedureLibraryWire.lean` adds a **finite** byte-encoding
+subprofile for two actual I64 source fixtures with no captures or dependencies
+and one empty instantiation. The kernel checks their encoded lengths and the
+first fixture's encoder length prefix. The source-digest-bound Lean emitter
+`verification/procedure-library/encoder-corpus.lean` generates the bytes,
+and the Rust differential test compares those bytes with
+`ProcedureRecord::identity_subject_bytes` for independently re-derived
+chunk identities and source revisions. The corpus receipt and its verifier
+bind the Lean model, emitter, Rust encoder and fixture source bytes.
+This is **not** a universal correspondence theorem: arbitrary chunks, captures,
+dependencies, provenance variants, the experimental digest and #56 exact-pair
+certificate validation remain outside the two checked fixtures. No promotion
+under a proof-demanding policy follows from the corpus alone.
+
 ## Specification-quality obligations (issue #65)
 
 `NobleFoundation/SpecQuality.lean` separates three questions about a retained
@@ -3791,11 +3909,128 @@ corpus evidence; it does not close these universal claims.
 
 The clean foundation receipt for this model is attached with unit 1.
 
+## Classical arbitrary-run size-change soundness (issue #101, phase 1)
+
+`NobleFoundation.SizeChangeSound.matrix_closure_sct_terminates_classical` proves that every
+`MatrixSiteRun` satisfying a `MatrixClosureCertificate`'s site matrices is impossible. The module
+imports the existing NobleM2 size-change certificate and run types directly through the foundation
+Lake project; these are not restated or connected through a second equivalence model.
+
+The proof colors an increasing pair of run positions by the matrix product over the intervening
+segment. The finite-color Ramsey lemma
+`NobleFoundation.SizeChangeSound.infinite_pair_homogeneous` gives a strictly increasing homogeneous
+sequence. Segment concatenation makes its common graph idempotent, and the exact closure certificate
+places that graph in the generated closure. Its checked strict diagonal then decreases one
+natural-valued measure at each selected step, contradicting the impossibility of an infinite strict
+descent in Nat. The theorem's transitive axioms are within the foundation allow-list
+`{propext, Classical.choice, Quot.sound}`; `Classical.choice` is needed for the infinite Ramsey
+construction.
+
+**Open, and deliberately not closed:** a choice-free arbitrary-run theorem inside the strict
+`SizeChange*.lean` family. That lane still accepts only `propext` and `Quot.sound`, and the
+periodic-run theorem remains its in-family result. The foundation result is about the exact abstract
+certificate/run model, not the Rust classifier's correspondence to source execution, list lengths,
+wrapped I64 counters, or mutual recursion.
+
+## Checked revision-3 plan semantics (issue #110, phase 1)
+
+`NobleFoundation/NetI64Plans.lean` models revision-3 rule-plan images over the
+vendored inets `HNet` hash-map/worklist representation. The rule compiler keeps
+the exact `NetI64.xRule` right-hand side for both orientations of OP2, OP1,
+DUP, and ERA. A captured plan records the local boundary, initialized result
+agents, local wire image, new principal-pair publications, and finite
+reservation counts. Commit applies those captured fields to the HNet maps;
+the compiled-image equation identifies that update with the vendored HNet
+worklist firing. Its pre-commit phases are observational stutters; commit
+refines to one `CStep` and publishes exactly the captured local pair list.
+The `Plan.commit_frame_agent` and `Plan.commit_frame_wire` theorems additionally
+prove that commit leaves the map lookup at each agent or port outside its
+consumed/result or captured-boundary/write footprint unchanged, respectively.
+The wire frame excludes both directions of each captured boundary edge; it
+does not assume away any otherwise valid local loop in the inets model.
+
+The same module models an independent version-one byte writer and parser,
+including little-endian words, bounded result/write arrays, resource
+reservations and the terminal commit marker. The kernel proves the
+writer/parser roundtrip for **every admissible plan field image**, including
+arbitrary `BitVec 64` operands, both external endpoint kinds, generations and
+ordered publication lists. Admissibility requires the valid field widths,
+counts and the 256-byte whole-plan bound, but does not imply the image matches
+a selected rule or live arena; the theorem is not a Rust-byte correspondence
+proof. The kernel also checks one full erasure image; a changed version or
+trailing byte is refused in that image.
+The representative OP2/OP1/DUP/ERA model fixtures check plan images with
+consumed-slot reuse, exact result symbols, and ordered output boundary writes
+where applicable. A fifth OP2 image connects the new principal port to a live
+third agent and declares one generation-tagged publication. None is a byte
+export from the Rust producer. A separate physical state model carries
+generation-tagged slots, a free-slot inventory, ordered outputs with stable
+abstract free-port labels and mutable arena targets, and a queued pair list.
+Its projection derives inets agents and both directions of physical/internal
+and output wires, stable free-port labels, and queued pairs from physical
+fields. The representation relation uses the saved physical
+journal until commit: reservations preserve the arena and enforce all three
+bounds, and a staged microstep stutters while rollback restores the saved
+physical state. `PhysicalState.executeCheckedImage` decodes the byte image,
+installs one or two rule results into reused or fresh slots, updates reciprocal
+external boundaries or ordered outputs, retires unretained slots, and
+publishes reciprocal generation-checked pairs at the queue tail. The
+independent checked-image predicate and Rust implementation are *not* proved
+equivalent to this executor. The conditional commit theorem requires that
+physical execution's projected `toNet` equal the checked abstract image and
+that their queues be permutations. For the five fixed, decoded model images,
+the kernel discharges the physical executor's exact post-state and the
+whole-net equality: output-connected OP2, OP1 wrapped subtraction, DUP, ERA,
+and OP2 with a nonempty publication and a live external peer. The last also
+discharges its directed-pair queue equality. These are finite model
+refinements, not a theorem for every checker-admitted plan and topology.
+Independently of those fixtures, a kernel theorem proves that **every
+successful decoded physical image** preserves the stable ordered abstract
+external free-port labels through all result installations, reciprocal peer
+and output writes, retirement and queue publications. It does not prove
+those free ports point to the correct replacement agents, nor that an
+arbitrary decoded image passes the Rust checker.
+Separate frame theorems for existing-slot writes and fresh-slot appends
+preserve unaffected generations and queue marks. Retagging any slot preserves
+the ordered external free-port identities (their physical targets remain a
+separate write obligation); writing outside queued slots preserves projected
+active-pair entries.
+The physical queue follows Rust's tail-append order and stores one canonical
+slot pair, while the abstract inets plan prepends newly active pairs and
+stores *both directed orientations* of every reciprocal principal wire. The
+projection expands one current physical pair into both abstract entries,
+skipping a generation-stale pair. With a checked publication inventory the
+tail-append/head-prepend worklists are a proved permutation, not equal ordered
+lists; queue publication itself preserves `toNet`. The nonempty OP2 example
+exercises this multiplicity explicitly. A complete physical-image theorem
+must use this directed-pair multiset, not one abstract entry per Rust pair,
+and must never assert whole-`HNet` equality for nonempty pending and newly
+published queues.
+
+The Lean model, Rust implementation correspondence, and finite Rust tests are
+separate claims. The Lean proof establishes the inets worklist and byte-grammar models; it
+does **not** prove that the Rust byte compiler/checker or generation-tagged
+vector arena implements this model. Rust tests cover the versioned byte plans,
+independent decoder/checker, rejection controls, rollback/resource boundaries,
+and paired storage-policy workloads. The measured comparison is descriptive
+only: net execution remains opt-in, and the #37 frozen 1.15 threshold is not
+changed.
+
+**Open, and deliberately not closed:** a Rust-to-Lean/plan refinement proof;
+the general kernel premise that *every checker-admitted* OP2/OP1/DUP/ERA
+image's slot, boundary and directed-pair queue writes project to its HNet
+firing (only five fixed model images are proved); proof that Rust's
+reservation, slot reuse, generation, rollback and queue publication transitions
+implement the physical model for arbitrary nets and byte streams; and
+performance claims beyond the retained matched finite workloads.
+
+The integrator attaches the clean foundation receipt for issue #110 after integration.
+
 ## Status by phase
 
 | Phase | Done (checked) | Open |
 |---|---|---|
-| 1 | whitelist/representation/observation table; signed ZMod/BitVec/K-NUM-01 correspondence; universal add/sub/mul with preserved typed prefix and orientation; literal refusal vs wrapping (spec and transcription); lifting to sequences and quote/compose/run; regressions; inventory and axiom audit | Rust frontend ↔ transcription refinement; MC1 `CodeTyped` ↔ kernel acceptance |
+| 1 | whitelist/representation/observation table; signed ZMod/BitVec/K-NUM-01 correspondence; universal add/sub/mul with preserved typed prefix and orientation; literal refusal vs wrapping (spec and transcription); lifting to sequences and quote/compose/run; regressions; issue #101 arbitrary-run soundness for checked matrix runs under the foundation axiom set; inventory and axiom audit | Rust frontend ↔ transcription refinement; MC1 `CodeTyped` ↔ kernel acceptance; choice-free arbitrary-run SCT proof in the strict size-change family and source/model correspondence |
 | 3 | one example from Lean spec to acquired bytes (opt off/on), helper model, ACORR-mapped refusals | E5 lowering, E7 assembler, E8 optimizer, E10 loader/engine, E12 PAA-1 envelope, ACORR-CASE-09, quote/compose/run helper models |
 | 4 | seeded differential comparator; separate fixed-input scalar if/case EMI; Lean-checked expectations, opt off/on, shrinking and replay, mutation controls, checker lanes, source-bound receipts, `--verify`, retained in-repo receipts, `ci.sh` recipe | Nix-sandbox CI check (see "CI": networked Mathlib cache, absent offline inputs, host services for the slice); rebuilt Mathlib `.olean` files; Rust renderer/lowering refinement and universal compiler equivalence |
 | 2 | MC1: preservation and primitive progress, pure laws and negative cases. Effects/resource layer: preservation, total progress, effect soundness for every prefix including denied/failed, ownership preservation with declared transitions, resource-free capture, resource negative cases | the whole language and implementation, abnormal cleanup, aggregates/borrowing, effectful equivalence laws, normalization |
@@ -4018,17 +4253,29 @@ The missing arbitrary-size reduction/read-back lemmas are precisely:
   `Steps (CStep system) (3 * n)`, with `chainProgram n`'s read-back equal to its packed-schedule
   reference output. The missing proof must construct the abstract trace that interleaves the
   input's duplicator chain with each `op2`/`op1` pair; the existing `chain_three_reference` is only
-  a closed `XNet.normalize` computation at `n = 3`.
+  a closed `XNet.normalize` computation at `n = 3`. This arbitrary-`n` statement remains open.
+  The zero-operation case is proved by `NobleFoundation.NetI64Families.chainProgram_zero_trace`.
 - **Balanced tree:** for every depth `d` and input vector of length `2^d`, establish a successful
   checked translation and a normal target reached by
   `Steps (CStep system) (2 * (2^d - 1))`, with read-back equal to the packed-schedule reference.
   The missing proof must inductively fire both child subtrees and then the parent `op2`/`op1` pair;
-  `balanced_depth_two_reference` is only the closed depth-two computation.
+  `balanced_depth_two_reference` is only the closed depth-two computation. The depth-zero case is
+  proved by `NobleFoundation.NetI64Families.balancedProgram_zero_translation_checked` and
+  `NobleFoundation.NetI64Families.balancedProgram_zero_trace`; the first binary layer for every
+  pair of input values is proved by `NobleFoundation.NetI64Families.balancedProgram_one_trace`.
+  The arbitrary-depth statement above remains open.
 - **Fanout:** for every output count `n` and input `x`, establish a successful checked translation
   and a normal target reached by `Steps (CStep system) (if n = 0 then 1 else n - 1)`, with ordered
   read-back equal to `List.replicate n (.i64 x)`. The missing proof must induct over the left-leaning
   `dup` chain (and handle the zero-output `era` case); `fanout_three_reference` and
-  `fanout_zero_reference` are only closed computations.
+  `fanout_zero_reference` are only closed computations. The one-output case is proved by
+  `NobleFoundation.NetI64Families.fanoutProgram_one_trace`, and the zero-output case for arbitrary
+  input by `NobleFoundation.NetI64Families.fanoutProgram_zero_trace`. The first nontrivial case
+  is proved for every input by `NobleFoundation.NetI64Families.fanoutProgram_two_trace`.
+  `NobleFoundation.NetI64Families.fanoutTraceSlots_length` and
+  `NobleFoundation.NetI64Families.fanoutTracePlan_length` establish the candidate
+  continuation's slot and wire counts, but not the induction step from an arbitrary
+  translated net; the arbitrary-`n` statement remains open.
 
 For all three, the missing artifact is an inductively constructed abstract reduction trace and its
 normality/read-back proof, not another cost formula or a symbolic evaluation of `XNet.run`.
@@ -4036,6 +4283,79 @@ General graph-to-net observation and the theorem that every admitted lowering re
 also remain **open**. This module is a
 mathematical model only: it proves no Rust lowering/reducer correspondence, runtime budget behavior,
 or implementation property. Those are integration/evidence work, not established by this slice.
+
+## Revision-3 interaction and live-agent resource certificates (#109)
+
+NobleFoundation/NetI64Resource.lean assigns a natural-number interaction potential of two to
+`op2`, one to `op1`, `dup`, and `era`, and zero to `num`; each agent has one cell of committed graph
+storage. `NobleFoundation.NetI64Resource.xRule_time_obligation` and
+`NobleFoundation.NetI64Resource.xRule_space_obligation` quantify over every legal symbol/payload and
+both orientations of every selected rule. Their RHS checks charge both arithmetic stages and the
+`dup` and `era` interactions; they do not assume that zero-cost administrative steps terminate.
+`NobleFoundation.NetI64Resource.XNet.fire_time_spends_one` applies each local obligation to the
+actual agent list, and `NobleFoundation.NetI64Resource.XNet.steps_resource_le` composes it over
+**every finite legal schedule prefix without assuming successful normalization**. The initial
+weighted potential bounds interactions; the initial agent count bounds committed live agents.
+`NobleFoundation.NetI64Resource.accepted_prefix_bounds_every_schedule` requires the admitted
+source's initial potentials to fit the certificate declarations, without a normalizer premise.
+Only `NobleFoundation.NetI64Resource.accepted_exact_count_every_normal_schedule` uses semantic
+certificate acceptance and a terminal normal form for the *exact* interaction count. Neither the
+prefix bound nor exact-count conditional theorem establishes unconditional normalization.
+`NobleFoundation.NetI64Resource.accepted_bytes_bound_every_schedule` additionally demands a
+successful supplied byte decoder, exact selected rule bytes, three digest checks, the fixed
+checker/proof/cost revisions, a checked initial weighted potential, and the semantic checker.
+The model leaves the supplied decoder and hash's implementation properties outside its theorem;
+these global bounds are not a proof of Rust/Lean correspondence.
+
+The Rust noble-ngraph resource module emits a bounded binary certificate for the exact encoded
+net, ordered output boundary, selected rule table, fixed cost profile, graph and input identities.
+Its independent consumer parses the bytes without trusting the producer's claims, revalidates
+the decoded fully connected net against the checked graph and input row, and recomputes exact
+non-wrapping `2*ops + dups + eras` and initial-agent counts. The consumer also sums weights of
+the **decoded agent symbols** independently and requires agreement with that graph-derived
+count. Revalidation shares the backend's
+canonical graph-to-net constructor, so neither its source-to-net correctness nor cryptographic
+hash collision resistance has been proved in Lean. The stored source-bound receipt compares six
+chain, balanced-tree and fanout-with-discard families against actual opt-in CLI net reports; it
+also replays the retained certificate/net bytes through the checker. Controls refuse wrong
+interaction and live bounds, mismatched net bytes, stale rules and cost profile, a changed
+checker identity, malformed certificates, omitted DUP/ERA costs, a negative-cost rule annotation,
+a digest-rebound negative potential, and a disconnected wire with a recomputed digest.
+The fixed unsigned potential table admits no producer-supplied negative potentials or missing rule
+cases: changing its rule or cost bytes requires a new checked revision, not an accepted override.
+The [retained resource receipt](../../verification/ngraph/resource-receipt.json) binds the six
+canonical graph texts, decoded net/certificate bytes, BLAKE3 identities, checker/proof/cost
+revisions, rejected controls and CLI-reported interaction/live-agent measurements to its source
+commit; the integration test replays each retained byte pair through the independent checker.
+NobleFoundation/NetI64ResourceCorpus.lean is a Rust-generated, freshness-checked finite witness:
+the producer issues a fanout/erase certificate, the separate byte checker accepts it, Rust emits
+its exact net/certificate bytes and BLAKE3 identities, and the kernel checks the revision/claim
+byte fields, source translation to the retained net, and four interactions/six initial agents.
+The CLI test's local corpus renderer is byte-identical to the #37 renderer, enforced by an
+integration test; keeping the compiler unit's module source local preserves complete Octet
+architecture collection without allowing the two renderers to drift.
+`NobleFoundation.NetI64ResourceCorpus.fixture_byte_claims_match_translation` links the integer
+fields extracted from those literal accepted bytes to the Lean translation; the kernel does not
+recompute BLAKE3 or prove the Rust byte decoder agrees on *all* possible inputs. The generated
+fixture and freshness test bind one exact subject rather than universally refining the checker.
+The separate [audited-source expanded follow-up receipt](../../verification/ngraph/resource-followup-2026-11-15-expanded.json)
+retains that fixture's BLAKE3 identity and seven refusal controls: missing DUP/ERA rule or
+charge, negative rule charge or potential, insufficient first-stage potential, and a
+digest-rebound disconnected net. The cost model is fixed by the checker, so the malformed
+potential controls cannot supply a new accepted model; they are refusals, not theorem
+instances. The earlier follow-up receipts remain immutable historical evidence; the
+undated receipt's corpus digest predates a proof-audit lexical correction.
+
+`NobleFoundation.NetI64Resource.chain_family_resources`,
+`NobleFoundation.NetI64Resource.balanced_family_resources`, and
+`NobleFoundation.NetI64Resource.fanout_family_resources` give parameterized structural formulas
+for arbitrary growing families and I64 payloads. These formulas are **not** arbitrary-size
+normalization or read-back proofs; the successful runtime traces are six finite observations.
+Certificate refusal means only **uncertified**, not divergence or exhausted runtime budget.
+The one-cell bound covers committed live agents and excludes wire storage, input materialization
+work, allocate-before-free arena reservation, worklists/scratch, fragmentation, retained source
+data, decoding/read-back/cleanup, and process RSS. A capacity guarantee needs the separate #110
+rewrite-plan reservation bound.
 
 ## Labelled DUP/SUP interaction system (issue #105, selected v3)
 

@@ -31,7 +31,7 @@ pub(crate) const USAGE: &str = "usage:
   noble ngraph eval GRAPH VECTORS [--reference | --net] [--snapshot FILE [--snapshot-id HEX]] [--fuel N]
       [--budget-KIND N]...
   noble ngraph specialize GRAPH --static INDEX=VALUE[,INDEX=VALUE...] --out RESIDUAL
-      [--graph-out RESIDUAL_GRAPH] [--budget-KIND N]...
+      [--graph-out RESIDUAL_GRAPH] [--cache] [--budget-KIND N]...
   noble ngraph specialize SOURCE --source --interface 'TYPE ... --' --tail N
       [--framed] [--subject-id HEX] [--static INDEX=VALUE[,INDEX=VALUE...]]
       --out RESIDUAL [--graph-out RESIDUAL_GRAPH] [--budget-KIND N]...
@@ -302,13 +302,13 @@ fn text(
     })
 }
 
-/// Reads, parses and checks a graph file.
+/// Reads, parses and checks a graph file, retaining its exact source bytes.
 fn load_graph(
     command: &'static str,
     path: &std::path::Path,
     budgets: &noble_ngraph::Budgets,
     what: &str,
-) -> Result<(CheckedGraph, Option<&'static str>), Line> {
+) -> Result<(CheckedGraph, Option<&'static str>, std::string::String), Line> {
     let bytes = attempt!(read(command, path, files::GRAPH_BYTES, what));
     let source = attempt!(text(
         command,
@@ -318,14 +318,14 @@ fn load_graph(
     ));
     if source.trim_start().starts_with('{') {
         return nickel::admit(source.as_bytes(), budgets)
-            .map(|graph| (graph, Some(nickel::LOWERER_REVISION)))
+            .map(|graph| (graph, Some(nickel::LOWERER_REVISION), source))
             .map_err(|d| Line::diagnostic(command, "check", &about(d, what)));
     }
     let graph = attempt!(noble_ngraph::format::graph::parse(&IDS, &source)
         .map_err(|d| Line::diagnostic(command, "input", &about(d, what))));
     let checked = noble_ngraph::check_with(&IDS, graph, budgets)
         .map_err(|d| Line::diagnostic(command, "check", &about(d, what)))?;
-    Ok((checked, None))
+    Ok((checked, None, source))
 }
 
 /// Reads and parses a snapshot file (identities recomputed).
@@ -407,7 +407,7 @@ fn check(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, Stop> 
     )
     .map_err(Stop::Usage));
     attempt!(policy(C, &args.budgets));
-    let (graph, lowerer_revision) =
+    let (graph, lowerer_revision, _) =
         attempt!(load_graph(C, &args.path(0), &args.budgets, "graph file"));
     if let Some(out) = args.path_value("--graph-out") {
         let text = noble_ngraph::format::graph::print(graph.graph());
@@ -597,7 +597,7 @@ fn specialize(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, S
                 "--subject-id",
             ],
             repeated: &[],
-            switches: &["--source", "--framed"],
+            switches: &["--cache", "--source", "--framed"],
             budgets: &budget_kinds,
         },
         arguments
@@ -608,6 +608,9 @@ fn specialize(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, S
     };
     attempt!(policy(C, &args.budgets));
     if args.switch("--source") {
+        if args.switch("--cache") {
+            return usage("--cache applies to graph specialization, not --source");
+        }
         return specialize_program(&args, &out);
     }
     if args.has("--interface")
@@ -617,7 +620,8 @@ fn specialize(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, S
     {
         return usage("--interface, --tail, --subject-id and --framed require --source");
     }
-    let (graph, _) = attempt!(load_graph(C, &args.path(0), &args.budgets, "graph file"));
+    let (graph, _, recipe_bytes) =
+        attempt!(load_graph(C, &args.path(0), &args.budgets, "graph file"));
     let leaves = graph
         .graph()
         .slots
@@ -625,44 +629,81 @@ fn specialize(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, S
         .filter(|slot| slot.kind == noble_ngraph::ir::SlotKind::Input)
         .count();
     let map = attempt!(static_map(&args, leaves).map_err(Stop::Usage));
-    let residual = attempt!(noble_ngraph::specialize::specialize(
-        &IDS,
-        &graph,
-        &noble_ngraph::specialize::Request {
-            static_inputs: &map,
-            budgets: &args.budgets,
-        },
-    )
-    .map_err(|d| Line::diagnostic(C, "specialization", &d)));
-    let source = attempt!(noble_ngraph::specialize::emit_source(&residual.checked)
-        .map_err(|d| Line::diagnostic(C, "source", &d)));
-    let types = attempt!(noble_ngraph::specialize::interface_types(&residual.checked)
-        .map_err(|d| Line::diagnostic(C, "source", &d)));
-    // Independent acceptance before publication (design D9): the ordinary
-    // declared-text frontend, the kernel and the extractor must all accept the
-    // emitted residual first.
-    let readmitted = attempt!(noble_ngraph::specialize::readmit(
-        &IDS,
-        &source,
-        &types,
-        noble_contracts::Limits::default(),
-        &args.budgets,
-    )
-    .map_err(|d| Line::diagnostic(C, "admission", &d)));
+    let (residual, source, readmitted_graph, readmitted_nodes, cache_report) =
+        if args.switch("--cache") {
+            // The command-line form is one request per process. Reusable
+            // embedders keep the same session object across requests.
+            let mut session = noble_ngraph::specialize::cache::Session::default();
+            let cached = attempt!(session
+                .specialize(noble_ngraph::specialize::cache::Invocation {
+                    ids: &IDS,
+                    original: &graph,
+                    recipe_bytes: recipe_bytes.as_bytes(),
+                    request: noble_ngraph::specialize::Request {
+                        static_inputs: &map,
+                        budgets: &args.budgets,
+                    },
+                    frontend_limits: noble_contracts::Limits::default(),
+                })
+                .map_err(|d| Line::diagnostic(C, "specialization", &d)));
+            let cache_report = Some((
+                cached.status.name(),
+                cached.specialization_key,
+                cached.program_key,
+                cached.lookup_entries,
+                cached.retained_bytes,
+            ));
+            let nodes = cached.readmitted.node_count();
+            let graph_id = cached.readmitted.id();
+            (
+                cached.residual,
+                cached.source,
+                graph_id,
+                nodes,
+                cache_report,
+            )
+        } else {
+            let residual = attempt!(noble_ngraph::specialize::specialize(
+                &IDS,
+                &graph,
+                &noble_ngraph::specialize::Request {
+                    static_inputs: &map,
+                    budgets: &args.budgets,
+                },
+            )
+            .map_err(|d| Line::diagnostic(C, "specialization", &d)));
+            let source = attempt!(noble_ngraph::specialize::emit_source(&residual.checked)
+                .map_err(|d| Line::diagnostic(C, "source", &d)));
+            let types = attempt!(noble_ngraph::specialize::interface_types(&residual.checked)
+                .map_err(|d| Line::diagnostic(C, "source", &d)));
+            // Independent acceptance before publication (design D9): the
+            // ordinary frontend, kernel and extractor accept residual source.
+            let readmitted = attempt!(noble_ngraph::specialize::readmit(
+                &IDS,
+                &source,
+                &types,
+                noble_contracts::Limits::default(),
+                &args.budgets,
+            )
+            .map_err(|d| Line::diagnostic(C, "admission", &d)));
+            let readmitted_graph = readmitted.id();
+            let readmitted_nodes = readmitted.node_count();
+            (residual, source, readmitted_graph, readmitted_nodes, None)
+        };
     if let Some(path) = args.path_value("--graph-out") {
         let text = noble_ngraph::format::graph::print(residual.checked.graph());
         attempt!(publish(C, &path, text.as_bytes()));
     }
     attempt!(publish(C, &out, source.as_bytes()));
     let report = residual.report;
-    Ok(std::vec![Line::normal(C, "specialization")
+    let mut line = Line::normal(C, "specialization")
         .with("graph", report::digest(&graph.id()))
         .with("residual_graph", report::digest(&report.residual_graph))
-        .with("readmitted_graph", report::digest(&readmitted.id()))
-        .with("readmitted_nodes", report::count(readmitted.node_count()))
+        .with("readmitted_graph", report::digest(&readmitted_graph))
+        .with("readmitted_nodes", report::count(readmitted_nodes))
         .with(
             "source_blake3",
-            report::digest(blake3::hash(source.as_bytes()).as_bytes())
+            report::digest(blake3::hash(source.as_bytes()).as_bytes()),
         )
         .with("accounting", string(report.accounting))
         .with(
@@ -675,8 +716,8 @@ fn specialize(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, S
                         Some(value) => Json::Signed(*value),
                         None => Json::Null,
                     })
-                    .collect()
-            )
+                    .collect(),
+            ),
         )
         .with("inputs", type_list(report.dynamic_inputs.iter().copied()))
         .with("live_nodes", report::count(residual.checked.node_count()))
@@ -684,7 +725,30 @@ fn specialize(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, S
         .with("folded_nodes", Json::Number(report.folded_nodes))
         .with("pruned_nodes", Json::Number(report.pruned_nodes))
         .with("residual_nodes", Json::Number(report.residual_nodes))
-        .with("variants", Json::Number(report.variants))])
+        .with("variants", Json::Number(report.variants));
+    if let Some((status, specialization_key, program_key, lookup_entries, retained_bytes)) =
+        cache_report
+    {
+        line = line
+            .with("cache_status", string(status))
+            .with(
+                "specialization_key",
+                specialization_key
+                    .as_ref()
+                    .map(report::digest)
+                    .unwrap_or(Json::Null),
+            )
+            .with(
+                "program_key",
+                program_key
+                    .as_ref()
+                    .map(report::digest)
+                    .unwrap_or(Json::Null),
+            )
+            .with("cache_lookup_entries", report::count(lookup_entries))
+            .with("cache_retained_bytes", report::count(retained_bytes));
+    }
+    Ok(std::vec![line])
 }
 
 fn specialize_program(
@@ -880,7 +944,7 @@ fn eval(
         return usage("--snapshot-id needs --snapshot");
     }
     attempt!(policy(C, &args.budgets));
-    let (graph, _) = attempt!(load_graph(C, &args.path(0), &args.budgets, "graph file"));
+    let (graph, _, _) = attempt!(load_graph(C, &args.path(0), &args.budgets, "graph file"));
     let snapshot = match args.path_value("--snapshot") {
         Some(p) => {
             let f = attempt!(load_snapshot(C, &p, &args.budgets, "snapshot file"));
@@ -1317,8 +1381,8 @@ fn train(
         );
     }
     attempt!(adam.admit().map_err(|d| Line::diagnostic(C, "request", &d)));
-    let (model, _) = attempt!(load_graph(C, &args.path(0), &budgets, "model graph"));
-    let (loss, _) = attempt!(load_graph(C, &loss_path, &budgets, "loss graph"));
+    let (model, _, _) = attempt!(load_graph(C, &args.path(0), &budgets, "model graph"));
+    let (loss, _, _) = attempt!(load_graph(C, &loss_path, &budgets, "loss graph"));
     let params = model.param_slots().to_vec();
     attempt!(noble_ngraph::train::admit(&model, &loss, &params, &deriv)
         .map_err(|d| Line::diagnostic(C, "admission", &d)));
@@ -1418,7 +1482,7 @@ fn verify(
     let pinned = attempt!(pinned(&args));
     let budgets = args.budgets.clone();
     attempt!(policy(C, &budgets));
-    let (graph, _) = attempt!(load_graph(C, &args.path(0), &budgets, "graph file"));
+    let (graph, _, _) = attempt!(load_graph(C, &args.path(0), &budgets, "graph file"));
     let file = attempt!(load_snapshot(C, &args.path(1), &budgets, "snapshot file"));
     attempt!(file
         .bind(&IDS, &graph, pinned.as_ref())
@@ -1429,7 +1493,7 @@ fn verify(
         else {
             return usage("--replay needs --loss and --data");
         };
-        let (loss, _) = attempt!(load_graph(C, &loss_path, &budgets, "loss graph"));
+        let (loss, _, _) = attempt!(load_graph(C, &loss_path, &budgets, "loss graph"));
         let data = attempt!(load_points(C, &data_path, &graph, &loss));
         let parent = match args.path_value("--from") {
             Some(p) => {

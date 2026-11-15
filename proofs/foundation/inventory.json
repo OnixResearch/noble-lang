@@ -6454,6 +6454,138 @@
       "claim": "a seeded interpreter with swapped subtraction operands disagrees with the reference"
     },
     {
+      "name": "NobleFoundation.ProcedureLibrary.decode_encode_subject",
+      "phase": 2,
+      "role": "library-identity",
+      "claim": "the abstract canonical subject encoder round-trips immutable identity fields"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.encode_subject_injective",
+      "phase": 2,
+      "role": "library-identity",
+      "claim": "the abstract canonical subject encoding is injective"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.identity_injective_on_subjects",
+      "phase": 2,
+      "role": "library-identity",
+      "claim": "equal procedure identities determine equal immutable subjects"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.identity_binds_body",
+      "phase": 2,
+      "role": "library-identity",
+      "claim": "equal procedure identities determine equal bodies"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.identity_binds_dependency_closure",
+      "phase": 2,
+      "role": "library-identity",
+      "claim": "equal procedure identities determine equal ordered dependency closures"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.identity_ignores_mutable_state",
+      "phase": 2,
+      "role": "library-identity",
+      "claim": "evidence status and cost changes do not alter abstract subject identity"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.reload_recomputes_identity",
+      "phase": 2,
+      "role": "library-reload",
+      "claim": "reloading a persisted record list recomputes the same ordered identities"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.reload_repeated_identity",
+      "phase": 2,
+      "role": "library-reload",
+      "claim": "repeated abstract persistence and reload preserve a record identity"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.deduplicate_reuses_exact_subject",
+      "phase": 2,
+      "role": "library-deduplication",
+      "claim": "an exact identity duplicate reuses the existing model records"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.deduplicate_reuse_preserves_dependency_closures",
+      "phase": 2,
+      "role": "library-deduplication",
+      "claim": "exact deduplication preserves all retained dependency closures"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.deduplicate_reuse_preserves_all_evidence",
+      "phase": 2,
+      "role": "library-deduplication",
+      "claim": "exact deduplication preserves every retained evidence record"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.bound_evidence_appends_to_existing_evidence",
+      "phase": 2,
+      "role": "library-evidence",
+      "claim": "subject-bound evidence is appended after the existing evidence sequence"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.appended_evidence_preserves_identity",
+      "phase": 2,
+      "role": "library-evidence",
+      "claim": "appending evidence leaves immutable procedure identity unchanged"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.appended_evidence_preserves_prior_obligations",
+      "phase": 2,
+      "role": "library-evidence",
+      "claim": "appending one evidence record preserves the prior evidence prefix"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.evidence_publication_appends_a_generation",
+      "phase": 2,
+      "role": "library-generation",
+      "claim": "bound evidence publication increments the generation number"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.evidence_publication_retains_prior_generation",
+      "phase": 2,
+      "role": "library-generation",
+      "claim": "bound evidence publication retains the exact previous generation"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.wrong_subject_evidence_does_not_publish",
+      "phase": 2,
+      "role": "library-evidence",
+      "claim": "evidence bound to a different subject cannot publish a generation"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.rollback_restores_exact_retained_closure",
+      "phase": 2,
+      "role": "library-rollback",
+      "claim": "rollback restores the exact record closure of a retained generation"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibrary.rollback_never_rewrites_retained_history",
+      "phase": 2,
+      "role": "library-rollback",
+      "claim": "rollback appends a generation without rewriting earlier retained history"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibraryWire.commuted_fixture_wire_length",
+      "phase": 2,
+      "role": "finite-byte-corpus",
+      "claim": "the finite Commuted source wire fixture has the checked encoded byte length"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibraryWire.subtract_fixture_wire_length",
+      "phase": 2,
+      "role": "finite-byte-corpus",
+      "claim": "the finite Subtract source wire fixture has the checked encoded byte length"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibraryWire.commuted_fixture_encoder_prefix",
+      "phase": 2,
+      "role": "finite-byte-corpus",
+      "claim": "the finite Commuted fixture begins with the checked encoder identifier length prefix"
+    },
+    {
       "name": "NobleFoundation.Synthesis.not_certifiable_of_refuted",
       "phase": 2,
       "role": "symbolic-solver",
@@ -12178,6 +12310,60 @@
       "claim": "every 64-bit input to the three-operation chain lowers to an XNet accepted by the executable invariant checker"
     },
     {
+      "name": "NobleFoundation.NetI64Families.balancedProgram_zero_translation_checked",
+      "phase": 1,
+      "role": "translation-admission",
+      "claim": "every input to the depth-zero balanced tree lowers to an XNet accepted by the executable invariant checker"
+    },
+    {
+      "name": "NobleFoundation.NetI64Families.balancedProgram_zero_trace",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "the depth-zero balanced tree has an empty normal abstract trace and reads back its sole input"
+    },
+    {
+      "name": "NobleFoundation.NetI64Families.balancedProgram_one_trace",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "for every pair of 64-bit leaves, the depth-one balanced tree fires op2 then op1, normalizes in two abstract interactions, and reads back the packed reference"
+    },
+    {
+      "name": "NobleFoundation.NetI64Families.chainProgram_zero_trace",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "a zero-operation chain has an empty normal abstract trace and reads back the input"
+    },
+    {
+      "name": "NobleFoundation.NetI64Families.fanoutTraceSlots_length",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "a fanout trace continuation contains exactly the requested number of output slots"
+    },
+    {
+      "name": "NobleFoundation.NetI64Families.fanoutTracePlan_length",
+      "phase": 1,
+      "role": "family-formula",
+      "claim": "a nonempty fanout trace plan uses two wires per output slot minus one"
+    },
+    {
+      "name": "NobleFoundation.NetI64Families.fanoutProgram_one_trace",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "one requested fanout copy has an empty normal abstract trace and reads back the input in order"
+    },
+    {
+      "name": "NobleFoundation.NetI64Families.fanoutProgram_zero_trace",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "zero requested fanout copies erase the input in one normal abstract interaction and read back an empty list"
+    },
+    {
+      "name": "NobleFoundation.NetI64Families.fanoutProgram_two_trace",
+      "phase": 1,
+      "role": "family-fixture",
+      "claim": "two requested fanout copies fire one duplicator, reach a normal abstract net, and read back both outputs in order"
+    },
+    {
       "name": "NobleFoundation.NetI64.balancedProgram_opCount",
       "phase": 1,
       "role": "family-formula",
@@ -12554,6 +12740,540 @@
       "phase": 1,
       "role": "lowering-corpus",
       "claim": "the empty finite graph has the retained exact interaction count"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.compileRule_exact_rhs",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "the plan-rule compiler preserves the exact selected revision-3 right-hand side"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.compileRule_op2_forward",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "every binary-operation and numeric-value pair has a forward plan image"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.compileRule_op2_reverse",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "every mirrored binary-operation and numeric-value pair has a plan image"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.compileRule_op1_forward",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "every partially applied operation and numeric-value pair has a forward plan image"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.compileRule_op1_reverse",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "every mirrored partially applied operation and numeric-value pair has a plan image"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.compileRule_dup_forward",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "every forward duplicator and numeric-value pair has a plan image"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.compileRule_dup_reverse",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "every mirrored duplicator and numeric-value pair has a plan image"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.compileRule_era_forward",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "every forward eraser and numeric-value pair has a plan image"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.compileRule_era_reverse",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "every mirrored eraser and numeric-value pair has a plan image"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.compile_commit",
+      "phase": 1,
+      "role": "abstract-reduction-step",
+      "claim": "executing a compiled boundary, result, wire, and queue image equals the inets hash-map worklist firing"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.commit_worklist",
+      "phase": 1,
+      "role": "abstract-reduction-step",
+      "claim": "committing a captured plan publishes exactly the local principal-pair image and retained worklist"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.commit_worklist_permutation",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-ordered pending-then-new and inets-ordered new-then-pending worklists contain the same pair multiset"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.commit_frame_agent",
+      "phase": 1,
+      "role": "representation",
+      "claim": "agents outside a plan's consumed pair and declared result image are untouched by commit"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.commit_frame_wire",
+      "phase": 1,
+      "role": "representation",
+      "claim": "wires outside a plan's captured two-way boundary and declared writes are untouched by commit"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.precommit_stutters",
+      "phase": 1,
+      "role": "abstract-reduction-step",
+      "claim": "every pre-commit plan phase preserves the represented abstract net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.commit_refines",
+      "phase": 1,
+      "role": "abstract-reduction-step",
+      "claim": "a checked worklist-plan commit refines to one revision-3 abstract net step"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.readWord_emitWord",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a bounded little-endian word of arbitrary width round-trips through the independent parser"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.readMany_bytes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "exact-count byte decoding consumes precisely the emitted prefix"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.decodeSymbol_emitSymbol",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every selected NetI64 symbol tag and arbitrary I64 payload decodes identically"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.emitSymbol_payload_bounded",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any emitted numeric or staged operand fits its exact eight-byte payload"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.readEndpoint_emitEndpoint",
+      "phase": 1,
+      "role": "representation",
+      "claim": "both admitted external endpoint tags and bounded indices decode without truncation"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.readBoundary_emitBoundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a captured physical source and external endpoint decode exactly"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.resultPort_roundtrip",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a valid boundary index is distinct from the one-byte absent-port sentinel"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.readResult_emitResult",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a result symbol, donor, three ports, freshness and destination decode exactly"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.readWrite_emitWrite",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a declared three-index physical wire write decodes exactly"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.readPair_emitPair",
+      "phase": 1,
+      "role": "representation",
+      "claim": "both physical slot indices and 64-bit generations decode exactly"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.decode_emit",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the independent plan parser recovers every admissible emitted version-one plan including arbitrary I64 payloads and all counted images"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op2_output_image",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one reused-slot OP2 plan with two output boundary writes round-trips through the version-one byte grammar"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op2_rule_symbols",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "the finite OP2 plan result symbol agrees with the selected staged right-hand side"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op2_published_image",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a decoded OP2 result with a live peer carries one generation-tagged physical publication"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op1_wrapping_output_image",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one reused-slot OP1 wrapping subtraction and its output write round-trip through the plan grammar"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op1_wrapping_rule_symbols",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "the finite OP1 wrapping subtraction plan result symbol agrees with the selected right-hand side"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.dup_output_image",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one DUP plan reusing both consumed slots and two output writes round-trips through the byte grammar"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.dup_rule_symbols",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "the finite DUP plan's ordered numeric results agree with the selected right-hand side"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.decode_header",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every accepted version-one byte plan has the exact magic and version header"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.era_image",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the erasure byte image decodes all fixed fields and exact resource reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.era_rule_symbols",
+      "phase": 1,
+      "role": "interaction-rule",
+      "claim": "the finite ERA rule has no result symbols, matching its decoded no-result byte fixture"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.era_trailing_bytes_refused",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the erasure byte image rejects a trailing operation after its commit marker"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.era_wrong_version_refused",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the erasure byte image refuses a changed plan version"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.stale_first_refused",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a generation-stale queued pair cannot identify a reused first physical slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.reserve_snapshot",
+      "phase": 1,
+      "role": "representation",
+      "claim": "successful resource reservation preserves the original physical arena and journal"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.reserve_within_limits",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reservation opens a physical transaction only if arena scratch and queue bounds all hold"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeSlot_frame",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a retagged physical slot leaves all other generation and queue marks unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.appendSlot_frame",
+      "phase": 1,
+      "role": "representation",
+      "claim": "appending a new physical slot preserves every previously allocated arena slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.logicalPort_writeSlot_away",
+      "phase": 1,
+      "role": "representation",
+      "claim": "writing away from a boundary endpoint preserves its projected logical port"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.logicalPair_writeSlot_away",
+      "phase": 1,
+      "role": "representation",
+      "claim": "writing away from both pair slots preserves a queued pair's decoded identities and generations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retargetOutput_preserves_free",
+      "phase": 1,
+      "role": "representation",
+      "claim": "retargeting an existing physical output keeps the ordered logical free-port labels fixed"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.executeCheckedImage_preserves_free",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every successful decoded physical image preserves the complete ordered abstract external free-port labels"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.project_boundary_frame",
+      "phase": 1,
+      "role": "representation",
+      "claim": "retagging any physical arena slot preserves the stable ordered identities of the external free ports"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.project_work_frame",
+      "phase": 1,
+      "role": "representation",
+      "claim": "writing outside every queued pair preserves the projected active-pair list"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.appendPublications_project_work",
+      "phase": 1,
+      "role": "representation",
+      "claim": "physical queue publication appends both abstract orientations of each generation-current pair after the pending worklist"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.appendPublications_project_plan_work",
+      "phase": 1,
+      "role": "representation",
+      "claim": "if the decoded pair inventory matches the plan, Rust tail append and inets head prepend carry the same directed-pair multiset"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.appendPublications_project_net",
+      "phase": 1,
+      "role": "representation",
+      "claim": "appending physical queue publications does not change the observable net agents wires or outputs"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_output_execution_exact",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the finite decoded OP2 output image updates reused slot generations, free inventory and two output targets exactly"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_output_refines",
+      "phase": 1,
+      "role": "abstract-reduction-step",
+      "claim": "the finite OP2 physical output rewrite projects to the selected abstract plan's whole net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_published_execution_exact",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the finite OP2 physical publication connects reciprocal principals and marks both generation-tagged slots"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_published_pair_orientations",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one canonical Rust pair projects to both oriented inets worklist entries"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_published_refines",
+      "phase": 1,
+      "role": "abstract-reduction-step",
+      "claim": "the finite OP2 active publication projects to the checked abstract net and matching directed-pair worklist"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_execution_exact",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the finite decoded OP1 wrapping subtraction retags its physical result and output exactly"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_refines",
+      "phase": 1,
+      "role": "abstract-reduction-step",
+      "claim": "the finite OP1 subtraction rewrite projects to the selected abstract plan's whole net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_execution_exact",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the finite decoded DUP image retags two reused slots and independently retargets two outputs"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_refines",
+      "phase": 1,
+      "role": "abstract-reduction-step",
+      "claim": "the finite DUP physical rewrite projects to the selected abstract plan's whole net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_execution_exact",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the finite decoded ERA image retires both consumed generation-zero slots and records both free indices"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_refines",
+      "phase": 1,
+      "role": "abstract-reduction-step",
+      "claim": "the finite ERA physical rewrite projects to the selected abstract empty-result net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalTransaction.stage_stutters",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a journaled physical microstep preserves its represented precommit net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalTransaction.rollback_restores",
+      "phase": 1,
+      "role": "representation",
+      "claim": "rollback restores the exact physical snapshot and represented net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalTransaction.commit_refines_if_projected",
+      "phase": 1,
+      "role": "abstract-reduction-step",
+      "claim": "a physical commit refines one net step and the pending-pair multiset if its observable arena and queue permutation match the checked plan image"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.xRule_time_obligation",
+      "phase": 1,
+      "role": "resource-potential",
+      "claim": "every selected oriented arithmetic, duplication, and erasure rule spends at least one unit of time potential"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.xRule_space_obligation",
+      "phase": 1,
+      "role": "resource-potential",
+      "claim": "every selected oriented rule preserves or decreases the one-cell-per-agent space potential"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.XNet.fire_time_spends_one",
+      "phase": 1,
+      "role": "resource-potential",
+      "claim": "every selected firing spends at least one unit of the exact live-agent time potential"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.XNet.steps_resource_le",
+      "phase": 1,
+      "role": "resource-bound",
+      "claim": "every finite legal reduction prefix spends within initial time potential and never increases committed live agents, without normalization"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.op2_stage_spends_one",
+      "phase": 1,
+      "role": "resource-potential",
+      "claim": "each first arithmetic stage consumes one interaction potential for arbitrary I64 payloads"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.op1_stage_spends_one",
+      "phase": 1,
+      "role": "resource-potential",
+      "claim": "each second arithmetic stage consumes one interaction potential for arbitrary I64 payloads"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.dup_spends_one",
+      "phase": 1,
+      "role": "resource-potential",
+      "claim": "each selected fanout firing consumes one unit of interaction potential"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.era_spends_one",
+      "phase": 1,
+      "role": "resource-potential",
+      "claim": "each selected erasure firing consumes one unit of interaction potential"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.checkResourceCertificate_iff",
+      "phase": 1,
+      "role": "certificate-checker",
+      "claim": "model checker acceptance is equivalent to decoder, selected rule, fixed cost, byte digest, and semantic certificate checks"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.accepted_prefix_bounds_every_schedule",
+      "phase": 1,
+      "role": "resource-bound",
+      "claim": "every legal prefix stays within independently checked initial time and committed live-agent bounds without assuming normalization"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.accepted_exact_count_every_normal_schedule",
+      "phase": 1,
+      "role": "resource-bound",
+      "claim": "an accepted semantic certificate supplies the exact count for a terminal normal form"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.accepted_bytes_bound_every_schedule",
+      "phase": 1,
+      "role": "resource-bound",
+      "claim": "decoder-bound model certificate acceptance transfers the all-schedule count and live-agent bounds"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.chain_family_resources",
+      "phase": 1,
+      "role": "resource-family",
+      "claim": "growing chain shape has exact parameterized interaction and agent formulas"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.balanced_family_resources",
+      "phase": 1,
+      "role": "resource-family",
+      "claim": "balanced tree shape has exact depth-parameterized interaction and agent formulas"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.fanout_family_resources",
+      "phase": 1,
+      "role": "resource-family",
+      "claim": "fanout and erasure shape has exact parameterized interaction and agent formulas"
+    },
+    {
+      "name": "NobleFoundation.NetI64ResourceCorpus.fixture_schema",
+      "phase": 1,
+      "role": "resource-byte-corpus",
+      "claim": "a Rust-accepted resource certificate has the exact expected magic and four versioned identities"
+    },
+    {
+      "name": "NobleFoundation.NetI64ResourceCorpus.fixture_byte_fields",
+      "phase": 1,
+      "role": "resource-byte-corpus",
+      "claim": "kernel reduction reads graph identity, build identity, and digests from the retained literal net and certificate bytes"
+    },
+    {
+      "name": "NobleFoundation.NetI64ResourceCorpus.fixture_translation",
+      "phase": 1,
+      "role": "resource-byte-corpus",
+      "claim": "one retained Rust net literal matches its admitted source-program translation"
+    },
+    {
+      "name": "NobleFoundation.NetI64ResourceCorpus.fixture_resources",
+      "phase": 1,
+      "role": "resource-byte-corpus",
+      "claim": "the retained source program has a kernel-checked four-interaction, six-agent accepted semantic certificate"
+    },
+    {
+      "name": "NobleFoundation.NetI64ResourceCorpus.fixture_byte_claims_match_translation",
+      "phase": 1,
+      "role": "resource-byte-corpus",
+      "claim": "decoded integer claims in exact Rust-accepted bytes match the independently translated Lean program"
+    },
+    {
+      "name": "NobleFoundation.SizeChangeSound.infinite_pair_homogeneous",
+      "phase": 1,
+      "role": "size-change-termination",
+      "claim": "every finite coloring of increasing natural pairs has an infinite homogeneous sequence"
+    },
+    {
+      "name": "NobleFoundation.SizeChangeSound.matrix_closure_sct_terminates_classical",
+      "phase": 1,
+      "role": "size-change-termination",
+      "claim": "a checked matrix closure certificate and any satisfying site run are incompatible"
     }
   ],
   "private_theorems": [
@@ -12691,6 +13411,10 @@
     "NobleFoundation.NetI64.fanoutProgram_dupCount",
     "NobleFoundation.NetI64.fanoutProgram_eraCount",
     "NobleFoundation.NetI64.Program.translateChecked_parts",
+    "NobleFoundation.NetI64Resource.filter_time_le",
+    "NobleFoundation.NetI64Resource.filter_time_drop",
+    "NobleFoundation.NetI64Resource.rhs_time_agents",
+    "NobleFoundation.NetI64Resource.selected_xRule",
     "NobleFoundation.NetLabelled.rhsSwapInvolutive",
     "NobleFoundation.NetLabelled.duplicateNumberWF",
     "NobleFoundation.NetLabelled.duplicateEraseWF",
@@ -12724,6 +13448,49 @@
     "NobleFoundation.PackedLayoutEncoded.decodeListPairs_encode_append",
     "NobleFoundation.PackedLayoutEncoded.decodeTablesPrefix_encodeTables_append",
     "NobleFoundation.PackedLayoutEncoded.decodeInputPrefix_encodeInput_append",
-    "NobleFoundation.PackedLayoutEncoded.decodeInputPrefix_encodeInput"
+    "NobleFoundation.PackedLayoutEncoded.decodeInputPrefix_encodeInput",
+    "NobleFoundation.NetI64Plans.insert_frame",
+    "NobleFoundation.NetI64Plans.erase_frame",
+    "NobleFoundation.NetI64Plans.readMany_emit",
+    "NobleFoundation.NetI64Plans.readCounted_emit",
+    "NobleFoundation.NetI64Plans.resultPorts_roundtrip",
+    "NobleFoundation.NetI64Plans.BytePlan.readHeader_emit",
+    "NobleFoundation.NetI64Plans.count_fits_byte",
+    "NobleFoundation.NetI64Plans.PhysicalState.portWires_appendPublications",
+    "NobleFoundation.NetI64Plans.PhysicalState.installResult_output_labels",
+    "NobleFoundation.NetI64Plans.PhysicalState.installResults_output_labels",
+    "NobleFoundation.NetI64Plans.PhysicalState.retire_output_labels",
+    "NobleFoundation.NetI64Plans.PhysicalState.publish_output_labels",
+    "NobleFoundation.NetI64Plans.PhysicalState.publishAll_output_labels",
+    "NobleFoundation.NetI64Plans.PhysicalState.writeExternal_output_labels",
+    "NobleFoundation.NetI64Plans.PhysicalState.writeExternals_output_labels",
+    "NobleFoundation.NetI64Plans.retargetOutputList_labels",
+    "NobleFoundation.NetI64Plans.op2_start_wires",
+    "NobleFoundation.NetI64Plans.op2_nearWires",
+    "NobleFoundation.NetI64Plans.op2_plan_boundary",
+    "NobleFoundation.NetI64Plans.op2_nbhd",
+    "NobleFoundation.NetI64Plans.op2_plan_agents",
+    "NobleFoundation.NetI64Plans.op2_plan_writes",
+    "NobleFoundation.NetI64Plans.op2_published_nearWires",
+    "NobleFoundation.NetI64Plans.op2_published_nbhd",
+    "NobleFoundation.NetI64Plans.op2_published_plan_agents",
+    "NobleFoundation.NetI64Plans.op2_published_plan_boundary",
+    "NobleFoundation.NetI64Plans.op2_published_plan_writes",
+    "NobleFoundation.NetI64Plans.op2_published_plan_pair",
+    "NobleFoundation.NetI64Plans.era_nearWires",
+    "NobleFoundation.NetI64Plans.era_nbhd",
+    "NobleFoundation.NetI64Plans.era_plan_agents",
+    "NobleFoundation.NetI64Plans.era_plan_boundary",
+    "NobleFoundation.NetI64Plans.era_plan_writes",
+    "NobleFoundation.NetI64Plans.op1_nearWires",
+    "NobleFoundation.NetI64Plans.op1_nbhd",
+    "NobleFoundation.NetI64Plans.op1_plan_agents",
+    "NobleFoundation.NetI64Plans.op1_plan_boundary",
+    "NobleFoundation.NetI64Plans.op1_plan_writes",
+    "NobleFoundation.NetI64Plans.dup_nearWires",
+    "NobleFoundation.NetI64Plans.dup_nbhd",
+    "NobleFoundation.NetI64Plans.dup_plan_agents",
+    "NobleFoundation.NetI64Plans.dup_plan_boundary",
+    "NobleFoundation.NetI64Plans.dup_plan_writes"
   ]
 }

@@ -715,7 +715,7 @@
         "protected_operations": 0,
         "size_change": {
           "schema": "noble-size-change/v1",
-          "criterion": "shared-measure: one declared measure decreases at every self-call site",
+          "criterion": "bounded-closure: every idempotent call-graph matrix has a strict diagonal",
           "profile": "list structure and guarded i64 counters under one stack prefix",
           "definitions": [{
             "definition": "go",
@@ -727,8 +727,17 @@
           "lean_check": null
         }
       },
-      "state": {"implementation": "implemented", "execution": "not-run", "proof": "open", "trust": "unassessed"},
-      "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "kind": "test",
+        "subject": "REC-SC-01",
+        "claim": "The clean source-built CLI accepted structural list-tail recursion under the bounded size-change closure checker, with the REC-SC-01 report and Lean certificate retained.",
+        "revision": "0.1.0-draft.5",
+        "result": "passed",
+        "source_revision": "git-tree:bec90f49f7cb3c92f54d39fcae214f3deeac3d45",
+        "configuration": {"profile": "Signed-Declared-Text-v1", "receipt": "../../verification/size-change/scenarios-7015b3fe220653fc6209935d0f4186a4764e444d.json", "receipt_sha256": "7aec5bfb0d3b8164f8d47892bd1861d752b9c52094cbfc61b76657df1c4fd9a7", "gate": "../../verification/size-change/scenarios.mjs", "case": "REC-SC-01"},
+        "assumptions": ["One clean production-session result from source commit 7015b3fe220653fc6209935d0f4186a4764e444d; evidence is limited to that execution.", "The reference-model audit does not prove arbitrary-run size-change soundness or correspondence to Rust, so proof remains open."]
+      }]
     },
     {
       "id": "REC-SC-02",
@@ -752,7 +761,7 @@
         "protected_operations": 0,
         "size_change": {
           "schema": "noble-size-change/v1",
-          "criterion": "shared-measure: one declared measure decreases at every self-call site",
+          "criterion": "bounded-closure: every idempotent call-graph matrix has a strict diagonal",
           "profile": "list structure and guarded i64 counters under one stack prefix",
           "definitions": [{
             "definition": "down",
@@ -764,8 +773,17 @@
           "lean_check": null
         }
       },
-      "state": {"implementation": "implemented", "execution": "not-run", "proof": "open", "trust": "unassessed"},
-      "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "kind": "test",
+        "subject": "REC-SC-02",
+        "claim": "The clean source-built CLI accepted guarded counter-predecessor recursion under the bounded size-change closure checker, with the REC-SC-02 report and Lean certificate retained.",
+        "revision": "0.1.0-draft.5",
+        "result": "passed",
+        "source_revision": "git-tree:bec90f49f7cb3c92f54d39fcae214f3deeac3d45",
+        "configuration": {"profile": "Signed-Declared-Text-v1", "receipt": "../../verification/size-change/scenarios-7015b3fe220653fc6209935d0f4186a4764e444d.json", "receipt_sha256": "7aec5bfb0d3b8164f8d47892bd1861d752b9c52094cbfc61b76657df1c4fd9a7", "gate": "../../verification/size-change/scenarios.mjs", "case": "REC-SC-02"},
+        "assumptions": ["One clean production-session result from source commit 7015b3fe220653fc6209935d0f4186a4764e444d; evidence is limited to that execution.", "The reference-model audit does not prove arbitrary-run size-change soundness or correspondence to Rust, so proof remains open."]
+      }]
     },
     {
       "id": "REC-SC-03",
@@ -789,7 +807,7 @@
         "protected_operations": 0,
         "size_change": {
           "schema": "noble-size-change/v1",
-          "criterion": "shared-measure: one declared measure decreases at every self-call site",
+          "criterion": "bounded-closure: every idempotent call-graph matrix has a strict diagonal",
           "profile": "list structure and guarded i64 counters under one stack prefix",
           "definitions": [{
             "definition": "same",
@@ -801,8 +819,17 @@
           "lean_check": null
         }
       },
-      "state": {"implementation": "implemented", "execution": "not-run", "proof": "open", "trust": "unassessed"},
-      "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "kind": "test",
+        "subject": "REC-SC-03",
+        "claim": "The clean source-built CLI refused non-decreasing self-recursion with the reported non-decreasing-site witness, preserving the existing REC-SC-03 result.",
+        "revision": "0.1.0-draft.5",
+        "result": "passed",
+        "source_revision": "git-tree:bec90f49f7cb3c92f54d39fcae214f3deeac3d45",
+        "configuration": {"profile": "Signed-Declared-Text-v1", "receipt": "../../verification/size-change/scenarios-7015b3fe220653fc6209935d0f4186a4764e444d.json", "receipt_sha256": "7aec5bfb0d3b8164f8d47892bd1861d752b9c52094cbfc61b76657df1c4fd9a7", "gate": "../../verification/size-change/scenarios.mjs", "case": "REC-SC-03"},
+        "assumptions": ["One clean production-session result from source commit 7015b3fe220653fc6209935d0f4186a4764e444d; evidence is limited to that execution.", "The reference-model audit does not prove arbitrary-run size-change soundness or correspondence to Rust, so proof remains open."]
+      }]
     },
     {
       "id": "REC-SC-04",
@@ -826,7 +853,7 @@
         "protected_operations": 0,
         "size_change": {
           "schema": "noble-size-change/v1",
-          "criterion": "shared-measure: one declared measure decreases at every self-call site",
+          "criterion": "bounded-closure: every idempotent call-graph matrix has a strict diagonal",
           "profile": "list structure and guarded i64 counters under one stack prefix",
           "definitions": [{
             "definition": "wrap",
@@ -838,8 +865,178 @@
           "lean_check": null
         }
       },
-      "state": {"implementation": "implemented", "execution": "not-run", "proof": "open", "trust": "unassessed"},
-      "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "kind": "test",
+        "subject": "REC-SC-04",
+        "claim": "The clean source-built CLI refused wrapping counter recursion as opaque, preserving the existing REC-SC-04 result.",
+        "revision": "0.1.0-draft.5",
+        "result": "passed",
+        "source_revision": "git-tree:bec90f49f7cb3c92f54d39fcae214f3deeac3d45",
+        "configuration": {"profile": "Signed-Declared-Text-v1", "receipt": "../../verification/size-change/scenarios-7015b3fe220653fc6209935d0f4186a4764e444d.json", "receipt_sha256": "7aec5bfb0d3b8164f8d47892bd1861d752b9c52094cbfc61b76657df1c4fd9a7", "gate": "../../verification/size-change/scenarios.mjs", "case": "REC-SC-04"},
+        "assumptions": ["One clean production-session result from source commit 7015b3fe220653fc6209935d0f4186a4764e444d; evidence is limited to that execution.", "The reference-model audit does not prove arbitrary-run size-change soundness or correspondence to Rust, so proof remains open."]
+      }]
+    },
+    {
+      "id": "REC-SC-05",
+      "profile": "Signed-Declared-Text-v1",
+      "kind": "static",
+      "requirements": ["K-CHECK-02"],
+      "input": {
+        "submissions": [
+          "module perm@1 [ signature perm forall<S:stack> [ S I64 I64 -- S I64 I64 ! pure ] export perm def perm [ dup 0 swap < [ 1 - swap perm ] [ ] if ] ]"
+        ],
+        "session_flags": [
+          "--framed", "--declared-modules", "--text-byte-cursor", "--signed-self-recursion",
+          "--retained-source-bytes", "262144", "--size-change-evidence",
+          "--size-change-certificate", "<new-directory>"
+        ]
+      },
+      "expected": {
+        "stage": "link",
+        "outcome": "linked",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "size_change": {
+          "schema": "noble-size-change/v1",
+          "criterion": "bounded-closure: every idempotent call-graph matrix has a strict diagonal",
+          "profile": "list structure and guarded i64 counters under one stack prefix",
+          "definitions": [{
+            "definition": "perm",
+            "measures": ["counter", "counter"],
+            "verdict": "accepted",
+            "sites": [{
+              "arguments": ["opaque", "opaque"],
+              "guarded": [false, true],
+              "graph": [["unknown", "same"], ["strict", "unknown"]]
+            }],
+            "closure": [
+              {"path": [0], "graph": [["unknown", "same"], ["strict", "unknown"]]},
+              {"path": [0, 0], "graph": [["strict", "unknown"], ["unknown", "strict"]]},
+              {"path": [0, 0, 0], "graph": [["unknown", "strict"], ["strict", "unknown"]]}
+            ],
+            "strict_witnesses": [{"closure_entry": 1, "measure": 0}]
+          }],
+          "lean_check": null
+        }
+      },
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "kind": "test",
+        "subject": "REC-SC-05",
+        "claim": "The clean source-built CLI accepted the argument-permuting recursive definition by the bounded composed-graph criterion, with closure paths and a strict diagonal witness retained.",
+        "revision": "0.1.0-draft.5",
+        "result": "passed",
+        "source_revision": "git-tree:bec90f49f7cb3c92f54d39fcae214f3deeac3d45",
+        "configuration": {"profile": "Signed-Declared-Text-v1", "receipt": "../../verification/size-change/scenarios-7015b3fe220653fc6209935d0f4186a4764e444d.json", "receipt_sha256": "7aec5bfb0d3b8164f8d47892bd1861d752b9c52094cbfc61b76657df1c4fd9a7", "gate": "../../verification/size-change/scenarios.mjs", "case": "REC-SC-05"},
+        "assumptions": ["One clean production-session result from source commit 7015b3fe220653fc6209935d0f4186a4764e444d; evidence is limited to that execution.", "The reference-model audit does not prove arbitrary-run size-change soundness or correspondence to Rust, so proof remains open."]
+      }]
+    },
+    {
+      "id": "REC-SC-06",
+      "profile": "Signed-Declared-Text-v1",
+      "kind": "static",
+      "requirements": ["K-CHECK-02"],
+      "input": {
+        "submissions": [
+          "module cycle@1 [ signature cycle forall<S:stack> [ S I64 I64 -- S I64 I64 ! pure ] export cycle def cycle [ swap cycle ] ]"
+        ],
+        "session_flags": [
+          "--framed", "--declared-modules", "--text-byte-cursor", "--signed-self-recursion",
+          "--retained-source-bytes", "262144", "--size-change-evidence",
+          "--size-change-certificate", "<new-directory>"
+        ]
+      },
+      "expected": {
+        "stage": "link",
+        "outcome": "linked",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "size_change": {
+          "schema": "noble-size-change/v1",
+          "criterion": "bounded-closure: every idempotent call-graph matrix has a strict diagonal",
+          "profile": "list structure and guarded i64 counters under one stack prefix",
+          "definitions": [{
+            "definition": "cycle",
+            "measures": ["counter", "counter"],
+            "verdict": "refused",
+            "sites": [{
+              "arguments": ["opaque", "opaque"],
+              "guarded": [false, false],
+              "graph": [["unknown", "same"], ["same", "unknown"]]
+            }],
+            "witnesses": [
+              {"measure": 0, "site": 0, "argument": "opaque"},
+              {"measure": 1, "site": 0, "argument": "opaque"}
+            ],
+            "closure": [
+              {"path": [0], "graph": [["unknown", "same"], ["same", "unknown"]]},
+              {"path": [0, 0], "graph": [["same", "unknown"], ["unknown", "same"]]}
+            ],
+            "idempotent_cycle": {
+              "path": [0, 0],
+              "graph": [["same", "unknown"], ["unknown", "same"]]
+            }
+          }],
+          "lean_check": null
+        }
+      },
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "kind": "test",
+        "subject": "REC-SC-06",
+        "claim": "The clean source-built CLI refused argument swapping without decrease and emitted the idempotent identity graph as its cycle witness.",
+        "revision": "0.1.0-draft.5",
+        "result": "passed",
+        "source_revision": "git-tree:bec90f49f7cb3c92f54d39fcae214f3deeac3d45",
+        "configuration": {"profile": "Signed-Declared-Text-v1", "receipt": "../../verification/size-change/scenarios-7015b3fe220653fc6209935d0f4186a4764e444d.json", "receipt_sha256": "7aec5bfb0d3b8164f8d47892bd1861d752b9c52094cbfc61b76657df1c4fd9a7", "gate": "../../verification/size-change/scenarios.mjs", "case": "REC-SC-06"},
+        "assumptions": ["One clean production-session result from source commit 7015b3fe220653fc6209935d0f4186a4764e444d; evidence is limited to that execution.", "The reference-model audit does not prove arbitrary-run size-change soundness or correspondence to Rust, so proof remains open."]
+      }]
+    },
+    {
+      "id": "REC-SC-07",
+      "profile": "Signed-Declared-Text-v1",
+      "kind": "static",
+      "requirements": ["K-CHECK-02"],
+      "input": {
+        "submissions": [
+          "module big@1 [ signature big forall<S:stack> [ S I64 I64 I64 I64 I64 I64 I64 I64 I64 -- S I64 I64 I64 I64 I64 I64 I64 I64 I64 ! pure ] export big def big [ big ] ]"
+        ],
+        "session_flags": [
+          "--framed", "--declared-modules", "--text-byte-cursor", "--signed-self-recursion",
+          "--retained-source-bytes", "262144", "--size-change-evidence",
+          "--size-change-certificate", "<new-directory>"
+        ]
+      },
+      "expected": {
+        "stage": "link",
+        "outcome": "linked",
+        "guest_requests": 0,
+        "protected_operations": 0,
+        "size_change": {
+          "schema": "noble-size-change/v1",
+          "criterion": "bounded-closure: every idempotent call-graph matrix has a strict diagonal",
+          "profile": "list structure and guarded i64 counters under one stack prefix",
+          "definitions": [{
+            "definition": "big",
+            "measures": [],
+            "verdict": "bound-exceeded",
+            "bound": "parameters"
+          }],
+          "lean_check": null
+        }
+      },
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [{
+        "kind": "test",
+        "subject": "REC-SC-07",
+        "claim": "The clean source-built CLI returned a parameter-bound-exceeded result for the over-cap recursive definition rather than claiming termination or divergence.",
+        "revision": "0.1.0-draft.5",
+        "result": "passed",
+        "source_revision": "git-tree:bec90f49f7cb3c92f54d39fcae214f3deeac3d45",
+        "configuration": {"profile": "Signed-Declared-Text-v1", "receipt": "../../verification/size-change/scenarios-7015b3fe220653fc6209935d0f4186a4764e444d.json", "receipt_sha256": "7aec5bfb0d3b8164f8d47892bd1861d752b9c52094cbfc61b76657df1c4fd9a7", "gate": "../../verification/size-change/scenarios.mjs", "case": "REC-SC-07"},
+        "assumptions": ["One clean production-session result from source commit 7015b3fe220653fc6209935d0f4186a4764e444d; evidence is limited to that execution.", "The reference-model audit does not prove arbitrary-run size-change soundness or correspondence to Rust, so proof remains open."]
+      }]
     }
   ]
 }

@@ -1,0 +1,577 @@
+{
+  "schema": "noble-lean-qualification-acceptance/v1",
+  "date": "2026-11-14",
+  "runner_commit": "32c909a31a92dbb4e93c8993e7372ab13036eb4c",
+  "raw_receipts_commit": "2c4e47bbd2a1b4f676862415616056a6e83ed271",
+  "baseline_revision": "16daeaa32cae954d902411ff5fd37497ef57e273",
+  "compatible_proposal_revision": "bfd0fabc19e9942412a28f6f4f5fee1c6eadf133",
+  "profile": "inets-foundation",
+  "scope": "Vendored InteractionNets plus foundation consumer, inventory/axiom gate, and differential replay. M3/Aeneas exporter and Mathlib consumer builds are not qualified.",
+  "production_pin_changed": false,
+  "candidate_review_sha256": "8ce75b0e8169483a0906bab54c63b272f9466b44d8a41038aa98fe5a62e9faed",
+  "source_and_diff": {
+    "baseline_tree": "d8d2d846b874414232c1407cad26558d4cdc381a",
+    "proposal_tree": "90f8151724c192c0d11b9c9020cb37fb32c807cb",
+    "vendored_baseline_sha256": "c7a35dad49822583a9ee209b47d8ba5617d5abcb5a7f9f96df05e8502f362f54",
+    "vendored_proposal_sha256": "efe23a75b45cef7598d05b365df2899dcf00cb65020e599883397964d72a0329",
+    "patch_sha256": "291ac55886575011809b09e04be2141f694e44b0260569ac42d68f90e9ac4cb6",
+    "classes": {
+      "proposed_pin_changes": [
+        "proofs/inets/UPSTREAM.json"
+      ],
+      "proof_only_repairs": [],
+      "semantic_changes": [
+        "proofs/inets/InteractionNets.lean"
+      ],
+      "verifier_policy_changes": []
+    }
+  },
+  "rebuild_explanation": "The copied foundation .lake/build setup traces contain absolute import-artifact paths from their original package context; relocated candidate package paths and LEAN_PATH trigger foundation trace/output regeneration even for a no-op pin set. Rebuild bytes count changed cache files, not unique reflink allocation.",
+  "cache_results": {
+    "noop": {
+      "baseline": {
+        "packages_rebuilt": [
+          {
+            "kind": "proof-project",
+            "package": "proofs/foundation",
+            "changed_files": 448,
+            "rebuilt_bytes": 78695893
+          }
+        ],
+        "rebuilt_bytes": 78695893,
+        "disposable_tree_usage": {
+          "apparent_bytes": 6045596056,
+          "allocated_bytes": 2827877376,
+          "allocated_note": "reflink-shared blocks are counted per file and may overstate unique filesystem allocation"
+        }
+      },
+      "proposal": {
+        "packages_rebuilt": [
+          {
+            "kind": "proof-project",
+            "package": "proofs/foundation",
+            "changed_files": 448,
+            "rebuilt_bytes": 78695893
+          }
+        ],
+        "rebuilt_bytes": 78695893,
+        "disposable_tree_usage": {
+          "apparent_bytes": 6045596056,
+          "allocated_bytes": 2827877376,
+          "allocated_note": "reflink-shared blocks are counted per file and may overstate unique filesystem allocation"
+        }
+      }
+    },
+    "compatible": {
+      "baseline": {
+        "packages_rebuilt": [
+          {
+            "kind": "proof-project",
+            "package": "proofs/foundation",
+            "changed_files": 448,
+            "rebuilt_bytes": 78847331
+          }
+        ],
+        "rebuilt_bytes": 78847331,
+        "disposable_tree_usage": {
+          "apparent_bytes": 6045747494,
+          "allocated_bytes": 2827860992,
+          "allocated_note": "reflink-shared blocks are counted per file and may overstate unique filesystem allocation"
+        }
+      },
+      "proposal": {
+        "packages_rebuilt": [
+          {
+            "kind": "proof-project",
+            "package": "proofs/foundation",
+            "changed_files": 456,
+            "rebuilt_bytes": 204195414
+          }
+        ],
+        "rebuilt_bytes": 204195414,
+        "disposable_tree_usage": {
+          "apparent_bytes": 6094891887,
+          "allocated_bytes": 2844302336,
+          "allocated_note": "reflink-shared blocks are counted per file and may overstate unique filesystem allocation"
+        }
+      }
+    }
+  },
+  "acceptance_items": [
+    {
+      "item": "No-op pins and reproducible no-change result",
+      "status": "DONE",
+      "evidence": [
+        "noop/plan/plan.json",
+        "noop/run/qualification.json",
+        "noop/run/baseline/lean-proofs/foundation-check.json",
+        "noop/run/baseline/foundation-differential/differential.json"
+      ]
+    },
+    {
+      "item": "Compatible update traverses existing proof/inventory/axiom/replay checks with exact source, tool and dependency identities",
+      "status": "DONE",
+      "evidence": [
+        "compatible/plan/plan.json",
+        "compatible/plan/candidate.patch",
+        "compatible/run/qualification.json",
+        "compatible/run/proposal/lean-proofs/foundation-check.json",
+        "compatible/run/proposal/foundation-differential/differential.json"
+      ]
+    },
+    {
+      "item": "Incompatible Lean/library and unavailable required checker remain unqualified",
+      "status": "DONE",
+      "evidence": [
+        "incompatible/plan/plan.json",
+        "incompatible/run/qualification.json",
+        "unavailable/plan/plan.json",
+        "unavailable/run/qualification.json"
+      ]
+    },
+    {
+      "item": "Upstream dependency absent from manifest is detected by exact post-resolution comparison",
+      "status": "DONE",
+      "evidence": [
+        "selftests-2c4e47b.log",
+        "compatible/plan/plan.json"
+      ],
+      "note": "Small local Git-backed Lean fixture performs lake update before and after the hidden dependency; the expected unpredicted-dependency discrepancy is asserted. The compatible real inets candidate retains an equal manifest."
+    },
+    {
+      "item": "Freshly probed synthetic good baseline; midrange regression and fail-then-pass linear scan",
+      "status": "DONE",
+      "evidence": [
+        "regression-evidence-2c4e47b.json",
+        "selftests-2c4e47b.log"
+      ],
+      "note": "Synthetic declared outcomes are not proof/replay results; the CLI probe path executes the actual checker profile."
+    },
+    {
+      "item": "Starting worktree and original evidence intact on success, failure, SIGINT, tool error; candidate-bound new receipts",
+      "status": "DONE",
+      "evidence": [
+        "noop/run/qualification.json",
+        "compatible/run/qualification.json",
+        "incompatible/run/qualification.json",
+        "unavailable/run/qualification.json",
+        "cancel/run/qualification.json",
+        "toolerror/run/qualification.json",
+        "selftests-2c4e47b.log"
+      ]
+    },
+    {
+      "item": "Missing module, changed theorem root, extra axiom, stale compiled artifact, missing negative control refused",
+      "status": "DONE",
+      "evidence": [
+        "selftests-2c4e47b.log",
+        "compatible/run/proposal/foundation-differential/differential.json"
+      ]
+    },
+    {
+      "item": "Model-assisted diff review advisory only",
+      "status": "DECIDED",
+      "evidence": [
+        "compatible/plan/plan.json"
+      ],
+      "note": "No model-assisted review is used; reviewed source diff and mandatory checks, not model approval, govern qualification."
+    }
+  ],
+  "verification": [
+    {
+      "command": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node --test verification/lean-qualify/qualify.test.mjs",
+      "environment": "env -i HOME=/home/brittonr USER=brittonr LANG=C.UTF-8 PATH=<policy Node bin>:/run/current-system/sw/bin:/usr/bin:/bin TMPDIR=/home/brittonr/.cache/noble-iss/tmp NOBLE_QUALIFY_TEST_TMP=/home/brittonr/.cache/noble-iss/scratch/qualify-126/selftests-retained-2c4e47b",
+      "result": "18 pass, 0 fail",
+      "evidence": "selftests-2c4e47b.log"
+    },
+    {
+      "command": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node tools/check-specs.mjs --self-test",
+      "result": "passed; 230 self-tests"
+    },
+    {
+      "command": "bun tools/cairn-specs.mjs --self-test",
+      "result": "passed; 26 self-tests"
+    },
+    {
+      "command": "NOBLE_GIT=/run/current-system/sw/bin/git bun test tools/cairn-specs.test.mjs tools/check-specs.test.mjs tools/calculator-headroom.test.mjs tools/source-inventory-renew.test.mjs",
+      "result": "114 pass, 0 fail"
+    },
+    {
+      "command": "bun tools/check-specs.mjs --self-test",
+      "result": "passed; 230 self-tests"
+    },
+    {
+      "command": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node verification/foundation/claims.mjs",
+      "result": "passed; 51 claim rows, 0 diagnostics"
+    }
+  ],
+  "run_statuses": {
+    "noop": {
+      "status": "qualified-no-change",
+      "source_unchanged": true,
+      "report": "noop/run/qualification.json"
+    },
+    "compatible": {
+      "status": "qualified",
+      "source_unchanged": true,
+      "report": "compatible/run/qualification.json"
+    },
+    "incompatible": {
+      "status": "unqualified",
+      "source_unchanged": true,
+      "report": "incompatible/run/qualification.json"
+    },
+    "unavailable": {
+      "status": "unqualified",
+      "source_unchanged": true,
+      "report": "unavailable/run/qualification.json"
+    },
+    "cancel": {
+      "status": "cancelled",
+      "source_unchanged": true,
+      "report": "cancel/run/qualification.json"
+    },
+    "toolerror": {
+      "status": "unqualified",
+      "source_unchanged": true,
+      "report": "toolerror/run/qualification.json"
+    }
+  },
+  "artifacts": [
+    {
+      "path": "cancel/run/qualification.json",
+      "bytes": 6782,
+      "sha256": "30902330ea18e8ad04b632fd506f59aaef261f2292c37832c3f7bf5006de561e"
+    },
+    {
+      "path": "cancel/run/stages/baseline-foundation-check.log",
+      "bytes": 391,
+      "sha256": "b71380a836b14ba058f585cdc2c1dab35084d34e5225e61651fbea1c07f17909"
+    },
+    {
+      "path": "cancel/run/stages/baseline-lean-version.log",
+      "bytes": 213,
+      "sha256": "7050b69fc421392d55226c4eb8269e0cf1162afbd3b6f65b15bcfb97d7db4208"
+    },
+    {
+      "path": "cancel/run/stages/baseline-node-version.log",
+      "bytes": 105,
+      "sha256": "f56b4eb679775177187e15581569151ffb9c6d476dab5da0d06b33757a8f7a11"
+    },
+    {
+      "path": "compatible/plan/candidate.patch",
+      "bytes": 1240889,
+      "sha256": "291ac55886575011809b09e04be2141f694e44b0260569ac42d68f90e9ac4cb6"
+    },
+    {
+      "path": "compatible/plan/change-classes/pins.patch",
+      "bytes": 1390,
+      "sha256": "99063a7a4a86b4341ec4af09751305e51687bc197b7215a0f4d718f99018d9a4"
+    },
+    {
+      "path": "compatible/plan/change-classes/repairs.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "compatible/plan/change-classes/semantics.patch",
+      "bytes": 1239499,
+      "sha256": "592bd041135ad205a2f1f8b7b26abbad459bc0422ff80aaeed4b01fcdae1b093"
+    },
+    {
+      "path": "compatible/plan/change-classes/verifier_policy.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "compatible/plan/plan.json",
+      "bytes": 160778,
+      "sha256": "8383a5ff2e854aef0f86cd8886399c296cf3613fcbaaf48f1ccf0b6851305dc3"
+    },
+    {
+      "path": "compatible/plan/summary.txt",
+      "bytes": 179,
+      "sha256": "50ab3b6b388bfe665353ed19707f8fdb61e697525f9c79d524ee97f1f4ba55da"
+    },
+    {
+      "path": "compatible/run/baseline-proofs-foundation-resolution.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "compatible/run/baseline/foundation-differential/differential.json",
+      "bytes": 181584,
+      "sha256": "8638d51372d4120ed74bb070f6bc73e14bd67fb82f7c0f8b7c0cd7bf22a68620"
+    },
+    {
+      "path": "compatible/run/baseline/lean-proofs/Audit.lean",
+      "bytes": 279736,
+      "sha256": "b950cb134fb101355ee6482164d98295e4eaba8478348c6e13ba0e4a4f86a6c9"
+    },
+    {
+      "path": "compatible/run/baseline/lean-proofs/foundation-check.json",
+      "bytes": 1579237,
+      "sha256": "680edfac59a0f7057833220b73e6579598e0edaaa1f661d1b1ad5bc5694d1c9c"
+    },
+    {
+      "path": "compatible/run/proposal-proofs-foundation-resolution.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "compatible/run/proposal/foundation-differential/differential.json",
+      "bytes": 181584,
+      "sha256": "f0ab3c2d0641808fcf63a813699c5a52c2c89b49d3045ea5773bfb19e4930e45"
+    },
+    {
+      "path": "compatible/run/proposal/lean-proofs/Audit.lean",
+      "bytes": 279736,
+      "sha256": "b950cb134fb101355ee6482164d98295e4eaba8478348c6e13ba0e4a4f86a6c9"
+    },
+    {
+      "path": "compatible/run/proposal/lean-proofs/foundation-check.json",
+      "bytes": 1579237,
+      "sha256": "2e84c8dcc319cd42ca9557c2a10e90fb75d91ad7ff283a54b7266f80bfa56ea1"
+    },
+    {
+      "path": "compatible/run/qualification.json",
+      "bytes": 35876,
+      "sha256": "bc90cee1fec84acb75086ef1dbfdf1e855511cada608a858b76bfea8f68af50d"
+    },
+    {
+      "path": "compatible/run/stages/baseline-foundation-check.log",
+      "bytes": 200975,
+      "sha256": "a9c7f319b54a002d2835576ac143b85a19ce06e92943c23d6777d9620c8cb11a"
+    },
+    {
+      "path": "compatible/run/stages/baseline-foundation-differential-verify.log",
+      "bytes": 573,
+      "sha256": "f8a8ce80335d1d9b324f8b16e08c7ea98c6b0fec5169c7c6d111874f16a92db0"
+    },
+    {
+      "path": "compatible/run/stages/baseline-foundation-differential.log",
+      "bytes": 1831,
+      "sha256": "b8a8ed18f687fd9cc589865715e3264a886c16bf290d8ea648af2e349e135163"
+    },
+    {
+      "path": "compatible/run/stages/baseline-lean-version.log",
+      "bytes": 213,
+      "sha256": "7050b69fc421392d55226c4eb8269e0cf1162afbd3b6f65b15bcfb97d7db4208"
+    },
+    {
+      "path": "compatible/run/stages/baseline-node-version.log",
+      "bytes": 105,
+      "sha256": "f56b4eb679775177187e15581569151ffb9c6d476dab5da0d06b33757a8f7a11"
+    },
+    {
+      "path": "compatible/run/stages/proposal-foundation-check.log",
+      "bytes": 200975,
+      "sha256": "ad6926125ed0bb9745973bf77ff08387ad48c3d98c202c9e8f973578b169b99d"
+    },
+    {
+      "path": "compatible/run/stages/proposal-foundation-differential-verify.log",
+      "bytes": 573,
+      "sha256": "11fad4a70a7379b64105964afee1568551ae40da9eec57431d26ed1eb432bdd9"
+    },
+    {
+      "path": "compatible/run/stages/proposal-foundation-differential.log",
+      "bytes": 1831,
+      "sha256": "29d39a6468eb9809090cfd9c0cec45ac1e9f0112be5f83b86c0edbe91668cdc3"
+    },
+    {
+      "path": "compatible/run/stages/proposal-lean-version.log",
+      "bytes": 213,
+      "sha256": "7050b69fc421392d55226c4eb8269e0cf1162afbd3b6f65b15bcfb97d7db4208"
+    },
+    {
+      "path": "compatible/run/stages/proposal-node-version.log",
+      "bytes": 105,
+      "sha256": "f56b4eb679775177187e15581569151ffb9c6d476dab5da0d06b33757a8f7a11"
+    },
+    {
+      "path": "incompatible/plan/candidate.patch",
+      "bytes": 259,
+      "sha256": "107d57456f286ca219aa8909b7e772316f657c4f2c4fff04fe96e9c9a51ff103"
+    },
+    {
+      "path": "incompatible/plan/change-classes/pins.patch",
+      "bytes": 259,
+      "sha256": "107d57456f286ca219aa8909b7e772316f657c4f2c4fff04fe96e9c9a51ff103"
+    },
+    {
+      "path": "incompatible/plan/change-classes/repairs.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "incompatible/plan/change-classes/semantics.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "incompatible/plan/change-classes/verifier_policy.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "incompatible/plan/plan.json",
+      "bytes": 167828,
+      "sha256": "286c7defd16425d032f880175d71cc87cbc98ed5dbc78100f4f04807bceb4c02"
+    },
+    {
+      "path": "incompatible/plan/summary.txt",
+      "bytes": 161,
+      "sha256": "51afec51a79a1502e23d020ca42c4e1e76206613caa33467f82e127d459a8d78"
+    },
+    {
+      "path": "incompatible/run/qualification.json",
+      "bytes": 13703,
+      "sha256": "215c9362394ad054291dbaec16aa9d13dfc8083933991a97ccddc4b10da8db7e"
+    },
+    {
+      "path": "noop/plan/candidate.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "noop/plan/change-classes/pins.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "noop/plan/change-classes/repairs.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "noop/plan/change-classes/semantics.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "noop/plan/change-classes/verifier_policy.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "noop/plan/plan.json",
+      "bytes": 160481,
+      "sha256": "ad464030756b8ec8e1a7897742f5a5f040446989575b81bedf1d5dd00953c5c8"
+    },
+    {
+      "path": "noop/plan/summary.txt",
+      "bytes": 179,
+      "sha256": "f24e2cd7b088748e9809bdd2f6c2937553480c81f6a0691e86c4fa83cd2a64d6"
+    },
+    {
+      "path": "noop/run/baseline-proofs-foundation-resolution.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "noop/run/baseline/foundation-differential/differential.json",
+      "bytes": 181584,
+      "sha256": "a5cda24b9b49e6c1a4d271fccd44c493b9b5ef79337a172d6e7c2eb22d087656"
+    },
+    {
+      "path": "noop/run/baseline/lean-proofs/Audit.lean",
+      "bytes": 279736,
+      "sha256": "b950cb134fb101355ee6482164d98295e4eaba8478348c6e13ba0e4a4f86a6c9"
+    },
+    {
+      "path": "noop/run/baseline/lean-proofs/foundation-check.json",
+      "bytes": 1579235,
+      "sha256": "16e0a9875155f5a29e416ba7475c0ea5e3e66ff2c2512a00920c624c30cbb00c"
+    },
+    {
+      "path": "noop/run/qualification.json",
+      "bytes": 35810,
+      "sha256": "8403e53f9e0b249011a27405357468ffd5c7d039bf9631cde86b7ccf0a4c8fb2"
+    },
+    {
+      "path": "noop/run/stages/baseline-foundation-check.log",
+      "bytes": 200969,
+      "sha256": "f7489f63d4abb42c5076578aa22fd1474031b65d73f01391660d17f8a7f0f939"
+    },
+    {
+      "path": "noop/run/stages/baseline-foundation-differential-verify.log",
+      "bytes": 569,
+      "sha256": "c2d816469e0f589a427f96160847fb84ea94d08469df5c3af90d26a196989ec8"
+    },
+    {
+      "path": "noop/run/stages/baseline-foundation-differential.log",
+      "bytes": 1823,
+      "sha256": "c6d9e70e37ebde901e8697cc4642d520dc50673e9d61858892c0509164ff4a7c"
+    },
+    {
+      "path": "noop/run/stages/baseline-lean-version.log",
+      "bytes": 213,
+      "sha256": "7050b69fc421392d55226c4eb8269e0cf1162afbd3b6f65b15bcfb97d7db4208"
+    },
+    {
+      "path": "noop/run/stages/baseline-node-version.log",
+      "bytes": 105,
+      "sha256": "f56b4eb679775177187e15581569151ffb9c6d476dab5da0d06b33757a8f7a11"
+    },
+    {
+      "path": "regression-evidence-2c4e47b.json",
+      "bytes": 6045,
+      "sha256": "11916f17259f4cf82b255d4cca0ac0869c6f36cae097aadc21cd23aab4eb21ec"
+    },
+    {
+      "path": "regression-evidence.json",
+      "bytes": 6045,
+      "sha256": "04ab51f9a4dab5e234198e1a915537a3aa325eeeae3c87a67b2b0c66778712c3"
+    },
+    {
+      "path": "selftests-2c4e47b.log",
+      "bytes": 1817,
+      "sha256": "4ce9d42aa49247cce7029e4ab170370fe43477a43ee0dc332710a187f800b011"
+    },
+    {
+      "path": "toolerror/run/qualification.json",
+      "bytes": 7704,
+      "sha256": "10621e96302aaf51fa5ec4c5c4bca173310e78d7a0b7ecaad07fc84e46737747"
+    },
+    {
+      "path": "unavailable/plan/candidate.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "unavailable/plan/change-classes/pins.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "unavailable/plan/change-classes/repairs.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "unavailable/plan/change-classes/semantics.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "unavailable/plan/change-classes/verifier_policy.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "unavailable/plan/plan.json",
+      "bytes": 64805,
+      "sha256": "43eb77323ca44aebda29eb8d0c78b31b4f5636c117b7f60d181fd008ff9813ec"
+    },
+    {
+      "path": "unavailable/plan/summary.txt",
+      "bytes": 161,
+      "sha256": "e1186b3c9d5aa87886fc9edd035465f33438d095241fcaef5ffac54e9510c14c"
+    },
+    {
+      "path": "unavailable/run/qualification.json",
+      "bytes": 4719,
+      "sha256": "83af03813429bea886d0a9cceafaa4150a5acc7f0d6c908384fa185869ea9644"
+    }
+  ]
+}

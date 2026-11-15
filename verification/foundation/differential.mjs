@@ -30,6 +30,9 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MIN, MAX, wrap, refRun, opSource, opsSource, leanInt, leanOps, leanList, prng } from './arithmetic.mjs';
 import { buildCli, createCliObserver, matchesScalar } from './execution.mjs';
+import { shrinkCandidates } from './shrinking.mjs';
+import { verifyRequiredDifferentialControls } from './control-ids.mjs';
+import { p1Eligible, p1RandomCell, structuredP1Cases } from '../differential-interactions/p1-cases.mjs';
 
 const root = resolve(fileURLToPath(import.meta.url), '../../..');
 const project = join(root, 'proofs/foundation');
@@ -49,7 +52,14 @@ const theoremsUsed = ['NobleFoundation.PExpr.exec_inputs_run', 'NobleFoundation.
   'NobleFoundation.accumulate_eq_acceptLiteral', 'NobleFoundation.refRun_range', 'NobleFoundation.wrap_eq_knum01'];
 const boundSources = [
   'verification/foundation/differential.mjs', 'verification/foundation/arithmetic.mjs',
-  'verification/foundation/execution.mjs', 'verification/selected-vendor.mjs',
+  'verification/foundation/execution.mjs', 'verification/foundation/shrinking.mjs',
+  'verification/foundation/control-ids.mjs',
+  'verification/differential-interactions/p1-cases.mjs', 'verification/differential-interactions/matrix-v1.json',
+  'verification/differential-interactions/mutants-v1.json', 'verification/differential-interactions/replay-p1.mjs',
+  'verification/differential-interactions/mutant-runner.mjs',
+  'verification/fuzz/export-differential.mjs',
+  'verification/selected-vendor.mjs',
+  'crates/noble-cli/src/core/runtime/engine.mjs', 'crates/noble-cli/src/core/runtime/values.mjs',
   'proofs/foundation/NobleFoundation/Sequence.lean',
   'proofs/foundation/NobleFoundation/Literal.lean', 'proofs/foundation/NobleFoundation/Repr.lean',
   'proofs/m3/MathlibI64.lean', 'proofs/mc1/NobleContracts/Model.lean', 'proofs/mc1/NobleContracts/Rules.lean',
@@ -196,36 +206,24 @@ const rejectionCases = [
 
 // ------------------------------------------------------------------ shrinking
 const SHRINK_STEPS = 48;
-function* simplerValues(n) { for (const v of [0n, 1n, -1n, n / 2n]) if (v !== n) yield v; }
-function* shrinkCandidates(c) {
-  for (let i = 0; i < c.prefix.length; i++) yield { ...c, prefix: c.prefix.filter((_, j) => j !== i) };
-  const listShrinks = function* (key) {
-    const list = c[key]; if (!list) return;
-    for (let i = 0; i < list.length; i++) yield { ...c, [key]: list.filter((_, j) => j !== i) };
-    for (let i = 0; i < list.length; i++) if (typeof list[i] === 'object') {
-      for (const v of simplerValues(list[i].push)) yield { ...c, [key]: list.map((op, j) => j === i ? { push: v } : op) };
-    }
-  };
-  yield* listShrinks('ops'); yield* listShrinks('ins');
-  if (c.program?.compose) { yield { ...c, program: c.program.compose[0] }; yield { ...c, program: c.program.compose[1] }; }
-  if (c.program?.arith) {
-    const body = c.program.arith;
-    for (let i = 0; i < body.length; i++) yield { ...c, program: { arith: body.filter((_, j) => j !== i) } };
-  }
-}
 /** Bounded greedy shrinking preserving `fails`. Candidates whose reference is a
 refusal are skipped so shrinking never changes the kind of disagreement. */
-function shrink(c, fails) {
+function shrink(c, fails, eligible = () => true) {
   let current = c, steps = 0;
+  const rejected = { reference_refusal: 0, target_feature_eliminated: 0, different_failure: 0 };
   outer: while (steps < SHRINK_STEPS) {
     for (const candidate of shrinkCandidates(current)) {
-      if (expectation(candidate).outcome !== 'normal') continue; // invalid: not executed, not counted
       if (++steps > SHRINK_STEPS) break outer;
-      if (fails(candidate)) { current = candidate; continue outer; }
+      if (expectation(candidate).outcome !== 'normal') { rejected.reference_refusal++; continue; }
+      if (!eligible(candidate)) { rejected.target_feature_eliminated++; continue; }
+      const result = fails(candidate);
+      if (result === true) { current = candidate; continue outer; }
+      if (result === 'different-failure') rejected.different_failure++;
     }
     break;
   }
-  return { case: current, steps };
+  return { case: current, steps, rejected,
+    termination_reason: steps >= SHRINK_STEPS ? 'attempt-budget-exhausted' : 'local-minimum-under-eligible-shrinks' };
 }
 
 // --------------------------------------------------------------- verify mode
@@ -265,14 +263,32 @@ const foundationPath = option('--foundation');
 const output = option('--output');
 const allowDirty = args.includes('--allow-dirty');
 const skipLanes = args.includes('--skip-checker-lanes');
+const mutationProbe = args.includes('--mutation-probe');
+const mutationId = option('--mutation-id');
+const mutationCell = option('--mutation-cell');
 const importPath = option('--import');
 requireThat(output && foundationPath && Number.isInteger(count) && count > 0,
   'usage: differential.mjs --seed N --count K --foundation FOUNDATION_CHECK_JSON --output NEW_DIR [--import CASES_JSON] [--allow-dirty] [--skip-checker-lanes]');
+requireThat(!mutationProbe || (typeof mutationId === 'string' && mutationId.length > 0 &&
+  typeof mutationCell === 'string' && mutationCell.length > 0),
+  '--mutation-probe requires --mutation-id and --mutation-cell');
 const out = resolve(output);
 mkdirSync(out);
 const receipt = { schema: 'noble-foundation-differential/v1', profile: 'Core-Bootstrap / managed-linear-memory',
   fragment: 'I64 literals, + - *, quote, literal blocks, compose, run, nested quote-run-run, Bool/I64 prefix',
   seed: String(seed), count, opt_modes: ['off', 'on'], universal_backend_proof: false };
+if (mutationProbe) receipt.mutation_probe = { mutation_id: mutationId, target_cell: mutationCell,
+  purpose: 'scratch semantic mutation; not production source' };
+
+function p1MismatchClass(expected, observed, model) {
+  if (observed.outcome !== 'normal') return `unexpected-${observed.outcome}`;
+  if (JSON.stringify(expected.stack) === JSON.stringify(observed.stack)) return null;
+  const prefixLength = model.prefix.length;
+  if (prefixLength > 0 && JSON.stringify(expected.stack.slice(0, prefixLength)) !==
+      JSON.stringify(observed.stack.slice(0, prefixLength))) return 'ordered-prefix-output-mismatch';
+  if (expected.stack.length !== observed.stack.length) return 'ordered-output-shape-mismatch';
+  return 'ordered-arithmetic-output-mismatch';
+}
 try {
   requireThat(realpathSync(process.execPath) === realpathSync(node), `use selected Node: ${node}`);
   const initial = gitState(root);
@@ -293,7 +309,7 @@ try {
   receipt.foundation_receipt_sha256 = fileHash(foundationPath);
 
   // CLI from this checkout (as compare.mjs), tools and helpers recorded.
-  const { cli, env } = buildCli({ root, out, selection, childBase, run });
+  const { cli, env } = buildCli({ root, out, selection, childBase, run, targetDir: option('--target-dir') });
   const tools = { node, wasm_tools: join(selection.tool_paths.wasm_tools.output, 'bin/wasm-tools'),
     wasm_opt: join(selection.tool_paths.binaryen.output, 'bin/wasm-opt') };
   receipt.toolchain = { cli_sha256: fileHash(cli), lean: foundation.lean, mathlib_commit: foundation.mathlib_commit,
@@ -314,16 +330,73 @@ try {
         ? Object.fromEntries(Object.entries(node).map(([key, value]) =>
           [key, key === 'push' || key === 'quoted' ? BigInt(value) : revive(value)]))
         : node;
-    for (const { origin, ...model } of exported.cases) {
+    const reviveCase = ({ origin, ...model }, invalidControl = false) => {
       requireThat(typeof origin?.text === 'string' && /^[0-9a-f]{64}$/.test(origin.sha256 ?? ''),
         'an imported case lacks its corpus text or digest');
-      cases.push({ ...revive(model), index: cases.length, origin });
+      requireThat(digest(Buffer.from(origin.text)) === (origin.text_sha256 ?? origin.sha256),
+        'an imported case text differs from its recorded digest');
+      cases.push({ ...revive(model), index: cases.length, origin, invalidControl });
+    };
+    for (const model of exported.cases) reviveCase(model);
+    for (const model of exported.invalid_cases ?? []) reviveCase(model, true);
+    const issue125Cases = exported.cases.filter(model => model.origin?.unit === 'issue125-p1-matrix-v1');
+    if (issue125Cases.length) {
+      requireThat(seed === 125n && count === 18,
+        'matrix-v1 P1 comparison requires --seed 125 --count 18 for a matched case-run budget');
+      requireThat(issue125Cases.length === 18 && exported.invalid_cases?.filter(model =>
+        model.origin?.unit === 'issue125-p1-invalid-control').length === 1,
+      'matrix-v1 P1 import must contain its 18 selected cells and one invalid-premise control');
     }
   }
   for (const c of cases) { c.source = c.origin ? c.origin.text : caseSource(c); c.expected = expectation(c); }
+  if (mutationProbe) {
+    const sample = structuredP1Cases().find(c =>
+      c.interaction.cell === 'P1/composed/min_max_wrap/ordered_single');
+    requireThat(sample && p1Eligible(sample), 'frozen composed P1 shrink-control case is ineligible');
+    const featureEliminated = { ...sample,
+      program: { arith: [{ push: MAX }, { push: 1n }, 'add'] } };
+    const sampleExpected = expectation(sample);
+    const wrongSameShape = { outcome: 'normal', stack: sampleExpected.stack.map(([type, value]) =>
+      [type, type === 'I64' ? String(BigInt(value) + 1n) : value]), trace: [] };
+    const identity = p1MismatchClass(sampleExpected, wrongSameShape, sample);
+    const earlierRefusal = p1MismatchClass(sampleExpected, { outcome: 'reject' }, sample);
+    const substitutedFailure = p1MismatchClass(sampleExpected, { outcome: 'normal', stack: [], trace: [] }, sample);
+    receipt.mutation_probe.shrink_control = {
+      control: 'candidate replaces composed program with straight arithmetic',
+      original_eligible: p1Eligible(sample),
+      target_feature_eliminated_rejected: !p1Eligible(featureEliminated),
+      earlier_refusal_substitution_rejected: identity !== null && earlierRefusal !== identity,
+      different_failure_substitution_rejected: identity !== null && substitutedFailure !== identity,
+      failure_identities: { intended: identity, earlier_refusal: earlierRefusal,
+        substituted_failure: substitutedFailure },
+    };
+    requireThat(receipt.mutation_probe.shrink_control.target_feature_eliminated_rejected &&
+      receipt.mutation_probe.shrink_control.earlier_refusal_substitution_rejected &&
+      receipt.mutation_probe.shrink_control.different_failure_substitution_rejected,
+      'P1 shrink feature/refusal/failure-identity control was accepted');
+  }
   requireThat(cases.slice(0, count).every(c => c.expected.outcome === 'normal'), 'generator produced an unexpected refusal');
-  const imported = cases.filter(c => c.origin);
+  const imported = cases.filter(c => c.origin && !c.invalidControl);
+  const invalidImported = cases.filter(c => c.origin && c.invalidControl);
+  const pilot = imported.filter(c => c.origin.unit === 'issue125-plausible-v1');
+  if (pilot.length) {
+    const protocol = JSON.parse(readFileSync(join(root,
+      'verification/differential-interactions/plausible/matrix-v1.json')));
+    requireThat(protocol.schema === 'noble-plausible-interaction-pilot/v1' &&
+      seed === BigInt(protocol.seed) && count === protocol.cases_per_arm &&
+      pilot.length === protocol.cases_per_arm && pilot.length === imported.length &&
+      pilot.every(c => p1Eligible(c) && protocol.selected_cells.includes(c.interaction.cell)) &&
+      invalidImported.length === 1 && invalidImported[0].origin.unit === 'issue125-p1-invalid-control',
+    'Plausible pilot import differs from its frozen typed 16-case protocol');
+    const counts = new Map();
+    for (const c of pilot) counts.set(c.interaction.cell, (counts.get(c.interaction.cell) ?? 0) + 1);
+    requireThat(protocol.selected_cells.every(cell => counts.get(cell) === 4) &&
+      counts.size === protocol.selected_cells.length,
+    'Plausible pilot did not allocate four actual generated cases per selected cell');
+  }
   requireThat(imported.every(c => c.expected.outcome === 'normal'), 'an imported case is not a normal reference run');
+  requireThat(invalidImported.every(c => c.expected.outcome === 'reject'),
+    'an imported one-premise invalid control did not refuse in the independent reference');
 
   // Lean kernel check of every expectation and per-case MC1 theorem.
   const leanFile = join(out, 'Expected.lean');
@@ -356,9 +429,25 @@ try {
       observations.set(`${c.index}/${mode}`, obs);
       const matched = agrees(c.expected, obs, decodeSigned);
       const entry = { index: c.index, kind: c.kind, mode, source: c.source.trim(), source_sha256: digest(c.source),
-        expected: c.expected, observed: { outcome: obs.outcome, stack: obs.stack, diagnostic: obs.diagnostic },
+        expected: c.expected, observed: { outcome: obs.outcome, stack: obs.stack, diagnostic: obs.diagnostic,
+          execution_steps: obs.metrics?.execution_steps ?? null },
         wasm_sha256: obs.wasm_sha256 ?? null, lean_theorem: `case_${c.index}_ref`, matched,
-        corpus_unit: c.origin ? { unit: c.origin.unit, sha256: c.origin.sha256 } : undefined };
+        corpus_unit: c.origin ? { unit: c.origin.unit, sha256: c.origin.sha256 } : undefined,
+        interaction: c.interaction ?? null,
+        ...(c.interaction?.profile === 'P1-core-source-wasm' ? { interaction_witness: {
+          admission_outcome: obs.outcome,
+          executed: obs.outcome === 'normal',
+          runtime_execution_steps: obs.metrics?.execution_steps ?? null,
+          positive_execution_steps: Number.isInteger(obs.metrics?.execution_steps) && obs.metrics.execution_steps > 0,
+          operator_trace_available: false,
+          source_operator_witness: c.interaction.source_operator_witness,
+          property_engaged: matched && obs.outcome === 'normal',
+          property_failed: !matched && obs.outcome === 'normal' &&
+            Number.isInteger(obs.metrics?.execution_steps) && obs.metrics.execution_steps > 0,
+          prefix_preserved: c.interaction.output_shape !== 'preserved_prefix_multiple' ||
+            JSON.stringify(obs.stack?.slice(0, c.prefix.length)) === JSON.stringify(c.expected.stack.slice(0, c.prefix.length)),
+          comparison_legs_reached: ['BigInt reference', 'Lean-kernel-checked expectation', `managed Wasm opt-${mode}`],
+        } } : {}) };
       if (!matched) {
         entry.shrunk = shrink(c, candidate => {
           const cand = { ...candidate, index: `shrink-${c.index}`, source: caseSource(candidate) };
@@ -369,13 +458,83 @@ try {
     }
   }
   receipt.all_matched = receipt.cases.every(c => c.matched);
-  requireThat(receipt.all_matched, `mismatch: ${show(receipt.cases.filter(c => !c.matched)).slice(0, 2000)}`);
+  if (mutationProbe) {
+    const targetRow = receipt.cases.find(entry => entry.interaction?.cell === mutationCell && !entry.matched);
+    if (targetRow) {
+      const model = cases.find(c => c.index === targetRow.index);
+      const originalObservation = observations.get(`${model.index}/${targetRow.mode}`);
+      const failureIdentity = p1MismatchClass(model.expected, originalObservation, model);
+      const shrunk = shrink(model, candidate => {
+        const observed = observe({ ...candidate, index: `mutation-shrink-${model.index}`, source: caseSource(candidate) }, targetRow.mode);
+        const candidateClass = p1MismatchClass(expectation(candidate), observed, candidate);
+        if (candidateClass === failureIdentity && observed.outcome === 'normal' &&
+            Number.isInteger(observed.metrics?.execution_steps) && observed.metrics.execution_steps > 0) return true;
+        return candidateClass === null ? false : 'different-failure';
+      }, p1Eligible);
+      const minimized = shrunk.case;
+      const minimizedSource = caseSource(minimized);
+      const minimizedObserved = observe({ ...minimized, index: `mutation-minimized-${model.index}`,
+        source: minimizedSource }, targetRow.mode);
+      const witness = (candidate, source, observed) => ({
+        cell: mutationCell,
+        mutation_site: mutationId,
+        model: JSON.parse(show(candidate)),
+        source,
+        source_sha256: digest(source),
+        source_size_bytes: Buffer.byteLength(source),
+        expected: expectation(candidate),
+        input_literals: caseOps(candidate).filter(operation => typeof operation === 'object')
+          .map(operation => String(operation.push)),
+        prefix: candidate.prefix,
+        mode: targetRow.mode,
+        snapshot: null,
+        limits: 'foundation CLI runtime defaults; no parameter snapshot',
+        observed: { outcome: observed.outcome, stack: observed.stack ?? null,
+          execution_steps: observed.metrics?.execution_steps ?? null,
+          wasm_sha256: observed.wasm_sha256 ?? null },
+        failure_identity: p1MismatchClass(expectation(candidate), observed, candidate),
+        execution_witness: { runtime_steps: observed.metrics?.execution_steps ?? null,
+          positive_runtime_steps: Number.isInteger(observed.metrics?.execution_steps) && observed.metrics.execution_steps > 0,
+          source_operator_witness: candidate.interaction?.source_operator_witness ?? [],
+          operator_trace_available: false,
+          witness_kind: 'positive successful-run steps and output-discriminating retained source; no per-operator runtime trace' },
+      });
+      const original = witness(model, model.source, originalObservation);
+      const minimizedWitness = witness(minimized, minimizedSource, minimizedObserved);
+      receipt.mutation_probe.witness = {
+        outcome: targetRow.interaction_witness.property_failed && targetRow.interaction_witness.positive_execution_steps
+          ? 'killed' : 'divergence-unreached',
+        failure_identity: failureIdentity,
+        original,
+        minimized: minimizedWitness,
+        candidate_cli_sha256: receipt.toolchain.cli_sha256,
+        witness_sizes_bytes: { original: original.source_size_bytes, minimized: minimizedWitness.source_size_bytes },
+        shrink_work: { attempts: shrunk.steps, budget: SHRINK_STEPS, rejected: shrunk.rejected,
+          termination_reason: shrunk.termination_reason,
+          eligibility_rechecked_each_candidate: true,
+          expected_result_rechecked_each_candidate: true,
+          failure_identity_rechecked_each_candidate: true,
+          target_feature_preserved: p1Eligible(minimized),
+          mismatch_preserved: minimizedWitness.failure_identity === failureIdentity },
+      };
+    } else {
+      receipt.mutation_probe.witness = { outcome: 'executed-survived',
+        target_cell_observations: receipt.cases.filter(entry => entry.interaction?.cell === mutationCell).map(entry => ({
+          mode: entry.mode, matched: entry.matched, admission: entry.observed.outcome,
+          execution_steps: entry.observed.execution_steps,
+        })) };
+    }
+  }
+  requireThat(receipt.all_matched || mutationProbe,
+    `mismatch: ${show(receipt.cases.filter(c => !c.matched)).slice(0, 2000)}`);
   receipt.imported = exported && {
     cases_sha256: fileHash(importPath), corpus: exported.corpus, export_counts: exported.counts,
     cases: imported.length,
     executed_cases: imported.filter(c => ['off', 'on'].every(mode =>
       observations.get(`${c.index}/${mode}`)?.outcome === 'normal')).length,
-    executions: receipt.cases.filter(entry => entry.corpus_unit).length,
+    invalid_cases: invalidImported.length,
+    executions: receipt.cases.filter(entry => entry.corpus_unit && !entry.interaction?.variant).length,
+    invalid_control_executions: receipt.cases.filter(entry => entry.corpus_unit && entry.interaction?.variant).length,
   };
   const optPairs = cases.filter(c => c.expected.outcome === 'normal');
   receipt.opt_on_off_same_stack = optPairs.every(c =>
@@ -392,10 +551,107 @@ try {
     rejection_cases: rejectionCases.length,
     imported_corpus_cases: imported.length,
   };
+  const p1Rows = receipt.cases.filter(entry => entry.interaction?.profile === 'P1-core-source-wasm' && entry.interaction.cell);
+  if (p1Rows.length) {
+    const pilotRun = pilot.length > 0;
+    const cells = new Map();
+    for (const row of p1Rows) {
+      const existing = cells.get(row.interaction.cell) ?? { cell: row.interaction.cell, selected: true, runs: [] };
+      existing.runs.push({ mode: row.mode, reached: row.interaction_witness.executed &&
+        row.interaction_witness.positive_execution_steps && row.interaction_witness.property_engaged &&
+        row.interaction_witness.prefix_preserved, matched: row.matched,
+        admission_outcome: row.interaction_witness.admission_outcome });
+      cells.set(row.interaction.cell, existing);
+    }
+    const selectedCells = [...cells.values()].sort((a, b) => a.cell.localeCompare(b.cell)).map(cell => ({
+      ...cell, reached: cell.runs.length === (pilotRun ? 8 : 2) &&
+        cell.runs.every(run => run.reached && run.matched),
+    }));
+    receipt.interaction_matrix = {
+      profile: 'P1-core-source-wasm', version: 1, selected: selectedCells.length,
+      matrix_sha256: fileHash(join(root, 'verification/differential-interactions/matrix-v1.json')),
+      reached: selectedCells.filter(cell => cell.reached).length,
+      unreached: selectedCells.filter(cell => !cell.reached).map(cell => cell.cell),
+      accepted: selectedCells.filter(cell => cell.runs.some(run => run.admission_outcome === 'normal')).length,
+      refused: selectedCells.filter(cell => cell.runs.some(run => run.admission_outcome === 'reject')).length,
+      exhausted: selectedCells.filter(cell => cell.runs.some(run => run.admission_outcome === 'runtime-exhausted')).length,
+      unsupported: 1,
+      unsupported_features: ['per-case runtime fuel limit: the foundation CLI observer exposes no fuel override; the case-count budget is measured separately'],
+      comparison_legs: ['BigInt reference', 'Lean-kernel-checked expectation', 'managed Wasm opt-off', 'managed Wasm opt-on'],
+      cells: selectedCells,
+      all_refused_is_semantic_acceptance: false,
+    };
+    const invalidRows = receipt.cases.filter(row => row.corpus_unit?.unit === 'issue125-p1-invalid-control');
+    receipt.p1_budget = { kind: 'frozen-case-count-per-optimization-mode',
+      selected_case_limit: pilotRun ? 16 : 18, selected_cases: pilotRun ? pilot.length : selectedCells.length,
+      observed: { opt_off: pilotRun ? pilot.length : selectedCells.length,
+        opt_on: pilotRun ? pilot.length : selectedCells.length },
+      budget_boundary_reached: (pilotRun ? pilot.length === 16 : selectedCells.length === 18),
+      runtime_fuel_boundary_supported: false,
+      note: 'The foundation CLI differential observer has no per-run fuel override; this boundary is the frozen case-work budget.' };
+    receipt.p1_invalid_control = { selected: invalidRows.length,
+      refused: invalidRows.length === 1 && invalidRows[0].observed.outcome === 'reject' && invalidRows[0].matched,
+      rows: invalidRows.map(row => ({ source: row.source, source_sha256: row.source_sha256,
+        outcome: row.observed.outcome, matched: row.matched, variant: row.interaction?.variant ?? null })) };
+    receipt.p1_outcome_summary = { accepted_cells: selectedCells.filter(cell => cell.runs.some(run => run.admission_outcome === 'normal')).length,
+      refused_invalid_variants: invalidRows.filter(row => row.observed.outcome === 'reject' && row.matched).length,
+      exhausted_runs: selectedCells.filter(cell => cell.runs.some(run => run.admission_outcome === 'runtime-exhausted')).length,
+      unsupported_variants: 1 };
+    if (!mutationProbe) requireThat(selectedCells.length === (pilotRun ? 4 : 18) &&
+      selectedCells.every(cell => cell.reached),
+    `P1 interaction matrix incomplete: reached ${selectedCells.filter(cell => cell.reached).length}/${pilotRun ? 4 : 18}`);
+    if (!mutationProbe) requireThat(receipt.p1_invalid_control.refused,
+      'P1 one-premise invalid control did not reach the expected frontend refusal');
+
+    const randomCases = cases.slice(0, count);
+    const randomCells = new Map();
+    const randomFailures = [];
+    for (const model of randomCases) {
+      const cell = p1RandomCell(model);
+      const rows = receipt.cases.filter(row => row.index === model.index && row.mode !== undefined);
+      if (!cell) {
+        for (const row of rows.filter(row => !row.matched)) {
+          randomFailures.push({ generator: 'current-seeded', case_index: model.index, cell: null,
+            failure_attribution: 'unclassified-current-generator-case', mode: row.mode,
+            failure_identity: p1MismatchClass(model.expected, row.observed, model),
+            source_sha256: row.source_sha256 });
+        }
+        continue;
+      }
+      const reached = rows.length === 2 && rows.every(row => row.matched && row.observed.outcome === 'normal' &&
+        Number.isInteger(row.observed.execution_steps) && row.observed.execution_steps > 0);
+      randomCells.set(cell, (randomCells.get(cell) ?? false) || reached);
+      for (const row of rows.filter(row => !row.matched)) {
+        randomFailures.push({ generator: 'current-seeded', case_index: model.index, cell: cell ?? 'unclassified',
+          mode: row.mode, failure_identity: p1MismatchClass(model.expected, row.observed, model),
+          source_sha256: row.source_sha256 });
+      }
+    }
+    const structuredFailures = receipt.cases.filter(row =>
+      row.interaction?.profile === 'P1-core-source-wasm' && row.interaction.cell && !row.matched)
+      .map(row => ({ generator: 'structured-extension', cell: row.interaction.cell, mode: row.mode,
+        failure_identity: p1MismatchClass(row.expected, row.observed, cases.find(c => c.index === row.index)),
+        source_sha256: row.source_sha256 }));
+    receipt.generator_comparison = {
+      profiles_separate: true,
+      same_compute_seed_budget: { seed: String(seed), cases_per_mode: count, opt_modes: ['off', 'on'],
+        current_generator_case_runs: count * 2, structured_extension_case_runs: (pilotRun ? pilot.length : selectedCells.length) * 2,
+        equal_case_run_budget: count === (pilotRun ? pilot.length : selectedCells.length) },
+      current_generator: { classified_cells: randomCells.size, reached_cells: [...randomCells]
+          .filter(([, reached]) => reached).map(([cell]) => cell).sort(),
+        classified_cell_observation: 'seeded case model plus successful exact source execution and positive runtime steps; no operator trace',
+        distinct_attributed_failures: randomFailures },
+      structured_extension: { selected_cells: selectedCells.length, generated_cases: pilotRun ? pilot.length : selectedCells.length,
+        reached_cells: selectedCells.filter(cell => cell.reached).map(cell => cell.cell),
+        witness_kind: 'frozen interaction model plus positive execution steps and property comparison; no operator trace',
+        distinct_attributed_failures: structuredFailures },
+    };
+  }
 
   // Mutation controls: each must disagree with the observations, and only for
   // its intended reason.
   const controls = [];
+  if (!mutationProbe) {
   const control = (id, intended, mutant, decode, attributable) => {
     const failing = [];
     for (const c of cases) for (const mode of ['off', 'on']) {
@@ -428,11 +684,12 @@ try {
     const r = refRun(wrapped, []);
     return { outcome: 'normal', stack: [...c.prefix, ...[...r].reverse().map(v => ['I64', String(v)])], trace: [] };
   };
-  const refusalFailing = cases.filter(c => c.expected.outcome === 'reject')
+  const refusalCases = cases.filter(c => c.expected.outcome === 'reject');
+  const refusalFailing = refusalCases
     .filter(c => !agrees(wrappedExpectation(c), observations.get(`${c.index}/off`)));
   controls.push({ id: 'literal-wrapping-instead-of-refusal', intended: 'out-of-range literal assumed to wrap',
-    detected_cases: refusalFailing.length, demonstrably_fails: refusalFailing.length === rejectionCases.length });
-  requireThat(refusalFailing.length === rejectionCases.length, 'refusal control did not fail');
+    detected_cases: refusalFailing.length, demonstrably_fails: refusalFailing.length === refusalCases.length });
+  requireThat(refusalFailing.length === refusalCases.length, 'refusal control did not fail');
   // Stale proof subject: Lean text bound to another case's program.
   const a = cases[0], b = cases.find(c => c.source !== a.source && c.expected.outcome === 'normal');
   const rebound = leanCase(a, a.index, refRun(caseOps(a), []));
@@ -442,10 +699,14 @@ try {
     lean_case_rebinding_rejected: staleRejected, foundation_tree_mismatch_rejected: staleFoundationRejected,
     demonstrably_fails: staleRejected && staleFoundationRejected });
   requireThat(staleRejected && staleFoundationRejected, 'stale proof subject control did not fail');
+  receipt.required_negative_controls = verifyRequiredDifferentialControls(controls);
   receipt.controls = controls;
+  } else {
+    receipt.controls = { skipped: true, reason: 'mutant outcome is classified by the issue-125 semantic witness' };
+  }
 
   // Checker property lanes (acceptance coverage, not execution semantics).
-  if (!skipLanes) {
+  if (!skipLanes && !mutationProbe) {
     const lanes = run(join(rustBin, 'cargo'), ['test', '--locked', '--offline', '-j', '4', '-p', 'noble-kernel',
       '--test', 'property'], { cwd: root, env, timeout: 3600000, allowFailure: true });
     const summary = (lanes.stdout + lanes.stderr).split('\n').filter(l => /^test |test result/.test(l));
@@ -454,7 +715,8 @@ try {
       coverage_class: 'checker acceptance (kernel), NOT execution semantics' };
     requireThat(lanes.status === 0, 'checker property lanes failed');
   } else {
-    receipt.checker_property_lanes = { skipped: true };
+    receipt.checker_property_lanes = { skipped: true,
+      reason: mutationProbe ? 'baseline-only independent property lane' : 'requested by --skip-checker-lanes' };
   }
 
   const final = gitState(root);
@@ -474,14 +736,16 @@ try {
     { claim: 'Mathlib .olean imports', status: 'assumed', note: 'downloaded cache, not rebuilt' },
   ];
   receipt.commands = commandLog.length;
-  writeFileSync(join(out, 'differential.json'), JSON.stringify(receipt, null, 2) + '\n');
+  writeFileSync(join(out, 'differential.json'), JSON.stringify(receipt,
+    (_key, value) => typeof value === 'bigint' ? value.toString() : value, 2) + '\n');
   console.log(JSON.stringify({ ok: true, receipt: join(out, 'differential.json'), source_commit: receipt.source_commit,
     seed: receipt.seed, cases: receipt.cases.length, all_matched: receipt.all_matched,
     opt_on_off_same_stack: receipt.opt_on_off_same_stack, coverage: receipt.coverage,
     controls: controls.map(c => `${c.id}:${c.demonstrably_fails}`),
     checker_property_lanes: receipt.checker_property_lanes.summary ?? 'skipped' }, null, 2));
 } catch (error) {
-  writeFileSync(join(out, 'differential-failure.json'), JSON.stringify({ ...receipt, error: error.message }, null, 2) + '\n');
+  writeFileSync(join(out, 'differential-failure.json'), JSON.stringify({ ...receipt, error: error.message },
+    (_key, value) => typeof value === 'bigint' ? value.toString() : value, 2) + '\n');
   console.error(`[differential] FAIL ${error.message}`);
   process.exitCode = 1;
 }

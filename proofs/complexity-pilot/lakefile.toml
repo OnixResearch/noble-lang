@@ -1,0 +1,21 @@
+name = "noble-complexity-pilot"
+version = "0.1.0"
+defaultTargets = ["NobleComplexityPilot"]
+
+[[require]]
+name = "cslib-frontier"
+git = "https://github.com/cslib-community/cslib-frontier"
+rev = "56e731dc048c8afcc696a95e147573c29a619637"
+
+[[lean_lib]]
+name = "PackedLayoutModel"
+srcDir = "../foundation"
+roots = [
+  "NobleFoundation.PackedSchedule",
+  "NobleFoundation.PackedLayout",
+  "NobleFoundation.PackedLayoutEncoded",
+]
+
+[[lean_lib]]
+name = "NobleComplexityPilot"
+roots = ["NobleFoundation.PackedLayoutComplexity"]

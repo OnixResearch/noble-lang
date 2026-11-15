@@ -58,20 +58,113 @@ result.
 
 ## (d) Remaining `native_decide` conversions
 
-**Deferred by the integrator's scope direction until #97 lands.** This slice is limited to items
-(a)–(c); the conversion inventory and gates must be resumed against the post-extraction source, not
-treated as completed here. Existing bounded trials and their reasons remain in the README's
-conversion table.
+**Decision (2026-11-14): keep the currently strength-flagged fixture declarations native; no
+additional conversion passed.** The brief identifies Aeneas re-extraction commit `1238879f` as
+blocked by two upstream limitations, with the VT-PIN-02 exception and current generated artifacts
+unchanged. Therefore this measurement uses the current checked-in M2/M3 sources, not a presumed
+post-#97 extraction.
 
-One exploratory `decide +kernel` trial ran before the scope reminder, on the clean source commit
-`9aef4bc`, for `NobleM2.SignedSelf.forever_accepted` in `proofs/m3/NobleM2/SignedSelf.lean`. The
-pinned Lean 4.35.0 invocation used 1,000,000 heartbeats and recursion depth 4,096. It failed with
-“Tactic `decide` failed to reduce”; reduction was stuck at the `checkSigned` result match inside
-`acceptsWith`, not reported as a heartbeat timeout. The two other still-native SignedSelf
-acceptance fixtures were not tried. This single observation is not a conversion or strength-join
-result, and did not change any proof source.
+The M2 and M3 coverage records identify 12 and 26 `native` citations, respectively, for
+`noble_kernel.acceptance.check`. Each cited theorem was temporarily tested with the same statement
+and `decide +kernel`, under Lean 4.35.0 with `maxHeartbeats = 1,000,000` and `maxRecDepth = 4,096`.
+Only the proof tactic and these trial options changed; no statement was edited. Both module builds
+reported a tactic reduction failure for every candidate, not a heartbeat timeout. In each case the
+diagnostic remained at the `match` over the extracted `project_result (acceptance.check …)` and the
+reference `check …`; the extracted `Result` computation did not reduce to a concrete outcome. The
+current modules provide conditional refinement handoffs, not a pointwise proof that closes these
+fixture equalities. Replacing the native proof would therefore require new checker-refinement
+lemmas, not more kernel fuel. Existing measured conversions and non-cited native fixtures remain
+documented in the README.
 
-Reopen after #97's re-extraction merges: re-inventory its resulting candidates, attempt the remaining
-bounded conversions file by file, and run the M2/M3 proof and coverage gates, refusal harnesses, and
-strength join after each conversion commit. Keep the external replay roots unchanged unless a
-separate claim-selection decision authorizes new roots.
+Reproduce the bounded candidate run by temporarily replacing only the named theorem proofs with
+`decide +kernel`, setting the two Lean options above in each module, and running the corresponding
+`lake build` command under the policy-selected Lean:
+
+- `cd proofs/m2 && lake build NobleM2 NobleM2.Refinement NobleKernel` — exit 1 after all 12
+  candidates failed to reduce (11.78 s command wall time with warm dependencies).
+- `cd proofs/m3 && lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel` — exit 1 after all
+  14 candidates failed to reduce (156.96 s command wall time including dependent builds under
+  concurrent load).
+
+| Strength-flagged theorem | Trial source location | Measured result |
+|---|---|---|
+| `NobleM2.Refinement.refinement_sequence_and_literals_accept_arithmetic` | `proofs/m2/NobleM2/Refinement.lean:72` | `decide +kernel` failed to reduce at the extracted/reference outcome match. |
+| `NobleM2.Refinement.refinement_quotation_construction_checks_body_and_runs` | `proofs/m2/NobleM2/Refinement.lean:80` | Same reduction failure; no concrete `Outcome` from `acceptance.check`. |
+| `NobleM2.Refinement.refinement_limits_nodes_exact` | `proofs/m2/NobleM2/Refinement.lean:90` | Same reduction failure; no concrete `Outcome` from `acceptance.check`. |
+| `NobleM2.Refinement.refinement_limits_nodes_over` | `proofs/m2/NobleM2/Refinement.lean:100` | Same reduction failure; no concrete `Outcome` from `acceptance.check`. |
+| `NobleM2.Refinement.refinement_limits_depth_deep` | `proofs/m2/NobleM2/Refinement.lean:110` | Same reduction failure; no concrete `Outcome` from `acceptance.check`. |
+| `NobleM2.Refinement.refinement_limits_depth_shallow` | `proofs/m2/NobleM2/Refinement.lean:120` | Same reduction failure; no concrete `Outcome` from `acceptance.check`. |
+| `NobleM2.Refinement.refinement_limits_work_eight` | `proofs/m2/NobleM2/Refinement.lean:131` | Same reduction failure; no concrete `Outcome` from `acceptance.check`. |
+| `NobleM2.Refinement.refinement_limits_work_four` | `proofs/m2/NobleM2/Refinement.lean:142` | Same reduction failure; no concrete `Outcome` from `acceptance.check`. |
+| `NobleM2.Refinement.refinement_hidden_emit_rejects_against_empty_bound` | `proofs/m2/NobleM2/Refinement.lean:153` | Same reduction failure after provenance erasure. |
+| `NobleM2.Refinement.refinement_diagnostics_report_order` | `proofs/m2/NobleM2/Refinement.lean:160` | Same reduction failure; no concrete `Outcome` from `acceptance.check`. |
+| `NobleM2.Refinement.refinement_diagnostics_truncation` | `proofs/m2/NobleM2/Refinement.lean:172` | Same reduction failure; no concrete `Outcome` from `acceptance.check`. |
+| `NobleM2.Refinement.refinement_resource_eligibility_rejects_duplication` | `proofs/m2/NobleM2/Refinement.lean:185` | Same reduction failure after provenance erasure. |
+| `NobleM3.Refine.refinement_recursive_dependency_self` | `proofs/m3/NobleM3/Refinement.lean:184` | `decide +kernel` failed to reduce at the extracted/reference outcome match. |
+| `NobleM3.Refine.refinement_recursive_dependency_mutual` | `proofs/m3/NobleM3/Refinement.lean:192` | Same reduction failure; no concrete `Outcome` from `acceptance.check`. |
+| `NobleM3.Refine.refinement_dependency_boundary` | `proofs/m3/NobleM3/Refinement.lean:202` | Same reduction failure; no concrete `Outcome` from `acceptance.check`. |
+| `NobleM3.Refine.refinement_dependency_exhausted` | `proofs/m3/NobleM3/Refinement.lean:212` | Same reduction failure; no concrete `Outcome` from `acceptance.check`. |
+| `NobleM3.Refine.refinement_dependency_before_body` | `proofs/m3/NobleM3/Refinement.lean:223` | Same reduction failure; no concrete `Outcome` from `acceptance.check`. |
+| `NobleM3.Refine.refinement_recursive_schema` | `proofs/m3/NobleM3/Refinement.lean:231` | Same reduction failure; no concrete `Outcome` from `acceptance.check`. |
+| `NobleM3.Refine.refinement_schema_boundary` | `proofs/m3/NobleM3/Refinement.lean:244` | Same reduction failure; no concrete `Outcome` from `acceptance.check`. |
+| `NobleM3.Refine.refinement_schema_exhausted` | `proofs/m3/NobleM3/Refinement.lean:253` | Same reduction failure; no concrete `Outcome` from `acceptance.check`. |
+| `NobleM3.Refine.refinement_cyclic_witness_self` | `proofs/m3/NobleM3/Refinement.lean:267` | Same reduction failure after provenance erasure. |
+| `NobleM3.Refine.refinement_cyclic_witness_mutual` | `proofs/m3/NobleM3/Refinement.lean:279` | Same reduction failure after provenance erasure. |
+| `NobleM3.Refine.refinement_resolvable_chain` | `proofs/m3/NobleM3/Refinement.lean:293` | Same reduction failure; no concrete `Outcome` from `acceptance.check`. |
+| `NobleM3.Refine.refinement_kind_crossed_reference` | `proofs/m3/NobleM3/Refinement.lean:306` | Same reduction failure after provenance erasure. |
+| `NobleM3.Refine.refinement_duplication_negative` | `proofs/m3/NobleM3/Refinement.lean:328` | Same reduction failure after provenance erasure. |
+| `NobleM3.Refine.refinement_implicit_union_negative` | `proofs/m3/NobleM3/Refinement.lean:353` | Same reduction failure after provenance erasure. |
+
+No statement became strict in this follow-up: the clean strength join is expected to retain M2
+`citations=13, strict=1, native=12` and M3 `citations=29, strict=3, native=26`. No new theorem
+became eligible for the independent-replay corpus; `statements.json` remains bound to its existing
+foundation roots. The follow-up strength-join receipt is
+[`receipts/2026-11-14/strength-join.json`](receipts/2026-11-14/strength-join.json).
+
+**Reopen condition:** when a corrected Aeneas extraction is available, or a structural proof of
+`acceptance.check` is added for these exact checker behaviors, rerun the 26 named conversions
+against that source with the same statement and budget, then rerun both coverage gates. Any
+successful conversion must be committed before its clean-source receipt is generated; replay roots
+remain frozen absent a separate claim-selection decision.
+
+## (e) Community axiom-audit comparison
+
+**Measured decision: NO-GO for adopting the community tool as an equivalent audit.** The
+[criteria](axiom-audit-criteria.json) were committed before measurement. Upstream
+`axiom-audit@0b885d88a69982cd76990b502742690b80b1a685` declares Lean 4.32.1, but its exact
+source built in the separate [`proofs/axiom-audit-pilot`](../../proofs/axiom-audit-pilot) project under
+the selected Lean 4.35.0; the main foundation toolchain and audit were unchanged. The clean
+selected-audit baseline was `1dbc2bf93628c73158a8227e000d30ab092b9445`, and the measured
+runner source was `3d796a48bfa90a16fd0c06d89be597d57849232e`. Its proof-source hashes
+matched that baseline. The [complete module roster](receipts/2026-11-14/axiom-audit-modules.json)
+enumerates 121 compiled source modules across `NobleFoundation`, `NobleContracts`, `MathlibI64`,
+and vendored `InteractionNets`. The [comparison receipt](receipts/2026-11-14/axiom-audit-comparison.json)
+contains the executable and roster digests, every discrepancy and control outcome, and wall/RSS
+readings. Raw stdout/stderr and the generated hostile sources remain outside the repository.
+
+| Observation on identical 4.35.0 compiled inputs | Measured result |
+|---|---|
+| Four root declaration counts, upstream / stock / CLI | `NobleFoundation` 15,264 / 15,264 / 15,264; `NobleContracts` 2,005 / 2,005 / 2,005; `MathlibI64` 8 / 8 / 8; `InteractionNets` 6,489 / 6,489 / 6,489 |
+| Independently inventoried public theorem axiom sets | 2,071 / 2,071 found; zero mismatches, including stricter theorem-specific profiles |
+| Private/protected helper names | 168 / 168 accounted for, zero ambiguous names |
+| Project union and forbidden axioms | exactly `propext`, `Classical.choice`, `Quot.sound`; zero policy violations |
+| Per-declaration upstream versus Lean stock collector | **53 mismatches**: upstream reports `[]` where stock finds permitted axioms in generated/inductive declarations (38 in foundation, 15 in InteractionNets) |
+| Imported custom axiom / private helper / `sorryAx` / empty root / missing module | all refused or detected; no omitted-module acceptance |
+| Mutual-inductive custom-axiom control | **four misses**: `Odd`, `Even.step`, `Even.zero`, `Odd.step` report `[]` upstream but `NobleAuditImports.seed` in stock collection |
+| Native-evaluation control | Lean 4.35.0 generates `NobleAuditControl.nativeSample._native.native_decide.ax_1_1`, detected by both collectors; the preregistered *exact* `Lean.ofReduceBool` name was not emitted, so that exact control remains false |
+| Per-declaration performance on the same environment | upstream 3.78 s / 2,751,596 KiB max RSS; stock collector 266.01 s / 2,749,672 KiB max RSS; speed cannot override the coverage mismatch |
+
+The 53 mismatches are a substantive acceptance failure even though the selected 2,071 theorem
+sets and project-wide union happen to agree. In particular, an imported custom axiom disappears
+from four cyclic/generated declaration rows, so a per-declaration assurance claim would be
+unsound. The exact native-control name also differs on the selected toolchain; the generated
+native axiom is recorded, not silently counted as the preregistered name. The CLI imports compiled
+environments at `trustLevel := 1024` and audits assumptions, not proof terms. The existing
+inventory-bound Lean `#print axioms` audit remains decisive, alongside independent proof replay and
+statement/protected-definition binding.
+
+**Reopen condition:** upstream fixes the shared traversal's per-declaration undercounts, including
+the cyclic custom-axiom fixture, and a new version-specific native control is frozen *before* a
+repeat run. Rebuild the exact pinned candidate in its isolated toolchain, retain all four libraries
+and every source module, and rerun the full comparison with the same independent inventory,
+controls, wall/RSS accounting and strict GO gate. Do not promote a faster but incomplete audit.

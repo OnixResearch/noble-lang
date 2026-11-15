@@ -1,0 +1,20 @@
+{
+  "schema": "noble-procedure-library-transfer-attempt/1",
+  "attempt": 1,
+  "source_commit": "e65f82c18d0763ffb0982527c348f359662c17cc",
+  "criteria": "verification/procedure-library/criteria-2026-11-13.json",
+  "criteria_sha256": "36b8efc1d7f99485f3e1764a596ce014ab24dcb62d6f029bf32456c196a4dc79",
+  "producer_receipt": "verification/synthesis/receipts/2026-11-13/synthesis-v2.json",
+  "producer_receipt_sha256": "4c05b46b3d439d7c5a95786d6a07e2c2017573d8a364fd6e8c52e2c70958387f",
+  "command": "cargo test -p noble-contracts --test editor --all-features --offline --locked procedures::transfer::tests::frozen_heldout_measurement_once -- --exact --ignored --nocapture",
+  "raw_command_output": "verification/procedure-library/receipts/2026-11-13/transfer-failed.raw.log",
+  "raw_command_output_sha256": "533d9e494c32d598a4fbfb3a70b51693f66443d2dfd0395625e511f49c296f3f",
+  "raw_command_output_bytes": 101587,
+  "process_exit_code": 101,
+  "test_result": "FAILED: 0 passed, 1 failed, 67 filtered out; accumulated learned library did not meet the frozen 8/8 task-cell threshold",
+  "selected_control_pair_as_printed": ["arithProduct", "arithScaled"],
+  "control_target_bytes_as_printed": 1815,
+  "control_candidate_bytes_as_printed": 1944,
+  "valid_measurement": false,
+  "reason": "The emitted JSON is syntactically invalid and the test harness excludes every source record before composition. See transfer-failed-erratum.json; no transfer outcome is claimed."
+}

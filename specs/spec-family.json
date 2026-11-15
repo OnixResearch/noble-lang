@@ -90,6 +90,12 @@
       "path": "../.cairn/specs/calculator/spec.md",
       "compatibility_path": "CALCULATOR.md",
       "cairn_id": "calculator"
+    },
+    {
+      "id": "SPEC-TCRANK001",
+      "path": "../.cairn/specs/typed-chunk-ranking/spec.md",
+      "compatibility_path": "TYPED-CHUNK-RANKING.md",
+      "cairn_id": "typed-chunk-ranking"
     }
   ],
   "scenario_files": [
@@ -111,6 +117,7 @@
     "conformance/erlang-abstract-cases.json",
     "conformance/octet-adoption-cases.json",
     "conformance/numeric-graph-cases.json",
+    "conformance/numeric-graph-pe-cases.json",
     "conformance/text-byte-cursor-cases.json",
     "conformance/recursion-cases.json",
     "conformance/effect-protocol-cases.json"

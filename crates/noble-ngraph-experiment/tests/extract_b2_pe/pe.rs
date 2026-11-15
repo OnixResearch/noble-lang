@@ -51,6 +51,8 @@ fn cells(values: &[Value]) -> Vec<String> {
         .collect()
 }
 
+#[path = "cache_measurement.rs"]
+mod cache_measurement;
 #[path = "differential.rs"]
 mod differential;
 #[path = "measurement.rs"]

@@ -1,0 +1,22 @@
+{
+  "schema": "noble-procedure-library-transfer-erratum/1",
+  "attempt": 1,
+  "source_commit": "e65f82c18d0763ffb0982527c348f359662c17cc",
+  "raw_log": "verification/procedure-library/receipts/2026-11-13/transfer-failed.raw.log",
+  "raw_log_sha256": "533d9e494c32d598a4fbfb3a70b51693f66443d2dfd0395625e511f49c296f3f",
+  "instrument_defects": [
+    {
+      "kind": "invalid-task-json",
+      "evidence": "The printed PROCEDURE_TRANSFER_JSON line contains 32 `},,` separators between task objects and JSON.parse rejects it at the first separator. In crates/noble-contracts/tests/editor/procedures/transfer/sweep.rs, evaluate() emits the task-list separator and task_json() emits the same separator again.",
+      "effect": "The per-arm rows are not a parseable retained measurement record. The byte-identical log is retained without correction."
+    },
+    {
+      "kind": "wrong-retrieval-composition-context",
+      "evidence": "The same sweep.rs constructs Query.composition_context as the entire three-input to one-output held-out target (3→1) for each two-input to one-output source procedure (2→1). compatible_context in crates/noble-contracts/src/source/procedures/retrieval.rs requires equal untouched-tail lengths, so both source records are excluded even in nonempty arms.",
+      "effect": "The run tests an impossible query, not the library's ability to retrieve and compose the retained sources; the learned-arm threshold failure is an instrument failure."
+    }
+  ],
+  "analysis_only": "For diagnosis only, the raw payload was transformed in memory by replacing `},,` with `},`; the transformed payload was not retained as a receipt, compared for transfer, or used to alter frozen criteria. It showed `retrieval-excluded-source` for every nonempty arm, as the source predicate predicts.",
+  "decision": "INVALID INSTRUMENT, not a library transfer result; no threshold, teacher-free, speedup or transfer claim is made from attempt 1.",
+  "reopen_condition": "Fix both harness defects with regression tests using only non-held-out fixtures; commit the source; repeat exactly once from a clean source commit against the byte-identical criteria and separately retain both attempts."
+}

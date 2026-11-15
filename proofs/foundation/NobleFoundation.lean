@@ -29,7 +29,11 @@ import NobleFoundation.PackedScheduleGuardCorpus
 import NobleFoundation.Belt
 import NobleFoundation.BeltCorpus
 import NobleFoundation.NetI64
+import NobleFoundation.NetI64Families
+import NobleFoundation.NetI64Resource
 import NobleFoundation.NetI64Corpus
+import NobleFoundation.NetI64Plans
+import NobleFoundation.NetI64ResourceCorpus
 import NobleFoundation.BeltTarget
 import NobleFoundation.BeltTargetCorpus
 import NobleFoundation.GraphRewrite
@@ -79,6 +83,8 @@ import NobleFoundation.SgdReference
 import NobleFoundation.SgdReferenceCorpus
 import NobleFoundation.FirstProjection
 import NobleFoundation.SynthesisCertified
+import NobleFoundation.ProcedureLibrary
+import NobleFoundation.ProcedureLibraryWire
 import NobleFoundation.OperandForwarding
 import NobleFoundation.Binary32Scale
 import NobleFoundation.ReverseADMutations
@@ -102,3 +108,4 @@ import NobleFoundation.ImplicitPropositions
 import NobleFoundation.UsePermissions
 import NobleFoundation.GuardedRewrite
 import NobleFoundation.GuardedRewriteCorpus
+import NobleFoundation.SizeChangeSound

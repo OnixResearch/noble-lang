@@ -1,0 +1,65 @@
+{
+  "schema": "noble-differential-interactions-matrix/v1",
+  "version": 1,
+  "issue": 125,
+  "frozen_before_campaign": true,
+  "profiles": [
+    {
+      "id": "P1-core-source-wasm",
+      "subject": "Core integer source programs through the foundation differential lane",
+      "generator": "verification/foundation/differential.mjs",
+      "selected_axes": {
+        "quotation_composition": ["plain", "quoted", "composed"],
+        "boundary_arithmetic": ["min_max_wrap", "zero_negative_one", "small"],
+        "output_shape": ["ordered_single", "preserved_prefix_multiple"]
+      },
+      "selected_cell_count": 18,
+      "cell_id_template": "P1/{quotation_composition}/{boundary_arithmetic}/{output_shape}",
+      "execution_witness": "The source program is admitted and both Wasm modes finish with the expected result and positive execution-step metrics. The actual CLI report has no per-operator trace: record the source operators and the output-discriminating witness separately, and do not claim direct operator tracing. For preserved_prefix_multiple, at least two untouched prefix values survive in order before the result.",
+      "properties": ["reference_stack_matches_source_wasm", "ordered_stack_and_prefix_preserved"],
+      "comparison_legs": ["BigInt reference", "per-case Lean-kernel-checked expectation", "managed Wasm opt-off", "managed Wasm opt-on"],
+      "budget": {"kind": "source-case evaluations per optimization mode", "seed": 125, "cases": 18,
+        "comparison": "current seeded generator and structured extension each receive 18 cases in each mode"},
+      "unsupported": [{"feature": "per-case runtime fuel boundary", "reason": "The foundation CLI observer exposes no runtime fuel override; the campaign freezes and measures its 18-case work budget instead."}],
+      "notes": "The matrix is exactly 18 cases per mode. A cell is not reached from its template or AST tag. Rejection/exhaustion counts do not contribute to semantic reach."
+    },
+    {
+      "id": "P2-ngraph-f32",
+      "subject": "F32 numeric-graph operator interactions through the experiment differential lane",
+      "generator": "crates/noble-ngraph-experiment/src/random.rs plus the structured interaction extension",
+      "selected_axes": {
+        "interaction_family": ["guard_select", "select_index", "index_affine", "guard_affine"],
+        "fp_class": ["signed_zero", "nan", "subnormal_normal_boundary", "overflow_infinity", "cancellation", "rounding_tie"]
+      },
+      "selected_cell_count": 24,
+      "cell_id_template": "P2/{interaction_family}/{fp_class}",
+      "execution_witness": "The checked graph contains the required operation nodes and the L3 reference reports all checked nodes evaluated on a normal result. Derive direct select branches and index table positions from concrete admitted input bits and graph operands; retain output-discriminating values. L4 exposes no per-node trace, so its witness kind is a successful comparison of those exact inputs/outputs, not an asserted internal trace.",
+      "properties": ["all_supported_f32_observations_agree", "selected_edge_branch_matches_reference"],
+      "comparison_legs": ["L2 APFloat oracle", "binary64-per-operation oracle", "L3 reference interpreter", "L4 compiled evaluator"],
+      "budget": {"kind": "L3 node evaluations", "seed": 125,
+        "cap": "the structured arm's measured total across its 24 accepted cells",
+        "current_generator": "keep the existing random graph generator, lower requested ops only as needed to fit one graph under the cap, then run floor(cap / graph_nodes) vectors",
+        "structured_extension": "one vector for each of the 24 frozen cells"},
+      "unsupported": [
+        {
+          "feature": "immutable parameter-snapshot interactions",
+          "reason": "The existing seeded campaign calls run_legs without a ParamSnapshot; this matrix deliberately does not infer snapshot support from another test path."
+        },
+        {
+          "feature": "Core source-to-Wasm and Lean expectations",
+          "reason": "P2 is a numeric-graph-only profile and makes no source-Wasm or Lean coverage claim."
+        }
+      ],
+      "notes": "FP-class labels are bound to explicit input/result bit-pattern witnesses in the receipt. Preserve the #38 reference and observation relation."
+    }
+  ],
+  "outcome_classes": ["killed", "divergence_unreached", "executed_survived", "invalid_or_equivalent", "incomplete"],
+  "campaign_outcomes": ["accepted", "refused", "exhausted", "unsupported"],
+  "kill_rule": "Count a kill only when the intended property fails for the same retained case and execution that reached the mutant divergence. Compile failures, panics, and unrelated mismatches are not kills.",
+  "frozen_controls": [
+    "all_refused_campaign_is_not_semantic_acceptance",
+    "oracle_weakness_must_be_detected_by_an_independent_control",
+    "shrinking_must_preserve_admission_interaction_property_mismatch_class_and_mutation_site",
+    "historical_receipts_do_not_bind_changed_candidate_bytes"
+  ]
+}

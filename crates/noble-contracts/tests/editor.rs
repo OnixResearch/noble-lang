@@ -180,6 +180,9 @@ mod chunks;
 #[path = "editor/chunks-completion.rs"]
 mod chunks_completion;
 
+#[path = "editor/procedures.rs"]
+mod procedures;
+
 fn monotonic_now_ns() -> u64 {
     static START: std::sync::LazyLock<std::time::Instant> =
         std::sync::LazyLock::new(std::time::Instant::now);

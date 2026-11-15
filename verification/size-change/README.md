@@ -1,4 +1,4 @@
-# Size-change termination evidence (issue #101)
+# Bounded size-change closure evidence (issue #101)
 
 The analysis placement decision and its reopen conditions are recorded in [`decision.md`](decision.md).
 
@@ -8,8 +8,8 @@ and is requested with `--size-change-evidence`.
 
 The model is `proofs/m3/NobleM2/SizeChange*.lean`:
 
-- `SizeChange`, `SizeChangeSites`, `SizeChangeClosure` — one self-loop, the shared-measure criterion
-  over a family of sites, and the closure language;
+- `SizeChange`, `SizeChangeSites`, `SizeChangeClosure` — the earlier one-self-loop/shared-measure
+  model and its constructive refusal facts;
 - `SizeChangeChecker` — the argument classifier (`Arg`), the graphs it derives (`graphOf`) and the
   guarded decrease it proves (`graphOf_decrease_sound`);
 - `SizeChangeGuarded` — the **guarded execution run**: a step is the chosen site's argument
@@ -20,8 +20,39 @@ The model is `proofs/m3/NobleM2/SizeChange*.lean`:
 - `SizeChangeRefusal` — the **constructive refusal witness**: `certifiedAll_refusal_site` names, for
   every measure, a site that does not decrease it, and `certifiedAll_refusal_iff` makes the report
   exact. Both are proved without `Classical.choice`;
-- `SizeChangeExact`, `SizeChangeMatrix*`, `SizeChangeCallProgram` — the exactness theorem, the
-  matrix lane and its periodic-cycle results.
+- `SizeChangeMatrix*`, `SizeChangeCallProgram`, `SizeChangeSCT` — matrix composition and path
+  semantics, a bounded closure certificate with exact path witnesses, validation of every
+  idempotent strict-diagonal witness, and an idempotent no-strict-diagonal refusal witness.
+
+## Bounds and interpretation
+
+The direct-self-call analyzer supports at most **8 measures**, **256 call sites**, and **256 distinct
+closure matrices**. Its symbolic walk additionally caps the frame at 64 cells, the per-definition
+walk at 65,536 word steps, and quotation nesting at 32. Exceeding an analysis cap is a distinct
+`bound-exceeded` result; it is not a claim of divergence.
+
+For a retained finite closure, the model checks that every call-site graph is present, every listed
+matrix has a non-empty site path, the list is composition-closed and duplicate-free, and each
+idempotent matrix has a strict diagonal witness. A refusal retains an exact idempotent closure entry
+without such a diagonal. Arbitrary-run soundness is proved in the separate Mathlib-backed foundation
+lane by `NobleFoundation.SizeChangeSound.matrix_closure_sct_terminates_classical`: for any checked
+`MatrixClosureCertificate` and any `MatrixSiteRun` over the same site matrices, an infinite model run
+is impossible. The proof imports the existing m3 certificate and run definitions directly, colors
+each increasing pair of run positions by its segment product, applies infinite Ramsey for pairs, and
+uses the resulting idempotent closure graph's strict diagonal to obtain an impossible descending
+Nat chain. Its axiom set is `{propext, Classical.choice, Quot.sound}`.
+
+The `verification/size-change/check.mjs` lane remains choice-free: it still admits only
+`{propext, Quot.sound}` for the `SizeChange*.lean` family. The separate foundation theorem does not
+weaken that restriction or change the meaning of the model certificate. `periodic_site_run_terminates`
+remains the periodic-run theorem inside that strict family. A refusal means **not shown terminating**,
+not divergence.
+
+The current checked source profile admits direct `SelfOwner` calls only. Named/helper calls are
+unsupported; mutual-recursion groups are not admitted by the current source resolver and are not
+part of this profile. There is no correspondence theorem from the Rust classifier to source
+execution, nor a proof connecting structural `List` tails to lengths or guarded wrapping `I64`
+counters to natural numbers.
 
 ## `check.mjs` — the axiom lane
 
@@ -60,6 +91,9 @@ external Cargo target directory to reuse build artifacts.
 | REC-SC-02 | countdown under `0 <`, passing its predecessor | accepted, measure 0 |
 | REC-SC-03 | non-decreasing self-call (the measure passed through) | refused, witness site 0 / `same` |
 | REC-SC-04 | wrapping `I64` arithmetic used as a measure | refused, witness site 0 / `opaque` |
+| REC-SC-05 | guarded two-measure recursion that swaps argument positions | accepted by the composed closure; no shared measure |
+| REC-SC-06 | recursive argument swap with no decrease | refused with the idempotent identity graph as cycle witness |
+| REC-SC-07 | nine declared measures, beyond the parameter cap | `bound-exceeded`; no termination or divergence claim |
 
 The lane also checks that ordinary signed-recursion reports omit `size_change` when the flag is
 absent, and that two reports in one session get distinct files inside one certificate directory.
@@ -69,9 +103,12 @@ version and binary digest, the isolated library's source digests, and the CLI bi
 
 ## What the evidence does and does not claim
 
-**Model.** A certified family admits no infinite run that respects the classified relations, and
-the guarded run model supplies the positivity premise the classifier needs. A refusal names a site
-per measure, and only that: **a refusal means "not shown terminating", not "diverges"**.
+**Model.** The finite certificate checker proves the listed closure exactly matches its matrix
+algebra and checks the criterion's idempotent witnesses. The strict size-change family proves
+periodic-run termination without `Classical.choice`; the foundation theorem additionally proves
+arbitrary-run soundness with the foundation axiom set. The older shared-measure and guarded-run
+theorems retain their own narrower contracts. A refusal means **not shown terminating**, not
+diverging.
 
 **Front end.** The Rust classifier (`crates/noble-contracts/src/source/sizechange.rs`) is an
 over-approximation of the body: values are tracked only as far as the classifier needs (the measure,
@@ -81,16 +118,18 @@ an active `0 <` guard *on that measure* at the site; a list tail counts without 
 cons tail is structurally shorter. Named helper calls are unsupported rather than assumed to return,
 so an unanalyzed recursive helper cannot be hidden behind a decreasing direct self-call.
 
-**Not claimed.** There is no correspondence theorem between the classifier and the Rust source, and
-none between `List` structure and its length or between a wrapped `I64` counter and a natural
-number. Those are the front end's assumptions, stated here so the receipts are not read as a
-verified refinement. The general size-change closure (composed graphs over paths) is not decided;
-the bounded shared-measure criterion is.
+**Not claimed.** A choice-free arbitrary-run soundness theorem within the strict
+`SizeChange*.lean` family is not claimed: its lane continues to reject `Classical.choice`. There is
+also no correspondence theorem between the classifier and Rust source execution, nor one between
+`List` structure and its length or between a wrapped `I64` counter and a natural number. No
+mutual-recursion analysis is performed. These boundaries are explicit so the receipts are not read
+as a verified refinement or a general source-level termination result.
 
 ## Receipts
 
 The model audit receipt is `receipt-<date>-<source-commit>.json`; the production-session receipt is
 `scenarios-<source-commit>.json`. Both are produced from clean commits and committed as evidence.
-Scenario certificates are retained under `evidence/` beside the scenario receipt, at the relative
-paths recorded in it. These receipts bind their named source commits; they are not evidence about
-later revisions.
+Scenario certificates are retained under `evidence/<source-commit>/` beside the scenario receipt, at
+the relative paths recorded in it. The source-commit directory keeps the original four-case
+certificates immutable when the expanded lane is retained. These receipts bind their named source
+commits; they are not evidence about later revisions.

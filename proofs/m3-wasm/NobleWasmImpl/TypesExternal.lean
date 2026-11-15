@@ -1,6 +1,8 @@
-import Aeneas
-import NobleKernel.Types
-import NobleContractImpl.Types
+module
+public import Aeneas
+public import NobleKernel.Types
+public import NobleContractImpl.Types
+@[expose] public section
 
 open Aeneas Aeneas.Std
 

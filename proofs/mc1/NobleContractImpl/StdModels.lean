@@ -1,6 +1,8 @@
-import Aeneas
-import NobleContractImpl.Types
-import NobleKernel.FunsExternal
+module
+public import Aeneas
+public import NobleContractImpl.Types
+public import NobleKernel.FunsExternal
+@[expose] public section
 
 open Aeneas Aeneas.Std Result ControlFlow Error
 open Aeneas.Data.ListN
@@ -177,7 +179,7 @@ def core.num.U8.is_ascii_whitespace (value : U8) : Result Bool :=
 
 /-- Check each digit before reporting overflow at that digit, as Rust does;
 an already overflowing prefix stops before examining any later bytes. -/
-private def parseU32Digits {n : Nat} (digits : ListN U8 n) (value : U32) :
+def parseU32Digits {n : Nat} (digits : ListN U8 n) (value : U32) :
     Result (core.result.Result U32 core.num.error.ParseIntError) :=
   match digits with
   | .nil => ok (.Ok value)
@@ -193,7 +195,7 @@ private def parseU32Digits {n : Nat} (digits : ListN U8 n) (value : U32) :
       ok (.Err { kind := .InvalidDigit })
 termination_by structural digits
 
-private def parseU32Start {n : Nat} (digits : ListN U8 n) :
+def parseU32Start {n : Nat} (digits : ListN U8 n) :
     Result (core.result.Result U32 core.num.error.ParseIntError) :=
   match digits with
   | .nil => ok (.Err { kind := .Empty })
@@ -214,7 +216,7 @@ def U32.Insts.CoreStrTraitsFromStrParseIntError.from_str (value : Str) :
   parseU32Start value.list
 
 /-- Consume the exact finite word width, not an arbitrary recursion budget. -/
-private def countLowBits : Nat → Nat → Nat
+def countLowBits : Nat → Nat → Nat
   | 0, _ => 0
   | width + 1, value => value % 2 + countLowBits width (value / 2)
 
@@ -381,23 +383,6 @@ def core.option.Option.or {T : Type} (value fallback : Option T) : Result (Optio
   | some _ => ok value
 
 @[rust_fun
-  "core::option::{core::ops::try_trait::Try<core::option::Option<@T>>}::branch"]
-def core.option.Option.Insts.CoreOpsTry_traitTry.branch {T : Type}
-    (value : Option T) :
-    Result (core.ops.control_flow.ControlFlow (Option core.convert.Infallible) T) :=
-  match value with
-  | some payload => ok (.Continue payload)
-  | none => ok (.Break none)
-
-@[rust_fun
-  "core::option::{core::ops::try_trait::FromResidual<core::option::Option<@T>, core::option::Option<core::convert::Infallible>>}::from_residual"]
-def core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
-    (T : Type) (residual : Option core.convert.Infallible) : Result (Option T) :=
-  match residual with
-  | none => ok none
-  | some impossible => impossible.casesOn
-
-@[rust_fun
   "core::option::{core::option::Option<core::option::Option<@T>>}::flatten"]
 def core.option.OptionOption.flatten {T : Type} (value : Option (Option T)) :
     Result (Option T) :=
@@ -410,7 +395,7 @@ def core.option.OptionShared0T.copied {T : Type} (inst : core.marker.Copy T)
 
 @[rust_fun
   "core::option::{core::cmp::PartialEq<core::option::Option<@T>, core::option::Option<@T>>}::eq"]
-def core.option.Option.Insts.CoreCmpPartialEqOption.eq {T : Type}
+def core.option.Option.Insts.CoreCmpPartialEqOption.eq {T : Type _}
     (inst : core.cmp.PartialEq T T) (left right : Option T) : Result Bool :=
   match left, right with
   | none, none => ok true
@@ -488,7 +473,7 @@ def core.slice.Slice.first {T : Type} (slice : Slice T) : Result (Option T) :=
 def core.slice.Slice.last {T : Type} (slice : Slice T) : Result (Option T) :=
   _root_.noble_kernel.core.slice.Slice.last slice
 
-private def prefixEq {T : Type} (inst : core.cmp.PartialEq T T) {n m : Nat} :
+def prefixEq {T : Type} (inst : core.cmp.PartialEq T T) {n m : Nat} :
     ListN T n → ListN T m → Result Bool
   | _, .nil => ok true
   | .nil, .cons _ _ => ok false
@@ -504,7 +489,7 @@ def core.slice.Slice.starts_with {T : Type} (inst : core.cmp.PartialEq T T)
 `sort_unstable`: the API does not specify the order of equal keys. Invoke the
 supplied `Ord` comparison only until the insertion point and propagate failure.
 The length witness prevents a sorted slice from changing storage size. -/
-private def insertSorted {T : Type} (inst : core.cmp.Ord T) (item : T) :
+def insertSorted {T : Type} (inst : core.cmp.Ord T) (item : T) :
     (items : List T) → Result { sorted : List T // sorted.length = items.length + 1 }
   | [] => ok ⟨[item], by simp⟩
   | first :: rest => do
@@ -515,7 +500,7 @@ private def insertSorted {T : Type} (inst : core.cmp.Ord T) (item : T) :
     else
       ok ⟨item :: first :: rest, by simp⟩
 
-private def sortItems {T : Type} (inst : core.cmp.Ord T) {n : Nat} :
+def sortItems {T : Type} (inst : core.cmp.Ord T) {n : Nat} :
     (items : ListN T n) → Result { sorted : List T // sorted.length = n }
   | .nil => ok ⟨[], rfl⟩
   | .cons first rest => do
@@ -535,7 +520,7 @@ def core.slice.Slice.sort_unstable {T : Type} (inst : core.cmp.Ord T)
 /-- Traverse existing slice storage without materializing another list. Every
 callback receives the state returned by its predecessor; skipped items do not
 invoke it. The cursor includes the item that triggers short-circuiting. -/
-private def scanIterator {T F : Type} (inst : core.ops.function.FnMut F T Bool)
+def scanIterator {T F : Type} (inst : core.ops.function.FnMut F T Bool)
     (stopOn : Bool) {n : Nat} (items : ListN T n) (skip cursor : Nat)
     (function : F) : Result (Bool × Nat) :=
   match items with
@@ -551,7 +536,7 @@ private def scanIterator {T F : Type} (inst : core.ops.function.FnMut F T Bool)
         scanIterator inst stopOn rest 0 (cursor + 1) function
 termination_by structural items
 
-private def foldIterator {T B F : Type} (inst : core.ops.function.FnMut F (B × T) B)
+def foldIterator {T B F : Type} (inst : core.ops.function.FnMut F (B × T) B)
     {n : Nat} (items : ListN T n) (skip : Nat) (accumulator : B)
     (function : F) : Result B :=
   match items with
@@ -658,7 +643,7 @@ def alloc.vec.Vec.as_slice {T : Type} (A : Type) (vector : alloc.vec.Vec T) :
 
 /-- The `FnMut` callback is threaded left to right, including over elements
 which are removed. Its returned closure state affects every later decision. -/
-private def retainedItems {T F : Type} (inst : core.ops.function.FnMut F T Bool)
+def retainedItems {T F : Type} (inst : core.ops.function.FnMut F T Bool)
     (function : F) {n : Nat} :
     (items : ListN T n) → Result { retained : List T // retained.length ≤ n }
   | .nil => ok ⟨[], by simp⟩
@@ -680,7 +665,7 @@ def alloc.vec.Vec.retain {T : Type} (_A : Type) {F : Type}
     have bound := vector.slice.bound
     omega))
 
-private def generatedItems {T F : Type} (inst : core.ops.function.FnMut F Unit T)
+def generatedItems {T F : Type} (inst : core.ops.function.FnMut F Unit T)
     (function : F) :
     (amount : Nat) → Result { generated : List T // generated.length = amount }
   | 0 => ok ⟨[], rfl⟩
@@ -722,16 +707,16 @@ def alloc.vec.Vec.split_off {T A : Type} (_inst : core.clone.Clone A)
 
 /-! ## Rust UTF-8 diagnostics -/
 
-private def utf8Continuation (byte : U8) : Bool :=
+def utf8Continuation (byte : U8) : Bool :=
   decide (0x80 ≤ byte.val ∧ byte.val ≤ 0xbf)
 
-private def utf8SecondOfThree (first second : U8) : Bool :=
+def utf8SecondOfThree (first second : U8) : Bool :=
   decide ((first.val = 0xe0 ∧ 0xa0 ≤ second.val ∧ second.val ≤ 0xbf) ∨
     (0xe1 ≤ first.val ∧ first.val ≤ 0xec ∧ 0x80 ≤ second.val ∧ second.val ≤ 0xbf) ∨
     (first.val = 0xed ∧ 0x80 ≤ second.val ∧ second.val ≤ 0x9f) ∨
     (0xee ≤ first.val ∧ first.val ≤ 0xef ∧ 0x80 ≤ second.val ∧ second.val ≤ 0xbf))
 
-private def utf8SecondOfFour (first second : U8) : Bool :=
+def utf8SecondOfFour (first second : U8) : Bool :=
   decide ((first.val = 0xf0 ∧ 0x90 ≤ second.val ∧ second.val ≤ 0xbf) ∨
     (0xf1 ≤ first.val ∧ first.val ≤ 0xf3 ∧ 0x80 ≤ second.val ∧ second.val ≤ 0xbf) ∨
     (first.val = 0xf4 ∧ 0x80 ≤ second.val ∧ second.val ≤ 0x8f))
@@ -742,7 +727,7 @@ private def utf8SecondOfFour (first second : U8) : Bool :=
 non-continuation byte. Overlong encodings, surrogates, and scalars above
 U+10FFFF fail at their lead byte with length one. The offset is deliberately
 unbounded during traversal and checked once on export, so it cannot wrap. -/
-private def utf8ErrorAt (offset : Nat) (bytes : List U8) :
+def utf8ErrorAt (offset : Nat) (bytes : List U8) :
     Option (Nat × Option Usize) :=
   match bytes with
   | [] => none
@@ -822,7 +807,7 @@ character boundaries. Raw pointer models retain Aeneas's value representation;
 an invalid unchecked range is undefined behavior rather than a safe panic.
 -/
 
-private def startsCharacterAt {n : Nat} (bytes : ListN U8 n) (index : Nat) : Bool :=
+def startsCharacterAt {n : Nat} (bytes : ListN U8 n) (index : Nat) : Bool :=
   match bytes with
   | .nil => false
   | .cons byte rest =>
@@ -831,20 +816,20 @@ private def startsCharacterAt {n : Nat} (bytes : ListN U8 n) (index : Nat) : Boo
     | index + 1 => startsCharacterAt rest index
 termination_by structural bytes
 
-private def strBoundary (value : Str) (index : Nat) : Bool :=
+def strBoundary (value : Str) (index : Nat) : Bool :=
   if index = 0 ∨ index = value.length then
     true
   else
     startsCharacterAt value.list index
 
-private def validStrRange (range : core.ops.range.Range Usize) (value : Str) : Bool :=
+def validStrRange (range : core.ops.range.Range Usize) (value : Str) : Bool :=
   decide (range.start.val ≤ range.end.val) &&
     strBoundary value range.start.val && strBoundary value range.end.val
 
 /-- As at the inherited mutable-slice boundary, safe callers return a borrow
 of the original length. Also retain the UTF-8 invariant of mutable `str`.
 Out-of-domain backward inputs cannot resize the borrow or alter its suffix. -/
-private def replaceStrRange (range : core.ops.range.Range Usize)
+def replaceStrRange (range : core.ops.range.Range Usize)
     (value replacement : Str) : Str :=
   if replacement.length = range.end.val - range.start.val ∧
       (utf8ErrorAt 0 replacement.val).isNone then
@@ -1040,7 +1025,7 @@ def Str.Insts.CoreCmpPartialEqStr.eq (left right : Str) : Result Bool :=
 
 /-- Only safe, validating Lean UTF-8 decoding is used. `Str` itself omits Rust's
 valid-UTF-8 invariant, hence the explicit failure on an invalid representation. -/
-private def decodeStr (value : Str) : Result String :=
+def decodeStr (value : Str) : Result String :=
   match _root_.String.fromUTF8?
       (value.val.map (fun byte => UInt8.ofBitVec byte.bv)).toByteArray with
   | some string => ok string
@@ -1097,7 +1082,7 @@ def alloc.string.String.as_bytes (value : String) : Result (Slice U8) :=
 
 /-- Compare existing UTF-8 storage directly, without allocating a second
 bounded slice merely to compare an owned and a borrowed string. -/
-private def stringBytesEq (owned : ByteArray) {n : Nat} (borrowed : ListN U8 n)
+def stringBytesEq (owned : ByteArray) {n : Nat} (borrowed : ListN U8 n)
     (index : Nat) : Bool :=
   match borrowed with
   | .nil => index == owned.size

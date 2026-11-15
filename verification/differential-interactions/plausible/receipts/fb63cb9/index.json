@@ -1,0 +1,42 @@
+{
+  "schema": "noble-plausible-pilot-receipt-index/v1",
+  "source_commit": "fb63cb96807ff8a1c59149a13476c83bbfbf5dee",
+  "source_tree": "81b994541e0c44ef50a6cb211e01642d8a6b2e27",
+  "all_artifacts_are_verbatim_from_clean_source_run": true,
+  "artifacts_sha256": {
+    "Control.lean": "d243aaf7a1276c251fa3b359b2054b41ad7d155bde62c352dc613643ba5417ee",
+    "Expected.lean": "6ce68d7ac6fd6931740702e399d3cd527f7be4a90012e3ac3b16f07cb500164c",
+    "control-axioms.jsonl": "951be45d9b8cc80429ed017ce2113477c38bb76847535be5734f7b46019091bb",
+    "control-gate.stderr": "9f4f50301c66e15cf4bf97dc9c143de8fb97244c1b7b1af147e49ae2b9d0bfce",
+    "differential.json": "46b41f5d0f821a8f7e3a20cf12082a0a477fe9f863af254e69a8e7b82679c9be",
+    "foundation-check.json": "a151e534b10d802fea7252c853cc9c615653b1a0a08928816758d269d560835b",
+    "import.json": "934287a5ec78e49efb6527bd9e425b2aa31957166d3c7e5203edfe977195618e",
+    "lean-summary.txt": "6d2ba8f00dfc3d34ea5274843c3adc6df384f36481106d34e41d6714d35875e3",
+    "pilot.json": "f80a316fae68c95c035fdff577a63ad42c868b8a17672fd9407cfd40f0e19a39",
+    "replay.json": "9d0ef7e0cbd355a251988b60d1df866fd041680ba491f51a9eda8e2822b2470d",
+    "samples.jsonl": "8e5d8924f5f2c251fd8f501218b4ebaddf4b019bd0035188c7ffa38cd1268767"
+  },
+  "results": {
+    "lean_proofs_overall": 0,
+    "positive_tactic_lean_exit": 0,
+    "positive_tactic_reported": "Unable to find a counter-example",
+    "positive_tactic_axiom": "sorryAx",
+    "foundation_negative_axiom_control_exit": 1,
+    "foundation_negative_axiom_control": "REFUSED negative-tactic-control: disallowed axioms sorryAx",
+    "matched_current_and_plausible_cases_per_mode": 16,
+    "selected_cells": 4,
+    "plausible_reached": 4,
+    "current_reached_in_selected_subset": 0,
+    "accepted_generated_execution_rows": 32,
+    "refused_generated_execution_rows": 0,
+    "fixed_invalid_control_refused": true,
+    "all_four_selected_test_side_fault_controls_detected": true,
+    "historical_real_mutant_receipt": "verification/differential-interactions/receipts/756ccc9/campaign.json",
+    "witness_bytes_before_after": [27, 15],
+    "shrink_attempts_budget": [48, 48],
+    "shrink_termination": "attempt-budget-exhausted",
+    "fresh_process_replayed_original_and_minimized": 2,
+    "fresh_replay_generator_called": false,
+    "decision": "adopt optional stratified P1 arm only; retain current foundation generator for other profiles"
+  }
+}

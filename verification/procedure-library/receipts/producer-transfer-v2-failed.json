@@ -1,0 +1,39 @@
+{
+  "schema": "noble-procedure-library-producer-transfer-receipt/1",
+  "source_commit": "b6b358c1f63b52093680148d3768156dff3bee17",
+  "source_tree": "cc1a30f076250a478a959662e88120b4b6a4161f",
+  "clean_source": true,
+  "criteria": "verification/procedure-library/criteria-producer-targets-v2.json",
+  "criteria_sha256": "884c2e51e3101107dbf6eca241339c9770970fb54a6349e8d9be7280cd834c81",
+  "producer_receipt": "verification/procedure-library/receipts/producer-targets-v2.json",
+  "producer_sha256": "e26825630ad6fbc164119a36e68874147cbb0c7689c6d7d893eebfb3c350fcf0",
+  "producer_source_commit": "e323919dcfb87bfe52ca9b85c11104e102dd243a",
+  "command": {
+    "binary": "/home/brittonr/.cache/noble-iss/cargo.sh",
+    "args": [
+      "test",
+      "-p",
+      "noble-contracts",
+      "--test",
+      "editor",
+      "procedures::transfer::tests::producer_generated_heldout_measurement_once",
+      "--offline",
+      "--locked",
+      "--",
+      "--ignored",
+      "--exact",
+      "--nocapture"
+    ],
+    "target": "/home/brittonr/.cache/noble-iss/target/procedures-118b"
+  },
+  "raw_sha256": "16550d712e9e1ae1b509196d9bf653778a76392345be04c513a8902539230b01",
+  "exit_status": 101,
+  "execution_error": null,
+  "report": null,
+  "decision": "NO-GO",
+  "non_claims": [
+    "A producer candidate is a finite target oracle only where its generated body agrees with the declared reference; the source library never stores that body.",
+    "The deliberate proposer and teacher requests run in an isolated negative-control library, not inside scored transfer arms.",
+    "This one-shot receipt cannot revise the preceding frozen criterion or receipt."
+  ]
+}

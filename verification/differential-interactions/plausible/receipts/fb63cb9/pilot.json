@@ -1,0 +1,1204 @@
+{
+  "schema": "noble-plausible-pilot/v1",
+  "source_commit": "fb63cb96807ff8a1c59149a13476c83bbfbf5dee",
+  "source_tree": "81b994541e0c44ef50a6cb211e01642d8a6b2e27",
+  "protocol_sha256": "e1c5340d3c25e8789ae3479c15cf5eaa986c5f205324b8ae16488f89553fcc5b",
+  "source_matrix_sha256": "d8183d933e40cafd9e283aeeef2e07af2d5c635f26045198730b576e787c4845",
+  "source_paths_sha256": {
+    "verification/differential-interactions/plausible/Driver.lean": "c5bd64e03bf74414ef9ef7692b0bde59236d37466e973e36b337e10631499f1d",
+    "verification/differential-interactions/plausible/run.mjs": "88ba66739aa049bba4525d0a8b8faf0cf2519be55286bfb38b37461f6a556482",
+    "verification/foundation/differential.mjs": "b5bbbd360a460419f37fb9e3e15db117f3b456bb21415614dca2cb0828402ff2"
+  },
+  "toolchain": {
+    "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+    "plausible_commit": "dfa4f38190d07c37e315953e08b90fe2d95b3c24",
+    "node": "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+    "node_sha256": "ad2d5c03bb247d3690f8baf48b2aac572fe0ed5252b4c5bdcfa7987a169b8f3b",
+    "cli_sha256": "4e4b10c16b53ec06282c81bf97f3bc335a625e907d4147dc0373c395d01024af",
+    "foundation_receipt_sha256": "a151e534b10d802fea7252c853cc9c615653b1a0a08928816758d269d560835b"
+  },
+  "seed": 125,
+  "generator_configuration": {
+    "size": 8,
+    "cases_per_arm": 16,
+    "allocation": "four attempts per selected cell, with a typed, cell-preserving generator for the varied input; attempts are counted even if refused"
+  },
+  "comparison_receipt_sha256": "46b41f5d0f821a8f7e3a20cf12082a0a477fe9f863af254e69a8e7b82679c9be",
+  "imported_cases_sha256": "934287a5ec78e49efb6527bd9e425b2aa31957166d3c7e5203edfe977195618e",
+  "sample_bytes_sha256": "8e5d8924f5f2c251fd8f501218b4ebaddf4b019bd0035188c7ffa38cd1268767",
+  "generated_cases": [
+    {
+      "cell": "P1/plain/small/preserved_prefix_multiple",
+      "source": "26 false 2 3 * 0 + 0 + 0 +\n",
+      "source_sha256": "2f8a1e93775716a43fa1b73212c02debb9a1ab97a6590bece51543dbf828f1d9",
+      "model": {
+        "interaction": {
+          "boundary_arithmetic": "small",
+          "cell": "P1/plain/small/preserved_prefix_multiple",
+          "output_shape": "preserved_prefix_multiple",
+          "profile": "P1-core-source-wasm",
+          "quotation_composition": "plain",
+          "source_operator_witness": [
+            "arithmetic"
+          ],
+          "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+        },
+        "kind": "straight",
+        "ops": [
+          {
+            "push": "2"
+          },
+          {
+            "push": "3"
+          },
+          "mul",
+          {
+            "push": "0"
+          },
+          "add",
+          {
+            "push": "0"
+          },
+          "add",
+          {
+            "push": "0"
+          },
+          "add"
+        ],
+        "prefix": [
+          [
+            "I64",
+            "26"
+          ],
+          [
+            "Bool",
+            "false"
+          ]
+        ]
+      }
+    },
+    {
+      "cell": "P1/plain/zero_negative_one/ordered_single",
+      "source": "0 -1 - 0 +\n",
+      "source_sha256": "5fab8d6607a286c2e3b6b8a6648301117ea3bac819215d342bc7b650a9e5bb57",
+      "model": {
+        "interaction": {
+          "boundary_arithmetic": "zero_negative_one",
+          "cell": "P1/plain/zero_negative_one/ordered_single",
+          "output_shape": "ordered_single",
+          "profile": "P1-core-source-wasm",
+          "quotation_composition": "plain",
+          "source_operator_witness": [
+            "arithmetic"
+          ],
+          "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+        },
+        "kind": "straight",
+        "ops": [
+          {
+            "push": "0"
+          },
+          {
+            "push": "-1"
+          },
+          "sub",
+          {
+            "push": "0"
+          },
+          "add"
+        ],
+        "prefix": []
+      }
+    },
+    {
+      "cell": "P1/quoted/min_max_wrap/ordered_single",
+      "source": "9223372036854775807 1 [ + 0 + 0 + 0 + ] run\n",
+      "source_sha256": "66d48909ad90d81139a2c48cc3b3bb2a008c357b753280a1bb789754502f41c4",
+      "model": {
+        "ins": [
+          {
+            "push": "9223372036854775807"
+          },
+          {
+            "push": "1"
+          }
+        ],
+        "interaction": {
+          "boundary_arithmetic": "min_max_wrap",
+          "cell": "P1/quoted/min_max_wrap/ordered_single",
+          "output_shape": "ordered_single",
+          "profile": "P1-core-source-wasm",
+          "quotation_composition": "quoted",
+          "source_operator_witness": [
+            "quote",
+            "run",
+            "arithmetic"
+          ],
+          "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+        },
+        "kind": "program",
+        "prefix": [],
+        "program": {
+          "arith": [
+            "add",
+            {
+              "push": "0"
+            },
+            "add",
+            {
+              "push": "0"
+            },
+            "add",
+            {
+              "push": "0"
+            },
+            "add"
+          ]
+        }
+      }
+    },
+    {
+      "cell": "P1/composed/min_max_wrap/ordered_single",
+      "source": "9223372036854775807 [ 1 + ] [ 2 * 0 + ] compose run\n",
+      "source_sha256": "a34443a6ebe39f2f0414ad73ed5f75787abbacdcaa576e5d3933deafd4d69e2c",
+      "model": {
+        "ins": [
+          {
+            "push": "9223372036854775807"
+          }
+        ],
+        "interaction": {
+          "boundary_arithmetic": "min_max_wrap",
+          "cell": "P1/composed/min_max_wrap/ordered_single",
+          "output_shape": "ordered_single",
+          "profile": "P1-core-source-wasm",
+          "quotation_composition": "composed",
+          "source_operator_witness": [
+            "quote",
+            "compose",
+            "run",
+            "arithmetic"
+          ],
+          "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+        },
+        "kind": "program",
+        "prefix": [],
+        "program": {
+          "compose": [
+            {
+              "arith": [
+                {
+                  "push": "1"
+                },
+                "add"
+              ]
+            },
+            {
+              "arith": [
+                {
+                  "push": "2"
+                },
+                "mul",
+                {
+                  "push": "0"
+                },
+                "add"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "cell": "P1/plain/small/preserved_prefix_multiple",
+      "source": "24 false 2 3 * 0 +\n",
+      "source_sha256": "b1262b35e57e0a76f65c83fe2f62dc44e061cc5946761fdafb679b699dada2db",
+      "model": {
+        "interaction": {
+          "boundary_arithmetic": "small",
+          "cell": "P1/plain/small/preserved_prefix_multiple",
+          "output_shape": "preserved_prefix_multiple",
+          "profile": "P1-core-source-wasm",
+          "quotation_composition": "plain",
+          "source_operator_witness": [
+            "arithmetic"
+          ],
+          "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+        },
+        "kind": "straight",
+        "ops": [
+          {
+            "push": "2"
+          },
+          {
+            "push": "3"
+          },
+          "mul",
+          {
+            "push": "0"
+          },
+          "add"
+        ],
+        "prefix": [
+          [
+            "I64",
+            "24"
+          ],
+          [
+            "Bool",
+            "false"
+          ]
+        ]
+      }
+    },
+    {
+      "cell": "P1/plain/zero_negative_one/ordered_single",
+      "source": "0 -1 - 0 + 0 + 0 +\n",
+      "source_sha256": "b224d5272a484345f7be8b6371d734b6553503a1efe8314afd6abd6841e739d9",
+      "model": {
+        "interaction": {
+          "boundary_arithmetic": "zero_negative_one",
+          "cell": "P1/plain/zero_negative_one/ordered_single",
+          "output_shape": "ordered_single",
+          "profile": "P1-core-source-wasm",
+          "quotation_composition": "plain",
+          "source_operator_witness": [
+            "arithmetic"
+          ],
+          "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+        },
+        "kind": "straight",
+        "ops": [
+          {
+            "push": "0"
+          },
+          {
+            "push": "-1"
+          },
+          "sub",
+          {
+            "push": "0"
+          },
+          "add",
+          {
+            "push": "0"
+          },
+          "add",
+          {
+            "push": "0"
+          },
+          "add"
+        ],
+        "prefix": []
+      }
+    },
+    {
+      "cell": "P1/quoted/min_max_wrap/ordered_single",
+      "source": "9223372036854775807 1 [ + 0 + ] run\n",
+      "source_sha256": "cd94e2c1e16401208cb591ae909fa6ffa9117621f35622410fa62a15606cac6e",
+      "model": {
+        "ins": [
+          {
+            "push": "9223372036854775807"
+          },
+          {
+            "push": "1"
+          }
+        ],
+        "interaction": {
+          "boundary_arithmetic": "min_max_wrap",
+          "cell": "P1/quoted/min_max_wrap/ordered_single",
+          "output_shape": "ordered_single",
+          "profile": "P1-core-source-wasm",
+          "quotation_composition": "quoted",
+          "source_operator_witness": [
+            "quote",
+            "run",
+            "arithmetic"
+          ],
+          "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+        },
+        "kind": "program",
+        "prefix": [],
+        "program": {
+          "arith": [
+            "add",
+            {
+              "push": "0"
+            },
+            "add"
+          ]
+        }
+      }
+    },
+    {
+      "cell": "P1/composed/min_max_wrap/ordered_single",
+      "source": "9223372036854775807 [ 1 + ] [ 2 * 0 + 0 + 0 + ] compose run\n",
+      "source_sha256": "cfb846006e7c9614ef4bf756d472ca0e8cd456cc94ded8522d4045f228e19729",
+      "model": {
+        "ins": [
+          {
+            "push": "9223372036854775807"
+          }
+        ],
+        "interaction": {
+          "boundary_arithmetic": "min_max_wrap",
+          "cell": "P1/composed/min_max_wrap/ordered_single",
+          "output_shape": "ordered_single",
+          "profile": "P1-core-source-wasm",
+          "quotation_composition": "composed",
+          "source_operator_witness": [
+            "quote",
+            "compose",
+            "run",
+            "arithmetic"
+          ],
+          "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+        },
+        "kind": "program",
+        "prefix": [],
+        "program": {
+          "compose": [
+            {
+              "arith": [
+                {
+                  "push": "1"
+                },
+                "add"
+              ]
+            },
+            {
+              "arith": [
+                {
+                  "push": "2"
+                },
+                "mul",
+                {
+                  "push": "0"
+                },
+                "add",
+                {
+                  "push": "0"
+                },
+                "add",
+                {
+                  "push": "0"
+                },
+                "add"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "cell": "P1/plain/small/preserved_prefix_multiple",
+      "source": "26 false 2 3 * 0 + 0 + 0 +\n",
+      "source_sha256": "2f8a1e93775716a43fa1b73212c02debb9a1ab97a6590bece51543dbf828f1d9",
+      "model": {
+        "interaction": {
+          "boundary_arithmetic": "small",
+          "cell": "P1/plain/small/preserved_prefix_multiple",
+          "output_shape": "preserved_prefix_multiple",
+          "profile": "P1-core-source-wasm",
+          "quotation_composition": "plain",
+          "source_operator_witness": [
+            "arithmetic"
+          ],
+          "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+        },
+        "kind": "straight",
+        "ops": [
+          {
+            "push": "2"
+          },
+          {
+            "push": "3"
+          },
+          "mul",
+          {
+            "push": "0"
+          },
+          "add",
+          {
+            "push": "0"
+          },
+          "add",
+          {
+            "push": "0"
+          },
+          "add"
+        ],
+        "prefix": [
+          [
+            "I64",
+            "26"
+          ],
+          [
+            "Bool",
+            "false"
+          ]
+        ]
+      }
+    },
+    {
+      "cell": "P1/plain/zero_negative_one/ordered_single",
+      "source": "0 -1 - 0 +\n",
+      "source_sha256": "5fab8d6607a286c2e3b6b8a6648301117ea3bac819215d342bc7b650a9e5bb57",
+      "model": {
+        "interaction": {
+          "boundary_arithmetic": "zero_negative_one",
+          "cell": "P1/plain/zero_negative_one/ordered_single",
+          "output_shape": "ordered_single",
+          "profile": "P1-core-source-wasm",
+          "quotation_composition": "plain",
+          "source_operator_witness": [
+            "arithmetic"
+          ],
+          "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+        },
+        "kind": "straight",
+        "ops": [
+          {
+            "push": "0"
+          },
+          {
+            "push": "-1"
+          },
+          "sub",
+          {
+            "push": "0"
+          },
+          "add"
+        ],
+        "prefix": []
+      }
+    },
+    {
+      "cell": "P1/quoted/min_max_wrap/ordered_single",
+      "source": "9223372036854775807 1 [ + 0 + 0 + 0 + ] run\n",
+      "source_sha256": "66d48909ad90d81139a2c48cc3b3bb2a008c357b753280a1bb789754502f41c4",
+      "model": {
+        "ins": [
+          {
+            "push": "9223372036854775807"
+          },
+          {
+            "push": "1"
+          }
+        ],
+        "interaction": {
+          "boundary_arithmetic": "min_max_wrap",
+          "cell": "P1/quoted/min_max_wrap/ordered_single",
+          "output_shape": "ordered_single",
+          "profile": "P1-core-source-wasm",
+          "quotation_composition": "quoted",
+          "source_operator_witness": [
+            "quote",
+            "run",
+            "arithmetic"
+          ],
+          "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+        },
+        "kind": "program",
+        "prefix": [],
+        "program": {
+          "arith": [
+            "add",
+            {
+              "push": "0"
+            },
+            "add",
+            {
+              "push": "0"
+            },
+            "add",
+            {
+              "push": "0"
+            },
+            "add"
+          ]
+        }
+      }
+    },
+    {
+      "cell": "P1/composed/min_max_wrap/ordered_single",
+      "source": "9223372036854775807 [ 1 + ] [ 2 * 0 + ] compose run\n",
+      "source_sha256": "a34443a6ebe39f2f0414ad73ed5f75787abbacdcaa576e5d3933deafd4d69e2c",
+      "model": {
+        "ins": [
+          {
+            "push": "9223372036854775807"
+          }
+        ],
+        "interaction": {
+          "boundary_arithmetic": "min_max_wrap",
+          "cell": "P1/composed/min_max_wrap/ordered_single",
+          "output_shape": "ordered_single",
+          "profile": "P1-core-source-wasm",
+          "quotation_composition": "composed",
+          "source_operator_witness": [
+            "quote",
+            "compose",
+            "run",
+            "arithmetic"
+          ],
+          "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+        },
+        "kind": "program",
+        "prefix": [],
+        "program": {
+          "compose": [
+            {
+              "arith": [
+                {
+                  "push": "1"
+                },
+                "add"
+              ]
+            },
+            {
+              "arith": [
+                {
+                  "push": "2"
+                },
+                "mul",
+                {
+                  "push": "0"
+                },
+                "add"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "cell": "P1/plain/small/preserved_prefix_multiple",
+      "source": "24 false 2 3 * 0 +\n",
+      "source_sha256": "b1262b35e57e0a76f65c83fe2f62dc44e061cc5946761fdafb679b699dada2db",
+      "model": {
+        "interaction": {
+          "boundary_arithmetic": "small",
+          "cell": "P1/plain/small/preserved_prefix_multiple",
+          "output_shape": "preserved_prefix_multiple",
+          "profile": "P1-core-source-wasm",
+          "quotation_composition": "plain",
+          "source_operator_witness": [
+            "arithmetic"
+          ],
+          "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+        },
+        "kind": "straight",
+        "ops": [
+          {
+            "push": "2"
+          },
+          {
+            "push": "3"
+          },
+          "mul",
+          {
+            "push": "0"
+          },
+          "add"
+        ],
+        "prefix": [
+          [
+            "I64",
+            "24"
+          ],
+          [
+            "Bool",
+            "false"
+          ]
+        ]
+      }
+    },
+    {
+      "cell": "P1/plain/zero_negative_one/ordered_single",
+      "source": "0 -1 - 0 + 0 + 0 +\n",
+      "source_sha256": "b224d5272a484345f7be8b6371d734b6553503a1efe8314afd6abd6841e739d9",
+      "model": {
+        "interaction": {
+          "boundary_arithmetic": "zero_negative_one",
+          "cell": "P1/plain/zero_negative_one/ordered_single",
+          "output_shape": "ordered_single",
+          "profile": "P1-core-source-wasm",
+          "quotation_composition": "plain",
+          "source_operator_witness": [
+            "arithmetic"
+          ],
+          "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+        },
+        "kind": "straight",
+        "ops": [
+          {
+            "push": "0"
+          },
+          {
+            "push": "-1"
+          },
+          "sub",
+          {
+            "push": "0"
+          },
+          "add",
+          {
+            "push": "0"
+          },
+          "add",
+          {
+            "push": "0"
+          },
+          "add"
+        ],
+        "prefix": []
+      }
+    },
+    {
+      "cell": "P1/quoted/min_max_wrap/ordered_single",
+      "source": "9223372036854775807 1 [ + 0 + ] run\n",
+      "source_sha256": "cd94e2c1e16401208cb591ae909fa6ffa9117621f35622410fa62a15606cac6e",
+      "model": {
+        "ins": [
+          {
+            "push": "9223372036854775807"
+          },
+          {
+            "push": "1"
+          }
+        ],
+        "interaction": {
+          "boundary_arithmetic": "min_max_wrap",
+          "cell": "P1/quoted/min_max_wrap/ordered_single",
+          "output_shape": "ordered_single",
+          "profile": "P1-core-source-wasm",
+          "quotation_composition": "quoted",
+          "source_operator_witness": [
+            "quote",
+            "run",
+            "arithmetic"
+          ],
+          "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+        },
+        "kind": "program",
+        "prefix": [],
+        "program": {
+          "arith": [
+            "add",
+            {
+              "push": "0"
+            },
+            "add"
+          ]
+        }
+      }
+    },
+    {
+      "cell": "P1/composed/min_max_wrap/ordered_single",
+      "source": "9223372036854775807 [ 1 + ] [ 2 * 0 + 0 + 0 + ] compose run\n",
+      "source_sha256": "cfb846006e7c9614ef4bf756d472ca0e8cd456cc94ded8522d4045f228e19729",
+      "model": {
+        "ins": [
+          {
+            "push": "9223372036854775807"
+          }
+        ],
+        "interaction": {
+          "boundary_arithmetic": "min_max_wrap",
+          "cell": "P1/composed/min_max_wrap/ordered_single",
+          "output_shape": "ordered_single",
+          "profile": "P1-core-source-wasm",
+          "quotation_composition": "composed",
+          "source_operator_witness": [
+            "quote",
+            "compose",
+            "run",
+            "arithmetic"
+          ],
+          "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+        },
+        "kind": "program",
+        "prefix": [],
+        "program": {
+          "compose": [
+            {
+              "arith": [
+                {
+                  "push": "1"
+                },
+                "add"
+              ]
+            },
+            {
+              "arith": [
+                {
+                  "push": "2"
+                },
+                "mul",
+                {
+                  "push": "0"
+                },
+                "add",
+                {
+                  "push": "0"
+                },
+                "add",
+                {
+                  "push": "0"
+                },
+                "add"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "comparison": {
+    "selected_cells": [
+      "P1/plain/small/preserved_prefix_multiple",
+      "P1/plain/zero_negative_one/ordered_single",
+      "P1/quoted/min_max_wrap/ordered_single",
+      "P1/composed/min_max_wrap/ordered_single"
+    ],
+    "reached_cells": [
+      "P1/composed/min_max_wrap/ordered_single",
+      "P1/plain/small/preserved_prefix_multiple",
+      "P1/plain/zero_negative_one/ordered_single",
+      "P1/quoted/min_max_wrap/ordered_single"
+    ],
+    "current_reached_selected": [],
+    "current_reached_all": [
+      "P1/composed/small/ordered_single"
+    ],
+    "accepted": 32,
+    "refused": 0,
+    "exhausted": 0,
+    "unsupported": [
+      "P2 F32 graph",
+      "per-run runtime fuel override",
+      "parameter snapshot",
+      "universal model/executable correspondence"
+    ],
+    "fixed_invalid_refused": true,
+    "source_case_runs_per_arm": 16,
+    "modes": [
+      "off",
+      "on"
+    ],
+    "distinct_attributed_failures_current": [],
+    "distinct_attributed_failures_plausible": []
+  },
+  "controls": {
+    "lean_positive_and_false_property": true,
+    "oracle_controls": [
+      {
+        "id": "reversed-subtraction",
+        "intended": "reference computes top - deeper",
+        "detected_cases": 18,
+        "all_attributable_to_intended_reason": true,
+        "shrunk": {
+          "source": "[ 1 1559655854772313886 - ] quote run run",
+          "steps": 48
+        },
+        "demonstrably_fails": true
+      },
+      {
+        "id": "unsigned-decoding",
+        "intended": "observed I64 decoded as unsigned",
+        "detected_cases": 30,
+        "all_attributable_to_intended_reason": true,
+        "shrunk": {
+          "source": "[ -1 ] quote run run",
+          "steps": 14
+        },
+        "demonstrably_fails": true
+      },
+      {
+        "id": "prefix-corruption",
+        "intended": "expected bottom prefix item replaced",
+        "detected_cases": 30,
+        "all_attributable_to_intended_reason": true,
+        "shrunk": {
+          "source": "7437673423764155863 [  ] quote run run",
+          "steps": 10
+        },
+        "demonstrably_fails": true
+      },
+      {
+        "id": "wrong-composition-order",
+        "intended": "compose evaluated as q then p",
+        "detected_cases": 16,
+        "all_attributable_to_intended_reason": true,
+        "shrunk": {
+          "source": "0 [ -4611686018427387904 + ] 4294967296 quote compose run",
+          "steps": 49
+        },
+        "demonstrably_fails": true
+      },
+      {
+        "id": "trace-mismatch",
+        "intended": "expectation claims a host request",
+        "detected_cases": 64,
+        "all_attributable_to_intended_reason": true,
+        "shrunk": {
+          "source": "[  ] quote run run",
+          "steps": 7
+        },
+        "demonstrably_fails": true
+      },
+      {
+        "id": "literal-wrapping-instead-of-refusal",
+        "intended": "out-of-range literal assumed to wrap",
+        "detected_cases": 4,
+        "demonstrably_fails": true
+      },
+      {
+        "id": "stale-proof-subject",
+        "intended": "Lean case or foundation receipt for a different subject",
+        "lean_case_rebinding_rejected": true,
+        "foundation_tree_mismatch_rejected": true,
+        "demonstrably_fails": true
+      }
+    ],
+    "selected_mutant_controls": [
+      {
+        "bank_id": "p1-reversed-observed-stack",
+        "cell": "P1/plain/small/preserved_prefix_multiple",
+        "source": "26 false 2 3 * 0 + 0 + 0 +\n",
+        "source_sha256": "2f8a1e93775716a43fa1b73212c02debb9a1ab97a6590bece51543dbf828f1d9",
+        "baseline_execution_steps": 29,
+        "baseline_clean_matched": true,
+        "expected_stack": [
+          [
+            "I64",
+            "26"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ],
+        "test_side_fault_stack": [
+          [
+            "I64",
+            "6"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "26"
+          ]
+        ],
+        "failure_identity": "ordered-prefix-output-mismatch",
+        "fault_kind": "test-side simulation of the bank fault; historical implementation-side mutation is separate"
+      },
+      {
+        "bank_id": "p1-reversed-i64-subtraction-operands",
+        "cell": "P1/plain/zero_negative_one/ordered_single",
+        "source": "0 -1 - 0 +\n",
+        "source_sha256": "5fab8d6607a286c2e3b6b8a6648301117ea3bac819215d342bc7b650a9e5bb57",
+        "baseline_execution_steps": 15,
+        "baseline_clean_matched": true,
+        "expected_stack": [
+          [
+            "I64",
+            "1"
+          ]
+        ],
+        "test_side_fault_stack": [
+          [
+            "I64",
+            "-1"
+          ]
+        ],
+        "failure_identity": "ordered-arithmetic-output-mismatch",
+        "fault_kind": "test-side simulation of the bank fault; historical implementation-side mutation is separate"
+      },
+      {
+        "bank_id": "p1-quoted-add-as-subtraction",
+        "cell": "P1/quoted/min_max_wrap/ordered_single",
+        "source": "9223372036854775807 1 [ + 0 + 0 + 0 + ] run\n",
+        "source_sha256": "66d48909ad90d81139a2c48cc3b3bb2a008c357b753280a1bb789754502f41c4",
+        "baseline_execution_steps": 29,
+        "baseline_clean_matched": true,
+        "expected_stack": [
+          [
+            "I64",
+            "-9223372036854775808"
+          ]
+        ],
+        "test_side_fault_stack": [
+          [
+            "I64",
+            "9223372036854775806"
+          ]
+        ],
+        "failure_identity": "ordered-arithmetic-output-mismatch",
+        "fault_kind": "test-side simulation of the bank fault; historical implementation-side mutation is separate"
+      },
+      {
+        "bank_id": "p1-wrong-compose-scheduling",
+        "cell": "P1/composed/min_max_wrap/ordered_single",
+        "source": "9223372036854775807 [ 1 + ] [ 2 * 0 + ] compose run\n",
+        "source_sha256": "a34443a6ebe39f2f0414ad73ed5f75787abbacdcaa576e5d3933deafd4d69e2c",
+        "baseline_execution_steps": 32,
+        "baseline_clean_matched": true,
+        "expected_stack": [
+          [
+            "I64",
+            "0"
+          ]
+        ],
+        "test_side_fault_stack": [
+          [
+            "I64",
+            "-1"
+          ]
+        ],
+        "failure_identity": "ordered-arithmetic-output-mismatch",
+        "fault_kind": "test-side simulation of the bank fault; historical implementation-side mutation is separate"
+      }
+    ],
+    "shrinking": {
+      "profile_changed_rejected": true,
+      "interaction_removed_rejected": true,
+      "required_prefix_dropped_rejected": true,
+      "earlier_refusal_substitution_rejected": true,
+      "unrelated_failure_substitution_rejected": true
+    },
+    "mutant_bank_id": "p1-reversed-observed-stack",
+    "mutant_injection_kind": "test-side output reversal, not a candidate implementation build",
+    "earlier_implementation_mutant_evidence": "verification/differential-interactions/receipts/756ccc9/campaign.json"
+  },
+  "mutant_control": {
+    "cell": "P1/plain/small/preserved_prefix_multiple",
+    "failure_identity": "ordered-prefix-output-mismatch",
+    "original": {
+      "source": "26 false 2 3 * 0 + 0 + 0 +\n",
+      "source_sha256": "2f8a1e93775716a43fa1b73212c02debb9a1ab97a6590bece51543dbf828f1d9",
+      "source_size_bytes": 27,
+      "model": {
+        "interaction": {
+          "boundary_arithmetic": "small",
+          "cell": "P1/plain/small/preserved_prefix_multiple",
+          "output_shape": "preserved_prefix_multiple",
+          "profile": "P1-core-source-wasm",
+          "quotation_composition": "plain",
+          "source_operator_witness": [
+            "arithmetic"
+          ],
+          "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+        },
+        "kind": "straight",
+        "ops": [
+          {
+            "push": "2"
+          },
+          {
+            "push": "3"
+          },
+          "mul",
+          {
+            "push": "0"
+          },
+          "add",
+          {
+            "push": "0"
+          },
+          "add",
+          {
+            "push": "0"
+          },
+          "add"
+        ],
+        "prefix": [
+          [
+            "I64",
+            "26"
+          ],
+          [
+            "Bool",
+            "false"
+          ]
+        ]
+      },
+      "mode": "off",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "26"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ]
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "26"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ],
+        "execution_steps": 29,
+        "wasm_sha256": "227fdc7c8c655c15bbe07c55e3978770b4f367ee8afdc5a61b62da24e07fcf68"
+      },
+      "injected": {
+        "stack": [
+          [
+            "I64",
+            "6"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "26"
+          ]
+        ],
+        "failure_identity": "ordered-prefix-output-mismatch"
+      },
+      "executed": true
+    },
+    "minimized": {
+      "source": "26 false 2 3 *\n",
+      "source_sha256": "b3bfb18127528235051b81216451613a60fe86ea722a228fd116058f21c2097c",
+      "source_size_bytes": 15,
+      "model": {
+        "interaction": {
+          "boundary_arithmetic": "small",
+          "cell": "P1/plain/small/preserved_prefix_multiple",
+          "output_shape": "preserved_prefix_multiple",
+          "profile": "P1-core-source-wasm",
+          "quotation_composition": "plain",
+          "source_operator_witness": [
+            "arithmetic"
+          ],
+          "witness_kind": "successful-output-and-positive-execution-steps; no per-operator runtime trace"
+        },
+        "kind": "straight",
+        "ops": [
+          {
+            "push": "2"
+          },
+          {
+            "push": "3"
+          },
+          "mul"
+        ],
+        "prefix": [
+          [
+            "I64",
+            "26"
+          ],
+          [
+            "Bool",
+            "false"
+          ]
+        ]
+      },
+      "mode": "off",
+      "expected": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "26"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ]
+      },
+      "observed": {
+        "outcome": "normal",
+        "stack": [
+          [
+            "I64",
+            "26"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "6"
+          ]
+        ],
+        "execution_steps": 17,
+        "wasm_sha256": "5f32f59834a4843f19cff422e86d6951eeeee54cb72ef374a011e4c14155d080"
+      },
+      "injected": {
+        "stack": [
+          [
+            "I64",
+            "6"
+          ],
+          [
+            "Bool",
+            "false"
+          ],
+          [
+            "I64",
+            "26"
+          ]
+        ],
+        "failure_identity": "ordered-prefix-output-mismatch"
+      },
+      "executed": true
+    },
+    "shrink_work": {
+      "attempts": 48,
+      "budget": 48,
+      "rejected": {
+        "reference_refusal": 0,
+        "interaction_or_premise_removed": 42,
+        "different_failure": 0,
+        "not_smaller": 0
+      },
+      "termination_reason": "attempt-budget-exhausted",
+      "admission_and_identity_rechecked": true,
+      "globally_minimal": false
+    }
+  },
+  "decision": {
+    "outcome": "adopt",
+    "rule": "All selected cells reached, both comparison modes admit and match every generated case, all controls pass, independent mutant detected, and Plausible reaches at least two more selected cells than current generation at the same case budget; shrink never grows the witness.",
+    "proof_gate_control_pending": true,
+    "fresh_replay_pending": true
+  }
+}

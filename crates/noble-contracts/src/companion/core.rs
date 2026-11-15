@@ -81,6 +81,17 @@ impl crate::companion::Core {
         crate::companion::registry::application::bind(self, evidence, subject)
     }
 
+    /// Bind exact proved evidence to an independently checked ordinary source
+    /// program. The supplied submission is rechecked under its frozen request,
+    /// and its canonical operation subject must match the evidence.
+    pub fn bind_checked_program(
+        &self,
+        evidence: crate::companion::registry::EvidenceId,
+        submission: &noble_kernel::execution::Submission,
+    ) -> Result<crate::companion::Subject, crate::companion::Refusal> {
+        crate::companion::release::bind_checked_program(self, evidence, submission)
+    }
+
     /// The derivation rule that minted an evidence entry, if any.
     pub fn evidence_rule(
         &self,

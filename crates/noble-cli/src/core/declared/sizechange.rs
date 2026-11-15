@@ -1,9 +1,9 @@
 //! Opt-in size-change evidence rendering (issue #101).
 //!
 //! The checker itself is `noble_contracts::source::size_change_evidence`: it classifies each
-//! self-call site of every recursive definition a module installed and decides the model's
-//! shared-measure criterion. This module turns that evidence into the report field, attaches the
-//! Lean certificate the front end generates, and — only when the caller names a Lean binary — has
+//! self-call site of every recursive definition a module installed, builds the bounded matrix
+//! closure, and decides its idempotent strict-edge criterion. This module turns that evidence into
+//! the report field, attaches the Lean certificate the front end generates, and — only when the caller names a Lean binary — has
 //! that binary re-check the certificate.
 //!
 //! The field is present only under `--size-change-evidence`, so ordinary execution never carries
@@ -58,6 +58,7 @@ fn definition(entry: &noble_contracts::source::Evidence) -> crate::workflow::enc
                                         .collect(),
                                 ),
                             ),
+                            ("graph", graph_json(&site.graph, entry.measures.len())),
                         ]))
                     })
                     .collect(),
@@ -65,11 +66,49 @@ fn definition(entry: &noble_contracts::source::Evidence) -> crate::workflow::enc
         ),
     ]);
     match &entry.verdict {
-        noble_contracts::source::Verdict::Accepted { measure } => {
+        noble_contracts::source::Verdict::Accepted {
+            shared_measure,
+            closure,
+            strict_witnesses,
+        } => {
             fields.push(("verdict", string("accepted")));
-            fields.push(("measure", Json::Number(u64::from(*measure))));
+            if let Some(measure) = shared_measure {
+                fields.push(("shared_measure", Json::Number(u64::from(*measure))));
+            }
+            fields.push((
+                "closure",
+                Json::Array(
+                    closure
+                        .iter()
+                        .map(|closure_entry| {
+                            closure_entry_json(closure_entry, entry.measures.len())
+                        })
+                        .collect(),
+                ),
+            ));
+            fields.push((
+                "strict_witnesses",
+                Json::Array(
+                    strict_witnesses
+                        .iter()
+                        .map(|witness| {
+                            Json::Object(std::vec::Vec::from([
+                                (
+                                    "closure_entry",
+                                    Json::Number(u64::from(witness.closure_entry)),
+                                ),
+                                ("measure", Json::Number(u64::from(witness.measure))),
+                            ]))
+                        })
+                        .collect(),
+                ),
+            ));
         }
-        noble_contracts::source::Verdict::Refused { witnesses } => {
+        noble_contracts::source::Verdict::Refused {
+            witnesses,
+            closure,
+            cycle,
+        } => {
             fields.push(("verdict", string("refused")));
             fields.push((
                 "witnesses",
@@ -86,6 +125,32 @@ fn definition(entry: &noble_contracts::source::Evidence) -> crate::workflow::enc
                         .collect(),
                 ),
             ));
+            fields.push((
+                "closure",
+                Json::Array(
+                    closure
+                        .iter()
+                        .map(|closure_entry| {
+                            closure_entry_json(closure_entry, entry.measures.len())
+                        })
+                        .collect(),
+                ),
+            ));
+            fields.push((
+                "idempotent_cycle",
+                closure_entry_json(cycle, entry.measures.len()),
+            ));
+        }
+        noble_contracts::source::Verdict::BoundExceeded { bound, span } => {
+            fields.push(("verdict", string("bound-exceeded")));
+            fields.push(("bound", string(bound.spelling())));
+            fields.push((
+                "span",
+                Json::Object(std::vec::Vec::from([
+                    ("start", Json::Number(u64::from(span.start))),
+                    ("end", Json::Number(u64::from(span.end))),
+                ])),
+            ));
         }
         noble_contracts::source::Verdict::Unsupported { reason, span } => {
             fields.push(("verdict", string("unsupported")));
@@ -100,6 +165,50 @@ fn definition(entry: &noble_contracts::source::Evidence) -> crate::workflow::enc
         }
     }
     Json::Object(fields)
+}
+
+/// Render a graph as a square row-major relation array.
+fn graph_json(
+    graph: &noble_contracts::source::Graph,
+    measure_count: usize,
+) -> crate::workflow::encoding::Json {
+    use crate::workflow::encoding::{string, Json};
+    Json::Array(
+        graph
+            .relations
+            .iter()
+            .take(measure_count)
+            .map(|row| {
+                Json::Array(
+                    row.iter()
+                        .take(measure_count)
+                        .map(|relation| string(relation.spelling()))
+                        .collect(),
+                )
+            })
+            .collect(),
+    )
+}
+
+/// Render one closure graph together with the source call-site path that produces it.
+fn closure_entry_json(
+    entry: &noble_contracts::source::ClosureEntry,
+    measure_count: usize,
+) -> crate::workflow::encoding::Json {
+    use crate::workflow::encoding::Json;
+    Json::Object(std::vec::Vec::from([
+        (
+            "path",
+            Json::Array(
+                entry
+                    .path
+                    .iter()
+                    .map(|site| Json::Number(u64::from(*site)))
+                    .collect(),
+            ),
+        ),
+        ("graph", graph_json(&entry.graph, measure_count)),
+    ]))
 }
 
 /// A refusal names what failed; the definition's own evidence stays in the report.
@@ -273,7 +382,7 @@ pub(super) fn report(
         ("schema", string("noble-size-change/v1")),
         (
             "criterion",
-            string("shared-measure: one declared measure decreases at every self-call site"),
+            string("bounded-closure: every idempotent call-graph matrix has a strict diagonal"),
         ),
         (
             "profile",

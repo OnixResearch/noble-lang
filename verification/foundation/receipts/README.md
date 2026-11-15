@@ -12,6 +12,35 @@ commit, which no ref contains. Its 83 source hashes are identical to
 `73cec09e`'s, so the two commits carry the same proof sources; the receipt is a
 provenance anomaly, not a proof gap.
 
+## 7ed66b5d — clean foundation basis for issue #125
+
+`7ed66b5/` records the clean run of `verification/foundation/check.mjs` at
+source commit `7ed66b5dca72d3256c9d3f3d79e8a775b93c0963`, tree
+`ef1314907bc293a4400d92bfe22c3862b342f77e`. The 1,450-theorem audit is the
+P1 per-case expectation basis for the bounded interaction campaign; it does
+not state an implementation theorem.
+
+| File | Content |
+|---|---|
+| `foundation-check.json` | verbatim clean-source foundation receipt |
+| `Audit.lean` | checker-generated theorem audit source |
+| `index.json` | raw-file hashes and campaign linkage |
+
+The associated finite P1/P2 campaign is retained separately at
+`verification/differential-interactions/receipts/7ed66b5/campaign.json`.
+Both receipts bind the tested source commit and tree, not the later evidence
+commit that retains them.
+
+## 675ab62f, c9fa57db, 756ccc94 — later issue #125 campaign bases
+
+`675ab62/`, `c9fa57d/` and `756ccc9/` hold the same three files for the clean
+foundation runs at source commits `675ab62fd309318679e6d9c37ad5d0e85e57dce5`,
+`c9fa57db9d5c56f8c93380532ed0d79ccbe5502c` and
+`756ccc9433677c8bdc70a8fac9e061e4ca875997`. Each is the basis of the campaign
+retained under the same name in `verification/differential-interactions/receipts/`.
+`756ccc9/` is the basis of the final campaign; the two earlier runs are kept
+unchanged as superseded evidence.
+
 ## 898cfe1 — original foundation run
 
 `898cfe1/` contains these files. Its source tree is `d11cd3c70621`, and it is the

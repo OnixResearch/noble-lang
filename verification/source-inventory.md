@@ -1015,7 +1015,7 @@ The inherited source comparison, policy/tool-selection freshness checks, and
 strict Octet gate remain separate acceptance controls; this document is not
 their execution receipt. Closure identities include source byte offsets, so even
 comment or help-text edits can require renewal. All 25 expected M6 workspace
-units were mandatory; the current DXM1 renewal requires all 32. An acyclic
+units were mandatory; the then-current DXM1 renewal required all 32. An acyclic
 boundary control must additionally retain both
 units of its synthetic shell library; collection capacity is not permission to
 omit real or synthetic test targets.
@@ -1024,15 +1024,24 @@ the single declared target/feature configuration or waive incomplete collection.
 
 ## Extraction and native-async evidence boundary
 
+The observations in this section are **historical, source-bound milestone
+runs**, not current-source results after issue #97 changed the Aeneas/Charon
+selection and regenerated only part of the Lean subject. In particular, the
+retained M4 lock and DXM1 extraction each bind 630 source files, with 342
+existing files now changed. They must be renewed before their assurance can
+attest the current tree; see the
+[#97 artifact classification](aeneas-re-extraction/README.md#generated-subjects-and-lane-receipts).
+
 The actual-source lane separately extracts the whole kernel, frontend and
 compiler. The backend imports actual frontend types before its own generated
 types; separate audit entrypoints include their transitive project dependencies.
 Its reviewed extraction lock and implementation
 receipt are the authorities for exact functions, external models, dependencies
-and axioms. The shared current lock is `verification/m4/extraction-lock.json`;
-historical M4/MC2 receipts retain their original scopes, and each renewal requires
-a fresh independent check. M5's resource-transition theorems and component
-dependency coverage remain separate from this classification.
+and axioms at their recorded source revisions. The retained shared lock is
+`verification/m4/extraction-lock.json`; M4/MC2 receipts retain their original
+scopes, and each renewal requires a fresh independent check. M5's
+resource-transition theorems and component dependency coverage remain
+separate from this classification.
 
 M6 adds the async-task kernel, WIT/component frontend and async component
 lowering/emission scopes. The [independent fresh
@@ -1072,16 +1081,17 @@ workspace Rust checks, published deny-all and complete Nix flake. All
 refinement obligations; bounded compiled execution and proof roots did not
 discharge them.
 
-DXM1 separately [checks 630 actual reviewed source files](declared-modules-v1/extraction.json)
-under the renewed shared [lock](m4/extraction-lock.json). All 268 inherited
-and renewed mutation controls refuse the planted defects (34 earlier, 21
-M5, 176 M6 and 37 M7); no stale generated Lean source is admitted. Exactly
+DXM1 separately [checked 630 then-reviewed source files](declared-modules-v1/extraction.json)
+under the then-renewed shared [lock](m4/extraction-lock.json). All 268 inherited
+and renewed mutation controls refused the planted defects (34 earlier, 21
+M5, 176 M6 and 37 M7); no stale generated Lean source was admitted **in
+that retained run**, which does not admit the #97 source. Exactly
 three compiler-ID-joined pure M7 dataspace functions at DefIDs 31/32/33
 retain nine strict Lean roots; there is no new nominal, module, adapter,
 host or Wasm-engine theorem. The [DXM1 assurance](declared-modules-v1/assurance.json)
 separately passes actual DX-03/08/09 compiled-source acceptance, M4–M8
 regressions, workspace Rust/Clippy, complete published Octet deny-all and
-full Nix flake. All 2,595 current authored production body obligations remain
+full Nix flake. All 2,595 then-current authored production body obligations remain
 open. Anonymous authored closures remain open, including the observed
 `nominal/inspection.rs:5810:5817` source-offset body; that reviewed
 classification is not a generated-body exception or proof discharge.

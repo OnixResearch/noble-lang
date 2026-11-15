@@ -1,1 +1,2 @@
-import NobleWasmImpl.Funs
+module
+public import NobleWasmImpl.Funs

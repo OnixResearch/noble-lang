@@ -936,9 +936,9 @@ theorem or byte decoder is claimed; F32 remains gated on the separate #38 follow
 
 **Erratum (2026-11-13, issue #43).** The retained receipt's `open_edges` entry reads "the kernel
 extraction that could carry it predates these sources (#97)". That dependency is **wrong**, and the
-receipt is immutable, so the correction is recorded here rather than edited into it. #97 is the
+receipt is immutable, so the correction is recorded here rather than edited into it. #97 covers
 re-extraction of the existing Aeneas subjects (`noble-contracts`, `noble-kernel`, `noble-wasm`) at
-Aeneas `1238879f` to end the VT-PIN-02 library exception; it adds no subject and never covers
+Aeneas `1238879f` and alignment of the selected extractor/library pins; it adds no subject and never covers
 `crates/noble-ngraph`. No extraction subject includes `crates/noble-ngraph/src/schedule.rs`, so the
 packed executor's correspondence is not blocked by #97 and does not depend on it. What is open is
 that no executor theorem exists and no extraction of the executor is planned; a future refinement

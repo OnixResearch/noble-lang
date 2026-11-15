@@ -22,28 +22,70 @@ certified-equivalence route used for semantic deduplication.
 - [x] [serial] Fix the acceptance 1–3 test plan naming every #73 and #116 interface consumed, its blocked status, and six planned proof obligations with separate model-proof/implementation-test/correspondence/assumption routes. r[LPL-01] r[LPL-02] r[LPL-03] r[LPL-04] r[LPL-05] r[LPL-06] r[LPL-07] r[LPL-08]
 - [x] [serial] Validate the change documents with the pinned Cairn runner; touch no canonical specification, generated view, requirement ledger, source inventory, policy file, receipt or foundation claim. r[LPL-01] r[LPL-08]
 
-## Phase 2: Store implementation and rejection tests (blocked on #73 Phase 2)
+## Phase 2: Store implementation and rejection tests (originally blocked on #73 Phase 2)
 
-Blocked until #73 implements and independently admits TCHUNK-01/TCHUNK-02. The
-follow-up slice starts from the interfaces listed in the design's test plan:
-the ordered admitted chunk envelopes (or their canonical bytes), the pinned
-`library_revision`, the one-hole enumerator and its report counters.
+The #73 substrate is now implemented. This slice uses its admitted chunk
+envelopes, pinned `library_revision`, one-hole enumerator and report counters;
+the Phase 1 blocker above describes the state when this package was designed.
 
-- [ ] [serial] Implement the `procedure-record/1` record over the admitted chunk envelopes, with canonical field order, provenance, ordered library dependency edges, per-obligation evidence binding and the integer cost key; scope identity to the immutable subject fields, keep evidence/promotion/cost as versioned state, recompute identity on every admission, and refuse any supplied digest, id, signature, name or path as authority. r[LPL-01]
-- [ ] [serial] Implement the two derived revisions from one generation and prove by execution that the chunk view reproduces the #73 `library_revision` exactly for the same chunk set. r[LPL-01] r[LPL-07]
-- [ ] [serial] Implement composition through `Session::prepare`, `acceptance::check` and `Core::derive_compose`, including the `UnresolvedImplication` case, and implement the authority-subset check with every escalation row as a named refusal. r[LPL-02]
-- [ ] [serial] Implement the promotion lattice over the existing evidence classes, with consumer policy obligations, per-obligation outcomes, `ForgedStatus`, `StaleContext`, recorded demotion and no evidence inspection that reaches a prover or a proof file. r[LPL-03]
+- [x] [serial] Implement the `procedure-record/1` record over the admitted chunk envelopes, with canonical field order, provenance, ordered library dependency edges, per-obligation evidence binding and the integer cost key; scope identity to the immutable subject fields, keep evidence/promotion/cost as versioned state, recompute identity on every admission, and refuse any supplied digest, id, signature, name or path as authority. r[LPL-01]
+- [x] [serial] Implement the two derived revisions from one generation and prove by execution that the chunk view reproduces the #73 `library_revision` exactly for the same chunk set. r[LPL-01] r[LPL-07]
+- [x] [serial] Implement composition through `Session::prepare`, `acceptance::check` and `Core::derive_compose`, including the `UnresolvedImplication` case, and implement the authority-subset check with every escalation row as a named refusal. r[LPL-02]
+- [x] [serial] Implement the promotion lattice over the existing evidence classes, with consumer policy obligations, per-obligation outcomes, `ForgedStatus`, `StaleContext`, recorded demotion and no evidence inspection that reaches a prover or a proof file. r[LPL-03]
 - [ ] [serial] Implement exact-record deduplication and the `DuplicateEntry` restatement refusal; implement the alias relation gated on a #56 certificate for the exact pair, retaining both identities and closures. r[LPL-04]
-- [ ] [serial] Implement the retrieval total order, the four query filters as ordered subsequences, the bounded index, the examined-entry counter and the rule that no retrieval result authorizes a composition. r[LPL-05]
-- [ ] [serial] Implement append-only generations, `supersedes`, rollback with the exactness and refusal rules, and the no-deletion rule. r[LPL-06]
-- [ ] [serial] Implement persistence and load recomputation with canonical collection order, the prohibited-input audit and `invalid` at the first differing field; add the two-process manifest comparison and the four negative controls as fixtures inside an existing test target, without adding a compilation unit. r[LPL-07]
-- [ ] [serial] Implement the identity manifest and metrics records, bind metrics to the manifest digest, and verify that no time, path, process, host, capability, secret, teacher configuration or training policy appears in either record. r[LPL-08]
+- [x] [serial] Implement the retrieval total order, the four query filters as ordered subsequences, the bounded index, the examined-entry counter and the rule that no retrieval result authorizes a composition. r[LPL-05]
+- [x] [serial] Implement append-only generations, `supersedes`, rollback with the exactness and refusal rules, and the no-deletion rule. r[LPL-06]
+- [x] [serial] Implement persistence and load recomputation with canonical collection order, the prohibited-input audit and `invalid` at the first differing field; add the two-process manifest comparison and the four negative controls as fixtures inside an existing test target, without adding a compilation unit. r[LPL-07]
+- [x] [serial] Implement the identity manifest and metrics records, bind metrics to the manifest digest, and verify that no time, path, process, host, capability, secret, teacher configuration or training policy appears in either record. r[LPL-08]
 - [ ] [serial] Add the acceptance-1 and acceptance-2 fixtures (`LPL-T01`–`LPL-T12`) to existing test targets, report counts and outcomes as executed library mechanics, and keep them separate from any proof or transfer claim. r[LPL-02] r[LPL-03] r[LPL-04] r[LPL-05] r[LPL-06] r[LPL-07]
 
-## Phase 3: Transfer evaluation (blocked on #73 Phase 2 and #116)
+Phase 2 execution evidence: `crates/noble-contracts/tests/editor/procedures/{identity,admission,composition,retrieval,generations,reload-negative,metrics}.rs`
+and `crates/noble-contracts/src/source/procedures/{composition,retrieval,persistence}.rs`.
+The two unticked rows share the LPL-04 positive exact-certificate case:
+the alias implementation row cannot pass a real exact-pair #56 verifier of
+both bodies and closures, and the `LPL-T07` acceptance row cannot execute an
+alias success without it. The alias-digest refusal test executes; positive
+alias remains **NOT DONE**. See `design.md` for the exact-pair verifier reopen
+condition. Do not tick either row on the strength of a digest or a mock.
 
-- [ ] [serial] Freeze the transfer protocol before any run: task families, held-out composition split, four arms (no library, frozen hand library, accumulated learned library, size-matched non-transfer control), paired seeds, success threshold, and the exact library sweeps. Commit the criterion before measuring. r[LPL-08]
+## Phase 3: Transfer evaluation (the original #73/#116 blockers have cleared)
+
+- [x] [serial] Freeze the transfer protocol before any run: task families, held-out composition split, four arms (no library, frozen hand library, accumulated learned library, size-matched non-transfer control), paired seeds, success threshold, and the exact library sweeps. Commit the criterion before measuring. r[LPL-08]
 - [ ] [serial] Generate held-out composed tasks from #116's producer with its grammar revision, budget, witness/counterexample trace and verifier status retained, and prove no held-out answer, body or evaluator state reaches an entry or the retrieval index. r[LPL-08]
-- [ ] [serial] Run the arms with the proposer and teacher disabled, record `proposer_calls` and `teacher_calls`, make any attempted call fail closed, and withdraw any transfer claim from a run with a nonzero count. r[LPL-08]
-- [ ] [serial] Report acquisition, retention, transfer, regression, growth, retrieval overhead, restart reuse and the break-even invocation count per arm and per seed, with model/synthesis behavior, executed mechanics, correspondence and assumptions kept separate; claim no lifelong learning, speedup or universal transfer. r[LPL-08]
+- [x] [serial] Run the arms with the proposer and teacher disabled, record `proposer_calls` and `teacher_calls`, make any attempted call fail closed, and withdraw any transfer claim from a run with a nonzero count. r[LPL-08]
+- [x] [serial] Report acquisition, retention, transfer, regression, growth, retrieval overhead, restart reuse and the break-even invocation count per arm and per seed, with model/synthesis behavior, executed mechanics, correspondence and assumptions kept separate; claim no lifelong learning, speedup or universal transfer. r[LPL-08]
 - [ ] [serial] Discharge the planned proof obligations `LPL-O1`–`LPL-O4` and the executed properties `LPL-O5`/`LPL-O6` as their own obligations before any promotion of a record to `promoted` under a proof-demanding policy. r[LPL-01] r[LPL-03] r[LPL-07]
+
+Phase 3 frozen criteria: `verification/procedure-library/criteria-2026-11-13.json`
+(committed before measurement); source candidates from
+`verification/synthesis/receipts/2026-11-13/synthesis-v2.json`.
+The invalid original attempt and its erratum are retained at
+`verification/procedure-library/receipts/2026-11-13/transfer-failed.json`
+and `transfer-failed-erratum.json`. A single repaired repeat from a separate
+clean source commit under the byte-identical criterion is retained at
+`verification/procedure-library/receipts/2026-11-13/transfer-repeat.json`:
+8/8 learned task cells (24/24 examples), 8/8 frozen-hand, 0/8 empty and
+0/8 size-matched control. `verification/procedure-library/decision.md`
+records why this is not a claim of incremental learning or of attempted-call
+refusal **in the original frozen run**. The later separately frozen
+`verification/procedure-library/receipts/producer-transfer-v2-final.json`
+records all 16 scored rows with zero producer/teacher attempts and callbacks.
+Its four separate fresh-library negative controls each deliberately attempted
+both requests and refused `Unsupported` before either callback; the original
+receipt's missed clause remains missed. The v2 target references were paired
+to the wrong source-order semantics; v2's 0/8 learned outcome is a
+**defective-criterion NO-GO, not evidence against the library**. The first
+unticked Phase 3 row still needs a valid #116-generated held-out transfer
+measurement under a new criterion mechanically derived from producer source
+semantics before generation; v1's correct pairing was never run. The other
+unticked Phase 3 row needs a checked Rust byte-encoder refinement and the #56
+exact-pair proof before proof-demanding
+promotion. The abstract model at
+`proofs/foundation/NobleFoundation/ProcedureLibrary.lean` discharges typed
+identity, reload, append and rollback lemmas, **not** a Rust byte-encoder
+refinement or a runtime #56 exact-pair proof. A separate
+`NobleFoundation/ProcedureLibraryWire.lean` subprofile and digest-bound
+`verification/procedure-library/receipts/encoder-corpus-v1.json` now compare
+two finite kernel-checked model encodings with Rust subject bytes; this is
+not a universal refinement. All four unticked Phase 2/3
+rows remain open; keep this Cairn change active.

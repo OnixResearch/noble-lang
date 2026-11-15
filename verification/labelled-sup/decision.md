@@ -34,3 +34,9 @@ These thresholds were committed before any performance or runtime measurement. T
 No Rust reducer, source-to-net compiler, graph identity binding, Wasm/graph/packed differential, multi-schedule runtime run, runtime allocation/scratch accounting, cancellation path, or performance measurement was implemented in this slice. HVM3 `INTERS.md` remains prior art, not evidence. Any runtime GO requires the unchanged #105 acceptance criteria, exact v3 identities, and a separate reviewed GO/NO-GO after #37's backend decision. A #37 NO-GO leaves this runtime arm unavailable.
 
 Re-open this model decision if the v3 rule contract or vendored inets pin changes, the labelled rule table/read-back relation changes, or a new runtime/translation claim is added.
+
+## Runtime decision (2026-11-14): NO-GO
+
+The runtime gate above made #37's backend decision a prerequisite and stated that a #37 NO-GO leaves this runtime arm unavailable. #37 has since recorded **NO-GO for continued runtime adoption** in [`net-decision.md`](../ngraph/net-decision.md): the opt-in revision-3 net passes its finite correctness gates but runs about 15x slower than packed execution against the frozen 1.15 speed threshold. There is therefore no adopted net runtime to extend with labelled DUP/SUP agents, and the #105 runtime arm is recorded as **NO-GO** under the unchanged criteria. No reducer, lowerer, differential or measurement was added for it, and none is claimed.
+
+The model-only GO above is unchanged. Reopen the runtime arm only if #37 reopens under a new pre-registered workload or implementation hypothesis and records a runtime GO; the unchanged #105 acceptance criteria and exact v3 identities then apply, with a separate reviewed GO/NO-GO.

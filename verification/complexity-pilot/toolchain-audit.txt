@@ -1,0 +1,31 @@
+NobleFoundation.PackedLayoutEncoded.decodeInput_encodeInput (input : NobleFoundation.PackedLayoutEncoded.Input) :
+  NobleFoundation.PackedLayoutEncoded.decodeInput (NobleFoundation.PackedLayoutEncoded.encodeInput input) = some input
+'NobleFoundation.PackedLayoutEncoded.decodeInput_encodeInput' depends on axioms: [propext, Classical.choice, Quot.sound]
+NobleFoundation.PackedLayoutEncoded.encodeInput_injective :
+  Function.Injective NobleFoundation.PackedLayoutEncoded.encodeInput
+'NobleFoundation.PackedLayoutEncoded.encodeInput_injective' depends on axioms: [propext, Classical.choice, Quot.sound]
+NobleFoundation.PackedLayoutEncoded.validateEncoded_agrees (input : NobleFoundation.PackedLayoutEncoded.Input) :
+  NobleFoundation.PackedLayoutEncoded.validateEncoded (NobleFoundation.PackedLayoutEncoded.encodeInput input) =
+    NobleFoundation.PackedLayoutEncoded.acceptedInput input
+'NobleFoundation.PackedLayoutEncoded.validateEncoded_agrees' depends on axioms: [propext, Classical.choice, Quot.sound]
+NobleFoundation.PackedLayoutEncoded.encodedSize_is_bit_length (input : NobleFoundation.PackedLayoutEncoded.Input) :
+  NobleFoundation.PackedLayoutEncoded.encodedSize input = (NobleFoundation.PackedLayoutEncoded.encodeInput input).length
+'NobleFoundation.PackedLayoutEncoded.encodedSize_is_bit_length' does not depend on any axioms
+NobleFoundation.PackedLayoutComplexity.decodeUnaryPrefixFast_computable_in_poly_time :
+  Turing.MultiTapeTM.ComputableInPolyTime NobleFoundation.PackedLayoutComplexity.decodeUnaryPrefixFast
+    Turing.MultiTapeTM.encBits (Turing.MultiTapeTM.encOption NobleFoundation.PackedLayoutComplexity.unaryPrefixOutput)
+'NobleFoundation.PackedLayoutComplexity.decodeUnaryPrefixFast_computable_in_poly_time' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+NobleFoundation.PackedLayoutComplexity.decodeUnaryPrefixFast_correct (bits : List Bool) :
+  NobleFoundation.PackedLayoutEncoded.decodeUnaryPrefix bits =
+    NobleFoundation.PackedLayoutComplexity.decodeUnaryPrefixFast bits
+'NobleFoundation.PackedLayoutComplexity.decodeUnaryPrefixFast_correct' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+NobleFoundation.PackedLayoutComplexity.decodeUnaryPrefix_computable_in_poly_time :
+  Turing.MultiTapeTM.ComputableInPolyTime NobleFoundation.PackedLayoutEncoded.decodeUnaryPrefix
+    Turing.MultiTapeTM.encBits (Turing.MultiTapeTM.encOption NobleFoundation.PackedLayoutComplexity.unaryPrefixOutput)
+'NobleFoundation.PackedLayoutComplexity.decodeUnaryPrefix_computable_in_poly_time' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]

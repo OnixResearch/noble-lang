@@ -13,6 +13,11 @@ const hash = text => crypto.createHash('sha256').update(text).digest('hex');
 const sourceFiles = Object.fromEntries(Object.entries(sources).map(([file, text]) =>
   [file, hash(text)]));
 const readSource = file => sources[file];
+const effectOracleFile = 'crates/noble-contracts/src/inference/effects.rs';
+const effectOracleSource = fs.readFileSync(path.join(root, effectOracleFile), 'utf8');
+const sourcePolicySources = { ...sources, [effectOracleFile]: effectOracleSource };
+const sourcePolicyFiles = { ...sourceFiles, [effectOracleFile]: hash(effectOracleSource) };
+const readPolicySource = file => sourcePolicySources[file];
 
 test('five reviewed opaque implementations retain exact source and body identities', () => {
   assert.deepEqual(sourceFiles, inheritedOpaqueSources);
@@ -44,3 +49,17 @@ for (const file of Object.keys(inheritedOpaqueSources)) {
     });
   }
 }
+
+test('test-only oracle modules are excluded from production source selection', () => {
+  assert.match(effectOracleSource, /#\[cfg\(test\)\]\s*\nmod oracle;/);
+  assert.doesNotThrow(() => sourcePolicy(sourcePolicyFiles, readPolicySource));
+});
+
+test('feature-selected source remains refused', () => {
+  const changed = effectOracleSource.replace('#[cfg(test)]\nmod oracle;',
+    '#[cfg(feature = "oracle")]\nmod oracle;');
+  assert.notEqual(changed, effectOracleSource);
+  assert.throws(() => sourcePolicy({ ...sourcePolicyFiles, [effectOracleFile]: hash(changed) },
+    file => file === effectOracleFile ? changed : readPolicySource(file)),
+  error => error.message === `M4-SOURCE-FILTER: ${effectOracleFile}: unreviewed conditional source selection`);
+});

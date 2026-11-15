@@ -1,0 +1,85 @@
+{
+  "schema": "noble-differential-interactions-mutants/v1",
+  "mutants": [
+    {
+      "id": "p1-wrong-compose-scheduling",
+      "profile": "P1-core-source-wasm",
+      "family": "composed",
+      "cell": "P1/composed/min_max_wrap/ordered_single",
+      "property": "reference result of ordered composition",
+      "source_path": "crates/noble-wasm/runtime/programs.wat",
+      "before": " (call $enqueue_program (call $b (local.get $environment)))\n (call $enqueue_program (call $a (local.get $environment)))",
+      "after": " (call $enqueue_program (call $a (local.get $environment)))\n (call $enqueue_program (call $b (local.get $environment)))"
+    },
+    {
+      "id": "p1-quoted-add-as-subtraction",
+      "profile": "P1-core-source-wasm",
+      "family": "quoted",
+      "cell": "P1/quoted/min_max_wrap/ordered_single",
+      "property": "quoted arithmetic block produces the reference result",
+      "source_path": "crates/noble-wasm/runtime/operations.wat",
+      "before": "(call $push_i64 (i64.add (local.get $left) (local.get $right))))",
+      "after": "(call $push_i64 (i64.sub (local.get $left) (local.get $right))))"
+    },
+    {
+      "id": "p1-reversed-i64-subtraction-operands",
+      "profile": "P1-core-source-wasm",
+      "family": "zero_negative_one",
+      "cell": "P1/plain/zero_negative_one/ordered_single",
+      "property": "zero minus negative one operand order",
+      "source_path": "crates/noble-wasm/runtime/operations.wat",
+      "before": "(call $push_i64 (i64.sub (local.get $left) (local.get $right))))",
+      "after": "(call $push_i64 (i64.sub (local.get $right) (local.get $left))))"
+    },
+    {
+      "id": "p1-reversed-observed-stack",
+      "profile": "P1-core-source-wasm",
+      "family": "preserved_prefix_multiple",
+      "cell": "P1/plain/small/preserved_prefix_multiple",
+      "property": "ordered preserved prefix and result stack",
+      "source_path": "crates/noble-cli/src/core/runtime/values.mjs",
+      "before": "    const stack = Array.from({ length: count }, (_, at) => {\n      const kind = runtime.stack_kind(at);\n      const raw = runtime.stack_value(at);\n      const handle = kind < 4 ? null : Number(BigInt.asUintN(64, raw));\n      const value = readValue(engine, runtime, kind, raw, 0);\n      if (handle !== null) engine.retainExternalCodeRoot(runtime, handle);\n      return { handle, ...(handle !== null && engine.sourceEpoch\n        ? { source_epoch: engine.sourceEpochGeneration,\n          source_store_id: engine.sourceStoreId } : {}), ...value };\n    });",
+      "after": "    const stack = Array.from({ length: count }, (_, at) => {\n      const kind = runtime.stack_kind(at);\n      const raw = runtime.stack_value(at);\n      const handle = kind < 4 ? null : Number(BigInt.asUintN(64, raw));\n      const value = readValue(engine, runtime, kind, raw, 0);\n      if (handle !== null) engine.retainExternalCodeRoot(runtime, handle);\n      return { handle, ...(handle !== null && engine.sourceEpoch\n        ? { source_epoch: engine.sourceEpochGeneration,\n          source_store_id: engine.sourceStoreId } : {}), ...value };\n    }).reverse();"
+    },
+    {
+      "id": "p2-inverted-guard-edge",
+      "profile": "P2-ngraph-f32",
+      "family": "guard_select",
+      "cell": "P2/guard_select/signed_zero",
+      "property": "finite guard admission before select result",
+      "source_path": "crates/noble-ngraph/src/eval.rs",
+      "before": "if !guard_holds(checked, fact, *value, get) {",
+      "after": "if guard_holds(checked, fact, *value, get) {"
+    },
+    {
+      "id": "p2-reversed-select-edge",
+      "profile": "P2-ngraph-f32",
+      "family": "select_index",
+      "cell": "P2/select_index/nan",
+      "property": "selected index branch reaches table slot one",
+      "source_path": "crates/noble-ngraph/src/eval.rs",
+      "before": "crate::sem::Value::F32(crate::sem::select(b, o0, o1))",
+      "after": "crate::sem::Value::F32(crate::sem::select(b, o1, o0))"
+    },
+    {
+      "id": "p2-stale-index-table-edge",
+      "profile": "P2-ngraph-f32",
+      "family": "index_affine",
+      "cell": "P2/index_affine/subnormal_normal_boundary",
+      "property": "selected index table value reaches affine result",
+      "source_path": "crates/noble-ngraph/src/eval.rs",
+      "before": "Ok(Some(k)) => get(table[k]),",
+      "after": "Ok(Some(_k)) => get(table[0]),"
+    },
+    {
+      "id": "p2-reversed-affine-terms",
+      "profile": "P2-ngraph-f32",
+      "family": "guard_affine",
+      "cell": "P2/guard_affine/cancellation",
+      "property": "ordered affine cancellation followed by residual",
+      "source_path": "crates/noble-ngraph/src/eval.rs",
+      "before": "terms.iter().map(|t| {",
+      "after": "terms.iter().rev().map(|t| {"
+    }
+  ]
+}

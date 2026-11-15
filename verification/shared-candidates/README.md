@@ -48,7 +48,9 @@ a gate, not a finding.
 
 ## What did not run
 
-- **The labelled-SUP arm** is not measured: there is no labelled DUP/SUP contract. **Pending #105.**
+- **The labelled-SUP arm** is not measured, and is decided **NO-GO** for this lane: #105's runtime
+  arm is unavailable after #37's runtime NO-GO (see the runtime decision in
+  [`../labelled-sup/decision.md`](../labelled-sup/decision.md)). It reopens only with that arm.
 - Allocation counts are not measured anywhere in the lane; see the instrument limits below.
 
 ## Reproduce

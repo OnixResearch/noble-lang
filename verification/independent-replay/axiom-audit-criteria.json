@@ -1,0 +1,32 @@
+{
+  "schema": "noble-issue62-axiom-audit-criteria/v1",
+  "frozen_before_measurement": true,
+  "foundation_baseline_commit": "719b8f989f118c23909f545024ac048ee262808c",
+  "foundation_toolchain": "leanprover/lean4:v4.35.0",
+  "candidate": {
+    "repository": "https://github.com/leanprover-community/axiom-audit",
+    "revision": "0b885d88a69982cd76990b502742690b80b1a685",
+    "declared_toolchain": "leanprover/lean4:v4.32.1",
+    "isolated_project": "proofs/axiom-audit-pilot",
+    "required_runtime": "Lean 4.35.0; a 4.32.1-only build cannot audit the selected foundation's 4.35.0 oleans"
+  },
+  "corpus": {
+    "project": "proofs/foundation",
+    "library_roots": ["NobleFoundation", "NobleContracts", "MathlibI64", "InteractionNets"],
+    "module_selection": "Enumerate all source modules of the four library roots and require corresponding compiled artifacts; never infer full coverage from the first library or root import alone.",
+    "required_public_theorems": "Every entry of proofs/foundation/inventory.json theorems, selected independently of the candidate output",
+    "private_helpers": "Every inventory.private_theorems entry must be accounted for as a source declaration; compare the candidate's compiled private declarations with independent Lean collection, and disclose any mapping gap.",
+    "policy": "Compare exact per-required-root transitive axioms with the selected Lean audit, not only the global propext/Classical.choice/Quot.sound allowlist. Preserve stricter empty-axiom profiles. Compare the project-wide union and every policy violation."
+  },
+  "negative_controls": [
+    "private helper relying on an imported custom axiom",
+    "custom axiom from an imported module outside the audited root",
+    "empty root and unimported/missing module",
+    "sorryAx introduced by an isolated throwaway fixture",
+    "Lean.ofReduceBool introduced by an isolated native-evaluation fixture",
+    "mutual-inductive or cyclic dependency cluster with per-declaration stock-audit comparison"
+  ],
+  "go_rule": "GO only if the pinned upstream source builds under the selected Lean 4.35.0; all four library/module rosters are complete; every required-root axiom set, project union and policy violation agrees with the independent inventory-bound Lean audit; every private helper is accounted for or its incompleteness is an explicit NO-GO; every negative control is correctly detected; no audit result replaces proof-term checking, independent replay, statement or protected-definition binding; wall time and peak RSS are retained.",
+  "no_go_rule": "NO-GO on build/import incompatibility, incomplete module/root/private coverage, any per-root axiom mismatch or missed control, unavailable source/artifacts, or inability to measure either side on identical selected compiled inputs. Retain the existing audit as decisive and record an exact blocker with a reopen condition.",
+  "non_claims": ["This tool imports compiled environments at trust level 1024 and does not validate proof terms.", "No audit-only result proves source authenticity or executable correctness."]
+}
