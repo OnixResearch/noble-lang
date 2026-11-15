@@ -1,5 +1,6 @@
 use super::*;
 
+#[octet::sealed_enum]
 #[derive(Clone, Debug)]
 enum StackValue {
     I64(i64),
@@ -141,7 +142,7 @@ fn output_scalar(value: StackValue) -> Result<Scalar, String> {
     match value {
         StackValue::I64(value) => Ok(Scalar::I64(value)),
         StackValue::Bool(value) => Ok(Scalar::Bool(value)),
-        _ => Err(String::from("independent replay left quotation data")),
+        StackValue::Quotation(_) => Err(String::from("independent replay left quotation data")),
     }
 }
 
@@ -185,7 +186,9 @@ fn boolean_target(mode: u8, inputs: &[Scalar]) -> Result<Vec<Scalar>, String> {
 
 fn integer_target(target: Target) -> Result<Vec<Scalar>, String> {
     let Target::Integer(value) = target else {
-        return Err(String::from("independent oracle received an unsupported target"));
+        return Err(String::from(
+            "independent oracle received an unsupported target",
+        ));
     };
     Ok(vec![Scalar::I64(value)])
 }

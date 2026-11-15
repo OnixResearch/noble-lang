@@ -1,13 +1,30 @@
 use super::*;
 
-pub(super) fn run_primitive(run: &EvaluationRun<'_>, started: std::time::Instant) -> Result<Value, String> {
-    let EvaluationMeta { mode, repetition, seed, spec, .. } = run.metadata;
+pub(super) fn primitive(
+    run: &EvaluationRun<'_>,
+    started: std::time::Instant,
+) -> Result<Value, String> {
+    let EvaluationMeta {
+        mode,
+        repetition,
+        seed,
+        spec,
+        ..
+    } = run.metadata;
     let request = request(spec, run.metadata.library);
-    let prepared = run.session.prepare(&spec.primitive_source, &spec.stack_in,
-        source_limits(request.budget))
+    let prepared = run
+        .session
+        .prepare(
+            &spec.primitive_source,
+            &spec.stack_in,
+            source_limits(request.budget),
+        )
         .map_err(|error| format!("primitive preparation {} refused: {error:?}", spec.id()))?;
     if prepared.output() != spec.stack_out {
-        return Err(format!("primitive output interface mismatch for {}", spec.id()));
+        return Err(format!(
+            "primitive output interface mismatch for {}",
+            spec.id()
+        ));
     }
     let primitive = primitive_envelope(spec);
     let mut is_output_match = true;
@@ -42,15 +59,26 @@ pub(super) fn run_primitive(run: &EvaluationRun<'_>, started: std::time::Instant
     }))
 }
 
-pub(super) fn run_fixed(run: &EvaluationRun<'_>) -> ModeOutcome {
+pub(super) fn fixed(run: &EvaluationRun<'_>) -> ModeOutcome {
     let mut attempts = Vec::new();
     let mut observer = |outcome: &chunks::CandidateOutcome| attempts.push(outcome.clone());
     let request = request(run.metadata.spec, run.metadata.library);
-    let response = chunks::complete_observed(run.session, run.metadata.library,
-        &request, &mut observer, monotonic_now_ns);
-    let candidate_row_count = chunks::candidate_queue(run.metadata.library,
-        chunks::CandidateLimit::from(request.budget.candidates)).candidates().len();
+    let response = chunks::complete_observed(
+        run.session,
+        run.metadata.library,
+        &request,
+        &mut observer,
+        monotonic_now_ns,
+    );
+    let candidate_row_count = chunks::candidate_queue(
+        run.metadata.library,
+        chunks::CandidateLimit::from(request.budget.candidates),
+    )
+    .candidates()
+    .len();
     debug_assert!(attempts.len() <= candidate_row_count);
-    debug_assert!(candidate_row_count <= usize::try_from(chunks::MAX_CANDIDATES).expect("fixed profile"));
+    debug_assert!(
+        candidate_row_count <= usize::try_from(chunks::MAX_CANDIDATES).expect("fixed profile")
+    );
     ModeOutcome::fixed(response, attempts, candidate_row_count)
 }

@@ -1,5 +1,6 @@
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
+#![register_tool(octet)]
 #![allow(
     tigerstyle::missing_const_fn,
     tigerstyle::explicit_defaults,

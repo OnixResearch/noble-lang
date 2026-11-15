@@ -136,13 +136,17 @@ fn task_record(task: &TaskSpec, library: &Value) -> Value {
     })
 }
 
-pub(crate) fn corpus() -> Value {
+pub(crate) fn snapshot() -> Value {
     let libraries: Vec<Value> = (0..FAMILY_NAMES.len()).map(library_record).collect();
-    let records: Vec<Value> = super::tasks::corpus()
+    let records: Vec<Value> = super::tasks::generate()
         .iter()
         .map(|task| task_record(task, &libraries[task.family]))
         .collect();
-    assert_eq!(libraries.len(), FAMILY_NAMES.len(), "every family needs a library");
+    assert_eq!(
+        libraries.len(),
+        FAMILY_NAMES.len(),
+        "every family needs a library"
+    );
     assert_eq!(records.len(), 480, "every frozen task needs a record");
     json!({
         "schema": "tchunk-ranking-corpus/1",
@@ -162,7 +166,7 @@ pub(crate) fn corpus() -> Value {
 
 #[test]
 pub(crate) fn frozen_corpus_has_the_registered_split_and_valid_libraries() -> Result<(), String> {
-    let manifest = corpus();
+    let manifest = snapshot();
     let frozen: Value = serde_json::from_str(FROZEN_CORPUS)
         .map_err(|error| format!("frozen corpus JSON is invalid: {error}"))?;
     assert_eq!(manifest, frozen, "frozen corpus manifest drifted");
@@ -175,7 +179,7 @@ pub(crate) fn frozen_corpus_has_the_registered_split_and_valid_libraries() -> Re
     check_task_splits(tasks)?;
     let session = noble_contracts::source::Session::without_test_hosts();
     let libraries = check_registered_libraries(&session)?;
-    for spec in super::tasks::corpus() {
+    for spec in super::tasks::generate() {
         let library = libraries
             .get(spec.family)
             .ok_or_else(|| format!("reference library missing for {}", spec.id()))?;
@@ -189,9 +193,17 @@ fn check_task_splits(tasks: &[Value]) -> Result<(), String> {
     let mut split_counts = [0usize; 3];
     let mut family_counts = [0usize; 5];
     let mut seen_ids = std::collections::BTreeSet::new();
+    let mut seen_sources = std::collections::BTreeSet::new();
     for task in tasks {
         let id = task["id"].as_str().ok_or("task ID missing")?;
         assert!(seen_ids.insert(id.to_owned()), "duplicate task ID {id}");
+        let source = task["primitive_reference_source"]
+            .as_str()
+            .ok_or("canonical reference source missing")?;
+        assert!(
+            seen_sources.insert(source.to_owned()),
+            "duplicate canonical reference source for {id}"
+        );
         let family = task["provenance"]["family_index"]
             .as_u64()
             .and_then(|index| usize::try_from(index).ok())
@@ -256,7 +268,7 @@ fn check_primitive_reference(
 
 fn check_fixture_reference(spec: &TaskSpec, envelope: &Envelope) -> Result<(), String> {
     for case in &spec.cases {
-        let expected = oracle_target(spec.target, &case.inputs)?;
+        let expected = target(spec.target, &case.inputs)?;
         assert_eq!(expected, case.outputs, "independent fixture {}", spec.id());
         let actual = independent_recipe_output(envelope, &case.inputs)?;
         assert_eq!(actual, case.outputs, "primitive recipe {}", spec.id());

@@ -17,21 +17,41 @@ pub(super) struct ModelArtifact<'a> {
     pub(super) model_payload_bytes: u64,
 }
 
-pub(super) fn model_artifact<'a>(fit: &'a ModelFit, provenance: &'a RunProvenance) -> Result<ModelArtifact<'a>, String> {
+pub(super) fn model_artifact<'a>(
+    fit: &'a ModelFit,
+    provenance: &'a RunProvenance,
+) -> Result<ModelArtifact<'a>, String> {
     debug_assert_eq!(fit.graph.graph().input_slots().len(), 64);
     debug_assert_eq!(fit.graph.param_slots().len(), 65);
-    let identity = model_identity(fit, &provenance.source_commit,
-        &provenance.rustc_version, &provenance.cargo_version);
+    let identity = trained_identity(
+        fit,
+        BuildIdentity {
+            source_commit: &provenance.source_commit,
+            rustc_version: &provenance.rustc_version,
+            cargo_version: &provenance.cargo_version,
+        },
+    );
     let graph_text = noble_ngraph::format::graph::print(fit.graph.graph());
     let loss_text = noble_ngraph::format::graph::print(fit.loss_graph.graph());
     let contexts = contexts_json(&fit.training_rows.contexts);
     let contexts_bytes = serde_json::to_vec(&contexts).map_err(|error| error.to_string())?;
-    let model_payload_bytes = u64::try_from(graph_text.len()).expect("in-memory graph size")
+    let model_payload_bytes = u64::try_from(graph_text.len())
+        .expect("in-memory graph size")
         .saturating_add(u64::try_from(fit.snapshot.bytes().len()).expect("in-memory snapshot size"))
         .saturating_add(u64::try_from(contexts_bytes.len()).expect("in-memory contexts size"))
-        .saturating_add(u64::try_from(chunks::FEATURE_REVISION.len()).expect("static revision size"));
-    Ok(ModelArtifact { fit, provenance, identity, graph_text, loss_text,
-        contexts, state_bytes: optimizer_state_bytes(&fit.state), model_payload_bytes })
+        .saturating_add(
+            u64::try_from(chunks::FEATURE_REVISION.len()).expect("static revision size"),
+        );
+    Ok(ModelArtifact {
+        fit,
+        provenance,
+        identity,
+        graph_text,
+        loss_text,
+        contexts,
+        state_bytes: optimizer_state_bytes(&fit.state),
+        model_payload_bytes,
+    })
 }
 
 pub(super) fn model_json(artifact: &ModelArtifact<'_>) -> Result<Value, String> {
@@ -91,8 +111,11 @@ pub(super) fn model_json(artifact: &ModelArtifact<'_>) -> Result<Value, String> 
 
 pub(super) fn selection_json(artifact: &ModelArtifact<'_>) -> Value {
     let fit = artifact.fit;
-    let optimizer_training_ns: u64 = fit.seeds.iter()
-        .map(|seed| seed.training_elapsed_ns).fold(0, u64::saturating_add);
+    let optimizer_training_ns: u64 = fit
+        .seeds
+        .iter()
+        .map(|seed| seed.training_elapsed_ns)
+        .fold(0, u64::saturating_add);
     debug_assert_eq!(fit.training_rows.rows.len(), 280 * 4);
     debug_assert_eq!(fit.validation_rows.rows.len(), 80 * 4);
     json!({

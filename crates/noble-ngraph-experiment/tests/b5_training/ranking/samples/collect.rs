@@ -40,7 +40,7 @@ struct TaskCapture<'a> {
     library: &'a Library,
     spec: &'a TaskSpec,
     split: &'a str,
-    capture: &'a FeatureCapture,
+    capture: &'a Feature,
 }
 
 struct CandidateLabel {
@@ -163,9 +163,9 @@ fn append_task_rows(
     spec: &TaskSpec,
     split: &str,
     data: &mut Dataset,
-) -> Result<FeatureCapture, String> {
+) -> Result<Feature, String> {
     let feature_started = std::time::Instant::now();
-    let capture = collect_features(session, library, spec)?;
+    let capture = features(session, library, spec)?;
     data.feature_collection_ns = data
         .feature_collection_ns
         .saturating_add(elapsed_ns(feature_started));
@@ -197,10 +197,10 @@ fn context_members(
     rows: &[TrainingRow],
     family: &str,
 ) -> (Vec<[u8; chunks::REVISION_BYTES]>, Vec<chunks::CandidateId>) {
-    let row_limit = rows.iter().filter(|row| row.family == family).count();
-    let candidate_limit = usize::try_from(chunks::MAX_CANDIDATES).expect("fixed profile");
-    let mut interfaces = Vec::with_capacity(row_limit);
-    let mut candidates = Vec::with_capacity(row_limit.min(candidate_limit));
+    let row_count = rows.iter().filter(|row| row.family == family).count();
+    let candidate_count = usize::try_from(chunks::MAX_CANDIDATES).expect("fixed profile");
+    let mut interfaces = Vec::with_capacity(row_count);
+    let mut candidates = Vec::with_capacity(row_count.min(candidate_count));
     for row in rows.iter().filter(|row| row.family == family) {
         if !interfaces.contains(&row.task_interface_identity) {
             interfaces.push(row.task_interface_identity);

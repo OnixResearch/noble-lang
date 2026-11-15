@@ -43,13 +43,8 @@ fn observed_isolated_response(
     let request = request(spec, isolated);
     let mut outcomes = Vec::new();
     let mut observer = |outcome: &chunks::CandidateOutcome| outcomes.push(outcome.clone());
-    let response = chunks::complete_observed(
-        session,
-        isolated,
-        &request,
-        &mut observer,
-        monotonic_now_ns,
-    );
+    let response =
+        chunks::complete_observed(session, isolated, &request, &mut observer, monotonic_now_ns);
     (outcomes, response)
 }
 
@@ -65,11 +60,13 @@ fn checked_target_label(
     response: &chunks::Response,
 ) -> Result<f32, String> {
     check_target_selection(spec, envelope, candidate_outcome, response)?;
-    Ok(if candidate_outcome.accepted && candidate_outcome.fixture_agreement.unwrap_or(false) {
-        1.0
-    } else {
-        0.0
-    })
+    Ok(
+        if candidate_outcome.accepted && candidate_outcome.fixture_agreement.unwrap_or(false) {
+            1.0
+        } else {
+            0.0
+        },
+    )
 }
 
 fn check_target_selection(

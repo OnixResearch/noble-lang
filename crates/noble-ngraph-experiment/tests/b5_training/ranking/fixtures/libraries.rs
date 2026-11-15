@@ -162,13 +162,7 @@ fn routing_swap_envelope(first: Ty, second: Ty) -> Envelope {
     let stack_in = [first.clone(), second.clone()];
     let stack_out = [second.clone(), first.clone()];
     let bindings = vec![value_binding(1, first), value_binding(2, second)];
-    generic_operation_envelope(
-        Op::Swap,
-        &stack_in,
-        &stack_out,
-        bindings,
-        b"swap ",
-    )
+    generic_operation_envelope(Op::Swap, &stack_in, &stack_out, bindings, b"swap ")
 }
 
 fn routing_dup_envelope() -> Envelope {

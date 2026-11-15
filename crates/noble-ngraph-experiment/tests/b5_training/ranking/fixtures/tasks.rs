@@ -208,15 +208,25 @@ fn integer_task(coordinate: TaskCoordinate) -> TaskSpec {
 }
 
 fn task_spec(coordinate: TaskCoordinate) -> TaskSpec {
-    match coordinate.family {
+    let mut task = match coordinate.family {
         0 => arithmetic_task(coordinate),
         1 => routing_task(coordinate),
         2 => boolean_task(coordinate),
         _ => integer_task(coordinate),
-    }
+    };
+    // Distinguish canonical reference programs across provenance blocks without
+    // changing their stack effect, target, fixture output or candidate library.
+    let instance = coordinate.family * 96
+        + usize::from(coordinate.block) * 8
+        + usize::from(coordinate.within_block)
+        + 1;
+    let mut source = format!("{instance} drop ").into_bytes();
+    source.extend_from_slice(&task.primitive_source);
+    task.primitive_source = source;
+    task
 }
 
-pub(crate) fn corpus() -> Vec<TaskSpec> {
+pub(crate) fn generate() -> Vec<TaskSpec> {
     let mut tasks = Vec::with_capacity(480);
     for family in 0..FAMILY_NAMES.len() {
         for block in 0..12 {

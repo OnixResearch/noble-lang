@@ -41,18 +41,25 @@ requireValue(corpus.tasks_per_family === 96 && corpus.provenance_blocks_per_fami
 requireValue(corpus.split?.train === criteria.corpus.split.train_tasks && corpus.split?.validation === criteria.corpus.split.validation_tasks && corpus.split?.test === criteria.corpus.split.test_tasks, "materialized corpus split counts must match criteria");
 requireValue(corpus.expected_values_owner === "independent-consumer-fixture" && corpus.expected_values_are_features === false, "expected-value ownership and feature exclusion must remain explicit");
 const taskIds = new Set();
+const canonicalSources = new Set();
 const familyCounts = new Map();
 const splitCounts = new Map();
 for (const task of corpus.tasks ?? []) {
   requireValue(typeof task.id === "string" && !taskIds.has(task.id), `task ID missing or duplicated: ${task.id}`);
   taskIds.add(task.id);
+  const source = task.primitive_reference_source;
+  const canonicalSource = typeof source === "string" ? source.trim().replace(/\s+/gu, " ") : null;
+  requireValue(canonicalSource !== null && canonicalSource.length > 0 && !canonicalSources.has(canonicalSource), `task ${task.id} has a missing or duplicated canonical reference program`);
+  if (canonicalSource !== null) canonicalSources.add(canonicalSource);
   familyCounts.set(task.family, (familyCounts.get(task.family) ?? 0) + 1);
   const block = task.provenance?.block;
   const expectedSplit = block <= 6 ? "train" : block <= 8 ? "validation" : "test";
   requireValue(task.provenance?.split === expectedSplit, `task ${task.id} has a split inconsistent with its provenance block`);
+  requireValue(task.provenance?.generator === "tchunk-ranking-corpus/1", `task ${task.id} lacks its frozen generator provenance`);
   splitCounts.set(expectedSplit, (splitCounts.get(expectedSplit) ?? 0) + 1);
   requireValue(task.independent_fixtures?.length === 4, `task ${task.id} must retain four independent fixtures`);
   requireValue(typeof task.chunk_library_identity === "string" && /^[0-9a-f]{64}$/.test(task.chunk_library_identity), `task ${task.id} lacks a full library identity`);
+  requireValue((corpus.libraries ?? []).some((library) => library.family === task.family && library.identity === task.chunk_library_identity), `task ${task.id} references a different library identity`);
 }
 for (const family of criteria.corpus.families) {
   requireValue(familyCounts.get(family.id) === family.tasks, `family ${family.id} task count differs from criteria`);

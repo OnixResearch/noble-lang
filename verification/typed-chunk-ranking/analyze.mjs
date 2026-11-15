@@ -44,6 +44,7 @@ requireValue(receipt.corpus_blake3 === model.corpus_blake3, "receipt/model corpu
 requireValue(receipt.criteria_blake3.length === 64 && receipt.corpus_blake3.length === 64, "model source bindings must be full 32-byte digests");
 requireValue(model.source_commit === sourceCommit, "model source commit differs from current HEAD");
 requireValue(model.identity === receipt.model_identity, "model identity differs between artifact and run receipt");
+requireValue(JSON.stringify(receipt.toolchain) === JSON.stringify(model.toolchain), "toolchain identity differs between model and run receipt");
 requireValue(receipt.task_count === 480 && receipt.train_tasks === 280 && receipt.validation_tasks === 80 && receipt.test_tasks === 120, "receipt corpus split differs from frozen criteria");
 requireValue(receipt.paired_repetitions === 10 && receipt.test_rows === 4800, "receipt must contain all 120 tasks x 10 seeds x 4 modes");
 requireValue(criteria.measurements.total_charged_work_definition === "Report.checking_work shared-budget units; other budget dimensions are reported separately and are not summed because their units differ and would double-count work", "frozen work definition is absent or changed");
@@ -380,6 +381,7 @@ const sourceFiles = [
   "crates/noble-ngraph/src/train.rs",
   "crates/noble-ngraph/tests/train_admission.rs",
   "crates/noble-ngraph/tests/train_admission/batches.rs",
+  "crates/noble-ngraph-experiment/tests/b5_training.rs",
   "crates/noble-ngraph-experiment/tests/b5_training/ranking.rs",
   "crates/noble-ngraph-experiment/tests/b5_training/ranking/execution.rs",
   "crates/noble-ngraph-experiment/tests/b5_training/ranking/execution/json.rs",
@@ -394,6 +396,8 @@ const sourceFiles = [
   "crates/noble-ngraph-experiment/tests/b5_training/ranking/fixtures/tasks.rs",
   "crates/noble-ngraph-experiment/tests/b5_training/ranking/labels.rs",
   "crates/noble-ngraph-experiment/tests/b5_training/ranking/labels/collect.rs",
+  "crates/noble-ngraph-experiment/tests/b5_training/ranking/labels/collect/capture.rs",
+  "crates/noble-ngraph-experiment/tests/b5_training/ranking/labels/collect/labels.rs",
   "crates/noble-ngraph-experiment/tests/b5_training/ranking/labels/oracle.rs",
   "crates/noble-ngraph-experiment/tests/b5_training/ranking/measure.rs",
   "crates/noble-ngraph-experiment/tests/b5_training/ranking/measure/artifacts.rs",
@@ -412,7 +416,10 @@ const sourceFiles = [
   "verification/typed-chunk-ranking/criteria-v1.json",
   "verification/typed-chunk-ranking/corpus-v1.json",
   "verification/typed-chunk-ranking/runner.mjs",
-  "verification/typed-chunk-ranking/analyze.mjs"
+  "verification/typed-chunk-ranking/analyze.mjs",
+  "policy/architecture.ncl",
+  "policy/architecture.json",
+  "policy/architecture.manifest.json"
 ];
 const sourceHashes = Object.fromEntries(sourceFiles.map((name) => [name, sha256(readFileSync(join(root, name)))]));
 const hashes = Object.fromEntries(["receipt.json", "model.json", "selection.json", "training.jsonl", "results.jsonl"].map((name) => [name, sha256(readFileSync(join(runDir, name)))]));

@@ -41,7 +41,7 @@ pub(crate) fn shuffled_model_identity(
 }
 
 pub(crate) fn shuffled_scores(
-    context: &RankingContext,
+    context: &CandidateContext,
     seed: u64,
 ) -> std::collections::BTreeMap<u32, f32> {
     shuffled_ordinals(context, seed)
@@ -59,7 +59,7 @@ pub(crate) fn shuffled_scores(
         .collect()
 }
 
-fn shuffled_ordinals(context: &RankingContext, seed: u64) -> Vec<u32> {
+fn shuffled_ordinals(context: &CandidateContext, seed: u64) -> Vec<u32> {
     let mut ordinals: Vec<u32> = context
         .allowed_candidates
         .iter()

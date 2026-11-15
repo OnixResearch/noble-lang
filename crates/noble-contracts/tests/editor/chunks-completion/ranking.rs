@@ -53,7 +53,10 @@ impl CandidateRanker for TestRanker {
         request: &CandidateScoreRequest<'_>,
     ) -> Result<CandidateScoreResponse, ScorerFailure> {
         debug_assert!(self.calls <= chunks::MAX_CANDIDATES);
-        debug_assert_eq!(u32::try_from(self.features_seen.len()).ok(), Some(self.calls));
+        debug_assert_eq!(
+            u32::try_from(self.features_seen.len()).ok(),
+            Some(self.calls)
+        );
         let features = request.features;
         let has_only_finite_features = features.iter().all(|feature| feature.is_finite());
         let has_expected_feature_count = features.len() == chunks::FEATURE_LANES;

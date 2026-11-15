@@ -122,7 +122,7 @@ pub(crate) fn loss_graph_counts(graph: &CheckedGraph) -> Result<Value, String> {
 pub(crate) fn write_frozen_corpus() -> Result<(), String> {
     let output = std::env::var_os("NOBLE_TCRANK_CORPUS_OUT")
         .ok_or_else(|| String::from("NOBLE_TCRANK_CORPUS_OUT must name an external output file"))?;
-    let mut bytes = serde_json::to_vec(&corpus_manifest()).map_err(|error| error.to_string())?;
+    let mut bytes = serde_json::to_vec(&snapshot()).map_err(|error| error.to_string())?;
     bytes.push(b'\n');
     std::fs::write(output, bytes).map_err(|error| error.to_string())
 }

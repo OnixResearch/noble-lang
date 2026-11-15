@@ -1,16 +1,22 @@
 use super::*;
 
-pub(super) fn receipt_json(artifact: &ModelArtifact<'_>, results: &RunResults,
-    selection: &Value) -> Value {
+pub(super) fn record(
+    artifact: &ModelArtifact<'_>,
+    results: &RunResults,
+    selection: &Value,
+) -> Value {
     let fit = artifact.fit;
     debug_assert_eq!(results.result_records.len(), 120 * PAIRED_SEEDS.len() * 4);
     debug_assert_eq!(results.training_records.len(), 280 * 4 + 80 * 4);
     json!({
         "schema": "tchunk-ranking-run/1", "measurement_performed": true,
+        "source_tree_clean": true,
         "criteria_blake3": hex(blake3::hash(FROZEN_CRITERIA.as_bytes()).as_bytes()),
         "corpus_blake3": hex(blake3::hash(FROZEN_CORPUS.as_bytes()).as_bytes()),
         "source_base": "272a41f472a46792430d3bd3e531a7c1fa295008",
         "source_commit": artifact.provenance.source_commit,
+        "toolchain": {"rustc": artifact.provenance.rustc_version,
+            "cargo": artifact.provenance.cargo_version},
         "model_identity": hex(&artifact.identity),
         "task_count": 480, "train_tasks": 280, "validation_tasks": 80, "test_tasks": 120,
         "paired_repetitions": PAIRED_SEEDS.len(),

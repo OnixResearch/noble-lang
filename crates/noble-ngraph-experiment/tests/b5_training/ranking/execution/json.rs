@@ -1,5 +1,6 @@
 use super::*;
 
+#[octet::sealed_enum]
 #[derive(Clone, Copy)]
 pub(crate) enum EvaluationMode {
     PrimitiveOnly,
@@ -52,7 +53,7 @@ pub(crate) fn fallback_disposition(disposition: chunks::RankingDisposition) -> b
     )
 }
 
-pub(crate) fn candidate_outcome_json(outcome: &chunks::CandidateOutcome) -> Value {
+pub(crate) fn candidate_record(outcome: &chunks::CandidateOutcome) -> Value {
     json!({
         "candidate_id": {"ordinal": outcome.candidate.ordinal, "digest": hex(&outcome.candidate.digest)},
         "ordinal": outcome.ordinal,
@@ -70,7 +71,7 @@ pub(crate) fn candidate_outcome_json(outcome: &chunks::CandidateOutcome) -> Valu
     })
 }
 
-pub(crate) fn scored_candidate_json(candidate: &ScoredCandidate) -> Value {
+pub(crate) fn score_record(candidate: &ScoredCandidate) -> Value {
     json!({
         "candidate_id": {"ordinal": candidate.candidate.ordinal, "digest": hex(&candidate.candidate.digest)},
         "features_f32_bits": candidate.features.iter().map(|value| value.to_bits()).collect::<Vec<_>>(),
@@ -78,7 +79,7 @@ pub(crate) fn scored_candidate_json(candidate: &ScoredCandidate) -> Value {
     })
 }
 
-pub(crate) fn identity_json(identity: &chunks::RankingIdentity) -> Value {
+pub(crate) fn identity_record(identity: &chunks::RankingIdentity) -> Value {
     debug_assert_eq!(identity.feature_revision, chunks::FEATURE_REVISION);
     debug_assert!(identity.budget.candidates <= Budget::PROFILE.candidates);
     let budgets: Vec<Value> = chunks::Resource::ALL

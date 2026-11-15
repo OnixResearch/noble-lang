@@ -33,7 +33,7 @@ pub(crate) struct ModelRanker<'a> {
     pub(crate) model_identity: [u8; chunks::REVISION_BYTES],
     pub(crate) graph: &'a CheckedGraph,
     pub(crate) snapshot: &'a ParamSnapshot,
-    pub(crate) contexts: &'a [RankingContext],
+    pub(crate) contexts: &'a [CandidateContext],
     pub(crate) active_identity: std::cell::RefCell<Option<chunks::RankingIdentity>>,
     pub(crate) score_calls: u32,
     pub(crate) scorer_elapsed_ns: u64,
@@ -133,7 +133,7 @@ impl chunks::CandidateRanker for ModelRanker<'_> {
 
 pub(crate) struct ShuffledRanker {
     pub(crate) model_identity: [u8; chunks::REVISION_BYTES],
-    pub(crate) contexts: Vec<RankingContext>,
+    pub(crate) contexts: Vec<CandidateContext>,
     pub(crate) active_identity: std::cell::RefCell<Option<chunks::RankingIdentity>>,
     pub(crate) scores: std::collections::BTreeMap<u32, f32>,
     pub(crate) score_calls: u32,

@@ -26,7 +26,8 @@ fn public_shortlex_prefix_is_bounded_and_canonical() -> Result<(), String> {
 }
 
 #[test]
-fn declared_candidate_budget_above_profile_is_clamped_without_a_debug_panic() -> Result<(), String> {
+fn declared_candidate_budget_above_profile_is_clamped_without_a_debug_panic() -> Result<(), String>
+{
     let session = noble_contracts::source::Session::without_test_hosts();
     let library = literal_library(&session)?;
     let mut request = fixture_request();
@@ -34,7 +35,8 @@ fn declared_candidate_budget_above_profile_is_clamped_without_a_debug_panic() ->
     let direct = chunks::complete(&session, &library, &request, monotonic_now_ns);
     let mut ranker = test_ranker(&library, vec![0.0; 31]);
     let mut scorer = ranker_session(&mut ranker);
-    let ranked = chunks::complete_ranked(&session, &library, &request, &mut scorer, monotonic_now_ns);
+    let ranked =
+        chunks::complete_ranked(&session, &library, &request, &mut scorer, monotonic_now_ns);
     assert_eq!(ranked.disposition, RankingDisposition::Applied);
     assert_eq!(ranker.calls, 31);
     assert_same_result(&direct, &ranked.response);
@@ -63,7 +65,8 @@ fn overheight_candidate_features_remain_bounded_before_readmission() -> Result<(
     let ordinal = usize::try_from(ordinal).map_err(|_| String::from("ordinal overflow"))?;
     let mut ranker = test_ranker(&library, vec![0.0; 31]);
     let mut scorer = ranker_session(&mut ranker);
-    let ranked = chunks::complete_ranked(&session, &library, &request, &mut scorer, monotonic_now_ns);
+    let ranked =
+        chunks::complete_ranked(&session, &library, &request, &mut scorer, monotonic_now_ns);
     assert_eq!(ranked.disposition, RankingDisposition::Applied);
     assert_eq!(ranker.calls, 31);
     let features = ranker

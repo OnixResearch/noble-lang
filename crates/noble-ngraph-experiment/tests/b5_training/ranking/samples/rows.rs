@@ -85,7 +85,7 @@ impl TrainingRow {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct RankingContext {
+pub(crate) struct CandidateContext {
     pub(crate) family: String,
     pub(crate) library_identity: [u8; chunks::REVISION_BYTES],
     pub(crate) library_revision: [u8; chunks::REVISION_BYTES],
@@ -99,8 +99,7 @@ pub(crate) struct RankingContext {
 #[derive(Default)]
 pub(crate) struct Dataset {
     pub(crate) rows: Vec<TrainingRow>,
-    pub(crate) contexts: Vec<RankingContext>,
+    pub(crate) contexts: Vec<CandidateContext>,
     pub(crate) feature_collection_ns: u64,
     pub(crate) target_label_ns: u64,
 }
-

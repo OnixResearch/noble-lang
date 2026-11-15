@@ -105,7 +105,10 @@ fn training_control<'a>(
 
 fn train_with_counters(inputs: &TrainingInputs<'_>, seed: u64) -> Result<SeedTraining, String> {
     debug_assert!(TRAIN_SEEDS.contains(&seed));
-    debug_assert_eq!(inputs.model.graph().input_slots().len(), chunks::FEATURE_LANES);
+    debug_assert_eq!(
+        inputs.model.graph().input_slots().len(),
+        chunks::FEATURE_LANES
+    );
     let contract = training_contract(inputs, seed);
     let started = std::time::Instant::now();
     let mut scratch = noble_ngraph::eval::ScratchCounters::default();
