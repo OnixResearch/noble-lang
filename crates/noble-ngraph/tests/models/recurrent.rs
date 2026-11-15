@@ -7,6 +7,8 @@ mod export;
 mod measurement;
 #[path = "recurrent/programs.rs"]
 mod programs;
+#[path = "recurrent/table_read.rs"]
+mod table_read;
 use noble_ngraph::ir::{Fact, GraphBuilder, ScalarType, SubProfile, Subject};
 use noble_ngraph::sem::Value;
 use programs::Program;
