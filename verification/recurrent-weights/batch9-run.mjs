@@ -143,7 +143,7 @@ if (!tableTest.stdout.includes('test result: ok. 1 passed; 0 failed')) {
 }
 commands.push({ command: [cargo, ...tableArgs], exit_code: 0, stdout_sha256: sha(tableTest.stdout) });
 const exportArgs = ['test', '-p', 'noble-ngraph', '--test', 'layout_differential', '--offline',
-  '--locked', '--', '--ignored', '--nocapture', 'recurrent::table_read::table_read_export'];
+  '--locked', '--', '--ignored', '--nocapture', 'recurrent::table_read::export_checked_index'];
 const tableStdout = command(cargo, exportArgs, { cwd: root, env: process.env }).stdout;
 const prefix = 'RECURRENT_TABLE_EXPORT\t';
 const rows = tableStdout.split('\n').filter(line => line.startsWith(prefix));

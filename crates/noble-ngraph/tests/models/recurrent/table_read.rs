@@ -134,7 +134,7 @@ impl Candidate {
         let mut cells = [Value::f32(0.0); CELLS];
         cells[0] = Value::f32(state as f32);
         cells[1] = Value::f32(index as f32);
-        cells[(index + 3) as usize] = Value::f32(1.0);
+        cells[usize::try_from(index + 3).expect("admitted selector fits usize")] = Value::f32(1.0);
         let (compiled, reference) = self.outcomes(&cells);
         let (Obs::Normal(actual), Obs::Normal(expected)) = (compiled, reference) else {
             panic!("valid indexed transition refused");
@@ -145,7 +145,10 @@ impl Candidate {
         };
         let next = f32::from_bits(*next);
         let hit = f32::from_bits(*hit);
-        assert!(next.is_finite() && hit.is_finite() && next.fract() == 0.0 && hit.fract() == 0.0);
+        assert!(next.is_finite());
+        assert!(hit.is_finite());
+        assert!(next.fract() == 0.0);
+        assert!(hit.fract() == 0.0);
         [next as u32, hit as u32]
     }
 }
@@ -154,13 +157,22 @@ fn rows(candidate: &Candidate) -> (String, String) {
     let tiny = (-1..=15)
         .map(|index| {
             let key = if (0..15).contains(&index) {
-                format!("\"{}\"", KEYS[index as usize])
+                format!(
+                    "\"{}\"",
+                    KEYS[usize::try_from(index).expect("declared key index fits usize")]
+                )
             } else {
                 "null".to_owned()
             };
             let [next, hit] = candidate.step(0, index);
             if (0..15).contains(&index) {
-                assert_eq!(Some([next, hit]), source(0, KEYS[index as usize]));
+                assert_eq!(
+                    Some([next, hit]),
+                    source(
+                        0,
+                        KEYS[usize::try_from(index).expect("declared key index fits usize")]
+                    )
+                );
             } else {
                 assert_eq!([next, hit], [0, 0], "Zero fallback");
             }
@@ -169,9 +181,11 @@ fn rows(candidate: &Candidate) -> (String, String) {
         .collect::<Vec<_>>()
         .join(",");
     let mut state = 0;
+    let key_count = KEYS.len();
+    assert!(key_count != 0);
     let free = (0..MAX_STEPS)
         .map(|step| {
-            let key = KEYS[(step * 7 + step / 4) % KEYS.len()];
+            let key = KEYS[(step * 7 + step / 4) % key_count];
             let index = key_index(key).expect("domain key");
             let [next, hit] = candidate.step(state, index as i32);
             assert_eq!(Some([next, hit]), source(state, key));
@@ -260,27 +274,29 @@ fn checked_index_tiny_near_misses_and_refusals() {
     for invalid in [0.5, f32::NAN, -2.0, 16.0, 16_777_216.0] {
         cells[1] = Value::f32(invalid);
         let (compiled, reference) = candidate.outcomes(&cells);
-        assert!(matches!(compiled, Obs::Refused(_)) && matches!(reference, Obs::Refused(_)));
+        assert!(matches!(compiled, Obs::Refused(_)));
+        assert!(matches!(reference, Obs::Refused(_)));
     }
     cells[1] = Value::f32(-1.0);
     cells[2] = Value::f32(0.5);
     let (compiled, reference) = candidate.outcomes(&cells);
-    assert!(matches!(compiled, Obs::Refused(_)) && matches!(reference, Obs::Refused(_)));
+    assert!(matches!(compiled, Obs::Refused(_)));
+    assert!(matches!(reference, Obs::Refused(_)));
     cells[2] = Value::f32(1.0);
     cells[3] = Value::f32(1.0); // two-hot, not a declared key
     let (compiled, reference) = candidate.outcomes(&cells);
-    assert!(matches!(compiled, Obs::Refused(_)) && matches!(reference, Obs::Refused(_)));
+    assert!(matches!(compiled, Obs::Refused(_)));
+    assert!(matches!(reference, Obs::Refused(_)));
     cells[3] = Value::f32(0.0);
     cells[1] = Value::f32(0.0); // integral but disagrees with selector -1
     let (compiled, reference) = candidate.outcomes(&cells);
-    assert!(
-        matches!(compiled, Obs::GuardFailed { .. }) && matches!(reference, Obs::GuardFailed { .. })
-    );
+    assert!(matches!(compiled, Obs::GuardFailed { .. }));
+    assert!(matches!(reference, Obs::GuardFailed { .. }));
 }
 
 #[test]
 #[ignore = "emits admitted graph and source vectors for selected offline ORT CPU pilot"]
-fn table_read_export() {
+fn export_checked_index() {
     let graph = graph();
     let candidate = Candidate::new(graph.clone());
     let (tiny, free) = rows(&candidate);
