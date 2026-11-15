@@ -7,9 +7,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const CRITERIA = 'verification/procedure-library/criteria-producer-targets-v2.json';
-const MANIFEST = 'verification/procedure-library/producer-targets-v2.txt';
-const PRODUCER = 'verification/procedure-library/receipts/producer-targets-v2.json';
+const CRITERIA = 'verification/procedure-library/criteria-producer-targets-v3.json';
+const MANIFEST = 'verification/procedure-library/producer-targets-v3.txt';
+const PRODUCER = 'verification/procedure-library/receipts/producer-targets-v3.json';
+const ACQUISITION = 'verification/synthesis/receipts/2026-11-13/synthesis-v2.json';
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const read = relative => fs.readFileSync(path.join(ROOT, relative));
 
@@ -43,7 +44,10 @@ function main() {
   assert.equal(git(['status', '--porcelain', '--untracked-files=all']), '', 'source tree must be clean');
   const criteriaBytes = read(CRITERIA);
   const criteria = JSON.parse(criteriaBytes);
-  assert.equal(criteria.schema, 'noble-procedure-library-producer-targets-criteria/2');
+  assert.equal(criteria.schema, 'noble-procedure-library-producer-targets-criteria/3');
+  assert.equal(criteria.producer.reference_derivation.source_sha256, digest(read(ACQUISITION)),
+    'the frozen v3 reference derivation no longer binds the retained #116 source');
+  assert.equal(criteria.producer.manifest, MANIFEST);
   const producerBytes = read(PRODUCER);
   const producer = JSON.parse(producerBytes);
   assert.equal(producer.schema, 'noble-synthesis-receipt/v1');
