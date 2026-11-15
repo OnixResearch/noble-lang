@@ -92,7 +92,8 @@ function refusal(run, code, label) {
   insist(run.kind !== 'review', `${label}: cannot refuse through a review`);
   assert.equal(run.code, code, `${label}: diagnostic`);
   insist(run.outcome !== 'normal', `${label}: refusal was normal`);
-  const unsupported = new Set(['E-EFFECT', 'E-RESOURCE', 'E-RECURSION', 'E-REFLECT', 'E-DYNAMIC-RUN']);
+  const unsupported = new Set(['E-AGGREGATE', 'E-EFFECT', 'E-RESOURCE', 'E-RECURSION',
+    'E-REFLECT', 'E-DYNAMIC-RUN']);
   const budget = code.startsWith('E-BUDGET-');
   const expectedExit = budget ? 5 : unsupported.has(code) ? 4 : 2;
   if (run.kind === 'cli') {
