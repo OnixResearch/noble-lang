@@ -70,12 +70,12 @@ function sourceRoster() {
     path: path.relative(root, file), sha256: fileDigest(file),
   })) };
 }
-function parseJson(label, runResult) {
+function parseJson(label, runResult, allowError = false) {
   if (runResult.error || runResult.signal) throw Error(`${label} did not return: ${JSON.stringify(runResult)}`);
   const text = fs.readFileSync(path.join(out, `${label}.out`), 'utf8').trim();
   let data;
   try { data = JSON.parse(text); } catch { throw Error(`${label} did not emit JSON: ${text.slice(0, 1000)}`); }
-  if (data.error) throw Error(`${label}: ${data.error}`);
+  if (data.error && !allowError) throw Error(`${label}: ${data.error}`);
   return data;
 }
 function rowsOf(report) {
@@ -164,7 +164,9 @@ function controlChecks(cli, candidate, stock, empty, missing) {
   };
   return { checks, candidate_count: c.size, stock_count: s.size,
     private_helper: hidden, cyclic_rows: cycle, cli_result: cli.data,
-    empty_result: empty.data, missing_result: missing.data };
+    empty_result: empty.data,
+    missing_result: { audited: missing.data?.audited, ok: missing.data?.ok,
+      unknown_module_refused: /unknown module prefix 'NobleAuditDoesNotExist'/.test(missing.data?.error ?? '') } };
 }
 
 invariant(!fs.existsSync(out), 'output directory already exists');
@@ -233,7 +235,7 @@ try {
   const controls = controlChecks({ ...controlCli, data: controlData },
     parseJson('control-candidate', controlModes.candidate), parseJson('control-stock', controlModes.stock),
     { ...empty, data: parseJson('control-empty', empty) },
-    { ...missing, data: parseJson('control-missing', missing) });
+    { ...missing, data: parseJson('control-missing', missing, true) });
   const complete = comparison.moduleMissing.length === 0 && comparison.selectedMissing.length === 0
     && comparison.selectedMismatches.length === 0 && comparison.privateMissing.length === 0
     && comparison.privateAmbiguous.length === 0 && comparison.candidate_stock_discrepancies.length === 0
