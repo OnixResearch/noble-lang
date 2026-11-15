@@ -2628,6 +2628,20 @@ earlier generations remain retained. Rust generation, evidence and rollback fixt
 implementation evidence; the model does not establish the concrete persistence decoder, evidence
 toolchain availability checks, or runtime behavior.
 
+`NobleFoundation/ProcedureLibraryWire.lean` adds a **finite** byte-encoding
+subprofile for two actual I64 source fixtures with no captures or dependencies
+and one empty instantiation. The kernel checks their encoded lengths and the
+first fixture's encoder length prefix. The source-digest-bound Lean emitter
+`verification/procedure-library/encoder-corpus.lean` generates the bytes,
+and the Rust differential test compares those bytes with
+`ProcedureRecord::identity_subject_bytes` for independently re-derived
+chunk identities and source revisions. The corpus receipt and its verifier
+bind the Lean model, emitter, Rust encoder and fixture source bytes.
+This is **not** a universal correspondence theorem: arbitrary chunks, captures,
+dependencies, provenance variants, the experimental digest and #56 exact-pair
+certificate validation remain outside the two checked fixtures. No promotion
+under a proof-demanding policy follows from the corpus alone.
+
 ## Specification-quality obligations (issue #65)
 
 `NobleFoundation/SpecQuality.lean` separates three questions about a retained

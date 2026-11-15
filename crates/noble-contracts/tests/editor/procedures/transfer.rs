@@ -266,6 +266,8 @@ struct TaskReport<'a> {
 
 const TRANSFER_ROW_CAPACITY: usize = 16;
 
+#[path = "transfer/encoder_corpus.rs"]
+mod encoder_corpus;
 #[path = "transfer/fixtures.rs"]
 mod fixtures;
 #[path = "transfer/producer.rs"]

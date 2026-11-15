@@ -6412,6 +6412,24 @@
       "claim": "rollback appends a generation without rewriting earlier retained history"
     },
     {
+      "name": "NobleFoundation.ProcedureLibraryWire.commuted_fixture_wire_length",
+      "phase": 2,
+      "role": "finite-byte-corpus",
+      "claim": "the finite Commuted source wire fixture has the checked encoded byte length"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibraryWire.subtract_fixture_wire_length",
+      "phase": 2,
+      "role": "finite-byte-corpus",
+      "claim": "the finite Subtract source wire fixture has the checked encoded byte length"
+    },
+    {
+      "name": "NobleFoundation.ProcedureLibraryWire.commuted_fixture_encoder_prefix",
+      "phase": 2,
+      "role": "finite-byte-corpus",
+      "claim": "the finite Commuted fixture begins with the checked encoder identifier length prefix"
+    },
+    {
       "name": "NobleFoundation.Synthesis.not_certifiable_of_refuted",
       "phase": 2,
       "role": "symbolic-solver",
