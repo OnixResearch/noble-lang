@@ -43,6 +43,7 @@ import NobleFoundation.BeltTargetCorpus
 import NobleFoundation.GraphRewrite
 import NobleFoundation.Specialize
 import NobleFoundation.SpecializeResidual
+import NobleFoundation.PartialStatic
 import NobleFoundation.SymbolicMutations
 import NobleFoundation.SymbolicPair
 import NobleFoundation.SymbolicSolver

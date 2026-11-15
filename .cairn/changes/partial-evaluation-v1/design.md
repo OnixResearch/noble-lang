@@ -393,10 +393,17 @@ The frozen protocol (committed before any measurement it governs) is:
   Pair/Unit shapes after the full original Program is independently admitted. This
   distinction does not add Bool composition; #35's NO-GO record is untouched.
 
-## Open questions (owner-reserved, recorded not decided)
+## Accounting-name decision for this bounded opt-in profile
 
-1. The accounting revision string `ngraph-pe/0` and the two budget-kind names are this
-   change's proposal; a different naming convention is a textual change to D7 and the delta.
+**DECIDED: retain** the already implemented `ngraph-pe/0` accounting revision
+and `RESIDUAL-NODES` / `VARIANTS` budget-kind names for the bounded,
+default-off D3/offset profile. D7 charges these two caps, the emitted
+derivation record names the revision, and the negative budget controls
+observe the exact refusal classes. There is no unresolved naming choice
+that prevents evaluating this opt-in experiment. Reopen only on an
+owner-reviewed versioned accounting/diagnostic revision with compatible
+consumer migration and fresh source-bound receipt; do not silently rename
+an existing record or weaken its cap.
 
 ## Remaining issue #32 boundary decisions (2026-11-14)
 
@@ -507,3 +514,217 @@ on a change to the value/effect whitelist or source emission, or when a consumer
 universal refinement instead of finite regression evidence. Transparent/default
 specialization needs a separate adoption decision; the ordinary unspecialized path is
 not changed.
+
+### D14 — Frozen comparison protocol for partially-static offsets (issue #32 owner follow-up)
+
+**Experiment contract, frozen before measuring:** This is an explicitly selected
+checked-graph experiment, not a change to D3, the default specializer, Core
+execution, or an already reflected Program. Its domain is D1's pure,
+total, flat `ngraph-i64/0` slice. Represent an add/sub expression by its
+wrapping `i64` offset and an **ordered** sequence of signed, shared symbolic
+node identities. A shared expression is materialized once; an unshared
+linear chain may be flattened. Reconstruct only a new checked residual,
+with the D2 ordered input map and a distinct derivation identity. Never
+cross multiplication, equality, guards, effects or a shape boundary.
+The existing D7 residual-node cap applies to both intermediate and final
+growth; exceeding it must refuse rather than publish a partial graph.
+
+**Frozen comparison:** Compare the exact same checked graph and static map
+through the current D3-based static-or-residual baseline (including the
+separately approved #34 total identity rules) and the opt-in offset path. Fixed
+families are chained addition `(x + 2) + 3`, chained subtraction
+`(x - 2) - 3`, wrapping boundary `x + i64::MAX + 1`, a shared linear
+subexpression used twice, a non-prefix static input, and a total expression
+made dead by folding/forwarding. Check every output under the same merged
+dynamic inputs at `0`, `1`, `-1`, `i64::MAX`, `i64::MIN`, and 64 fixed-seed
+vectors. Include below/at/above a reduced growth cap, and distinguish
+refusal from mismatched values. A nested partially known pair remains an
+explicit **unsupported graph experiment**: D1 rejects authored shape
+trees; D13's Program path independently supports bounded pair/Unit
+reconstruction but is not automatically routed through this new offset
+transform. Do not count a scalar flattening as pair evidence.
+
+Record **separately**: residual graph node count; L3/L4 runtime node visits
+on both sides; specialization and source emission/re-admission elapsed time;
+first and repeated replay time; compiled retained bytes, checked-graph
+retained bytes, and emitted-source bytes. Use a source-committed runner and
+a clean committed source identity; timings on a shared host are descriptive
+and never a pass condition. A positive structural result requires every
+finite vector to agree, a checked/re-admitted residual, at least one family
+with fewer graph nodes *and* runtime visits than baseline, no family with
+more than 125% of baseline runtime visits or retained compiled bytes, and
+both growth-limit refusals and input-order controls to fire. An adoption
+**GO** additionally requires a universal Rust-to-wrapping-model and
+emitter/replay correspondence result, a reviewed intentional code-inspection
+semantics for the *new* Program identity, and repeatable cost benefit under
+equivalent budgets. Without any of these, **NO-GO** for default adoption
+even if the finite experiment improves a fixture. Reopen on a completed
+proof/bridge and a new frozen matched-budget comparison, or on an admitted
+counterexample (which first requires a correctness repair).
+
+The Wei/Tan/Zhong let-insertion observation is tested here as preservation
+of graph-node identity and lexical sharing in emitted source, not as
+permission to move an effect or alter the result of code inspection. An
+inspector may distinguish old and new code; only an explicitly requested
+new residual identity is returned. The Yallop et al. partially-static
+suggestion is restricted to wrapping-I64 offsets and symbolic atoms; no
+F32, effectful value, or general recursive pair algebra is implied.
+
+### D15 — Measured result and default-adoption decision (issue #32 owner follow-up)
+
+**NO-GO for default adoption.** D14's source-committed, opt-in producer and
+the raw comparison in `verification/ngraph/pe-offset-2026-11-15.json` retain
+69 ordered dynamic vectors for each of seven fixed families. Every L3/L4
+result and every independently re-admitted emitted residual agrees on those
+finite vectors. Counts below are *totals* over 69 vectors for each graph's
+runtime visits; retained bytes are from the compiled graph, not a claim about
+the total process's memory.
+
+| Frozen family | Baseline → offset nodes | Baseline → offset L3/L4 visits | Baseline → offset compiled bytes |
+|---|---:|---:|---:|
+| chained add | 5 → 3 | 345 → 207 | 124 → 76 |
+| chained subtract | 5 → 3 | 345 → 207 | 124 → 76 |
+| wrapping boundary | 5 → 3 | 345 → 207 | 124 → 76 |
+| shared subexpression | 4 → 4 | 276 → 276 | 108 → 108 |
+| non-prefix static input | 9 → 5 | 621 → 345 | 216 → 120 |
+| dead pure total forward | 3 → 3 | 207 → 207 | 76 → 76 |
+| growth cap control | 5 → 7 | 345 → 483 | 120 → 168 |
+
+The growth control consumes **140%** of baseline visits and compiled bytes,
+exceeding D14's pre-registered 125% maximum: the positive structural result
+is **not** met even though four families have smaller graphs. An attempted
+growth beyond the lowered `residual_nodes` cap refuses without publishing;
+the unchanged D3 baseline and equal-cap exact boundary are tested. On
+reduced-node cases the checked-graph retained bytes can still equal baseline
+because the separate new store reserves the baseline node capacity; the
+compiled bytes, emitted-source bytes and all elapsed-time categories are
+recorded separately in the receipt. Timing numbers are one shared-host debug
+sample per fixture, not a matched-budget speedup or cold-cache comparison.
+The opt-in comparison invokes D3 first; its total specialization time is
+therefore not a standalone replacement cost.
+Neither this comparison receipt nor the earlier `pe-2026-11-13.json`
+measured a peak heap high-water. D16 froze the follow-on DHAT protocol
+before its execution; D17 reports its process-global peak live heap and
+total allocated bytes for both D13 Program residualization and the offset
+comparison. The original acceptance item's **scratch-byte reporting is
+DONE** at that explicitly scoped level, alongside the retained-size and
+finite-work observations. There is still **NO-GO for a scratch-memory
+efficiency claim**: a global instrumented process peak is not a
+transformation-only bound, and a single fixed-fixture run is not a
+matched-budget resource-efficiency result. Reopen an efficiency claim only
+with an attributable or proved bound through both transformation and
+ordinary re-admission, plus a new frozen matched-budget comparison.
+
+The selected normalization laws over `BitVec 64`, ordered signed atom
+identities, wrapping offset folding, rank/merge, and add/sub step semantics
+are kernel-checked in `NobleFoundation.PartialStatic` and inventoried by the
+foundation lane. They are **model laws**, not a theorem that the Rust
+normalizer, graph emitter, compiler, ordinary execution or the original
+Program's stack tail refine that model for all admitted inputs. Finite tests
+assert emitted `let` sharing, distinct residual identity and admission; the
+old reflected Program, source, subject and unspecialized/default execution
+remain unchanged. A code inspector can distinguish the *explicitly
+requested new Program*: this is not a license for silent optimization of a
+reflected object. The current experiment rejects authored nested partially
+known pairs at D1's graph boundary (`E-AGGREGATE`); D13 separately supports
+bounded pair/Unit Program reconstruction but does not route it through
+offset normalization. No effectful or potentially failing operation is
+moved or eliminated.
+
+| Owner follow-up | Disposition and condition for changing it |
+|---|---|
+| Wei/Tan/Zhong binding store, sharing, let insertion, dead total nodes | **DONE for this bounded experiment:** shared graph identities are materialized once, re-emitted as lexical `let`s; dead pure total nodes and repeated uses are fixed cases. More general DCE/let-motion is **NO-GO** without a separate whitelist and semantic bridge. |
+| Yallop partially-static mixed data and wrapping normalization | **DONE for I64 add/sub offsets with ordered signed atoms**; partial recursive pairs/F32 are **NO-GO** here. Reopen on admitted typed aggregate cases and an explicit normalization proof for them. |
+| Nested pairs, repeated subexpressions, non-prefix maps, dead nodes, growth cap | **DONE or DECIDED:** scalar controls and cap boundaries are executed; nested pair is a tested refusal, not misrepresented as supported. Reopen pairs only with a D1/D13-compatible representation and proof. |
+| Recipe/identity and intensional code inspection | **DECIDED:** explicit new checked residual and readmitted Program; no silent modification of the original. Reopen default adoption only after an owner-reviewed observational contract explicitly covers inspector-visible code identities. |
+| #42 certificates, #33 manifest/endpoint replay, static merge and Program bridge | **DECIDED:** the #42 layer and #33 binding do not establish this Rust/model or Program bridge. Do not claim they do. Reopen on a universally checked correspondence through rank/merge, residual source emission/re-admission and ordinary replay, with #33 binding exact endpoints when this representation is used. |
+| E-graphs, self-application, effectful code motion | **DECIDED not prerequisite** for the pure selected experiment; reopen only under a separately authorized enlarged domain and proof/effect policy. |
+| Original acceptance item 6, peak scratch-byte reporting | **DONE for measured process-global live heap high-water** on seven offset fixtures and three D13 Program fixtures, each with an isolated setup leg (D16–D17). **NO-GO for a transformation-only scratch bound or efficiency claim** until scoped/verified accounting and matched-budget measurements justify it. |
+
+Adoption requires **all** D14 criteria: repair the 140% growth failure under
+the frozen structural gate, prove universal Rust-to-model plus
+emitter/replay correspondence with the static-input merge relation,
+review inspector-visible identity semantics, and demonstrate repeatable
+matched-budget cost benefit with scratch accounting under a new
+pre-registered comparison. Reopen on a completed proof/bridge and newly
+frozen measured gate, or immediately on an admitted counterexample (first
+repair correctness). Until then D3 remains the only default.
+
+### D16 — Frozen heap-high-water reporting protocol for acceptance item 6
+
+**Protocol frozen before scratch measurement:** Keep the seven D14 checked
+graph fixtures and their input maps unchanged. In one fresh process per
+fixture and side, run an ignored test case under pinned Valgrind DHAT
+3.27.1: `setup` constructs only the checked source; `baseline` constructs
+the D3 residual and emits/re-admits its source; `offset` runs the opt-in
+comparison and emits/re-admits its normalized source. This is seven times
+three processes. Separately measure three fixed D13 checked-Program
+families with two processes each: `setup` prepares the original source,
+and `program` invokes the real `program::residualize`, including its
+ordinary source preparation and re-admission:
+
+| D13 family | Original source | Input interface / preserved tail | Static active leaves |
+|---|---|---|---|
+| `opaque-tail` | `swap -` | `Text Bool I64 I64` / 2 | first I64 = 5, second dynamic |
+| `nested-partial-pair` | `drop drop drop dup unpair unpair swap drop +` | `Text Pair<I64,Pair<Unit,I64>> Unit Bool I64` / 1 | `[2, dynamic, dynamic, 4]` |
+| `named-repeated-call` | `def sq [ dup * ]` then `sq sq` | `Text I64` / 1 | I64 = 5 |
+
+Capture the raw DHAT JSON, Valgrind log and test stdout/stderr for
+each of 27 runs. The script requires a clean source commit, records the
+source tree, test executable digest, exact arguments and pinned Valgrind
+version, and refuses missing or unparsable `Total` and `At t-gmax`
+bytes/blocks. Report DHAT process-global peak live heap (`t-gmax`) and
+total allocated bytes **separately**, plus the paired setup differences.
+The global peak includes the libtest harness, input construction and
+source/graph preparation in addition to the selected transformation and
+readmission; the setup difference is an observation, not an isolated
+allocator high-water of the transformation. `Total` is cumulative
+allocation traffic, not peak. No timing, leak, equal-budget, retained
+memory or efficiency threshold is inferred from the DHAT figures.
+Outcomes of all 27 cases must be successful and the ordinary checked
+readmission must be reached on every non-setup leg. If a future claim
+requires an attributable scratch-only bound, instrument a scoped
+allocator under a separately reviewed policy; do not relabel a
+process-global DHAT peak as one.
+
+### D17 — Source-bound high-water result and efficiency decision (2026-11-15)
+
+Pinned DHAT 3.27.1 completed all **27/27** frozen process legs at the
+clean source commit `3c3df044497f2411e88e989fcb90703c301b0e3e`. The
+[receipt](../../../verification/ngraph/pe-scratch-2026-11-15.json) binds its
+source tree, executable and harness digests, and all **108 raw DHAT JSON,
+Valgrind log and test stdout/stderr files** by SHA-256. `t-gmax` is
+process-global *peak live heap bytes*; `Total` is *cumulative allocated
+bytes*, **not** peak and **not** retained graph bytes. In each row `(Δ)`
+subtracts the separately measured setup process; it is not a scoped
+transformation heap high-water. The global peak also counts the libtest
+harness and input/checked-source preparation.
+
+| Frozen graph family | Setup peak B | D3 peak B (Δ setup B) | Opt-in offset peak B (Δ setup B) | D3 total B | Offset total B |
+|---|---:|---:|---:|---:|---:|
+| chained-add | 14,779 | 342,921 (328,142) | 123,737 (108,958) | 4,311,236 | 1,075,458 |
+| chained-sub | 14,779 | 342,921 (328,142) | 123,737 (108,958) | 4,311,236 | 1,075,499 |
+| wrapping-boundary | 14,779 | 342,945 (328,166) | 123,743 (108,964) | 4,311,980 | 1,076,243 |
+| shared-subexpression | 14,779 | 249,454 (234,675) | 248,472 (233,693) | 3,054,493 | 3,057,105 |
+| non-prefix-static | 14,779 | 2,320,171 (2,305,392) | 340,022 (325,243) | 31,171,634 | 4,273,621 |
+| dead-total-forward | 14,779 | 123,554 (108,775) | 123,552 (108,773) | 1,072,235 | 1,074,705 |
+| growth-cap | 14,779 | 355,176 (340,397) | 985,360 (970,581) | 4,492,216 | 12,935,100 |
+
+| Frozen D13 Program family | Setup peak B | Residualize + readmit peak B (Δ setup B) | Setup total B | Residualize + readmit total B |
+|---|---:|---:|---:|---:|
+| opaque-tail | 47,593 | 96,482 (48,889) | 149,459 | 797,373 |
+| nested-partial-pair | 63,645 | 344,889 (281,244) | 242,850 | 3,984,194 |
+| named-repeated-call | 58,271 | 86,513 (28,242) | 304,507 | 822,319 |
+
+**Decision:** original acceptance item 6's numeric peak scratch reporting
+is DONE as an explicitly labelled process-global upper observation for
+these bounded fixtures. The growth case's offset peak (985,360 B) is
+**above** its D3 peak (355,176 B), while D14's separate runtime/compiled
+growth gate also fails at 140%. Remain **NO-GO for default adoption** and
+for any claim of memory or runtime efficiency. Reopen only after repairing
+that frozen growth case, proving the missing universal Rust-to-model and
+ordinary Program bridge, reviewing inspector-visible identity semantics,
+and producing an attributable/proved scratch limit plus a new
+pre-registered matched-budget comparison. An admitted semantic
+counterexample first requires a correctness repair. The old D3 default is
+unchanged.

@@ -1,0 +1,18 @@
+==1394794== DHAT, a dynamic heap analysis tool
+==1394794== Copyright (C) 2010-2024, and GNU GPL'd, by Mozilla Foundation et al.
+==1394794== Using Valgrind-3.27.1 and LibVEX; rerun with -h for copyright info
+==1394794== Command: /home/brittonr/.cache/noble-iss/target/pe-32e/debug/deps/rewrite_cost-de0940107f21480a --exact offset::scratch::profile_case --ignored --nocapture
+==1394794== Parent PID: 1394676
+==1394794== 
+==1394794== 
+==1394794== Total:     4,311,236 bytes in 44,022 blocks
+==1394794== At t-gmax: 342,921 bytes in 2,491 blocks
+==1394794== At t-end:  592 bytes in 2 blocks
+==1394794== Reads:     6,125,075 bytes
+==1394794== Writes:    4,598,184 bytes
+==1394794== 
+==1394794== To view the resulting profile, open
+==1394794==   file:///nix/store/39iybd55afmpqlgf979ra06wj3q3wapa-valgrind-3.27.1/libexec/valgrind/dh_view.html
+==1394794== in a web browser, click on "Load...", and then select the file
+==1394794==   /home/brittonr/.cache/noble-iss/scratch/pe-32e/dhat-3c3df04/chained-add-baseline.dhat.json
+==1394794== The text at the bottom explains the abbreviations used in the output.

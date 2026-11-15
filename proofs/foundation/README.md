@@ -4643,6 +4643,61 @@ Open, and deliberately not closed:
 - no correspondence claim relates this model to Rust, Wasm, the certificate
   emitter, or any retained runtime artifact.
 
+### Ordered wrapping offsets and signed atoms (issue #32)
+
+The selected Lean experiment in NobleFoundation/PartialStatic.lean uses
+`BitVec 64`, the issue-#15 word representation, and the issue-#43
+PackedSchedule add/sub step semantics. A form has a wrapping constant offset
+and a list of `(node identity, negative sign)` atoms. Addition concatenates
+lists; subtraction subtracts the right offset and flips the right list's
+signs *without reversing its order*. Normalization does not sort, cancel,
+clone or erase atoms. Each identity denotes one value in an arbitrary
+node-valued map; repeated occurrences refer to that same value with their
+multiplicity intact. The proofs transport word equations through the
+issue-#15 `toZ` map to residues modulo `2^64`, not real-number algebra.
+
+`NobleFoundation.PartialStatic.normalize_sound` covers every finite add/sub
+expression under an arbitrary word-valued node map.
+`NobleFoundation.PartialStatic.increment_offset_eval`,
+`NobleFoundation.PartialStatic.add_atom_eval`, and
+`NobleFoundation.PartialStatic.sub_atom_eval` specify constant and signed
+atom accumulation. `NobleFoundation.PartialStatic.fold_offset_2_3` fixes
+`(x + 2) + 3` to one atom and offset five;
+`NobleFoundation.PartialStatic.wrapping_offset_boundary` and
+`NobleFoundation.PartialStatic.wrapping_offset_eval` fix the maximum
+64-bit unsigned offset plus one to zero. The left-first, negative-right
+subtraction shape and a noncommuting concrete control are inventoried
+separately. `NobleFoundation.PartialStatic.repeated_atom_identity` and
+`NobleFoundation.PartialStatic.repeated_atom_eval` show two references to the
+same node, not two independently identified input values.
+
+`NobleFoundation.PartialStatic.normalize_sound_merge` instantiates the
+denotation with the existing Specialize rank/merge input reconstruction.
+`NobleFoundation.PartialStatic.dynamic_atom_merge` and
+`NobleFoundation.PartialStatic.static_atom_merge` pin its dynamic and static
+slots; the non-prefix fixture puts the static slot between live dynamic
+slots. In that instantiation atoms are **input slots**. For arbitrary graph
+node identities instead, the caller supplies one word value per identity;
+`NobleFoundation.PartialStatic.packed_add_step` and
+`NobleFoundation.PartialStatic.packed_sub_step` connect an individual
+PackedSchedule add/sub node to that valuation when both predecessor
+registers contain the specified I64 values. These statements do not assert
+that every graph node is I64 or that an arbitrary graph has a valid
+partially-static residual.
+
+| Claim | Model / theorem(s) | Implementation boundary | Status |
+|---|---|---|---|
+| Selected wrapping offset and signed-atom normalization | `NobleFoundation.PartialStatic.normalize_sound`, `NobleFoundation.PartialStatic.addForm_eval`, `NobleFoundation.PartialStatic.subForm_eval`, `NobleFoundation.PartialStatic.normalize_sound_merge`, `NobleFoundation.PartialStatic.packed_add_step`, `NobleFoundation.PartialStatic.packed_sub_step`, `NobleFoundation.PartialStatic.fold_offset_2_3`, `NobleFoundation.PartialStatic.wrapping_offset_boundary`, `NobleFoundation.PartialStatic.repeated_atom_identity` | Finite pure BitVec64 add/sub model with arbitrary atom values; one-step PackedSchedule bridge only under explicit typed predecessor premises. No Rust form construction, sharing/materialization count, budget, residual Program or backend refinement theorem. | **selected model proof source added; kernel/axiom audit pending integration**; Rust/Program correspondence **open** |
+
+Open, and deliberately not closed: this list representation alone does not
+prove that the Rust producer materializes each shared node once, preserves
+the precise evaluator's ordering or emits a valid and independently accepted
+residual Program. It proves no dynamic graph traversal, dead-code safety,
+mixed-pair transformation, bounded memory/work, F32 rewrite, code-inspection
+equivalence or effectful code motion. The graph-to-Program, Rust-to-model and
+runtime/backend correspondence remain separate obligations; changes in
+observable recipe and identity are not identified away by these equations.
+
 ## Collision-safe cache lookup and subject key encoding (issue #33, phase 1)
 
 `NobleFoundation/CacheLookup.lean` is a generic model of two parts of the

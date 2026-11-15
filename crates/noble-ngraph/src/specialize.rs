@@ -37,6 +37,8 @@ use crate::identity::IdentityScheme;
 
 /// Session-local exact-key reuse of successful residual Programs.
 pub mod cache;
+/// Opt-in partially-static wrapping-I64 offset experiment (not the default path).
+pub mod offset;
 /// Opt-in specialization of an exact, checked source Program.
 pub mod program;
 

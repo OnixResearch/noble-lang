@@ -5896,6 +5896,150 @@
       "claim": "false-equality fixture outputs include the wrapping double of any dynamic input"
     },
     {
+      "name": "NobleFoundation.PartialStatic.flip_node",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "sign reversal preserves the identity of a symbolic node"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.flip_involution",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "reversing an atom sign twice preserves the exact signed atom"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.contribution_flip",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "flipping an atom sign negates its wrapping I64 contribution"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.atomSum_append",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "ordered concatenation adds the signed-atom sums as wrapping I64 words"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.atomSum_flip",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "flipping every ordered atom negates the wrapping sum without erasing repeats"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.addForm_eval",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "adding offsets and concatenating atoms preserves wrapping addition"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.subForm_eval",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "subtracting the RHS offset and flipping its ordered atoms preserves wrapping subtraction"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.increment_offset_eval",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "accumulating a constant offset adds that word to the denotation"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.add_atom_eval",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "adding an atom adds the value of its referenced node"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.sub_atom_eval",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "subtracting an atom subtracts the value of its referenced node"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.normalize_sound",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "every finite add/sub expression over arbitrary word-valued nodes agrees with its ordered affine normalization"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.normalize_sound_merge",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "normalization remains sound under static and ordered dynamic input reconstruction"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.dynamic_atom_merge",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "a dynamic atom denotes the dynamic input at its rank for any original slot"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.static_atom_merge",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "a static atom denotes the exact bits at its original input slot"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.packed_add_step",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "an I64-typed packed graph add step agrees with normalized signed-atom addition"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.packed_sub_step",
+      "phase": 1,
+      "role": "specialization",
+      "claim": "an I64-typed packed graph sub step agrees with first-minus-second normalization"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.fold_offset_2_3",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "normalizing an atom plus two plus three retains one atom and offset five"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.wrapping_offset_boundary",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "adding maximum unsigned 64-bit offset and one wraps the offset to zero"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.wrapping_offset_eval",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the wrapped boundary leaves the symbolic input's value unchanged"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.subtraction_atom_order",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "a symbolic subtraction retains left-first order and a negative RHS atom"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.repeated_atom_identity",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "using one materialized node twice retains two references to the same identity"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.repeated_atom_eval",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "repeated references contribute the same node's word value twice"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.non_prefix_atom_merge",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "a middle static slot leaves later dynamic atom rank and subtraction order intact"
+    },
+    {
+      "name": "NobleFoundation.PartialStatic.reversed_subtraction_control",
+      "phase": 1,
+      "role": "negative-control",
+      "claim": "reversing two distinct concrete subtraction operands changes the result"
+    },
+    {
       "name": "NobleFoundation.Binary32.DecimalImport.decimalRatio_den_pos",
       "phase": 1,
       "role": "binary32-decimal-import",
