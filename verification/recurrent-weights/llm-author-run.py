@@ -34,6 +34,9 @@ def run(prompt_path, transcript_path, compiled_path, output_dir):
     require(transcript["schema"] == "noble-recurrent-llm-author-transcript/v1" and
             transcript["prompt_path"] == "verification/recurrent-weights/llm-author-prompt.txt" and
             transcript["prompt_sha256"] == hashlib.sha256(prompt.encode()).hexdigest() and
+            transcript["observed_author_tool_reads"] == [
+                "verification/recurrent-weights/llm-author-prompt.txt",
+                "verification/recurrent-weights/llm-author-prompt.txt:raw:5-5"] and
             isinstance(transcript["response"], dict),
             "authored prompt or complete response does not match committed transcript")
     response = transcript["response"]
