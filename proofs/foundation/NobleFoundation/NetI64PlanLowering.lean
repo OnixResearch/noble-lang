@@ -305,12 +305,17 @@ theorem PhysicalState.era_forward_candidate_exists
     (hfp : first.ports[0]? = some (some (pair.second, 0)))
     (hsp : second.ports[0]? = some (some (pair.first, 0))) :
     ∃ plan, state.planCandidate pair
-      (a, b, .era, .num value, eraNumData.toX) reuse = some plan := by
+      (a, b, .era, .num value, eraNumData.toX) reuse = some plan ∧
+      plan.results = [] ∧ plan.externalWrites = [] ∧
+      plan.publications = [] ∧ plan.action = (0, 0) ∧
+      plan.pair = (pair.first, pair.firstGeneration.toNat,
+        pair.second, pair.secondGeneration.toNat) := by
   unfold PhysicalState.planCandidate PhysicalState.planCandidateCore
   simp [NetI64.xRule, hpair, hf, hs, hfa, hsa, hfp, hsp,
     BytePlan.ruleSlots, BytePlan.ruleOpcode, PhysicalState.candidateBody,
     PhysicalState.consumedBoundaryAlias, NetI64.arity,
     eraNumData, RuleData.toX, RuleData.ofWires]
+  simp [BytePlan.withRequiredWrites, BytePlan.requiredWrites]
 
 /-- The reverse erasure orientation has the same empty physical image and
 requires only the corresponding current principal and symbol fields. -/
@@ -326,12 +331,17 @@ theorem PhysicalState.era_reverse_candidate_exists
     (hfp : first.ports[0]? = some (some (pair.second, 0)))
     (hsp : second.ports[0]? = some (some (pair.first, 0))) :
     ∃ plan, state.planCandidate pair
-      (a, b, .num value, .era, eraNumData.toX.swap) reuse = some plan := by
+      (a, b, .num value, .era, eraNumData.toX.swap) reuse = some plan ∧
+      plan.results = [] ∧ plan.externalWrites = [] ∧
+      plan.publications = [] ∧ plan.action = (0, 0) ∧
+      plan.pair = (pair.first, pair.firstGeneration.toNat,
+        pair.second, pair.secondGeneration.toNat) := by
   unfold PhysicalState.planCandidate PhysicalState.planCandidateCore
   simp [NetI64.xRule, hpair, hf, hs, hfa, hsa, hfp, hsp,
     BytePlan.ruleSlots, BytePlan.ruleOpcode, PhysicalState.candidateBody,
     PhysicalState.consumedBoundaryAlias, NetI64.arity,
     eraNumData, RuleData.toX, RuleData.ofWires, XRhs.swap]
+  simp [BytePlan.withRequiredWrites, BytePlan.requiredWrites]
 
 /-- A forward one-operand rule has exactly one captured auxiliary endpoint,
 one result symbol, and one potential physical publication. The capture and
@@ -740,6 +750,29 @@ theorem PhysicalState.planCandidate_fields {state : PhysicalState}
     · simpa [BytePlan.withRequiredWrites] using hscratch
     · simpa [BytePlan.withRequiredWrites] using hqueue
 
+/-- Successful lowering retains the exact candidate it constructed before
+the independent image decoder checked its roundtrip. -/
+private theorem PhysicalState.lowerPlan_has_candidate
+    {state : PhysicalState} {pair : PhysicalPair}
+    {redex : XRedex NetSym} {reuse : Bool} {plan : BytePlan}
+    (hLower : state.lowerPlan pair redex reuse = some plan) :
+    state.planCandidate pair redex reuse = some plan := by
+  unfold PhysicalState.lowerPlan at hLower
+  cases he : state.planIndicesEncodable with
+  | false => simp [he] at hLower
+  | true =>
+    cases hh : state.pairHeadroom pair with
+    | false => simp [he, hh] at hLower
+    | true =>
+      cases hp : state.planCandidate pair redex reuse with
+      | none => simp [he, hh, hp] at hLower
+      | some candidate =>
+        by_cases hd : BytePlan.decode candidate.emit = some candidate
+        · simp [he, hh, hp, hd] at hLower
+          cases hLower
+          rfl
+        · simp [he, hh, hp, hd] at hLower
+
 /-- The actual lowered byte image already satisfies the first eight
 independently checked semantic fields when its physical capture denotes the
 abstract selected boundary. The remaining fields concern the physical
@@ -766,22 +799,7 @@ theorem PhysicalState.lowerPlan_semantic_prefix {state : PhysicalState}
       (plan.results.filter fun result => result.1).length ∧
     256 ≤ plan.scratchReservation ∧
     plan.publications.length ≤ plan.worklistReservation := by
-  have hc : state.planCandidate pair redex reuse = some plan := by
-    unfold PhysicalState.lowerPlan at hLower
-    cases he : state.planIndicesEncodable with
-    | false => simp [he] at hLower
-    | true =>
-      cases hh : state.pairHeadroom pair with
-      | false => simp [he, hh] at hLower
-      | true =>
-        cases hp : state.planCandidate pair redex reuse with
-        | none => simp [he, hh, hp] at hLower
-        | some candidate =>
-          by_cases hd : BytePlan.decode candidate.emit = some candidate
-          · simp [he, hh, hp, hd] at hLower
-            cases hLower
-            rfl
-          · simp [he, hh, hp, hd] at hLower
+  have hc := PhysicalState.lowerPlan_has_candidate hLower
   obtain ⟨hop, _, ⟨rhs, hrule, hsymbols⟩, hw, hew,
     harena, hscratch, hqueue⟩ := PhysicalState.planCandidate_fields hc
   have hrhs : rhs = redex.2.2.2.2 := by
@@ -791,6 +809,127 @@ theorem PhysicalState.lowerPlan_semantic_prefix {state : PhysicalState}
   exact ⟨hop.symm, hBoundary,
     (PhysicalState.rule_result_symbols hRule hsymbols).symm,
     hw, hew, harena, by omega, by omega⟩
+
+/-- Any lowered zero-result image whose two consumed slots are distinct and
+live completes its physical step, preserves every output target, and keeps
+the old physical pending queue exactly. Both erasure orientations yield this
+image shape under the per-rule candidate-existence witnesses above. -/
+theorem PhysicalState.lowered_empty_image_completes
+    {state : PhysicalState} {pair : PhysicalPair}
+    {redex : XRedex NetSym} {reuse : Bool}
+    {plan : BytePlan} {first second : PhysicalSlot}
+    (hLower : state.lowerPlan pair redex reuse = some plan)
+    (hShape : plan.results = [] ∧ plan.externalWrites = [] ∧
+      plan.publications = [] ∧ plan.action = (0, 0) ∧
+      plan.pair = (pair.first, pair.firstGeneration.toNat,
+        pair.second, pair.secondGeneration.toNat))
+    (hpair : state.logicalPair pair = some (redex.1, redex.2.1))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hliveFirst : first.agent.isSome = true)
+    (hliveSecond : second.agent.isSome = true)
+    (hdistinct : pair.first ≠ pair.second) :
+    ∃ next, state.executeCheckedImage plan.emit redex = some next ∧
+      next.outputs = state.outputs ∧ next.work = state.work := by
+  obtain ⟨hresults, hwrites, hpubs, haction, hpairPlan⟩ := hShape
+  have hroom := PhysicalState.lowerPlan_requires_headroom hLower
+  simp [PhysicalState.pairHeadroom, hf, hs] at hroom
+  have hcurrent : state.logicalPair
+      { first := plan.pair.1,
+        firstGeneration := UInt64.ofNat plan.pair.2.1,
+        second := plan.pair.2.2.1,
+        secondGeneration := UInt64.ofNat plan.pair.2.2.2 } =
+      some (redex.1, redex.2.1) := by
+    simpa [hpairPlan] using hpair
+  have hf' : state.slots[plan.pair.1]? = some first := by
+    simpa [hpairPlan] using hf
+  have hs' : state.slots[plan.pair.2.2.1]? = some second := by
+    simpa [hpairPlan] using hs
+  have hdistinct' : plan.pair.1 ≠ plan.pair.2.2.1 := by
+    simpa [hpairPlan] using hdistinct
+  have hd := PhysicalState.lowerPlan_decodes hLower
+  obtain ⟨next, he⟩ := PhysicalState.execute_empty_image_success
+    hd hcurrent hresults hwrites hpubs haction hf' hs'
+    hliveFirst hliveSecond hroom.1 hroom.2 hdistinct'
+  exact ⟨next, he,
+    PhysicalState.execute_empty_image_preserves_outputs
+      hd hcurrent hresults hwrites hpubs haction he,
+    by simpa [hpubs] using
+      PhysicalState.executeCheckedImage_work_append hd he⟩
+
+/-- Every actually lowered forward ERA image executes for distinct consumed
+physical slots, retaining all output targets and the old physical queue. -/
+theorem PhysicalState.era_forward_lowered_completes
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {value : BitVec 64} {reuse : Bool}
+    {first second : PhysicalSlot} {plan : BytePlan}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some .era)
+    (hsa : second.agent.map Prod.snd = some (.num value))
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0)))
+    (hdistinct : pair.first ≠ pair.second)
+    (hLower : state.lowerPlan pair
+      (a, b, .era, .num value, eraNumData.toX) reuse = some plan) :
+    ∃ next, state.executeCheckedImage plan.emit
+        (a, b, .era, .num value, eraNumData.toX) = some next ∧
+      next.outputs = state.outputs ∧ next.work = state.work := by
+  obtain ⟨candidate, hc, hresults, hwrites, hpubs, haction,
+    hpairPlan⟩ := PhysicalState.era_forward_candidate_exists
+      hpair hf hs hfa hsa hfp hsp
+  have hcandidate := PhysicalState.lowerPlan_has_candidate hLower
+  have heq : candidate = plan := Option.some.inj (hc.symm.trans hcandidate)
+  subst candidate
+  have hliveFirst : first.agent.isSome = true := by
+    cases ha : first.agent with
+    | none => simp [ha] at hfa
+    | some _ => rfl
+  have hliveSecond : second.agent.isSome = true := by
+    cases ha : second.agent with
+    | none => simp [ha] at hsa
+    | some _ => rfl
+  exact PhysicalState.lowered_empty_image_completes hLower
+    ⟨hresults, hwrites, hpubs, haction, hpairPlan⟩
+    hpair hf hs hliveFirst hliveSecond hdistinct
+
+/-- Reverse ERA has the same symbolic retirement and output/queue frame as
+forward ERA; only the physical orientation of the rule symbols changes. -/
+theorem PhysicalState.era_reverse_lowered_completes
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {value : BitVec 64} {reuse : Bool}
+    {first second : PhysicalSlot} {plan : BytePlan}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some (.num value))
+    (hsa : second.agent.map Prod.snd = some .era)
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0)))
+    (hdistinct : pair.first ≠ pair.second)
+    (hLower : state.lowerPlan pair
+      (a, b, .num value, .era, eraNumData.toX.swap) reuse = some plan) :
+    ∃ next, state.executeCheckedImage plan.emit
+        (a, b, .num value, .era, eraNumData.toX.swap) = some next ∧
+      next.outputs = state.outputs ∧ next.work = state.work := by
+  obtain ⟨candidate, hc, hresults, hwrites, hpubs, haction,
+    hpairPlan⟩ := PhysicalState.era_reverse_candidate_exists
+      hpair hf hs hfa hsa hfp hsp
+  have hcandidate := PhysicalState.lowerPlan_has_candidate hLower
+  have heq : candidate = plan := Option.some.inj (hc.symm.trans hcandidate)
+  subst candidate
+  have hliveFirst : first.agent.isSome = true := by
+    cases ha : first.agent with
+    | none => simp [ha] at hfa
+    | some _ => rfl
+  have hliveSecond : second.agent.isSome = true := by
+    cases ha : second.agent with
+    | none => simp [ha] at hsa
+    | some _ => rfl
+  exact PhysicalState.lowered_empty_image_completes hLower
+    ⟨hresults, hwrites, hpubs, haction, hpairPlan⟩
+    hpair hf hs hliveFirst hliveSecond hdistinct
 
 /-- Exact bytes from the model lowering, with decoder roundtrip checked
 before return. These are comparable byte-for-byte to a Rust-emitted stream. -/

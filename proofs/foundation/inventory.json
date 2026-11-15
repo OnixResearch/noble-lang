@@ -13558,6 +13558,24 @@
       "claim": "a successful decoded empty-result image with no external writes or publications preserves the entire output-target table"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowered_empty_image_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a lowered empty-result image physically completes and preserves outputs and work for distinct live consumed slots"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_forward_lowered_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every actually lowered forward ERA image physically executes under current distinct reciprocal principal slots, preserving output targets and work"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_reverse_lowered_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every actually lowered reverse ERA image physically executes under current distinct reciprocal principal slots, preserving output targets and work"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.era_forward_candidate_exists",
       "phase": 1,
       "role": "representation",
@@ -14296,6 +14314,7 @@
     "NobleFoundation.NetI64Plans.lookup_eq_of_some_iff",
     "NobleFoundation.NetI64Plans.BytePlan.semanticFieldsCheck_iff",
     "NobleFoundation.NetI64Plans.mapM_preserves_projection",
-    "NobleFoundation.NetI64Plans.mapM_filterMap_symbols"
+    "NobleFoundation.NetI64Plans.mapM_filterMap_symbols",
+    "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_has_candidate"
   ]
 }
