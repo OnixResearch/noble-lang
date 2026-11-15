@@ -14888,6 +14888,18 @@
       "phase": 1,
       "role": "representation",
       "claim": "the single result's publication of a one-result image is always defined when its principal port reads a captured endpoint: quiet for outputs and nonprincipal peers, one canonical tuple for a live peer's principal port"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_forward_admitted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP2 emitted admission"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_reverse_admitted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP2 emitted admission"
     }
   ],
   "private_theorems": [
