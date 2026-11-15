@@ -2021,6 +2021,10 @@ fn read_back(
 mod tests {
     use super::*;
 
+    mod plan_corpus {
+        include!("net/plan_corpus.rs");
+    }
+
     const REQUIRED_ALLOCATION_ARENA_SLOTS: u64 = 4;
 
     struct TestIds;
