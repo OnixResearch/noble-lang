@@ -36,7 +36,7 @@ fn hex(bytes: &[u8]) -> String {
 }
 
 fn unhex(text: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-    if text.len() % 2 != 0 {
+    if !text.len().is_multiple_of(2) {
         return Err("retained hex field has odd length".into());
     }
     text.as_bytes()
