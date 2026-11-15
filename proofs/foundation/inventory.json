@@ -14972,6 +14972,24 @@
       "phase": 1,
       "role": "representation",
       "claim": "reverse ERA emitted admission"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "emitted OP1 admission, for either orientation and storage policy: an actually lowered OP1 image of a legal, current, matched arena that is not excluded by queue capacity executes and passes the independent semantic checker at its exact reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP1 emitted admission. From a legal arena, a current selected op1 ⋈ num pair, a matching projection and its redex alone, an actually lowered image that is not excluded by queue capacity passes the semantic checker at its exact reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_reverse_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP1 emitted admission. The mirrored num ⋈ op1 orientation: the op1 agent is the second selected identity and its physical slot donates the single result"
     }
   ],
   "private_theorems": [

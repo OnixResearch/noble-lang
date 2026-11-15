@@ -53,6 +53,7 @@ import NobleFoundation.NetI64PlanInstance
 import NobleFoundation.NetI64PlanOp2
 import NobleFoundation.NetI64PlanCandidates
 import NobleFoundation.NetI64PlanEra
+import NobleFoundation.NetI64PlanOp1
 import NobleFoundation.BeltTarget
 import NobleFoundation.BeltTargetCorpus
 import NobleFoundation.GraphRewrite
