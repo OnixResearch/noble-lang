@@ -51,13 +51,13 @@ private def nodeBytes : WireNode → List Nat
   | .operation tag instantiation => [3, tag] ++ u16be instantiation
 
 structure WireBinding where
-  variable : Nat
+  slot : Nat
   kind : Nat
   ty : Nat
   deriving DecidableEq, Repr
 
 private def bindingBytes (binding : WireBinding) : List Nat :=
-  u16be binding.variable ++ [binding.kind, binding.ty]
+  u16be binding.slot ++ [binding.kind, binding.ty]
 
 structure WireLibraryDependency where
   procedureId : List Nat
@@ -152,7 +152,7 @@ def productFixture : Fixture := {
   sourceRevision := hex "573fcbbd45df1f51a4bed2fef2291c335f8a52f73668c6369ded0b3e72b0ccec"
   nodes := [.i64 5, .operation 3 0, .operation 0 1, .i64 2,
             .operation 4 0, .operation 5 0, .operation 3 0]
-  instantiations := [[], [{ variable := 1, kind := 1, ty := 0 }]]
+  instantiations := [[], [{ slot := 1, kind := 1, ty := 0 }]]
   producerTag := 1
   toolRevision := 2
   taskId := some (ascii "arithProduct" ++ List.replicate 20 0)
