@@ -13324,6 +13324,12 @@
       "claim": "a concrete nonempty three-input two-output wrapping-I64 graph passes model preparation"
     },
     {
+      "name": "NobleFoundation.TickRunner.out_of_order_or_late_input_refuses",
+      "phase": 1,
+      "role": "tick-protocol-control",
+      "claim": "ordered input prefix and absence of late input nodes are independently checked, not inferred from declared interface width"
+    },
+    {
       "name": "NobleFoundation.TickRunner.actual_tick_commits_once",
       "phase": 1,
       "role": "tick-protocol-control",

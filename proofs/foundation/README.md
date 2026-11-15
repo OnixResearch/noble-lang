@@ -4630,6 +4630,8 @@ followed by visible-output words. Admission checks actual node references, input
 slots, output indices, interface widths and the declared node, word, work, tick
 and epoch caps. Labels for graph and controls are opaque identities in this model,
 not proof of artifact-byte integrity or authorization.
+The concrete out-of-order/late-input refusal theorem prevents an in-range but
+producer-impossible slot order from being treated as the selected I64 profile.
 
 The sequential runner selects the *whole* graph/control/state tuple at tick
 entry, evaluates it once, and publishes next state and output together. Its

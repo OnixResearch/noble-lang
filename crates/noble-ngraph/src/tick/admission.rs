@@ -1,55 +1,63 @@
 //! Checks the actual graph interface and packed stream, not producer metadata.
 
-use super::{Limits, Partition, Refusal, Selection};
 use crate::identity::IdentityScheme;
-use crate::ir::{Graph, Op, ScalarType, SlotKind, SubProfile};
 
 pub(super) struct Admitted {
     pub compiled: crate::compiled::Compiled,
     pub workspace: crate::compiled::Workspace,
-    pub selection: Selection,
+    pub selection: super::Selection,
     pub input_words: usize,
     pub retained_bytes: u64,
 }
 
 /// Refuse arithmetic overflow before multiplying a word count by 8.
-pub(super) fn charge_words(words: usize, cap: u64, label: &'static str) -> Result<(), Refusal> {
+pub(super) fn charge_words(
+    words: usize,
+    cap: u64,
+    label: &'static str,
+) -> Result<(), super::Refusal> {
     let bytes = u64::try_from(words)
         .ok()
         .and_then(|n| n.checked_mul(8))
-        .ok_or(Refusal::Budget(label))?;
+        .ok_or(super::Refusal::Budget(label))?;
     if bytes > cap {
-        Err(Refusal::Budget(label))
+        Err(super::Refusal::Budget(label))
     } else {
         Ok(())
     }
 }
 
-fn check_partition(graph: &Graph, p: Partition, limits: &Limits) -> Result<usize, Refusal> {
+fn check_partition(
+    graph: &crate::ir::Graph,
+    p: super::Partition,
+    limits: &super::Limits,
+) -> Result<usize, super::Refusal> {
     let input_words = p
         .state_words
         .checked_add(p.input_words)
         .and_then(|n| n.checked_add(p.control_words))
-        .ok_or(Refusal::Partition)?;
+        .ok_or(super::Refusal::Partition)?;
     let output_words = p
         .state_words
         .checked_add(p.output_words)
-        .ok_or(Refusal::Partition)?;
-    if p.state_words == 0
-        || p.input_words == 0
-        || p.output_words == 0
-        || input_words > 256
-        || output_words > 256
-        || graph.slots.len() != input_words
+        .ok_or(super::Refusal::Partition)?;
+    if p.state_words == 0 || p.input_words == 0 || p.output_words == 0 {
+        return Err(super::Refusal::Partition);
+    }
+    if input_words > 256 || output_words > 256 {
+        return Err(super::Refusal::Partition);
+    }
+    if graph.slots.len() != input_words
         || graph.outputs.len() != output_words
         || graph
             .slots
             .iter()
-            .any(|s| s.kind != SlotKind::Input || s.ty != ScalarType::I64)
-        || graph.input_shape.is_some()
-        || graph.output_shape.is_some()
+            .any(|s| s.kind != crate::ir::SlotKind::Input || s.ty != crate::ir::ScalarType::I64)
     {
-        return Err(Refusal::Partition);
+        return Err(super::Refusal::Partition);
+    }
+    if graph.input_shape.is_some() || graph.output_shape.is_some() {
+        return Err(super::Refusal::Partition);
     }
     charge_words(p.state_words, limits.state_bytes, "state_bytes")?;
     charge_words(p.input_words, limits.input_bytes, "input_bytes")?;
@@ -59,43 +67,54 @@ fn check_partition(graph: &Graph, p: Partition, limits: &Limits) -> Result<usize
     Ok(input_words)
 }
 
-fn profile(checked: &crate::check::CheckedGraph, p: Partition) -> Result<(), Refusal> {
+fn profile(
+    checked: &crate::check::CheckedGraph,
+    p: super::Partition,
+) -> Result<(), super::Refusal> {
     let graph = checked.graph();
     let interface_words = p.state_words + p.input_words + p.control_words;
-    if graph.profile != SubProfile::I64
+    if graph.profile != crate::ir::SubProfile::I64
         || !graph.facts.is_empty()
         || graph.nodes.len() < interface_words
-        || graph.nodes[..interface_words]
-            .iter()
-            .enumerate()
-            .any(|(slot, node)| !matches!(node.op, Op::Input(k) if k as usize == slot))
+    {
+        return Err(super::Refusal::Profile);
+    }
+    if graph.nodes[..interface_words]
+        .iter()
+        .enumerate()
+        .any(|(slot, node)| !matches!(node.op, crate::ir::Op::Input(k) if k as usize == slot))
         || graph.nodes[interface_words..]
             .iter()
-            .any(|node| matches!(node.op, Op::Input(_)))
-        || graph.nodes.iter().any(|n| {
-            !matches!(
-                n.op,
-                Op::Input(_)
-                    | Op::Const(crate::ir::Literal::I64(_))
-                    | Op::I64Add(_, _)
-                    | Op::I64Sub(_, _)
-                    | Op::I64Mul(_, _)
-            )
-        })
-        || graph
-            .outputs
-            .iter()
-            .any(|&n| checked.ty(n) != Some(ScalarType::I64))
+            .any(|node| matches!(node.op, crate::ir::Op::Input(_)))
+    {
+        return Err(super::Refusal::Profile);
+    }
+    if graph.nodes.iter().any(|n| {
+        !matches!(
+            n.op,
+            crate::ir::Op::Input(_)
+                | crate::ir::Op::Const(crate::ir::Literal::I64(_))
+                | crate::ir::Op::I64Add(_, _)
+                | crate::ir::Op::I64Sub(_, _)
+                | crate::ir::Op::I64Mul(_, _)
+        )
+    }) || graph
+        .outputs
+        .iter()
+        .any(|&n| checked.ty(n) != Some(crate::ir::ScalarType::I64))
         || p.state_words + p.output_words != graph.outputs.len()
     {
-        return Err(Refusal::Profile);
+        return Err(super::Refusal::Profile);
     }
     Ok(())
 }
 
-fn check_limits(limits: &Limits) -> Result<(), Refusal> {
-    limits.graph.validate_policy().map_err(Refusal::Graph)?;
-    let max = Limits::default();
+fn check_limits(limits: &super::Limits) -> Result<(), super::Refusal> {
+    limits
+        .graph
+        .validate_policy()
+        .map_err(super::Refusal::Graph)?;
+    let max = super::Limits::default();
     let fields = [
         (limits.state_bytes, max.state_bytes),
         (limits.input_bytes, max.input_bytes),
@@ -112,7 +131,7 @@ fn check_limits(limits: &Limits) -> Result<(), Refusal> {
         || limits.ticks == 0
         || limits.trace_bytes == 0
     {
-        return Err(Refusal::Budget("policy"));
+        return Err(super::Refusal::Budget("policy"));
     }
     Ok(())
 }
@@ -122,7 +141,7 @@ fn check_limits(limits: &Limits) -> Result<(), Refusal> {
 pub(super) fn control_id(
     ids: &dyn IdentityScheme,
     graph: crate::ir::Digest,
-    p: Partition,
+    p: super::Partition,
     controls: &[i64],
 ) -> crate::ir::Digest {
     let mut h = ids.start();
@@ -147,7 +166,7 @@ pub(super) fn control_id(
 fn retained_bytes(
     checked: &crate::check::CheckedGraph,
     compiled: &crate::compiled::Compiled,
-    p: Partition,
+    p: super::Partition,
     input_words: usize,
 ) -> u64 {
     // Count the graph's owned bytes, packed stream/layout, workspace and
@@ -173,40 +192,44 @@ fn retained_bytes(
 /// must accept both the declaration and emitted instruction bodies.
 pub(super) fn admit(
     ids: &dyn IdentityScheme,
-    graph: Graph,
-    partition: Partition,
-    state: &[i64],
-    controls: &[i64],
-    limits: &Limits,
+    start: super::Start<'_>,
+    limits: &super::Limits,
     reserved_bytes: u64,
-) -> Result<Admitted, Refusal> {
+) -> Result<Admitted, super::Refusal> {
+    let super::Start {
+        graph,
+        partition,
+        state,
+        controls,
+    } = start;
     check_limits(limits)?;
-    let checked = crate::check::check_with(ids, graph, &limits.graph).map_err(Refusal::Graph)?;
+    let checked =
+        crate::check::check_with(ids, graph, &limits.graph).map_err(super::Refusal::Graph)?;
     let input_words = check_partition(checked.graph(), partition, limits)?;
     if state.len() != partition.state_words || controls.len() != partition.control_words {
-        return Err(Refusal::Partition);
+        return Err(super::Refusal::Partition);
     }
     profile(&checked, partition)?;
     if checked.node_count() as u64 > limits.tick_work {
-        return Err(Refusal::Budget("tick_work"));
+        return Err(super::Refusal::Budget("tick_work"));
     }
     let compiled = crate::compiled::Compiled::new(ids, &checked);
     let layout = compiled.packed_layout();
-    let instructions = compiled.i64_instructions().ok_or(Refusal::Profile)?;
+    let instructions = compiled.i64_instructions().ok_or(super::Refusal::Profile)?;
     crate::schedule::check_within(&checked, &layout, instructions, limits.schedule_work)
-        .map_err(Refusal::Schedule)?;
+        .map_err(super::Refusal::Schedule)?;
     if compiled.scratch_bytes() > limits.graph.forward_scratch {
-        return Err(Refusal::Budget("forward_scratch"));
+        return Err(super::Refusal::Budget("forward_scratch"));
     }
     let retained_bytes = retained_bytes(&checked, &compiled, partition, input_words);
     if retained_bytes.saturating_add(reserved_bytes) > limits.retained_bytes {
-        return Err(Refusal::Budget(if reserved_bytes == 0 {
+        return Err(super::Refusal::Budget(if reserved_bytes == 0 {
             "retained_bytes"
         } else {
             "replacement_peak_bytes"
         }));
     }
-    let selection = Selection {
+    let selection = super::Selection {
         graph: checked.id(),
         schedule: compiled.layout_key(),
         controls: control_id(ids, checked.id(), partition, controls),
@@ -226,10 +249,7 @@ pub(super) fn admit(
 
 #[cfg(test)]
 pub(super) mod tests {
-    use super::super::{Limits, Partition, Runner};
     use crate::identity::{IdentityHasher, IdentityScheme};
-    use crate::ir::{Digest, Graph, GraphBuilder, Op, ScalarType, SubProfile, Subject};
-    use alloc::boxed::Box;
 
     pub(crate) struct Scheme;
     pub(crate) static IDS: Scheme = Scheme;
@@ -243,7 +263,7 @@ pub(super) mod tests {
                     .wrapping_add(u64::from(*b));
             }
         }
-        fn finish(self: Box<Self>) -> Digest {
+        fn finish(self: alloc::boxed::Box<Self>) -> crate::ir::Digest {
             let mut digest = [0; 32];
             digest[..8].copy_from_slice(&self.0.to_le_bytes());
             digest
@@ -253,35 +273,39 @@ pub(super) mod tests {
         fn name(&self) -> &'static str {
             "tick-test-fnv"
         }
-        fn start(&self) -> Box<dyn IdentityHasher + '_> {
-            Box::new(Hasher(14_695_981_039_346_656_037))
+        fn start(&self) -> alloc::boxed::Box<dyn IdentityHasher + '_> {
+            alloc::boxed::Box::new(Hasher(14_695_981_039_346_656_037))
         }
     }
-    pub(crate) fn graph() -> Graph {
-        let mut builder =
-            GraphBuilder::new(SubProfile::I64, Subject::authored(&IDS, "tick/counter"));
-        let s = builder.input(ScalarType::I64);
-        let x = builder.input(ScalarType::I64);
-        let c = builder.input(ScalarType::I64);
-        let product = builder.op(Op::I64Mul(c, x));
-        let sum = builder.op(Op::I64Add(s, product));
+    pub(crate) fn graph() -> crate::ir::Graph {
+        let mut builder = crate::ir::GraphBuilder::new(
+            crate::ir::SubProfile::I64,
+            crate::ir::Subject::authored(&IDS, "tick/counter"),
+        );
+        let s = builder.input(crate::ir::ScalarType::I64);
+        let x = builder.input(crate::ir::ScalarType::I64);
+        let c = builder.input(crate::ir::ScalarType::I64);
+        let product = builder.op(crate::ir::Op::I64Mul(c, x));
+        let sum = builder.op(crate::ir::Op::I64Add(s, product));
         builder.output(sum);
         builder.output(sum);
         builder.finish()
     }
-    pub(crate) fn fixture() -> Runner {
-        Runner::prepare(
+    pub(crate) fn fixture() -> super::super::Runner {
+        super::super::Runner::prepare(
             &IDS,
-            graph(),
-            Partition {
-                state_words: 1,
-                input_words: 1,
-                control_words: 1,
-                output_words: 1,
+            super::super::Start {
+                graph: graph(),
+                partition: super::super::Partition {
+                    state_words: 1,
+                    input_words: 1,
+                    control_words: 1,
+                    output_words: 1,
+                },
+                state: &[0],
+                controls: &[7],
             },
-            &[0],
-            &[7],
-            Limits::default(),
+            super::super::Limits::default(),
         )
         .expect("test graph admitted")
     }

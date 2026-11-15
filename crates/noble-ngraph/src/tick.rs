@@ -5,8 +5,6 @@
 //! the declared interface has the same shape. This is not a concurrency, deadline,
 //! effect-rollback, authorization, or Rust-to-Lean correspondence guarantee.
 
-use alloc::vec::Vec;
-
 use crate::identity::IdentityScheme;
 
 #[path = "tick/admission.rs"]
@@ -24,10 +22,23 @@ pub struct Partition {
     pub state_words: usize,
     /// Number of caller-supplied inputs per tick (positive).
     pub input_words: usize,
-    /// Number of control inputs (positive).
+    /// Number of control inputs (zero is permitted).
     pub control_words: usize,
     /// Number of visible outputs (positive).
     pub output_words: usize,
+}
+
+/// Candidate graph and explicit ordered initial state/control words. A reset
+/// must supply a new `Start` even if the replacement has the same interface.
+pub struct Start<'a> {
+    /// Owned graph to admit independently.
+    pub graph: crate::ir::Graph,
+    /// Declared interface, checked against actual graph slots and outputs.
+    pub partition: Partition,
+    /// Initial state for this graph epoch.
+    pub state: &'a [i64],
+    /// Initial control words for this graph/control epoch.
+    pub controls: &'a [i64],
 }
 
 /// Host-lowered caps. Graph budgets inherit the existing `/0` policy;
@@ -119,9 +130,29 @@ pub struct Selection {
     pub next_tick: u64,
 }
 
+/// Expected graph and control epochs for one explicit replacement.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Epochs {
+    /// Graph revision selected by the caller.
+    pub graph: u64,
+    /// Control revision selected by the caller.
+    pub controls: u64,
+}
+
+impl Selection {
+    /// Expected epochs of this selected tuple.
+    #[must_use]
+    pub const fn epochs(self) -> Epochs {
+        Epochs {
+            graph: self.graph_epoch,
+            controls: self.control_epoch,
+        }
+    }
+}
+
 /// One success borrowed from the active runner, with no partial-success variant.
 #[derive(Debug, PartialEq, Eq)]
-pub struct Tick<'a> {
+pub struct Outcome<'a> {
     /// The tuple pinned at entry, before advancing the tick counter.
     pub selected: Selection,
     /// Committed state after this tick.
@@ -138,7 +169,7 @@ pub struct Tick<'a> {
 #[derive(Debug)]
 pub struct ControlUpdate {
     expected: Selection,
-    words: Vec<i64>,
+    words: alloc::vec::Vec<i64>,
     digest: crate::ir::Digest,
 }
 
@@ -152,10 +183,10 @@ pub struct Runner {
     limits: Limits,
     scheme: &'static str,
     selection: Selection,
-    state: Vec<i64>,
-    controls: Vec<i64>,
-    inputs: Vec<crate::sem::Value>,
-    output: Vec<i64>,
+    state: alloc::vec::Vec<i64>,
+    controls: alloc::vec::Vec<i64>,
+    inputs: alloc::vec::Vec<crate::sem::Value>,
+    output: alloc::vec::Vec<i64>,
     retained_bytes: u64,
 }
 
@@ -167,33 +198,22 @@ impl Runner {
     /// A checker/profile/partition/schedule or byte/work-cap refusal.
     pub fn prepare(
         ids: &dyn IdentityScheme,
-        graph: crate::ir::Graph,
-        partition: Partition,
-        state: &[i64],
-        controls: &[i64],
+        start: Start<'_>,
         limits: Limits,
     ) -> Result<Self, Refusal> {
-        Self::prepare_reserved(ids, graph, partition, state, controls, limits, 0)
+        Self::prepare_reserved(ids, start, limits, 0)
     }
 
     fn prepare_reserved(
         ids: &dyn IdentityScheme,
-        graph: crate::ir::Graph,
-        partition: Partition,
-        state: &[i64],
-        controls: &[i64],
+        start: Start<'_>,
         limits: Limits,
         reserved_bytes: u64,
     ) -> Result<Self, Refusal> {
-        let admitted = admission::admit(
-            ids,
-            graph,
-            partition,
-            state,
-            controls,
-            &limits,
-            reserved_bytes,
-        )?;
+        let partition = start.partition;
+        let state = start.state;
+        let controls = start.controls;
+        let admitted = admission::admit(ids, start, &limits, reserved_bytes)?;
         Ok(Self {
             compiled: admitted.compiled,
             workspace: admitted.workspace,
@@ -256,7 +276,7 @@ impl Runner {
         tick: u64,
         input: &[i64],
         evaluation: &mut crate::eval::Control<'_>,
-    ) -> Result<Tick<'_>, Refusal> {
+    ) -> Result<Outcome<'_>, Refusal> {
         self.check_epochs(graph_epoch, control_epoch)?;
         if tick != self.selection.next_tick {
             return Err(Refusal::TickOrder);
@@ -328,7 +348,7 @@ impl Runner {
         }
         let selected = self.selection;
         self.selection.next_tick = next_tick;
-        Ok(Tick {
+        Ok(Outcome {
             selected,
             state: &self.state,
             output: &self.output,
@@ -414,32 +434,23 @@ impl Runner {
     pub fn reset(
         &mut self,
         ids: &dyn IdentityScheme,
-        graph_epoch: u64,
-        control_epoch: u64,
-        graph: crate::ir::Graph,
-        partition: Partition,
-        state: &[i64],
-        controls: &[i64],
+        expected: Epochs,
+        start: Start<'_>,
     ) -> Result<Selection, Refusal> {
-        self.check_epochs(graph_epoch, control_epoch)?;
+        self.check_epochs(expected.graph, expected.controls)?;
         if ids.name() != self.scheme {
             return Err(Refusal::Profile);
         }
-        let next_graph = graph_epoch
+        let next_graph = expected
+            .graph
             .checked_add(1)
             .ok_or(Refusal::CounterExhausted)?;
-        let next_controls = control_epoch
+        let next_controls = expected
+            .controls
             .checked_add(1)
             .ok_or(Refusal::CounterExhausted)?;
-        let mut candidate = Self::prepare_reserved(
-            ids,
-            graph,
-            partition,
-            state,
-            controls,
-            self.limits.clone(),
-            self.retained_bytes,
-        )?;
+        let mut candidate =
+            Self::prepare_reserved(ids, start, self.limits.clone(), self.retained_bytes)?;
         candidate.selection.graph_epoch = next_graph;
         candidate.selection.control_epoch = next_controls;
         *self = candidate;
@@ -457,18 +468,16 @@ impl Runner {
 
 #[cfg(test)]
 mod tests {
-    use super::{Refusal, Runner};
-
     #[test]
     fn counters_refuse_overflow_without_mutation() {
         // Internal boundary injection avoids waiting 2^64 requests to exercise
         // arithmetic exhaustion; public construction always starts at zero.
-        let mut runner: Runner = super::admission::tests::fixture();
+        let mut runner: super::Runner = super::admission::tests::fixture();
         runner.selection.control_epoch = u64::MAX;
         let selected = runner.selection;
         assert_eq!(
             runner.update_controls(0, u64::MAX, &[7], &super::admission::tests::IDS),
-            Err(Refusal::CounterExhausted)
+            Err(super::Refusal::CounterExhausted)
         );
         assert_eq!(runner.selection, selected);
         runner.selection.graph_epoch = u64::MAX;
@@ -478,14 +487,18 @@ mod tests {
         assert_eq!(
             runner.reset(
                 &super::admission::tests::IDS,
-                u64::MAX,
-                u64::MAX,
-                graph,
-                partition,
-                &[0],
-                &[7]
+                super::Epochs {
+                    graph: u64::MAX,
+                    controls: u64::MAX,
+                },
+                super::Start {
+                    graph,
+                    partition,
+                    state: &[0],
+                    controls: &[7],
+                }
             ),
-            Err(Refusal::CounterExhausted)
+            Err(super::Refusal::CounterExhausted)
         );
         assert_eq!(runner.selection, selected);
     }

@@ -17,7 +17,7 @@ fn actual(graph: noble_ngraph::ir::Graph, inputs: &[i64]) -> Vec<i64> {
         .into_iter()
         .map(|v| match v {
             Value::I64(n) => n,
-            _ => panic!("not I64"),
+            Value::Bool(_) | Value::F32(_) => panic!("not I64"),
         })
         .collect()
 }
@@ -117,7 +117,12 @@ fn stale_schedule_and_duplicate_publication_controls_use_real_admission() {
         schedule::check(&changed, &changed_compiled.packed_layout(), &malformed),
         Err(schedule::StreamRefusal::BodyMismatch)
     );
-    let mut r = Runner::prepare(&IDS, add_graph(), ONE, &[11], &[2], Limits::default()).unwrap();
+    let mut r = Runner::prepare(
+        &IDS,
+        super::start(add_graph(), ONE, &[11], &[2]),
+        Limits::default(),
+    )
+    .unwrap();
     r.tick(0, 0, 0, &[3], &mut Control::default()).unwrap();
     assert_eq!(
         r.tick(0, 0, 0, &[3], &mut Control::default()),
@@ -126,7 +131,11 @@ fn stale_schedule_and_duplicate_publication_controls_use_real_admission() {
     );
     let last = r.state().to_vec();
     assert_eq!(last, [17]);
-    r.reset(&IDS, 0, 0, two_graph(), TWO, &[17, -13], &[2, 3])
-        .unwrap();
+    r.reset(
+        &IDS,
+        super::epochs(0, 0),
+        super::start(two_graph(), TWO, &[17, -13], &[2, 3]),
+    )
+    .unwrap();
     assert!(r.output().is_none());
 }

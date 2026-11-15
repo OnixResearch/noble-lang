@@ -9,6 +9,24 @@ use crate::common::IDS;
 use noble_ngraph::ir::{Graph, GraphBuilder, Op, ScalarType, SubProfile, Subject};
 use noble_ngraph::tick::{Limits, Partition, Runner};
 
+pub(super) const fn epochs(graph: u64, controls: u64) -> noble_ngraph::tick::Epochs {
+    noble_ngraph::tick::Epochs { graph, controls }
+}
+
+pub(super) fn start<'a>(
+    graph: Graph,
+    partition: Partition,
+    state: &'a [i64],
+    controls: &'a [i64],
+) -> noble_ngraph::tick::Start<'a> {
+    noble_ngraph::tick::Start {
+        graph,
+        partition,
+        state,
+        controls,
+    }
+}
+
 pub(super) fn add_graph() -> Graph {
     let mut b = GraphBuilder::new(SubProfile::I64, Subject::authored(&IDS, "tick/add/v1"));
     let s = b.input(ScalarType::I64);
@@ -69,14 +87,18 @@ pub(super) const TWO: Partition = Partition {
     output_words: 2,
 };
 
-pub(super) fn runner(
+pub(super) fn fixture(
     graph: Graph,
     partition: Partition,
     state: &[i64],
     controls: &[i64],
 ) -> Runner {
-    Runner::prepare(&IDS, graph, partition, state, controls, Limits::default())
-        .expect("fixture admitted")
+    Runner::prepare(
+        &IDS,
+        start(graph, partition, state, controls),
+        Limits::default(),
+    )
+    .expect("fixture admitted")
 }
 
 // The independent oracle is straight host arithmetic, not the graph evaluator.

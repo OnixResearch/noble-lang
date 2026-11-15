@@ -76,10 +76,20 @@ def Graph.scoped (graph : Graph) : Bool :=
     | some node => node.scoped index graph.inputWords) &&
   graph.outputs.all (fun index => decide (index < graph.nodes.length))
 
+/-- Every declared interface input is a unique position in its exact slot order,
+    and later nodes cannot introduce a second, unbound input. -/
+def Graph.orderedInputs (graph : Graph) : Bool :=
+  decide (graph.nodes.take graph.inputWords =
+    (List.range graph.inputWords).map Node.input) &&
+  (graph.nodes.drop graph.inputWords).all (fun node =>
+    match node with
+    | .input _ => false
+    | _ => true)
+
 /-- Check a graph/partition and the actual initial state and controls, with word/work caps. -/
 def eligible (graph : Graph) (partition : Partition) (state controls : List Word)
     (limits : Limits) : Bool :=
-  graph.scoped &&
+  graph.scoped && graph.orderedInputs &&
   decide (graph.inputWords = partition.stateWords + partition.inputWords +
     partition.controlWords) &&
   decide (graph.outputs.length = partition.stateWords + partition.outputWords) &&
@@ -383,7 +393,7 @@ def fixtureLimits : Limits :=
 /-- s' = s + c*x, visible output s'; control is the third interface input. -/
 def additive : Graph :=
   { inputWords := 3,
-    nodes := [.input 0, .input 2, .input 1, .mul 1 2, .add 0 3],
+    nodes := [.input 0, .input 1, .input 2, .mul 1 2, .add 0 3],
     outputs := [4, 4] }
 
 /-- Same layout, different meaning and ordered outputs: s' = s-x, out = s'-c. -/
@@ -404,6 +414,19 @@ def replacementIds : Ids := { graph := 23, controls := 29 }
 theorem fixture_prepares :
     prepare { graph := 17, controls := 19 } additive fixturePartition [5] [2] fixtureLimits =
       some fixture := by
+  decide
+
+/-- Neither a permuted prefix nor an extra late Input is part of this profile,
+    even though both may point to in-range, already declared interface slots. -/
+theorem out_of_order_or_late_input_refuses :
+    prepare { graph := 17, controls := 19 }
+      { additive with
+        nodes := [.input 0, .input 2, .input 1, .mul 1 2, .add 0 3] }
+      fixturePartition [5] [2] fixtureLimits = none ∧
+    prepare { graph := 17, controls := 19 }
+      { additive with
+        nodes := [.input 0, .input 1, .input 2, .input 0, .add 0 3] }
+      fixturePartition [5] [2] fixtureLimits = none := by
   decide
 
 theorem actual_tick_commits_once :
