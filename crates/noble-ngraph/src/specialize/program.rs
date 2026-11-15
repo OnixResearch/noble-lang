@@ -2,10 +2,13 @@
 //!
 //! The original submission is checked in full before graph extraction. An
 //! extractor marker refuses every attempt to consume or move a prefix value;
-//! the graph sees only the supported active suffix. The emitted source is
-//! independently prepared and admitted at the *full* dynamic interface,
-//! leaving the prefix below its `let` bindings. The returned ModulePrepared is
-//! the actual ordinary Declared-Text-v1 Program, not a graph proxy.
+//! the graph sees only the supported active suffix. Pair/Unit input values are
+//! flattened left-to-right into scalar leaves (Unit contributes none). The
+//! residual accepts only the ordered dynamic scalar leaves above the unchanged
+//! prefix; checked output shapes are rebuilt with `unit` and `pair`. The
+//! emitted source is independently prepared and admitted at that full
+//! interface, leaving the prefix below its `let` bindings. The returned
+//! ModulePrepared is an ordinary Declared-Text-v1 Program, not a graph proxy.
 //!
 //! This implementation and its finite differential tests do not prove
 //! Rust/model, extraction/Program or backend/runtime correspondence.
@@ -25,8 +28,10 @@ pub struct Request<'a> {
     pub expected_original: Option<crate::ir::Digest>,
     /// Count of untouched stack values below the active suffix.
     pub preserved_tail: usize,
-    /// One optional I64 value per scalar input of the active suffix, in
-    /// bottom-first order; the preserved tail has no binding positions.
+    /// One optional I64 value per scalar leaf of the active suffix, in
+    /// bottom-first stack-item and left-to-right pair order. Unit contributes
+    /// no leaf; the preserved tail has no binding positions in this library
+    /// map. A Bool leaf may only remain dynamic.
     pub static_inputs: &'a [Option<i64>],
     /// Extraction, specialization and checker caps.
     pub budgets: &'a crate::check::Budgets,
@@ -52,6 +57,112 @@ pub struct Residual {
     pub readmitted: crate::check::CheckedGraph,
     /// Number of unchanged bottom-most stack values on both interfaces.
     pub preserved_tail: usize,
+    /// Checked original active stack-item types, including pair/Unit shape.
+    pub original_active_inputs: alloc::vec::Vec<noble_kernel::types::Ty>,
+}
+
+/// One reconstructed active input item for the original ordinary Program.
+/// The opaque tail is supplied unchanged before these items by the caller.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ActiveValue {
+    /// Checked I64 or Bool leaf.
+    Scalar(crate::sem::Value),
+    /// Unit is a stack item but has no scalar binding position.
+    Unit,
+    /// Original nested pair shape, in left-to-right leaf order.
+    Pair(alloc::boxed::Box<(ActiveValue, ActiveValue)>),
+}
+
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-ngraph; the source frontend and admission bound pair nesting to MAX_SHAPE_DEPTH"
+)]
+fn leaves(ty: &noble_kernel::types::Ty) -> usize {
+    match ty {
+        noble_kernel::types::Ty::Pair(left, right) => {
+            leaves(left).saturating_add(leaves(right))
+        }
+        noble_kernel::types::Ty::Unit => 0,
+        _ => 1,
+    }
+}
+
+/// Number of flattened scalar input leaves. This only counts shapes: the
+/// full original submission must still pass independent source admission
+/// before any active type can be trusted as supported.
+#[must_use]
+pub fn input_leaf_count(inputs: &[noble_kernel::types::Ty]) -> usize {
+    inputs.iter().fold(0usize, |n, ty| n.saturating_add(leaves(ty)))
+}
+
+impl Residual {
+    /// Reconstruct the original active stack items from the residual's flat,
+    /// checked dynamic leaf interface. Prefix tail items remain unchanged.
+    /// Wrong arity/type or an inconsistent binding map returns `None`.
+    #[must_use]
+    pub fn merge_active(&self, dynamic: &[crate::sem::Value]) -> Option<alloc::vec::Vec<ActiveValue>> {
+        if dynamic.len() != self.specialized.report.dynamic_inputs.len()
+            || dynamic
+                .iter()
+                .zip(&self.specialized.report.dynamic_inputs)
+                .any(|(value, ty)| value.ty() != *ty)
+        {
+            return None;
+        }
+        let mut leaf = 0;
+        let mut rank = 0;
+        let mut original = alloc::vec::Vec::with_capacity(self.original_active_inputs.len());
+        for ty in &self.original_active_inputs {
+            original.push(merge_value(
+                ty,
+                &self.specialized.report.static_inputs,
+                dynamic,
+                &mut leaf,
+                &mut rank,
+            )?);
+        }
+        if leaf != self.specialized.report.static_inputs.len() || rank != dynamic.len() {
+            return None;
+        }
+        Some(original)
+    }
+}
+
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-ngraph; independently accepted original types bound pair nesting to MAX_SHAPE_DEPTH"
+)]
+fn merge_value(
+    ty: &noble_kernel::types::Ty,
+    bindings: &[Option<i64>],
+    dynamic: &[crate::sem::Value],
+    leaf: &mut usize,
+    rank: &mut usize,
+) -> Option<ActiveValue> {
+    match ty {
+        noble_kernel::types::Ty::Pair(left, right) => Some(ActiveValue::Pair(
+            alloc::boxed::Box::new((
+                merge_value(left, bindings, dynamic, leaf, rank)?,
+                merge_value(right, bindings, dynamic, leaf, rank)?,
+            )),
+        )),
+        noble_kernel::types::Ty::Unit => Some(ActiveValue::Unit),
+        noble_kernel::types::Ty::I64 | noble_kernel::types::Ty::Bool => {
+            let known = *bindings.get(*leaf)?;
+            *leaf += 1;
+            let scalar = match (ty, known) {
+                (noble_kernel::types::Ty::I64, Some(value)) => crate::sem::Value::I64(value),
+                (_, Some(_)) => return None,
+                (_, None) => {
+                    let value = *dynamic.get(*rank)?;
+                    *rank += 1;
+                    value
+                }
+            };
+            Some(ActiveValue::Scalar(scalar))
+        }
+        _ => None,
+    }
 }
 
 fn refuse(
@@ -94,9 +205,11 @@ fn static_encoding(static_inputs: &[Option<i64>], preserved_tail: usize) -> allo
 
 /// Specialize an exact checked Program into a newly source-prepared,
 /// independently checked residual Program. The observation domain is the
-/// resource-free stack: `tail ++ merge(static_inputs, dynamic)` on the
-/// original side and `tail ++ dynamic` on the residual side. No operation of
-/// the original may inspect or move `tail`; unsupported subjects refuse.
+/// resource-free stack: `tail ++ merge_active(static_inputs, dynamic)` on the
+/// original side and `tail ++ dynamic_scalar_leaves` on the residual side.
+/// Every original active pair/Unit item is reconstructed in its original
+/// shape; `tail` is an unchanged prefix of opaque stack items. No operation
+/// of the original may inspect or move `tail`; unsupported subjects refuse.
 /// Neither side is executed here, and the ordinary unspecialized path is
 /// unchanged.
 ///
@@ -129,15 +242,20 @@ pub fn residualize(
         ));
     }
     let extracted = crate::extract::extract(ids, &original, request.budgets)?;
-    let specialized = super::specialize(
+    let specialized = super::specialize_inner(
         ids,
         &extracted.checked,
         &super::Request {
             static_inputs: request.static_inputs,
             budgets: request.budgets,
         },
+        true,
     )?;
-    let source = super::emit_source(&specialized.checked)?;
+    let source = if let Some(shapes) = extracted.checked.graph().output_shape.as_deref() {
+        super::emit_source_with_outputs(&specialized.checked, shapes)?
+    } else {
+        super::emit_source(&specialized.checked)?
+    };
     let mut dynamic_inputs =
         request.original.request.expected.stack_in[..request.preserved_tail].to_vec();
     dynamic_inputs.extend(super::interface_types(&specialized.checked)?);
@@ -172,18 +290,6 @@ pub fn residualize(
             "the full residual Program output differs from the original stack interface",
         ));
     }
-    if prepared.output()[request.preserved_tail..]
-        .iter()
-        .zip(specialized.checked.graph().outputs.iter())
-        .any(|(ty, node)| specialized.checked.ty(*node).and_then(output_type).as_ref() != Some(ty))
-        || prepared.output().len() - request.preserved_tail
-            != specialized.checked.graph().outputs.len()
-    {
-        return Err(refuse(
-            crate::diag::Code::Interface,
-            "residual Program outputs differ from the checked residual graph",
-        ));
-    }
     let readmitted = crate::extract::admit_with_tail(
         ids,
         submission,
@@ -207,6 +313,22 @@ pub fn residualize(
         readmitted.closure().to_vec(),
     );
     let readmitted_graph = crate::extract::extract(ids, &readmitted, request.budgets)?.checked;
+    if readmitted_graph.graph().outputs.len() != specialized.checked.graph().outputs.len()
+        || readmitted_graph
+            .graph()
+            .outputs
+            .iter()
+            .zip(&specialized.checked.graph().outputs)
+            .any(|(actual, expected)| {
+                readmitted_graph.ty(*actual).and_then(output_type)
+                    != specialized.checked.ty(*expected).and_then(output_type)
+            })
+    {
+        return Err(refuse(
+            crate::diag::Code::Interface,
+            "residual Program scalar outputs differ from the checked residual graph",
+        ));
+    }
     Ok(Residual {
         source,
         prepared,
@@ -215,6 +337,8 @@ pub fn residualize(
         specialized,
         readmitted: readmitted_graph,
         preserved_tail: request.preserved_tail,
+        original_active_inputs: request.original.request.expected.stack_in[request.preserved_tail..]
+            .to_vec(),
     })
 }
 
@@ -283,6 +407,270 @@ mod tests {
                 source_limits: noble_contracts::Limits::default(),
             },
         )
+    }
+
+    fn observe(
+        graph: &crate::check::CheckedGraph,
+        inputs: &[crate::sem::Value],
+    ) -> alloc::vec::Vec<crate::sem::Value> {
+        match crate::eval::reference(
+            graph,
+            inputs,
+            None,
+            &mut crate::eval::Control::default(),
+        )
+        .obs
+        {
+            crate::eval::Obs::Normal(values) => values,
+            other => panic!("unexpected graph observation {other:?}"),
+        }
+    }
+
+    fn nested_pair() -> noble_kernel::types::Ty {
+        noble_kernel::types::Ty::Pair(
+            alloc::boxed::Box::new(noble_kernel::types::Ty::I64),
+            alloc::boxed::Box::new(noble_kernel::types::Ty::Pair(
+                alloc::boxed::Box::new(noble_kernel::types::Ty::Unit),
+                alloc::boxed::Box::new(noble_kernel::types::Ty::I64),
+            )),
+        )
+    }
+
+    fn original_graph(
+        original: &crate::extract::source::Prepared,
+        tail: usize,
+    ) -> crate::check::CheckedGraph {
+        let budgets = crate::check::Budgets::default();
+        let admitted = crate::extract::admit_with_tail(
+            &Ids,
+            &original.submission,
+            &crate::extract::Request {
+                profile: "ngraph-i64/0",
+                claimed_closure: &original.claimed_closure,
+                budget: graph_budget(&budgets),
+            },
+            tail,
+        )
+        .expect("original independently admitted");
+        crate::extract::extract(&Ids, &admitted, &budgets)
+            .expect("original independently checked graph")
+            .checked
+    }
+
+    #[test]
+    fn nested_pair_partial_bindings_reconstruct_checked_shape_and_dynamic_order() {
+        let inputs = [
+            noble_kernel::types::Ty::Text,
+            nested_pair(),
+            noble_kernel::types::Ty::Unit,
+            noble_kernel::types::Ty::Bool,
+            noble_kernel::types::Ty::I64,
+        ];
+        let original = checked(
+            &[],
+            "let y let flag drop unpair unpair let z drop y + unit z y - pair pair flag",
+            &inputs,
+        );
+        let original_graph = original_graph(&original, 1);
+        assert_eq!(input_leaf_count(&inputs[1..]), 4);
+        let residual = prepare(
+            &original,
+            1,
+            &[Some(2), None, None, Some(4)],
+            None,
+            &[],
+        )
+        .expect("the independently checked active pair/Unit and mixed leaves specialize");
+        assert_eq!(
+            residual
+                .prepared
+                .submission()
+                .expect("ordinary checked Program")
+                .request
+                .expected
+                .stack_in,
+            [
+                noble_kernel::types::Ty::Text,
+                noble_kernel::types::Ty::I64,
+                noble_kernel::types::Ty::Bool
+            ]
+        );
+        assert_eq!(
+            residual.prepared.output(),
+            original.submission.request.expected.stack_out
+        );
+        assert_eq!(
+            residual.readmitted.graph().output_shape,
+            original_graph.graph().output_shape
+        );
+        assert!(residual.source.contains("unit\n"));
+        assert!(residual.source.matches("pair\n").count() >= 2);
+        for (z, flag) in [(9i64, true), (i64::MIN, false), (0, true)] {
+            let dynamic = [crate::sem::Value::I64(z), crate::sem::Value::Bool(flag)];
+            let full = [
+                crate::sem::Value::I64(2),
+                crate::sem::Value::I64(z),
+                crate::sem::Value::Bool(flag),
+                crate::sem::Value::I64(4),
+            ];
+            assert_eq!(
+                residual.merge_active(&dynamic),
+                Some(alloc::vec![
+                    ActiveValue::Pair(alloc::boxed::Box::new((
+                        ActiveValue::Scalar(crate::sem::Value::I64(2)),
+                        ActiveValue::Pair(alloc::boxed::Box::new((
+                            ActiveValue::Unit,
+                            ActiveValue::Scalar(crate::sem::Value::I64(z)),
+                        ))),
+                    ))),
+                    ActiveValue::Unit,
+                    ActiveValue::Scalar(crate::sem::Value::Bool(flag)),
+                    ActiveValue::Scalar(crate::sem::Value::I64(4)),
+                ])
+            );
+            let expected = alloc::vec![
+                crate::sem::Value::I64(6),
+                crate::sem::Value::I64(z.wrapping_sub(4)),
+                crate::sem::Value::Bool(flag),
+            ];
+            assert_eq!(observe(&residual.specialized.checked, &dynamic), expected);
+            assert_eq!(observe(&residual.readmitted, &dynamic), expected);
+            assert_eq!(observe(&original_graph, &full), expected);
+        }
+        assert_eq!(residual.merge_active(&[crate::sem::Value::I64(9)]), None);
+        assert_eq!(
+            residual.merge_active(&[
+                crate::sem::Value::Bool(true),
+                crate::sem::Value::I64(9)
+            ]),
+            None
+        );
+    }
+
+    #[test]
+    fn nested_pair_all_and_no_static_leaves_keep_unit_and_output_shape() {
+        let inputs = [nested_pair(), noble_kernel::types::Ty::Unit];
+        let original = checked(&[], "drop unpair unpair swap drop + unit pair", &inputs);
+        let original_graph = original_graph(&original, 0);
+        for (map, dynamic, full) in [
+            (
+                &[None, None][..],
+                alloc::vec![
+                    crate::sem::Value::I64(i64::MAX),
+                    crate::sem::Value::I64(1)
+                ],
+                alloc::vec![
+                    crate::sem::Value::I64(i64::MAX),
+                    crate::sem::Value::I64(1)
+                ],
+            ),
+            (
+                &[Some(i64::MAX), Some(1)][..],
+                alloc::vec![],
+                alloc::vec![
+                    crate::sem::Value::I64(i64::MAX),
+                    crate::sem::Value::I64(1)
+                ],
+            ),
+        ] {
+            let residual = prepare(&original, 0, map, None, &[])
+                .expect("all/no static nested pair leaves specialize");
+            let expected_inputs = if map.iter().all(Option::is_some) {
+                alloc::vec![]
+            } else {
+                alloc::vec![noble_kernel::types::Ty::I64; 2]
+            };
+            assert_eq!(
+                residual
+                    .prepared
+                    .submission()
+                    .expect("ordinary Program")
+                    .request
+                    .expected
+                    .stack_in,
+                expected_inputs
+            );
+            assert_eq!(
+                residual.prepared.output(),
+                &[noble_kernel::types::Ty::Pair(
+                    alloc::boxed::Box::new(noble_kernel::types::Ty::I64),
+                    alloc::boxed::Box::new(noble_kernel::types::Ty::Unit),
+                )]
+            );
+            assert_eq!(
+                residual.merge_active(&dynamic),
+                Some(alloc::vec![
+                    ActiveValue::Pair(alloc::boxed::Box::new((
+                        ActiveValue::Scalar(crate::sem::Value::I64(i64::MAX)),
+                        ActiveValue::Pair(alloc::boxed::Box::new((
+                            ActiveValue::Unit,
+                            ActiveValue::Scalar(crate::sem::Value::I64(1)),
+                        ))),
+                    ))),
+                    ActiveValue::Unit,
+                ])
+            );
+            // The accepted source output keeps Pair<I64,Unit>; the scalar
+            // observation and wrapping result are the same on both paths.
+            assert_eq!(
+                observe(&original_graph, &full),
+                alloc::vec![crate::sem::Value::I64(i64::MIN)]
+            );
+            assert_eq!(
+                observe(&residual.readmitted, &dynamic),
+                alloc::vec![crate::sem::Value::I64(i64::MIN)]
+            );
+        }
+    }
+
+    #[test]
+    fn unit_only_active_input_and_pair_output_need_no_scalar_binding() {
+        let original = checked(&[], "unit pair", &[noble_kernel::types::Ty::Unit]);
+        let residual = prepare(&original, 0, &[], None, &[])
+            .expect("a checked Unit-only shape is reconstructible without scalar leaves");
+        assert_eq!(input_leaf_count(&[noble_kernel::types::Ty::Unit]), 0);
+        assert_eq!(
+            residual
+                .prepared
+                .submission()
+                .expect("ordinary Program")
+                .request
+                .expected
+                .stack_in,
+            alloc::vec![]
+        );
+        assert_eq!(
+            residual.prepared.output(),
+            &[noble_kernel::types::Ty::Pair(
+                alloc::boxed::Box::new(noble_kernel::types::Ty::Unit),
+                alloc::boxed::Box::new(noble_kernel::types::Ty::Unit),
+            )]
+        );
+        assert_eq!(residual.source, "unit\nunit\npair\n");
+        assert_eq!(residual.merge_active(&[]), Some(alloc::vec![ActiveValue::Unit]));
+        assert_eq!(observe(&residual.readmitted, &[]), alloc::vec![]);
+        assert_eq!(residual.readmitted.graph().outputs.len(), 0);
+    }
+
+    #[test]
+    fn boolean_leaf_cannot_be_static_inside_a_pair() {
+        let pair = noble_kernel::types::Ty::Pair(
+            alloc::boxed::Box::new(noble_kernel::types::Ty::Bool),
+            alloc::boxed::Box::new(noble_kernel::types::Ty::I64),
+        );
+        let original = checked(&[], "unpair drop", &[pair]);
+        assert_eq!(
+            prepare(&original, 0, &[Some(1), None], None, &[])
+                .expect_err("I64 cannot bind a Bool leaf")
+                .code,
+            crate::diag::Code::Interface
+        );
+        assert_eq!(
+            prepare(&original, 0, &[None], None, &[])
+                .expect_err("a whole pair item is not one scalar leaf")
+                .code,
+            crate::diag::Code::Interface
+        );
     }
 
     #[test]

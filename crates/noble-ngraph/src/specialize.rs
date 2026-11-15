@@ -311,7 +311,10 @@ fn algebraic_result(op: &crate::ir::Op, known: &[Option<Known>]) -> Option<Algeb
 }
 
 /// Refuses a graph outside the `ngraph-pe/0` subject slice (D1).
-fn admit_slice(checked: &crate::check::CheckedGraph) -> Result<(), crate::diag::Diagnostic> {
+fn admit_slice(
+    checked: &crate::check::CheckedGraph,
+    source_shapes: bool,
+) -> Result<(), crate::diag::Diagnostic> {
     let graph = checked.graph();
     if graph.profile != crate::ir::SubProfile::I64 {
         return Err(refuse(crate::diag::Code::Profile, {
@@ -335,7 +338,7 @@ fn admit_slice(checked: &crate::check::CheckedGraph) -> Result<(), crate::diag::
             ));
         }
     }
-    if graph.input_shape.is_some() || graph.output_shape.is_some() {
+    if !source_shapes && (graph.input_shape.is_some() || graph.output_shape.is_some()) {
         return Err(refuse(
             crate::diag::Code::Aggregate,
             "an interface shape tree is outside the ngraph-pe/0 slice; v1 admits flat scalar interfaces only",
@@ -467,8 +470,19 @@ pub fn specialize(
     checked: &crate::check::CheckedGraph,
     request: &Request<'_>,
 ) -> Result<Residual, crate::diag::Diagnostic> {
+    specialize_inner(ids, checked, request, false)
+}
+
+/// Only the fully admitted Program path may flatten checked pair/Unit shapes.
+/// The public graph operation continues to refuse every shaped interface.
+fn specialize_inner(
+    ids: &dyn IdentityScheme,
+    checked: &crate::check::CheckedGraph,
+    request: &Request<'_>,
+    source_shapes: bool,
+) -> Result<Residual, crate::diag::Diagnostic> {
     request.budgets.validate_policy()?;
-    admit_slice(checked)?;
+    admit_slice(checked, source_shapes)?;
     let graph = checked.graph();
     let positions = leaf_positions(graph);
     let leaves = positions.iter().filter(|p| p.is_some()).count();
@@ -764,7 +778,55 @@ pub fn interface_types(
 pub fn emit_source(
     checked: &crate::check::CheckedGraph,
 ) -> Result<alloc::string::String, crate::diag::Diagnostic> {
-    admit_slice(checked)?;
+    emit_source_inner(checked, None)
+}
+
+/// Source-Program-only output reconstruction: the shape comes from the
+/// independently checked *original* Program, never from an untrusted request.
+/// The specialized graph itself retains a flat, dynamically ranked interface.
+fn emit_source_with_outputs(
+    checked: &crate::check::CheckedGraph,
+    output_shapes: &[crate::ir::ShapeTree],
+) -> Result<alloc::string::String, crate::diag::Diagnostic> {
+    emit_source_inner(checked, Some(output_shapes))
+}
+
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-ngraph; the checked original shape is bounded by MAX_SHAPE_DEPTH"
+)]
+fn emit_output_tree(
+    tree: &crate::ir::ShapeTree,
+    outputs: &[crate::ir::NodeId],
+    next: &mut usize,
+    text: &mut alloc::string::String,
+) -> Result<(), crate::diag::Diagnostic> {
+    match tree.node() {
+        crate::ir::ShapeNode::Scalar => {
+            let output = outputs.get(*next).ok_or_else(|| {
+                refuse(
+                    crate::diag::Code::Interface,
+                    "a checked output shape has more scalar leaves than the residual graph",
+                )
+            })?;
+            crate::format::write_text!(text, "v{}\n", output.0);
+            *next += 1;
+        }
+        crate::ir::ShapeNode::Unit => text.push_str("unit\n"),
+        crate::ir::ShapeNode::Pair(left, right) => {
+            emit_output_tree(left, outputs, next, text)?;
+            emit_output_tree(right, outputs, next, text)?;
+            text.push_str("pair\n");
+        }
+    }
+    Ok(())
+}
+
+fn emit_source_inner(
+    checked: &crate::check::CheckedGraph,
+    output_shapes: Option<&[crate::ir::ShapeTree]>,
+) -> Result<alloc::string::String, crate::diag::Diagnostic> {
+    admit_slice(checked, false)?;
     let graph = checked.graph();
     let capacity_bytes = graph
         .nodes
@@ -859,10 +921,23 @@ pub fn emit_source(
         bound[index] = true;
         crate::format::write_text!(text, " let v{}\n", id.0);
     }
-    for output in &graph.outputs {
-        crate::format::write_text!(text, "v{}\n", output.0);
+    if let Some(shapes) = output_shapes {
+        let mut next = 0;
+        for tree in shapes {
+            emit_output_tree(tree, &graph.outputs, &mut next, &mut text)?;
+        }
+        if next != graph.outputs.len() {
+            return Err(refuse(
+                crate::diag::Code::Interface,
+                "a checked output shape omits residual graph scalar leaves",
+            ));
+        }
+    } else {
+        for output in &graph.outputs {
+            crate::format::write_text!(text, "v{}\n", output.0);
+        }
     }
-    if graph.nodes.is_empty() && graph.slots.is_empty() && graph.outputs.is_empty() {
+    if text.is_empty() {
         text.push_str("0 drop\n");
     }
     Ok(text)
