@@ -1,0 +1,83 @@
+{
+  "schema": "noble-mm0-production/v1",
+  "source_commit": "26f5e25855ba1db01b51c6686934b7b86fb272ba",
+  "clean_source": true,
+  "mm0_source": {
+    "revision": "0d414c0bfdaaeb7fea571895127abc1fa5a3d956",
+    "git_archive_sha256": "741ee2b6e13eb189dcf75dead7dbbfc6f818e33800ea781bda99926b1dcf01db"
+  },
+  "implementation": {
+    "checker_binary_sha256": "9fe789c00f6374dccb6f036afa38a874484e31d87c428e0a89aa1dc5530db94c",
+    "checker_source_sha256": "ecde31379241e38ca0b375df0f40b216e9108f6cfd45952ccb282658d883de17",
+    "producer_binary_sha256": "87c7f8a15ca8567a5ada5700b333bce23192dc741e0766661518472c892c2446",
+    "producer_lock_sha256": "3faa2cc6cc6f5e322aa3001677a6c5a28ed90827ab855bf98a6cb8b38fad621f",
+    "checker_build": "gcc -O2 mm0-c/main.c -o mm0-c",
+    "producer_build": "cargo build --locked --manifest-path mm0-rs/Cargo.toml --bin mm0-rs",
+    "compiler": "gcc (GCC) 15.2.0",
+    "compiler_store_path": "/nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin/cc",
+    "compiler_wrapper_sha256": "3c48a46fb1dc134c0f10c2da6ec1a8d34a381b93c2ac588b7d19dd3e804eeeef",
+    "checker_flags": [
+      "-O2"
+    ],
+    "parser_enabled": true
+  },
+  "artifact": {
+    "spec_sha256": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+    "spec_bytes": 34499,
+    "proof_sha256": "2ced26177614e3af86ed74fb92c4ad3ef43d3d249512a357652f9b2111a56860",
+    "proof_bytes": 1242704
+  },
+  "control_proofs": {
+    "different": {
+      "proof_sha256": "71be574cef4fb04644853ee035e61a2552ecfffd423a23e669710ad511bd19de",
+      "proof_bytes": 616,
+      "producer_status": 0,
+      "producer_stderr": ""
+    },
+    "forged": {
+      "proof_sha256": "bf159c688be2c11b12b41e91f6ead07138d0a0416c3c3a00f5e69bb8e2b937fb",
+      "proof_bytes": 472,
+      "producer_status": 0,
+      "producer_stderr": ""
+    },
+    "sorry": {
+      "proof_sha256": "a85d56e91d4c405630c7df8acb856d90e28bcd975d21835fef4de1395b76ed36",
+      "proof_bytes": 376,
+      "producer_status": 0,
+      "producer_stderr": ""
+    }
+  },
+  "no_parser_control": {
+    "binary_sha256": "8722538a732911478d8228da0ba9b10fcdbdc63f8216988883f9a4c2685503e2",
+    "binary_bytes": 35464,
+    "build_wall_ms": 1092.98206,
+    "selected": false
+  },
+  "generation": {
+    "wall_ms": 344.80751,
+    "generator_elapsed_s": 0.34,
+    "generator_peak_rss_kib": 102016,
+    "status": 0,
+    "limits": {
+      "address_space_bytes": 1073741824,
+      "cpu_seconds": 20,
+      "wall_ms": 180000
+    },
+    "stderr": "",
+    "stdout": "elab proof.mm1\nelab peano_hex.mm1\nelab peano.mm1\nelabbed peano.mm1\nelabbed peano_hex.mm1\nelabbed proof.mm1\n6 sorts, 207 term/def, 3867 ax/thm\n"
+  },
+  "checking": {
+    "wall_ms": 23.856947,
+    "checker_elapsed_s": 0.01,
+    "checker_peak_rss_kib": 1588,
+    "status": 0,
+    "signal": null,
+    "stdout": "",
+    "stderr": "",
+    "limits": {
+      "address_space_bytes": 1073741824,
+      "cpu_seconds": 20,
+      "wall_ms": 180000
+    }
+  }
+}

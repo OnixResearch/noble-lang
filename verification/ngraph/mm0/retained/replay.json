@@ -1,0 +1,294 @@
+{
+  "schema": "noble-mm0-replay/v1",
+  "source_commit": "26f5e25855ba1db01b51c6686934b7b86fb272ba",
+  "consumer_source_commit": "cb446b94dec04d993d53f3c87cd1a911723b3255",
+  "consumer_script_sha256": "700c5ab216d495b03da17623113eb08692a722fc3408cd3cccea92e8b18129d8",
+  "retained_spec_sha256": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+  "retained_proof_sha256": "2ced26177614e3af86ed74fb92c4ad3ef43d3d249512a357652f9b2111a56860",
+  "checker_binary_sha256": "9fe789c00f6374dccb6f036afa38a874484e31d87c428e0a89aa1dc5530db94c",
+  "producer_invoked": false,
+  "qualified_compiler_lab_backend": false,
+  "rows": {
+    "positive-small": {
+      "stage": "accepted",
+      "claim": {
+        "subject": "9551e321f433f40d000000000000000000000000000000000000000000000000",
+        "first_bits": "3",
+        "second_bits": "5",
+        "folded_bits": "8",
+        "ordered_outputs": [
+          1,
+          2,
+          4
+        ],
+        "input_slots": 1,
+        "theorem": "endpoint_small",
+        "proposition": "3 : 5 : umul a (uadd 3 5) : 0 = 3 : 5 : umul a 8 : 0"
+      },
+      "checker": {
+        "status": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "",
+        "stderr": "",
+        "wall_ms": 10.62712,
+        "checker_elapsed_s": 0,
+        "checker_peak_rss_kib": 1944,
+        "address_space_bytes": 1073741824,
+        "wall_limit_ms": 180000
+      },
+      "subject_shas": [
+        "3dd69fc4527c12d40cecf542a4d8e248db02ae7901b25321fad084489ec2c000",
+        "221caaec0bb54ffcf84b22c37de383d0427a42f2ee871b6b915ab4f3c29a3a40",
+        "33117f988d5d1e708a233b29dfafaa0ece27cfce37c902b47c1bd3852eca90c6"
+      ]
+    },
+    "positive-boundary": {
+      "stage": "accepted",
+      "claim": {
+        "subject": "9551e321f433f40d000000000000000000000000000000000000000000000000",
+        "first_bits": "9223372036854775807",
+        "second_bits": "1",
+        "folded_bits": "9223372036854775808",
+        "ordered_outputs": [
+          1,
+          2,
+          4
+        ],
+        "input_slots": 1,
+        "theorem": "endpoint_boundary",
+        "proposition": "wmax : 1 : umul a (uadd wmax 1) : 0 = wmax : 1 : umul a wmin : 0"
+      },
+      "checker": {
+        "status": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "",
+        "stderr": "",
+        "wall_ms": 7.269051,
+        "checker_elapsed_s": 0,
+        "checker_peak_rss_kib": 1680,
+        "address_space_bytes": 1073741824,
+        "wall_limit_ms": 180000
+      },
+      "subject_shas": [
+        "af8c7a8872b8cd53b61d52e2b47dcb67e19211518ad34af057e8d1c4f6883870",
+        "e01ec5c72c0497a37b233270effb98d2b751ae1b04ea14b002a7fa1cdd4026c5",
+        "f0da255c6b5b1f665c1d87e0e82c5eb7509e0e3c7bd4042f2dbcde6c13f1d749"
+      ]
+    },
+    "unrelated-valid-endpoint": {
+      "stage": "claim-projection",
+      "reason": "the changed graph projects a different full ordered endpoint claim"
+    },
+    "reordered-output": {
+      "stage": "claim-projection",
+      "reason": "the changed graph projects a different full ordered endpoint claim"
+    },
+    "changed-shared-use": {
+      "stage": "claim-projection",
+      "reason": "the changed graph projects a different full ordered endpoint claim"
+    },
+    "changed-consumed-bits": {
+      "stage": "claim-projection",
+      "reason": "the changed graph projects a different full ordered endpoint claim"
+    },
+    "changed-certificate-bits": {
+      "stage": "certificate-claim",
+      "reason": "retained source constant bits differ from selected theorem"
+    },
+    "stale-subject-identity": {
+      "stage": "subject-digest",
+      "reason": "small/before.graph is not the exact retained Noble subject"
+    },
+    "changed-arithmetic-definition": {
+      "stage": "spec-digest",
+      "reason": "not the caller-approved complete specification and axiom inventory",
+      "raw_checker": {
+        "status": 255,
+        "signal": null,
+        "error": null,
+        "stdout": "",
+        "stderr": "stmt: BBAAC\ncmd: BBAB7: End\nucmd: 2452: UTerm 44  // = add\n\nat uadd: unify failure at term\n\ndef modulus: nat = $ x1 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 $;\ndef uadd (a b: nat): nat = $ (a * b) % modulus $;\n                                               ^\n\ncmds:\n  BBAAE: Ref 0  // = expr (mul expr out of range expr out of range):wff\n  BBAAF: Ref 1  // = expr ?:wff\n  BBAB1: Term 44  // = add\n  BBAB3: Term 202  // = modulus\n  BBAB5: Term 57  // = mod\n\n\n\nunify cmds:\n  2450: UTerm 57  // = mod\n> 2452: UTerm 44  // = add\n  2454: URef 0  // = v0\n  2455: URef 1  // = v1\n  2457: UTerm 202  // = modulus\n\nunify stack:\n(modulus)\n\nunify heap:\n0: v0\n1: v1\n",
+        "wall_ms": 7.828316,
+        "checker_elapsed_s": null,
+        "checker_peak_rss_kib": null,
+        "address_space_bytes": 1073741824,
+        "wall_limit_ms": 180000
+      }
+    },
+    "changed-axiom": {
+      "stage": "spec-digest",
+      "reason": "not the caller-approved complete specification and axiom inventory",
+      "raw_checker": {
+        "status": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "",
+        "stderr": "",
+        "wall_ms": 7.405846,
+        "checker_elapsed_s": 0,
+        "checker_peak_rss_kib": 1668,
+        "address_space_bytes": 1073741824,
+        "wall_limit_ms": 180000
+      }
+    },
+    "additional-unapproved-axiom": {
+      "stage": "spec-digest",
+      "reason": "not the caller-approved complete specification and axiom inventory",
+      "raw_checker": {
+        "status": 255,
+        "signal": null,
+        "error": null,
+        "stdout": "",
+        "stderr": "stmt: BC4A4\ncmd: BC575: End\n\nexpecting an axiom\n\n\naxiom oracle_any (p: wff): $ p $;\n      ^\n\ncmds:\n  BC4A6: Term 205  // = wmax\n  BC4A6: Save\n  BC4A8: Term 30  // = d1\n  BC4A8: Save\n  BC4AA: Ref 0  // = expr ?:wff\n  BC4AB: Ref 1  // = expr (umul ? expr out of range):wff\n  BC4AD: Ref 2  // = expr (uadd expr out of range expr out of range):wff\n  BC4AF: Term 203  // = uadd\n  BC4AF: Save\n  BC4B1: Term 204  // = umul\n  BC4B1: Save\n  BC4B3: Term 28  // = d0\n  BC4B3: Save\n  BC4B5: Term 131  // = cons\n  BC4B5: Save\n  BC4B7: Term 131  // = cons\n  BC4B7: Save\n  BC4B9: Ref 2  // = expr (uadd expr out of range expr out of range):wff\n  BC4BB: Ref 0  // = expr ?:wff\n  BC4BC: Term 206  // = wmin\n  BC4BC: Save\n  BC4BE: Term 204  // = umul\n  BC4BE: Save\n  BC4C0: Ref 5  // = expr ?:wff\n  BC4C2: Term 131  // = cons\n  BC4C2: Save\n  BC4C4: Term 131  // = cons\n  BC4C4: Save\n  BC4C6: Ref 7  // = expr (umul ? expr out of range):wff\n  BC4C8: Ref 11  // = expr ?:wff\n  BC4CA: Term 10  // = eq\n  BC4CA: Save\n  BC4CC: Ref 1  // = expr (umul ? expr out of range):wff\n  BC4CE: Ref 7  // = expr (umul ? expr out of range):wff\n  BC4D0: Term 131  // = cons\n  BC4D0: Save\n  BC4D2: Ref 1  // = expr (umul ? expr out of range):wff\n  BC4D4: Ref 11  // = expr ?:wff\n  BC4D6: Term 131  // = cons\n  BC4D6: Save\n  BC4D8: Term 10  // = eq\n  BC4D8: Save\n  BC4DA: Term 0  // = im\n  BC4DB: Thm 2190  // = conseq2\n  BC4DE: Ref 2  // = expr (uadd expr out of range expr out of range):wff\n  BC4E0: Ref 6  // = expr ?:wff\n  BC4E2: Ref 10  // = expr (cons (d1) ?):wff\n  BC4E4: Ref 6  // = expr ?:wff\n  BC4E6: Ref 10  // = expr (cons (d1) ?):wff\n  BC4E8: Term 10  // = eq\n  BC4E8: Save\n  BC4EA: Ref 12  // = expr expr out of range\n  BC4EC: Term 0  // = im\n  BC4ED: Thm 2190  // = conseq2\n  BC4F0: Ref 4  // = expr (cons v0 expr out of range):wff\n  BC4F2: Ref 9  // = expr ?:wff\n  BC4F4: Ref 5  // = expr ?:wff\n  BC4F6: Ref 4  // = expr (cons v0 expr out of range):wff\n  BC4F8: Ref 9  // = expr ?:wff\n  BC4FA: Term 10  // = eq\n  BC4FA: Save\n  BC4FC: Ref 16  // = expr expr out of range\n  BC4FE: Term 0  // = im\n  BC4FF: Thm 2188  // = conseq1\n  BC502: Ref 0  // = expr ?:wff\n  BC503: Ref 3  // = expr (wmax):wff\n  BC505: Term 45  // = mul\n  BC505: Save\n  BC507: Ref 0  // = expr ?:wff\n  BC508: Ref 8  // = expr (d0):wff\n  BC50A: Term 45  // = mul\n  BC50A: Save\n  BC50C: Term 10  // = eq\n  BC50C: Save\n  BC50E: Ref 17  // = expr expr out of range\n  BC510: Term 0  // = im\n  BC511: Ref 18  // = expr expr out of range\n  BC513: Ref 19  // = expr expr out of range\n  BC515: Term 202  // = modulus\n  BC515: Save\n  BC517: Ref 20  // = expr expr out of range\n  BC519: Ref 18  // = expr expr out of range\n  BC51B: Ref 21  // = expr expr out of range\n  BC51D: Term 57  // = mod\n  BC51D: Save\n  BC51F: Ref 19  // = expr expr out of range\n  BC521: Ref 21  // = expr expr out of range\n  BC523: Term 57  // = mod\n  BC523: Save\n  BC525: Term 10  // = eq\n  BC527: Term 0  // = im\n  BC528: Thm 1068  // = modeq1\n  BC52B: Conv\n  BC52C: Cong\n  BC52D: Refl\n  BC52E: Cong\n  BC52F: Ref 22  // = expr expr out of range\n  BC531: Unfold\n  BC532: Refl\n  BC533: Ref 23  // = expr expr out of range\n  BC535: Unfold\n  BC536: Refl\n  BC537: Ref 0  // = expr ?:wff\n  BC538: Ref 3  // = expr (wmax):wff\n  BC53A: Ref 8  // = expr (d0):wff\n  BC53C: Ref 3  // = expr (wmax):wff\n  BC53E: Ref 8  // = expr (d0):wff\n  BC540: Term 10  // = eq\n  BC540: Save\n  BC542: Ref 20  // = expr expr out of range\n  BC544: Term 0  // = im\n  BC545: Thm 805  // = muleq2\n  BC548: Ref 24  // = expr expr out of range\n  BC54A: Thm 3864  // = ufold_boundary\n  BC54D: Ref 24  // = expr expr out of range\n  BC54F: Ref 20  // = expr expr out of range\n  BC551: Ref 20  // = expr expr out of range\n  BC553: Thm 3  // = ax_mp\n  BC555: Ref 20  // = expr expr out of range\n  BC557: Ref 17  // = expr expr out of range\n  BC559: Ref 17  // = expr expr out of range\n  BC55B: Thm 3  // = ax_mp\n  BC55D: Ref 17  // = expr expr out of range\n  BC55F: Ref 16  // = expr expr out of range\n  BC561: Ref 16  // = expr expr out of range\n  BC563: Thm 3  // = ax_mp\n  BC565: Ref 16  // = expr expr out of range\n  BC567: Ref 12  // = expr expr out of range\n  BC569: Ref 12  // = expr expr out of range\n  BC56B: Thm 3  // = ax_mp\n  BC56D: Ref 12  // = expr expr out of range\n  BC56F: Ref 15  // = expr expr out of range\n  BC571: Ref 15  // = expr expr out of range\n  BC573: Thm 3  // = ax_mp\n\n\n",
+        "wall_ms": 7.12447,
+        "checker_elapsed_s": null,
+        "checker_peak_rss_kib": null,
+        "address_space_bytes": 1073741824,
+        "wall_limit_ms": 180000
+      }
+    },
+    "foreign-different": {
+      "stage": "spec-digest",
+      "control_spec_sha256": "83ab9ef3f346fb5be56f1d587e5458c8d17b504b5fe104ce93496e8eb38b7062",
+      "control_proof_sha256": "71be574cef4fb04644853ee035e61a2552ecfffd423a23e669710ad511bd19de",
+      "raw_checker": {
+        "status": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "",
+        "stderr": "",
+        "wall_ms": 2.755131,
+        "checker_elapsed_s": 0,
+        "checker_peak_rss_kib": 1708,
+        "address_space_bytes": 1073741824,
+        "wall_limit_ms": 180000
+      },
+      "adapter": {
+        "stage": "spec-digest",
+        "reason": "not the caller-approved complete specification and axiom inventory"
+      }
+    },
+    "foreign-forged": {
+      "stage": "spec-digest",
+      "control_spec_sha256": "68df61c76184f36e2fbc897e397d56d9d9dc919f06bdd28ccf0e89f83a41ec18",
+      "control_proof_sha256": "bf159c688be2c11b12b41e91f6ead07138d0a0416c3c3a00f5e69bb8e2b937fb",
+      "raw_checker": {
+        "status": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "",
+        "stderr": "",
+        "wall_ms": 2.438059,
+        "checker_elapsed_s": 0,
+        "checker_peak_rss_kib": 1704,
+        "address_space_bytes": 1073741824,
+        "wall_limit_ms": 180000
+      },
+      "adapter": {
+        "stage": "spec-digest",
+        "reason": "not the caller-approved complete specification and axiom inventory"
+      }
+    },
+    "foreign-sorry": {
+      "stage": "checker-refused",
+      "control_spec_sha256": "d1791f190b0f0c2f78ad955634c9372e9be16ea932a1a09c5d23d60cca28bdc2",
+      "control_proof_sha256": "a85d56e91d4c405630c7df8acb856d90e28bcd975d21835fef4de1395b76ed36",
+      "raw_checker": {
+        "status": 3,
+        "signal": null,
+        "error": null,
+        "stdout": "",
+        "stderr": "at 4E: 'unproven' uses sorry\nerror: some theorems used sorry\n",
+        "wall_ms": 2.286104,
+        "checker_elapsed_s": null,
+        "checker_peak_rss_kib": null,
+        "address_space_bytes": 1073741824,
+        "wall_limit_ms": 180000
+      },
+      "adapter": {
+        "stage": "spec-digest",
+        "reason": "not the caller-approved complete specification and axiom inventory"
+      }
+    },
+    "truncated-proof": {
+      "stage": "checker-refused",
+      "input_proof_sha256": "3283ef72dad6cffc3b716b8d559a1c23828b57b8686d3c7fb773637da59a8631",
+      "raw_checker": {
+        "status": 255,
+        "signal": null,
+        "error": null,
+        "stdout": "",
+        "stderr": "stmt: 97B0F\ncmd: 97B0E: End\n\nproof command out of range\n\n--| `map : (A -> B) -> list A -> list B`\ndef map (F: set) (l: nat): nat;\n^\n\ncmds:\n  97923: Ref 2  // = expr v2\n  97925: Ref 0  // = expr v0\n  97926: Term 150\n  97926: Save\n  97928: Ref 3  // = expr v3\n  9792A: Ref 1  // = expr v1\n  9792C: Term 150\n  9792C: Save\n  9792E: Term 10\n  9792E: Save\n  97930: Ref 0  // = expr v0\n  97931: Ref 2  // = expr v2\n  97933: Term 157\n  97933: Save\n  97935: Term 131\n  97935: Save\n  97937: Term 157\n  97937: Save\n  97939: Ref 1  // = expr v1\n  9793B: Ref 3  // = expr v3\n  9793D: Term 157\n  9793D: Save\n  9793F: Term 131\n  9793F: Save\n  97941: Term 157\n  97941: Save\n  97943: Term 10\n  97943: Save\n  97945: Ref 2  // = expr v2\n  97947: Ref 3  // = expr v3\n  97949: Term 10\n  97949: Save\n  9794B: Ref 0  // = expr v0\n  9794C: Ref 1  // = expr v1\n  9794E: Term 10\n  9794E: Save\n  97950: Term 2\n  97950: Save\n  97952: Ref 13  // = expr (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3))))\n  97954: Ref 6  // = expr (t10 (t150 v2 v0) (t150 v3 v1))\n  97956: Term 3\n  97956: Save\n  97958: Ref 13  // = expr (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3))))\n  9795A: Ref 16  // = expr (t2 (t10 v2 v3) (t10 v0 v1))\n  9795C: Term 3\n  9795C: Save\n  9795E: Ref 6  // = expr (t10 (t150 v2 v0) (t150 v3 v1))\n  97960: Ref 16  // = expr (t2 (t10 v2 v3) (t10 v0 v1))\n  97962: Term 3\n  97962: Save\n  97964: Term 0\n  97964: Save\n  97965: Term 0\n  97966: Thm 151\n  97968: Ref 9  // = expr (t157 (t131 v0 (t157 v2)))\n  9796A: Ref 4  // = expr (t150 v2 v0)\n  9796C: Ref 12  // = expr (t157 (t131 v1 (t157 v3)))\n  9796E: Ref 5  // = expr (t150 v3 v1)\n  97970: Ref 9  // = expr (t157 (t131 v0 (t157 v2)))\n  97972: Ref 4  // = expr (t150 v2 v0)\n  97974: Term 10\n  97974: Save\n  97976: Ref 12  // = expr (t157 (t131 v1 (t157 v3)))\n  97978: Ref 5  // = expr (t150 v3 v1)\n  9797A: Term 10\n  9797A: Save\n  9797C: Ref 17  // = expr (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t10 (t150 v2 v0) (t150 v3 v1)))\n  9797E: Term 0\n  9797E: Save\n  9797F: Term 0\n  97980: Thm 351\n  97983: Ref 9  // = expr (t157 (t131 v0 (t157 v2)))\n  97985: Ref 7  // = expr (t157 v2)\n  97987: Term 157\n  97987: Save\n  97989: Ref 0  // = expr v0\n  9798A: Term 150\n  9798A: Save\n  9798C: Ref 4  // = expr (t150 v2 v0)\n  9798E: Ref 9  // = expr (t157 (t131 v0 (t157 v2)))\n  97990: Ref 25  // = expr (t150 (t157 (t157 v2)) v0)\n  97992: Term 10\n  97992: Save\n  97994: Ref 25  // = expr (t150 (t157 (t157 v2)) v0)\n  97996: Ref 4  // = expr (t150 v2 v0)\n  97998: Term 10\n  97998: Save\n  9799A: Ref 21  // = expr (t10 (t157 (t131 v0 (t157 v2))) (t150 v2 v0))\n  9799C: Term 0\n  9799C: Save\n  9799D: Term 0\n  9799E: Thm 342\n  979A1: Ref 0  // = expr v0\n  979A2: Ref 7  // = expr (t157 v2)\n  979A4: Ref 26  // = expr (t10 (t157 (t131 v0 (t157 v2))) (t150 (t157 (t157 v2)) v0))\n  979A6: Thm 2557\n  979A9: Ref 26  // = expr (t10 (t157 (t131 v0 (t157 v2))) (t150 (t157 (t157 v2)) v0))\n  979AB: Ref 28  // = expr (t0 (t10 (t150 (t157 (t157 v2)) v0) (t150 v2 v0)) (t10 (t157 (t131 v0 (t157 v2))) (t150 v2 v0)))\n  979AD: Ref 28  // = expr (t0 (t10 (t150 (t157 (t157 v2)) v0) (t150 v2 v0)) (t10 (t157 (t131 v0 (t157 v2))) (t150 v2 v0)))\n  979AF: Thm 3\n  979B1: Ref 24  // = expr (t157 (t157 v2))\n  979B3: Ref 2  // = expr v2\n  979B5: Ref 0  // = expr v0\n  979B6: Ref 24  // = expr (t157 (t157 v2))\n  979B8: Ref 2  // = expr v2\n  979BA: Term 10\n  979BA: Save\n  979BC: Ref 27  // = expr (t10 (t150 (t157 (t157 v2)) v0) (t150 v2 v0))\n  979BE: Term 0\n  979BF: Thm 2454\n  979C2: Ref 2  // = expr v2\n  979C4: Ref 29  // = expr (t10 (t157 (t157 v2)) v2)\n  979C6: Thm 2561\n  979C9: Ref 29  // = expr (t10 (t157 (t157 v2)) v2)\n  979CB: Ref 27  // = expr (t10 (t150 (t157 (t157 v2)) v0) (t150 v2 v0))\n  979CD: Ref 27  // = expr (t10 (t150 (t157 (t157 v2)) v0) (t150 v2 v0))\n  979CF: Thm 3\n  979D1: Ref 27  // = expr (t10 (t150 (t157 (t157 v2)) v0) (t150 v2 v0))\n  979D3: Ref 21  // = expr (t10 (t157 (t131 v0 (t157 v2))) (t150 v2 v0))\n  979D5: Ref 21  // = expr (t10 (t157 (t131 v0 (t157 v2))) (t150 v2 v0))\n  979D7: Thm 3\n  979D9: Ref 21  // = expr (t10 (t157 (t131 v0 (t157 v2))) (t150 v2 v0))\n  979DB: Ref 23  // = expr (t0 (t10 (t157 (t131 v1 (t157 v3))) (t150 v3 v1)) (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t10 (t150 v2 v0) (t150 v3 v1))))\n  979DD: Ref 23  // = expr (t0 (t10 (t157 (t131 v1 (t157 v3))) (t150 v3 v1)) (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t10 (t150 v2 v0) (t150 v3 v1))))\n  979DF: Thm 3\n  979E1: Ref 12  // = expr (t157 (t131 v1 (t157 v3)))\n  979E3: Ref 10  // = expr (t157 v3)\n  979E5: Term 157\n  979E5: Save\n  979E7: Ref 1  // = expr v1\n  979E9: Term 150\n  979E9: Save\n  979EB: Ref 5  // = expr (t150 v3 v1)\n  979ED: Ref 12  // = expr (t157 (t131 v1 (t157 v3)))\n  979EF: Ref 31  // = expr (t150 (t157 (t157 v3)) v1)\n  979F1: Term 10\n  979F1: Save\n  979F3: Ref 31  // = expr (t150 (t157 (t157 v3)) v1)\n  979F5: Ref 5  // = expr (t150 v3 v1)\n  979F7: Term 10\n  979F7: Save\n  979F9: Ref 22  // = expr (t10 (t157 (t131 v1 (t157 v3))) (t150 v3 v1))\n  979FB: Term 0\n  979FB: Save\n  979FC: Term 0\n  979FD: Thm 342\n  97A00: Ref 1  // = expr v1\n  97A02: Ref 10  // = expr (t157 v3)\n  97A04: Ref 32  // = expr (t10 (t157 (t131 v1 (t157 v3))) (t150 (t157 (t157 v3)) v1))\n  97A06: Thm 2557\n  97A09: Ref 32  // = expr (t10 (t157 (t131 v1 (t157 v3))) (t150 (t157 (t157 v3)) v1))\n  97A0B: Ref 34  // = expr (t0 (t10 (t150 (t157 (t157 v3)) v1) (t150 v3 v1)) (t10 (t157 (t131 v1 (t157 v3))) (t150 v3 v1)))\n  97A0D: Ref 34  // = expr (t0 (t10 (t150 (t157 (t157 v3)) v1) (t150 v3 v1)) (t10 (t157 (t131 v1 (t157 v3))) (t150 v3 v1)))\n  97A0F: Thm 3\n  97A11: Ref 30  // = expr (t157 (t157 v3))\n  97A13: Ref 3  // = expr v3\n  97A15: Ref 1  // = expr v1\n  97A17: Ref 30  // = expr (t157 (t157 v3))\n  97A19: Ref 3  // = expr v3\n  97A1B: Term 10\n  97A1B: Save\n  97A1D: Ref 33  // = expr (t10 (t150 (t157 (t157 v3)) v1) (t150 v3 v1))\n  97A1F: Term 0\n  97A20: Thm 2454\n  97A23: Ref 3  // = expr v3\n  97A25: Ref 35  // = expr (t10 (t157 (t157 v3)) v3)\n  97A27: Thm 2561\n  97A2A: Ref 35  // = expr (t10 (t157 (t157 v3)) v3)\n  97A2C: Ref 33  // = expr (t10 (t150 (t157 (t157 v3)) v1) (t150 v3 v1))\n  97A2E: Ref 33  // = expr (t10 (t150 (t157 (t157 v3)) v1) (t150 v3 v1))\n  97A30: Thm 3\n  97A32: Ref 33  // = expr (t10 (t150 (t157 (t157 v3)) v1) (t150 v3 v1))\n  97A34: Ref 22  // = expr (t10 (t157 (t131 v1 (t157 v3))) (t150 v3 v1))\n  97A36: Ref 22  // = expr (t10 (t157 (t131 v1 (t157 v3))) (t150 v3 v1))\n  97A38: Thm 3\n  97A3A: Ref 22  // = expr (t10 (t157 (t131 v1 (t157 v3))) (t150 v3 v1))\n  97A3C: Ref 17  // = expr (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t10 (t150 v2 v0) (t150 v3 v1)))\n  97A3E: Ref 17  // = expr (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t10 (t150 v2 v0) (t150 v3 v1)))\n  97A40: Thm 3\n  97A42: Ref 17  // = expr (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t10 (t150 v2 v0) (t150 v3 v1)))\n  97A44: Ref 20  // = expr (t0 (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t2 (t10 v2 v3) (t10 v0 v1))) (t3 (t10 (t150 v2 v0) (t150 v3 v1)) (t2 (t10 v2 v3) (t10 v0 v1))))\n  97A46: Ref 20  // = expr (t0 (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t2 (t10 v2 v3) (t10 v0 v1))) (t3 (t10 (t150 v2 v0) (t150 v3 v1)) (t2 (t10 v2 v3) (t10 v0 v1))))\n  97A48: Thm 3\n  97A4A: Ref 13  // = expr (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3))))\n  97A4C: Ref 8  // = expr (t131 v0 (t157 v2))\n  97A4E: Ref 11  // = expr (t131 v1 (t157 v3))\n  97A50: Term 10\n  97A50: Save\n  97A52: Ref 16  // = expr (t2 (t10 v2 v3) (t10 v0 v1))\n  97A54: Ref 13  // = expr (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3))))\n  97A56: Ref 36  // = expr (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3)))\n  97A58: Term 3\n  97A58: Save\n  97A5A: Ref 36  // = expr (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3)))\n  97A5C: Ref 16  // = expr (t2 (t10 v2 v3) (t10 v0 v1))\n  97A5E: Term 3\n  97A5E: Save\n  97A60: Ref 18  // = expr (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t2 (t10 v2 v3) (t10 v0 v1)))\n  97A62: Term 0\n  97A62: Save\n  97A63: Term 0\n  97A64: Thm 149\n  97A66: Ref 8  // = expr (t131 v0 (t157 v2))\n  97A68: Ref 11  // = expr (t131 v1 (t157 v3))\n  97A6A: Ref 37  // = expr (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3))))\n  97A6C: Thm 2563\n  97A6F: Ref 37  // = expr (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3))))\n  97A71: Ref 39  // = expr (t0 (t3 (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1))) (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t2 (t10 v2 v3) (t10 v0 v1))))\n  97A73: Ref 39  // = expr (t0 (t3 (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1))) (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t2 (t10 v2 v3) (t10 v0 v1))))\n  97A75: Thm 3\n  97A77: Ref 36  // = expr (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3)))\n  97A79: Ref 15  // = expr (t10 v0 v1)\n  97A7B: Ref 7  // = expr (t157 v2)\n  97A7D: Ref 10  // = expr (t157 v3)\n  97A7F: Term 10\n  97A7F: Save\n  97A81: Term 2\n  97A81: Save\n  97A83: Ref 16  // = expr (t2 (t10 v2 v3) (t10 v0 v1))\n  97A85: Ref 36  // = expr (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3)))\n  97A87: Ref 41  // = expr (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3)))\n  97A89: Term 3\n  97A89: Save\n  97A8B: Ref 41  // = expr (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3)))\n  97A8D: Ref 16  // = expr (t2 (t10 v2 v3) (t10 v0 v1))\n  97A8F: Term 3\n  97A8F: Save\n  97A91: Ref 38  // = expr (t3 (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1)))\n  97A93: Term 0\n  97A93: Save\n  97A94: Term 0\n  97A95: Thm 149\n  97A97: Ref 0  // = expr v0\n  97A98: Ref 1  // = expr v1\n  97A9A: Ref 7  // = expr (t157 v2)\n  97A9C: Ref 10  // = expr (t157 v3)\n  97A9E: Ref 42  // = expr (t3 (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3))) (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3))))\n  97AA0: Thm 2196\n  97AA3: Ref 42  // = expr (t3 (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3))) (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3))))\n  97AA5: Ref 44  // = expr (t0 (t3 (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1))) (t3 (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1))))\n  97AA7: Ref 44  // = expr (t0 (t3 (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1))) (t3 (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1))))\n  97AA9: Thm 3\n  97AAB: Ref 41  // = expr (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3)))\n  97AAD: Ref 40  // = expr (t10 (t157 v2) (t157 v3))\n  97AAF: Ref 15  // = expr (t10 v0 v1)\n  97AB1: Term 2\n  97AB1: Save\n  97AB3: Ref 16  // = expr (t2 (t10 v2 v3) (t10 v0 v1))\n  97AB5: Ref 41  // = expr (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3)))\n  97AB7: Ref 45  // = expr (t2 (t10 (t157 v2) (t157 v3)) (t10 v0 v1))\n  97AB9: Term 3\n  97AB9: Save\n  97ABB: Ref 45  // = expr (t2 (t10 (t157 v2) (t157 v3)) (t10 v0 v1))\n  97ABD: Ref 16  // = expr (t2 (t10 v2 v3) (t10 v0 v1))\n  97ABF: Term 3\n  97ABF: Save\n  97AC1: Ref 43  // = expr (t3 (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1)))\n  97AC3: Term 0\n  97AC3: Save\n  97AC4: Term 0\n  97AC5: Thm 149\n  97AC7: Ref 15  // = expr (t10 v0 v1)\n  97AC9: Ref 40  // = expr (t10 (t157 v2) (t157 v3))\n  97ACB: Ref 46  // = expr (t3 (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3))) (t2 (t10 (t157 v2) (t157 v3)) (t10 v0 v1)))\n  97ACD: Thm 177\n  97ACF: Ref 46  // = expr (t3 (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3))) (t2 (t10 (t157 v2) (t157 v3)) (t10 v0 v1)))\n  97AD1: Ref 48  // = expr (t0 (t3 (t2 (t10 (t157 v2) (t157 v3)) (t10 v0 v1)) (t2 (t10 v2 v3) (t10 v0 v1))) (t3 (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1))))\n  97AD3: Ref 48  // = expr (t0 (t3 (t2 (t10 (t157 v2) (t157 v3)) (t10 v0 v1)) (t2 (t10 v2 v3) (t10 v0 v1))) (t3 (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1))))\n  97AD5: Thm 3\n  97AD7: Ref 2  // = expr v2\n  97AD9: Ref 3  // = expr v3\n  97ADB: Ref 40  // = expr (t10 (t157 v2) (t157 v3))\n  97ADD: Ref 14  // = expr (t10 v2 v3)\n  97ADF: Term 3\n  97AE1: Thm 2563\n  97AE4: Ref 40  // = expr (t10 (t157 v2) (t157 v3))\n  97AE6: Ref 14  // = expr (t10 v2 v3)\n  97AE8: Ref 15  // = expr (t10 v0 v1)\n  97AEA: Ref 47  // = expr (t3 (t2 (t10 (t157 v2) (t157 v3)) (t10 v0 v1)) (t2 (t10 v2 v3) (t10 v0 v1)))\n  97AEC: Thm 203\n  97AEE: Ref 47  // = expr (t3 (t2 (t10 (t157 v2) (t157 v3)) (t10 v0 v1)) (t2 (t10 v2 v3) (t10 v0 v1)))\n  97AF0: Ref 43  // = expr (t3 (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1)))\n  97AF2: Ref 43  // = expr (t3 (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1)))\n  97AF4: Thm 3\n  97AF6: Ref 43  // = expr (t3 (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1)))\n  97AF8: Ref 38  // = expr (t3 (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1)))\n  97AFA: Ref 38  // = expr (t3 (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1)))\n  97AFC: Thm 3\n  97AFE: Ref 38  // = expr (t3 (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1)))\n  97B00: Ref 18  // = expr (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t2 (t10 v2 v3) (t10 v0 v1)))\n  97B02: Ref 18  // = expr (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t2 (t10 v2 v3) (t10 v0 v1)))\n  97B04: Thm 3\n  97B06: Ref 18  // = expr (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t2 (t10 v2 v3) (t10 v0 v1)))\n  97B08: Ref 19  // = expr (t3 (t10 (t150 v2 v0) (t150 v3 v1)) (t2 (t10 v2 v3) (t10 v0 v1)))\n  97B0A: Ref 19  // = expr (t3 (t10 (t150 v2 v0) (t150 v3 v1)) (t2 (t10 v2 v3) (t10 v0 v1)))\n  97B0C: Thm 3\n\nstack:\nproof (t3 (t10 (t150 v2 v0) (t150 v3 v1)) (t2 (t10 v2 v3) (t10 v0 v1)))\n\nheap:\n0: expr v0\n1: expr v1\n2: expr v2\n3: expr v3\n4: expr (t150 v2 v0)\n5: expr (t150 v3 v1)\n6: expr (t10 (t150 v2 v0) (t150 v3 v1))\n7: expr (t157 v2)\n8: expr (t131 v0 (t157 v2))\n9: expr (t157 (t131 v0 (t157 v2)))\n10: expr (t157 v3)\n11: expr (t131 v1 (t157 v3))\n12: expr (t157 (t131 v1 (t157 v3)))\n13: expr (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3))))\n14: expr (t10 v2 v3)\n15: expr (t10 v0 v1)\n16: expr (t2 (t10 v2 v3) (t10 v0 v1))\n17: expr (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t10 (t150 v2 v0) (t150 v3 v1)))\n18: expr (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t2 (t10 v2 v3) (t10 v0 v1)))\n19: expr (t3 (t10 (t150 v2 v0) (t150 v3 v1)) (t2 (t10 v2 v3) (t10 v0 v1)))\n20: expr (t0 (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t2 (t10 v2 v3) (t10 v0 v1))) (t3 (t10 (t150 v2 v0) (t150 v3 v1)) (t2 (t10 v2 v3) (t10 v0 v1))))\n21: expr (t10 (t157 (t131 v0 (t157 v2))) (t150 v2 v0))\n22: expr (t10 (t157 (t131 v1 (t157 v3))) (t150 v3 v1))\n23: expr (t0 (t10 (t157 (t131 v1 (t157 v3))) (t150 v3 v1)) (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t10 (t150 v2 v0) (t150 v3 v1))))\n24: expr (t157 (t157 v2))\n25: expr (t150 (t157 (t157 v2)) v0)\n26: expr (t10 (t157 (t131 v0 (t157 v2))) (t150 (t157 (t157 v2)) v0))\n27: expr (t10 (t150 (t157 (t157 v2)) v0) (t150 v2 v0))\n28: expr (t0 (t10 (t150 (t157 (t157 v2)) v0) (t150 v2 v0)) (t10 (t157 (t131 v0 (t157 v2))) (t150 v2 v0)))\n29: expr (t10 (t157 (t157 v2)) v2)\n30: expr (t157 (t157 v3))\n31: expr (t150 (t157 (t157 v3)) v1)\n32: expr (t10 (t157 (t131 v1 (t157 v3))) (t150 (t157 (t157 v3)) v1))\n33: expr (t10 (t150 (t157 (t157 v3)) v1) (t150 v3 v1))\n34: expr (t0 (t10 (t150 (t157 (t157 v3)) v1) (t150 v3 v1)) (t10 (t157 (t131 v1 (t157 v3))) (t150 v3 v1)))\n35: expr (t10 (t157 (t157 v3)) v3)\n36: expr (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3)))\n37: expr (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3))))\n38: expr (t3 (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1)))\n39: expr (t0 (t3 (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1))) (t3 (t10 (t157 (t131 v0 (t157 v2))) (t157 (t131 v1 (t157 v3)))) (t2 (t10 v2 v3) (t10 v0 v1))))\n40: expr (t10 (t157 v2) (t157 v3))\n41: expr (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3)))\n42: expr (t3 (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3))) (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3))))\n43: expr (t3 (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1)))\n44: expr (t0 (t3 (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1))) (t3 (t10 (t131 v0 (t157 v2)) (t131 v1 (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1))))\n45: expr (t2 (t10 (t157 v2) (t157 v3)) (t10 v0 v1))\n46: expr (t3 (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3))) (t2 (t10 (t157 v2) (t157 v3)) (t10 v0 v1)))\n47: expr (t3 (t2 (t10 (t157 v2) (t157 v3)) (t10 v0 v1)) (t2 (t10 v2 v3) (t10 v0 v1)))\n48: expr (t0 (t3 (t2 (t10 (t157 v2) (t157 v3)) (t10 v0 v1)) (t2 (t10 v2 v3) (t10 v0 v1))) (t3 (t2 (t10 v0 v1) (t10 (t157 v2) (t157 v3))) (t2 (t10 v2 v3) (t10 v0 v1))))\n",
+        "wall_ms": 9.179863,
+        "checker_elapsed_s": null,
+        "checker_peak_rss_kib": null,
+        "address_space_bytes": 1073741824,
+        "wall_limit_ms": 180000
+      }
+    },
+    "malformed-proof": {
+      "stage": "checker-refused",
+      "input_proof_sha256": "73290029c07bc8612dee9720ae153702abfc3609e3aef19da1a92178aa4a691c",
+      "raw_checker": {
+        "status": 255,
+        "signal": null,
+        "error": null,
+        "stdout": "",
+        "stderr": "Not a MM0B file\n\ndelimiter $ ( { ~ $  $ } ) , $;\n^\n\ncmds:\n\nstack:\n\nheap:\n",
+        "wall_ms": 2.716209,
+        "checker_elapsed_s": null,
+        "checker_peak_rss_kib": null,
+        "address_space_bytes": 1073741824,
+        "wall_limit_ms": 180000
+      }
+    },
+    "exhausted-address-space": {
+      "stage": "resource-limit",
+      "raw_checker": {
+        "status": 139,
+        "signal": null,
+        "error": null,
+        "stdout": "",
+        "stderr": "",
+        "wall_ms": 2.620559,
+        "checker_elapsed_s": null,
+        "checker_peak_rss_kib": null,
+        "address_space_bytes": 16777216,
+        "wall_limit_ms": 180000
+      }
+    },
+    "exhausted-wall-clock": {
+      "stage": "resource-limit",
+      "raw_checker": {
+        "status": null,
+        "signal": "SIGKILL",
+        "error": "spawnSync /usr/bin/time ETIMEDOUT",
+        "stdout": "",
+        "stderr": "",
+        "wall_ms": 1.553805,
+        "checker_elapsed_s": null,
+        "checker_peak_rss_kib": null,
+        "address_space_bytes": 1073741824,
+        "wall_limit_ms": 1
+      }
+    },
+    "no-parser-tool": {
+      "stage": "tool-identity",
+      "reason": "NO_PARSER binary is not the pinned parser-enabled checker",
+      "raw_checker": {
+        "status": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "",
+        "stderr": "",
+        "wall_ms": 7.179002,
+        "checker_elapsed_s": 0,
+        "checker_peak_rss_kib": 1688,
+        "address_space_bytes": 1073741824,
+        "wall_limit_ms": 180000
+      }
+    }
+  }
+}
