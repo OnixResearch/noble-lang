@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use noble_ngraph::eval::{self, Obs as EvalObs};
+use noble_ngraph::eval;
 use noble_ngraph::ir::{GraphBuilder, Op, ScalarType, SubProfile, Subject};
 use noble_ngraph::net::{self, InteractionGraph, Plan, Report, StoragePolicy};
 use noble_ngraph::sem::Value;
@@ -72,7 +72,7 @@ fn run_plan(
     storage_policy: StoragePolicy,
 ) -> (Report, u128) {
     let limits = net::Limits::default();
-    let started = Instant::now();
+    let started = start_clock();
     let report = net::reduce(
         &super::common::IDS,
         net::ReduceRequest {
@@ -87,6 +87,14 @@ fn run_plan(
         },
     );
     (report, started.elapsed().as_nanos())
+}
+
+#[expect(
+    tigerstyle::ambient_clock,
+    reason = "Owner: noble-maintainers; this paired test reads monotonic time only at its measurement boundary."
+)]
+fn start_clock() -> Instant {
+    Instant::now()
 }
 
 fn digest_hex(digest: &noble_ngraph::ir::Digest) -> String {
@@ -127,19 +135,19 @@ fn arm_json(label: &str, report: &Report, times_ns: &[u128]) -> String {
     )
 }
 
-fn compare_storage(family: &str, checked: noble_ngraph::CheckedGraph, inputs: &[Value]) {
-    let limits = net::Limits::default();
-    let candidate = match net::lower(&super::common::IDS, &checked, inputs, &limits) {
-        Ok(candidate) => candidate,
-        Err(error) => panic!("{family} net refused: {error:?}"),
-    };
-    let reference = eval::reference(&checked, inputs, None, &mut eval::Control::default());
+fn expected_from_warmups(
+    family: &str,
+    checked: &noble_ngraph::CheckedGraph,
+    candidate: &InteractionGraph,
+    inputs: &[Value],
+) -> (net::Obs, u64) {
+    let reference = eval::reference(checked, inputs, None, &mut eval::Control::default());
     let expected_values = match reference.obs {
-        EvalObs::Normal(values) => values,
+        eval::Obs::Normal(values) => values,
         other => panic!("{family} reference did not normalize: {other:?}"),
     };
-    let (reuse_warm, _) = run_plan(&checked, &candidate, inputs, StoragePolicy::Reuse);
-    let (allocate_warm, _) = run_plan(&checked, &candidate, inputs, StoragePolicy::Allocate);
+    let (reuse_warm, _) = run_plan(checked, candidate, inputs, StoragePolicy::Reuse);
+    let (allocate_warm, _) = run_plan(checked, candidate, inputs, StoragePolicy::Allocate);
     assert_eq!(
         reuse_warm.obs,
         net::Obs::Normal(expected_values.clone()),
@@ -158,8 +166,17 @@ fn compare_storage(family: &str, checked: noble_ngraph::CheckedGraph, inputs: &[
         reuse_warm.interactions, allocate_warm.interactions,
         "{family} warm-up counts differ"
     );
-    let expected_obs = reuse_warm.obs;
-    let expected_interactions = reuse_warm.interactions;
+    (reuse_warm.obs, reuse_warm.interactions)
+}
+
+fn measure_paired(
+    family: &str,
+    checked: &noble_ngraph::CheckedGraph,
+    candidate: &InteractionGraph,
+    inputs: &[Value],
+    expected_obs: &net::Obs,
+    expected_interactions: u64,
+) -> ([Report; 2], [Vec<u128>; 2]) {
     let mut reports: [Option<Report>; 2] = [None, None];
     let mut times: [Vec<u128>; 2] = [Vec::with_capacity(31), Vec::with_capacity(31)];
     for pair_index in 0..31 {
@@ -170,9 +187,9 @@ fn compare_storage(family: &str, checked: noble_ngraph::CheckedGraph, inputs: &[
         };
         for storage_policy in order {
             let index = usize::from(storage_policy == StoragePolicy::Allocate);
-            let (report, elapsed) = run_plan(&checked, &candidate, inputs, storage_policy);
+            let (report, elapsed) = run_plan(checked, candidate, inputs, storage_policy);
             assert_eq!(
-                report.obs, expected_obs,
+                &report.obs, expected_obs,
                 "{family}/{storage_policy:?} output differs"
             );
             assert_eq!(
@@ -190,8 +207,13 @@ fn compare_storage(family: &str, checked: noble_ngraph::CheckedGraph, inputs: &[
             times[index].push(elapsed);
         }
     }
-    let reuse = reports[0].as_ref().expect("reuse arm ran");
-    let allocate = reports[1].as_ref().expect("allocation arm ran");
+    let [Some(reuse), Some(allocate)] = reports else {
+        panic!("{family}: both arms must run")
+    };
+    ([reuse, allocate], times)
+}
+
+fn assert_storage_counts(family: &str, reuse: &Report, allocate: &Report) {
     assert_eq!(reuse.obs, allocate.obs, "{family} measured outputs differ");
     assert_eq!(
         reuse.interactions, allocate.interactions,
@@ -228,6 +250,25 @@ fn compare_storage(family: &str, checked: noble_ngraph::CheckedGraph, inputs: &[
         reuse.plan_stats.plan_digest, allocate.plan_stats.plan_digest,
         "{family} plan identities collided"
     );
+}
+
+fn compare_storage(family: &str, checked: noble_ngraph::CheckedGraph, inputs: &[Value]) {
+    let limits = net::Limits::default();
+    let candidate = match net::lower(&super::common::IDS, &checked, inputs, &limits) {
+        Ok(candidate) => candidate,
+        Err(error) => panic!("{family} net refused: {error:?}"),
+    };
+    let (expected_obs, expected_interactions) =
+        expected_from_warmups(family, &checked, &candidate, inputs);
+    let ([reuse, allocate], times) = measure_paired(
+        family,
+        &checked,
+        &candidate,
+        inputs,
+        &expected_obs,
+        expected_interactions,
+    );
+    assert_storage_counts(family, &reuse, &allocate);
     println!(
         "NOBLE_NET_PLAN_SAMPLE:{{\"family\":\"{family}\",\"graph_id\":\"{}\",\"net_key\":\"{}\",\"input_count\":{},\"rule_revision\":\"{}\",\"plan_revision\":\"{}\",\"representation_revision\":\"{}\",\"checker_revision\":\"{}\",\"executor_revision\":\"{}\",\"same_observation\":true,\"same_interactions\":true,\"reuse\":{},\"allocate\":{}}}",
         digest_hex(&checked.id()),
@@ -238,8 +279,8 @@ fn compare_storage(family: &str, checked: noble_ngraph::CheckedGraph, inputs: &[
         net::PLAN_REPRESENTATION_REVISION,
         net::PLAN_CHECKER_REVISION,
         net::PLAN_EXECUTOR_REVISION,
-        arm_json("reuse", reuse, &times[0]),
-        arm_json("allocate", allocate, &times[1]),
+        arm_json("reuse", &reuse, &times[0]),
+        arm_json("allocate", &allocate, &times[1]),
     );
 }
 

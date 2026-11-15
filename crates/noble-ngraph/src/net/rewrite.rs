@@ -49,7 +49,7 @@ struct ResultAgent {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct WireWrite {
     result: u8,
-    port_index: u8,
+    port_index: super::PortIndex,
     boundary: u8,
 }
 
@@ -237,24 +237,21 @@ impl Writer {
 
 struct Reader<'a> {
     bytes: &'a [u8],
-    byte_offset: usize,
+    cursor: usize,
 }
 
 impl<'a> Reader<'a> {
     fn new(bytes: &'a [u8]) -> Self {
-        Self {
-            bytes,
-            byte_offset: 0,
-        }
+        Self { bytes, cursor: 0 }
     }
 
     fn get(&mut self) -> Result<u8, super::Invalid> {
         let value = *self
             .bytes
-            .get(self.byte_offset)
+            .get(self.cursor)
             .ok_or(super::Invalid::PlanEncoding)?;
-        self.byte_offset = self
-            .byte_offset
+        self.cursor = self
+            .cursor
             .checked_add(1)
             .ok_or(super::Invalid::CounterOverflow)?;
         Ok(value)
@@ -369,7 +366,7 @@ fn active_pair(
 fn boundary(
     context: &RuleContext<'_>,
     owner: u32,
-    port_index: u8,
+    port_index: super::PortIndex,
     instance: &mut RuleInstance,
 ) -> Result<(), super::Invalid> {
     let slots = context.slots;
@@ -392,7 +389,7 @@ fn boundary(
                 || target_agent.ports[usize::from(target.port_index)]
                     != Some(super::Endpoint::Port(super::PortRef {
                         agent: owner,
-                        port_index: super::PortIndex::from(port_index),
+                        port_index,
                     }))
             {
                 return Err(super::Invalid::NonReciprocal);
@@ -402,7 +399,7 @@ fn boundary(
             if outputs.get(index as usize)
                 != Some(&super::PortRef {
                     agent: owner,
-                    port_index: super::PortIndex::from(port_index),
+                    port_index,
                 })
             {
                 return Err(super::Invalid::OutputBoundary);
@@ -421,7 +418,7 @@ fn boundary(
         .ok_or(super::Invalid::PlanEncoding)? = Some(Boundary {
         source: super::PortRef {
             agent: owner,
-            port_index: super::PortIndex::from(port_index),
+            port_index,
         },
         external,
     });
@@ -471,8 +468,8 @@ fn classify(context: &RuleContext<'_>) -> Result<RuleInstance, super::Invalid> {
     };
     match opcode {
         1 => {
-            boundary(context, rule_slot, 1, &mut instance)?;
-            boundary(context, rule_slot, 2, &mut instance)?;
+            boundary(context, rule_slot, super::PortIndex::from(1), &mut instance)?;
+            boundary(context, rule_slot, super::PortIndex::from(2), &mut instance)?;
             let op = match slot_agent(slots, rule_slot)?.symbol {
                 super::Symbol::Op2(op) => op,
                 _ => return Err(super::Invalid::PlanMismatch),
@@ -490,7 +487,7 @@ fn classify(context: &RuleContext<'_>) -> Result<RuleInstance, super::Invalid> {
             instance.action = consumed_actions(pair, [rule_slot], policy)?;
         }
         2 => {
-            boundary(context, rule_slot, 1, &mut instance)?;
+            boundary(context, rule_slot, super::PortIndex::from(1), &mut instance)?;
             let (op, first_value) = match slot_agent(slots, rule_slot)?.symbol {
                 super::Symbol::Op1(op, first_value) => (op, first_value),
                 _ => return Err(super::Invalid::PlanMismatch),
@@ -512,8 +509,8 @@ fn classify(context: &RuleContext<'_>) -> Result<RuleInstance, super::Invalid> {
             instance.action = consumed_actions(pair, [rule_slot], policy)?;
         }
         3 => {
-            boundary(context, rule_slot, 1, &mut instance)?;
-            boundary(context, rule_slot, 2, &mut instance)?;
+            boundary(context, rule_slot, super::PortIndex::from(1), &mut instance)?;
+            boundary(context, rule_slot, super::PortIndex::from(2), &mut instance)?;
             let second_destination = match policy {
                 super::StoragePolicy::Reuse => Some(value_slot),
                 super::StoragePolicy::Allocate => None,
@@ -624,8 +621,9 @@ fn populate_writes_and_publications(
             let write_index = usize::from(instance.write_count);
             let write = WireWrite {
                 result: u8::try_from(result_index).map_err(|_| super::Invalid::CounterOverflow)?,
-                port_index: u8::try_from(port_index)
-                    .map_err(|_| super::Invalid::CounterOverflow)?,
+                port_index: super::PortIndex::from(
+                    u8::try_from(port_index).map_err(|_| super::Invalid::CounterOverflow)?,
+                ),
                 boundary: *boundary_index,
             };
             *instance
@@ -782,7 +780,7 @@ pub(super) fn compile(
     {
         let write = write.ok_or(super::Invalid::PlanEncoding)?;
         writer.put(write.result)?;
-        writer.put(write.port_index)?;
+        writer.put(u8::from(write.port_index))?;
         writer.put(write.boundary)?;
     }
     writer.put(instance.write_count)?;
@@ -793,7 +791,7 @@ pub(super) fn compile(
     {
         let write = write.ok_or(super::Invalid::PlanEncoding)?;
         writer.put(write.result)?;
-        writer.put(write.port_index)?;
+        writer.put(u8::from(write.port_index))?;
         writer.put(write.boundary)?;
     }
     writer.put_u32(fresh)?;
@@ -893,7 +891,7 @@ fn decode(bytes: &[u8]) -> Result<Image, super::Invalid> {
     for write in writes.iter_mut().take(usize::from(write_count)) {
         *write = Some(WireWrite {
             result: reader.get()?,
-            port_index: reader.get()?,
+            port_index: super::PortIndex::from(reader.get()?),
             boundary: reader.get()?,
         });
     }
@@ -908,7 +906,7 @@ fn decode(bytes: &[u8]) -> Result<Image, super::Invalid> {
     {
         *write = Some(WireWrite {
             result: reader.get()?,
-            port_index: reader.get()?,
+            port_index: super::PortIndex::from(reader.get()?),
             boundary: reader.get()?,
         });
     }
@@ -928,7 +926,7 @@ fn decode(bytes: &[u8]) -> Result<Image, super::Invalid> {
             second_generation: reader.get_u64()?,
         });
     }
-    if reader.get()? != COMMIT || reader.byte_offset != bytes.len() {
+    if reader.get()? != COMMIT || reader.cursor != bytes.len() {
         return Err(super::Invalid::PlanEncoding);
     }
     Ok(Image {
@@ -1160,8 +1158,9 @@ fn validate_image(
             }
             let expected_write = WireWrite {
                 result: u8::try_from(result_index).map_err(|_| super::Invalid::CounterOverflow)?,
-                port_index: u8::try_from(port_index)
-                    .map_err(|_| super::Invalid::CounterOverflow)?,
+                port_index: super::PortIndex::from(
+                    u8::try_from(port_index).map_err(|_| super::Invalid::CounterOverflow)?,
+                ),
                 boundary: *boundary_index,
             };
             if image.writes.get(write_index).copied().flatten() != Some(expected_write)
@@ -1357,11 +1356,9 @@ fn validate_worklist(
             return Err(super::Invalid::WorklistBound);
         }
         for prior in worklist.entries.iter().take(index) {
-            if prior.first == queued.first
-                || prior.first == queued.second
-                || prior.second == queued.first
-                || prior.second == queued.second
-            {
+            let is_first_shared = prior.first == queued.first || prior.second == queued.first;
+            let is_second_shared = prior.first == queued.second || prior.second == queued.second;
+            if is_first_shared || is_second_shared {
                 return Err(super::Invalid::DoubleEnqueue);
             }
         }
@@ -1560,8 +1557,8 @@ fn execute_with_hooks(
             observed: required_queue,
         });
     }
-    let old_slot_capacity_slots = slots.capacity();
-    let old_queue_capacity_entries = worklist.entries.capacity();
+    let reserved_slots_before = slots.capacity();
+    let reserved_entries_before = worklist.entries.capacity();
     if hooks.reservation_failure_after == Some(0) {
         return Err(ExecuteError::Invalid(
             super::Invalid::PlanReservationFailure,
@@ -1624,7 +1621,7 @@ fn execute_with_hooks(
         ));
     }
     if hooks.reservation_failure_after == Some(1) {
-        slots.shrink_to(old_slot_capacity_slots);
+        slots.shrink_to(reserved_slots_before);
         return Err(ExecuteError::Invalid(
             super::Invalid::PlanReservationFailure,
         ));
@@ -1637,23 +1634,23 @@ fn execute_with_hooks(
         )
         .is_err()
     {
-        slots.shrink_to(old_slot_capacity_slots);
-        worklist.entries.shrink_to(old_queue_capacity_entries);
+        slots.shrink_to(reserved_slots_before);
+        worklist.entries.shrink_to(reserved_entries_before);
         return Err(ExecuteError::Invalid(
             super::Invalid::PlanReservationFailure,
         ));
     }
     if hooks.reservation_failure_after == Some(2) {
-        slots.shrink_to(old_slot_capacity_slots);
-        worklist.entries.shrink_to(old_queue_capacity_entries);
+        slots.shrink_to(reserved_slots_before);
+        worklist.entries.shrink_to(reserved_entries_before);
         return Err(ExecuteError::Invalid(
             super::Invalid::PlanReservationFailure,
         ));
     }
     if let Err(invalid) = apply_image(state, &image, hooks.interrupt_after) {
         rollback(state, &journal);
-        state.slots.shrink_to(old_slot_capacity_slots);
-        state.worklist.entries.shrink_to(old_queue_capacity_entries);
+        state.slots.shrink_to(reserved_slots_before);
+        state.worklist.entries.shrink_to(reserved_entries_before);
         return Err(ExecuteError::Invalid(invalid));
     }
     Ok(Execution {
@@ -1799,7 +1796,7 @@ fn apply_image(
             image.boundaries[usize::from(write.boundary)].ok_or(super::Invalid::PlanEncoding)?;
         let new_port = super::PortRef {
             agent: result.slot,
-            port_index: super::PortIndex::from(write.port_index),
+            port_index: write.port_index,
         };
         match target.external {
             super::Endpoint::Port(peer) => {

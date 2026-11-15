@@ -564,6 +564,32 @@ pub struct PlanStats {
     pub replay_digest: crate::ir::Digest,
 }
 
+impl PlanStats {
+    fn record_commit_counts(&mut self, execution: &rewrite::Execution) -> Result<(), Invalid> {
+        let allocated = self
+            .allocated_slots
+            .checked_add(u64::from(execution.allocated_slots))
+            .ok_or(Invalid::CounterOverflow)?;
+        let reused = self
+            .reused_slots
+            .checked_add(u64::from(execution.reused_slots))
+            .ok_or(Invalid::CounterOverflow)?;
+        let freed = self
+            .freed_slots
+            .checked_add(u64::from(execution.freed_slots))
+            .ok_or(Invalid::CounterOverflow)?;
+        let microsteps = self
+            .microsteps
+            .checked_add(u64::from(execution.microsteps))
+            .ok_or(Invalid::CounterOverflow)?;
+        self.allocated_slots = allocated;
+        self.reused_slots = reused;
+        self.freed_slots = freed;
+        self.microsteps = microsteps;
+        Ok(())
+    }
+}
+
 /// Lowers a checked graph and one input row into its canonical revision-3 net.
 ///
 /// Admission and exact input/interface validation happen before net allocation.
@@ -698,8 +724,8 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
                 interactions: 0,
                 peak_live_agents: initial_agents,
                 final_wires: Some(initial_wires),
-                retained_bytes: retained_bytes,
-                plan_stats: plan_stats,
+                retained_bytes,
+                plan_stats,
             });
         }
     }
@@ -720,11 +746,11 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
         if plan.cancel.is_some_and(|cancel| cancel(interactions)) {
             return report_with_stats(ReportInput {
                 obs: Obs::Cancelled,
-                interactions: interactions,
+                interactions,
                 peak_live_agents: initial_agents,
                 final_wires: Some(live_wires),
-                retained_bytes: retained_bytes,
-                plan_stats: plan_stats,
+                retained_bytes,
+                plan_stats,
             });
         }
         if interactions >= fuel {
@@ -733,11 +759,11 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
                 None => {
                     return report_with_stats(ReportInput {
                         obs: Obs::InternalInvalid(Invalid::CounterOverflow),
-                        interactions: interactions,
+                        interactions,
                         peak_live_agents: initial_agents,
                         final_wires: Some(live_wires),
-                        retained_bytes: retained_bytes,
-                        plan_stats: plan_stats,
+                        retained_bytes,
+                        plan_stats,
                     });
                 }
             };
@@ -747,11 +773,11 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
                     cap: fuel,
                     observed,
                 },
-                interactions: interactions,
+                interactions,
                 peak_live_agents: initial_agents,
                 final_wires: Some(live_wires),
-                retained_bytes: retained_bytes,
-                plan_stats: plan_stats,
+                retained_bytes,
+                plan_stats,
             });
         }
         let bytes = match rewrite::compile(&slots, &outputs, pair, storage_policy) {
@@ -759,11 +785,11 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
             Err(invalid) => {
                 return report_with_stats(ReportInput {
                     obs: Obs::InternalInvalid(invalid),
-                    interactions: interactions,
+                    interactions,
                     peak_live_agents: initial_agents,
                     final_wires: Some(live_wires),
-                    retained_bytes: retained_bytes,
-                    plan_stats: plan_stats,
+                    retained_bytes,
+                    plan_stats,
                 });
             }
         };
@@ -772,18 +798,18 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
             slots: &slots,
             outputs: &outputs,
             worklist: &worklist,
-            pair: pair,
+            pair,
             policy: storage_policy,
         }) {
             Ok(checked) => checked,
             Err(invalid) => {
                 return report_with_stats(ReportInput {
                     obs: Obs::InternalInvalid(invalid),
-                    interactions: interactions,
+                    interactions,
                     peak_live_agents: initial_agents,
                     final_wires: Some(live_wires),
-                    retained_bytes: retained_bytes,
-                    plan_stats: plan_stats,
+                    retained_bytes,
+                    plan_stats,
                 });
             }
         };
@@ -796,11 +822,11 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
             None => {
                 return report_with_stats(ReportInput {
                     obs: Obs::InternalInvalid(Invalid::CounterOverflow),
-                    interactions: interactions,
+                    interactions,
                     peak_live_agents: initial_agents,
                     final_wires: Some(live_wires),
-                    retained_bytes: retained_bytes,
-                    plan_stats: plan_stats,
+                    retained_bytes,
+                    plan_stats,
                 });
             }
         };
@@ -812,7 +838,7 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
         let scratch_limit_bytes = plan
             .max_plan_scratch_bytes
             .unwrap_or(rewrite::MAX_PLAN_BYTES as u64);
-        let queue_limit_entries = plan.max_worklist_entries.unwrap_or(limits.max_agent_slots);
+        let max_queue_entries = plan.max_worklist_entries.unwrap_or(limits.max_agent_slots);
         let execution = match rewrite::execute(
             checked_plan,
             &mut rewrite::ExecutionState {
@@ -823,18 +849,18 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
             rewrite::ExecutionLimits {
                 arena_slots: limits.max_agent_slots,
                 scratch_bytes: scratch_limit_bytes,
-                worklist_entries: queue_limit_entries,
+                worklist_entries: max_queue_entries,
             },
         ) {
             Ok(execution) => execution,
             Err(rewrite::ExecuteError::Invalid(invalid)) => {
                 return report_with_stats(ReportInput {
                     obs: Obs::InternalInvalid(invalid),
-                    interactions: interactions,
+                    interactions,
                     peak_live_agents: initial_agents,
                     final_wires: Some(live_wires),
-                    retained_bytes: retained_bytes,
-                    plan_stats: plan_stats,
+                    retained_bytes,
+                    plan_stats,
                 });
             }
             Err(rewrite::ExecuteError::Limited {
@@ -848,11 +874,11 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
                         cap,
                         observed,
                     },
-                    interactions: interactions,
+                    interactions,
                     peak_live_agents: initial_agents,
                     final_wires: Some(live_wires),
-                    retained_bytes: retained_bytes,
-                    plan_stats: plan_stats,
+                    retained_bytes,
+                    plan_stats,
                 });
             }
         };
@@ -861,11 +887,11 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
             None => {
                 return report_with_stats(ReportInput {
                     obs: Obs::InternalInvalid(Invalid::CounterOverflow),
-                    interactions: interactions,
+                    interactions,
                     peak_live_agents: initial_agents,
                     final_wires: Some(live_wires),
-                    retained_bytes: retained_bytes,
-                    plan_stats: plan_stats,
+                    retained_bytes,
+                    plan_stats,
                 });
             }
         };
@@ -874,23 +900,24 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
             None => {
                 return report_with_stats(ReportInput {
                     obs: Obs::InternalInvalid(Invalid::CounterOverflow),
-                    interactions: interactions,
+                    interactions,
                     peak_live_agents: initial_agents,
                     final_wires: Some(live_wires),
-                    retained_bytes: retained_bytes,
-                    plan_stats: plan_stats,
+                    retained_bytes,
+                    plan_stats,
                 });
             }
         };
-        plan_stats.allocated_slots = plan_stats
-            .allocated_slots
-            .saturating_add(u64::from(execution.allocated_slots));
-        plan_stats.reused_slots = plan_stats
-            .reused_slots
-            .saturating_add(u64::from(execution.reused_slots));
-        plan_stats.freed_slots = plan_stats
-            .freed_slots
-            .saturating_add(u64::from(execution.freed_slots));
+        if let Err(invalid) = plan_stats.record_commit_counts(&execution) {
+            return report_with_stats(ReportInput {
+                obs: Obs::InternalInvalid(invalid),
+                interactions,
+                peak_live_agents: initial_agents,
+                final_wires: Some(live_wires),
+                retained_bytes,
+                plan_stats,
+            });
+        }
         plan_stats.committed_live_nodes = live_agents;
         plan_stats.transient_slots = plan_stats
             .transient_slots
@@ -901,19 +928,16 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
         plan_stats.queue_high_water = plan_stats
             .queue_high_water
             .max(u64::try_from(worklist.entries.len()).unwrap_or(u64::MAX));
-        plan_stats.microsteps = plan_stats
-            .microsteps
-            .saturating_add(u64::from(execution.microsteps));
         live_wires = match live_wires.checked_sub(1) {
             Some(value) => value,
             None => {
                 return report_with_stats(ReportInput {
                     obs: Obs::InternalInvalid(Invalid::CounterOverflow),
-                    interactions: interactions,
+                    interactions,
                     peak_live_agents: initial_agents,
                     final_wires: None,
-                    retained_bytes: retained_bytes,
-                    plan_stats: plan_stats,
+                    retained_bytes,
+                    plan_stats,
                 });
             }
         };
@@ -925,30 +949,30 @@ pub fn reduce(ids: &dyn IdentityScheme, request: ReduceRequest<'_>) -> Report {
             {
                 return report_with_stats(ReportInput {
                     obs: Obs::InternalInvalid(Invalid::LeftoverAgent),
-                    interactions: interactions,
+                    interactions,
                     peak_live_agents: initial_agents,
                     final_wires: Some(live_wires),
-                    retained_bytes: retained_bytes,
-                    plan_stats: plan_stats,
+                    retained_bytes,
+                    plan_stats,
                 });
             }
             plan_stats.replay_digest = replay_digest(ids, net, plan_stats.plan_digest);
             report_with_stats(ReportInput {
                 obs: Obs::Normal(values),
-                interactions: interactions,
+                interactions,
                 peak_live_agents: initial_agents,
                 final_wires: Some(live_wires),
-                retained_bytes: retained_bytes,
-                plan_stats: plan_stats,
+                retained_bytes,
+                plan_stats,
             })
         }
         Err(invalid) => report_with_stats(ReportInput {
             obs: Obs::InternalInvalid(invalid),
-            interactions: interactions,
+            interactions,
             peak_live_agents: initial_agents,
             final_wires: Some(live_wires),
-            retained_bytes: retained_bytes,
-            plan_stats: plan_stats,
+            retained_bytes,
+            plan_stats,
         }),
     }
 }
@@ -961,11 +985,11 @@ fn report(
     retained_bytes: u64,
 ) -> Report {
     report_with_stats(ReportInput {
-        obs: obs,
-        interactions: interactions,
-        peak_live_agents: peak_live_agents,
-        final_wires: final_wires,
-        retained_bytes: retained_bytes,
+        obs,
+        interactions,
+        peak_live_agents,
+        final_wires,
+        retained_bytes,
         plan_stats: PlanStats::default(),
     })
 }
@@ -1266,12 +1290,12 @@ fn build_expected_from_i64(
     for count in &use_counts {
         let count = usize::try_from(*count)
             .map_err(|_| Refusal::InternalInvalid(Invalid::CounterOverflow))?;
-        let next_entry_offset = use_entry_offsets
+        let next_cursor = use_entry_offsets
             .last()
             .copied()
             .and_then(|previous_entry_offset| previous_entry_offset.checked_add(count))
             .ok_or(Refusal::InternalInvalid(Invalid::CounterOverflow))?;
-        use_entry_offsets.push(next_entry_offset);
+        use_entry_offsets.push(next_cursor);
     }
     let mut cursors = alloc::vec::Vec::with_capacity(source_count);
     for entry_offset in use_entry_offsets.iter().take(source_count) {
@@ -2126,8 +2150,7 @@ mod tests {
             };
             2
         ];
-        let mut outputs =
-            alloc::vec::Vec::with_capacity(usize::from(rule.port_count().saturating_sub(1)));
+        let mut outputs = alloc::vec::Vec::with_capacity(rule.port_count().saturating_sub(1));
         let mut output_index = 0u32;
         for index in 0..2usize {
             let symbol = symbols[index];
@@ -2171,25 +2194,25 @@ mod tests {
         result_index: usize,
     ) -> Option<core::ops::Range<usize>> {
         let bytes = plan.as_bytes();
-        let mut byte_offset = 33usize;
-        let boundary_count = usize::from(*bytes.get(byte_offset)?);
-        byte_offset = byte_offset.checked_add(1)?;
+        let mut cursor = 33usize;
+        let boundary_count = usize::from(*bytes.get(cursor)?);
+        cursor = cursor.checked_add(1)?;
         for _ in 0..boundary_count {
-            byte_offset = byte_offset.checked_add(5)?;
-            byte_offset = byte_offset.checked_add(match bytes.get(byte_offset).copied()? {
+            cursor = cursor.checked_add(5)?;
+            cursor = cursor.checked_add(match bytes.get(cursor).copied()? {
                 0 => 6,
                 1 => 5,
                 _ => return None,
             })?;
         }
-        let result_count = usize::from(*bytes.get(byte_offset)?);
+        let result_count = usize::from(*bytes.get(cursor)?);
         if result_index >= result_count {
             return None;
         }
-        byte_offset = byte_offset.checked_add(1)?;
-        byte_offset = byte_offset.checked_add(result_index.checked_mul(21)?)?;
-        byte_offset = byte_offset.checked_add(1)?;
-        Some(byte_offset..byte_offset.checked_add(4)?)
+        cursor = cursor.checked_add(1)?;
+        cursor = cursor.checked_add(result_index.checked_mul(21)?)?;
+        cursor = cursor.checked_add(1)?;
+        Some(cursor..cursor.checked_add(4)?)
     }
 
     fn principal_boundary_fixture() -> (alloc::vec::Vec<Slot>, alloc::vec::Vec<PortRef>, Pair) {
@@ -2497,6 +2520,43 @@ mod tests {
     }
 
     #[test]
+    fn plan_operation_counters_refuse_wrap_without_partial_accounting() {
+        let execution = rewrite::Execution {
+            live_decrease: 1,
+            transient_live_nodes: 2,
+            allocated_slots: 1,
+            reused_slots: 1,
+            freed_slots: 1,
+            microsteps: 6,
+        };
+        for mut stats in [
+            PlanStats {
+                allocated_slots: u64::MAX,
+                ..PlanStats::default()
+            },
+            PlanStats {
+                reused_slots: u64::MAX,
+                ..PlanStats::default()
+            },
+            PlanStats {
+                freed_slots: u64::MAX,
+                ..PlanStats::default()
+            },
+            PlanStats {
+                microsteps: u64::MAX - 5,
+                ..PlanStats::default()
+            },
+        ] {
+            let before = stats.clone();
+            assert_eq!(
+                stats.record_commit_counts(&execution),
+                Err(Invalid::CounterOverflow)
+            );
+            assert_eq!(stats, before);
+        }
+    }
+
+    #[test]
     fn checker_preserves_distinct_ports_on_one_boundary_agent_and_queue_ownership() {
         let (slots, outputs, worklist, pair) = shared_boundary_worklist_fixture();
         let bytes = rewrite::compile(&slots, &outputs, pair, StoragePolicy::Reuse)
@@ -2691,7 +2751,7 @@ mod tests {
                 };
                 let queue_before = worklist.entries.clone();
                 let interrupted = |step| step == stop_at;
-                let arena_limit_slots = u64::try_from(slots.len()).expect("fixture size")
+                let max_arena_slots = u64::try_from(slots.len()).expect("fixture size")
                     + u64::from(policy == StoragePolicy::Allocate);
                 let result = rewrite::execute_with_interrupt(
                     checked,
@@ -2701,7 +2761,7 @@ mod tests {
                         worklist: &mut worklist,
                     },
                     rewrite::ExecutionLimits {
-                        arena_slots: arena_limit_slots,
+                        arena_slots: max_arena_slots,
                         scratch_bytes: rewrite::MAX_PLAN_BYTES as u64,
                         worklist_entries: 1,
                     },
@@ -2794,7 +2854,7 @@ mod tests {
         let mut worklist = ActiveWorklist {
             entries: alloc::vec::Vec::with_capacity(slots.len()),
         };
-        let arena_limit_slots = u64::try_from(slots.len()).expect("fixture size");
+        let max_arena_slots = u64::try_from(slots.len()).expect("fixture size");
         let result = rewrite::execute(
             checked,
             &mut rewrite::ExecutionState {
@@ -2803,7 +2863,7 @@ mod tests {
                 worklist: &mut worklist,
             },
             rewrite::ExecutionLimits {
-                arena_slots: arena_limit_slots,
+                arena_slots: max_arena_slots,
                 scratch_bytes: rewrite::MAX_PLAN_BYTES as u64,
                 worklist_entries: 1,
             },
@@ -2864,7 +2924,7 @@ mod tests {
                 assert_eq!(worklist.entries.len(), 1);
             }
         }
-        for queue_limit_entries in [0u64, 1, 2] {
+        for max_queue_entries in [0u64, 1, 2] {
             let (mut slots, mut outputs, pair) = principal_boundary_fixture();
             let bytes =
                 rewrite::compile(&slots, &outputs, pair, StoragePolicy::Reuse).expect("reuse plan");
@@ -2886,10 +2946,10 @@ mod tests {
                 rewrite::ExecutionLimits {
                     arena_slots,
                     scratch_bytes: required_scratch_bytes,
-                    worklist_entries: queue_limit_entries,
+                    worklist_entries: max_queue_entries,
                 },
             );
-            if queue_limit_entries == 0 {
+            if max_queue_entries == 0 {
                 assert!(matches!(
                     result,
                     Err(rewrite::ExecuteError::Limited {
@@ -2905,7 +2965,7 @@ mod tests {
                 assert_eq!(worklist.entries.len(), 1);
             }
         }
-        for arena_limit_slots in [
+        for max_arena_slots in [
             REQUIRED_ALLOCATION_ARENA_SLOTS - 1,
             REQUIRED_ALLOCATION_ARENA_SLOTS,
             REQUIRED_ALLOCATION_ARENA_SLOTS + 1,
@@ -2926,12 +2986,12 @@ mod tests {
                     worklist: &mut worklist,
                 },
                 rewrite::ExecutionLimits {
-                    arena_slots: arena_limit_slots,
+                    arena_slots: max_arena_slots,
                     scratch_bytes: required_scratch_bytes,
                     worklist_entries: 1,
                 },
             );
-            if arena_limit_slots < REQUIRED_ALLOCATION_ARENA_SLOTS {
+            if max_arena_slots < REQUIRED_ALLOCATION_ARENA_SLOTS {
                 assert!(matches!(
                     result,
                     Err(rewrite::ExecuteError::Limited {
