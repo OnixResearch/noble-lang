@@ -1244,6 +1244,19 @@ impl ProcedureLibrary {
                         return Err(Refusal::at(RefusalKind::ForgedStatus, Diagnostic { field: "promotion.obligations", message: "each promoted obligation requires exact-subject proof evidence allowed by policy" }, index as u32));
                     }
                 }
+                if let Some(policy) = policy {
+                    for required in &policy.obligations {
+                        if !promotion.obligations.contains(&required.id) {
+                            return Err(Refusal::new(
+                                RefusalKind::ForgedStatus,
+                                Diagnostic {
+                                    field: "promotion.obligations",
+                                    message: "promotion omits an obligation demanded by the selected consumer policy",
+                                },
+                            ));
+                        }
+                    }
+                }
             }
             Status::Superseded => {
                 if record.promotion.is_some() {

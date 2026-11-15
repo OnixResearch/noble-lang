@@ -15,6 +15,9 @@ use noble_kernel::types::Ty;
 use std::cell::Cell;
 use std::vec;
 
+#[path = "retrieval/generated.rs"]
+mod generated;
+
 #[test]
 fn filters_are_ordered_identity_only_subsequences() -> Result<(), String> {
     let namespace = Session::without_test_hosts();

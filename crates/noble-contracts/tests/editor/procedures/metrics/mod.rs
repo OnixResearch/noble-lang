@@ -11,6 +11,9 @@ use noble_contracts::source::Session;
 use std::string::String;
 use std::vec;
 
+#[path = "schema.rs"]
+mod schema;
+
 #[test]
 fn bind_manifest_and_withdraw_transfer_on_any_producer_call() -> Result<(), String> {
     let namespace = Session::without_test_hosts();
