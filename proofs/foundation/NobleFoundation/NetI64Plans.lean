@@ -1245,6 +1245,120 @@ def PhysicalState.queuedGenerationsBound (state : PhysicalState) : Bool :=
     ((state.slots[pair.second]?).map fun slot =>
       decide (pair.secondGeneration.toNat ≤ slot.generation.toNat)).getD false
 
+/-- A freshly constructed arena with no queued entries meets the generation
+bound regardless of its slot layout or current generation values. -/
+theorem PhysicalState.empty_work_queued_generations_bound
+    {state : PhysicalState} (hwork : state.work = []) :
+    state.queuedGenerationsBound = true := by
+  simp [PhysicalState.queuedGenerationsBound, hwork]
+
+/-- The Boolean legal-state condition is exactly a bound on both concrete
+array lookups of every old queued entry, including stale ones. -/
+theorem PhysicalState.queuedGenerationsBound_iff
+    {state : PhysicalState} :
+    state.queuedGenerationsBound = true ↔
+      ∀ pair ∈ state.work,
+        (∃ first, state.slots[pair.first]? = some first ∧
+          pair.firstGeneration.toNat ≤ first.generation.toNat) ∧
+        (∃ second, state.slots[pair.second]? = some second ∧
+          pair.secondGeneration.toNat ≤ second.generation.toNat) := by
+  simp only [PhysicalState.queuedGenerationsBound, List.all_eq_true]
+  constructor
+  · intro h pair hp
+    have hb := h pair hp
+    cases hf : state.slots[pair.first]? with
+    | none => simp [hf] at hb
+    | some first =>
+      cases hs : state.slots[pair.second]? with
+      | none => simp [hs] at hb
+      | some second =>
+        simp [hf, hs] at hb
+        exact ⟨⟨first, rfl, hb.1⟩, ⟨second, rfl, hb.2⟩⟩
+  · intro h pair hp
+    obtain ⟨⟨first, hf, hfirst⟩, ⟨second, hs, hsecond⟩⟩ := h pair hp
+    simp [hf, hs, hfirst, hsecond]
+
+/-- Updating an existing slot without decreasing its generation cannot
+turn an old bounded queued reference into a future-generation reference. -/
+theorem PhysicalState.queuedGenerationsBound_writeSlot_mono
+    {state : PhysicalState} {index : Nat} {old replacement : PhysicalSlot}
+    (hbound : state.queuedGenerationsBound = true)
+    (hslot : state.slots[index]? = some old)
+    (hgen : old.generation.toNat ≤ replacement.generation.toNat) :
+    (state.writeSlot index replacement).queuedGenerationsBound = true := by
+  apply PhysicalState.queuedGenerationsBound_iff.mpr
+  intro pair hp
+  obtain ⟨⟨first, hf, hfirst⟩, ⟨second, hs, hsecond⟩⟩ :=
+    PhysicalState.queuedGenerationsBound_iff.mp hbound pair
+      (by simpa [PhysicalState.writeSlot] using hp)
+  have boundAt (slot : Nat) (generation : UInt64) (source : PhysicalSlot)
+      (hsource : state.slots[slot]? = some source)
+      (hle : generation.toNat ≤ source.generation.toNat) :
+      ∃ target, (state.writeSlot index replacement).slots[slot]? =
+        some target ∧ generation.toNat ≤ target.generation.toNat := by
+    by_cases he : index = slot
+    · have hin : state.slots[slot]? = some old := by
+        simpa [he] using hslot
+      have same : source = old := Option.some.inj (hsource.symm.trans hin)
+      subst source
+      exact ⟨replacement,
+        by simpa [he] using (PhysicalState.writeSlot_self
+          (replacement := replacement) hslot),
+        by omega⟩
+    · exact ⟨source, (PhysicalState.writeSlot_frame he).trans hsource,
+        hle⟩
+  exact ⟨boundAt pair.first pair.firstGeneration first hf hfirst,
+    boundAt pair.second pair.secondGeneration second hs hsecond⟩
+
+/-- A fresh slot has no old queued references; append preserves every
+bounded old endpoint without requiring the new slot's generation to be zero. -/
+theorem PhysicalState.queuedGenerationsBound_appendSlot
+    {state : PhysicalState} {fresh : PhysicalSlot}
+    (hbound : state.queuedGenerationsBound = true) :
+    (state.appendSlot fresh).queuedGenerationsBound = true := by
+  apply PhysicalState.queuedGenerationsBound_iff.mpr
+  intro pair hp
+  obtain ⟨⟨first, hf, hfirst⟩, ⟨second, hs, hsecond⟩⟩ :=
+    PhysicalState.queuedGenerationsBound_iff.mp hbound pair
+      (by simpa [PhysicalState.appendSlot] using hp)
+  have hfb : pair.first < state.slots.size := (getElem?_eq_some_iff.mp hf).1
+  have hsb : pair.second < state.slots.size := (getElem?_eq_some_iff.mp hs).1
+  exact ⟨⟨first, (PhysicalState.appendSlot_frame hfb).trans hf,
+      hfirst⟩,
+    ⟨second, (PhysicalState.appendSlot_frame hsb).trans hs, hsecond⟩⟩
+
+/-- The physical headroom check makes an increment genuinely monotone;
+without it the fixed-width generation wraps and old references can revive. -/
+theorem PhysicalState.generation_increment_mono {generation : UInt64}
+    (hroom : generation ≠ UInt64.ofNat (UInt64.size - 1)) :
+    generation.toNat ≤ (generation + 1).toNat := by
+  have hmax : generation.toNat ≠ UInt64.size - 1 := by
+    intro he
+    apply hroom
+    rw [← UInt64.ofNat_toNat (x := generation), he]
+  have hlt : generation.toNat + 1 < UInt64.size := by
+    have hb := UInt64.toNat_lt generation
+    have hsize : UInt64.size = 2 ^ 64 := rfl
+    omega
+  rw [UInt64.toNat_add, UInt64.toNat_ofNat]
+  simp only [Nat.one_mod]
+  rw [Nat.mod_eq_of_lt (by simpa [UInt64.size] using hlt)]
+  omega
+
+/-- Output retargeting does not alter slot generations or pending entries. -/
+theorem PhysicalState.retargetOutput_preserves_queued_generations_bound
+    {state next : PhysicalState} {index : Nat} {target : Nat × Nat}
+    (hbound : state.queuedGenerationsBound = true)
+    (h : state.retargetOutput index target = some next) :
+    next.queuedGenerationsBound = true := by
+  unfold PhysicalState.retargetOutput at h
+  cases ho : retargetOutputList index target state.outputs with
+  | none => simp [ho] at h
+  | some outputs =>
+    simp [ho] at h
+    cases h
+    simpa [PhysicalState.queuedGenerationsBound] using hbound
+
 /-- A dead endpoint cannot be decoded as a current queued agent pair,
 regardless of whether its stored generation matches the queue entry. -/
 theorem PhysicalState.logicalPair_dead_endpoint
@@ -1320,6 +1434,26 @@ tagged pairs, without changing slots, wires or outputs. -/
 def PhysicalState.appendPublications (state : PhysicalState)
     (published : List PhysicalPair) : PhysicalState :=
   { state with work := state.work ++ published }
+
+/-- A newly queued pair records generations no greater than its concrete
+endpoint generations, leaving all earlier queued bounds intact. -/
+theorem PhysicalState.append_current_pair_preserves_queued_generations_bound
+    {state : PhysicalState} {pair : PhysicalPair}
+    {first second : PhysicalSlot}
+    (hbound : state.queuedGenerationsBound = true)
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfg : pair.firstGeneration.toNat ≤ first.generation.toNat)
+    (hsg : pair.secondGeneration.toNat ≤ second.generation.toNat) :
+    (state.appendPublications [pair]).queuedGenerationsBound = true := by
+  apply PhysicalState.queuedGenerationsBound_iff.mpr
+  intro queued hq
+  have hmem : queued ∈ state.work ∨ queued = pair := by
+    simpa [PhysicalState.appendPublications] using hq
+  rcases hmem with hold | hnew
+  · exact PhysicalState.queuedGenerationsBound_iff.mp hbound queued hold
+  · subst queued
+    exact ⟨⟨first, hf, hfg⟩, ⟨second, hs, hsg⟩⟩
 
 theorem PhysicalState.appendPublications_project_work
     (state : PhysicalState) (published : List PhysicalPair) :
@@ -1521,6 +1655,46 @@ theorem PhysicalState.installResult_preserves_outputs
             rcases h with ⟨_, heq⟩
             exact (congrArg PhysicalState.outputs heq).symm
 
+/-- Every successful result installation increments a reused generation
+without wrap or appends a new slot, so old pending generations stay bounded. -/
+theorem PhysicalState.installResult_preserves_queued_generations_bound
+    {state next : PhysicalState} {plan : BytePlan} {logical : Id}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    (hbound : state.queuedGenerationsBound = true)
+    (h : state.installResult plan logical result = some next) :
+    next.queuedGenerationsBound = true := by
+  unfold PhysicalState.installResult at h
+  cases hd : state.slots[result.2.2.2.1]? with
+  | none => simp [hd] at h
+  | some donor =>
+    cases ha : donor.agent with
+    | none => simp [hd, ha] at h
+    | some _ =>
+      cases hp : result.2.2.2.2.mapM plan.resultTarget with
+      | none => simp [hd, hp] at h
+      | some ports =>
+        cases hr : result.1 with
+        | true =>
+          simp [hd, ha, hp, hr] at h
+          rcases h with ⟨_, heq⟩
+          rw [← heq]
+          exact PhysicalState.queuedGenerationsBound_appendSlot hbound
+        | false =>
+          cases ho : state.slots[result.2.1]? with
+          | none => simp [hd, hp, hr, ho] at h
+          | some old =>
+            cases hb : old.agent with
+            | none => simp [hd, hp, hr, ho, hb] at h
+            | some _ =>
+              have hroom : old.generation ≠
+                  UInt64.ofNat (UInt64.size - 1) := by
+                intro he
+                simp [hd, hp, hr, ho, hb, he] at h
+              simp [hd, hp, hr, ho, hb] at h
+              rw [← h.2.2]
+              exact PhysicalState.queuedGenerationsBound_writeSlot_mono
+                hbound ho (PhysicalState.generation_increment_mono hroom)
+
 /-- Installing a result cannot mutate an existing external peer whose
 physical slot is distinct from the result destination. -/
 theorem PhysicalState.installResult_external_slot_frame
@@ -1596,6 +1770,36 @@ theorem PhysicalState.install_single_result_success
   refine ⟨next, ?_⟩
   simp [PhysicalState.installResults, hslot, hlab, hinstall]
 
+/-- A successful variable-length installation cannot revive any queued
+generation, including when several results reuse successive consumed slots. -/
+theorem PhysicalState.installResults_preserves_queued_generations_bound
+    {state next : PhysicalState} {plan : BytePlan}
+    {left right : Id} {rhs : XRhs NetSym}
+    {index : Nat}
+    {results : List (Bool × Nat × NetSym × Nat × List (Option Nat))}
+    (hbound : state.queuedGenerationsBound = true)
+    (h : PhysicalState.installResults plan left right rhs index state results =
+      some next) :
+    next.queuedGenerationsBound = true := by
+  induction results generalizing index state next with
+  | nil =>
+    simp [PhysicalState.installResults] at h
+    cases h
+    exact hbound
+  | cons result rest ih =>
+    cases hslot : rhs.slots[index]? with
+    | none => simp [PhysicalState.installResults, hslot] at h
+    | some ruleSlot =>
+      by_cases hlab : rhs.lab ruleSlot.1 ruleSlot.2 =
+          some result.2.2.1
+      · simp [PhysicalState.installResults, hslot, hlab] at h
+        obtain ⟨installed, hinstall, hrest⟩ :=
+          Option.bind_eq_some_iff.mp h
+        exact ih
+          (PhysicalState.installResult_preserves_queued_generations_bound
+            hbound hinstall) hrest
+      · simp [PhysicalState.installResults, hslot, hlab] at h
+
 /-- Retire a consumed slot not reused by a result, refusing stale or
 overflowing generations rather than publishing an invalid free slot. -/
 private def PhysicalState.retire (state : PhysicalState) (index : Nat)
@@ -1610,6 +1814,42 @@ private def PhysicalState.retire (state : PhysicalState) (index : Nat)
         generation := old.generation + 1
         queuedGeneration := none }
       some { retired with freeSlots := index :: retired.freeSlots }
+
+/-- Retirement either leaves a reused slot unchanged or increments an old
+generation with checked headroom; both preserve every old queue bound. -/
+theorem PhysicalState.retire_preserves_queued_generations_bound
+    {state next : PhysicalState} {index : Nat} {reuse : Bool}
+    (hbound : state.queuedGenerationsBound = true)
+    (h : state.retire index reuse = some next) :
+    next.queuedGenerationsBound = true := by
+  cases reuse with
+  | true =>
+    simp [PhysicalState.retire] at h
+    cases h
+    exact hbound
+  | false =>
+    cases hslot : state.slots[index]? with
+    | none => simp [PhysicalState.retire, hslot] at h
+    | some old =>
+      cases ha : old.agent with
+      | none => simp [PhysicalState.retire, hslot, ha] at h
+      | some _ =>
+        have hroom : old.generation ≠
+            UInt64.ofNat (UInt64.size - 1) := by
+          intro he
+          simp [PhysicalState.retire, hslot, ha, he] at h
+        let replacement : PhysicalSlot :=
+          { old with
+            agent := none
+            generation := old.generation + 1
+            queuedGeneration := none }
+        have hmono :=
+          PhysicalState.queuedGenerationsBound_writeSlot_mono
+            (replacement := replacement) hbound hslot
+            (PhysicalState.generation_increment_mono hroom)
+        simp [PhysicalState.retire, hslot, ha] at h
+        rw [← h.2]
+        simpa [PhysicalState.queuedGenerationsBound, replacement] using hmono
 
 /-- A successful non-reuse retirement removes the selected agent regardless
 of what other (possibly stale) queue entries still reference its slot. -/
@@ -1741,6 +1981,50 @@ theorem PhysicalState.writeExternal_slot_frame
             | succ n => simp [hr, hboundary, hk] at h
           | succ n => simp [hr, hboundary, hk] at h
 
+/-- Reciprocal writes change only peer port contents/queue marks, or an
+output target; neither operation decreases a physical generation. -/
+theorem PhysicalState.writeExternal_preserves_queued_generations_bound
+    {state next : PhysicalState} {plan : BytePlan}
+    {write : Nat × Nat × Nat}
+    (hbound : state.queuedGenerationsBound = true)
+    (h : state.writeExternal plan write = some next) :
+    next.queuedGenerationsBound = true := by
+  unfold PhysicalState.writeExternal at h
+  cases hr : plan.results[write.1]? with
+  | none => simp [hr] at h
+  | some result =>
+    cases hb : plan.boundaries[write.2.2]? with
+    | none => simp [hr, hb] at h
+    | some boundary =>
+      cases hk : boundary.2 with
+      | mk kind rest =>
+        cases rest with
+        | mk peer port =>
+          cases kind with
+          | zero =>
+            cases hp : state.slots[peer]? with
+            | none => simp [hr, hb, hk, hp] at h
+            | some old =>
+              simp [hr, hb, hk, hp] at h
+              rcases h with ⟨_, _, _, heq⟩
+              rw [← heq]
+              exact PhysicalState.queuedGenerationsBound_writeSlot_mono
+                hbound hp (Nat.le_refl _)
+          | succ k =>
+            cases k with
+            | zero =>
+              cases port with
+              | zero =>
+                cases ho : state.outputs[peer]? with
+                | none => simp [hr, hb, hk, ho] at h
+                | some old =>
+                  simp [hr, hb, hk, ho] at h
+                  rcases h with ⟨_, _, ht⟩
+                  exact PhysicalState.retargetOutput_preserves_queued_generations_bound
+                    hbound ht
+              | succ n => simp [hr, hb, hk] at h
+            | succ n => simp [hr, hb, hk] at h
+
 /-- A result installation cannot invalidate the prestate ownership of an
 external output boundary, so its reciprocal write follows immediately. -/
 theorem PhysicalState.install_then_write_output
@@ -1795,6 +2079,26 @@ private def PhysicalState.writeExternals (state : PhysicalState)
       let next ← state.writeExternal plan write
       next.writeExternals plan rest
 
+/-- Every completed reciprocal-write list preserves the old queue's
+generation bound, regardless of output versus live-peer endpoint order. -/
+theorem PhysicalState.writeExternals_preserves_queued_generations_bound
+    {state next : PhysicalState} {plan : BytePlan}
+    {writes : List (Nat × Nat × Nat)}
+    (hbound : state.queuedGenerationsBound = true)
+    (h : state.writeExternals plan writes = some next) :
+    next.queuedGenerationsBound = true := by
+  induction writes generalizing state next with
+  | nil =>
+    simp [PhysicalState.writeExternals] at h
+    cases h
+    exact hbound
+  | cons write rest ih =>
+    simp [PhysicalState.writeExternals] at h
+    obtain ⟨rewired, hwrite, hrest⟩ := Option.bind_eq_some_iff.mp h
+    exact ih
+      (PhysicalState.writeExternal_preserves_queued_generations_bound
+        hbound hwrite) hrest
+
 /-- Publish one reciprocal principal pair after the existing queue, marking
 both current generations. Old pending entries and old-generation marks do not
 block a new publication: Rust may leave those stale entries to be skipped
@@ -1834,6 +2138,64 @@ theorem PhysicalState.publish_success
     ∃ next, state.publish pair = some next := by
   simp [PhysicalState.publish, horder, hfirst, hsecond, hcurrent,
     hfp, hsp, hmarkFirst, hmarkSecond, hcapacity]
+
+/-- Every successful canonical publication leaves existing generation tags
+bounded and appends the two current endpoint generations. -/
+theorem PhysicalState.publish_preserves_queued_generations_bound
+    {state next : PhysicalState} {pair : PhysicalPair}
+    (hbound : state.queuedGenerationsBound = true)
+    (h : state.publish pair = some next) :
+    next.queuedGenerationsBound = true := by
+  have horder : pair.first < pair.second := by
+    by_cases hn : pair.first < pair.second
+    · exact hn
+    have hge : pair.first ≥ pair.second := by omega
+    simp [PhysicalState.publish, hge] at h
+  cases hf : state.slots[pair.first]? with
+  | none => simp [PhysicalState.publish, hf] at h
+  | some first =>
+    cases hs : state.slots[pair.second]? with
+    | none => simp [PhysicalState.publish, hf, hs] at h
+    | some second =>
+      cases hc : state.logicalPair pair with
+      | none => simp [PhysicalState.publish, hf, hs, hc] at h
+      | some owners =>
+        have hfg : first.generation = pair.firstGeneration := by
+          by_cases he : first.generation = pair.firstGeneration
+          · exact he
+          simp [PhysicalState.logicalPair, hf, hs, he] at hc
+        have hsg : second.generation = pair.secondGeneration := by
+          by_cases he : second.generation = pair.secondGeneration
+          · exact he
+          simp [PhysicalState.logicalPair, hf, hs, he] at hc
+        let markedFirst := state.writeSlot pair.first
+          { first with queuedGeneration := some pair.firstGeneration }
+        let marked := markedFirst.writeSlot pair.second
+          { second with queuedGeneration := some pair.secondGeneration }
+        have hsMarkedFirst :
+            markedFirst.slots[pair.second]? = some second :=
+          (PhysicalState.writeSlot_frame (Nat.ne_of_lt horder)).trans hs
+        have hmarkedBound : marked.queuedGenerationsBound = true :=
+          PhysicalState.queuedGenerationsBound_writeSlot_mono
+            (PhysicalState.queuedGenerationsBound_writeSlot_mono
+              hbound hf (Nat.le_refl _))
+            hsMarkedFirst (Nat.le_refl _)
+        have hmf : marked.slots[pair.first]? =
+            some { first with queuedGeneration := some pair.firstGeneration } := by
+          rw [PhysicalState.writeSlot_frame (Nat.ne_of_gt horder)]
+          exact PhysicalState.writeSlot_self hf
+        have hms : marked.slots[pair.second]? =
+            some { second with queuedGeneration := some pair.secondGeneration } :=
+          PhysicalState.writeSlot_self hsMarkedFirst
+        have hafter :
+            (marked.appendPublications [pair]).queuedGenerationsBound = true :=
+          PhysicalState.append_current_pair_preserves_queued_generations_bound
+            hmarkedBound hmf hms
+            (by simp [hfg])
+            (by simp [hsg])
+        simp [PhysicalState.publish, horder, hf, hs, hc] at h
+        rw [← h.2]
+        exact hafter
 
 private def PhysicalState.publishAll (state : PhysicalState) :
     List PhysicalPair → Option PhysicalState

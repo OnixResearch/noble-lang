@@ -13624,6 +13624,12 @@
       "claim": "a result's single output port resolves without a physical peer slot"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.single_peer_result_ports",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one result's peer port resolves exactly to the independently captured physical endpoint"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.retargetOutput_success",
       "phase": 1,
       "role": "representation",
@@ -13678,10 +13684,22 @@
       "claim": "a canonical current reciprocal pair publishes with clear generation marks and physical queue headroom"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.execute_single_external_image_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one decoded result and reciprocal write execute for fresh or either reuse policy when their independent installation, write and frame guards hold and no pair publishes"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.execute_single_output_image_success",
       "phase": 1,
       "role": "representation",
       "claim": "one-result one-output decoded image physically executes under local prestate guards in fresh or either reuse mode"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.execute_single_peer_image_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one-result one-live-peer decoded image physically executes without pair publication when the peer is distinct from the consumed pair"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.lowered_empty_image_completes",
@@ -13750,6 +13768,18 @@
       "claim": "a byte-roundtripped reverse OP1 output-boundary candidate completes its physical step in both storage modes"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_nonprincipal_peer_candidate_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP1 emitted candidate with a distinct live nonprincipal peer completes reciprocal wiring and retirement in either storage mode"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_reverse_nonprincipal_peer_candidate_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP1 emitted candidate with a distinct live nonprincipal peer completes reciprocal wiring and retirement in either storage mode"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_output_lowered_completes",
       "phase": 1,
       "role": "representation",
@@ -13760,6 +13790,18 @@
       "phase": 1,
       "role": "representation",
       "claim": "actually emitted reverse OP1 output-boundary image executes under current physical prestate capture guards"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_nonprincipal_peer_lowered_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "actually lowered forward OP1 image with a live nonprincipal peer completes in both storage modes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_reverse_nonprincipal_peer_lowered_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "actually lowered reverse OP1 image with a live nonprincipal peer completes in both storage modes"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_output_lowered_boundary",
@@ -13958,6 +14000,84 @@
       "phase": 1,
       "role": "representation",
       "claim": "every checker-admitted physical state has no future-generation queued endpoints, even for an illegal prestate"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.empty_work_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every initial arena with an empty pending queue satisfies the generation bound independent of slot contents"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.queuedGenerationsBound_iff",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the Boolean queued-generation bound is exactly an in-bounds slot lookup bounding both generations of every old queued entry"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.queuedGenerationsBound_writeSlot_mono",
+      "phase": 1,
+      "role": "representation",
+      "claim": "overwriting an existing slot without decreasing its generation preserves the queued-generation bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.queuedGenerationsBound_appendSlot",
+      "phase": 1,
+      "role": "representation",
+      "claim": "appending a fresh slot of any generation preserves every old queued-generation bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.generation_increment_mono",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a generation increment under the physical headroom check does not wrap and is numerically monotone"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retargetOutput_preserves_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a successful output retarget leaves slot generations and pending entries unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.append_current_pair_preserves_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "appending one pair whose generations are bounded by its endpoint slots preserves the queued-generation bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.installResult_preserves_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every successful fresh or reused result installation preserves the queued-generation bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.installResults_preserves_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every successful variable-length result installation preserves the queued-generation bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retire_preserves_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every successful reuse or checked-headroom retirement preserves the queued-generation bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeExternal_preserves_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every successful peer or output reciprocal write preserves the queued-generation bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeExternals_preserves_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every successful reciprocal-write list preserves the queued-generation bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.publish_preserves_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every successful canonical pair publication preserves old bounds and appends current endpoint generations"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalTransaction.stage_preserves_visible_legal",
