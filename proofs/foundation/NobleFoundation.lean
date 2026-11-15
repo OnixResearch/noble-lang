@@ -36,6 +36,8 @@ import NobleFoundation.NetI64Plans
 import NobleFoundation.NetI64PlanChecked
 import NobleFoundation.NetI64ResourceCorpus
 import NobleFoundation.NetI64PlanCorpus
+import NobleFoundation.NetI64PlanLowering
+import NobleFoundation.NetI64PlanLoweringCorpus
 import NobleFoundation.BeltTarget
 import NobleFoundation.BeltTargetCorpus
 import NobleFoundation.GraphRewrite

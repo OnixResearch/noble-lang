@@ -13504,6 +13504,144 @@
       "claim": "Rust-emitted reverse ERA allocate bytes decode to the empty result and retirement plan fields"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_decodes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every model-lowered physical plan roundtrips through the independent versioned byte decoder"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refines_if_admitted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every semantically admitted model-emitted plan decodes and refines the selected whole-net rewrite"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.overflow_pair_refuses_both_modes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "live matched physical pairs at exhausted generation refuse both lowering policies before emitting bytes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.five_fixture_images_from_lowering",
+      "phase": 1,
+      "role": "representation",
+      "claim": "model lowering derives the exact five independently specified physical fixture images"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.five_lowered_images_admitted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "all five model-emitted physical fixture images pass the complete semantic admission checker"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanLoweringCorpus.all_sixteen_bytes_match",
+      "phase": 1,
+      "role": "representation",
+      "claim": "model lowering independently reproduces 16 Rust-emitted images across four rules, both orientations and storage policies"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanLoweringCorpus.extra_sixteen_bytes_match",
+      "phase": 1,
+      "role": "representation",
+      "claim": "model lowering independently reproduces 16 additional Rust-emitted extreme and zero payload images"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op2MaxForwardReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted maximum-payload OP2 forward reuse bytes decode and match selected rule symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op2MaxForwardAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted maximum-payload OP2 forward allocate bytes decode and match selected rule symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op2MaxReverseReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted maximum-payload OP2 reverse reuse bytes decode and match selected rule symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op2MaxReverseAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted maximum-payload OP2 reverse allocate bytes decode and match selected rule symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op1ZeroForwardReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload OP1 forward reuse bytes decode and match selected staged symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op1ZeroForwardAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload OP1 forward allocate bytes decode and match selected staged symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op1ZeroReverseReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload OP1 reverse reuse bytes decode and match selected staged symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op1ZeroReverseAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload OP1 reverse allocate bytes decode and match selected staged symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.dupZeroForwardReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload DUP forward reuse bytes decode and match both fanout symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.dupZeroForwardAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload DUP forward allocate bytes decode and match both fanout symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.dupZeroReverseReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload DUP reverse reuse bytes decode and match both fanout symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.dupZeroReverseAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload DUP reverse allocate bytes decode and match both fanout symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.eraZeroForwardReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload ERA forward reuse bytes decode and match the empty result"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.eraZeroForwardAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload ERA forward allocate bytes decode and match the empty result"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.eraZeroReverseReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload ERA reverse reuse bytes decode and match the empty result"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.eraZeroReverseAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload ERA reverse allocate bytes decode and match the empty result"
+    },
+    {
       "name": "NobleFoundation.NetI64Resource.xRule_time_obligation",
       "phase": 1,
       "role": "resource-potential",
