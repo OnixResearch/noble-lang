@@ -2,7 +2,7 @@
 // Issue #62: source-bound, separate builds of all five required external checkers.
 // Run on a committed tree with a new --work directory outside the repository. The receipt and
 // raw stdout/stderr/export bytes stay there until the caller deliberately retains them.
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -48,7 +48,11 @@ if (sources.schema !== 'noble-independent-replay-source-provenance/v1'
     || JSON.stringify(sources.sources.map((entry) => entry.id)) !== JSON.stringify(required)
     || JSON.stringify(pins.checkers.map((entry) => entry.id)) !== JSON.stringify(required)
     || sources.selected_export.toolchain !== criteria.selected_lean
-    || sources.selected_export.format !== criteria.selected_export_format) {
+    || sources.selected_export.format !== criteria.selected_export_format
+    || sources.source_build_admission_erratum?.prior_source_commit
+      !== '3ddce2d0da2357cae300e8018474109cac6677b9'
+    || sources.source_build_admission_erratum?.prior_receipt_sha256
+      !== 'dd80be206796580182718a6e906eb08239ae5bf157189812669a5c021d0ea74e') {
   throw new Error('frozen criteria, source manifest and configured required checkers disagree');
 }
 if (fs.existsSync(work)) throw new Error(`work directory already exists: ${work}`);
@@ -182,6 +186,14 @@ function manifestSha256(directory, tracked) {
   for (const relative of tracked) {
     const file = path.join(directory, relative);
     const stat = fs.lstatSync(file);
+    if (stat.isDirectory()) {
+      const link = spawnSync(gitBin, ['-C', directory, 'ls-files', '--stage', '--', relative],
+        { encoding: 'utf8', timeout: 10_000 });
+      const match = /^160000 ([0-9a-f]{40}) 0\t[^\n]+\n?$/u.exec(link.stdout ?? '');
+      if (link.status !== 0 || !match) throw new Error(`unexpected source directory: ${relative}`);
+      hash.update(`gitlink\0${relative}\0${match[1]}\n`);
+      continue;
+    }
     if (!stat.isFile() && !stat.isSymbolicLink()) throw new Error(`unexpected source entry: ${relative}`);
     const contents = stat.isSymbolicLink() ? Buffer.from(fs.readlinkSync(file)) : fs.readFileSync(file);
     hash.update(`${stat.isSymbolicLink() ? 'link' : 'file'}\0${relative}\0${sha256(contents)}\n`);
@@ -430,7 +442,7 @@ async function main() {
       // Lake can update a manifest and Cargo can run build scripts: refuse if tracked source moved.
       const tracked = must(await run(`${source.id}-tracked-after-build`, gitBin,
         ['-C', directory, 'status', '--porcelain', '--untracked-files=no']), 'source-mismatch');
-      if (tracked !== (source.id === 'lean4lean' ? ' M lakefile.toml' : '')) {
+      if (tracked !== (source.id === 'lean4lean' ? 'M lakefile.toml' : '')) {
         const error = new Error(`${source.id}: tracked source changed during build: ${tracked}`);
         error.outcomeClass = 'source-mismatch';
         throw error;

@@ -7,6 +7,12 @@
     "lean4lean_patch_path": "script/lean4lean-minimal-init.sh",
     "claim": "The four release-bundled checker sources are identified by the Lean 4.35.0 release build recipe, not inferred from the bundled binary strings. A reconstructed executable is only byte-identical to the release executable if its measured digest matches checkers.json."
   },
+  "source_build_admission_erratum": {
+    "prior_source_commit": "3ddce2d0da2357cae300e8018474109cac6677b9",
+    "prior_receipt_sha256": "dd80be206796580182718a6e906eb08239ae5bf157189812669a5c021d0ea74e",
+    "observed": "Nanoda, con-leche and OCaml4Lean source builds and paired replays passed. Con-ron was blocked before build by the custody hasher treating its Git submodule gitlink as a regular file. Lean4Lean built successfully but a trimmed git status string made its expected single reviewed source patch look like an unexpected edit; no replay ran.",
+    "repair": "Record the pinned gitlink object ID without fetching or building the unused submodule, and compare the already trimmed status against the trimmed expected patch marker. Preserve every selected source revision, compiler, export, checker run, and positive/negative expectation."
+  },
   "selected_export": {
     "toolchain": "4.35.0",
     "format": "3.1.0",
