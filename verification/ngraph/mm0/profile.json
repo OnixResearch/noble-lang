@@ -11,6 +11,8 @@
     "checker_compiler": "/nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin/cc",
     "checker_compiler_sha256": "3c48a46fb1dc134c0f10c2da6ec1a8d34a381b93c2ac588b7d19dd3e804eeeef",
     "producer": "Rust nightly 1.96.0 2026-03-21, --locked, RUSTFLAGS=-Zcrate-attr=feature(uint_bit_width); compile -W",
+    "producer_memory_bytes": 1073741824,
+    "producer_cpu_seconds": 20,
     "checker_memory_bytes": 1073741824,
     "checker_cpu_seconds": 20,
     "checker_wall_ms": 180000

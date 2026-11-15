@@ -86,8 +86,13 @@ if (mode === 'freeze') {
   const dirty = command('git', ['status', '--porcelain'], { cwd: root });
   requireSuccess(dirty, 'clean source');
   assert.equal(dirty.stdout, '', 'commit source before producing evidence');
-  const generation = command(producer, ['compile', '-W', 'proof.mm1', 'proof.mmb'], { cwd: output });
+  const generation = command('/usr/bin/time', ['-f', '%e %M', '-o', path.join(output, 'generation.time'),
+    'prlimit', `--as=${profile.build_profile.producer_memory_bytes}`,
+    `--cpu=${profile.build_profile.producer_cpu_seconds}`, '--',
+    producer, 'compile', '-W', 'proof.mm1', 'proof.mmb'], { cwd: output });
   requireSuccess(generation, 'produce MMB');
+  const [generationElapsed, generationRss] =
+    readFileSync(path.join(output, 'generation.time'), 'utf8').trim().split(' ');
   const controlsDir = path.join(output, 'controls');
   mkdirSync(controlsDir, { mode: 0o700 });
   const controlProofs = {};
@@ -134,7 +139,10 @@ if (mode === 'freeze') {
     no_parser_control: { binary_sha256: fileSha(noParser),
       binary_bytes: statSync(noParser).size, build_wall_ms: noParserBuild.wall_ms,
       selected: false },
-    generation: { wall_ms: generation.wall_ms, status: generation.status,
+    generation: { wall_ms: generation.wall_ms, generator_elapsed_s: Number(generationElapsed),
+      generator_peak_rss_kib: Number(generationRss), status: generation.status,
+      limits: { address_space_bytes: profile.build_profile.producer_memory_bytes,
+        cpu_seconds: profile.build_profile.producer_cpu_seconds, wall_ms: 180000 },
       stderr: generation.stderr, stdout: generation.stdout },
     checking: { wall_ms: checking.wall_ms, checker_elapsed_s: Number(elapsed),
       checker_peak_rss_kib: Number(rss), status: checking.status, signal: checking.signal,
