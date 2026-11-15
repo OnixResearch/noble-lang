@@ -33,6 +33,7 @@ import NobleFoundation.NetI64Families
 import NobleFoundation.NetI64Resource
 import NobleFoundation.NetI64Corpus
 import NobleFoundation.NetI64Plans
+import NobleFoundation.NetI64ResourceCorpus
 import NobleFoundation.BeltTarget
 import NobleFoundation.BeltTargetCorpus
 import NobleFoundation.GraphRewrite

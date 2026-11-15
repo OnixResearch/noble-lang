@@ -1,0 +1,16 @@
+{
+  "evidence": {
+    "certificate_blake3": "bb6b7df7bb5119093069fda84f830f851c037fbe657ad8cf48b5d91386789404",
+    "controls": {
+      "disconnected_rebound_net": "InvalidNet",
+      "negative_cost_annotation": "StaleRuleTable",
+      "negative_potential": "WrongCostModel",
+      "omitted_dup_cost": "StaleRuleTable"
+    },
+    "graph_id": "dce94c83442235a3b702e3a3b0b2b153a3979e7d6876e91df4571f676fe7c1d7",
+    "lean_corpus_blake3": "e81fe06be9b4a97397e9778fd7b9f99696f9a789ea3f998e9695b9c627b518c8",
+    "net_blake3": "039a016ec671138bf71f45736ffc02f418e7a77b77864f3c6e0133309f8c6aa3"
+  },
+  "schema": "ngraph-resource-followup/1",
+  "source_commit": "d9337b99b5f103b8c7159af50dc92da5acccef22"
+}

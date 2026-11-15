@@ -218,7 +218,7 @@ Status words:
 | Historical revision-1 checked interaction-net contract: versioned typed agent kinds, arity-checked ports, reciprocal unique-incidence wiring, compatible ordered operand links and ordered output boundary | `version_ok_sound`, `reciprocity_ok_sound`, `compatibility_ok_sound`, `boundary_ok_sound`, `validate_sound`, `deeper_minus_top_is_accepted`, `swapped_sub_operands_are_rejected`, `dangling_wire_is_rejected`, `aliased_incidence_is_rejected`, `two_output_boundary_is_accepted`, `wrong_output_order_is_rejected` | revision-1 validator only; reduction/read-back and graph-to-net translation are open for that superseded profile; revision-3 work is listed separately below | **proved** (model) |
 | What interaction-net contract revision 1 admits (issue #37) | `oriented_active_pair`, `value_into_result_port_is_accepted`, `fanout_cannot_feed_an_operand`, `identity_agents_bypass_the_operand_rule` | revision-1 contract model only; no reduction semantics, Rust or runtime claim | model **proved**: under the documented orientation no value meets an arithmetic agent in an active pair; the validator does not enforce the orientation, fanout cannot feed operands, and the operand rule constrains wiring shape, not the function |
 | Selected revision-3 I64 system on inets (#37/#109/#124) | `system_rule_wf`, `system_rule_symm`, the op2, op1, dup and era rules, `Program.acceptanceCheck_iff`, `Program.translateChecked_accepted`, `Program.translateChecked_wf`, `Program.translateChecked_interface`, `Program.normalize_spec`, `i64_normal_form_unique`, `i64_equal_interaction_count`, `conflicting_rule_pair_rejected`, `parallel_sub_schedules_start_differ`, `parallel_sub_schedules_same_normal_form`, `parallel_sub_schedules_agree`, `checkCertificate_iff`, `Certificate.accepted_exact_count`, `Certificate.accepted_reduction_live_agents`, `chainProgram_interactionCount`, `chainProgram_agentBound`, `balancedProgram_interactionCount`, `balancedProgram_agentBound`, `fanoutProgram_interactionCount`, `fanoutProgram_agentBound`, `fanout_two_active_pair`, `fanout_two_abstract_step`, `fifo_control_fork_not_diamond`, and `fifo_control_schedules_differ` | no Rust implementation or lowering correspondence is claimed | model **proved**: checked translation, ordered interface, exact mirrored interaction rules, schedule-independent normal-form counts, and finite-prefix live-agent bounds. Chain, balanced-tree, and fanout graph-count/resource formulas hold for arbitrary sizes. A symbolic two-output fanout instance has a proved duplicator/numeric redex and one abstract firing; this does not prove its resulting net is normal or establish read-back. The #124 two-subtraction fixture executes distinct scan-order schedules and establishes the same abstract normal form, wrapping read-back, and count; `conflicting_rule_pair_rejected` is the non-confluent rule-table control rejected by `SysData.check`. The explicitly rejected FIFO control has a non-diamond delivery fork and schedule-dependent subtraction result; it is not the selected semantics. Revision 3 has no operand stacks: each wire has exactly two port endpoints, with fanout represented by explicit `dup`. Arbitrary-size chain, balanced-tree, and fanout normalization/read-back, general graph observation, and proof that every admitted lowering reaches normal form remain **open** |
-| Revision-3 byte-bound resource certificates (#109) | `NobleFoundation.NetI64Resource.xRule_time_obligation`, `NobleFoundation.NetI64Resource.xRule_space_obligation`, `NobleFoundation.NetI64Resource.checkResourceCertificate_iff`, `NobleFoundation.NetI64Resource.accepted_bytes_bound_every_schedule`, `NobleFoundation.NetI64Resource.chain_family_resources`, `NobleFoundation.NetI64Resource.balanced_family_resources`, `NobleFoundation.NetI64Resource.fanout_family_resources` | Rust byte parser/checker independently recomputes decoded-net counts and uses graph revalidation; a Rust/Lean decoder/hash/reduction refinement theorem is not claimed | model **proved** for all selected rules and every finite prefix of an accepted normalizing net; Rust byte controls and six CLI net-trace comparisons are finite **tested** evidence; structural formulas alone do not prove arbitrary-size normalization |
+| Revision-3 byte-bound resource certificates (#109) | `NobleFoundation.NetI64Resource.xRule_time_obligation`, `NobleFoundation.NetI64Resource.xRule_space_obligation`, `NobleFoundation.NetI64Resource.XNet.steps_resource_le`, `NobleFoundation.NetI64Resource.checkResourceCertificate_iff`, `NobleFoundation.NetI64Resource.accepted_bytes_bound_every_schedule`, `NobleFoundation.NetI64ResourceCorpus.fixture_byte_fields`, `NobleFoundation.NetI64ResourceCorpus.fixture_translation`, `NobleFoundation.NetI64ResourceCorpus.fixture_byte_claims_match_translation`, `NobleFoundation.NetI64Resource.chain_family_resources`, `NobleFoundation.NetI64Resource.balanced_family_resources`, `NobleFoundation.NetI64Resource.fanout_family_resources` | Rust byte parser/checker independently recomputes decoded-net counts and uses graph revalidation; a general Rust/Lean decoder/hash/reduction refinement theorem is not claimed | model **proved** for all selected rules and every finite legal schedule prefix without normalization; exact terminal count still depends on semantic certificate acceptance; one generated exact-byte Rust-accepted fixture is kernel-checked; controls and six CLI net-trace comparisons are finite **tested** evidence |
 | Bounded Boolean Shannon control, interval ISOP, and independent checker (issue #35) | `Isop.shannon_exact`, `Isop.majority_cover_has_a_nonprime_cube`, `Isop.equivOn_sound`; `IsopInterval.isop_bounds`, `isopCover_eval`, `isopCover_bounds`, `isopCover_exact`, `allCubes_complete`, `majority_isop_cover_prime_and_irredundant`, `intervalChecker_sound`, `isopCover_interval_checked`, interval fixtures, and seeded atom-map/care-set controls | Lean truth-table model and `crates/noble-ngraph-experiment/src/isop.rs`; standalone checked Boolean DAG only, not connected to source lowering or `Program` | Shannon control and interval ISOP semantics **proved**; Rust core/checker and seeded limits **tested**; synthetic comparison and frozen adoption decision in `verification/isop/`. Source integration **NO-GO/deferred**: the current #32 whitelist contains no Boolean-composition regions, and no lazy Bool/branch extension is admitted |
 | Constructor reuse under a unique root, matching size, and resource eligibility | `makeCell_requested`, `reuseStep_success`, `reuseStep_refuses_size_mismatch`, `reuseStep_replaces_unique_root`, `reuseStep_initializes_requested_cell`, `eligible_replacement_has_no_resource`, `eligible_replacement_requires_move`, `wrapped_resource_is_not_reuse_eligible`, `shared_alias_control` | none (finite model only; no allocator, runtime or Wasm correspondence) | **proved** (model) |
 | Encoded packed-layout validation (issue #80, unit 1) | `NobleFoundation.PackedLayoutEncoded.decodeInput_encodeInput`, `NobleFoundation.PackedLayoutEncoded.encodeInput_injective`, `NobleFoundation.PackedLayoutEncoded.validateEncoded_agrees`, `NobleFoundation.PackedLayoutEncoded.encodedSize_is_bit_length`, `NobleFoundation.PackedLayoutEncoded.encodeNat_length` | finite list-based I64/Bool graph and layout tables; unary-prefixed binary-width natural fields of exactly `2 * natWidth n + 1` bits, fixed 64-bit constants and total decoder. The revision flag and fail-node set are model inputs, not the Rust serde format | model **proved**; Rust bytes, CheckedGraph metadata and implementation refinement **open** |
@@ -4243,33 +4243,59 @@ storage. `NobleFoundation.NetI64Resource.xRule_time_obligation` and
 `NobleFoundation.NetI64Resource.xRule_space_obligation` quantify over every legal symbol/payload and
 both orientations of every selected rule. Their RHS checks charge both arithmetic stages and the
 `dup` and `era` interactions; they do not assume that zero-cost administrative steps terminate.
-`NobleFoundation.NetI64Resource.accepted_prefix_bounds_every_schedule` composes the existing
-inets normal-form-length/prefix theorem with the accepted NetI64 certificate, and independently
-uses the live-agent preservation theorem: *conditional on certificate acceptance and a successful
-normalization*, every legal reduction prefix stays within the declared count and live bound.
-These global bounds are not a proof of Rust/Lean correspondence or of unconditional termination.
+`NobleFoundation.NetI64Resource.XNet.fire_time_spends_one` applies each local obligation to the
+actual agent list, and `NobleFoundation.NetI64Resource.XNet.steps_resource_le` composes it over
+**every finite legal schedule prefix without assuming successful normalization**. The initial
+weighted potential bounds interactions; the initial agent count bounds committed live agents.
+`NobleFoundation.NetI64Resource.accepted_prefix_bounds_every_schedule` requires the admitted
+source's initial potentials to fit the certificate declarations, without a normalizer premise.
+Only `NobleFoundation.NetI64Resource.accepted_exact_count_every_normal_schedule` uses semantic
+certificate acceptance and a terminal normal form for the *exact* interaction count. Neither the
+prefix bound nor exact-count conditional theorem establishes unconditional normalization.
 `NobleFoundation.NetI64Resource.accepted_bytes_bound_every_schedule` additionally demands a
 successful supplied byte decoder, exact selected rule bytes, three digest checks, the fixed
-checker/proof/cost revisions, and the semantic checker; the model leaves the supplied decoder and
-hash's implementation properties outside its theorem.
+checker/proof/cost revisions, a checked initial weighted potential, and the semantic checker.
+The model leaves the supplied decoder and hash's implementation properties outside its theorem;
+these global bounds are not a proof of Rust/Lean correspondence.
 
 The Rust noble-ngraph resource module emits a bounded binary certificate for the exact encoded
 net, ordered output boundary, selected rule table, fixed cost profile, graph and input identities.
 Its independent consumer parses the bytes without trusting the producer's claims, revalidates
 the decoded fully connected net against the checked graph and input row, and recomputes exact
-non-wrapping `2*ops + dups + eras` and initial-agent counts. Revalidation shares the backend's
+non-wrapping `2*ops + dups + eras` and initial-agent counts. The consumer also sums weights of
+the **decoded agent symbols** independently and requires agreement with that graph-derived
+count. Revalidation shares the backend's
 canonical graph-to-net constructor, so neither its source-to-net correctness nor cryptographic
 hash collision resistance has been proved in Lean. The stored source-bound receipt compares six
 chain, balanced-tree and fanout-with-discard families against actual opt-in CLI net reports; it
 also replays the retained certificate/net bytes through the checker. Controls refuse wrong
 interaction and live bounds, mismatched net bytes, stale rules and cost profile, a changed
-checker identity, malformed certificates, and forged structural bytes with recomputed digests.
-The fixed unsigned potential table admits no negative annotations or missing rule cases: changing
-its bytes requires a new checked revision, not a producer-declared override.
+checker identity, malformed certificates, omitted DUP/ERA costs, a negative-cost rule annotation,
+a digest-rebound negative potential, and a disconnected wire with a recomputed digest.
+The fixed unsigned potential table admits no producer-supplied negative potentials or missing rule
+cases: changing its rule or cost bytes requires a new checked revision, not an accepted override.
 The [retained resource receipt](../../verification/ngraph/resource-receipt.json) binds the six
 canonical graph texts, decoded net/certificate bytes, BLAKE3 identities, checker/proof/cost
 revisions, rejected controls and CLI-reported interaction/live-agent measurements to its source
 commit; the integration test replays each retained byte pair through the independent checker.
+NobleFoundation/NetI64ResourceCorpus.lean is a Rust-generated, freshness-checked finite witness:
+the producer issues a fanout/erase certificate, the separate byte checker accepts it, Rust emits
+its exact net/certificate bytes and BLAKE3 identities, and the kernel checks the revision/claim
+byte fields, source translation to the retained net, and four interactions/six initial agents.
+The CLI test's local corpus renderer is byte-identical to the #37 renderer, enforced by an
+integration test; keeping the compiler unit's module source local preserves complete Octet
+architecture collection without allowing the two renderers to drift.
+`NobleFoundation.NetI64ResourceCorpus.fixture_byte_claims_match_translation` links the integer
+fields extracted from those literal accepted bytes to the Lean translation; the kernel does not
+recompute BLAKE3 or prove the Rust byte decoder agrees on *all* possible inputs. The generated
+fixture and freshness test bind one exact subject rather than universally refining the checker.
+The separate [audited-source expanded follow-up receipt](../../verification/ngraph/resource-followup-2026-11-15-expanded.json)
+retains that fixture's BLAKE3 identity and seven refusal controls: missing DUP/ERA rule or
+charge, negative rule charge or potential, insufficient first-stage potential, and a
+digest-rebound disconnected net. The cost model is fixed by the checker, so the malformed
+potential controls cannot supply a new accepted model; they are refusals, not theorem
+instances. The earlier follow-up receipts remain immutable historical evidence; the
+undated receipt's corpus digest predates a proof-audit lexical correction.
 
 `NobleFoundation.NetI64Resource.chain_family_resources`,
 `NobleFoundation.NetI64Resource.balanced_family_resources`, and
