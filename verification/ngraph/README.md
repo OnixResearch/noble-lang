@@ -383,9 +383,26 @@ receipt's single shared-host debug timings are descriptive, not
 matched-budget latency evidence. Checked-graph retained bytes can be
 unchanged in reduced-node cases because the new store preallocates the
 baseline capacity. Neither the new receipt nor the earlier PE receipt
-measures peak scratch allocation: D15 records a separate **NO-GO** for a
-scratch-memory efficiency claim until a bound or source-bound high-water
-measurement covers transformation and re-admission under equal policy.
+measured peak scratch allocation. The later, separately frozen
+[D16 protocol and D17 decision](../../.cairn/changes/partial-evaluation-v1/design.md)
+now report the **process-global live heap high-water and cumulative
+allocated bytes** over the same seven graph fixtures plus three D13
+Program residualization cases, each with an isolated setup process:
+[source-bound DHAT receipt](pe-scratch-2026-11-15.json) and
+[raw hash-bound DHAT evidence](pe-scratch-2026-11-15.evidence/raw/).
+All 27 cases completed at clean source `3c3df044` under pinned Valgrind
+3.27.1. Graph peaks include baseline → offset 342,921 → 123,737 B for
+chained add, 2,320,171 → 340,022 B for the non-prefix case, and
+355,176 → 985,360 B for the growth control; D13 Program peaks are
+96,482 B (opaque tail), 344,889 B (nested partial pair) and 86,513 B
+(repeated named call). The receipt reports every setup peak, peak-minus-
+setup observation and `Total` allocated bytes separately. The measured
+peak includes the libtest harness, construction, transformation and
+ordinary independent re-admission; the setup difference is **not** an
+isolated scratch bound. The original item-6 scratch-byte *reporting*
+is DONE at this scope, but D15/D17 retain **NO-GO for an efficiency claim
+or default adoption**, with criteria and reopen conditions. Historical
+receipts remain unedited.
 
 `NobleFoundation.PartialStatic` proves the selected normalization laws on
 wrapping `BitVec 64` atoms, with the previously proved ordered input
@@ -415,6 +432,22 @@ test is the receipt producer: first verify a clean committed tree, supply
 its source and protocol commits. Do not compare costs from different
 source revisions as if they were one matched-budget A/B.
 
+To reproduce the pinned-DHAT peak-heap run, compile the existing test
+target from a **clean committed** source checkout in the pinned Rust
+toolchain with `cargo test -p noble-ngraph --test rewrite_cost --offline
+--locked --no-run`; pass the resulting absolute `rewrite_cost` test
+executable path and a **new** directory outside the checkout to:
+
+```text
+node verification/ngraph/pe-scratch.mjs --binary <absolute path of built rewrite_cost test executable> --output <new directory outside the repository>
+```
+
+The script refuses dirty source, an existing/in-tree output path, a
+different Valgrind version, an incomplete process leg, or missing DHAT
+peak/total records. It records the binary SHA-256 but does not by itself
+prove build-to-source correspondence or derive a universal allocator
+bound.
+
 ## Files
 
 | File | Content |
@@ -429,6 +462,7 @@ source revisions as if they were one matched-budget A/B.
 | [phase-b-extract-2026-11-12.json](phase-b-extract-2026-11-12.json) | The same extraction leg rerun at source revision `83ff2654` with a release `noble` built from that commit (SHA-256 `6d7a4b1d…60c8`), after B2 began requiring every L1 program to have at least one agreement and every L1 vector to be an agreement or a recorded quota outcome. All three records pass. L1 agrees on 562 of 562 vectors in both `--opt` legs, with 0 quota outcomes and 3 session restarts; `random-1`, whose 24 vectors the `eccbc02` CLI of `phase-b-extract.json` refused as `exhausted`, agrees on all 24, as the 2026-10-30 re-check found for newer CLIs. Under the current rule the 2026-10-15 run would record `B2-I64-differential` as failed, because `random-1` had no ordinary-path agreement. |
 | [pe-2026-11-13.json](pe-2026-11-13.json) | Issue #32 specialization runtime receipt: per-fixture original/residual graph nodes, folded/pruned counts, L3/L4 node visits, compiled-graph retained bytes, residual source size and specialization time, bound to the clean source revision. Finite measurement evidence only; not a Rust/model correspondence or equal-fuel claim. |
 | [pe-offset-2026-11-15.json](pe-offset-2026-11-15.json) | Source-committed seven-fixture × 69-vector comparison of D3 baseline and opt-in wrapping-I64 offset normalizer, with separate runtime work, specialization/source/replay timings and retained bytes; the frozen 125% growth ceiling fails. |
+| [pe-scratch-2026-11-15.json](pe-scratch-2026-11-15.json) and [raw profiles](pe-scratch-2026-11-15.evidence/raw/) | Clean-source issue #32 DHAT process-global heap-high-water and cumulative allocation receipt: seven offset fixtures × setup/D3/offset plus three D13 Programs × setup/residualize; 27/27 process legs and 108 SHA-256-bound raw JSON/log/stdout/stderr files. |
 | [l1-attribution-2026-10-30.json](l1-attribution-2026-10-30.json) | L1 attribution re-check for issue #75 (schema `noble-ngraph-l1-attribution-evidence/v1`), produced by [l1-attribution.mjs](l1-attribution.mjs). The hardened adapter ran against two real CLIs, in both `--opt` legs; their 69 L1 and B3 ordinary-path records are compared with `phase-b-extract.json`. The receipt also holds the rule-mutation result of [l1-attribution-mutations.mjs](l1-attribution-mutations.mjs). |
 | [test-log.txt](test-log.txt) | `cargo test -p noble-ngraph-experiment` output (default suite, debug) at the receipt's source revision. Historical: it predates the `numeric-graph-v1` split. |
 

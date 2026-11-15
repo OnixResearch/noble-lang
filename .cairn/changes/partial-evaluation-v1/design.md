@@ -595,13 +595,18 @@ recorded separately in the receipt. Timing numbers are one shared-host debug
 sample per fixture, not a matched-budget speedup or cold-cache comparison.
 The opt-in comparison invokes D3 first; its total specialization time is
 therefore not a standalone replacement cost.
-Neither this receipt nor the earlier `pe-2026-11-13.json` measures a peak
-allocator/scratch-byte high-water mark. The original acceptance item's
-retained-size and finite-work observations are met, but **NO-GO** for a
-scratch-memory efficiency claim: reopen that cost criterion only with a
-source-bound peak-scratch measurement or proved cap covering both
-transformation and ordinary re-admission under the same policy. It is also
-a prerequisite to any default resource-efficiency claim.
+Neither this comparison receipt nor the earlier `pe-2026-11-13.json`
+measured a peak heap high-water. D16 froze the follow-on DHAT protocol
+before its execution; D17 reports its process-global peak live heap and
+total allocated bytes for both D13 Program residualization and the offset
+comparison. The original acceptance item's **scratch-byte reporting is
+DONE** at that explicitly scoped level, alongside the retained-size and
+finite-work observations. There is still **NO-GO for a scratch-memory
+efficiency claim**: a global instrumented process peak is not a
+transformation-only bound, and a single fixed-fixture run is not a
+matched-budget resource-efficiency result. Reopen an efficiency claim only
+with an attributable or proved bound through both transformation and
+ordinary re-admission, plus a new frozen matched-budget comparison.
 
 The selected normalization laws over `BitVec 64`, ordered signed atom
 identities, wrapping offset folding, rank/merge, and add/sub step semantics
@@ -627,6 +632,7 @@ moved or eliminated.
 | Recipe/identity and intensional code inspection | **DECIDED:** explicit new checked residual and readmitted Program; no silent modification of the original. Reopen default adoption only after an owner-reviewed observational contract explicitly covers inspector-visible code identities. |
 | #42 certificates, #33 manifest/endpoint replay, static merge and Program bridge | **DECIDED:** the #42 layer and #33 binding do not establish this Rust/model or Program bridge. Do not claim they do. Reopen on a universally checked correspondence through rank/merge, residual source emission/re-admission and ordinary replay, with #33 binding exact endpoints when this representation is used. |
 | E-graphs, self-application, effectful code motion | **DECIDED not prerequisite** for the pure selected experiment; reopen only under a separately authorized enlarged domain and proof/effect policy. |
+| Original acceptance item 6, peak scratch-byte reporting | **DONE for measured process-global live heap high-water** on seven offset fixtures and three D13 Program fixtures, each with an isolated setup leg (D16–D17). **NO-GO for a transformation-only scratch bound or efficiency claim** until scoped/verified accounting and matched-budget measurements justify it. |
 
 Adoption requires **all** D14 criteria: repair the 140% growth failure under
 the frozen structural gate, prove universal Rust-to-model plus
@@ -673,3 +679,45 @@ readmission must be reached on every non-setup leg. If a future claim
 requires an attributable scratch-only bound, instrument a scoped
 allocator under a separately reviewed policy; do not relabel a
 process-global DHAT peak as one.
+
+### D17 — Source-bound high-water result and efficiency decision (2026-11-15)
+
+Pinned DHAT 3.27.1 completed all **27/27** frozen process legs at the
+clean source commit `3c3df044497f2411e88e989fcb90703c301b0e3e`. The
+[receipt](../../../verification/ngraph/pe-scratch-2026-11-15.json) binds its
+source tree, executable and harness digests, and all **108 raw DHAT JSON,
+Valgrind log and test stdout/stderr files** by SHA-256. `t-gmax` is
+process-global *peak live heap bytes*; `Total` is *cumulative allocated
+bytes*, **not** peak and **not** retained graph bytes. In each row `(Δ)`
+subtracts the separately measured setup process; it is not a scoped
+transformation heap high-water. The global peak also counts the libtest
+harness and input/checked-source preparation.
+
+| Frozen graph family | Setup peak B | D3 peak B (Δ setup B) | Opt-in offset peak B (Δ setup B) | D3 total B | Offset total B |
+|---|---:|---:|---:|---:|---:|
+| chained-add | 14,779 | 342,921 (328,142) | 123,737 (108,958) | 4,311,236 | 1,075,458 |
+| chained-sub | 14,779 | 342,921 (328,142) | 123,737 (108,958) | 4,311,236 | 1,075,499 |
+| wrapping-boundary | 14,779 | 342,945 (328,166) | 123,743 (108,964) | 4,311,980 | 1,076,243 |
+| shared-subexpression | 14,779 | 249,454 (234,675) | 248,472 (233,693) | 3,054,493 | 3,057,105 |
+| non-prefix-static | 14,779 | 2,320,171 (2,305,392) | 340,022 (325,243) | 31,171,634 | 4,273,621 |
+| dead-total-forward | 14,779 | 123,554 (108,775) | 123,552 (108,773) | 1,072,235 | 1,074,705 |
+| growth-cap | 14,779 | 355,176 (340,397) | 985,360 (970,581) | 4,492,216 | 12,935,100 |
+
+| Frozen D13 Program family | Setup peak B | Residualize + readmit peak B (Δ setup B) | Setup total B | Residualize + readmit total B |
+|---|---:|---:|---:|---:|
+| opaque-tail | 47,593 | 96,482 (48,889) | 149,459 | 797,373 |
+| nested-partial-pair | 63,645 | 344,889 (281,244) | 242,850 | 3,984,194 |
+| named-repeated-call | 58,271 | 86,513 (28,242) | 304,507 | 822,319 |
+
+**Decision:** original acceptance item 6's numeric peak scratch reporting
+is DONE as an explicitly labelled process-global upper observation for
+these bounded fixtures. The growth case's offset peak (985,360 B) is
+**above** its D3 peak (355,176 B), while D14's separate runtime/compiled
+growth gate also fails at 140%. Remain **NO-GO for default adoption** and
+for any claim of memory or runtime efficiency. Reopen only after repairing
+that frozen growth case, proving the missing universal Rust-to-model and
+ordinary Program bridge, reviewing inspector-visible identity semantics,
+and producing an attributable/proved scratch limit plus a new
+pre-registered matched-budget comparison. An admitted semantic
+counterexample first requires a correctness repair. The old D3 default is
+unchanged.
