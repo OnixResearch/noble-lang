@@ -693,8 +693,10 @@ fn specialize_program(
 ) -> Result<std::vec::Vec<Line>, Stop> {
     const C: &str = "specialize";
     let interface_text = attempt!(args.required("--interface").map_err(Stop::Usage));
-    let stack_interface = attempt!(noble_contracts::source::parse_core_interface(&interface_text)
-        .map_err(|e| Stop::Usage(std::format!("--interface: {e:?}"))));
+    let stack_interface = attempt!(
+        noble_contracts::source::parse_core_interface(&interface_text)
+            .map_err(|e| Stop::Usage(std::format!("--interface: {e:?}")))
+    );
     if !stack_interface.stack_out.is_empty() {
         return usage("--interface must end at `--` without output types");
     }
@@ -713,9 +715,9 @@ fn specialize_program(
     );
     let mut texts = std::vec::Vec::with_capacity(parts.len());
     for part in parts {
-        texts.push(attempt!(std::string::String::from_utf8(part).map_err(|_| {
-            subject_refusal(C, "a source submission is not UTF-8 text".into())
-        })));
+        texts.push(attempt!(std::string::String::from_utf8(part).map_err(
+            |_| { subject_refusal(C, "a source submission is not UTF-8 text".into()) }
+        )));
     }
     let Some((root, definitions)) = texts.split_last() else {
         return Err(subject_refusal(C, "the source has no root submission".into()).into());
@@ -767,13 +769,22 @@ fn specialize_program(
     Ok(std::vec![Line::normal(C, "program-specialization")
         .with("graph", report::digest(&report.original_graph))
         .with("residual_graph", report::digest(&report.residual_graph))
-        .with("readmitted_graph", report::digest(&residual.readmitted.id()))
+        .with(
+            "readmitted_graph",
+            report::digest(&residual.readmitted.id())
+        )
         .with(
             "source_blake3",
             report::digest(blake3::hash(residual.source.as_bytes()).as_bytes()),
         )
-        .with("original_subject", report::digest(&residual.original_subject.identity))
-        .with("residual_subject", report::digest(&residual.residual_subject.identity))
+        .with(
+            "original_subject",
+            report::digest(&residual.original_subject.identity)
+        )
+        .with(
+            "residual_subject",
+            report::digest(&residual.residual_subject.identity)
+        )
         .with(
             "original_closure",
             Json::Array(
@@ -797,13 +808,39 @@ fn specialize_program(
             ),
         )
         .with("tail", Json::Number(tail as u64))
-        .with("inputs", Json::Array(program.request.expected.stack_in.iter()
-            .map(|ty| string(std::format!("{ty:?}"))).collect()))
+        .with(
+            "static_inputs",
+            Json::Array(
+                map.iter()
+                    .map(|entry| match entry {
+                        Some(value) => Json::Signed(*value),
+                        None => Json::Null,
+                    })
+                    .collect(),
+            ),
+        )
+        .with(
+            "inputs",
+            Json::Array(
+                program
+                    .request
+                    .expected
+                    .stack_in
+                    .iter()
+                    .map(|ty| string(std::format!("{ty:?}")))
+                    .collect()
+            )
+        )
         .with("accounting", string(report.accounting))
+        .with(
+            "readmitted_nodes",
+            report::count(residual.readmitted.node_count())
+        )
         .with("original_nodes", Json::Number(report.original_nodes))
         .with("folded_nodes", Json::Number(report.folded_nodes))
         .with("pruned_nodes", Json::Number(report.pruned_nodes))
-        .with("residual_nodes", Json::Number(report.residual_nodes))])
+        .with("residual_nodes", Json::Number(report.residual_nodes))
+        .with("variants", Json::Number(report.variants))])
 }
 
 fn eval(

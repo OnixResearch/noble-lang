@@ -62,9 +62,11 @@ value. A flag MAY only lower a budget; a raised value MUST be refused with `E-PR
 r[NGRAPH-PE-01]
 
 `Numeric-Graph-v1` MUST expose bounded static-input specialization of a **checked** graph
-through exactly one library entry point in `noble-ngraph` and one `noble ngraph specialize`
-subcommand. No source syntax, kernel word, type or effect MAY change, and a specialization
-request MUST NOT modify, re-publish or reinterpret the original graph or Program.
+through its graph library entry point and the `noble ngraph specialize` subcommand.
+The same subcommand's explicit `--source` mode MUST select the separate checked-Program
+entry point specified by `NGRAPH-PE-08`. No source syntax, kernel word, type or effect MAY
+change, and a specialization request MUST NOT modify, re-publish or reinterpret the
+original graph or Program.
 
 **Admitted subject slice.** The entry point MUST accept a checked `ngraph-i64/0` graph whose
 interface is flat scalar slots, with no param slot, no interface shape tree, no fact record
@@ -128,9 +130,9 @@ reassociate, commute, apply identity or absorption rewrites, eliminate common su
 propagate a `Bool` result into an `I64` operand, or reorder nodes. Every node that is not
 folded MUST remain residual with its original operation and operand positions.
 
-**Equality extension.** Folding `I64Eq` is not covered by the foundation model's
-`specialize_sound`; it is an explicitly recorded extension whose evidence is differential
-testing, not proof.
+**Equality extension.** `specialize_sound` alone does not cover `I64Eq`;
+`SpecializeResidual.foldEqualities_sound` proves its exact equality fold in the
+extended model. Rust correspondence is still an open obligation.
 
 #### Scenario: NGRAPH-PE-CASE-05 folding whitelist
 
@@ -154,8 +156,8 @@ A residual MUST be a new graph with its own independently recomputed identity an
 presented as the original. The recorded claim MUST be, for every vector of dynamic inputs,
 that the residual's observation and the original's observation under the merged input vector
 are equivalent under the profile's observation relation. The implementation MUST NOT assert
-that relation as verified; differential tests are finite evidence, not a proof, and no
-Program-level refinement claim is made.
+that relation as Rust-verified; differential tests are finite evidence, not correspondence.
+The separately selected checked-Program operation has the additional `NGRAPH-PE-08` contract.
 
 **Pruning.** A node that reaches no output MAY be removed and the residual MAY be renumbered
 densely, but only because the admitted slice contains no failing node; the derivation record
@@ -222,8 +224,8 @@ Every `noble ngraph` report MUST expose `guest_requests: 0`, including an extrac
 so the existing host-request accounting makes the no-request result observable.
 Effectful, resource, recursive, aggregate and control subjects MUST be refused by the
 profile's extraction stage at or before admission, with no graph, no residual and no published
-output, and such a subject MUST NOT be able to reach specialization at all: specialization
-accepts only an already admitted graph.
+output. Such a subject MUST NOT reach the graph specialization entry point; `--source`
+MUST independently check and refuse it before Program residualization.
 
 #### Scenario: NGRAPH-PE-CASE-11 residual source acceptance
 
@@ -269,3 +271,67 @@ two graphs.
 - WHEN their derivation records are compared
 - THEN both pairs MUST differ in the residual identity and in the binding fields, so that a
   later cache cannot admit one for the other
+
+### Requirement: NGRAPH-PE-08
+r[NGRAPH-PE-08]
+
+The explicit `noble ngraph specialize --source` path MUST accept an exact checked Core
+Program and its complete source-resolved dependency closure before specializing the active
+flat scalar suffix. It MUST preserve an ordered, resource-free stack prefix of `N` opaque
+values without reading, moving or replacing any value in that prefix. The original input
+and output prefix types MUST be identical; a tail that an operation touches MUST refuse
+with `E-INTERFACE`. A static binding in the prefix MUST refuse, not silently bind a
+tail value. The active suffix retains the graph whitelist and I64-only static map.
+
+**Residual Program.** The new source MUST be independently prepared as an ordinary
+Declared-Text-v1 expression under the full `tail ++ dynamic` stack and independently
+kernel-accepted. Its output MUST have the original Program's full ordered type interface,
+including the preserved prefix. Its reached dependency closure MUST be recomputed exactly
+from the emitted submission and MUST be empty for the let-only emitter. Its new subject
+identity MUST bind the full original subject/closure, the static map and tail count and the
+independently checked residual source subject. The original's exact closure MUST be
+reported separately from the residual's, not copied onto the residual as if its calls
+still existed. A retained original identity pin that no longer matches MUST refuse
+before publication. A missing dependency closure MUST refuse with `E-CLOSURE`.
+
+**Observation and selection.** On successful requests the resource-free typed-stack
+observation to compare is `run(residual, tail ++ dynamic)` versus
+`run(original, tail ++ merge(static, dynamic))`, without equality of session-local
+handles, recipe/identity reflection, timing or low-fuel results. The specialization
+command MUST execute no guest code. Ordinary Core `compile` and `session` MUST remain
+unspecialized and selectable; residual source MUST run through the ordinary
+Declared-Text-v1 path. The graph model theorem alone does not prove Rust/Program
+or backend correspondence, which remain explicit obligations.
+
+#### Scenario: NGRAPH-PE-CASE-15 full stack tail
+
+- GIVEN checked pure Programs over Text/Bool/Unit/pair stack tails and a flat
+  I64 active suffix, with no, all, mixed and non-prefix static inputs
+- WHEN the source mode specializes them and both original Core and residual
+  Declared-Text Programs execute on reconstructed inputs
+- THEN their ordered type/value stacks MUST agree, the tail positions MUST
+  remain unchanged, and both ordinary paths MUST remain selectable
+
+#### Scenario: NGRAPH-PE-CASE-16 closure and fresh identity
+
+- GIVEN a checked root with reached named definitions, including a saved old
+  definition after a same-name rebinding, and an externally retained subject id
+- WHEN source specialization and source re-admission succeed
+- THEN the report MUST retain the exact original closure, record the empty
+  residual closure and fresh identity, and a changed definition identity or
+  stale retained subject id MUST refuse before publication
+
+#### Scenario: NGRAPH-PE-CASE-17 unsupported tail and effect
+
+- GIVEN an operation touching an opaque tail, a static binding within the
+  tail, an oversized tail, or an effectful checked root
+- WHEN each is presented to source specialization
+- THEN it MUST report `E-INTERFACE` or `E-EFFECT` as applicable, report zero
+  guest requests and publish neither a residual source nor graph
+
+#### Scenario: NGRAPH-PE-CASE-18 exact closure refusal
+
+- GIVEN a checked root that invokes a named definition but a request whose
+  claimed closure omits its identity
+- WHEN source specialization checks the original
+- THEN it MUST refuse with `E-CLOSURE` before extraction or publication

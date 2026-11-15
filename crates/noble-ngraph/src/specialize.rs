@@ -26,9 +26,10 @@
 //!
 //! Claims and non-claims: `specialize_sound` is a model theorem about graph
 //! values. This module is an implementation with finite differential tests; it
-//! does **not** claim Rust/model correspondence, Program refinement, or an
+//! does **not** claim Rust/model or backend/Program correspondence, or an
 //! equal budget, fuel or work relation between an original and its residual
-//! (H-LIMIT-03). Folding `I64Eq` is an extension the model does not cover.
+//! (H-LIMIT-03). The extended residual model covers exact `I64Eq` folding
+//! under its valid-survivor-map premise; it is not a Rust correspondence proof.
 
 use crate::identity::IdentityScheme;
 

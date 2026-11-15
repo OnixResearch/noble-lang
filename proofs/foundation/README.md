@@ -4087,7 +4087,7 @@ slots as a prefix gives a different result on the non-prefix fixture.
 
 | Claim | Model / theorem(s) | Implementation boundary | Status |
 |---|---|---|---|
-| Bounded static-input specialization for checked packed graphs | `staticValue_sound`, `specialize_wellFormed`, `congruenceWithInputs`, `residual_specialize_sound`, `specialize_sound` prove the existing index-preserving add/sub/mul model; `foldEqualities_sound`, `pruneRenumber_outputs`, and `residualize_outputs_sound` extend the model to exact I64 equality and ordered outputs under a valid survivor map. `rust_fixture_equal_shape`, `rust_fixture_unequal_shape`, `rust_fixture_equal_values`, and `rust_fixture_unequal_values` pin the paired fixture in the Lean model. The proof does not establish the Rust map builder's universal validity. | The Rust entry point noble_ngraph::specialize and noble ngraph specialize implement substitution, rank/merge renumbering, add/sub/mul/eq folding, dead-node pruning and independent graph re-check for checked ngraph-i64/0 graphs. rust_model_fixture_eq_prune_renumber pins the same equality true/false, dead-node and operand-renumbering fixture and checks dynamic input retention. The emitted residual source is re-admitted and compiled through the ordinary Declared-Text-v1 path. Rust/model and Rust/backend correspondence remain open; no arbitrary stack-tail or exact dependency-preservation contract is claimed. The source-bound measurement receipt at [verification/ngraph/pe-2026-11-13.json](../../verification/ngraph/pe-2026-11-13.json) records 11 fixture/map rows × 1,000 vectors; those finite measurements claim neither equal budgets nor universal speedup. | **model: proved under PruneMap premises**; **Rust/model correspondence: open**; **differential: finite tests**; **runtime: measured, see source-bound receipt** |
+| Bounded static-input specialization for checked packed graphs and the selected checked-Program suffix | `staticValue_sound`, `specialize_wellFormed`, `congruenceWithInputs`, `residual_specialize_sound`, `specialize_sound` prove the existing index-preserving add/sub/mul model; `foldEqualities_sound`, `pruneRenumber_outputs`, and `residualize_outputs_sound` extend the model to exact I64 equality and ordered outputs under a valid survivor map. `rust_fixture_equal_shape`, `rust_fixture_unequal_shape`, `rust_fixture_equal_values`, and `rust_fixture_unequal_values` pin the paired fixture in the Lean model. The proof establishes neither the Rust map builder's universal validity nor Program/stack-tail correspondence. | The Rust graph entry point and noble ngraph specialize implement substitution, rank/merge renumbering, add/sub/mul/eq folding, dead-node pruning and independent graph re-check. The separate opt-in source mode checks the whole original Core Program and its exact closure, preserves an opaque resource-free stack tail, and prepares and independently accepts a new Declared-Text residual Program at its full dynamic interface. Its new subject binds the original and the independently checked residual subject, tail count and static map; the original and residual closures are distinct. Program tests compare typed stack values on ordinary Core/Declared-Text sessions and assert refusal for effects, tail access, missing closure and stale identity. Rust/model, Rust/Program and Rust/backend correspondence remain open. The source-bound measurement receipt at [verification/ngraph/pe-2026-11-13.json](../../verification/ngraph/pe-2026-11-13.json) covers 11 graph fixture/map rows × 1,000 vectors; these finite measurements claim neither equal budgets nor universal speedup. | **graph model: proved under PruneMap premises**; **Program implementation: finite differential tests**; **Rust/Program/backend correspondence: open**; **runtime: measured, see source-bound receipt** |
 
 The clean-source receipt for the specialization model is
 [`verification/foundation/receipts/84753c99e/`](../../verification/foundation/receipts/84753c99e/foundation-check.json)
@@ -4120,7 +4120,13 @@ The implementation phase of the same issue keeps the four kinds of result apart:
 - **Finite differential tests.** The `extract_b2` issue-#32 leg compares the original
   under the merged input vector, the checked residual and the re-admitted graph on L3,
   L4 and (when `NOBLE_NODE` is set) the Node BigInt oracle. Agreement is finite
-  evidence about those graphs and vectors; it is not a proof.
+  evidence about those graphs and vectors; it is not a proof. The Program mode
+  exercises the original Core Program and an independently prepared residual
+  Declared-Text-v1 Program in ordinary sessions. Its observation strips
+  session-local handles and compares the ordered type/value stacks, including
+  Text/Bool/Unit/pair tails, no/all/mixed/non-prefix static maps, operand order,
+  wrapping, captures, repeated known calls and saved old definitions after
+  rebinding. The residual source is re-admitted at the full dynamic stack.
 - **Runtime.** The measured node visits, residual sizes and retained bytes are recorded
   in the change's measurement receipt. They report the two sides separately and claim
   no equal budget, fuel or work (H-LIMIT-03) and no universal speedup.
@@ -4128,21 +4134,23 @@ The implementation phase of the same issue keeps the four kinds of result apart:
 Open, and deliberately not closed:
 
 - pairs and `Unit` values, and `quote`/`compose`/`run`, are outside this graph
-  model;
-- preservation of an arbitrary stack tail is not represented: the graph model
-  has explicit input slots and ordered outputs, not an arbitrary stack prefix;
+  *model*. The Program implementation can pass a resource-free opaque tail
+  through unchanged and can expand checked known recipes, but has no theorem
+  about its whole-Program correspondence;
+- active nested pair/Unit specialization, static Bool bindings, resources and
+  effectful residualization remain outside the selected implementation profile;
 - the model conditions pruning correctness on a valid dense survivor map;
   the Rust-to-map construction and Rust/backend correspondence remain open;
-- exact source dependency preservation is not represented. The residual receives
-  a new graph identity and records the emitted source digest/re-admitted graph id,
-  but the original Program's full dependency set is not a field of this graph
-  contract;
-- the original ordinary compile path remains opt-in-separate: specialization is
-  entered only by `noble ngraph specialize`; generated residual text is accepted
-  and compiled through the ordinary Declared-Text-v1 frontend path;
-- the original Program-to-residual-Program stack-tail and exact dependency/identity
-  contract remains open; D13 scopes this graph operation rather than claiming
-  that Program-level acceptance is complete;
+- the Program implementation computes the exact original reached definition
+  closure and separately rechecks the residual's empty closure. Its fresh
+  identity binds both full-stack checked subjects, the static map and tail
+  count. The graph model does not prove this Program identity/closure bridge;
+- the ordinary Core compile/session path remains unspecialized. The residual
+  Program runs only by explicitly selecting the independently checked
+  Declared-Text-v1 path; neither path is silently rewritten;
+- the universal extraction-to-Program, emitter and backend refinement
+  obligations remain open. D13 claims finite tested Program behavior, not
+  a general proof or observational equality under arbitrary reflection;
 - budgets, thresholds, refusal/adoption criteria and other owner-reserved
   contracts remain the change's proposal, not an accepted policy;
 - effects, host calls, resource ownership and effect-aware partial execution

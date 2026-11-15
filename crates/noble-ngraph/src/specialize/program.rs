@@ -138,16 +138,16 @@ pub fn specialize(
         },
     )?;
     let source = super::emit_source(&specialized.checked)?;
-    let mut dynamic_inputs = request.original.request.expected.stack_in[..request.preserved_tail]
-        .to_vec();
+    let mut dynamic_inputs =
+        request.original.request.expected.stack_in[..request.preserved_tail].to_vec();
     dynamic_inputs.extend(super::interface_types(&specialized.checked)?);
     let retained = noble_contracts::source::RetainedSourceLimit::new(request.source_limits.bytes)
         .ok_or_else(|| {
-            refuse(
-                crate::diag::Code::Profile,
-                "the source byte limit exceeds the retained-source cap",
-            )
-        })?;
+        refuse(
+            crate::diag::Code::Profile,
+            "the source byte limit exceeds the retained-source cap",
+        )
+    })?;
     let session = noble_contracts::source::ModuleSession::new_declared_text(&[], false, retained)
         .map_err(super::source_refusal)?;
     let prepared = session
@@ -251,11 +251,7 @@ mod tests {
         }
     }
 
-    fn checked(
-        definitions: &[&str],
-        root: &str,
-        input: &[Ty],
-    ) -> crate::extract::source::Prepared {
+    fn checked(definitions: &[&str], root: &str, input: &[Ty]) -> crate::extract::source::Prepared {
         crate::extract::source::prepare(
             noble_contracts::source::Session::new(),
             noble_contracts::Limits::default(),
@@ -289,7 +285,10 @@ mod tests {
 
     #[test]
     fn checked_program_keeps_opaque_tail_and_exact_closures() {
-        let pair = Ty::Pair(alloc::boxed::Box::new(Ty::I64), alloc::boxed::Box::new(Ty::Bool));
+        let pair = Ty::Pair(
+            alloc::boxed::Box::new(Ty::I64),
+            alloc::boxed::Box::new(Ty::Bool),
+        );
         let inputs = [Ty::Text, Ty::Unit, pair, Ty::I64, Ty::I64];
         let original = checked(&["def twice [ dup + ]"], "twice swap 3 +", &inputs);
         assert_eq!(&original.submission.request.expected.stack_in, &inputs);
@@ -302,17 +301,20 @@ mod tests {
         )
         .expect("checked Program specializes while preserving an opaque tail");
         assert_eq!(residual.preserved_tail, 3);
-        assert_eq!(
-            residual.original_subject.closure,
-            original.claimed_closure
-        );
+        assert_eq!(residual.original_subject.closure, original.claimed_closure);
         assert!(residual.residual_subject.closure.is_empty());
         assert_ne!(
             residual.original_subject.identity,
             residual.residual_subject.identity
         );
         assert_eq!(
-            residual.prepared.submission().expect("ordinary Program").request.expected.stack_in,
+            residual
+                .prepared
+                .submission()
+                .expect("ordinary Program")
+                .request
+                .expected
+                .stack_in,
             [inputs[..3].to_vec(), alloc::vec![Ty::I64]].concat()
         );
         assert_eq!(
@@ -336,16 +338,17 @@ mod tests {
                 .code,
             crate::diag::Code::Closure
         );
+        let retained = prepare(&original, 1, &[None], None, &original.claimed_closure)
+            .expect("the source-bound original identity")
+            .original_subject
+            .identity;
+        let mut stale = original.clone();
+        stale.submission.definitions[0].identity += 1;
+        stale.claimed_closure[0] += 1;
         assert_eq!(
-            prepare(
-                &original,
-                1,
-                &[None],
-                Some([0; 32]),
-                &original.claimed_closure
-            )
-            .expect_err("a stale original identity must refuse")
-            .code,
+            prepare(&stale, 1, &[None], Some(retained), &stale.claimed_closure)
+                .expect_err("a changed definition identity must not match the retained subject")
+                .code,
             crate::diag::Code::Subject
         );
     }

@@ -4002,7 +4002,10 @@ fn specialize_program_source(
         .arg(out)
 }
 
-fn program_session(declared: bool, sources: &[&str]) -> Result<Vec<Value>, Box<dyn std::error::Error>> {
+fn program_session(
+    declared: bool,
+    sources: &[&str],
+) -> Result<Vec<Value>, Box<dyn std::error::Error>> {
     let mut command = std::process::Command::new(env!("CARGO_BIN_EXE_noble"));
     command.arg("session").arg("--framed");
     if declared {
@@ -4030,15 +4033,37 @@ fn program_session(declared: bool, sources: &[&str]) -> Result<Vec<Value>, Box<d
         .lines()
         .map(serde_json::from_str)
         .collect::<Result<_, _>>()?;
-    assert_eq!(reports.len(), sources.len(), "one report per framed submission");
+    assert_eq!(
+        reports.len(),
+        sources.len(),
+        "one report per framed submission"
+    );
     for (source, report) in sources.iter().zip(&reports) {
         assert_eq!(
             report["outcome"],
-            if source.starts_with("def ") { "defined" } else { "normal" },
+            if source.starts_with("def ") {
+                "defined"
+            } else {
+                "normal"
+            },
             "{report}"
         );
     }
     Ok(reports)
+}
+
+fn without_session_handles(value: &Value) -> Value {
+    match value {
+        Value::Object(fields) => Value::Object(
+            fields
+                .iter()
+                .filter(|(key, _)| key.as_str() != "handle")
+                .map(|(key, value)| (key.clone(), without_session_handles(value)))
+                .collect(),
+        ),
+        Value::Array(items) => Value::Array(items.iter().map(without_session_handles).collect()),
+        other => other.clone(),
+    }
 }
 
 fn observed_stack(report: &Value) -> Vec<(Value, Value)> {
@@ -4046,7 +4071,12 @@ fn observed_stack(report: &Value) -> Vec<(Value, Value)> {
         .as_array()
         .expect("a normal Program report has a stack")
         .iter()
-        .map(|item| (item["type"].clone(), item["value"].clone()))
+        .map(|item| {
+            (
+                item["type"].clone(),
+                without_session_handles(&item["value"]),
+            )
+        })
         .collect()
 }
 
@@ -4058,8 +4088,14 @@ fn specialize_checked_program_preserves_tail_and_ordinary_path() -> TestResult {
         .arg("compile")
         .arg(&source)
         .args([
-            "--input-type", "Text", "--input-type", "Bool", "--input-type", "I64",
-            "--input-type", "I64",
+            "--input-type",
+            "Text",
+            "--input-type",
+            "Bool",
+            "--input-type",
+            "I64",
+            "--input-type",
+            "I64",
         ])
         .output()?;
     assert!(original_compile.status.success(), "original compiles");
@@ -4104,7 +4140,11 @@ fn specialize_checked_program_preserves_tail_and_ordinary_path() -> TestResult {
                     &scratch.path(&format!("{name}-pinned.noble")),
                 )
                 .arg("--subject-id")
-                .arg(line["original_subject"].as_str().ok_or("original subject id")?),
+                .arg(
+                    line["original_subject"]
+                        .as_str()
+                        .ok_or("original subject id")?,
+                ),
             )?,
             "specialize",
         )?;
@@ -4114,19 +4154,84 @@ fn specialize_checked_program_preserves_tail_and_ordinary_path() -> TestResult {
         .arg("compile")
         .arg(&source)
         .args([
-            "--input-type", "Text", "--input-type", "Bool", "--input-type", "I64",
-            "--input-type", "I64",
+            "--input-type",
+            "Text",
+            "--input-type",
+            "Bool",
+            "--input-type",
+            "I64",
+            "--input-type",
+            "I64",
         ])
         .output()?;
-    assert_eq!(after.stdout, original_compile.stdout, "the ordinary compiler did not change");
+    assert_eq!(
+        after.stdout, original_compile.stdout,
+        "the ordinary compiler did not change"
+    );
     assert_eq!(after.status.code(), original_compile.status.code());
+    Ok(())
+}
+
+#[test]
+fn specialize_checked_program_preserves_unit_and_pair_tails() -> TestResult {
+    let scratch = Scratch::new("pe-program-shapes")?;
+    let source = scratch.write("original.noble", "1 +\n")?;
+    for (name, interface, initial, dynamic) in [
+        ("unit", "Unit I64 --", "unit 5", "unit"),
+        (
+            "pair",
+            "Pair<I64,Bool> I64 --",
+            "7 true pair 5",
+            "7 true pair",
+        ),
+    ] {
+        let out = scratch.path(&format!("{name}.residual"));
+        let line = expect_normal(
+            &scratch.run(&specialize_program_source(
+                &source, interface, "1", "1=5", &out,
+            ))?,
+            "specialize",
+        )?;
+        assert_eq!(line["tail"], 1);
+        let original = program_session(false, &[initial, "1 +"])?;
+        let emitted = std::fs::read_to_string(&out)?;
+        let residual = program_session(true, &[dynamic, &emitted])?;
+        assert_eq!(
+            observed_stack(&residual[1]),
+            observed_stack(&original[1]),
+            "{name}: {line}"
+        );
+    }
+    let wrapping = scratch.write("wrap.noble", "9223372036854775807 1 +\n")?;
+    let out = scratch.path("wrap.residual");
+    expect_normal(
+        &scratch.run(&specialize_program_source(
+            &wrapping, "Text --", "1", "", &out,
+        ))?,
+        "specialize",
+    )?;
+    let original = program_session(false, &["\"overflow\"", "9223372036854775807 1 +"])?;
+    let emitted = std::fs::read_to_string(out)?;
+    let residual = program_session(true, &["\"overflow\"", &emitted])?;
+    assert_eq!(observed_stack(&residual[1]), observed_stack(&original[1]));
+    assert_eq!(original[1]["stack"][1]["value"], "-9223372036854775808");
     Ok(())
 }
 
 #[test]
 fn specialize_checked_program_preserves_saved_dependencies_and_recipes() -> TestResult {
     let scratch = Scratch::new("pe-program-closure")?;
-    for (name, definitions, root, initial, static_map, dynamic, tail_value, expected_value, closure_len) in [
+    for (
+        name,
+        definitions,
+        root,
+        initial,
+        static_map,
+        dynamic,
+        tail_value,
+        expected_value,
+        closure_len,
+    ) in [
         (
             "rebind",
             &["def step [ 1 + ]", "def use [ step ]", "def step [ 9 + ]"][..],
@@ -4175,7 +4280,10 @@ fn specialize_checked_program_preserves_saved_dependencies_and_recipes() -> Test
             "specialize",
         )?;
         assert_eq!(
-            line["original_closure"].as_array().ok_or("closure array")?.len(),
+            line["original_closure"]
+                .as_array()
+                .ok_or("closure array")?
+                .len(),
             closure_len,
             "{name}: {line}"
         );
@@ -4202,11 +4310,43 @@ fn specialize_checked_program_preserves_saved_dependencies_and_recipes() -> Test
 fn specialize_checked_program_refuses_effect_tail_and_stale_identity() -> TestResult {
     let scratch = Scratch::new("pe-program-refuse")?;
     for (name, source, interface, tail, static_map, pin, code) in [
-        ("effect", "\"audit\" test.emit 1 +", "I64 --", "0", "", None, "E-EFFECT"),
-        ("tail-move", "swap", "I64 I64 --", "1", "", None, "E-INTERFACE"),
-        ("tail-bind", "1 +", "Text I64 --", "1", "0=5", None, "E-INTERFACE"),
+        (
+            "effect",
+            "\"audit\" test.emit 1 +",
+            "I64 --",
+            "0",
+            "",
+            None,
+            "E-EFFECT",
+        ),
+        (
+            "tail-move",
+            "swap",
+            "I64 I64 --",
+            "1",
+            "",
+            None,
+            "E-INTERFACE",
+        ),
+        (
+            "tail-bind",
+            "1 +",
+            "Text I64 --",
+            "1",
+            "0=5",
+            None,
+            "E-INTERFACE",
+        ),
         ("tail-long", "1 +", "I64 --", "2", "", None, "E-INTERFACE"),
-        ("stale", "1 +", "I64 --", "0", "", Some("00".repeat(32)), "E-SUBJECT"),
+        (
+            "stale",
+            "1 +",
+            "I64 --",
+            "0",
+            "",
+            Some("00".repeat(32)),
+            "E-SUBJECT",
+        ),
     ] {
         let input = scratch.write(&format!("{name}.source"), source)?;
         let out = scratch.path(&format!("{name}.residual"));
