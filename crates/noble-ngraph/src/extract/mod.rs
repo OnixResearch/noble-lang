@@ -42,7 +42,7 @@ mod admission;
 pub mod source;
 mod symbolic;
 
-pub use admission::{admit, Admitted, Request};
+pub use admission::{admit, admit_with_tail, Admitted, Request};
 pub use symbolic::{extract, Extraction, Stats};
 
 /// Extraction budgets (D5 `/0` defaults; a request may only lower them).

@@ -422,28 +422,56 @@ or actual backend refinement. A change that introduces guards/facts/effects must
 preservation of their observations before pruning; the current total I64/Bool whitelist does
 not grant that claim.
 
-### D13 — Keep the Program residual contract opt-in and graph-scoped
+### D13 — Opt-in checked-Program residualization with an opaque stack tail
 
-**Choice:** the `noble ngraph specialize` operation remains an explicit, opt-in graph command.
-It produces a new graph subject and a new Declared-Text-v1 residual source, then independently
-re-admits that source before publication. Its recorded graph identities, static map, source
-digest and re-admitted graph id identify this derivation; they do not claim that the residual
-has the original Program's exact dependency set or identity. The ordinary `noble compile` path
-is not automatically rewritten and remains the ordinary path that accepts the residual source.
+**Choice:** `noble ngraph specialize SOURCE --source --interface 'TYPE ... --' --tail N`
+selects the Program path; without `--source` the existing graph path is unchanged. The
+library accepts the *entire* original Core submission and every reached definition through
+the kernel, recomputes its exact closure and compares the supplied claim before extraction.
+The first `N` bottom-first root-stack values are opaque, resource-free tail values. The
+original input/output type prefixes must match; each is represented by a distinct symbolic
+marker. Any operation that consumes, copies into an output, moves or otherwise changes a
+marker refuses before any residual Program is returned. Only the remaining flat scalar
+suffix is extracted and specialized. Static positions in the CLI count the full stack and
+cannot bind the opaque prefix; the library map is relative to the active suffix.
 
-**Scoped decision:** an arbitrary preserved stack tail is outside the current graph interface,
-which contains only typed input slots and an ordered output vector. Exact source dependency
-preservation is also outside the graph derivation record; the residual's graph identity is
-deliberately new. Therefore this change does not define or prove a Program-to-Program relation
-for stack prefixes or dependency sets. The copied checked-graph closure is an input to the
-graph identity derivation, not a claim that the emitted residual Program has precisely that
-transitive dependency closure. This avoids inferring invisible source observations from graph
-values. The full Program-to-Program acceptance requirement remains open; this scoped graph
-decision must not be presented as implementing it.
+**Reconstruction and observation:** for a supported, independently accepted original,
+`merge(tail, sigma, dynamic) = tail ++ graph_merge(sigma, dynamic)` in bottom-first order.
+The residual receives `tail ++ dynamic` and must yield the original output types, including
+the *same* untouched tail positions. `emit_source` binds only dynamic suffix values; its
+source is freshly prepared as a Declared-Text-v1 expression at that full interface, then
+independently kernel-admitted, closure-checked and graph-re-extracted before publication.
+Ordinary `noble compile` and Core `session` do not invoke specialization; the residual
+is separately selectable through ordinary declared-text `compile` or `session`.
+The finite differential compares the typed stack values, not session-local value handles,
+source spelling, fuel, timing, identity, or arbitrary reflection contexts.
 
-**Reopen criteria:** to claim the original Program residual contract, select a checked Program
-subject whose stack-tail and dependency closure can be represented, specify reconstruction
-and an exact new dependency/identity derivation, then add model, implementation and ordinary-path
-controls before changing behavior. Any request for transparent/default specialization requires
-an additional explicit observation and adoption decision; it is not implied by this graph
-command or by the ordinary `compile` path.
+**Closure and identity:** the original subject digest binds the exact full-stack request,
+environment, root body/texts and each reached immutable definition identity, contract and
+body. The residual source contains no named calls: its independently recomputed closure is
+empty, while its derivation records the original closure separately. A new domain-separated
+residual Program subject binds the original subject identity, accounting revision, full-stack
+tail count and static map, and the independently re-admitted residual Program subject.
+`--subject-id` can pin an externally retained original digest; a stale pin refuses.
+Core definition identities are session-local `u64`s, not portable global names. The original
+Program is not mutated or re-published.
+
+**Limits and exclusions:** the original full root and all dependencies are checked before
+selecting the graph whitelist. The extractor still refuses effects, resources, reflection,
+recursion, unresolved dispatch and unsupported active aggregates; a tail containing a resource
+also refuses. The kernel, source frontend, extraction and specialization caps remain in force;
+exhaustion publishes nothing. The active suffix currently permits the same flat I64/Bool
+graph slice and I64-only static bindings; non-scalar active values, static Bool values and
+effectful residualization are not admitted by implication. A tail at the frontend's stack
+or source-type bound may refuse, rather than being silently shortened.
+
+**Evidence boundary and reopen criteria:** CLI differential tests exercise no/all/mixed and
+non-prefix maps, Text/Bool tails, named dependencies after rebinding, repeated calls and
+captures on Core-original versus Declared-Text residual ordinary execution. Unit and CLI
+refusal controls cover tail access, effects, missing closure and stale identity. The Lean
+model proves the graph transformation under a valid survivor map; the MC1 frame lemma is
+model-only. A universal extraction/Program relation, Rust-to-model map construction,
+emitter correctness and backend/runtime correspondence remain open and are **not** asserted
+by these finite tests. Extend the profile only with a separately checked new value/effect
+contract and its observation proof; transparent/default specialization requires a separate
+adoption decision, not a change to the ordinary unspecialized path.
