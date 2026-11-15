@@ -254,7 +254,7 @@ struct SweepInput<'a> {
 }
 
 struct TaskReport<'a> {
-    task: HeldOutTask,
+    task: &'a str,
     order: [SourceTask; 2],
     outcome: &'a str,
     passed: u32,

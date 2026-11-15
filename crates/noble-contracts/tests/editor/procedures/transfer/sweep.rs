@@ -13,11 +13,8 @@ fn task_json(output: &mut String, report: TaskReport<'_>) {
         cases,
         references,
     } = report;
-    if !output.ends_with('{') && !output.ends_with('[') {
-        output.push(',');
-    }
     output.push_str("{\"task\":\"");
-    output.push_str(task.name);
+    output.push_str(task);
     output.push_str("\",\"selected_sources\":[\"");
     output.push_str(order[0].name());
     output.push_str("\",\"");
@@ -44,6 +41,59 @@ fn task_json(output: &mut String, report: TaskReport<'_>) {
         ));
     }
     output.push_str("]}");
+}
+
+fn retrieve_step(
+    library: &ProcedureLibrary,
+    budget: &mut QueryBudget,
+    counts: &mut Counts,
+    before: Vec<Ty>,
+    after: Vec<Ty>,
+) -> Result<Vec<[u8; 32]>, String> {
+    let query = Query {
+        composition_context: Some((before, after)),
+        exact_interface: None,
+        dependency_root: None,
+        status: None,
+    };
+    let started = Instant::now();
+    let retrieved = library
+        .retrieve(&query, budget)
+        .map_err(|error| format!("retrieve source step: {error:?}"))?;
+    counts.retrieval_ns = counts
+        .retrieval_ns
+        .checked_add(super::producer::elapsed_nanoseconds(started)?)
+        .ok_or_else(|| String::from("measured retrieval time exceeds the metrics counter"))?;
+    counts.retrieval_queries = counts.retrieval_queries.saturating_add(1);
+    counts.retrieval_examined = counts
+        .retrieval_examined
+        .saturating_add(retrieved.examined_entries);
+    counts.max_examined = counts.max_examined.max(retrieved.examined_entries);
+    Ok(retrieved.candidates)
+}
+
+fn retrieve_source_steps(
+    library: &ProcedureLibrary,
+    budget: &mut QueryBudget,
+    counts: &mut Counts,
+) -> Result<[Vec<[u8; 32]>; 2], String> {
+    // Each 2→1 source consumes one step of the 3→2→1 composition; a 3→1
+    // whole-target context cannot match either single source.
+    let first = retrieve_step(
+        library,
+        budget,
+        counts,
+        vec![Ty::I64, Ty::I64, Ty::I64],
+        vec![Ty::I64, Ty::I64],
+    )?;
+    let second = retrieve_step(
+        library,
+        budget,
+        counts,
+        vec![Ty::I64, Ty::I64],
+        vec![Ty::I64],
+    )?;
+    Ok([first, second])
 }
 
 pub(super) fn evaluate(input: SweepInput<'_>) -> Result<(String, Counts), String> {
@@ -77,25 +127,7 @@ pub(super) fn evaluate(input: SweepInput<'_>) -> Result<(String, Counts), String
             output.push(',');
         }
         let order = super::fixtures::target_order(task, arm, control);
-        let query = Query {
-            composition_context: Some((vec![Ty::I64, Ty::I64, Ty::I64], vec![Ty::I64])),
-            exact_interface: None,
-            dependency_root: None,
-            status: None,
-        };
-        let started = Instant::now();
-        let retrieved = library
-            .retrieve(&query, &mut budget)
-            .map_err(|error| format!("retrieve {}: {error:?}", task.name))?;
-        counts.retrieval_ns = counts
-            .retrieval_ns
-            .checked_add(super::producer::elapsed_nanoseconds(started)?)
-            .ok_or_else(|| String::from("measured retrieval time exceeds the metrics counter"))?;
-        counts.retrieval_queries = counts.retrieval_queries.saturating_add(1);
-        counts.retrieval_examined = counts
-            .retrieval_examined
-            .saturating_add(retrieved.examined_entries);
-        counts.max_examined = counts.max_examined.max(retrieved.examined_entries);
+        let retrieved_steps = retrieve_source_steps(library, &mut budget, &mut counts)?;
         counts.heldout_tasks = counts.heldout_tasks.saturating_add(1);
         let (fixtures, references) = super::fixtures::heldout_cases(task, seed_index);
         let reference_count = u32::try_from(references.len())
@@ -103,9 +135,10 @@ pub(super) fn evaluate(input: SweepInput<'_>) -> Result<(String, Counts), String
         counts.heldout_examples = counts.heldout_examples.saturating_add(reference_count);
         let pair = super::producer::paired_sources(library, sources, order);
         let result = if let Some(records) = pair.filter(|records| {
-            records
+            retrieved_steps
                 .iter()
-                .all(|record| retrieved.candidates.contains(&record.procedure_id))
+                .zip(records.iter())
+                .all(|(candidates, record)| candidates.contains(&record.procedure_id))
         }) {
             let composition = library
                 .compose(
@@ -140,7 +173,7 @@ pub(super) fn evaluate(input: SweepInput<'_>) -> Result<(String, Counts), String
         task_json(
             &mut output,
             TaskReport {
-                task,
+                task: task.name,
                 order,
                 outcome: result.0,
                 passed: result.1,
@@ -157,4 +190,73 @@ pub(super) fn evaluate(input: SweepInput<'_>) -> Result<(String, Counts), String
         "],\"earlier_tasks\":{earlier_tasks},\"regression_failed\":{regression_failed}}}"
     ));
     Ok((output, counts))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn nonheldout_source_steps_retrieve_each_admitted_source() -> Result<(), String> {
+        let namespace = Session::without_test_hosts();
+        let mut library = ProcedureLibrary::new(super::super::revision(7));
+        let mut ids = Vec::new();
+        for task in [SourceTask::Scaled, SourceTask::Product] {
+            let record = super::super::producer::task_record(task, Producer::Synthesis)?;
+            ids.push(
+                library
+                    .admit(&namespace, None, record)
+                    .map_err(|error| format!("non-held-out source admission: {error:?}"))?,
+            );
+        }
+        let mut budget = QueryBudget::new();
+        let mut counts = Counts::default();
+        let steps = retrieve_source_steps(&library, &mut budget, &mut counts)?;
+        assert_eq!(budget.queries(), 2);
+        assert_eq!(counts.retrieval_queries, 2);
+        assert_eq!(counts.retrieval_examined, 4);
+        for candidates in steps {
+            assert_eq!(candidates.len(), 2);
+            for id in &ids {
+                assert!(candidates.contains(id));
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn nonheldout_task_rows_have_one_separator_and_parse() -> Result<(), String> {
+        let references = [([113, 127, 131], 23)];
+        let cases = [(Some(23), 23, true)];
+        let mut rows = String::from("[");
+        for (index, name) in ["nonheldout_source_a", "nonheldout_source_b"]
+            .iter()
+            .enumerate()
+        {
+            if index != 0 {
+                rows.push(',');
+            }
+            task_json(
+                &mut rows,
+                TaskReport {
+                    task: name,
+                    order: [SourceTask::Scaled, SourceTask::Product],
+                    outcome: "fixture-only",
+                    passed: 1,
+                    cases: &cases,
+                    references: &references,
+                },
+            );
+        }
+        rows.push(']');
+        let parsed: serde_json::Value =
+            serde_json::from_str(&rows).map_err(|error| format!("task rows JSON: {error}"))?;
+        let tasks = parsed
+            .as_array()
+            .ok_or_else(|| String::from("task rows are not a JSON array"))?;
+        assert_eq!(tasks.len(), 2);
+        assert_eq!(tasks[0]["task"].as_str(), Some("nonheldout_source_a"));
+        assert_eq!(tasks[1]["task"].as_str(), Some("nonheldout_source_b"));
+        Ok(())
+    }
 }
