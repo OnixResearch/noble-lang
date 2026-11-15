@@ -799,7 +799,7 @@ fn emit_output_tree(
     tree: &crate::ir::ShapeTree,
     outputs: &[crate::ir::NodeId],
     next: &mut usize,
-    text: &mut alloc::string::String,
+    mut text: &mut alloc::string::String,
 ) -> Result<(), crate::diag::Diagnostic> {
     match tree.node() {
         crate::ir::ShapeNode::Scalar => {
