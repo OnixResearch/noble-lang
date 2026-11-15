@@ -3,8 +3,9 @@ exact `typed-chunk/1` envelope, immutable chunk library, `library_revision`,
 one-hole stack-equation solver, deterministic shortlex queue, ordinary
 source/kernel re-admission, shared budgets and four outcome classes. No task
 below may substitute a new chunk store, a second body encoding or a
-signature-only index. #116 supplies synthesized bodies; #56 supplies the only
-certified-equivalence route used for semantic deduplication.
+signature-only index. #116 supplies synthesized bodies; the local bounded
+pure-I64 exact-pair verifier supplies the alias route exercised by this slice.
+The separate #56 certificate lane is not an alias-admission dependency.
 
 ## Phase 1: Design (this change)
 
@@ -14,7 +15,7 @@ certified-equivalence route used for semantic deduplication.
 - [x] [serial] Fix identity status: experimental, versioned, library-local; encoder id and encoding revision recorded in every record and export; no canonical encoding, hash algorithm or cross-implementation stability selected (P-ID-04, VC-ID-03). r[LPL-01] r[LPL-07]
 - [x] [serial] Fix composition and capability admission onto the MC2 path: fresh candidate, ordinary `Session::prepare`, `acceptance::check`, `ComposeV1` with both premises, joint endpoint as the intermediate implication, authority-subset rule, and the escalation table naming exact refusals. r[LPL-02]
 - [x] [serial] Fix promotion: `candidate`/`tested`/`promoted`/`superseded`, consumer-selected obligation policy, existing seven evidence classes reused, tested and proved permanently distinct, no promotion transfer across subject or policy, demotion recorded in a new generation. r[LPL-03]
-- [x] [serial] Fix deduplication: exact-record identity reuse, derivation restatement refused as `duplicate-entry`, equal signatures kept distinct, semantic alias only from a #56 certificate for the exact pair with both closures retained. r[LPL-04]
+- [x] [serial] Fix deduplication: exact-record identity reuse, derivation restatement refused as `duplicate-entry`, equal signatures kept distinct, semantic alias only from a checked exact-pair certificate retaining both bodies and closures. r[LPL-04]
 - [x] [serial] Fix deterministic retrieval: total order over interface, effects, promotion rank, integer cost key and identity bytes; filters as ordered subsequences; bounded index and counted examination; candidates are identities, never authority. r[LPL-05]
 - [x] [serial] Fix append-only generations, `supersedes` replacement, rollback exactness, rollback refusal on drift or unavailable toolchain, and the no-deletion rule for referenced generations. r[LPL-06]
 - [x] [serial] Fix reload identity: persisted canonical form, recomputation order, `invalid` at the first differing field, prohibited nondeterministic inputs, canonical collection order, and the two-process manifest comparison with four negative controls. r[LPL-07]
@@ -32,21 +33,20 @@ the Phase 1 blocker above describes the state when this package was designed.
 - [x] [serial] Implement the two derived revisions from one generation and prove by execution that the chunk view reproduces the #73 `library_revision` exactly for the same chunk set. r[LPL-01] r[LPL-07]
 - [x] [serial] Implement composition through `Session::prepare`, `acceptance::check` and `Core::derive_compose`, including the `UnresolvedImplication` case, and implement the authority-subset check with every escalation row as a named refusal. r[LPL-02]
 - [x] [serial] Implement the promotion lattice over the existing evidence classes, with consumer policy obligations, per-obligation outcomes, `ForgedStatus`, `StaleContext`, recorded demotion and no evidence inspection that reaches a prover or a proof file. r[LPL-03]
-- [ ] [serial] Implement exact-record deduplication and the `DuplicateEntry` restatement refusal; implement the alias relation gated on a #56 certificate for the exact pair, retaining both identities and closures. r[LPL-04]
+- [x] [serial] Implement exact-record deduplication and the `DuplicateEntry` restatement refusal; implement the alias relation gated on a locally verified bounded pure-I64 exact-pair certificate, retaining both identities and closures. r[LPL-04]
 - [x] [serial] Implement the retrieval total order, the four query filters as ordered subsequences, the bounded index, the examined-entry counter and the rule that no retrieval result authorizes a composition. r[LPL-05]
 - [x] [serial] Implement append-only generations, `supersedes`, rollback with the exactness and refusal rules, and the no-deletion rule. r[LPL-06]
 - [x] [serial] Implement persistence and load recomputation with canonical collection order, the prohibited-input audit and `invalid` at the first differing field; add the two-process manifest comparison and the four negative controls as fixtures inside an existing test target, without adding a compilation unit. r[LPL-07]
 - [x] [serial] Implement the identity manifest and metrics records, bind metrics to the manifest digest, and verify that no time, path, process, host, capability, secret, teacher configuration or training policy appears in either record. r[LPL-08]
-- [ ] [serial] Add the acceptance-1 and acceptance-2 fixtures (`LPL-T01`–`LPL-T12`) to existing test targets, report counts and outcomes as executed library mechanics, and keep them separate from any proof or transfer claim. r[LPL-02] r[LPL-03] r[LPL-04] r[LPL-05] r[LPL-06] r[LPL-07]
+- [x] [serial] Add the acceptance-1 and acceptance-2 fixtures (`LPL-T01`–`LPL-T12`) to existing test targets, report counts and outcomes as executed library mechanics, and keep them separate from any proof or transfer claim. r[LPL-02] r[LPL-03] r[LPL-04] r[LPL-05] r[LPL-06] r[LPL-07]
 
 Phase 2 execution evidence: `crates/noble-contracts/tests/editor/procedures/{identity,admission,composition,retrieval,generations,reload-negative,metrics}.rs`
-and `crates/noble-contracts/src/source/procedures/{composition,retrieval,persistence}.rs`.
-The two unticked rows share the LPL-04 positive exact-certificate case:
-the alias implementation row cannot pass a real exact-pair #56 verifier of
-both bodies and closures, and the `LPL-T07` acceptance row cannot execute an
-alias success without it. The alias-digest refusal test executes; positive
-alias remains **NOT DONE**. See `design.md` for the exact-pair verifier reopen
-condition. Do not tick either row on the strength of a digest or a mock.
+and `crates/noble-contracts/src/source/procedures/{composition,retrieval,persistence,alias}.rs`.
+`LPL-T07` admits and reloads a verified exact-pair alias for distinct pure-I64
+bodies with matching normalized polynomials and independently binds both
+empty dependency closures. Unsupported operators, a forged closure and the
+legacy digest-only claim refuse; the positive case is not a #56 certificate,
+a proof-demanding promotion or an implementation-to-Lean refinement.
 
 ## Phase 3: Transfer evaluation (the original #73/#116 blockers have cleared)
 
@@ -77,15 +77,19 @@ to the wrong source-order semantics; v2's 0/8 learned outcome is a
 **defective-criterion NO-GO, not evidence against the library**. The first
 unticked Phase 3 row still needs a valid #116-generated held-out transfer
 measurement under a new criterion mechanically derived from producer source
-semantics before generation; v1's correct pairing was never run. The other
-unticked Phase 3 row needs a checked Rust byte-encoder refinement and the #56
-exact-pair proof before proof-demanding
-promotion. The abstract model at
+semantics before generation; v1's correct pairing was never run. V3's
+criterion and manifest are frozen from the #116 source receipt before any
+v3 target generation.
+The other unticked Phase 3 row still needs a universal checked Rust
+byte-encoder refinement before a proof-demanding promotion may claim `LPL-O1`
+for the actual encoder. A local exact-pair validation result alone cannot
+authorize such promotion. The abstract model at
 `proofs/foundation/NobleFoundation/ProcedureLibrary.lean` discharges typed
 identity, reload, append and rollback lemmas, **not** a Rust byte-encoder
-refinement or a runtime #56 exact-pair proof. A separate
+refinement. A separate
 `NobleFoundation/ProcedureLibraryWire.lean` subprofile and digest-bound
-`verification/procedure-library/receipts/encoder-corpus-v1.json` now compare
-two finite kernel-checked model encodings with Rust subject bytes; this is
-not a universal refinement. All four unticked Phase 2/3
-rows remain open; keep this Cairn change active.
+`verification/procedure-library/receipts/encoder-corpus-v1.json` compare
+two finite kernel-checked model encodings with Rust subject bytes; the
+expanded v2 corpus spans 36 cases and retains the universal obligation.
+The v3 #116 target run and transfer result remain to be recorded; keep this
+Cairn change active until all obligations are genuinely discharged.

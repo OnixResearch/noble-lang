@@ -223,6 +223,7 @@ Status words:
 
 | Bounded typed program synthesis with counterexample-guided refinement (issue #116) | `NobleFoundation.Synthesis.not_certifiable_of_refuted`, `NobleFoundation.Synthesis.arithCommuted_certified`, `NobleFoundation.Synthesis.arithSubtract_certified`, `NobleFoundation.Synthesis.arithScaled_certified`, `NobleFoundation.Synthesis.overBoundControl_certified`, `NobleFoundation.Synthesis.bitOr_refused_witness_refutes`, `NobleFoundation.Synthesis.bitOr_refused_not_certifiable`, `NobleFoundation.Synthesis.bitXor_refused_witness_refutes`, `NobleFoundation.Synthesis.bitXor_refused_not_certifiable` | `verification/synthesis/cegis.mjs` and finite re-admission through the existing CLI; no production synthesis implementation theorem | model **proved** (four affine graph-pair certificates and two exact-witness refusal controls); bounded search/refinement and held-out behavior **tested** only on the frozen tasks and budgets; nonlinear, Bool, 0/1-domain and list cases are **unproven** or run-only; general synthesis and source-to-model refinement remain **open** |
 | Learned procedure identity, persistence, append-only state and rollback (issue #118, LPL-O1--LPL-O4) | `NobleFoundation.ProcedureLibrary.decode_encode_subject`, `NobleFoundation.ProcedureLibrary.encode_subject_injective`, `NobleFoundation.ProcedureLibrary.identity_injective_on_subjects`, `NobleFoundation.ProcedureLibrary.identity_binds_body`, `NobleFoundation.ProcedureLibrary.identity_binds_dependency_closure`, `NobleFoundation.ProcedureLibrary.identity_ignores_mutable_state`, `NobleFoundation.ProcedureLibrary.reload_recomputes_identity`, `NobleFoundation.ProcedureLibrary.reload_repeated_identity`, `NobleFoundation.ProcedureLibrary.deduplicate_reuses_exact_subject`, `NobleFoundation.ProcedureLibrary.deduplicate_reuse_preserves_dependency_closures`, `NobleFoundation.ProcedureLibrary.deduplicate_reuse_preserves_all_evidence`, `NobleFoundation.ProcedureLibrary.bound_evidence_appends_to_existing_evidence`, `NobleFoundation.ProcedureLibrary.appended_evidence_preserves_identity`, `NobleFoundation.ProcedureLibrary.appended_evidence_preserves_prior_obligations`, `NobleFoundation.ProcedureLibrary.evidence_publication_appends_a_generation`, `NobleFoundation.ProcedureLibrary.evidence_publication_retains_prior_generation`, `NobleFoundation.ProcedureLibrary.wrong_subject_evidence_does_not_publish`, `NobleFoundation.ProcedureLibrary.rollback_restores_exact_retained_closure`, `NobleFoundation.ProcedureLibrary.rollback_never_rewrites_retained_history` | The abstract canonical subject tuple and generation relation in the ProcedureLibrary model; the Rust serializer, experimental digest and implementation correspondence are outside the theorem subject | abstract model **proved**; Rust persistence, four corruption controls and restart identity are **tested** separately; no theorem claims a canonical hash, Rust implementation refinement or portability |
+| Local exact-pair alias normalizer for pure wrapping I64 bodies (issue #118, LPL-04) | `NobleFoundation.ProcedureLibraryAlias.wrapping_i64_add`, `NobleFoundation.ProcedureLibraryAlias.wrapping_i64_sub`, `NobleFoundation.ProcedureLibraryAlias.wrapping_i64_mul`, `NobleFoundation.ProcedureLibraryAlias.step_sound`, `NobleFoundation.ProcedureLibraryAlias.body_sound`, `NobleFoundation.ProcedureLibraryAlias.initial_polynomials_sound`, `NobleFoundation.ProcedureLibraryAlias.exact_pair_sound` | Mathlib polynomial semantics prove the abstract instruction interpreter sound, not that Rust's bounded sparse normalizer implements it; runtime checks both actual bodies and empty closures, with unsupported syntax refused | model **proved**; positive/negative runtime alias admission and reload **tested** separately; universal Rust normalizer refinement and dependency-bearing aliases remain **open** |
 
 Typing premises are stated exactly:
 - Sequences require `depthRun ops k = some k'` (static depth) for typing,
@@ -2628,19 +2629,31 @@ earlier generations remain retained. Rust generation, evidence and rollback fixt
 implementation evidence; the model does not establish the concrete persistence decoder, evidence
 toolchain availability checks, or runtime behavior.
 
-`NobleFoundation/ProcedureLibraryWire.lean` adds a **finite** byte-encoding
-subprofile for two actual I64 source fixtures with no captures or dependencies
-and one empty instantiation. The kernel checks their encoded lengths and the
-first fixture's encoder length prefix. The source-digest-bound Lean emitter
-`verification/procedure-library/encoder-corpus.lean` generates the bytes,
-and the Rust differential test compares those bytes with
-`ProcedureRecord::identity_subject_bytes` for independently re-derived
-chunk identities and source revisions. The corpus receipt and its verifier
-bind the Lean model, emitter, Rust encoder and fixture source bytes.
-This is **not** a universal correspondence theorem: arbitrary chunks, captures,
-dependencies, provenance variants, the experimental digest and #56 exact-pair
-certificate validation remain outside the two checked fixtures. No promotion
-under a proof-demanding policy follows from the corpus alone.
+`NobleFoundation/ProcedureLibraryWire.lean` models a restricted byte-encoding
+subprofile for four actual I64 source bodies, including an instantiation with
+a typed binding, all three producer provenance branches, and zero, one or two
+ordered library-dependency edges. Its 36-case source-digest-bound Lean emitter
+generates immutable-subject bytes; a Rust differential test compares those
+bytes with `ProcedureRecord::identity_subject_bytes` after independently
+re-deriving chunk and source identities. It also rejects an oversized closure
+and distinguishes two dependency orders. The earlier two-case receipt stays
+immutable; the expanded corpus has its own separately retained receipt. The
+kernel-checked wire theorems establish only two fixture lengths and one prefix.
+This is **not** universal Rust encoder correspondence or a total encode/decode
+roundtrip: captures, chunk dependencies, other body variants, digests and
+all untested field values remain open. In particular unrestricted `Nat` fields
+can truncate under fixed-width serialization, so injectivity is not claimed.
+
+`NobleFoundation/ProcedureLibraryAlias.lean` separately interprets a
+dependency-free I64 instruction sequence as polynomials over Z/2^64 and proves
+that normalization preserves the full runtime stack, underflow refusal and
+subtraction order. Equality of the two formal stacks implies equal execution
+for all modeled inputs. The local Rust checker must independently rederive
+both normal forms and both empty-closure digests on admission and reload; its
+fixtures are implementation tests, not an implementation-refinement theorem.
+Unsupported effects, Boolean values, quotations, calls and dependency-bearing
+closures are refused rather than treated as semantically equal. A local
+`validation/passed` alias does not create proof-demanding promotion evidence.
 
 ## Specification-quality obligations (issue #65)
 

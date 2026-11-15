@@ -209,7 +209,12 @@ cost: { expanded_nodes: u32, emitted_source_bytes: u32, evaluation_steps: u32 }
 retrieval: { stack_in: [I64|Bool], stack_out: [I64|Bool], effects: [],
              status_rank: u8, cost_key: [u32; 3] }
 supersedes: procedure_id | none
-alias_of: { procedure_id: 32 bytes, certificate: 32 bytes } | none
+alias_of: { procedure_id: 32 bytes,
+            certificate: exact-pair {
+              left_form: [bounded canonical I64 polynomials],
+              right_form: [bounded canonical I64 polynomials],
+              left_closure: 32 bytes, right_closure: 32 bytes
+            } } | none
 ```
 
 Notes that are normative rather than descriptive:
@@ -335,30 +340,39 @@ Four distinct results, never conflated:
    new generation. Proof attachment never creates a second artifact.
 3. **Restated derivation** — a derivation that restates an existing premise:
    `DuplicateEntry` (`crates/noble-cli/src/core/companions.rs:32-38`).
-4. **Semantic alias** — only with a certificate from #56's
-   certified-equivalence lane for the exact pair: add an alias edge plus the
-   certificate as its own evidence record. Both identities, both dependency
-   closures and both retrieval positions remain. No substitution into an
-   existing Program, no deletion, no rewrite.
+4. **Semantic alias** — only when a local no-std verifier recomputes both
+   actual bodies into equal canonical wrapping-I64 polynomials and checks
+   both complete dependency closures. The current supported fragment is
+   dependency-free pure I64; any other closure or operation refuses. The
+   exact-pair certificate and a distinct `validation/passed` evidence record
+   are retained with both identities and retrieval positions. No substitution
+   into an existing Program, no deletion, no rewrite or `proved` promotion.
 
 Equal signatures with different bodies are never merged, never deduplicated and
 never treated as behaviorally equal (TCHUNK-01). A name, interface, cost,
 template identity, path or nearest-body similarity is not a deduplication key.
 
-### LPL-04 implementation decision (2026-11-14)
+### LPL-04 bounded exact-pair decision (2026-11-14)
 
-Exact-record reuse and the `DuplicateEntry` restatement refusal are implemented.
-The **positive exact-certificate semantic-alias case is NOT DONE**. Issue #56
-currently supplies a verification lane, not a runtime exact-pair equivalence
-verifier: a certificate digest alone cannot establish the equivalence of the
-two retained bodies and their dependency closures. `ProcedureLibrary::admit`
-therefore refuses every proposed `alias_of`, including a nonzero digest; the
-alias refusal fixture pins this fail-closed behavior. No contracts-to-ngraph
-dependency or mock certificate is introduced. Reopen positive alias admission
-only after an exact-pair #56 runtime verifier exists in a crate that
-`noble-contracts` may depend on, or after `noble-contracts` defines a verifier
-trait implemented by a higher crate. The verifier must check the *actual*
-pair and both closures before an alias edge and its evidence can be retained.
+The original #56-only route could not admit a positive alias because #56 has
+no runtime exact-pair verifier in the contracts crate. The replacement is a
+local bounded decision procedure, not a certificate-digest shortcut or an
+ngraph dependency. Its supported fragment consists of typed, pure I64
+straight-line bodies with literal/capture and stack/arithmetic operations
+only. Canonical sparse polynomials have wrapping 64-bit coefficients, bounded
+terms and exponents, and are computed from *both* admitted bodies. The
+certificate retains both forms and separately derived closure digests;
+admission and reload recompute every field and demand equal full-stack forms.
+Both closures must be empty in this first sound subprofile; dependency-bearing
+bodies, Boolean operations, quotations and calls refuse. A matching signature
+or caller-supplied digest cannot authorize an alias.
+
+Successful alias state also carries its own exact-pair-bound
+`validation/passed` evidence with a versioned checker identity. This does
+not inherit a proof-demanding consumer obligation or claim that the Rust
+normalizer is formally refined by the separate Lean soundness model. The
+legacy digest-only representation remains a refused input, not an accepted
+compatibility path.
 
 ## Retrieval
 
@@ -537,7 +551,7 @@ Consumed interfaces:
 | `RuleId` / `RULESET_V1` | `crates/noble-contracts/src/companion/rules/mod.rs:10-48` | rule identity in every derivation |
 | `Refusal` variants | `crates/noble-contracts/src/companion/mod.rs:140-167` | rejection classes named in the fixtures |
 | synthesis producer record (candidate source, grammar revision, budget, witness/counterexample trace, verifier status) | #116 scope | provenance of synthesized entries and held-out task generation |
-| certified equivalence certificate | #56 lane | the only semantic deduplication input |
+| local exact-pair polynomial certificate | `crates/noble-contracts/src/source/procedures/alias.rs` | bounded pure-I64 semantic alias, recomputed on admission and reload; #56 is not an acceptance dependency |
 
 Acceptance 1 — reuse and composition examples, rejection tests:
 
@@ -573,9 +587,11 @@ Acceptance 3 — transfer on held-out composed tasks:
 Implementation status: `LPL-T01`–`LPL-T03`, `LPL-T05`–`LPL-T12` have
 source-level fixtures in `crates/noble-contracts/tests/editor/procedures/`
 covering the corresponding mechanics and refusals. `LPL-T04` is covered by
-the effect-widening refusal in `admission.rs`. The positive exact-pair
-certificate alias portion of `LPL-T07` remains **NOT DONE**: `admission.rs`
-exercises its fail-closed refusal, not alias success. `LPL-T13` is frozen in
+the effect-widening refusal in `admission.rs`. `LPL-T07` additionally covers
+the local bounded pure-I64 exact-pair alias admission and reload, as well as
+refusal of unsupported pairs, forged closure and digest-only certificates.
+These tests establish the executed Rust fragment, not Rust/Lean refinement
+or a #56 certificate. `LPL-T13` is frozen in
 `verification/procedure-library/criteria-2026-11-13.json` ahead of the
 one-shot measurement. The original attempt at `e65f82c` is retained with an
 erratum: its JSON task serializer duplicated separators and its 3→1 query
@@ -592,10 +608,14 @@ attempted-call test now proves both library requests refuse before any host
 callback, but the frozen run did not exercise an attempt. The #116 producer
 receipt binds acquisition source tasks **and their non-held-out reference
 examples**; the source program, grammar, budget and verifier-status fields
-are checked against the receipt and a mutated reference or program is refused.
-The composed target references themselves remain fixture-authored, not #116
-generated in this lane. No fixture is evidence of Rust/Lean correspondence or
-a #56 certificate. The exact decision and non-claims are in
+are checked against the receipt, and a mutated reference or program is
+refused. The v1/v2 composed target references were
+fixture-authored; the v2 pair mapping was defective. The separately frozen
+v3 targets are derived directly from the #116 receipt's source programs
+before generation, and a non-held-out independent Rust evaluator checks each
+reference; their transfer receipt is recorded separately. No fixture is
+evidence of a universal Rust/Lean correspondence or a #56 certificate. The
+exact decision and non-claims are in
 `verification/procedure-library/decision.md`.
 
 ## Acceptance mapping
@@ -619,7 +639,10 @@ The abstract Lean model at
 injectivity, reload determinism, dedup/evidence append and exact retained
 rollback (`LPL-O1`–`LPL-O4`) at the model boundary. Rust fixtures test the
 separate executed mechanics (`LPL-O5`/`LPL-O6` included), but no
-implementation-to-model correspondence or byte-encoder refinement is proved.
+implementation-to-model correspondence or universal byte-encoder refinement
+is proved. `ProcedureLibraryAlias.lean` proves polynomial interpretation
+soundness of the supported fragment over wrapping 64-bit arithmetic; the Rust
+normalizer is tested separately, not theorem-refined.
 An experimental digest is not an injective proof of a language-wide identity.
 
 | ID | Obligation | Suggested route |
