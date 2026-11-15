@@ -251,11 +251,10 @@ pub fn residualize(
         },
         true,
     )?;
-    let source = if let Some(shapes) = extracted.checked.graph().output_shape.as_deref() {
-        super::emit_source_with_outputs(&specialized.checked, shapes)?
-    } else {
-        super::emit_source(&specialized.checked)?
-    };
+    let source = super::emit_program_source(
+        &specialized.checked,
+        extracted.checked.graph().output_shape.as_deref(),
+    )?;
     let mut dynamic_inputs =
         request.original.request.expected.stack_in[..request.preserved_tail].to_vec();
     dynamic_inputs.extend(super::interface_types(&specialized.checked)?);
@@ -650,6 +649,28 @@ mod tests {
         assert_eq!(residual.merge_active(&[]), Some(alloc::vec![ActiveValue::Unit]));
         assert_eq!(observe(&residual.readmitted, &[]), alloc::vec![]);
         assert_eq!(residual.readmitted.graph().outputs.len(), 0);
+    }
+
+    #[test]
+    fn repeated_output_reuses_one_bound_node_while_single_use_constant_is_inlined() {
+        let original = checked(&[], "1 + dup pair", &[noble_kernel::types::Ty::I64]);
+        let residual = prepare(&original, 0, &[None], None, &[])
+            .expect("a pair of repeated results reuses its common subexpression");
+        assert_eq!(residual.source.matches("let v").count(), 2);
+        assert!(!residual.source.contains("1 let v"));
+        assert_eq!(residual.source.matches("v2 ").count(), 2);
+        let original_graph = original_graph(&original, 0);
+        for x in [0, 7, i64::MAX] {
+            let input = [crate::sem::Value::I64(x)];
+            assert_eq!(
+                observe(&residual.readmitted, &input),
+                alloc::vec![crate::sem::Value::I64(x.wrapping_add(1)); 2]
+            );
+            assert_eq!(
+                observe(&original_graph, &input),
+                observe(&residual.readmitted, &input)
+            );
+        }
     }
 
     #[test]

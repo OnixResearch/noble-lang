@@ -778,17 +778,7 @@ pub fn interface_types(
 pub fn emit_source(
     checked: &crate::check::CheckedGraph,
 ) -> Result<alloc::string::String, crate::diag::Diagnostic> {
-    emit_source_inner(checked, None)
-}
-
-/// Source-Program-only output reconstruction: the shape comes from the
-/// independently checked *original* Program, never from an untrusted request.
-/// The specialized graph itself retains a flat, dynamically ranked interface.
-fn emit_source_with_outputs(
-    checked: &crate::check::CheckedGraph,
-    output_shapes: &[crate::ir::ShapeTree],
-) -> Result<alloc::string::String, crate::diag::Diagnostic> {
-    emit_source_inner(checked, Some(output_shapes))
+    emit_source_inner(checked)
 }
 
 #[expect(
@@ -799,7 +789,8 @@ fn emit_output_tree(
     tree: &crate::ir::ShapeTree,
     outputs: &[crate::ir::NodeId],
     next: &mut usize,
-    mut text: &mut alloc::string::String,
+    text: &mut alloc::string::String,
+    render: &mut impl FnMut(&mut alloc::string::String, crate::ir::NodeId) -> Result<(), crate::diag::Diagnostic>,
 ) -> Result<(), crate::diag::Diagnostic> {
     match tree.node() {
         crate::ir::ShapeNode::Scalar => {
@@ -809,22 +800,174 @@ fn emit_output_tree(
                     "a checked output shape has more scalar leaves than the residual graph",
                 )
             })?;
-            crate::format::write_text!(text, "v{}\n", output.0);
+            render(text, *output)?;
+            text.push('\n');
             *next += 1;
         }
         crate::ir::ShapeNode::Unit => text.push_str("unit\n"),
         crate::ir::ShapeNode::Pair(left, right) => {
-            emit_output_tree(left, outputs, next, text)?;
-            emit_output_tree(right, outputs, next, text)?;
+            emit_output_tree(left, outputs, next, text, render)?;
+            emit_output_tree(right, outputs, next, text, render)?;
             text.push_str("pair\n");
         }
     }
     Ok(())
 }
 
-fn emit_source_inner(
+/// Each use is an operand edge or an output edge. A node with one use can be
+/// spelled at that use instead of introducing a new lexical `let` quotation.
+/// Count both edges when the same operand occurs twice.
+fn source_uses(graph: &crate::ir::Graph) -> alloc::vec::Vec<u32> {
+    let mut uses = alloc::vec![0u32; graph.nodes.len()];
+    for node in &graph.nodes {
+        match node.op {
+            crate::ir::Op::I64Add(a, b)
+            | crate::ir::Op::I64Sub(a, b)
+            | crate::ir::Op::I64Mul(a, b)
+            | crate::ir::Op::I64Eq(a, b) => {
+                uses[a.index()] = uses[a.index()].saturating_add(1);
+                uses[b.index()] = uses[b.index()].saturating_add(1);
+            }
+            _ => {}
+        }
+    }
+    for output in &graph.outputs {
+        uses[output.index()] = uses[output.index()].saturating_add(1);
+    }
+    uses
+}
+
+/// Iterative postorder avoids host-stack growth up to the checked graph's
+/// layer cap. Only total, effect-free operations enter this emitter. Shared
+/// operands refer to their earlier lexical binding; singly used operations
+/// retain exactly their original operand order when inlined.
+fn emit_expression(
+    graph: &crate::ir::Graph,
+    uses: &[u32],
+    root: crate::ir::NodeId,
+    force_root: bool,
+    pending: &mut alloc::vec::Vec<(crate::ir::NodeId, bool, bool)>,
+    mut text: &mut alloc::string::String,
+) -> Result<(), crate::diag::Diagnostic> {
+    pending.push((root, false, force_root));
+    while let Some((id, complete, force)) = pending.pop() {
+        let op = &graph.nodes[id.index()].op;
+        if complete {
+            text.push_str(match op {
+                crate::ir::Op::I64Add(..) => "+ ",
+                crate::ir::Op::I64Sub(..) => "- ",
+                crate::ir::Op::I64Mul(..) => "* ",
+                crate::ir::Op::I64Eq(..) => "= ",
+                _ => {
+                    return Err(at(
+                        crate::diag::Code::Interface,
+                        crate::diag::Site::Node(id),
+                        "an inlined operation is not a binary scalar operation",
+                    ))
+                }
+            });
+            continue;
+        }
+        if !force && uses[id.index()] > 1 {
+            crate::format::write_text!(text, "v{} ", id.0);
+            continue;
+        }
+        match op {
+            crate::ir::Op::Input(_) => crate::format::write_text!(text, "v{} ", id.0),
+            crate::ir::Op::Const(crate::ir::Literal::I64(value)) => {
+                crate::format::write_text!(text, "{value} ");
+            }
+            crate::ir::Op::Const(crate::ir::Literal::Bool(value)) => {
+                text.push_str(if *value { "true " } else { "false " });
+            }
+            crate::ir::Op::I64Add(left, right)
+            | crate::ir::Op::I64Sub(left, right)
+            | crate::ir::Op::I64Mul(left, right)
+            | crate::ir::Op::I64Eq(left, right) => {
+                pending.push((id, true, false));
+                pending.push((*right, false, false));
+                pending.push((*left, false, false));
+            }
+            other => {
+                return Err(at(
+                    crate::diag::Code::Profile,
+                    crate::diag::Site::Node(id),
+                    alloc::format!("{} cannot be emitted as Noble source", other.name()),
+                ))
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Program-only source emitter. The independently accepted original supplies
+/// `output_shapes`; the residual graph retains a flat dynamic scalar input.
+/// Binding a node in Declared-Text-v1 introduces quotation machinery in the
+/// ordinary Wasm compiler. Inline every singly used *total* node instead of
+/// forcing an avoidable binding, retaining a let only for shared nodes and
+/// input leaves. Graph-mode emission is unchanged.
+fn emit_program_source(
     checked: &crate::check::CheckedGraph,
     output_shapes: Option<&[crate::ir::ShapeTree]>,
+) -> Result<alloc::string::String, crate::diag::Diagnostic> {
+    admit_slice(checked, false)?;
+    let graph = checked.graph();
+    let uses = source_uses(graph);
+    let mut pending = alloc::vec::Vec::new();
+    let mut text = alloc::string::String::with_capacity(
+        graph.nodes.len().saturating_mul(44)
+            + graph.outputs.len().saturating_mul(12),
+    );
+    for (k, slot) in graph.slots.iter().enumerate().rev() {
+        if slot.kind != crate::ir::SlotKind::Input {
+            continue;
+        }
+        let id = checked.slot_node(k as u32);
+        if !matches!(graph.nodes[id.index()].op, crate::ir::Op::Input(n) if n == k as u32) {
+            return Err(at(
+                crate::diag::Code::Interface,
+                crate::diag::Site::Slot(k as u32),
+                "an input slot has no input node",
+            ));
+        }
+        crate::format::write_text!(text, "let v{}\n", id.0);
+    }
+    for (index, node) in graph.nodes.iter().enumerate() {
+        if matches!(node.op, crate::ir::Op::Input(_)) || uses[index] <= 1 {
+            continue;
+        }
+        let id = crate::ir::NodeId(index as u32);
+        emit_expression(graph, &uses, id, true, &mut pending, &mut text)?;
+        crate::format::write_text!(text, "let v{}\n", id.0);
+    }
+    if let Some(shapes) = output_shapes {
+        let mut next = 0;
+        let mut render = |text: &mut alloc::string::String, output| {
+            emit_expression(graph, &uses, output, false, &mut pending, text)
+        };
+        for tree in shapes {
+            emit_output_tree(tree, &graph.outputs, &mut next, &mut text, &mut render)?;
+        }
+        if next != graph.outputs.len() {
+            return Err(refuse(
+                crate::diag::Code::Interface,
+                "a checked output shape omits residual graph scalar leaves",
+            ));
+        }
+    } else {
+        for output in &graph.outputs {
+            emit_expression(graph, &uses, *output, false, &mut pending, &mut text)?;
+            text.push('\n');
+        }
+    }
+    if text.is_empty() {
+        text.push_str("0 drop\n");
+    }
+    Ok(text)
+}
+
+fn emit_source_inner(
+    checked: &crate::check::CheckedGraph,
 ) -> Result<alloc::string::String, crate::diag::Diagnostic> {
     admit_slice(checked, false)?;
     let graph = checked.graph();
@@ -921,21 +1064,8 @@ fn emit_source_inner(
         bound[index] = true;
         crate::format::write_text!(text, " let v{}\n", id.0);
     }
-    if let Some(shapes) = output_shapes {
-        let mut next = 0;
-        for tree in shapes {
-            emit_output_tree(tree, &graph.outputs, &mut next, &mut text)?;
-        }
-        if next != graph.outputs.len() {
-            return Err(refuse(
-                crate::diag::Code::Interface,
-                "a checked output shape omits residual graph scalar leaves",
-            ));
-        }
-    } else {
-        for output in &graph.outputs {
-            crate::format::write_text!(text, "v{}\n", output.0);
-        }
+    for output in &graph.outputs {
+        crate::format::write_text!(text, "v{}\n", output.0);
     }
     if text.is_empty() {
         text.push_str("0 drop\n");
