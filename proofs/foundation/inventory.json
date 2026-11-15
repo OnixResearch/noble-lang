@@ -12524,6 +12524,66 @@
       "phase": 1,
       "role": "abstract-reduction-step",
       "claim": "a checked worklist-plan commit refines to one revision-3 abstract net step"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.decode_header",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every accepted version-one byte plan has the exact magic and version header"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.era_image",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the erasure byte image decodes all fixed fields and exact resource reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.era_trailing_bytes_refused",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the erasure byte image rejects a trailing operation after its commit marker"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.era_wrong_version_refused",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the erasure byte image refuses a changed plan version"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.stale_first_refused",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a generation-stale queued pair cannot identify a reused first physical slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.reserve_snapshot",
+      "phase": 1,
+      "role": "representation",
+      "claim": "successful resource reservation preserves the original physical arena and journal"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.reserve_within_limits",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reservation opens a physical transaction only if arena scratch and queue bounds all hold"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalTransaction.stage_stutters",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a journaled physical microstep preserves its represented precommit net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalTransaction.rollback_restores",
+      "phase": 1,
+      "role": "representation",
+      "claim": "rollback restores the exact physical snapshot and represented net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalTransaction.commit_refines_if_projected",
+      "phase": 1,
+      "role": "abstract-reduction-step",
+      "claim": "a physical commit refines one net step if its actual projected arena equals the checked plan image"
     }
   ],
   "private_theorems": [

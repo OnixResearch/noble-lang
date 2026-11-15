@@ -257,4 +257,407 @@ theorem Plan.commit_refines {H : HNet NetSym} (r : XRedex NetSym)
   · simpa [NetI64.xsys] using
       (HNet.fire_toNet (xs := NetI64.xsys) hm hredex hRule rest).1
 
+/-- The selected `ngraph-net-plan/1` on-wire image. Integers are little-endian;
+the final byte is the commit marker, not another executable operation. -/
+structure BytePlan where
+  reuse : Bool
+  opcode : UInt8
+  pair : Nat × Nat × Nat × Nat
+  action : UInt8 × UInt8
+  boundaries : List ((Nat × Nat) × (Nat × Nat × Nat))
+  results : List (Bool × Nat × NetSym × Nat × List (Option Nat))
+  writes : List (Nat × Nat × Nat)
+  externalWrites : List (Nat × Nat × Nat)
+  arenaReservation : Nat
+  scratchReservation : Nat
+  worklistReservation : Nat
+  publications : List (Nat × Nat × Nat × Nat)
+  deriving DecidableEq
+
+private def readByte : List UInt8 → Option (UInt8 × List UInt8)
+  | [] => none
+  | head :: tail => some (head, tail)
+
+/-- Read an unsigned little-endian integer of exactly `size` bytes. -/
+private def readWord : Nat → List UInt8 → Option (Nat × List UInt8)
+  | 0, bytes => some (0, bytes)
+  | size + 1, bytes => do
+      let (digit, rest) ← readByte bytes
+      let (high, tail) ← readWord size rest
+      some (digit.toNat + 256 * high, tail)
+
+private def readMany {T : Type} (count : Nat)
+    (reader : List UInt8 → Option (T × List UInt8)) :
+    List UInt8 → Option (List T × List UInt8)
+  | bytes => match count with
+    | 0 => some ([], bytes)
+    | count + 1 => do
+        let (item, rest) ← reader bytes
+        let (items, tail) ← readMany count reader rest
+        some (item :: items, tail)
+
+private def readCounted {T : Type} (limit : Nat)
+    (reader : List UInt8 → Option (T × List UInt8))
+    (bytes : List UInt8) : Option (List T × List UInt8) := do
+  let (count, rest) ← readByte bytes
+  if count.toNat ≤ limit then readMany count.toNat reader rest else none
+
+private def decodeSymbol (tag : UInt8) (payload : Nat) : Option NetSym :=
+  match tag.toNat with
+  | 0 => some (.num (BitVec.ofNat 64 payload))
+  | 1 => if payload == 0 then some (.op2 .add) else none
+  | 2 => if payload == 0 then some (.op2 .sub) else none
+  | 3 => if payload == 0 then some (.op2 .mul) else none
+  | 4 => if payload == 0 then some (.op2 .eq) else none
+  | 5 => some (.op1 .add (BitVec.ofNat 64 payload))
+  | 6 => some (.op1 .sub (BitVec.ofNat 64 payload))
+  | 7 => some (.op1 .mul (BitVec.ofNat 64 payload))
+  | 8 => some (.op1 .eq (BitVec.ofNat 64 payload))
+  | 9 => if payload == 0 then some .dup else none
+  | 10 => if payload == 0 then some .era else none
+  | _ => none
+
+private def readEndpoint (bytes : List UInt8) : Option ((Nat × Nat × Nat) × List UInt8) := do
+  let (tag, rest) ← readByte bytes
+  if tag == 0 then do
+    let (slot, rest) ← readWord 4 rest
+    let (port, rest) ← readByte rest
+    some ((0, slot, port.toNat), rest)
+  else if tag == 1 then do
+    let (output, rest) ← readWord 4 rest
+    some ((1, output, 0), rest)
+  else none
+
+private def readBoundary (bytes : List UInt8) :
+    Option (((Nat × Nat) × (Nat × Nat × Nat)) × List UInt8) := do
+  let (slot, rest) ← readWord 4 bytes
+  let (port, rest) ← readByte rest
+  let (endpoint, rest) ← readEndpoint rest
+  some (((slot, port.toNat), endpoint), rest)
+
+private def readResult (bytes : List UInt8) :
+    Option ((Bool × Nat × NetSym × Nat × List (Option Nat)) × List UInt8) := do
+  let (fresh, rest) ← readByte bytes
+  if fresh.toNat > 1 then none else do
+    let (slot, rest) ← readWord 4 rest
+    let (tag, rest) ← readByte rest
+    let (payload, rest) ← readWord 8 rest
+    let symbol ← decodeSymbol tag payload
+    let (donor, rest) ← readWord 4 rest
+    let (ports, rest) ← readMany 3 readByte rest
+    let ports := ports.map fun value =>
+      if value.toNat == 255 then none else some value.toNat
+    some ((fresh == 1, slot, symbol, donor, ports), rest)
+
+private def readWrite (bytes : List UInt8) :
+    Option ((Nat × Nat × Nat) × List UInt8) := do
+  let (result, rest) ← readByte bytes
+  let (port, rest) ← readByte rest
+  let (boundary, rest) ← readByte rest
+  some ((result.toNat, port.toNat, boundary.toNat), rest)
+
+private def readPair (bytes : List UInt8) :
+    Option ((Nat × Nat × Nat × Nat) × List UInt8) := do
+  let (first, rest) ← readWord 4 bytes
+  let (firstGeneration, rest) ← readWord 8 rest
+  let (second, rest) ← readWord 4 rest
+  let (secondGeneration, rest) ← readWord 8 rest
+  some ((first, firstGeneration, second, secondGeneration), rest)
+
+private def readHeader (bytes : List UInt8) : Option (List UInt8) :=
+  if bytes.take 5 == ([78, 80, 76, 78, 1] : List UInt8) &&
+      bytes.length ≥ 5 then some (bytes.drop 5) else none
+
+/-- Decode the entire version-one byte grammar, rejecting malformed counts,
+invalid symbols, noncanonical flags, missing commit markers and trailing bytes.
+This parses bytes independently of the Rust compiler; field-vs-live-state
+checking and execution correspondence are separate obligations. -/
+def BytePlan.decode (bytes : List UInt8) : Option BytePlan := do
+  if bytes.length > 256 then none else do
+    let rest ← readHeader bytes
+    let (mode, rest) ← readByte rest
+    if mode.toNat > 1 then none else do
+      let (opcode, rest) ← readByte rest
+      let (pair, rest) ← readPair rest
+      let (firstAction, rest) ← readByte rest
+      let (secondAction, rest) ← readByte rest
+      if firstAction.toNat > 1 || secondAction.toNat > 1 then none else do
+        let (boundaries, rest) ← readCounted 2 readBoundary rest
+        let (results, rest) ← readCounted 2 readResult rest
+        let (writes, rest) ← readCounted 2 readWrite rest
+        let (externalWrites, rest) ← readCounted 2 readWrite rest
+        let (arenaReservation, rest) ← readWord 4 rest
+        let (scratchReservation, rest) ← readWord 4 rest
+        let (worklistReservation, rest) ← readWord 4 rest
+        let (publications, rest) ← readCounted 2 readPair rest
+        let (commit, remaining) ← readByte rest
+        if commit == 199 && remaining.isEmpty then
+          some {
+            reuse := mode == 0
+            opcode
+            pair
+            action := (firstAction, secondAction)
+            boundaries
+            results
+            writes
+            externalWrites
+            arenaReservation
+            scratchReservation
+            worklistReservation
+            publications
+          }
+        else none
+
+/-- Every accepted byte plan has the exact version-one magic and version header. -/
+theorem BytePlan.decode_header {bytes : List UInt8} {plan : BytePlan}
+    (h : BytePlan.decode bytes = some plan) :
+    bytes.take 5 = ([78, 80, 76, 78, 1] : List UInt8) := by
+  unfold BytePlan.decode at h
+  split at h
+  · contradiction
+  · cases hh : readHeader bytes with
+    | none => simp [hh] at h
+    | some rest =>
+      have hheader : bytes.take 5 = ([78, 80, 76, 78, 1] : List UInt8) := by
+        by_cases heq : bytes.take 5 = ([78, 80, 76, 78, 1] : List UInt8)
+        · exact heq
+        · have hnone : readHeader bytes = none := by simp [readHeader, heq]
+          simp [hnone] at hh
+      exact hheader
+
+/-- One erasure image with physical slots zero and one, both at generation zero.
+The same 51-byte layout is used by the Rust writer for the no-result erasure
+rule; its Rust identity remains a separate, finite differential obligation. -/
+private def eraPlanBytes : List UInt8 :=
+  [78, 80, 76, 78, 1, 0, 4] ++
+  [0, 0, 0, 0] ++ List.replicate 8 0 ++
+  [1, 0, 0, 0] ++ List.replicate 8 0 ++
+  [0, 0] ++ [0, 0, 0, 0] ++ List.replicate 4 0 ++
+  [0, 1, 0, 0] ++ List.replicate 4 0 ++ [0, 199]
+
+/-- The byte decoder reads every erasure field, including its zero fresh
+reservation and the fixed 256-byte plan scratch reservation. -/
+theorem BytePlan.era_image :
+    BytePlan.decode eraPlanBytes = some {
+      reuse := true
+      opcode := 4
+      pair := (0, 0, 1, 0)
+      action := (0, 0)
+      boundaries := []
+      results := []
+      writes := []
+      externalWrites := []
+      arenaReservation := 0
+      scratchReservation := 256
+      worklistReservation := 0
+      publications := []
+    } := by
+  decide
+
+/-- An erasure image with an appended operation is not a complete plan. -/
+theorem BytePlan.era_trailing_bytes_refused :
+    BytePlan.decode (eraPlanBytes ++ [0]) = none := by
+  decide
+
+/-- An erasure image carrying a different format version is refused. -/
+theorem BytePlan.era_wrong_version_refused :
+    BytePlan.decode ([78, 80, 76, 78, 2] ++ eraPlanBytes.drop 5) = none := by
+  decide
+
+/-- One physical slot in the sequential model. A logical identity is carried
+separately from its reusable physical index and its bounded generation. -/
+structure PhysicalSlot where
+  agent : Option (Id × NetSym)
+  generation : UInt64
+  queuedGeneration : Option UInt64
+  ports : List (Option (Nat × Nat))
+
+/-- A queued physical pair records both generations; stale entries are not
+silently the same pair after either slot is reused. -/
+structure PhysicalPair where
+  first : Nat
+  firstGeneration : UInt64
+  second : Nat
+  secondGeneration : UInt64
+
+/-- Concrete single-engine storage, including empty-slot inventory and ordered
+boundary and worklist; the abstract net has no counterpart of the free slots. -/
+structure PhysicalState where
+  slots : Array PhysicalSlot
+  freeSlots : List Nat
+  outputs : List (Nat × Nat)
+  work : List PhysicalPair
+
+def PhysicalState.logicalPort (state : PhysicalState) (port : Nat × Nat) : Option Port := do
+  let slot ← state.slots[port.1]?
+  let (logical, _) ← slot.agent
+  some (logical, port.2)
+
+private def PhysicalState.portWires (state : PhysicalState) (logical : Id) :
+    Nat → List (Option (Nat × Nat)) → Std.HashMap Port Port → Std.HashMap Port Port
+  | _, [], wires => wires
+  | index, target :: rest, wires =>
+      let wires := match target with
+        | none => wires
+        | some target =>
+          match state.logicalPort target with
+          | none => wires
+          | some endpoint => wires.insert (logical, index) endpoint
+      PhysicalState.portWires state logical (index + 1) rest wires
+
+/-- Decode live physical slots into the inets agent map, using the logical
+identity attached to each generation of a reusable physical slot. -/
+def PhysicalState.agents (state : PhysicalState) : Std.HashMap Id NetSym :=
+  state.slots.toList.foldl (fun agents slot =>
+    match slot.agent with
+    | none => agents
+    | some (logical, symbol) => agents.insert logical symbol) {}
+
+/-- Decode physical port references into logical inets wires. -/
+def PhysicalState.wires (state : PhysicalState) : Std.HashMap Port Port :=
+  state.slots.toList.foldl (fun wires slot =>
+    match slot.agent with
+    | none => wires
+    | some (logical, _) => state.portWires logical 0 slot.ports wires) {}
+
+def PhysicalState.logicalPair (state : PhysicalState)
+    (pair : PhysicalPair) : Option (Id × Id) := do
+  let first ← state.slots[pair.first]?
+  let second ← state.slots[pair.second]?
+  if first.generation != pair.firstGeneration ||
+      second.generation != pair.secondGeneration then none else do
+    let (left, _) ← first.agent
+    let (right, _) ← second.agent
+    some (left, right)
+
+/-- A queued pair naming an old first-slot generation never resolves to
+the new agent occupying that same physical slot. -/
+theorem PhysicalState.stale_first_refused {state : PhysicalState}
+    {pair : PhysicalPair} {slot : PhysicalSlot}
+    (hslot : state.slots[pair.first]? = some slot)
+    (hstale : slot.generation ≠ pair.firstGeneration) :
+    state.logicalPair pair = none := by
+  simp [PhysicalState.logicalPair, hslot, hstale]
+
+/-- Projection is computed from physical slots, ports, ordered outputs and
+generation-checked queued pairs, not from a ghost abstract net. -/
+def PhysicalState.project (state : PhysicalState) : HNet NetSym :=
+  { agents := state.agents
+    wires := state.wires
+    free := state.outputs.filterMap state.logicalPort
+    work := state.work.filterMap state.logicalPair }
+
+/-- A committed physical state must have no stale queued pair or incorrectly
+classified free slot. These are obligations on the representation relation. -/
+def PhysicalState.WellFormed (state : PhysicalState) : Prop :=
+  (∀ pair ∈ state.work, (state.logicalPair pair).isSome) ∧
+  (∀ index, index ∈ state.freeSlots ↔
+    ∃ slot, state.slots[index]? = some slot ∧ slot.agent = none)
+
+/-- The journal is the concrete, saved physical view seen by an observer until
+commit; intermediate writes to `current` are not admitted as committed nets. -/
+structure PhysicalTransaction where
+  current : PhysicalState
+  journal : Option PhysicalState
+
+def PhysicalTransaction.visible (transaction : PhysicalTransaction) : PhysicalState :=
+  transaction.journal.getD transaction.current
+
+def PhysicalTransaction.Related (transaction : PhysicalTransaction)
+    (net : HNet NetSym) : Prop :=
+  transaction.visible.WellFormed ∧ transaction.visible.project = net
+
+/-- Begin an in-flight transaction only after all three plan reservations fit.
+A refused reservation leaves no transaction or modified arena to publish. -/
+def PhysicalState.reserve (state : PhysicalState) (plan : BytePlan)
+    (arenaAvailable scratchAvailable worklistAvailable : Nat) :
+    Option PhysicalTransaction :=
+  if plan.arenaReservation ≤ arenaAvailable &&
+      plan.scratchReservation ≤ scratchAvailable &&
+      plan.worklistReservation ≤ worklistAvailable then
+    some { current := state, journal := some state }
+  else none
+
+/-- A successful reservation returns the exact original arena and its saved
+snapshot; no slot, port or queued pair is changed before the first microstep. -/
+theorem PhysicalState.reserve_snapshot {state : PhysicalState}
+    {plan : BytePlan} {arena scratch queue : Nat} {transaction : PhysicalTransaction}
+    (h : state.reserve plan arena scratch queue = some transaction) :
+    transaction.current = state ∧ transaction.journal = some state := by
+  unfold PhysicalState.reserve at h
+  split at h
+  · cases Option.some.inj h
+    exact ⟨rfl, rfl⟩
+  · simp at h
+
+/-- All three resource obligations are discharged before the first physical
+write is permitted; an unchecked plan cannot acquire an in-flight journal. -/
+theorem PhysicalState.reserve_within_limits {state : PhysicalState}
+    {plan : BytePlan} {arena scratch queue : Nat} {transaction : PhysicalTransaction}
+    (h : state.reserve plan arena scratch queue = some transaction) :
+    plan.arenaReservation ≤ arena ∧
+      plan.scratchReservation ≤ scratch ∧
+      plan.worklistReservation ≤ queue := by
+  unfold PhysicalState.reserve at h
+  split at h
+  · rename_i hlimits
+    simp at hlimits
+    rcases hlimits with ⟨⟨ha, hs⟩, hq⟩
+    exact ⟨ha, hs, hq⟩
+  · simp at h
+
+/-- One internal microstep can change physical storage only after a journal is
+present; the observer continues to see the saved committed state. -/
+def PhysicalTransaction.stage (transaction : PhysicalTransaction)
+    (change : PhysicalState → PhysicalState) : Option PhysicalTransaction :=
+  transaction.journal.map fun saved =>
+    { current := change transaction.current, journal := some saved }
+
+def PhysicalTransaction.rollback (transaction : PhysicalTransaction) : PhysicalTransaction :=
+  { current := transaction.visible, journal := none }
+
+def PhysicalTransaction.commit (transaction : PhysicalTransaction) : PhysicalTransaction :=
+  { current := transaction.current, journal := none }
+
+/-- A staged microstep preserves the complete represented net and slot/queue
+validity of the saved state; the physical writes remain unobservable. -/
+theorem PhysicalTransaction.stage_stutters {transaction next : PhysicalTransaction}
+    {net : HNet NetSym} {change : PhysicalState → PhysicalState}
+    (related : transaction.Related net)
+    (step : transaction.stage change = some next) :
+    next.Related net := by
+  cases hj : transaction.journal with
+  | none => simp [PhysicalTransaction.stage, hj] at step
+  | some saved =>
+    simp [PhysicalTransaction.stage, hj] at step
+    cases step
+    simpa [PhysicalTransaction.Related, PhysicalTransaction.visible, hj] using related
+
+/-- A rollback restores the identical physical snapshot, not only the same
+abstract observation, after any sequence of in-flight writes. -/
+theorem PhysicalTransaction.rollback_restores {transaction : PhysicalTransaction}
+    {net : HNet NetSym} (related : transaction.Related net) :
+    (transaction.rollback).Related net ∧
+      (transaction.rollback).current = transaction.visible := by
+  constructor
+  · simpa [PhysicalTransaction.rollback, PhysicalTransaction.Related,
+      PhysicalTransaction.visible] using related
+  · rfl
+
+/-- The physical-to-abstract commit bridge exposes its missing premise rather
+than claiming the Rust byte executor is proved: the decoded physical image
+must be shown to project to the independently selected rule-plan commit. -/
+theorem PhysicalTransaction.commit_refines_if_projected {transaction : PhysicalTransaction}
+    {H : HNet NetSym} (r : XRedex NetSym)
+    (hRule : NetI64.xRule r.2.2.1 r.2.2.2.1 = some r.2.2.2.2)
+    (rest : List (Id × Id))
+    (hm : H.toNet.Matching NetI64.arity)
+    (hredex : Redex NetI64.system H.toNet
+      r.1 r.2.1 r.2.2.1 r.2.2.2.1 r.2.2.2.2.toRhs)
+    (himage : transaction.current.project =
+      Plan.commit H (Plan.compile H r hRule) rest) :
+    CStep NetI64.system H.toNet (transaction.commit).visible.project.toNet := by
+  simpa [PhysicalTransaction.commit, PhysicalTransaction.visible, himage] using
+    (Plan.commit_refines r hRule rest hm hredex)
+
 end NobleFoundation.NetI64Plans

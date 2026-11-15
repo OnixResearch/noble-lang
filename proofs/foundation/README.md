@@ -171,6 +171,7 @@ Status words:
 | Claim | Model / theorem(s) | Implementation boundary | Status |
 |---|---|---|---|
 | Checked revision-3 worklist-plan semantics (issue #110) | `NobleFoundation.NetI64Plans.compileRule_exact_rhs`, `NobleFoundation.NetI64Plans.compileRule_op2_forward`, `NobleFoundation.NetI64Plans.compileRule_op2_reverse`, `NobleFoundation.NetI64Plans.compileRule_op1_forward`, `NobleFoundation.NetI64Plans.compileRule_op1_reverse`, `NobleFoundation.NetI64Plans.compileRule_dup_forward`, `NobleFoundation.NetI64Plans.compileRule_dup_reverse`, `NobleFoundation.NetI64Plans.compileRule_era_forward`, `NobleFoundation.NetI64Plans.compileRule_era_reverse`, `NobleFoundation.NetI64Plans.Plan.compile_commit`, `NobleFoundation.NetI64Plans.Plan.commit_worklist`, `NobleFoundation.NetI64Plans.Plan.precommit_stutters`, `NobleFoundation.NetI64Plans.Plan.commit_refines` | Kernel model over the vendored inets hash-map agent/wire state and active-pair worklist; it does not model the Rust generation-tagged vector arena, encoded byte checker, physical reuse map, or allocator | Lean plan-rule/refinement model **proved**. Rust compiler/checker, adversarial controls, and storage comparisons are separate finite **tested** evidence. Rust↔Lean/plan correspondence **open**; runtime default and #37's threshold unchanged |
+| Checked plan byte grammar and journaled physical projection (issue #110) | `NobleFoundation.NetI64Plans.BytePlan.decode_header`, `NobleFoundation.NetI64Plans.BytePlan.era_image`, `NobleFoundation.NetI64Plans.BytePlan.era_trailing_bytes_refused`, `NobleFoundation.NetI64Plans.BytePlan.era_wrong_version_refused`, `NobleFoundation.NetI64Plans.PhysicalState.stale_first_refused`, `NobleFoundation.NetI64Plans.PhysicalState.reserve_snapshot`, `NobleFoundation.NetI64Plans.PhysicalState.reserve_within_limits`, `NobleFoundation.NetI64Plans.PhysicalTransaction.stage_stutters`, `NobleFoundation.NetI64Plans.PhysicalTransaction.rollback_restores`, `NobleFoundation.NetI64Plans.PhysicalTransaction.commit_refines_if_projected` | Decoder follows the version-one Rust byte-field order; the physical slot/port/queue projector reads concrete generations and carries a rollback journal, but no theorem yet proves that decoded plan writes produce the required projected commit | Byte header, finite erasure image/control, reservation, stale queue and journal stutter/rollback **proved**; emitted-plan physical commit for all rules **open** |
 | Bounded sequential I64/Bool belt validator (issue #113) | `NobleFoundation.Belt.validate_sound`; real lowered program and exact-vector controls in the generated BeltCorpus module | symbolic graph identities over `PackedSchedule`; no Rust refinement theorem | model **proved**; real artifact corpus is finite model evidence; Rust lowerer/checker/interpreter and B2 comparisons remain separate **tested** evidence |
 | Fixed T1/T2 timing legality and ordered target outputs (issue #114) | `NobleFoundation.BeltTarget.mapReadyOutputs`, `NobleFoundation.BeltTarget.validate_sound` | the symbolic run gates graph-reference values on latency-derived completion; it does not evaluate operations or simulate belt/save state, and no Rust artifact/operand-age refinement theorem is claimed | completion-gate/order **proved** only; generated corpus and Rust lowerer/checker/interpreter cross-backend controls are separate **tested** evidence; machine-step refinement remains **open** |
 | ZMod/BitVec/K-NUM-01 signed decoding, range, round trips | `toZ_ofZ`, `ofZ_toZ`, `toZ_add`, `toZ_sub`, `toZ_mul`, `toZ_neg`, `signed_eq_toInt`, `signed_toZ`, `wrap_eq_bmod`, `wrap_eq_toInt_ofInt`, `wrap_eq_knum01`, `toInt_range`, `signed_range`, `intCast_signed`, `toInt_ofInt_eq_iff`, `signed_intCast_eq_iff`, `ofInt_toInt` | none (mathematics only) | **proved** |
@@ -3884,6 +3885,20 @@ consumed/result or captured-boundary/write footprint unchanged, respectively.
 The wire frame excludes both directions of each captured boundary edge; it
 does not assume away any otherwise valid local loop in the inets model.
 
+The same module now independently parses the exact version-one plan-byte
+field order, including little-endian words, bounded result/write arrays,
+resource reservations and the terminal commit marker. The kernel checks
+the byte header and one full erasure image; a changed version or trailing
+byte is refused in that image. A separate physical state model carries
+generation-tagged slots, a free-slot inventory, ordered outputs and a queued
+pair list. Its projection derives inets agents, wires, boundary and work
+from physical fields. The representation relation uses the saved physical
+journal until commit: reservations preserve the arena and enforce all three
+bounds, and a staged microstep stutters while rollback restores the saved
+physical state. The commit theorem states its exact unproved premise:
+executing the decoded plan must make the projected physical arena equal the
+checked abstract plan image. The model has not proved that premise.
+
 The Lean model, Rust implementation correspondence, and finite Rust tests are
 separate claims. The Lean proof establishes the inets worklist model only; it
 does **not** prove that the Rust byte compiler/checker or generation-tagged
@@ -3894,9 +3909,11 @@ only: net execution remains opt-in, and the #37 frozen 1.15 threshold is not
 changed.
 
 **Open, and deliberately not closed:** a Rust-to-Lean/plan refinement proof;
-proof that Rust's reservation, slot reuse, generation, rollback and queue
-publication transitions implement this finite HNet plan model for arbitrary
-nets; and performance claims beyond the retained matched finite workloads.
+the kernel premise that each decoded OP2/OP1/DUP/ERA plan's physical slot,
+boundary and queue writes project to its HNet firing; proof that Rust's
+reservation, slot reuse, generation, rollback and queue publication transitions
+implement that physical model for arbitrary nets; and performance claims beyond
+the retained matched finite workloads.
 
 The integrator attaches the clean foundation receipt for issue #110 after integration.
 
