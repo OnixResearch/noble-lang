@@ -25,7 +25,9 @@ pub(super) fn source_reference_cases_in(
         || receipt["grammar"]["i64"]["name"] != "synth-i64/0"
         || receipt["budget"]["max_candidates"].as_u64() != Some(400_000)
     {
-        return Err(String::from("#116 producer schema, grammar or budget drifted"));
+        return Err(String::from(
+            "#116 producer schema, grammar or budget drifted",
+        ));
     }
     let tasks = receipt["tasks"]
         .as_array()
@@ -35,7 +37,10 @@ pub(super) fn source_reference_cases_in(
         .next()
         .ok_or_else(|| format!("{} missing in #116 producer receipt", task.name()))?;
     if matching.next().is_some() {
-        return Err(format!("{} is duplicated in #116 producer receipt", task.name()));
+        return Err(format!(
+            "{} is duplicated in #116 producer receipt",
+            task.name()
+        ));
     }
     let source = core::str::from_utf8(task.source())
         .map_err(|error| format!("source program utf8: {error}"))?;
