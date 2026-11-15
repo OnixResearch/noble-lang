@@ -1,0 +1,11 @@
+{
+  "schema": "noble-procedure-library-run-erratum/1",
+  "criteria": "verification/procedure-library/criteria-producer-targets-v2.json",
+  "unchanged_criteria_sha256": "884c2e51e3101107dbf6eca241339c9770970fb54a6349e8d9be7280cd834c81",
+  "source_commit": "b6b358c1f63b52093680148d3768156dff3bee17",
+  "receipt": "verification/procedure-library/receipts/producer-transfer-v2-failed.json",
+  "raw": "verification/procedure-library/receipts/producer-transfer-v2-failed.raw.log",
+  "instrument_defect": "transfer/fixtures.rs still computed the predecessor's x-y-z formula for TargetKind::CommutedThenSubtract, instead of evaluating v2's frozen x+y-z+14 reference. At [4,9,2], the #116-generated candidate correctly disagreed with that stale fixture expectation.",
+  "disposition": "The raw test fails before completing its first arm; the source-bound receipt has report:null, no scored outcomes, no attempted negative-control calls, and decision:NO-GO solely as a harness execution failure. This is not a measured library NO-GO. Keep these bytes and this erratum unchanged.",
+  "authorized_repeat": "Parse/check each target reference from the unchanged v2 criterion and manifest, evaluate it rather than restating formulas in the new harness, and regression-test every criterion fixture. One final clean-source repeat is authorized; whatever it yields is the final recorded result, with no further repeats."
+}
