@@ -12,7 +12,7 @@
   "export_format": "3.1.0",
   "module": "Compiler217",
   "source": "compiler217/Compiler217.lean",
-  "source_sha256": "b1ba166f773a2209454be56c0fb58527242e6bc8d3681f3835fdad97f1aa9582",
+  "source_sha256": "da865c8f798f7122c9079b2476045e721be07397c6fcc53b31bcf00e341a4555",
   "official_checker_sha256": "ec7d3c6574b27f0db2319da5cb015d3ea7806b0302c3a70c7164c517487937e7",
   "allowed_axioms": ["propext", "Classical.choice", "Quot.sound"],
   "resource_bound_amendment": {
@@ -22,6 +22,12 @@
     "prior_address_space_bytes": 2147483648,
     "new_address_space_bytes": 17179869184,
     "reason": "The initially frozen virtual-address-space limit prevented Lean from creating a thread (libc++abi: failed to create thread: Resource temporarily unavailable). This changes only the compilation and checker resource ceiling, not the seven selected fixtures, roots, expected verdicts, permitted axioms, Lean version or export format. No fixture exported and no checker verdict was observed under the original ceiling."
+  },
+  "warning_only_amendment": {
+    "prior_source_commit": "e5ded0849a1c46cf46396061dbe4d718bed0a80f",
+    "prior_receipt_sha256": "b9604039262aeb5b4528b8f53a8507813cbd3d4c13c8263c950a5e5fbad7c8bb",
+    "prior_outcome": "fixture compiled with exit 0, but the unused second function argument triggered the frozen warning-free compilation check; no fixture exported or checker ran",
+    "source_change": "Rename the intentionally unused explicit second function binder from g to _g. Its binder position, type, body, exported proposition and expected semantic mutation are unchanged."
   },
   "bounds": {
     "compile_timeout_ms": 120000,

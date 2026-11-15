@@ -104,6 +104,11 @@ function bindInputs() {
     && manifest.resource_bound_amendment?.new_address_space_bytes === bounds.address_space_bytes
     && bounds.address_space_bytes === 17179869184, 'configuration-error',
   'resource ceiling amendment must retain its exact pre-export refusal receipt');
+  requireThat(manifest.warning_only_amendment?.prior_source_commit
+      === 'e5ded0849a1c46cf46396061dbe4d718bed0a80f'
+    && manifest.warning_only_amendment?.prior_receipt_sha256
+      === 'b9604039262aeb5b4528b8f53a8507813cbd3d4c13c8263c950a5e5fbad7c8bb',
+  'configuration-error', 'warning-only amendment must retain its exact pre-export refusal receipt');
   requireThat(manifest.cases.length === 7
     && new Set(manifest.cases.map((entry) => entry.id)).size === 7
     && same(manifest.cases.map((entry) => `${entry.category}:${entry.expected.lane}`),
@@ -500,6 +505,7 @@ function run() {
       allowed_axioms: STANDARD_AXIOMS, checkers: ['official-kernel', 'nanoda'] },
     resource_bounds: bounds,
     resource_bound_amendment: manifest.resource_bound_amendment,
+    warning_only_amendment: manifest.warning_only_amendment,
     compile: null, exports: [], cases: [],
     shared_corpus_consumption: {
       decision: 'NO-GO',

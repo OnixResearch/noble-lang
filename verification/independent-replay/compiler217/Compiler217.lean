@@ -7,7 +7,7 @@ eta counterexamples are made by changing one expression in the resulting valid N
 -/
 namespace Compiler217
 
-theorem functionEta (f g : Nat → Nat) : (fun x => f x) = f := rfl
+theorem functionEta (f _g : Nat → Nat) : (fun x => f x) = f := rfl
 
 theorem structureEta (p : Nat × Nat) : (p.1, p.2) = p := rfl
 
