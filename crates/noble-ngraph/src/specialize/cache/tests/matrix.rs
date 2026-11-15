@@ -133,7 +133,7 @@ fn semantic_and_specializer_option_changes_miss_in_full_key() {
         max_bytes: usize::MAX,
         epoch: SpecializationEpoch {
             semantic_revision: b"ngraph-sem/0",
-            specializer_revision: b"ngraph-pe-specializer/1",
+            specializer_revision: b"ngraph-pe-specializer/2",
             options: b"",
         },
     })
@@ -141,17 +141,17 @@ fn semantic_and_specializer_option_changes_miss_in_full_key() {
     for (semantic, revision, options) in [
         (
             b"ngraph-sem/1".as_slice(),
-            b"ngraph-pe-specializer/1".as_slice(),
-            b"".as_slice(),
-        ),
-        (
-            b"ngraph-sem/0".as_slice(),
             b"ngraph-pe-specializer/2".as_slice(),
             b"".as_slice(),
         ),
         (
             b"ngraph-sem/0".as_slice(),
-            b"ngraph-pe-specializer/1".as_slice(),
+            b"ngraph-pe-specializer/3".as_slice(),
+            b"".as_slice(),
+        ),
+        (
+            b"ngraph-sem/0".as_slice(),
+            b"ngraph-pe-specializer/2".as_slice(),
             b"alternate-fold-option".as_slice(),
         ),
     ] {
