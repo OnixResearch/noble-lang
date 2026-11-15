@@ -222,12 +222,12 @@ fn assert_dispatch_removed(residual: &Residual, ops: [Opcode; 2]) {
     assert_eq!(graph.outputs.len(), 1);
     for (index, op) in ops.into_iter().enumerate() {
         let actual = &graph.nodes[index + 2].op;
-        let ok = match (op, actual) {
+        let ok = matches!(
+            (op, actual),
             (Opcode::Add, Op::I64Add(..))
-            | (Opcode::Sub, Op::I64Sub(..))
-            | (Opcode::Mul, Op::I64Mul(..)) => true,
-            _ => false,
-        };
+                | (Opcode::Sub, Op::I64Sub(..))
+                | (Opcode::Mul, Op::I64Mul(..))
+        );
         assert!(ok, "selected opcode at node {}: {actual:?}", index + 2);
     }
     assert!(graph.slots.iter().all(|s| s.ty == ScalarType::I64));
