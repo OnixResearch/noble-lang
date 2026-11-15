@@ -502,6 +502,11 @@
 #   cargo graph 026d74e820ef4ce6949d8a53a2f7a5e829b2f984ba2fc6cf8f36f0f946b7ac5e; collector policy ca2b8f54c7e545c331e702fa82a14a844fb63f4992b3cd65f34099c2717a361a.
 #   21704 production paths = 10391 body/open + 7176 generated + 4137 structural;
 #   14100 test-only paths; 93 macro origins. Earlier header counts are historical.
+# Renewed Campaign batch 10: relocate the #50 read-region decision core outside the historically bound resources scope from a complete 110-unit selected collection:
+#   IR 37345db6281912e1a84013e221010df8a5d4b64b5272f82ec0fd05052d8c979c; coverage c4f8ab9e489b641b27344cf590f9dab26fea42ff357ba491d0203ee06532984f;
+#   cargo graph 026d74e820ef4ce6949d8a53a2f7a5e829b2f984ba2fc6cf8f36f0f946b7ac5e; collector policy ca2b8f54c7e545c331e702fa82a14a844fb63f4992b3cd65f34099c2717a361a.
+#   21704 production paths = 10391 body/open + 7176 generated + 4137 structural;
+#   14100 test-only paths; 93 macro origins. Earlier header counts are historical.
 # Renewal is explicit: the build never refreshes reviewed expectations.
 let Subject = {
   qualified_path | String,
