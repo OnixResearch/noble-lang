@@ -238,6 +238,54 @@ theorem PhysicalState.lowered_zero_arity_boundary
   rw [Plan.zero_arity_boundary state.project redex hRule hfirst hsecond]
   simp [BytePlan.logicalBoundary, hboundaries]
 
+/-- Resolve a single captured output boundary against the physical prestate.
+This uses the output's stable logical label rather than its mutable target. -/
+theorem BytePlan.single_output_logical_boundary
+    {state : PhysicalState} {plan : BytePlan}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {slot output : Nat} {logical : Id} {old : PhysicalOutput}
+    (hboundaries : plan.boundaries = [boundary])
+    (hsource : boundary.1 = (slot, 1))
+    (hkind : boundary.2 = (1, output, 0))
+    (hleft : state.logicalPort (slot, 1) = some (logical, 1))
+    (houtput : state.outputs[output]? = some old) :
+    plan.logicalBoundary state = some [((logical, 1), old.label)] := by
+  simp [BytePlan.logicalBoundary, hboundaries, hsource,
+    hkind, hleft, houtput]
+
+/-- Only OP1's one auxiliary port survives the independent abstract
+near-wires capture, in either selected principal orientation. -/
+theorem Plan.op1_forward_output_boundary
+    (H : HNet NetSym) (a b : Id)
+    (op : Op) (firstValue secondValue : BitVec 64)
+    (label : Port)
+    (hwire : H.wires[(a, 1)]? = some label) :
+    ((Plan.compile H
+      (a, b, .op1 op firstValue, .num secondValue,
+        (op1NumData op firstValue secondValue).toX)
+      (by rfl)).capturedBoundary.filter fun edge => edge.1.2 != 0) =
+        [((a, 1), label)] := by
+  cases ha : H.wires[(a, 0)]? <;>
+    cases hb : H.wires[(b, 0)]? <;>
+    simp [Plan.compile, HNet.nearWires, portsOf, NetI64.arity,
+      List.range_succ, ha, hb, hwire]
+  all_goals rfl
+
+theorem Plan.op1_reverse_output_boundary
+    (H : HNet NetSym) (a b : Id)
+    (op : Op) (firstValue secondValue : BitVec 64)
+    (label : Port)
+    (hwire : H.wires[(b, 1)]? = some label) :
+    ((Plan.compile H
+      (a, b, .num secondValue, .op1 op firstValue,
+        (op1NumData op firstValue secondValue).toX.swap)
+      (by rfl)).capturedBoundary.filter fun edge => edge.1.2 != 0) =
+        [((b, 1), label)] := by
+  cases ha : H.wires[(a, 0)]? <;>
+    cases hb : H.wires[(b, 0)]? <;>
+    simp [Plan.compile, HNet.nearWires, portsOf, NetI64.arity,
+      List.range_succ, ha, hb, hwire]
+
 /-- Derive the opcode, ordered physical capture and all reservation counters
 from the builder's inputs, not from the later semantic-admission predicate. -/
 theorem PhysicalState.candidateBody_fields
@@ -412,6 +460,56 @@ theorem PhysicalState.op1_forward_candidate_exists
   simpa [op1NumData, RuleData.toX, RuleData.ofWires, assoc]
     using halias
 
+/-- A selected forward OP1 candidate fixes the one-result physical image,
+including its single reciprocal boundary write and storage action. -/
+theorem PhysicalState.op1_forward_candidate_shape
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {op : Op} {firstValue secondValue : BitVec 64}
+    {reuse : Bool} {first second : PhysicalSlot}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {published : List (Nat × Nat × Nat × Nat)}
+    {plan : BytePlan}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some (.op1 op firstValue))
+    (hsa : second.agent.map Prod.snd = some (.num secondValue))
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0)))
+    (hcap : state.captureAux pair.first 1 = some boundary)
+    (hpub : state.publicationFor pair [boundary]
+      (not reuse, if reuse then pair.first else state.slots.size,
+        .num (op.apply firstValue secondValue), pair.first,
+        [some 0, none, none]) = some published)
+    (hc : state.planCandidate pair
+      (a, b, .op1 op firstValue, .num secondValue,
+        (op1NumData op firstValue secondValue).toX) reuse = some plan) :
+    plan.results =
+      [(not reuse, if reuse then pair.first else state.slots.size,
+        .num (op.apply firstValue secondValue), pair.first,
+        [some 0, none, none])] ∧
+    plan.boundaries = [boundary] ∧
+    plan.externalWrites = [(0, 0, 0)] ∧
+    plan.publications = published ∧
+    plan.action = (if reuse then 1 else 0, 0) ∧
+    plan.pair = (pair.first, pair.firstGeneration.toNat,
+      pair.second, pair.secondGeneration.toNat) := by
+  unfold PhysicalState.planCandidate PhysicalState.planCandidateCore at hc
+  simp [NetI64.xRule, hpair, hf, hs, hfa, hsa, hfp, hsp,
+    BytePlan.ruleSlots, BytePlan.ruleOpcode, PhysicalState.candidateBody,
+    hcap, hpub,
+    op1NumData, RuleData.toX, RuleData.ofWires, assoc] at hc
+  obtain ⟨body, ⟨_, hbody⟩, hwrap⟩ := hc
+  subst body
+  rw [← hwrap]
+  have hdistinct : pair.first ≠ pair.second := by
+    intro heq
+    rw [heq] at hf
+    have heqSlots : first = second := Option.some.inj (hf.symm.trans hs)
+    subst second
+    simp [hfa] at hsa
+  simp [BytePlan.withRequiredWrites, BytePlan.requiredWrites, hdistinct.symm]
+
 /-- The mirrored one-operand rule captures the second physical slot's
 auxiliary port while keeping the single result and publication order. -/
 theorem PhysicalState.op1_reverse_candidate_exists
@@ -446,6 +544,291 @@ theorem PhysicalState.op1_reverse_candidate_exists
   refine ⟨_, _, ⟨?_, rfl⟩, rfl⟩
   simpa [op1NumData, RuleData.toX, RuleData.ofWires, XRhs.swap, assoc]
     using halias
+
+/-- The reverse OP1 candidate has the same one-result/write shape, with its
+donor and reusable destination in the second consumed physical slot. -/
+theorem PhysicalState.op1_reverse_candidate_shape
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {op : Op} {firstValue secondValue : BitVec 64}
+    {reuse : Bool} {first second : PhysicalSlot}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {published : List (Nat × Nat × Nat × Nat)}
+    {plan : BytePlan}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some (.num secondValue))
+    (hsa : second.agent.map Prod.snd = some (.op1 op firstValue))
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0)))
+    (hcap : state.captureAux pair.second 1 = some boundary)
+    (hpub : state.publicationFor pair [boundary]
+      (not reuse, if reuse then pair.second else state.slots.size,
+        .num (op.apply firstValue secondValue), pair.second,
+        [some 0, none, none]) = some published)
+    (hc : state.planCandidate pair
+      (a, b, .num secondValue, .op1 op firstValue,
+        (op1NumData op firstValue secondValue).toX.swap) reuse = some plan) :
+    plan.results =
+      [(not reuse, if reuse then pair.second else state.slots.size,
+        .num (op.apply firstValue secondValue), pair.second,
+        [some 0, none, none])] ∧
+    plan.boundaries = [boundary] ∧
+    plan.externalWrites = [(0, 0, 0)] ∧
+    plan.publications = published ∧
+    plan.action = (0, if reuse then 1 else 0) ∧
+    plan.pair = (pair.first, pair.firstGeneration.toNat,
+      pair.second, pair.secondGeneration.toNat) := by
+  unfold PhysicalState.planCandidate PhysicalState.planCandidateCore at hc
+  simp [NetI64.xRule, hpair, hf, hs, hfa, hsa, hfp, hsp,
+    BytePlan.ruleSlots, BytePlan.ruleOpcode, PhysicalState.candidateBody,
+    hcap, hpub,
+    op1NumData, RuleData.toX, RuleData.ofWires, XRhs.swap, assoc] at hc
+  obtain ⟨body, ⟨_, hbody⟩, hwrap⟩ := hc
+  subst body
+  rw [← hwrap]
+  have hdistinct : pair.first ≠ pair.second := by
+    intro heq
+    rw [heq] at hf
+    have heqSlots : first = second := Option.some.inj (hf.symm.trans hs)
+    subst second
+    simp [hfa] at hsa
+  simp [BytePlan.withRequiredWrites, BytePlan.requiredWrites, hdistinct]
+
+/-- A forward OP1 image whose sole captured endpoint is an output executes
+after candidate construction and byte roundtrip, for both storage modes.
+The one-result and write shape is derived from the selected candidate. -/
+theorem PhysicalState.op1_forward_output_candidate_completes
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {op : Op} {firstValue secondValue : BitVec 64}
+    {reuse : Bool} {first second : PhysicalSlot}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {output : Nat} {oldOutput : PhysicalOutput}
+    {plan : BytePlan}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some (.op1 op firstValue))
+    (hsa : second.agent.map Prod.snd = some (.num secondValue))
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0)))
+    (hcap : state.captureAux pair.first 1 = some boundary)
+    (hkind : boundary.2 = (1, output, 0))
+    (houtput : state.outputs[output]? = some oldOutput)
+    (htarget : oldOutput.target = boundary.1)
+    (hc : state.planCandidate pair
+      (a, b, .op1 op firstValue, .num secondValue,
+        (op1NumData op firstValue secondValue).toX)
+      reuse = some plan)
+    (hdecode : BytePlan.decode plan.emit = some plan)
+    (hhead : state.pairHeadroom pair = true) :
+    ∃ next, state.executeCheckedImage plan.emit
+      (a, b, .op1 op firstValue, .num secondValue,
+        (op1NumData op firstValue secondValue).toX) = some next := by
+  let result : Bool × Nat × NetSym × Nat × List (Option Nat) :=
+    (not reuse, if reuse then pair.first else state.slots.size,
+      .num (op.apply firstValue secondValue), pair.first,
+      [some 0, none, none])
+  have hpub : state.publicationFor pair [boundary] result = some [] := by
+    simp [result, PhysicalState.publicationFor, hkind]
+  obtain ⟨hresults, hboundaries, hwrites, hpubs, haction, hpairFields⟩ :=
+    PhysicalState.op1_forward_candidate_shape hpair hf hs
+      hfa hsa hfp hsp hcap hpub hc
+  have hresult : plan.results = [result] := hresults
+  have hbound : plan.boundaries[0]? = some boundary := by
+    simp [hboundaries]
+  have hportShape : result.2.2.2.2 = [some 0, none, none] := rfl
+  have hcurrent : state.logicalPair
+      { first := plan.pair.1,
+        firstGeneration := UInt64.ofNat plan.pair.2.1,
+        second := plan.pair.2.2.1,
+        secondGeneration := UInt64.ofNat plan.pair.2.2.2 } =
+        some (a, b) := by
+    simpa [hpairFields] using hpair
+  have hroom :
+      (first.generation != UInt64.ofNat (UInt64.size - 1) &&
+        second.generation != UInt64.ofNat (UInt64.size - 1)) = true := by
+    simpa [PhysicalState.pairHeadroom, hf, hs] using hhead
+  have hrooms : (first.generation != UInt64.ofNat (UInt64.size - 1)) =
+      true ∧
+      (second.generation != UInt64.ofNat (UInt64.size - 1)) = true := by
+    simpa using hroom
+  have hfirstRoom : first.generation ≠
+      UInt64.ofNat (UInt64.size - 1) := by
+    simpa using hrooms.1
+  have hsecondRoom : second.generation ≠
+      UInt64.ofNat (UInt64.size - 1) := by
+    simpa using hrooms.2
+  have hfirstLive : first.agent.isSome = true := by
+    cases ha : first.agent with
+    | none => simp [ha] at hfa
+    | some _ => rfl
+  have hsecondLive : second.agent.isSome = true := by
+    cases ha : second.agent with
+    | none => simp [ha] at hsa
+    | some _ => rfl
+  have hdistinct : pair.first ≠ pair.second := by
+    intro heq
+    rw [heq] at hf
+    have heqSlots : first = second := Option.some.inj (hf.symm.trans hs)
+    subst second
+    simp [hfa] at hsa
+  have hpolicy :
+      (result.1 = true ∧ result.2.1 = state.slots.size ∧
+        plan.action = (0, 0)) ∨
+      (result.1 = false ∧ result.2.1 = plan.pair.1 ∧
+        plan.action = (1, 0)) ∨
+      (result.1 = false ∧ result.2.1 = plan.pair.2.2.1 ∧
+        plan.action = (0, 1)) := by
+    cases reuse with
+    | false =>
+      left
+      simp [result, haction]
+    | true =>
+      right
+      left
+      simp [result, haction, hpairFields]
+  have hreuse : result.1 = false →
+      ∃ old, state.slots[result.2.1]? = some old ∧
+        old.agent.isSome = true ∧
+        old.generation ≠ UInt64.ofNat (UInt64.size - 1) := by
+    intro hr
+    cases reuse with
+    | false => simp [result] at hr
+    | true =>
+      refine ⟨first, ?_, hfirstLive, hfirstRoom⟩
+      simpa [result] using hf
+  have hslot : (op1NumData op firstValue secondValue).toX.slots[0]? =
+      some (some false, 0) := by rfl
+  have hlab : (op1NumData op firstValue secondValue).toX.lab
+      (some false) 0 = some result.2.2.1 := by rfl
+  have hfPlan : state.slots[plan.pair.1]? = some first := by
+    simpa [hpairFields] using hf
+  have hsPlan : state.slots[plan.pair.2.2.1]? = some second := by
+    simpa [hpairFields] using hs
+  exact PhysicalState.execute_single_output_image_success
+    hdecode hcurrent hresult
+    hslot hlab hbound hportShape hkind houtput htarget
+    hwrites hpubs hpolicy hf hfirstLive hreuse
+    hfPlan hsPlan hfirstLive hsecondLive hfirstRoom hsecondRoom
+    (by simpa [hpairFields] using hdistinct)
+
+/-- Mirrored OP1 with a captured output likewise executes its actual
+one-result candidate in either physical storage mode. -/
+theorem PhysicalState.op1_reverse_output_candidate_completes
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {op : Op} {firstValue secondValue : BitVec 64}
+    {reuse : Bool} {first second : PhysicalSlot}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {output : Nat} {oldOutput : PhysicalOutput}
+    {plan : BytePlan}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some (.num secondValue))
+    (hsa : second.agent.map Prod.snd = some (.op1 op firstValue))
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0)))
+    (hcap : state.captureAux pair.second 1 = some boundary)
+    (hkind : boundary.2 = (1, output, 0))
+    (houtput : state.outputs[output]? = some oldOutput)
+    (htarget : oldOutput.target = boundary.1)
+    (hc : state.planCandidate pair
+      (a, b, .num secondValue, .op1 op firstValue,
+        (op1NumData op firstValue secondValue).toX.swap)
+      reuse = some plan)
+    (hdecode : BytePlan.decode plan.emit = some plan)
+    (hhead : state.pairHeadroom pair = true) :
+    ∃ next, state.executeCheckedImage plan.emit
+      (a, b, .num secondValue, .op1 op firstValue,
+        (op1NumData op firstValue secondValue).toX.swap) = some next := by
+  let result : Bool × Nat × NetSym × Nat × List (Option Nat) :=
+    (not reuse, if reuse then pair.second else state.slots.size,
+      .num (op.apply firstValue secondValue), pair.second,
+      [some 0, none, none])
+  have hpub : state.publicationFor pair [boundary] result = some [] := by
+    simp [result, PhysicalState.publicationFor, hkind]
+  obtain ⟨hresults, hboundaries, hwrites, hpubs, haction, hpairFields⟩ :=
+    PhysicalState.op1_reverse_candidate_shape hpair hf hs
+      hfa hsa hfp hsp hcap hpub hc
+  have hresult : plan.results = [result] := hresults
+  have hbound : plan.boundaries[0]? = some boundary := by
+    simp [hboundaries]
+  have hportShape : result.2.2.2.2 = [some 0, none, none] := rfl
+  have hcurrent : state.logicalPair
+      { first := plan.pair.1,
+        firstGeneration := UInt64.ofNat plan.pair.2.1,
+        second := plan.pair.2.2.1,
+        secondGeneration := UInt64.ofNat plan.pair.2.2.2 } =
+        some (a, b) := by
+    simpa [hpairFields] using hpair
+  have hroom :
+      (first.generation != UInt64.ofNat (UInt64.size - 1) &&
+        second.generation != UInt64.ofNat (UInt64.size - 1)) = true := by
+    simpa [PhysicalState.pairHeadroom, hf, hs] using hhead
+  have hrooms : (first.generation != UInt64.ofNat (UInt64.size - 1)) =
+      true ∧
+      (second.generation != UInt64.ofNat (UInt64.size - 1)) = true := by
+    simpa using hroom
+  have hfirstRoom : first.generation ≠
+      UInt64.ofNat (UInt64.size - 1) := by
+    simpa using hrooms.1
+  have hsecondRoom : second.generation ≠
+      UInt64.ofNat (UInt64.size - 1) := by
+    simpa using hrooms.2
+  have hfirstLive : first.agent.isSome = true := by
+    cases ha : first.agent with
+    | none => simp [ha] at hfa
+    | some _ => rfl
+  have hsecondLive : second.agent.isSome = true := by
+    cases ha : second.agent with
+    | none => simp [ha] at hsa
+    | some _ => rfl
+  have hdistinct : pair.first ≠ pair.second := by
+    intro heq
+    rw [heq] at hf
+    have heqSlots : first = second := Option.some.inj (hf.symm.trans hs)
+    subst second
+    simp [hfa] at hsa
+  have hpolicy :
+      (result.1 = true ∧ result.2.1 = state.slots.size ∧
+        plan.action = (0, 0)) ∨
+      (result.1 = false ∧ result.2.1 = plan.pair.1 ∧
+        plan.action = (1, 0)) ∨
+      (result.1 = false ∧ result.2.1 = plan.pair.2.2.1 ∧
+        plan.action = (0, 1)) := by
+    cases reuse with
+    | false =>
+      left
+      simp [result, haction]
+    | true =>
+      right
+      right
+      simp [result, haction, hpairFields]
+  have hreuse : result.1 = false →
+      ∃ old, state.slots[result.2.1]? = some old ∧
+        old.agent.isSome = true ∧
+        old.generation ≠ UInt64.ofNat (UInt64.size - 1) := by
+    intro hr
+    cases reuse with
+    | false => simp [result] at hr
+    | true =>
+      refine ⟨second, ?_, hsecondLive, hsecondRoom⟩
+      simpa [result] using hs
+  have hslot : (op1NumData op firstValue secondValue).toX.swap.slots[0]? =
+      some (some true, 0) := by rfl
+  have hlab : (op1NumData op firstValue secondValue).toX.swap.lab
+      (some true) 0 = some result.2.2.1 := by rfl
+  have hfPlan : state.slots[plan.pair.1]? = some first := by
+    simpa [hpairFields] using hf
+  have hsPlan : state.slots[plan.pair.2.2.1]? = some second := by
+    simpa [hpairFields] using hs
+  exact PhysicalState.execute_single_output_image_success
+    hdecode hcurrent hresult
+    hslot hlab hbound hportShape hkind houtput htarget
+    hwrites hpubs hpolicy hs hsecondLive hreuse
+    hfPlan hsPlan hfirstLive hsecondLive hfirstRoom hsecondRoom
+    (by simpa [hpairFields] using hdistinct)
 
 /-- Forward OP2 candidate existence requires two distinct physical captures
 and only the independently computed publication of its one result. -/
@@ -805,6 +1188,159 @@ private theorem PhysicalState.lowerPlan_has_candidate
           cases hLower
           rfl
         · simp [he, hh, hp, hd] at hLower
+
+/-- An actually emitted forward OP1 image with an output boundary completes
+the physical executor in both storage modes without an execution premise. -/
+theorem PhysicalState.op1_forward_output_lowered_completes
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {op : Op} {firstValue secondValue : BitVec 64}
+    {reuse : Bool} {first second : PhysicalSlot}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {output : Nat} {oldOutput : PhysicalOutput}
+    {plan : BytePlan}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some (.op1 op firstValue))
+    (hsa : second.agent.map Prod.snd = some (.num secondValue))
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0)))
+    (hcap : state.captureAux pair.first 1 = some boundary)
+    (hkind : boundary.2 = (1, output, 0))
+    (houtput : state.outputs[output]? = some oldOutput)
+    (htarget : oldOutput.target = boundary.1)
+    (hLower : state.lowerPlan pair
+      (a, b, .op1 op firstValue, .num secondValue,
+        (op1NumData op firstValue secondValue).toX)
+      reuse = some plan) :
+    ∃ next, state.executeCheckedImage plan.emit
+      (a, b, .op1 op firstValue, .num secondValue,
+        (op1NumData op firstValue secondValue).toX) = some next :=
+  PhysicalState.op1_forward_output_candidate_completes
+    hpair hf hs hfa hsa hfp hsp hcap hkind houtput htarget
+    (PhysicalState.lowerPlan_has_candidate hLower)
+    (PhysicalState.lowerPlan_decodes hLower)
+    (PhysicalState.lowerPlan_requires_headroom hLower)
+
+/-- The mirrored actually emitted OP1 output-boundary image also completes,
+with the result allocated fresh or installed in the second selected slot. -/
+theorem PhysicalState.op1_reverse_output_lowered_completes
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {op : Op} {firstValue secondValue : BitVec 64}
+    {reuse : Bool} {first second : PhysicalSlot}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {output : Nat} {oldOutput : PhysicalOutput}
+    {plan : BytePlan}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some (.num secondValue))
+    (hsa : second.agent.map Prod.snd = some (.op1 op firstValue))
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0)))
+    (hcap : state.captureAux pair.second 1 = some boundary)
+    (hkind : boundary.2 = (1, output, 0))
+    (houtput : state.outputs[output]? = some oldOutput)
+    (htarget : oldOutput.target = boundary.1)
+    (hLower : state.lowerPlan pair
+      (a, b, .num secondValue, .op1 op firstValue,
+        (op1NumData op firstValue secondValue).toX.swap)
+      reuse = some plan) :
+    ∃ next, state.executeCheckedImage plan.emit
+      (a, b, .num secondValue, .op1 op firstValue,
+        (op1NumData op firstValue secondValue).toX.swap) = some next :=
+  PhysicalState.op1_reverse_output_candidate_completes
+    hpair hf hs hfa hsa hfp hsp hcap hkind houtput htarget
+    (PhysicalState.lowerPlan_has_candidate hLower)
+    (PhysicalState.lowerPlan_decodes hLower)
+    (PhysicalState.lowerPlan_requires_headroom hLower)
+
+/-- Independent prestate endpoint/projection witnesses identify the one
+physical output capture with OP1's sole abstract auxiliary edge. They do
+not assume post-state equality or semantic-checker acceptance. -/
+theorem PhysicalState.op1_forward_output_lowered_boundary
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {op : Op} {firstValue secondValue : BitVec 64}
+    {reuse : Bool} {first second : PhysicalSlot}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {output : Nat} {oldOutput : PhysicalOutput}
+    {plan : BytePlan}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some (.op1 op firstValue))
+    (hsa : second.agent.map Prod.snd = some (.num secondValue))
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0)))
+    (hcap : state.captureAux pair.first 1 = some boundary)
+    (hsource : boundary.1 = (pair.first, 1))
+    (hkind : boundary.2 = (1, output, 0))
+    (hleft : state.logicalPort (pair.first, 1) = some (a, 1))
+    (houtput : state.outputs[output]? = some oldOutput)
+    (hwire : state.project.wires[(a, 1)]? = some oldOutput.label)
+    (hLower : state.lowerPlan pair
+      (a, b, .op1 op firstValue, .num secondValue,
+        (op1NumData op firstValue secondValue).toX)
+      reuse = some plan) :
+    plan.logicalBoundary state = some
+      ((Plan.compile state.project
+        (a, b, .op1 op firstValue, .num secondValue,
+          (op1NumData op firstValue secondValue).toX)
+        (by rfl)).capturedBoundary.filter fun edge => edge.1.2 != 0) := by
+  have hpub : state.publicationFor pair [boundary]
+      (not reuse, if reuse then pair.first else state.slots.size,
+        .num (op.apply firstValue secondValue), pair.first,
+        [some 0, none, none]) = some [] := by
+    simp [PhysicalState.publicationFor, hkind]
+  have hc := PhysicalState.lowerPlan_has_candidate hLower
+  have hshape := PhysicalState.op1_forward_candidate_shape
+    hpair hf hs hfa hsa hfp hsp hcap hpub hc
+  rw [Plan.op1_forward_output_boundary state.project a b op
+    firstValue secondValue oldOutput.label hwire]
+  exact BytePlan.single_output_logical_boundary hshape.2.1
+    hsource hkind hleft houtput
+
+theorem PhysicalState.op1_reverse_output_lowered_boundary
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {op : Op} {firstValue secondValue : BitVec 64}
+    {reuse : Bool} {first second : PhysicalSlot}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {output : Nat} {oldOutput : PhysicalOutput}
+    {plan : BytePlan}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some (.num secondValue))
+    (hsa : second.agent.map Prod.snd = some (.op1 op firstValue))
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0)))
+    (hcap : state.captureAux pair.second 1 = some boundary)
+    (hsource : boundary.1 = (pair.second, 1))
+    (hkind : boundary.2 = (1, output, 0))
+    (hleft : state.logicalPort (pair.second, 1) = some (b, 1))
+    (houtput : state.outputs[output]? = some oldOutput)
+    (hwire : state.project.wires[(b, 1)]? = some oldOutput.label)
+    (hLower : state.lowerPlan pair
+      (a, b, .num secondValue, .op1 op firstValue,
+        (op1NumData op firstValue secondValue).toX.swap)
+      reuse = some plan) :
+    plan.logicalBoundary state = some
+      ((Plan.compile state.project
+        (a, b, .num secondValue, .op1 op firstValue,
+          (op1NumData op firstValue secondValue).toX.swap)
+        (by rfl)).capturedBoundary.filter fun edge => edge.1.2 != 0) := by
+  have hpub : state.publicationFor pair [boundary]
+      (not reuse, if reuse then pair.second else state.slots.size,
+        .num (op.apply firstValue secondValue), pair.second,
+        [some 0, none, none]) = some [] := by
+    simp [PhysicalState.publicationFor, hkind]
+  have hc := PhysicalState.lowerPlan_has_candidate hLower
+  have hshape := PhysicalState.op1_reverse_candidate_shape
+    hpair hf hs hfa hsa hfp hsp hcap hpub hc
+  rw [Plan.op1_reverse_output_boundary state.project a b op
+    firstValue secondValue oldOutput.label hwire]
+  exact BytePlan.single_output_logical_boundary hshape.2.1
+    hsource hkind hleft houtput
 
 /-- The actual lowered byte image already satisfies the first eight
 independently checked semantic fields when its physical capture denotes the

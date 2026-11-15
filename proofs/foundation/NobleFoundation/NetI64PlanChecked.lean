@@ -101,7 +101,8 @@ def BytePlan.SemanticFields (state next : PhysicalState) (plan : BytePlan)
   next.project.wires.toList.Perm expected.wires.toList ∧
   next.project.work.Perm (Plan.pendingPairs expected) ∧
   next.reciprocalPorts = true ∧
-  next.outputOwners = true
+  next.outputOwners = true ∧
+  next.queuedGenerationsBound = true
 
 private theorem lookup_eq_of_some_iff {K V : Type} (first second : K → Option V)
     (h : ∀ key value, first key = some value ↔ second key = some value) :
@@ -384,7 +385,8 @@ theorem BytePlan.era_fixture_accepted :
     dsimp only [BytePlan.SemanticFields]
     refine ⟨by decide, ?_, ?_, by decide, by decide, by decide,
       by decide, by decide, by decide, by decide, by decide, by decide,
-      by decide, by decide, by decide, maps.1, maps.2, ?_, by decide, by decide⟩
+      by decide, by decide, by decide, maps.1, maps.2, ?_, by decide,
+      by decide, by decide⟩
     · simpa [image, BytePlan.logicalBoundary] using observables.1.symm
     · simpa [image] using observables.2.1.symm
     · change ([] : List (Id × Id)).Perm
@@ -445,7 +447,8 @@ theorem BytePlan.op2_output_fixture_accepted :
     dsimp only [BytePlan.SemanticFields]
     refine ⟨by decide, ?_, by decide, by decide, by decide, by decide,
       by decide, by decide, by decide, outputs, by decide, by decide,
-      by decide, by decide, by decide, maps.1, maps.2, ?_, by decide, by decide⟩
+      by decide, by decide, by decide, maps.1, maps.2, ?_, by decide,
+      by decide, by decide⟩
     · rw [observables.1]
       decide
     · change ([] : List (Id × Id)).Perm
@@ -505,7 +508,8 @@ theorem BytePlan.op1_output_fixture_accepted :
     dsimp only [BytePlan.SemanticFields]
     refine ⟨by decide, ?_, by decide, by decide, by decide, by decide,
       by decide, by decide, by decide, outputs, by decide, by decide,
-      by decide, by decide, by decide, maps.1, maps.2, ?_, by decide, by decide⟩
+      by decide, by decide, by decide, maps.1, maps.2, ?_, by decide,
+      by decide, by decide⟩
     · rw [observables.1]
       decide
     · change ([] : List (Id × Id)).Perm
@@ -573,7 +577,8 @@ theorem BytePlan.dup_output_fixture_accepted :
     dsimp only [BytePlan.SemanticFields]
     refine ⟨by decide, ?_, by decide, by decide, by decide, by decide,
       by decide, by decide, by decide, outputs, by decide, by decide,
-      by decide, by decide, by decide, maps.1, maps.2, ?_, by decide, by decide⟩
+      by decide, by decide, by decide, maps.1, maps.2, ?_, by decide,
+      by decide, by decide⟩
     · rw [observables.1]
       decide
     · change ([] : List (Id × Id)).Perm
@@ -647,7 +652,8 @@ theorem BytePlan.op2_published_fixture_accepted :
     dsimp only [BytePlan.SemanticFields]
     refine ⟨by decide, ?_, by decide, by decide, by decide, by decide,
       by decide, by decide, by decide, outputs, by decide, by decide,
-      by decide, by decide, by decide, maps.1, maps.2, ?_, by decide, by decide⟩
+      by decide, by decide, by decide, maps.1, maps.2, ?_, by decide,
+      by decide, by decide⟩
     · rw [observables.1]
       decide
     · have filtered :

@@ -13606,10 +13606,40 @@
       "claim": "an OP1 or OP2 one-result RHS installs from source-slot label agreement and concrete per-result guards"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.installResult_preserves_outputs",
+      "phase": 1,
+      "role": "representation",
+      "claim": "installing one physical result leaves every ordered output target unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.installResult_external_slot_frame",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one result installation leaves every distinct old external peer slot unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.single_output_result_ports",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a result's single output port resolves without a physical peer slot"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.retargetOutput_success",
       "phase": 1,
       "role": "representation",
       "claim": "any existing physical output table entry can be retargeted"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retargetOutput_preserves_slots",
+      "phase": 1,
+      "role": "representation",
+      "claim": "output retargeting leaves all physical slots and generations unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retargetOutput_target",
+      "phase": 1,
+      "role": "representation",
+      "claim": "successful output retargeting stores the requested physical target at the selected index"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.writeExternal_output_success",
@@ -13622,6 +13652,36 @@
       "phase": 1,
       "role": "representation",
       "claim": "a distinct live external peer still owning its captured target accepts an emitted result's reciprocal write"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeExternal_slot_frame",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one reciprocal external write preserves slots away from its live peer, or every slot for an output"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.install_then_write_output",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one result installation preserves a captured output target for its following reciprocal write"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.install_then_write_peer",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one result installation away from a captured live peer preserves its following reciprocal write"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.publish_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a canonical current reciprocal pair publishes with clear generation marks and physical queue headroom"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.execute_single_output_image_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one-result one-output decoded image physically executes under local prestate guards in fresh or either reuse mode"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.lowered_empty_image_completes",
@@ -13664,6 +13724,72 @@
       "phase": 1,
       "role": "representation",
       "claim": "any reverse OP1 pair with a valid prestate capture and publication creates a candidate independent of the checker"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_candidate_shape",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP1 candidate has exactly one result, one captured boundary and one reciprocal write with matching storage action"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_reverse_candidate_shape",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP1 candidate has exactly one result, one captured boundary and one reciprocal write with matching storage action"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_output_candidate_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a byte-roundtripped forward OP1 output-boundary candidate completes its physical step in both storage modes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_reverse_output_candidate_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a byte-roundtripped reverse OP1 output-boundary candidate completes its physical step in both storage modes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_output_lowered_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "actually emitted forward OP1 output-boundary image executes under current physical prestate capture guards"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_reverse_output_lowered_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "actually emitted reverse OP1 output-boundary image executes under current physical prestate capture guards"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_output_lowered_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP1 emitted physical output capture equals its abstract boundary under independent prestate endpoint witnesses"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_reverse_output_lowered_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP1 emitted physical output capture equals its abstract boundary under independent prestate endpoint witnesses"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.op1_forward_output_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP1 abstract nonprincipal capture contains only its sole auxiliary wire"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.op1_reverse_output_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP1 abstract nonprincipal capture contains only its sole auxiliary wire"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.single_output_logical_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one physical output boundary resolves to the stable prestate logical output label"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_forward_candidate_exists",
@@ -13825,7 +13951,13 @@
       "name": "NobleFoundation.NetI64Plans.PhysicalState.semanticCheck_result_legal",
       "phase": 1,
       "role": "representation",
-      "claim": "every checked physical commit is structurally legal, including reciprocal ports and unique owned outputs"
+      "claim": "every checked physical commit has structural legality, including bounded queued generations, reciprocal ports and unique owned outputs"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.semanticCheck_result_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every checker-admitted physical state has no future-generation queued endpoints, even for an illegal prestate"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalTransaction.stage_preserves_visible_legal",

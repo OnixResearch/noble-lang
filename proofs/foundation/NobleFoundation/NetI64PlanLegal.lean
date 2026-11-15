@@ -15,8 +15,8 @@ namespace NobleFoundation.NetI64Plans
 open NobleFoundation.NetI64
 
 /-- Exact free-slot inventory, canonical old queue, unique logical owners,
-reciprocal physical ports and unique, owned output targets. No claim of
-emitter completeness is built into this predicate. -/
+bounded queued generations, reciprocal physical ports and unique, owned
+output targets. No claim of emitter completeness is built into it. -/
 def PhysicalState.Legal (state : PhysicalState) : Prop :=
   state.freeSlots.Nodup ∧
     state.freeSlots.all (fun index => decide (index < state.slots.size)) = true ∧
@@ -24,6 +24,7 @@ def PhysicalState.Legal (state : PhysicalState) : Prop :=
       decide (index ∈ state.freeSlots) ==
         ((state.slots[index]?).map (fun slot => slot.agent.isNone)).getD false) = true ∧
     state.work.all (fun pair => decide (pair.first < pair.second)) = true ∧
+    state.queuedGenerationsBound = true ∧
     (state.slots.toList.filterMap fun slot => slot.agent.map Prod.fst).Nodup ∧
     state.reciprocalPorts = true ∧ state.outputOwners = true
 
@@ -99,8 +100,11 @@ longer project to active abstract pairs, but still occupy physical capacity.
 This legal layout isolates the fourth, independent queue-resource exclusion. -/
 def op2FullQueueStart : PhysicalState :=
   { op2PublishedStart with
-    work := List.replicate 3
-      { first := 0, firstGeneration := 11, second := 2,
+    slots := op2PublishedStart.slots.push
+      { agent := none, generation := 0, queuedGeneration := none, ports := [] }
+    freeSlots := [3]
+    work := List.replicate 4
+      { first := 2, firstGeneration := 0, second := 3,
         secondGeneration := 0 } }
 
 /-- Structural legality, a current matched pair, counter headroom, byte
@@ -154,6 +158,23 @@ theorem PhysicalState.checked_ownership_inventory
     BytePlan.semanticCheck_ownership hRule h
   exact ⟨free, bounds, inventory, queueOrder, owners⟩
 
+/-- Every checker-admitted physical commit has bounded queued generations.
+The semantic checker independently rejects a future-generation queue entry,
+even if an external caller supplies an illegal prestate. -/
+theorem PhysicalState.semanticCheck_result_queued_generations_bound
+    {state next : PhysicalState} {bytes : List UInt8}
+    {redex : INet.XRedex NetSym}
+    (hRule : NetI64.xRule redex.2.2.1 redex.2.2.2.1 = some redex.2.2.2.2)
+    {arena scratch queue : Nat}
+    (h : BytePlan.semanticCheck state bytes redex hRule arena scratch queue =
+      some next) :
+    next.queuedGenerationsBound = true := by
+  obtain ⟨_, _, _, _, _, fields⟩ := BytePlan.semanticCheck_fields hRule h
+  dsimp [BytePlan.SemanticFields] at fields
+  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
+    _, _, bound⟩ := fields
+  exact bound
+
 /-- Any fully checker-admitted commit has a structurally legal physical
 post-state. This is a checker guarantee, not emitter completeness. -/
 theorem PhysicalState.semanticCheck_result_legal
@@ -168,8 +189,9 @@ theorem PhysicalState.semanticCheck_result_legal
   obtain ⟨_, _, _, _, _, fields⟩ := BytePlan.semanticCheck_fields hRule h
   dsimp [BytePlan.SemanticFields] at fields
   obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
-    reciprocal, outputs⟩ := fields
-  exact ⟨free, bounds, inventory, queueOrder, owners, reciprocal, outputs⟩
+    reciprocal, outputs, queueBound⟩ := fields
+  exact ⟨free, bounds, inventory, queueOrder, queueBound, owners,
+    reciprocal, outputs⟩
 
 /-- Staging any physical microstep retains the saved legal committed view;
 the potentially incomplete current image is not externally visible. -/
