@@ -362,9 +362,9 @@ one accumulated offset and an ordered list of signed symbolic graph-node
 identities. It materializes a reused expression once and emits lexical
 `let` bindings on the ordinary source/readmission path; no default CLI or
 reflected Program is modified. The frozen protocol is
-[D14](../../.cairn/changes/partial-evaluation-v1/design.md), committed as
+[D14](../../.cairn/archive/2026-11-15-partial-evaluation-v1/design.md), committed as
 `fbd67e7` before measuring. The measured
-[D15 decision](../../.cairn/changes/partial-evaluation-v1/design.md) is
+[D15 decision](../../.cairn/archive/2026-11-15-partial-evaluation-v1/design.md) is
 **NO-GO for default adoption**, with per-owner-bullet dispositions, exact
 reopen conditions and proof boundaries.
 
@@ -384,7 +384,7 @@ matched-budget latency evidence. Checked-graph retained bytes can be
 unchanged in reduced-node cases because the new store preallocates the
 baseline capacity. Neither the new receipt nor the earlier PE receipt
 measured peak scratch allocation. The later, separately frozen
-[D16 protocol and D17 decision](../../.cairn/changes/partial-evaluation-v1/design.md)
+[D16 protocol and D17 decision](../../.cairn/archive/2026-11-15-partial-evaluation-v1/design.md)
 now report the **process-global live heap high-water and cumulative
 allocated bytes** over the same seven graph fixtures plus three D13
 Program residualization cases, each with an isolated setup process:
