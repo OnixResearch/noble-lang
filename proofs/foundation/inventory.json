@@ -12610,6 +12610,78 @@
       "claim": "the empty finite graph has the retained exact interaction count"
     },
     {
+      "name": "NobleFoundation.NetI64Resource.xRule_time_obligation",
+      "phase": 1,
+      "role": "resource-potential",
+      "claim": "every selected oriented arithmetic, duplication, and erasure rule spends at least one unit of time potential"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.xRule_space_obligation",
+      "phase": 1,
+      "role": "resource-potential",
+      "claim": "every selected oriented rule preserves or decreases the one-cell-per-agent space potential"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.op2_stage_spends_one",
+      "phase": 1,
+      "role": "resource-potential",
+      "claim": "each first arithmetic stage consumes one interaction potential for arbitrary I64 payloads"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.op1_stage_spends_one",
+      "phase": 1,
+      "role": "resource-potential",
+      "claim": "each second arithmetic stage consumes one interaction potential for arbitrary I64 payloads"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.dup_spends_one",
+      "phase": 1,
+      "role": "resource-potential",
+      "claim": "each selected fanout firing consumes one unit of interaction potential"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.era_spends_one",
+      "phase": 1,
+      "role": "resource-potential",
+      "claim": "each selected erasure firing consumes one unit of interaction potential"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.checkResourceCertificate_iff",
+      "phase": 1,
+      "role": "certificate-checker",
+      "claim": "model checker acceptance is equivalent to decoder, selected rule, fixed cost, byte digest, and semantic certificate checks"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.accepted_prefix_bounds_every_schedule",
+      "phase": 1,
+      "role": "resource-bound",
+      "claim": "every legal prefix of an accepted normalizing net stays below the exact interaction and live-agent bounds"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.accepted_bytes_bound_every_schedule",
+      "phase": 1,
+      "role": "resource-bound",
+      "claim": "decoder-bound model certificate acceptance transfers the all-schedule count and live-agent bounds"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.chain_family_resources",
+      "phase": 1,
+      "role": "resource-family",
+      "claim": "growing chain shape has exact parameterized interaction and agent formulas"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.balanced_family_resources",
+      "phase": 1,
+      "role": "resource-family",
+      "claim": "balanced tree shape has exact depth-parameterized interaction and agent formulas"
+    },
+    {
+      "name": "NobleFoundation.NetI64Resource.fanout_family_resources",
+      "phase": 1,
+      "role": "resource-family",
+      "claim": "fanout and erasure shape has exact parameterized interaction and agent formulas"
+    },
+    {
       "name": "NobleFoundation.SizeChangeSound.infinite_pair_homogeneous",
       "phase": 1,
       "role": "size-change-termination",

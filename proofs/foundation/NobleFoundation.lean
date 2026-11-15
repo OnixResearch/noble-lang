@@ -30,6 +30,7 @@ import NobleFoundation.Belt
 import NobleFoundation.BeltCorpus
 import NobleFoundation.NetI64
 import NobleFoundation.NetI64Families
+import NobleFoundation.NetI64Resource
 import NobleFoundation.NetI64Corpus
 import NobleFoundation.BeltTarget
 import NobleFoundation.BeltTargetCorpus

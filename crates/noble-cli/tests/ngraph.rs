@@ -34,6 +34,8 @@ use serde_json::Value;
 
 #[path = "ngraph/nickel/construction.rs"]
 mod construction;
+#[path = "ngraph/resource.rs"]
+mod net_resource;
 
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 
