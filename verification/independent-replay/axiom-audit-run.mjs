@@ -150,6 +150,8 @@ function controlChecks(cli, candidate, stock, empty, missing) {
   const sorry = c.get('NobleAuditControl.sorrySample') ?? [];
   const native = c.get('NobleAuditControl.nativeSample') ?? [];
   const cycle = [...c].filter(([name]) => /NobleAuditControl\.(Even|Odd)/.test(name));
+  const cyclicDiscrepancies = cycle.map(([name, axioms]) => ({ name, candidate: axioms,
+    stock: s.get(name) ?? null })).filter(row => !same(row.candidate, row.stock ?? []));
   const checks = {
     imported_custom_refused: cli.status === 1 && !cli.data.ok
       && cli.data.violations.some(v => v.decl === 'NobleAuditControl.viaPrivate'
@@ -158,12 +160,14 @@ function controlChecks(cli, candidate, stock, empty, missing) {
     sorry_detected: sorry.some(ax => ax.includes('sorryAx')),
     native_detected: native.includes('Lean.ofReduceBool'),
     native_generated_detected: native.some(ax => ax.includes('._native.native_decide.ax_')),
-    cyclic_declarations_compared: cycle.length >= 4 && equal,
+    cyclic_declarations_compared: cycle.length >= 4 && equal && cyclicDiscrepancies.length === 0,
     empty_root_refused: empty.status === 1 && empty.data?.audited === 0,
-    missing_module_refused: missing.status === 2 && missing.data?.audited === 0,
+    missing_module_refused: missing.status === 2 && missing.data?.audited === 0
+      && /unknown module prefix 'NobleAuditDoesNotExist'/.test(missing.data?.error ?? ''),
   };
   return { checks, candidate_count: c.size, stock_count: s.size,
-    private_helper: hidden, cyclic_rows: cycle, cli_result: cli.data,
+    private_helper: hidden, native_axioms_observed: native, cyclic_rows: cycle,
+    cyclic_discrepancies: cyclicDiscrepancies, cli_result: cli.data,
     empty_result: empty.data,
     missing_result: { audited: missing.data?.audited, ok: missing.data?.ok,
       unknown_module_refused: /unknown module prefix 'NobleAuditDoesNotExist'/.test(missing.data?.error ?? '') } };
@@ -248,7 +252,6 @@ try {
     candidate_executable_sha256: fileDigest(auditor), comparator_executable_sha256: fileDigest(compare),
     lean_executable_sha256: fileDigest(path.join(leanBin, 'lean')),
     module_roster_sha256: fileDigest(path.join(out, 'source-roster.json')),
-    candidate_project_axioms: cli.NobleFoundation.axiomsUsed,
     comparison, controls, performance: Object.fromEntries(Object.entries(runList)
       .filter(([key]) => !key.startsWith('data-'))),
     go: complete, decision: complete ? 'GO: experimental coverage/performance cross-check only'
