@@ -32,6 +32,9 @@
 
 use crate::identity::IdentityScheme;
 
+/// Opt-in specialization of an exact, checked source Program.
+pub mod program;
+
 /// Accounting revision of every cap this module charges and every count it
 /// reports (`ngraph-pe/0`, D7).
 pub const ACCOUNTING_REVISION: &str = "ngraph-pe/0";

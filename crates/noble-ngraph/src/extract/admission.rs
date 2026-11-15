@@ -35,6 +35,8 @@ pub struct Admitted<'s> {
     pub(super) closure: alloc::vec::Vec<u64>,
     pub(super) subject: crate::ir::Subject,
     pub(super) budget: super::Budget,
+    /// Number of opaque, untouched values below the extractable root suffix.
+    pub(super) preserved_tail: usize,
 }
 
 impl Admitted<'_> {
@@ -55,6 +57,12 @@ impl Admitted<'_> {
     pub fn root_interface(&self) -> (&[noble_kernel::types::Ty], &[noble_kernel::types::Ty]) {
         let e = &self.submission.request.expected;
         (&e.stack_in, &e.stack_out)
+    }
+
+    /// Original root stack values that must pass through without being read.
+    #[must_use]
+    pub const fn preserved_tail(&self) -> usize {
+        self.preserved_tail
     }
 
     /// Body index of a definition specialization.
@@ -103,6 +111,23 @@ pub fn admit<'s>(
     ids: &dyn IdentityScheme,
     submission: &'s noble_kernel::execution::Submission,
     request: &Request<'_>,
+) -> Result<Admitted<'s>, crate::diag::Diagnostic> {
+    admit_with_tail(ids, submission, request, 0)
+}
+
+/// Admit a checked root with an opaque stack prefix preserved in order.
+/// The entire original body and its exact closure are independently checked
+/// before the graph profile examines only the active suffix. Extraction will
+/// refuse any attempt to read, copy or move a value of the preserved prefix.
+///
+/// # Errors
+/// `E-INTERFACE` if the claimed prefix does not have the same input/output
+/// types, in addition to [`admit`]'s refusal classes.
+pub fn admit_with_tail<'s>(
+    ids: &dyn IdentityScheme,
+    submission: &'s noble_kernel::execution::Submission,
+    request: &Request<'_>,
+    preserved_tail: usize,
 ) -> Result<Admitted<'s>, crate::diag::Diagnostic> {
     match crate::ir::SubProfile::from_name(request.profile) {
         Some(crate::ir::SubProfile::I64) => {}
@@ -156,6 +181,15 @@ pub fn admit<'s>(
 
     // (c) The root interface: P scalars, Unit and pairs of them.
     let expected = &submission.request.expected;
+    if expected.stack_in.len() < preserved_tail
+        || expected.stack_out.len() < preserved_tail
+        || expected.stack_in[..preserved_tail] != expected.stack_out[..preserved_tail]
+    {
+        return Err(refuse(
+            crate::diag::Code::Interface,
+            "the preserved stack tail is absent or its input/output types differ",
+        ));
+    }
     for (k, ty) in expected
         .stack_in
         .iter()
@@ -170,10 +204,10 @@ pub fn admit<'s>(
             ));
         }
     }
-    for ty in &expected.stack_in {
+    for ty in &expected.stack_in[preserved_tail..] {
         classify(ty, crate::diag::Code::DynamicRun)?;
     }
-    for ty in &expected.stack_out {
+    for ty in &expected.stack_out[preserved_tail..] {
         classify(ty, crate::diag::Code::ProgramOutput)?;
     }
 
@@ -199,6 +233,7 @@ pub fn admit<'s>(
         closure,
         subject,
         budget: request.budget,
+        preserved_tail,
     })
 }
 

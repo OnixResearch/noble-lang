@@ -21,6 +21,8 @@ fn index(value: usize) -> Result<u32, crate::diag::Diagnostic> {
 /// captures share the same id because values are immutable.
 #[derive(Clone, Debug)]
 enum Sym {
+    /// One opaque root-stack value; its position must not change.
+    Tail(usize, alloc::rc::Rc<noble_kernel::types::Ty>),
     Scalar(u32, crate::ir::ScalarType),
     Unit,
     Pair(alloc::rc::Rc<(Sym, Sym)>),
@@ -155,8 +157,14 @@ pub fn extract(
 ) -> Result<Extraction, crate::diag::Diagnostic> {
     let mut m = Machine::new(admitted);
     let (inputs, outputs) = admitted.root_interface();
-    let mut input_shapes = alloc::vec::Vec::with_capacity(inputs.len());
-    for ty in inputs {
+    let tail = admitted.preserved_tail();
+    let mut input_shapes = alloc::vec::Vec::with_capacity(inputs.len().saturating_sub(tail));
+    for (position, ty) in inputs.iter().enumerate() {
+        if position < tail {
+            m.sigma
+                .push(Sym::Tail(position, alloc::rc::Rc::new(ty.clone())));
+            continue;
+        }
         let sym = m.input(ty)?;
         input_shapes.push(shape(ty)?);
         m.sigma.push(sym);
@@ -171,12 +179,23 @@ pub fn extract(
             "final symbolic stack differs from the checked root output",
         ));
     }
+    if !m.sigma[..tail]
+        .iter()
+        .enumerate()
+        .all(|(position, symbol)| matches!(symbol, Sym::Tail(index, _) if *index == position))
+    {
+        return Err(crate::diag::Diagnostic::new(
+            crate::diag::Code::Interface,
+            crate::diag::Site::Graph,
+            "the original stack tail was changed by the checked root",
+        ));
+    }
     let mut out_ids = alloc::vec::Vec::new();
-    for s in &m.sigma {
+    for s in &m.sigma[tail..] {
         flatten(s, &mut out_ids)?;
     }
-    let mut output_shapes = alloc::vec::Vec::with_capacity(outputs.len());
-    for ty in outputs {
+    let mut output_shapes = alloc::vec::Vec::with_capacity(outputs.len() - tail);
+    for ty in &outputs[tail..] {
         output_shapes.push(shape(ty)?);
     }
     let static_bound = static_bound(admitted)?;
@@ -426,14 +445,23 @@ impl<'a, 's> Machine<'a, 's> {
         body: usize,
         node: noble_kernel::untrusted::NodeId,
     ) -> Result<Sym, crate::diag::Diagnostic> {
-        self.sigma.pop().ok_or_else(|| {
+        let value = self.sigma.pop().ok_or_else(|| {
             self.err(
                 crate::diag::Code::Interface,
                 body,
                 node,
                 "symbolic stack underflow",
             )
-        })
+        })?;
+        if matches!(value, Sym::Tail(..)) {
+            return Err(self.err(
+                crate::diag::Code::Interface,
+                body,
+                node,
+                "the checked root consumes an opaque stack-tail value",
+            ));
+        }
+        Ok(value)
     }
 
     #[expect(
@@ -890,6 +918,7 @@ fn expansion(
 )]
 fn matches(s: &Sym, t: &noble_kernel::types::Ty) -> bool {
     match (s, t) {
+        (Sym::Tail(_, ty), t) => **ty == *t,
         (Sym::Scalar(_, crate::ir::ScalarType::I64), noble_kernel::types::Ty::I64)
         | (Sym::Scalar(_, crate::ir::ScalarType::Bool), noble_kernel::types::Ty::Bool)
         | (Sym::Unit, noble_kernel::types::Ty::Unit) => true,
@@ -917,6 +946,13 @@ fn suffix_matches(sigma: &[Sym], stack: &[noble_kernel::types::Ty]) -> bool {
 )]
 fn flatten(s: &Sym, out: &mut alloc::vec::Vec<u32>) -> Result<(), crate::diag::Diagnostic> {
     match s {
+        Sym::Tail(..) => {
+            return Err(crate::diag::Diagnostic::new(
+                crate::diag::Code::Interface,
+                crate::diag::Site::Graph,
+                "an opaque stack-tail value reached an extractable output",
+            ));
+        }
         Sym::Scalar(id, _) => out.push(*id),
         Sym::Unit => {}
         Sym::Pair(p) => {
@@ -1113,6 +1149,7 @@ fn static_bound(a: &super::admission::Admitted<'_>) -> Result<u64, crate::diag::
         .root_interface()
         .0
         .iter()
+        .skip(a.preserved_tail())
         .fold(0u64, |leaves, ty| leaves.saturating_add(input_leaves(ty)));
     crate::check::expansion_bound(&entries, root_id)
         .map(|b| b.saturating_add(inputs))
