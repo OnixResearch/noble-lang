@@ -1,0 +1,711 @@
+{
+  "schema": "noble.recurrent-model-state-receipt/v1",
+  "source_commit": "c61fac31db362c5a32a4d527eada0cd47964fb84",
+  "source_tree": "d1f2660b8c69db6d2b790ccb145a3ad4a512d235",
+  "clean_source": true,
+  "criterion": "verification/recurrent-weights/model-state-criteria.txt",
+  "criterion_sha256": "9b6cff77698f08a0684781ac99bda3a21539a87953a1b67f11ae7724adb9237f",
+  "host": {
+    "platform": "linux",
+    "architecture": "x64",
+    "kernel_release": "6.18.60",
+    "node": "v24.13.0"
+  },
+  "selected_tools": {
+    "source_nixpkgs": {
+      "narHash": "sha256-9tpvMGFteZnd3gRQZFlRCohVpqooygFuy9yjuyRL2C0=",
+      "rev": "9cf7092bdd603554bd8b63c216e8943cf9b12512"
+    },
+    "onnx_runtime": {
+      "derivation": "/nix/store/kr48b4fyxcpirysl1g3zx827qb92xxnw-onnxruntime-1.23.2.drv",
+      "output": "/nix/store/2sqcb683r2mxb26vl3c9qvphns0hlsrp-onnxruntime-1.23.2",
+      "narHash": "sha256-vI+zFHzR/cPzaGr9K5d+kGGBXA8DB3bkb/Tkxscxbq4="
+    },
+    "onnx_python": {
+      "derivation": "/nix/store/kpg9birivrqckh6n401yzhpyn69g617g-python3-3.13.12-env.drv",
+      "output": "/nix/store/i5p0gn147kav6kwyf6vixkmdxw90nh91-python3-3.13.12-env",
+      "narHash": "sha256-2ms5pgrVv2g4TPkhrq29gfhdMqQSeTtEeGVLULnw97I="
+    },
+    "python": "/nix/store/i5p0gn147kav6kwyf6vixkmdxw90nh91-python3-3.13.12-env/bin/python",
+    "execution_offline": true
+  },
+  "exporter": {
+    "command": [
+      "/home/brittonr/.cache/noble-iss/cargo.sh",
+      "test",
+      "-p",
+      "noble-ngraph",
+      "--test",
+      "layout_differential",
+      "--offline",
+      "--locked",
+      "--",
+      "--ignored",
+      "--nocapture",
+      "stock_runtime_export"
+    ],
+    "test_result": "1 passed; 0 failed",
+    "stdout_sha256": "d59798b06fb221be4b0821e61b4e11cdc8a91cf1be2aed693dec7cfb7e7921e6",
+    "checked_graphs_sha256": "bf84fa4454e7313a9500a4ece04d2fbc8b6f1ddcb3dfb4698a3ae19014f4b4ae",
+    "checked_graphs_path": "/home/brittonr/.cache/noble-iss/scratch/recurrent-78c/model-run-c61fac3/checked-graphs.json"
+  },
+  "model_state": {
+    "command": [
+      "/nix/store/i5p0gn147kav6kwyf6vixkmdxw90nh91-python3-3.13.12-env/bin/python",
+      "-I",
+      "/home/brittonr/.cache/noble-iss/wt/recurrent-78c/verification/recurrent-weights/model-state.py",
+      "--export",
+      "/home/brittonr/.cache/noble-iss/scratch/recurrent-78c/model-run-c61fac3/checked-graphs.json",
+      "--output-dir",
+      "/home/brittonr/.cache/noble-iss/scratch/recurrent-78c/model-run-c61fac3"
+    ],
+    "exit_code": 0,
+    "coverage": {
+      "dense": "none",
+      "model_carried": "two ONNX Scan models; one call per 1,000-step free run",
+      "sparse": "none",
+      "stateless_host_loop": "separate retained stock-runtime receipt",
+      "stock": "selected ORT CPU: two single-call ONNX Scan 1,000-step free runs, separate one-step host loops"
+    },
+    "results": [
+      {
+        "controls": [
+          {
+            "control": "wrong-state-shape",
+            "reason": "wrong word shape",
+            "refused": true
+          },
+          {
+            "control": "state-out-of-domain",
+            "reason": "out-of-domain word",
+            "refused": true
+          },
+          {
+            "control": "wrong-scan-token-shape",
+            "reason": "scan input shape/bound",
+            "refused": true
+          },
+          {
+            "control": "coerced-state-dtype",
+            "reason": "non-binary32 state or scan input representation",
+            "refused": true
+          },
+          {
+            "control": "coerced-token-dtype",
+            "reason": "non-binary32 state or scan input representation",
+            "refused": true
+          },
+          {
+            "control": "corrupted-state-nan",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "corrupted-state-negative-zero",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "corrupted-state-fractional",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "corrupted-input-token-nan",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "corrupted-input-token-negative-zero",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "corrupted-input-token-fractional",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "zero-length-sequence",
+            "reason": "scan input count",
+            "refused": true
+          },
+          {
+            "control": "wrong-program",
+            "reason": "recurrent program mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-codec",
+            "reason": "recurrent codec mismatch",
+            "refused": true
+          },
+          {
+            "control": "budget-short",
+            "reason": "scan budget exhausted or cancelled",
+            "refused": true
+          },
+          {
+            "control": "trajectory-budget-short",
+            "reason": "scan budget exhausted or cancelled",
+            "refused": true
+          },
+          {
+            "control": "cancelled-before-call",
+            "reason": "scan budget exhausted or cancelled",
+            "refused": true
+          },
+          {
+            "control": "wrong-output-length",
+            "reason": "wrong cell shape",
+            "refused": true
+          },
+          {
+            "control": "malformed-observation-nan",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "malformed-observation-negative-zero",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "malformed-observation-fractional",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "corrupted-model",
+            "reason": "recurrent model digest mismatch",
+            "refused": true
+          },
+          {
+            "control": "missing-recurrent-state",
+            "reason": "checkpoint is incomplete or has hybrid/extraneous state",
+            "refused": true
+          },
+          {
+            "control": "kv-only",
+            "reason": "checkpoint is incomplete or has hybrid/extraneous state",
+            "refused": true
+          },
+          {
+            "control": "scratch-only",
+            "reason": "checkpoint is incomplete or has hybrid/extraneous state",
+            "refused": true
+          },
+          {
+            "control": "hybrid-extra",
+            "reason": "checkpoint is incomplete or has hybrid/extraneous state",
+            "refused": true
+          },
+          {
+            "control": "negative-index",
+            "reason": "illegal snapshot index",
+            "refused": true
+          },
+          {
+            "control": "past-request-end",
+            "reason": "illegal snapshot index",
+            "refused": true
+          },
+          {
+            "control": "mid-body-index",
+            "reason": "illegal snapshot index",
+            "refused": true
+          },
+          {
+            "control": "wrong-budget",
+            "reason": "checkpoint budget mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-model-digest",
+            "reason": "checkpoint configuration/weights mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-checkpoint-program",
+            "reason": "checkpoint configuration/weights mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-checkpoint-state-shape",
+            "reason": "wrong word shape",
+            "refused": true
+          },
+          {
+            "control": "request-end-budget",
+            "reason": "scan budget exhausted or cancelled",
+            "refused": true
+          }
+        ],
+        "coverage": {
+          "boundary": {
+            "elapsed_ns": 3187375,
+            "host_calls": 6,
+            "mismatches": 0,
+            "transitions": 6
+          },
+          "free_running": {
+            "elapsed_ns": 451450820,
+            "emitted_tokens": 1000,
+            "end_to_end_ns": 472286221,
+            "host_calls": 1,
+            "mismatches": 0,
+            "mutable_state_bytes": 256,
+            "rss_before_bytes": 71057408,
+            "rss_peak_bytes": 71315456,
+            "scan_steps": 1000,
+            "sequence_input_bytes": 256000,
+            "sequence_output_bytes": 256000,
+            "skipped_work": 0,
+            "transitions": 1000
+          },
+          "teacher_forced": {
+            "elapsed_ns": 466814306,
+            "host_calls": 1000,
+            "mismatches": 0,
+            "transitions": 1000
+          },
+          "tiny": {
+            "elapsed_ns": 9344445,
+            "host_calls": 16,
+            "mismatches": 0,
+            "transitions": 16
+          }
+        },
+        "export_ns": 17754727,
+        "graph_id": "f9bb01aff2957947f252aa2f5e6579be349cf8582965412e254d05a74823763c",
+        "graph_sha256": "8c31b0f220973d163efaeea0477800173648080f69aa668b5db5d29be91083c7",
+        "guards_elided_under_exact_bit_closure": 129,
+        "load_ns": 24799042,
+        "model_bytes": 47499,
+        "model_path": "/home/brittonr/.cache/noble-iss/scratch/recurrent-78c/model-run-c61fac3/accumulator-scan.onnx",
+        "model_sha256": "a797dcd849805991b43771cf49e9e30a232b324963839d8b76af18dfceb795c8",
+        "parameter_count": 2,
+        "program": "accumulator",
+        "resume": {
+          "elapsed_ns": 436459128,
+          "emitted_tokens": 998,
+          "end_to_end_ns": 456628136,
+          "host_calls": 1,
+          "index": 2,
+          "mutable_state_bytes": 256,
+          "rss_before_bytes": 74514432,
+          "rss_peak_bytes": 74514432,
+          "scan_steps": 998,
+          "sequence_input_bytes": 255488,
+          "sequence_output_bytes": 255488,
+          "skipped_work": 0
+        },
+        "seeded_fault": {
+          "first_counterexample": {
+            "actual": [
+              "0"
+            ],
+            "expected": [
+              "1"
+            ],
+            "input": [
+              "1"
+            ],
+            "state": [
+              "0"
+            ]
+          },
+          "model_sha256": "60c8b7d9c82f280d64e51ff6e3584598a21721485fcde2a4e1b5543958129e8d"
+        },
+        "snapshot_id": "ebb216b86beec8269c357e1d03360ee6d952ff7a8c95a70a7e54361c3acf26e5",
+        "snapshot_sha256": "22b6f43bd8d27738d3213f29e96b62d01d9d6c0ab4f9732aaae803186f51eab7",
+        "state_bytes": 256,
+        "stateless_host_loop": {
+          "end_to_end_ns": 563851265,
+          "host_calls": 1000,
+          "model_bytes": 46407,
+          "model_sha256": "72bbac6790ab9ec2f772371fdcf84bc9141c84862591edca6a248af547f03b32",
+          "runtime_load_ns": 20207842,
+          "transitions": 1000
+        },
+        "weight_bytes": 8
+      },
+      {
+        "controls": [
+          {
+            "control": "wrong-state-shape",
+            "reason": "wrong word shape",
+            "refused": true
+          },
+          {
+            "control": "state-out-of-domain",
+            "reason": "out-of-domain word",
+            "refused": true
+          },
+          {
+            "control": "wrong-scan-token-shape",
+            "reason": "scan input shape/bound",
+            "refused": true
+          },
+          {
+            "control": "coerced-state-dtype",
+            "reason": "non-binary32 state or scan input representation",
+            "refused": true
+          },
+          {
+            "control": "coerced-token-dtype",
+            "reason": "non-binary32 state or scan input representation",
+            "refused": true
+          },
+          {
+            "control": "corrupted-state-nan",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "corrupted-state-negative-zero",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "corrupted-state-fractional",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "corrupted-input-token-nan",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "corrupted-input-token-negative-zero",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "corrupted-input-token-fractional",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "nonzero-stack-swap-token",
+            "reason": "nonzero stack-swap scan token",
+            "refused": true
+          },
+          {
+            "control": "zero-length-sequence",
+            "reason": "scan input count",
+            "refused": true
+          },
+          {
+            "control": "wrong-program",
+            "reason": "recurrent program mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-codec",
+            "reason": "recurrent codec mismatch",
+            "refused": true
+          },
+          {
+            "control": "budget-short",
+            "reason": "scan budget exhausted or cancelled",
+            "refused": true
+          },
+          {
+            "control": "trajectory-budget-short",
+            "reason": "scan budget exhausted or cancelled",
+            "refused": true
+          },
+          {
+            "control": "cancelled-before-call",
+            "reason": "scan budget exhausted or cancelled",
+            "refused": true
+          },
+          {
+            "control": "wrong-output-length",
+            "reason": "wrong cell shape",
+            "refused": true
+          },
+          {
+            "control": "malformed-observation-nan",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "malformed-observation-negative-zero",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "malformed-observation-fractional",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "corrupted-model",
+            "reason": "recurrent model digest mismatch",
+            "refused": true
+          },
+          {
+            "control": "missing-recurrent-state",
+            "reason": "checkpoint is incomplete or has hybrid/extraneous state",
+            "refused": true
+          },
+          {
+            "control": "kv-only",
+            "reason": "checkpoint is incomplete or has hybrid/extraneous state",
+            "refused": true
+          },
+          {
+            "control": "scratch-only",
+            "reason": "checkpoint is incomplete or has hybrid/extraneous state",
+            "refused": true
+          },
+          {
+            "control": "hybrid-extra",
+            "reason": "checkpoint is incomplete or has hybrid/extraneous state",
+            "refused": true
+          },
+          {
+            "control": "negative-index",
+            "reason": "illegal snapshot index",
+            "refused": true
+          },
+          {
+            "control": "past-request-end",
+            "reason": "illegal snapshot index",
+            "refused": true
+          },
+          {
+            "control": "mid-body-index",
+            "reason": "illegal snapshot index",
+            "refused": true
+          },
+          {
+            "control": "wrong-budget",
+            "reason": "checkpoint budget mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-model-digest",
+            "reason": "checkpoint configuration/weights mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-checkpoint-program",
+            "reason": "checkpoint configuration/weights mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-checkpoint-state-shape",
+            "reason": "wrong word shape",
+            "refused": true
+          },
+          {
+            "control": "request-end-budget",
+            "reason": "scan budget exhausted or cancelled",
+            "refused": true
+          }
+        ],
+        "coverage": {
+          "boundary": {
+            "elapsed_ns": 0,
+            "host_calls": 0,
+            "mismatches": 0,
+            "transitions": 0
+          },
+          "free_running": {
+            "elapsed_ns": 28914628,
+            "emitted_tokens": 1000,
+            "end_to_end_ns": 46857305,
+            "host_calls": 1,
+            "mismatches": 0,
+            "mutable_state_bytes": 512,
+            "rss_before_bytes": 75325440,
+            "rss_peak_bytes": 75653120,
+            "scan_steps": 1000,
+            "sequence_input_bytes": 4000,
+            "sequence_output_bytes": 512000,
+            "skipped_work": 0,
+            "transitions": 1000
+          },
+          "teacher_forced": {
+            "elapsed_ns": 37921244,
+            "host_calls": 1000,
+            "mismatches": 0,
+            "transitions": 1000
+          },
+          "tiny": {
+            "elapsed_ns": 759344,
+            "host_calls": 16,
+            "mismatches": 0,
+            "transitions": 16
+          }
+        },
+        "export_ns": 2971080,
+        "graph_id": "2f012a518cf5a931c968906cc04ae6a573d54afe7edd94d91cd4349b6dc1f038",
+        "graph_sha256": "ce5ae5a155bc4c4bea77f58630a15b8af1959856594990491705049e12781c8d",
+        "guards_elided_under_exact_bit_closure": 128,
+        "load_ns": 1843808,
+        "model_bytes": 13467,
+        "model_path": "/home/brittonr/.cache/noble-iss/scratch/recurrent-78c/model-run-c61fac3/stack-swap-scan.onnx",
+        "model_sha256": "db793d0d78ee729457f5af5f3476dbff12714c698dc5ba25a9d08d2f5dfbd9ea",
+        "parameter_count": 0,
+        "program": "stack-swap",
+        "resume": {
+          "elapsed_ns": 28733620,
+          "emitted_tokens": 998,
+          "end_to_end_ns": 46122455,
+          "host_calls": 1,
+          "index": 2,
+          "mutable_state_bytes": 512,
+          "rss_before_bytes": 75665408,
+          "rss_peak_bytes": 75665408,
+          "scan_steps": 998,
+          "sequence_input_bytes": 3992,
+          "sequence_output_bytes": 510976,
+          "skipped_work": 0
+        },
+        "seeded_fault": {
+          "first_counterexample": {
+            "actual": [
+              "0",
+              "0"
+            ],
+            "expected": [
+              "1",
+              "0"
+            ],
+            "input": [],
+            "state": [
+              "0",
+              "1"
+            ]
+          },
+          "model_sha256": "562cbd6037a2f6a0f085edd24cf8345c91bbebfd5c006b2a91d8fafecd167372"
+        },
+        "snapshot_id": "978a8138e2c1c98c4f66e727e3223bde87efe1aa63ff46a0c2a4983284b34907",
+        "snapshot_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "state_bytes": 512,
+        "stateless_host_loop": {
+          "end_to_end_ns": 71945988,
+          "host_calls": 1000,
+          "model_bytes": 12374,
+          "model_sha256": "12816d55e49eb7650c056c24b60a0fa71b5bfc567e5d67efe1ca50da1700b933",
+          "runtime_load_ns": 1650387,
+          "transitions": 1000
+        },
+        "weight_bytes": 0
+      }
+    ],
+    "runtime": {
+      "ir": 10,
+      "onnx": "1.20.1",
+      "onnxruntime": "1.23.2",
+      "opset": 18,
+      "optimizations": "disabled",
+      "provider": "CPUExecutionProvider",
+      "thread_count": 1
+    },
+    "schema": "noble.recurrent-model-state/v1"
+  },
+  "authored": {
+    "command": [
+      "/nix/store/i5p0gn147kav6kwyf6vixkmdxw90nh91-python3-3.13.12-env/bin/python",
+      "-I",
+      "/home/brittonr/.cache/noble-iss/wt/recurrent-78c/verification/recurrent-weights/authored-checker.py"
+    ],
+    "criterion": "verification/recurrent-weights/authored-criteria.txt",
+    "criterion_sha256": "f961be347746a1c425a7b5b24511bafecbb10f02d3ef9b2ac39ada9c1cc55c5d",
+    "exit_code": 0,
+    "accepted": {
+      "first_counterexample": null,
+      "initializer_elements": 128,
+      "kind": "ACCEPT",
+      "model_sha256": "5432ccf8ea1cd85353ed217386b67c0fd1a6bbcb3bb551235dcc807e408a2fb2",
+      "nonzero_initializers": 127,
+      "passed": 16,
+      "property": "one-step stack-swap (a,b)->(b,a) under binary32-exact/u64-bit-le/v1 for a,b in 0..3",
+      "reason": null,
+      "total": 16
+    },
+    "accuracy": null,
+    "authorship": "hand-written routing-index initializer, independent of Noble emitter",
+    "compiled_weight_checker_property": "one-step stack-swap (a,b)->(b,a) under binary32-exact/u64-bit-le/v1 for a,b in 0..3",
+    "controls": {
+      "corrupt_bytes": {
+        "first_counterexample": null,
+        "initializer_elements": 0,
+        "kind": "REFUSE",
+        "model_sha256": "f9d84439be0a5a41e9799757e4a650e2554e8bd436a2fac0378633def31272d4",
+        "nonzero_initializers": 0,
+        "passed": 0,
+        "property": "one-step stack-swap (a,b)->(b,a) under binary32-exact/u64-bit-le/v1 for a,b in 0..3",
+        "reason": "Error parsing message with type 'onnx.ModelProto'",
+        "total": 16
+      },
+      "malformed_model": {
+        "first_counterexample": null,
+        "initializer_elements": 0,
+        "kind": "REFUSE",
+        "model_sha256": "614a9ace2016cde89fda8369521b03a27d6c699376919236660b6ad02b10ff6c",
+        "nonzero_initializers": 0,
+        "passed": 0,
+        "property": "one-step stack-swap (a,b)->(b,a) under binary32-exact/u64-bit-le/v1 for a,b in 0..3",
+        "reason": "Error parsing message with type 'onnx.ModelProto'",
+        "total": 16
+      },
+      "wrong_codec": {
+        "first_counterexample": null,
+        "initializer_elements": 0,
+        "kind": "REFUSE",
+        "model_sha256": "5432ccf8ea1cd85353ed217386b67c0fd1a6bbcb3bb551235dcc807e408a2fb2",
+        "nonzero_initializers": 0,
+        "passed": 0,
+        "property": "one-step stack-swap (a,b)->(b,a) under binary32-exact/u64-bit-le/v1 for a,b in 0..3",
+        "reason": "unsupported source transition or state codec",
+        "total": 16
+      },
+      "wrong_source": {
+        "first_counterexample": null,
+        "initializer_elements": 0,
+        "kind": "REFUSE",
+        "model_sha256": "5432ccf8ea1cd85353ed217386b67c0fd1a6bbcb3bb551235dcc807e408a2fb2",
+        "nonzero_initializers": 0,
+        "passed": 0,
+        "property": "one-step stack-swap (a,b)->(b,a) under binary32-exact/u64-bit-le/v1 for a,b in 0..3",
+        "reason": "unsupported source transition or state codec",
+        "total": 16
+      }
+    },
+    "llm_authored": "not run; no prompt/transcript/model identity",
+    "refused": {
+      "first_counterexample": {
+        "actual": [
+          "0",
+          "0"
+        ],
+        "expected": [
+          "1",
+          "0"
+        ],
+        "input": [],
+        "state": [
+          "0",
+          "1"
+        ]
+      },
+      "initializer_elements": 128,
+      "kind": "REFUSE",
+      "model_sha256": "76fc198fc6099ea4954dff2a946b5bc6a795fee0cad24f09fd744b5c6c8b44ec",
+      "nonzero_initializers": 126,
+      "passed": 1,
+      "property": "one-step stack-swap (a,b)->(b,a) under binary32-exact/u64-bit-le/v1 for a,b in 0..3",
+      "reason": "one-step simulation counterexample",
+      "total": 16
+    },
+    "schema": "noble.recurrent-authored-checker/v1"
+  },
+  "note": "Single-call ONNX Scan body carries recurrence; explicit boundary state is not persistent session or hybrid KV state."
+}
