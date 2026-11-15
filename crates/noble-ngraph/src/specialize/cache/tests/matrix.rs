@@ -1,5 +1,22 @@
 use super::*;
 
+fn rebind_provenance(entry: &mut Entry, max_bytes: usize) {
+    let report = report_manifest(&entry.report, max_bytes).expect("retained report");
+    let provenance = encode_parts(
+        PROVENANCE_DOMAIN,
+        &[
+            &entry.specialization_manifest,
+            &entry.subject_manifest,
+            &entry.program_manifest,
+            &entry.artifact_digest,
+            &report,
+        ],
+        max_bytes,
+    )
+    .expect("retained provenance");
+    entry.provenance = digest(&TestIds, &provenance);
+}
+
 #[test]
 fn source_dependencies_bindings_interfaces_and_assumptions_do_not_reuse() {
     let base = graph(&TestIds, false, 7, &[11, 12], false, false, false);
@@ -152,6 +169,21 @@ fn semantic_and_specializer_option_changes_miss_in_full_key() {
         })
         .expect("changed manifest");
         assert_ne!(expected, changed);
+        let mut session = Session::default();
+        assert_eq!(
+            run(&mut session, &TestIds, &original, &map).unwrap().status,
+            Status::MissStored
+        );
+        let max_bytes = session.limits.manifest_bytes;
+        let entry = &mut session.entries[0];
+        entry.specialization_manifest = changed;
+        entry.specialization_key = digest(&TestIds, &entry.specialization_manifest);
+        rebind_provenance(entry, max_bytes);
+        assert_eq!(
+            run(&mut session, &TestIds, &original, &map).unwrap().status,
+            Status::MissStored,
+            "an entry from another semantic or specializer epoch is not a hit"
+        );
     }
 }
 
@@ -200,10 +232,27 @@ fn backend_flags_runtime_abi_and_compiler_epochs_change_build_key() {
     epochs[5].abi_revision = b"other-abi";
     epochs[6].compiler_epoch = b"other-compiler-epoch";
     for epoch in epochs {
-        assert_ne!(
-            expected,
-            build_manifest_with_epoch(BuildManifestInput { base, epoch })
-                .expect("changed build manifest")
+        let changed = build_manifest_with_epoch(BuildManifestInput { base, epoch })
+            .expect("changed build manifest");
+        assert_ne!(expected, changed);
+        let mut session = Session::default();
+        assert_eq!(
+            run(&mut session, &TestIds, &checked, &static_inputs)
+                .unwrap()
+                .status,
+            Status::MissStored
+        );
+        let max_bytes = session.limits.manifest_bytes;
+        let entry = &mut session.entries[0];
+        entry.program_manifest = changed;
+        entry.program_key = digest(&TestIds, &entry.program_manifest);
+        rebind_provenance(entry, max_bytes);
+        assert_eq!(
+            run(&mut session, &TestIds, &checked, &static_inputs)
+                .unwrap()
+                .status,
+            Status::CorruptRebuilt,
+            "an entry built under another target, backend, runtime or compiler epoch is rejected"
         );
     }
 }
