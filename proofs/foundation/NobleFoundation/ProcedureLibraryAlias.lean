@@ -1,3 +1,5 @@
+import Mathlib
+
 /-!
 # Exact-pair I64 polynomial normalization
 
@@ -13,7 +15,6 @@ both empty-closure digests. This proof establishes normalization soundness for
 the model; it does not purport to prove Rust's array codec or bounded sparse
 support implementation equivalent to Mathlib's representation.
 -/
-import Mathlib
 
 namespace NobleFoundation.ProcedureLibraryAlias
 

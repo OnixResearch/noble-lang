@@ -341,7 +341,8 @@ impl Alias {
 
     fn evidence(&self, subject: ProcedureId) -> EvidenceRecord {
         const HEX: &[u8; 16] = b"0123456789abcdef";
-        let mut claim = String::from("exact-pair:");
+        let mut claim = String::with_capacity("exact-pair:".len() + 2 * 32 * 2 + 2 + "empty-closure".len());
+        claim.push_str("exact-pair:");
         for id in [subject, self.procedure_id] {
             for byte in id {
                 claim.push(char::from(HEX[usize::from(byte >> 4)]));
