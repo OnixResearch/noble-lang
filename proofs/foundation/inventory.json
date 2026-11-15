@@ -14990,6 +14990,54 @@
       "phase": 1,
       "role": "representation",
       "claim": "reverse OP1 emitted admission. The mirrored num ⋈ op1 orientation: the op1 agent is the second selected identity and its physical slot donates the single result"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.candidate_of_representable",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every representable instance of a selected rule has a model-emitter candidate unless the alias exclusion holds or generation headroom is exhausted, in every orientation and storage policy"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.accepted_of_representable",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every actually emitted image of a representable instance that is not excluded by queue capacity is admitted by the independent semantic checker at its exact reservations, in every orientation and storage policy"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.emitted_image_physical_fields_on_representable_layout",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the physical-field bridge. Every actually emitted image of a representable instance that is not excluded by queue capacity supplies all three witnesses of lowerPlan_refines_of_physical_fields at its exact reservations: the resource reservation succeeds, the generic physical executor runs the emitted bytes, and every independently specified semantic field holds"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.emitter_classification",
+      "phase": 1,
+      "role": "representation",
+      "claim": "universal emitter classification. For every representable instance of a selected revision-3 rule, in either orientation and storage policy, one of the following holds: a named exclusion refuses it (consumed-boundary alias; unencodable index table; exhausted generation; unencodable byte image; physical queue capacity, which the checker refuses before any mutation at every queue limit up to the slot-derived headroom), or the lowered image is admitted by BytePlan.semanticCheck at its exact reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.emitter_refines",
+      "phase": 1,
+      "role": "representation",
+      "claim": "unconditional refinement corollary. Every representable instance whose lowering is not refused by a named exclusion is admitted, and its admitted commit is one abstract CStep of the matched net, with the projected generation-checked queue a permutation of the abstract live pending pairs and the stable free-port list unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "emitted DUP acceptance, for either orientation and storage policy: an actually lowered DUP image of a legal, current, matched arena that is not excluded by queue capacity executes and passes the independent semantic checker at its exact reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_forward_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward DUP emitted acceptance"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_reverse_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse DUP emitted acceptance"
     }
   ],
   "private_theorems": [
@@ -15351,6 +15399,13 @@
     "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.wires_consumed",
     "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.wires_label_free",
     "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.wires_old",
-    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.wires_dead"
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.wires_dead",
+    "NobleFoundation.NetI64Plans.PhysicalState.dup_install_results",
+    "NobleFoundation.NetI64Plans.PhysicalState.dup_publication_shape",
+    "NobleFoundation.NetI64Plans.PhysicalState.dup_published_mem",
+    "NobleFoundation.NetI64Plans.PhysicalState.canonicalPair_ends",
+    "NobleFoundation.NetI64Plans.PhysicalState.canonicalPair_ends_nodup",
+    "NobleFoundation.NetI64Plans.PhysicalState.canonicalPairs_ends_nodup",
+    "NobleFoundation.NetI64Plans.PhysicalState.canonicalPairs_nodup"
   ]
 }
