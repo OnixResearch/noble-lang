@@ -47,5 +47,9 @@ mod limits;
 mod measure;
 #[path = "schedule_lean_dir/pairs.rs"]
 mod pairs;
+#[path = "plancomparison/measure.rs"]
+mod plancomparison;
+#[path = "plancomparison/fixtures.rs"]
+mod plancomparison_fixtures;
 use base::{declared, interleaved, packed};
 mod common;
