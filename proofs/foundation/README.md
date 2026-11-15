@@ -4085,6 +4085,9 @@ NobleFoundation/NetI64ResourceCorpus.lean is a Rust-generated, freshness-checked
 the producer issues a fanout/erase certificate, the separate byte checker accepts it, Rust emits
 its exact net/certificate bytes and BLAKE3 identities, and the kernel checks the revision/claim
 byte fields, source translation to the retained net, and four interactions/six initial agents.
+The CLI test's local corpus renderer is byte-identical to the #37 renderer, enforced by an
+integration test; keeping the compiler unit's module source local preserves complete Octet
+architecture collection without allowing the two renderers to drift.
 `NobleFoundation.NetI64ResourceCorpus.fixture_byte_claims_match_translation` links the integer
 fields extracted from those literal accepted bytes to the Lean translation; the kernel does not
 recompute BLAKE3 or prove the Rust byte decoder agrees on *all* possible inputs. The generated

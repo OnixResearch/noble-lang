@@ -34,10 +34,22 @@ use serde_json::Value;
 
 #[path = "ngraph/nickel/construction.rs"]
 mod construction;
-#[path = "../../noble-ngraph-experiment/tests/extract_b2/net_i64_corpus/serialization.rs"]
+// Keep the test-only serializer local to this compiler unit; pin it bytewise
+// to the #37 corpus renderer so the two finite-witness encodings cannot drift.
+#[path = "ngraph/corpus/codec.rs"]
 mod corpus_codec;
 #[path = "ngraph/resource.rs"]
 mod net_resource;
+
+#[test]
+fn resource_serializer_matches_selected_corpus_codec() {
+    assert_eq!(
+        include_str!("ngraph/corpus/codec.rs"),
+        include_str!(
+            "../../noble-ngraph-experiment/tests/extract_b2/net_i64_corpus/serialization.rs"
+        )
+    );
+}
 
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 
