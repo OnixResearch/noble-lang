@@ -4,11 +4,15 @@ use std::vec::Vec;
 pub(super) const MANIFEST: &str = "verification/procedure-library/producer-targets-v2.txt";
 
 pub(super) fn manifest_targets() -> Result<[(String, String); 2], String> {
+    manifest_targets_from(MANIFEST)
+}
+
+pub(super) fn manifest_targets_from(relative: &str) -> Result<[(String, String); 2], String> {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
         .nth(2)
         .ok_or_else(|| String::from("worktree root unavailable"))?;
-    let text = std::fs::read_to_string(root.join(MANIFEST))
+    let text = std::fs::read_to_string(root.join(relative))
         .map_err(|error| format!("read frozen target manifest: {error}"))?;
     let mut targets = Vec::with_capacity(2);
     for line in text.lines().map(str::trim) {
