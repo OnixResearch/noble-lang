@@ -76,9 +76,9 @@ def dependenciesEarlierLayer (nodes : List Node) (nodeLayers : List Nat) : Bool 
 exactly that range's layer number. Empty layers are allowed. -/
 def layersMatch (nodeLayers : List Nat) (witness : List Nat) :
     Nat → Nat → List (Nat × Nat) → Bool
-  | _, from, [] => decide (from = witness.length)
-  | layer, from, (start, stop) :: rest =>
-      decide (start = from ∧ start ≤ stop ∧ stop ≤ witness.length) &&
+  | _, offset, [] => decide (offset = witness.length)
+  | layer, offset, (start, stop) :: rest =>
+      decide (start = offset ∧ start ≤ stop ∧ stop ≤ witness.length) &&
         ((witness.drop start).take (stop - start)).all
           (fun index => decide (nodeLayers.getD index 0 = layer)) &&
         layersMatch nodeLayers witness (layer + 1) stop rest
@@ -102,8 +102,8 @@ def obligations (nodes : List Node) (regs nodeLayers : List Nat)
     (List.range nodes.length).all (fun index =>
       decide (nodeLayers.getD index 0 < layers.length)),
     dependenciesEarlierLayer nodes nodeLayers,
-    layersMatch nodeLayers witness 0 0 layers,
-    PackedSchedule.validate (graph nodes) (regOf regs)
+    layersMatch nodeLayers witness 0 0 layers] ++
+    [PackedSchedule.validate (graph nodes) (regOf regs)
       (tableWitness nodes regs preloads ++ witness) (preloads ++ instrs) outputs outRegs]
 
 /-- A separate validator for the actual given table, op-only stream, per-instruction
@@ -147,7 +147,9 @@ theorem accepted_stream_sound (nodes : List Node) (regs nodeLayers : List Nat)
     checked (FirstProjection.operandsEarlier nodes) (by simp [obligations])
   have body : PackedSchedule.validate (graph nodes) (regOf regs)
       (tableWitness nodes regs preloads ++ witness) (preloads ++ instrs) outputs outRegs = true :=
-    checked _ (by simp [obligations])
+    checked _ (by
+      unfold obligations
+      exact List.mem_append.mpr (Or.inr (by simp only [List.mem_singleton, eq_self])))
   have wellFormed : WellFormed (graph nodes) :=
     FirstProjection.ofList_wellFormed nodes 0 nonempty earlier
   exact PackedSchedule.validate_sound (graph nodes) wellFormed (regOf regs)
