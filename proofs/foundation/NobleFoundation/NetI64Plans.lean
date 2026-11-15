@@ -1111,6 +1111,13 @@ theorem PhysicalState.writeSlot_frame {state : PhysicalState}
     (state.writeSlot index replacement).slots[other]? = state.slots[other]? := by
   simp [PhysicalState.writeSlot, Array.getElem?_setIfInBounds_ne h]
 
+private theorem PhysicalState.writeSlot_self
+    {state : PhysicalState} {index : Nat} {old replacement : PhysicalSlot}
+    (hslot : state.slots[index]? = some old) :
+    (state.writeSlot index replacement).slots[index]? = some replacement := by
+  obtain ⟨hi, _⟩ := getElem?_eq_some_iff.mp hslot
+  simp [PhysicalState.writeSlot, hi]
+
 /-- A fresh physical slot is appended, without changing any prior slot. -/
 def PhysicalState.appendSlot (state : PhysicalState)
     (fresh : PhysicalSlot) : PhysicalState :=
@@ -1178,6 +1185,26 @@ def PhysicalState.logicalPair (state : PhysicalState)
     let (left, _) ← first.agent
     let (right, _) ← second.agent
     some (left, right)
+
+/-- A dead endpoint cannot be decoded as a current queued agent pair,
+regardless of whether its stored generation matches the queue entry. -/
+theorem PhysicalState.logicalPair_dead_endpoint
+    {state : PhysicalState} {pair : PhysicalPair}
+    (hdead :
+      (state.slots[pair.first]?).bind PhysicalSlot.agent = none ∨
+        (state.slots[pair.second]?).bind PhysicalSlot.agent = none) :
+    state.logicalPair pair = none := by
+  cases hf : state.slots[pair.first]? with
+  | none => simp [PhysicalState.logicalPair, hf]
+  | some first =>
+    cases hs : state.slots[pair.second]? with
+    | none => simp [PhysicalState.logicalPair, hs]
+    | some second =>
+      rcases hdead with hfirst | hsecond
+      · have ha : first.agent = none := by simpa [hf] using hfirst
+        simp [PhysicalState.logicalPair, hf, hs, ha]
+      · have ha : second.agent = none := by simpa [hs] using hsecond
+        simp [PhysicalState.logicalPair, hf, hs, ha]
 
 /-- The vendored inets worklist records both directed principal wires,
 whereas Rust queues each canonical physical pair only once. -/
@@ -1437,6 +1464,20 @@ private def PhysicalState.retire (state : PhysicalState) (index : Nat)
         queuedGeneration := none }
       some { retired with freeSlots := index :: retired.freeSlots }
 
+/-- A successful non-reuse retirement removes the selected agent regardless
+of what other (possibly stale) queue entries still reference its slot. -/
+theorem PhysicalState.retire_erases_agent
+    {state next : PhysicalState} {index : Nat}
+    (h : state.retire index false = some next) :
+    (next.slots[index]?).bind PhysicalSlot.agent = none := by
+  unfold PhysicalState.retire at h
+  cases hslot : state.slots[index]? with
+  | none => simp [hslot] at h
+  | some old =>
+    simp [hslot] at h
+    rw [← h.2]
+    simp [PhysicalState.writeSlot_self hslot]
+
 /-- Apply the reciprocal side of one checked boundary wire: either update an
 external agent's exact prior physical endpoint or retarget a checked output.
 The result's own port was installed by `installResult`. -/
@@ -1653,6 +1694,34 @@ theorem PhysicalState.retire_preserves_outputs
       cases heq
       rfl
 
+/-- Retiring a physical slot leaves any other slot byte-for-byte intact. -/
+theorem PhysicalState.retire_frame
+    {state next : PhysicalState} {index other : Nat}
+    (h : state.retire index false = some next)
+    (hne : index ≠ other) :
+    next.slots[other]? = state.slots[other]? := by
+  cases ho : state.slots[index]? with
+  | none => simp [PhysicalState.retire, ho] at h
+  | some old =>
+    simp [PhysicalState.retire, ho] at h
+    rw [← h.2]
+    exact PhysicalState.writeSlot_frame hne
+
+/-- Retirement cannot change the validity or identities of queued pairs
+whose physical endpoints are disjoint from the retired slot. -/
+theorem PhysicalState.logicalPair_retire_away
+    {state next : PhysicalState} {index : Nat} {pair : PhysicalPair}
+    (h : state.retire index false = some next)
+    (hfirst : index ≠ pair.first)
+    (hsecond : index ≠ pair.second) :
+    next.logicalPair pair = state.logicalPair pair := by
+  cases ho : state.slots[index]? with
+  | none => simp [PhysicalState.retire, ho] at h
+  | some old =>
+    simp [PhysicalState.retire, ho] at h
+    rw [← h.2]
+    exact PhysicalState.logicalPair_writeSlot_away hfirst hsecond
+
 /-- An empty-result, empty-write, empty-publication decoded execution leaves
 every output's physical target, not merely its stable label, unchanged. -/
 theorem PhysicalState.execute_empty_image_preserves_outputs
@@ -1678,6 +1747,36 @@ theorem PhysicalState.execute_empty_image_preserves_outputs
   obtain ⟨afterFirst, hf, hs⟩ := Option.bind_eq_some_iff.mp h
   exact (PhysicalState.retire_preserves_outputs hs).trans
     (PhysicalState.retire_preserves_outputs hf)
+
+/-- Both consumed ERA agents are absent after an empty decoded image,
+irrespective of the generation-stale entries retained in the old queue. -/
+theorem PhysicalState.execute_empty_image_retires_pair
+    {state next : PhysicalState} {bytes : List UInt8}
+    {redex : XRedex NetSym} {plan : BytePlan}
+    (hdecode : BytePlan.decode bytes = some plan)
+    (hcurrent : state.logicalPair
+      { first := plan.pair.1,
+        firstGeneration := UInt64.ofNat plan.pair.2.1,
+        second := plan.pair.2.2.1,
+        secondGeneration := UInt64.ofNat plan.pair.2.2.2 } =
+      some (redex.1, redex.2.1))
+    (hresults : plan.results = [])
+    (hwrites : plan.externalWrites = [])
+    (hpubs : plan.publications = [])
+    (haction : plan.action = (0, 0))
+    (hdistinct : plan.pair.1 ≠ plan.pair.2.2.1)
+    (h : state.executeCheckedImage bytes redex = some next) :
+    (next.slots[plan.pair.1]?).bind PhysicalSlot.agent = none ∧
+      (next.slots[plan.pair.2.2.1]?).bind PhysicalSlot.agent = none := by
+  simp [PhysicalState.executeCheckedImage, hdecode, hcurrent,
+    hresults, hwrites, hpubs, haction,
+    PhysicalState.installResults, PhysicalState.writeExternals,
+    PhysicalState.publishAll] at h
+  obtain ⟨afterFirst, hf, hs⟩ := Option.bind_eq_some_iff.mp h
+  constructor
+  · rw [PhysicalState.retire_frame hs hdistinct.symm]
+    exact PhysicalState.retire_erases_agent hf
+  · exact PhysicalState.retire_erases_agent hs
 
 /-- Installing any admitted result, whether recycled or freshly appended,
 cannot alter the ordered external-output identities. -/
@@ -3279,6 +3378,97 @@ theorem PhysicalState.executeCheckedImage_project_work_split
         next.pairOrientations
   rw [PhysicalState.executeCheckedImage_work_append hdecode h, List.flatMap_append,
     hpreserve state.work hpending]
+
+/-- Empty-image ERA retirement keeps the physical old queue, but its
+projection drops exactly the entries touching either consumed slot. Queue
+entries for unrelated slots retain their original validity and both directed
+logical orientations, whether current or already stale. -/
+theorem PhysicalState.execute_empty_image_project_work
+    {state next : PhysicalState} {bytes : List UInt8}
+    {redex : XRedex NetSym} {plan : BytePlan}
+    (hdecode : BytePlan.decode bytes = some plan)
+    (hcurrent : state.logicalPair
+      { first := plan.pair.1,
+        firstGeneration := UInt64.ofNat plan.pair.2.1,
+        second := plan.pair.2.2.1,
+        secondGeneration := UInt64.ofNat plan.pair.2.2.2 } =
+      some (redex.1, redex.2.1))
+    (hresults : plan.results = [])
+    (hwrites : plan.externalWrites = [])
+    (hpubs : plan.publications = [])
+    (haction : plan.action = (0, 0))
+    (hdistinct : plan.pair.1 ≠ plan.pair.2.2.1)
+    (h : state.executeCheckedImage bytes redex = some next) :
+    next.project.work =
+      (state.work.filter fun queued =>
+        decide (queued.first ≠ plan.pair.1 ∧
+          queued.second ≠ plan.pair.1 ∧
+          queued.first ≠ plan.pair.2.2.1 ∧
+          queued.second ≠ plan.pair.2.2.1)).flatMap
+        state.pairOrientations := by
+  let disjoint : PhysicalPair → Bool := fun queued =>
+    decide (queued.first ≠ plan.pair.1 ∧
+      queued.second ≠ plan.pair.1 ∧
+      queued.first ≠ plan.pair.2.2.1 ∧
+      queued.second ≠ plan.pair.2.2.1)
+  have hwork : next.work = state.work := by
+    simpa [hpubs] using PhysicalState.executeCheckedImage_work_append hdecode h
+  have ⟨hdeadFirst, hdeadSecond⟩ :=
+    PhysicalState.execute_empty_image_retires_pair hdecode hcurrent
+      hresults hwrites hpubs haction hdistinct h
+  have hretire : ∃ afterFirst,
+      state.retire plan.pair.1 false = some afterFirst ∧
+        afterFirst.retire plan.pair.2.2.1 false = some next := by
+    have hexec := h
+    simp [PhysicalState.executeCheckedImage, hdecode, hcurrent,
+      hresults, hwrites, hpubs, haction,
+      PhysicalState.installResults, PhysicalState.writeExternals,
+      PhysicalState.publishAll] at hexec
+    exact Option.bind_eq_some_iff.mp hexec
+  obtain ⟨afterFirst, hf, hs⟩ := hretire
+  have hpair (queued : PhysicalPair) :
+      next.pairOrientations queued =
+        if disjoint queued then state.pairOrientations queued else [] := by
+    by_cases hd : disjoint queued = true
+    · have hsides : queued.first ≠ plan.pair.1 ∧
+          queued.second ≠ plan.pair.1 ∧
+          queued.first ≠ plan.pair.2.2.1 ∧
+          queued.second ≠ plan.pair.2.2.1 := by
+        simpa [disjoint] using hd
+      have hp : next.logicalPair queued = state.logicalPair queued :=
+        (PhysicalState.logicalPair_retire_away hs
+          hsides.2.2.1.symm hsides.2.2.2.symm).trans
+          (PhysicalState.logicalPair_retire_away hf
+            hsides.1.symm hsides.2.1.symm)
+      simp [hd, PhysicalState.pairOrientations, hp]
+    · have hnot : ¬ (queued.first ≠ plan.pair.1 ∧
+          queued.second ≠ plan.pair.1 ∧
+          queued.first ≠ plan.pair.2.2.1 ∧
+          queued.second ≠ plan.pair.2.2.1) := by
+        simpa [disjoint] using hd
+      have htouch : queued.first = plan.pair.1 ∨
+          queued.second = plan.pair.1 ∨
+          queued.first = plan.pair.2.2.1 ∨
+          queued.second = plan.pair.2.2.1 := by omega
+      have hdead :
+          (next.slots[queued.first]?).bind PhysicalSlot.agent = none ∨
+            (next.slots[queued.second]?).bind PhysicalSlot.agent = none := by
+        rcases htouch with hfirst | hsecond | hfirst | hsecond
+        · left; simpa [hfirst] using hdeadFirst
+        · right; simpa [hsecond] using hdeadFirst
+        · left; simpa [hfirst] using hdeadSecond
+        · right; simpa [hsecond] using hdeadSecond
+      have hp := PhysicalState.logicalPair_dead_endpoint hdead
+      simp [hd, PhysicalState.pairOrientations, hp]
+  change next.work.flatMap next.pairOrientations =
+    (state.work.filter disjoint).flatMap state.pairOrientations
+  rw [hwork]
+  induction state.work with
+  | nil => rfl
+  | cons queued rest ih =>
+    simp only [List.flatMap_cons, List.filter_cons]
+    rw [hpair queued]
+    cases disjoint queued <;> simp [ih]
 
 /-- Pending pairs retain canonical slot order even if their generations have
 gone stale. The ghost free-slot inventory exactly classifies retired slots. -/

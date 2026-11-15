@@ -13558,6 +13558,42 @@
       "claim": "a successful decoded empty-result image with no external writes or publications preserves the entire output-target table"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retire_erases_agent",
+      "phase": 1,
+      "role": "representation",
+      "claim": "successful non-reuse retirement removes its agent irrespective of stale worklist references"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retire_frame",
+      "phase": 1,
+      "role": "representation",
+      "claim": "non-reuse retirement preserves every unrelated physical slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.logicalPair_dead_endpoint",
+      "phase": 1,
+      "role": "representation",
+      "claim": "queued pair decoding refuses a missing agent at either endpoint"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.logicalPair_retire_away",
+      "phase": 1,
+      "role": "representation",
+      "claim": "retirement leaves generation and identity decoding of disjoint queued pairs unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.execute_empty_image_retires_pair",
+      "phase": 1,
+      "role": "representation",
+      "claim": "an empty decoded image retires both distinct consumed physical agents"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.execute_empty_image_project_work",
+      "phase": 1,
+      "role": "representation",
+      "claim": "empty decoded image projects exactly old queued pairs disjoint from consumed slots, preserving their directed orientation order"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.installResult_success",
       "phase": 1,
       "role": "representation",
@@ -14330,6 +14366,7 @@
     "NobleFoundation.NetI64Plans.PhysicalState.publish_work",
     "NobleFoundation.NetI64Plans.PhysicalState.publishAll_work",
     "NobleFoundation.NetI64Plans.PhysicalState.logicalPair_pairSlotView",
+    "NobleFoundation.NetI64Plans.PhysicalState.writeSlot_self",
     "NobleFoundation.NetI64Plans.PhysicalState.installResult_output_labels",
     "NobleFoundation.NetI64Plans.PhysicalState.installResults_output_labels",
     "NobleFoundation.NetI64Plans.PhysicalState.retire_output_labels",
