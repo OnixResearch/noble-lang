@@ -40,6 +40,18 @@ fn stage_stats(samples: Vec<u64>) -> Json {
     }
 }
 
+fn byte_stats(mut samples: Vec<u64>) -> Json {
+    assert!(!samples.is_empty());
+    samples.sort_unstable();
+    json!({
+        "n": samples.len(), "min_bytes": samples[0],
+        "p25_bytes": samples[(samples.len() - 1) / 4],
+        "median_bytes": samples[(samples.len() - 1) / 2],
+        "p75_bytes": samples[3 * (samples.len() - 1) / 4],
+        "max_bytes": samples[samples.len() - 1],
+    })
+}
+
 fn median(report: &Json) -> u64 {
     report["median_ns"].as_u64().expect("nonempty stats")
 }
@@ -329,6 +341,7 @@ fn stage_record(lowered: &Interpreted, ops: [Opcode; 2], pairs: &[(i64, i64)]) -
         "source_tags": source, "one_hot_static_map": map,
         "interpreter_graph": noble_ngraph::ir::hex(&lowered.checked.id()),
         "residual_graph": noble_ngraph::ir::hex(&last_residual.checked.id()),
+        "residual_graph_text": noble_ngraph::format::graph::print(last_residual.checked.graph()),
         "readmitted_graph": noble_ngraph::ir::hex(&checked.id()),
         "direct_graph": noble_ngraph::ir::hex(&direct.checked.id()),
         "residual_source": emitted, "direct_source": direct_source,
@@ -336,7 +349,7 @@ fn stage_record(lowered: &Interpreted, ops: [Opcode; 2], pairs: &[(i64, i64)]) -
         "original_nodes": lowered.checked.graph().nodes.len(),
         "residual_nodes": last_residual.report.residual_nodes,
         "variants": last_residual.report.variants,
-        "cache_retained_bytes": stats(cache_bytes),
+        "cache_retained_bytes": byte_stats(cache_bytes),
         "compiled_retained_bytes": {"interpreter": lowered.compiled.retained_bytes(),
             "residual": compiled.retained_bytes(), "direct": direct.compiled.retained_bytes()},
         "workspace_scratch_bytes": {"interpreter": lowered.compiled.scratch_bytes(),
@@ -420,6 +433,17 @@ fn source_bound_first_projection_receipt() {
         "profile": "ngraph-i64/0", "specializer": noble_ngraph::specialize::ACCOUNTING_REVISION,
         "graph_semantics": noble_ngraph::ir::SEMANTIC_REVISION,
         "compiled_backend": noble_ngraph::compiled::COMPILER_REVISION,
+        "specializer_revision": "ngraph-pe-specializer/2",
+        "frontend_limits": {
+            "interpreter": {"bytes": 65_536, "nodes": 524_288, "depth": 64, "work": 512_000_000},
+            "residual_and_direct": {
+                "bytes": noble_contracts::Limits::default().bytes,
+                "nodes": noble_contracts::Limits::default().nodes,
+                "depth": noble_contracts::Limits::default().depth,
+                "work": noble_contracts::Limits::default().work,
+            },
+            "graph_budgets": format!("{:?}", Budgets::default()),
+        },
         "optimization_flags": {"rust_debug_assertions": cfg!(debug_assertions), "source": "unoptimized ordinary Noble graph; no Wasm or wasm-opt path used"},
         "hardware": {"cpu": cpu, "os": version("uname", "-a")},
         "toolchain": {"rustc": version("rustc", "--version"), "cargo": version("cargo", "--version")},
