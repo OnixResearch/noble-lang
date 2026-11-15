@@ -2205,7 +2205,7 @@
     },
     {
       "file": "verification/region-trace/README.md",
-      "sha256": "fe309d328e837e424dba53049e28f834cbbedc0404708698d9a5f2ba3c9bccf5"
+      "sha256": "10620294e3b79d3f556f5bc0e635dc6ff5144f6ac575dd723784d46bf10b4c00"
     },
     {
       "file": "verification/service-wire-refinement/README.md",
