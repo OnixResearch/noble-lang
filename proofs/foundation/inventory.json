@@ -13534,6 +13534,18 @@
       "claim": "every successful model candidate derives rule opcode, ordered physical capture, result payloads, reciprocal write inventory and reservations without semantic-checker assumptions"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retire_live_success_frame",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a live nonoverflowing physical slot retires successfully without modifying any other slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.execute_empty_image_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any decoded empty-result, empty-write, empty-publication image completes for two distinct live nonoverflowing consumed slots"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.era_forward_candidate_exists",
       "phase": 1,
       "role": "representation",

@@ -1439,6 +1439,69 @@ def PhysicalState.executeCheckedImage (state : PhysicalState)
         second, secondGeneration := UInt64.ofNat secondGeneration : PhysicalPair }
     retiredSecond.publishAll publications
 
+/-- Retiring one live generation below the counter maximum succeeds and
+leaves every other physical slot intact. It does not depend on the agent's
+rule symbol or the contents of the old pending queue. -/
+theorem PhysicalState.retire_live_success_frame
+    {state : PhysicalState} {index : Nat} {old : PhysicalSlot}
+    (hslot : state.slots[index]? = some old)
+    (hlive : old.agent.isSome = true)
+    (hroom : old.generation ≠ UInt64.ofNat (UInt64.size - 1)) :
+    ∃ next, state.retire index false = some next ∧
+      ∀ other, index ≠ other →
+        next.slots[other]? = state.slots[other]? := by
+  cases ha : old.agent with
+  | none => simp [ha] at hlive
+  | some owner =>
+    let replacement : PhysicalSlot :=
+      { old with agent := none, generation := old.generation + 1, queuedGeneration := none }
+    let retired := state.writeSlot index replacement
+    refine ⟨{retired with freeSlots := index :: retired.freeSlots}, ?_, ?_⟩
+    · simp [PhysicalState.retire, hslot, ha, retired, replacement]
+      simpa using hroom
+    · intro other hne
+      simpa only [retired] using PhysicalState.writeSlot_frame
+        (state := state) (replacement := replacement) hne
+
+/-- A decoded erasure image with no results, writes or publications completes
+for any current pair of distinct live slots with generation headroom. This
+isolates physical execution from rule-specific emission and map refinement. -/
+theorem PhysicalState.execute_empty_image_success
+    {state : PhysicalState} {bytes : List UInt8}
+    {redex : XRedex NetSym} {plan : BytePlan}
+    {first second : PhysicalSlot}
+    (hdecode : BytePlan.decode bytes = some plan)
+    (hcurrent : state.logicalPair
+      { first := plan.pair.1,
+        firstGeneration := UInt64.ofNat plan.pair.2.1,
+        second := plan.pair.2.2.1,
+        secondGeneration := UInt64.ofNat plan.pair.2.2.2 } =
+      some (redex.1, redex.2.1))
+    (hresults : plan.results = [])
+    (hwrites : plan.externalWrites = [])
+    (hpubs : plan.publications = [])
+    (haction : plan.action = (0, 0))
+    (hfirst : state.slots[plan.pair.1]? = some first)
+    (hsecond : state.slots[plan.pair.2.2.1]? = some second)
+    (hfirstLive : first.agent.isSome = true)
+    (hsecondLive : second.agent.isSome = true)
+    (hfirstRoom : first.generation ≠ UInt64.ofNat (UInt64.size - 1))
+    (hsecondRoom : second.generation ≠ UInt64.ofNat (UInt64.size - 1))
+    (hdistinct : plan.pair.1 ≠ plan.pair.2.2.1) :
+    ∃ next, state.executeCheckedImage bytes redex = some next := by
+  obtain ⟨afterFirst, hretireFirst, hframe⟩ :=
+    PhysicalState.retire_live_success_frame hfirst hfirstLive hfirstRoom
+  have hsecondAfter : afterFirst.slots[plan.pair.2.2.1]? = some second := by
+    rw [hframe _ hdistinct]
+    exact hsecond
+  obtain ⟨afterSecond, hretireSecond, _⟩ :=
+    PhysicalState.retire_live_success_frame hsecondAfter hsecondLive hsecondRoom
+  refine ⟨afterSecond, ?_⟩
+  simp [PhysicalState.executeCheckedImage, hdecode, hcurrent,
+    hresults, hwrites, hpubs, haction,
+    PhysicalState.installResults, PhysicalState.writeExternals,
+    hretireFirst, hretireSecond, PhysicalState.publishAll]
+
 /-- Installing any admitted result, whether recycled or freshly appended,
 cannot alter the ordered external-output identities. -/
 private theorem PhysicalState.installResult_output_labels
