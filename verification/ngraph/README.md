@@ -1021,6 +1021,10 @@ and observed process RSS delta **163,840 bytes**. The retained five-instruction
 artifact's separate witness is 20 bytes. The scratch and payload figures count the
 specified arrays/structures, not allocator overhead; the process RSS delta is a
 shared-host process observation, not a bound or an allocation count.
+The [clean-source receipt](permutation-receipt-2026-11-15.json) binds source
+commit `140a5114fc2a55a073482926c915d5056b279d3b` and records the general
+model soundness statement, all 27 model and 17 exported-corpus theorem axioms,
+the exact export bytes and replay subjects, and this separate measurement.
 
 # CPU batch continuation decision (2026-11-01, issue #41)
 

@@ -1,0 +1,314 @@
+{
+  "schema": "noble-packed-permutation-receipt/v1",
+  "issue": 129,
+  "source_commit": "140a5114fc2a55a073482926c915d5056b279d3b",
+  "source_tree": "887add2bc5642dc8535eaf7e80c76448a7221d59",
+  "clean_source": true,
+  "profile": "ngraph-packed-permutation/0",
+  "graph_logical_id": "2f89873596f3187e61241ba141048e0570305dc514d68e09b9cfc063f50035da",
+  "replay_subjects": {
+    "graph": {
+      "logical_id": "2f89873596f3187e61241ba141048e0570305dc514d68e09b9cfc063f50035da",
+      "model_nodes_sha256": "cc7647e1462b36e97cd87e63deeb362980f40cbdbdc1f0428793dd3c4751eb46"
+    },
+    "stream": {
+      "instructions": 5,
+      "sha256": "e7b20185bd29447cb80113a4a8587c0abd2efd6d7ca4ad8cf9a5339f15422bdb"
+    },
+    "witness": {
+      "bytes": 20,
+      "sha256": "680371d5fa77bdb2099c7f34943c01e106a05e4e6784a546984999b5dfcad23a"
+    },
+    "register_output_map": {
+      "register_count": 9,
+      "registers_sha256": "03d70a6c0e4013285964a4a85b5948195ba2253a859d117130f636e2afb4ee9a",
+      "output_sha256": "d5a47a02305bdcc9c72c4e49cccb280062438fce500cdc1f8d71af2be351b1eb"
+    },
+    "layout": {
+      "key": "45392ab2207e944e2745858ddcb9a49b6187e921f53fdfd12d84c85f15cd7f48",
+      "declaration_sha256": "e2aaa90427a2ad6affeeecb44bd84e81df0d73abfca76c9a22a7e09a8171eca6"
+    },
+    "profile": {
+      "profile": "ngraph-packed-permutation/0",
+      "semantic": "ngraph-sem/0",
+      "sha256": "b33cf5527dfc00a56e746d94d40a8d45ec6fd1d6c631319d079a9c6e301abcf2"
+    },
+    "revisions": {
+      "checker": "ngraph-permutation-checker/0",
+      "model": "NobleFoundation.PackedPermutation/0",
+      "export": "ngraph-permutation-export/0",
+      "compiler": "ngraph-layered/0",
+      "layout": "ngraph-layout/0",
+      "sha256": "1eddb1eb18cccff11e108e0490347bbbc82dca8456217af7dacf4865da1fe6d6"
+    }
+  },
+  "export": {
+    "path": "verification/ngraph/permutation-noncanonical-0.bin",
+    "bytes": 501,
+    "sha256": "b8857eda5133c2ef3defb5fd148237832c3a45d5fe34ce0498cf1eb487b7b566",
+    "codec_sha256": "b412139535410f2260b75ff6d84890c5a472957fbef9e11cc1e499525094f3d9"
+  },
+  "corpus": {
+    "path": "proofs/foundation/NobleFoundation/PackedPermutationCorpus.lean",
+    "sha256": "1dad4a9bbefe2e71eb7f2f8aa15cbd50d1fd6bb94002fd0a8554146b1637a7b5",
+    "theorem_count": 17,
+    "validated": {
+      "name": "NobleFoundation.PackedPermutationCorpus.first_validated",
+      "phase": 1,
+      "role": "real-permutation-artifact",
+      "claim": "The model checker accepts the decoded real binary's noncanonical first within-layer permutation.",
+      "status": "proved",
+      "statement": "NobleFoundation.PackedPermutationCorpus.first_validated : NobleFoundation.PackedPermutation.validate NobleFoundation.PackedPermutationCorpus.nodes NobleFoundation.PackedPermutationCorpus.regs NobleFoundation.PackedPermutationCorpus.nodeLayers NobleFoundation.PackedPermutationCorpus.layers NobleFoundation.PackedPermutationCorpus.preloads NobleFoundation.PackedPermutationCorpus.firstWitness NobleFoundation.PackedPermutationCorpus.firstInstrs NobleFoundation.PackedPermutationCorpus.outputs NobleFoundation.PackedPermutationCorpus.outRegs = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    "sound": {
+      "name": "NobleFoundation.PackedPermutationCorpus.first_sound",
+      "phase": 1,
+      "role": "real-permutation-artifact",
+      "claim": "The decoded real binary's first noncanonical stream preserves every ordered output in the model.",
+      "status": "proved",
+      "statement": "NobleFoundation.PackedPermutationCorpus.first_sound : ∀ (inputs : ℕ → BitVec 64), NobleFoundation.PackedPermutation.runOutputs inputs NobleFoundation.PackedPermutationCorpus.preloads NobleFoundation.PackedPermutationCorpus.firstInstrs NobleFoundation.PackedPermutationCorpus.outRegs = NobleFoundation.PackedSchedule.referenceOutputs (NobleFoundation.PackedPermutation.graph NobleFoundation.PackedPermutationCorpus.nodes) inputs NobleFoundation.PackedPermutationCorpus.outputs",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    "transitive_axioms": {
+      "NobleFoundation.PackedPermutationCorpus.canonical_validated": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutationCorpus.canonical_sound": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutationCorpus.first_validated": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutationCorpus.first_sound": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutationCorpus.second_validated": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutationCorpus.second_sound": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutationCorpus.cross_layer_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutationCorpus.swapped_sub_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutationCorpus.duplicate_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutationCorpus.omitted_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutationCorpus.early_read_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutationCorpus.duplicate_destination_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutationCorpus.wrong_witness_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutationCorpus.changed_output_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutationCorpus.changed_constant_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutationCorpus.first_execution_0_agrees": [
+        "propext"
+      ],
+      "NobleFoundation.PackedPermutationCorpus.distinct_orders": []
+    }
+  },
+  "model": {
+    "path": "proofs/foundation/NobleFoundation/PackedPermutation.lean",
+    "theorem_count": 27,
+    "soundness": {
+      "name": "NobleFoundation.PackedPermutation.validate_sound",
+      "phase": 1,
+      "role": "packed-permutation",
+      "claim": "Accepted actual tables and witnessed operation streams agree with every ordered graph output under an explicit sufficient instruction budget and no cancellation.",
+      "status": "proved",
+      "statement": "NobleFoundation.PackedPermutation.validate_sound : ∀ (nodes : List NobleFoundation.PackedSchedule.Node) (regs nodeLayers : List ℕ) (layers : List (ℕ × ℕ)) (preloads : List NobleFoundation.PackedSchedule.Instr) (witness : List ℕ) (instrs : List NobleFoundation.PackedSchedule.Instr) (outputs outRegs : List ℕ), NobleFoundation.PackedPermutation.validate nodes regs nodeLayers layers preloads witness instrs outputs outRegs = true → ∀ (inputs : ℕ → BitVec 64) (budget : ℕ), preloads.length + instrs.length ≤ budget → ∀ (cancelled : Bool), cancelled = false → NobleFoundation.PackedPermutation.runWithBudget inputs budget cancelled preloads instrs outRegs = some (NobleFoundation.PackedSchedule.referenceOutputs (NobleFoundation.PackedPermutation.graph nodes) inputs outputs)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    "transitive_axioms": {
+      "NobleFoundation.PackedPermutation.accepted_stream_sound": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.validate_sound": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.fixture_witnesses_distinct": [],
+      "NobleFoundation.PackedPermutation.fixture_canonical_accepted": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.fixture_first_permutation_accepted": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.fixture_second_permutation_accepted": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.fixture_constant_first_table_accepted": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.fixture_first_sound": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.fixture_second_sound": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.cross_layer_base_accepts": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.cross_layer_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.early_read_base_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.early_read_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.wrong_witness_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.repeated_writer_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.omitted_writer_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.dead_writer_base_accepts": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.dead_writer_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.swapped_subtraction_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.duplicate_destination_body_matches": [
+        "propext"
+      ],
+      "NobleFoundation.PackedPermutation.duplicate_destination_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.changed_constant_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.changed_input_slot_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.duplicate_table_entry_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.changed_output_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.empty_output_refused": [
+        "propext",
+        "Quot.sound"
+      ],
+      "NobleFoundation.PackedPermutation.empty_witness_refused": [
+        "propext",
+        "Quot.sound"
+      ]
+    }
+  },
+  "foundation": {
+    "source_commit": "140a5114fc2a55a073482926c915d5056b279d3b",
+    "source_tree": "887add2bc5642dc8535eaf7e80c76448a7221d59",
+    "lean_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+    "allowed_axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ]
+  },
+  "sources_sha256": {
+    "crates/noble-ngraph/src/permutation.rs": "b412139535410f2260b75ff6d84890c5a472957fbef9e11cc1e499525094f3d9",
+    "crates/noble-ngraph/src/compiled.rs": "3ef981b38e1b85aa3f74c823c9f72cdf4d9da28ecc354ce7b8207fa7067a9064",
+    "crates/noble-ngraph/src/layout.rs": "62058025d4bc266e0c0b82e9c59e4111c4e8421299d63cdc8d2177974ebc383d",
+    "crates/noble-ngraph/src/check.rs": "47f5219285d739153455d2f503338d192126e3074df735af5b2b3904da7cdd4a",
+    "crates/noble-ngraph/src/ir.rs": "d3f03e3991252252a46e48eddda3f9fda00071fac27caa9aeaec20ebfa5029d3",
+    "crates/noble-ngraph/src/sem.rs": "9b257b3a00caa1198b97235a9b18e44b8bd94e99ddc9a6dfeee5be09d0a5fea4",
+    "crates/noble-ngraph/src/eval.rs": "4641b787d61a61e49d5c703a50f6f295713d2d428776f4f8c9559feb2b2865f4",
+    "crates/noble-ngraph/tests/schedule_correspondence_dir/permutation.rs": "6b18a1f7cecf944239fd9d420409bd66cb015dedd54d56be01d67c21412d2e48",
+    "crates/noble-ngraph/tests/schedule_correspondence_dir/permutation_export.rs": "6f96cf7bb96d928e54bd87419054575cedaaa57625f828bef86c93545128a38e",
+    "proofs/foundation/NobleFoundation/PackedPermutation.lean": "f89fac47c4dc60fc54b97cdde65716f001bb8cd8b552ce220a009b6e5aebb2cd",
+    "proofs/foundation/NobleFoundation/PackedPermutationCorpus.lean": "1dad4a9bbefe2e71eb7f2f8aa15cbd50d1fd6bb94002fd0a8554146b1637a7b5",
+    "proofs/foundation/NobleFoundation/PackedSchedule.lean": "0e1db688aeec829d207fc640f06ece9cdf47dac4d2d98e1f0ea329c187de2757",
+    "proofs/foundation/NobleFoundation/FirstProjection.lean": "17073143a8a107f30b8e428f960336c78a974420e26edec80f8fdbe214e85b9f",
+    "proofs/foundation/inventory.json": "7da4b4565931b0e713f83112cf0bf41e06609c43b3afedd2f2d455fe127226e2",
+    "proofs/foundation/NobleFoundation.lean": "0b9511bb9bc179cbca5b6e807cf6260ed5edf66930c1f6f83b726cce31328e1d"
+  },
+  "measurement": {
+    "workload": "2048 independent operations (distinct from the retained five-operation export)",
+    "nodes": 2049,
+    "instructions": 2048,
+    "checker_median_ns": 478525,
+    "witness_bytes": 8192,
+    "encoded_bytes": 51536,
+    "retained_payload_bytes": 57384,
+    "checker_scratch_bool_bytes": 4099,
+    "execution_scratch_bytes": 16400,
+    "rss_growth_bytes": 163840,
+    "samples": 9
+  },
+  "evidence": "Rust freshness/differential/control tests and the Lean kernel check are separate; this receipt only binds their subjects and the retained proof statements.",
+  "open_edges": [
+    "No arbitrary Rust executor or runtime correspondence theorem.",
+    "Lean receives generated terms, not a verified byte decoder refinement.",
+    "No guards, F32, register reuse, cross-layer motion, low-fuel/cancellation equivalence, cache or native-code theorem."
+  ]
+}
