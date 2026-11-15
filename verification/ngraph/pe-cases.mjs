@@ -15,6 +15,7 @@ const root = fs.realpathSync(path.resolve(path.dirname(fileURLToPath(import.meta
 const caseFile = 'specs/conformance/numeric-graph-pe-cases.json';
 const measurementFile = 'verification/ngraph/pe-2026-11-13.json';
 const sourceScope = ['crates', 'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml',
+  'policy/tool-selection.json',
   caseFile, measurementFile, 'verification/ngraph/pe-cases.mjs'];
 const harnesses = [
   'ngraph-specialize-admitted-slice', 'ngraph-specialize-refused-slice',
@@ -122,15 +123,15 @@ function namedRuns(observed, names, id) {
   return byName;
 }
 
-function measurementReview(observed, checks, expected) {
-  assert.equal(observed.measurement_file, measurementFile);
+function measurementReview(checks, expected) {
+  assert.equal(checks.measurement_file, measurementFile);
   const measurement = JSON.parse(fs.readFileSync(relative(measurementFile), 'utf8'));
   assert.equal(measurement.schema, 'noble-pe-measurement/v1');
   assert.equal(measurement.clean_source, true);
   assert.equal(measurement.issue, 32);
   insist(Array.isArray(measurement.records) && measurement.records.length > 0,
     'CASE-10: no measured original/residual records');
-  assert.equal(observed.measurement_records, measurement.records.length,
+  assert.equal(checks.measurement_records, measurement.records.length,
     'CASE-10: marker record count differs from retained measurement');
   const sides = ['l3_original', 'l3_residual', 'l4_original', 'l4_residual'];
   for (const [index, record] of measurement.records.entries()) {
@@ -179,6 +180,7 @@ function verifyObservation(c, observation) {
   let measurement = null;
   switch (id) {
     case 'NGRAPH-PE-CASE-01':
+      namedRuns(observed, input.graphs, id);
       insist(observed.runs.some(run => run.kind === 'cli' && run.stage === 'specialization' &&
         run.outcome === 'normal' && run.published_output), `${id}: no checked residual publication`);
       insist(Number.isInteger(checks.checked_residuals) && checks.checked_residuals > 0,
@@ -243,7 +245,7 @@ function verifyObservation(c, observation) {
     }
     case 'NGRAPH-PE-CASE-10':
       insist(observed.runs.some(run => run.kind === 'review'), `${id}: missing record review`);
-      measurement = measurementReview(observed, checks, expected);
+      measurement = measurementReview(checks, expected);
       break;
     case 'NGRAPH-PE-CASE-11':
       checked(checks, 'readmitted_checked', true, id);
@@ -270,6 +272,11 @@ function verifyObservation(c, observation) {
       }
       break;
     case 'NGRAPH-PE-CASE-15':
+      assert.deepEqual([...names].sort(),
+        input.tail_types.flatMap(tail => input.static_maps.map(map => `${tail}/${map}`)).sort(),
+        `${id}: not every tail type/static-map pair was executed`);
+      checked(checks, 'tested_tail_types', input.tail_types, id);
+      checked(checks, 'tested_static_maps', input.static_maps, id);
       checked(checks, 'ordered_typed_stacks_agree', true, id);
       checked(checks, 'opaque_tail_positions_unchanged', true, id);
       checked(checks, 'ordinary_paths_selectable', true, id);
@@ -328,7 +335,7 @@ function testArtifact(build, target) {
 function onePassed(command, name) {
   insist(command.exit === 0 && command.signal === null && command.error === null,
     `${name}: test executable failed (${command.exit ?? command.signal ?? command.error})`);
-  insist(/test result: ok\. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out/.test(command.stdout),
+  insist(/test result: ok\. 1 passed; 0 failed; 0 ignored; 0 measured; \d+ filtered out/.test(command.stdout),
     `${name}: not exactly one selected passing test`);
 }
 
@@ -489,7 +496,9 @@ function main() {
   const receipt = {
     schema: 'noble-ngraph-pe-cases-execution/v1', result: errors.length === 0 && rows.length === 18 ? 'passed' : 'failed',
     failures: errors, tested_commit: testedCommit, source_tree: sourceTree,
-    source_scope: sourceScope, source_revision: sourceRevision, source_files: before,
+    source_scope: sourceScope, source_revision: sourceRevision,
+    source_revision_algorithm: 'sha256(JSON.stringify(source_files))',
+    source_manifest_sha256: sha256(JSON.stringify(before)), source_files: before,
     canonical_case_file: caseFile, canonical_case_file_sha256: before[caseFile].sha256,
     case_projections: Object.fromEntries(cases.map(c => [c.id, sha256(JSON.stringify(c))])),
     toolchain: { cargo: { path: pinnedCargo, sha256: cargoDigest },
