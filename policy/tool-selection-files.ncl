@@ -104,7 +104,7 @@
   "tools/m3-wasm-worker.mjs" = "8bdbde4fd444dc8a74ff8e020c2d10c613b7a517809d6927c8e5e5cf2dff7035",
   "tools/m3-wasm.mjs" = "4d1bbe5054e3a4ad5fccc5aee315709f33280a18dd3fa27df2343e1653df5596",
   "verification/declared-modules-v1/peer/Cargo.lock" = "bf925f1c8c9d73f29571c5d63995ae0c93424cd9386ea334ab57882f4cb332b7",
-  "verification/fixtures/randomness.Cargo.lock" = "356ef437559d06e54e1e7bef745da1650d281800cd250c290011f10aa9b4691e",
+  "verification/fixtures/randomness.Cargo.lock" = "74145a59317884daa6f3be7afc356a66dcb2330c346135cd9379d99db45c2331",
   "verification/intrinsic-named-v2/gate.mjs" = "04ada0e7ed5f52f9b26ee8a1863cb1ac54907e2560a6a9c0056313a9a45527c8",
   "verification/intrinsic-named-v2/peer/Cargo.lock" = "64a919d5caefef95e0b4cf1c545a7808161b0299e3f22cfb3aba03a22cc3ba75",
   "verification/intrinsic-proofs/build.mjs" = "e51fa3fe46e38295ad860d3a38ee9f849f46a9031df6f4742507cf0f8bec46a4",

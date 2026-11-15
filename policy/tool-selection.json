@@ -341,7 +341,7 @@
     "verification/current-source-replay/diagnostic-check.rs": "c0a3e2c3ed4f1c791e1452969bcd33ea3c4e1cebccd4dfde4879726b81d086fa",
     "verification/declared-modules-v1/peer/Cargo.lock": "bf925f1c8c9d73f29571c5d63995ae0c93424cd9386ea334ab57882f4cb332b7",
     "verification/declared-modules-v1/peer/src/main.rs": "8d36f2807858a756115d52311747f04c2744feb5d2cf15e27ee956242831f206",
-    "verification/fixtures/randomness.Cargo.lock": "356ef437559d06e54e1e7bef745da1650d281800cd250c290011f10aa9b4691e",
+    "verification/fixtures/randomness.Cargo.lock": "74145a59317884daa6f3be7afc356a66dcb2330c346135cd9379d99db45c2331",
     "verification/intrinsic-named-v2/gate.mjs": "04ada0e7ed5f52f9b26ee8a1863cb1ac54907e2560a6a9c0056313a9a45527c8",
     "verification/intrinsic-named-v2/peer/Cargo.lock": "64a919d5caefef95e0b4cf1c545a7808161b0299e3f22cfb3aba03a22cc3ba75",
     "verification/intrinsic-named-v2/peer/src/main.rs": "90aa7c2c682a097bba14aeb3a149a1a0b1202040a5a7d559929de34f3cdb9ddb",
