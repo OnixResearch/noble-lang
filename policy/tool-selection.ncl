@@ -104,6 +104,18 @@ let Pin = { rev | String, narHash | String } in
       version = "125",
       role = "core-bootstrap-and-verification-wasm-optimizer",
     },
+    onnx_python = {
+      source = "nixpkgs",
+      attribute = "python3.withPackages(onnx,onnxruntime)",
+      version = "3.13.12",
+      role = "recurrent-weights-stock-model-export-and-execution",
+    },
+    onnx_runtime = {
+      source = "nixpkgs",
+      attribute = "onnxruntime",
+      version = "1.23.2",
+      role = "recurrent-weights-stock-cpu-inference-runtime",
+    },
   },
   owned_wasm_runtime = {
     assets | Array String = [

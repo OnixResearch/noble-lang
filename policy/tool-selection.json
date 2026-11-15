@@ -258,7 +258,7 @@
     "crates/noble-wasm/wit/worker-transition.wit": "f788988352acbccfe9a9f4fd6811551b1b3e4d4b43f1436b7a8c5e702e7652f0",
     "dylint.toml": "265d16c2a5bba73d011ce460e1e9d15ce04dca24cdf6e7bc0cf4e66a9040a88b",
     "flake.lock": "85e86e8f3826b97d3deb9ff5355d5a4d10d227201ee4d11e71b1bb8028cc2c30",
-    "flake.nix": "45e751161a69c38afe9155f5c5c13945ea614d88c024b00f13772869bec63b32",
+    "flake.nix": "8a718ff063de1d2908bfe65bbe55b4278ba9de5c8137b66465f97f5078025596",
     "nix/aeneas-string-escaping.patch": "3d2a88e02e55b491aa7d53573cd0256c58ffb4e549a8ff9a0134c2eaef07cc70",
     "nix/boundary-controls.nix": "86e9bbd342b616c0861775ab336cd8313e7473506c381634fbc1eec6a2cab943",
     "nix/boundary-fixture-tests.nix": "9d008b1cafac6c076c9fb1e58933b476efa0ac31a9569d09f887c1a9be8aa26f",
@@ -291,11 +291,11 @@
     "nix/source-inventory-derive.nix": "0b995253daa90d53c0028745fddacb577af0575ee1794c07003004ff35c1fd0d",
     "nix/source-inventory-tests.nix": "68cb117f575fc639150026b2cd38ba6822e39b2a9eb032a3bf2c5f3e03323567",
     "nix/source-inventory.nix": "cfe6a4ad827bdb4400b32103920e85b7b29528d621be933c8cfabb7f4623ff49",
-    "nix/tool-selection-app.nix": "4cb3cecb6786f7edd9e5372dfd94beedd046edb655cdb24ce64697c771e01dce",
+    "nix/tool-selection-app.nix": "ecce946f78bc030d179ffb7f16d4ca15bcfb19c682af49d49b7611a734be2f05",
     "nix/tool-selection-files.nix": "a4bb2202ade8ec61728bce1b4b2d019328be0b35e33493f866d4da82f6fddeab",
     "nix/tool-selection-observation.nix": "1913777df366e807602e9c6879d9a3dc1167584007e62ebacd601d07fac678b8",
     "nix/tool-selection-tests.nix": "e054566d1a0e4dd1df1c612d57ea3a131e6ecd21d1f0816b5a6426217e58a92d",
-    "nix/tool-selection.nix": "842796c9ca343fda5a6c768a7e6b0dcb6609c6d2ece7f024ad3f8ef81444bf8c",
+    "nix/tool-selection.nix": "b18a7d7d7dcd0e74eca21acea0123814f1008ad04595a059c773ad44da9d9e16",
     "nix/vendor-only.nix": "d7743c80ac4fc913be61aa54629c75fd7182eaa6b7d0a9b289c08a210dde1546",
     "policy/architecture-export-spec.ncl": "e32a2c75f975e768b292702500ca902bb944f07a5ce156bcbfa00bff576681bd",
     "policy/architecture.contracts.ncl": "9cbbe9437d789e2ed7cdf1cfda992616fd3de18af169e23e1e8e9652a8c1571e",
@@ -513,6 +513,14 @@
       "derivation": "/nix/store/7i1yb8b2k8x7r5cv8ngmkagcd9alva1l-octet-standards-0.1.0.drv",
       "output": "/nix/store/m3nfxp90pws6805xsqljnzl2i8gxwc0c-octet-standards-0.1.0"
     },
+    "onnx_python": {
+      "derivation": "/nix/store/kpg9birivrqckh6n401yzhpyn69g617g-python3-3.13.12-env.drv",
+      "output": "/nix/store/i5p0gn147kav6kwyf6vixkmdxw90nh91-python3-3.13.12-env"
+    },
+    "onnx_runtime": {
+      "derivation": "/nix/store/kr48b4fyxcpirysl1g3zx827qb92xxnw-onnxruntime-1.23.2.drv",
+      "output": "/nix/store/2sqcb683r2mxb26vl3c9qvphns0hlsrp-onnxruntime-1.23.2"
+    },
     "quality_rust": {
       "derivation": "/nix/store/zxvqck0x496vcj2qn1r0wil6bb85zj7b-rust-default-1.96.0-nightly-2026-03-21.drv",
       "output": "/nix/store/1yvh3d6y3fj3xk2dgwczrp1dj5svd92c-rust-default-1.96.0-nightly-2026-03-21"
@@ -538,6 +546,18 @@
       "role": "core-bootstrap-and-verification-wasm-host",
       "source": "nixpkgs",
       "version": "24.13.0"
+    },
+    "onnx_python": {
+      "attribute": "python3.withPackages(onnx,onnxruntime)",
+      "role": "recurrent-weights-stock-model-export-and-execution",
+      "source": "nixpkgs",
+      "version": "3.13.12"
+    },
+    "onnx_runtime": {
+      "attribute": "onnxruntime",
+      "role": "recurrent-weights-stock-cpu-inference-runtime",
+      "source": "nixpkgs",
+      "version": "1.23.2"
     },
     "wasm_tools": {
       "attribute": "wasm-tools",

@@ -52,6 +52,13 @@
         wasm_tools = pkgs.wasm-tools;
         binaryen = pkgs.binaryen;
       };
+      selectedStockTools = {
+        onnx_runtime = pkgs.onnxruntime;
+        onnx_python = pkgs.python3.withPackages (ps: [
+          ps.onnx
+          ps.onnxruntime
+        ]);
+      };
       selectionPolicy = builtins.fromJSON (builtins.readFile ./policy/tool-selection.json);
       # Upstream Wasmtime v40.0.2. The CLI and the Wasm peers consume the crates
       # as path dependencies, so the tree must be a real checkout with its
@@ -87,7 +94,12 @@
           wasmToolsVersion = wasmVerificationTools.wasm_tools.version;
         })
         // {
-          verification_tool_versions = builtins.mapAttrs (_: tool: tool.version) wasmVerificationTools;
+          verification_tool_versions =
+            (builtins.mapAttrs (_: tool: tool.version) wasmVerificationTools)
+            // {
+              onnx_runtime = selectedStockTools.onnx_runtime.version;
+              onnx_python = pkgs.python3.version;
+            };
           tool_paths =
             builtins.mapAttrs
               (_: tool: {
@@ -104,7 +116,7 @@
                 octet_standards = standards;
                 cairn = cairn.packages.${system}.cairn;
                 upstream_pin_check = aeneas.checks.${system}.check-charon-pin;
-              } // wasmVerificationTools);
+              } // wasmVerificationTools // selectedStockTools);
         };
       selection = import ./nix/tool-selection.nix {
         policy = selectionPolicy;
@@ -133,6 +145,8 @@
         node = wasmVerificationTools.node;
         wasmTools = wasmVerificationTools.wasm_tools;
         binaryen = wasmVerificationTools.binaryen;
+        onnxRuntime = selectedStockTools.onnx_runtime;
+        onnxPython = selectedStockTools.onnx_python;
       };
       leanDependenciesCheck = import ./nix/lean-dependency-check.nix {
         inherit pkgs;

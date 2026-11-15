@@ -33,6 +33,14 @@
     derivation = "/nix/store/gr41mppcarfhwk10hv2g6rdmgr2yq3hz-nodejs-24.13.0.drv",
     output = "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0",
   },
+  onnx_python = {
+    derivation = "/nix/store/kpg9birivrqckh6n401yzhpyn69g617g-python3-3.13.12-env.drv",
+    output = "/nix/store/i5p0gn147kav6kwyf6vixkmdxw90nh91-python3-3.13.12-env",
+  },
+  onnx_runtime = {
+    derivation = "/nix/store/kr48b4fyxcpirysl1g3zx827qb92xxnw-onnxruntime-1.23.2.drv",
+    output = "/nix/store/2sqcb683r2mxb26vl3c9qvphns0hlsrp-onnxruntime-1.23.2",
+  },
   octet = {
     derivation = "/nix/store/izwmmqx0p177k4dcd6nznihx1q3wyljq-cargo-octet-0.1.0-typed-strict-trait.drv",
     output = "/nix/store/znmkgimllzx7gyrlani4xbj1fs47vnf5-cargo-octet-0.1.0-typed-strict-trait",
