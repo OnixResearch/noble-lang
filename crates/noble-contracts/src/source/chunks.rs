@@ -3563,7 +3563,7 @@ fn comes_before(left: &Entry, right: &Entry) -> core::cmp::Ordering {
     left.envelope.chunk_id.cmp(&right.envelope.chunk_id)
 }
 
-fn canonical_order(library: &Library) -> alloc::vec::Vec<u16> {
+pub(crate) fn canonical_entry_order(library: &Library) -> alloc::vec::Vec<u16> {
     let mut order: alloc::vec::Vec<u16> = alloc::vec::Vec::with_capacity(library.entries().len());
     for index in 0..library.entries().len() {
         if let Ok(index) = u16::try_from(index) {
@@ -4161,7 +4161,7 @@ fn complete_inner(namespace: &super::Session, library: &Library, request: &Reque
         checked_candidates: 0,
         fixtures: None,
     };
-    let order = canonical_order(library);
+    let order = canonical_entry_order(library);
     let mut chunk_count = 0u32;
     while chunk_count <= MAX_COMPOSED_CHUNKS {
         if let Err(response) = run_length(&mut search, &order, chunk_count) {

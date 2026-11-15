@@ -457,6 +457,7 @@ name = "noble-contracts"
 version = "0.0.0"
 dependencies = [
  "noble-kernel",
+ "serde_json",
 ]
 
 [[package]]
