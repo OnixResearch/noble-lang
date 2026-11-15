@@ -44,7 +44,7 @@ function snapshot() {
     'scoped source must be clean and committed');
   const files = git('ls-files', '-z', '--', ...sourceScope).split('\0').filter(Boolean).sort();
   for (const required of [caseFile, measurementFile, 'verification/ngraph/pe-cases.mjs',
-    'crates/noble-cli/tests/ngraph.rs', 'crates/noble-cli/tests/ngraph/pe_cases.rs']) {
+    'crates/noble-cli/tests/ngraph.rs', 'crates/noble-cli/tests/ngraph/pe/cases.rs']) {
     insist(files.includes(required), `missing committed source: ${required}`);
   }
   return Object.fromEntries(files.map(file => [file, { sha256: digest(relative(file)) }]));
@@ -440,7 +440,7 @@ function main() {
           stdout_sha256: command.stdout_sha256, stderr_sha256: command.stderr_sha256 } });
     }
     for (const [index, c] of cases.entries()) {
-      const test = `pe_cases::pe_case_${String(index + 1).padStart(2, '0')}`;
+      const test = `pe_cases::case_${String(index + 1).padStart(2, '0')}`;
       const args = ['--exact', test, '--nocapture', '--test-threads=1', '--color=never'];
       const command = execute(testExecutable, args, output, `case-${String(index + 1).padStart(2, '0')}`,
         { ...process.env, TMPDIR: path.join(output, 'tmp') });

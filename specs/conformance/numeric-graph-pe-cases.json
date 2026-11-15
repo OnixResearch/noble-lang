@@ -89,7 +89,7 @@
     },
     {
       "id": "NGRAPH-PE-CASE-15", "profile": "Numeric-Graph-v1", "kind": "runtime", "requirements": ["NGRAPH-PE-08"],
-      "input": {"harness": "ngraph-specialize-source-full-tail", "tail_types": ["Text", "Bool", "Unit", "Pair"], "static_maps": ["none", "all", "mixed", "non-prefix"]},
+      "input": {"harness": "ngraph-specialize-source-full-tail", "active_shape": "Pair<I64,Pair<Unit,I64>> I64", "tail_types": ["Text", "Bool", "Unit", "Pair"], "static_maps": ["none", "all", "mixed", "non-prefix"]},
       "expected": {"stage": "ordinary-Core-and-Declared-Text-execution", "outcome": "same-ordered-typed-value-stack", "opaque_tail_positions_unchanged": true, "ordinary_paths_selectable": true},
       "state": {"implementation": "implemented", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
     },

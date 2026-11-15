@@ -52,57 +52,164 @@ fn set_cap(budgets: &mut Budgets, kind: BudgetKind, value: u64) -> bool {
     true
 }
 
+fn extractor_charges(
+    first: &extract::Extraction,
+    last: &extract::Extraction,
+) -> [(BudgetKind, u64); 3] {
+    [
+        (
+            BudgetKind::Work,
+            first.stats.work_units.max(last.stats.work_units),
+        ),
+        (
+            BudgetKind::Expansion,
+            first
+                .stats
+                .static_expansion_bound
+                .max(first.stats.expanded_nodes)
+                .max(last.stats.static_expansion_bound)
+                .max(last.stats.expanded_nodes),
+        ),
+        (
+            BudgetKind::InlineDepth,
+            first
+                .stats
+                .max_inline_depth
+                .max(last.stats.max_inline_depth),
+        ),
+    ]
+}
+
+fn observed_charges(
+    original: &extract::source::Prepared,
+    defaults: &Budgets,
+) -> [(BudgetKind, u64); 10] {
+    let baseline = residualize(
+        &original.submission,
+        &original.claimed_closure,
+        &[None],
+        defaults,
+    )
+    .expect("baseline Program and independently prepared residual");
+    let first = extraction(&original.submission, &original.claimed_closure, defaults);
+    let last = extraction(
+        baseline.prepared.submission().expect("residual submission"),
+        &[],
+        defaults,
+    );
+    let checked = [&first.checked, &baseline.specialized.checked, &last.checked];
+    let max_checked = |measure: fn(&check::CheckedGraph) -> u64| {
+        checked
+            .iter()
+            .map(|g| measure(g))
+            .max()
+            .expect("three checked graphs")
+    };
+    let [work, expansion, depth] = extractor_charges(&first, &last);
+    [
+        work,
+        expansion,
+        depth,
+        (
+            BudgetKind::LiveNodes,
+            max_checked(|g| g.graph().nodes.len() as u64),
+        ),
+        (
+            BudgetKind::Layers,
+            max_checked(|g| u64::from(g.layer_count())),
+        ),
+        (
+            BudgetKind::Inputs,
+            max_checked(|g| g.graph().slots.len() as u64),
+        ),
+        (
+            BudgetKind::Outputs,
+            max_checked(|g| g.graph().outputs.len() as u64),
+        ),
+        (
+            BudgetKind::GraphBytes,
+            max_checked(|g| check::retained_bytes(g.graph())),
+        ),
+        (
+            BudgetKind::ResidualNodes,
+            baseline
+                .specialized
+                .report
+                .original_nodes
+                .max(baseline.specialized.report.residual_nodes),
+        ),
+        (BudgetKind::Variants, baseline.specialized.report.variants),
+    ]
+}
+
+fn check_cap(
+    original: &extract::source::Prepared,
+    defaults: &Budgets,
+    kind: BudgetKind,
+    count: u64,
+) {
+    assert!(count > 0, "{kind:?} must have a reachable positive charge");
+    let mut below = defaults.clone();
+    assert!(set_cap(&mut below, kind, count - 1));
+    let diagnostic = residualize(
+        &original.submission,
+        &original.claimed_closure,
+        &[None],
+        &below,
+    )
+    .expect_err("a below-observed cap cannot publish a partial Program");
+    assert_eq!(
+        diagnostic.code,
+        Code::Budget(kind),
+        "{kind:?}: {diagnostic}"
+    );
+    assert_eq!(diagnostic.budget.expect("budget count").0, count - 1);
+    let mut at = defaults.clone();
+    assert!(set_cap(&mut at, kind, count));
+    assert!(
+        residualize(
+            &original.submission,
+            &original.claimed_closure,
+            &[None],
+            &at
+        )
+        .is_ok(),
+        "{kind:?}: the observed bound must be inclusive"
+    );
+    let mut above = defaults.clone();
+    assert!(set_cap(&mut above, kind, count + 1));
+    if kind == BudgetKind::Variants {
+        assert_eq!(
+            residualize(
+                &original.submission,
+                &original.claimed_closure,
+                &[None],
+                &above
+            )
+            .expect_err("raising the /0 variant policy")
+            .code,
+            Code::Profile
+        );
+    } else {
+        assert!(
+            residualize(
+                &original.submission,
+                &original.claimed_closure,
+                &[None],
+                &above
+            )
+            .is_ok(),
+            "{kind:?}: one above the observed charge is still within policy"
+        );
+    }
+}
+
 #[test]
 fn program_budget_charges_have_inclusive_observed_boundaries() {
     let original = prepared(&["def inc [ 1 + ]"], "inc", &[Ty::I64]);
     let defaults = Budgets::default();
-    let baseline = residualize(&original.submission, &original.claimed_closure, &[None], &defaults)
-        .expect("baseline Program and independently prepared residual");
-    let first = extraction(&original.submission, &original.claimed_closure, &defaults);
-    let last = extraction(
-        baseline.prepared.submission().expect("residual submission"),
-        &[],
-        &defaults,
-    );
-    let checked = [&first.checked, &baseline.specialized.checked, &last.checked];
-    let max_checked = |measure: fn(&check::CheckedGraph) -> u64| {
-        checked.iter().map(|g| measure(g)).max().expect("three checked graphs")
-    };
-    let observed = [
-        (BudgetKind::Work, first.stats.work_units.max(last.stats.work_units)),
-        (BudgetKind::Expansion, first.stats.static_expansion_bound.max(first.stats.expanded_nodes)
-            .max(last.stats.static_expansion_bound).max(last.stats.expanded_nodes)),
-        (BudgetKind::InlineDepth, first.stats.max_inline_depth.max(last.stats.max_inline_depth)),
-        (BudgetKind::LiveNodes, max_checked(|g| g.graph().nodes.len() as u64)),
-        (BudgetKind::Layers, max_checked(|g| u64::from(g.layer_count()))),
-        (BudgetKind::Inputs, max_checked(|g| g.graph().slots.len() as u64)),
-        (BudgetKind::Outputs, max_checked(|g| g.graph().outputs.len() as u64)),
-        (BudgetKind::GraphBytes, max_checked(|g| check::retained_bytes(g.graph()))),
-        (BudgetKind::ResidualNodes, baseline.specialized.report.original_nodes
-            .max(baseline.specialized.report.residual_nodes)),
-        (BudgetKind::Variants, baseline.specialized.report.variants),
-    ];
-    for (kind, count) in observed {
-        assert!(count > 0, "{kind:?} must have a reachable positive charge");
-        let mut below = defaults.clone();
-        assert!(set_cap(&mut below, kind, count - 1));
-        let diagnostic = residualize(&original.submission, &original.claimed_closure, &[None], &below)
-            .expect_err("a below-observed cap cannot publish a partial Program");
-        assert_eq!(diagnostic.code, Code::Budget(kind), "{kind:?}: {diagnostic}");
-        assert_eq!(diagnostic.budget.expect("budget count").0, count - 1);
-        let mut at = defaults.clone();
-        assert!(set_cap(&mut at, kind, count));
-        assert!(residualize(&original.submission, &original.claimed_closure, &[None], &at).is_ok(),
-            "{kind:?}: the observed bound must be inclusive");
-        let mut above = defaults.clone();
-        assert!(set_cap(&mut above, kind, count + 1));
-        if kind == BudgetKind::Variants {
-            assert_eq!(residualize(&original.submission, &original.claimed_closure, &[None], &above)
-                .expect_err("raising the /0 variant policy").code, Code::Profile);
-        } else {
-            assert!(residualize(&original.submission, &original.claimed_closure, &[None], &above).is_ok(),
-                "{kind:?}: one above the observed charge is still within policy");
-        }
+    for (kind, count) in observed_charges(&original, &defaults) {
+        check_cap(&original, &defaults, kind, count);
     }
 }
 
@@ -118,8 +225,8 @@ fn program_budget_charges_have_inclusive_observed_boundaries() {
 #[test]
 fn unreachable_profile_budget_classes_are_lower_only_not_faux_exhaustion() {
     use BudgetKind::{
-        AffineTerms, BackwardScratch, Facts, ForwardScratch, SnapshotBytes, Steps,
-        TableEntries, TableLength,
+        AffineTerms, BackwardScratch, Facts, ForwardScratch, SnapshotBytes, Steps, TableEntries,
+        TableLength,
     };
     let original = prepared(&[], "1 +", &[Ty::I64]);
     let defaults = Budgets::default();
@@ -141,8 +248,12 @@ fn unreachable_profile_budget_classes_are_lower_only_not_faux_exhaustion() {
         assert!(result.readmitted.graph().facts.is_empty(), "{kind:?}");
         let mut raised = defaults.clone();
         assert!(set_cap(&mut raised, kind, profile_cap + 1));
-        assert_eq!(residualize(&original.submission, &[], &[None], &raised)
-            .expect_err("raised /0 cap refuses by policy, not exhaustion").code,
-            Code::Profile, "{kind:?}");
+        assert_eq!(
+            residualize(&original.submission, &[], &[None], &raised)
+                .expect_err("raised /0 cap refuses by policy, not exhaustion")
+                .code,
+            Code::Profile,
+            "{kind:?}"
+        );
     }
 }

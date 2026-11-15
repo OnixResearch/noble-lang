@@ -801,10 +801,12 @@ fn specialize_program(
         &stack_interface.stack_in
     )
     .map_err(|e| subject_refusal(C, e)));
-    let active = attempt!(stack_interface.stack_in.get(tail..).ok_or_else(|| {
-        interface(C, "--tail exceeds the original input stack".into())
-    }));
-    let positions = tail.saturating_add(noble_ngraph::specialize::program::input_leaf_count(active));
+    let active = attempt!(stack_interface
+        .stack_in
+        .get(tail..)
+        .ok_or_else(|| { interface(C, "--tail exceeds the original input stack".into()) }));
+    let positions =
+        tail.saturating_add(noble_ngraph::specialize::program::input_leaf_count(active));
     let map = attempt!(static_map(args, positions).map_err(Stop::Usage));
     if map[..tail].iter().any(Option::is_some) {
         return Err(interface(

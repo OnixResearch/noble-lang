@@ -4444,9 +4444,11 @@ The implementation phase of the same issue keeps the four kinds of result apart:
   exercises the original Core Program and an independently prepared residual
   Declared-Text-v1 Program in ordinary sessions. Its observation strips
   session-local handles and compares the ordered type/value stacks, including
-  Text/Bool/Unit/pair tails, no/all/mixed/non-prefix static maps, operand order,
-  wrapping, captures, repeated known calls and saved old definitions after
-  rebinding. The residual source is re-admitted at the full dynamic stack.
+  Text/Bool/Unit/pair tails, active nested Pair/Unit items with their I64 leaves
+  bound through no/all/mixed/non-prefix maps, operand order, wrapping, captures,
+  repeated known calls and saved old definitions after rebinding. The residual
+  source is re-admitted at the full tail-plus-dynamic-leaf stack; graph mode
+  still refuses authored shape trees.
 - **Runtime.** The measured node visits, residual sizes and retained bytes are recorded
   in the change's measurement receipt. They report the two sides separately and claim
   no equal budget, fuel or work (H-LIMIT-03) and no universal speedup.
@@ -4457,8 +4459,10 @@ Open, and deliberately not closed:
   *model*. The Program implementation can pass a resource-free opaque tail
   through unchanged and can expand checked known recipes, but has no theorem
   about its whole-Program correspondence;
-- active nested pair/Unit specialization, static Bool bindings, resources and
-  effectful residualization remain outside the selected implementation profile;
+- static Bool bindings, active resources and effectful residualization remain
+  outside the selected implementation profile. Active Pair/Unit structure is
+  supported only by the opt-in checked-Program path, with a bounded shape and
+  scalar dynamic leaves, not by directly authored graph specialization;
 - the model conditions pruning correctness on a valid dense survivor map;
   the Rust-to-map construction and Rust/backend correspondence remain open;
 - the Program implementation computes the exact original reached definition
@@ -4468,9 +4472,12 @@ Open, and deliberately not closed:
 - the ordinary Core compile/session path remains unspecialized. The residual
   Program runs only by explicitly selecting the independently checked
   Declared-Text-v1 path; neither path is silently rewritten;
-- the universal extraction-to-Program, emitter and backend refinement
-  obligations remain open. D13 claims finite tested Program behavior, not
-  a general proof or observational equality under arbitrary reflection;
+- the universal extraction-to-Program, Rust survivor-map construction, pair/Unit
+  source-emitter and backend refinement obligations remain open. Reopen each
+  on an admitted counterexample, an extended value/effect or emitter contract,
+  or a consumer requiring universal correspondence rather than finite evidence.
+  D13 claims finite tested Program behavior, not a general proof or
+  observational equality under arbitrary reflection;
 - budgets, thresholds, refusal/adoption criteria and other owner-reserved
   contracts remain the change's proposal, not an accepted policy;
 - effects, host calls, resource ownership and effect-aware partial execution

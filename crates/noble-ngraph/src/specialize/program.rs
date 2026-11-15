@@ -79,9 +79,7 @@ pub enum ActiveValue {
 )]
 fn leaves(ty: &noble_kernel::types::Ty) -> usize {
     match ty {
-        noble_kernel::types::Ty::Pair(left, right) => {
-            leaves(left).saturating_add(leaves(right))
-        }
+        noble_kernel::types::Ty::Pair(left, right) => leaves(left).saturating_add(leaves(right)),
         noble_kernel::types::Ty::Unit => 0,
         _ => 1,
     }
@@ -92,7 +90,9 @@ fn leaves(ty: &noble_kernel::types::Ty) -> usize {
 /// before any active type can be trusted as supported.
 #[must_use]
 pub fn input_leaf_count(inputs: &[noble_kernel::types::Ty]) -> usize {
-    inputs.iter().fold(0usize, |n, ty| n.saturating_add(leaves(ty)))
+    inputs
+        .iter()
+        .fold(0usize, |n, ty| n.saturating_add(leaves(ty)))
 }
 
 impl Residual {
@@ -100,7 +100,10 @@ impl Residual {
     /// checked dynamic leaf interface. Prefix tail items remain unchanged.
     /// Wrong arity/type or an inconsistent binding map returns `None`.
     #[must_use]
-    pub fn merge_active(&self, dynamic: &[crate::sem::Value]) -> Option<alloc::vec::Vec<ActiveValue>> {
+    pub fn merge_active(
+        &self,
+        dynamic: &[crate::sem::Value],
+    ) -> Option<alloc::vec::Vec<ActiveValue>> {
         if dynamic.len() != self.specialized.report.dynamic_inputs.len()
             || dynamic
                 .iter()
@@ -140,12 +143,12 @@ fn merge_value(
     rank: &mut usize,
 ) -> Option<ActiveValue> {
     match ty {
-        noble_kernel::types::Ty::Pair(left, right) => Some(ActiveValue::Pair(
-            alloc::boxed::Box::new((
+        noble_kernel::types::Ty::Pair(left, right) => {
+            Some(ActiveValue::Pair(alloc::boxed::Box::new((
                 merge_value(left, bindings, dynamic, leaf, rank)?,
                 merge_value(right, bindings, dynamic, leaf, rank)?,
-            )),
-        )),
+            ))))
+        }
         noble_kernel::types::Ty::Unit => Some(ActiveValue::Unit),
         noble_kernel::types::Ty::I64 | noble_kernel::types::Ty::Bool => {
             let known = *bindings.get(*leaf)?;
@@ -242,7 +245,7 @@ pub fn residualize(
         ));
     }
     let extracted = crate::extract::extract(ids, &original, request.budgets)?;
-    let specialized = super::specialize_inner(
+    let specialized = super::lower_checked_graph(
         ids,
         &extracted.checked,
         &super::Request {
@@ -336,7 +339,8 @@ pub fn residualize(
         specialized,
         readmitted: readmitted_graph,
         preserved_tail: request.preserved_tail,
-        original_active_inputs: request.original.request.expected.stack_in[request.preserved_tail..]
+        original_active_inputs: request.original.request.expected.stack_in
+            [request.preserved_tail..]
             .to_vec(),
     })
 }
@@ -412,13 +416,7 @@ mod tests {
         graph: &crate::check::CheckedGraph,
         inputs: &[crate::sem::Value],
     ) -> alloc::vec::Vec<crate::sem::Value> {
-        match crate::eval::reference(
-            graph,
-            inputs,
-            None,
-            &mut crate::eval::Control::default(),
-        )
-        .obs
+        match crate::eval::reference(graph, inputs, None, &mut crate::eval::Control::default()).obs
         {
             crate::eval::Obs::Normal(values) => values,
             other => panic!("unexpected graph observation {other:?}"),
@@ -465,21 +463,11 @@ mod tests {
             noble_kernel::types::Ty::Bool,
             noble_kernel::types::Ty::I64,
         ];
-        let original = checked(
-            &[],
-            "let y let flag drop unpair unpair let z drop y + unit z y - pair pair flag",
-            &inputs,
-        );
+        let original = checked(&[], "drop drop drop dup unpair unpair swap drop +", &inputs);
         let original_graph = original_graph(&original, 1);
         assert_eq!(input_leaf_count(&inputs[1..]), 4);
-        let residual = prepare(
-            &original,
-            1,
-            &[Some(2), None, None, Some(4)],
-            None,
-            &[],
-        )
-        .expect("the independently checked active pair/Unit and mixed leaves specialize");
+        let residual = prepare(&original, 1, &[Some(2), None, None, Some(4)], None, &[])
+            .expect("the independently checked active pair/Unit and mixed leaves specialize");
         assert_eq!(
             residual
                 .prepared
@@ -528,9 +516,9 @@ mod tests {
                 ])
             );
             let expected = alloc::vec![
-                crate::sem::Value::I64(6),
-                crate::sem::Value::I64(z.wrapping_sub(4)),
-                crate::sem::Value::Bool(flag),
+                crate::sem::Value::I64(2),
+                crate::sem::Value::I64(z),
+                crate::sem::Value::I64(z.wrapping_add(2)),
             ];
             assert_eq!(observe(&residual.specialized.checked, &dynamic), expected);
             assert_eq!(observe(&residual.readmitted, &dynamic), expected);
@@ -538,10 +526,7 @@ mod tests {
         }
         assert_eq!(residual.merge_active(&[crate::sem::Value::I64(9)]), None);
         assert_eq!(
-            residual.merge_active(&[
-                crate::sem::Value::Bool(true),
-                crate::sem::Value::I64(9)
-            ]),
+            residual.merge_active(&[crate::sem::Value::Bool(true), crate::sem::Value::I64(9)]),
             None
         );
     }
@@ -554,22 +539,13 @@ mod tests {
         for (map, dynamic, full) in [
             (
                 &[None, None][..],
-                alloc::vec![
-                    crate::sem::Value::I64(i64::MAX),
-                    crate::sem::Value::I64(1)
-                ],
-                alloc::vec![
-                    crate::sem::Value::I64(i64::MAX),
-                    crate::sem::Value::I64(1)
-                ],
+                alloc::vec![crate::sem::Value::I64(i64::MAX), crate::sem::Value::I64(1)],
+                alloc::vec![crate::sem::Value::I64(i64::MAX), crate::sem::Value::I64(1)],
             ),
             (
                 &[Some(i64::MAX), Some(1)][..],
                 alloc::vec![],
-                alloc::vec![
-                    crate::sem::Value::I64(i64::MAX),
-                    crate::sem::Value::I64(1)
-                ],
+                alloc::vec![crate::sem::Value::I64(i64::MAX), crate::sem::Value::I64(1)],
             ),
         ] {
             let residual = prepare(&original, 0, map, None, &[])
@@ -646,7 +622,10 @@ mod tests {
             )]
         );
         assert_eq!(residual.source, "unit\nunit\npair\n");
-        assert_eq!(residual.merge_active(&[]), Some(alloc::vec![ActiveValue::Unit]));
+        assert_eq!(
+            residual.merge_active(&[]),
+            Some(alloc::vec![ActiveValue::Unit])
+        );
         assert_eq!(observe(&residual.readmitted, &[]), alloc::vec![]);
         assert_eq!(residual.readmitted.graph().outputs.len(), 0);
     }

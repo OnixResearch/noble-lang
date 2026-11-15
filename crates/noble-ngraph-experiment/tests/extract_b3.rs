@@ -24,10 +24,10 @@ use noble_ngraph::ir::Op;
 use noble_ngraph_experiment::controls::{self, chain, outcome};
 use noble_ngraph_experiment::scheme::BLAKE3;
 
-#[path = "extract_b3/pe_refusals.rs"]
-mod pe_refusals;
 #[path = "extract_b3/pe_budgets.rs"]
 mod pe_budgets;
+#[path = "extract_b3/pe_refusals.rs"]
+mod pe_refusals;
 
 #[test]
 fn every_source_control_is_refused_with_its_d6_code() {

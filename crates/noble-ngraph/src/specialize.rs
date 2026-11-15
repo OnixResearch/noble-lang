@@ -470,12 +470,12 @@ pub fn specialize(
     checked: &crate::check::CheckedGraph,
     request: &Request<'_>,
 ) -> Result<Residual, crate::diag::Diagnostic> {
-    specialize_inner(ids, checked, request, false)
+    lower_checked_graph(ids, checked, request, false)
 }
 
 /// Only the fully admitted Program path may flatten checked pair/Unit shapes.
 /// The public graph operation continues to refuse every shaped interface.
-fn specialize_inner(
+fn lower_checked_graph(
     ids: &dyn IdentityScheme,
     checked: &crate::check::CheckedGraph,
     request: &Request<'_>,
@@ -781,39 +781,6 @@ pub fn emit_source(
     emit_source_inner(checked)
 }
 
-#[expect(
-    tigerstyle::no_recursion,
-    reason = "Owner: noble-ngraph; the checked original shape is bounded by MAX_SHAPE_DEPTH"
-)]
-fn emit_output_tree(
-    tree: &crate::ir::ShapeTree,
-    outputs: &[crate::ir::NodeId],
-    next: &mut usize,
-    text: &mut alloc::string::String,
-    render: &mut impl FnMut(&mut alloc::string::String, crate::ir::NodeId) -> Result<(), crate::diag::Diagnostic>,
-) -> Result<(), crate::diag::Diagnostic> {
-    match tree.node() {
-        crate::ir::ShapeNode::Scalar => {
-            let output = outputs.get(*next).ok_or_else(|| {
-                refuse(
-                    crate::diag::Code::Interface,
-                    "a checked output shape has more scalar leaves than the residual graph",
-                )
-            })?;
-            render(text, *output)?;
-            text.push('\n');
-            *next += 1;
-        }
-        crate::ir::ShapeNode::Unit => text.push_str("unit\n"),
-        crate::ir::ShapeNode::Pair(left, right) => {
-            emit_output_tree(left, outputs, next, text, render)?;
-            emit_output_tree(right, outputs, next, text, render)?;
-            text.push_str("pair\n");
-        }
-    }
-    Ok(())
-}
-
 /// Each use is an operand edge or an output edge. A node with one use can be
 /// spelled at that use instead of introducing a new lexical `let` quotation.
 /// Count both edges when the same operand occurs twice.
@@ -841,63 +808,100 @@ fn source_uses(graph: &crate::ir::Graph) -> alloc::vec::Vec<u32> {
 /// layer cap. Only total, effect-free operations enter this emitter. Shared
 /// operands refer to their earlier lexical binding; singly used operations
 /// retain exactly their original operand order when inlined.
-fn emit_expression(
-    graph: &crate::ir::Graph,
-    uses: &[u32],
-    root: crate::ir::NodeId,
-    force_root: bool,
-    pending: &mut alloc::vec::Vec<(crate::ir::NodeId, bool, bool)>,
-    mut text: &mut alloc::string::String,
-) -> Result<(), crate::diag::Diagnostic> {
-    pending.push((root, false, force_root));
-    while let Some((id, complete, force)) = pending.pop() {
-        let op = &graph.nodes[id.index()].op;
-        if complete {
-            text.push_str(match op {
-                crate::ir::Op::I64Add(..) => "+ ",
-                crate::ir::Op::I64Sub(..) => "- ",
-                crate::ir::Op::I64Mul(..) => "* ",
-                crate::ir::Op::I64Eq(..) => "= ",
-                _ => {
-                    return Err(at(
+struct ProgramEmitter<'a> {
+    graph: &'a crate::ir::Graph,
+    uses: alloc::vec::Vec<u32>,
+    pending: alloc::vec::Vec<(crate::ir::NodeId, bool, bool)>,
+    text: alloc::string::String,
+}
+
+impl ProgramEmitter<'_> {
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-ngraph; the checked original shape is bounded by MAX_SHAPE_DEPTH"
+    )]
+    fn emit_output_tree(
+        &mut self,
+        tree: &crate::ir::ShapeTree,
+        next: &mut usize,
+    ) -> Result<(), crate::diag::Diagnostic> {
+        match tree.node() {
+            crate::ir::ShapeNode::Scalar => {
+                let output = self.graph.outputs.get(*next).ok_or_else(|| {
+                    refuse(
                         crate::diag::Code::Interface,
+                        "a checked output shape has more scalar leaves than the residual graph",
+                    )
+                })?;
+                self.emit_expression(*output, false)?;
+                self.text.push('\n');
+                *next += 1;
+            }
+            crate::ir::ShapeNode::Unit => self.text.push_str("unit\n"),
+            crate::ir::ShapeNode::Pair(left, right) => {
+                self.emit_output_tree(left, next)?;
+                self.emit_output_tree(right, next)?;
+                self.text.push_str("pair\n");
+            }
+        }
+        Ok(())
+    }
+
+    fn emit_expression(
+        &mut self,
+        root: crate::ir::NodeId,
+        force_root: bool,
+    ) -> Result<(), crate::diag::Diagnostic> {
+        self.pending.push((root, false, force_root));
+        while let Some((id, complete, force)) = self.pending.pop() {
+            let op = &self.graph.nodes[id.index()].op;
+            if complete {
+                self.text.push_str(match op {
+                    crate::ir::Op::I64Add(..) => "+ ",
+                    crate::ir::Op::I64Sub(..) => "- ",
+                    crate::ir::Op::I64Mul(..) => "* ",
+                    crate::ir::Op::I64Eq(..) => "= ",
+                    _ => {
+                        return Err(at(
+                            crate::diag::Code::Interface,
+                            crate::diag::Site::Node(id),
+                            "an inlined operation is not a binary scalar operation",
+                        ))
+                    }
+                });
+                continue;
+            }
+            if !force && self.uses[id.index()] > 1 {
+                crate::format::write_text!(self.text, "v{} ", id.0);
+                continue;
+            }
+            match op {
+                crate::ir::Op::Input(_) => crate::format::write_text!(self.text, "v{} ", id.0),
+                crate::ir::Op::Const(crate::ir::Literal::I64(value)) => {
+                    crate::format::write_text!(self.text, "{value} ");
+                }
+                crate::ir::Op::Const(crate::ir::Literal::Bool(value)) => {
+                    self.text.push_str(if *value { "true " } else { "false " });
+                }
+                crate::ir::Op::I64Add(left, right)
+                | crate::ir::Op::I64Sub(left, right)
+                | crate::ir::Op::I64Mul(left, right)
+                | crate::ir::Op::I64Eq(left, right) => {
+                    self.pending.push((id, true, false));
+                    self.pending.push((*right, false, false));
+                    self.pending.push((*left, false, false));
+                }
+                other => {
+                    return Err(at(
+                        crate::diag::Code::Profile,
                         crate::diag::Site::Node(id),
-                        "an inlined operation is not a binary scalar operation",
+                        alloc::format!("{} cannot be emitted as Noble source", other.name()),
                     ))
                 }
-            });
-            continue;
-        }
-        if !force && uses[id.index()] > 1 {
-            crate::format::write_text!(text, "v{} ", id.0);
-            continue;
-        }
-        match op {
-            crate::ir::Op::Input(_) => crate::format::write_text!(text, "v{} ", id.0),
-            crate::ir::Op::Const(crate::ir::Literal::I64(value)) => {
-                crate::format::write_text!(text, "{value} ");
-            }
-            crate::ir::Op::Const(crate::ir::Literal::Bool(value)) => {
-                text.push_str(if *value { "true " } else { "false " });
-            }
-            crate::ir::Op::I64Add(left, right)
-            | crate::ir::Op::I64Sub(left, right)
-            | crate::ir::Op::I64Mul(left, right)
-            | crate::ir::Op::I64Eq(left, right) => {
-                pending.push((id, true, false));
-                pending.push((*right, false, false));
-                pending.push((*left, false, false));
-            }
-            other => {
-                return Err(at(
-                    crate::diag::Code::Profile,
-                    crate::diag::Site::Node(id),
-                    alloc::format!("{} cannot be emitted as Noble source", other.name()),
-                ))
             }
         }
+        Ok(())
     }
-    Ok(())
 }
 
 /// Program-only source emitter. The independently accepted original supplies
@@ -912,12 +916,14 @@ fn emit_program_source(
 ) -> Result<alloc::string::String, crate::diag::Diagnostic> {
     admit_slice(checked, false)?;
     let graph = checked.graph();
-    let uses = source_uses(graph);
-    let mut pending = alloc::vec::Vec::new();
-    let mut text = alloc::string::String::with_capacity(
-        graph.nodes.len().saturating_mul(44)
-            + graph.outputs.len().saturating_mul(12),
-    );
+    let mut emitter = ProgramEmitter {
+        graph,
+        uses: source_uses(graph),
+        pending: alloc::vec::Vec::new(),
+        text: alloc::string::String::with_capacity(
+            graph.nodes.len().saturating_mul(44) + graph.outputs.len().saturating_mul(12),
+        ),
+    };
     for (k, slot) in graph.slots.iter().enumerate().rev() {
         if slot.kind != crate::ir::SlotKind::Input {
             continue;
@@ -930,23 +936,20 @@ fn emit_program_source(
                 "an input slot has no input node",
             ));
         }
-        crate::format::write_text!(text, "let v{}\n", id.0);
+        crate::format::write_text!(emitter.text, "let v{}\n", id.0);
     }
     for (index, node) in graph.nodes.iter().enumerate() {
-        if matches!(node.op, crate::ir::Op::Input(_)) || uses[index] <= 1 {
+        if matches!(node.op, crate::ir::Op::Input(_)) || emitter.uses[index] <= 1 {
             continue;
         }
         let id = crate::ir::NodeId(index as u32);
-        emit_expression(graph, &uses, id, true, &mut pending, &mut text)?;
-        crate::format::write_text!(text, "let v{}\n", id.0);
+        emitter.emit_expression(id, true)?;
+        crate::format::write_text!(emitter.text, "let v{}\n", id.0);
     }
     if let Some(shapes) = output_shapes {
         let mut next = 0;
-        let mut render = |text: &mut alloc::string::String, output| {
-            emit_expression(graph, &uses, output, false, &mut pending, text)
-        };
         for tree in shapes {
-            emit_output_tree(tree, &graph.outputs, &mut next, &mut text, &mut render)?;
+            emitter.emit_output_tree(tree, &mut next)?;
         }
         if next != graph.outputs.len() {
             return Err(refuse(
@@ -956,14 +959,14 @@ fn emit_program_source(
         }
     } else {
         for output in &graph.outputs {
-            emit_expression(graph, &uses, *output, false, &mut pending, &mut text)?;
-            text.push('\n');
+            emitter.emit_expression(*output, false)?;
+            emitter.text.push('\n');
         }
     }
-    if text.is_empty() {
-        text.push_str("0 drop\n");
+    if emitter.text.is_empty() {
+        emitter.text.push_str("0 drop\n");
     }
-    Ok(text)
+    Ok(emitter.text)
 }
 
 fn emit_source_inner(

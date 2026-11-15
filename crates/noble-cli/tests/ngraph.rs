@@ -15,7 +15,8 @@
     tigerstyle::assertion_density,
     tigerstyle::missing_const_fn,
     tigerstyle::raw_arithmetic_overflow,
-    reason = "Owner: noble-maintainers; this integration harness constructs boundary scenarios and asserts their outcomes, so terse fixture names, unwraps and long setup legs are the readable form."
+    tigerstyle::explicit_defaults,
+    reason = "Owner: noble-maintainers; this integration harness exercises the production default profile limits and constructs boundary scenarios, so duplicating foreign-crate defaults, terse fixture names and long setup legs would obscure the tested contract."
 )]
 //! Black-box tests of the `noble ngraph` CLI (`Numeric-Graph-v1`).
 //!
@@ -40,6 +41,8 @@ mod construction;
 mod corpus_codec;
 #[path = "ngraph/resource.rs"]
 mod net_resource;
+#[path = "ngraph/pe/cases.rs"]
+mod pe_cases;
 
 #[test]
 fn resource_serializer_matches_selected_corpus_codec() {
@@ -4073,7 +4076,9 @@ fn program_session(
     let output = child.wait_with_output()?;
     assert!(
         output.status.success(),
-        "Program session: {}",
+        "Program session status {}: stdout: {}; stderr: {}",
+        output.status,
+        String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)
     );
     let reports: Vec<Value> = std::str::from_utf8(&output.stdout)?

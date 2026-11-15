@@ -63,7 +63,13 @@ fn program_rejects_untrusted_subject_closure_and_binding_errors() {
         &[None],
         Code::Closure,
     );
-    refused("duplicate", &original.submission, &[id, id], &[None], Code::Closure);
+    refused(
+        "duplicate",
+        &original.submission,
+        &[id, id],
+        &[None],
+        Code::Closure,
+    );
     refused(
         "missing binding",
         &original.submission,
@@ -79,7 +85,13 @@ fn program_rejects_untrusted_subject_closure_and_binding_errors() {
         Code::Interface,
     );
     let boolean = prepared(&[], "drop 7", &[Ty::Bool]);
-    refused("I64 value for Bool", &boolean.submission, &[], &[Some(5)], Code::Interface);
+    refused(
+        "I64 value for Bool",
+        &boolean.submission,
+        &[],
+        &[Some(5)],
+        Code::Interface,
+    );
 
     let mut malformed = original.clone();
     malformed
@@ -98,7 +110,13 @@ fn program_rejects_untrusted_subject_closure_and_binding_errors() {
     let (mut wrong_dependencies, claimed) = super::chain(2);
     let row = wrong_dependencies.definitions[1].definition.0 as usize;
     wrong_dependencies.environment.deps[row].clear();
-    refused("forged dependency list", &wrong_dependencies, &claimed, &[], Code::Closure);
+    refused(
+        "forged dependency list",
+        &wrong_dependencies,
+        &claimed,
+        &[],
+        Code::Closure,
+    );
 }
 
 #[test]
@@ -109,24 +127,38 @@ fn program_refuses_effect_resource_reflection_dynamic_run_and_recursion() {
     refused("reflection", &reflect.submission, &[], &[], Code::Reflect);
     let program_type = Ty::program(vec![Ty::I64], vec![Ty::I64], EffSet::empty());
     let dynamic = prepared(&[], "run", &[Ty::I64, program_type]);
-    refused("dynamic run", &dynamic.submission, &[], &[], Code::DynamicRun);
+    refused(
+        "dynamic run",
+        &dynamic.submission,
+        &[],
+        &[],
+        Code::DynamicRun,
+    );
 
     // Core source cannot supply a Resource. Use the same declared-module
     // producer as the existing B3 control, then re-check its submission.
-    let retained = noble_contracts::source::RetainedSourceLimit::new(
-        noble_contracts::Limits::default().bytes,
-    )
-    .expect("default source bytes are retainable");
+    let retained =
+        noble_contracts::source::RetainedSourceLimit::new(noble_contracts::Limits::default().bytes)
+            .expect("default source bytes are retainable");
     let module = noble_contracts::source::ModuleSession::new(&[], retained)
         .expect("declared-module session");
     let resource = module
         .prepare(
             b"swap",
-            &[Ty::Resource(noble_kernel::contracts::FIXTURE_RESOURCE), Ty::I64],
+            &[
+                Ty::Resource(noble_kernel::contracts::FIXTURE_RESOURCE),
+                Ty::I64,
+            ],
             noble_contracts::Limits::default(),
         )
         .expect("resource subject is ordinarily prepared");
-    refused("resource interface", resource.submission().expect("submission"), &[], &[], Code::Resource);
+    refused(
+        "resource interface",
+        resource.submission().expect("submission"),
+        &[],
+        &[],
+        Code::Resource,
+    );
 
     // The frontend cannot produce recursive definitions: forge a call in a
     // previously prepared body and leave its producer dependency list stale.
@@ -150,13 +182,19 @@ fn program_refuses_effect_resource_reflection_dynamic_run_and_recursion() {
 #[test]
 fn program_refuses_pre_pruning_explosion_without_constructing_a_large_chain() {
     let (original, closure) = super::chain(4);
-    let budgets = Budgets { expanded_nodes: 33, ..Budgets::default() };
+    let budgets = Budgets {
+        expanded_nodes: 33,
+        ..Budgets::default()
+    };
     let diagnostic = residualize(&original, &closure, &[], &budgets)
         .expect_err("34 expanded nodes must refuse, despite pruning to one constant");
     assert_eq!(diagnostic.code, Code::Budget(BudgetKind::Expansion));
     assert_eq!(diagnostic.budget, Some((33, 34)));
     for bound in [34, 35] {
-        let budgets = Budgets { expanded_nodes: bound, ..Budgets::default() };
+        let budgets = Budgets {
+            expanded_nodes: bound,
+            ..Budgets::default()
+        };
         assert!(residualize(&original, &closure, &[], &budgets).is_ok());
     }
 }
