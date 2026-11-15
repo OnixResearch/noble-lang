@@ -242,6 +242,10 @@ fn byte_certificates_replay_against_cli_traces() -> TestResult {
                         schedule: Some(schedule),
                         interaction_fuel: None,
                         cancel: None,
+                        storage_policy: None,
+                        max_plan_scratch_bytes: None,
+                        max_worklist_entries: None,
+                        plan_observer: None,
                     },
                 },
             );
