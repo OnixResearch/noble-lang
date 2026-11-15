@@ -356,6 +356,12 @@ let contracts = import "./architecture.contracts.ncl" in
     external_crates = ["alloc", "anyhow", "core", "rustc_apfloat", "serde", "std"],
     local_traits = [
       {
+        path = "noble_contracts::source::chunks::CandidateRanker",
+        owner = "noble-maintainers",
+        reason = "CandidateRanker is an open advisory extension point with no default bodies; implementations live in workspace crates whose bodies Octet collects. The core treats every ranker response as untrusted advice, re-admits every candidate under its own unchanged budget and effects, and grants the ranker no acceptance or capability authority.",
+        review_condition = "Reopen if any implementation acquires a capability effect, lives outside the workspace, or the core stops re-admitting every candidate.",
+      },
+      {
         path = "noble_ngraph::grad::Real",
         owner = "noble-maintainers",
         reason = "The trait and every implementation are declared in noble-ngraph; the dynamic call set is closed over those local implementation bodies, whose effect facts are collected separately.",

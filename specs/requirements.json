@@ -4973,6 +4973,66 @@
       "test_design": "scenario-described-not-executed"
     },
     {
+      "id": "TCRANK-01",
+      "document": "../.cairn/specs/typed-chunk-ranking/spec.md",
+      "document_id": "SPEC-TCRANK001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "TCRANK-02",
+      "document": "../.cairn/specs/typed-chunk-ranking/spec.md",
+      "document_id": "SPEC-TCRANK001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "TCRANK-03",
+      "document": "../.cairn/specs/typed-chunk-ranking/spec.md",
+      "document_id": "SPEC-TCRANK001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "TCRANK-04",
+      "document": "../.cairn/specs/typed-chunk-ranking/spec.md",
+      "document_id": "SPEC-TCRANK001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
+      "id": "TCRANK-05",
+      "document": "../.cairn/specs/typed-chunk-ranking/spec.md",
+      "document_id": "SPEC-TCRANK001",
+      "evidence_routes": [
+        "experiment-test",
+        "correspondence",
+        "review"
+      ],
+      "scenarios": [],
+      "test_design": "test-design-open"
+    },
+    {
       "id": "V-AUTH-01",
       "document": "../.cairn/specs/verification/spec.md",
       "document_id": "SPEC-V001",

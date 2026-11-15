@@ -17,6 +17,8 @@
 //! Training admission and replay (design D10, NGRAPH-DERIV-01,
 //! NGRAPH-SNAP-01/02, NGRAPH-CASE-11/13 at the library level).
 
+#[path = "train_admission/batches.rs"]
+mod batches;
 mod common;
 #[path = "grad_ordered/differential.rs"]
 mod grad_ordered;

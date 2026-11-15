@@ -97,7 +97,7 @@ const STATES = {
   trust: ['unassessed', 'explicit'],
 };
 const KINDS = ['static', 'runtime', 'admission', 'adapter', 'identity', 'review'];
-const REQUIRED_DOCUMENTS = ['SPEC-0001', 'SPEC-S001', 'SPEC-W001', 'SPEC-V001', 'IMPL-V001', 'SPEC-V002', 'SPEC-B001', 'SPEC-BE001', 'SPEC-BE002', 'SPEC-BE003', 'SPEC-R001', 'SPEC-EV001', 'SPEC-DX001', 'SPEC-CALC001'];
+const REQUIRED_DOCUMENTS = ['SPEC-0001', 'SPEC-S001', 'SPEC-W001', 'SPEC-V001', 'IMPL-V001', 'SPEC-V002', 'SPEC-B001', 'SPEC-BE001', 'SPEC-BE002', 'SPEC-BE003', 'SPEC-R001', 'SPEC-EV001', 'SPEC-DX001', 'SPEC-CALC001', 'SPEC-TCRANK001'];
 const EXECUTED = ['passed', 'failed', 'timeout'];
 const ROUTES = {
   K: ['semantic-test', 'model-proof', 'review'],
@@ -122,6 +122,7 @@ const ROUTES = {
   NGV: ['proof-or-explicit-assumption', 'implementation-test', 'review'],
   DX: ['semantic-test', 'policy-test', 'review'],
   CALC: ['application-test', 'benchmark-policy-test', 'review'],
+  TCRANK: ['experiment-test', 'correspondence', 'review'],
   FXORACLE: ['experiment-test', 'correspondence', 'review'],
   EPROTO: ['boundary-test', 'model-proof', 'review'],
 };

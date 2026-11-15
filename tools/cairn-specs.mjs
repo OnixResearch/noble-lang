@@ -22,6 +22,7 @@ export const SPEC_SLUGS = {
   'EVIDENCE.md': 'evidence',
   'DEVELOPER-EXPERIENCE.md': 'developer-experience',
   'CALCULATOR.md': 'calculator',
+  'TYPED-CHUNK-RANKING.md': 'typed-chunk-ranking',
 };
 export const canonicalPath = name => {
   if (!Object.hasOwn(SPEC_SLUGS, name)) throw new Error(`unknown spec: ${name}`);
