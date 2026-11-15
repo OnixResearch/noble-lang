@@ -29,6 +29,8 @@ mod common;
 mod fixtures;
 #[path = "rewrite_cost/measure.rs"]
 mod measure;
+#[path = "rewrite_cost/offset.rs"]
+mod offset;
 #[path = "rewrite_cost/pipeline.rs"]
 mod pipeline;
 #[path = "rewrite_cost/report.rs"]
