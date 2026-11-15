@@ -2,8 +2,8 @@
 
 **Decision: accept the executed store/retrieval/composition mechanics and the narrowly
 measured frozen-fixture result; do not close the full Cairn change or claim
-incremental learning, general transfer, a teacher-attempt refusal, semantic
-aliasing, or implementation/model correspondence.** The remaining acceptance
+incremental learning, general transfer, a teacher-attempt refusal in the
+frozen run, semantic aliasing, or implementation/model correspondence.** The remaining acceptance
 obligations are explicit below. The frozen criterion is
 `criteria-2026-11-13.json` (SHA-256
 `36b8efc1d7f99485f3e1764a596ce014ab24dcb62d6f029bf32456c196a4dc79`),
@@ -53,7 +53,14 @@ cost differences were not measured. Retrieval-only nanoseconds are observations
 from this fixture, not a speedup benchmark; the learned arm **ties** the
 frozen-hand arm on task success. No runtime teacher-attempt control was
 exercised (`teacher_attempts = 0` in all rows), so the attempted-call portion
-of the frozen criterion is not established.
+of the frozen criterion is not established. A later, **non-held-out** library
+test requests both a proposer and teacher through
+`ProcedureLibrary::request_runtime_producer`, supplying callbacks that count
+actual invocations. Both requests return `Unsupported` before either callback
+runs; the query budget records one attempt of each kind, zero retrievals and
+the callbacks record zero calls. The library identity manifest is unchanged.
+This independently checks the disabled boundary, not the earlier frozen
+measurement or its one-shot teacher-attempt clause; no held-out task was rerun.
 
 ## Acceptance and remaining obligations
 
@@ -65,10 +72,10 @@ of the frozen criterion is not established.
 | Positive semantic alias of distinct records with an exact #56 certificate (LPL-04) | **NOT DONE** | #56 currently supplies a verification lane, not a runtime exact-pair verifier of both actual bodies and both closures. Admission refuses alias requests. Reopen only with an exact-pair verifier callable without adding a contracts→ngraph dependency (or a higher-crate verifier trait), validating the pair and both closures before an alias edge or evidence is retained. |
 | Two-process reload equality, deterministic dependency order, mutation/encoder-drift refusals, replacement and rollback | DONE | `tests/editor/procedures/identity.rs`, `reload-negative.rs`, `generations.rs`. Two child processes compare the exact identity manifest against the parent. |
 | Frozen held-out composed-task evaluation and per-seed library growth/retrieval overhead | DONE for the **repaired fixture** | Criterion SHA-256 above; both attempts retained separately; one repaired repeat meets 8/8 and 24/24. Per-arm rows, bytes, query counts, restart, retention, regression and null break-even reasons are in `transfer-repeat.json`. This is not an incremental benefit over the frozen-hand library. |
-| Held-out task generation by #116 with producer grammar/budget/trace/verifier status, and no target leakage | PARTIAL | The two retained acquisition sources bind to `verification/synthesis/receipts/2026-11-13/synthesis-v2.json`; the composed target references and input triples are fixture-authored, not a new #116 producer run. The harness checks no target id, composed target record or evaluator state enters the index. Reopen with a bound producer-generated target set and negative trace independent of this fixture. |
-| No runtime teacher/proposer fallback, including an attempted-call refusal | PARTIAL | The fixture has no runtime proposer or teacher path and all 16 counts are zero; `tests/editor/procedures/metrics.rs` invalidates transfer metrics if either count is nonzero. There was **no attempted call** in the repeat, so the frozen negative-control clause is unproven. Reopen with a real attempt through an explicitly disabled adapter, an observed refusal and a claim-withdrawal check; do not fabricate calls or counters. |
+| Held-out task generation by #116 with producer grammar/budget/trace/verifier status, and no target leakage | PARTIAL | The **non-held-out acquisition** source references and examples are now read from `verification/synthesis/receipts/2026-11-13/synthesis-v2.json`, not fixture-authored arrays. `tests/editor/procedures/transfer/producer.rs` checks the receipt schema, grammar, budget, exact source program, reference presence, verifier status, example totals and observed/expected agreement; `transfer/tests.rs` tests typed execution and refuses mutated references/programs. The frozen composed target references and input triples remain fixture-authored and untouched; no new #116 producer run generated those targets. The harness checks no target id, composed target record or evaluator state enters the index. Reopen with a bound producer-generated target set and negative trace independent of this fixture, under a new criterion before any new measurement. |
+| No runtime teacher/proposer fallback, including an attempted-call refusal | PARTIAL | All 16 frozen-arm counts are zero; `tests/editor/procedures/metrics.rs` withdraws transfer metrics if an actual count is nonzero. The later non-held-out `retrieval::attempted_runtime_proposer_and_teacher_calls_refuse_before_invocation` test deliberately attempts both calls through the library's disabled boundary, observes both refusals, one attempt per kind and zero host callbacks. The **frozen repeat did not attempt a call**, and no later test retroactively establishes its negative-control clause or claim withdrawal for an attempted call in that run. Reopen with a separately frozen criterion for an attempted-call arm; keep the original one-shot receipt unchanged. |
 | Proof obligations O1–O6 and proof-demanding promotion | PARTIAL | `proofs/foundation/NobleFoundation/ProcedureLibrary.lean` proves abstract typed-subject identity, reload, append/dedup and rollback; Rust tests exercise O5/O6. No checked refinement from Rust bytes/hash to Lean or #56 runtime exact-pair proof exists. Do not promote under a proof-demanding policy on the strength of the model alone. |
-| Cairn validation and archive | PARTIAL | Pinned `cairn validate` passes; unchecked alias, producer-generation, teacher-attempt and refinement obligations remain in `.cairn/changes/learned-procedure-library/tasks.md`. Keep the change active; archive only after those rows are honestly discharged. |
+| Cairn validation and archive | PARTIAL | Pinned `cairn validate` passes; unchecked positive exact-pair alias, its `LPL-T07` fixture, #116 composed-target generation, the frozen-run teacher-attempt clause and Rust/Lean correspondence remain in `.cairn/changes/learned-procedure-library/tasks.md`. Keep the change active; archive only after those rows are honestly discharged. |
 
 Model proof, implementation tests, producer provenance, the observed repaired
 fixture, and correspondence assumptions are separate evidence classes. The

@@ -509,7 +509,12 @@ Both records are read-only and contain no training policy, capability, captured
 secret or live handle. A transfer field is only valid when `proposer_calls` and
 `teacher_calls` are zero and the harness record shows proposer and teacher
 disabled; an attempted teacher call during such a run fails closed and
-invalidates the transfer field, while growth is still reported. Model and
+invalidates the transfer field, while growth is still reported. The later
+non-held-out `ProcedureLibrary::request_runtime_producer` test explicitly
+requests both producer types: each request is counted as an attempt, returns
+`Unsupported` before its callback, and records zero actual callback calls.
+This does not establish that the frozen held-out run exercised its attempted
+call control. Model and
 synthesis behavior, executed library mechanics, artifact correspondence and
 explicit assumptions stay in separate fields.
 
@@ -582,9 +587,13 @@ criterion. Its receipt is
 The learned arm met 8/8 task cells and 24/24 examples, but tied the frozen
 hand-library arm; the empty and size-matched non-transfer arms each passed
 0/8. `LPL-T15` is **PARTIAL**: runtime teacher/proposer counts are zero and a
-nonzero count invalidates the metrics claim, but no deliberate attempted call
-was exercised. The #116 producer receipt binds the acquisition source tasks;
-the composed target references themselves are fixture-authored, not #116
+nonzero count invalidates the metrics claim; an independent non-held-out
+attempted-call test now proves both library requests refuse before any host
+callback, but the frozen run did not exercise an attempt. The #116 producer
+receipt binds acquisition source tasks **and their non-held-out reference
+examples**; the source program, grammar, budget and verifier-status fields
+are checked against the receipt and a mutated reference or program is refused.
+The composed target references themselves remain fixture-authored, not #116
 generated in this lane. No fixture is evidence of Rust/Lean correspondence or
 a #56 certificate. The exact decision and non-claims are in
 `verification/procedure-library/decision.md`.

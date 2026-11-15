@@ -41,10 +41,12 @@ the Phase 1 blocker above describes the state when this package was designed.
 
 Phase 2 execution evidence: `crates/noble-contracts/tests/editor/procedures/{identity,admission,composition,retrieval,generations,reload-negative,metrics}.rs`
 and `crates/noble-contracts/src/source/procedures/{composition,retrieval,persistence}.rs`.
-The two unticked rows share the LPL-04 positive exact-certificate case: no
-runtime #56 verifier currently proves an exact pair and both closures. The
-alias-digest refusal test executes; the positive case remains **NOT DONE**.
-See `design.md` for its precise reopen condition.
+The two unticked rows share the LPL-04 positive exact-certificate case:
+the alias implementation row cannot pass a real exact-pair #56 verifier of
+both bodies and closures, and the `LPL-T07` acceptance row cannot execute an
+alias success without it. The alias-digest refusal test executes; positive
+alias remains **NOT DONE**. See `design.md` for the exact-pair verifier reopen
+condition. Do not tick either row on the strength of a digest or a mock.
 
 ## Phase 3: Transfer evaluation (the original #73/#116 blockers have cleared)
 
@@ -64,11 +66,20 @@ clean source commit under the byte-identical criterion is retained at
 `verification/procedure-library/receipts/2026-11-13/transfer-repeat.json`:
 8/8 learned task cells (24/24 examples), 8/8 frozen-hand, 0/8 empty and
 0/8 size-matched control. `verification/procedure-library/decision.md`
-records why this is not a claim of incremental learning or teacher-attempt
-refusal. The #116 source task candidates and their bound receipt are retained,
-but the composed target references are fixture-authored, not newly synthesized
-by #116 in this lane. The abstract model at
+records why this is not a claim of incremental learning or of attempted-call
+refusal **in the frozen run**. The first unticked Phase 3 row needs #116
+generation of the composed held-out targets with producer trace/status under
+a new frozen criterion: only acquisition sources and their non-held-out
+reference examples are now read directly from the bound #116 receipt, while
+the composed target references remain fixture-authored. The second unticked
+row needs an attempted-call negative control in a separately frozen run:
+the original held-out receipt recorded zero actual calls but exercised no
+attempt; a later independent non-held-out library test now proves both
+attempts return `Unsupported` with zero host callbacks, not that the frozen
+run tested this condition. The third unticked row needs a checked Rust
+byte-encoder refinement and the #56 exact-pair proof before proof-demanding
+promotion. The abstract model at
 `proofs/foundation/NobleFoundation/ProcedureLibrary.lean` discharges typed
 identity, reload, append and rollback lemmas, **not** a Rust byte-encoder
-refinement or a runtime #56 exact-pair proof. The three unticked Phase 3 rows
-remain partial rather than inferred complete from this transfer report.
+refinement or a runtime #56 exact-pair proof. All five unticked Phase 2/3
+rows remain open; keep this Cairn change active.
