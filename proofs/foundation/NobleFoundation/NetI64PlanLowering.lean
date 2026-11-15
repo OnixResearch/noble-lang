@@ -277,6 +277,31 @@ def PhysicalState.lowerBytes (state : PhysicalState) (pair : PhysicalPair)
     (redex : XRedex NetSym) (reuse : Bool) : Option (List UInt8) :=
   (state.lowerPlan pair redex reuse).map BytePlan.emit
 
+/-- Independent physical queue-capacity exclusion. Stale entries still occupy
+space; additional plan publications cannot exceed the post-allocation slot
+bound. This is a resource refusal, not an alias or byte-encoding failure. -/
+def PhysicalState.queueCapacityExcluded (state : PhysicalState)
+    (plan : BytePlan) : Bool :=
+  decide (state.slots.size + plan.arenaReservation - state.work.length <
+    plan.worklistReservation)
+
+/-- With no more available worklist entries than the actual slot-derived
+headroom, a queue-capacity exclusion refuses before any physical mutation. -/
+theorem BytePlan.semanticCheck_refuses_queue_capacity
+    {state : PhysicalState} {bytes : List UInt8} {plan : BytePlan}
+    {redex : XRedex NetSym}
+    (hRule : NetI64.xRule redex.2.2.1 redex.2.2.2.1 = some redex.2.2.2.2)
+    {arena scratch queue : Nat}
+    (hd : BytePlan.decode bytes = some plan)
+    (hcap : state.queueCapacityExcluded plan = true)
+    (hqueue : queue ≤ state.slots.size + plan.arenaReservation -
+      state.work.length) :
+    BytePlan.semanticCheck state bytes redex hRule arena scratch queue = none := by
+  have hshort : ¬ plan.worklistReservation ≤ queue := by
+    simp only [PhysicalState.queueCapacityExcluded, decide_eq_true_eq] at hcap
+    omega
+  simp [BytePlan.semanticCheck, hd, PhysicalState.reserve, hshort]
+
 /-- The physical emitter needs a *separate* completeness proof: decoding a
 model-emitted image and observing that admission succeeded imply one whole-net
 rewrite, but the decoder alone does not establish semantic admission. -/

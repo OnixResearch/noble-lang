@@ -99,6 +99,46 @@ theorem PhysicalState.aux_loop_is_explicit_exclusion :
     set_option maxRecDepth 3000 in decide
   all_goals set_option maxRecDepth 3000 in decide
 
+/-- An old worklist may contain stale generation-tagged entries which no
+longer project to active abstract pairs, but still occupy physical capacity.
+This legal layout isolates the fourth, independent queue-resource exclusion. -/
+def op2FullQueueStart : PhysicalState :=
+  { op2PublishedStart with
+    work := List.replicate 3
+      { first := 0, firstGeneration := 11, second := 2,
+        secondGeneration := 0 } }
+
+/-- Structural legality, a current matched pair, counter headroom, byte
+encodability and no boundary alias do not imply executable emission: a full
+physical queue rejects publication even though all old entries are stale.
+The lowering still emits bytes; the independently checked transaction refuses
+under the slot-derived worklist reservation, without exposing partial state. -/
+theorem PhysicalState.queue_full_is_independent_exclusion :
+    op2FullQueueStart.Legal ∧
+    op2FullQueueStart.logicalPair
+      { first := 0, firstGeneration := 0, second := 1, secondGeneration := 0 } =
+        some ([1], [2]) ∧
+    op2FullQueueStart.pairHeadroom
+      { first := 0, firstGeneration := 0, second := 1, secondGeneration := 0 } = true ∧
+    op2FullQueueStart.consumedBoundaryAlias
+      { first := 0, firstGeneration := 0, second := 1, secondGeneration := 0 }
+      op2PhysicalRedex = false ∧
+    op2FullQueueStart.planIndicesEncodable = true ∧
+    op2FullQueueStart.project.work = [] ∧
+    op2FullQueueStart.work.length = op2FullQueueStart.slots.size ∧
+    op2FullQueueStart.lowerPlan
+      { first := 0, firstGeneration := 0, second := 1, secondGeneration := 0 }
+      op2PhysicalRedex true = some op2PublishedFixture ∧
+    op2FullQueueStart.queueCapacityExcluded op2PublishedFixture = true ∧
+    op2FullQueueStart.executeCheckedImage op2PublishedFixture.emit
+      op2PhysicalRedex = none ∧
+    BytePlan.semanticCheck op2FullQueueStart op2PublishedFixture.emit
+      op2PhysicalRedex (by rfl) 0 256 0 = none := by
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · unfold PhysicalState.Legal
+    set_option maxRecDepth 3000 in decide
+  all_goals set_option maxRecDepth 3000 in decide
+
 /-- A semantically checked step restores the ownership, free-slot and
 canonical-queue subset of structural legality. Full legality additionally
 uses the explicit physical-edge checks in `SemanticFields`. -/

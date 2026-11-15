@@ -13558,6 +13558,18 @@
       "claim": "a model candidate whose byte image exceeds 256 bytes refuses plan lowering"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.semanticCheck_refuses_queue_capacity",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a checker with physical slot-derived queue headroom refuses any image requesting more publication entries"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.queue_full_is_independent_exclusion",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a legal matched non-aliased and byte-encodable layout can emit a plan while stale physical entries fill the queue and independently refuse execution"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_requires_headroom",
       "phase": 1,
       "role": "representation",
