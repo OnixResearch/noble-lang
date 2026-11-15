@@ -2,10 +2,10 @@
   "revision": "0.1.0-draft.5",
   "validator": {
     "file": "tools/check-specs.mjs",
-    "sha256": "19932073b4af954516f7372033ef69de717b1251197c1bf8b455edf944d0efc2",
+    "sha256": "c0fc6e1a6a24fd5feafea794d119590d85efa899aa9be6de40f3716141bdc2be",
     "adapter": {
       "file": "tools/cairn-specs.mjs",
-      "sha256": "e59bb1e929ebc0dd2f9bb038eb462c3cda964acf2799e7fe3312c8660d192ca9"
+      "sha256": "628700981379a20afdec4203526a2c4676d65d6b3d46eae025e151abe4acee79"
     }
   },
   "lane": "document-validation-only",
@@ -14,11 +14,11 @@
     "bun": null,
     "node_api": "24.13.0"
   },
-  "documents": 15,
-  "requirements": 604,
+  "documents": 16,
+  "requirements": 612,
   "scenarios": 274,
   "scenarios_executed": 194,
-  "open_test_design": 226,
+  "open_test_design": 234,
   "proof_obligations": 30,
   "completed_proofs": 3,
   "self_tests": [],
@@ -796,6 +796,22 @@
       "sha256": "123a4566964e784acf54f4c73010f5bb0f4e19e728f3745f8d23876ce628b5e4"
     },
     {
+      "file": ".cairn/archive/2026-11-15-learned-procedure-library/design.md",
+      "sha256": "b964d969eb7668b07c521b77608fa63d9257b9ecd9e01168fe03a8176b490390"
+    },
+    {
+      "file": ".cairn/archive/2026-11-15-learned-procedure-library/proposal.md",
+      "sha256": "47d5b29fc842b272db99a79cc91f6e0c46754795b7d5b8fb93547f2775741920"
+    },
+    {
+      "file": ".cairn/archive/2026-11-15-learned-procedure-library/specs/learned-procedure-library/spec.md",
+      "sha256": "a80a5caefbbb6a47cdaed030a75b4ee7267d5cffb38c7fc0e01ed1729d2eedc6"
+    },
+    {
+      "file": ".cairn/archive/2026-11-15-learned-procedure-library/tasks.md",
+      "sha256": "0509cb4a224f20d43be520de3765a39ca6a27b7939422844c5ca0b3d4cbea1fd"
+    },
+    {
       "file": ".cairn/changes/allocation-strategy-contract/design.md",
       "sha256": "6b34ad39dd8180a08464c66daf450af2f6a687f9dee4bf1c5abd0f3436f06b66"
     },
@@ -1064,22 +1080,6 @@
       "sha256": "dda4524c7277b81c86c3c6bbe086835a80fa4cc6ba059c1e07b79038652545fe"
     },
     {
-      "file": ".cairn/changes/learned-procedure-library/design.md",
-      "sha256": "44b3635c404766ac3e5c2dbdc3eac615ec5c2337151ab82c1869f92ff0d2f0d1"
-    },
-    {
-      "file": ".cairn/changes/learned-procedure-library/proposal.md",
-      "sha256": "47d5b29fc842b272db99a79cc91f6e0c46754795b7d5b8fb93547f2775741920"
-    },
-    {
-      "file": ".cairn/changes/learned-procedure-library/specs/learned-procedure-library/spec.md",
-      "sha256": "a80a5caefbbb6a47cdaed030a75b4ee7267d5cffb38c7fc0e01ed1729d2eedc6"
-    },
-    {
-      "file": ".cairn/changes/learned-procedure-library/tasks.md",
-      "sha256": "a3dcbe6d9c5d04ba9d205e66c19055e0ed61f8fbc82a064c34098e207940028d"
-    },
-    {
       "file": ".cairn/changes/live-reference-lifetimes/design.md",
       "sha256": "8d14310600bc71df02b8716fc5f64a2ee3e26f3abf00903343f957df4c3e8b15"
     },
@@ -1221,7 +1221,7 @@
     },
     {
       "file": ".cairn/changes/partial-evaluation-v1/design.md",
-      "sha256": "2c44fd0dcefcfaa91997459b4923649a62eae6fb1f93bfac7fdd19e27261d19a"
+      "sha256": "8005a07adf7890f30b9dc2d49a5ce771fd50e68a89a757bebba4f05aa234ca8e"
     },
     {
       "file": ".cairn/changes/partial-evaluation-v1/proposal.md",
@@ -1464,6 +1464,10 @@
       "sha256": "de4fcb3c7f4eb0cb60a6d289e4b44acb0892d13c185320a5d269033db65ba19e"
     },
     {
+      "file": ".cairn/specs/learned-procedure-library/spec.md",
+      "sha256": "c568d46444c419a367def306c7146bad468041c00eef19911b4d5f07ca688a2e"
+    },
+    {
       "file": ".cairn/specs/program-contracts/spec.md",
       "sha256": "dd9add3290f88d4ef2f38fc5cbd1efcc51255e1585ae7b80d33b9805336e227e"
     },
@@ -1517,7 +1521,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "9581e04da76c2e51ef0d9fef50072f20d57a26ee297fcc5e8d080abae987d58a"
+      "sha256": "94ea8e1e3bb51654f4a16787d01797c7d81eedac68fbbb8c50c22a01317ec92b"
     },
     {
       "file": "proofs/inets/README.md",
@@ -1529,7 +1533,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "3d432cd65d7454d996647e96566724d927a0423e4406c96cdbf64c8bc336fd1c"
+      "sha256": "535d623c254d7d20993cbb1bbf9ded1b1059e037de62b4e69798530fcf4222e9"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -1656,6 +1660,10 @@
       "sha256": "c611f7a5d33d6ad8176e955e21faeb098acde8b98da3eaca7daff260ed6bb698"
     },
     {
+      "file": "specs/LEARNED-PROCEDURE-LIBRARY.md",
+      "sha256": "b1a610828de1af03d03554bf1f0584746a8e1e4318a0ef56767f40e969f09d9d"
+    },
+    {
       "file": "specs/OCTET-ADOPTION.md",
       "sha256": "f6d2f41107e39b29dd286ab02034ed8f2f0f828afdba1ad89624c1a11c22d35c"
     },
@@ -1665,11 +1673,11 @@
     },
     {
       "file": "specs/README.md",
-      "sha256": "140da598d8b8926626951b870d703847d1a6440e7eb351d5ddd518618ee34ae2"
+      "sha256": "ca6343d34da53403cbb54dfde417dfaef7e44dcae4410c6ff0ec6acfdaf55a15"
     },
     {
       "file": "specs/requirements.json",
-      "sha256": "1165bb62d217a1930b4d6b131ee30f2dd6bf78e5afa24c7c468d891c5e9662da"
+      "sha256": "0bce5965255d1eab1f357476e0f42a054684e914ea00ee59f45dd62db23550be"
     },
     {
       "file": "specs/RESOURCE-ADAPTERS.md",
@@ -1701,7 +1709,7 @@
     },
     {
       "file": "specs/spec-family.json",
-      "sha256": "a6c081003cc07ac44598c88170b6630affe7a931dc507f566c08f21e9d32da59"
+      "sha256": "1d5283c78931d33e55150f883a0a493699b36e9aa869ddeedb6b92ec73a12708"
     },
     {
       "file": "specs/STATUS.json",
@@ -2032,6 +2040,14 @@
       "sha256": "f4cbd7b07697a72b2a651d748e331a99e2aef7dbccd4dae81fc93c5e36333b4a"
     },
     {
+      "file": "verification/m7/trace130/profile.md",
+      "sha256": "e6e87856217cba33887b2a3ffeda08b2971d2f7279b867f9661ce2ab2e4e11bd"
+    },
+    {
+      "file": "verification/m7/trace130/report.md",
+      "sha256": "106a16320b5cb1ab4e368a1542537c62e406802a4f8701c0bee5fab97c12db2f"
+    },
+    {
       "file": "verification/main-gates/README.md",
       "sha256": "b4dc33b1bc74452d070158bb682a7c7c57d7a078901539e47607fbb94a88a12f"
     },
@@ -2072,6 +2088,10 @@
       "sha256": "348eb18eca683febe6e75e2f3190f9c270c27d2fd1897ece1057530019cb9eb5"
     },
     {
+      "file": "verification/ngraph/mm0/decision.md",
+      "sha256": "f281a087b9deac4339f51e9a4f8bc40273d225bbf84df15a40b22005aeca3f40"
+    },
+    {
       "file": "verification/ngraph/net-continuation-criteria.md",
       "sha256": "a84506f0d4f74268b6e540a88fa6bdb949950c9b6991116342416d16bc36b7d2"
     },
@@ -2081,7 +2101,7 @@
     },
     {
       "file": "verification/ngraph/README.md",
-      "sha256": "5db2602d4f556d7ef978793992b6e648ba718eb6fcdb9a1c287fd3591dd1e3ab"
+      "sha256": "d0f17d98da16750104ff7535fb2341aad19bf155daa939518dd42ffb96b4813e"
     },
     {
       "file": "verification/numeric-graph-v1/architecture-exceptions.md",
@@ -2157,7 +2177,7 @@
     },
     {
       "file": "verification/procedure-library/decision.md",
-      "sha256": "6188fdfdacc3bb8d015585a2dcdeb4d3762ad85e642f771f972bfb838d9f3c9d"
+      "sha256": "658bf35327d5143c88fa7b22e1ef8e12066060b0b2492a477c116e87eb041e41"
     },
     {
       "file": "verification/program-inspection/README.md",
@@ -2185,7 +2205,7 @@
     },
     {
       "file": "verification/region-trace/README.md",
-      "sha256": "68fe1acc819be7c5f103cfc981db6d049b9de8d1b206f124f997998d9cb77aa1"
+      "sha256": "fe309d328e837e424dba53049e28f834cbbedc0404708698d9a5f2ba3c9bccf5"
     },
     {
       "file": "verification/service-wire-refinement/README.md",
@@ -2242,6 +2262,18 @@
     {
       "file": "verification/task-scope/README.md",
       "sha256": "0de148ac1c236ce616345aa5218c81224adcfabdf173230bb84e21f58a7a8de0"
+    },
+    {
+      "file": "verification/tick-runner/continuation-criteria.md",
+      "sha256": "f99c55aba4f36917d3ff9b5674a2c1725b09c0c3aa42804b27ff021d5c23fbab"
+    },
+    {
+      "file": "verification/tick-runner/decision.md",
+      "sha256": "afa607a7881ec9c63c72f72f6577061d28ab08233a04b292c85d67b3d711a206"
+    },
+    {
+      "file": "verification/tick-runner/README.md",
+      "sha256": "d38ef54a36a7530b7c8c667b05bcb8557cdb4b470de4a8b3d2a98acb566f33b5"
     },
     {
       "file": "verification/tool-selection.md",
