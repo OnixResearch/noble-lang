@@ -40,6 +40,10 @@ import NobleFoundation.NetI64PlanLowering
 import NobleFoundation.NetI64PlanLegal
 import NobleFoundation.NetI64PlanLoweringCorpus
 import NobleFoundation.NetI64PlanFired
+import NobleFoundation.NetI64PlanProjection
+import NobleFoundation.NetI64PlanExecute
+import NobleFoundation.NetI64PlanCompose
+import NobleFoundation.NetI64PlanShape
 import NobleFoundation.BeltTarget
 import NobleFoundation.BeltTargetCorpus
 import NobleFoundation.GraphRewrite
