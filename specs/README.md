@@ -121,6 +121,7 @@ not automatic completion.
 | [Resource adapters](RESOURCE-ADAPTERS.md) | SPEC-R001 | Bounded synchronous and selected native-async ownership contracts |
 | [Developer experience](DEVELOPER-EXPERIENCE.md) | SPEC-DX001 | Scoped language ergonomics, libraries, module boundaries, protocol types, and development tools |
 | [Exact calculator](CALCULATOR.md) | SPEC-CALC001 | First reference application: exact arithmetic, lexical functions, and bounded AI-authoring evaluation |
+| [Typed-chunk ranking](TYPED-CHUNK-RANKING.md) | SPEC-TCRANK001 | Bounded learned-ranking experiment over checked #73 chunks; the retained [NO-GO decision](../verification/typed-chunk-ranking/decision.md) does not select a production scorer |
 
 ## Verification and evidence
 

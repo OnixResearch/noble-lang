@@ -90,6 +90,12 @@
       "path": "../.cairn/specs/calculator/spec.md",
       "compatibility_path": "CALCULATOR.md",
       "cairn_id": "calculator"
+    },
+    {
+      "id": "SPEC-TCRANK001",
+      "path": "../.cairn/specs/typed-chunk-ranking/spec.md",
+      "compatibility_path": "TYPED-CHUNK-RANKING.md",
+      "cairn_id": "typed-chunk-ranking"
     }
   ],
   "scenario_files": [
