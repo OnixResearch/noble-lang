@@ -1,7 +1,9 @@
 .pi/
 .octet/
 node_modules/
-target
+# Only the root Cargo build directory: tracked source modules may be named `target`
+# (crates/noble-ngraph/src/belt/target/, the #118 transfer fixtures).
+/target
 .lake/
 .octet/
 proofs/m1/NobleKernel.lean
