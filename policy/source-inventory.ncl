@@ -31160,6 +31160,8 @@ let
     { name = "node", category = "verification-tool" },
     { name = "octet", category = "architecture-tool" },
     { name = "octet_standards", category = "architecture-tool" },
+    { name = "onnx_python", category = "verification-tool" },
+    { name = "onnx_runtime", category = "verification-tool" },
     { name = "quality_rust", category = "rust-toolchain" },
     { name = "upstream_pin_check", category = "compatibility-tool" },
     { name = "wasm_tools", category = "verification-tool" },
