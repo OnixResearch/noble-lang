@@ -78,9 +78,11 @@ The previous stock **host-loop** result is still valid but is not model-held rec
 
 The preceding deferrals were decisions made **before** these arms existed.
 The additional thresholds in `batch9-criteria.txt` were frozen at `c4d2765`
-before any new arm ran. The immutable clean-source receipt
-`receipts/2026-11-15/batch9-d7489d5.json` binds implementation `d7489d5`,
-the selected offline ORT 1.23.2/Python 3.13.12 closure and source/model bytes.
+before any new arm ran. The final immutable clean-source receipt
+`receipts/2026-11-15/batch9-c070ef5.json` binds Octet-clean implementation
+`c070ef5`, the selected offline ORT 1.23.2/Python 3.13.12 closure and
+source/model bytes. The earlier `batch9-d7489d5.json` remains immutable
+historical evidence from before the table-test lint fix, not the final run.
 The independent Lean audit is
 `receipts/2026-11-15/recurrent-proof-f3a2323.json`, from clean source
 `f3a2323`; it hashes the complete foundation checker output and records its
