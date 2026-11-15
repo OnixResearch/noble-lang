@@ -3,7 +3,7 @@
 **Decision: accept the executed store/retrieval/composition mechanics and the narrowly
 measured frozen-fixture result; do not close the full Cairn change or claim
 incremental learning, general transfer, a teacher-attempt refusal in the
-frozen run, semantic aliasing, or implementation/model correspondence.** The remaining acceptance
+original frozen run, semantic aliasing, or universal implementation/model correspondence.** The remaining acceptance
 obligations are explicit below. The frozen criterion is
 `criteria-2026-11-13.json` (SHA-256
 `36b8efc1d7f99485f3e1764a596ce014ab24dcb62d6f029bf32456c196a4dc79`),
@@ -114,6 +114,24 @@ derived mechanically from the #116 producer's declared source semantics
 and actual top-of-stack composition order, never manually restated, followed
 by exactly one clean-source run. Do not rerun v2.
 
+## Finite byte-encoder correspondence, not universal refinement
+
+The kernel-checked `NobleFoundation/ProcedureLibraryWire.lean` models exactly
+two restricted source records, including length-prefixed UTF-8, big-endian
+integers, fixed chunk IDs and revisions, typed interfaces, body node tags,
+provenance options and zero library dependencies. Its three inventoried
+theorems check the two resulting byte lengths and an encoder prefix. The
+separate clean-source Lean emitter produced
+`receipts/encoder-corpus-v1.json` (SHA-256
+`3936d12dc1ee017ce6b0d10ec7ec22cee60e29868ffb9814e5b15cb772e1dd4e`);
+its verifier binds the model/emitter and Rust encoder/fixture digests.
+`transfer::encoder_corpus::finite_subject_bytes_match_lean_generated_corpus`
+reconstructs both Rust records, checks their chunk IDs and source revisions,
+then compares the full immutable-subject bytes. Both cases passed. This is a
+finite implementation/model **differential fixture**, not a universal
+correspondence theorem for arbitrary chunks, dependencies, captures, digests,
+semantic aliases or proof-demanding promotion. Those obligations remain open.
+
 ## Acceptance and remaining obligations
 
 | Item | Status | Evidence / release condition |
@@ -126,8 +144,8 @@ by exactly one clean-source run. Do not rerun v2.
 | Frozen held-out composed-task evaluation and per-seed library growth/retrieval overhead | DONE for the **repaired fixture** | Criterion SHA-256 above; both attempts retained separately; one repaired repeat meets 8/8 and 24/24. Per-arm rows, bytes, query counts, restart, retention, regression and null break-even reasons are in `transfer-repeat.json`. This is not an incremental benefit over the frozen-hand library. |
 | #116-generated held-out **transfer measurement**, with grammar/budget/trace/verifier status and no target leakage | **NOT DONE** | Acquisition sources remain bound to `verification/synthesis/receipts/2026-11-13/synthesis-v2.json`. V2 produced two three-input targets with retained trace, solver status and normal CLI re-admission; its final four-arm run covered every seed and isolated attempted-call refusal. But v2's source-order/reference pairing was defective and passed 0/8 for that reason; this is **not** a valid measurement of the library. V1's mapping was correct but never run. Reopen only under a new precommitted criterion deriving references mechanically from #116 source semantics and actual top-of-stack composition order, then exactly one clean-source run. |
 | No runtime teacher/proposer fallback, including an attempted-call refusal | DONE for the v2 boundary; original frozen clause NOT DONE | The original frozen repeat records zero calls but no attempted call. The independent non-held-out refusal test remains. Separately, v2's final one-shot run records all 16 scored arms with zero attempts/calls and four fresh-library negative controls with one attempted call of each kind per seed, each refused before callbacks. No scored arm inherits those attempts. This establishes the attempted-call boundary in that execution, **not** successful transfer under v2's defective criterion or the original receipt's missed clause. |
-| Proof obligations O1–O6 and proof-demanding promotion | PARTIAL | `proofs/foundation/NobleFoundation/ProcedureLibrary.lean` proves abstract typed-subject identity, reload, append/dedup and rollback; Rust tests exercise O5/O6. No checked refinement from Rust bytes/hash to Lean or #56 runtime exact-pair proof exists. Do not promote under a proof-demanding policy on the strength of the model alone. |
-| Cairn validation and archive | PARTIAL | Pinned `cairn validate` passes; unchecked positive exact-pair alias, its `LPL-T07` fixture, #116 composed-target generation, the frozen-run teacher-attempt clause and Rust/Lean correspondence remain in `.cairn/changes/learned-procedure-library/tasks.md`. Keep the change active; archive only after those rows are honestly discharged. |
+| Proof obligations O1–O6 and proof-demanding promotion | PARTIAL | `proofs/foundation/NobleFoundation/ProcedureLibrary.lean` proves abstract typed-subject identity, reload, append/dedup and rollback; Rust tests exercise O5/O6. `NobleFoundation/ProcedureLibraryWire.lean` plus `receipts/encoder-corpus-v1.json` and the Rust differential test bind **two finite** subject encodings to kernel-checked model fixtures. No universal refinement from Rust bytes/hash to Lean or #56 runtime exact-pair proof exists. Do not promote under a proof-demanding policy on the strength of this finite corpus. |
+| Cairn validation and archive | PARTIAL | Pinned `cairn validate` passes; unchecked positive exact-pair alias, its `LPL-T07` fixture, a **valid** #116-generated composed-target measurement and universal Rust/Lean correspondence remain in `.cairn/changes/learned-procedure-library/tasks.md`. The original frozen run's missed teacher-attempt clause is not retroactively discharged; v2 independently exercised that refusal boundary. Keep the change active; archive only after the open rows are honestly discharged. |
 
 Model proof, implementation tests, producer provenance, the observed repaired
 fixture, and correspondence assumptions are separate evidence classes. The

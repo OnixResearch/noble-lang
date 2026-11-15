@@ -83,5 +83,9 @@ exact-pair proof before proof-demanding
 promotion. The abstract model at
 `proofs/foundation/NobleFoundation/ProcedureLibrary.lean` discharges typed
 identity, reload, append and rollback lemmas, **not** a Rust byte-encoder
-refinement or a runtime #56 exact-pair proof. All four unticked Phase 2/3
+refinement or a runtime #56 exact-pair proof. A separate
+`NobleFoundation/ProcedureLibraryWire.lean` subprofile and digest-bound
+`verification/procedure-library/receipts/encoder-corpus-v1.json` now compare
+two finite kernel-checked model encodings with Rust subject bytes; this is
+not a universal refinement. All four unticked Phase 2/3
 rows remain open; keep this Cairn change active.
