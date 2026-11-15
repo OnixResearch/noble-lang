@@ -1,0 +1,12 @@
+{
+  "schema": "noble-procedure-library-transfer-disposition/1",
+  "criteria": "verification/procedure-library/criteria-producer-targets-v2.json",
+  "criteria_sha256": "884c2e51e3101107dbf6eca241339c9770970fb54a6349e8d9be7280cd834c81",
+  "source_commit": "b2c0fcf28cd99cf01ddd85a13955e83803d88628",
+  "final_receipt": "verification/procedure-library/receipts/producer-transfer-v2-final.json",
+  "final_raw": "verification/procedure-library/receipts/producer-transfer-v2-final.raw.log",
+  "decision": "NO-GO under the unchanged v2 rule: the learned arm passed 0/8 seed-task cells and 0/24 cases. All 16 scored rows have zero producer/teacher attempts and callbacks, matched control size, matching restart identities and zero earlier-task regressions. Four fresh-library negative controls each attempted one proposer and one teacher, refused both Unsupported, invoked zero callbacks and preserved the identity manifest.",
+  "criterion_defect": "The v2 target references were chosen from an incorrect static inference about stack order. The first source consumes the top pair (y,z); at [4,9,2], Commuted then Subtract actually produces -7, exactly v1's x-y-z, while Subtract then Commuted produces 25, exactly v1's x+y-z+14. V2 expected the opposite functions. The 0/8 result is a defective-criterion outcome, NOT evidence against the library's ability to transfer to correctly paired targets. The v1 mapping was right, as recorded in criteria-producer-targets-v1.erratum.json's correction.",
+  "heldout_transfer_status": "NOT DONE: there is no valid #116-generated held-out transfer measurement. The v1 mapping was never run; the v2 run was completed only against mismatched source/target references.",
+  "reopen_condition": "Commit a new frozen criterion before generation whose references are derived mechanically from the #116 producer's declared source semantics and the actual top-of-stack composition order, never restated by hand; bind manifest/fixture/reference bytes to that derivation, then execute exactly one clean-source run. Do not rerun the v2 criterion."
+}

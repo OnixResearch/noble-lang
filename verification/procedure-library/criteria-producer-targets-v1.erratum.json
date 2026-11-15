@@ -11,5 +11,11 @@
     "The second task declares source_order [arithSubtract,arithCommuted] and reference x+y-z+14. The actual bodies compute (x-y+7)+z+7 = x-y+z+14."
   ],
   "disposition": "The defective frozen criteria and manifest remain byte-identical and have no generated target or transfer run. A separately committed corrected criterion and target manifest precede the single authorized second producer/transfer run. No GO/NO-GO or target outcome is inferred from the defective files.",
-  "replacement": "verification/procedure-library/criteria-producer-targets-v2.json"
+  "replacement": "verification/procedure-library/criteria-producer-targets-v2.json",
+  "correction_after_v2_final_run": {
+    "source": "verification/procedure-library/receipts/producer-transfer-v2-final.json",
+    "original_static_inference": "WRONG: the first 2→1 source consumes the top two stack values (y,z), not the bottom two (x,y).",
+    "witness": "For [4,9,2], actual Commuted→Subtract yielded -7 = 4-9-2; actual Subtract→Commuted yielded 25 = 4+9-2+14. These are exactly the original v1 reference formulas in their original source order.",
+    "disposition": "The v1 criterion and manifest were not defective in their source-order mapping. This earlier erratum remains as a transparent record of the mistaken static inference; it is superseded by the executed composition witness. No v1 target generation or held-out transfer was run."
+  }
 }

@@ -52,7 +52,7 @@ condition. Do not tick either row on the strength of a digest or a mock.
 
 - [x] [serial] Freeze the transfer protocol before any run: task families, held-out composition split, four arms (no library, frozen hand library, accumulated learned library, size-matched non-transfer control), paired seeds, success threshold, and the exact library sweeps. Commit the criterion before measuring. r[LPL-08]
 - [ ] [serial] Generate held-out composed tasks from #116's producer with its grammar revision, budget, witness/counterexample trace and verifier status retained, and prove no held-out answer, body or evaluator state reaches an entry or the retrieval index. r[LPL-08]
-- [ ] [serial] Run the arms with the proposer and teacher disabled, record `proposer_calls` and `teacher_calls`, make any attempted call fail closed, and withdraw any transfer claim from a run with a nonzero count. r[LPL-08]
+- [x] [serial] Run the arms with the proposer and teacher disabled, record `proposer_calls` and `teacher_calls`, make any attempted call fail closed, and withdraw any transfer claim from a run with a nonzero count. r[LPL-08]
 - [x] [serial] Report acquisition, retention, transfer, regression, growth, retrieval overhead, restart reuse and the break-even invocation count per arm and per seed, with model/synthesis behavior, executed mechanics, correspondence and assumptions kept separate; claim no lifelong learning, speedup or universal transfer. r[LPL-08]
 - [ ] [serial] Discharge the planned proof obligations `LPL-O1`–`LPL-O4` and the executed properties `LPL-O5`/`LPL-O6` as their own obligations before any promotion of a record to `promoted` under a proof-demanding policy. r[LPL-01] r[LPL-03] r[LPL-07]
 
@@ -67,19 +67,21 @@ clean source commit under the byte-identical criterion is retained at
 8/8 learned task cells (24/24 examples), 8/8 frozen-hand, 0/8 empty and
 0/8 size-matched control. `verification/procedure-library/decision.md`
 records why this is not a claim of incremental learning or of attempted-call
-refusal **in the frozen run**. The first unticked Phase 3 row needs #116
-generation of the composed held-out targets with producer trace/status under
-a new frozen criterion: only acquisition sources and their non-held-out
-reference examples are now read directly from the bound #116 receipt, while
-the composed target references remain fixture-authored. The second unticked
-row needs an attempted-call negative control in a separately frozen run:
-the original held-out receipt recorded zero actual calls but exercised no
-attempt; a later independent non-held-out library test now proves both
-attempts return `Unsupported` with zero host callbacks, not that the frozen
-run tested this condition. The third unticked row needs a checked Rust
-byte-encoder refinement and the #56 exact-pair proof before proof-demanding
+refusal **in the original frozen run**. The later separately frozen
+`verification/procedure-library/receipts/producer-transfer-v2-final.json`
+records all 16 scored rows with zero producer/teacher attempts and callbacks.
+Its four separate fresh-library negative controls each deliberately attempted
+both requests and refused `Unsupported` before either callback; the original
+receipt's missed clause remains missed. The v2 target references were paired
+to the wrong source-order semantics; v2's 0/8 learned outcome is a
+**defective-criterion NO-GO, not evidence against the library**. The first
+unticked Phase 3 row still needs a valid #116-generated held-out transfer
+measurement under a new criterion mechanically derived from producer source
+semantics before generation; v1's correct pairing was never run. The other
+unticked Phase 3 row needs a checked Rust byte-encoder refinement and the #56
+exact-pair proof before proof-demanding
 promotion. The abstract model at
 `proofs/foundation/NobleFoundation/ProcedureLibrary.lean` discharges typed
 identity, reload, append and rollback lemmas, **not** a Rust byte-encoder
-refinement or a runtime #56 exact-pair proof. All five unticked Phase 2/3
+refinement or a runtime #56 exact-pair proof. All four unticked Phase 2/3
 rows remain open; keep this Cairn change active.
