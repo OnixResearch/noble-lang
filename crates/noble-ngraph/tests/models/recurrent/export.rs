@@ -93,7 +93,9 @@ fn row(state: &[u64], input: &[u64], output: &[u64]) -> String {
     let list = |words: &[u64]| {
         words
             .iter()
-            .map(u64::to_string)
+            // JSON numbers pass through the Node receipt runner, whose Number
+            // cannot represent all 64-bit words (including u64::MAX).
+            .map(|word| format!("\"{word}\""))
             .collect::<Vec<_>>()
             .join(",")
     };

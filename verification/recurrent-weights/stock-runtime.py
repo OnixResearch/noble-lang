@@ -70,6 +70,20 @@ def source(program, state, inputs):
     return [state[1], state[0]]
 
 
+def vector_words(values):
+    require(type(values) is list, "malformed vector word list")
+    words = []
+    for value in values:
+        require(type(value) is str and 1 <= len(value) <= 20
+                and value.isascii() and value.isdecimal(),
+                "noncanonical 64-bit word text")
+        word = int(value)
+        require(str(word) == value and 0 <= word <= U64_MAX,
+                "vector word outside 64-bit domain")
+        words.append(word)
+    return words
+
+
 def tensor(name, values, kind):
     return numpy_helper.from_array(np.asarray(values, dtype=kind), name=name)
 
@@ -290,8 +304,9 @@ def controls(engine, spec, model_bytes, output_dir):
     require(restore({**base, "index": 1000, "remaining_budget": 0}, engine) == state,
             "request-end boundary restore")
     third = spec["vectors"]["teacher_forced"][2]
-    resumed = restore({**base, "index": 2, "remaining_budget": 998, "state": third[0]}, engine)
-    require(engine.step(resumed, third[1], budget=998) == third[2],
+    resumed = restore({**base, "index": 2, "remaining_budget": 998,
+                       "state": vector_words(third[0])}, engine)
+    require(engine.step(resumed, vector_words(third[1]), budget=998) == vector_words(third[2]),
             "resumed stock execution differs from Noble/source")
     refused("request-end-budget-exhausted", lambda: engine.step(
         state, [1] if engine.program == "accumulator" else [], budget=0), results)
@@ -330,7 +345,7 @@ def compare_vectors(engine, spec):
         started = time.perf_counter_ns()
         for position, row in enumerate(rows):
             require(type(row) is list and len(row) == 3, "malformed Noble vector")
-            original_state, inputs, noble_output = row
+            original_state, inputs, noble_output = (vector_words(part) for part in row)
             require(source(engine.program, original_state, inputs) == noble_output,
                     f"Noble vector disagrees with independent source: {group} {position}")
             if group == "free_running":
