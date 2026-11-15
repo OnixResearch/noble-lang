@@ -12802,6 +12802,24 @@
       "claim": "appending physical queue publications does not change the observable net agents wires or outputs"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op2_omitted_external_decodes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the version-one byte parser accepts a syntactically valid OP2 image missing one required output write"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_omitted_external_execution_exact",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the parser-only OP2 image executes despite omitting the second external retarget"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_omitted_external_miswires",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the executed parser-only image misroutes the second ordered output relative to the checked rule image"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_output_execution_exact",
       "phase": 1,
       "role": "representation",

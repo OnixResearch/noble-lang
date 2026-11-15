@@ -34,6 +34,16 @@ The reuse/allocate plan streams differ under the same rule revision; both the ex
 
 **Open correspondence obligation:** prove that **Rust's** compiler emits the modeled `ngraph-net-plan/1` bytes for **every** admitted rule instance (the four aligned finite cases above do, but not universally), and that its independent decoder/checker admits only images whose slot/port/worklist mutations (saved boundary, generations, marks, reservations, rollback and overflow refusal) project to the model's one abstract rewrite. The remaining general Lean sublemma is: for every checker-admitted OP2/OP1/DUP/ERA image and representable live layout, `PhysicalState.executeCheckedImage` preserves the untouched frame, produces `Plan.commit`'s agent/wire and output-target projection, and gives a directed-pair worklist permutation (including reuse/fresh slots, external peers, reverse orientations, existing work and alias refusals). The free-port **identity** and physical queue-append components are proved for every successful model image; the projected old-work split additionally assumes stable old-pair slot generations/identities. Five fixed model images discharge whole-net equality, four of which now have actual Rust-byte identity, but not the universally quantified sublemma. A separate unproved Rust correspondence must bind the actual compiler, checker and executor transitions to this physical model. The obligation statement is **DONE**; universal implementation refinement is **OPEN**; hardware/concurrency are outside the issue.
 
+**Why the universal premise matters:** the kernel checks a parser-only OP2
+counterexample: `BytePlan.op2_omitted_external_decodes` accepts a versioned
+image with one omitted output write;
+`PhysicalState.op2_omitted_external_execution_exact` still executes it; and
+`PhysicalState.op2_omitted_external_miswires` witnesses a different second
+output wire from the correct OP2 image. This image is **not** a Rust
+checker-admitted plan. A theorem using only successful decoding/execution as
+its premise would be false; the general refinement must derive exact-write
+completeness from an independently specified semantic checker.
+
 ## Acceptance status by evidence class
 
 | Issue #110 acceptance item | Kernel model | Safe-Rust / finite evidence | Rust-to-model correspondence |

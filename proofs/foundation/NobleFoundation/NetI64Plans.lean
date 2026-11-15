@@ -2094,6 +2094,38 @@ theorem PhysicalState.op2_output_refines :
   · intro p
     rfl
 
+/-- The byte grammar alone accepts an image omitting the second output write.
+The independent semantic plan checker must rule this out: successful physical
+decoding and execution do not themselves establish abstract refinement. -/
+def op2OmittedExternalFixture : BytePlan :=
+  { op2OutputFixture with externalWrites := [(0, 0, 0)] }
+
+theorem BytePlan.op2_omitted_external_decodes :
+    BytePlan.decode op2OmittedExternalFixture.emit =
+      some op2OmittedExternalFixture := by
+  set_option maxRecDepth 3000 in decide
+
+def op2OmittedExternalAfter : PhysicalState :=
+  { op2PhysicalAfter with
+    outputs := [
+      { label := ([100], 0), target := (0, 0) },
+      { label := ([101], 0), target := (0, 2) }] }
+
+theorem PhysicalState.op2_omitted_external_execution_exact :
+    op2PhysicalStart.executeCheckedImage op2OmittedExternalFixture.emit
+      op2PhysicalRedex = some op2OmittedExternalAfter := by
+  set_option maxRecDepth 2000 in decide
+
+/-- The parser-only image successfully executes but leaves the second
+ordered output at the consumed node's old port, not the rule's result port. -/
+theorem PhysicalState.op2_omitted_external_miswires :
+    op2OmittedExternalAfter.project.wires[([101], 0)]? ≠
+      op2PhysicalAfter.project.wires[([101], 0)]? := by
+  simp [PhysicalState.project, PhysicalState.wires,
+    PhysicalState.portWires, PhysicalState.logicalPort,
+    op2OmittedExternalAfter, op2PhysicalAfter,
+    Std.HashMap.getElem_insert]
+
 /-- A nonempty publication: the resulting OP1's principal is connected to a
 third live number, while its auxiliary still points at an ordered output. -/
 def op2PublishedStart : PhysicalState :=

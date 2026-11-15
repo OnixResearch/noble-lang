@@ -12,7 +12,7 @@ node verification/net-plans/regenerate-lean-corpus.mjs
 -- source crates/noble-ngraph/src/net/rewrite.rs test-net-digest=dbda431a711b626e76b4951a7d22375fcd9a4274d1f19e401641768e617681c3
 -- source crates/noble-ngraph/src/net.rs test-net-digest=fd4090460eb9c8d0828f983323b5b523a7774b6af69727630012dc2f6857a68b
 -- source crates/noble-ngraph/src/net/plan/corpus.rs test-net-digest=06fad4f5918cb804b2a2923029e8138581f3a7ee7db445528b82cd713d6c59f1
--- source proofs/foundation/NobleFoundation/NetI64Plans.lean test-net-digest=f8f78a00519855e034819f74d37449ee2965d97eea956d0d709a3de808476e4f
+-- source proofs/foundation/NobleFoundation/NetI64Plans.lean test-net-digest=49beda9c3a213719041a30d761a28678b51814fdaf2b12ab2dc557c7e1917d9b
 -- length-framed emitted byte stream + revisions test-net-digest=9690658793bcea456e55e6db6e60b2c9d34d8d0fa705cdefe64182743ab572db
 -- test-net is a test-only identity scheme, not a cryptographic signature.
 
