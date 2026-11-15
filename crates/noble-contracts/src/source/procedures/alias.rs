@@ -366,16 +366,6 @@ impl Alias {
 pub(super) fn verify(records: &[ProcedureRecord]) -> Result<(), Refusal> {
     for record in records {
         let Some(alias) = &record.alias_of else {
-            if record
-                .evidence
-                .iter()
-                .any(|evidence| evidence.obligation == ALIAS_EVIDENCE_OBLIGATION)
-            {
-                return Err(refused(
-                    RefusalKind::Invalid,
-                    "alias validation evidence has no exact-pair claim",
-                ));
-            }
             continue;
         };
         let AliasCertificate::ExactPair(certificate) = &alias.certificate else {
