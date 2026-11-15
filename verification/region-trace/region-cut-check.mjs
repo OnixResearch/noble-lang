@@ -149,7 +149,7 @@ requireThat(final.commit === initial.commit && final.tree === initial.tree && fi
 const paths = [source, proof, 'proofs/m5/HostLocality.lean', 'proofs/m5/M5Resources.lean',
   'proofs/m3/NobleKernel/Funs.lean',
   'proofs/m5/region-cut-inventory.json', 'proofs/m5/lakefile.toml',
-  'crates/noble-kernel/src/resources/region_read.rs',
+  'crates/noble-kernel/src/region/read.rs',
   'crates/noble-kernel/src/lib.rs', 'crates/noble-cli/src/component/bounded_region.rs',
   'verification/host-locality/model-inputs.json',
   'verification/region-trace/region-cut-generate.mjs', 'verification/region-trace/region-cut-check.mjs',

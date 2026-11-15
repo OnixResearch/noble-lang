@@ -631,12 +631,13 @@ function main() {
     'abnormal_exit_cleanup_is_observed_rather_than_propagated',
     'failed_cleanup_is_reported_as_a_failed_observation',
     'failed_cleanup_release_retains_owner_for_recovery',
+    'native_copy_requires_the_admitted_identity_scope_and_checked_range',
   ];
   for (const name of hostTestNames) {
     requireThat(new RegExp(`test component::bounded_region::tests::${name}\\s+\\.\\.\\. ok`).test(hostTests.stdout),
       `direct Host test did not report success: ${name}`);
   }
-  requireThat(/test result: ok\. 8 passed; 0 failed/.test(hostTests.stdout),
+  requireThat(/test result: ok\. 9 passed; 0 failed/.test(hostTests.stdout),
     'direct Host control count differs from the receipt roster');
   const hostTestCommand = hostTests.record.id;
   const hostTestControls = [
@@ -658,6 +659,9 @@ function main() {
     ['borrowed-owner-restored-before-consuming-release', 'Host::read / Host::release',
       'invalid_claims_and_boundaries_do_not_read_or_consume_region',
       'After a successful borrowed read the original owner handle remains live and is then consumed by release.'],
+    ['authentic-scope-bounded-copy', 'Host::read_region',
+      'native_copy_requires_the_admitted_identity_scope_and_checked_range',
+      'The real table admits the exact claimed handle, scope and checked byte interval, refuses substituted identity/scope/out-of-bounds range, and returns that owner only after a matching completion.'],
     ['double-retirement-refused', 'Host::release', 'double_release_does_not_retire_the_owner_twice',
       'The first release retires once; a second release errors without incrementing releases or recreating a live owner.'],
     ['cleanup-release-refusal-retains-owner', 'Host::release', 'failed_cleanup_release_retains_owner_for_recovery',
