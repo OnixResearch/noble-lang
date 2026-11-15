@@ -1,0 +1,38 @@
+{
+  "schema": "noble-procedure-library-producer-targets-criteria/1",
+  "issue": "OnixResearch/noble-lang#118",
+  "frozen_before_target_generation": true,
+  "predecessor_criteria": "verification/procedure-library/criteria-2026-11-13.json",
+  "producer": {
+    "lane": "verification/synthesis/cegis.mjs",
+    "manifest": "verification/procedure-library/producer-targets-v1.txt",
+    "grammar": "synth-i64/0",
+    "budget": {"seed": "0x9e3779b97f4a7c15", "max_words": 8, "max_stack": 4, "max_candidates": 400000, "max_rounds": 4, "solver_ms": 10000},
+    "target_tasks": [
+      {"name": "arithComposeDifference", "reference": "(- (- x y) z)", "declared_inputs": 3, "bound": 8, "source_order": ["arithCommuted", "arithSubtract"]},
+      {"name": "arithComposeShifted", "reference": "(+ (- (+ x y) z) (+ 7 7))", "declared_inputs": 3, "bound": 8, "source_order": ["arithSubtract", "arithCommuted"]}
+    ],
+    "acquisition_receipt": "verification/synthesis/receipts/2026-11-13/synthesis-v2.json",
+    "acquisition_receipt_sha256": "4c05b46b3d439d7c5a95786d6a07e2c2017573d8a364fd6e8c52e2c70958387f"
+  },
+  "source_bound_sequence": [
+    "Commit these criteria and the target declaration before generating or inspecting any new target candidate, trace, receipt or held-out outcome.",
+    "Extend only the existing #116 CEGIS lane for three-input arithmetic and a selected manifest, with non-held-out regression tests; commit the generator and test runner before generating targets.",
+    "Run #116 once from a clean commit with the frozen target manifest, retaining its unmodified receipt, generated candidate bodies, grammar, budget, search/refutation trace, solver verdict, held-out producer observations and CLI re-admission status.",
+    "Commit that producer receipt without changing these criteria or its target manifest. Run the four-arm transfer exactly once from a later clean commit with output outside the tree. Retain the raw output and source-bound receipt, including failures; do not rerun or choose a replacement target after seeing outcomes."
+  ],
+  "paired_seeds": [1, 7, 23, 101],
+  "held_out_case_inputs": {
+    "1": [[4, 9, 2], [-12, 7, -5], [17, -4, 0]],
+    "7": [[19, 3, 8], [2, -17, 5], [-5, 21, -3]],
+    "23": [[8, -11, 4], [31, 6, -2], [-3, 14, 19]],
+    "101": [[0, 0, 1], [43, -23, 16], [-21, 29, 7]]
+  },
+  "arms": ["no_library", "frozen_hand_library", "accumulated_learned_library", "size_matched_nontransfer"],
+  "acquisition_order": ["arithCommuted", "arithSubtract"],
+  "control_pool_and_selection": "Use the predecessor's lexically selected size-matched non-transfer control over arithScaled, arithProduct and bitXor before looking at outcomes. Require <=10% canonical-byte size difference or report control unavailable; never silently substitute another control.",
+  "negative_control": "After all four scored arms at each seed, use a separate fresh library to deliberately request both RuntimeProducer::Proposer and RuntimeProducer::Teacher with counting callbacks. Each request must refuse Unsupported before callback execution; record one attempt of each kind, zero actual callbacks, unchanged identity manifest and zero new records. A failed refusal or a host callback is a NO-GO. The probe is inside the same one-shot source-bound run, but outside scored arms: attempted calls do not contaminate transfer-arm metrics.",
+  "go_rule": "GO iff both declared targets have #116-generated candidates with normal CLI readmission and passing producer held-out examples, both solver verdicts and all witness/counterexample traces are retained without upgrading an unproven status to a proof, the accumulated learned arm passes all 8 seed-task cells and 24/24 cases, all scored arms record zero proposer and teacher calls and attempts, every per-seed negative control refuses both attempts with zero host callbacks, and all restart/regression checks pass. Otherwise NO-GO; retain every failure.",
+  "report": ["per seed and arm: acquisition count, generations, canonical bytes, identity and restart match, retrieval queries/examined/monotonic ns, composed task and example outcomes, regression counts, proposer/teacher attempts and calls, break-even or null reason", "producer task status, candidate, search/solver witness trace, held-out agreement, tool identities, manifest and source digests", "model/synthesis behavior, executed mechanics, Rust-Lean correspondence and assumptions as distinct claims"],
+  "non_claims": ["Producer references and examples are declared inputs; #116 generates the candidate programs and checks them, not the reference expressions themselves.", "A solver UNSAT or passing fixture is not an independently kernel-checked universal proof.", "The second held-out run cannot retroactively change the predecessor's frozen criterion or receipt.", "No universal transfer, lifelong learning, speedup, semantic alias or Rust byte-encoder refinement is inferred from this finite experiment."]
+}
