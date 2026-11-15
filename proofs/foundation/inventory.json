@@ -14204,6 +14204,7 @@
     "NobleFoundation.NetI64Plans.dup_plan_boundary",
     "NobleFoundation.NetI64Plans.dup_plan_writes",
     "NobleFoundation.NetI64Plans.lookup_eq_of_some_iff",
-    "NobleFoundation.NetI64Plans.BytePlan.semanticFieldsCheck_iff"
+    "NobleFoundation.NetI64Plans.BytePlan.semanticFieldsCheck_iff",
+    "NobleFoundation.NetI64Plans.mapM_preserves_projection"
   ]
 }
