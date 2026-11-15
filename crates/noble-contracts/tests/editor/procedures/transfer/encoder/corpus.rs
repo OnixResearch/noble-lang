@@ -3,7 +3,7 @@ use super::*;
 const CORPUS: &str = "verification/procedure-library/receipts/encoder-corpus-v1.json";
 
 #[test]
-fn finite_subject_bytes_match_lean_generated_corpus() -> Result<(), String> {
+fn finite_subject_bytes_match_lean_generated() -> Result<(), String> {
     let receipt = super::producer_targets::read_json(CORPUS)?;
     if receipt["schema"] != "noble-procedure-library-lean-byte-receipt/1"
         || receipt["corpus"]["schema"] != "noble-procedure-library-lean-byte-corpus/1"

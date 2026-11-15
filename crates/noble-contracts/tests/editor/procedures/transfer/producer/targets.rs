@@ -15,6 +15,11 @@ pub(super) struct ProducerTargets {
     pub(super) summary: serde_json::Value,
 }
 
+struct TargetDeclaration<'a> {
+    name: &'a str,
+    reference: &'a str,
+}
+
 pub(super) fn read_json(relative: &str) -> Result<serde_json::Value, String> {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
@@ -27,9 +32,9 @@ pub(super) fn read_json(relative: &str) -> Result<serde_json::Value, String> {
 
 fn target_program(
     receipt: &serde_json::Value,
-    name: &str,
-    reference: &str,
+    target: TargetDeclaration<'_>,
 ) -> Result<(String, serde_json::Value), String> {
+    let TargetDeclaration { name, reference } = target;
     if receipt["name"] != name || receipt["reference"] != reference {
         return Err(format!("{name}: producer target name or reference drifted"));
     }
@@ -99,7 +104,7 @@ fn target_program(
         let expected_text = expected.to_string();
         if example["agrees"] != true
             || example["observed"].as_str() != Some(expected_text.as_str())
-            || evaluate_program(program, inputs)? != expected
+            || evaluator::evaluate_program(program, inputs)? != expected
         {
             return Err(format!(
                 "{name}: generated target disagrees on producer held-out input"
@@ -131,9 +136,11 @@ pub(super) fn load() -> Result<ProducerTargets, String> {
         return Err(String::from("producer criterion manifest path drifted"));
     }
     for (index, name) in TARGET_NAMES.iter().copied().enumerate() {
-        if criteria["producer"]["target_tasks"][index]["name"] != name
-            || manifest[index].0 != name
-            || criteria["producer"]["target_tasks"][index]["reference"] != manifest[index].1
+        if criteria["producer"]["target_tasks"][index]["name"] != name || manifest[index].0 != name
+        {
+            return Err(format!("{name}: frozen criterion task identity drifted"));
+        }
+        if criteria["producer"]["target_tasks"][index]["reference"] != manifest[index].1
             || criteria["producer"]["target_tasks"][index]["source_order"]
                 != serde_json::json!(TARGET_SOURCE_ORDERS[index])
         {
@@ -142,7 +149,10 @@ pub(super) fn load() -> Result<ProducerTargets, String> {
     }
     if receipt["schema"] != "noble-synthesis-receipt/v1"
         || receipt["source"]["manifest"] != "verification/procedure-library/producer-targets-v2.txt"
-        || receipt["source"]["clean"] != true
+    {
+        return Err(String::from("producer target source or budget drifted"));
+    }
+    if receipt["source"]["clean"] != true
         || receipt["budget"]["max_candidates"].as_u64() != Some(400_000)
     {
         return Err(String::from("producer target source or budget drifted"));
@@ -157,8 +167,20 @@ pub(super) fn load() -> Result<ProducerTargets, String> {
             serde_json::from_value(criteria["held_out_case_inputs"][seed.to_string()].clone())
                 .map_err(|error| format!("seed {seed} held-out input shape: {error}"))?;
     }
-    let (first, first_summary) = target_program(&tasks[0], TARGET_NAMES[0], &manifest[0].1)?;
-    let (second, second_summary) = target_program(&tasks[1], TARGET_NAMES[1], &manifest[1].1)?;
+    let (first, first_summary) = target_program(
+        &tasks[0],
+        TargetDeclaration {
+            name: TARGET_NAMES[0],
+            reference: &manifest[0].1,
+        },
+    )?;
+    let (second, second_summary) = target_program(
+        &tasks[1],
+        TargetDeclaration {
+            name: TARGET_NAMES[1],
+            reference: &manifest[1].1,
+        },
+    )?;
     let [(_, first_reference), (_, second_reference)] = manifest;
     let set = TargetSet {
         tasks: [
@@ -179,68 +201,6 @@ pub(super) fn load() -> Result<ProducerTargets, String> {
         set,
         summary: serde_json::json!([first_summary, second_summary]),
     })
-}
-
-pub(super) fn evaluate_program(program: &str, inputs: [i64; 3]) -> Result<i64, String> {
-    let words = program.split_whitespace().collect::<Vec<_>>();
-    if words.is_empty() || words.len() > 8 {
-        return Err(String::from(
-            "producer target exceeds the declared word bound",
-        ));
-    }
-    let mut stack = Vec::with_capacity(4);
-    stack.extend_from_slice(&inputs);
-    for word in words {
-        match word {
-            "dup" => {
-                let top = *stack.last().ok_or_else(|| String::from("dup underflow"))?;
-                stack.push(top);
-            }
-            "swap" => {
-                let length = stack.len();
-                if length < 2 {
-                    return Err(String::from("swap underflow"));
-                }
-                stack.swap(length - 2, length - 1);
-            }
-            "+" | "-" | "*" => {
-                let right = stack
-                    .pop()
-                    .ok_or_else(|| String::from("operator underflow"))?;
-                let left = stack
-                    .pop()
-                    .ok_or_else(|| String::from("operator underflow"))?;
-                let result = match word {
-                    "+" => left.wrapping_add(right),
-                    "-" => left.wrapping_sub(right),
-                    "*" => left.wrapping_mul(right),
-                    _ => return Err(String::from("unrecognized producer arithmetic word")),
-                };
-                stack.push(result);
-            }
-            "=" => return Err(String::from("Boolean target is outside the I64 criterion")),
-            literal => {
-                let value = literal
-                    .parse::<i64>()
-                    .map_err(|error| format!("unknown producer word {literal}: {error}"))?;
-                if ![0, 1, 2, 3, 5, 7].contains(&value) {
-                    return Err(format!(
-                        "producer constant {literal} is outside the grammar"
-                    ));
-                }
-                stack.push(value);
-            }
-        }
-        if stack.len() > 4 {
-            return Err(String::from("producer target exceeds max-stack 4"));
-        }
-    }
-    match stack.as_slice() {
-        [result] => Ok(*result),
-        _ => Err(String::from(
-            "producer target does not leave exactly one I64",
-        )),
-    }
 }
 
 pub(super) fn refusal_probe(seed: u64) -> Result<serde_json::Value, String> {
@@ -264,16 +224,16 @@ pub(super) fn refusal_probe(seed: u64) -> Result<serde_json::Value, String> {
             ));
         }
     }
-    let identity_unchanged = library
+    let is_identity_unchanged = library
         .identity_manifest()
         .map_err(|error| format!("probe final manifest: {error:?}"))?
         == original;
-    if budget.proposer_attempts() != 1
-        || budget.teacher_attempts() != 1
-        || calls.get() != 0
-        || !identity_unchanged
-        || !library.records().is_empty()
-    {
+    if budget.proposer_attempts() != 1 || budget.teacher_attempts() != 1 {
+        return Err(format!(
+            "seed {seed}: attempted producer control was not fail-closed"
+        ));
+    }
+    if calls.get() != 0 || !is_identity_unchanged || !library.records().is_empty() {
         return Err(format!(
             "seed {seed}: attempted producer control was not fail-closed"
         ));
@@ -285,22 +245,13 @@ pub(super) fn refusal_probe(seed: u64) -> Result<serde_json::Value, String> {
         "proposer_calls": 0,
         "teacher_calls": calls.get(),
         "refusals": ["Unsupported", "Unsupported"],
-        "identity_unchanged": identity_unchanged,
+        "identity_unchanged": is_identity_unchanged,
         "records": library.records().len(),
     }))
 }
 
+#[path = "targets/evaluator.rs"]
+pub(crate) mod evaluator;
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn nonheldout_three_input_stack_evaluator_has_refusals() -> Result<(), String> {
-        assert_eq!(evaluate_program("+ -", [5, -5, 7])?, 3);
-        assert_eq!(evaluate_program("- 7 + 7 + +", [5, -5, 7])?, 7);
-        assert!(evaluate_program("42 + +", [0, 0, 0]).is_err());
-        assert!(evaluate_program("dup dup", [1, 2, 3]).is_err());
-        assert!(evaluate_program("= +", [1, 2, 3]).is_err());
-        Ok(())
-    }
-}
+#[path = "targets/tests.rs"]
+mod tests;

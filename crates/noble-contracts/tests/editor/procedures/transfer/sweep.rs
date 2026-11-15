@@ -130,8 +130,14 @@ pub(super) fn evaluate(input: SweepInput<'_>) -> Result<(String, Counts), String
         let order = super::fixtures::target_order(task, arm, control);
         let retrieved_steps = retrieve_source_steps(library, &mut budget, &mut counts)?;
         counts.heldout_tasks = counts.heldout_tasks.saturating_add(1);
-        let (fixtures, references) =
-            super::fixtures::heldout_cases(task, task_index, seed_index, target_set)?;
+        let (fixtures, references) = super::fixtures::heldout_cases(
+            task,
+            super::fixtures::CaseIndex {
+                task: task_index,
+                seed: seed_index,
+            },
+            target_set,
+        )?;
         let reference_count = u32::try_from(references.len())
             .map_err(|_| String::from("held-out fixture count exceeds the metrics domain"))?;
         counts.heldout_examples = counts.heldout_examples.saturating_add(reference_count);

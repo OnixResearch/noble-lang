@@ -2,6 +2,11 @@ use super::*;
 
 type HeldoutCases = (Vec<Fixture>, Vec<([i64; 3], i64)>);
 
+pub(super) struct CaseIndex {
+    pub(super) task: usize,
+    pub(super) seed: usize,
+}
+
 fn definition(record: &ProcedureRecord) -> DefinitionRef {
     let mut identity = [0; 8];
     identity.copy_from_slice(&record.chunk.chunk_id[..8]);
@@ -32,21 +37,21 @@ pub(super) fn target_order(
 
 pub(super) fn heldout_cases(
     task: HeldOutTask,
-    task_index: usize,
-    seed_index: usize,
+    index: CaseIndex,
     target_set: &TargetSet,
 ) -> Result<HeldoutCases, String> {
-    let inputs = target_set.inputs[seed_index];
+    let inputs = target_set.inputs[index.seed];
     let mut fixtures = Vec::with_capacity(inputs.len());
     let mut references = Vec::with_capacity(inputs.len());
     for values in inputs {
         let expected = match (
-            &target_set.references[task_index],
-            &target_set.programs[task_index],
+            &target_set.references[index.task],
+            &target_set.programs[index.task],
         ) {
             (Some(reference), Some(program)) => {
                 let declared = super::target_reference::evaluate(reference, values)?;
-                let generated = super::producer_targets::evaluate_program(program, values)?;
+                let generated =
+                    super::producer_targets::evaluator::evaluate_program(program, values)?;
                 if generated != declared {
                     return Err(format!(
                         "{} generated candidate disagrees with declared reference at {values:?}",

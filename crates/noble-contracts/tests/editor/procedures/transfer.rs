@@ -266,13 +266,13 @@ struct TaskReport<'a> {
 
 const TRANSFER_ROW_CAPACITY: usize = 16;
 
-#[path = "transfer/encoder_corpus.rs"]
+#[path = "transfer/encoder/corpus.rs"]
 mod encoder_corpus;
 #[path = "transfer/fixtures.rs"]
 mod fixtures;
 #[path = "transfer/producer.rs"]
 mod producer;
-#[path = "transfer/producer_targets.rs"]
+#[path = "transfer/producer/targets.rs"]
 mod producer_targets;
 #[path = "transfer/report.rs"]
 mod report;
@@ -282,7 +282,7 @@ mod runner;
 mod selection;
 #[path = "transfer/sweep.rs"]
 mod sweep;
-#[path = "transfer/target_reference.rs"]
+#[path = "transfer/target/reference.rs"]
 mod target_reference;
 #[path = "transfer/tests.rs"]
 mod tests;

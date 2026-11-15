@@ -125,7 +125,7 @@ separate clean-source Lean emitter produced
 `receipts/encoder-corpus-v1.json` (SHA-256
 `3936d12dc1ee017ce6b0d10ec7ec22cee60e29868ffb9814e5b15cb772e1dd4e`);
 its verifier binds the model/emitter and Rust encoder/fixture digests.
-`transfer::encoder_corpus::finite_subject_bytes_match_lean_generated_corpus`
+`transfer::encoder_corpus::finite_subject_bytes_match_lean_generated`
 reconstructs both Rust records, checks their chunk IDs and source revisions,
 then compares the full immutable-subject bytes. Both cases passed. This is a
 finite implementation/model **differential fixture**, not a universal

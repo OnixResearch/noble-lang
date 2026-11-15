@@ -103,7 +103,7 @@ fn producer_generated_heldout_measurement_once() -> Result<(), String> {
 }
 
 #[test]
-fn frozen_target_fixtures_match_criterion_and_manifest_before_transfer() -> Result<(), String> {
+fn frozen_target_fixtures_match_criterion_and_manifest() -> Result<(), String> {
     let producer = super::producer_targets::load()?;
     let criterion = super::producer_targets::read_json(
         "verification/procedure-library/criteria-producer-targets-v2.json",
@@ -124,8 +124,14 @@ fn frozen_target_fixtures_match_criterion_and_manifest_before_transfer() -> Resu
                 producer.set.references[task_index].as_deref(),
                 Some(declared)
             );
-            let (cases, references) =
-                super::fixtures::heldout_cases(task, task_index, seed_index, &producer.set)?;
+            let (cases, references) = super::fixtures::heldout_cases(
+                task,
+                super::fixtures::CaseIndex {
+                    task: task_index,
+                    seed: seed_index,
+                },
+                &producer.set,
+            )?;
             assert_eq!(cases.len(), criterion_inputs.len());
             assert_eq!(references.len(), criterion_inputs.len());
             for (case_index, (inputs, expected)) in references.iter().enumerate() {
