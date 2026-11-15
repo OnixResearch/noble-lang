@@ -8,11 +8,6 @@
 //! source and the new result have distinct identities. This is finite Rust
 //! implementation evidence, not a Rust/Lean or backend refinement theorem.
 
-use alloc::collections::BTreeMap;
-use alloc::vec::Vec;
-
-use crate::ir::{Literal, Node, NodeId, Op};
-
 /// Distinct revision of this explicitly selected research transformation.
 pub const REVISION: &str = "ngraph-pe/offset/0";
 
@@ -30,39 +25,39 @@ pub struct Comparison {
 
 #[derive(Clone, Copy)]
 struct Term {
-    node: NodeId,
+    node: crate::ir::NodeId,
     negative: bool,
 }
 
 #[derive(Clone)]
 struct Expr {
-    atoms: Vec<Term>,
-    offset: i64,
+    atoms: alloc::vec::Vec<Term>,
+    constant_value: i64,
 }
 
 impl Expr {
-    fn constant(offset: i64) -> Self {
+    fn constant(value: i64) -> Self {
         Self {
-            atoms: Vec::new(),
-            offset,
+            atoms: alloc::vec::Vec::new(),
+            constant_value: value,
         }
     }
 
-    fn atom(node: NodeId) -> Self {
+    fn atom(node: crate::ir::NodeId) -> Self {
         Self {
             atoms: alloc::vec![Term {
                 node,
                 negative: false
             }],
-            offset: 0,
+            constant_value: 0,
         }
     }
 
     fn append(&mut self, mut right: Self, subtract: bool) {
-        self.offset = if subtract {
-            self.offset.wrapping_sub(right.offset)
+        self.constant_value = if subtract {
+            self.constant_value.wrapping_sub(right.constant_value)
         } else {
-            self.offset.wrapping_add(right.offset)
+            self.constant_value.wrapping_add(right.constant_value)
         };
         if subtract {
             for atom in &mut right.atoms {
@@ -76,14 +71,17 @@ impl Expr {
 #[derive(Clone)]
 enum Value {
     I64(Expr),
-    Bool(NodeId),
+    Bool(crate::ir::NodeId),
 }
 
 impl Value {
-    fn i64(self) -> Expr {
+    fn i64(self) -> Result<Expr, crate::diag::Diagnostic> {
         match self {
-            Self::I64(value) => value,
-            Self::Bool(_) => unreachable!("a checked I64 operand is not Bool"),
+            Self::I64(value) => Ok(value),
+            Self::Bool(_) => Err(super::refuse(
+                crate::diag::Code::Interface,
+                "a checked I64 operand has Bool type",
+            )),
         }
     }
 }
@@ -101,58 +99,73 @@ enum Key {
     Eq(u32, u32),
 }
 
-fn key(op: &Op) -> Key {
+fn key(op: &crate::ir::Op) -> Result<Key, crate::diag::Diagnostic> {
     match op {
-        Op::Input(k) => Key::Input(*k),
-        Op::Const(Literal::I64(v)) => Key::I64(*v),
-        Op::Const(Literal::Bool(v)) => Key::Bool(*v),
-        Op::I64Add(a, b) => Key::Add(a.0, b.0),
-        Op::I64Sub(a, b) => Key::Sub(a.0, b.0),
-        Op::I64Mul(a, b) => Key::Mul(a.0, b.0),
-        Op::I64Eq(a, b) => Key::Eq(a.0, b.0),
-        _ => unreachable!("the baseline admitted only the total D1 whitelist"),
+        crate::ir::Op::Input(k) => Ok(Key::Input(*k)),
+        crate::ir::Op::Const(crate::ir::Literal::I64(v)) => Ok(Key::I64(*v)),
+        crate::ir::Op::Const(crate::ir::Literal::Bool(v)) => Ok(Key::Bool(*v)),
+        crate::ir::Op::I64Add(a, b) => Ok(Key::Add(a.0, b.0)),
+        crate::ir::Op::I64Sub(a, b) => Ok(Key::Sub(a.0, b.0)),
+        crate::ir::Op::I64Mul(a, b) => Ok(Key::Mul(a.0, b.0)),
+        crate::ir::Op::I64Eq(a, b) => Ok(Key::Eq(a.0, b.0)),
+        _ => Err(super::refuse(
+            crate::diag::Code::Profile,
+            "the offset experiment admits only the total D1 whitelist",
+        )),
     }
 }
 
 struct Store {
-    nodes: Vec<Node>,
-    shared: BTreeMap<Key, NodeId>,
-    limit: u64,
+    nodes: alloc::vec::Vec<crate::ir::Node>,
+    shared: alloc::collections::BTreeMap<Key, crate::ir::NodeId>,
+    allowed_nodes: u64,
 }
 
 impl Store {
-    fn new(limit: u64, capacity: usize) -> Self {
+    fn new(allowed_nodes: u64, reserved_nodes: usize) -> Self {
         Self {
-            nodes: Vec::with_capacity(capacity),
-            shared: BTreeMap::new(),
-            limit,
+            nodes: alloc::vec::Vec::with_capacity(reserved_nodes),
+            shared: alloc::collections::BTreeMap::new(),
+            allowed_nodes,
         }
     }
 
-    fn emit(&mut self, op: Op) -> Result<NodeId, crate::diag::Diagnostic> {
-        let identity = key(&op);
+    fn emit(&mut self, op: crate::ir::Op) -> Result<crate::ir::NodeId, crate::diag::Diagnostic> {
+        let identity = key(&op)?;
         if let Some(&id) = self.shared.get(&identity) {
             return Ok(id);
         }
         let charged = self.nodes.len() as u64 + 1;
-        if charged > self.limit {
+        if charged > self.allowed_nodes {
             return Err(crate::diag::Diagnostic::budget(
                 crate::diag::BudgetKind::ResidualNodes,
-                self.limit,
+                self.allowed_nodes,
                 charged,
             ));
         }
-        let id =
-            NodeId(u32::try_from(self.nodes.len()).expect("checked graph node count fits u32"));
-        self.nodes.push(Node { op, origin: None });
+        let id = crate::ir::NodeId(u32::try_from(self.nodes.len()).map_err(|_| {
+            crate::diag::Diagnostic::budget(
+                crate::diag::BudgetKind::ResidualNodes,
+                self.allowed_nodes,
+                charged,
+            )
+        })?);
+        self.nodes.push(crate::ir::Node { op, origin: None });
         self.shared.insert(identity, id);
         Ok(id)
     }
 
-    fn materialize(&mut self, expression: Expr) -> Result<NodeId, crate::diag::Diagnostic> {
+    fn materialize(
+        &mut self,
+        expression: Expr,
+    ) -> Result<crate::ir::NodeId, crate::diag::Diagnostic> {
         let mut terms = expression.atoms.into_iter();
         let mut result = match terms.next() {
-            None => return self.emit(Op::Const(Literal::I64(expression.offset))),
+            None => {
+                return self.emit(crate::ir::Op::Const(crate::ir::Literal::I64(
+                    expression.constant_value,
+                )))
+            }
             Some(Term {
                 node,
                 negative: false,
@@ -161,39 +174,62 @@ impl Store {
                 node,
                 negative: true,
             }) => {
-                let zero = self.emit(Op::Const(Literal::I64(0)))?;
-                self.emit(Op::I64Sub(zero, node))?
+                let zero = self.emit(crate::ir::Op::Const(crate::ir::Literal::I64(0)))?;
+                self.emit(crate::ir::Op::I64Sub(zero, node))?
             }
         };
         for term in terms {
             result = self.emit(if term.negative {
-                Op::I64Sub(result, term.node)
+                crate::ir::Op::I64Sub(result, term.node)
             } else {
-                Op::I64Add(result, term.node)
+                crate::ir::Op::I64Add(result, term.node)
             })?;
         }
-        if expression.offset != 0 {
-            let constant = self.emit(Op::Const(Literal::I64(expression.offset)))?;
-            result = self.emit(Op::I64Add(result, constant))?;
+        if expression.constant_value != 0 {
+            let constant = self.emit(crate::ir::Op::Const(crate::ir::Literal::I64(
+                expression.constant_value,
+            )))?;
+            result = self.emit(crate::ir::Op::I64Add(result, constant))?;
         }
         Ok(result)
     }
 }
 
-fn consume(values: &mut [Option<Value>], uses: &mut [u32], id: NodeId) -> Value {
-    let count = &mut uses[id.index()];
-    assert!(*count > 0, "each checked operand/output use is counted");
-    *count -= 1;
+fn consume(
+    values: &mut [Option<Value>],
+    uses: &mut [u32],
+    id: crate::ir::NodeId,
+) -> Result<Value, crate::diag::Diagnostic> {
+    let count = uses.get_mut(id.index()).ok_or_else(|| {
+        super::refuse(
+            crate::diag::Code::Interface,
+            "operand outside the checked graph",
+        )
+    })?;
     if *count == 0 {
-        values[id.index()]
-            .take()
-            .expect("every operand has an earlier value")
-    } else {
-        values[id.index()]
-            .as_ref()
-            .expect("every operand has an earlier value")
-            .clone()
+        return Err(super::refuse(
+            crate::diag::Code::Interface,
+            "checked operand consumed more times than it is referenced",
+        ));
     }
+    *count -= 1;
+    let entry = values.get_mut(id.index()).ok_or_else(|| {
+        super::refuse(
+            crate::diag::Code::Interface,
+            "operand outside the checked graph",
+        )
+    })?;
+    let value = if *count == 0 {
+        entry.take()
+    } else {
+        entry.clone()
+    };
+    value.ok_or_else(|| {
+        super::refuse(
+            crate::diag::Code::Interface,
+            "checked operand has no earlier materialized value",
+        )
+    })
 }
 
 /// Compare the existing D3 baseline and a bounded, independently checked
@@ -204,7 +240,7 @@ fn consume(values: &mut [Option<Value>], uses: &mut [u32], id: NodeId) -> Value 
 /// # Errors
 /// Any baseline refusal, a residual-node growth refusal or independent
 /// checker refusal. No new Program is published on refusal.
-pub fn specialize(
+pub fn compare(
     ids: &dyn crate::identity::IdentityScheme,
     checked: &crate::check::CheckedGraph,
     request: &super::Request<'_>,
@@ -225,37 +261,44 @@ pub fn specialize(
     let mut store = Store::new(request.budgets.residual_nodes, graph.nodes.len());
     for (index, node) in graph.nodes.iter().enumerate() {
         let value = match node.op {
-            Op::Input(slot) => {
-                let input = store.emit(Op::Input(slot))?;
+            crate::ir::Op::Input(slot) => {
+                let input = store.emit(crate::ir::Op::Input(slot))?;
                 if graph.slots[slot as usize].ty == crate::ir::ScalarType::I64 {
                     Value::I64(Expr::atom(input))
                 } else {
                     Value::Bool(input)
                 }
             }
-            Op::Const(Literal::I64(v)) => Value::I64(Expr::constant(v)),
-            Op::Const(Literal::Bool(v)) => Value::Bool(store.emit(Op::Const(Literal::Bool(v)))?),
-            Op::I64Add(a, b) | Op::I64Sub(a, b) => {
-                let mut left = consume(&mut values, &mut remaining, a).i64();
-                let right = consume(&mut values, &mut remaining, b).i64();
-                left.append(right, matches!(node.op, Op::I64Sub(..)));
+            crate::ir::Op::Const(crate::ir::Literal::I64(v)) => Value::I64(Expr::constant(v)),
+            crate::ir::Op::Const(crate::ir::Literal::Bool(v)) => {
+                Value::Bool(store.emit(crate::ir::Op::Const(crate::ir::Literal::Bool(v)))?)
+            }
+            crate::ir::Op::I64Add(a, b) | crate::ir::Op::I64Sub(a, b) => {
+                let mut left = consume(&mut values, &mut remaining, a)?.i64()?;
+                let right = consume(&mut values, &mut remaining, b)?.i64()?;
+                left.append(right, matches!(node.op, crate::ir::Op::I64Sub(..)));
                 Value::I64(left)
             }
-            Op::I64Mul(a, b) | Op::I64Eq(a, b) => {
-                let left = store.materialize(consume(&mut values, &mut remaining, a).i64())?;
-                let right = store.materialize(consume(&mut values, &mut remaining, b).i64())?;
-                let computed = store.emit(if matches!(node.op, Op::I64Mul(..)) {
-                    Op::I64Mul(left, right)
+            crate::ir::Op::I64Mul(a, b) | crate::ir::Op::I64Eq(a, b) => {
+                let left = store.materialize(consume(&mut values, &mut remaining, a)?.i64()?)?;
+                let right = store.materialize(consume(&mut values, &mut remaining, b)?.i64()?)?;
+                let computed = store.emit(if matches!(node.op, crate::ir::Op::I64Mul(..)) {
+                    crate::ir::Op::I64Mul(left, right)
                 } else {
-                    Op::I64Eq(left, right)
+                    crate::ir::Op::I64Eq(left, right)
                 })?;
-                if matches!(node.op, Op::I64Mul(..)) {
+                if matches!(node.op, crate::ir::Op::I64Mul(..)) {
                     Value::I64(Expr::atom(computed))
                 } else {
                     Value::Bool(computed)
                 }
             }
-            _ => unreachable!("baseline specialization admitted only total D1 operations"),
+            _ => {
+                return Err(super::refuse(
+                    crate::diag::Code::Profile,
+                    "the baseline residual contains an operation outside the D1 whitelist",
+                ))
+            }
         };
         values[index] = Some(if uses[index] > 1 {
             match value {
@@ -268,9 +311,9 @@ pub fn specialize(
             value
         });
     }
-    let mut outputs = Vec::with_capacity(graph.outputs.len());
+    let mut outputs = alloc::vec::Vec::with_capacity(graph.outputs.len());
     for output in &graph.outputs {
-        let value = consume(&mut values, &mut remaining, *output);
+        let value = consume(&mut values, &mut remaining, *output)?;
         outputs.push(match value {
             Value::I64(expr) => store.materialize(expr)?,
             Value::Bool(node) => node,
@@ -295,7 +338,7 @@ pub fn specialize(
             slots: graph.slots.clone(),
             nodes: store.nodes,
             outputs,
-            facts: Vec::new(),
+            facts: alloc::vec::Vec::new(),
             subject,
             input_shape: None,
             output_shape: None,

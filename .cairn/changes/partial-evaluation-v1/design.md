@@ -562,3 +562,70 @@ inspector may distinguish old and new code; only an explicitly requested
 new residual identity is returned. The Yallop et al. partially-static
 suggestion is restricted to wrapping-I64 offsets and symbolic atoms; no
 F32, effectful value, or general recursive pair algebra is implied.
+
+### D15 — Measured result and default-adoption decision (issue #32 owner follow-up)
+
+**NO-GO for default adoption.** D14's source-committed, opt-in producer and
+the raw comparison in `verification/ngraph/pe-offset-2026-11-15.json` retain
+69 ordered dynamic vectors for each of seven fixed families. Every L3/L4
+result and every independently re-admitted emitted residual agrees on those
+finite vectors. Counts below are *totals* over 69 vectors for each graph's
+runtime visits; retained bytes are from the compiled graph, not a claim about
+the total process's memory.
+
+| Frozen family | Baseline → offset nodes | Baseline → offset L3/L4 visits | Baseline → offset compiled bytes |
+|---|---:|---:|---:|
+| chained add | 5 → 3 | 345 → 207 | 124 → 76 |
+| chained subtract | 5 → 3 | 345 → 207 | 124 → 76 |
+| wrapping boundary | 5 → 3 | 345 → 207 | 124 → 76 |
+| shared subexpression | 4 → 4 | 276 → 276 | 108 → 108 |
+| non-prefix static input | 9 → 5 | 621 → 345 | 216 → 120 |
+| dead pure total forward | 3 → 3 | 207 → 207 | 76 → 76 |
+| growth cap control | 5 → 7 | 345 → 483 | 120 → 168 |
+
+The growth control consumes **140%** of baseline visits and compiled bytes,
+exceeding D14's pre-registered 125% maximum: the positive structural result
+is **not** met even though four families have smaller graphs. An attempted
+growth beyond the lowered `residual_nodes` cap refuses without publishing;
+the unchanged D3 baseline and equal-cap exact boundary are tested. On
+reduced-node cases the checked-graph retained bytes can still equal baseline
+because the separate new store reserves the baseline node capacity; the
+compiled bytes, emitted-source bytes and all elapsed-time categories are
+recorded separately in the receipt. Timing numbers are one shared-host debug
+sample per fixture, not a matched-budget speedup or cold-cache comparison.
+The opt-in comparison invokes D3 first; its total specialization time is
+therefore not a standalone replacement cost.
+
+The selected normalization laws over `BitVec 64`, ordered signed atom
+identities, wrapping offset folding, rank/merge, and add/sub step semantics
+are kernel-checked in `NobleFoundation.PartialStatic` and inventoried by the
+foundation lane. They are **model laws**, not a theorem that the Rust
+normalizer, graph emitter, compiler, ordinary execution or the original
+Program's stack tail refine that model for all admitted inputs. Finite tests
+assert emitted `let` sharing, distinct residual identity and admission; the
+old reflected Program, source, subject and unspecialized/default execution
+remain unchanged. A code inspector can distinguish the *explicitly
+requested new Program*: this is not a license for silent optimization of a
+reflected object. The current experiment rejects authored nested partially
+known pairs at D1's graph boundary (`E-AGGREGATE`); D13 separately supports
+bounded pair/Unit Program reconstruction but does not route it through
+offset normalization. No effectful or potentially failing operation is
+moved or eliminated.
+
+| Owner follow-up | Disposition and condition for changing it |
+|---|---|
+| Wei/Tan/Zhong binding store, sharing, let insertion, dead total nodes | **DONE for this bounded experiment:** shared graph identities are materialized once, re-emitted as lexical `let`s; dead pure total nodes and repeated uses are fixed cases. More general DCE/let-motion is **NO-GO** without a separate whitelist and semantic bridge. |
+| Yallop partially-static mixed data and wrapping normalization | **DONE for I64 add/sub offsets with ordered signed atoms**; partial recursive pairs/F32 are **NO-GO** here. Reopen on admitted typed aggregate cases and an explicit normalization proof for them. |
+| Nested pairs, repeated subexpressions, non-prefix maps, dead nodes, growth cap | **DONE or DECIDED:** scalar controls and cap boundaries are executed; nested pair is a tested refusal, not misrepresented as supported. Reopen pairs only with a D1/D13-compatible representation and proof. |
+| Recipe/identity and intensional code inspection | **DECIDED:** explicit new checked residual and readmitted Program; no silent modification of the original. Reopen default adoption only after an owner-reviewed observational contract explicitly covers inspector-visible code identities. |
+| #42 certificates, #33 manifest/endpoint replay, static merge and Program bridge | **DECIDED:** the #42 layer and #33 binding do not establish this Rust/model or Program bridge. Do not claim they do. Reopen on a universally checked correspondence through rank/merge, residual source emission/re-admission and ordinary replay, with #33 binding exact endpoints when this representation is used. |
+| E-graphs, self-application, effectful code motion | **DECIDED not prerequisite** for the pure selected experiment; reopen only under a separately authorized enlarged domain and proof/effect policy. |
+
+Adoption requires **all** D14 criteria: repair the 140% growth failure under
+the frozen structural gate, prove universal Rust-to-model plus
+emitter/replay correspondence with the static-input merge relation,
+review inspector-visible identity semantics, and demonstrate repeatable
+matched-budget cost benefit under a new pre-registered comparison. Reopen
+on a completed proof/bridge and newly frozen measured gate, or immediately
+on an admitted counterexample (first repair correctness). Until then D3
+remains the only default.
