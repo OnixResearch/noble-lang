@@ -13,10 +13,19 @@ pub struct Query {
     pub status: Option<Status>,
 }
 
+#[octet::sealed_enum]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RuntimeProducer {
+    Proposer,
+    Teacher,
+}
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct QueryBudget {
     queries: u32,
     work: u32,
+    proposer_attempts: u32,
+    teacher_attempts: u32,
 }
 
 impl QueryBudget {
@@ -24,6 +33,8 @@ impl QueryBudget {
         Self {
             queries: 0,
             work: 0,
+            proposer_attempts: 0,
+            teacher_attempts: 0,
         }
     }
 
@@ -33,6 +44,14 @@ impl QueryBudget {
 
     pub const fn work(&self) -> u32 {
         self.work
+    }
+
+    pub const fn proposer_attempts(&self) -> u32 {
+        self.proposer_attempts
+    }
+
+    pub const fn teacher_attempts(&self) -> u32 {
+        self.teacher_attempts
     }
 }
 
@@ -98,6 +117,37 @@ const fn type_rank(ty: &Ty) -> u8 {
 }
 
 impl ProcedureLibrary {
+    /// A retrieval miss must not invoke a host proposer or teacher. The
+    /// caller's callback is held only to demonstrate that it is never reached;
+    /// the attempt is counted separately from actual producer calls.
+    pub fn request_runtime_producer(
+        &self,
+        producer: RuntimeProducer,
+        budget: &mut QueryBudget,
+        _invoke: impl FnOnce() -> ProcedureRecord,
+    ) -> Result<(), Refusal> {
+        let attempts = match producer {
+            RuntimeProducer::Proposer => &mut budget.proposer_attempts,
+            RuntimeProducer::Teacher => &mut budget.teacher_attempts,
+        };
+        *attempts = attempts.checked_add(1).ok_or_else(|| {
+            Refusal::new(
+                RefusalKind::Exhausted,
+                super::Diagnostic {
+                    field: "retrieval.runtime_producer",
+                    message: "runtime producer attempt counter overflow",
+                },
+            )
+        })?;
+        Err(Refusal::new(
+            RefusalKind::Unsupported,
+            super::Diagnostic {
+                field: "retrieval.runtime_producer",
+                message: "runtime proposer and teacher fallback is disabled",
+            },
+        ))
+    }
+
     pub fn retrieve(
         &self,
         query: &Query,

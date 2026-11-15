@@ -24,7 +24,7 @@ mod retrieval;
 
 pub use composition::{BoundOperand, CertifiedComposedProgram, ComposeContext, ComposedProgram};
 pub use persistence::{ArmMetrics, Metrics};
-pub use retrieval::{Query, QueryBudget, QueryResult};
+pub use retrieval::{Query, QueryBudget, QueryResult, RuntimeProducer};
 
 use super::chunks;
 use alloc::string::String;

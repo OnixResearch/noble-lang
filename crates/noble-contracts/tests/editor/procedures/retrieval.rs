@@ -4,14 +4,15 @@
 )]
 
 use super::super::procedures::support::{
-    add_record, add_seven_record, revision, times_five_record,
+    add_record, add_seven_record, literal_record, revision, times_five_record,
 };
 use noble_contracts::source::procedures::{
-    ProcedureLibrary, Producer, Query, QueryBudget, RefusalKind, Status,
+    ProcedureLibrary, Producer, Query, QueryBudget, RefusalKind, RuntimeProducer, Status,
 };
 use noble_contracts::source::Session;
 
 use noble_kernel::types::Ty;
+use std::cell::Cell;
 use std::vec;
 
 #[test]
@@ -146,5 +147,49 @@ fn query_budget_counts_and_refuses_after_bound() -> Result<(), String> {
     assert_eq!(budget.work(), 0);
     assert!(library.records().is_empty());
     assert_eq!(library.current_generation(), 0);
+    Ok(())
+}
+
+#[test]
+fn attempted_runtime_proposer_and_teacher_calls_refuse_before_invocation() -> Result<(), String> {
+    let namespace = Session::without_test_hosts();
+    let mut library = ProcedureLibrary::new(revision(7));
+    let source = literal_record(1, Producer::Chunk)
+        .map_err(|error| format!("non-held-out source: {error:?}"))?;
+    library
+        .admit(&namespace, None, source.clone())
+        .map_err(|error| format!("source admission: {error:?}"))?;
+    let before = library
+        .identity_manifest()
+        .map_err(|error| format!("before identity: {error:?}"))?;
+    let calls = Cell::new(0u32);
+    let mut budget = QueryBudget::new();
+    for producer in [RuntimeProducer::Proposer, RuntimeProducer::Teacher] {
+        let refusal = library
+            .request_runtime_producer(producer, &mut budget, || {
+                calls.set(calls.get() + 1);
+                source.clone()
+            })
+            .expect_err("the disabled runtime producer must refuse before calling the host");
+        assert_eq!(refusal.kind, RefusalKind::Unsupported);
+        assert_eq!(
+            refusal.location,
+            noble_contracts::source::chunks::Location::field("retrieval.runtime_producer")
+        );
+        assert_eq!(calls.get(), 0, "the host producer must never be called");
+    }
+    assert_eq!(budget.proposer_attempts(), 1);
+    assert_eq!(budget.teacher_attempts(), 1);
+    assert_eq!(budget.queries(), 0);
+    assert_eq!(budget.work(), 0);
+    assert_eq!(calls.get(), 0, "zero actual producer calls were recorded");
+    assert_eq!(library.current_generation(), 1);
+    assert_eq!(
+        library
+            .identity_manifest()
+            .map_err(|error| format!("after identity: {error:?}"))?,
+        before,
+        "refused requests must not mutate retained source state"
+    );
     Ok(())
 }
