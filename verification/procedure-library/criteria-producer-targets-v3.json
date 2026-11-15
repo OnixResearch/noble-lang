@@ -1,0 +1,164 @@
+{
+  "schema": "noble-procedure-library-producer-targets-criteria/3",
+  "issue": "OnixResearch/noble-lang#118",
+  "frozen_before_target_generation": true,
+  "predecessor_criteria": "verification/procedure-library/criteria-producer-targets-v2.json",
+  "preregistration_erratum": "verification/procedure-library/receipts/producer-transfer-v2-disposition.json",
+  "producer": {
+    "lane": "verification/synthesis/cegis.mjs",
+    "manifest": "verification/procedure-library/producer-targets-v3.txt",
+    "grammar": "synth-i64/0",
+    "budget": {
+      "seed": "0x9e3779b97f4a7c15",
+      "max_words": 8,
+      "max_stack": 4,
+      "max_candidates": 400000,
+      "max_rounds": 4,
+      "solver_ms": 10000
+    },
+    "target_tasks": [
+      {
+        "name": "arithCommutedThenSubtract",
+        "reference": "(+ (- x (+ y (+ z 7))) 7)",
+        "declared_inputs": 3,
+        "bound": 8,
+        "source_order": [
+          "arithCommuted",
+          "arithSubtract"
+        ],
+        "source_program_sha256": [
+          "f85e511933e84631021d421b8d85b7eb33aefc3d7ec9e26e82f01e387ff09055",
+          "1c2ae713e923480be18f0d998fee2a89d2e12a6886ce99367189d847b259f039"
+        ]
+      },
+      {
+        "name": "arithSubtractThenCommuted",
+        "reference": "(+ x (+ (+ (- y z) 7) 7))",
+        "declared_inputs": 3,
+        "bound": 8,
+        "source_order": [
+          "arithSubtract",
+          "arithCommuted"
+        ],
+        "source_program_sha256": [
+          "1c2ae713e923480be18f0d998fee2a89d2e12a6886ce99367189d847b259f039",
+          "f85e511933e84631021d421b8d85b7eb33aefc3d7ec9e26e82f01e387ff09055"
+        ]
+      }
+    ],
+    "acquisition_receipt": "verification/synthesis/receipts/2026-11-13/synthesis-v2.json",
+    "acquisition_receipt_sha256": "4c05b46b3d439d7c5a95786d6a07e2c2017573d8a364fd6e8c52e2c70958387f",
+    "reference_derivation": {
+      "source": "verification/synthesis/receipts/2026-11-13/synthesis-v2.json",
+      "source_sha256": "4c05b46b3d439d7c5a95786d6a07e2c2017573d8a364fd6e8c52e2c70958387f",
+      "lane": "verification/procedure-library/derive-producer-targets.mjs",
+      "semantics": "Symbolically execute each retained #116 source program on [x,y,z]; every word consumes the actual top of stack; the second source consumes the first source result."
+    }
+  },
+  "source_bound_sequence": [
+    "Commit this mechanically derived criterion, manifest and derivation lane before running #116 on either target.",
+    "Commit a non-held-out cross-check against independently interpreted #116 source programs before target generation.",
+    "From a clean source commit, run #116 once against this manifest and retain candidate bodies, search trace, solver answers, held-out producer observations and CLI re-admission status.",
+    "From a subsequent clean source commit, run the four transfer arms once and retain raw output and the source-bound receipt regardless of GO or NO-GO. Never rerun or replace targets based on outcomes."
+  ],
+  "paired_seeds": [
+    1,
+    7,
+    23,
+    101
+  ],
+  "held_out_case_inputs": {
+    "1": [
+      [
+        4,
+        9,
+        2
+      ],
+      [
+        -12,
+        7,
+        -5
+      ],
+      [
+        17,
+        -4,
+        0
+      ]
+    ],
+    "7": [
+      [
+        19,
+        3,
+        8
+      ],
+      [
+        2,
+        -17,
+        5
+      ],
+      [
+        -5,
+        21,
+        -3
+      ]
+    ],
+    "23": [
+      [
+        8,
+        -11,
+        4
+      ],
+      [
+        31,
+        6,
+        -2
+      ],
+      [
+        -3,
+        14,
+        19
+      ]
+    ],
+    "101": [
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        43,
+        -23,
+        16
+      ],
+      [
+        -21,
+        29,
+        7
+      ]
+    ]
+  },
+  "arms": [
+    "no_library",
+    "frozen_hand_library",
+    "accumulated_learned_library",
+    "size_matched_nontransfer"
+  ],
+  "acquisition_order": [
+    "arithCommuted",
+    "arithSubtract"
+  ],
+  "control_pool_and_selection": "Use the predecessor's lexically selected size-matched non-transfer control over arithScaled, arithProduct and bitXor before looking at outcomes. Require <=10% canonical-byte size difference or report control unavailable; never silently substitute another control.",
+  "negative_control": "After all four scored arms at each seed, use a separate fresh library to deliberately request both RuntimeProducer::Proposer and RuntimeProducer::Teacher with counting callbacks. Each request must refuse Unsupported before callback execution; record one attempt of each kind, zero actual callbacks, unchanged identity manifest and zero new records. A failed refusal or a host callback is a NO-GO. The probe is inside the same one-shot source-bound run, but outside scored arms: attempted calls do not contaminate transfer-arm metrics.",
+  "go_rule": "GO iff both declared targets have #116-generated candidates with normal CLI readmission and passing producer held-out examples, both solver verdicts and all witness/counterexample traces are retained without upgrading an unproven status to a proof, the accumulated learned arm passes all 8 seed-task cells and 24/24 cases, all scored arms record zero proposer and teacher calls and attempts, every per-seed negative control refuses both attempts with zero host callbacks, and all restart/regression checks pass. Otherwise NO-GO; retain every failure.",
+  "report": [
+    "per seed and arm: acquisition count, generations, canonical bytes, identity and restart match, retrieval queries/examined/monotonic ns, composed task and example outcomes, regression counts, proposer/teacher attempts and calls, break-even or null reason",
+    "producer task status, candidate, search/solver witness trace, held-out agreement, tool identities, manifest and source digests",
+    "model/synthesis behavior, executed mechanics, Rust-Lean correspondence and assumptions as distinct claims"
+  ],
+  "non_claims": [
+    "Reference expressions and declared producer examples are computed from already-retained #116 source programs before either new target is generated.",
+    "A passing target candidate, solver UNSAT or finite fixture is not an independently checked universal proof.",
+    "Neither earlier v1/v2 criterion nor any retained outcome is revised by this third, separately frozen criterion.",
+    "Finite transfer does not show lifelong learning, a speedup, or universal alias/encoder correspondence."
+  ]
+}
