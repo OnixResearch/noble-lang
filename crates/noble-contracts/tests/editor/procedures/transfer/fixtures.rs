@@ -1,5 +1,7 @@
 use super::*;
 
+type HeldoutCases = (Vec<Fixture>, Vec<([i64; 3], i64)>);
+
 fn definition(record: &ProcedureRecord) -> DefinitionRef {
     let mut identity = [0; 8];
     identity.copy_from_slice(&record.chunk.chunk_id[..8]);
@@ -33,7 +35,7 @@ pub(super) fn heldout_cases(
     task_index: usize,
     seed_index: usize,
     target_set: &TargetSet,
-) -> Result<(Vec<Fixture>, Vec<([i64; 3], i64)>), String> {
+) -> Result<HeldoutCases, String> {
     let inputs = target_set.inputs[seed_index];
     let mut fixtures = Vec::with_capacity(inputs.len());
     let mut references = Vec::with_capacity(inputs.len());
