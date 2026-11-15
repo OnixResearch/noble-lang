@@ -743,7 +743,7 @@ fn specialize_program(
         )
         .into());
     }
-    let residual = attempt!(noble_ngraph::specialize::program::specialize(
+    let residual = attempt!(noble_ngraph::specialize::program::residualize(
         &IDS,
         &noble_ngraph::specialize::program::Request {
             original: &prepared.submission,

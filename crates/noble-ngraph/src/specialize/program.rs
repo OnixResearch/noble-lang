@@ -105,7 +105,7 @@ fn static_encoding(static_inputs: &[Option<i64>], preserved_tail: usize) -> allo
 /// diagnostic, `E-SUBJECT` for a stale identity or refused residual source,
 /// `E-CLOSURE` for a nonempty residual dependency closure, and `E-INTERFACE`
 /// for a changed full stack interface. No partial Program is returned.
-pub fn specialize(
+pub fn residualize(
     ids: &dyn IdentityScheme,
     request: &Request<'_>,
 ) -> Result<Residual, crate::diag::Diagnostic> {
@@ -221,8 +221,6 @@ pub fn specialize(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use noble_kernel::types::Ty;
-
     struct Hasher(u64);
 
     impl crate::identity::IdentityHasher for Hasher {
@@ -251,7 +249,11 @@ mod tests {
         }
     }
 
-    fn checked(definitions: &[&str], root: &str, input: &[Ty]) -> crate::extract::source::Prepared {
+    fn checked(
+        definitions: &[&str],
+        root: &str,
+        input: &[noble_kernel::types::Ty],
+    ) -> crate::extract::source::Prepared {
         crate::extract::source::prepare(
             noble_contracts::source::Session::new(),
             noble_contracts::Limits::default(),
@@ -269,7 +271,7 @@ mod tests {
         expected_original: Option<crate::ir::Digest>,
         claimed_closure: &[u64],
     ) -> Result<Residual, crate::diag::Diagnostic> {
-        specialize(
+        residualize(
             &Ids,
             &Request {
                 original: &original.submission,
@@ -284,12 +286,18 @@ mod tests {
     }
 
     #[test]
-    fn checked_program_keeps_opaque_tail_and_exact_closures() {
-        let pair = Ty::Pair(
-            alloc::boxed::Box::new(Ty::I64),
-            alloc::boxed::Box::new(Ty::Bool),
+    fn checked_root_keeps_opaque_tail_and_exact_closures() {
+        let pair = noble_kernel::types::Ty::Pair(
+            alloc::boxed::Box::new(noble_kernel::types::Ty::I64),
+            alloc::boxed::Box::new(noble_kernel::types::Ty::Bool),
         );
-        let inputs = [Ty::Text, Ty::Unit, pair, Ty::I64, Ty::I64];
+        let inputs = [
+            noble_kernel::types::Ty::Text,
+            noble_kernel::types::Ty::Unit,
+            pair,
+            noble_kernel::types::Ty::I64,
+            noble_kernel::types::Ty::I64,
+        ];
         let original = checked(&["def twice [ dup + ]"], "twice swap 3 +", &inputs);
         assert_eq!(&original.submission.request.expected.stack_in, &inputs);
         let residual = prepare(
@@ -315,7 +323,11 @@ mod tests {
                 .request
                 .expected
                 .stack_in,
-            [inputs[..3].to_vec(), alloc::vec![Ty::I64]].concat()
+            [
+                inputs[..3].to_vec(),
+                alloc::vec![noble_kernel::types::Ty::I64],
+            ]
+            .concat()
         );
         assert_eq!(
             residual.prepared.output(),
@@ -330,7 +342,11 @@ mod tests {
 
     #[test]
     fn stale_subject_and_missing_dependency_refuse_before_publication() {
-        let original = checked(&["def twice [ dup + ]"], "twice", &[Ty::Text, Ty::I64]);
+        let original = checked(
+            &["def twice [ dup + ]"],
+            "twice",
+            &[noble_kernel::types::Ty::Text, noble_kernel::types::Ty::I64],
+        );
         assert!(!original.claimed_closure.is_empty());
         assert_eq!(
             prepare(&original, 1, &[None], None, &[])
@@ -355,14 +371,22 @@ mod tests {
 
     #[test]
     fn a_checked_root_may_not_inspect_or_move_its_tail() {
-        let original = checked(&[], "swap", &[Ty::I64, Ty::I64]);
+        let original = checked(
+            &[],
+            "swap",
+            &[noble_kernel::types::Ty::I64, noble_kernel::types::Ty::I64],
+        );
         assert_eq!(
             prepare(&original, 1, &[None], None, &[])
                 .expect_err("the opaque tail is consumed")
                 .code,
             crate::diag::Code::Interface
         );
-        let effectful = checked(&[], "\"audit\" test.emit 1 +", &[Ty::Text, Ty::I64]);
+        let effectful = checked(
+            &[],
+            "\"audit\" test.emit 1 +",
+            &[noble_kernel::types::Ty::Text, noble_kernel::types::Ty::I64],
+        );
         assert_eq!(
             prepare(&effectful, 1, &[None], None, &[])
                 .expect_err("host effects are outside the pure Program slice")

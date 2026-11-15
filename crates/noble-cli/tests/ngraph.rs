@@ -4021,8 +4021,10 @@ fn program_session(
         input.extend_from_slice(format!("{}\n", source.len()).as_bytes());
         input.extend_from_slice(source.as_bytes());
     }
-    std::io::Write::write_all(child.stdin.as_mut().ok_or("missing stdin")?, &input)?;
-    drop(child.stdin.take());
+    {
+        let mut stdin = child.stdin.take().ok_or("missing stdin")?;
+        std::io::Write::write_all(&mut stdin, &input)?;
+    }
     let output = child.wait_with_output()?;
     assert!(
         output.status.success(),
@@ -4066,10 +4068,10 @@ fn without_session_handles(value: &Value) -> Value {
     }
 }
 
-fn observed_stack(report: &Value) -> Vec<(Value, Value)> {
-    report["stack"]
+fn observed_stack(report: &Value) -> Result<Vec<(Value, Value)>, Box<dyn std::error::Error>> {
+    Ok(report["stack"]
         .as_array()
-        .expect("a normal Program report has a stack")
+        .ok_or("a normal Program report must have a stack")?
         .iter()
         .map(|item| {
             (
@@ -4077,7 +4079,7 @@ fn observed_stack(report: &Value) -> Vec<(Value, Value)> {
                 without_session_handles(&item["value"]),
             )
         })
-        .collect()
+        .collect())
 }
 
 #[test]
@@ -4100,7 +4102,7 @@ fn specialize_checked_program_preserves_tail_and_ordinary_path() -> TestResult {
         .output()?;
     assert!(original_compile.status.success(), "original compiles");
     let original = program_session(false, &["\"audit\" true 5 7", "swap -"])?;
-    let expected = observed_stack(&original[1]);
+    let expected = observed_stack(&original[1])?;
     assert_eq!(expected[0].1, "audit");
     assert_eq!(expected[1].1, true);
     assert_eq!(expected[2].1, "2");
@@ -4128,7 +4130,7 @@ fn specialize_checked_program_preserves_tail_and_ordinary_path() -> TestResult {
         assert_ne!(line["original_subject"], line["residual_subject"]);
         let emitted = std::fs::read_to_string(&out)?;
         let residual = program_session(true, &[dynamic, &emitted])?;
-        assert_eq!(observed_stack(&residual[1]), expected, "{name}: {line}");
+        assert_eq!(observed_stack(&residual[1])?, expected, "{name}: {line}");
         assert_eq!(residual[1]["guest_requests"], 0);
         let reproduced = expect_normal(
             &scratch.run(
@@ -4197,8 +4199,8 @@ fn specialize_checked_program_preserves_unit_and_pair_tails() -> TestResult {
         let emitted = std::fs::read_to_string(&out)?;
         let residual = program_session(true, &[dynamic, &emitted])?;
         assert_eq!(
-            observed_stack(&residual[1]),
-            observed_stack(&original[1]),
+            observed_stack(&residual[1])?,
+            observed_stack(&original[1])?,
             "{name}: {line}"
         );
     }
@@ -4213,7 +4215,7 @@ fn specialize_checked_program_preserves_unit_and_pair_tails() -> TestResult {
     let original = program_session(false, &["\"overflow\"", "9223372036854775807 1 +"])?;
     let emitted = std::fs::read_to_string(out)?;
     let residual = program_session(true, &["\"overflow\"", &emitted])?;
-    assert_eq!(observed_stack(&residual[1]), observed_stack(&original[1]));
+    assert_eq!(observed_stack(&residual[1])?, observed_stack(&original[1])?);
     assert_eq!(original[1]["stack"][1]["value"], "-9223372036854775808");
     Ok(())
 }
@@ -4298,10 +4300,10 @@ fn specialize_checked_program_preserves_saved_dependencies_and_recipes() -> Test
         )?;
         let emitted = std::fs::read_to_string(&out)?;
         let residual = program_session(true, &[dynamic, &emitted])?;
-        let expected = observed_stack(original.last().ok_or("original report")?);
+        let expected = observed_stack(original.last().ok_or("original report")?)?;
         assert_eq!(expected[0].1, tail_value);
         assert_eq!(expected[1].1, expected_value, "{name}");
-        assert_eq!(observed_stack(&residual[1]), expected, "{name}");
+        assert_eq!(observed_stack(&residual[1])?, expected, "{name}");
     }
     Ok(())
 }
