@@ -129,6 +129,12 @@ assert(names.has(`${prefix}first_validated`) && names.has(`${prefix}first_sound`
   'kernel proof receipt does not contain the noncanonical artifact and soundness');
 assert(proved.every((row) => row.status === 'proved' && row.axioms.every((axiom) => foundation.allowed_axioms.includes(axiom))),
   'nonstandard axiom or unproved corpus theorem');
+const modelPrefix = 'NobleFoundation.PackedPermutation.';
+const modelRows = foundation.theorems.filter((row) => row.name.startsWith(modelPrefix));
+const soundness = modelRows.find((row) => row.name === `${modelPrefix}validate_sound`);
+assert(soundness && modelRows.every((row) => row.status === 'proved' &&
+  row.axioms.every((axiom) => foundation.allowed_axioms.includes(axiom))),
+  'kernel proof receipt does not attest model soundness and its transitive axioms');
 const corpusText = file(corpus).toString('utf8');
 assert(corpusText.includes('def firstWitness') && corpusText.includes('theorem first_sound'),
   'the bound noncanonical model corpus is absent');
@@ -169,6 +175,9 @@ const receipt = {
     validated: proved.find((row) => row.name === `${prefix}first_validated`),
     sound: proved.find((row) => row.name === `${prefix}first_sound`),
     transitive_axioms: Object.fromEntries(proved.map((row) => [row.name, row.axioms])) },
+  model: { path: 'proofs/foundation/NobleFoundation/PackedPermutation.lean',
+    theorem_count: modelRows.length, soundness,
+    transitive_axioms: Object.fromEntries(modelRows.map((row) => [row.name, row.axioms])) },
   foundation: { source_commit: foundation.source_commit, source_tree: foundation.source_tree,
     lean_sha256: foundation.lean_sha256, allowed_axioms: foundation.allowed_axioms },
   sources_sha256: Object.fromEntries(sourcePaths.map((name) => [name, sha(file(name))])),
@@ -183,4 +192,4 @@ const receipt = {
 };
 writeFileSync(output, `${JSON.stringify(receipt, null, 2)}\n`, { flag: 'wx' });
 console.log(JSON.stringify({ result: 'passed', source_commit: sourceCommit, export_sha256: sha(bytes),
-  theorems: proved.length, receipt_sha256: sha(readFileSync(output)) }));
+  theorems: proved.length + modelRows.length, receipt_sha256: sha(readFileSync(output)) }));
