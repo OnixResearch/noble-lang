@@ -194,10 +194,10 @@ def compare(engine, spec):
     stock.require(cost["host_calls"] == 1 and cost["scan_steps"] == 1000,
                   "free-running recurrence escaped into host loop")
     coverage["free_running"] = {"transitions": 1000, "mismatches": 0, **cost}
-    return coverage
+    return coverage, observed[-1]
 
 
-def controls(engine, spec, model_bytes, output_dir):
+def controls(engine, spec, model_bytes, output_dir, model_final_state):
     results = []
     state = [0] if engine.program == "accumulator" else [1, 2]
     inputs = [[1]] if engine.program == "accumulator" else [[]]
@@ -254,11 +254,12 @@ def controls(engine, spec, model_bytes, output_dir):
             "state": state, "remaining_budget": 1000}
     stock.require(stock.restore(base, engine) == state, "initial recurrent restore")
     raw = spec["vectors"]["free_running"]
-    final_state = vector(raw[-1])[2]
     stock.require(stock.restore({**base, "index": 1000, "remaining_budget": 0,
-                                 "state": final_state}, engine) == final_state,
+                                 "state": model_final_state}, engine) == vector(raw[-1])[2],
                   "request-end recurrent restore")
-    second_state = vector(raw[2])[0]
+    prefix, _ = engine.run(state, [vector(row)[1] for row in raw[:2]], budget=1000)
+    second_state = prefix[-1]
+    stock.require(second_state == vector(raw[2])[0], "model prefix state disagrees at index 2")
     restored = stock.restore({**base, "index": 2, "remaining_budget": 998,
                               "state": second_state}, engine)
     remaining = [vector(row)[1] for row in raw[2:]]
@@ -364,9 +365,9 @@ def main():
         path = output_dir / (spec["program"] + "-scan.onnx")
         path.write_bytes(data)
         engine = ScanEngine(spec, path, stock.sha(data))
-        coverage = compare(engine, spec)
+        coverage, model_final_state = compare(engine, spec)
         host_loop = compare_host_loop(spec, output_dir)
-        refusals, resume_cost = controls(engine, spec, data, output_dir)
+        refusals, resume_cost = controls(engine, spec, data, output_dir, model_final_state)
         seeded = seeded_fault(engine, spec, data, output_dir)
         results.append({"program": engine.program, "model_sha256": stock.sha(data),
                         "model_bytes": len(data), "model_path": str(path),
