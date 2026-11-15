@@ -1,0 +1,970 @@
+{
+  "schema": "noble-issue62-axiom-audit-measurement/v1",
+  "source_commit": "3d796a48bfa90a16fd0c06d89be597d57849232e",
+  "selected_baseline_commit": "1dbc2bf93628c73158a8227e000d30ab092b9445",
+  "clean_selected_baseline": true,
+  "candidate_source_revision": "0b885d88a69982cd76990b502742690b80b1a685",
+  "candidate_executable_sha256": "c16ef133c5a577d890df2e1fa222a2930bdac1248acc0552113b5d86d9a9659d",
+  "comparator_executable_sha256": "253641d37e64036a6fafb09b66b457fbb796ad6a77b6702e609a6103b63e13d5",
+  "lean_executable_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+  "module_roster_sha256": "4d1ce3e64cf2d856a3d89ede7f2a00d4bf8cf1e47ba1838273a464233d190687",
+  "comparison": {
+    "rootCounts": {
+      "NobleFoundation": {
+        "candidate": 15264,
+        "stock": 15264,
+        "cli": 15264
+      },
+      "NobleContracts": {
+        "candidate": 2005,
+        "stock": 2005,
+        "cli": 2005
+      },
+      "MathlibI64": {
+        "candidate": 8,
+        "stock": 8,
+        "cli": 8
+      },
+      "InteractionNets": {
+        "candidate": 6489,
+        "stock": 6489,
+        "cli": 6489
+      }
+    },
+    "source_modules": 121,
+    "moduleMissing": [],
+    "required_roots": 2071,
+    "selectedMissing": [],
+    "selectedMismatches": [],
+    "private_helpers": 168,
+    "privateMissing": [],
+    "privateAmbiguous": [],
+    "candidate_stock_discrepancies": [
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.StackT",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.ValT",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Certificate.AcceptedRewriteChain.done",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.CodeT.nil",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.KontT.nil",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.KontT.restore",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.OpT.acquire",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.OpT.add",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.OpT.block",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.OpT.compose",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.OpT.dip",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.OpT.emit",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.OpT.ifte",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.OpT.release",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.OpT.run",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.OpT.swap",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.StackT.below",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.StackT.brecOn",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.StackT.casesOn",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.StackT.cons",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.StackT.nil",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.StackT.rec",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.StackT.recOn",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.ValT.i64",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.ValT.prog",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.ValT.res",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Ownership.Accounts.branch",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Ownership.Accounts.compose",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Ownership.Accounts.fail",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.ReverseAD.Node.add",
+        "candidate": [],
+        "stock": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.ReverseAD.Node.input",
+        "candidate": [],
+        "stock": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.ReverseAD.Node.mul",
+        "candidate": [],
+        "stock": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.ReverseAD.Node.param",
+        "candidate": [],
+        "stock": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.ReverseAD.Node.sub",
+        "candidate": [],
+        "stock": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.StackT.below.casesOn",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.StackT.below.cons",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.StackT.below.nil",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "NobleFoundation",
+        "decl": "NobleFoundation.Effects.StackT.below.rec",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "InteractionNets",
+        "decl": "INet.MRun.refl",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "InteractionNets",
+        "decl": "INet.MStep.agent",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "InteractionNets",
+        "decl": "INet.MStep.cas₁",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "InteractionNets",
+        "decl": "INet.MStep.cas₂",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "InteractionNets",
+        "decl": "INet.MStep.done",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "InteractionNets",
+        "decl": "INet.MStep.first",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "InteractionNets",
+        "decl": "INet.MStep.found",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "InteractionNets",
+        "decl": "INet.MStep.link",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "InteractionNets",
+        "decl": "INet.MStep.look",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "InteractionNets",
+        "decl": "INet.MStep.next",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "InteractionNets",
+        "decl": "INet.MStep.undo",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "InteractionNets",
+        "decl": "INet.Opers.refl",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "InteractionNets",
+        "decl": "INet.Runs.refl",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "InteractionNets",
+        "decl": "INet.Stays.refl",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      },
+      {
+        "root": "InteractionNets",
+        "decl": "INet.Works.refl",
+        "candidate": [],
+        "stock": [
+          "propext"
+        ]
+      }
+    ],
+    "project_axioms_union": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "project_policy_violations": []
+  },
+  "controls": {
+    "checks": {
+      "imported_custom_refused": true,
+      "private_helper_covered": true,
+      "sorry_detected": true,
+      "native_detected": false,
+      "native_generated_detected": true,
+      "cyclic_declarations_compared": false,
+      "empty_root_refused": true,
+      "missing_module_refused": true
+    },
+    "candidate_count": 29,
+    "stock_count": 29,
+    "private_helper": [
+      [
+        "_private.NobleAuditControl.0.NobleAuditControl.hidden",
+        [
+          "NobleAuditImports.importedCustom"
+        ]
+      ]
+    ],
+    "native_axioms_observed": [
+      "NobleAuditControl.nativeSample._native.native_decide.ax_1_1"
+    ],
+    "cyclic_rows": [
+      [
+        "NobleAuditControl.Even",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ],
+      [
+        "NobleAuditControl.Odd",
+        []
+      ],
+      [
+        "NobleAuditControl.Even.below",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ],
+      [
+        "NobleAuditControl.Even.brecOn",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ],
+      [
+        "NobleAuditControl.Even.casesOn",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ],
+      [
+        "NobleAuditControl.Even.rec",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ],
+      [
+        "NobleAuditControl.Even.recOn",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ],
+      [
+        "NobleAuditControl.Even.special",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ],
+      [
+        "NobleAuditControl.Even.step",
+        []
+      ],
+      [
+        "NobleAuditControl.Even.zero",
+        []
+      ],
+      [
+        "NobleAuditControl.Odd.below",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ],
+      [
+        "NobleAuditControl.Odd.brecOn",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ],
+      [
+        "NobleAuditControl.Odd.casesOn",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ],
+      [
+        "NobleAuditControl.Odd.rec",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ],
+      [
+        "NobleAuditControl.Odd.recOn",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ],
+      [
+        "NobleAuditControl.Odd.step",
+        []
+      ],
+      [
+        "NobleAuditControl.Even.below.casesOn",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ],
+      [
+        "NobleAuditControl.Even.below.rec",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ],
+      [
+        "NobleAuditControl.Even.below.special",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ],
+      [
+        "NobleAuditControl.Even.below.step",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ],
+      [
+        "NobleAuditControl.Even.below.zero",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ],
+      [
+        "NobleAuditControl.Odd.below.casesOn",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ],
+      [
+        "NobleAuditControl.Odd.below.rec",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ],
+      [
+        "NobleAuditControl.Odd.below.step",
+        [
+          "NobleAuditImports.seed"
+        ]
+      ]
+    ],
+    "cyclic_discrepancies": [
+      {
+        "name": "NobleAuditControl.Odd",
+        "candidate": [],
+        "stock": [
+          "NobleAuditImports.seed"
+        ]
+      },
+      {
+        "name": "NobleAuditControl.Even.step",
+        "candidate": [],
+        "stock": [
+          "NobleAuditImports.seed"
+        ]
+      },
+      {
+        "name": "NobleAuditControl.Even.zero",
+        "candidate": [],
+        "stock": [
+          "NobleAuditImports.seed"
+        ]
+      },
+      {
+        "name": "NobleAuditControl.Odd.step",
+        "candidate": [],
+        "stock": [
+          "NobleAuditImports.seed"
+        ]
+      }
+    ],
+    "cli_result": {
+      "allowed": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "audited": 29,
+      "axiomsUsed": [
+        "sorryAx",
+        "NobleAuditImports.importedCustom",
+        "NobleAuditImports.seed",
+        "NobleAuditControl.nativeSample._native.native_decide.ax_1_1"
+      ],
+      "ok": false,
+      "root": "NobleAuditControl",
+      "violations": [
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Even"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Even.below.step"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Even.below.special"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Even.below.casesOn"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Even.below.rec"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Even.below"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Even.recOn"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Even.special"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Odd.below"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.importedCustom"
+          ],
+          "decl": "NobleAuditControl.viaPrivate"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Odd.below.casesOn"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Even.below.zero"
+        },
+        {
+          "axioms": [
+            "sorryAx"
+          ],
+          "decl": "NobleAuditControl.sorrySample"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Odd.below.rec"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Odd.casesOn"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.importedCustom"
+          ],
+          "decl": "_private.NobleAuditControl.0.NobleAuditControl.hidden"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Odd.brecOn"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Odd.rec"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Odd.recOn"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Even.rec"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Even.casesOn"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Odd.below.step"
+        },
+        {
+          "axioms": [
+            "NobleAuditImports.seed"
+          ],
+          "decl": "NobleAuditControl.Even.brecOn"
+        },
+        {
+          "axioms": [
+            "NobleAuditControl.nativeSample._native.native_decide.ax_1_1"
+          ],
+          "decl": "NobleAuditControl.nativeSample._native.native_decide.ax_1_1"
+        },
+        {
+          "axioms": [
+            "NobleAuditControl.nativeSample._native.native_decide.ax_1_1"
+          ],
+          "decl": "NobleAuditControl.nativeSample"
+        }
+      ]
+    },
+    "empty_result": {
+      "allowed": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "audited": 0,
+      "axiomsUsed": [],
+      "ok": false,
+      "root": "NobleAuditAbsent",
+      "violations": []
+    },
+    "missing_result": {
+      "audited": 0,
+      "ok": false,
+      "unknown_module_refused": true
+    }
+  },
+  "performance": {
+    "library-NobleFoundation": {
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "elapsed_sec": 2.59,
+      "rss_kib": 2776576,
+      "stdout_sha256": "7003093b3de219e34f05f6e82cb08576a4c051a6bbdd63d23274cc9396544d9c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "audited": 15264,
+      "ok": true,
+      "axiomsUsed": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "violations": 0
+    },
+    "library-NobleContracts": {
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "elapsed_sec": 1.66,
+      "rss_kib": 2745388,
+      "stdout_sha256": "f54929e463eabdafee2e02b9554b4d5835827fe9323664bf8bc01764054b3cd2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "audited": 2005,
+      "ok": true,
+      "axiomsUsed": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "violations": 0
+    },
+    "library-MathlibI64": {
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "elapsed_sec": 1.62,
+      "rss_kib": 2741240,
+      "stdout_sha256": "1a6fc02b560f109134a8512dad373f66e4a3a87b23f03176ba33c8662adc610d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "audited": 8,
+      "ok": true,
+      "axiomsUsed": [
+        "propext",
+        "Quot.sound"
+      ],
+      "violations": 0
+    },
+    "library-InteractionNets": {
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "elapsed_sec": 2.16,
+      "rss_kib": 2756496,
+      "stdout_sha256": "270f7dbee977d214af9a891678a16d57ba9249f57b737e98527510a2941cf776",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "audited": 6489,
+      "ok": true,
+      "axiomsUsed": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "violations": 0
+    },
+    "per-declaration-candidate": {
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "elapsed_sec": 3.78,
+      "rss_kib": 2751596,
+      "stdout_sha256": "29591073a0a0992fd3802aa5465a79e705327b66f14b21547df4197b3c1d6e10",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "per-declaration-stock": {
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "elapsed_sec": 266.01,
+      "rss_kib": 2749672,
+      "stdout_sha256": "a3bdb7d84a13fc6912d8da145a51a17d27a5be7574693e2e6a3b74e14f55e401",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "build-NobleAuditImports": {
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "elapsed_sec": 0.8,
+      "rss_kib": 1537172,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "build-NobleAuditControl": {
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "elapsed_sec": 0.95,
+      "rss_kib": 1542320,
+      "stdout_sha256": "a49e03755218bcdff8d82de66538a46ba93619d90a4ddc20c3273495d38b448e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "go": false,
+  "decision": "NO-GO: retain the selected inventory-bound audit as deciding reference"
+}

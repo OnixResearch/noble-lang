@@ -129,22 +129,42 @@ remain frozen absent a separate claim-selection decision.
 
 ## (e) Community axiom-audit comparison
 
-**Scoped decision: defer the comparison; retain Noble's inventory-bound theorem audit as the
-deciding reference.** The proposed upstream `axiom-audit` revision
-`0b885d88a69982cd76990b502742690b80b1a685` declares Lean 4.32.1, while the repository selects Lean
-4.35.0. Compatibility has not been demonstrated. The issue also records that the upstream audit
-imports compiled environments at `trustLevel := 1024`, audits assumptions rather than validating
-proof terms, and documents possible undercounting in cyclic dependency clusters. The foundation
-package builds multiple libraries, including vendored InteractionNets, so a default first-library
-run would not satisfy the requested full module/root coverage.
+**Measured decision: NO-GO for adopting the community tool as an equivalent audit.** The
+[criteria](axiom-audit-criteria.json) were committed before measurement. Upstream
+`axiom-audit@0b885d88a69982cd76990b502742690b80b1a685` declares Lean 4.32.1, but its exact
+source built in the separate [`proofs/axiom-audit-pilot`](../../proofs/axiom-audit-pilot) project under
+the selected Lean 4.35.0; the main foundation toolchain and audit were unchanged. The clean
+selected-audit baseline was `1dbc2bf93628c73158a8227e000d30ab092b9445`, and the measured
+runner source was `3d796a48bfa90a16fd0c06d89be597d57849232e`. Its proof-source hashes
+matched that baseline. The [complete module roster](receipts/2026-11-14/axiom-audit-modules.json)
+enumerates 121 compiled source modules across `NobleFoundation`, `NobleContracts`, `MathlibI64`,
+and vendored `InteractionNets`. The [comparison receipt](receipts/2026-11-14/axiom-audit-comparison.json)
+contains the executable and roster digests, every discrepancy and control outcome, and wall/RSS
+readings. Raw stdout/stderr and the generated hostile sources remain outside the repository.
 
-No external audit was built or run, and no performance or coverage comparison is claimed. A partial
-or toolchain-mismatched result would be weaker than the existing per-root audit and could not
-establish equivalence. The comparison may reopen only when a source revision builds with the selected
-4.35.0 toolchain and an explicit roster covers every foundation library/module and independently
-selected inventoried root. The experiment must compare exact per-root transitive axioms, selected
-policy violations, private helpers, imported custom axioms, empty/unimported roots, `sorryAx`, native
-extensions, and cyclic fixtures against the existing checker; it must report incomplete coverage,
-wall time and peak memory, and retain negative controls. Until that work passes, the existing
-independent inventory-bound checker remains authoritative and no audit-only result is proof replay or
-an executable-correctness claim.
+| Observation on identical 4.35.0 compiled inputs | Measured result |
+|---|---|
+| Four root declaration counts, upstream / stock / CLI | `NobleFoundation` 15,264 / 15,264 / 15,264; `NobleContracts` 2,005 / 2,005 / 2,005; `MathlibI64` 8 / 8 / 8; `InteractionNets` 6,489 / 6,489 / 6,489 |
+| Independently inventoried public theorem axiom sets | 2,071 / 2,071 found; zero mismatches, including stricter theorem-specific profiles |
+| Private/protected helper names | 168 / 168 accounted for, zero ambiguous names |
+| Project union and forbidden axioms | exactly `propext`, `Classical.choice`, `Quot.sound`; zero policy violations |
+| Per-declaration upstream versus Lean stock collector | **53 mismatches**: upstream reports `[]` where stock finds permitted axioms in generated/inductive declarations (38 in foundation, 15 in InteractionNets) |
+| Imported custom axiom / private helper / `sorryAx` / empty root / missing module | all refused or detected; no omitted-module acceptance |
+| Mutual-inductive custom-axiom control | **four misses**: `Odd`, `Even.step`, `Even.zero`, `Odd.step` report `[]` upstream but `NobleAuditImports.seed` in stock collection |
+| Native-evaluation control | Lean 4.35.0 generates `NobleAuditControl.nativeSample._native.native_decide.ax_1_1`, detected by both collectors; the preregistered *exact* `Lean.ofReduceBool` name was not emitted, so that exact control remains false |
+| Per-declaration performance on the same environment | upstream 3.78 s / 2,751,596 KiB max RSS; stock collector 266.01 s / 2,749,672 KiB max RSS; speed cannot override the coverage mismatch |
+
+The 53 mismatches are a substantive acceptance failure even though the selected 2,071 theorem
+sets and project-wide union happen to agree. In particular, an imported custom axiom disappears
+from four cyclic/generated declaration rows, so a per-declaration assurance claim would be
+unsound. The exact native-control name also differs on the selected toolchain; the generated
+native axiom is recorded, not silently counted as the preregistered name. The CLI imports compiled
+environments at `trustLevel := 1024` and audits assumptions, not proof terms. The existing
+inventory-bound Lean `#print axioms` audit remains decisive, alongside independent proof replay and
+statement/protected-definition binding.
+
+**Reopen condition:** upstream fixes the shared traversal's per-declaration undercounts, including
+the cyclic custom-axiom fixture, and a new version-specific native control is frozen *before* a
+repeat run. Rebuild the exact pinned candidate in its isolated toolchain, retain all four libraries
+and every source module, and rerun the full comparison with the same independent inventory,
+controls, wall/RSS accounting and strict GO gate. Do not promote a faster but incomplete audit.
