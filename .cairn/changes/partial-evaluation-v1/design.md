@@ -446,7 +446,7 @@ stack-item order. `reconstruct_active` rebuilds every pair/Unit value in the che
 original input shape from static I64 leaves and ordered dynamic scalar leaves; it rejects
 a wrong arity or type rather than silently changing an item. The residual receives
 `tail ++ dynamic_scalar_leaves` and must yield the original output types, including
-`emit_source`
+the unchanged tail items. `emit_source`
 binds only dynamic suffix leaves and emits checked `unit`/`pair` words for the output
 shapes; its source is freshly prepared as a Declared-Text-v1 expression at that full
 interface, then independently kernel-admitted, closure-checked and graph-re-extracted
@@ -487,6 +487,13 @@ after rebinding, repeated calls and captures on Core-original versus Declared-Te
 ordinary execution. Direct-library refusal controls cover malformed closure, effects,
 resources, reflection, recursion, unsupported active types and reachable budget boundaries;
 only the CLI-representable cases have an instrumented zero-guest-request counter.
+The clean-source receipt
+`verification/ngraph/pe-cases/17461eb/acceptance.json` binds 18/18 registered
+cases and seven auxiliary tests to commit
+`17461ebf59d0348ae609427d07237e1162b9a2d7`; CASE-10 reviews the older
+measurement instead of repeating it. The registered cases have explicit
+execution evidence, while their proof fields remain open except that
+measurement review is not a proof obligation.
 The Lean model proves the graph transformation under a valid survivor map; the MC1
 frame lemma is model-only. This does **not** prove that (1) every admitted Core Program
 extracts to the same ordered-value semantics under the exact tail and closure,
