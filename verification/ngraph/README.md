@@ -382,7 +382,10 @@ structural gate; no whole-program or runtime speedup is claimed. The
 receipt's single shared-host debug timings are descriptive, not
 matched-budget latency evidence. Checked-graph retained bytes can be
 unchanged in reduced-node cases because the new store preallocates the
-baseline capacity.
+baseline capacity. Neither the new receipt nor the earlier PE receipt
+measures peak scratch allocation: D15 records a separate **NO-GO** for a
+scratch-memory efficiency claim until a bound or source-bound high-water
+measurement covers transformation and re-admission under equal policy.
 
 `NobleFoundation.PartialStatic` proves the selected normalization laws on
 wrapping `BitVec 64` atoms, with the previously proved ordered input

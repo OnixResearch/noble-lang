@@ -595,6 +595,13 @@ recorded separately in the receipt. Timing numbers are one shared-host debug
 sample per fixture, not a matched-budget speedup or cold-cache comparison.
 The opt-in comparison invokes D3 first; its total specialization time is
 therefore not a standalone replacement cost.
+Neither this receipt nor the earlier `pe-2026-11-13.json` measures a peak
+allocator/scratch-byte high-water mark. The original acceptance item's
+retained-size and finite-work observations are met, but **NO-GO** for a
+scratch-memory efficiency claim: reopen that cost criterion only with a
+source-bound peak-scratch measurement or proved cap covering both
+transformation and ordinary re-admission under the same policy. It is also
+a prerequisite to any default resource-efficiency claim.
 
 The selected normalization laws over `BitVec 64`, ordered signed atom
 identities, wrapping offset folding, rank/merge, and add/sub step semantics
@@ -625,7 +632,7 @@ Adoption requires **all** D14 criteria: repair the 140% growth failure under
 the frozen structural gate, prove universal Rust-to-model plus
 emitter/replay correspondence with the static-input merge relation,
 review inspector-visible identity semantics, and demonstrate repeatable
-matched-budget cost benefit under a new pre-registered comparison. Reopen
-on a completed proof/bridge and newly frozen measured gate, or immediately
-on an admitted counterexample (first repair correctness). Until then D3
-remains the only default.
+matched-budget cost benefit with scratch accounting under a new
+pre-registered comparison. Reopen on a completed proof/bridge and newly
+frozen measured gate, or immediately on an admitted counterexample (first
+repair correctness). Until then D3 remains the only default.
