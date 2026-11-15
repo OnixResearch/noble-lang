@@ -112,20 +112,22 @@ pub(super) struct Interpreted {
     pub(super) compiled: Compiled,
 }
 
-pub(super) fn interpreter() -> Interpreted {
-    // The declared-text frontend's constraint expansion for eight live input
-    // binders exceeds its default 16K node budget; this bounded experimental
-    // admission uses the documented larger limits, not an unchecked graph.
-    let limits = noble_contracts::Limits {
+fn interpreter_limits() -> noble_contracts::Limits {
+    // Constraint expansion for eight live input binders exceeds the default
+    // 16K node limit; keep this experimental admission independently checked.
+    noble_contracts::Limits {
         nodes: 524_288,
         work: 512_000_000,
         ..noble_contracts::Limits::default()
-    };
+    }
+}
+
+pub(super) fn interpreter() -> Interpreted {
     let checked = specialize::readmit(
         &BLAKE3,
         INTERPRETER,
         &[const { noble_kernel::types::Ty::I64 }; 8],
-        limits,
+        interpreter_limits(),
         &Budgets::default(),
     )
     .expect("interpreter accepted as a declared-text Noble Program");
@@ -353,7 +355,8 @@ fn seeded_wrong_binding_opcode_operands_and_captured_program_are_killed() {
     let correct = [Opcode::Sub, Opcode::Add];
     let [x, y] = [7, 2];
     let expected = reference(&[1, 0], x, y).unwrap();
-    let wrong_binding = static_map([Opcode::Sub, Opcode::Sub]);
+    let mut wrong_binding = static_map(correct);
+    wrong_binding.swap(0, 1);
     let wrong_opcode = static_map([Opcode::Mul, Opcode::Add]);
     for (name, map) in [
         ("static slots swapped", wrong_binding),
@@ -375,10 +378,31 @@ fn seeded_wrong_binding_opcode_operands_and_captured_program_are_killed() {
             "{name}"
         );
     }
-    let reversed_subtraction = Opcode::Add.apply(Opcode::Sub.apply(y, x), y);
+    let mutant_source = INTERPRETER.replacen("x y - let s0", "y x - let s0", 1);
+    assert_ne!(mutant_source, INTERPRETER);
+    let wrong_interpreter = specialize::readmit(
+        &BLAKE3,
+        &mutant_source,
+        &[const { noble_kernel::types::Ty::I64 }; 8],
+        interpreter_limits(),
+        &Budgets::default(),
+    )
+    .expect("swapped-operand interpreter admits");
+    let coeff = static_map(correct);
+    let full = [
+        coeff[0].unwrap(),
+        coeff[1].unwrap(),
+        coeff[2].unwrap(),
+        coeff[3].unwrap(),
+        coeff[4].unwrap(),
+        coeff[5].unwrap(),
+        x,
+        y,
+    ];
     assert_ne!(
-        reversed_subtraction, expected,
-        "swapped subtraction operands are caught"
+        observe_graph(&wrong_interpreter, &full),
+        Obs::Normal(vec![Value::I64(expected)]),
+        "swapped interpreter operands disagree with independently decoded source"
     );
     let stale = specialize_program(&lowered, [Opcode::Add, Opcode::Add]).0;
     assert_ne!(
@@ -389,6 +413,48 @@ fn seeded_wrong_binding_opcode_operands_and_captured_program_are_killed() {
     let actual = specialize_program(&lowered, correct).0;
     assert_eq!(
         observe_graph(&actual.checked, &[x, y]),
+        Obs::Normal(vec![Value::I64(expected)])
+    );
+    let old_map = static_map([Opcode::Add, Opcode::Add]);
+    let correct_map = static_map(correct);
+    let mut session = noble_ngraph::specialize::cache::Session::default();
+    let budgets = Budgets::default();
+    let old = session
+        .specialize(noble_ngraph::specialize::cache::Invocation::new(
+            &BLAKE3,
+            &lowered.checked,
+            INTERPRETER.as_bytes(),
+            Request {
+                static_inputs: &old_map,
+                budgets: &budgets,
+            },
+            noble_contracts::Limits::default(),
+        ))
+        .expect("old residual cached");
+    assert_eq!(
+        old.status,
+        noble_ngraph::specialize::cache::Status::MissStored
+    );
+    let rebound = session
+        .specialize(noble_ngraph::specialize::cache::Invocation::new(
+            &BLAKE3,
+            &lowered.checked,
+            INTERPRETER.as_bytes(),
+            Request {
+                static_inputs: &correct_map,
+                budgets: &budgets,
+            },
+            noble_contracts::Limits::default(),
+        ))
+        .expect("new source binding cached separately");
+    assert_eq!(
+        rebound.status,
+        noble_ngraph::specialize::cache::Status::MissStored,
+        "a stale captured static map must not hit after rebinding"
+    );
+    assert_ne!(old.specialization_key, rebound.specialization_key);
+    assert_eq!(
+        observe_graph(&rebound.readmitted, &[x, y]),
         Obs::Normal(vec![Value::I64(expected)])
     );
 }
