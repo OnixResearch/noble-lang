@@ -32,6 +32,9 @@ pub(crate) const USAGE: &str = "usage:
       [--budget-KIND N]...
   noble ngraph specialize GRAPH --static INDEX=VALUE[,INDEX=VALUE...] --out RESIDUAL
       [--graph-out RESIDUAL_GRAPH] [--budget-KIND N]...
+  noble ngraph specialize SOURCE --source --interface 'TYPE ... --' --tail N
+      [--framed] [--subject-id HEX] [--static INDEX=VALUE[,INDEX=VALUE...]]
+      --out RESIDUAL [--graph-out RESIDUAL_GRAPH] [--budget-KIND N]...
   noble ngraph train MODEL --loss LOSS --data DATA --policy ngraph-deriv-real/0 --optimizer adam/0
       --seed U64 --steps N --out SNAPSHOT [--from PARENT] [--opt-in SPEC]...
       [--adam-lr X] [--adam-beta1 X] [--adam-beta2 X] [--adam-eps X] [--budget-KIND N]...
@@ -42,6 +45,12 @@ pub(crate) const USAGE: &str = "usage:
   INDEX is a 0-based input leaf, VALUE a signed I64 decimal; unlisted leaves stay dynamic.
   specialize emits let-based Noble source and publishes it only after the ordinary
   frontend, kernel and extractor accept the residual.
+  --source selects an exact checked Core Program instead of a graph. TYPE uses
+  Core interface spelling, with bottom-first input types before -- and no
+  output types. The first N stack items are an untouched, resource-free tail;
+  --static positions count full stack items, including the tail, but cannot
+  bind tail positions. The emitted Program is independently checked at its
+  full dynamic interface and runs through ordinary Declared-Text-v1 execution.
   KIND: work expansion inline-depth live-nodes layers inputs outputs affine-terms table-length
       table-entries facts graph-bytes snapshot-bytes forward-scratch backward-scratch steps
       residual-nodes variants
@@ -579,9 +588,16 @@ fn specialize(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, S
     let args = attempt!(arguments::parse(
         &Spec {
             positional: &["GRAPH"],
-            values: &["--static", "--out", "--graph-out"],
+            values: &[
+                "--static",
+                "--out",
+                "--graph-out",
+                "--interface",
+                "--tail",
+                "--subject-id",
+            ],
             repeated: &[],
-            switches: &[],
+            switches: &["--source", "--framed"],
             budgets: &budget_kinds,
         },
         arguments
@@ -591,6 +607,16 @@ fn specialize(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, S
         return usage("--out is required");
     };
     attempt!(policy(C, &args.budgets));
+    if args.switch("--source") {
+        return specialize_program(&args, &out);
+    }
+    if args.has("--interface")
+        || args.has("--tail")
+        || args.has("--subject-id")
+        || args.switch("--framed")
+    {
+        return usage("--interface, --tail, --subject-id and --framed require --source");
+    }
     let (graph, _) = attempt!(load_graph(C, &args.path(0), &args.budgets, "graph file"));
     let leaves = graph
         .graph()
@@ -659,6 +685,125 @@ fn specialize(arguments: &[std::ffi::OsString]) -> Result<std::vec::Vec<Line>, S
         .with("pruned_nodes", Json::Number(report.pruned_nodes))
         .with("residual_nodes", Json::Number(report.residual_nodes))
         .with("variants", Json::Number(report.variants))])
+}
+
+fn specialize_program(
+    args: &arguments::Parsed,
+    out: &std::path::Path,
+) -> Result<std::vec::Vec<Line>, Stop> {
+    const C: &str = "specialize";
+    let interface_text = attempt!(args.required("--interface").map_err(Stop::Usage));
+    let stack_interface = attempt!(noble_contracts::source::parse_core_interface(&interface_text)
+        .map_err(|e| Stop::Usage(std::format!("--interface: {e:?}"))));
+    if !stack_interface.stack_out.is_empty() {
+        return usage("--interface must end at `--` without output types");
+    }
+    let tail_text = attempt!(args.required("--tail").map_err(Stop::Usage));
+    let tail = attempt!(noble_ngraph::format::decimal_u32(&tail_text)
+        .map(|n| n as usize)
+        .ok_or_else(|| Stop::Usage("--tail takes an unsigned decimal stack-item count".into())));
+    let original_pin = match attempt!(args.text("--subject-id").map_err(Stop::Usage)) {
+        Some(text) => Some(attempt!(noble_ngraph::format::digest_from_hex(&text)
+            .ok_or_else(|| Stop::Usage("--subject-id must be 64 hex digits".into())))),
+        None => None,
+    };
+    let source = attempt!(read(C, &args.path(0), files::SOURCE_BYTES, "source file"));
+    let parts = attempt!(
+        submissions(&source, args.switch("--framed")).map_err(|m| Line::host(C, "input", m))
+    );
+    let mut texts = std::vec::Vec::with_capacity(parts.len());
+    for part in parts {
+        texts.push(attempt!(std::string::String::from_utf8(part).map_err(|_| {
+            subject_refusal(C, "a source submission is not UTF-8 text".into())
+        })));
+    }
+    let Some((root, definitions)) = texts.split_last() else {
+        return Err(subject_refusal(C, "the source has no root submission".into()).into());
+    };
+    let definitions: std::vec::Vec<&str> = definitions
+        .iter()
+        .map(std::string::String::as_str)
+        .collect();
+    let prepared = attempt!(noble_ngraph::extract::source::prepare(
+        noble_contracts::source::Session::new(),
+        noble_contracts::Limits::default(),
+        &definitions,
+        root,
+        &stack_interface.stack_in
+    )
+    .map_err(|e| subject_refusal(C, e)));
+    let map = attempt!(static_map(args, stack_interface.stack_in.len()).map_err(Stop::Usage));
+    if tail > map.len() || map[..tail].iter().any(Option::is_some) {
+        return Err(interface(
+            C,
+            "a static binding consumes the preserved stack tail or --tail exceeds the input stack"
+                .into(),
+        )
+        .into());
+    }
+    let residual = attempt!(noble_ngraph::specialize::program::specialize(
+        &IDS,
+        &noble_ngraph::specialize::program::Request {
+            original: &prepared.submission,
+            claimed_closure: &prepared.claimed_closure,
+            expected_original: original_pin,
+            preserved_tail: tail,
+            static_inputs: &map[tail..],
+            budgets: &args.budgets,
+            source_limits: noble_contracts::Limits::default(),
+        },
+    )
+    .map_err(|d| Line::diagnostic(C, "program-specialization", &d)));
+    if let Some(path) = args.path_value("--graph-out") {
+        let text = noble_ngraph::format::graph::print(residual.specialized.graph());
+        attempt!(publish(C, &path, text.as_bytes()));
+    }
+    attempt!(publish(C, out, residual.source.as_bytes()));
+    let report = &residual.specialized.report;
+    let program = residual
+        .prepared
+        .submission()
+        .ok_or_else(|| subject_refusal(C, "the checked residual Program was lost".into()))?;
+    Ok(std::vec![Line::normal(C, "program-specialization")
+        .with("graph", report::digest(&report.original_graph))
+        .with("residual_graph", report::digest(&report.residual_graph))
+        .with("readmitted_graph", report::digest(&residual.readmitted.id()))
+        .with(
+            "source_blake3",
+            report::digest(blake3::hash(residual.source.as_bytes()).as_bytes()),
+        )
+        .with("original_subject", report::digest(&residual.original_subject.identity))
+        .with("residual_subject", report::digest(&residual.residual_subject.identity))
+        .with(
+            "original_closure",
+            Json::Array(
+                residual
+                    .original_subject
+                    .closure
+                    .iter()
+                    .map(|id| Json::Number(*id))
+                    .collect(),
+            ),
+        )
+        .with(
+            "residual_closure",
+            Json::Array(
+                residual
+                    .residual_subject
+                    .closure
+                    .iter()
+                    .map(|id| Json::Number(*id))
+                    .collect(),
+            ),
+        )
+        .with("tail", Json::Number(tail as u64))
+        .with("inputs", Json::Array(program.request.expected.stack_in.iter()
+            .map(|ty| string(std::format!("{ty:?}"))).collect()))
+        .with("accounting", string(report.accounting))
+        .with("original_nodes", Json::Number(report.original_nodes))
+        .with("folded_nodes", Json::Number(report.folded_nodes))
+        .with("pruned_nodes", Json::Number(report.pruned_nodes))
+        .with("residual_nodes", Json::Number(report.residual_nodes))])
 }
 
 fn eval(

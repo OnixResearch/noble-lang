@@ -548,7 +548,7 @@ const SNAPSHOT_KEYS: [&str; 19] = [
 
 const REPORT_SCHEMA: &str = "noble-ngraph-report/v1";
 
-const STAGES: [&str; 13] = [
+const STAGES: [&str; 14] = [
     "request",
     "input",
     "admission",
@@ -561,6 +561,7 @@ const STAGES: [&str; 13] = [
     "output",
     "publication",
     "specialization",
+    "program-specialization",
     "source",
 ];
 
@@ -3975,5 +3976,251 @@ fn ngraph_extract_refuses_effectful_and_control_sources_without_a_graph() -> Tes
     )?;
     assert_eq!(report["outcome"], "normal", "{report}");
     assert_eq!(report["guest_requests"], 1, "{report}");
+    Ok(())
+}
+
+// Program mode is explicitly selected; unlike graph mode its source is
+// checked on a full ordinary stack, including opaque values beneath the
+// specialized I64 suffix.
+fn specialize_program_source(
+    source: &Path,
+    interface: &str,
+    tail: &str,
+    static_map: &str,
+    out: &Path,
+) -> Ngraph {
+    Ngraph::new("specialize")
+        .arg(source)
+        .arg("--source")
+        .arg("--interface")
+        .arg(interface)
+        .arg("--tail")
+        .arg(tail)
+        .arg("--static")
+        .arg(static_map)
+        .arg("--out")
+        .arg(out)
+}
+
+fn program_session(declared: bool, sources: &[&str]) -> Result<Vec<Value>, Box<dyn std::error::Error>> {
+    let mut command = std::process::Command::new(env!("CARGO_BIN_EXE_noble"));
+    command.arg("session").arg("--framed");
+    if declared {
+        command.arg("--declared-modules").arg("--text-byte-cursor");
+    }
+    let mut child = command
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()?;
+    let mut input = Vec::new();
+    for source in sources {
+        input.extend_from_slice(format!("{}\n", source.len()).as_bytes());
+        input.extend_from_slice(source.as_bytes());
+    }
+    std::io::Write::write_all(child.stdin.as_mut().ok_or("missing stdin")?, &input)?;
+    drop(child.stdin.take());
+    let output = child.wait_with_output()?;
+    assert!(
+        output.status.success(),
+        "Program session: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let reports: Vec<Value> = std::str::from_utf8(&output.stdout)?
+        .lines()
+        .map(serde_json::from_str)
+        .collect::<Result<_, _>>()?;
+    assert_eq!(reports.len(), sources.len(), "one report per framed submission");
+    for (source, report) in sources.iter().zip(&reports) {
+        assert_eq!(
+            report["outcome"],
+            if source.starts_with("def ") { "defined" } else { "normal" },
+            "{report}"
+        );
+    }
+    Ok(reports)
+}
+
+fn observed_stack(report: &Value) -> Vec<(Value, Value)> {
+    report["stack"]
+        .as_array()
+        .expect("a normal Program report has a stack")
+        .iter()
+        .map(|item| (item["type"].clone(), item["value"].clone()))
+        .collect()
+}
+
+#[test]
+fn specialize_checked_program_preserves_tail_and_ordinary_path() -> TestResult {
+    let scratch = Scratch::new("pe-program-tail")?;
+    let source = scratch.write("original.noble", "swap -\n")?;
+    let original_compile = std::process::Command::new(env!("CARGO_BIN_EXE_noble"))
+        .arg("compile")
+        .arg(&source)
+        .args([
+            "--input-type", "Text", "--input-type", "Bool", "--input-type", "I64",
+            "--input-type", "I64",
+        ])
+        .output()?;
+    assert!(original_compile.status.success(), "original compiles");
+    let original = program_session(false, &["\"audit\" true 5 7", "swap -"])?;
+    let expected = observed_stack(&original[1]);
+    assert_eq!(expected[0].1, "audit");
+    assert_eq!(expected[1].1, true);
+    assert_eq!(expected[2].1, "2");
+    for (name, static_map, dynamic) in [
+        ("none", "", "\"audit\" true 5 7"),
+        ("first", "2=5", "\"audit\" true 7"),
+        ("second", "3=7", "\"audit\" true 5"),
+        ("all", "2=5,3=7", "\"audit\" true"),
+    ] {
+        let out = scratch.path(&format!("{name}.noble"));
+        let line = expect_normal(
+            &scratch.run(&specialize_program_source(
+                &source,
+                "Text Bool I64 I64 --",
+                "2",
+                static_map,
+                &out,
+            ))?,
+            "specialize",
+        )?;
+        assert_eq!(line["stage"], "program-specialization", "{line}");
+        assert_eq!(line["guest_requests"], 0, "{line}");
+        assert_eq!(line["original_closure"], serde_json::json!([]), "{line}");
+        assert_eq!(line["residual_closure"], serde_json::json!([]), "{line}");
+        assert_ne!(line["original_subject"], line["residual_subject"]);
+        let emitted = std::fs::read_to_string(&out)?;
+        let residual = program_session(true, &[dynamic, &emitted])?;
+        assert_eq!(observed_stack(&residual[1]), expected, "{name}: {line}");
+        assert_eq!(residual[1]["guest_requests"], 0);
+        let reproduced = expect_normal(
+            &scratch.run(
+                &specialize_program_source(
+                    &source,
+                    "Text Bool I64 I64 --",
+                    "2",
+                    static_map,
+                    &scratch.path(&format!("{name}-pinned.noble")),
+                )
+                .arg("--subject-id")
+                .arg(line["original_subject"].as_str().ok_or("original subject id")?),
+            )?,
+            "specialize",
+        )?;
+        assert_eq!(reproduced["residual_subject"], line["residual_subject"]);
+    }
+    let after = std::process::Command::new(env!("CARGO_BIN_EXE_noble"))
+        .arg("compile")
+        .arg(&source)
+        .args([
+            "--input-type", "Text", "--input-type", "Bool", "--input-type", "I64",
+            "--input-type", "I64",
+        ])
+        .output()?;
+    assert_eq!(after.stdout, original_compile.stdout, "the ordinary compiler did not change");
+    assert_eq!(after.status.code(), original_compile.status.code());
+    Ok(())
+}
+
+#[test]
+fn specialize_checked_program_preserves_saved_dependencies_and_recipes() -> TestResult {
+    let scratch = Scratch::new("pe-program-closure")?;
+    for (name, definitions, root, initial, static_map, dynamic, tail_value, expected_value, closure_len) in [
+        (
+            "rebind",
+            &["def step [ 1 + ]", "def use [ step ]", "def step [ 9 + ]"][..],
+            "use",
+            "\"old\" 5",
+            "1=5",
+            "\"old\"",
+            "old",
+            "6",
+            2usize,
+        ),
+        (
+            "repeat",
+            &["def sq [ dup * ]"][..],
+            "sq sq",
+            "\"repeat\" 5",
+            "1=5",
+            "\"repeat\"",
+            "repeat",
+            "625",
+            1,
+        ),
+        (
+            "capture",
+            &[][..],
+            "2 quote [ + ] compose run",
+            "\"capture\" 5",
+            "",
+            "\"capture\" 5",
+            "capture",
+            "7",
+            0,
+        ),
+    ] {
+        let text = format!("{}\n{root}\n", definitions.join("\n"));
+        let source = scratch.write(&format!("{name}.source"), &text)?;
+        let out = scratch.path(&format!("{name}.residual"));
+        let line = expect_normal(
+            &scratch.run(&specialize_program_source(
+                &source,
+                "Text I64 --",
+                "1",
+                static_map,
+                &out,
+            ))?,
+            "specialize",
+        )?;
+        assert_eq!(
+            line["original_closure"].as_array().ok_or("closure array")?.len(),
+            closure_len,
+            "{name}: {line}"
+        );
+        assert_eq!(line["residual_closure"], serde_json::json!([]));
+        let original = program_session(
+            false,
+            &definitions
+                .iter()
+                .copied()
+                .chain([initial, root])
+                .collect::<Vec<_>>(),
+        )?;
+        let emitted = std::fs::read_to_string(&out)?;
+        let residual = program_session(true, &[dynamic, &emitted])?;
+        let expected = observed_stack(original.last().ok_or("original report")?);
+        assert_eq!(expected[0].1, tail_value);
+        assert_eq!(expected[1].1, expected_value, "{name}");
+        assert_eq!(observed_stack(&residual[1]), expected, "{name}");
+    }
+    Ok(())
+}
+
+#[test]
+fn specialize_checked_program_refuses_effect_tail_and_stale_identity() -> TestResult {
+    let scratch = Scratch::new("pe-program-refuse")?;
+    for (name, source, interface, tail, static_map, pin, code) in [
+        ("effect", "\"audit\" test.emit 1 +", "I64 --", "0", "", None, "E-EFFECT"),
+        ("tail-move", "swap", "I64 I64 --", "1", "", None, "E-INTERFACE"),
+        ("tail-bind", "1 +", "Text I64 --", "1", "0=5", None, "E-INTERFACE"),
+        ("tail-long", "1 +", "I64 --", "2", "", None, "E-INTERFACE"),
+        ("stale", "1 +", "I64 --", "0", "", Some("00".repeat(32)), "E-SUBJECT"),
+    ] {
+        let input = scratch.write(&format!("{name}.source"), source)?;
+        let out = scratch.path(&format!("{name}.residual"));
+        let graph = scratch.path(&format!("{name}.graph"));
+        let mut command = specialize_program_source(&input, interface, tail, static_map, &out)
+            .arg("--graph-out")
+            .arg(&graph);
+        if let Some(pin) = &pin {
+            command = command.arg("--subject-id").arg(pin);
+        }
+        let line = expect_code(&scratch.run(&command)?, "specialize", code)?;
+        assert_eq!(line["guest_requests"], 0, "{name}");
+        assert_no_publication(&out);
+        assert_no_publication(&graph);
+    }
     Ok(())
 }
