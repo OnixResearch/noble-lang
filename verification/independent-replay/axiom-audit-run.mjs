@@ -139,7 +139,7 @@ function compareReports(candidate, stock, roster, cli) {
 function writeControls(dir) {
   fs.mkdirSync(dir);
   fs.writeFileSync(path.join(dir, 'NobleAuditImports.lean'), `import Lean\n\nnamespace NobleAuditImports\naxiom importedCustom : True\naxiom seed : Nat\nend NobleAuditImports\n`);
-  fs.writeFileSync(path.join(dir, 'NobleAuditControl.lean'), `import NobleAuditImports\nimport Mathlib.Tactic\n\nnamespace NobleAuditControl\nprivate theorem hidden : True := NobleAuditImports.importedCustom\ntheorem viaPrivate : True := hidden\ntheorem sorrySample : True := by sorry\ntheorem nativeSample : (2 : Nat) + 2 = 4 := by native_decide\nmutual\ninductive Even : Nat → Prop\n  | zero : Even 0\n  | step (n : Nat) : Odd n → Even (n + 1)\n  | special : Even (NobleAuditImports.seed + 1)\ninductive Odd : Nat → Prop\n  | step (n : Nat) : Even n → Odd (n + 1)\nend\nend NobleAuditControl\n`);
+  fs.writeFileSync(path.join(dir, 'NobleAuditControl.lean'), `import NobleAuditImports\n\nnamespace NobleAuditControl\nprivate theorem hidden : True := NobleAuditImports.importedCustom\ntheorem viaPrivate : True := hidden\ntheorem sorrySample : True := by sorry\ntheorem nativeSample : (2 : Nat) + 2 = 4 := by native_decide\nmutual\ninductive Even : Nat → Prop\n  | zero : Even 0\n  | step (n : Nat) : Odd n → Even (n + 1)\n  | special : Even (NobleAuditImports.seed + 1)\ninductive Odd : Nat → Prop\n  | step (n : Nat) : Even n → Odd (n + 1)\nend\nend NobleAuditControl\n`);
 }
 function controlChecks(cli, candidate, stock, empty, missing) {
   const c = rowsOf(candidate).get('NobleAuditControl');
@@ -157,6 +157,7 @@ function controlChecks(cli, candidate, stock, empty, missing) {
     private_helper_covered: hidden.length === 1 && hidden[0][1].includes('NobleAuditImports.importedCustom'),
     sorry_detected: sorry.some(ax => ax.includes('sorryAx')),
     native_detected: native.includes('Lean.ofReduceBool'),
+    native_generated_detected: native.some(ax => ax.includes('._native.native_decide.ax_')),
     cyclic_declarations_compared: cycle.length >= 4 && equal,
     empty_root_refused: empty.status === 1 && empty.data?.audited === 0,
     missing_module_refused: missing.status === 2 && missing.data?.audited === 0,
