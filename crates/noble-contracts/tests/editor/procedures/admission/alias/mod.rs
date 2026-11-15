@@ -6,6 +6,7 @@ use noble_contracts::source::procedures::{
 };
 use noble_contracts::source::Session;
 use noble_kernel::types::Ty;
+use std::fmt::Write as _;
 use std::string::String;
 use std::vec;
 use std::vec::Vec;
@@ -29,7 +30,8 @@ pub(super) fn polynomial_record(added: &[i64]) -> Result<ProcedureRecord, String
     let mut nodes = Vec::with_capacity(expected_node_count);
     let mut entry = Vec::with_capacity(expected_node_count);
     for value in added {
-        source.push_str(&format!("{value} + "));
+        write!(&mut source, "{value} + ")
+            .map_err(|error| format!("literal formatting: {error}"))?;
         entry.push(u32::try_from(nodes.len()).map_err(|error| error.to_string())?);
         nodes.push(Node::I64(*value));
         entry.push(u32::try_from(nodes.len()).map_err(|error| error.to_string())?);
