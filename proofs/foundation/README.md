@@ -170,7 +170,7 @@ Status words:
 
 | Claim | Model / theorem(s) | Implementation boundary | Status |
 |---|---|---|---|
-| Exact-bit recurrent one-step accumulator and two-word swap (issue #78) | `NobleFoundation.RecurrentBitCell.graphAdder_correct`, `NobleFoundation.RecurrentBitCell.accumulator_one_step`, `NobleFoundation.RecurrentBitCell.stack_swap_one_step`, `NobleFoundation.RecurrentBitCell.step_bound_halts_at_limit` | Boolean select-gate model of the checked Rust test graph; no Rust graph, ONNX emitter, Scan-body or runtime refinement theorem | model theorem source added, clean-source kernel/axiom receipt pending; implementation correspondence **open** |
+| Exact-bit recurrent one-step accumulator and two-word swap (issue #78) | `NobleFoundation.RecurrentBitCell.graphAdder_correct`, `NobleFoundation.RecurrentBitCell.accumulator_one_step`, `NobleFoundation.RecurrentBitCell.stack_swap_one_step`, `NobleFoundation.RecurrentBitCell.step_bound_halts_at_limit` | Boolean select-gate model of the checked Rust test graph; no Rust graph, ONNX emitter, Scan-body or runtime refinement theorem | model **proved** and clean-source kernel/axiom audit retained in the recurrent lane; implementation correspondence **open** |
 | Bounded sequential I64/Bool belt validator (issue #113) | `NobleFoundation.Belt.validate_sound`; real lowered program and exact-vector controls in the generated BeltCorpus module | symbolic graph identities over `PackedSchedule`; no Rust refinement theorem | model **proved**; real artifact corpus is finite model evidence; Rust lowerer/checker/interpreter and B2 comparisons remain separate **tested** evidence |
 | Fixed T1/T2 timing legality and ordered target outputs (issue #114) | `NobleFoundation.BeltTarget.mapReadyOutputs`, `NobleFoundation.BeltTarget.validate_sound` | the symbolic run gates graph-reference values on latency-derived completion; it does not evaluate operations or simulate belt/save state, and no Rust artifact/operand-age refinement theorem is claimed | completion-gate/order **proved** only; generated corpus and Rust lowerer/checker/interpreter cross-backend controls are separate **tested** evidence; machine-step refinement remains **open** |
 | ZMod/BitVec/K-NUM-01 signed decoding, range, round trips | `toZ_ofZ`, `ofZ_toZ`, `toZ_add`, `toZ_sub`, `toZ_mul`, `toZ_neg`, `signed_eq_toInt`, `signed_toZ`, `wrap_eq_bmod`, `wrap_eq_toInt_ofInt`, `wrap_eq_knum01`, `toInt_range`, `signed_range`, `intCast_signed`, `toInt_ofInt_eq_iff`, `signed_intCast_eq_iff`, `ofInt_toInt` | none (mathematics only) | **proved** |
@@ -3919,9 +3919,12 @@ are not derived from the Lean definitions. Their existing finite differential
 and selected ORT CPU checks do not close a Rust-to-model, ONNX-emitter or
 runtime-refinement theorem. In particular no Lean theorem claims a complete
 1,000-step ONNX execution or host snapshot/resume correctness. The foundation
-axiom whitelist is propext, Classical.choice and Quot.sound; the integrator
-must check the new module's exact transitive axioms and clean-source inventory
-before reporting this model proof as verified.
+axiom whitelist is propext, Classical.choice and Quot.sound. The pinned
+lean-proofs ladder on clean source f3a2323 passed all four stages; the
+recurrent-lane proof audit receipt records all twelve new theorem names,
+their transitive axioms and the digest of the full foundation checker output.
+The integrator still owns the official foundation receipt and any final-head
+source-inventory renewal.
 
 ## Status by phase
 
