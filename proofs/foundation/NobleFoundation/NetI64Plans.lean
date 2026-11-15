@@ -488,10 +488,42 @@ structure PhysicalState where
   outputs : List (Nat × Nat)
   work : List PhysicalPair
 
+/-- Retag one existing physical slot; an out-of-range index cannot silently
+grow the bounded arena. -/
+def PhysicalState.writeSlot (state : PhysicalState)
+    (index : Nat) (replacement : PhysicalSlot) : PhysicalState :=
+  { state with slots := state.slots.setIfInBounds index replacement }
+
+/-- Updating a consumed physical slot leaves every other slot unchanged,
+including its generation and queued-reference mark. -/
+theorem PhysicalState.writeSlot_frame {state : PhysicalState}
+    {index other : Nat} {replacement : PhysicalSlot} (h : index ≠ other) :
+    (state.writeSlot index replacement).slots[other]? = state.slots[other]? := by
+  simp [PhysicalState.writeSlot, Array.getElem?_setIfInBounds_ne h]
+
+/-- A fresh physical slot is appended, without changing any prior slot. -/
+def PhysicalState.appendSlot (state : PhysicalState)
+    (fresh : PhysicalSlot) : PhysicalState :=
+  { state with slots := state.slots.push fresh }
+
+theorem PhysicalState.appendSlot_frame {state : PhysicalState}
+    {fresh : PhysicalSlot} {index : Nat} (h : index < state.slots.size) :
+    (state.appendSlot fresh).slots[index]? = state.slots[index]? := by
+  simp [PhysicalState.appendSlot, Array.getElem?_push, Nat.ne_of_lt h]
+
 def PhysicalState.logicalPort (state : PhysicalState) (port : Nat × Nat) : Option Port := do
   let slot ← state.slots[port.1]?
   let (logical, _) ← slot.agent
   some (logical, port.2)
+
+/-- A physical write away from one boundary endpoint cannot retarget the
+represented logical port at that endpoint. -/
+theorem PhysicalState.logicalPort_writeSlot_away {state : PhysicalState}
+    {index : Nat} {replacement : PhysicalSlot} {port : Nat × Nat}
+    (h : index ≠ port.1) :
+    (state.writeSlot index replacement).logicalPort port = state.logicalPort port := by
+  simp [PhysicalState.logicalPort, PhysicalState.writeSlot,
+    Array.getElem?_setIfInBounds_ne h]
 
 private def PhysicalState.portWires (state : PhysicalState) (logical : Id) :
     Nat → List (Option (Nat × Nat)) → Std.HashMap Port Port → Std.HashMap Port Port
@@ -539,6 +571,16 @@ theorem PhysicalState.stale_first_refused {state : PhysicalState}
     state.logicalPair pair = none := by
   simp [PhysicalState.logicalPair, hslot, hstale]
 
+/-- Retagging an unrelated slot cannot change a queue entry's two decoded
+logical identities or its generation validity. -/
+theorem PhysicalState.logicalPair_writeSlot_away {state : PhysicalState}
+    {index : Nat} {replacement : PhysicalSlot} {pair : PhysicalPair}
+    (left : index ≠ pair.first) (right : index ≠ pair.second) :
+    (state.writeSlot index replacement).logicalPair pair = state.logicalPair pair := by
+  simp [PhysicalState.logicalPair, PhysicalState.writeSlot,
+    Array.getElem?_setIfInBounds_ne left,
+    Array.getElem?_setIfInBounds_ne right]
+
 /-- Projection is computed from physical slots, ports, ordered outputs and
 generation-checked queued pairs, not from a ghost abstract net. -/
 def PhysicalState.project (state : PhysicalState) : HNet NetSym :=
@@ -546,6 +588,53 @@ def PhysicalState.project (state : PhysicalState) : HNet NetSym :=
     wires := state.wires
     free := state.outputs.filterMap state.logicalPort
     work := state.work.filterMap state.logicalPair }
+
+/-- Ordered external boundary ports are unchanged by a physical slot write
+whose index is absent from the boundary, not merely equal as an unordered set. -/
+theorem PhysicalState.project_boundary_frame {state : PhysicalState}
+    {index : Nat} {replacement : PhysicalSlot}
+    (outside : ∀ port ∈ state.outputs, index ≠ port.1) :
+    (state.writeSlot index replacement).project.free = state.project.free := by
+  have preserve : ∀ ports : List (Nat × Nat),
+      (∀ port ∈ ports, index ≠ port.1) →
+      ports.filterMap (state.writeSlot index replacement).logicalPort =
+        ports.filterMap state.logicalPort := by
+    intro ports
+    induction ports with
+    | nil => intro _; rfl
+    | cons port rest ih =>
+      intro hports
+      have hrest := ih (by
+        intro entry he
+        exact hports entry (List.mem_cons_of_mem _ he))
+      simp only [List.filterMap_cons]
+      rw [PhysicalState.logicalPort_writeSlot_away (hports port (by simp))]
+      rw [hrest]
+  exact preserve state.outputs outside
+
+/-- The ordered active-pair worklist is unchanged by a write away from both
+slots named by every queued pair. -/
+theorem PhysicalState.project_work_frame {state : PhysicalState}
+    {index : Nat} {replacement : PhysicalSlot}
+    (outside : ∀ pair ∈ state.work,
+      index ≠ pair.first ∧ index ≠ pair.second) :
+    (state.writeSlot index replacement).project.work = state.project.work := by
+  have preserve : ∀ pairs : List PhysicalPair,
+      (∀ pair ∈ pairs, index ≠ pair.first ∧ index ≠ pair.second) →
+      pairs.filterMap (state.writeSlot index replacement).logicalPair =
+        pairs.filterMap state.logicalPair := by
+    intro pairs
+    induction pairs with
+    | nil => intro _; rfl
+    | cons pair rest ih =>
+      intro hpairs
+      have hpair := hpairs pair (by simp)
+      have hrest := ih (by
+        intro entry he
+        exact hpairs entry (List.mem_cons_of_mem _ he))
+      simp only [List.filterMap_cons]
+      rw [PhysicalState.logicalPair_writeSlot_away hpair.1 hpair.2, hrest]
+  exact preserve state.work outside
 
 /-- A committed physical state must have no stale queued pair or incorrectly
 classified free slot. These are obligations on the representation relation. -/

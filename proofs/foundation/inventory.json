@@ -12568,6 +12568,42 @@
       "claim": "reservation opens a physical transaction only if arena scratch and queue bounds all hold"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeSlot_frame",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a retagged physical slot leaves all other generation and queue marks unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.appendSlot_frame",
+      "phase": 1,
+      "role": "representation",
+      "claim": "appending a new physical slot preserves every previously allocated arena slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.logicalPort_writeSlot_away",
+      "phase": 1,
+      "role": "representation",
+      "claim": "writing away from a boundary endpoint preserves its projected logical port"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.logicalPair_writeSlot_away",
+      "phase": 1,
+      "role": "representation",
+      "claim": "writing away from both pair slots preserves a queued pair's decoded identities and generations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.project_boundary_frame",
+      "phase": 1,
+      "role": "representation",
+      "claim": "writing outside ordered external boundary slots leaves its projected port list unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.project_work_frame",
+      "phase": 1,
+      "role": "representation",
+      "claim": "writing outside every queued pair preserves the projected active-pair list"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalTransaction.stage_stutters",
       "phase": 1,
       "role": "representation",
