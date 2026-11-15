@@ -1439,6 +1439,249 @@ def PhysicalState.executeCheckedImage (state : PhysicalState)
         second, secondGeneration := UInt64.ofNat secondGeneration : PhysicalPair }
     retiredSecond.publishAll publications
 
+/-- Installing any admitted result, whether recycled or freshly appended,
+cannot alter the ordered external-output identities. -/
+private theorem PhysicalState.installResult_output_labels
+    {state next : PhysicalState} {plan : BytePlan} {logical : Id}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    (h : state.installResult plan logical result = some next) :
+    next.outputs.map PhysicalOutput.label =
+      state.outputs.map PhysicalOutput.label := by
+  unfold PhysicalState.installResult at h
+  cases hd : state.slots[result.2.2.2.1]? with
+  | none => simp [hd] at h
+  | some donor =>
+    cases ha : donor.agent with
+    | none => simp [hd, ha] at h
+    | some data =>
+      cases hports : result.2.2.2.2.mapM plan.resultTarget with
+      | none => simp [hd, hports] at h
+      | some ports =>
+        by_cases hfresh : result.1
+        · simp [hd, ha, hports, hfresh, PhysicalState.appendSlot] at h
+          rcases h with ⟨_, heq⟩
+          cases heq
+          rfl
+        · cases ho : state.slots[result.2.1]? with
+          | none => simp [hd, hports, hfresh, ho] at h
+          | some old =>
+            simp [hd, ha, hports, hfresh, ho,
+              PhysicalState.writeSlot] at h
+            rcases h with ⟨_, heq⟩
+            cases heq
+            rfl
+
+/-- Every finite result installation preserves external-output identities;
+the result count, slot choice and payload are arbitrary. -/
+private theorem PhysicalState.installResults_output_labels
+    {plan : BytePlan} {left right : Id} {rhs : XRhs NetSym}
+    {index : Nat} {state next : PhysicalState}
+    {results : List (Bool × Nat × NetSym × Nat × List (Option Nat))}
+    (h : PhysicalState.installResults plan left right rhs index state results =
+      some next) :
+    next.outputs.map PhysicalOutput.label =
+      state.outputs.map PhysicalOutput.label := by
+  induction results generalizing index state next with
+  | nil =>
+    simp [PhysicalState.installResults] at h
+    subst next
+    rfl
+  | cons result rest ih =>
+    cases hs : rhs.slots[index]? with
+    | none => simp [PhysicalState.installResults, hs] at h
+    | some slot =>
+      by_cases hlab : rhs.lab slot.1 slot.2 = some result.2.2.1
+      · cases hi : state.installResult plan
+          (child left right slot.1 slot.2) result with
+        | none =>
+          simp [PhysicalState.installResults, hs, hlab, hi] at h
+        | some installed =>
+          have hrest : PhysicalState.installResults plan left right rhs
+              (index + 1) installed rest = some next := by
+            simpa [PhysicalState.installResults, hs, hlab, hi] using h
+          exact (ih hrest).trans (PhysicalState.installResult_output_labels hi)
+      · simp [PhysicalState.installResults, hs, hlab] at h
+
+/-- Retiring either consumed arena slot cannot rename or remove an output. -/
+private theorem PhysicalState.retire_output_labels
+    {state next : PhysicalState} {index : Nat} {reuse : Bool}
+    (h : state.retire index reuse = some next) :
+    next.outputs.map PhysicalOutput.label =
+      state.outputs.map PhysicalOutput.label := by
+  by_cases hr : reuse
+  · simp [PhysicalState.retire, hr] at h
+    cases h
+    rfl
+  · cases ho : state.slots[index]? with
+    | none => simp [PhysicalState.retire, hr, ho] at h
+    | some old =>
+      simp [PhysicalState.retire, hr, ho, PhysicalState.writeSlot] at h
+      rcases h with ⟨_, heq⟩
+      cases heq
+      rfl
+
+/-- Marking and appending one canonical active pair never changes the
+external-output inventory, regardless of whether the queue was already
+nonempty. -/
+private theorem PhysicalState.publish_output_labels
+    {state next : PhysicalState} {pair : PhysicalPair}
+    (h : state.publish pair = some next) :
+    next.outputs.map PhysicalOutput.label =
+      state.outputs.map PhysicalOutput.label := by
+  by_cases hp : pair.first >= pair.second
+  · simp [PhysicalState.publish, hp] at h
+  · cases hf : state.slots[pair.first]? with
+    | none => simp [PhysicalState.publish, hp, hf] at h
+    | some first =>
+      cases hs : state.slots[pair.second]? with
+      | none => simp [PhysicalState.publish, hp, hf, hs] at h
+      | some second =>
+        simp [PhysicalState.publish, hp, hf, hs,
+          PhysicalState.writeSlot, PhysicalState.appendPublications] at h
+        rcases h with ⟨_, heq⟩
+        cases heq
+        rfl
+
+/-- Any finite successful publication batch preserves ordered output
+identities even though it may change queued-generation marks and the queue. -/
+private theorem PhysicalState.publishAll_output_labels
+    {state next : PhysicalState} {pairs : List PhysicalPair}
+    (h : state.publishAll pairs = some next) :
+    next.outputs.map PhysicalOutput.label =
+      state.outputs.map PhysicalOutput.label := by
+  induction pairs generalizing state next with
+  | nil =>
+    simp [PhysicalState.publishAll] at h
+    cases h
+    rfl
+  | cons pair rest ih =>
+    cases hp : state.publish pair with
+    | none => simp [PhysicalState.publishAll, hp] at h
+    | some published =>
+      have hrest : published.publishAll rest = some next := by
+        simpa [PhysicalState.publishAll, hp] using h
+      exact (ih hrest).trans (PhysicalState.publish_output_labels hp)
+
+/-- A checked reciprocal write may mutate an external slot or retarget an
+output, but it cannot change the output's stable abstract identity. -/
+private theorem PhysicalState.writeExternal_output_labels
+    {state next : PhysicalState} {plan : BytePlan}
+    {write : Nat × Nat × Nat}
+    (h : state.writeExternal plan write = some next) :
+    next.outputs.map PhysicalOutput.label =
+      state.outputs.map PhysicalOutput.label := by
+  unfold PhysicalState.writeExternal at h
+  cases hr : plan.results[write.1]? with
+  | none => simp [hr] at h
+  | some result =>
+    cases hb : plan.boundaries[write.2.2]? with
+    | none => simp [hr, hb] at h
+    | some boundary =>
+      by_cases hp : result.2.2.2.2[write.2.1]? = some (some write.2.2)
+      · cases boundary with
+        | mk physical tag =>
+          cases tag with
+          | mk kind peerAndPort =>
+            cases peerAndPort with
+            | mk peer port =>
+              cases kind with
+              | zero =>
+                cases hs : state.slots[peer]? with
+                | none => simp [hr, hb, hs] at h
+                | some old =>
+                  simp [hr, hb, hp, hs, PhysicalState.writeSlot] at h
+                  rcases h with ⟨_, _, heq⟩
+                  cases heq
+                  rfl
+              | succ kind =>
+                cases kind with
+                | zero =>
+                  cases port with
+                  | zero =>
+                    cases ho : state.outputs[peer]? with
+                    | none => simp [hr, hb, ho] at h
+                    | some old =>
+                      simp [hr, hb, hp, ho] at h
+                      rcases h with ⟨_, hretarget⟩
+                      exact PhysicalState.retargetOutput_preserves_free hretarget
+                  | succ port => simp [hr, hb] at h
+                | succ kind => simp [hr, hb] at h
+      · simp [hr, hb, hp] at h
+
+/-- All checked reciprocal boundary writes retain the original free-port
+identity list, including arbitrary mixtures of peer slots and outputs. -/
+private theorem PhysicalState.writeExternals_output_labels
+    {state next : PhysicalState} {plan : BytePlan}
+    {writes : List (Nat × Nat × Nat)}
+    (h : state.writeExternals plan writes = some next) :
+    next.outputs.map PhysicalOutput.label =
+      state.outputs.map PhysicalOutput.label := by
+  induction writes generalizing state next with
+  | nil =>
+    simp [PhysicalState.writeExternals] at h
+    cases h
+    rfl
+  | cons write rest ih =>
+    cases hw : state.writeExternal plan write with
+    | none => simp [PhysicalState.writeExternals, hw] at h
+    | some rewired =>
+      have hrest : rewired.writeExternals plan rest = some next := by
+        simpa [PhysicalState.writeExternals, hw] using h
+      exact (ih hrest).trans (PhysicalState.writeExternal_output_labels hw)
+
+/-- For any successfully decoded rule image, including arbitrary slot
+placement, external peers and existing pending pairs, the physical executor
+preserves the abstract free-port labels through its entire transaction. -/
+theorem PhysicalState.executeCheckedImage_preserves_free
+    {state next : PhysicalState} {bytes : List UInt8}
+    {redex : XRedex NetSym}
+    (h : state.executeCheckedImage bytes redex = some next) :
+    next.project.free = state.project.free := by
+  change next.outputs.map PhysicalOutput.label =
+    state.outputs.map PhysicalOutput.label
+  unfold PhysicalState.executeCheckedImage at h
+  cases hd : BytePlan.decode bytes with
+  | none => simp [hd] at h
+  | some plan =>
+    let pair : PhysicalPair :=
+      { first := plan.pair.1
+        firstGeneration := UInt64.ofNat plan.pair.2.1
+        second := plan.pair.2.2.1
+        secondGeneration := UInt64.ofNat plan.pair.2.2.2 }
+    by_cases hp : state.logicalPair pair = some (redex.1, redex.2.1)
+    · simp [hd, pair, hp] at h
+      cases hi : PhysicalState.installResults plan redex.1 redex.2.1
+          redex.2.2.2.2 0 state plan.results with
+      | none => simp [hi] at h
+      | some installed =>
+        simp [hi] at h
+        cases hw : installed.writeExternals plan plan.externalWrites with
+        | none => simp [hw] at h
+        | some rewired =>
+          simp [hw] at h
+          cases hf : rewired.retire plan.pair.1 (plan.action.1 == 1) with
+          | none => simp [hf] at h
+          | some retiredFirst =>
+            simp [hf] at h
+            cases hs : retiredFirst.retire plan.pair.2.2.1
+                (plan.action.2 == 1) with
+            | none => simp [hs] at h
+            | some retiredSecond =>
+              simp [hs] at h
+              calc
+                next.outputs.map PhysicalOutput.label =
+                    retiredSecond.outputs.map PhysicalOutput.label :=
+                  PhysicalState.publishAll_output_labels h
+                _ = retiredFirst.outputs.map PhysicalOutput.label :=
+                  PhysicalState.retire_output_labels hs
+                _ = rewired.outputs.map PhysicalOutput.label :=
+                  PhysicalState.retire_output_labels hf
+                _ = installed.outputs.map PhysicalOutput.label :=
+                  PhysicalState.writeExternals_output_labels hw
+                _ = state.outputs.map PhysicalOutput.label :=
+                  PhysicalState.installResults_output_labels hi
+    · simp [hd, pair, hp] at h
+
 /-- An output-connected OP2/number instance with a selected active pair at
 generation zero. External identities remain stable when its two targets move. -/
 private def op2PhysicalStart : PhysicalState :=
