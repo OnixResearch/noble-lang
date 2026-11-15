@@ -86,6 +86,7 @@ pub mod ir;
 pub mod layout;
 pub mod llvm;
 pub mod net;
+pub mod permutation;
 pub mod prng;
 pub mod resource;
 pub mod schedule;

@@ -2749,7 +2749,109 @@
       "name": "NobleFoundation.PackedPermutation.empty_witness_refused",
       "phase": 1,
       "role": "packed-permutation-negative-control",
-      "claim": "The profile refuses an empty emitting-node witness."
+      "claim": "A graph with emitting nodes refuses an empty witness."
+    },
+    {
+      "name": "NobleFoundation.PackedPermutationCorpus.canonical_validated",
+      "phase": 1,
+      "role": "real-permutation-artifact",
+      "claim": "The independent model checker accepts the canonical real exported stream."
+    },
+    {
+      "name": "NobleFoundation.PackedPermutationCorpus.canonical_sound",
+      "phase": 1,
+      "role": "real-permutation-artifact",
+      "claim": "The canonical real exported stream preserves graph-reference ordered outputs in the model."
+    },
+    {
+      "name": "NobleFoundation.PackedPermutationCorpus.first_validated",
+      "phase": 1,
+      "role": "real-permutation-artifact",
+      "claim": "The model checker accepts the decoded real binary's noncanonical first within-layer permutation."
+    },
+    {
+      "name": "NobleFoundation.PackedPermutationCorpus.first_sound",
+      "phase": 1,
+      "role": "real-permutation-artifact",
+      "claim": "The decoded real binary's first noncanonical stream preserves every ordered output in the model."
+    },
+    {
+      "name": "NobleFoundation.PackedPermutationCorpus.second_validated",
+      "phase": 1,
+      "role": "real-permutation-artifact",
+      "claim": "The model checker accepts the second distinct real within-layer permutation."
+    },
+    {
+      "name": "NobleFoundation.PackedPermutationCorpus.second_sound",
+      "phase": 1,
+      "role": "real-permutation-artifact",
+      "claim": "The second real noncanonical stream preserves every ordered output in the model."
+    },
+    {
+      "name": "NobleFoundation.PackedPermutationCorpus.cross_layer_refused",
+      "phase": 1,
+      "role": "real-permutation-control",
+      "claim": "Moving a real graph operation to a different assigned layer is refused."
+    },
+    {
+      "name": "NobleFoundation.PackedPermutationCorpus.swapped_sub_refused",
+      "phase": 1,
+      "role": "real-permutation-control",
+      "claim": "Swapped ordered subtraction operands in the real stream are refused."
+    },
+    {
+      "name": "NobleFoundation.PackedPermutationCorpus.duplicate_refused",
+      "phase": 1,
+      "role": "real-permutation-control",
+      "claim": "Duplicating one real operation and witness is refused."
+    },
+    {
+      "name": "NobleFoundation.PackedPermutationCorpus.omitted_refused",
+      "phase": 1,
+      "role": "real-permutation-control",
+      "claim": "Omitting one real operation and witness is refused."
+    },
+    {
+      "name": "NobleFoundation.PackedPermutationCorpus.early_read_refused",
+      "phase": 1,
+      "role": "real-permutation-control",
+      "claim": "A real stream instruction reading a later uninitialized register is refused."
+    },
+    {
+      "name": "NobleFoundation.PackedPermutationCorpus.duplicate_destination_refused",
+      "phase": 1,
+      "role": "real-permutation-control",
+      "claim": "A real instruction overwriting an already used destination is refused."
+    },
+    {
+      "name": "NobleFoundation.PackedPermutationCorpus.wrong_witness_refused",
+      "phase": 1,
+      "role": "real-permutation-control",
+      "claim": "An incorrect graph-node witness for the real stream is refused."
+    },
+    {
+      "name": "NobleFoundation.PackedPermutationCorpus.changed_output_refused",
+      "phase": 1,
+      "role": "real-permutation-control",
+      "claim": "Changing ordered real output-register mapping is refused."
+    },
+    {
+      "name": "NobleFoundation.PackedPermutationCorpus.changed_constant_refused",
+      "phase": 1,
+      "role": "real-permutation-control",
+      "claim": "Changing a real constant-table preload is refused."
+    },
+    {
+      "name": "NobleFoundation.PackedPermutationCorpus.first_execution_0_agrees",
+      "phase": 1,
+      "role": "real-permutation-execution",
+      "claim": "The kernel computes the same finite boundary-case result written by the Rust differential test."
+    },
+    {
+      "name": "NobleFoundation.PackedPermutationCorpus.distinct_orders",
+      "phase": 1,
+      "role": "real-permutation-artifact",
+      "claim": "The two exported noncanonical witnesses differ from canonical and each other."
     },
     {
       "name": "NobleFoundation.PackedScheduleCorpus.interleaved_validated",
