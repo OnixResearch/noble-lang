@@ -142,7 +142,7 @@ def main():
         "wrong_codec": check_candidate("stack-swap", "big-endian", good),
         "wrong_source": check_candidate("accumulator", CODEC, good),
         "malformed_model": check_candidate("stack-swap", CODEC, b"not an ONNX model"),
-        "corrupt_bytes": check_candidate("stack-swap", CODEC, good[:-1] + bytes([good[-1] ^ 1])),
+        "corrupt_bytes": check_candidate("stack-swap", CODEC, bytes([good[0] ^ 1]) + good[1:]),
     }
     if accepted.kind != "ACCEPT" or accepted.passed != 16 or accepted.nonzero_initializers != 127:
         raise ValueError("independently authored correct weights were not accepted")
