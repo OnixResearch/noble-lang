@@ -1,0 +1,421 @@
+{
+  "schema": "noble.recurrent-stock-receipt/v1",
+  "source_commit": "60c449bf131c81cd82bd5cd78623e799d3e575fd",
+  "source_tree": "885d6a19d1ec802375d20459a3c78c67d600c203",
+  "clean_source": true,
+  "criterion": "verification/recurrent-weights/stock-runtime-criteria.txt",
+  "criterion_sha256": "b2fc5b76d6b3a9818474cb655e41400121a26fa472662aefb9e10fc0f838496b",
+  "host": {
+    "platform": "linux",
+    "architecture": "x64",
+    "kernel_release": "6.18.60",
+    "node": "v24.13.0"
+  },
+  "selected_tools": {
+    "source_nixpkgs": {
+      "narHash": "sha256-9tpvMGFteZnd3gRQZFlRCohVpqooygFuy9yjuyRL2C0=",
+      "rev": "9cf7092bdd603554bd8b63c216e8943cf9b12512"
+    },
+    "onnx_runtime": {
+      "derivation": "/nix/store/kr48b4fyxcpirysl1g3zx827qb92xxnw-onnxruntime-1.23.2.drv",
+      "output": "/nix/store/2sqcb683r2mxb26vl3c9qvphns0hlsrp-onnxruntime-1.23.2",
+      "narHash": "sha256-vI+zFHzR/cPzaGr9K5d+kGGBXA8DB3bkb/Tkxscxbq4="
+    },
+    "onnx_python": {
+      "derivation": "/nix/store/kpg9birivrqckh6n401yzhpyn69g617g-python3-3.13.12-env.drv",
+      "output": "/nix/store/i5p0gn147kav6kwyf6vixkmdxw90nh91-python3-3.13.12-env",
+      "narHash": "sha256-2ms5pgrVv2g4TPkhrq29gfhdMqQSeTtEeGVLULnw97I="
+    },
+    "python": "/nix/store/i5p0gn147kav6kwyf6vixkmdxw90nh91-python3-3.13.12-env/bin/python",
+    "execution_offline": true
+  },
+  "exporter": {
+    "command": [
+      "/home/brittonr/.cache/noble-iss/cargo.sh",
+      "test",
+      "-p",
+      "noble-ngraph",
+      "--test",
+      "layout_differential",
+      "--offline",
+      "--locked",
+      "--",
+      "--ignored",
+      "--nocapture",
+      "stock_runtime_export"
+    ],
+    "test_result": "1 passed; 0 failed",
+    "stdout_sha256": "4ccef64424058cd2c949614a0607e7ec604264c000965af400b180b1d63f2ae8",
+    "checked_graphs_sha256": "bf84fa4454e7313a9500a4ece04d2fbc8b6f1ddcb3dfb4698a3ae19014f4b4ae",
+    "checked_graphs_path": "/home/brittonr/.cache/noble-iss/scratch/recurrent-78c/stock-run-60c449b/checked-graphs.json"
+  },
+  "stock": {
+    "command": [
+      "/nix/store/i5p0gn147kav6kwyf6vixkmdxw90nh91-python3-3.13.12-env/bin/python",
+      "-I",
+      "/home/brittonr/.cache/noble-iss/wt/recurrent-78c/verification/recurrent-weights/stock-runtime.py",
+      "--export",
+      "/home/brittonr/.cache/noble-iss/scratch/recurrent-78c/stock-run-60c449b/checked-graphs.json",
+      "--output-dir",
+      "/home/brittonr/.cache/noble-iss/scratch/recurrent-78c/stock-run-60c449b"
+    ],
+    "exit_code": 0,
+    "coverage": {
+      "dense": "none",
+      "sparse": "none",
+      "stock": "two exported ONNX graphs: tiny domains, boundaries, 1,000 teacher-forced and 1,000 free-running transitions per program"
+    },
+    "results": [
+      {
+        "coverage": {
+          "boundary": {
+            "elapsed_ns": 3363401,
+            "mismatches": 0,
+            "ns_per_transition": 560566.8333333334,
+            "transitions": 6
+          },
+          "free_running": {
+            "elapsed_ns": 514625869,
+            "mismatches": 0,
+            "ns_per_transition": 514625.869,
+            "transitions": 1000
+          },
+          "teacher_forced": {
+            "elapsed_ns": 546162649,
+            "mismatches": 0,
+            "ns_per_transition": 546162.649,
+            "transitions": 1000
+          },
+          "tiny": {
+            "elapsed_ns": 9807615,
+            "mismatches": 0,
+            "ns_per_transition": 612975.9375,
+            "transitions": 16
+          }
+        },
+        "graph_id": "f9bb01aff2957947f252aa2f5e6579be349cf8582965412e254d05a74823763c",
+        "graph_sha256": "8c31b0f220973d163efaeea0477800173648080f69aa668b5db5d29be91083c7",
+        "guard_count": 129,
+        "model_bytes": 46407,
+        "model_path": "/home/brittonr/.cache/noble-iss/scratch/recurrent-78c/stock-run-60c449b/accumulator.onnx",
+        "model_sha256": "72bbac6790ab9ec2f772371fdcf84bc9141c84862591edca6a248af547f03b32",
+        "onnx_ir": 10,
+        "onnx_opset": 18,
+        "program": "accumulator",
+        "provider": [
+          "CPUExecutionProvider"
+        ],
+        "refusals": [
+          {
+            "control": "corrupted-state-nan",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "corrupted-state-negative-zero",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "corrupted-state-fractional",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "short-input-cells",
+            "reason": "wrong cell shape",
+            "refused": true
+          },
+          {
+            "control": "wrong-state-shape",
+            "reason": "state/input word shape mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-input-shape",
+            "reason": "state/input word shape mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-program",
+            "reason": "program configuration mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-decoder",
+            "reason": "codec configuration mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-output-length",
+            "reason": "wrong cell shape",
+            "refused": true
+          },
+          {
+            "control": "malformed-output",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "zero-step-budget",
+            "reason": "budget exhausted or cancelled",
+            "refused": true
+          },
+          {
+            "control": "boundary-cancellation",
+            "reason": "budget exhausted or cancelled",
+            "refused": true
+          },
+          {
+            "control": "corrupted-model-bytes",
+            "reason": "model identity mismatch",
+            "refused": true
+          },
+          {
+            "control": "request-end-budget-exhausted",
+            "reason": "budget exhausted or cancelled",
+            "refused": true
+          },
+          {
+            "control": "missing-recurrent-state",
+            "reason": "checkpoint is incomplete or has hybrid/extraneous state",
+            "refused": true
+          },
+          {
+            "control": "kv-without-recurrent",
+            "reason": "checkpoint is incomplete or has hybrid/extraneous state",
+            "refused": true
+          },
+          {
+            "control": "scratch-without-recurrent",
+            "reason": "checkpoint is incomplete or has hybrid/extraneous state",
+            "refused": true
+          },
+          {
+            "control": "hybrid-material-unsupported",
+            "reason": "checkpoint is incomplete or has hybrid/extraneous state",
+            "refused": true
+          },
+          {
+            "control": "negative-snapshot-index",
+            "reason": "illegal snapshot index",
+            "refused": true
+          },
+          {
+            "control": "past-last-snapshot-index",
+            "reason": "illegal snapshot index",
+            "refused": true
+          },
+          {
+            "control": "mid-graph-snapshot",
+            "reason": "illegal snapshot index",
+            "refused": true
+          },
+          {
+            "control": "wrong-checkpoint-program",
+            "reason": "checkpoint configuration/weights mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-checkpoint-weights",
+            "reason": "checkpoint configuration/weights mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-checkpoint-budget",
+            "reason": "checkpoint budget mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-checkpoint-state-shape",
+            "reason": "wrong word shape",
+            "refused": true
+          }
+        ],
+        "runtime_load_ns": 20810170,
+        "snapshot_id": "ebb216b86beec8269c357e1d03360ee6d952ff7a8c95a70a7e54361c3acf26e5",
+        "snapshot_sha256": "22b6f43bd8d27738d3213f29e96b62d01d9d6c0ab4f9732aaae803186f51eab7"
+      },
+      {
+        "coverage": {
+          "boundary": {
+            "elapsed_ns": 430,
+            "mismatches": 0,
+            "ns_per_transition": null,
+            "transitions": 0
+          },
+          "free_running": {
+            "elapsed_ns": 71489838,
+            "mismatches": 0,
+            "ns_per_transition": 71489.838,
+            "transitions": 1000
+          },
+          "teacher_forced": {
+            "elapsed_ns": 71415299,
+            "mismatches": 0,
+            "ns_per_transition": 71415.299,
+            "transitions": 1000
+          },
+          "tiny": {
+            "elapsed_ns": 2109880,
+            "mismatches": 0,
+            "ns_per_transition": 131867.5,
+            "transitions": 16
+          }
+        },
+        "graph_id": "2f012a518cf5a931c968906cc04ae6a573d54afe7edd94d91cd4349b6dc1f038",
+        "graph_sha256": "ce5ae5a155bc4c4bea77f58630a15b8af1959856594990491705049e12781c8d",
+        "guard_count": 128,
+        "model_bytes": 12374,
+        "model_path": "/home/brittonr/.cache/noble-iss/scratch/recurrent-78c/stock-run-60c449b/stack-swap.onnx",
+        "model_sha256": "12816d55e49eb7650c056c24b60a0fa71b5bfc567e5d67efe1ca50da1700b933",
+        "onnx_ir": 10,
+        "onnx_opset": 18,
+        "program": "stack-swap",
+        "provider": [
+          "CPUExecutionProvider"
+        ],
+        "refusals": [
+          {
+            "control": "corrupted-state-nan",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "corrupted-state-negative-zero",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "corrupted-state-fractional",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "short-input-cells",
+            "reason": "wrong cell shape",
+            "refused": true
+          },
+          {
+            "control": "wrong-state-shape",
+            "reason": "state/input word shape mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-input-shape",
+            "reason": "state/input word shape mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-program",
+            "reason": "program configuration mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-decoder",
+            "reason": "codec configuration mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-output-length",
+            "reason": "wrong cell shape",
+            "refused": true
+          },
+          {
+            "control": "malformed-output",
+            "reason": "non-exact bit cell",
+            "refused": true
+          },
+          {
+            "control": "zero-step-budget",
+            "reason": "budget exhausted or cancelled",
+            "refused": true
+          },
+          {
+            "control": "boundary-cancellation",
+            "reason": "budget exhausted or cancelled",
+            "refused": true
+          },
+          {
+            "control": "corrupted-model-bytes",
+            "reason": "model identity mismatch",
+            "refused": true
+          },
+          {
+            "control": "request-end-budget-exhausted",
+            "reason": "budget exhausted or cancelled",
+            "refused": true
+          },
+          {
+            "control": "missing-recurrent-state",
+            "reason": "checkpoint is incomplete or has hybrid/extraneous state",
+            "refused": true
+          },
+          {
+            "control": "kv-without-recurrent",
+            "reason": "checkpoint is incomplete or has hybrid/extraneous state",
+            "refused": true
+          },
+          {
+            "control": "scratch-without-recurrent",
+            "reason": "checkpoint is incomplete or has hybrid/extraneous state",
+            "refused": true
+          },
+          {
+            "control": "hybrid-material-unsupported",
+            "reason": "checkpoint is incomplete or has hybrid/extraneous state",
+            "refused": true
+          },
+          {
+            "control": "negative-snapshot-index",
+            "reason": "illegal snapshot index",
+            "refused": true
+          },
+          {
+            "control": "past-last-snapshot-index",
+            "reason": "illegal snapshot index",
+            "refused": true
+          },
+          {
+            "control": "mid-graph-snapshot",
+            "reason": "illegal snapshot index",
+            "refused": true
+          },
+          {
+            "control": "wrong-checkpoint-program",
+            "reason": "checkpoint configuration/weights mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-checkpoint-weights",
+            "reason": "checkpoint configuration/weights mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-checkpoint-budget",
+            "reason": "checkpoint budget mismatch",
+            "refused": true
+          },
+          {
+            "control": "wrong-checkpoint-state-shape",
+            "reason": "wrong word shape",
+            "refused": true
+          }
+        ],
+        "runtime_load_ns": 1882575,
+        "snapshot_id": "978a8138e2c1c98c4f66e727e3223bde87efe1aa63ff46a0c2a4983284b34907",
+        "snapshot_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "runtime": {
+      "numpy": "2.4.2",
+      "onnx": "1.20.1",
+      "onnxruntime": "1.23.2",
+      "optimizations": "disabled",
+      "provider": "CPUExecutionProvider",
+      "thread_count": 1
+    },
+    "schema": "noble.recurrent-stock-runtime/v1"
+  },
+  "note": "Separate bounded ONNX stock CPU execution, not dense/sparse optimized model coverage or a hybrid serving checkpoint."
+}
