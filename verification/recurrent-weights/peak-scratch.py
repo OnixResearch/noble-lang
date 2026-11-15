@@ -260,9 +260,9 @@ def measure(api, model_bytes, initial, tokens, expected):
                                    c.c_size_t, c.POINTER(c.c_int64), c.c_size_t,
                                    c.c_int, P_PTR)
         create_input(input_memory_info, c.cast(initial, PTR), c.sizeof(initial),
-                     shape_state, 1, 1, c.byref(inputs, 0))
+                     shape_state, 1, 1, c.cast(c.byref(inputs, 0), P_PTR))
         create_input(input_memory_info, c.cast(tokens, PTR), c.sizeof(tokens),
-                     shape_tokens, 2, 1, c.byref(inputs, c.sizeof(PTR)))
+                     shape_tokens, 2, 1, c.cast(c.byref(inputs, c.sizeof(PTR)), P_PTR))
         idle, idle_cost = api.snapshot(allocator)
         no_run, control_cost = api.snapshot(allocator)
         input_names = (c.c_char_p * 2)(b"initial_state_bits", b"scan_inputs")

@@ -95,7 +95,9 @@ function pythonReport(script, args, allowMeasuredNoGo = false) {
   const argv = ['-I', join(root, 'verification/recurrent-weights', script), ...args];
   const result = command(python, argv, { cwd: root, env: pyEnv }, allowMeasuredNoGo ? [0, 1] : [0]);
   const lines = result.stdout.trim().split('\n');
-  if (lines.length !== 1) throw new Error(`${script} did not produce exactly one JSON report`);
+  if (lines.length !== 1 || !lines[0]) {
+    throw new Error(`${script} did not produce exactly one JSON report: ${result.stderr}`);
+  }
   const report = JSON.parse(lines[0]);
   if (result.status === 1 && report.verdict !== 'NO-GO') {
     throw new Error(`${script} exited nonzero without an explicit measured NO-GO`);
