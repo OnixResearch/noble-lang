@@ -102,3 +102,4 @@ import NobleFoundation.UsePermissions
 import NobleFoundation.GuardedRewrite
 import NobleFoundation.GuardedRewriteCorpus
 import NobleFoundation.SizeChangeSound
+import NobleFoundation.RecurrentBitCell

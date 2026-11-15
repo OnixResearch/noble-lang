@@ -170,6 +170,7 @@ Status words:
 
 | Claim | Model / theorem(s) | Implementation boundary | Status |
 |---|---|---|---|
+| Exact-bit recurrent one-step accumulator and two-word swap (issue #78) | `NobleFoundation.RecurrentBitCell.graphAdder_correct`, `NobleFoundation.RecurrentBitCell.accumulator_one_step`, `NobleFoundation.RecurrentBitCell.stack_swap_one_step`, `NobleFoundation.RecurrentBitCell.step_bound_halts_at_limit` | Boolean select-gate model of the checked Rust test graph; no Rust graph, ONNX emitter, Scan-body or runtime refinement theorem | model theorem source added, clean-source kernel/axiom receipt pending; implementation correspondence **open** |
 | Bounded sequential I64/Bool belt validator (issue #113) | `NobleFoundation.Belt.validate_sound`; real lowered program and exact-vector controls in the generated BeltCorpus module | symbolic graph identities over `PackedSchedule`; no Rust refinement theorem | model **proved**; real artifact corpus is finite model evidence; Rust lowerer/checker/interpreter and B2 comparisons remain separate **tested** evidence |
 | Fixed T1/T2 timing legality and ordered target outputs (issue #114) | `NobleFoundation.BeltTarget.mapReadyOutputs`, `NobleFoundation.BeltTarget.validate_sound` | the symbolic run gates graph-reference values on latency-derived completion; it does not evaluate operations or simulate belt/save state, and no Rust artifact/operand-age refinement theorem is claimed | completion-gate/order **proved** only; generated corpus and Rust lowerer/checker/interpreter cross-backend controls are separate **tested** evidence; machine-step refinement remains **open** |
 | ZMod/BitVec/K-NUM-01 signed decoding, range, round trips | `toZ_ofZ`, `ofZ_toZ`, `toZ_add`, `toZ_sub`, `toZ_mul`, `toZ_neg`, `signed_eq_toInt`, `signed_toZ`, `wrap_eq_bmod`, `wrap_eq_toInt_ofInt`, `wrap_eq_knum01`, `toInt_range`, `signed_range`, `intCast_signed`, `toInt_ofInt_eq_iff`, `signed_intCast_eq_iff`, `ofInt_toInt` | none (mathematics only) | **proved** |
@@ -3889,6 +3890,38 @@ construction.
 periodic-run theorem remains its in-family result. The foundation result is about the exact abstract
 certificate/run model, not the Rust classifier's correspondence to source execution, list lengths,
 wrapped I64 counters, or mutual recursion.
+
+## Exact-bit recurrent one-step model (issue #78, phase 1)
+
+The RecurrentBitCell module represents every unsigned 64-bit word as a function
+from bit indices 0 through 63 to Boolean cells, least significant bit first.
+`decode_encode_word` and `encode_decode_word` establish both directions of the
+bit-cell round trip. `sumGate_xor` and `carryGate_majority` check the Boolean
+full-adder equations for the off/on select-gate order of the Rust test graph
+in crates/noble-ngraph/tests/models/recurrent/programs.rs. `graphAdder_correct`
+uses the kernel-proved BitVec ripple-adder specification to show the entire
+gate chain computes modulo-2^64 addition, for arbitrary cells rather than
+only measured vectors. `accumulator_initialization` and `accumulator_one_step`
+connect the encoded initial state and both post-step outputs to every source
+state and input. `stack_initialization` and `stack_swap_one_step` give the
+same universal state/observation facts for routing either pair of 64-bit
+words, including distinct and equal words. The separate `mayStep` predicate
+allows counts below 1,000 and refuses counts at or above 1,000; this is an
+abstract per-step halting bound, not an implementation-level admission proof.
+
+**Proof boundary and nonclaims:** the cell model uses Booleans, not binary32
+values; translating a Boolean cell into the exact binary32 +0/1 codec,
+rejecting negative zero/NaN/fractional cells and establishing guard closure
+remain external obligations. The Rust checked-graph builder and Param
+snapshot, its exported ONNX Scan-body bytes and ordered Gather/Where
+semantics, the selected runtime and all host-side budget/cancellation checks
+are not derived from the Lean definitions. Their existing finite differential
+and selected ORT CPU checks do not close a Rust-to-model, ONNX-emitter or
+runtime-refinement theorem. In particular no Lean theorem claims a complete
+1,000-step ONNX execution or host snapshot/resume correctness. The foundation
+axiom whitelist is propext, Classical.choice and Quot.sound; the integrator
+must check the new module's exact transitive axioms and clean-source inventory
+before reporting this model proof as verified.
 
 ## Status by phase
 
