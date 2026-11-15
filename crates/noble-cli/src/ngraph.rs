@@ -48,9 +48,12 @@ pub(crate) const USAGE: &str = "usage:
   --source selects an exact checked Core Program instead of a graph. TYPE uses
   Core interface spelling, with bottom-first input types before -- and no
   output types. The first N stack items are an untouched, resource-free tail;
-  --static positions count full stack items, including the tail, but cannot
-  bind tail positions. The emitted Program is independently checked at its
-  full dynamic interface and runs through ordinary Declared-Text-v1 execution.
+  --static positions count N untouched tail stack items (not bindable), then
+  scalar leaves of active stack items bottom-first, recursively left-to-right
+  in Pair; Unit has zero leaves. Bool leaves cannot be bound by I64 values.
+  The emitted Program takes the original tail followed by only dynamic scalar
+  leaves, rebuilds the original nested Pair/Unit outputs, and runs through
+  ordinary independently checked Declared-Text-v1 execution.
   KIND: work expansion inline-depth live-nodes layers inputs outputs affine-terms table-length
       table-entries facts graph-bytes snapshot-bytes forward-scratch backward-scratch steps
       residual-nodes variants
@@ -567,7 +570,7 @@ fn static_map(
         };
         if index >= leaves {
             return Err(std::format!(
-                "--static index {index} is not an input leaf; the graph has {leaves}"
+                "--static index {index} is not an input leaf; the interface has {leaves}"
             ));
         }
         if map[index].is_some() {
@@ -798,12 +801,17 @@ fn specialize_program(
         &stack_interface.stack_in
     )
     .map_err(|e| subject_refusal(C, e)));
-    let map = attempt!(static_map(args, stack_interface.stack_in.len()).map_err(Stop::Usage));
-    if tail > map.len() || map[..tail].iter().any(Option::is_some) {
+    let active = attempt!(stack_interface
+        .stack_in
+        .get(tail..)
+        .ok_or_else(|| { interface(C, "--tail exceeds the original input stack".into()) }));
+    let positions =
+        tail.saturating_add(noble_ngraph::specialize::program::input_leaf_count(active));
+    let map = attempt!(static_map(args, positions).map_err(Stop::Usage));
+    if map[..tail].iter().any(Option::is_some) {
         return Err(interface(
             C,
-            "a static binding consumes the preserved stack tail or --tail exceeds the input stack"
-                .into(),
+            "a static binding consumes the preserved stack tail".into(),
         )
         .into());
     }

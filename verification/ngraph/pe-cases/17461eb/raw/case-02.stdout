@@ -1,0 +1,7 @@
+
+running 1 test
+test pe_cases::case_02 ... PE_CASE_OBSERVATION:{"harness":"ngraph-specialize-refused-slice","id":"NGRAPH-PE-CASE-02","observed":{"checks":{"published_output":false,"residual_nodes_created":0},"runs":[{"code":"E-PROFILE","exit":2,"guest_requests":0,"kind":"cli","name":"wrong-profile","outcome":"reject","protected_operations":0,"published_output":false,"stage":"specialization"},{"code":"E-PROFILE","exit":2,"guest_requests":0,"kind":"cli","name":"param-slot","outcome":"reject","protected_operations":0,"published_output":false,"stage":"specialization"},{"code":"E-AGGREGATE","exit":4,"guest_requests":0,"kind":"cli","name":"interface-shape-tree","outcome":"unsupported","protected_operations":0,"published_output":false,"stage":"specialization"},{"code":"E-PROFILE","exit":2,"guest_requests":0,"kind":"cli","name":"fact-record","outcome":"reject","protected_operations":0,"published_output":false,"stage":"specialization"},{"code":"E-PROFILE","exit":2,"guest_requests":0,"kind":"cli","name":"guard-node","outcome":"reject","protected_operations":0,"published_output":false,"stage":"specialization"},{"code":"E-INTERFACE","exit":null,"guest_requests":0,"kind":"library","name":"wrong-static-map-arity","outcome":"reject","protected_operations":0,"published_output":false,"stage":"static-map-admission"}]},"variants":{"variants":["wrong-profile","param-slot","interface-shape-tree","fact-record","guard-node","wrong-static-map-arity"]}}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.01s
+

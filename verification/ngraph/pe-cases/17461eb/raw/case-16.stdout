@@ -1,0 +1,7 @@
+
+running 1 test
+test pe_cases::case_16 ... PE_CASE_OBSERVATION:{"harness":"ngraph-specialize-source-closure-identity","id":"NGRAPH-PE-CASE-16","observed":{"checks":{"changed_definition_or_stale_pin_publishes":false,"empty_residual_closure":true,"exact_original_closure":true,"fresh_identity":true},"runs":[{"code":null,"exit":0,"guest_requests":0,"kind":"cli","name":"checked-root-with-reached-definitions","outcome":"normal","protected_operations":0,"published_output":true,"stage":"program-specialization"},{"code":null,"exit":0,"guest_requests":0,"kind":"cli","name":"saved-old-definition-after-rebinding","outcome":"normal","protected_operations":0,"published_output":true,"stage":"program-specialization"},{"code":"E-SUBJECT","exit":2,"guest_requests":0,"kind":"cli","name":"stale-changed-definition","outcome":"reject","protected_operations":0,"published_output":false,"stage":"program-specialization"}]},"variants":{"subjects":["checked-root-with-reached-definitions","saved-old-definition-after-rebinding"]}}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.75s
+

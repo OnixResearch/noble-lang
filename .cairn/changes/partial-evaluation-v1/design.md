@@ -388,9 +388,10 @@ The frozen protocol (committed before any measurement it governs) is:
 - **Re-extraction changes node ids** (pruning renumbers), so nothing may compare the residual
   to the original by node index. The differential compares outputs; the derivation record
   names ids.
-- **No pairs/`Unit` support (D1)** means authored graphs with shape trees are refused; only
-  extraction's flat interfaces are in scope. #35, which needs `Bool` composition, stays
-  blocked and its NO-GO record is untouched.
+- **No directly authored graph shapes (D1):** authored graphs with shape trees still refuse.
+  The separately selected checked-Program path (D13) can reconstruct bounded active
+  Pair/Unit shapes after the full original Program is independently admitted. This
+  distinction does not add Bool composition; #35's NO-GO record is untouched.
 
 ## Open questions (owner-reserved, recorded not decided)
 
@@ -431,16 +432,30 @@ the kernel, recomputes its exact closure and compares the supplied claim before 
 The first `N` bottom-first root-stack values are opaque, resource-free tail values. The
 original input/output type prefixes must match; each is represented by a distinct symbolic
 marker. Any operation that consumes, copies into an output, moves or otherwise changes a
-marker refuses before any residual Program is returned. Only the remaining flat scalar
-suffix is extracted and specialized. Static positions in the CLI count the full stack and
-cannot bind the opaque prefix; the library map is relative to the active suffix.
+marker refuses before any residual Program is returned. The active suffix may contain
+scalar I64/Bool items or bounded nested `Pair`/`Unit` items. Its supported scalar leaves
+are flattened bottom-first by item, left-to-right inside pairs; `Unit` contributes no
+binding position. Only I64 leaves may be static. Static positions in the CLI count the
+opaque tail *items* followed by those flattened leaves, and cannot bind the opaque prefix;
+the library map is relative to the active leaves. Directly authored graph mode still
+refuses shape trees under D1.
 
 **Reconstruction and observation:** for a supported, independently accepted original,
-`merge(tail, sigma, dynamic) = tail ++ graph_merge(sigma, dynamic)` in bottom-first order.
-The residual receives `tail ++ dynamic` and must yield the original output types, including
-the *same* untouched tail positions. `emit_source` binds only dynamic suffix values; its
-source is freshly prepared as a Declared-Text-v1 expression at that full interface, then
-independently kernel-admitted, closure-checked and graph-re-extracted before publication.
+`merge(tail, sigma, dynamic) = tail ++ reconstruct_active(sigma, dynamic)` in bottom-first
+stack-item order. `reconstruct_active` rebuilds every pair/Unit value in the checked
+original input shape from static I64 leaves and ordered dynamic scalar leaves; it rejects
+a wrong arity or type rather than silently changing an item. The residual receives
+`tail ++ dynamic_scalar_leaves` and must yield the original output types, including
+the unchanged tail items. `emit_source`
+binds only dynamic suffix leaves and emits checked `unit`/`pair` words for the output
+shapes; its source is freshly prepared as a Declared-Text-v1 expression at that full
+interface, then independently kernel-admitted, closure-checked and graph-re-extracted
+before publication.
+The Program emitter spells singly used total expressions at their use and retains
+lexical bindings for input leaves and shared nodes. This avoids redundant `let`
+quotations that exhaust the ordinary compiler's fixed work ledger on an otherwise
+accepted nested output; it does not change graph-mode emission or bypass the
+ordinary compiler's limits.
 Ordinary `noble compile` and Core `session` do not invoke specialization; the residual
 is separately selectable through ordinary declared-text `compile` or `session`.
 The finite differential compares the typed stack values, not session-local value handles,
@@ -458,20 +473,37 @@ Program is not mutated or re-published.
 
 **Limits and exclusions:** the original full root and all dependencies are checked before
 selecting the graph whitelist. The extractor still refuses effects, resources, reflection,
-recursion, unresolved dispatch and unsupported active aggregates; a tail containing a resource
-also refuses. The kernel, source frontend, extraction and specialization caps remain in force;
-exhaustion publishes nothing. The active suffix currently permits the same flat I64/Bool
-graph slice and I64-only static bindings; non-scalar active values, static Bool values and
-effectful residualization are not admitted by implication. A tail at the frontend's stack
-or source-type bound may refuse, rather than being silently shortened.
+recursion, unresolved dispatch and active types other than bounded I64/Bool/Pair/Unit shapes;
+a tail containing a resource also refuses. The kernel, source frontend, extraction and
+specialization caps remain in force; exhaustion publishes nothing. The active suffix
+permits I64/Bool scalar leaves and shape-only `Pair`/`Unit` structure; static Bool
+values, out-of-bound pair depth and effectful residualization are not admitted by
+implication. A tail at the frontend's stack or source-type bound may refuse, rather
+than being silently shortened.
 
-**Evidence boundary and reopen criteria:** CLI differential tests exercise no/all/mixed and
-non-prefix maps, Text/Bool tails, named dependencies after rebinding, repeated calls and
-captures on Core-original versus Declared-Text residual ordinary execution. Unit and CLI
-refusal controls cover tail access, effects, missing closure and stale identity. The Lean
-model proves the graph transformation under a valid survivor map; the MC1 frame lemma is
-model-only. A universal extraction/Program relation, Rust-to-model map construction,
-emitter correctness and backend/runtime correspondence remain open and are **not** asserted
-by these finite tests. Extend the profile only with a separately checked new value/effect
-contract and its observation proof; transparent/default specialization requires a separate
-adoption decision, not a change to the ordinary unspecialized path.
+**Evidence boundary and reopen criteria:** CLI differential tests cover no/all/mixed and
+non-prefix maps, Text/Bool/Unit/Pair tails, nested active Pair/Unit shapes, named dependencies
+after rebinding, repeated calls and captures on Core-original versus Declared-Text residual
+ordinary execution. Direct-library refusal controls cover malformed closure, effects,
+resources, reflection, recursion, unsupported active types and reachable budget boundaries;
+only the CLI-representable cases have an instrumented zero-guest-request counter.
+The clean-source receipt
+`verification/ngraph/pe-cases/17461eb/acceptance.json` binds 18/18 registered
+cases and seven auxiliary tests to commit
+`17461ebf59d0348ae609427d07237e1162b9a2d7`; CASE-10 reviews the older
+measurement instead of repeating it. The registered cases have explicit
+execution evidence, while their proof fields remain open except that
+measurement review is not a proof obligation.
+The Lean model proves the graph transformation under a valid survivor map; the MC1
+frame lemma is model-only. This does **not** prove that (1) every admitted Core Program
+extracts to the same ordered-value semantics under the exact tail and closure,
+(2) Rust's keep-walk and renumbering construct a valid survivor map for every graph,
+(3) the source emitter and its pair/Unit reconstruction preserve that Program-level
+semantics for every accepted shape, or (4) L3/L4 and ordinary compiled execution refine
+those semantics under compatible limits and effects. The retained fixtures and case receipts
+are finite witnesses, not a universal extraction/Program, Rust/model, emitter or backend
+correspondence theorem. Reopen any specific obligation on an admitted counterexample,
+on a change to the value/effect whitelist or source emission, or when a consumer requires
+universal refinement instead of finite regression evidence. Transparent/default
+specialization needs a separate adoption decision; the ordinary unspecialized path is
+not changed.

@@ -1,0 +1,7 @@
+
+running 1 test
+test pe_cases::case_18 ... PE_CASE_OBSERVATION:{"harness":"ngraph-specialize-source-closure-refusal","id":"NGRAPH-PE-CASE-18","observed":{"checks":{"extraction_started":false,"published_output":false},"runs":[{"code":"E-CLOSURE","exit":null,"guest_requests":0,"kind":"library","name":"omitted-reached-definition","outcome":"reject","protected_operations":0,"published_output":false,"stage":"original-admission"}]},"variants":{}}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.00s
+

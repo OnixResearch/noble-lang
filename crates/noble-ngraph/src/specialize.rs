@@ -311,7 +311,10 @@ fn algebraic_result(op: &crate::ir::Op, known: &[Option<Known>]) -> Option<Algeb
 }
 
 /// Refuses a graph outside the `ngraph-pe/0` subject slice (D1).
-fn admit_slice(checked: &crate::check::CheckedGraph) -> Result<(), crate::diag::Diagnostic> {
+fn admit_slice(
+    checked: &crate::check::CheckedGraph,
+    source_shapes: bool,
+) -> Result<(), crate::diag::Diagnostic> {
     let graph = checked.graph();
     if graph.profile != crate::ir::SubProfile::I64 {
         return Err(refuse(crate::diag::Code::Profile, {
@@ -335,7 +338,7 @@ fn admit_slice(checked: &crate::check::CheckedGraph) -> Result<(), crate::diag::
             ));
         }
     }
-    if graph.input_shape.is_some() || graph.output_shape.is_some() {
+    if !source_shapes && (graph.input_shape.is_some() || graph.output_shape.is_some()) {
         return Err(refuse(
             crate::diag::Code::Aggregate,
             "an interface shape tree is outside the ngraph-pe/0 slice; v1 admits flat scalar interfaces only",
@@ -467,8 +470,19 @@ pub fn specialize(
     checked: &crate::check::CheckedGraph,
     request: &Request<'_>,
 ) -> Result<Residual, crate::diag::Diagnostic> {
+    lower_checked_graph(ids, checked, request, false)
+}
+
+/// Only the fully admitted Program path may flatten checked pair/Unit shapes.
+/// The public graph operation continues to refuse every shaped interface.
+fn lower_checked_graph(
+    ids: &dyn IdentityScheme,
+    checked: &crate::check::CheckedGraph,
+    request: &Request<'_>,
+    source_shapes: bool,
+) -> Result<Residual, crate::diag::Diagnostic> {
     request.budgets.validate_policy()?;
-    admit_slice(checked)?;
+    admit_slice(checked, source_shapes)?;
     let graph = checked.graph();
     let positions = leaf_positions(graph);
     let leaves = positions.iter().filter(|p| p.is_some()).count();
@@ -764,7 +778,201 @@ pub fn interface_types(
 pub fn emit_source(
     checked: &crate::check::CheckedGraph,
 ) -> Result<alloc::string::String, crate::diag::Diagnostic> {
-    admit_slice(checked)?;
+    emit_source_inner(checked)
+}
+
+/// Each use is an operand edge or an output edge. A node with one use can be
+/// spelled at that use instead of introducing a new lexical `let` quotation.
+/// Count both edges when the same operand occurs twice.
+fn source_uses(graph: &crate::ir::Graph) -> alloc::vec::Vec<u32> {
+    let mut uses = alloc::vec![0u32; graph.nodes.len()];
+    for node in &graph.nodes {
+        match node.op {
+            crate::ir::Op::I64Add(a, b)
+            | crate::ir::Op::I64Sub(a, b)
+            | crate::ir::Op::I64Mul(a, b)
+            | crate::ir::Op::I64Eq(a, b) => {
+                uses[a.index()] = uses[a.index()].saturating_add(1);
+                uses[b.index()] = uses[b.index()].saturating_add(1);
+            }
+            _ => {}
+        }
+    }
+    for output in &graph.outputs {
+        uses[output.index()] = uses[output.index()].saturating_add(1);
+    }
+    uses
+}
+
+/// Iterative postorder avoids host-stack growth up to the checked graph's
+/// layer cap. Only total, effect-free operations enter this emitter. Shared
+/// operands refer to their earlier lexical binding; singly used operations
+/// retain exactly their original operand order when inlined.
+struct ProgramEmitter<'a> {
+    graph: &'a crate::ir::Graph,
+    uses: alloc::vec::Vec<u32>,
+    pending: alloc::vec::Vec<(crate::ir::NodeId, bool, bool)>,
+    text: alloc::string::String,
+}
+
+impl ProgramEmitter<'_> {
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-ngraph; the checked original shape is bounded by MAX_SHAPE_DEPTH"
+    )]
+    fn emit_output_tree(
+        &mut self,
+        tree: &crate::ir::ShapeTree,
+        next: &mut usize,
+    ) -> Result<(), crate::diag::Diagnostic> {
+        match tree.node() {
+            crate::ir::ShapeNode::Scalar => {
+                let output = self.graph.outputs.get(*next).ok_or_else(|| {
+                    refuse(
+                        crate::diag::Code::Interface,
+                        "a checked output shape has more scalar leaves than the residual graph",
+                    )
+                })?;
+                self.emit_expression(*output, false)?;
+                self.text.push('\n');
+                *next += 1;
+            }
+            crate::ir::ShapeNode::Unit => self.text.push_str("unit\n"),
+            crate::ir::ShapeNode::Pair(left, right) => {
+                self.emit_output_tree(left, next)?;
+                self.emit_output_tree(right, next)?;
+                self.text.push_str("pair\n");
+            }
+        }
+        Ok(())
+    }
+
+    fn emit_expression(
+        &mut self,
+        root: crate::ir::NodeId,
+        force_root: bool,
+    ) -> Result<(), crate::diag::Diagnostic> {
+        self.pending.push((root, false, force_root));
+        while let Some((id, complete, force)) = self.pending.pop() {
+            let op = &self.graph.nodes[id.index()].op;
+            if complete {
+                self.text.push_str(match op {
+                    crate::ir::Op::I64Add(..) => "+ ",
+                    crate::ir::Op::I64Sub(..) => "- ",
+                    crate::ir::Op::I64Mul(..) => "* ",
+                    crate::ir::Op::I64Eq(..) => "= ",
+                    _ => {
+                        return Err(at(
+                            crate::diag::Code::Interface,
+                            crate::diag::Site::Node(id),
+                            "an inlined operation is not a binary scalar operation",
+                        ))
+                    }
+                });
+                continue;
+            }
+            if !force && self.uses[id.index()] > 1 {
+                crate::format::write_text!(self.text, "v{} ", id.0);
+                continue;
+            }
+            match op {
+                crate::ir::Op::Input(_) => crate::format::write_text!(self.text, "v{} ", id.0),
+                crate::ir::Op::Const(crate::ir::Literal::I64(value)) => {
+                    crate::format::write_text!(self.text, "{value} ");
+                }
+                crate::ir::Op::Const(crate::ir::Literal::Bool(value)) => {
+                    self.text.push_str(if *value { "true " } else { "false " });
+                }
+                crate::ir::Op::I64Add(left, right)
+                | crate::ir::Op::I64Sub(left, right)
+                | crate::ir::Op::I64Mul(left, right)
+                | crate::ir::Op::I64Eq(left, right) => {
+                    self.pending.push((id, true, false));
+                    self.pending.push((*right, false, false));
+                    self.pending.push((*left, false, false));
+                }
+                other => {
+                    return Err(at(
+                        crate::diag::Code::Profile,
+                        crate::diag::Site::Node(id),
+                        alloc::format!("{} cannot be emitted as Noble source", other.name()),
+                    ))
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+/// Program-only source emitter. The independently accepted original supplies
+/// `output_shapes`; the residual graph retains a flat dynamic scalar input.
+/// Binding a node in Declared-Text-v1 introduces quotation machinery in the
+/// ordinary Wasm compiler. Inline every singly used *total* node instead of
+/// forcing an avoidable binding, retaining a let only for shared nodes and
+/// input leaves. Graph-mode emission is unchanged.
+fn emit_program_source(
+    checked: &crate::check::CheckedGraph,
+    output_shapes: Option<&[crate::ir::ShapeTree]>,
+) -> Result<alloc::string::String, crate::diag::Diagnostic> {
+    admit_slice(checked, false)?;
+    let graph = checked.graph();
+    let mut emitter = ProgramEmitter {
+        graph,
+        uses: source_uses(graph),
+        pending: alloc::vec::Vec::new(),
+        text: alloc::string::String::with_capacity(
+            graph.nodes.len().saturating_mul(44) + graph.outputs.len().saturating_mul(12),
+        ),
+    };
+    for (k, slot) in graph.slots.iter().enumerate().rev() {
+        if slot.kind != crate::ir::SlotKind::Input {
+            continue;
+        }
+        let id = checked.slot_node(k as u32);
+        if !matches!(graph.nodes[id.index()].op, crate::ir::Op::Input(n) if n == k as u32) {
+            return Err(at(
+                crate::diag::Code::Interface,
+                crate::diag::Site::Slot(k as u32),
+                "an input slot has no input node",
+            ));
+        }
+        crate::format::write_text!(emitter.text, "let v{}\n", id.0);
+    }
+    for (index, node) in graph.nodes.iter().enumerate() {
+        if matches!(node.op, crate::ir::Op::Input(_)) || emitter.uses[index] <= 1 {
+            continue;
+        }
+        let id = crate::ir::NodeId(index as u32);
+        emitter.emit_expression(id, true)?;
+        crate::format::write_text!(emitter.text, "let v{}\n", id.0);
+    }
+    if let Some(shapes) = output_shapes {
+        let mut next = 0;
+        for tree in shapes {
+            emitter.emit_output_tree(tree, &mut next)?;
+        }
+        if next != graph.outputs.len() {
+            return Err(refuse(
+                crate::diag::Code::Interface,
+                "a checked output shape omits residual graph scalar leaves",
+            ));
+        }
+    } else {
+        for output in &graph.outputs {
+            emitter.emit_expression(*output, false)?;
+            emitter.text.push('\n');
+        }
+    }
+    if emitter.text.is_empty() {
+        emitter.text.push_str("0 drop\n");
+    }
+    Ok(emitter.text)
+}
+
+fn emit_source_inner(
+    checked: &crate::check::CheckedGraph,
+) -> Result<alloc::string::String, crate::diag::Diagnostic> {
+    admit_slice(checked, false)?;
     let graph = checked.graph();
     let capacity_bytes = graph
         .nodes
@@ -862,7 +1070,7 @@ pub fn emit_source(
     for output in &graph.outputs {
         crate::format::write_text!(text, "v{}\n", output.0);
     }
-    if graph.nodes.is_empty() && graph.slots.is_empty() && graph.outputs.is_empty() {
+    if text.is_empty() {
         text.push_str("0 drop\n");
     }
     Ok(text)

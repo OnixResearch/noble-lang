@@ -1339,16 +1339,21 @@ r[NGRAPH-PE-08]
 
 The explicit `noble ngraph specialize --source` path MUST accept an exact checked Core
 Program and its complete source-resolved dependency closure before specializing the active
-flat scalar suffix. It MUST preserve an ordered, resource-free stack prefix of `N` opaque
-values without reading, moving or replacing any value in that prefix. The original input
-and output prefix types MUST be identical; a tail that an operation touches MUST refuse
-with `E-INTERFACE`. A static binding in the prefix MUST refuse, not silently bind a
-tail value. The active suffix retains the graph whitelist and I64-only static map.
+suffix of I64/Bool leaves and bounded nested Pair/Unit shapes. It MUST preserve an ordered,
+resource-free stack prefix of `N` opaque values without reading, moving or replacing any
+value in that prefix. The original input and output prefix types MUST be identical; a tail
+that an operation touches MUST refuse with `E-INTERFACE`. A static binding in the prefix
+MUST refuse, not silently bind a tail value. The active map MUST count scalar leaves
+bottom-first by stack item and left-to-right inside each pair; Unit contributes no map
+position and Bool leaves MUST remain dynamic. The active suffix retains the graph's pure
+operation whitelist and I64-only static values; directly authored graph-mode shape trees
+remain outside the admitted graph slice.
 
 **Residual Program.** The new source MUST be independently prepared as an ordinary
-Declared-Text-v1 expression under the full `tail ++ dynamic` stack and independently
-kernel-accepted. Its output MUST have the original Program's full ordered type interface,
-including the preserved prefix. Its reached dependency closure MUST be recomputed exactly
+Declared-Text-v1 expression under the full `tail ++ dynamic_scalar_leaves` stack and
+independently kernel-accepted. Its output MUST have the original Program's full ordered
+type interface, including the preserved prefix and reconstructed nested Pair/Unit outputs.
+Its reached dependency closure MUST be recomputed exactly
 from the emitted submission and MUST be empty for the let-only emitter. Its new subject
 identity MUST bind the full original subject/closure, the static map and tail count and the
 independently checked residual source subject. The original's exact closure MUST be
@@ -1357,8 +1362,10 @@ still existed. A retained original identity pin that no longer matches MUST refu
 before publication. A missing dependency closure MUST refuse with `E-CLOSURE`.
 
 **Observation and selection.** On successful requests the resource-free typed-stack
-observation to compare is `run(residual, tail ++ dynamic)` versus
-`run(original, tail ++ merge(static, dynamic))`, without equality of session-local
+observation to compare is `run(residual, tail ++ dynamic_scalar_leaves)` versus
+`run(original, tail ++ reconstruct_active(static, dynamic_scalar_leaves))`, where
+reconstruction preserves the original checked stack-item Pair/Unit shapes.
+Comparison is without equality of session-local
 handles, recipe/identity reflection, timing or low-fuel results. The specialization
 command MUST execute no guest code. Ordinary Core `compile` and `session` MUST remain
 unspecialized and selectable; residual source MUST run through the ordinary
@@ -1403,8 +1410,9 @@ This is a scenario design, not an execution result. The case's `state` and `evid
 
 #### Scenario: NGRAPH-PE-CASE-15 full stack tail
 
-- GIVEN checked pure Programs over Text/Bool/Unit/pair stack tails and a flat
-  I64 active suffix, with no, all, mixed and non-prefix static inputs
+- GIVEN checked pure Programs over Text/Bool/Unit/pair stack tails and a bounded
+  active `Pair<I64,Pair<Unit,I64>> I64` suffix, with no, all, mixed and
+  non-prefix scalar-leaf static maps
 - WHEN the source mode specializes them and both original Core and residual
   Declared-Text Programs execute on reconstructed inputs
 - THEN their ordered type/value stacks MUST agree, the tail positions MUST
