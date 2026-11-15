@@ -1,0 +1,1316 @@
+{
+  "schema": "noble-synthesis-receipt/v1",
+  "claim": "bounded typed synthesis with counterexample-guided refinement over the frozen benchmark set; discovery, refinement, kernel-certificate emission and command-line re-admission kept separate",
+  "source": {
+    "commit": "2217001b6b3198c5d999ac29f8a2c62aea099fc6",
+    "tree": "6172d58ec566909f669d5af01b99c104663d3a9f",
+    "clean": true,
+    "lane_sha256": "63f1fdf027cb8ef606b341ed07e2aef9959403bc5fda69c7e9934e16ab7afefc",
+    "qfbv_sha256": "8e269fa416c3c2200b6fcf6567825e5dc742e7714c021525bdd77e09a4dc1f43",
+    "manifest": "verification/procedure-library/producer-targets-v3.txt",
+    "manifest_sha256": "d0d4a604796d1fbdce0c5e0597a0296c735d9ef3f252be6cf33cf08086b8f8e3",
+    "semantic_revision": "ngraph-sem/0",
+    "profile": "ngraph-i64/0",
+    "encoder": "noble-symbolic-qfbv/v1"
+  },
+  "cli_sha256": "d7f1cf932196c1aa681545c83cda9911d72d6d3d2340ca1322149d53af353256",
+  "grammar": {
+    "i64": {
+      "name": "synth-i64/0",
+      "words": [
+        "dup",
+        "swap",
+        "+",
+        "-",
+        "*",
+        "="
+      ],
+      "constants": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "5",
+        "7"
+      ],
+      "wiring": "dup and swap only; no arithmetic beyond + - * ="
+    },
+    "list": {
+      "name": "synth-list/0",
+      "words": [
+        "dup",
+        "swap",
+        "nil",
+        "cons",
+        "+",
+        "-"
+      ],
+      "constants": [
+        "1",
+        "2",
+        "3"
+      ]
+    }
+  },
+  "budget": {
+    "seed": "0x9e3779b97f4a7c15",
+    "size": 8,
+    "max_stack": 4,
+    "max_candidates": 400000,
+    "max_rounds": 4,
+    "solver_ms": 10000,
+    "list_max_stack": 4
+  },
+  "tools": {
+    "bitwuzla": {
+      "path": "/nix/store/5i2dxw5dxqx73sb235zgb904yc3jlh49-bitwuzla-0.8.2/bin/bitwuzla",
+      "sha256": "81c9f5366b900b5abc853c4c16542d9ca35eb1eabc97e048e56fa40a5c0215dc"
+    },
+    "z3": {
+      "path": "/nix/store/qzngzax9x0f84g5iapqr3xjc4vg1a2sz-z3-4.15.8/bin/z3",
+      "sha256": "eab6da7c7964354e24bb0a29613d8ef26ba62e95e3d3d4fe57f9dfd980a9201a"
+    },
+    "time": {
+      "path": "/nix/store/mqldjw98f2f4w2glz0f12qdnvv8m4aq9-time-1.9/bin/time",
+      "sha256": "7869c0b0bd5d5657ed3eb73eded1cfe7d95f3bc484f5677cb7c1ac610c20ccee"
+    }
+  },
+  "measurement": {
+    "wall_ns": 1225899720,
+    "cpu_user_ns": 864460000,
+    "cpu_system_ns": 51186000,
+    "node_cpu_user_ns": 864460000,
+    "node_cpu_system_ns": 51186000,
+    "solver_cpu_user_ns": 0,
+    "solver_cpu_system_ns": 0,
+    "process_peak_rss_kb": 9927320,
+    "solver_peak_rss_kb": 22556,
+    "peak_rss_kb": 9927320,
+    "solver_runs": 4
+  },
+  "lean": {
+    "path": "proofs/foundation/NobleFoundation/SynthesisCertified.lean",
+    "emission_sha256": "19e7bf3b06814a3a4ff80cb7796da2fe9846abe1dc9d9c34f1d7891bbdddeff0",
+    "theorems": [
+      {
+        "name": "NobleFoundation.Synthesis.not_certifiable_of_refuted",
+        "phase": 2,
+        "role": "symbolic-solver",
+        "claim": "a pair with a refuting input has no certificate for every input"
+      },
+      {
+        "name": "NobleFoundation.Synthesis.arithCommutedThenSubtract_certified",
+        "phase": 1,
+        "role": "real-artifact",
+        "claim": "the synthesized program `+ -` and its reference `(+ (- x (+ y (+ z 7))) 7)` agree on every input, a graph-model theorem"
+      },
+      {
+        "name": "NobleFoundation.Synthesis.arithSubtractThenCommuted_certified",
+        "phase": 1,
+        "role": "real-artifact",
+        "claim": "the synthesized program `- 7 7 + + +` and its reference `(+ x (+ (+ (- y z) 7) 7))` agree on every input, a graph-model theorem"
+      }
+    ],
+    "freshness": null,
+    "kernel": "the emitted theorems are proved only once verification/foundation/check.mjs accepts them; this lane does not check the kernel"
+  },
+  "tasks": [
+    {
+      "name": "arithCommutedThenSubtract",
+      "family": "arithmetic",
+      "out": "i64",
+      "reference": "(+ (- x (+ y (+ z 7))) 7)",
+      "declaration": {
+        "inputs": 3,
+        "bound": 8,
+        "control_bound": null,
+        "precondition": null
+      },
+      "examples": {
+        "train": 3,
+        "heldout": 3,
+        "counterexamples": 0
+      },
+      "search": {
+        "grammar": "synth-i64/0",
+        "words": [
+          "-",
+          "7",
+          "0",
+          "=",
+          "2",
+          "1",
+          "5",
+          "+",
+          "3",
+          "*",
+          "swap",
+          "dup"
+        ],
+        "rounds": 1,
+        "candidates": 43,
+        "program": "+ -",
+        "size": 2,
+        "sizes": [
+          {
+            "size": 0,
+            "states": 1,
+            "complete": 0
+          },
+          {
+            "size": 1,
+            "states": 11,
+            "complete": 0
+          },
+          {
+            "size": 2,
+            "states": 29,
+            "complete": 1,
+            "partial": true
+          }
+        ],
+        "measurement": {
+          "wall_ns": 98328917,
+          "cpu_user_ns": 5519000,
+          "cpu_system_ns": 6172000,
+          "process_peak_rss_kb": 9927320
+        }
+      },
+      "lean": {
+        "pair": {
+          "name": "arithCommutedThenSubtract",
+          "left": [
+            {
+              "op": "input",
+              "slot": 0
+            },
+            {
+              "op": "input",
+              "slot": 1
+            },
+            {
+              "op": "input",
+              "slot": 2
+            },
+            {
+              "op": "add",
+              "a": 1,
+              "b": 2
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000000"
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000000"
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000000"
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000000"
+            },
+            {
+              "op": "sub",
+              "a": 0,
+              "b": 3
+            }
+          ],
+          "right": [
+            {
+              "op": "input",
+              "slot": 0
+            },
+            {
+              "op": "input",
+              "slot": 1
+            },
+            {
+              "op": "input",
+              "slot": 2
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000007"
+            },
+            {
+              "op": "add",
+              "a": 2,
+              "b": 3
+            },
+            {
+              "op": "add",
+              "a": 1,
+              "b": 4
+            },
+            {
+              "op": "sub",
+              "a": 0,
+              "b": 5
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000007"
+            },
+            {
+              "op": "add",
+              "a": 6,
+              "b": 7
+            }
+          ],
+          "outputs": [
+            8
+          ],
+          "digest": "7b2cef7c5f9b77e5f88e4e92257b779e59f3827fb8b8d471daad376226eb2f4f"
+        },
+        "refused": null
+      },
+      "status": "proved",
+      "certificate": {
+        "theorem": "NobleFoundation.Synthesis.arithCommutedThenSubtract_certified",
+        "form": {
+          "coef": [
+            "0x0000000000000001",
+            "0xffffffffffffffff",
+            "0xffffffffffffffff"
+          ],
+          "constant": "0x0000000000000000"
+        },
+        "kernel": "checked by verification/foundation/check.mjs, not by this lane"
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "program": "+ -",
+          "size": 2,
+          "candidates": 43,
+          "solver": [
+            "unsat",
+            "unsat"
+          ],
+          "verdict": "proved",
+          "affine": {
+            "certifiable": true,
+            "reason": null
+          },
+          "query": {
+            "bytes": 820,
+            "nodes": 14,
+            "sha256": "f3a845e61d8593e6bc7bf0f0c584a0c1643969472d4a346e3635296b3bb8cc49",
+            "assumptions": 0
+          },
+          "answers": [
+            {
+              "solver": "bitwuzla",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof",
+              "wall_ns": 17518408,
+              "cpu_user_ns": 0,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 3996,
+              "witness": null,
+              "replay_ns": null
+            },
+            {
+              "solver": "z3",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof",
+              "wall_ns": 35956335,
+              "cpu_user_ns": 0,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 20608,
+              "witness": null,
+              "replay_ns": null
+            }
+          ],
+          "encoder_checks": {
+            "simulation_points": 4,
+            "claim_outputs": [
+              8
+            ],
+            "simulation": [
+              {
+                "point": {
+                  "s0": "0x0000000000000000",
+                  "s1": "0x0000000000000000",
+                  "s2": "0x0000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0xffffffffffffffff",
+                  "s1": "0xffffffffffffffff",
+                  "s2": "0xffffffffffffffff"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x8000000000000000",
+                  "s1": "0x8000000000000000",
+                  "s2": "0x8000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0123456789abcdef",
+                  "s1": "0x123456789abcdf00",
+                  "s2": "0x23456789abcdf011"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              }
+            ]
+          },
+          "readmission": {
+            "points": [
+              [
+                "0",
+                "0",
+                "0"
+              ],
+              [
+                "5",
+                "-5",
+                "7"
+              ],
+              [
+                "1",
+                "2",
+                "3"
+              ],
+              [
+                "7",
+                "4",
+                "-2"
+              ],
+              [
+                "-2",
+                "-3",
+                "5"
+              ],
+              [
+                "3",
+                "9",
+                "-8"
+              ],
+              [
+                "-9223372036854775808",
+                "0",
+                "0"
+              ],
+              [
+                "9223372036854775807",
+                "1",
+                "0"
+              ],
+              [
+                "0",
+                "-9223372036854775808",
+                "9223372036854775807"
+              ],
+              [
+                "-7",
+                "7",
+                "1"
+              ]
+            ],
+            "outputs": [
+              "0",
+              "3",
+              "-4",
+              "5",
+              "-4",
+              "2",
+              "-9223372036854775808",
+              "9223372036854775806",
+              "1",
+              "-15"
+            ],
+            "graph": {
+              "outcome": "normal",
+              "graph": "7728f40fa39aa161cbb181d936709cf8ffa636f66f647a754ffd01812a3dfe92",
+              "graph_sha256": "28b67378786511ce31cdc9d9d06844f70479ca4c029a7959d3832cedf82f4b0a",
+              "points": 10,
+              "evaluators_agree": true,
+              "reference_ns": 2956108,
+              "packed_ns": 2335117
+            }
+          }
+        }
+      ],
+      "solver_check": {
+        "query": {
+          "bytes": 820,
+          "nodes": 14,
+          "sha256": "f3a845e61d8593e6bc7bf0f0c584a0c1643969472d4a346e3635296b3bb8cc49",
+          "assumptions": 0
+        },
+        "answers": [
+          {
+            "solver": "bitwuzla",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof",
+            "wall_ns": 17518408,
+            "cpu_user_ns": 0,
+            "cpu_system_ns": 0,
+            "peak_rss_kb": 3996,
+            "witness": null,
+            "replay_ns": null
+          },
+          {
+            "solver": "z3",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof",
+            "wall_ns": 35956335,
+            "cpu_user_ns": 0,
+            "cpu_system_ns": 0,
+            "peak_rss_kb": 20608,
+            "witness": null,
+            "replay_ns": null
+          }
+        ],
+        "encoder_checks": {
+          "simulation_points": 4,
+          "claim_outputs": [
+            8
+          ],
+          "simulation": [
+            {
+              "point": {
+                "s0": "0x0000000000000000",
+                "s1": "0x0000000000000000",
+                "s2": "0x0000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0xffffffffffffffff",
+                "s1": "0xffffffffffffffff",
+                "s2": "0xffffffffffffffff"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x8000000000000000",
+                "s1": "0x8000000000000000",
+                "s2": "0x8000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x0123456789abcdef",
+                "s1": "0x123456789abcdf00",
+                "s2": "0x23456789abcdf011"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            }
+          ]
+        }
+      },
+      "baseline": {
+        "candidates": 400000,
+        "program": null,
+        "size": null,
+        "exhausted": "candidate fuel",
+        "measurement": {
+          "wall_ns": 534997260,
+          "cpu_user_ns": 558341000,
+          "cpu_system_ns": 7971000,
+          "process_peak_rss_kb": 9927320
+        }
+      },
+      "heldout": {
+        "status": "pass",
+        "passed": 3,
+        "total": 3,
+        "entries": [
+          {
+            "inputs": [
+              "7",
+              "4",
+              "-2"
+            ],
+            "expected": "5",
+            "observed": "5",
+            "agrees": true
+          },
+          {
+            "inputs": [
+              "-2",
+              "-3",
+              "5"
+            ],
+            "expected": "-4",
+            "observed": "-4",
+            "agrees": true
+          },
+          {
+            "inputs": [
+              "3",
+              "9",
+              "-8"
+            ],
+            "expected": "2",
+            "observed": "2",
+            "agrees": true
+          }
+        ]
+      },
+      "readmission": {
+        "points": [
+          [
+            "0",
+            "0",
+            "0"
+          ],
+          [
+            "5",
+            "-5",
+            "7"
+          ],
+          [
+            "1",
+            "2",
+            "3"
+          ],
+          [
+            "7",
+            "4",
+            "-2"
+          ],
+          [
+            "-2",
+            "-3",
+            "5"
+          ],
+          [
+            "3",
+            "9",
+            "-8"
+          ],
+          [
+            "-9223372036854775808",
+            "0",
+            "0"
+          ],
+          [
+            "9223372036854775807",
+            "1",
+            "0"
+          ],
+          [
+            "0",
+            "-9223372036854775808",
+            "9223372036854775807"
+          ],
+          [
+            "-7",
+            "7",
+            "1"
+          ]
+        ],
+        "outputs": [
+          "0",
+          "3",
+          "-4",
+          "5",
+          "-4",
+          "2",
+          "-9223372036854775808",
+          "9223372036854775806",
+          "1",
+          "-15"
+        ],
+        "graph": {
+          "outcome": "normal",
+          "graph": "7728f40fa39aa161cbb181d936709cf8ffa636f66f647a754ffd01812a3dfe92",
+          "graph_sha256": "28b67378786511ce31cdc9d9d06844f70479ca4c029a7959d3832cedf82f4b0a",
+          "points": 10,
+          "evaluators_agree": true,
+          "reference_ns": 2956108,
+          "packed_ns": 2335117
+        }
+      }
+    },
+    {
+      "name": "arithSubtractThenCommuted",
+      "family": "arithmetic",
+      "out": "i64",
+      "reference": "(+ x (+ (+ (- y z) 7) 7))",
+      "declaration": {
+        "inputs": 3,
+        "bound": 8,
+        "control_bound": null,
+        "precondition": null
+      },
+      "examples": {
+        "train": 3,
+        "heldout": 3,
+        "counterexamples": 0
+      },
+      "search": {
+        "grammar": "synth-i64/0",
+        "words": [
+          "-",
+          "7",
+          "0",
+          "=",
+          "2",
+          "1",
+          "5",
+          "+",
+          "3",
+          "*",
+          "swap",
+          "dup"
+        ],
+        "rounds": 1,
+        "candidates": 27197,
+        "program": "- 7 7 + + +",
+        "size": 6,
+        "sizes": [
+          {
+            "size": 0,
+            "states": 1,
+            "complete": 0
+          },
+          {
+            "size": 1,
+            "states": 11,
+            "complete": 0
+          },
+          {
+            "size": 2,
+            "states": 63,
+            "complete": 9
+          },
+          {
+            "size": 3,
+            "states": 466,
+            "complete": 4
+          },
+          {
+            "size": 4,
+            "states": 2351,
+            "complete": 266
+          },
+          {
+            "size": 5,
+            "states": 14322,
+            "complete": 286
+          },
+          {
+            "size": 6,
+            "states": 1752,
+            "complete": 1,
+            "partial": true
+          }
+        ],
+        "measurement": {
+          "wall_ns": 150185043,
+          "cpu_user_ns": 180559000,
+          "cpu_system_ns": 23255000,
+          "process_peak_rss_kb": 9927320
+        }
+      },
+      "lean": {
+        "pair": {
+          "name": "arithSubtractThenCommuted",
+          "left": [
+            {
+              "op": "input",
+              "slot": 0
+            },
+            {
+              "op": "input",
+              "slot": 1
+            },
+            {
+              "op": "input",
+              "slot": 2
+            },
+            {
+              "op": "sub",
+              "a": 1,
+              "b": 2
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000007"
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000007"
+            },
+            {
+              "op": "add",
+              "a": 4,
+              "b": 5
+            },
+            {
+              "op": "add",
+              "a": 3,
+              "b": 6
+            },
+            {
+              "op": "add",
+              "a": 0,
+              "b": 7
+            }
+          ],
+          "right": [
+            {
+              "op": "input",
+              "slot": 0
+            },
+            {
+              "op": "input",
+              "slot": 1
+            },
+            {
+              "op": "input",
+              "slot": 2
+            },
+            {
+              "op": "sub",
+              "a": 1,
+              "b": 2
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000007"
+            },
+            {
+              "op": "add",
+              "a": 3,
+              "b": 4
+            },
+            {
+              "op": "constant",
+              "bits": "0x0000000000000007"
+            },
+            {
+              "op": "add",
+              "a": 5,
+              "b": 6
+            },
+            {
+              "op": "add",
+              "a": 0,
+              "b": 7
+            }
+          ],
+          "outputs": [
+            8
+          ],
+          "digest": "5ed6430f5269847555ab6a236c3c6e035b729d5e32aeef743f68de64d7075df1"
+        },
+        "refused": null
+      },
+      "status": "proved",
+      "certificate": {
+        "theorem": "NobleFoundation.Synthesis.arithSubtractThenCommuted_certified",
+        "form": {
+          "coef": [
+            "0x0000000000000001",
+            "0x0000000000000001",
+            "0xffffffffffffffff"
+          ],
+          "constant": "0x000000000000000e"
+        },
+        "kernel": "checked by verification/foundation/check.mjs, not by this lane"
+      },
+      "rounds": [
+        {
+          "round": 1,
+          "program": "- 7 7 + + +",
+          "size": 6,
+          "candidates": 27197,
+          "solver": [
+            "unsat",
+            "unsat"
+          ],
+          "verdict": "proved",
+          "affine": {
+            "certifiable": true,
+            "reason": null
+          },
+          "query": {
+            "bytes": 1018,
+            "nodes": 18,
+            "sha256": "2ddd6bd018bd4248ef8f47634cb45c3758858feea8e25bd308a697e6a9a0bc1a",
+            "assumptions": 0
+          },
+          "answers": [
+            {
+              "solver": "bitwuzla",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof",
+              "wall_ns": 4803242,
+              "cpu_user_ns": 0,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 5168,
+              "witness": null,
+              "replay_ns": null
+            },
+            {
+              "solver": "z3",
+              "answer": "unsat",
+              "status": "inconclusive",
+              "reason": "external UNSAT without an accepted proof",
+              "wall_ns": 7508961,
+              "cpu_user_ns": 0,
+              "cpu_system_ns": 0,
+              "peak_rss_kb": 22556,
+              "witness": null,
+              "replay_ns": null
+            }
+          ],
+          "encoder_checks": {
+            "simulation_points": 4,
+            "claim_outputs": [
+              8
+            ],
+            "simulation": [
+              {
+                "point": {
+                  "s0": "0x0000000000000000",
+                  "s1": "0x0000000000000000",
+                  "s2": "0x0000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0xffffffffffffffff",
+                  "s1": "0xffffffffffffffff",
+                  "s2": "0xffffffffffffffff"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x8000000000000000",
+                  "s1": "0x8000000000000000",
+                  "s2": "0x8000000000000000"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              },
+              {
+                "point": {
+                  "s0": "0x0123456789abcdef",
+                  "s1": "0x123456789abcdf00",
+                  "s2": "0x23456789abcdf011"
+                },
+                "answers": [
+                  "sat",
+                  "sat"
+                ]
+              }
+            ]
+          },
+          "readmission": {
+            "points": [
+              [
+                "0",
+                "0",
+                "0"
+              ],
+              [
+                "5",
+                "-5",
+                "7"
+              ],
+              [
+                "1",
+                "2",
+                "3"
+              ],
+              [
+                "7",
+                "4",
+                "-2"
+              ],
+              [
+                "-2",
+                "-3",
+                "5"
+              ],
+              [
+                "3",
+                "9",
+                "-8"
+              ],
+              [
+                "-9223372036854775808",
+                "0",
+                "0"
+              ],
+              [
+                "9223372036854775807",
+                "1",
+                "0"
+              ],
+              [
+                "0",
+                "-9223372036854775808",
+                "9223372036854775807"
+              ],
+              [
+                "-7",
+                "7",
+                "1"
+              ]
+            ],
+            "outputs": [
+              "14",
+              "7",
+              "14",
+              "27",
+              "4",
+              "34",
+              "-9223372036854775794",
+              "-9223372036854775794",
+              "15",
+              "13"
+            ],
+            "graph": {
+              "outcome": "normal",
+              "graph": "b2e6de62fa53663b764b686b41026c8d386bbb23827a91b67fc40b8cd52e7cc1",
+              "graph_sha256": "3a0638d8146c914264b11e1459b3968e0cb324c089e248e5ceed8f545cd711a6",
+              "points": 10,
+              "evaluators_agree": true,
+              "reference_ns": 3007023,
+              "packed_ns": 2646408
+            }
+          }
+        }
+      ],
+      "solver_check": {
+        "query": {
+          "bytes": 1018,
+          "nodes": 18,
+          "sha256": "2ddd6bd018bd4248ef8f47634cb45c3758858feea8e25bd308a697e6a9a0bc1a",
+          "assumptions": 0
+        },
+        "answers": [
+          {
+            "solver": "bitwuzla",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof",
+            "wall_ns": 4803242,
+            "cpu_user_ns": 0,
+            "cpu_system_ns": 0,
+            "peak_rss_kb": 5168,
+            "witness": null,
+            "replay_ns": null
+          },
+          {
+            "solver": "z3",
+            "answer": "unsat",
+            "status": "inconclusive",
+            "reason": "external UNSAT without an accepted proof",
+            "wall_ns": 7508961,
+            "cpu_user_ns": 0,
+            "cpu_system_ns": 0,
+            "peak_rss_kb": 22556,
+            "witness": null,
+            "replay_ns": null
+          }
+        ],
+        "encoder_checks": {
+          "simulation_points": 4,
+          "claim_outputs": [
+            8
+          ],
+          "simulation": [
+            {
+              "point": {
+                "s0": "0x0000000000000000",
+                "s1": "0x0000000000000000",
+                "s2": "0x0000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0xffffffffffffffff",
+                "s1": "0xffffffffffffffff",
+                "s2": "0xffffffffffffffff"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x8000000000000000",
+                "s1": "0x8000000000000000",
+                "s2": "0x8000000000000000"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            },
+            {
+              "point": {
+                "s0": "0x0123456789abcdef",
+                "s1": "0x123456789abcdf00",
+                "s2": "0x23456789abcdf011"
+              },
+              "answers": [
+                "sat",
+                "sat"
+              ]
+            }
+          ]
+        }
+      },
+      "baseline": {
+        "candidates": 76936,
+        "program": "- 7 - 7 3 * + +",
+        "size": 8,
+        "exhausted": null,
+        "measurement": {
+          "wall_ns": 98435045,
+          "cpu_user_ns": 112332000,
+          "cpu_system_ns": 2953000,
+          "process_peak_rss_kb": 9927320
+        },
+        "readmission": {
+          "points": [
+            [
+              "0",
+              "0",
+              "0"
+            ],
+            [
+              "5",
+              "-5",
+              "7"
+            ],
+            [
+              "1",
+              "2",
+              "3"
+            ],
+            [
+              "-9223372036854775808",
+              "0",
+              "0"
+            ],
+            [
+              "9223372036854775807",
+              "1",
+              "0"
+            ],
+            [
+              "0",
+              "-9223372036854775808",
+              "9223372036854775807"
+            ],
+            [
+              "-7",
+              "7",
+              "1"
+            ]
+          ],
+          "outputs": [
+            "14",
+            "7",
+            "14",
+            "-9223372036854775794",
+            "-9223372036854775794",
+            "15",
+            "13"
+          ],
+          "graph": {
+            "outcome": "normal",
+            "graph": "615382f2ec45c6a2a677a60355c31b41b8113e62fbf321289611d543011898ce",
+            "graph_sha256": "3fa871ee9a0014304932543588e5d90491dc0a510a0cfc48a160a852ed11c6ad",
+            "points": 7,
+            "evaluators_agree": true,
+            "reference_ns": 2335868,
+            "packed_ns": 2416730
+          }
+        }
+      },
+      "heldout": {
+        "status": "pass",
+        "passed": 3,
+        "total": 3,
+        "entries": [
+          {
+            "inputs": [
+              "7",
+              "4",
+              "-2"
+            ],
+            "expected": "27",
+            "observed": "27",
+            "agrees": true
+          },
+          {
+            "inputs": [
+              "-2",
+              "-3",
+              "5"
+            ],
+            "expected": "4",
+            "observed": "4",
+            "agrees": true
+          },
+          {
+            "inputs": [
+              "3",
+              "9",
+              "-8"
+            ],
+            "expected": "34",
+            "observed": "34",
+            "agrees": true
+          }
+        ]
+      },
+      "readmission": {
+        "points": [
+          [
+            "0",
+            "0",
+            "0"
+          ],
+          [
+            "5",
+            "-5",
+            "7"
+          ],
+          [
+            "1",
+            "2",
+            "3"
+          ],
+          [
+            "7",
+            "4",
+            "-2"
+          ],
+          [
+            "-2",
+            "-3",
+            "5"
+          ],
+          [
+            "3",
+            "9",
+            "-8"
+          ],
+          [
+            "-9223372036854775808",
+            "0",
+            "0"
+          ],
+          [
+            "9223372036854775807",
+            "1",
+            "0"
+          ],
+          [
+            "0",
+            "-9223372036854775808",
+            "9223372036854775807"
+          ],
+          [
+            "-7",
+            "7",
+            "1"
+          ]
+        ],
+        "outputs": [
+          "14",
+          "7",
+          "14",
+          "27",
+          "4",
+          "34",
+          "-9223372036854775794",
+          "-9223372036854775794",
+          "15",
+          "13"
+        ],
+        "graph": {
+          "outcome": "normal",
+          "graph": "b2e6de62fa53663b764b686b41026c8d386bbb23827a91b67fc40b8cd52e7cc1",
+          "graph_sha256": "3a0638d8146c914264b11e1459b3968e0cb324c089e248e5ceed8f545cd711a6",
+          "points": 10,
+          "evaluators_agree": true,
+          "reference_ns": 3007023,
+          "packed_ns": 2646408
+        }
+      }
+    }
+  ],
+  "summary": {
+    "arithCommutedThenSubtract": "proved",
+    "arithSubtractThenCommuted": "proved"
+  },
+  "non_claims": [
+    "a status is about the declared model graphs, the declared examples and the declared bounds; nothing outside them is claimed",
+    "proved means a generated bv_omega theorem over the pair was emitted; the kernel is checked by the foundation lane, not here",
+    "solver UNSAT is recorded and never certifies; every solver is untrusted",
+    "the list family is run only: no solver and no certificate covers it",
+    "re-admission shows the selected CLI accepts the program and its evaluators agree on the listed points; that is finite evidence, and extraction preservation (NG-PO-A) stays open",
+    "timings and peak memory are one run on one host, not a performance claim"
+  ]
+}
