@@ -1,0 +1,23 @@
+
+running 1 test
+test trace130_host::issued_child_drop_foreign_profile_and_physical_exhaustion ... M7HOST	open root	Ok(true) (1, 0, 0) []	Ok(true) (1, 0, 0) []
+M7HOST	open child	Ok(true) (2, 0, 0) []	Ok(true) (2, 0, 0) []
+M7HOST	open watcher	Ok(true) (3, 0, 0) []	Ok(true) (3, 0, 0) []
+M7HOST	open unrelated	Ok(true) (4, 0, 0) []	Ok(true) (4, 0, 0) []
+M7HOST	observe absent clock true	Ok(false) (4, 0, 1) []	Ok(false) (4, 0, 1) []
+M7HOST	publish child clock true	Ok(true) (4, 1, 1) [Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Added }]	Ok(true) (4, 1, 1) [Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Added }]
+M7HOST	publish unrelated alarm false	Ok(true) (4, 2, 1) [Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Added }]	Ok(true) (4, 2, 1) [Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Added }]
+M7HOST	foreign-profile refusal	Err(WrongProfile) (0, 0, 0) []	Err(WrongProfile) (0, 0, 0) []
+M7HOST	source profile remains unchanged	Ok(true) (4, 2, 1) [Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Added }]	Ok(true) (4, 2, 1) [Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Added }]
+M7HOST	drop parent and child	Ok(true) (2, 1, 1) [Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Added }, Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Removed }]	Ok(true) (2, 1, 1) [Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Added }, Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Removed }]
+M7HOST	retired child rejects publish	Err(Kernel(InvalidFacet)) (2, 1, 1) [Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Added }, Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Removed }]	Err(Kernel(InvalidFacet)) (2, 1, 1) [Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Added }, Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Removed }]
+M7HOST	late false-pair observe	Ok(true) (2, 1, 2) [Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Added }, Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Removed }, Event { observer: Facet(3), service: Service { name: "alarm", ready: false }, change: Added }]	Ok(true) (2, 1, 2) [Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Added }, Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Removed }, Event { observer: Facet(3), service: Service { name: "alarm", ready: false }, change: Added }]
+M7HOST	idempotent close retired child	Ok(true) (2, 1, 2) [Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Added }, Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Removed }, Event { observer: Facet(3), service: Service { name: "alarm", ready: false }, change: Added }]	Ok(true) (2, 1, 2) [Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Added }, Event { observer: Facet(3), service: Service { name: "clock", ready: true }, change: Removed }, Event { observer: Facet(3), service: Service { name: "alarm", ready: false }, change: Added }]
+M7HOST	explicit drain	Ok(true) (2, 1, 2) []	Ok(true) (2, 1, 2) []
+M7HOST	drop observer	Ok(true) (1, 1, 0) []	Ok(true) (1, 1, 0) []
+M7HOST	close unrelated	Ok(true) (0, 0, 0) []	Ok(true) (0, 0, 0) []
+M7HOST	physical slots not recycled	Err(Kernel(Capacity)) (0, 0, 0) []	Err(Kernel(Capacity)) (0, 0, 0) []
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
