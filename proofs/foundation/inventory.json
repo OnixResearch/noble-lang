@@ -14900,6 +14900,60 @@
       "phase": 1,
       "role": "representation",
       "claim": "reverse OP2 emitted admission"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.publicationFor_defined_outside",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the same definedness for a result that may occupy the value slot (DUP's second result): the captured peer differs from both consumed slots, so it suffices that no live slot outside them is the result slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_forward_candidate_of_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP2 has a candidate in every legal, current, matched, non-aliased arena with generation headroom"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_reverse_candidate_of_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP2 has a candidate in every legal, current, matched, non-aliased arena with generation headroom"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_candidate_of_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP1 has a candidate in every legal, current, matched, non-aliased arena with generation headroom"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_reverse_candidate_of_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP1 has a candidate in every legal, current, matched, non-aliased arena with generation headroom"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_forward_candidate_of_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward ERA always has its empty candidate in a legal, current, matched arena"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_reverse_candidate_of_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse ERA always has its empty candidate in a legal, current, matched arena"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_forward_candidate_of_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward DUP has a candidate in every legal, current, matched, non-aliased arena with generation headroom"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_reverse_candidate_of_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse DUP has a candidate in every legal, current, matched, non-aliased arena with generation headroom"
     }
   ],
   "private_theorems": [

@@ -51,6 +51,7 @@ import NobleFoundation.NetI64PlanRewriteMaps
 import NobleFoundation.NetI64PlanAdmit
 import NobleFoundation.NetI64PlanInstance
 import NobleFoundation.NetI64PlanOp2
+import NobleFoundation.NetI64PlanCandidates
 import NobleFoundation.BeltTarget
 import NobleFoundation.BeltTargetCorpus
 import NobleFoundation.GraphRewrite

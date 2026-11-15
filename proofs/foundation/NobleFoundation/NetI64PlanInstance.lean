@@ -1023,4 +1023,52 @@ theorem PhysicalState.publicationFor_defined
     · exact ⟨[], PhysicalState.publicationFor_quiet hport hboundary (.inr (by simp [hk, hz]))⟩
   · exact ⟨[], PhysicalState.publicationFor_quiet hport hboundary (.inl (by simp [hk]))⟩
 
+/-- The same definedness for a result that may occupy the value slot (DUP's
+second result): the captured peer differs from both consumed slots, so it
+suffices that no live slot outside them is the result slot. -/
+theorem PhysicalState.publicationFor_defined_outside
+    {state : PhysicalState} {pair : PhysicalPair}
+    {boundaries : List ((Nat × Nat) × (Nat × Nat × Nat))}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    {index ruleSlot valueSlot sourcePort : Nat} {endpoint : Port}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    (hport : result.2.2.2.2[0]? = some (some index))
+    (hboundary : boundaries[index]? = some boundary)
+    (hcapture : (∃ peer peerPort peerSlot peerId peerSymbol,
+          boundary.2 = (0, peer, peerPort) ∧ peer ≠ ruleSlot ∧ peer ≠ valueSlot ∧
+          state.slots[peer]? = some peerSlot ∧
+          peerSlot.agent = some (peerId, peerSymbol) ∧
+          peerSlot.ports[peerPort]? = some (some (ruleSlot, sourcePort)) ∧
+          endpoint = (peerId, peerPort)) ∨
+       (∃ output out, boundary.2 = (1, output, 0) ∧
+          state.outputs[output]? = some out ∧
+          out.target = (ruleSlot, sourcePort) ∧ endpoint = out.label))
+    (hpair : (pair.first = ruleSlot ∧ pair.second = valueSlot) ∨
+      (pair.first = valueSlot ∧ pair.second = ruleSlot))
+    (hself : ∀ peer, state.slots[peer]? ≠ none → peer ≠ ruleSlot → peer ≠ valueSlot →
+      peer ≠ result.2.1)
+    (hgeneration : result.1 = false → ∃ old, state.slots[result.2.1]? = some old ∧
+      old.generation ≠ UInt64.ofNat (UInt64.size - 1)) :
+    ∃ published, state.publicationFor pair boundaries result = some published := by
+  rcases hcapture with ⟨peer, peerPort, peerSlot, peerId, peerSymbol, hk, h1, h2, hpeer,
+      hpeerAgent, _, _⟩ | ⟨output, out, hk, _, _, _⟩
+  · by_cases hz : peerPort = 0
+    · subst hz
+      have hf : peer ≠ pair.first := by
+        rcases hpair with ⟨hf, _⟩ | ⟨hf, _⟩ <;> rw [hf] <;> assumption
+      have hs : peer ≠ pair.second := by
+        rcases hpair with ⟨_, hs⟩ | ⟨_, hs⟩ <;> rw [hs] <;> assumption
+      have hne := hself peer (by simp [hpeer]) h1 h2
+      have hlive : peerSlot.agent.isSome = true := by simp [hpeerAgent]
+      cases hr : result.1 with
+      | true =>
+        exact ⟨_, PhysicalState.publicationFor_fresh_active hport hboundary hk hf hs hne
+          hpeer hlive hr⟩
+      | false =>
+        obtain ⟨old, hold, hroom⟩ := hgeneration hr
+        exact ⟨_, PhysicalState.publicationFor_reuse_active hport hboundary hk hf hs hne
+          hpeer hlive hr hold hroom⟩
+    · exact ⟨[], PhysicalState.publicationFor_quiet hport hboundary (.inr (by simp [hk, hz]))⟩
+  · exact ⟨[], PhysicalState.publicationFor_quiet hport hboundary (.inl (by simp [hk]))⟩
+
 end NobleFoundation.NetI64Plans
