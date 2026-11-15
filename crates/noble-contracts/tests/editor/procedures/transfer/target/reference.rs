@@ -1,7 +1,7 @@
 use std::string::{String, ToString};
 use std::vec::Vec;
 
-pub(super) const MANIFEST: &str = "verification/procedure-library/producer-targets-v2.txt";
+pub(super) const MANIFEST: &str = "verification/procedure-library/producer-targets-v3.txt";
 
 pub(super) fn manifest_targets() -> Result<[(String, String); 2], String> {
     manifest_targets_from(MANIFEST)
