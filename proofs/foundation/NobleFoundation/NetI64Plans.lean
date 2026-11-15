@@ -1052,6 +1052,29 @@ def PhysicalState.retargetOutput (state : PhysicalState)
   (retargetOutputList index target state.outputs).map fun outputs =>
     { state with outputs }
 
+/-- An existing output index can always be retargeted; missing indices are
+the only failure of this single table operation. -/
+theorem PhysicalState.retargetOutput_success
+    {state : PhysicalState} {index : Nat} {old : PhysicalOutput}
+    (target : Nat × Nat)
+    (houtput : state.outputs[index]? = some old) :
+    ∃ next, state.retargetOutput index target = some next := by
+  have hlist (outputs : List PhysicalOutput) (index : Nat)
+      (h : outputs[index]? = some old) :
+      ∃ next, retargetOutputList index target outputs = some next := by
+    induction outputs generalizing index with
+    | nil => simp at h
+    | cons output rest ih =>
+      cases index with
+      | zero => exact ⟨{output with target} :: rest, rfl⟩
+      | succ n =>
+        have hrest : rest[n]? = some old := by simpa using h
+        obtain ⟨updated, hu⟩ := ih n hrest
+        exact ⟨output :: updated, by simp [retargetOutputList, hu]⟩
+  obtain ⟨updated, hu⟩ := hlist state.outputs index houtput
+  exact ⟨{state with outputs := updated}, by
+    simp [PhysicalState.retargetOutput, hu]⟩
+
 private theorem retargetOutputList_labels (outputs : List PhysicalOutput)
     (index : Nat) (target : Nat × Nat) (next : List PhysicalOutput)
     (h : retargetOutputList index target outputs = some next) :
@@ -1438,6 +1461,55 @@ private def PhysicalState.writeExternal (state : PhysicalState)
         if old.target != boundary.1 then none else
           state.retargetOutput output target
     | _ => none
+
+/-- A reciprocal output write succeeds if its referenced output still owns
+the captured prestate endpoint, and its result port names that boundary. -/
+theorem PhysicalState.writeExternal_output_success
+    {state : PhysicalState} {plan : BytePlan}
+    {write : Nat × Nat × Nat}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {output : Nat} {old : PhysicalOutput}
+    (hresult : plan.results[write.1]? = some result)
+    (hboundary : plan.boundaries[write.2.2]? = some boundary)
+    (hport : result.2.2.2.2[write.2.1]? = some (some write.2.2))
+    (hkind : boundary.2 = (1, output, 0))
+    (houtput : state.outputs[output]? = some old)
+    (htarget : old.target = boundary.1) :
+    ∃ next, state.writeExternal plan write = some next := by
+  obtain ⟨next, hretarget⟩ :=
+    PhysicalState.retargetOutput_success (result.2.1, write.2.1) houtput
+  refine ⟨next, ?_⟩
+  simp [PhysicalState.writeExternal, hresult, hboundary, hport,
+    hkind, houtput, htarget, hretarget]
+
+/-- A reciprocal peer write succeeds if the peer is live and still points to
+the captured endpoint, and it is neither consumed principal. -/
+theorem PhysicalState.writeExternal_peer_success
+    {state : PhysicalState} {plan : BytePlan}
+    {write : Nat × Nat × Nat}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {peer port : Nat} {old : PhysicalSlot}
+    (hresult : plan.results[write.1]? = some result)
+    (hboundary : plan.boundaries[write.2.2]? = some boundary)
+    (hport : result.2.2.2.2[write.2.1]? = some (some write.2.2))
+    (hkind : boundary.2 = (0, peer, port))
+    (hleft : peer ≠ plan.pair.1)
+    (hright : peer ≠ plan.pair.2.2.1)
+    (hpeer : state.slots[peer]? = some old)
+    (hlive : old.agent.isSome = true)
+    (htarget : old.ports[port]? = some (some boundary.1)) :
+    ∃ next, state.writeExternal plan write = some next := by
+  have hsome : old.agent ≠ none := by
+    intro ha
+    simp [ha] at hlive
+  refine ⟨state.writeSlot peer {
+    old with
+    ports := old.ports.set port (some (result.2.1, write.2.1))
+    queuedGeneration := if port == 0 then none else old.queuedGeneration }, ?_⟩
+  simp [PhysicalState.writeExternal, hresult, hboundary, hport,
+    hkind, hleft, hright, hpeer, hsome, htarget]
 
 private def PhysicalState.writeExternals (state : PhysicalState)
     (plan : BytePlan) : List (Nat × Nat × Nat) → Option PhysicalState

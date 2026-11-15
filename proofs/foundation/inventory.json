@@ -13570,6 +13570,24 @@
       "claim": "an OP1 or OP2 one-result RHS installs from source-slot label agreement and concrete per-result guards"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retargetOutput_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any existing physical output table entry can be retargeted"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeExternal_output_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "an external output endpoint still owning its captured target accepts an emitted result's reciprocal write"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeExternal_peer_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a distinct live external peer still owning its captured target accepts an emitted result's reciprocal write"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.lowered_empty_image_completes",
       "phase": 1,
       "role": "representation",
