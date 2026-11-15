@@ -2022,7 +2022,7 @@ mod tests {
     use super::*;
 
     mod emission {
-        include!("net/plan_corpus.rs");
+        include!("net/plan/corpus.rs");
     }
 
     const REQUIRED_ALLOCATION_ARENA_SLOTS: u64 = 4;

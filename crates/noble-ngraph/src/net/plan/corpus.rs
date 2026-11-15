@@ -2,15 +2,14 @@
 
 use super::*;
 use alloc::borrow::ToOwned;
-use alloc::format;
-use alloc::string::{String, ToString};
-use alloc::vec::Vec;
+use alloc::string::ToString;
 use crate::identity::IdentityScheme;
-use core::writeln;
-use std::fmt::Write as _;
-use std::path::Path;
 
-const REGENERATE: &str = "cargo test -p noble-ngraph --lib net::tests::emission::regenerate_lean_plan_corpus -- --ignored --exact";
+const REGENERATE: &str = "node verification/net-plans/regenerate-lean-corpus.mjs";
+const RETAINED: &str =
+    include_str!("../../../../../proofs/foundation/NobleFoundation/NetI64PlanCorpus.lean");
+const SOURCE_BEGIN: &str = "NOBLE_NET_PLAN_CORPUS_BEGIN";
+const SOURCE_END: &str = "NOBLE_NET_PLAN_CORPUS_END";
 
 #[derive(Clone, Copy)]
 struct RuleCase {
@@ -91,35 +90,28 @@ const RULES: [RuleCase; 4] = [
 
 struct EmittedCase {
     rule: RuleCase,
-    name: String,
+    name: alloc::string::String,
     reverse: bool,
     policy: StoragePolicy,
     bytes: rewrite::PlanBytes,
 }
 
-fn corpus_path() -> std::path::PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../proofs/foundation/NobleFoundation/NetI64PlanCorpus.lean")
-}
-
 #[test]
 fn generated_lean_plan_corpus_is_fresh() {
-    let path = corpus_path();
-    let retained = std::fs::read_to_string(&path)
-        .unwrap_or_else(|error| panic!("{}: {error}; run `{REGENERATE}`", path.display()));
-    assert_eq!(retained, render_corpus(), "run `{REGENERATE}`");
+    assert_eq!(RETAINED, render_corpus(), "run `{REGENERATE}`");
 }
 
 #[test]
-#[ignore = "writes the Lean corpus from the real revision-3 plan compiler"]
+#[ignore = "emits the real compiler byte corpus to the shell regeneration command"]
+#[should_panic(expected = "NOBLE_NET_PLAN_CORPUS_BEGIN")]
 fn regenerate_lean_plan_corpus() {
-    let path = corpus_path();
-    std::fs::write(&path, render_corpus())
-        .unwrap_or_else(|error| panic!("{}: {error}", path.display()));
+    // The test-only domain core has no filesystem or output port. The shell
+    // script captures this bounded panic payload and owns the file write.
+    panic!("{SOURCE_BEGIN}\n{}\n{SOURCE_END}", render_corpus());
 }
 
-fn emitted_cases() -> Vec<EmittedCase> {
-    let mut cases = Vec::with_capacity(RULES.len() * 4);
+fn emitted_cases() -> alloc::vec::Vec<EmittedCase> {
+    let mut cases = alloc::vec::Vec::with_capacity(RULES.len() * 4);
     for rule in RULES {
         for reverse in [false, true] {
             for policy in [StoragePolicy::Reuse, StoragePolicy::Allocate] {
@@ -136,7 +128,7 @@ fn emitted_cases() -> Vec<EmittedCase> {
                 };
                 cases.push(EmittedCase {
                     rule,
-                    name: format!("{}{orientation}{storage}", rule.name),
+                    name: alloc::format!("{}{orientation}{storage}", rule.name),
                     reverse,
                     policy,
                     bytes,
@@ -182,39 +174,39 @@ fn stream_digest(cases: &[EmittedCase]) -> crate::ir::Digest {
     hasher.finish()
 }
 
-fn render_corpus() -> String {
+fn render_corpus() -> alloc::string::String {
     let cases = emitted_cases();
     let compiler_source = crate::ir::hex(&digest_bytes(
         &IDS,
         &[
             b"net-plan-compiler-and-checker-source/1",
-            include_str!("rewrite.rs").as_bytes(),
+            include_str!("../rewrite.rs").as_bytes(),
         ],
     ));
     let net_source = crate::ir::hex(&digest_bytes(
         &IDS,
         &[
             b"net-plan-test-and-executor-source/1",
-            include_str!("../net.rs").as_bytes(),
+            include_str!("../../net.rs").as_bytes(),
         ],
     ));
     let generator_source = crate::ir::hex(&digest_bytes(
         &IDS,
         &[
             b"net-plan-corpus-generator-source/1",
-            include_str!("plan_corpus.rs").as_bytes(),
+            include_str!("corpus.rs").as_bytes(),
         ],
     ));
     let model_source = crate::ir::hex(&digest_bytes(
         &IDS,
         &[
             b"net-plan-model-source/1",
-            include_str!("../../../../proofs/foundation/NobleFoundation/NetI64Plans.lean")
+            include_str!("../../../../../proofs/foundation/NobleFoundation/NetI64Plans.lean")
                 .as_bytes(),
         ],
     ));
     let digest = crate::ir::hex(&stream_digest(&cases));
-    let mut source = format!(
+    let mut source = alloc::format!(
         r#"import NobleFoundation.NetI64Plans
 
 /-! Finite Rust compiler-to-Lean byte correspondence. These literal bytes come only
@@ -228,7 +220,7 @@ Rust compiler correctness proof. Regenerate with:
 -- checker={PLAN_CHECKER_REVISION}; executor={PLAN_EXECUTOR_REVISION}
 -- source crates/noble-ngraph/src/net/rewrite.rs test-net-digest={compiler_source}
 -- source crates/noble-ngraph/src/net.rs test-net-digest={net_source}
--- source crates/noble-ngraph/src/net/plan_corpus.rs test-net-digest={generator_source}
+-- source crates/noble-ngraph/src/net/plan/corpus.rs test-net-digest={generator_source}
 -- source proofs/foundation/NobleFoundation/NetI64Plans.lean test-net-digest={model_source}
 -- length-framed emitted byte stream + revisions test-net-digest={digest}
 -- test-net is a test-only identity scheme, not a cryptographic signature.
@@ -247,7 +239,7 @@ open NobleFoundation.NetI64Plans
     source
 }
 
-fn write_case(source: &mut String, case: &EmittedCase) {
+fn write_case(source: &mut impl core::fmt::Write, case: &EmittedCase) {
     let name = &case.name;
     let rule = case.rule;
     let chunks = case
@@ -255,12 +247,16 @@ fn write_case(source: &mut String, case: &EmittedCase) {
         .as_bytes()
         .chunks(16)
         .map(|chunk| {
-            format!(
+            alloc::format!(
                 "  [{}]",
-                chunk.iter().map(u8::to_string).collect::<Vec<_>>().join(", ")
+                chunk
+                    .iter()
+                    .map(u8::to_string)
+                    .collect::<alloc::vec::Vec<_>>()
+                    .join(", ")
             )
         })
-        .collect::<Vec<_>>()
+        .collect::<alloc::vec::Vec<_>>()
         .join(" ++\n");
     let byte_identity = crate::ir::hex(&digest_bytes(
         &IDS,
@@ -271,7 +267,7 @@ fn write_case(source: &mut String, case: &EmittedCase) {
             case.bytes.as_bytes(),
         ],
     ));
-    writeln!(
+    core::writeln!(
         source,
         "-- {name}: emitted_bytes={}; rules+checker+bytes test-net-digest={byte_identity}\ndef {name}Bytes : List UInt8 :=\n{chunks}\n",
         case.bytes.as_bytes().len()
@@ -279,23 +275,25 @@ fn write_case(source: &mut String, case: &EmittedCase) {
     .expect("write corpus bytes");
     let (rule_left, rule_right) = if case.reverse {
         (
-            format!(".num (BitVec.ofNat 64 {})", rule.value),
+            alloc::format!(".num (BitVec.ofNat 64 {})", rule.value),
             rule.lean_rule.to_owned(),
         )
     } else {
         (
             rule.lean_rule.to_owned(),
-            format!(".num (BitVec.ofNat 64 {})", rule.value),
+            alloc::format!(".num (BitVec.ofNat 64 {})", rule.value),
         )
     };
-    let reused = case.policy == StoragePolicy::Reuse;
-    let first_action = u8::from(reused && rule.results != 0 && (!case.reverse || rule.results == 2));
-    let second_action = u8::from(reused && rule.results != 0 && (case.reverse || rule.results == 2));
-    let reservation = if reused { 0 } else { rule.results };
+    let is_reused = case.policy == StoragePolicy::Reuse;
+    let first_action =
+        u8::from(is_reused && rule.results != 0 && (!case.reverse || rule.results == 2));
+    let second_action =
+        u8::from(is_reused && rule.results != 0 && (case.reverse || rule.results == 2));
+    let reservation = if is_reused { 0 } else { rule.results };
     let rule_opcode = rule.opcode;
     let boundaries = rule.boundaries;
     let results = rule.results;
-    writeln!(
+    core::writeln!(
         source,
         r#"theorem {name}_decoded_fields_and_symbols :
   (BytePlan.decode {name}Bytes).isSome = true ∧
@@ -309,21 +307,25 @@ fn write_case(source: &mut String, case: &EmittedCase) {
      image.publications.length,
      image.results.map (fun result => result.2.2.1)))) =
   (compileRule ({rule_left}) ({rule_right})).map (fun selected =>
-    ({reused}, {rule_opcode}, (0, 0, 1, 0),
+    ({is_reused}, {rule_opcode}, (0, 0, 1, 0),
      {first_action}, {second_action},
      {boundaries}, {results}, {boundaries}, {boundaries},
      {reservation}, 256, 0, 0, selected.results.map Prod.snd)) := by
-  decide
+  constructor
+  · set_option maxRecDepth 3000 in decide
+  constructor
+  · set_option maxRecDepth 3000 in decide
+  · set_option maxRecDepth 3000 in rfl
 "#
     )
     .expect("write decoded field and model-rule comparison");
-    if !case.reverse && reused {
+    if !case.reverse && is_reused {
         let model_bytes = rule.model_bytes;
         let physical_start = rule.physical_start;
         let physical_redex = rule.physical_redex;
         let physical_after = rule.physical_after;
         let physical_theorem = rule.physical_theorem;
-        writeln!(
+        core::writeln!(
             source,
             r#"-- The model fixture was declared independently of the Rust writer.
 theorem {name}_matches_model : {name}Bytes = {model_bytes} := by

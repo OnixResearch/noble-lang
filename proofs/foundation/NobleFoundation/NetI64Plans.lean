@@ -1553,7 +1553,7 @@ private theorem PhysicalState.publishAll_output_labels
   | nil =>
     simp [PhysicalState.publishAll] at h
     cases h
-    rfl
+    simp
   | cons pair rest ih =>
     cases hp : state.publish pair with
     | none => simp [PhysicalState.publishAll, hp] at h
@@ -1869,7 +1869,7 @@ private theorem PhysicalState.publishAll_work
   | nil =>
     simp [PhysicalState.publishAll] at h
     cases h
-    rfl
+    simp
   | cons pair rest ih =>
     cases hp : state.publish pair with
     | none => simp [PhysicalState.publishAll, hp] at h
@@ -2753,14 +2753,14 @@ theorem PhysicalState.samePairSlots_appendSlot
 ports, queue markers, free-list bookkeeping or output targets. -/
 private theorem PhysicalState.logicalPair_pairSlotView
     (state : PhysicalState) (pair : PhysicalPair) :
-    state.logicalPair pair = do
+    state.logicalPair pair = (do
       let (firstGeneration, firstAgent) ← state.pairSlotView pair.first
       let (secondGeneration, secondAgent) ← state.pairSlotView pair.second
       if firstGeneration != pair.firstGeneration ||
           secondGeneration != pair.secondGeneration then none else do
         let left ← firstAgent
         let right ← secondAgent
-        some (left, right) := by
+        some (left, right)) := by
   cases hf : state.slots[pair.first]? with
   | none => simp [PhysicalState.logicalPair, PhysicalState.pairSlotView, hf]
   | some first =>

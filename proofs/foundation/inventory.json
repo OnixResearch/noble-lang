@@ -12736,6 +12736,54 @@
       "claim": "writing outside every queued pair preserves the projected active-pair list"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.executeCheckedImage_work_append",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a successful decoded physical image retains the entire old pending queue and appends exactly its plan publications"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.pairSlotView_writeSlot_away",
+      "phase": 1,
+      "role": "representation",
+      "claim": "writing a different physical slot leaves the queued slot's generation and logical agent identity unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.pairSlotView_appendSlot_existing",
+      "phase": 1,
+      "role": "representation",
+      "claim": "appending a fresh physical slot leaves every old slot's generation and agent identity unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.samePairSlots_writeSlot_away",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a write disjoint from both queued endpoints preserves their physical identities"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.samePairSlots_appendSlot",
+      "phase": 1,
+      "role": "representation",
+      "claim": "fresh allocation preserves both in-bounds old endpoints of a queued pair"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.logicalPair_of_same_pair_slots",
+      "phase": 1,
+      "role": "representation",
+      "claim": "unchanged queued endpoint generations and agent identities preserve the decoded logical pair"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.pairOrientations_of_same_pair_slots",
+      "phase": 1,
+      "role": "representation",
+      "claim": "unchanged queued endpoint identities preserve both directed orientations of the physical pair"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.executeCheckedImage_project_work_split",
+      "phase": 1,
+      "role": "representation",
+      "claim": "on field-level preservation of old queue endpoints, a successful physical image projects to old directed work followed by all newly published orientations"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.appendPublications_project_work",
       "phase": 1,
       "role": "representation",
@@ -12836,6 +12884,150 @@
       "phase": 1,
       "role": "abstract-reduction-step",
       "claim": "a physical commit refines one net step and the pending-pair multiset if its observable arena and queue permutation match the checked plan image"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op2ForwardReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted forward OP2 reuse bytes decode to selected rule symbols, plan fields and reservation counts"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op2ForwardReuse_matches_model",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted forward OP2 reuse bytes equal the independently declared Lean model fixture"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op2ForwardReuse_physical",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the Rust-emitted forward OP2 reuse image executes to the exact modeled physical post-state"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op2ForwardAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted forward OP2 allocation bytes decode to selected rule symbols and admitted plan fields"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op2ReverseReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted reverse OP2 reuse bytes decode to selected rule symbols and admitted plan fields"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op2ReverseAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted reverse OP2 allocation bytes decode to selected rule symbols and admitted plan fields"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op1ForwardReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted forward OP1 reuse bytes decode to staged subtraction result symbols and plan fields"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op1ForwardReuse_matches_model",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted forward OP1 reuse bytes equal the independently declared wrapping-subtraction model fixture"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op1ForwardReuse_physical",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the Rust-emitted forward OP1 reuse image executes to the exact modeled physical post-state"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op1ForwardAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted forward OP1 allocation bytes decode to selected staged arithmetic symbols and plan fields"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op1ReverseReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted reverse OP1 reuse bytes decode to selected staged arithmetic symbols and plan fields"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op1ReverseAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted reverse OP1 allocation bytes decode to selected staged arithmetic symbols and plan fields"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.dupForwardReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted forward DUP reuse bytes decode to both duplicated result symbols and plan fields"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.dupForwardReuse_matches_model",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted forward DUP reuse bytes equal the independently declared Lean fanout fixture"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.dupForwardReuse_physical",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the Rust-emitted forward DUP reuse image executes to the exact modeled physical post-state"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.dupForwardAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted forward DUP allocation bytes decode to selected fanout symbols and plan fields"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.dupReverseReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted reverse DUP reuse bytes decode to selected fanout symbols and plan fields"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.dupReverseAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted reverse DUP allocation bytes decode to selected fanout symbols and plan fields"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.eraForwardReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted forward ERA reuse bytes decode to the empty result and retirement plan fields"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.eraForwardReuse_matches_model",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted forward ERA reuse bytes equal the independently declared Lean erasure fixture"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.eraForwardReuse_physical",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the Rust-emitted forward ERA reuse image executes to the exact modeled physical post-state"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.eraForwardAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted forward ERA allocate bytes decode to the empty result and retirement plan fields"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.eraReverseReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted reverse ERA reuse bytes decode to the empty result and retirement plan fields"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.eraReverseAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted reverse ERA allocate bytes decode to the empty result and retirement plan fields"
     }
   ],
   "private_theorems": [
@@ -13015,6 +13207,15 @@
     "NobleFoundation.NetI64Plans.BytePlan.readHeader_emit",
     "NobleFoundation.NetI64Plans.count_fits_byte",
     "NobleFoundation.NetI64Plans.PhysicalState.portWires_appendPublications",
+    "NobleFoundation.NetI64Plans.PhysicalState.installResult_work",
+    "NobleFoundation.NetI64Plans.PhysicalState.installResults_work",
+    "NobleFoundation.NetI64Plans.PhysicalState.retire_work",
+    "NobleFoundation.NetI64Plans.PhysicalState.retargetOutput_work",
+    "NobleFoundation.NetI64Plans.PhysicalState.writeExternal_work",
+    "NobleFoundation.NetI64Plans.PhysicalState.writeExternals_work",
+    "NobleFoundation.NetI64Plans.PhysicalState.publish_work",
+    "NobleFoundation.NetI64Plans.PhysicalState.publishAll_work",
+    "NobleFoundation.NetI64Plans.PhysicalState.logicalPair_pairSlotView",
     "NobleFoundation.NetI64Plans.PhysicalState.installResult_output_labels",
     "NobleFoundation.NetI64Plans.PhysicalState.installResults_output_labels",
     "NobleFoundation.NetI64Plans.PhysicalState.retire_output_labels",
