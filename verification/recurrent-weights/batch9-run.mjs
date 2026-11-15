@@ -159,7 +159,7 @@ if (table.schema !== 'noble.recurrent-table-read/v1' || table.decision !== 'GO' 
     table.coverage.near_miss.misroutes !== 0 ||
     table.coverage.free_running.transitions !== 64 ||
     table.coverage.free_running.host_calls !== 64 ||
-    table.controls.length !== 35 || !table.controls.every(item => item.refused) ||
+    table.controls.length !== 36 || !table.controls.every(item => item.refused) ||
     !table.seeded_fault.first_counterexample) {
   throw new Error('checked F32Index table pilot omitted required coverage/refusals');
 }

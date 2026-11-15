@@ -148,7 +148,8 @@ def export(spec):
             graph_nodes.append(helper.make_node("Sub" if kind == "sub" else "Add",
                                                 [names[op[1]], names[op[2]]], [name]))
         elif kind == "guard_zero":
-            # Exact one-hot and matching numeric index are validated by step_cells.
+            # The guard is a liveness root, not a value operand. The host
+            # validates the same exact-zero fact before entering ORT.
             names.append(None)
             continue
         elif kind == "index_zero":

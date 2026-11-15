@@ -273,7 +273,9 @@ fn checked_index_tiny_near_misses_and_refusals() {
     cells[3] = Value::f32(0.0);
     cells[1] = Value::f32(0.0); // integral but disagrees with selector -1
     let (compiled, reference) = candidate.outcomes(&cells);
-    assert!(matches!(compiled, Obs::Refused(_)) && matches!(reference, Obs::Refused(_)));
+    assert!(
+        matches!(compiled, Obs::GuardFailed { .. }) && matches!(reference, Obs::GuardFailed { .. })
+    );
 }
 
 #[test]
