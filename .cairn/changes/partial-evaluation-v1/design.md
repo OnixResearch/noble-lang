@@ -393,10 +393,17 @@ The frozen protocol (committed before any measurement it governs) is:
   Pair/Unit shapes after the full original Program is independently admitted. This
   distinction does not add Bool composition; #35's NO-GO record is untouched.
 
-## Open questions (owner-reserved, recorded not decided)
+## Accounting-name decision for this bounded opt-in profile
 
-1. The accounting revision string `ngraph-pe/0` and the two budget-kind names are this
-   change's proposal; a different naming convention is a textual change to D7 and the delta.
+**DECIDED: retain** the already implemented `ngraph-pe/0` accounting revision
+and `RESIDUAL-NODES` / `VARIANTS` budget-kind names for the bounded,
+default-off D3/offset profile. D7 charges these two caps, the emitted
+derivation record names the revision, and the negative budget controls
+observe the exact refusal classes. There is no unresolved naming choice
+that prevents evaluating this opt-in experiment. Reopen only on an
+owner-reviewed versioned accounting/diagnostic revision with compatible
+consumer migration and fresh source-bound receipt; do not silently rename
+an existing record or weaken its cap.
 
 ## Remaining issue #32 boundary decisions (2026-11-14)
 
