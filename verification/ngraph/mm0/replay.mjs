@@ -53,7 +53,7 @@ const max = (1n << 63n) - 1n;
 const min = -(1n << 63n);
 const signed = (value) => { const word = value & u64; return word > max ? word - (1n << 64n) : word; };
 function graph(body) {
-  const lines = body.trimEnd().split('\n');
+  const lines = body.toString('utf8').trimEnd().split('\n');
   const header = lines.slice(0, 3);
   requireAt('graph-admission', header[0] === 'ngraph-ir/0 ngraph-i64/0' &&
     /^subject authored [a-f0-9]{64} closure -$/.test(header[1]) &&
@@ -84,7 +84,7 @@ function graph(body) {
   return { subject: header[1].split(' ')[2], nodes: parsed, outputs: outputs.map((out) => Number(out[1])) };
 }
 function certificate(body) {
-  const parts = body.trimEnd().split(' ');
+  const parts = body.toString('utf8').trimEnd().split(' ');
   requireAt('certificate-claim', parts.length === 10 && parts[0] === 'ngraph-cert/0' &&
     parts[1] === 'ngraph-sem/0' && parts.slice(2, 7).join(' ') === '1 0 3 1 2' &&
     parts.slice(7).every((item) => /^\d+$/.test(item)), 'certificate shape or identity changed');
@@ -172,6 +172,8 @@ assert.equal(fileSha(checker), profile.checker_sha256, 'selected parser-enabled 
 assert.equal(fileSha(path.join(generated, 'spec.mm0')), profile.spec_sha256, 'production spec mismatch');
 assert.equal(fileSha(path.join(generated, 'proof.mmb')), production.artifact.proof_sha256,
   'production proof differs from receipt');
+assert.equal(production.artifact.proof_sha256, profile.retained_proof_sha256,
+  'proof differs from caller-retained production artifact');
 assert.equal(production.clean_source, true);
 assert.equal(production.artifact.spec_sha256, profile.spec_sha256);
 for (const [file, expected] of Object.entries(profile.inputs)) {
@@ -218,15 +220,17 @@ changed('changed-certificate-bits', s['before.graph'], s['after.graph'],
   mutate(s['certificate.wire'], '3 5 8', '3 5 9'), 'certificate-claim');
 changed('stale-subject-identity',
   mutate(s['before.graph'], 'subject authored 9551', 'subject authored 8551'),
-  s['after.graph'], s['certificate.wire'], 'subject-digest');
+  mutate(s['after.graph'], 'subject authored 9551', 'subject authored 8551'),
+  s['certificate.wire'], 'subject-digest');
 const mutatedSpec = (name, body) => {
   rows[name] = assertRefusal(name,
     outcome(() => evaluate('small', s['before.graph'], s['after.graph'], s['certificate.wire'], body, proof)),
     'spec-digest');
   rows[name].raw_checker = timedChecker(`raw-${name}`, body, path.join(generated, 'proof.mmb'));
 };
-mutatedSpec('changed-arithmetic-definition', mutate(spec, 'def uadd (a b: nat): nat = $(a + b) % modulus$;',
-  'def uadd (a b: nat): nat = $(a * b) % modulus$;'));
+mutatedSpec('changed-arithmetic-definition', mutate(spec,
+  'def uadd (a b: nat): nat = $ (a + b) % modulus $;',
+  'def uadd (a b: nat): nat = $ (a * b) % modulus $;'));
 mutatedSpec('changed-axiom', mutate(spec, 'axiom peano1', 'axiom peano1_changed'));
 mutatedSpec('additional-unapproved-axiom', Buffer.concat([spec,
   Buffer.from('\naxiom oracle_any (p: wff): $ p $;\n')]));
@@ -234,6 +238,8 @@ for (const name of ['different', 'forged', 'sorry']) {
   const control = path.join(generated, 'controls', name);
   const otherSpec = readFileSync(`${control}.mm0`);
   const otherProof = `${control}.mmb`;
+  assert.equal(fileSha(otherProof), production.control_proofs[name].proof_sha256,
+    `foreign-${name} proof differs from production receipt`);
   const raw = timedChecker(`raw-${name}`, otherSpec, otherProof);
   rows[`foreign-${name}`] = { stage: name === 'sorry' ? 'checker-refused' : 'spec-digest',
     control_spec_sha256: sha(otherSpec), control_proof_sha256: fileSha(otherProof), raw_checker: raw };
@@ -258,6 +264,11 @@ const exhausted = timedChecker('exhausted-address-space', spec,
 rows['exhausted-address-space'] = { stage: exhausted.status === 0 ? 'accepted' : 'resource-limit',
   raw_checker: exhausted };
 assert.notEqual(exhausted.status, 0, 'checker accepted with exhausted 16MiB address-space limit');
+const deadline = timedChecker('exhausted-wall-clock', spec,
+  path.join(generated, 'proof.mmb'), profile.build_profile.checker_memory_bytes, 1);
+rows['exhausted-wall-clock'] = { stage: deadline.status === 0 ? 'accepted' : 'resource-limit',
+  raw_checker: deadline };
+assert.notEqual(deadline.status, 0, 'checker accepted under exhausted 1ms wall limit');
 const receipt = { schema: 'noble-mm0-replay/v1', source_commit: production.source_commit,
   retained_spec_sha256: profile.spec_sha256, retained_proof_sha256: sha(proof),
   checker_binary_sha256: fileSha(checker), producer_invoked: false,

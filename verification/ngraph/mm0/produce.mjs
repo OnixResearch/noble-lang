@@ -101,6 +101,8 @@ if (mode === 'freeze') {
       producer_status: run.status, producer_stderr: run.stderr };
   }
   const proof = path.join(output, 'proof.mmb');
+  assert.equal(fileSha(proof), profile.retained_proof_sha256,
+    'produced proof differs from caller-frozen retained artifact');
   const checking = command('/usr/bin/time', ['-f', '%e %M', '-o', path.join(output, 'checker.time'),
     'prlimit', `--as=${profile.build_profile.checker_memory_bytes}`,
     `--cpu=${profile.build_profile.checker_cpu_seconds}`, '--', checker, proof],

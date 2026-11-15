@@ -14,6 +14,7 @@
     "checker_wall_ms": 180000
   },
   "spec_sha256": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+  "retained_proof_sha256": "2ced26177614e3af86ed74fb92c4ad3ef43d3d249512a357652f9b2111a56860",
   "required_theorems": ["fold_small", "fold_boundary", "ufold_small", "ufold_boundary", "endpoint_small", "endpoint_boundary"],
   "approved_axioms": ["ax_1", "ax_2", "ax_3", "ax_mp", "itru", "ax_gen", "ax_4", "ax_5", "ax_6", "ax_7", "ax_10", "ax_11", "ax_12", "elab", "ax_8", "peano1", "peano2", "peano5", "theid", "the0", "addeq", "muleq", "add0", "addS", "mul0", "mulS", "h2nlt", "c2nlt", "c2nch", "s2nstr", "s2ns0", "s2ns1", "s2nsadd"],
   "model": { "integer": "Peano naturals modulo 18446744073709551616 (2^64)", "input_slots": 1, "ordered_outputs": 3, "semantic_revision": "ngraph-sem/0", "certificate_revision": "ngraph-cert/0", "topology": "input0; const(first); const(second); add(1,2); mul(0,3); outputs [1,2,4]" },
@@ -26,8 +27,8 @@
     "subjects/boundary/before.graph": "af8c7a8872b8cd53b61d52e2b47dcb67e19211518ad34af057e8d1c4f6883870",
     "subjects/boundary/after.graph": "e01ec5c72c0497a37b233270effb98d2b751ae1b04ea14b002a7fa1cdd4026c5",
     "subjects/boundary/certificate.wire": "f0da255c6b5b1f665c1d87e0e82c5eb7509e0e3c7bd4042f2dbcde6c13f1d749",
-    "controls/different.mm0": "257e23a09c0312821707b3e7b47b2394d430674e7214ac6bfa832effbf98f062",
-    "controls/different.mm1": "35a2479534643fa3017d8bfc6d46abfaf3767d4b7818bb217438e4ac15cecef1",
+    "controls/different.mm0": "83ab9ef3f346fb5be56f1d587e5458c8d17b504b5fe104ce93496e8eb38b7062",
+    "controls/different.mm1": "7bad34e2e32857d853c16bf66498a88b21ae128b7d72b8174c76527f84037e19",
     "controls/forged.mm0": "68df61c76184f36e2fbc897e397d56d9d9dc919f06bdd28ccf0e89f83a41ec18",
     "controls/forged.mm1": "a9fbe1a225fd5e7f9ea30f18bd30625cc83befb36f9069f9533a06b6536cbadd",
     "controls/sorry.mm0": "d1791f190b0f0c2f78ad955634c9372e9be16ea932a1a09c5d23d60cca28bdc2",
