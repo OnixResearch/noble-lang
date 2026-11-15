@@ -13510,6 +13510,66 @@
       "claim": "every model-lowered physical plan roundtrips through the independent versioned byte decoder"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.withRequiredWrites_exact",
+      "phase": 1,
+      "role": "representation",
+      "claim": "construction of both reciprocal write lists from result ports yields exact ordered inventories"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refuses_exhausted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "generation-headroom exhaustion refuses plan emission for every selected rule and storage mode"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_requires_headroom",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every model-emitted plan has generation headroom in both consumed slots"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.five_initial_layouts_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "five physical fixture starts satisfy finite reciprocal-port, output-ownership and unique-owner legality"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.five_committed_layouts_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "five physical fixture committed states satisfy the same structural legality predicate"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.overflow_layout_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a structurally legal live pair can independently exhaust generation headroom and refuse emission"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.aux_loop_is_explicit_exclusion",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a legal reciprocal auxiliary loop on a matched pair has headroom but explicitly refuses model emission"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.checked_ownership_inventory",
+      "phase": 1,
+      "role": "representation",
+      "claim": "semantic checker ensures owner, free-slot and canonical-work subset of physical legality"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.semanticCheck_result_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every checked physical commit is structurally legal, including reciprocal ports and unique owned outputs"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalTransaction.stage_preserves_visible_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every internal physical microstep leaves the saved visible structural legality unchanged"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refines_if_checked",
       "phase": 1,
       "role": "representation",

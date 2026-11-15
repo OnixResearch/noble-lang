@@ -60,6 +60,43 @@ def PhysicalState.publicationFor (state : PhysicalState) (pair : PhysicalPair)
         if physical < peer then some [(physical, generation, peer, current)]
         else some [(peer, current, physical, generation)]
 
+/-- Finite generation headroom is a per-pair resource, not a persistent
+global state invariant: an accepted rewrite may consume the final increment. -/
+def PhysicalState.pairHeadroom (state : PhysicalState) (pair : PhysicalPair) : Bool :=
+  match state.slots[pair.first]?, state.slots[pair.second]? with
+  | some first, some second =>
+      first.generation != UInt64.ofNat (UInt64.size - 1) &&
+        second.generation != UInt64.ofNat (UInt64.size - 1)
+  | _, _ => false
+
+/-- Deliberately excluded checked-DAG boundary: a selected rule auxiliary
+edge loops into either consumed physical slot. -/
+def PhysicalState.consumedBoundaryAlias (state : PhysicalState)
+    (pair : PhysicalPair) (redex : INet.XRedex NetSym) : Bool :=
+  let (slot, symbol) := match redex.2.2.1 with
+    | .num _ => (pair.second, redex.2.2.2.1)
+    | symbol => (pair.first, symbol)
+  let ports := (List.range (NetI64.arity symbol)).map (· + 1)
+  ports.any fun port =>
+    match (state.slots[slot]?).bind (fun owner => owner.ports[port]?) with
+    | some (some (peer, _)) => peer == pair.first || peer == pair.second
+    | _ => false
+
+/-- Fill both reciprocal write inventories from exactly the initialized
+result ports; this helper is the only place the model constructs write lists. -/
+private def BytePlan.withRequiredWrites (plan : BytePlan) : BytePlan :=
+  let writes := plan.requiredWrites
+  { plan with writes, externalWrites := writes }
+
+/-- Every image assembled through the result-port helper has exact and
+identical outgoing and reciprocal write inventories. -/
+theorem BytePlan.withRequiredWrites_exact (plan : BytePlan) :
+    (plan.withRequiredWrites).writes =
+      (plan.withRequiredWrites).requiredWrites ∧
+    (plan.withRequiredWrites).externalWrites =
+      (plan.withRequiredWrites).requiredWrites := by
+  simp [BytePlan.withRequiredWrites, BytePlan.requiredWrites]
+
 /-- Construct all physical fields from a matched pair; a separate admission
 step rejects any image that the version-one decoder cannot read back. -/
 private def PhysicalState.planCandidate (state : PhysicalState) (pair : PhysicalPair)
@@ -71,9 +108,7 @@ private def PhysicalState.planCandidate (state : PhysicalState) (pair : Physical
     if first.agent.map Prod.snd != some redex.2.2.1 ||
         second.agent.map Prod.snd != some redex.2.2.2.1 ||
         first.ports[0]? != some (some (pair.second, 0)) ||
-        second.ports[0]? != some (some (pair.first, 0)) ||
-        first.generation == UInt64.ofNat (UInt64.size - 1) ||
-        second.generation == UInt64.ofNat (UInt64.size - 1)
+        second.ports[0]? != some (some (pair.first, 0))
     then none else do
       let opcode ← BytePlan.ruleOpcode redex.2.2.1 redex.2.2.2.1
       let (ruleSlot, valueSlot) ← match redex.2.2.1, redex.2.2.2.1 with
@@ -107,17 +142,11 @@ private def PhysicalState.planCandidate (state : PhysicalState) (pair : Physical
           let action : UInt8 × UInt8 :=
             (if reused.contains pair.first then 1 else 0,
              if reused.contains pair.second then 1 else 0)
-          let writes := BytePlan.requiredWrites
+          let publications ← results.flatMapM (state.publicationFor pair boundaries)
+          let plan : BytePlan := BytePlan.withRequiredWrites
             { reuse, opcode, pair := (pair.first, pair.firstGeneration.toNat,
                 pair.second, pair.secondGeneration.toNat), action,
               boundaries, results, writes := [], externalWrites := [],
-              arenaReservation := 0, scratchReservation := 256,
-              worklistReservation := 0, publications := [] }
-          let publications ← results.flatMapM (state.publicationFor pair boundaries)
-          let plan : BytePlan :=
-            { reuse, opcode, pair := (pair.first, pair.firstGeneration.toNat,
-                pair.second, pair.secondGeneration.toNat), action,
-              boundaries, results, writes, externalWrites := writes,
               arenaReservation := (results.filter fun result => result.1).length,
               scratchReservation := 256,
               worklistReservation := publications.length, publications }
@@ -130,8 +159,30 @@ consumed-slot reuse or fresh append in the same order as Rust. A plan that
 cannot roundtrip through the independent byte decoder is refused. -/
 def PhysicalState.lowerPlan (state : PhysicalState) (pair : PhysicalPair)
     (redex : XRedex NetSym) (reuse : Bool) : Option BytePlan := do
-  let plan ← state.planCandidate pair redex reuse
-  if BytePlan.decode plan.emit == some plan then some plan else none
+  if state.pairHeadroom pair then
+    let plan ← state.planCandidate pair redex reuse
+    if BytePlan.decode plan.emit == some plan then some plan else none
+  else none
+
+/-- Exhausted generation headroom refuses before an image can be emitted,
+regardless of rule orientation or storage policy. -/
+theorem PhysicalState.lowerPlan_refuses_exhausted
+    {state : PhysicalState} {pair : PhysicalPair}
+    {redex : XRedex NetSym} {reuse : Bool}
+    (h : state.pairHeadroom pair = false) :
+    state.lowerPlan pair redex reuse = none := by
+  simp [PhysicalState.lowerPlan, h]
+
+/-- Every actually emitted plan has checked counter headroom for both
+consumed slots; successful byte parsing alone does not prove this fact. -/
+theorem PhysicalState.lowerPlan_requires_headroom
+    {state : PhysicalState} {pair : PhysicalPair}
+    {redex : XRedex NetSym} {reuse : Bool} {plan : BytePlan}
+    (h : state.lowerPlan pair redex reuse = some plan) :
+    state.pairHeadroom pair = true := by
+  cases hh : state.pairHeadroom pair with
+  | false => simp [PhysicalState.lowerPlan, hh] at h
+  | true => rfl
 
 /-- Every emitted model image is parsed back byte-for-byte before return;
 this does not imply the stronger physical semantic checker accepts it. -/
@@ -140,14 +191,17 @@ theorem PhysicalState.lowerPlan_decodes {state : PhysicalState}
     (h : state.lowerPlan pair redex reuse = some plan) :
     BytePlan.decode plan.emit = some plan := by
   unfold PhysicalState.lowerPlan at h
-  cases hp : state.planCandidate pair redex reuse with
-  | none => simp [hp] at h
-  | some candidate =>
-    by_cases hd : BytePlan.decode candidate.emit = some candidate
-    · simp [hp, hd] at h
-      cases h
-      exact hd
-    · simp [hp, hd] at h
+  cases hh : state.pairHeadroom pair with
+  | false => simp [hh] at h
+  | true =>
+    cases hp : state.planCandidate pair redex reuse with
+    | none => simp [hh, hp] at h
+    | some candidate =>
+      by_cases hd : BytePlan.decode candidate.emit = some candidate
+      · simp [hh, hp, hd] at h
+        cases h
+        exact hd
+      · simp [hh, hp, hd] at h
 
 /-- Exact bytes from the model lowering, with decoder roundtrip checked
 before return. These are comparable byte-for-byte to a Rust-emitted stream. -/

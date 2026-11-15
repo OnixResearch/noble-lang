@@ -2193,6 +2193,29 @@ mod tests {
         (slots, outputs, pair)
     }
 
+    #[test]
+    fn checked_plan_refuses_reciprocal_auxiliary_loop() {
+        let (mut slots, mut outputs, pair) = plan_fixture(Symbol::Op2(Op::Add), 27, false);
+        let rule_agent = slots[0].agent.as_mut().expect("live OP2 fixture");
+        rule_agent.ports[1] = Some(Endpoint::Port(PortRef {
+            agent: 0,
+            port_index: PortIndex::from(2),
+        }));
+        rule_agent.ports[2] = Some(Endpoint::Port(PortRef {
+            agent: 0,
+            port_index: PortIndex::from(1),
+        }));
+        outputs.clear();
+        assert!(matches!(
+            rewrite::compile(&slots, &outputs, pair, StoragePolicy::Reuse),
+            Err(Invalid::PlanBoundaryAlias)
+        ));
+        assert!(matches!(
+            rewrite::compile(&slots, &outputs, pair, StoragePolicy::Allocate),
+            Err(Invalid::PlanBoundaryAlias)
+        ));
+    }
+
     fn result_slot_range(
         plan: &rewrite::PlanBytes,
         result_index: usize,

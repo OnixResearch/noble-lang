@@ -3047,6 +3047,48 @@ def PhysicalState.WellFormed (state : PhysicalState) : Prop :=
   (∀ index, index ∈ state.freeSlots ↔
     ∃ slot, state.slots[index]? = some slot ∧ slot.agent = none)
 
+/-- Every port of a live physical agent has the declared arity and exactly
+one owner: a reciprocal live peer or a single stable external output.
+Result slots may carry unused padded ports, but those must remain empty. -/
+def PhysicalState.reciprocalPorts (state : PhysicalState) : Bool :=
+  (List.range state.slots.size).all fun index =>
+    match state.slots[index]? with
+    | none => false
+    | some slot =>
+      match slot.agent with
+      | none => true
+      | some (_, symbol) =>
+        NetI64.arity symbol + 1 <= slot.ports.length &&
+          slot.ports.zipIdx.all fun (target, port) =>
+            if port > NetI64.arity symbol then target.isNone
+            else
+              match target with
+              | some (peer, peerPort) =>
+                match state.slots[peer]? with
+                | none => false
+                | some remote =>
+                  remote.agent.isSome &&
+                    remote.ports[peerPort]? == some (some (index, port)) &&
+                    !(state.outputs.any fun output => output.target == (index, port))
+              | none =>
+                (state.outputs.filter fun output =>
+                  output.target == (index, port)).length == 1
+
+/-- External identities and their mutable targets are each unique. Every
+output targets a live, unpaired physical port whose logical agent identity
+is different from that external identity. -/
+def PhysicalState.outputOwners (state : PhysicalState) : Bool :=
+  decide (state.outputs.map PhysicalOutput.label).Nodup &&
+    decide (state.outputs.map PhysicalOutput.target).Nodup &&
+    state.outputs.all fun output =>
+      match state.slots[output.target.1]? with
+      | none => false
+      | some slot =>
+        slot.agent.isSome &&
+          slot.ports[output.target.2]? == some none &&
+          !(state.slots.toList.any fun live =>
+            live.agent.map Prod.fst == some output.label.1)
+
 /-- The journal is the concrete, saved physical view seen by an observer until
 commit; intermediate writes to `current` are not admitted as committed nets. -/
 structure PhysicalTransaction where

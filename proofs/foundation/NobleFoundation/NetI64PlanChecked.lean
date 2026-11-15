@@ -68,7 +68,8 @@ def Plan.pendingPairs (net : HNet NetSym) : List (Id × Id) :=
 rule, pre-commit boundary, and the simulated physical state. The two map-list
 permutations are *finite executable extensional comparisons*, not equality of
 hash-table insertion order. The exact byte-write lists are checked before any
-net equality; the post-state checks include the actual mutable output targets.
+net equality; the post-state checks include the actual mutable output targets,
+reciprocal physical ports, and unique, owned external outputs.
 No producer-origin metadata is trusted. -/
 def BytePlan.SemanticFields (state next : PhysicalState) (plan : BytePlan)
     (redex : XRedex NetSym)
@@ -98,7 +99,9 @@ def BytePlan.SemanticFields (state next : PhysicalState) (plan : BytePlan)
   next.work.all (fun pair => decide (pair.first < pair.second)) = true ∧
   next.project.agents.toList.Perm expected.agents.toList ∧
   next.project.wires.toList.Perm expected.wires.toList ∧
-  next.project.work.Perm (Plan.pendingPairs expected)
+  next.project.work.Perm (Plan.pendingPairs expected) ∧
+  next.reciprocalPorts = true ∧
+  next.outputOwners = true
 
 private theorem lookup_eq_of_some_iff {K V : Type} (first second : K → Option V)
     (h : ∀ key value, first key = some value ↔ second key = some value) :
@@ -338,7 +341,7 @@ theorem BytePlan.semanticCheck_refines {state next : PhysicalState}
   obtain ⟨plan, transaction, hd, hr, he, fields⟩ :=
     BytePlan.semanticCheck_fields hRule h
   dsimp [BytePlan.SemanticFields] at fields
-  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hagents, hwires, hqueue⟩ := fields
+  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hagents, hwires, hqueue, _, _⟩ := fields
   let expected := Plan.commit state.project
     (Plan.compile state.project redex hRule) state.project.work
   have hagentsAt (id : Id) : next.project.agents[id]? = expected.agents[id]? :=
@@ -381,7 +384,7 @@ theorem BytePlan.era_fixture_accepted :
     dsimp only [BytePlan.SemanticFields]
     refine ⟨by decide, ?_, ?_, by decide, by decide, by decide,
       by decide, by decide, by decide, by decide, by decide, by decide,
-      by decide, by decide, by decide, maps.1, maps.2, ?_⟩
+      by decide, by decide, by decide, maps.1, maps.2, ?_, by decide, by decide⟩
     · simpa [image, BytePlan.logicalBoundary] using observables.1.symm
     · simpa [image] using observables.2.1.symm
     · change ([] : List (Id × Id)).Perm
@@ -442,7 +445,7 @@ theorem BytePlan.op2_output_fixture_accepted :
     dsimp only [BytePlan.SemanticFields]
     refine ⟨by decide, ?_, by decide, by decide, by decide, by decide,
       by decide, by decide, by decide, outputs, by decide, by decide,
-      by decide, by decide, by decide, maps.1, maps.2, ?_⟩
+      by decide, by decide, by decide, maps.1, maps.2, ?_, by decide, by decide⟩
     · rw [observables.1]
       decide
     · change ([] : List (Id × Id)).Perm
@@ -502,7 +505,7 @@ theorem BytePlan.op1_output_fixture_accepted :
     dsimp only [BytePlan.SemanticFields]
     refine ⟨by decide, ?_, by decide, by decide, by decide, by decide,
       by decide, by decide, by decide, outputs, by decide, by decide,
-      by decide, by decide, by decide, maps.1, maps.2, ?_⟩
+      by decide, by decide, by decide, maps.1, maps.2, ?_, by decide, by decide⟩
     · rw [observables.1]
       decide
     · change ([] : List (Id × Id)).Perm
@@ -570,7 +573,7 @@ theorem BytePlan.dup_output_fixture_accepted :
     dsimp only [BytePlan.SemanticFields]
     refine ⟨by decide, ?_, by decide, by decide, by decide, by decide,
       by decide, by decide, by decide, outputs, by decide, by decide,
-      by decide, by decide, by decide, maps.1, maps.2, ?_⟩
+      by decide, by decide, by decide, maps.1, maps.2, ?_, by decide, by decide⟩
     · rw [observables.1]
       decide
     · change ([] : List (Id × Id)).Perm
@@ -644,7 +647,7 @@ theorem BytePlan.op2_published_fixture_accepted :
     dsimp only [BytePlan.SemanticFields]
     refine ⟨by decide, ?_, by decide, by decide, by decide, by decide,
       by decide, by decide, by decide, outputs, by decide, by decide,
-      by decide, by decide, by decide, maps.1, maps.2, ?_⟩
+      by decide, by decide, by decide, maps.1, maps.2, ?_, by decide, by decide⟩
     · rw [observables.1]
       decide
     · have filtered :
