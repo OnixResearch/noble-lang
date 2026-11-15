@@ -4089,6 +4089,9 @@ byte fields, source translation to the retained net, and four interactions/six i
 fields extracted from those literal accepted bytes to the Lean translation; the kernel does not
 recompute BLAKE3 or prove the Rust byte decoder agrees on *all* possible inputs. The generated
 fixture and freshness test bind one exact subject rather than universally refining the checker.
+The separate [clean-source follow-up receipt](../../verification/ngraph/resource-followup-receipt.json)
+retains that fixture's BLAKE3 identity and the four newly exercised refusal classes without
+rewriting the original six-family receipt.
 
 `NobleFoundation.NetI64Resource.chain_family_resources`,
 `NobleFoundation.NetI64Resource.balanced_family_resources`, and
