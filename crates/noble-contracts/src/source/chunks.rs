@@ -4855,9 +4855,7 @@ fn recipe_quotation_depth(recipe: &Recipe) -> Option<u32> {
     debug_assert!(encoded_len(recipe.entry.len()) <= u64::from(MAX_RECIPE_NODES));
     let mut node_depths = [0u32; 64];
     for node_index in 0..recipe.nodes.len() {
-        let Some(node) = recipe.nodes.get(node_index) else {
-            return None;
-        };
+        let node = recipe.nodes.get(node_index)?;
         if node_index >= node_depths.len() {
             return None;
         }

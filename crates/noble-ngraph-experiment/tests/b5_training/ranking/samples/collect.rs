@@ -213,18 +213,28 @@ fn context_members(
     (interfaces, candidates)
 }
 
+#[derive(Eq, PartialEq, Ord, PartialOrd)]
+struct ContextKey {
+    family: usize,
+    revision: [u8; chunks::REVISION_BYTES],
+    candidate_set: [u8; chunks::REVISION_BYTES],
+    policy: [u8; chunks::REVISION_BYTES],
+    editor_request: [u8; chunks::REVISION_BYTES],
+}
+
 fn add_contexts(
     libraries: &[Library],
     data: &mut Dataset,
-    keys: std::collections::BTreeSet<(
-        usize,
-        [u8; chunks::REVISION_BYTES],
-        [u8; chunks::REVISION_BYTES],
-        [u8; chunks::REVISION_BYTES],
-        [u8; chunks::REVISION_BYTES],
-    )>,
+    keys: std::collections::BTreeSet<ContextKey>,
 ) -> Result<(), String> {
-    for (family, revision, candidate_set, policy, editor_request) in keys {
+    for ContextKey {
+        family,
+        revision,
+        candidate_set,
+        policy,
+        editor_request,
+    } in keys
+    {
         let library = libraries
             .get(family)
             .ok_or_else(|| String::from("ranking context library missing"))?;
@@ -262,13 +272,13 @@ pub(crate) fn dataset_for_split(
             .get(spec.family)
             .ok_or_else(|| format!("library missing for {}", spec.id()))?;
         let capture = append_task_rows(session, library, spec, split, &mut data)?;
-        known_contexts.insert((
-            spec.family,
-            capture.identity.library_revision,
-            capture.identity.candidate_set,
-            capture.identity.policy,
-            capture.identity.editor_request,
-        ));
+        known_contexts.insert(ContextKey {
+            family: spec.family,
+            revision: capture.identity.library_revision,
+            candidate_set: capture.identity.candidate_set,
+            policy: capture.identity.policy,
+            editor_request: capture.identity.editor_request,
+        });
     }
     add_contexts(libraries, &mut data, known_contexts)?;
     Ok(data)
