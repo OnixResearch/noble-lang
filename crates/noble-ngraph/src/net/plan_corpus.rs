@@ -5,7 +5,7 @@ use crate::identity::IdentityScheme;
 use std::fmt::Write as _;
 use std::path::Path;
 
-const REGENERATE: &str = "cargo test -p noble-ngraph --lib net::tests::plan_corpus::regenerate_lean_plan_corpus -- --ignored --exact";
+const REGENERATE: &str = "cargo test -p noble-ngraph --lib net::tests::emission::regenerate_lean_plan_corpus -- --ignored --exact";
 
 #[derive(Clone, Copy)]
 struct RuleCase {

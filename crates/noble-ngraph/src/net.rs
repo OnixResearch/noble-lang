@@ -2021,7 +2021,7 @@ fn read_back(
 mod tests {
     use super::*;
 
-    mod plan_corpus {
+    mod emission {
         include!("net/plan_corpus.rs");
     }
 
