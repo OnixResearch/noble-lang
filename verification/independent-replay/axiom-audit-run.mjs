@@ -211,7 +211,7 @@ try {
   for (const name of ['NobleAuditImports', 'NobleAuditControl']) {
     const label = `build-${name}`;
     runList[label] = run(path.join(leanBin, 'lean'), [path.join(controlsDir, `${name}.lean`),
-      '-o', path.join(controlsDir, `${name}.olean`)], label, project, controlEnv);
+      '-o', path.join(controlsDir, `${name}.olean`)], label, controlsDir, controlEnv);
     invariant(runList[label].status === 0, `control ${name} did not compile`);
   }
   const fixtureRoster = path.join(out, 'controls-roster.txt');
