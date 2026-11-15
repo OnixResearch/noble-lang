@@ -60,6 +60,7 @@ fn refused(kind: RefusalKind, message: &'static str) -> Refusal {
 }
 
 fn charge(work: &mut u32, amount: usize) -> Result<(), Refusal> {
+    debug_assert!(*work <= MAX_ALIAS_WORK);
     let amount = u32::try_from(amount).map_err(|_| {
         refused(
             RefusalKind::Exhausted,
@@ -72,6 +73,7 @@ fn charge(work: &mut u32, amount: usize) -> Result<(), Refusal> {
             "alias polynomial work count overflow",
         )
     })?;
+    debug_assert!(*work >= amount);
     if *work > MAX_ALIAS_WORK {
         return Err(refused(
             RefusalKind::Exhausted,
