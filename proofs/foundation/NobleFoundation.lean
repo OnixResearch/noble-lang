@@ -24,6 +24,8 @@ import NobleFoundation.SpecQuality
 import NobleFoundation.ReverseAD
 import NobleFoundation.PackedSchedule
 import NobleFoundation.TickRunner
+import NobleFoundation.PackedPermutation
+import NobleFoundation.PackedPermutationCorpus
 import NobleFoundation.PackedScheduleGuard
 import NobleFoundation.PackedScheduleCorpus
 import NobleFoundation.PackedScheduleGuardCorpus

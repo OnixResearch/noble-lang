@@ -944,6 +944,88 @@ packed executor's correspondence is not blocked by #97 and does not depend on it
 that no executor theorem exists and no extraction of the executor is planned; a future refinement
 would need its own extraction subject and its own obligation, not #97's re-extraction.
 
+## Witnessed within-layer permutation profile (issue #129)
+
+`crates/noble-ngraph/src/permutation.rs` is a separate, opt-in
+`ngraph-packed-permutation/0` artifact and checker. Neither `Compiled::new`'s canonical order,
+`schedule::check`, nor the canonical evaluator's acceptance boundary changes. A producer can
+exchange actual `(instruction, node witness)` pairs only within a graph-checked layer. The
+checker runs `layout::check` first, re-derives all emitting nodes and layer assignments from
+`CheckedGraph`, checks every witness exactly once, compares the **actual** instruction body to
+the witnessed graph op's ordered operands and destination, tests initialized operand and unique
+writer registers, and checks every ordered/repeated output register. The preloaded input and
+constant tables are independently checked against the graph by `layout::check`. This first
+profile allows only input nodes, I64 constants, wrapping Add/Sub/Mul and I64 equality; it
+rejects guards, parameters, Bool constants, F32, cross-layer motion, reuse and new buffer
+operations.
+
+The real `Compiled::new` emission is exported to an explicit binary byte format and a generated
+Lean corpus by the existing `schedule_correspondence` integration target. The retained
+`permutation-noncanonical-0.bin` is the first swapped within-layer operation pair. A freshness
+test compares its **entire binary** and every generated Lean term with a new export of the
+compiler's actual graph and stream; the generator decodes that binary before writing the model
+terms. The corpus contains a canonical stream and **two different** noncanonical permutations
+plus refused mutation controls. `NobleFoundation.PackedPermutation.validate_sound`
+proves accepted model streams have the graph's ordered/repeated outputs for any input, given
+sufficient instruction budget and no cancellation. Its theorem and the concrete corpus
+theorems are inventoried in `proofs/foundation/inventory.json`; the clean foundation proof
+receipt records each statement and its **transitive** axioms. The Lean model is not a general
+proof that the Rust decoder, validator or executor implements that model.
+
+The binary reader checks a 32 MiB byte cap before reading any contents and checks each length
+against remaining bytes before allocating. `check_within` bounds the sum of graph nodes,
+layout tables, stream bodies, witness and output map at 4,194,304 entries by default; its
+scratch arrays are sized by the checked graph and accepted layout, not by a padded witness.
+`encode_within` checks the computed total size before allocation. `Malformed`, `Unsupported`
+and `Exhausted` remain separate from semantic refusals, and exhaustion is **not** acceptance.
+`permutation::Replay` fingerprints graph, actual stream, node witness, layout,
+register/output map, profile/semantics and checker/model/export revisions under an injected
+identity scheme. `replay` compares every subject and **rechecks** the semantics even when all
+fingerprints match; a previous verdict cannot be used to run substituted bytes. The validated
+borrow prevents safe mutation of the checked artifact during opt-in interpretation.
+
+The integration target checks body swaps, dependent/cross-layer movement, duplicate/missing
+nodes, early reads, duplicate destinations, wrong input/constant/output bindings, stale
+identity and changed replay subjects. At boundary input pairs it compares the independent
+wrapping-word formula, the checked-graph reference interpreter and the opt-in stream
+interpreter. These finite comparisons support execution evidence; they do not prove any
+general Rust executor theorem, and low-fuel/cancellation equivalence is not claimed.
+
+Reproduce with the repository's pinned Rust/Lean tools; outputs stay outside the worktree:
+
+```sh
+cargo test -p noble-ngraph --test schedule_correspondence --offline --locked
+cargo test -p noble-ngraph --test schedule_correspondence --offline --locked \
+  permutation::cost_report -- --ignored --nocapture
+verification/ci/lean-proofs.sh <new directory outside the repository>
+node verification/foundation/claims.mjs
+node verification/ngraph/permutation-receipt.mjs \
+  --foundation-receipt <clean foundation-check.json> \
+  --measurement-file <saved permutation::cost_report output> \
+  --output <new receipt file outside the repository>
+```
+
+The receipt runner requires clean committed source, matches every referenced Lean proof file
+byte-for-byte to the clean foundation receipt's source commit, independently parses the
+binary, binds all replay subjects and revisions, and includes measured checker time, witness
+size, retained-payload estimate, scratch-array size and observed resident growth. Retained
+measurements are one-host observations, not throughput or allocation-count guarantees.
+
+The committed `permutation::cost_report` workload uses 2,048 independent instructions
+(2,049 graph nodes) and the median of nine timed debug-build checks (no warm-up); it
+is distinct from the five-instruction retained noncanonical artifact. On this run its
+checker median was **478,525 ns**, its explicit witness **8,192 bytes**, encoded artifact
+**51,536 bytes**, and estimated retained artifact payload **57,384 bytes**. The
+checker boolean-array scratch was **4,099 bytes**, execution scratch **16,400 bytes**,
+and observed process RSS delta **163,840 bytes**. The retained five-instruction
+artifact's separate witness is 20 bytes. The scratch and payload figures count the
+specified arrays/structures, not allocator overhead; the process RSS delta is a
+shared-host process observation, not a bound or an allocation count.
+The [clean-source receipt](permutation-receipt-2026-11-15.json) binds source
+commit `140a5114fc2a55a073482926c915d5056b279d3b` and records the general
+model soundness statement, all 27 model and 17 exported-corpus theorem axioms,
+the exact export bytes and replay subjects, and this separate measurement.
+
 # CPU batch continuation decision (2026-11-01, issue #41)
 
 [`batch-continuation-criteria.md`](batch-continuation-criteria.md) froze the continuation rule before

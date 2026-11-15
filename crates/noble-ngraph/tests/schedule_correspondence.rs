@@ -9,8 +9,10 @@
     tigerstyle::ambiguous_params,
     tigerstyle::assertion_density,
     tigerstyle::clone_then_borrow,
+    tigerstyle::excessive_file_length,
     tigerstyle::explicit_defaults,
     tigerstyle::fallible_int_fallback,
+    tigerstyle::function_length,
     tigerstyle::missing_const_fn,
     tigerstyle::no_unwrap,
     tigerstyle::no_panic,
@@ -52,6 +54,10 @@ mod limits;
 mod measure;
 #[path = "schedule_lean_dir/pairs.rs"]
 mod pairs;
+#[path = "schedule_correspondence_dir/permutation.rs"]
+mod permutation;
+#[path = "schedule_correspondence_dir/permutation_export.rs"]
+mod permutation_export;
 #[path = "plancomparison/measure.rs"]
 mod plancomparison;
 #[path = "plancomparison/fixtures.rs"]

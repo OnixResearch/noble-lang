@@ -181,6 +181,7 @@ Status words:
 | Parser-only plan image is not semantic admission (issue #110) | `NobleFoundation.NetI64Plans.BytePlan.op2_omitted_external_decodes`, `NobleFoundation.NetI64Plans.PhysicalState.op2_omitted_external_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.op2_omitted_external_miswires` | A syntactically decoded OP2 plan with one omitted output write executes physically but misroutes the second output; a separate Rust byte-control retains a grammar-valid missing-write stream and gets `PlanMismatch` from the independent checker. The parser and physical executor alone cannot establish full refinement | Parser counterexample **proved**, Rust refusal **tested**; universal checker-admitted refinement **open** |
 | Decoded four-rule physical transaction instances (issue #110) | `NobleFoundation.NetI64Plans.PhysicalState.op2_output_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.op2_output_refines`, `NobleFoundation.NetI64Plans.PhysicalState.op2_published_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.op2_published_pair_orientations`, `NobleFoundation.NetI64Plans.PhysicalState.op2_published_refines`, `NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_refines`, `NobleFoundation.NetI64Plans.PhysicalState.dup_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.dup_refines`, `NobleFoundation.NetI64Plans.PhysicalState.era_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.era_refines` | The kernel decodes each model byte image, executes physical slot retag/reuse, external writes, retirement and publication, and proves whole-net equality to `Plan.commit` for each fixed layout. The nonempty OP2 publication also proves its two-entry directed queue matches the checked plan. These are model-internal finite fixtures, not arbitrary admitted layouts, fresh-slot cases, reverse orientations or a Rust implementation theorem | Four rule-shapes plus one nonempty publication **proved** for fixed fixtures; general physical-image refinement and Rust correspondence **open** |
 | Exact-bit recurrent one-step accumulator and two-word swap (issue #78) | `NobleFoundation.RecurrentBitCell.graphAdder_correct`, `NobleFoundation.RecurrentBitCell.accumulator_one_step`, `NobleFoundation.RecurrentBitCell.stack_swap_one_step`, `NobleFoundation.RecurrentBitCell.step_bound_halts_at_limit` | Boolean select-gate model of the checked Rust test graph; no Rust graph, ONNX emitter, Scan-body or runtime refinement theorem | model **proved** and clean-source kernel/axiom audit retained in the recurrent lane; implementation correspondence **open** |
+| Witnessed within-layer packed permutation model (issue #129) | `NobleFoundation.PackedPermutation.accepted_stream_sound`, `NobleFoundation.PackedPermutation.validate_sound`; `NobleFoundation.PackedPermutation.fixture_witnesses_distinct`, `NobleFoundation.PackedPermutation.cross_layer_base_accepts`, `NobleFoundation.PackedPermutation.cross_layer_refused` | separate total I64/Bool model with actual table and op streams, complete node witness, strict layer ranges, injective registers, ordered/repeated outputs and sufficient-budget/no-cancellation observation; Rust and byte translation remain separate | theorem source present; foundation kernel/axiom audit pending integration; Rust checker/export/evaluator correspondence **open** |
 | Bounded sequential I64/Bool belt validator (issue #113) | `NobleFoundation.Belt.validate_sound`; real lowered program and exact-vector controls in the generated BeltCorpus module | symbolic graph identities over `PackedSchedule`; no Rust refinement theorem | model **proved**; real artifact corpus is finite model evidence; Rust lowerer/checker/interpreter and B2 comparisons remain separate **tested** evidence |
 | Fixed T1/T2 timing legality and ordered target outputs (issue #114) | `NobleFoundation.BeltTarget.mapReadyOutputs`, `NobleFoundation.BeltTarget.validate_sound` | the symbolic run gates graph-reference values on latency-derived completion; it does not evaluate operations or simulate belt/save state, and no Rust artifact/operand-age refinement theorem is claimed | completion-gate/order **proved** only; generated corpus and Rust lowerer/checker/interpreter cross-backend controls are separate **tested** evidence; machine-step refinement remains **open** |
 | Bounded sequential I64 tick protocol (issue #128) | `NobleFoundation.TickRunner.tick_ready_pins_entry`, `NobleFoundation.TickRunner.tick_ready_commits_once`, `NobleFoundation.TickRunner.tick_refusal_preserves_active`, `NobleFoundation.TickRunner.update_success_keeps_state`, `NobleFoundation.TickRunner.update_refusal_preserves_active`, `NobleFoundation.TickRunner.reset_uses_separate_state`, `NobleFoundation.TickRunner.reset_refusal_preserves_active`, `NobleFoundation.TickRunner.actual_tick_commits_once`, `NobleFoundation.TickRunner.changed_control_is_selected`, `NobleFoundation.TickRunner.same_layout_reset_never_migrates` | independent finite-DAG and sequential stream model; no Rust graph/checker/evaluator or host correspondence | **proved** model theorems only; Rust implementation and executed-artifact correspondence remain **open** |
@@ -214,6 +215,7 @@ Status words:
 | Propositions and sorts of implicit proof arguments: encoding and rebasing (issue #12, `implicit-proof-arguments` task 13) | `PropT.enc_injective`, `SortT.enc_injective`, `PropT.enc_ne_mvar`, `PropT.head_enc`, `PropT.shift_comp`, `PropT.shift_id`, `PropT.levels_shift` | the encoding of the design's `Pi`/`Eq` propositions and `Type0`/`Value` sorts into the solver's tree algebra, and rebasal of their levels; no Rust representation of these trees exists | model **proved**: structural identity is exactly tree equality, encoded propositions never collide with a code or value meta, and rebasal acts on exactly the level occurrences and composes. Rust elaborator refinement **open** |
 | Bounded canonical ServiceRef codec: round trip, canonicality, bounds and error classes | `decode_encode`, `encode_of_accepted`, `accepted_name_is_valid`, `longest_name_round_trips`, `the_full_wire_budget_is_not_a_byte_limit`, `overlong_name_decodes_to_schema`, `byte_limit_precedes_depth_scan`, `depth_configuration_precedes_schema`, `depth_scan_precedes_schema`, `altered_readiness_is_schema`, `empty_name_is_schema`, `foreign_name_byte_is_schema`, `schema_controls_have_accepted_neighbours`, `closers_below_zero_depth_do_not_reduce_the_reached_depth` | `crates/noble-kernel/src/dataspace/wire.rs` `decode_service`/`encode_service`; an Aeneas extraction of both exists in `proofs/m3/NobleKernel/Funs.lean` | model **proved**. 271-case differential **tested** (`verification/service-ref/differential.json`). Refinement from the extraction **open** |
 | Packed I64/Bool schedule: result equivalence and independent instruction validation | `validate_sound`, `bodiesMatch_eq_emitNodes`, `operandsDefined_sound`, `registersInjectiveOn_sound`, `outputsMatch_runOutputs`, `schedule_sound`, `execSchedule_sound`, `step_computes`, `step_written`, `run_emitNodes_eq`, `foldl_eq_execSchedule`, `valuesUpTo_eq_value`, `orderOk_cons`, `exampleGraph_wellFormed`, `exampleSchedule_valid`, `exampleSchedule_validated`, `reordered_order_not_layer_sorted`, `reorderedGraph_wellFormed`, `exampleGraph_values`, `exampleGraph_schedule_sound`, `reordered_stream_validated_with_repeated_output`, `reordered_stream_sound`, `validate_refuses_operand_before_definition`, `validate_refuses_live_register_alias`, `validate_refuses_wrong_operation`, `validate_refuses_wrong_output_register`, `aliasing_loses_the_constant`, `a_missing_operand_refuses_rather_than_fabricating`, `a_missing_second_operand_refuses_rather_than_fabricating`, `an_unwritten_register_keeps_its_value`, `an_unwritten_register_stays_empty`, `an_omitted_output_node_yields_no_output` | `crates/noble-ngraph/src/compiled.rs` `Compiled::new`, the packed `I` instruction stream and its evaluator | model **proved**. The Rust stream is exported (`Compiled::i64_instructions()`); a general Lean↔Rust correspondence is **open** |
+| Separate witnessed within-layer packed permutation (issue #129) | `NobleFoundation.PackedPermutation.validate_sound`, `NobleFoundation.PackedPermutationCorpus.first_validated`, `NobleFoundation.PackedPermutationCorpus.first_sound`, `NobleFoundation.PackedPermutationCorpus.second_sound`, `NobleFoundation.PackedPermutationCorpus.distinct_orders` | real byte-exported noncanonical I64 graph, exact witness and preload/output maps; the corpus freshness test pins the generated terms; no Rust decoder, checker or executor refinement theorem | model **proved**; finite Rust/reference/wrapping expectations **tested**; arbitrary Rust correspondence **open** |
 | Guarded I64/Bool schedule: first-failure semantics and `fail_suffix_min` loop | `firstFailure_eq_minimum`, `validate_sound`, `runLayersWithTable_correct`, `example_smoothed_suffix_reports_the_later_guard`, `graphGuardLayers_failures`, `layeredObs_sound` | `PackedScheduleGuard` models `Fact::Bit` guards, a supplied stream, canonical failure selection and the strict per-layer suffix values the packed loop reads | model **proved**; Rust executor correspondence **open** |
 | Real packed I64/Bool artifacts, validated one at a time (issue #43) | the acceptance/soundness/well-formedness theorems for the interleaved, lateInput and nonLayerSortedGuarded artifacts, the refused mutations and the 17 `*_execution_*_agrees` runs in the generated corpus modules | three artifacts `Compiled::new` emits, written into Lean by an untrusted exporter and pinned by both generated-corpus freshness tests; the slot and constant preload translation is trusted | **proved** for those three artifacts; the Rust executor agrees at 17 inputs, a **tested** fact, not a theorem about it |
 | Explicit exact and RNE decimal import | `decimalRatio_den_pos`, `isNegative_eq_msb`, `rne_negative_sign`, `zero_spelling`, `outcomeClass_overflow_iff`, `exactImport_some_iff`, `exactImport_agrees_with_rne`, `exactImport_exactValue`, `rne_exactValue_absolute_error`, `exactImport_accepts_representable_rne`, the retained decimal fixtures, and 38 generated agreements in the DecimalImport.Corpus module | decimal syntax/resource bounds, Rust implementation correspondence, import receipt persistence, and byte-exact CLI replay | exact model and conditional half-spacing error bound **proved**; 19 boundary rows agree with Rust **tested**; no general implementation or parser theorem claimed |
@@ -1925,6 +1927,62 @@ The real-artifact corpus was first retained at
 constant/slot, layer, count and failure-suffix obligations do not export or
 validate instruction bodies, and no correspondence theorem joins that layout
 model to Rust bytes or to this validator.
+
+## Witnessed within-layer packed permutation (issue #129, separate profile)
+
+PackedPermutation.lean models a separate total I64/Bool profile, not a change
+to issue #43's canonical schedule acceptance. A caller supplies a finite
+Input/Const/Add/Sub/Mul/Eq node list, one injective register per node, a
+node-layer list, contiguous operation-stream layer ranges, the **actual**
+input/constant preload table, an instruction-to-node witness, actual
+operation-only bodies, and ordered graph-output/register lists. Table entries
+may occur in any order: the checker derives each table node from that actual
+entry's body and demands exactly one entry per input/constant node. It checks
+that every operand refers to an earlier I64-producing node (rather than
+silently producing an empty value on a Bool/I64 type mismatch), every emitting
+node appears exactly once in the witness (including dead operations), every
+body and ordered operand/destination matches its witnessed
+node, every read is initialized, every register has one writer, each instruction
+lies in its declared node's layer, dependencies lie in earlier layers, and
+ordered/repeated outputs select their declared registers. An empty output is
+refused; an empty witness is refused when the graph has emitting nodes.
+
+`NobleFoundation.PackedPermutation.accepted_stream_sound` applies the
+PackedSchedule model's already proved step invariant to the **supplied**
+table and stream, not a freshly emitted stream. For every input assignment it
+identifies the actual stream's entire ordered output list with the graph
+reference. `NobleFoundation.PackedPermutation.validate_sound` adds an
+explicit budget at least the table-entry count plus instruction count and a
+false cancellation flag; only then does the bounded model return that
+observation. The theorem does not equate low-budget or cancellation results
+with any external machine.
+
+Three hand-authored streams use the same eight-node graph: one canonical
+order and two distinct within-layer permutations, with output node 3
+repeated. The constants-first table fixture demonstrates that table order
+need not follow graph order. A topological cross-layer stream passes the
+earlier packed-body validator but is refused by this separate layer check.
+The inherited body validator independently refuses the early-read control;
+it accepts an omitted operation that no requested output observes, while
+this profile still refuses that omission. Other model controls state refusal
+of a wrong node witness, duplicated work, reversed subtraction operands,
+body-matched aliased destinations, changed constant bits or input slots, a
+duplicated table entry, changed output register, empty output, and empty
+witness on a graph with emitting nodes.
+Every theorem is individually listed in inventory.json;
+the foundation lane checks transitive axiom dependencies against its pinned
+allow-list rather than assuming the parent theorem's axioms.
+
+The graph nodes and checker-derived layer assignments must be faithfully
+translated into these model inputs; that translation is not proved here.
+There is no general Lean-to-Rust checker, parser, exporter, or evaluator
+correspondence theorem, and the hand-authored fixtures are not real exported
+artifacts. The separate PackedPermutationCorpus.lean is generated from the
+real compiled graph, the actual noncanonical binary after decoding, and its
+two independent within-layer reorderings; a freshness test pins both the
+binary and the exact generated model terms. Its clean source-bound receipt
+supplies finite evidence only. This profile says nothing about
+register reuse, guards, F32 semantics, hardware scheduling or cache residency.
 
 ## Guarded packed-schedule model (issue #43, deliverable 6)
 
