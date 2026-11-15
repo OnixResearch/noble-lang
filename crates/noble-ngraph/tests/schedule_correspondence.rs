@@ -49,5 +49,7 @@ mod measure;
 mod pairs;
 #[path = "plancomparison/measure.rs"]
 mod plancomparison;
+#[path = "plancomparison/fixtures.rs"]
+mod plancomparison_fixtures;
 use base::{declared, interleaved, packed};
 mod common;

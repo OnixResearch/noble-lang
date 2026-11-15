@@ -1,69 +1,8 @@
 use std::time::Instant;
 
 use noble_ngraph::eval;
-use noble_ngraph::ir::{GraphBuilder, Op, ScalarType, SubProfile, Subject};
 use noble_ngraph::net::{self, InteractionGraph, Plan, Report, StoragePolicy};
 use noble_ngraph::sem::Value;
-
-fn checked(builder: GraphBuilder, label: &str) -> noble_ngraph::CheckedGraph {
-    match noble_ngraph::check::check(&super::common::IDS, builder.finish()) {
-        Ok(checked) => checked,
-        Err(error) => panic!("{label} graph rejected: {error}"),
-    }
-}
-
-fn chain_graph() -> noble_ngraph::CheckedGraph {
-    let mut builder = GraphBuilder::new(
-        SubProfile::I64,
-        Subject::authored(&super::common::IDS, "net-plan-chain"),
-    );
-    let a = builder.input(ScalarType::I64);
-    let b = builder.input(ScalarType::I64);
-    let c = builder.input(ScalarType::I64);
-    let d = builder.input(ScalarType::I64);
-    let ab = builder.op(Op::I64Add(a, b));
-    let abc = builder.op(Op::I64Mul(ab, c));
-    let result = builder.op(Op::I64Sub(abc, d));
-    builder.output(result);
-    checked(builder, "chain")
-}
-
-fn fanout_graph() -> noble_ngraph::CheckedGraph {
-    let mut builder = GraphBuilder::new(
-        SubProfile::I64,
-        Subject::authored(&super::common::IDS, "net-plan-fanout"),
-    );
-    let a = builder.input(ScalarType::I64);
-    let b = builder.input(ScalarType::I64);
-    let difference = builder.op(Op::I64Sub(a, b));
-    let square = builder.op(Op::I64Mul(difference, difference));
-    builder.output(difference);
-    builder.output(square);
-    checked(builder, "fanout")
-}
-
-fn erasure_graph() -> noble_ngraph::CheckedGraph {
-    let mut builder = GraphBuilder::new(
-        SubProfile::I64,
-        Subject::authored(&super::common::IDS, "net-plan-erasure"),
-    );
-    let _erased = builder.input(ScalarType::I64);
-    let observed = builder.input(ScalarType::I64);
-    builder.output(observed);
-    checked(builder, "erasure")
-}
-
-fn subtraction_graph() -> noble_ngraph::CheckedGraph {
-    let mut builder = GraphBuilder::new(
-        SubProfile::I64,
-        Subject::authored(&super::common::IDS, "net-plan-subtraction"),
-    );
-    let a = builder.input(ScalarType::I64);
-    let b = builder.input(ScalarType::I64);
-    let difference = builder.op(Op::I64Sub(a, b));
-    builder.output(difference);
-    checked(builder, "subtraction")
-}
 
 fn run_plan(
     checked: &noble_ngraph::CheckedGraph,
@@ -135,12 +74,17 @@ fn arm_json(label: &str, report: &Report, times_ns: &[u128]) -> String {
     )
 }
 
+struct Expected {
+    obs: net::Obs,
+    interactions: u64,
+}
+
 fn expected_from_warmups(
     family: &str,
     checked: &noble_ngraph::CheckedGraph,
     candidate: &InteractionGraph,
     inputs: &[Value],
-) -> (net::Obs, u64) {
+) -> Expected {
     let reference = eval::reference(checked, inputs, None, &mut eval::Control::default());
     let expected_values = match reference.obs {
         eval::Obs::Normal(values) => values,
@@ -166,7 +110,10 @@ fn expected_from_warmups(
         reuse_warm.interactions, allocate_warm.interactions,
         "{family} warm-up counts differ"
     );
-    (reuse_warm.obs, reuse_warm.interactions)
+    Expected {
+        obs: reuse_warm.obs,
+        interactions: reuse_warm.interactions,
+    }
 }
 
 fn measure_paired(
@@ -174,8 +121,7 @@ fn measure_paired(
     checked: &noble_ngraph::CheckedGraph,
     candidate: &InteractionGraph,
     inputs: &[Value],
-    expected_obs: &net::Obs,
-    expected_interactions: u64,
+    expected: &Expected,
 ) -> ([Report; 2], [Vec<u128>; 2]) {
     let mut reports: [Option<Report>; 2] = [None, None];
     let mut times: [Vec<u128>; 2] = [Vec::with_capacity(31), Vec::with_capacity(31)];
@@ -189,11 +135,11 @@ fn measure_paired(
             let index = usize::from(storage_policy == StoragePolicy::Allocate);
             let (report, elapsed) = run_plan(checked, candidate, inputs, storage_policy);
             assert_eq!(
-                &report.obs, expected_obs,
+                &report.obs, &expected.obs,
                 "{family}/{storage_policy:?} output differs"
             );
             assert_eq!(
-                report.interactions, expected_interactions,
+                report.interactions, expected.interactions,
                 "{family}/{storage_policy:?} count differs"
             );
             if let Some(previous) = &reports[index] {
@@ -202,7 +148,7 @@ fn measure_paired(
                     "{family}/{storage_policy:?} counters drifted"
                 );
             } else {
-                reports[index] = Some(report.clone());
+                reports[index] = Some(report);
             }
             times[index].push(elapsed);
         }
@@ -258,16 +204,9 @@ fn compare_storage(family: &str, checked: noble_ngraph::CheckedGraph, inputs: &[
         Ok(candidate) => candidate,
         Err(error) => panic!("{family} net refused: {error:?}"),
     };
-    let (expected_obs, expected_interactions) =
-        expected_from_warmups(family, &checked, &candidate, inputs);
-    let ([reuse, allocate], times) = measure_paired(
-        family,
-        &checked,
-        &candidate,
-        inputs,
-        &expected_obs,
-        expected_interactions,
-    );
+    let expected = expected_from_warmups(family, &checked, &candidate, inputs);
+    let ([reuse, allocate], times) =
+        measure_paired(family, &checked, &candidate, inputs, &expected);
     assert_storage_counts(family, &reuse, &allocate);
     println!(
         "NOBLE_NET_PLAN_SAMPLE:{{\"family\":\"{family}\",\"graph_id\":\"{}\",\"net_key\":\"{}\",\"input_count\":{},\"rule_revision\":\"{}\",\"plan_revision\":\"{}\",\"representation_revision\":\"{}\",\"checker_revision\":\"{}\",\"executor_revision\":\"{}\",\"same_observation\":true,\"same_interactions\":true,\"reuse\":{},\"allocate\":{}}}",
@@ -288,12 +227,20 @@ fn compare_storage(family: &str, checked: noble_ngraph::CheckedGraph, inputs: &[
 fn plan_storage_comparison_covers_required_families() {
     compare_storage(
         "chain",
-        chain_graph(),
+        super::plancomparison_fixtures::chain_graph(),
         &[Value::I64(3), Value::I64(5), Value::I64(7), Value::I64(11)],
     );
-    compare_storage("fanout", fanout_graph(), &[Value::I64(13), Value::I64(4)]);
-    compare_storage("erasure", erasure_graph(), &[Value::I64(23), Value::I64(8)]);
-    let subtraction = subtraction_graph();
+    compare_storage(
+        "fanout",
+        super::plancomparison_fixtures::fanout_graph(),
+        &[Value::I64(13), Value::I64(4)],
+    );
+    compare_storage(
+        "erasure",
+        super::plancomparison_fixtures::erasure_graph(),
+        &[Value::I64(23), Value::I64(8)],
+    );
+    let subtraction = super::plancomparison_fixtures::subtraction_graph();
     compare_storage(
         "asymmetric-subtraction",
         subtraction.clone(),
