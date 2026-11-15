@@ -179,6 +179,7 @@ Status words:
 | Decoded four-rule physical transaction instances (issue #110) | `NobleFoundation.NetI64Plans.PhysicalState.op2_output_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.op2_output_refines`, `NobleFoundation.NetI64Plans.PhysicalState.op2_published_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.op2_published_pair_orientations`, `NobleFoundation.NetI64Plans.PhysicalState.op2_published_refines`, `NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_refines`, `NobleFoundation.NetI64Plans.PhysicalState.dup_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.dup_refines`, `NobleFoundation.NetI64Plans.PhysicalState.era_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.era_refines` | The kernel decodes each model byte image, executes physical slot retag/reuse, external writes, retirement and publication, and proves whole-net equality to `Plan.commit` for each fixed layout. The nonempty OP2 publication also proves its two-entry directed queue matches the checked plan. These are model-internal finite fixtures, not arbitrary admitted layouts, fresh-slot cases, reverse orientations or a Rust implementation theorem | Four rule-shapes plus one nonempty publication **proved** for fixed fixtures; general physical-image refinement and Rust correspondence **open** |
 | Bounded sequential I64/Bool belt validator (issue #113) | `NobleFoundation.Belt.validate_sound`; real lowered program and exact-vector controls in the generated BeltCorpus module | symbolic graph identities over `PackedSchedule`; no Rust refinement theorem | model **proved**; real artifact corpus is finite model evidence; Rust lowerer/checker/interpreter and B2 comparisons remain separate **tested** evidence |
 | Fixed T1/T2 timing legality and ordered target outputs (issue #114) | `NobleFoundation.BeltTarget.mapReadyOutputs`, `NobleFoundation.BeltTarget.validate_sound` | the symbolic run gates graph-reference values on latency-derived completion; it does not evaluate operations or simulate belt/save state, and no Rust artifact/operand-age refinement theorem is claimed | completion-gate/order **proved** only; generated corpus and Rust lowerer/checker/interpreter cross-backend controls are separate **tested** evidence; machine-step refinement remains **open** |
+| Bounded sequential I64 tick protocol (issue #128) | `NobleFoundation.TickRunner.tick_ready_pins_entry`, `NobleFoundation.TickRunner.tick_ready_commits_once`, `NobleFoundation.TickRunner.tick_refusal_preserves_active`, `NobleFoundation.TickRunner.update_success_keeps_state`, `NobleFoundation.TickRunner.update_refusal_preserves_active`, `NobleFoundation.TickRunner.reset_uses_separate_state`, `NobleFoundation.TickRunner.reset_refusal_preserves_active`, `NobleFoundation.TickRunner.actual_tick_commits_once`, `NobleFoundation.TickRunner.changed_control_is_selected`, `NobleFoundation.TickRunner.same_layout_reset_never_migrates` | independent finite-DAG and sequential stream model; no Rust graph/checker/evaluator or host correspondence | scoped model theorems only; implementation and executed-artifact claims are separate |
 | ZMod/BitVec/K-NUM-01 signed decoding, range, round trips | `toZ_ofZ`, `ofZ_toZ`, `toZ_add`, `toZ_sub`, `toZ_mul`, `toZ_neg`, `signed_eq_toInt`, `signed_toZ`, `wrap_eq_bmod`, `wrap_eq_toInt_ofInt`, `wrap_eq_knum01`, `toInt_range`, `signed_range`, `intCast_signed`, `toInt_ofInt_eq_iff`, `signed_intCast_eq_iff`, `ofInt_toInt` | none (mathematics only) | **proved** |
 | MC1 BitVec add/sub/mul decode to the comparator oracle | `toInt_add`, `toInt_sub`, `toInt_mul`, `oracle_add`, `oracle_sub`, `oracle_mul` | none | **proved** |
 | Checked I64 scalar arithmetic and explicit truncating division/remainder | `NobleFoundation.CheckedI64.checkedAdd_ok_iff`, `checkedSub_ok_iff`, `checkedMul_ok_iff`, `checkedNeg_ok_iff`, `checkedAbs_ok_iff`, `checkedAdd_overflow_iff`, `checkedSub_overflow_iff`, `checkedMul_overflow_iff`, `checkedNeg_overflow_iff`, `checkedAbs_overflow_iff`, `div_rem_identity`, `trem_natAbs_lt`, `trem_sign`, `checkedDivRem_overflow_iff`, `checkedDivRem_divisionByZero` | none (name-neutral mathematical model; no Rust/API correspondence) | **proved** |
@@ -4615,6 +4616,41 @@ The retained request and fresh-process replay are in
 [`verification/llvm-lowering/`](../../verification/llvm-lowering/README.md).
 Semantic validation and finite concrete agreement are separate evidence.
 LLVM optimization and native-artifact stages were not run in this repository:
-compiler-lab #124 owns them, and the current host has no pinned LLVM. The lane
+The lane
 does not change the selected production backend; any runtime adoption needs a
 separate decision and evidence.
+
+## Bounded sequential tick protocol model (issue #128)
+
+NobleFoundation/TickRunner.lean defines a separate finite total-I64 DAG reference:
+ordinary inputs and exact constants, wrapping add/sub/mul, earlier-node operands,
+and ordered selected graph outputs. A partition fixes contiguous state, input and
+control positions in that order; the graph's output list contains next-state words
+followed by visible-output words. Admission checks actual node references, input
+slots, output indices, interface widths and the declared node, word, work, tick
+and epoch caps. Labels for graph and controls are opaque identities in this model,
+not proof of artifact-byte integrity or authorization.
+
+The sequential runner selects the *whole* graph/control/state tuple at tick
+entry, evaluates it once, and publishes next state and output together. Its
+logical commit count and next-tick number increase exactly once on success.
+A refusal leaves the entire active runner unchanged. Control activation checks
+both epochs and the control partition before advancing only the control epoch;
+reset checks both epochs and separately admits a fresh graph, initial state and
+controls, clears the old visible output and next-tick number, and advances both
+epochs. A same-layout reset never imports old state implicitly. The theorem
+statements for those scoped properties are inventoried with role
+`tick-protocol` in inventory.json. Nonempty examples cover a successful
+`s + c*x` tick, changed-control selection, duplicate and cancelled requests,
+wrong partition and tick exhaustion, and a same-layout subtraction reset from
+state 99 yielding state 95 and *distinct* visible output 92.
+
+These are theorems about the self-contained Lean model, **not** a theorem
+connecting it to Rust's checked graph, emitted schedule, runtime evaluation,
+update admission or stored bytes. The explicit cancellation flag is observed
+before evaluation; concurrent updates and interruption during evaluation are
+outside this model. Word/work limits are modelled, but actual allocation, byte
+and trace-retention quotas, artifact hash validation, cleanup, measured
+latency, backend correctness and host effects require separate implementation
+tests and retained evidence. No finite model trace proves a wall-clock deadline,
+universal implementation correspondence or independent compiler-lab agreement.
