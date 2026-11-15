@@ -17,6 +17,10 @@ pub use clone_budget::{
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Definition(pub u32);
 
+fn empty_dependency_list() -> alloc::vec::Vec<Definition> {
+    alloc::vec::Vec::new()
+}
+
 /// The reserved identity of the resource-free `test.emit` effect.
 pub const TEST_EMIT: crate::types::EffId = crate::types::EffId(0);
 /// The reserved identity of the opt-in scripted `test.clock` effect.
@@ -643,8 +647,9 @@ pub fn text_cursor_environment() -> Result<Env, crate::shapes::Defect> {
         .extend(core::iter::repeat_n(reserved.clone(), reserved_rows));
     env.kinds
         .extend(core::iter::repeat_n(Behavior::Reserved, reserved_rows));
+    // Aeneas 1238879f rejects generic Vec::new function items with bound regions (SymbolicToPureTypes.ml:411).
     env.deps
-        .extend(core::iter::repeat_with(alloc::vec::Vec::new).take(reserved_rows));
+        .extend(core::iter::repeat_with(empty_dependency_list).take(reserved_rows));
     env.definition_owners
         .extend(core::iter::repeat_n(None, reserved_rows));
     let tail = crate::shapes::Pattern::StackVar(crate::words::Variable(0));
@@ -825,8 +830,9 @@ pub fn calculator_environment() -> Result<Env, crate::shapes::Defect> {
         env.defs.push(scheme);
         env.kinds.push(behavior);
     }
+    // Aeneas 1238879f rejects generic Vec::new function items with bound regions (SymbolicToPureTypes.ml:411).
     env.deps
-        .extend(core::iter::repeat_with(alloc::vec::Vec::new).take(rows));
+        .extend(core::iter::repeat_with(empty_dependency_list).take(rows));
     env.definition_owners
         .extend(core::iter::repeat_n(None, rows));
     Ok(env)
@@ -863,6 +869,45 @@ pub fn declared_text_environment() -> Result<Env, crate::shapes::Defect> {
 
 #[cfg(test)]
 mod checked_i64_tests {
+    #[test]
+    fn concrete_aeneas_factory_keeps_each_reserved_dependency_list_empty() {
+        let base = super::environment()
+            .expect("bootstrap environment")
+            .defs
+            .len();
+        let cursor = super::text_cursor_environment().expect("cursor environment");
+        assert_eq!(cursor.deps.len(), cursor.defs.len());
+        assert_eq!(
+            cursor.deps.len(),
+            base.checked_add(4).expect("cursor row bound")
+        );
+        assert!(
+            cursor.deps[base..base.checked_add(3).expect("cursor row bound")]
+                .iter()
+                .all(alloc::vec::Vec::is_empty)
+        );
+
+        let mut calculator = super::calculator_environment().expect("calculator environment");
+        assert_eq!(calculator.deps.len(), calculator.defs.len());
+        assert_eq!(
+            calculator.deps.len(),
+            cursor
+                .deps
+                .len()
+                .checked_add(5)
+                .expect("calculator row bound")
+        );
+        assert!(calculator.deps[base..]
+            .iter()
+            .all(alloc::vec::Vec::is_empty));
+        calculator.deps[base].push(super::Definition(0));
+        assert!(
+            calculator.deps[base.checked_add(1).expect("calculator row bound")..]
+                .iter()
+                .all(alloc::vec::Vec::is_empty)
+        );
+    }
+
     #[test]
     fn profile_appends_the_fixed_pure_operation_table() {
         let ordinary = super::environment().unwrap_or_else(|_| panic!("ordinary environment"));

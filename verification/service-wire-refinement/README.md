@@ -1,5 +1,17 @@
 # ServiceRef codec: refinement of the Lean model (issue #48)
 
+**Historical input, not a current #97 extraction check.** The retained proof
+receipt used Aeneas `505b6ca` and Lean 4.31.0. The current
+`model-inputs.json` names the selected `1238879f` **Lean library** for a
+possible rerun, while its extraction receipt and lock still record the older
+translator. After #97's partial re-extraction, none of the five checked-in M3
+generated/model input hashes matches this profile. The checker rejects that
+drift before compiling or claiming refinement; it has no fallback that
+silently treats the old receipt as current. The commands and theorem claims
+below describe the retained source-bound run, not a successful proof over
+the new checked-in subject or today's Rust sources. See the
+[#97 classification](../aeneas-re-extraction/README.md#generated-subjects-and-lane-receipts).
+
 This lane proves statements about two generated Lean functions:
 `noble_kernel.dataspace.wire.decode_service` and `noble_kernel.dataspace.wire.encode_service`. Both
 are checked-in Charon/Aeneas translations, in `proofs/m3/NobleKernel/Funs.lean`, of the codec in
@@ -25,8 +37,9 @@ The harness refuses three things:
 
 ## What one run checks
 
-1. **The generated input.** The five `proofs/m3/NobleKernel` sources must match
-   [the profile](model-inputs.json) and two independent records of one passed extraction:
+1. **The generated input.** For a new successful run, the five
+   `proofs/m3/NobleKernel` sources must match [the profile](model-inputs.json)
+   and two independent records of the same extraction:
    - `verification/declared-modules-v1/extraction.json`, for the generated outputs and the
      handwritten external models it read;
    - `verification/m4/extraction-lock.json`.
@@ -54,8 +67,8 @@ The harness refuses three things:
 3. **Source binding.** A Lean pass collects every `noble_kernel` constant reachable from the
    inventoried theorems, through types, proof terms and constructors. Each one maps to the generated
    declaration that owns it, and that declaration's `Source:` Rust file must hold exactly the bytes
-   the extraction recorded (`exact-file`). There is no archived input for this extraction, so a
-   reachable Rust file that has changed since then fails the run and needs a new extraction.
+   the extraction recorded (`exact-file`). There is no archived fallback for this extraction, so
+   a reachable Rust file that has changed since then fails the run and needs a new extraction.
    Elaborator-shared matchers and side proofs are traversed but bind no Rust item. Reachable
    handwritten external models are listed as a trust boundary.
 4. **Mutation controls.** Each structure-preserving edit changes one behaviour of the generated

@@ -1,19 +1,26 @@
 # M2 per-function coverage classification gate (task 3.3)
 
-**Status: complete.** Every function of the M2 kernel extraction subject is
+**Historical task 3.3 status: complete for its recorded extraction, not
+current-source evidence after #97.** Every function of the recorded M2 kernel
+extraction subject is
 classified `extracted`, `proved`, `fixture-checked`, `modeled`, `excepted`,
 or `open` in the reviewed record `verification/m2-coverage.json`; the gate
 `verification/m2-coverage-gate.sh` joins that record with the authoritative
 function list derived from the extraction output, enforces consistency in
 both directions, and refuses five mutation classes
-(`verification/m2-coverage-refusals.sh`). Run on the current tree:
-baseline green, all five refusals demonstrated. Nothing under `proofs/`,
+(`verification/m2-coverage-refusals.sh`). The original run was green with
+all five refusals demonstrated; it is not a fresh run for the selected
+`1238879f` extractor. Nothing under `proofs/`,
 the Rust crate, or the existing gates was modified; only the four new
 `verification/` files listed in §7 exist.
 
 Since 2026-11-05 (#88) every citation also carries its claim strength, and
 `noble_kernel.acceptance.check` is `fixture-checked`, not `proved`: see §8.
 The refusal matrix now has seven mutation classes and one positive control.
+For #97 the M2 and M3 coverage JSON records were re-derived against the new
+checked-in generated definition lists; that *static* join does not establish
+their proof gates, source-to-generated correspondence, or current-Rust
+applicability. See [the #97 classification](aeneas-re-extraction/README.md#generated-subjects-and-lane-receipts).
 
 ## 1. Binding source for the function list
 
@@ -71,7 +78,7 @@ checker B imports `NobleM2.Refinement` (the refinement family). Note that
 the `NobleM2` root does **not** transitively import `NobleKernel`, so A
 imports it explicitly.
 
-## 3. Classification summary (current tree)
+## 3. Classification summary (historical run)
 
 | Status | Count | Population |
 |---|---|---|
@@ -86,9 +93,10 @@ Coverage: 471/471 = 100% of generated functions classified; the
 `Funs.lean` entries span 21 crate source files under
 `crates/noble-kernel/src` (plus 2 rustc/core macro/option paths).
 
-These counts and the outputs in §4 and §6 are the 2026-09-18 record. The
-current gate classifies 515 functions and, since #88, counts
-`acceptance.check` as `fixture-checked` (§8).
+These counts and the outputs in §4 and §6 are the 2026-09-18 record.
+Later records, including the #97 re-derived map, have different function
+counts and count `acceptance.check` as `fixture-checked` (§8). The checked-in
+record is the only reviewed count for a new gate run.
 
 ## 4. Commands and outputs
 

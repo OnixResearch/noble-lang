@@ -1,7 +1,10 @@
-import Aeneas
-import NobleKernel.Types
+module
+public import Aeneas
+public import NobleKernel.Types
+@[expose] public section
 
 open Aeneas Aeneas.Std
+set_option linter.dupNamespace false
 
 namespace noble_contracts
 

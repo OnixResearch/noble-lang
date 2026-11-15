@@ -1,4 +1,6 @@
-# M1 extraction probe
+# M1 extraction probe (historical evidence)
+
+> The extractor/library pair below records the original probe: Aeneas `505b6ca` with the Aeneas Lean library at `1238879f`. It is not the current selected configuration or a VT-PIN-02 exception. The current selected extractor and Lean library both use `1238879f`; a fresh translation of the full kernel subject is blocked by the Aeneas limitations recorded in [`verification/aeneas-re-extraction/README.md`](../../verification/aeneas-re-extraction/README.md). The historical result does not establish a fresh run with the current extractor.
 
 This probe extracts `noble_kernel::consume_budget` from the actual workspace.
 It compiles the generated `NobleKernel.lean` module without manual edits.
@@ -15,8 +17,8 @@ The CLI exposes only an internal budget smoke route.
 | Features | All features, currently none |
 | Profile | `dev`, overflow checks enabled, panic unwind |
 | Test profile | Cargo test harness, panic unwind |
-| Aeneas extractor | `505b6ca35217e7be5c96c3e2f8045edfbdf47291` |
-| Aeneas Lean library | `1238879f9ea550512096e9bf8bd6fe7407b3eaef`, pinned separately (VT-PIN-02 exception, issue #86) |
+| Historical Aeneas extractor | `505b6ca35217e7be5c96c3e2f8045edfbdf47291` |
+| Historical Aeneas Lean library | `1238879f9ea550512096e9bf8bd6fe7407b3eaef` |
 | Required Charon | `b104e24fea7d721b71e6c39fd70f26ff20bc0980` |
 | Extraction Rust and Miri | `nightly-2026-08-18`, supplied by that Charon input |
 | Lean | `v4.35.0`, commit `eb6cafb7290e8bd5f2937522d8d804f58f02bafc` |

@@ -5,6 +5,12 @@ Boundary requirement: [VT-ALLOC-01](../../.cairn/specs/verification-toolchain/sp
 Decision record: [`decision.md`](decision.md).
 Measured evidence: `receipt-<commit>.json` in this directory (produced by `run.mjs` from a clean commit).
 
+The retained `receipt-f800f80.json` was produced under Aeneas `505b6ca`
+and Charon `b104e24f`, before issue #97 selected Aeneas `1238879f` and
+Charon `9e95cf31`. Its matrix is historical, not a fresh run of the current
+extraction selection. The conservative allocator-refusal decision remains in
+force; current-toolchain extraction evidence requires a new source-bound run.
+
 This lane answers one question: which allocator uses does Noble's **selected** Charon → Aeneas → Lean
 pipeline support, which does it erase, and where must Noble refuse instead. Rust 1.100.0 (released
 2026-11-12) stabilises the custom-allocator API, so the question stops being hypothetical.

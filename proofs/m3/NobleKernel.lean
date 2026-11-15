@@ -1,1 +1,2 @@
-import NobleKernel.Funs
+module
+public import NobleKernel.Funs

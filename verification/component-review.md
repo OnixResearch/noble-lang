@@ -1,4 +1,10 @@
-# M1 component review and current evidence
+# M1 component review (historical inputs)
+
+The extraction and Lean revisions below describe the retained M1 review, not
+the currently selected Aeneas/Charon/Lean toolchain or a fresh proof from the
+current Rust source. See `policy/tool-selection.json` for current selections
+and `verification/aeneas-re-extraction/README.md` for the partial #97
+regeneration, historical evidence, and outstanding source-binding blockers.
 
 ## Reviewed inputs
 
