@@ -42,11 +42,20 @@ struct Expr {
 
 impl Expr {
     fn constant(offset: i64) -> Self {
-        Self { atoms: Vec::new(), offset }
+        Self {
+            atoms: Vec::new(),
+            offset,
+        }
     }
 
     fn atom(node: NodeId) -> Self {
-        Self { atoms: alloc::vec![Term { node, negative: false }], offset: 0 }
+        Self {
+            atoms: alloc::vec![Term {
+                node,
+                negative: false
+            }],
+            offset: 0,
+        }
     }
 
     fn append(&mut self, mut right: Self, subtract: bool) {
@@ -113,7 +122,11 @@ struct Store {
 
 impl Store {
     fn new(limit: u64, capacity: usize) -> Self {
-        Self { nodes: Vec::with_capacity(capacity), shared: BTreeMap::new(), limit }
+        Self {
+            nodes: Vec::with_capacity(capacity),
+            shared: BTreeMap::new(),
+            limit,
+        }
     }
 
     fn emit(&mut self, op: Op) -> Result<NodeId, crate::diag::Diagnostic> {
@@ -129,7 +142,8 @@ impl Store {
                 charged,
             ));
         }
-        let id = NodeId(u32::try_from(self.nodes.len()).expect("checked graph node count fits u32"));
+        let id =
+            NodeId(u32::try_from(self.nodes.len()).expect("checked graph node count fits u32"));
         self.nodes.push(Node { op, origin: None });
         self.shared.insert(identity, id);
         Ok(id)
@@ -139,8 +153,14 @@ impl Store {
         let mut terms = expression.atoms.into_iter();
         let mut result = match terms.next() {
             None => return self.emit(Op::Const(Literal::I64(expression.offset))),
-            Some(Term { node, negative: false }) => node,
-            Some(Term { node, negative: true }) => {
+            Some(Term {
+                node,
+                negative: false,
+            }) => node,
+            Some(Term {
+                node,
+                negative: true,
+            }) => {
                 let zero = self.emit(Op::Const(Literal::I64(0)))?;
                 self.emit(Op::I64Sub(zero, node))?
             }
@@ -165,9 +185,14 @@ fn consume(values: &mut [Option<Value>], uses: &mut [u32], id: NodeId) -> Value 
     assert!(*count > 0, "each checked operand/output use is counted");
     *count -= 1;
     if *count == 0 {
-        values[id.index()].take().expect("every operand has an earlier value")
+        values[id.index()]
+            .take()
+            .expect("every operand has an earlier value")
     } else {
-        values[id.index()].as_ref().expect("every operand has an earlier value").clone()
+        values[id.index()]
+            .as_ref()
+            .expect("every operand has an earlier value")
+            .clone()
     }
 }
 
@@ -255,21 +280,31 @@ pub fn specialize(
     let subject = crate::ir::Subject::derive(
         ids,
         crate::ir::SubjectKind::Extracted,
-        &[b"partial-static-offset", REVISION.as_bytes(), &baseline.report.original_graph,
-            &baseline.report.residual_graph],
+        &[
+            b"partial-static-offset",
+            REVISION.as_bytes(),
+            &baseline.report.original_graph,
+            &baseline.report.residual_graph,
+        ],
         graph.subject.closure.clone(),
     );
-    let normalized = crate::check::check_with(ids, crate::ir::Graph {
-        profile: graph.profile,
-        slots: graph.slots.clone(),
-        nodes: store.nodes,
-        outputs,
-        facts: Vec::new(),
-        subject,
-        input_shape: None,
-        output_shape: None,
-    }, request.budgets)?;
-    Ok(Comparison { baseline, normalized, generated_nodes })
+    let normalized = crate::check::check_with(
+        ids,
+        crate::ir::Graph {
+            profile: graph.profile,
+            slots: graph.slots.clone(),
+            nodes: store.nodes,
+            outputs,
+            facts: Vec::new(),
+            subject,
+            input_shape: None,
+            output_shape: None,
+        },
+        request.budgets,
+    )?;
+    Ok(Comparison {
+        baseline,
+        normalized,
+        generated_nodes,
+    })
 }
-
-

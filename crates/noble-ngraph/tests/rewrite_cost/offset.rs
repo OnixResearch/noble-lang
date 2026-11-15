@@ -58,7 +58,8 @@ fn graph(kind: Fixture) -> (CheckedGraph, Vec<Option<i64>>) {
                 builder.output(first);
                 twice
             } else {
-                let second_constant = builder.i64_const(if matches!(kind, Fixture::Wrap) { 1 } else { 3 });
+                let second_constant =
+                    builder.i64_const(if matches!(kind, Fixture::Wrap) { 1 } else { 3 });
                 builder.op(if matches!(kind, Fixture::Sub) {
                     Op::I64Sub(first, second_constant)
                 } else {
@@ -86,24 +87,31 @@ fn graph(kind: Fixture) -> (CheckedGraph, Vec<Option<i64>>) {
         }
     };
     builder.output(output);
-    (check::check(&IDS, builder.finish()).expect("fixed graph accepted"), map)
+    (
+        check::check(&IDS, builder.finish()).expect("fixed graph accepted"),
+        map,
+    )
 }
 
 fn vector(seed: u64, count: usize) -> Vec<i64> {
     let mut state = seed;
-    (0..count).map(|_| {
-        state ^= state << 13;
-        state ^= state >> 7;
-        state ^= state << 17;
-        state as i64
-    }).collect()
+    (0..count)
+        .map(|_| {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            state as i64
+        })
+        .collect()
 }
 
 fn vectors(map: &[Option<i64>]) -> Vec<Vec<i64>> {
     let count = map.iter().filter(|value| value.is_none()).count();
     let mut rows = vec![0, 1, -1, i64::MAX, i64::MIN]
-        .into_iter().map(|value| vec![value; count]).collect::<Vec<_>>();
-    rows.extend((0..64).map(|index| vector(0x32_e0_f15e_u64 + index, count)));
+        .into_iter()
+        .map(|value| vec![value; count])
+        .collect::<Vec<_>>();
+    rows.extend((0..64).map(|index| vector(0x32e0_f15e_u64 + index, count)));
     rows
 }
 
@@ -126,18 +134,34 @@ fn compiled(compiled: &Compiled, values: &[Value]) -> (Vec<Value>, u64) {
 fn compare(kind: Fixture) -> (u64, u64, usize, usize) {
     let (original, map) = graph(kind);
     let budgets = Budgets::default();
-    let comparison = offset::specialize(&IDS, &original, &Request { static_inputs: &map, budgets: &budgets })
-        .expect("bounded offset comparison");
+    let comparison = offset::specialize(
+        &IDS,
+        &original,
+        &Request {
+            static_inputs: &map,
+            budgets: &budgets,
+        },
+    )
+    .expect("bounded offset comparison");
     let baseline = &comparison.baseline.checked;
     let normalized = &comparison.normalized;
     let baseline_compiled = Compiled::new(&IDS, baseline);
     let normalized_compiled = Compiled::new(&IDS, normalized);
     assert_ne!(baseline.id(), normalized.id(), "new residual identity");
-    assert_eq!(baseline.graph().slots, normalized.graph().slots, "ordered dynamic input slots");
+    assert_eq!(
+        baseline.graph().slots,
+        normalized.graph().slots,
+        "ordered dynamic input slots"
+    );
     let source = specialize::emit_source(normalized).expect("emit new Program source");
-    let readmitted = specialize::readmit(&IDS, &source,
+    let readmitted = specialize::readmit(
+        &IDS,
+        &source,
         &specialize::interface_types(normalized).expect("interface"),
-        noble_contracts::Limits::default(), &budgets).expect("ordinary independent admission");
+        noble_contracts::Limits::default(),
+        &budgets,
+    )
+    .expect("ordinary independent admission");
     let mut work_baseline = 0;
     let mut work_normalized = 0;
     for dynamic in vectors(&map) {
@@ -148,69 +172,186 @@ fn compare(kind: Fixture) -> (u64, u64, usize, usize) {
         let (offset_result, offset_nodes) = observed(normalized, &inputs);
         assert_eq!(baseline_result, expected, "{} baseline", kind.name());
         assert_eq!(offset_result, expected, "{} offset", kind.name());
-        assert_eq!(compiled(&baseline_compiled, &inputs).0, expected, "{} baseline L4", kind.name());
-        assert_eq!(compiled(&normalized_compiled, &inputs).0, expected, "{} offset L4", kind.name());
-        assert_eq!(observed(&readmitted, &inputs).0, expected, "{} emitted Program", kind.name());
+        assert_eq!(
+            compiled(&baseline_compiled, &inputs).0,
+            expected,
+            "{} baseline L4",
+            kind.name()
+        );
+        assert_eq!(
+            compiled(&normalized_compiled, &inputs).0,
+            expected,
+            "{} offset L4",
+            kind.name()
+        );
+        assert_eq!(
+            observed(&readmitted, &inputs).0,
+            expected,
+            "{} emitted Program",
+            kind.name()
+        );
         work_baseline += baseline_nodes;
         work_normalized += offset_nodes;
     }
-    (work_baseline, work_normalized, baseline.node_count(), normalized.node_count())
+    (
+        work_baseline,
+        work_normalized,
+        baseline.node_count(),
+        normalized.node_count(),
+    )
 }
 
 #[test]
 fn offset_normalization_preserves_wrapping_order_and_shared_bindings() {
-    for kind in [Fixture::Add, Fixture::Sub, Fixture::Wrap, Fixture::Shared, Fixture::Nonprefix, Fixture::Dead, Fixture::Growth] {
+    for kind in [
+        Fixture::Add,
+        Fixture::Sub,
+        Fixture::Wrap,
+        Fixture::Shared,
+        Fixture::Nonprefix,
+        Fixture::Dead,
+        Fixture::Growth,
+    ] {
         let _ = compare(kind);
     }
     let (base_work, offset_work, base_nodes, offset_nodes) = compare(Fixture::Add);
-    assert!(offset_work < base_work && offset_nodes < base_nodes, "(x+2)+3 becomes x+5");
+    assert!(
+        offset_work < base_work && offset_nodes < base_nodes,
+        "(x+2)+3 becomes x+5"
+    );
     let (shared, map) = graph(Fixture::Shared);
-    let result = offset::specialize(&IDS, &shared, &Request { static_inputs: &map, budgets: &Budgets::default() })
-        .expect("shared output");
+    let result = offset::specialize(
+        &IDS,
+        &shared,
+        &Request {
+            static_inputs: &map,
+            budgets: &Budgets::default(),
+        },
+    )
+    .expect("shared output");
     let emitted = specialize::emit_source(&result.normalized).expect("lexical sharing");
-    assert!(emitted.contains("let v"), "the reused subexpression remains a lexical binding");
+    assert!(
+        emitted.contains("let v"),
+        "the reused subexpression remains a lexical binding"
+    );
     let inputs = [Value::I64(3)];
     let actual = observed(&result.normalized, &inputs).0;
-    assert_eq!(actual, vec![Value::I64(5), Value::I64(10)], "the same shared node occurs twice");
+    assert_eq!(
+        actual,
+        vec![Value::I64(5), Value::I64(10)],
+        "the same shared node occurs twice"
+    );
 }
 
 #[test]
 fn offset_growth_cap_refuses_without_publishing_and_baseline_is_unchanged() {
     let (original, map) = graph(Fixture::Growth);
-    let base = specialize::specialize(&IDS, &original, &Request { static_inputs: &map, budgets: &Budgets::default() })
-        .expect("D3 baseline");
+    let base = specialize::specialize(
+        &IDS,
+        &original,
+        &Request {
+            static_inputs: &map,
+            budgets: &Budgets::default(),
+        },
+    )
+    .expect("D3 baseline");
     let limit = base.checked.node_count() as u64;
-    let mut budgets = Budgets { residual_nodes: limit, ..Budgets::default() };
-    let refused = offset::specialize(&IDS, &original, &Request { static_inputs: &map, budgets: &budgets })
-        .expect_err("an extra generated node charges the cap");
+    let mut budgets = Budgets {
+        residual_nodes: limit,
+        ..Budgets::default()
+    };
+    let refused = offset::specialize(
+        &IDS,
+        &original,
+        &Request {
+            static_inputs: &map,
+            budgets: &budgets,
+        },
+    )
+    .expect_err("an extra generated node charges the cap");
     assert_eq!(refused.code_string(), "E-BUDGET-RESIDUAL-NODES");
     budgets.residual_nodes = limit + 2;
-    let accepted = offset::specialize(&IDS, &original, &Request { static_inputs: &map, budgets: &budgets })
-        .expect("exact generated-node cap");
+    let accepted = offset::specialize(
+        &IDS,
+        &original,
+        &Request {
+            static_inputs: &map,
+            budgets: &budgets,
+        },
+    )
+    .expect("exact generated-node cap");
     assert_eq!(accepted.generated_nodes, limit + 2);
-    assert_eq!(accepted.baseline.checked.id(), base.checked.id(), "D3 baseline is unchanged");
+    assert_eq!(
+        accepted.baseline.checked.id(),
+        base.checked.id(),
+        "D3 baseline is unchanged"
+    );
     budgets.residual_nodes = limit + 1;
-    assert_eq!(offset::specialize(&IDS, &original, &Request { static_inputs: &map, budgets: &budgets })
-        .expect_err("one below generated count").code_string(), "E-BUDGET-RESIDUAL-NODES");
+    assert_eq!(
+        offset::specialize(
+            &IDS,
+            &original,
+            &Request {
+                static_inputs: &map,
+                budgets: &budgets
+            }
+        )
+        .expect_err("one below generated count")
+        .code_string(),
+        "E-BUDGET-RESIDUAL-NODES"
+    );
     budgets.residual_nodes = limit - 1;
-    assert_eq!(offset::specialize(&IDS, &original, &Request { static_inputs: &map, budgets: &budgets })
-        .expect_err("below baseline cap").code_string(), "E-BUDGET-RESIDUAL-NODES");
+    assert_eq!(
+        offset::specialize(
+            &IDS,
+            &original,
+            &Request {
+                static_inputs: &map,
+                budgets: &budgets
+            }
+        )
+        .expect_err("below baseline cap")
+        .code_string(),
+        "E-BUDGET-RESIDUAL-NODES"
+    );
 }
 
 #[test]
 fn offset_refuses_nested_partially_known_pairs_and_preserves_dynamic_bool_slots() {
-    let mut builder = GraphBuilder::new(SubProfile::I64, Subject::authored(&IDS, "offset-nested-pair"));
+    let mut builder = GraphBuilder::new(
+        SubProfile::I64,
+        Subject::authored(&IDS, "offset-nested-pair"),
+    );
     let x = builder.input(ScalarType::I64);
     let _y = builder.input(ScalarType::I64);
     builder.output(x);
-    builder.shapes(Some(vec![ShapeTree::pair(
-        ShapeTree::pair(ShapeTree::SCALAR, ShapeTree::UNIT).expect("bounded nested pair"),
-        ShapeTree::SCALAR).expect("bounded nested pair")]), None);
+    builder.shapes(
+        Some(vec![ShapeTree::pair(
+            ShapeTree::pair(ShapeTree::SCALAR, ShapeTree::UNIT).expect("bounded nested pair"),
+            ShapeTree::SCALAR,
+        )
+        .expect("bounded nested pair")]),
+        None,
+    );
     let pair = check::check(&IDS, builder.finish()).expect("shape-bearing checked graph");
     let map = [Some(2), None];
-    assert_eq!(offset::specialize(&IDS, &pair, &Request { static_inputs: &map, budgets: &Budgets::default() })
-        .expect_err("authored shape excluded").code_string(), "E-AGGREGATE");
-    let mut builder = GraphBuilder::new(SubProfile::I64, Subject::authored(&IDS, "offset-dynamic-bool"));
+    assert_eq!(
+        offset::specialize(
+            &IDS,
+            &pair,
+            &Request {
+                static_inputs: &map,
+                budgets: &Budgets::default()
+            }
+        )
+        .expect_err("authored shape excluded")
+        .code_string(),
+        "E-AGGREGATE"
+    );
+    let mut builder = GraphBuilder::new(
+        SubProfile::I64,
+        Subject::authored(&IDS, "offset-dynamic-bool"),
+    );
     let flag = builder.input(ScalarType::Bool);
     let number = builder.input(ScalarType::I64);
     let two = builder.i64_const(2);
@@ -220,17 +361,28 @@ fn offset_refuses_nested_partially_known_pairs_and_preserves_dynamic_bool_slots(
     builder.output(flag);
     builder.output(sum);
     let graph = check::check(&IDS, builder.finish()).expect("mixed scalar slots");
-    let result = offset::specialize(&IDS, &graph, &Request { static_inputs: &[None, None], budgets: &Budgets::default() })
-        .expect("dynamic Bool remains ordered");
-    assert_eq!(observed(&result.normalized, &[Value::Bool(true), Value::I64(4)]).0,
-        vec![Value::Bool(true), Value::I64(9)]);
+    let result = offset::specialize(
+        &IDS,
+        &graph,
+        &Request {
+            static_inputs: &[None, None],
+            budgets: &Budgets::default(),
+        },
+    )
+    .expect("dynamic Bool remains ordered");
+    assert_eq!(
+        observed(&result.normalized, &[Value::Bool(true), Value::I64(4)]).0,
+        vec![Value::Bool(true), Value::I64(9)]
+    );
 }
 
 #[expect(
     tigerstyle::ambient_clock,
     reason = "Owner: noble-maintainers; the ignored, frozen #32 cost lane times only the explicitly named specialization, admission and replay scopes."
 )]
-fn clock() -> Instant { Instant::now() }
+fn clock() -> Instant {
+    Instant::now()
+}
 
 #[test]
 #[ignore = "descriptive #32 measurement; requires clean committed source and an external receipt destination"]
@@ -245,10 +397,21 @@ fn report_offset_costs() {
     assert_eq!(source_clean, "true");
     let output = std::env::var("NOBLE_PE_OFFSET_OUT").expect("external receipt destination");
     let mut records = Vec::new();
-    for kind in [Fixture::Add, Fixture::Sub, Fixture::Wrap, Fixture::Shared, Fixture::Nonprefix, Fixture::Dead, Fixture::Growth] {
+    for kind in [
+        Fixture::Add,
+        Fixture::Sub,
+        Fixture::Wrap,
+        Fixture::Shared,
+        Fixture::Nonprefix,
+        Fixture::Dead,
+        Fixture::Growth,
+    ] {
         let (original, map) = graph(kind);
         let budgets = Budgets::default();
-        let request = Request { static_inputs: &map, budgets: &budgets };
+        let request = Request {
+            static_inputs: &map,
+            budgets: &budgets,
+        };
         let start = clock();
         let baseline = specialize::specialize(&IDS, &original, &request).expect("baseline");
         let baseline_specialization_ns = start.elapsed().as_nanos();
@@ -264,19 +427,31 @@ fn report_offset_costs() {
         let mut graph_bytes = [0u64; 2];
         let mut compiled_bytes = [0u64; 2];
         let mut source_bytes = [0usize; 2];
-        for (side, checked) in [&baseline.checked, &comparison.normalized].into_iter().enumerate() {
+        for (side, checked) in [&baseline.checked, &comparison.normalized]
+            .into_iter()
+            .enumerate()
+        {
             graph_bytes[side] = check::retained_bytes(checked.graph());
             let packed = Compiled::new(&IDS, checked);
             compiled_bytes[side] = packed.retained_bytes();
             let start = clock();
             let source = specialize::emit_source(checked).expect("source");
             source_bytes[side] = source.len();
-            let rechecked = specialize::readmit(&IDS, &source,
+            let rechecked = specialize::readmit(
+                &IDS,
+                &source,
                 &specialize::interface_types(checked).expect("types"),
-                noble_contracts::Limits::default(), &budgets).expect("ordinary admission");
+                noble_contracts::Limits::default(),
+                &budgets,
+            )
+            .expect("ordinary admission");
             emit_ns[side] = start.elapsed().as_nanos();
             let inputs = vectors(&map);
-            let first = inputs[0].iter().copied().map(Value::I64).collect::<Vec<_>>();
+            let first = inputs[0]
+                .iter()
+                .copied()
+                .map(Value::I64)
+                .collect::<Vec<_>>();
             let start = clock();
             let first_result = compiled(&packed, &first);
             replay_first_ns[side] = start.elapsed().as_nanos();
@@ -291,7 +466,12 @@ fn report_offset_costs() {
                 replay_warm_ns[side] += start.elapsed().as_nanos();
                 assert_eq!(l3, expected, "{} L3", kind.name());
                 assert_eq!(l4, expected, "{} L4", kind.name());
-                assert_eq!(observed(&rechecked, &dynamic).0, expected, "{} readmission", kind.name());
+                assert_eq!(
+                    observed(&rechecked, &dynamic).0,
+                    expected,
+                    "{} readmission",
+                    kind.name()
+                );
                 l3_visits[side] += visits;
                 l4_visits[side] += packed_visits;
             }
