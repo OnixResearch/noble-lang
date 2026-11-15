@@ -572,8 +572,22 @@ the effect-widening refusal in `admission.rs`. The positive exact-pair
 certificate alias portion of `LPL-T07` remains **NOT DONE**: `admission.rs`
 exercises its fail-closed refusal, not alias success. `LPL-T13` is frozen in
 `verification/procedure-library/criteria-2026-11-13.json` ahead of the
-one-shot measurement. `LPL-T14`–`LPL-T16` require that source-bound receipt.
-No fixture is evidence of Rust/Lean correspondence or a #56 certificate.
+one-shot measurement. The original attempt at `e65f82c` is retained with an
+erratum: its JSON task serializer duplicated separators and its 3→1 query
+excluded both 2→1 source procedures, so it is **not** a library measurement.
+After non-held-out regressions and a clean source repair, one explicit repeat
+at `dbbc03b` executed `LPL-T14` and `LPL-T16` under the byte-identical
+criterion. Its receipt is
+`verification/procedure-library/receipts/2026-11-13/transfer-repeat.json`.
+The learned arm met 8/8 task cells and 24/24 examples, but tied the frozen
+hand-library arm; the empty and size-matched non-transfer arms each passed
+0/8. `LPL-T15` is **PARTIAL**: runtime teacher/proposer counts are zero and a
+nonzero count invalidates the metrics claim, but no deliberate attempted call
+was exercised. The #116 producer receipt binds the acquisition source tasks;
+the composed target references themselves are fixture-authored, not #116
+generated in this lane. No fixture is evidence of Rust/Lean correspondence or
+a #56 certificate. The exact decision and non-claims are in
+`verification/procedure-library/decision.md`.
 
 ## Acceptance mapping
 
