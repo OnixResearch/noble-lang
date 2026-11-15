@@ -19,6 +19,16 @@ if (clean.status !== 0) throw new Error(`git status failed: ${clean.stderr}`);
 if (clean.stdout.trim() !== '') throw new Error('measurement requires a clean committed source tree');
 const sourceCommit = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf8' });
 if (sourceCommit.status !== 0) throw new Error(`git rev-parse failed: ${sourceCommit.stderr}`);
+const inets = JSON.parse(await readFile(path.join(repo, 'proofs/inets/UPSTREAM.json'), 'utf8'));
+const inetsSha256 = createHash('sha256')
+  .update(await readFile(path.join(repo, 'proofs/inets/InteractionNets.lean')))
+  .digest('hex');
+if (inets.sha256 !== inetsSha256 || !/^[a-f0-9]{40}$/.test(inets.commit)) {
+  throw new Error('vendored inets identity does not match its pinned upstream provenance');
+}
+const planModelSha256 = createHash('sha256')
+  .update(await readFile(path.join(repo, 'proofs/foundation/NobleFoundation/NetI64Plans.lean')))
+  .digest('hex');
 const binaryBytes = await readFile(testBinary);
 const executableSha256 = createHash('sha256').update(binaryBytes).digest('hex');
 const executableBytes = (await stat(testBinary)).size;
@@ -71,10 +81,16 @@ const identities = cases.map((row) => ({
   representation_revision: row.representation_revision,
   checker_revision: row.checker_revision,
   executor_revision: row.executor_revision,
+  inets_upstream_commit: inets.commit,
+  inets_sha256: inetsSha256,
+  plan_model_sha256: planModelSha256,
   executable_sha256: executableSha256,
   evidence_key: createHash('sha256').update(JSON.stringify([
     sourceCommit.stdout.trim(),
     executableSha256,
+    inets.commit,
+    inetsSha256,
+    planModelSha256,
     row.family,
     row.graph_id,
     row.net_key,
@@ -94,6 +110,11 @@ const report = {
   source_commit: sourceCommit.stdout.trim(),
   test_executable_sha256: executableSha256,
   test_executable_bytes: executableBytes,
+  formal_reference: {
+    inets_upstream_commit: inets.commit,
+    inets_sha256: inetsSha256,
+    plan_model_sha256: planModelSha256,
+  },
   executable_command: 'plancomparison::plan_storage_comparison_covers_required_families --exact --nocapture',
   criteria: 'verification/net-plans/criteria.md',
   timing_scope: 'complete reduce call, including validation, plan compile/check, execution, read-back and local destruction; excludes graph admission/lowering',
