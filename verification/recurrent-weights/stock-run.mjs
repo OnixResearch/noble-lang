@@ -95,7 +95,7 @@ if (report.schema !== (modelState ? 'noble.recurrent-model-state/v1' :
         result.coverage.free_running.scan_steps !== 1000 ||
         result.resume.index !== 2 || !result.seeded_fault.first_counterexample :
         result.provider.join(',') !== 'CPUExecutionProvider') ||
-        controls.length !== (modelState ? result.program === 'stack-swap' ? 32 : 31 : 25) ||
+        controls.length !== (modelState ? result.program === 'stack-swap' ? 35 : 34 : 25) ||
         !controls.every(control => control.refused) ||
         result.coverage.tiny.transitions !== 16 ||
         result.coverage.boundary.transitions !== (index ? 0 : 6) ||

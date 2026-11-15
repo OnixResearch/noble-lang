@@ -59,7 +59,9 @@ def authored_model(indices):
 
 
 def _bits(values):
-    cells = np.asarray(values, dtype=np.float32)
+    cells = np.asarray(values)
+    if cells.dtype != np.dtype("float32"):
+        raise ValueError("candidate emitted a non-binary32 observation")
     if cells.shape != (128,) or not np.all(np.isin(cells.view(np.uint32),
                                                      [0x00000000, 0x3F800000])):
         raise ValueError("candidate emitted a non-exact state bit or wrong output shape")
@@ -99,8 +101,10 @@ def check_candidate(source_transition, state_codec, candidate_bytes):
         if session.get_providers() != ["CPUExecutionProvider"] or [
                 item.name for item in session.get_inputs()] != ["initial_state_bits", "scan_inputs"] or [
                 item.shape for item in session.get_inputs()] != [[128], ["steps", 1]] or [
+                item.type for item in session.get_inputs()] != ["tensor(float)", "tensor(float)"] or [
                 item.name for item in session.get_outputs()] != ["final_state_bits", "observations"] or [
-                item.shape for item in session.get_outputs()] != [[128], ["steps", 128]]:
+                item.shape for item in session.get_outputs()] != [[128], ["steps", 128]] or [
+                item.type for item in session.get_outputs()] != ["tensor(float)", "tensor(float)"]:
             raise ValueError("candidate state/observation ABI differs")
         for left in range(4):
             for right in range(4):

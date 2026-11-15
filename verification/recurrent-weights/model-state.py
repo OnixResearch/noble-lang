@@ -108,8 +108,12 @@ class ScanEngine:
 
     def run_cells(self, initial, tokens, *, budget=1000, cancelled=False):
         self.assert_model_identity()
+        initial = np.asarray(initial)
+        tokens = np.asarray(tokens)
+        stock.require(initial.dtype == np.dtype("float32") and
+                      tokens.dtype == np.dtype("float32"),
+                      "non-binary32 state or scan input representation")
         initial = stock.validate_cells(initial, self.state_cells)
-        tokens = np.asarray(tokens, dtype=np.float32)
         stock.require(tokens.ndim == 2 and tokens.shape[1] == self.token_cells
                       and 1 <= tokens.shape[0] <= 1000, "scan input shape/bound")
         for row in tokens:
@@ -127,6 +131,8 @@ class ScanEngine:
         peak = rss_bytes("VmHWM")
         stock.require(len(result) == 2 and result[1].shape == (len(tokens), self.state_cells),
                       "scan output shape mismatch")
+        stock.require(result[0].dtype == np.dtype("float32") and
+                      result[1].dtype == np.dtype("float32"), "scan output dtype mismatch")
         observations = [stock.decode_words(row, self.state_cells) for row in result[1]]
         final = stock.decode_words(result[0], self.state_cells)
         stock.require(final == observations[-1], "model final state/observation mismatch")
@@ -208,6 +214,12 @@ def controls(engine, spec, model_bytes, output_dir, model_final_state):
     stock.refused("wrong-scan-token-shape", lambda: engine.run_cells(
         stock.encode_words(state, engine.state_cells // 64),
         np.zeros((1, engine.token_cells + 1), dtype=np.float32)), results)
+    stock.refused("coerced-state-dtype", lambda: engine.run_cells(
+        np.ones(engine.state_cells, dtype=np.float64),
+        np.zeros((1, engine.token_cells), dtype=np.float32)), results)
+    stock.refused("coerced-token-dtype", lambda: engine.run_cells(
+        stock.encode_words(state, engine.state_cells // 64),
+        np.zeros((1, engine.token_cells), dtype=np.float64)), results)
     for label, bits in [("nan", 0x7FC00000), ("negative-zero", 0x80000000),
                         ("fractional", 0x3F000000)]:
         bad = stock.encode_words(state, engine.state_cells // 64)
@@ -231,6 +243,8 @@ def controls(engine, spec, model_bytes, output_dir, model_final_state):
     stock.refused("wrong-program", lambda: engine.run(state, inputs, declared_program="wrong"), results)
     stock.refused("wrong-codec", lambda: engine.run(state, inputs, codec="big-endian"), results)
     stock.refused("budget-short", lambda: engine.run(state, inputs, budget=0), results)
+    stock.refused("trajectory-budget-short",
+                  lambda: engine.run(state, inputs + inputs, budget=1), results)
     stock.refused("cancelled-before-call", lambda: engine.run(state, inputs, cancelled=True), results)
     stock.refused("wrong-output-length", lambda: stock.decode_words(
         np.zeros(engine.state_cells - 1, dtype=np.float32), engine.state_cells), results)
