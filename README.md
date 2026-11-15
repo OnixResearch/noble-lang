@@ -398,6 +398,18 @@ admitted only by the graph checker (decision B0(b)); there is no kernel `F32`.
 Implementation proofs of Rust code that computes with floats wait on Aeneas
 float support; the [foundation README](proofs/foundation/README.md) records that
 blocker (issue #92) and its non-claims.
+
+The separate opt-in [`noble_ngraph::tick` runner](verification/tick-runner/README.md)
+admits an acyclic total-I64 graph as one bounded sequential transition
+`(state, input, controls) -> (next_state, output)`, with explicit between-tick
+control activation and independently admitted reset. It is a library API, not
+a new CLI command, Core construct, graph feedback edge or F32 parameter mode.
+Its frozen continuation criteria and source-bound comparison are separate
+from the historical numeric-graph Phase C STOP and independent-row batch
+NO-GO; neither historical decision is reopened by this different workload.
+The [retained decision and raw receipts](verification/tick-runner/decision.md)
+record a NO-GO for further optimization under the preregistered tick rule.
+
 Extraction from Core source produces `ngraph-i64/0` graphs only. The existing
 `noble ngraph check` command also accepts versioned Nickel constructor JSON and
 lowers it into the same `ngraph-ir/0` format before native `check_with`

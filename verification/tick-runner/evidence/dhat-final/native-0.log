@@ -1,0 +1,25 @@
+
+running 1 test
+ALLOC {"schema":"noble-tick-allocation-observation/v1","arm":"native","successful_ticks":0,"source_commit":"597d228cea3f8e2e7f8f35400aa101ae13bd1c21","test_executable_sha256":"af108bf56048d8fd50f4586b256dab4704cccfd3cb08e0df8ef7658684973fae","operation_count":0,"harness_included":true,"scratch_bytes_declared":null,"retained_bytes_charged":16}
+test tick_runner::benchmark::probes::opt_in_allocation_observation ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 69 filtered out; finished in 0.17s
+
+
+==3983773== DHAT, a dynamic heap analysis tool
+==3983773== Copyright (C) 2010-2024, and GNU GPL'd, by Mozilla Foundation et al.
+==3983773== Using Valgrind-3.27.1 and LibVEX; rerun with -h for copyright info
+==3983773== Command: /dev/shm/noble-iss/target/tick-128/debug/deps/schedule_correspondence-ed4191f0e41aeff5 --exact tick_runner::benchmark::probes::opt_in_allocation_observation --nocapture
+==3983773== 
+==3983773== 
+==3983773== Total:     51,569 bytes in 280 blocks
+==3983773== At t-gmax: 20,145 bytes in 101 blocks
+==3983773== At t-end:  592 bytes in 2 blocks
+==3983773== Reads:     58,837 bytes
+==3983773== Writes:    49,817 bytes
+==3983773== 
+==3983773== To view the resulting profile, open
+==3983773==   file:///nix/store/39iybd55afmpqlgf979ra06wj3q3wapa-valgrind-3.27.1/libexec/valgrind/dh_view.html
+==3983773== in a web browser, click on "Load...", and then select the file
+==3983773==   /home/brittonr/.cache/noble-iss/scratch/tick-128/dhat-final/native-0.json
+==3983773== The text at the bottom explains the abbreviations used in the output.

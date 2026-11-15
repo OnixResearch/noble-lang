@@ -1,6 +1,11 @@
 #![feature(register_tool)]
 #![register_tool(tigerstyle)]
 #![allow(
+    tigerstyle::ambient_clock,
+    tigerstyle::ambient_env,
+    reason = "Owner: noble-maintainers; opt-in integration benchmarks measure the real host clock and consume environment-supplied output paths only at the test-shell boundary."
+)]
+#![allow(
     tigerstyle::ambiguous_params,
     tigerstyle::assertion_density,
     tigerstyle::clone_then_borrow,
@@ -51,5 +56,7 @@ mod pairs;
 mod plancomparison;
 #[path = "plancomparison/fixtures.rs"]
 mod plancomparison_fixtures;
+#[path = "tick_runner/mod.rs"]
+mod tick_runner;
 use base::{declared, interleaved, packed};
 mod common;

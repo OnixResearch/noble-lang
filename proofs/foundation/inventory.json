@@ -13528,6 +13528,90 @@
       "claim": "a checked matrix closure certificate and any satisfying site run are incompatible"
     },
     {
+      "name": "NobleFoundation.TickRunner.tick_ready_pins_entry",
+      "phase": 1,
+      "role": "tick-protocol",
+      "claim": "a successful tick records the single graph, control and state tuple selected at entry"
+    },
+    {
+      "name": "NobleFoundation.TickRunner.tick_ready_commits_once",
+      "phase": 1,
+      "role": "tick-protocol",
+      "claim": "a successful model tick atomically publishes next state and output and advances tick and commit counts exactly once"
+    },
+    {
+      "name": "NobleFoundation.TickRunner.tick_refusal_preserves_active",
+      "phase": 1,
+      "role": "tick-protocol",
+      "claim": "every refused tick preserves the entire active model runner"
+    },
+    {
+      "name": "NobleFoundation.TickRunner.update_success_keeps_state",
+      "phase": 1,
+      "role": "tick-protocol",
+      "claim": "control activation changes controls and their epoch without advancing the state, graph epoch or logical tick"
+    },
+    {
+      "name": "NobleFoundation.TickRunner.update_refusal_preserves_active",
+      "phase": 1,
+      "role": "tick-protocol",
+      "claim": "a refused control update preserves every active field"
+    },
+    {
+      "name": "NobleFoundation.TickRunner.reset_uses_separate_state",
+      "phase": 1,
+      "role": "tick-protocol",
+      "claim": "a successful reset installs separately supplied state and controls, clears output and tick, and advances both epochs"
+    },
+    {
+      "name": "NobleFoundation.TickRunner.reset_refusal_preserves_active",
+      "phase": 1,
+      "role": "tick-protocol",
+      "claim": "a refused reset preserves the entire prior active stream"
+    },
+    {
+      "name": "NobleFoundation.TickRunner.fixture_prepares",
+      "phase": 1,
+      "role": "tick-protocol-control",
+      "claim": "a concrete nonempty three-input two-output wrapping-I64 graph passes model preparation"
+    },
+    {
+      "name": "NobleFoundation.TickRunner.out_of_order_or_late_input_refuses",
+      "phase": 1,
+      "role": "tick-protocol-control",
+      "claim": "ordered input prefix and absence of late input nodes are independently checked, not inferred from declared interface width"
+    },
+    {
+      "name": "NobleFoundation.TickRunner.actual_tick_commits_once",
+      "phase": 1,
+      "role": "tick-protocol-control",
+      "claim": "a real reference-model tick reaches the ready path and commits the expected 13 once"
+    },
+    {
+      "name": "NobleFoundation.TickRunner.changed_control_is_selected",
+      "phase": 1,
+      "role": "tick-protocol-control",
+      "claim": "activating a distinct control before the first tick changes its next state to 17"
+    },
+    {
+      "name": "NobleFoundation.TickRunner.duplicate_and_cancel_preserve",
+      "phase": 1,
+      "role": "tick-protocol-control",
+      "claim": "a duplicate ticket refuses and a pre-evaluation cancellation preserves active state"
+    },
+    {
+      "name": "NobleFoundation.TickRunner.same_layout_reset_never_migrates",
+      "phase": 1,
+      "role": "tick-protocol-control",
+      "claim": "a same-layout subtractive reset uses explicit state 99 and yields distinct next-state 95 and output 92"
+    },
+    {
+      "name": "NobleFoundation.TickRunner.partition_and_tick_bound_refuse",
+      "phase": 1,
+      "role": "tick-protocol-control",
+      "claim": "a wrong control partition and exhausted tick counter reach actual model refusal paths"
+    },
+    {
       "name": "NobleFoundation.RecurrentBitCell.decode_encode_word",
       "phase": 1,
       "role": "recurrent-bitcell",
