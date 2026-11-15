@@ -32,6 +32,14 @@ fn stats(mut samples: Vec<u64>) -> Json {
     })
 }
 
+fn stage_stats(samples: Vec<u64>) -> Json {
+    if samples.is_empty() {
+        json!({"status": "not-run", "reason": "the verified cache hit bypasses this stage"})
+    } else {
+        stats(samples)
+    }
+}
+
 fn median(report: &Json) -> u64 {
     report["median_ns"].as_u64().expect("nonempty stats")
 }
@@ -60,11 +68,11 @@ impl Stages {
 
     fn report(self) -> Json {
         json!({
-            "lookup_and_validation": stats(self.lookup),
-            "specialization": stats(self.specialization),
-            "source_emission": stats(self.emission),
-            "independent_admission": stats(self.admission),
-            "publication": stats(self.publication),
+            "lookup_and_validation": stage_stats(self.lookup),
+            "specialization": stage_stats(self.specialization),
+            "source_emission": stage_stats(self.emission),
+            "independent_admission": stage_stats(self.admission),
+            "publication": stage_stats(self.publication),
             "request_total": stats(self.total),
         })
     }
