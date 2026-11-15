@@ -87,6 +87,8 @@ if (lines.length !== 1) throw new Error('expected one runtime JSON result');
 const report = JSON.parse(lines[0]);
 if (report.schema !== (modelState ? 'noble.recurrent-model-state/v1' :
       'noble.recurrent-stock-runtime/v1') || report.results.length !== 2 ||
+    report.coverage.dense !== 'none' || report.coverage.sparse !== 'none' ||
+    !report.coverage.stock ||
     report.results.some((result, index) => {
       const controls = modelState ? result.controls : result.refusals;
       return result.program !== ['accumulator', 'stack-swap'][index] ||

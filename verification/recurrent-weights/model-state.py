@@ -388,6 +388,7 @@ def main():
                         "graph_sha256": stock.sha(bytes.fromhex(spec["canonical_graph"])),
                         "graph_id": spec["graph_id"], "snapshot_id": spec["snapshot_id"],
                         "snapshot_sha256": stock.sha(bytes.fromhex(spec["snapshot_bytes"])),
+                        "parameter_count": len(spec["weights"]),
                         "weight_bytes": len(bytes.fromhex(spec["snapshot_bytes"])),
                         "export_ns": export_ns, "load_ns": engine.load_ns,
                         "guards_elided_under_exact_bit_closure": guards,
@@ -401,6 +402,8 @@ def main():
                                   "provider": "CPUExecutionProvider", "opset": 18, "ir": 10,
                                   "optimizations": "disabled", "thread_count": 1},
                       "coverage": {"dense": "none", "sparse": "none",
+                                   "stock": "selected ORT CPU: two single-call ONNX Scan "
+                                            "1,000-step free runs, separate one-step host loops",
                                    "stateless_host_loop": "separate retained stock-runtime receipt",
                                    "model_carried": "two ONNX Scan models; one call per 1,000-step free run"},
                       "results": results}, sort_keys=True))
