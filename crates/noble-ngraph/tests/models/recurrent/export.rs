@@ -32,10 +32,7 @@ pub(super) fn document(
     name: &str,
     graph: &Graph,
     weights: &[f32],
-    graph_id: &[u8],
-    snapshot_id: &[u8],
-    snapshot_bytes: &[u8],
-    canonical_graph: &[u8],
+    candidate: &Candidate,
     vectors: &str,
 ) -> String {
     assert_eq!(graph.profile, SubProfile::F32);
@@ -77,15 +74,17 @@ pub(super) fn document(
         .map(|value| value.to_bits().to_string())
         .collect::<Vec<_>>()
         .join(",");
+    let (graph_id, snapshot_id, snapshot_bytes) = candidate.identities();
+    let canonical_graph = candidate.graph_bytes();
     format!(
         "{{\"schema\":\"noble.recurrent-stock-export/v1\",\"program\":\"{name}\",\
          \"graph_id\":\"{}\",\"snapshot_id\":\"{}\",\"snapshot_bytes\":\"{}\",\
          \"canonical_graph\":\"{}\",\"slots\":[{slots}],\"weights\":[{weight_bits}],\
          \"nodes\":[{nodes}],\"outputs\":[{outputs}],\"vectors\":{vectors}}}",
-        hex(graph_id),
-        hex(snapshot_id),
-        hex(snapshot_bytes),
-        hex(canonical_graph),
+        hex(&graph_id),
+        hex(&snapshot_id),
+        hex(&snapshot_bytes),
+        hex(&canonical_graph),
     )
 }
 

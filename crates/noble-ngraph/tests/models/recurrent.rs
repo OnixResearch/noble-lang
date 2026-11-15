@@ -193,18 +193,14 @@ fn stock_runtime_export() {
     ] {
         let checked = checker::Candidate::new(program, graph.clone(), &weights)
             .expect("export only after checked graph and snapshot admission");
-        let (graph_id, snapshot_id, snapshot_bytes) = checked.identities();
         println!(
             "RECURRENT_STOCK_EXPORT\t{}",
             export::document(
                 name,
                 &graph,
                 &weights,
-                &graph_id,
-                &snapshot_id,
-                &snapshot_bytes,
-                &checked.graph_bytes(),
-                &export::vectors(program, &checked),
+                &checked,
+                &export::vectors(program, &checked)
             )
         );
     }
