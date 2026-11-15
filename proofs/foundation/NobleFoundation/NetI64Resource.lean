@@ -385,8 +385,12 @@ theorem accepted_bytes_bound_every_schedule (hash : List Nat → List Nat) (hash
     selectedRuleBytes selectedCostBytes program inputs certificate).1 accepted
   rcases fields with ⟨_, _, _, _, _, _, _, _, netDigest, ruleDigest, _, selectedRules,
     decoded, sourceTime, _, sourceLive, _, _, semanticCount, liveBound, semanticAccepted⟩
-  have sourceEq : program.translate inputs = source :=
-    (Program.translateChecked_parts translated).2.1
+  have sourceEq : program.translate inputs = source := by
+    by_cases admitted : program.acceptanceCheck inputs = true
+    · by_cases checked : (program.translate inputs).check arity = true
+      · simpa [Program.translateChecked, admitted, checked] using translated
+      · simp [Program.translateChecked, admitted, checked] at translated
+    · simp [Program.translateChecked, admitted] at translated
   have sourceTime' : agentsTimePotential source.agents ≤
       certificate.semantic.declaredInteractions := by
     calc
