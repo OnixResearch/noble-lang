@@ -3912,6 +3912,9 @@ Rust's revision-3 `rewrite::compile`, independently admitted by `rewrite::check`
 The Rust generator emits four rule families in both orientations under both
 reuse and allocating storage policies (16 streams), and a normal Rust test
 compares the retained Lean file against freshly re-emitted source bytes.
+Regenerate with `node verification/net-plans/regenerate-lean-corpus.mjs`;
+the shell runner owns the file write while the library test generates only
+the compiler-derived corpus and checks freshness without filesystem effects.
 The Lean kernel checks that all 16 parse into the expected revision, opcode,
 pair, reuse actions, result-symbol list, wire/publication counts and
 reservation fields. For the four forward-reuse cases, it additionally proves
