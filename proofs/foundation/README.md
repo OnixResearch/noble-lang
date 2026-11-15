@@ -177,6 +177,7 @@ Status words:
 | Physical plan slot, boundary and queue frame (issue #110) | `NobleFoundation.NetI64Plans.PhysicalState.writeSlot_frame`, `NobleFoundation.NetI64Plans.PhysicalState.appendSlot_frame`, `NobleFoundation.NetI64Plans.PhysicalState.logicalPort_writeSlot_away`, `NobleFoundation.NetI64Plans.PhysicalState.logicalPair_writeSlot_away`, `NobleFoundation.NetI64Plans.PhysicalState.retargetOutput_preserves_free`, `NobleFoundation.NetI64Plans.PhysicalState.project_boundary_frame`, `NobleFoundation.NetI64Plans.PhysicalState.project_work_frame`, `NobleFoundation.NetI64Plans.PhysicalState.appendPublications_project_work`, `NobleFoundation.NetI64Plans.PhysicalState.appendPublications_project_plan_work`, `NobleFoundation.NetI64Plans.PhysicalState.appendPublications_project_net` | A slot write/append preserves unrelated slots and queued pairs under explicit outside-footprint premises. Output labels remain stable while physical targets move. Each canonical queued Rust pair projects to two directed inets work entries; a checked publication inventory therefore permits tail-append/head-prepend permutation without claiming equal ordered queues | Local physical frame, stable external labels and queue-order relation **proved**; arbitrary emitted-plan whole-net refinement **open** |
 | Arbitrary decoded physical output identity (issue #110) | `NobleFoundation.NetI64Plans.PhysicalState.executeCheckedImage_preserves_free` | Any successful decoded image may install any number of result slots, perform peer/output writes, retire consumed slots and publish pairs; the physical executor preserves the entire ordered stable free-port identity list. It does not establish correct targets, agents, wire contents, checker admissibility or full net refinement | Free-port identity **proved** for all successful model executions; general projected-net and Rust correspondence **open** |
 | Decoded four-rule physical transaction instances (issue #110) | `NobleFoundation.NetI64Plans.PhysicalState.op2_output_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.op2_output_refines`, `NobleFoundation.NetI64Plans.PhysicalState.op2_published_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.op2_published_pair_orientations`, `NobleFoundation.NetI64Plans.PhysicalState.op2_published_refines`, `NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_refines`, `NobleFoundation.NetI64Plans.PhysicalState.dup_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.dup_refines`, `NobleFoundation.NetI64Plans.PhysicalState.era_execution_exact`, `NobleFoundation.NetI64Plans.PhysicalState.era_refines` | The kernel decodes each model byte image, executes physical slot retag/reuse, external writes, retirement and publication, and proves whole-net equality to `Plan.commit` for each fixed layout. The nonempty OP2 publication also proves its two-entry directed queue matches the checked plan. These are model-internal finite fixtures, not arbitrary admitted layouts, fresh-slot cases, reverse orientations or a Rust implementation theorem | Four rule-shapes plus one nonempty publication **proved** for fixed fixtures; general physical-image refinement and Rust correspondence **open** |
+| Witnessed within-layer packed permutation model (issue #129) | `NobleFoundation.PackedPermutation.accepted_stream_sound`, `NobleFoundation.PackedPermutation.validate_sound`; `NobleFoundation.PackedPermutation.fixture_witnesses_distinct`, `NobleFoundation.PackedPermutation.cross_layer_base_accepts`, `NobleFoundation.PackedPermutation.cross_layer_refused` | separate total I64/Bool model with actual table and op streams, complete node witness, strict layer ranges, injective registers, ordered/repeated outputs and sufficient-budget/no-cancellation observation; Rust and byte translation remain separate | theorem source present; foundation kernel/axiom audit pending integration; Rust checker/export/evaluator correspondence **open** |
 | Bounded sequential I64/Bool belt validator (issue #113) | `NobleFoundation.Belt.validate_sound`; real lowered program and exact-vector controls in the generated BeltCorpus module | symbolic graph identities over `PackedSchedule`; no Rust refinement theorem | model **proved**; real artifact corpus is finite model evidence; Rust lowerer/checker/interpreter and B2 comparisons remain separate **tested** evidence |
 | Fixed T1/T2 timing legality and ordered target outputs (issue #114) | `NobleFoundation.BeltTarget.mapReadyOutputs`, `NobleFoundation.BeltTarget.validate_sound` | the symbolic run gates graph-reference values on latency-derived completion; it does not evaluate operations or simulate belt/save state, and no Rust artifact/operand-age refinement theorem is claimed | completion-gate/order **proved** only; generated corpus and Rust lowerer/checker/interpreter cross-backend controls are separate **tested** evidence; machine-step refinement remains **open** |
 | ZMod/BitVec/K-NUM-01 signed decoding, range, round trips | `toZ_ofZ`, `ofZ_toZ`, `toZ_add`, `toZ_sub`, `toZ_mul`, `toZ_neg`, `signed_eq_toInt`, `signed_toZ`, `wrap_eq_bmod`, `wrap_eq_toInt_ofInt`, `wrap_eq_knum01`, `toInt_range`, `signed_range`, `intCast_signed`, `toInt_ofInt_eq_iff`, `signed_intCast_eq_iff`, `ofInt_toInt` | none (mathematics only) | **proved** |
@@ -1919,6 +1920,58 @@ The real-artifact corpus was first retained at
 constant/slot, layer, count and failure-suffix obligations do not export or
 validate instruction bodies, and no correspondence theorem joins that layout
 model to Rust bytes or to this validator.
+
+## Witnessed within-layer packed permutation (issue #129, separate profile)
+
+PackedPermutation.lean models a separate total I64/Bool profile, not a change
+to issue #43's canonical schedule acceptance. A caller supplies a finite
+Input/Const/Add/Sub/Mul/Eq node list, one injective register per node, a
+node-layer list, contiguous operation-stream layer ranges, the **actual**
+input/constant preload table, an instruction-to-node witness, actual
+operation-only bodies, and ordered graph-output/register lists. Table entries
+may occur in any order: the checker derives each table node from that actual
+entry's body and demands exactly one entry per input/constant node. It checks
+that every operand refers to an earlier I64-producing node (rather than
+silently producing an empty value on a Bool/I64 type mismatch), every emitting
+node appears exactly once in the witness (including dead operations), every
+body and ordered operand/destination matches its witnessed
+node, every read is initialized, every register has one writer, each instruction
+lies in its declared node's layer, dependencies lie in earlier layers, and
+ordered/repeated outputs select their declared registers. Empty output and
+operation-witness lists are refused, not interpreted as vacuous success.
+
+`NobleFoundation.PackedPermutation.accepted_stream_sound` applies the
+PackedSchedule model's already proved step invariant to the **supplied**
+table and stream, not a freshly emitted stream. For every input assignment it
+identifies the actual stream's entire ordered output list with the graph
+reference. `NobleFoundation.PackedPermutation.validate_sound` adds an
+explicit budget at least the table-entry count plus instruction count and a
+false cancellation flag; only then does the bounded model return that
+observation. The theorem does not equate low-budget or cancellation results
+with any external machine.
+
+Three hand-authored streams use the same eight-node graph: one canonical
+order and two distinct within-layer permutations, with output node 3
+repeated. The constants-first table fixture demonstrates that table order
+need not follow graph order. A topological cross-layer stream passes the
+earlier packed-body validator but is refused by this separate layer check.
+The inherited body validator independently refuses the early-read control;
+it accepts an omitted operation that no requested output observes, while
+this profile still refuses that omission. Other model controls state refusal
+of a wrong node witness, duplicated work, reversed subtraction operands,
+body-matched aliased destinations, changed constant bits or input slots, a
+duplicated table entry, changed output register, and empty output/witness.
+Every theorem is individually listed in inventory.json;
+the foundation lane checks transitive axiom dependencies against its pinned
+allow-list rather than assuming the parent theorem's axioms.
+
+The graph nodes and checker-derived layer assignments must be faithfully
+translated into these model inputs; that translation is not proved here.
+There is no general Lean-to-Rust checker, parser, exporter, or evaluator
+correspondence theorem, and the hand-authored fixtures are not real exported
+artifacts. The separate generated corpus and its source-bound receipt, when
+attached, supply finite evidence only. This profile says nothing about
+register reuse, guards, F32 semantics, hardware scheduling or cache residency.
 
 ## Guarded packed-schedule model (issue #43, deliverable 6)
 
