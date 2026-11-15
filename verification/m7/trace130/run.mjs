@@ -72,8 +72,9 @@ function run(label, crate, test, filter) {
 const kernel = run('kernel', 'noble-kernel', 'm7-dataspace', 'trace130');
 const host = run('host', 'noble-syndicate', 'service', 'trace130');
 function lines(output, marker, fields) {
-  return output.split(/\r?\n/).filter(line => line.startsWith(`${marker}\t`)).map(line => {
-    const columns = line.split('\t');
+  return output.split(/\r?\n/).filter(line => line.includes(`${marker}\t`)).map(line => {
+    // libtest may print its "test ... " prefix on the first nocapture row.
+    const columns = line.slice(line.indexOf(`${marker}\t`)).split('\t');
     assert.equal(columns.length, fields, `malformed ${marker} receipt: ${line}`);
     return columns;
   });
