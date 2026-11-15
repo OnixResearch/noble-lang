@@ -1,0 +1,2123 @@
+{
+  "cache": {
+    "limits": {
+      "entries": 64,
+      "eviction_work": 4096,
+      "lookup_work": 64,
+      "manifest_bytes": 4194304,
+      "retained_bytes": 67108864,
+      "variants_per_subject": 8
+    },
+    "state": "new empty session for each setup repetition, miss then verified hit; no persisted executable"
+  },
+  "clean_source": true,
+  "compiled_backend": "ngraph-layered/0",
+  "criteria": "verification/interpreter-specialization/criteria.md",
+  "dataset": {
+    "boundary_and_seeded_rows": 266,
+    "seed": "0x34f0202611140001",
+    "timing_batch": 1024,
+    "timing_rows": "the same deterministic cyclic batch of boundary and seeded rows on all paths"
+  },
+  "frontend_limits": {
+    "graph_budgets": "Budgets { work_units: 4194304, expanded_nodes: 262144, inline_depth: 64, live_nodes: 262144, layers: 16384, inputs: 65536, outputs: 65536, affine_terms: 4096, table_length_entries: 65536, table_entries: 1048576, facts: 262144, graph_bytes: 33554432, snapshot_bytes: 4194304, forward_scratch: 67108864, backward_scratch: 134217728, optimizer_steps: 1000000, residual_nodes: 262144, variants: 1 }",
+    "interpreter": {
+      "bytes": 65536,
+      "depth": 64,
+      "nodes": 524288,
+      "work": 512000000
+    },
+    "residual_and_direct": {
+      "bytes": 65536,
+      "depth": 64,
+      "nodes": 16384,
+      "work": 2000000
+    }
+  },
+  "graph_semantics": "ngraph-sem/0",
+  "hardware": {
+    "cpu": "model name\t: AMD RYZEN AI MAX+ 395 w/ Radeon 8060S",
+    "os": "Linux aspen3 6.18.60 #1-NixOS SMP PREEMPT_DYNAMIC @1793362001 x86_64 GNU/Linux"
+  },
+  "initial_interpreter_ordinary_admission_extraction_and_build_ns": 725502813,
+  "issue": 34,
+  "optimization_flags": {
+    "rust_debug_assertions": true,
+    "source": "unoptimized ordinary Noble graph; no Wasm or wasm-opt path used"
+  },
+  "profile": "ngraph-i64/0",
+  "proof_boundary": "existing FirstProjection/OperandForwarding Lean graph model, no Rust correspondence or Program refinement",
+  "records": [
+    {
+      "batch_savings_ns": "556060",
+      "break_even_calls": 7564,
+      "break_even_reason_if_null": null,
+      "cache_hit_ns": {
+        "independent_admission": {
+          "max_ns": 4183365,
+          "median_ns": 4101562,
+          "min_ns": 4027173,
+          "n": 11,
+          "p25_ns": 4071085,
+          "p75_ns": 4108696
+        },
+        "lookup_and_validation": {
+          "max_ns": 397593,
+          "median_ns": 391261,
+          "min_ns": 381272,
+          "n": 11,
+          "p25_ns": 389668,
+          "p75_ns": 394036
+        },
+        "publication": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        },
+        "request_total": {
+          "max_ns": 4582601,
+          "median_ns": 4493014,
+          "min_ns": 4409457,
+          "n": 11,
+          "p25_ns": 4461966,
+          "p75_ns": 4503563
+        },
+        "source_emission": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        },
+        "specialization": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        }
+      },
+      "cache_miss_ns": {
+        "independent_admission": {
+          "max_ns": 4129394,
+          "median_ns": 4038153,
+          "min_ns": 3978723,
+          "n": 11,
+          "p25_ns": 4014218,
+          "p75_ns": 4042612
+        },
+        "lookup_and_validation": {
+          "max_ns": 64320,
+          "median_ns": 61916,
+          "min_ns": 60233,
+          "n": 11,
+          "p25_ns": 61165,
+          "p75_ns": 62807
+        },
+        "publication": {
+          "max_ns": 265957,
+          "median_ns": 259865,
+          "min_ns": 253894,
+          "n": 11,
+          "p25_ns": 258143,
+          "p75_ns": 264404
+        },
+        "request_total": {
+          "max_ns": 4532427,
+          "median_ns": 4436798,
+          "min_ns": 4370504,
+          "n": 11,
+          "p25_ns": 4410399,
+          "p75_ns": 4443080
+        },
+        "source_emission": {
+          "max_ns": 4729,
+          "median_ns": 4338,
+          "min_ns": 4107,
+          "n": 11,
+          "p25_ns": 4158,
+          "p75_ns": 4458
+        },
+        "specialization": {
+          "max_ns": 76303,
+          "median_ns": 69210,
+          "min_ns": 68347,
+          "n": 11,
+          "p25_ns": 68678,
+          "p75_ns": 69660
+        }
+      },
+      "cache_retained_bytes": {
+        "max_bytes": 2883,
+        "median_bytes": 2883,
+        "min_bytes": 2883,
+        "n": 11,
+        "p25_bytes": 2883,
+        "p75_bytes": 2883
+      },
+      "compiled_retained_bytes": {
+        "direct": 104,
+        "interpreter": 528,
+        "residual": 104
+      },
+      "differential_agreement": true,
+      "differential_vectors": 1024,
+      "direct_graph": "03f6923b16fb9e55c39c494215acc1809ab602797a2d08977a02b3dcbf75680f",
+      "direct_setup_ns_not_offset_against_interpretation": 1975220,
+      "direct_source": "let y let x x y + y +",
+      "incremental_setup_ns": 4107384,
+      "interpreter_graph": "5760ac76b6e7c248d308e7d07afdd4b488b8b5301f2fbcd77f11bc4560c12151",
+      "one_hot_static_map": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        null,
+        null
+      ],
+      "original_nodes": 24,
+      "original_source_bytes": 202,
+      "readmitted_graph": "d455c4e4116d64dda85a53d9ca1a563eaaa2b11ed3cb1f66d96346684ffb13a6",
+      "residual_graph": "355693df2dfb33ac656d010d43762463c8560898bbaaa812a81368860812429a",
+      "residual_graph_text": "ngraph-ir/0 ngraph-i64/0\nsubject extracted d4b43654a9126b9fb19f848263a4513227cd7ebfa711db4cc26c732199a537e8 closure -\nslot input i64\nslot input i64\n%0 = input 0\n%1 = input 1\n%2 = i64.add %0 %1\n%3 = i64.add %2 %1\nout %3\n",
+      "residual_nodes": 4,
+      "residual_source": "let v1\nlet v0\nv0 v1 + let v2\nv2 v1 + let v3\nv3\n",
+      "residual_source_bytes": 47,
+      "source_tags": [
+        0,
+        0
+      ],
+      "stage_ns": {
+        "backend_build": {
+          "max_ns": 30638,
+          "median_ns": 27612,
+          "min_ns": 22052,
+          "n": 11,
+          "p25_ns": 25939,
+          "p75_ns": 27782
+        },
+        "cold_first_residual_execution": {
+          "max_ns": 12824,
+          "median_ns": 11351,
+          "min_ns": 10710,
+          "n": 11,
+          "p25_ns": 10860,
+          "p75_ns": 11882
+        },
+        "direct_ordinary_frontend_extraction_and_build": {
+          "max_ns": 2315616,
+          "median_ns": 1975220,
+          "min_ns": 1940976,
+          "n": 11,
+          "p25_ns": 1949903,
+          "p75_ns": 1989948
+        },
+        "independent_admission": {
+          "max_ns": 4086975,
+          "median_ns": 4000964,
+          "min_ns": 3962993,
+          "n": 11,
+          "p25_ns": 3974635,
+          "p75_ns": 4027113
+        },
+        "source_emission": {
+          "max_ns": 7353,
+          "median_ns": 4699,
+          "min_ns": 4258,
+          "n": 11,
+          "p25_ns": 4469,
+          "p75_ns": 4869
+        },
+        "specialization": {
+          "max_ns": 78978,
+          "median_ns": 74109,
+          "min_ns": 71173,
+          "n": 11,
+          "p25_ns": 72075,
+          "p75_ns": 74800
+        }
+      },
+      "variants": 1,
+      "warm_batch_ns": {
+        "boundary": "already-built evaluator, reusable preallocated workspace and row vectors; every returned observation consumed; host-native arithmetic has no graph output allocation",
+        "direct_ordinary_graph": {
+          "max_ns": 448909,
+          "median_ns": 436125,
+          "min_ns": 431316,
+          "n": 31,
+          "p25_ns": 434953,
+          "p75_ns": 438840
+        },
+        "host_native": {
+          "max_ns": 8115,
+          "median_ns": 7935,
+          "min_ns": 7904,
+          "n": 31,
+          "p25_ns": 7925,
+          "p75_ns": 7955
+        },
+        "interpreter": {
+          "max_ns": 1025476,
+          "median_ns": 1000800,
+          "min_ns": 925489,
+          "n": 31,
+          "p25_ns": 969501,
+          "p75_ns": 1005849
+        },
+        "residual": {
+          "max_ns": 449990,
+          "median_ns": 444740,
+          "min_ns": 440213,
+          "n": 31,
+          "p25_ns": 442607,
+          "p75_ns": 447706
+        },
+        "sample_size": 1024,
+        "samples_per_path": 31
+      },
+      "workspace_scratch_bytes": {
+        "direct": 40,
+        "interpreter": 200,
+        "residual": 40
+      }
+    },
+    {
+      "batch_savings_ns": "453257",
+      "break_even_calls": 8572,
+      "break_even_reason_if_null": null,
+      "cache_hit_ns": {
+        "independent_admission": {
+          "max_ns": 4391744,
+          "median_ns": 3576261,
+          "min_ns": 3432262,
+          "n": 11,
+          "p25_ns": 3478378,
+          "p75_ns": 4112192
+        },
+        "lookup_and_validation": {
+          "max_ns": 402392,
+          "median_ns": 340676,
+          "min_ns": 325989,
+          "n": 11,
+          "p25_ns": 331048,
+          "p75_ns": 395629
+        },
+        "publication": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        },
+        "request_total": {
+          "max_ns": 4788796,
+          "median_ns": 3917929,
+          "min_ns": 3759804,
+          "n": 11,
+          "p25_ns": 3812943,
+          "p75_ns": 4509484
+        },
+        "source_emission": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        },
+        "specialization": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        }
+      },
+      "cache_miss_ns": {
+        "independent_admission": {
+          "max_ns": 4235964,
+          "median_ns": 3510307,
+          "min_ns": 3408668,
+          "n": 11,
+          "p25_ns": 3428685,
+          "p75_ns": 4068300
+        },
+        "lookup_and_validation": {
+          "max_ns": 67046,
+          "median_ns": 57457,
+          "min_ns": 51987,
+          "n": 11,
+          "p25_ns": 53300,
+          "p75_ns": 60964
+        },
+        "publication": {
+          "max_ns": 267670,
+          "median_ns": 226383,
+          "min_ns": 219420,
+          "n": 11,
+          "p25_ns": 220682,
+          "p75_ns": 261718
+        },
+        "request_total": {
+          "max_ns": 4655577,
+          "median_ns": 3851144,
+          "min_ns": 3746719,
+          "n": 11,
+          "p25_ns": 3763411,
+          "p75_ns": 4467035
+        },
+        "source_emission": {
+          "max_ns": 4809,
+          "median_ns": 4017,
+          "min_ns": 3286,
+          "n": 11,
+          "p25_ns": 3396,
+          "p75_ns": 4228
+        },
+        "specialization": {
+          "max_ns": 76814,
+          "median_ns": 61364,
+          "min_ns": 58058,
+          "n": 11,
+          "p25_ns": 60052,
+          "p75_ns": 69720
+        }
+      },
+      "cache_retained_bytes": {
+        "max_bytes": 2883,
+        "median_bytes": 2883,
+        "min_bytes": 2883,
+        "n": 11,
+        "p25_bytes": 2883,
+        "p75_bytes": 2883
+      },
+      "compiled_retained_bytes": {
+        "direct": 104,
+        "interpreter": 528,
+        "residual": 104
+      },
+      "differential_agreement": true,
+      "differential_vectors": 1024,
+      "direct_graph": "1faebfb17e2faca7497a47ae893b5494a1d872c9c38dba75c319707a318b790e",
+      "direct_setup_ns_not_offset_against_interpretation": 1975009,
+      "direct_source": "let y let x x y + y -",
+      "incremental_setup_ns": 3794047,
+      "interpreter_graph": "5760ac76b6e7c248d308e7d07afdd4b488b8b5301f2fbcd77f11bc4560c12151",
+      "one_hot_static_map": [
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        null,
+        null
+      ],
+      "original_nodes": 24,
+      "original_source_bytes": 202,
+      "readmitted_graph": "972a34c448c0268457131549d7dd79887ded8a4cb3aecebdefe27a27ccb88ecc",
+      "residual_graph": "32a8a9c838b3386acd6a8af1b751c07235988208453992a2f0aa24d35e6ff7a4",
+      "residual_graph_text": "ngraph-ir/0 ngraph-i64/0\nsubject extracted 4b234b1ed03632e26fef43f9be8266a1ea3f3fc9499c91f52df584ad73c3d553 closure -\nslot input i64\nslot input i64\n%0 = input 0\n%1 = input 1\n%2 = i64.add %0 %1\n%3 = i64.sub %2 %1\nout %3\n",
+      "residual_nodes": 4,
+      "residual_source": "let v1\nlet v0\nv0 v1 + let v2\nv2 v1 - let v3\nv3\n",
+      "residual_source_bytes": 47,
+      "source_tags": [
+        0,
+        1
+      ],
+      "stage_ns": {
+        "backend_build": {
+          "max_ns": 29796,
+          "median_ns": 24566,
+          "min_ns": 23334,
+          "n": 11,
+          "p25_ns": 24496,
+          "p75_ns": 27492
+        },
+        "cold_first_residual_execution": {
+          "max_ns": 12664,
+          "median_ns": 10690,
+          "min_ns": 8185,
+          "n": 11,
+          "p25_ns": 10239,
+          "p75_ns": 11481
+        },
+        "direct_ordinary_frontend_extraction_and_build": {
+          "max_ns": 2463422,
+          "median_ns": 1975009,
+          "min_ns": 1650142,
+          "n": 11,
+          "p25_ns": 1677403,
+          "p75_ns": 1986321
+        },
+        "independent_admission": {
+          "max_ns": 4355126,
+          "median_ns": 3692819,
+          "min_ns": 3356100,
+          "n": 11,
+          "p25_ns": 3420129,
+          "p75_ns": 4024538
+        },
+        "source_emission": {
+          "max_ns": 6342,
+          "median_ns": 4538,
+          "min_ns": 3346,
+          "n": 11,
+          "p25_ns": 4178,
+          "p75_ns": 4689
+        },
+        "specialization": {
+          "max_ns": 84698,
+          "median_ns": 72124,
+          "min_ns": 60663,
+          "n": 11,
+          "p25_ns": 64400,
+          "p75_ns": 73497
+        }
+      },
+      "variants": 1,
+      "warm_batch_ns": {
+        "boundary": "already-built evaluator, reusable preallocated workspace and row vectors; every returned observation consumed; host-native arithmetic has no graph output allocation",
+        "direct_ordinary_graph": {
+          "max_ns": 418502,
+          "median_ns": 377034,
+          "min_ns": 364541,
+          "n": 31,
+          "p25_ns": 369360,
+          "p75_ns": 382735
+        },
+        "host_native": {
+          "max_ns": 10279,
+          "median_ns": 6792,
+          "min_ns": 6753,
+          "n": 31,
+          "p25_ns": 6773,
+          "p75_ns": 6803
+        },
+        "interpreter": {
+          "max_ns": 968359,
+          "median_ns": 824230,
+          "min_ns": 784505,
+          "n": 31,
+          "p25_ns": 814361,
+          "p75_ns": 837565
+        },
+        "residual": {
+          "max_ns": 404025,
+          "median_ns": 370973,
+          "min_ns": 355203,
+          "n": 31,
+          "p25_ns": 360524,
+          "p75_ns": 374539
+        },
+        "sample_size": 1024,
+        "samples_per_path": 31
+      },
+      "workspace_scratch_bytes": {
+        "direct": 40,
+        "interpreter": 200,
+        "residual": 40
+      }
+    },
+    {
+      "batch_savings_ns": "520402",
+      "break_even_calls": 8280,
+      "break_even_reason_if_null": null,
+      "cache_hit_ns": {
+        "independent_admission": {
+          "max_ns": 4282901,
+          "median_ns": 4196990,
+          "min_ns": 3790050,
+          "n": 11,
+          "p25_ns": 4128633,
+          "p75_ns": 4215455
+        },
+        "lookup_and_validation": {
+          "max_ns": 422229,
+          "median_ns": 398735,
+          "min_ns": 350875,
+          "n": 11,
+          "p25_ns": 392203,
+          "p75_ns": 399696
+        },
+        "publication": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        },
+        "request_total": {
+          "max_ns": 4693298,
+          "median_ns": 4597338,
+          "min_ns": 4142810,
+          "n": 11,
+          "p25_ns": 4529432,
+          "p75_ns": 4614500
+        },
+        "source_emission": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        },
+        "specialization": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        }
+      },
+      "cache_miss_ns": {
+        "independent_admission": {
+          "max_ns": 4298470,
+          "median_ns": 4100040,
+          "min_ns": 3675416,
+          "n": 11,
+          "p25_ns": 4070694,
+          "p75_ns": 4159130
+        },
+        "lookup_and_validation": {
+          "max_ns": 67857,
+          "median_ns": 63088,
+          "min_ns": 53500,
+          "n": 11,
+          "p25_ns": 61605,
+          "p75_ns": 63949
+        },
+        "publication": {
+          "max_ns": 273552,
+          "median_ns": 267550,
+          "min_ns": 241040,
+          "n": 11,
+          "p25_ns": 265376,
+          "p75_ns": 272099
+        },
+        "request_total": {
+          "max_ns": 4711902,
+          "median_ns": 4509785,
+          "min_ns": 4040237,
+          "n": 11,
+          "p25_ns": 4480930,
+          "p75_ns": 4576830
+        },
+        "source_emission": {
+          "max_ns": 5801,
+          "median_ns": 4478,
+          "min_ns": 3887,
+          "n": 11,
+          "p25_ns": 4238,
+          "p75_ns": 4509
+        },
+        "specialization": {
+          "max_ns": 93284,
+          "median_ns": 72486,
+          "min_ns": 60854,
+          "n": 11,
+          "p25_ns": 71824,
+          "p75_ns": 72886
+        }
+      },
+      "cache_retained_bytes": {
+        "max_bytes": 2883,
+        "median_bytes": 2883,
+        "min_bytes": 2883,
+        "n": 11,
+        "p25_bytes": 2883,
+        "p75_bytes": 2883
+      },
+      "compiled_retained_bytes": {
+        "direct": 104,
+        "interpreter": 528,
+        "residual": 104
+      },
+      "differential_agreement": true,
+      "differential_vectors": 1024,
+      "direct_graph": "ecdbccd9178fec96db27e182551d850c4da6a868d5aa9a6c8d265c54bf5f7497",
+      "direct_setup_ns_not_offset_against_interpretation": 2025143,
+      "direct_source": "let y let x x y + y *",
+      "incremental_setup_ns": 4207601,
+      "interpreter_graph": "5760ac76b6e7c248d308e7d07afdd4b488b8b5301f2fbcd77f11bc4560c12151",
+      "one_hot_static_map": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        null,
+        null
+      ],
+      "original_nodes": 24,
+      "original_source_bytes": 202,
+      "readmitted_graph": "af4982797c81d2ae1581d3371424177df52cc78e5866c97a2b9f240db8534e2a",
+      "residual_graph": "489a722603e7c3b822363497b5ea799e34f470758a5de9f16449d37de934847c",
+      "residual_graph_text": "ngraph-ir/0 ngraph-i64/0\nsubject extracted ae6d92289f0db6697527aee24712d7e84115ec4a085fadf61593ea288fa8af93 closure -\nslot input i64\nslot input i64\n%0 = input 0\n%1 = input 1\n%2 = i64.add %0 %1\n%3 = i64.mul %2 %1\nout %3\n",
+      "residual_nodes": 4,
+      "residual_source": "let v1\nlet v0\nv0 v1 + let v2\nv2 v1 * let v3\nv3\n",
+      "residual_source_bytes": 47,
+      "source_tags": [
+        0,
+        2
+      ],
+      "stage_ns": {
+        "backend_build": {
+          "max_ns": 33202,
+          "median_ns": 29706,
+          "min_ns": 25608,
+          "n": 11,
+          "p25_ns": 27010,
+          "p75_ns": 30146
+        },
+        "cold_first_residual_execution": {
+          "max_ns": 13515,
+          "median_ns": 12162,
+          "min_ns": 8115,
+          "n": 11,
+          "p25_ns": 11651,
+          "p75_ns": 12233
+        },
+        "direct_ordinary_frontend_extraction_and_build": {
+          "max_ns": 2252218,
+          "median_ns": 2025143,
+          "min_ns": 1734611,
+          "n": 11,
+          "p25_ns": 2000106,
+          "p75_ns": 2043167
+        },
+        "independent_admission": {
+          "max_ns": 4163849,
+          "median_ns": 4097645,
+          "min_ns": 3415802,
+          "n": 11,
+          "p25_ns": 3997307,
+          "p75_ns": 4110459
+        },
+        "source_emission": {
+          "max_ns": 6572,
+          "median_ns": 4939,
+          "min_ns": 4268,
+          "n": 11,
+          "p25_ns": 4629,
+          "p75_ns": 5220
+        },
+        "specialization": {
+          "max_ns": 84718,
+          "median_ns": 75311,
+          "min_ns": 70251,
+          "n": 11,
+          "p25_ns": 74550,
+          "p75_ns": 76503
+        }
+      },
+      "variants": 1,
+      "warm_batch_ns": {
+        "boundary": "already-built evaluator, reusable preallocated workspace and row vectors; every returned observation consumed; host-native arithmetic has no graph output allocation",
+        "direct_ordinary_graph": {
+          "max_ns": 537824,
+          "median_ns": 455842,
+          "min_ns": 406690,
+          "n": 31,
+          "p25_ns": 440002,
+          "p75_ns": 467984
+        },
+        "host_native": {
+          "max_ns": 12965,
+          "median_ns": 7504,
+          "min_ns": 7404,
+          "n": 31,
+          "p25_ns": 7474,
+          "p75_ns": 8927
+        },
+        "interpreter": {
+          "max_ns": 1094475,
+          "median_ns": 996401,
+          "min_ns": 946208,
+          "n": 31,
+          "p25_ns": 973218,
+          "p75_ns": 1023632
+        },
+        "residual": {
+          "max_ns": 498652,
+          "median_ns": 475999,
+          "min_ns": 453878,
+          "n": 31,
+          "p25_ns": 463847,
+          "p75_ns": 482230
+        },
+        "sample_size": 1024,
+        "samples_per_path": 31
+      },
+      "workspace_scratch_bytes": {
+        "direct": 40,
+        "interpreter": 200,
+        "residual": 40
+      }
+    },
+    {
+      "batch_savings_ns": "499774",
+      "break_even_calls": 8284,
+      "break_even_reason_if_null": null,
+      "cache_hit_ns": {
+        "independent_admission": {
+          "max_ns": 4294362,
+          "median_ns": 3949819,
+          "min_ns": 3716914,
+          "n": 11,
+          "p25_ns": 3870550,
+          "p75_ns": 4087166
+        },
+        "lookup_and_validation": {
+          "max_ns": 427178,
+          "median_ns": 379589,
+          "min_ns": 333543,
+          "n": 11,
+          "p25_ns": 374720,
+          "p75_ns": 383687
+        },
+        "publication": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        },
+        "request_total": {
+          "max_ns": 4723353,
+          "median_ns": 4333926,
+          "min_ns": 4052160,
+          "n": 11,
+          "p25_ns": 4257494,
+          "p75_ns": 4472425
+        },
+        "source_emission": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        },
+        "specialization": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        }
+      },
+      "cache_miss_ns": {
+        "independent_admission": {
+          "max_ns": 4275146,
+          "median_ns": 3964366,
+          "min_ns": 3817111,
+          "n": 11,
+          "p25_ns": 3948216,
+          "p75_ns": 4024378
+        },
+        "lookup_and_validation": {
+          "max_ns": 77635,
+          "median_ns": 60853,
+          "min_ns": 55113,
+          "n": 11,
+          "p25_ns": 58439,
+          "p75_ns": 64301
+        },
+        "publication": {
+          "max_ns": 278891,
+          "median_ns": 256710,
+          "min_ns": 245368,
+          "n": 11,
+          "p25_ns": 246670,
+          "p75_ns": 260086
+        },
+        "request_total": {
+          "max_ns": 4674582,
+          "median_ns": 4376095,
+          "min_ns": 4200126,
+          "n": 11,
+          "p25_ns": 4348854,
+          "p75_ns": 4425647
+        },
+        "source_emission": {
+          "max_ns": 5901,
+          "median_ns": 4378,
+          "min_ns": 4058,
+          "n": 11,
+          "p25_ns": 4208,
+          "p75_ns": 4408
+        },
+        "specialization": {
+          "max_ns": 76754,
+          "median_ns": 70301,
+          "min_ns": 64410,
+          "n": 11,
+          "p25_ns": 68197,
+          "p75_ns": 72425
+        }
+      },
+      "cache_retained_bytes": {
+        "max_bytes": 2883,
+        "median_bytes": 2883,
+        "min_bytes": 2883,
+        "n": 11,
+        "p25_bytes": 2883,
+        "p75_bytes": 2883
+      },
+      "compiled_retained_bytes": {
+        "direct": 104,
+        "interpreter": 528,
+        "residual": 104
+      },
+      "differential_agreement": true,
+      "differential_vectors": 1024,
+      "direct_graph": "3e662f001365323224e10fd54383714fc3ed44cc74f73abb659ea104b1c68d23",
+      "direct_setup_ns_not_offset_against_interpretation": 1963418,
+      "direct_source": "let y let x x y - y +",
+      "incremental_setup_ns": 4042882,
+      "interpreter_graph": "5760ac76b6e7c248d308e7d07afdd4b488b8b5301f2fbcd77f11bc4560c12151",
+      "one_hot_static_map": [
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        null,
+        null
+      ],
+      "original_nodes": 24,
+      "original_source_bytes": 202,
+      "readmitted_graph": "b84dece75b47084de0ab3732f974582c7a380ba9de7372c8e0b452e92e77d1b2",
+      "residual_graph": "205e13395c550fa0d9d216c9bed7dbd6dfa944fc771c8b3ce82f855a2757a3bc",
+      "residual_graph_text": "ngraph-ir/0 ngraph-i64/0\nsubject extracted 882be75a519aabc191c5bd701a20adb06f81081fdb11a1eb7d8a408b53bcdacb closure -\nslot input i64\nslot input i64\n%0 = input 0\n%1 = input 1\n%2 = i64.sub %0 %1\n%3 = i64.add %2 %1\nout %3\n",
+      "residual_nodes": 4,
+      "residual_source": "let v1\nlet v0\nv0 v1 - let v2\nv2 v1 + let v3\nv3\n",
+      "residual_source_bytes": 47,
+      "source_tags": [
+        1,
+        0
+      ],
+      "stage_ns": {
+        "backend_build": {
+          "max_ns": 40957,
+          "median_ns": 27491,
+          "min_ns": 25558,
+          "n": 11,
+          "p25_ns": 26570,
+          "p75_ns": 28483
+        },
+        "cold_first_residual_execution": {
+          "max_ns": 15439,
+          "median_ns": 13355,
+          "min_ns": 11582,
+          "n": 11,
+          "p25_ns": 12784,
+          "p75_ns": 13746
+        },
+        "direct_ordinary_frontend_extraction_and_build": {
+          "max_ns": 2530037,
+          "median_ns": 1963418,
+          "min_ns": 1821983,
+          "n": 11,
+          "p25_ns": 1846349,
+          "p75_ns": 1964770
+        },
+        "independent_admission": {
+          "max_ns": 4175621,
+          "median_ns": 3937095,
+          "min_ns": 3708327,
+          "n": 11,
+          "p25_ns": 3809226,
+          "p75_ns": 3968704
+        },
+        "source_emission": {
+          "max_ns": 6572,
+          "median_ns": 4939,
+          "min_ns": 4268,
+          "n": 11,
+          "p25_ns": 4468,
+          "p75_ns": 5660
+        },
+        "specialization": {
+          "max_ns": 82323,
+          "median_ns": 73357,
+          "min_ns": 68659,
+          "n": 11,
+          "p25_ns": 70272,
+          "p75_ns": 74760
+        }
+      },
+      "variants": 1,
+      "warm_batch_ns": {
+        "boundary": "already-built evaluator, reusable preallocated workspace and row vectors; every returned observation consumed; host-native arithmetic has no graph output allocation",
+        "direct_ordinary_graph": {
+          "max_ns": 428370,
+          "median_ns": 397823,
+          "min_ns": 374059,
+          "n": 31,
+          "p25_ns": 389507,
+          "p75_ns": 405838
+        },
+        "host_native": {
+          "max_ns": 8576,
+          "median_ns": 6863,
+          "min_ns": 6523,
+          "n": 31,
+          "p25_ns": 6542,
+          "p75_ns": 8166
+        },
+        "interpreter": {
+          "max_ns": 966917,
+          "median_ns": 901144,
+          "min_ns": 865066,
+          "n": 31,
+          "p25_ns": 895263,
+          "p75_ns": 926421
+        },
+        "residual": {
+          "max_ns": 422930,
+          "median_ns": 401370,
+          "min_ns": 382705,
+          "n": 31,
+          "p25_ns": 395599,
+          "p75_ns": 409675
+        },
+        "sample_size": 1024,
+        "samples_per_path": 31
+      },
+      "workspace_scratch_bytes": {
+        "direct": 40,
+        "interpreter": 200,
+        "residual": 40
+      }
+    },
+    {
+      "batch_savings_ns": "563813",
+      "break_even_calls": 7159,
+      "break_even_reason_if_null": null,
+      "cache_hit_ns": {
+        "independent_admission": {
+          "max_ns": 4616474,
+          "median_ns": 4004852,
+          "min_ns": 3640030,
+          "n": 11,
+          "p25_ns": 3699360,
+          "p75_ns": 4293611
+        },
+        "lookup_and_validation": {
+          "max_ns": 457384,
+          "median_ns": 371824,
+          "min_ns": 345606,
+          "n": 11,
+          "p25_ns": 347709,
+          "p75_ns": 398114
+        },
+        "publication": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        },
+        "request_total": {
+          "max_ns": 5076815,
+          "median_ns": 4365606,
+          "min_ns": 3986757,
+          "n": 11,
+          "p25_ns": 4091344,
+          "p75_ns": 4698708
+        },
+        "source_emission": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        },
+        "specialization": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        }
+      },
+      "cache_miss_ns": {
+        "independent_admission": {
+          "max_ns": 6318073,
+          "median_ns": 3681387,
+          "min_ns": 3589385,
+          "n": 11,
+          "p25_ns": 3641743,
+          "p75_ns": 4213692
+        },
+        "lookup_and_validation": {
+          "max_ns": 72866,
+          "median_ns": 59141,
+          "min_ns": 55684,
+          "n": 11,
+          "p25_ns": 56816,
+          "p75_ns": 62016
+        },
+        "publication": {
+          "max_ns": 349974,
+          "median_ns": 253644,
+          "min_ns": 230942,
+          "n": 11,
+          "p25_ns": 234488,
+          "p75_ns": 275675
+        },
+        "request_total": {
+          "max_ns": 6758716,
+          "median_ns": 4063751,
+          "min_ns": 3954107,
+          "n": 11,
+          "p25_ns": 4006245,
+          "p75_ns": 4666728
+        },
+        "source_emission": {
+          "max_ns": 10510,
+          "median_ns": 4989,
+          "min_ns": 4027,
+          "n": 11,
+          "p25_ns": 4388,
+          "p75_ns": 5410
+        },
+        "specialization": {
+          "max_ns": 94276,
+          "median_ns": 66724,
+          "min_ns": 61525,
+          "n": 11,
+          "p25_ns": 64120,
+          "p75_ns": 73387
+        }
+      },
+      "cache_retained_bytes": {
+        "max_bytes": 2883,
+        "median_bytes": 2883,
+        "min_bytes": 2883,
+        "n": 11,
+        "p25_bytes": 2883,
+        "p75_bytes": 2883
+      },
+      "compiled_retained_bytes": {
+        "direct": 104,
+        "interpreter": 528,
+        "residual": 104
+      },
+      "differential_agreement": true,
+      "differential_vectors": 1024,
+      "direct_graph": "799ea65218c2ee3e6c376896e2fd89fdb1d4e034891ddc945dfdbd3796c1453f",
+      "direct_setup_ns_not_offset_against_interpretation": 1974558,
+      "direct_source": "let y let x x y - y -",
+      "incremental_setup_ns": 3941333,
+      "interpreter_graph": "5760ac76b6e7c248d308e7d07afdd4b488b8b5301f2fbcd77f11bc4560c12151",
+      "one_hot_static_map": [
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        null,
+        null
+      ],
+      "original_nodes": 24,
+      "original_source_bytes": 202,
+      "readmitted_graph": "d12f84ef97bfb1ca70fc3f20e248538b0f3520bf0c2f07aa76d6e53c755db46e",
+      "residual_graph": "79e6ca49ff08136dec9dc9716b68984bd041bc365b47e3287b6867bf82f5f9c0",
+      "residual_graph_text": "ngraph-ir/0 ngraph-i64/0\nsubject extracted 3ec1db9180c94c879bd2f775c82f9cb9ddb9659ae9da9752401dd66f11ded139 closure -\nslot input i64\nslot input i64\n%0 = input 0\n%1 = input 1\n%2 = i64.sub %0 %1\n%3 = i64.sub %2 %1\nout %3\n",
+      "residual_nodes": 4,
+      "residual_source": "let v1\nlet v0\nv0 v1 - let v2\nv2 v1 - let v3\nv3\n",
+      "residual_source_bytes": 47,
+      "source_tags": [
+        1,
+        1
+      ],
+      "stage_ns": {
+        "backend_build": {
+          "max_ns": 50214,
+          "median_ns": 28012,
+          "min_ns": 25367,
+          "n": 11,
+          "p25_ns": 26961,
+          "p75_ns": 32050
+        },
+        "cold_first_residual_execution": {
+          "max_ns": 17633,
+          "median_ns": 13545,
+          "min_ns": 10119,
+          "n": 11,
+          "p25_ns": 11953,
+          "p75_ns": 14056
+        },
+        "direct_ordinary_frontend_extraction_and_build": {
+          "max_ns": 3181794,
+          "median_ns": 1974558,
+          "min_ns": 1733439,
+          "n": 11,
+          "p25_ns": 1785375,
+          "p75_ns": 2069646
+        },
+        "independent_admission": {
+          "max_ns": 5064882,
+          "median_ns": 3835365,
+          "min_ns": 3582973,
+          "n": 11,
+          "p25_ns": 3623449,
+          "p75_ns": 4127190
+        },
+        "source_emission": {
+          "max_ns": 9387,
+          "median_ns": 5470,
+          "min_ns": 4639,
+          "n": 11,
+          "p25_ns": 4779,
+          "p75_ns": 5841
+        },
+        "specialization": {
+          "max_ns": 88204,
+          "median_ns": 72486,
+          "min_ns": 66244,
+          "n": 11,
+          "p25_ns": 66754,
+          "p75_ns": 75351
+        }
+      },
+      "variants": 1,
+      "warm_batch_ns": {
+        "boundary": "already-built evaluator, reusable preallocated workspace and row vectors; every returned observation consumed; host-native arithmetic has no graph output allocation",
+        "direct_ordinary_graph": {
+          "max_ns": 445562,
+          "median_ns": 438860,
+          "min_ns": 434783,
+          "n": 31,
+          "p25_ns": 436806,
+          "p75_ns": 440683
+        },
+        "host_native": {
+          "max_ns": 9448,
+          "median_ns": 8145,
+          "min_ns": 8085,
+          "n": 31,
+          "p25_ns": 8115,
+          "p75_ns": 8155
+        },
+        "interpreter": {
+          "max_ns": 1021709,
+          "median_ns": 1006670,
+          "min_ns": 977286,
+          "n": 31,
+          "p25_ns": 998084,
+          "p75_ns": 1011690
+        },
+        "residual": {
+          "max_ns": 450502,
+          "median_ns": 442857,
+          "min_ns": 436736,
+          "n": 31,
+          "p25_ns": 440212,
+          "p75_ns": 446273
+        },
+        "sample_size": 1024,
+        "samples_per_path": 31
+      },
+      "workspace_scratch_bytes": {
+        "direct": 40,
+        "interpreter": 200,
+        "residual": 40
+      }
+    },
+    {
+      "batch_savings_ns": "436805",
+      "break_even_calls": 9652,
+      "break_even_reason_if_null": null,
+      "cache_hit_ns": {
+        "independent_admission": {
+          "max_ns": 4210195,
+          "median_ns": 4105359,
+          "min_ns": 3485752,
+          "n": 11,
+          "p25_ns": 4078940,
+          "p75_ns": 4149582
+        },
+        "lookup_and_validation": {
+          "max_ns": 403804,
+          "median_ns": 386261,
+          "min_ns": 329235,
+          "n": 11,
+          "p25_ns": 383256,
+          "p75_ns": 390320
+        },
+        "publication": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        },
+        "request_total": {
+          "max_ns": 4616163,
+          "median_ns": 4490959,
+          "min_ns": 3815898,
+          "n": 11,
+          "p25_ns": 4465201,
+          "p75_ns": 4546263
+        },
+        "source_emission": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        },
+        "specialization": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        }
+      },
+      "cache_miss_ns": {
+        "independent_admission": {
+          "max_ns": 4217930,
+          "median_ns": 4045427,
+          "min_ns": 3445095,
+          "n": 11,
+          "p25_ns": 4019720,
+          "p75_ns": 4069383
+        },
+        "lookup_and_validation": {
+          "max_ns": 66634,
+          "median_ns": 60392,
+          "min_ns": 51666,
+          "n": 11,
+          "p25_ns": 59741,
+          "p75_ns": 61345
+        },
+        "publication": {
+          "max_ns": 266238,
+          "median_ns": 256268,
+          "min_ns": 219730,
+          "n": 11,
+          "p25_ns": 254696,
+          "p75_ns": 260997
+        },
+        "request_total": {
+          "max_ns": 4633066,
+          "median_ns": 4438472,
+          "min_ns": 3780944,
+          "n": 11,
+          "p25_ns": 4408295,
+          "p75_ns": 4471554
+        },
+        "source_emission": {
+          "max_ns": 4999,
+          "median_ns": 3908,
+          "min_ns": 3376,
+          "n": 11,
+          "p25_ns": 3847,
+          "p75_ns": 4368
+        },
+        "specialization": {
+          "max_ns": 74079,
+          "median_ns": 68588,
+          "min_ns": 59030,
+          "n": 11,
+          "p25_ns": 68177,
+          "p75_ns": 69379
+        }
+      },
+      "cache_retained_bytes": {
+        "max_bytes": 2883,
+        "median_bytes": 2883,
+        "min_bytes": 2883,
+        "n": 11,
+        "p25_bytes": 2883,
+        "p75_bytes": 2883
+      },
+      "compiled_retained_bytes": {
+        "direct": 104,
+        "interpreter": 528,
+        "residual": 104
+      },
+      "differential_agreement": true,
+      "differential_vectors": 1024,
+      "direct_graph": "6d2efd163054f10200720ec5d8342bb263e5f1a2a00f2649384d9d8dce3abdda",
+      "direct_setup_ns_not_offset_against_interpretation": 1970752,
+      "direct_source": "let y let x x y - y *",
+      "incremental_setup_ns": 4117000,
+      "interpreter_graph": "5760ac76b6e7c248d308e7d07afdd4b488b8b5301f2fbcd77f11bc4560c12151",
+      "one_hot_static_map": [
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        null,
+        null
+      ],
+      "original_nodes": 24,
+      "original_source_bytes": 202,
+      "readmitted_graph": "f2082a1b411749c502c3c6f0356b2267275f07d9f3ffa563edbbebd8eee15cce",
+      "residual_graph": "76d476ef86525cf510d3b8eb7c4aa66d5487cf147f28fe8d51fced4fbec356f7",
+      "residual_graph_text": "ngraph-ir/0 ngraph-i64/0\nsubject extracted cd7bfc9b6e9b03d05b4ee4c412e94cc1801e9814d1b50c3473a07708dd311132 closure -\nslot input i64\nslot input i64\n%0 = input 0\n%1 = input 1\n%2 = i64.sub %0 %1\n%3 = i64.mul %2 %1\nout %3\n",
+      "residual_nodes": 4,
+      "residual_source": "let v1\nlet v0\nv0 v1 - let v2\nv2 v1 * let v3\nv3\n",
+      "residual_source_bytes": 47,
+      "source_tags": [
+        1,
+        2
+      ],
+      "stage_ns": {
+        "backend_build": {
+          "max_ns": 30617,
+          "median_ns": 27751,
+          "min_ns": 26500,
+          "n": 11,
+          "p25_ns": 27161,
+          "p75_ns": 28143
+        },
+        "cold_first_residual_execution": {
+          "max_ns": 12553,
+          "median_ns": 9708,
+          "min_ns": 6722,
+          "n": 11,
+          "p25_ns": 7955,
+          "p75_ns": 9858
+        },
+        "direct_ordinary_frontend_extraction_and_build": {
+          "max_ns": 2475013,
+          "median_ns": 1970752,
+          "min_ns": 1672815,
+          "n": 11,
+          "p25_ns": 1956425,
+          "p75_ns": 1992442
+        },
+        "independent_admission": {
+          "max_ns": 4363953,
+          "median_ns": 4013238,
+          "min_ns": 3445427,
+          "n": 11,
+          "p25_ns": 3998761,
+          "p75_ns": 4036450
+        },
+        "source_emission": {
+          "max_ns": 6132,
+          "median_ns": 4548,
+          "min_ns": 3567,
+          "n": 11,
+          "p25_ns": 4168,
+          "p75_ns": 4819
+        },
+        "specialization": {
+          "max_ns": 85008,
+          "median_ns": 71463,
+          "min_ns": 60483,
+          "n": 11,
+          "p25_ns": 70471,
+          "p75_ns": 73247
+        }
+      },
+      "variants": 1,
+      "warm_batch_ns": {
+        "boundary": "already-built evaluator, reusable preallocated workspace and row vectors; every returned observation consumed; host-native arithmetic has no graph output allocation",
+        "direct_ordinary_graph": {
+          "max_ns": 497099,
+          "median_ns": 435123,
+          "min_ns": 386061,
+          "n": 31,
+          "p25_ns": 405237,
+          "p75_ns": 458226
+        },
+        "host_native": {
+          "max_ns": 9397,
+          "median_ns": 9278,
+          "min_ns": 9267,
+          "n": 31,
+          "p25_ns": 9277,
+          "p75_ns": 9287
+        },
+        "interpreter": {
+          "max_ns": 1069809,
+          "median_ns": 824800,
+          "min_ns": 789565,
+          "n": 31,
+          "p25_ns": 820273,
+          "p75_ns": 827806
+        },
+        "residual": {
+          "max_ns": 418251,
+          "median_ns": 387995,
+          "min_ns": 380621,
+          "n": 31,
+          "p25_ns": 385470,
+          "p75_ns": 389417
+        },
+        "sample_size": 1024,
+        "samples_per_path": 31
+      },
+      "workspace_scratch_bytes": {
+        "direct": 40,
+        "interpreter": 200,
+        "residual": 40
+      }
+    },
+    {
+      "batch_savings_ns": "876938",
+      "break_even_calls": 8526,
+      "break_even_reason_if_null": null,
+      "cache_hit_ns": {
+        "independent_admission": {
+          "max_ns": 7948168,
+          "median_ns": 7517263,
+          "min_ns": 6058588,
+          "n": 11,
+          "p25_ns": 6546229,
+          "p75_ns": 7774934
+        },
+        "lookup_and_validation": {
+          "max_ns": 739932,
+          "median_ns": 697754,
+          "min_ns": 553444,
+          "n": 11,
+          "p25_ns": 595903,
+          "p75_ns": 712591
+        },
+        "publication": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        },
+        "request_total": {
+          "max_ns": 8689664,
+          "median_ns": 8218604,
+          "min_ns": 6615559,
+          "n": 11,
+          "p25_ns": 7143715,
+          "p75_ns": 8485331
+        },
+        "source_emission": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        },
+        "specialization": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        }
+      },
+      "cache_miss_ns": {
+        "independent_admission": {
+          "max_ns": 8053675,
+          "median_ns": 7339752,
+          "min_ns": 5835531,
+          "n": 11,
+          "p25_ns": 6190194,
+          "p75_ns": 7759636
+        },
+        "lookup_and_validation": {
+          "max_ns": 122299,
+          "median_ns": 108011,
+          "min_ns": 87063,
+          "n": 11,
+          "p25_ns": 90439,
+          "p75_ns": 113713
+        },
+        "publication": {
+          "max_ns": 505424,
+          "median_ns": 470309,
+          "min_ns": 373938,
+          "n": 11,
+          "p25_ns": 402703,
+          "p75_ns": 487401
+        },
+        "request_total": {
+          "max_ns": 8837569,
+          "median_ns": 8062291,
+          "min_ns": 6412559,
+          "n": 11,
+          "p25_ns": 6803831,
+          "p75_ns": 8511431
+        },
+        "source_emission": {
+          "max_ns": 9437,
+          "median_ns": 8827,
+          "min_ns": 6392,
+          "n": 11,
+          "p25_ns": 8105,
+          "p75_ns": 9037
+        },
+        "specialization": {
+          "max_ns": 144680,
+          "median_ns": 129151,
+          "min_ns": 101920,
+          "n": 11,
+          "p25_ns": 106309,
+          "p75_ns": 132958
+        }
+      },
+      "cache_retained_bytes": {
+        "max_bytes": 2883,
+        "median_bytes": 2883,
+        "min_bytes": 2883,
+        "n": 11,
+        "p25_bytes": 2883,
+        "p75_bytes": 2883
+      },
+      "compiled_retained_bytes": {
+        "direct": 104,
+        "interpreter": 528,
+        "residual": 104
+      },
+      "differential_agreement": true,
+      "differential_vectors": 1024,
+      "direct_graph": "369f3eed1f210e8d3ec1aeca2b486f65f992480bf493d5c49a06b6fb7bc4d165",
+      "direct_setup_ns_not_offset_against_interpretation": 3404780,
+      "direct_source": "let y let x x y * y +",
+      "incremental_setup_ns": 7300998,
+      "interpreter_graph": "5760ac76b6e7c248d308e7d07afdd4b488b8b5301f2fbcd77f11bc4560c12151",
+      "one_hot_static_map": [
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        null,
+        null
+      ],
+      "original_nodes": 24,
+      "original_source_bytes": 202,
+      "readmitted_graph": "9795192842552603a3679a114c7f57bc07a8a8f7f9954a924524e1b1c38eb7c3",
+      "residual_graph": "08350bf56d18a16592f8d1bd4b7c020d99de3b20f8bfd438b76fff370357effd",
+      "residual_graph_text": "ngraph-ir/0 ngraph-i64/0\nsubject extracted 961d9b3133cbe3b3c5347e5169ce52cf0248e9d223c20a9109bbf026b09663d5 closure -\nslot input i64\nslot input i64\n%0 = input 0\n%1 = input 1\n%2 = i64.mul %0 %1\n%3 = i64.add %2 %1\nout %3\n",
+      "residual_nodes": 4,
+      "residual_source": "let v1\nlet v0\nv0 v1 * let v2\nv2 v1 + let v3\nv3\n",
+      "residual_source_bytes": 47,
+      "source_tags": [
+        2,
+        0
+      ],
+      "stage_ns": {
+        "backend_build": {
+          "max_ns": 59220,
+          "median_ns": 53510,
+          "min_ns": 43872,
+          "n": 11,
+          "p25_ns": 46076,
+          "p75_ns": 56596
+        },
+        "cold_first_residual_execution": {
+          "max_ns": 24707,
+          "median_ns": 19887,
+          "min_ns": 15078,
+          "n": 11,
+          "p25_ns": 17653,
+          "p75_ns": 20378
+        },
+        "direct_ordinary_frontend_extraction_and_build": {
+          "max_ns": 3929451,
+          "median_ns": 3404780,
+          "min_ns": 2937117,
+          "n": 11,
+          "p25_ns": 3011686,
+          "p75_ns": 3693490
+        },
+        "independent_admission": {
+          "max_ns": 8002911,
+          "median_ns": 7108740,
+          "min_ns": 5677095,
+          "n": 11,
+          "p25_ns": 6071022,
+          "p75_ns": 7487097
+        },
+        "source_emission": {
+          "max_ns": 10790,
+          "median_ns": 9507,
+          "min_ns": 7283,
+          "n": 11,
+          "p25_ns": 8406,
+          "p75_ns": 10369
+        },
+        "specialization": {
+          "max_ns": 156442,
+          "median_ns": 129241,
+          "min_ns": 106358,
+          "n": 11,
+          "p25_ns": 111729,
+          "p75_ns": 144049
+        }
+      },
+      "variants": 1,
+      "warm_batch_ns": {
+        "boundary": "already-built evaluator, reusable preallocated workspace and row vectors; every returned observation consumed; host-native arithmetic has no graph output allocation",
+        "direct_ordinary_graph": {
+          "max_ns": 889000,
+          "median_ns": 743338,
+          "min_ns": 720846,
+          "n": 31,
+          "p25_ns": 733541,
+          "p75_ns": 754600
+        },
+        "host_native": {
+          "max_ns": 14638,
+          "median_ns": 14467,
+          "min_ns": 14436,
+          "n": 31,
+          "p25_ns": 14447,
+          "p75_ns": 14467
+        },
+        "interpreter": {
+          "max_ns": 1868420,
+          "median_ns": 1610178,
+          "min_ns": 1546209,
+          "n": 31,
+          "p25_ns": 1581915,
+          "p75_ns": 1660772
+        },
+        "residual": {
+          "max_ns": 1127226,
+          "median_ns": 733240,
+          "min_ns": 670323,
+          "n": 31,
+          "p25_ns": 696511,
+          "p75_ns": 749861
+        },
+        "sample_size": 1024,
+        "samples_per_path": 31
+      },
+      "workspace_scratch_bytes": {
+        "direct": 40,
+        "interpreter": 200,
+        "residual": 40
+      }
+    },
+    {
+      "batch_savings_ns": "565437",
+      "break_even_calls": 13436,
+      "break_even_reason_if_null": null,
+      "cache_hit_ns": {
+        "independent_admission": {
+          "max_ns": 9141407,
+          "median_ns": 7031756,
+          "min_ns": 5993516,
+          "n": 11,
+          "p25_ns": 6750822,
+          "p75_ns": 8279858
+        },
+        "lookup_and_validation": {
+          "max_ns": 817387,
+          "median_ns": 653671,
+          "min_ns": 554927,
+          "n": 11,
+          "p25_ns": 609409,
+          "p75_ns": 731486
+        },
+        "publication": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        },
+        "request_total": {
+          "max_ns": 9963183,
+          "median_ns": 7689214,
+          "min_ns": 6551810,
+          "n": 11,
+          "p25_ns": 7363226,
+          "p75_ns": 9015853
+        },
+        "source_emission": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        },
+        "specialization": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        }
+      },
+      "cache_miss_ns": {
+        "independent_admission": {
+          "max_ns": 8661260,
+          "median_ns": 6853413,
+          "min_ns": 5937753,
+          "n": 11,
+          "p25_ns": 6686090,
+          "p75_ns": 8064666
+        },
+        "lookup_and_validation": {
+          "max_ns": 126246,
+          "median_ns": 102491,
+          "min_ns": 89096,
+          "n": 11,
+          "p25_ns": 101920,
+          "p75_ns": 121857
+        },
+        "publication": {
+          "max_ns": 566248,
+          "median_ns": 444691,
+          "min_ns": 382485,
+          "n": 11,
+          "p25_ns": 414895,
+          "p75_ns": 499162
+        },
+        "request_total": {
+          "max_ns": 9509505,
+          "median_ns": 7536810,
+          "min_ns": 6527915,
+          "n": 11,
+          "p25_ns": 7329232,
+          "p75_ns": 8844672
+        },
+        "source_emission": {
+          "max_ns": 10710,
+          "median_ns": 8536,
+          "min_ns": 7644,
+          "n": 11,
+          "p25_ns": 8375,
+          "p75_ns": 9718
+        },
+        "specialization": {
+          "max_ns": 144830,
+          "median_ns": 126155,
+          "min_ns": 105978,
+          "n": 11,
+          "p25_ns": 117840,
+          "p75_ns": 142235
+        }
+      },
+      "cache_retained_bytes": {
+        "max_bytes": 2883,
+        "median_bytes": 2883,
+        "min_bytes": 2883,
+        "n": 11,
+        "p25_bytes": 2883,
+        "p75_bytes": 2883
+      },
+      "compiled_retained_bytes": {
+        "direct": 104,
+        "interpreter": 528,
+        "residual": 104
+      },
+      "differential_agreement": true,
+      "differential_vectors": 1024,
+      "direct_graph": "c90fa79a3321c479de571c52ba62ac8a4c4628862c93a2de5143a0b07db5c609",
+      "direct_setup_ns_not_offset_against_interpretation": 3866183,
+      "direct_source": "let y let x x y * y -",
+      "incremental_setup_ns": 7418850,
+      "interpreter_graph": "5760ac76b6e7c248d308e7d07afdd4b488b8b5301f2fbcd77f11bc4560c12151",
+      "one_hot_static_map": [
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        null,
+        null
+      ],
+      "original_nodes": 24,
+      "original_source_bytes": 202,
+      "readmitted_graph": "e953b4da1a81175995c7a19e04f6e06f44618cbd3f8ee90cc357ebf367d736c9",
+      "residual_graph": "9b06c959bb8cc1c535497a545f47dfa792a38115f0d3fd17d16d617f078801e7",
+      "residual_graph_text": "ngraph-ir/0 ngraph-i64/0\nsubject extracted d777405379f17d339a63ba9fd63359d8246e40735c9a23291ea699cd9a2cba45 closure -\nslot input i64\nslot input i64\n%0 = input 0\n%1 = input 1\n%2 = i64.mul %0 %1\n%3 = i64.sub %2 %1\nout %3\n",
+      "residual_nodes": 4,
+      "residual_source": "let v1\nlet v0\nv0 v1 * let v2\nv2 v1 - let v3\nv3\n",
+      "residual_source_bytes": 47,
+      "source_tags": [
+        2,
+        1
+      ],
+      "stage_ns": {
+        "backend_build": {
+          "max_ns": 60984,
+          "median_ns": 51727,
+          "min_ns": 46156,
+          "n": 11,
+          "p25_ns": 50074,
+          "p75_ns": 59622
+        },
+        "cold_first_residual_execution": {
+          "max_ns": 21621,
+          "median_ns": 19537,
+          "min_ns": 16811,
+          "n": 11,
+          "p25_ns": 17602,
+          "p75_ns": 20388
+        },
+        "direct_ordinary_frontend_extraction_and_build": {
+          "max_ns": 4395612,
+          "median_ns": 3866183,
+          "min_ns": 2866766,
+          "n": 11,
+          "p25_ns": 3288584,
+          "p75_ns": 4067358
+        },
+        "independent_admission": {
+          "max_ns": 8152941,
+          "median_ns": 7217203,
+          "min_ns": 5825182,
+          "n": 11,
+          "p25_ns": 6731445,
+          "p75_ns": 7979116
+        },
+        "source_emission": {
+          "max_ns": 11081,
+          "median_ns": 9618,
+          "min_ns": 7895,
+          "n": 11,
+          "p25_ns": 8566,
+          "p75_ns": 10429
+        },
+        "specialization": {
+          "max_ns": 152074,
+          "median_ns": 140302,
+          "min_ns": 104976,
+          "n": 11,
+          "p25_ns": 122058,
+          "p75_ns": 144660
+        }
+      },
+      "variants": 1,
+      "warm_batch_ns": {
+        "boundary": "already-built evaluator, reusable preallocated workspace and row vectors; every returned observation consumed; host-native arithmetic has no graph output allocation",
+        "direct_ordinary_graph": {
+          "max_ns": 674981,
+          "median_ns": 647099,
+          "min_ns": 616862,
+          "n": 31,
+          "p25_ns": 636960,
+          "p75_ns": 656407
+        },
+        "host_native": {
+          "max_ns": 13976,
+          "median_ns": 11581,
+          "min_ns": 11562,
+          "n": 31,
+          "p25_ns": 11581,
+          "p75_ns": 11582
+        },
+        "interpreter": {
+          "max_ns": 1259273,
+          "median_ns": 1164847,
+          "min_ns": 1089796,
+          "n": 31,
+          "p25_ns": 1105716,
+          "p75_ns": 1183441
+        },
+        "residual": {
+          "max_ns": 651286,
+          "median_ns": 599410,
+          "min_ns": 567289,
+          "n": 31,
+          "p25_ns": 586426,
+          "p75_ns": 617624
+        },
+        "sample_size": 1024,
+        "samples_per_path": 31
+      },
+      "workspace_scratch_bytes": {
+        "direct": 40,
+        "interpreter": 200,
+        "residual": 40
+      }
+    },
+    {
+      "batch_savings_ns": "1248031",
+      "break_even_calls": 5065,
+      "break_even_reason_if_null": null,
+      "cache_hit_ns": {
+        "independent_admission": {
+          "max_ns": 7583316,
+          "median_ns": 5853595,
+          "min_ns": 5379820,
+          "n": 11,
+          "p25_ns": 5564876,
+          "p75_ns": 6433518
+        },
+        "lookup_and_validation": {
+          "max_ns": 704346,
+          "median_ns": 546030,
+          "min_ns": 476721,
+          "n": 11,
+          "p25_ns": 496327,
+          "p75_ns": 601424
+        },
+        "publication": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        },
+        "request_total": {
+          "max_ns": 8290878,
+          "median_ns": 6402691,
+          "min_ns": 5879424,
+          "n": 11,
+          "p25_ns": 6045704,
+          "p75_ns": 7038318
+        },
+        "source_emission": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        },
+        "specialization": {
+          "reason": "the verified cache hit bypasses this stage",
+          "status": "not-run"
+        }
+      },
+      "cache_miss_ns": {
+        "independent_admission": {
+          "max_ns": 7298594,
+          "median_ns": 5974161,
+          "min_ns": 5294090,
+          "n": 11,
+          "p25_ns": 5409836,
+          "p75_ns": 6461100
+        },
+        "lookup_and_validation": {
+          "max_ns": 107712,
+          "median_ns": 92623,
+          "min_ns": 77675,
+          "n": 11,
+          "p25_ns": 81913,
+          "p75_ns": 97021
+        },
+        "publication": {
+          "max_ns": 475498,
+          "median_ns": 374730,
+          "min_ns": 333554,
+          "n": 11,
+          "p25_ns": 339394,
+          "p75_ns": 406229
+        },
+        "request_total": {
+          "max_ns": 8020703,
+          "median_ns": 6571847,
+          "min_ns": 5817678,
+          "n": 11,
+          "p25_ns": 5951007,
+          "p75_ns": 7098992
+        },
+        "source_emission": {
+          "max_ns": 8937,
+          "median_ns": 8145,
+          "min_ns": 6973,
+          "n": 11,
+          "p25_ns": 7754,
+          "p75_ns": 8326
+        },
+        "specialization": {
+          "max_ns": 125023,
+          "median_ns": 106138,
+          "min_ns": 98314,
+          "n": 11,
+          "p25_ns": 98605,
+          "p75_ns": 113442
+        }
+      },
+      "cache_retained_bytes": {
+        "max_bytes": 2883,
+        "median_bytes": 2883,
+        "min_bytes": 2883,
+        "n": 11,
+        "p25_bytes": 2883,
+        "p75_bytes": 2883
+      },
+      "compiled_retained_bytes": {
+        "direct": 104,
+        "interpreter": 528,
+        "residual": 104
+      },
+      "differential_agreement": true,
+      "differential_vectors": 1024,
+      "direct_graph": "2b27e7905a3fafd1c8019100197302ecde2f42737fe4e6e0c230f0ce09c7463c",
+      "direct_setup_ns_not_offset_against_interpretation": 2899146,
+      "direct_source": "let y let x x y * y *",
+      "incremental_setup_ns": 6172903,
+      "interpreter_graph": "5760ac76b6e7c248d308e7d07afdd4b488b8b5301f2fbcd77f11bc4560c12151",
+      "one_hot_static_map": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        null,
+        null
+      ],
+      "original_nodes": 24,
+      "original_source_bytes": 202,
+      "readmitted_graph": "22cf0e6f80c43e68649a3d4303dd1b3ad80a1f8fb629506982c95cfab4991bf8",
+      "residual_graph": "deb5e53907abe886066ffbba13e24268567ab6dd3df480a438e977d3525ee4f1",
+      "residual_graph_text": "ngraph-ir/0 ngraph-i64/0\nsubject extracted 413b622192d5bafccc4d706c3482a1940ccec27e2da8b1cbe987ea78725df9bb closure -\nslot input i64\nslot input i64\n%0 = input 0\n%1 = input 1\n%2 = i64.mul %0 %1\n%3 = i64.mul %2 %1\nout %3\n",
+      "residual_nodes": 4,
+      "residual_source": "let v1\nlet v0\nv0 v1 * let v2\nv2 v1 * let v3\nv3\n",
+      "residual_source_bytes": 47,
+      "source_tags": [
+        2,
+        2
+      ],
+      "stage_ns": {
+        "backend_build": {
+          "max_ns": 50875,
+          "median_ns": 44664,
+          "min_ns": 38662,
+          "n": 11,
+          "p25_ns": 42229,
+          "p75_ns": 46727
+        },
+        "cold_first_residual_execution": {
+          "max_ns": 19266,
+          "median_ns": 17472,
+          "min_ns": 15108,
+          "n": 11,
+          "p25_ns": 16801,
+          "p75_ns": 17774
+        },
+        "direct_ordinary_frontend_extraction_and_build": {
+          "max_ns": 3579427,
+          "median_ns": 2899146,
+          "min_ns": 2583807,
+          "n": 11,
+          "p25_ns": 2688662,
+          "p75_ns": 3139184
+        },
+        "independent_admission": {
+          "max_ns": 7235778,
+          "median_ns": 6007032,
+          "min_ns": 5024877,
+          "n": 11,
+          "p25_ns": 5532866,
+          "p75_ns": 6306131
+        },
+        "source_emission": {
+          "max_ns": 10049,
+          "median_ns": 8286,
+          "min_ns": 7594,
+          "n": 11,
+          "p25_ns": 7814,
+          "p75_ns": 8425
+        },
+        "specialization": {
+          "max_ns": 130665,
+          "median_ns": 112921,
+          "min_ns": 96801,
+          "n": 11,
+          "p25_ns": 99696,
+          "p75_ns": 121417
+        }
+      },
+      "variants": 1,
+      "warm_batch_ns": {
+        "boundary": "already-built evaluator, reusable preallocated workspace and row vectors; every returned observation consumed; host-native arithmetic has no graph output allocation",
+        "direct_ordinary_graph": {
+          "max_ns": 1259092,
+          "median_ns": 737859,
+          "min_ns": 707201,
+          "n": 31,
+          "p25_ns": 718863,
+          "p75_ns": 771010
+        },
+        "host_native": {
+          "max_ns": 13465,
+          "median_ns": 13315,
+          "min_ns": 13285,
+          "n": 31,
+          "p25_ns": 13305,
+          "p75_ns": 13325
+        },
+        "interpreter": {
+          "max_ns": 2311468,
+          "median_ns": 2172669,
+          "min_ns": 1766650,
+          "n": 31,
+          "p25_ns": 2031806,
+          "p75_ns": 2230196
+        },
+        "residual": {
+          "max_ns": 1017932,
+          "median_ns": 924638,
+          "min_ns": 822457,
+          "n": 31,
+          "p25_ns": 864054,
+          "p75_ns": 943864
+        },
+        "sample_size": 1024,
+        "samples_per_path": 31
+      },
+      "workspace_scratch_bytes": {
+        "direct": 40,
+        "interpreter": 200,
+        "residual": 40
+      }
+    }
+  ],
+  "repetitions": {
+    "stage": 11,
+    "warm_batch": 1024,
+    "warm_samples": 31
+  },
+  "schema": "noble-interpreter-first-projection/v1",
+  "source_revision": "aa8df373a234d384a7f649e413cdcc53221bd145",
+  "specializer": "ngraph-pe/0",
+  "specializer_revision": "ngraph-pe-specializer/2",
+  "toolchain": {
+    "cargo": "cargo 1.96.0-nightly (cbb9bb8bd 2026-03-13)",
+    "rustc": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)"
+  },
+  "unsupported": {
+    "Wasm_code_bytes": "compiled backend is the in-memory layered graph evaluator, not a Wasm code emitter",
+    "actual_peak_scratch_heap": "no allocator peak instrumentation; compiled workspace bytes are measured structurally",
+    "end_to_end_cli_prepare_compile_instantiate": "no CLI Wasm process in this in-process graph experiment; cannot turn graph latency into CLI cost",
+    "second_or_third_projection_cost": "no accepted representation of the Rust specializer as a Noble subject"
+  }
+}
