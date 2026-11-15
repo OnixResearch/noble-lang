@@ -523,7 +523,8 @@ The existing D7 residual-node cap applies to both intermediate and final
 growth; exceeding it must refuse rather than publish a partial graph.
 
 **Frozen comparison:** Compare the exact same checked graph and static map
-through D3's static-or-residual baseline and the opt-in offset path. Fixed
+through the current D3-based static-or-residual baseline (including the
+separately approved #34 total identity rules) and the opt-in offset path. Fixed
 families are chained addition `(x + 2) + 3`, chained subtraction
 `(x - 2) - 3`, wrapping boundary `x + i64::MAX + 1`, a shared linear
 subexpression used twice, a non-prefix static input, and a total expression
