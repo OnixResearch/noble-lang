@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Issue #62 protected-semantics lane (exported-closure fallback).
+// Issue #62 protected-semantics lane (exported-closure fallback plus kernel replay).
 //
 // `lake comparator` is not usable on this host because its required `bwrap` executable is absent
 // from the execution PATH. Instead, the separate challenge and solution packages are built with the
@@ -9,12 +9,14 @@
 // separate proof-closure digest. This is not a claim that the local comparison implements all of
 // `lake comparator`; the only permitted definition holes are checked empty.
 //
-// The eight fixture cases are: a real proof, an alternate proof, a weakened predicate under the same
+// The original eight fixture cases are: a real proof, an alternate proof, a weakened predicate under the same
 // theorem names/statements, changed imported semantics under the same theorem names/statements, a
 // wrong-statement proof, a forbidden-axiom proof, an invalid proof rejected by Lean, and an
 // export-level missing-definition control. They exercise five distinct refusal classes plus
-// acceptance. Proofs are checked by each project build's Lean
-// kernel; the exported-closure comparison is the protected-definition check. Opt-in evidence, not a gate.
+// acceptance. The two valid solutions and an independently selected amendment are also replayed
+// from their actual exports by Nanoda and Lean's bundled official `leanchecker --from-export`.
+// An amended challenge may only be approved in a separate committed manifest after its own
+// export has been kernel-checked, before the amended solution is built. Opt-in evidence, not a gate.
 import { spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -39,6 +41,8 @@ const root = process.cwd();
 const leanBin = path.resolve(value('--lean-bin'));
 const work = path.resolve(value('--work'));
 const output = path.resolve(value('--output'));
+const rawOutput = `${output}.raw`;
+const freezeAmendment = argv.includes('--freeze-amendment');
 const toolchain = optional('--toolchain');
 const pins = {
   lean: value('--lean-sha256'),
@@ -50,6 +54,10 @@ const checkersPin = JSON.parse(fs.readFileSync(checkersPath, 'utf8'));
 const lake = path.join(leanBin, 'lake');
 const leanexport = path.join(leanBin, 'leanexport');
 const nanoda = path.join(leanBin, 'nanoda_bin');
+const leanchecker = path.join(leanBin, 'leanchecker');
+// Lean 4.35.0 bundled official kernel; its `LeanChecker.lean` dispatches --from-export
+// to parseStream + Kernel.Environment.replay and checks quotient declarations.
+const LEANCHECKER_SHA256 = 'ec7d3c6574b27f0db2319da5cb015d3ea7806b0302c3a70c7164c517487937e7';
 const nanodaPin = checkersPin.checkers.find((checker) => checker.id === 'nanoda')?.sha256;
 if (!nanodaPin) throw new Error('checkers.json has no nanoda binary pin');
 
@@ -58,9 +66,11 @@ pinGuard([
   { role: 'lake', file: lake, sha256: pins.lake, pinClass: 'tool-pin-mismatch' },
   { role: 'leanexport', file: leanexport, sha256: pins.leanexport, pinClass: 'tool-pin-mismatch' },
   { role: 'nanoda', file: nanoda, sha256: nanodaPin, pinClass: 'tool-pin-mismatch' },
+  { role: 'leanchecker', file: leanchecker, sha256: LEANCHECKER_SHA256, pinClass: 'tool-pin-mismatch' },
 ]);
 if (fs.existsSync(work)) throw new Error(`work directory exists: ${work}`);
 if (fs.existsSync(output)) throw new Error(`output already exists: ${output}`);
+if (fs.existsSync(rawOutput)) throw new Error(`raw output already exists: ${rawOutput}`);
 fs.mkdirSync(work, { recursive: true });
 
 const PROJECTS = {
@@ -72,13 +82,27 @@ const PROJECTS = {
   'wrong-statement': path.join(here, 'protected/solutions/wrong-statement'),
   'forbidden-assumption': path.join(here, 'protected/solutions/forbidden-assumption'),
   'kernel-rejection': path.join(here, 'protected/solutions/kernel-rejection'),
+  'amended-challenge': path.join(here, 'protected/amendment/challenge'),
+  'amended-solution': path.join(here, 'protected/solutions/amended'),
 };
 const configPath = path.join(here, 'protected/challenge.json');
 const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+const amendedConfigPath = path.join(here, 'protected/amendment/challenge.json');
+const amendedConfig = JSON.parse(fs.readFileSync(amendedConfigPath, 'utf8'));
+const amendedApprovalPath = path.join(here, 'protected/amendment/approval.json');
 const THEOREMS = config.theorem_names;
 const PERMITTED_AXIOMS = config.assumption_policy.permitted_axioms;
 const EXPECTED_FORMAT = checkersPin.export_format.version;
 const CONTROL_AXIOM = 'Protected.external_zero';
+const OLD_APPROVAL = {
+  challenge_id: 'noble-issue-62-protected-bound/v1',
+  config_sha256: '01611d9fd87eb8bd63f5d4ec38463b27270bb6ac6358c21c50fdb94a4a09258c',
+  semantic_closure_sha256: '7cc25479566cb12a3192812f4cd789da4e9f6ed4d8030b854fb9b228fb8ae605',
+  challenge_source_sha256: {
+    'Challenge.lean': 'ec19efc7538e20381bc4db5d473a5ca94d5b1982a3226e2ac7277dbd0c0c1ef3',
+    'Protected/Semantics.lean': '5641e7e90be1205f5b3101a07ce09931c1ee27f1a67e8c9ed7d9a8bb0866c45f',
+  },
+};
 if (config.assumption_policy.definition_holes.length !== 0) {
   throw new Error('the exported-closure fallback does not support definition holes; challenge must list none');
 }
@@ -89,6 +113,24 @@ if (!config.challenge_id || !config.model?.name || !config.model?.version
     || !config.external_contracts.some((contract) =>
       contract.name === 'Lean.Init/Nat' && contract.version === checkersPin.toolchain.lean)) {
   throw new Error('challenge must freeze its identity, model/version, and external contracts');
+}
+if (fileSha256(configPath) !== OLD_APPROVAL.config_sha256
+    || Object.entries(OLD_APPROVAL.challenge_source_sha256).some(([relative, hash]) =>
+      fileSha256(path.join(PROJECTS.challenge, relative)) !== hash)) {
+  throw new Error('original challenge source or frozen approval identity changed');
+}
+if (amendedConfig.challenge_id !== 'noble-issue-62-protected-bound/v2-64'
+    || amendedConfig.challenge_id === config.challenge_id
+    || amendedConfig.model?.name !== config.model.name
+    || amendedConfig.model?.version !== '2'
+    || amendedConfig.model?.semantic_root !== config.model.semantic_root
+    || amendedConfig.model?.predicate !== config.model.predicate
+    || amendedConfig.model?.parameters?.threshold !== 64
+    || JSON.stringify(amendedConfig.theorem_names) !== JSON.stringify(THEOREMS)
+    || JSON.stringify(amendedConfig.assumption_policy) !== JSON.stringify(config.assumption_policy)
+    || amendedConfig.challenge_module !== 'Challenge' || amendedConfig.solution_module !== 'Solution'
+    || JSON.stringify(amendedConfig.external_contracts) !== JSON.stringify(config.external_contracts)) {
+  throw new Error('unsupported amended challenge contract or changed axiom policy');
 }
 const childEnv = {
   HOME: process.env.HOME ?? '/', LANG: 'C.UTF-8',
@@ -112,44 +154,58 @@ function run(argvRun, cwd) {
     timeout: 1_800_000, killSignal: 'SIGKILL',
   });
   return {
-    argv: argvRun.map((part) => part.replace(work, '$WORK').replace(root, '$ROOT')),
-    project: path.relative(root, cwd),
+    argv: argvRun, cwd,
     exit_code: result.status,
     signal: result.signal,
+    process_error: result.error ? { code: result.error.code ?? null, message: result.error.message } : null,
     elapsed_ms: Number((process.hrtime.bigint() - started) / 1_000_000n),
-    stdout: (result.stdout ?? '').trim().slice(-1200),
-    stderr: (result.stderr ?? '').trim().slice(-1200),
+    stdout: result.stdout ?? '',
+    stderr: result.stderr ?? '',
     timed_out: result.error?.code === 'ETIMEDOUT',
   };
 }
 
 /** Build one isolated fixture project and export its exact theorem roots. */
-function buildAndExport(project, library, declarations,
+function buildAndExport(id, project, library, declarations,
   { allowForeignAxioms = false, expectKernelRejection = false } = {}) {
   const build = run([lake, 'build'], project);
-  if (build.exit_code !== 0 || build.signal || build.timed_out) {
+  if (build.exit_code !== 0 || build.signal || build.process_error) {
     const detail = `${build.stdout}\n${build.stderr}`.trim();
-    const className = expectKernelRejection && /type mismatch/iu.test(detail)
-      ? 'kernel-rejection' : 'build-failure';
+    const className = build.timed_out ? 'timeout'
+      : build.signal === 'SIGKILL' || /\b(?:out of memory|cannot allocate|ENOMEM)\b/iu.test(detail)
+        ? 'resource-exhausted'
+        : expectKernelRejection && /type mismatch/iu.test(detail)
+          ? 'kernel-rejection' : 'build-failure';
     return { build, failure: { class: className, detail } };
   }
-  const exportPath = path.join(work, `${library}-${path.basename(project)}.ndjson`);
+  const exportPath = path.join(work, `${id}.ndjson`);
   const descriptor = fs.openSync(exportPath, 'w');
+  const started = process.hrtime.bigint();
+  const exportArgv = [lake, 'env', leanexport, library, '--', ...declarations];
   const exported = spawnSync(lake, ['env', leanexport, library, '--', ...declarations], {
     cwd: project, env: childEnv, encoding: 'utf8', stdio: ['ignore', descriptor, 'pipe'],
     maxBuffer: 64 * 1024 * 1024, timeout: 1_800_000, killSignal: 'SIGKILL',
   });
   fs.closeSync(descriptor);
   const stage = {
-    argv: ['lake', 'env', 'leanexport', library, '--', ...declarations],
+    argv: exportArgv,
+    cwd: project,
     exit_code: exported.status,
     signal: exported.signal,
+    process_error: exported.error ? { code: exported.error.code ?? null, message: exported.error.message } : null,
+    elapsed_ms: Number((process.hrtime.bigint() - started) / 1_000_000n),
     timed_out: exported.error?.code === 'ETIMEDOUT',
     panic: /PANIC/u.test(exported.stderr ?? ''),
-    stderr_excerpt: (exported.stderr ?? '').split('\nbacktrace:')[0].trim().slice(0, 500),
+    stderr: exported.stderr ?? '',
+    stdout_file: exportPath,
+    stdout_sha256: fileSha256(exportPath),
+    stdout_size_bytes: fs.statSync(exportPath).size,
   };
-  if (stage.exit_code !== 0 || stage.signal || stage.timed_out || stage.panic) {
-    return { build, stage, exportPath, failure: { class: 'export-failure', detail: stage.stderr_excerpt } };
+  if (stage.exit_code !== 0 || stage.signal || stage.process_error || stage.panic) {
+    const className = stage.timed_out ? 'timeout'
+      : stage.signal === 'SIGKILL' || /\b(?:out of memory|cannot allocate|ENOMEM)\b/iu.test(stage.stderr)
+        ? 'resource-exhausted' : 'export-failure';
+    return { build, stage, exportPath, failure: { class: className, detail: stage.stderr } };
   }
   let parsed;
   let inspection;
@@ -180,6 +236,110 @@ function buildAndExport(project, library, declarations,
       records: parsed.records, format: parsed.format, declarations: parsed.decls.size,
       axioms: parsed.axioms, foreign_axioms: foreign,
     },
+  };
+}
+
+/** The official kernel skips unsafe and partial declarations; do not count an incomplete replay. */
+function skippedByKernel(parsed) {
+  const skipped = [];
+  for (const [name, decl] of parsed.decls) {
+    const record = decl.kind === 'inductive'
+      ? [...(decl.group.record.types ?? []), ...(decl.group.record.ctors ?? []),
+        ...(decl.group.record.recs ?? [])].find((member) => parsed.names.get(member.name) === name)
+      : decl.record;
+    if (decl.kind === 'def' && record.safety !== 'safe'
+      || decl.kind !== 'def' && record.isUnsafe === true) skipped.push(name);
+  }
+  return skipped.sort();
+}
+
+/** One physical NDJSON is passed to both separately pinned kernels. */
+function replayExport(candidate, id) {
+  if (candidate.failure || !candidate.parsed || !candidate.record) {
+    return { classification: candidate.failure?.class ?? 'export-failure', runs: [] };
+  }
+  const skipped = skippedByKernel(candidate.parsed);
+  const foreign = foreignAxioms(candidate.inspection).filter((name) => !PERMITTED_AXIOMS.includes(name));
+  // `LeanChecker.checkExport` removes these three generated quotient declarations from
+  // the kernel input and checks them against the regenerated kernel values afterward.
+  const postcheckedQuotients = ['Quot.mk', 'Quot.lift', 'Quot.ind']
+    .filter((name) => candidate.parsed.decls.has(name));
+  const replayable = candidate.parsed.decls.size - skipped.length - postcheckedQuotients.length;
+  if (candidate.parsed.format !== EXPECTED_FORMAT || skipped.length || foreign.length || replayable <= 0) {
+    return {
+      classification: candidate.parsed.format !== EXPECTED_FORMAT ? 'unsupported-format'
+        : skipped.length ? 'unsupported' : foreign.length ? 'forbidden-axiom' : 'empty-check',
+      skipped_declarations: skipped, foreign_axioms: foreign, eligible_declarations: replayable,
+      original_parsed_count: candidate.parsed.decls.size,
+      quotient_exclusions: postcheckedQuotients, runs: [],
+    };
+  }
+  const nanodaConfigPath = path.join(work, `${id}.nanoda.json`);
+  fs.writeFileSync(nanodaConfigPath, `${JSON.stringify({
+    use_stdin: false,
+    export_file_path: candidate.exportPath,
+    permitted_axioms: PERMITTED_AXIOMS,
+    unpermitted_axiom_hard_error: true,
+    num_threads: 1,
+    nat_extension: true,
+    string_extension: true,
+    print_axioms: false,
+    print_success_message: true,
+  }, null, 2)}\n`);
+  const commands = [
+    { checker: 'nanoda', argv: [nanoda, nanodaConfigPath] },
+    { checker: 'lean-official', argv: [leanchecker, '--from-export', candidate.exportPath] },
+  ];
+  const runs = commands.map(({ checker, argv: command }) => {
+    const result = run(command, work);
+    const text = `${result.stdout}\n${result.stderr}\n${result.process_error?.message ?? ''}`;
+    let classification;
+    let checkedDeclarations = null;
+    if (result.timed_out) classification = 'timeout';
+    else if (result.signal === 'SIGKILL' || result.signal === 'SIGXCPU' || result.exit_code === 137
+      || /out of memory|cannot allocate(?: memory)?|allocation failed|memory allocation|failed to allocate|\bENOMEM\b/iu.test(text)) {
+      classification = 'resource-exhausted';
+    } else if (result.exit_code === 2
+      || /\bunsupported(?: format| feature| extension)?\b|export format version is (?:greater|less) than/iu.test(text)) {
+      classification = 'unsupported';
+    } else if (/\bparse\b.{0,60}(?:error|fail|invalid|unexpected|eof)|\binvalid\s+(?:json|ndjson|token)\b|\bEOF while parsing\b/iu.test(text)) {
+      classification = 'parse-failure';
+    } else if (/\bunpermitted axiom\b/iu.test(text)) {
+      classification = 'forbidden-axiom';
+    } else if (result.exit_code === 0 && !result.signal && !result.process_error) {
+      if (checker === 'nanoda') {
+        const match = /^Checked (\d+) declarations with no errors\s*$/u.exec(result.stdout);
+        checkedDeclarations = match ? Number(match[1]) : null;
+      } else if (result.stdout === 'Lean default kernel accepts the solution\n'
+        && result.stderr === '') {
+        // LeanChecker.lean's checkExport replays every safe declaration from this exact
+        // export and checks the quotient postconditions; it prints no numeric count.
+        checkedDeclarations = replayable;
+      }
+      classification = checkedDeclarations === null ? 'checker-error'
+        : checkedDeclarations > 0 ? 'accepted' : 'empty-check';
+    } else {
+      classification = /\b(?:mismatch|invalid|rejects?|unknown constant|assertion failed|kernel)\b/iu.test(text)
+        ? 'kernel-rejection' : 'checker-error';
+    }
+    return { checker, ...result, classification, checked_declarations: checkedDeclarations,
+      count_origin: checker === 'nanoda' ? 'checker-stdout' : 'parsed-export-nonquotient',
+      official_count_source: checker === 'lean-official' ? 'parsed_export_nonquotient' : null,
+      original_parsed_count: candidate.parsed.decls.size,
+      quotient_exclusions: postcheckedQuotients,
+      export_sha256: candidate.record.sha256,
+      ...(checker === 'nanoda' ? {
+        config_file: nanodaConfigPath, config_sha256: fileSha256(nanodaConfigPath),
+      } : {}) };
+  });
+  return {
+    classification: runs.every((item) => item.classification === 'accepted') ? 'accepted' : 'replay-refused',
+    eligible_declarations: replayable,
+    original_parsed_count: candidate.parsed.decls.size,
+    quotient_exclusions: postcheckedQuotients,
+    skipped_declarations: skipped,
+    foreign_axioms: foreign,
+    runs,
   };
 }
 
@@ -280,28 +440,156 @@ function rootStatements(parsed) {
   }));
 }
 
-const challenge = buildAndExport(PROJECTS.challenge, config.challenge_module, THEOREMS);
+function git(args) {
+  const command = spawnSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 4 * 1024 * 1024 });
+  if (command.status !== 0 || command.error) {
+    throw new Error(`git ${args.join(' ')}: ${command.stderr ?? command.error?.message ?? 'failed'}`);
+  }
+  return command.stdout.trim();
+}
+
+function committedSource(file, revision = 'HEAD') {
+  const relative = path.relative(root, file);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error(`not a source within repository: ${file}`);
+  }
+  const committed = spawnSync('git', ['show', `${revision}:${relative}`], {
+    cwd: root, encoding: 'buffer', maxBuffer: 4 * 1024 * 1024,
+  });
+  if (committed.status !== 0 || committed.error || !committed.stdout.equals(fs.readFileSync(file))) {
+    throw new Error(`uncommitted or changed source at ${revision}: ${relative}`);
+  }
+  return { path: relative, sha256: fileSha256(file) };
+}
+
+if (!freezeAmendment && !fs.existsSync(amendedApprovalPath)) {
+  throw new Error('approval-missing: amended challenge needs a separately committed approval manifest');
+}
+const presentedApproval = freezeAmendment ? null
+  : JSON.parse(fs.readFileSync(amendedApprovalPath, 'utf8'));
+const proposalSourceCommit = freezeAmendment ? git(['rev-parse', 'HEAD'])
+  : presentedApproval.proposal_source_commit;
+if (!/^[0-9a-f]{40}$/u.test(proposalSourceCommit)) {
+  throw new Error('amended approval source commit must be a full SHA-1 revision');
+}
+const amendedSourceFiles = [
+  amendedConfigPath,
+  ...['Challenge.lean', 'Protected/Semantics.lean',
+    'lake-manifest.json', 'lakefile.toml', 'lean-toolchain']
+    .map((relative) => path.join(PROJECTS['amended-challenge'], relative)),
+];
+const amendedSource = amendedSourceFiles.map((file) => {
+  committedSource(file, 'HEAD');
+  return committedSource(file, proposalSourceCommit);
+});
+const amendedChallenge = buildAndExport(
+  'amended-challenge', PROJECTS['amended-challenge'], amendedConfig.challenge_module, THEOREMS);
+if (amendedChallenge.failure) {
+  throw new Error(`amended challenge ${amendedChallenge.failure.class}: ${amendedChallenge.failure.detail}`);
+}
+const amendedStatements = rootStatements(amendedChallenge.parsed);
+const amendedSemantic = semanticClosure(amendedChallenge.parsed, THEOREMS);
+if (amendedSemantic.missing.length) {
+  throw new Error(`amended challenge semantic closure incomplete: ${amendedSemantic.missing.join(', ')}`);
+}
+const amendedChallengeReplay = replayExport(amendedChallenge, 'amended-challenge');
+const proposal = {
+  schema: 'noble-independent-replay-protected-approval/v1',
+  challenge_id: amendedConfig.challenge_id,
+  proposal_source_commit: proposalSourceCommit,
+  model: amendedConfig.model,
+  source_sha256: Object.fromEntries(amendedSource.map((entry) => [entry.path, entry.sha256])),
+  root_statement_sha256: amendedStatements,
+  semantic_closure_sha256: amendedSemantic.digest.sha256,
+  permitted_axioms: PERMITTED_AXIOMS,
+  toolchain: checkersPin.toolchain.output,
+  export_format: EXPECTED_FORMAT,
+};
+
+function retainRaw(files) {
+  fs.mkdirSync(path.dirname(output), { recursive: true });
+  fs.mkdirSync(rawOutput, { recursive: false });
+  return files.filter((file) => file && fs.existsSync(file)).map((file) => {
+    const retained = path.join(rawOutput, path.basename(file));
+    if (fs.existsSync(retained)) throw new Error(`duplicate raw artifact: ${retained}`);
+    fs.copyFileSync(file, retained, fs.constants.COPYFILE_EXCL);
+    return { path: path.relative(path.dirname(output), retained),
+      sha256: fileSha256(retained), size_bytes: fs.statSync(retained).size };
+  });
+}
+
+if (freezeAmendment) {
+  const holds = amendedChallengeReplay.classification === 'accepted'
+    && THEOREMS.every((name) => amendedChallenge.parsed.decls.has(name))
+    && Object.values(amendedStatements).every((hash) => typeof hash === 'string')
+    && foreignAxioms(amendedChallenge.inspection).every((name) => PERMITTED_AXIOMS.includes(name));
+  const raw_artifacts = retainRaw([
+    amendedChallenge.exportPath,
+    ...amendedChallengeReplay.runs.map((entry) => entry.config_file),
+  ]);
+  const frozen = {
+    schema: 'noble-independent-replay-protected-amendment-proposal/v1',
+    source_commit: proposal.proposal_source_commit,
+    holds,
+    challenge: { build: amendedChallenge.build, export: amendedChallenge.stage,
+      export_record: amendedChallenge.record, root_statement_sha256: amendedStatements,
+      semantic_closure: amendedSemantic, proof_closure: proofClosure(amendedChallenge.parsed, THEOREMS),
+      replay: amendedChallengeReplay },
+    approval_proposal: holds ? proposal : null,
+    raw_artifacts,
+    status: 'observed challenge only; not owner approval; amended solution has not been built',
+  };
+  fs.mkdirSync(path.dirname(output), { recursive: true });
+  fs.writeFileSync(output, `${JSON.stringify(frozen, null, 2)}\n`);
+  console.log(JSON.stringify({ holds, proposal: holds ? proposal : null }));
+  process.exit(holds ? 0 : 1);
+}
+
+// Approval is a distinct tracked commit, not a value inferred from a solution export.
+const committedApproval = committedSource(amendedApprovalPath);
+const approval = presentedApproval;
+const approvalCommit = git(['log', '-1', '--format=%H', '--', committedApproval.path]);
+if (approval.schema !== proposal.schema
+    || approval.challenge_id !== amendedConfig.challenge_id
+    || approval.challenge_id === OLD_APPROVAL.challenge_id
+    || approval.proposal_source_commit === approvalCommit
+    || git(['merge-base', proposal.proposal_source_commit, approvalCommit]) !== proposal.proposal_source_commit
+    || JSON.stringify(approval) !== JSON.stringify(proposal)) {
+  throw new Error('approval-mismatch: independent committed owner approval does not match the checked challenge');
+}
+
+const challenge = buildAndExport('challenge', PROJECTS.challenge, config.challenge_module, THEOREMS);
 if (challenge.failure) throw new Error(`challenge ${challenge.failure.class}: ${challenge.failure.detail}`);
 const challengeStatements = rootStatements(challenge.parsed);
 const challengeSemantic = semanticClosure(challenge.parsed, THEOREMS);
 if (challengeSemantic.missing.length > 0) {
   throw new Error(`challenge semantic closure is incomplete: ${challengeSemantic.missing.join(', ')}`);
 }
+if (challengeSemantic.digest.sha256 !== OLD_APPROVAL.semantic_closure_sha256) {
+  throw new Error('original challenge semantic closure differs from its immutable approval');
+}
 
 const solutionBuilds = new Map();
 for (const id of ['real', 'alternate', 'weakened-predicate', 'changed-semantics', 'wrong-statement',
   'forbidden-assumption', 'kernel-rejection']) {
-  solutionBuilds.set(id, buildAndExport(PROJECTS[id], config.solution_module, THEOREMS, {
+  solutionBuilds.set(id, buildAndExport(id, PROJECTS[id], config.solution_module, THEOREMS, {
     allowForeignAxioms: id === 'forbidden-assumption',
     expectKernelRejection: id === 'kernel-rejection',
   }));
 }
+const amendedSolution = buildAndExport(
+  'amended-solution', PROJECTS['amended-solution'], amendedConfig.solution_module, THEOREMS);
 
-/** The export-side comparison retains distinct failure, statement, definition and missing classes. */
-function compareSolution(id, candidate) {
+/** Compare to a separately selected, approval-bound challenge; never to the candidate itself. */
+function compareSolution(id, candidate, approved = {
+  id: OLD_APPROVAL.challenge_id, statements: challengeStatements, semantic: challengeSemantic,
+}) {
   const entry = {
     id,
-    project: PROJECTS[id] ? path.relative(root, PROJECTS[id]) : candidate.build?.project ?? null,
+    project: PROJECTS[id] ? path.relative(root, PROJECTS[id])
+      : candidate.build?.cwd ? path.relative(root, candidate.build.cwd) : candidate.build?.project ?? null,
+    approval_id: approved.id,
+    approved_semantic_closure_sha256: approved.semantic.digest.sha256,
     build: candidate.build,
     export: candidate.record ?? null,
     export_stage: candidate.stage ?? null,
@@ -318,7 +606,7 @@ function compareSolution(id, candidate) {
     entry.verdict = { class: 'forbidden-axiom', detail: foreign[0], forbidden: foreign };
     return entry;
   }
-  const statementMismatch = THEOREMS.find((name) => statements[name] !== challengeStatements[name]);
+  const statementMismatch = THEOREMS.find((name) => statements[name] !== approved.statements[name]);
   if (statementMismatch) {
     entry.verdict = { class: 'statement-mismatch', detail: statementMismatch, path: [statementMismatch] };
     return entry;
@@ -326,11 +614,11 @@ function compareSolution(id, candidate) {
 
   const semantic = semanticClosure(candidate.parsed, THEOREMS);
   entry.semantic_closure = semantic;
-  const expectedNames = new Set(challengeSemantic.names);
+  const expectedNames = new Set(approved.semantic.names);
   const actualNames = new Set(semantic.names);
   const missing = [...new Set([
     ...semantic.missing,
-    ...challengeSemantic.names.filter((name) => !actualNames.has(name)),
+    ...approved.semantic.names.filter((name) => !actualNames.has(name)),
   ])].sort();
   if (missing.length > 0) {
     entry.verdict = {
@@ -339,8 +627,8 @@ function compareSolution(id, candidate) {
     };
     return entry;
   }
-  const changed = challengeSemantic.names.filter((name) =>
-    semantic.declaration_digests[name] !== challengeSemantic.declaration_digests[name]);
+  const changed = approved.semantic.names.filter((name) =>
+    semantic.declaration_digests[name] !== approved.semantic.declaration_digests[name]);
   if (changed.length > 0) {
     entry.verdict = {
       class: 'definition-mismatch', detail: changed[0], changed,
@@ -361,6 +649,16 @@ function compareSolution(id, candidate) {
 }
 
 const runs = [...solutionBuilds].map(([id, candidate]) => compareSolution(id, candidate));
+const amendedReference = {
+  id: approval.challenge_id, statements: amendedStatements, semantic: amendedSemantic,
+};
+const amendmentRuns = [
+  compareSolution('amended-solution', amendedSolution, amendedReference),
+  compareSolution('old-solution-under-new-approval', solutionBuilds.get('real'), amendedReference),
+  compareSolution('amended-solution-under-old-approval', amendedSolution),
+  compareSolution('old-challenge-under-new-approval', challenge, amendedReference),
+  compareSolution('amended-challenge-under-old-approval', amendedChallenge),
+];
 const real = solutionBuilds.get('real');
 const realParsed = real.parsed;
 if (!realParsed) throw new Error(`real solution build failed: ${real.failure?.detail ?? 'no export'}`);
@@ -388,6 +686,7 @@ runs.push(compareSolution('missing-definition', {
 }));
 
 const byId = (id) => runs.find((entry) => entry.id === id);
+const amendedById = (id) => amendmentRuns.find((entry) => entry.id === id);
 const verdictOf = (id) => byId(id)?.verdict.class;
 const detailOf = (id) => byId(id)?.verdict.detail;
 const expectedVerdicts = {
@@ -417,12 +716,28 @@ const sourcePaths = Object.values(PROJECTS).flatMap((project) => {
 const sourceEvidence = sourcePaths.map((file) => ({ path: path.relative(root, file), sha256: fileSha256(file) }));
 const proofClosures = Object.fromEntries([
   ['challenge', challenge.parsed],
+  ['amended-challenge', amendedChallenge.parsed],
+  ...(amendedSolution.parsed ? [['amended-solution', amendedSolution.parsed]] : []),
   ...[...solutionBuilds].filter(([, candidate]) => candidate.parsed).map(([id, candidate]) => [id, candidate.parsed]),
 ].map(([id, parsed]) => [id, proofClosure(parsed, THEOREMS)]));
-const allExported = [challenge, ...solutionBuilds.values()];
+const allExported = [challenge, amendedChallenge, amendedSolution, ...solutionBuilds.values()];
 const legitimateExports = allExported.filter((entry) =>
   entry !== solutionBuilds.get('forbidden-assumption')
     && entry !== solutionBuilds.get('kernel-rejection'));
+const replay = Object.fromEntries([
+  ['challenge', challenge],
+  ['real', real],
+  ['alternate', solutionBuilds.get('alternate')],
+  ['amended-challenge', amendedChallenge],
+  ['amended-solution', amendedSolution],
+].map(([id, candidate]) => [id, id === 'amended-challenge'
+  ? amendedChallengeReplay : replayExport(candidate, id)]));
+const successfulReplay = (id) => replay[id]?.classification === 'accepted'
+  && replay[id].runs.length === 2
+  && replay[id].runs.every((entry) => entry.classification === 'accepted'
+    && entry.checked_declarations > 0 && entry.export_sha256
+    === (id === 'challenge' ? challenge : id === 'amended-challenge' ? amendedChallenge
+      : id === 'amended-solution' ? amendedSolution : solutionBuilds.get(id)).record.sha256);
 const checks = {
   challenge_configuration_is_explicit:
     config.challenge_id === 'noble-issue-62-protected-bound/v1'
@@ -444,6 +759,27 @@ const checks = {
     entry.inspection && foreignAxioms(entry.inspection).every((name) => PERMITTED_AXIOMS.includes(name))),
   real_solution_accepted: verdictOf('real') === expectedVerdicts.real[0],
   alternate_proof_accepted: verdictOf('alternate') === expectedVerdicts.alternate[0],
+  real_and_alternate_replay_on_their_actual_exports:
+    ['challenge', 'real', 'alternate'].every(successfulReplay),
+  amended_challenge_and_new_solution_replay_on_their_actual_exports:
+    ['amended-challenge', 'amended-solution'].every(successfulReplay),
+  amended_challenge_bound_to_separate_approval:
+    approval.challenge_id !== OLD_APPROVAL.challenge_id
+      && approval.semantic_closure_sha256 === amendedSemantic.digest.sha256
+      && amendedSemantic.digest.sha256 !== OLD_APPROVAL.semantic_closure_sha256
+      && committedApproval.sha256 === fileSha256(amendedApprovalPath)
+      && amendedById('amended-solution')?.verdict.class === 'accepted'
+      && amendedById('amended-solution')?.semantic_closure?.digest.sha256 === approval.semantic_closure_sha256
+      && THEOREMS.every((name) =>
+        amendedById('amended-solution')?.root_statement_sha256?.[name] === approval.root_statement_sha256[name]),
+  old_approval_refuses_amended_semantics:
+    ['amended-solution-under-old-approval', 'amended-challenge-under-old-approval']
+      .every((id) => amendedById(id)?.verdict.class === 'definition-mismatch'
+        && amendedById(id)?.verdict.detail === 'Protected.threshold'),
+  amended_approval_refuses_old_semantics:
+    ['old-solution-under-new-approval', 'old-challenge-under-new-approval']
+      .every((id) => amendedById(id)?.verdict.class === 'definition-mismatch'
+        && amendedById(id)?.verdict.detail === 'Protected.threshold'),
   weakened_predicate_refused_on_its_definition:
     verdictOf('weakened-predicate') === expectedVerdicts['weakened-predicate'][0]
       && detailOf('weakened-predicate') === expectedVerdicts['weakened-predicate'][1],
@@ -470,7 +806,9 @@ const checks = {
     ['weakened-predicate', 'changed-semantics'].every((id) =>
       byId(id)?.semantic_closure?.digest.sha256 !== challengeSemantic.digest.sha256),
   proof_and_semantic_closures_are_distinctly_recorded:
-    challengeSemantic.digest.sha256 !== proofClosures.real?.digest?.sha256,
+    challengeSemantic.digest.sha256 !== proofClosures.real?.digest?.sha256
+      && amendedSemantic.digest.sha256 !== proofClosures['amended-solution']?.digest?.sha256
+      && proofClosures['amended-solution']?.digest?.sha256 !== proofClosures.real?.digest?.sha256,
   proof_closure_distinguishes_all_three_proof_terms:
     new Set(['challenge', 'real', 'alternate'].map((id) => proofClosures[id]?.digest?.sha256)).size === 3,
   diagnostic_classes_remain_distinct:
@@ -497,13 +835,18 @@ const source = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: process.cwd(), enc
 if (source.status !== 0 || source.stdout.trim() === '') {
   throw new Error(`cannot identify receipt source commit: ${source.stderr.trim()}`);
 }
+const raw_artifacts = retainRaw([
+  ...allExported.map((candidate) => candidate.exportPath),
+  missingDefinition.file,
+  ...Object.values(replay).flatMap((result) => result.runs.map((entry) => entry.config_file)),
+]);
 const receipt = {
-  schema: 'noble-independent-replay-protected/v2',
+  schema: 'noble-independent-replay-protected/v3',
   measured_on: new Date().toISOString().slice(0, 10),
   host,
   source_commit: source.stdout.trim(),
   toolchain,
-  assertion: 'separately built real and alternate proofs preserve all challenge statements and protected semantic definitions; a weakened predicate and changed imported threshold are refused by per-definition exported-closure comparison with dependency paths; wrong statements and a forbidden axiom have distinct refusal classes; a solution export missing a protected definition is refused by exact name',
+  assertion: 'independently selected old and amended challenges bind separate approval identities and exact semantic closures; real, alternate and amended proofs are kernel-replayed on their retained exports by pinned Nanoda and Lean; the two approval identities reject each other’s semantics; all eight historical control verdicts remain enforced',
   holds,
   checks,
   comparison: {
@@ -513,11 +856,15 @@ const receipt = {
     execution_path: childEnv.PATH,
     definition_holes: config.assumption_policy.definition_holes,
     model: config.model,
+    amended_model: amendedConfig.model,
     external_contracts: config.external_contracts,
   },
   harness: {
     protected: { path: 'verification/independent-replay/protected.mjs', sha256: fileSha256(fileURLToPath(import.meta.url)) },
     challenge_config: { path: 'verification/independent-replay/protected/challenge.json', sha256: fileSha256(configPath) },
+    amended_challenge_config: { path: 'verification/independent-replay/protected/amendment/challenge.json',
+      sha256: fileSha256(amendedConfigPath) },
+    amended_approval: committedApproval,
     checker_manifest: { path: 'verification/independent-replay/checkers.json', sha256: fileSha256(checkersPath) },
     sources: sourceEvidence,
   },
@@ -525,10 +872,16 @@ const receipt = {
     lean: { binary_sha256: pins.lean },
     lake: { binary_sha256: pins.lake },
     leanexport: { binary_sha256: pins.leanexport },
+    nanoda: { binary_sha256: nanodaPin },
+    leanchecker: { binary_sha256: LEANCHECKER_SHA256, interface: '--from-export <exact retained NDJSON>' },
     release: checkersPin.toolchain.output,
     derivation: checkersPin.toolchain.derivation,
   },
   configuration: config,
+  approvals: {
+    old: OLD_APPROVAL,
+    amended: { ...approval, approval_manifest_sha256: committedApproval.sha256, approval_commit: approvalCommit },
+  },
   challenge: {
     build: challenge.build,
     export: challenge.stage,
@@ -536,12 +889,23 @@ const receipt = {
     root_statement_sha256: challengeStatements,
     semantic_closure: challengeSemantic,
   },
+  amended_challenge: {
+    build: amendedChallenge.build,
+    export: amendedChallenge.stage,
+    export_record: amendedChallenge.record,
+    root_statement_sha256: amendedStatements,
+    semantic_closure: amendedSemantic,
+  },
+  replay,
   proof_closures: proofClosures,
   missing_definition_control: missingDefinition.record,
   runs,
+  amendment_runs: amendmentRuns,
+  raw_artifacts,
   non_claims: [
     'This exported-closure fallback is not lake comparator and does not inherit all of its sandbox or comparison guarantees.',
-    'Valid solutions are checked by Lean 4.35.0; the invalid-proof control demonstrates kernel rejection, but no independent proof checker result is claimed for these protected-semantic fixture packages.',
+    'The official Lean checker replays the retained export through Lean’s own C++ kernel; it is not an independent checker implementation. Nanoda is separately implemented but neither checker proves the correctness of the other.',
+    'The approved amendment is source-and-export-bound in a separate committed manifest; a solution may not mint its own approval. The issuer of the approval remains an owner decision.',
     'The challenge is authored in this lane and is not an independent specification of any Noble theorem.',
     'The missing-definition case removes one declaration from a valid export; a source package omitting a definition it uses would not typecheck.',
     'No CI, flake, policy or gate change; promotion is an owner decision.',
@@ -553,5 +917,7 @@ console.log(JSON.stringify({
   holds,
   checks,
   verdicts: Object.fromEntries(runs.map((entry) => [entry.id, `${entry.verdict.class}:${entry.verdict.detail ?? '-'}`])),
+  amended_verdicts: Object.fromEntries(amendmentRuns.map((entry) =>
+    [entry.id, `${entry.verdict.class}:${entry.verdict.detail ?? '-'}`])),
 }));
 process.exitCode = holds ? 0 : 1;
