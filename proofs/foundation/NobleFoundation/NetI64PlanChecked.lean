@@ -361,4 +361,98 @@ theorem BytePlan.semanticCheck_refines {state next : PhysicalState}
   exact ⟨himage ▸ Plan.commit_refines redex hRule state.project.work hm hredex,
     hqueue, hfree⟩
 
+/-- The already decoded erasure fixture has a kernel-checked positive
+semantic-admission witness; this is stronger than merely executing its
+physical image or evaluating its checker result. -/
+theorem BytePlan.era_fixture_admitted :
+    BytePlan.semanticCheck eraPhysicalStart eraPlanBytes
+      eraPhysicalRedex (by rfl) 0 256 0 = some eraPhysicalAfter := by
+  let image : BytePlan :=
+    { reuse := true, opcode := 4, pair := (0, 0, 1, 0), action := (0, 0),
+      boundaries := [], results := [], writes := [], externalWrites := [],
+      arenaReservation := 0, scratchReservation := 256,
+      worklistReservation := 0, publications := [] }
+  have fields :
+      image.SemanticFields eraPhysicalStart eraPhysicalAfter
+        eraPhysicalRedex (by rfl) := by
+    have maps := PhysicalState.projected_maps_perm_of_toNet_eq
+      _ _ PhysicalState.era_refines
+    have observables := PhysicalState.era_compiled_observables
+    dsimp only [BytePlan.SemanticFields]
+    refine ⟨by decide, ?_, ?_, by decide, by decide, by decide,
+      by decide, by decide, by decide, by decide, by decide, by decide,
+      by decide, by decide, by decide, maps.1, maps.2, ?_⟩
+    · simpa [image, BytePlan.logicalBoundary] using observables.1.symm
+    · simpa [image] using observables.2.1.symm
+    · change ([] : List (Id × Id)).Perm
+        (Plan.pendingPairs (Plan.commit eraPhysicalStart.project
+          (Plan.compile eraPhysicalStart.project eraPhysicalRedex (by rfl))
+          eraPhysicalStart.project.work))
+      simp only [Plan.pendingPairs, observables.2.2, List.filter_nil,
+        List.perm_nil]
+  exact BytePlan.semanticCheck_of_fields (by rfl)
+    (by simpa only [image] using BytePlan.era_image)
+    ⟨{ current := eraPhysicalStart, journal := some eraPhysicalStart }, by rfl⟩
+    PhysicalState.era_execution_exact fields
+
+/-- The complete output-connected OP2 image is admitted. In contrast, the
+parser-valid image omitting one external write is rejected for every bound. -/
+theorem BytePlan.op2_output_fixture_admitted :
+    BytePlan.semanticCheck op2PhysicalStart op2OutputFixture.emit
+      op2PhysicalRedex (by rfl) 0 256 0 = some op2PhysicalAfter := by
+  have fields :
+      op2OutputFixture.SemanticFields op2PhysicalStart op2PhysicalAfter
+        op2PhysicalRedex (by rfl) := by
+    have maps := PhysicalState.projected_maps_perm_of_toNet_eq
+      _ _ PhysicalState.op2_output_refines
+    have observables := PhysicalState.op2_output_compiled_observables
+    have wireLookup (port : Port) :
+        op2PhysicalAfter.project.wires[port]? =
+          (Plan.commit op2PhysicalStart.project
+            (Plan.compile op2PhysicalStart.project op2PhysicalRedex (by rfl))
+            op2PhysicalStart.project.work).wires[port]? :=
+      (Std.HashMap.Equiv.of_toList_perm maps.2).getElem?_eq
+    have agentLookup (id : Id) :
+        op2PhysicalAfter.project.agents[id]? =
+          (Plan.commit op2PhysicalStart.project
+            (Plan.compile op2PhysicalStart.project op2PhysicalRedex (by rfl))
+            op2PhysicalStart.project.work).agents[id]? :=
+      (Std.HashMap.Equiv.of_toList_perm maps.1).getElem?_eq
+    have noOutput :
+        (Plan.commit op2PhysicalStart.project
+          (Plan.compile op2PhysicalStart.project op2PhysicalRedex (by rfl))
+          op2PhysicalStart.project.work).agents[[100]]? = none := by
+      rw [←agentLookup]
+      simp [PhysicalState.project, PhysicalState.agents, op2PhysicalAfter,
+        show child [1] [2] (some false) 0 = [0, 1] from rfl]
+    have noMem :
+        ¬ [100] ∈ (Plan.commit op2PhysicalStart.project
+          (Plan.compile op2PhysicalStart.project op2PhysicalRedex (by rfl))
+          op2PhysicalStart.project.work).agents := by
+      simpa using noOutput
+    have outputs : op2PhysicalAfter.outputs.all (fun output =>
+        decide (op2PhysicalAfter.logicalPort output.target =
+          (Plan.commit op2PhysicalStart.project
+            (Plan.compile op2PhysicalStart.project op2PhysicalRedex (by rfl))
+            op2PhysicalStart.project.work).wires[output.label]?)) = true := by
+      apply List.all_eq_true.mpr
+      intro output hmem
+      have before := (List.all_eq_true.mp observables.2.2) output hmem
+      simpa only [←wireLookup output.label] using before
+    dsimp only [BytePlan.SemanticFields]
+    refine ⟨by decide, ?_, by decide, by decide, by decide, by decide,
+      by decide, by decide, by decide, outputs, by decide, by decide,
+      by decide, by decide, by decide, maps.1, maps.2, ?_⟩
+    · rw [observables.1]
+      decide
+    · change ([] : List (Id × Id)).Perm
+        (Plan.pendingPairs (Plan.commit op2PhysicalStart.project
+          (Plan.compile op2PhysicalStart.project op2PhysicalRedex (by rfl))
+          op2PhysicalStart.project.work))
+      simp only [Plan.pendingPairs, observables.2.1]
+      simp [noMem]
+  exact BytePlan.semanticCheck_of_fields (by rfl) BytePlan.op2_output_image
+    ⟨{ current := op2PhysicalStart, journal := some op2PhysicalStart }, by rfl⟩
+    PhysicalState.op2_output_execution_exact fields
+
 end NobleFoundation.NetI64Plans

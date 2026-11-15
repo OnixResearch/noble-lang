@@ -13120,6 +13120,18 @@
       "claim": "every model-semantic-checker-admitted physical byte image commits one selected abstract rewrite with the entire net, stable ordered free-port labels, and directed live-agent pending-pair permutation"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.era_fixture_admitted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the complete decoded ERA physical fixture passes the model semantic checker at exact resource reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op2_output_fixture_admitted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the complete decoded OP2 output physical fixture passes the model semantic checker at exact resource reservations"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.project_boundary_frame",
       "phase": 1,
       "role": "representation",
@@ -13225,7 +13237,13 @@
       "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_output_refines",
       "phase": 1,
       "role": "abstract-reduction-step",
-      "claim": "the finite OP2 physical output rewrite projects to the selected abstract plan's whole net"
+      "claim": "the finite OP2 physical rewrite projects to the selected abstract result net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_output_compiled_observables",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the fixed OP2 output plan's captured boundary, directed work candidates and physical output targets"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_published_execution_exact",
@@ -13280,6 +13298,12 @@
       "phase": 1,
       "role": "abstract-reduction-step",
       "claim": "the finite ERA physical rewrite projects to the selected abstract empty-result net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_compiled_observables",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the fixed ERA model plan captures no external boundary or result agents and publishes no pending pairs"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalTransaction.stage_stutters",

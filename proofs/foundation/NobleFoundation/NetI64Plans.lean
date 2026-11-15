@@ -2094,6 +2094,43 @@ theorem PhysicalState.op2_output_refines :
   · intro p
     rfl
 
+/-- Independently compiled OP2 boundary and candidate work, plus the
+physical output-target observation needed for semantic admission. -/
+theorem PhysicalState.op2_output_compiled_observables :
+    (Plan.compile op2PhysicalStart.project op2PhysicalRedex (by rfl)).capturedBoundary.filter
+      (fun edge => edge.1.2 != 0) =
+        [(([1], 1), ([100], 0)), (([1], 2), ([101], 0))] ∧
+    (Plan.commit op2PhysicalStart.project
+      (Plan.compile op2PhysicalStart.project op2PhysicalRedex (by rfl))
+      op2PhysicalStart.project.work).work =
+        [(child [1] [2] (some false) 0, [100]),
+          ([100], child [1] [2] (some false) 0)] ∧
+    op2PhysicalAfter.outputs.all (fun output =>
+      decide (op2PhysicalAfter.logicalPort output.target =
+        op2PhysicalAfter.project.wires[output.label]?)) = true := by
+  refine ⟨?_, ?_, ?_⟩
+  · rw [op2_plan_boundary]
+    decide
+  · have published :
+        (Plan.compile op2PhysicalStart.project op2PhysicalRedex
+          (by rfl)).newlyActive =
+          [(child [1] [2] (some false) 0, [100]),
+            ([100], child [1] [2] (some false) 0)] := by
+      change principalPairs
+        ((HNet.nbhd NetI64.arity op2PhysicalStart.project [1] [2]
+          (.op2 .add) (.num (BitVec.ofNat 64 27))).fire
+          NetI64.arity [1] [2] (.op2 .add) (.num (BitVec.ofNat 64 27))
+          (NetI64.op2NumData .add (BitVec.ofNat 64 27)).toX).wires = _
+      rw [op2_nbhd]
+      set_option maxRecDepth 3000 in decide
+    change (Plan.compile op2PhysicalStart.project op2PhysicalRedex
+      (by rfl)).newlyActive ++ [] = _
+    rw [published]
+    rfl
+  · simp [PhysicalState.project, PhysicalState.wires,
+      PhysicalState.portWires, PhysicalState.logicalPort,
+      op2PhysicalAfter, hget_insert]
+
 /-- The byte grammar alone accepts an image omitting the second output write.
 The independent semantic plan checker must rule this out: successful physical
 decoding and execution do not themselves establish abstract refinement. -/
@@ -2415,6 +2452,36 @@ theorem PhysicalState.era_refines :
     intro hleft hright hleft'
     simp [hleft, hright]
   · intro p
+    rfl
+
+/-- The concrete erasure fixture's independently compiled boundary and work
+image are empty once its consumed principal connection is excluded. -/
+theorem PhysicalState.era_compiled_observables :
+    (Plan.compile eraPhysicalStart.project eraPhysicalRedex (by rfl)).capturedBoundary.filter
+      (fun edge => edge.1.2 != 0) = [] ∧
+    (Plan.compile eraPhysicalStart.project eraPhysicalRedex (by rfl)).initializedAgents.map
+      Prod.snd = [] ∧
+    (Plan.commit eraPhysicalStart.project
+      (Plan.compile eraPhysicalStart.project eraPhysicalRedex (by rfl))
+      eraPhysicalStart.project.work).work = [] := by
+  refine ⟨?_, ?_, ?_⟩
+  · rw [era_plan_boundary]
+    decide
+  · rw [era_plan_agents]
+    rfl
+  · have empty :
+        (Plan.compile eraPhysicalStart.project eraPhysicalRedex (by rfl)).newlyActive =
+          [] := by
+      change principalPairs
+        ((HNet.nbhd NetI64.arity eraPhysicalStart.project [1] [2]
+          .era (.num (BitVec.ofNat 64 42))).fire
+          NetI64.arity [1] [2] .era (.num (BitVec.ofNat 64 42))
+          NetI64.eraNumData.toX).wires = []
+      rw [era_nbhd]
+      decide
+    change (Plan.compile eraPhysicalStart.project eraPhysicalRedex
+      (by rfl)).newlyActive ++ [] = []
+    rw [empty]
     rfl
 
 /-- A checked OP1 subtraction output image replaces the consumed operation
