@@ -13630,6 +13630,30 @@
       "claim": "any total selected rule-slot labeling matches the abstract compiler result-symbol order"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.Plan.zero_arity_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every selected pair of two zero-arity agents has no nonprincipal abstract captured boundary"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowered_zero_arity_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a physically empty boundary for a zero-arity pair agrees with the abstract selected boundary"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_forward_lowered_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every actually emitted forward ERA candidate has exactly the independent abstract boundary"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_reverse_lowered_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every actually emitted reverse ERA candidate has exactly the independent abstract boundary"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_semantic_prefix",
       "phase": 1,
       "role": "representation",

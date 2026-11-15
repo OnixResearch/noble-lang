@@ -207,6 +207,37 @@ theorem PhysicalState.rule_result_symbols {H : HNet NetSym}
     (by intros; rfl) h
   simpa [Plan.compile, localResult, XNet.fire, HNet.nbhd] using hm
 
+/-- An abstract selected rule with two zero-arity agents has no auxiliary
+capture, regardless of principal-wire targets or map insertion order. -/
+theorem Plan.zero_arity_boundary
+    (H : HNet NetSym) (redex : XRedex NetSym)
+    (hRule : NetI64.xRule redex.2.2.1 redex.2.2.2.1 =
+      some redex.2.2.2.2)
+    (hfirst : NetI64.arity redex.2.2.1 = 0)
+    (hsecond : NetI64.arity redex.2.2.2.1 = 0) :
+    ((Plan.compile H redex hRule).capturedBoundary.filter
+      fun edge => edge.1.2 != 0) = [] := by
+  simp [Plan.compile, HNet.nearWires, portsOf, hfirst, hsecond]
+  intro a1 b1 a2 b2 h
+  rcases h with ⟨_, _, _, ⟨_, hz⟩, _, _⟩ |
+    ⟨_, _, _, ⟨_, hz⟩, _, _⟩ <;> omega
+
+/-- Empty physical captures of a zero-arity pair equal the abstract
+compiler's empty nonprincipal boundary without inspecting a ghost net. -/
+theorem PhysicalState.lowered_zero_arity_boundary
+    {state : PhysicalState} {redex : XRedex NetSym}
+    {plan : BytePlan}
+    (hRule : NetI64.xRule redex.2.2.1 redex.2.2.2.1 =
+      some redex.2.2.2.2)
+    (hfirst : NetI64.arity redex.2.2.1 = 0)
+    (hsecond : NetI64.arity redex.2.2.2.1 = 0)
+    (hboundaries : plan.boundaries = []) :
+    plan.logicalBoundary state = some
+      ((Plan.compile state.project redex hRule).capturedBoundary.filter
+        fun edge => edge.1.2 != 0) := by
+  rw [Plan.zero_arity_boundary state.project redex hRule hfirst hsecond]
+  simp [BytePlan.logicalBoundary, hboundaries]
+
 /-- Derive the opcode, ordered physical capture and all reservation counters
 from the builder's inputs, not from the later semantic-admission predicate. -/
 theorem PhysicalState.candidateBody_fields
@@ -306,7 +337,8 @@ theorem PhysicalState.era_forward_candidate_exists
     (hsp : second.ports[0]? = some (some (pair.first, 0))) :
     ∃ plan, state.planCandidate pair
       (a, b, .era, .num value, eraNumData.toX) reuse = some plan ∧
-      plan.results = [] ∧ plan.externalWrites = [] ∧
+      plan.results = [] ∧ plan.boundaries = [] ∧
+      plan.externalWrites = [] ∧
       plan.publications = [] ∧ plan.action = (0, 0) ∧
       plan.pair = (pair.first, pair.firstGeneration.toNat,
         pair.second, pair.secondGeneration.toNat) := by
@@ -332,7 +364,8 @@ theorem PhysicalState.era_reverse_candidate_exists
     (hsp : second.ports[0]? = some (some (pair.first, 0))) :
     ∃ plan, state.planCandidate pair
       (a, b, .num value, .era, eraNumData.toX.swap) reuse = some plan ∧
-      plan.results = [] ∧ plan.externalWrites = [] ∧
+      plan.results = [] ∧ plan.boundaries = [] ∧
+      plan.externalWrites = [] ∧
       plan.publications = [] ∧ plan.action = (0, 0) ∧
       plan.pair = (pair.first, pair.firstGeneration.toNat,
         pair.second, pair.secondGeneration.toNat) := by
@@ -876,7 +909,7 @@ theorem PhysicalState.era_forward_lowered_completes
     ∃ next, state.executeCheckedImage plan.emit
         (a, b, .era, .num value, eraNumData.toX) = some next ∧
       next.outputs = state.outputs ∧ next.work = state.work := by
-  obtain ⟨candidate, hc, hresults, hwrites, hpubs, haction,
+  obtain ⟨candidate, hc, hresults, _, hwrites, hpubs, haction,
     hpairPlan⟩ := PhysicalState.era_forward_candidate_exists
       hpair hf hs hfa hsa hfp hsp
   have hcandidate := PhysicalState.lowerPlan_has_candidate hLower
@@ -913,7 +946,7 @@ theorem PhysicalState.era_reverse_lowered_completes
     ∃ next, state.executeCheckedImage plan.emit
         (a, b, .num value, .era, eraNumData.toX.swap) = some next ∧
       next.outputs = state.outputs ∧ next.work = state.work := by
-  obtain ⟨candidate, hc, hresults, hwrites, hpubs, haction,
+  obtain ⟨candidate, hc, hresults, _, hwrites, hpubs, haction,
     hpairPlan⟩ := PhysicalState.era_reverse_candidate_exists
       hpair hf hs hfa hsa hfp hsp
   have hcandidate := PhysicalState.lowerPlan_has_candidate hLower
@@ -930,6 +963,60 @@ theorem PhysicalState.era_reverse_lowered_completes
   exact PhysicalState.lowered_empty_image_completes hLower
     ⟨hresults, hwrites, hpubs, haction, hpairPlan⟩
     hpair hf hs hliveFirst hliveSecond hdistinct
+
+/-- Forward ERA's actually emitted empty capture equals the independent
+abstract selected boundary for arbitrary physical/abstract map contents. -/
+theorem PhysicalState.era_forward_lowered_boundary
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {value : BitVec 64} {reuse : Bool}
+    {first second : PhysicalSlot} {plan : BytePlan}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some .era)
+    (hsa : second.agent.map Prod.snd = some (.num value))
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0)))
+    (hLower : state.lowerPlan pair
+      (a, b, .era, .num value, eraNumData.toX) reuse = some plan) :
+    plan.logicalBoundary state = some
+      ((Plan.compile state.project
+        (a, b, .era, .num value, eraNumData.toX) (by rfl)).capturedBoundary.filter
+        fun edge => edge.1.2 != 0) := by
+  obtain ⟨candidate, hc, _, hboundaries, _, _, _, _⟩ :=
+    PhysicalState.era_forward_candidate_exists hpair hf hs hfa hsa hfp hsp
+  have hcandidate := PhysicalState.lowerPlan_has_candidate hLower
+  have heq : candidate = plan := Option.some.inj (hc.symm.trans hcandidate)
+  subst candidate
+  exact PhysicalState.lowered_zero_arity_boundary
+    (by rfl) rfl rfl hboundaries
+
+/-- Mirrored ERA has the same boundary correspondence: both selected agents
+have arity zero, and the physical image captures no auxiliary endpoint. -/
+theorem PhysicalState.era_reverse_lowered_boundary
+    {state : PhysicalState} {pair : PhysicalPair}
+    {a b : Id} {value : BitVec 64} {reuse : Bool}
+    {first second : PhysicalSlot} {plan : BytePlan}
+    (hpair : state.logicalPair pair = some (a, b))
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfa : first.agent.map Prod.snd = some (.num value))
+    (hsa : second.agent.map Prod.snd = some .era)
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0)))
+    (hLower : state.lowerPlan pair
+      (a, b, .num value, .era, eraNumData.toX.swap) reuse = some plan) :
+    plan.logicalBoundary state = some
+      ((Plan.compile state.project
+        (a, b, .num value, .era, eraNumData.toX.swap) (by rfl)).capturedBoundary.filter
+        fun edge => edge.1.2 != 0) := by
+  obtain ⟨candidate, hc, _, hboundaries, _, _, _, _⟩ :=
+    PhysicalState.era_reverse_candidate_exists hpair hf hs hfa hsa hfp hsp
+  have hcandidate := PhysicalState.lowerPlan_has_candidate hLower
+  have heq : candidate = plan := Option.some.inj (hc.symm.trans hcandidate)
+  subst candidate
+  exact PhysicalState.lowered_zero_arity_boundary
+    (by rfl) rfl rfl hboundaries
 
 /-- Exact bytes from the model lowering, with decoder roundtrip checked
 before return. These are comparable byte-for-byte to a Rust-emitted stream. -/
