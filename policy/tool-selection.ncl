@@ -51,7 +51,7 @@ let Pin = { rev | String, narHash | String } in
     word_bits | Number = 64,
     quality_rust | String = "nightly-2026-03-21",
     extraction_rust | String = "nightly-2026-09-17",
-    miri_rust | String = "nightly-2026-08-18",
+    miri_rust | String = "nightly-2026-09-17",
     miri_flags | Array String = ["-Zmiri-strict-provenance"],
     features | Array String = [],
     # Reviewed workspace names, separate from explicitly listed features;
