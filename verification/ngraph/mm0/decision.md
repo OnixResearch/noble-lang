@@ -16,4 +16,66 @@ If **any** condition is missing or unsupported, the decision is **NO-GO for expa
 
 ## Observed decision
 
-Pending a clean measured fixture run. This section will record separately the source commit, receipt path, costs, selected status, and remaining assumptions. No production dependency or gate is selected by this note.
+**NO-GO for expansion or promotion.** The frozen source
+`26f5e25855ba1db01b51c6686934b7b86fb272ba` produced the complete
+retained bytes in `retained/spec.mm0`, `retained/proof.mmb`,
+`retained/controls/` and `subjects/`. The source-bound generation/checking
+measurements are in `retained/production.json`; the separate **proposer-free**
+consumer's two acceptances and 17 refusals, including their actual failure
+stages and checker statuses, are in `retained/replay.json`. The consumer is
+replayable as:
+
+```sh
+node verification/ngraph/mm0/replay.mjs \
+  <built parser-enabled MM0 checker selected by profile.json> \
+  verification/ngraph/mm0/retained <new directory outside this repository>
+```
+
+The selected *experimental* verifier is upstream mm0-c at
+`0d414c0bfdaaeb7fea571895127abc1fa5a3d956` (source archive, compiler
+wrapper, flags, producer lock and both executable digests pinned in the
+tool-selection policy, `profile.json` and production receipt). It is built
+with the **parser enabled**, checks the entire flattened MM0 specification,
+and rejects a proof containing the `Sorry` opcode (raw exit 3). An otherwise
+valid proof with a deliberately different theorem and an arbitrary-proposition
+axiom both pass raw checking against *their own* specifications (exit 0) but
+fail this adapter's independently established specification digest. The
+NO_PARSER build verifies the original proof despite a changed arithmetic
+definition (raw exit 0), yet the adapter refuses its binary identity.
+Spec/model changes fail at `spec-digest`; malformed/truncated proofs fail
+inside the parser-enabled checker (exit 255); the 16 MiB address-space run
+terminates with exit 139 and the 1 ms wall limit with `SIGKILL`/`ETIMEDOUT`.
+Neither resource result is acceptance.
+
+The two retained, Rust-emitted, independently admitted graph/certificate
+pairs are 238/236/42 bytes (3 + 5) and 256/273/78 bytes
+(`i64::MAX + 1 → i64::MIN`) respectively. Both bind the same one-slot
+topology, operands in order, constants also used as ordered outputs, the
+shared add/mul use and all **three** outputs; the final `endpoint_small` and
+`endpoint_boundary` MM0 theorems quantify the symbolic input. The selected
+whole flattened specification is 34,499 bytes and lists 33 exact, approved
+upstream Peano/logic axioms; the proof is 1,242,704 bytes. No desired fold
+equivalence is an axiom. The proof producer took **344.8 ms** wall
+(**102,016 KiB** peak RSS), and the selected parser-enabled checker took
+**23.9 ms** wall (**1,588 KiB** peak RSS) under 1 GiB address-space and
+20-second CPU caps. The independently replayed small/boundary checks took
+8–10 ms each on this run. The focused warm Rust graph-admission and
+certificate-replay test took 0.12 seconds and 37,892 KiB peak RSS **for the
+whole Cargo command**, so these differently scoped process measurements
+do not establish a matched-budget performance advantage.
+
+The MM0 model encodes an I64 value as a Peano natural modulo $2^{64}$,
+reads the high bit as a negative Rust I64 solely in the independent consumer,
+and uses ordered nested natural constructors as an output tuple. Noble's Lean
+certificate model uses `BitVec 64` and its own graph/derivation denotation.
+These are **duplicated semantics**, not a shared checked representation.
+The consumer's graph-to-MM0-term projection, parser, proof selection, Rust
+implementation-to-Lean correspondence, compiler lowering and runtime
+correspondence remain unproved. Existing Rust certificate checks and Lean
+model theorems are separate evidence; this direct MM0 run proves only its
+bounded MM0-model endpoint theorem under the pinned axioms and encoding.
+Neither the checked representation bridge nor Compiler Lab #220's qualified
+backend is available here, so conditions 1 and 5 of the frozen continuation
+rule fail regardless of the positive local run. The experiment adds no
+production dependency, changes no ordinary execution, and does not promote
+the separate independent-Lean replay pilot.
