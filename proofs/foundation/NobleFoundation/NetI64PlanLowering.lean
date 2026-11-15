@@ -489,6 +489,34 @@ theorem PhysicalState.lowerPlan_refines_if_checked {state next : PhysicalState}
   exact ⟨PhysicalState.lowerPlan_decodes hLower,
     BytePlan.semanticCheck_refines hRule hChecked hm hredex⟩
 
+/-- The final implication needs no checker-admission premise: generic physical
+execution plus the independently specified field facts and reserved resources
+establish admission and then the complete abstract refinement. The emitter
+still needs a separate proof supplying these witnesses from legal layouts. -/
+theorem PhysicalState.lowerPlan_refines_of_physical_fields
+    {state next : PhysicalState} {pair : PhysicalPair}
+    {redex : XRedex NetSym} {reuse : Bool}
+    {plan : BytePlan} {arena scratch queue : Nat}
+    (hRule : NetI64.xRule redex.2.2.1 redex.2.2.2.1 = some redex.2.2.2.2)
+    (hLower : state.lowerPlan pair redex reuse = some plan)
+    (hReserve : ∃ transaction,
+      state.reserve plan arena scratch queue = some transaction)
+    (hExecute : state.executeCheckedImage plan.emit redex = some next)
+    (hFields : plan.SemanticFields state next redex hRule)
+    (hm : state.project.toNet.Matching NetI64.arity)
+    (hredex : Redex NetI64.system state.project.toNet
+      redex.1 redex.2.1 redex.2.2.1 redex.2.2.2.1 redex.2.2.2.2.toRhs) :
+    BytePlan.semanticCheck state plan.emit redex hRule
+      arena scratch queue = some next ∧
+    CStep NetI64.system state.project.toNet next.project.toNet ∧
+    next.project.work.Perm
+      (Plan.pendingPairs (Plan.commit state.project
+        (Plan.compile state.project redex hRule) state.project.work)) ∧
+    next.project.free = state.project.free := by
+  have hChecked := BytePlan.semanticCheck_of_fields hRule
+    (PhysicalState.lowerPlan_decodes hLower) hReserve hExecute hFields
+  exact ⟨hChecked, BytePlan.semanticCheck_refines hRule hChecked hm hredex⟩
+
 /-- The independently modeled five physical layouts lower to precisely
 their original byte images, including the live-peer publication case. -/
 theorem PhysicalState.five_fixture_images_from_lowering :

@@ -13642,6 +13642,12 @@
       "claim": "every semantically admitted model-emitted plan decodes and refines the selected whole-net rewrite"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refines_of_physical_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "generic emitted image execution with independently established semantic fields and resources composes into checker admission and one abstract step"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.overflow_pair_refuses_both_modes",
       "phase": 1,
       "role": "representation",
