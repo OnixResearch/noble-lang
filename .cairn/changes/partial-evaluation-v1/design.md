@@ -636,3 +636,40 @@ matched-budget cost benefit with scratch accounting under a new
 pre-registered comparison. Reopen on a completed proof/bridge and newly
 frozen measured gate, or immediately on an admitted counterexample (first
 repair correctness). Until then D3 remains the only default.
+
+### D16 — Frozen heap-high-water reporting protocol for acceptance item 6
+
+**Protocol frozen before scratch measurement:** Keep the seven D14 checked
+graph fixtures and their input maps unchanged. In one fresh process per
+fixture and side, run an ignored test case under pinned Valgrind DHAT
+3.27.1: `setup` constructs only the checked source; `baseline` constructs
+the D3 residual and emits/re-admits its source; `offset` runs the opt-in
+comparison and emits/re-admits its normalized source. This is seven times
+three processes. Separately measure three fixed D13 checked-Program
+families with two processes each: `setup` prepares the original source,
+and `program` invokes the real `program::residualize`, including its
+ordinary source preparation and re-admission:
+
+| D13 family | Original source | Input interface / preserved tail | Static active leaves |
+|---|---|---|---|
+| `opaque-tail` | `swap -` | `Text Bool I64 I64` / 2 | first I64 = 5, second dynamic |
+| `nested-partial-pair` | `drop drop drop dup unpair unpair swap drop +` | `Text Pair<I64,Pair<Unit,I64>> Unit Bool I64` / 1 | `[2, dynamic, dynamic, 4]` |
+| `named-repeated-call` | `def sq [ dup * ]` then `sq sq` | `Text I64` / 1 | I64 = 5 |
+
+Capture the raw DHAT JSON, Valgrind log and test stdout/stderr for
+each of 27 runs. The script requires a clean source commit, records the
+source tree, test executable digest, exact arguments and pinned Valgrind
+version, and refuses missing or unparsable `Total` and `At t-gmax`
+bytes/blocks. Report DHAT process-global peak live heap (`t-gmax`) and
+total allocated bytes **separately**, plus the paired setup differences.
+The global peak includes the libtest harness, input construction and
+source/graph preparation in addition to the selected transformation and
+readmission; the setup difference is an observation, not an isolated
+allocator high-water of the transformation. `Total` is cumulative
+allocation traffic, not peak. No timing, leak, equal-budget, retained
+memory or efficiency threshold is inferred from the DHAT figures.
+Outcomes of all 27 cases must be successful and the ordinary checked
+readmission must be reached on every non-setup leg. If a future claim
+requires an attributable scratch-only bound, instrument a scoped
+allocator under a separately reviewed policy; do not relabel a
+process-global DHAT peak as one.
