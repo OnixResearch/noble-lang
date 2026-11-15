@@ -140,7 +140,14 @@ if (measurePath) {
   const line = readFileSync(measurePath, 'utf8').split('\n').find((entry) => entry.startsWith('PERM_MEASURE '));
   assert(line, 'measurement file has no executed PERM_MEASURE result');
   measurement = JSON.parse(line.slice('PERM_MEASURE '.length));
-  assert(measurement.witness_bytes === witness.parsed.length, 'measurement witness size differs from artifact');
+  assert(Number.isSafeInteger(measurement.instructions) && measurement.instructions > 0 &&
+    measurement.witness_bytes === measurement.instructions * 4 &&
+    Number.isSafeInteger(measurement.checker_median_ns) && measurement.checker_median_ns >= 0 &&
+    Number.isSafeInteger(measurement.retained_payload_bytes) && measurement.retained_payload_bytes > 0 &&
+    Number.isSafeInteger(measurement.checker_scratch_bool_bytes) && measurement.checker_scratch_bool_bytes > 0 &&
+    Number.isSafeInteger(measurement.rss_growth_bytes) && measurement.rss_growth_bytes >= 0 &&
+    measurement.samples === 9,
+    'measurement is not the bounded nine-sample checker workload');
 }
 const receipt = {
   schema: 'noble-packed-permutation-receipt/v1', issue: 129,
@@ -165,7 +172,10 @@ const receipt = {
   foundation: { source_commit: foundation.source_commit, source_tree: foundation.source_tree,
     lean_sha256: foundation.lean_sha256, allowed_axioms: foundation.allowed_axioms },
   sources_sha256: Object.fromEntries(sourcePaths.map((name) => [name, sha(file(name))])),
-  measurement,
+  measurement: measurement && {
+    workload: '2048 independent operations (distinct from the retained five-operation export)',
+    ...measurement,
+  },
   evidence: 'Rust freshness/differential/control tests and the Lean kernel check are separate; this receipt only binds their subjects and the retained proof statements.',
   open_edges: ['No arbitrary Rust executor or runtime correspondence theorem.',
     'Lean receives generated terms, not a verified byte decoder refinement.',

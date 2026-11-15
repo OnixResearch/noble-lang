@@ -965,7 +965,7 @@ Lean corpus by the existing `schedule_correspondence` integration target. The re
 test compares its **entire binary** and every generated Lean term with a new export of the
 compiler's actual graph and stream; the generator decodes that binary before writing the model
 terms. The corpus contains a canonical stream and **two different** noncanonical permutations
-plus single-obligation refused copies. `NobleFoundation.PackedPermutation.validate_sound`
+plus refused mutation controls. `NobleFoundation.PackedPermutation.validate_sound`
 proves accepted model streams have the graph's ordered/repeated outputs for any input, given
 sufficient instruction budget and no cancellation. Its theorem and the concrete corpus
 theorems are inventoried in `proofs/foundation/inventory.json`; the clean foundation proof
@@ -997,7 +997,7 @@ Reproduce with the repository's pinned Rust/Lean tools; outputs stay outside the
 cargo test -p noble-ngraph --test schedule_correspondence --offline --locked
 cargo test -p noble-ngraph --test schedule_correspondence --offline --locked \
   permutation::cost_report -- --ignored --nocapture
-verification/ci/lean-proofs.sh --allow-dirty <new directory outside the repository>
+verification/ci/lean-proofs.sh <new directory outside the repository>
 node verification/foundation/claims.mjs
 node verification/ngraph/permutation-receipt.mjs \
   --foundation-receipt <clean foundation-check.json> \
@@ -1010,6 +1010,17 @@ byte-for-byte to the clean foundation receipt's source commit, independently par
 binary, binds all replay subjects and revisions, and includes measured checker time, witness
 size, retained-payload estimate, scratch-array size and observed resident growth. Retained
 measurements are one-host observations, not throughput or allocation-count guarantees.
+
+The committed `permutation::cost_report` workload uses 2,048 independent instructions
+(2,049 graph nodes) and the median of nine timed debug-build checks (no warm-up); it
+is distinct from the five-instruction retained noncanonical artifact. On this run its
+checker median was **478,525 ns**, its explicit witness **8,192 bytes**, encoded artifact
+**51,536 bytes**, and estimated retained artifact payload **57,384 bytes**. The
+checker boolean-array scratch was **4,099 bytes**, execution scratch **16,400 bytes**,
+and observed process RSS delta **163,840 bytes**. The retained five-instruction
+artifact's separate witness is 20 bytes. The scratch and payload figures count the
+specified arrays/structures, not allocator overhead; the process RSS delta is a
+shared-host process observation, not a bound or an allocation count.
 
 # CPU batch continuation decision (2026-11-01, issue #41)
 
