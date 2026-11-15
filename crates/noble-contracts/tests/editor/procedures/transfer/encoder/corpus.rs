@@ -27,10 +27,16 @@ fn finite_subject_matrix_matches_lean_generated() -> Result<(), String> {
             [Producer::Chunk, Producer::Synthesis, Producer::Composition][producer_index];
         let closure_count = index % 3;
         let name = format!("{}/{producer_index}/{closure_count}", task.name());
-        if row["name"] != name
-            || row["source_task"] != task.name()
-            || row["producer_tag"].as_u64() != Some([0_u64, 1, 2][producer_index])
-            || row["closure_count"].as_u64() != Some([0_u64, 1, 2][closure_count])
+        let expected_tag = Some([0_u64, 1, 2][producer_index]);
+        let expected_closure = Some([0_u64, 1, 2][closure_count]);
+        if ![
+            row["name"] == name,
+            row["source_task"] == task.name(),
+            row["producer_tag"].as_u64() == expected_tag,
+            row["closure_count"].as_u64() == expected_closure,
+        ]
+        .into_iter()
+        .all(|matches| matches)
         {
             return Err(format!("{name}: finite Lean corpus matrix drifted"));
         }

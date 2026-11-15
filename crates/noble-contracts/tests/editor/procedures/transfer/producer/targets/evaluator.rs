@@ -1,7 +1,7 @@
 use std::string::String;
 use std::vec::Vec;
 
-fn execute_words(program: &str, stack: &mut Vec<i64>) -> Result<(), String> {
+fn execute_words(program: &str, mut stack: Vec<i64>) -> Result<Vec<i64>, String> {
     let word_count = program.split_whitespace().count();
     if word_count == 0 || word_count > 8 {
         return Err(String::from(
@@ -53,13 +53,13 @@ fn execute_words(program: &str, stack: &mut Vec<i64>) -> Result<(), String> {
             return Err(String::from("producer target exceeds max-stack 4"));
         }
     }
-    Ok(())
+    Ok(stack)
 }
 
 pub(crate) fn evaluate_program(program: &str, inputs: [i64; 3]) -> Result<i64, String> {
     let mut stack = Vec::with_capacity(4);
     stack.extend_from_slice(&inputs);
-    execute_words(program, &mut stack)?;
+    let stack = execute_words(program, stack)?;
     match stack.as_slice() {
         [result] => Ok(*result),
         _ => Err(String::from(
@@ -71,11 +71,11 @@ pub(crate) fn evaluate_program(program: &str, inputs: [i64; 3]) -> Result<i64, S
 pub(crate) fn evaluate_composed(programs: [&str; 2], inputs: [i64; 3]) -> Result<i64, String> {
     let mut stack = Vec::with_capacity(4);
     stack.extend_from_slice(&inputs);
-    execute_words(programs[0], &mut stack)?;
+    let stack = execute_words(programs[0], stack)?;
     if stack.len() != 2 {
         return Err(String::from("first source does not leave a composable stack"));
     }
-    execute_words(programs[1], &mut stack)?;
+    let stack = execute_words(programs[1], stack)?;
     match stack.as_slice() {
         [result] => Ok(*result),
         _ => Err(String::from("second source does not leave a single I64")),
