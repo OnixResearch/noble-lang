@@ -1,0 +1,9 @@
+name = "noble-axiom-audit-pilot"
+version = "0.1.0"
+
+# The upstream project declares Lean 4.32.1. Build its exact source against the
+# repository-selected 4.35.0 in this independent project; never alter foundation.
+[[require]]
+name = "axiomAudit"
+git = "https://github.com/leanprover-community/axiom-audit"
+rev = "0b885d88a69982cd76990b502742690b80b1a685"
