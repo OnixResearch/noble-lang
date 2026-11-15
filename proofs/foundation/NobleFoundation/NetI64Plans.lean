@@ -1502,6 +1502,50 @@ theorem PhysicalState.execute_empty_image_success
     PhysicalState.installResults, PhysicalState.writeExternals,
     hretireFirst, hretireSecond, PhysicalState.publishAll]
 
+/-- Retirement changes agent ownership and the free-slot inventory, not the
+ordered physical output table or any of its mutable targets. -/
+theorem PhysicalState.retire_preserves_outputs
+    {state next : PhysicalState} {index : Nat} {reuse : Bool}
+    (h : state.retire index reuse = some next) :
+    next.outputs = state.outputs := by
+  by_cases hr : reuse
+  · simp [PhysicalState.retire, hr] at h
+    cases h
+    rfl
+  · cases ho : state.slots[index]? with
+    | none => simp [PhysicalState.retire, hr, ho] at h
+    | some old =>
+      simp [PhysicalState.retire, hr, ho, PhysicalState.writeSlot] at h
+      rcases h with ⟨_, heq⟩
+      cases heq
+      rfl
+
+/-- An empty-result, empty-write, empty-publication decoded execution leaves
+every output's physical target, not merely its stable label, unchanged. -/
+theorem PhysicalState.execute_empty_image_preserves_outputs
+    {state next : PhysicalState} {bytes : List UInt8}
+    {redex : XRedex NetSym} {plan : BytePlan}
+    (hdecode : BytePlan.decode bytes = some plan)
+    (hcurrent : state.logicalPair
+      { first := plan.pair.1,
+        firstGeneration := UInt64.ofNat plan.pair.2.1,
+        second := plan.pair.2.2.1,
+        secondGeneration := UInt64.ofNat plan.pair.2.2.2 } =
+      some (redex.1, redex.2.1))
+    (hresults : plan.results = [])
+    (hwrites : plan.externalWrites = [])
+    (hpubs : plan.publications = [])
+    (haction : plan.action = (0, 0))
+    (h : state.executeCheckedImage bytes redex = some next) :
+    next.outputs = state.outputs := by
+  simp [PhysicalState.executeCheckedImage, hdecode, hcurrent,
+    hresults, hwrites, hpubs, haction,
+    PhysicalState.installResults, PhysicalState.writeExternals,
+    PhysicalState.publishAll] at h
+  obtain ⟨afterFirst, hf, hs⟩ := Option.bind_eq_some_iff.mp h
+  exact (PhysicalState.retire_preserves_outputs hs).trans
+    (PhysicalState.retire_preserves_outputs hf)
+
 /-- Installing any admitted result, whether recycled or freshly appended,
 cannot alter the ordered external-output identities. -/
 private theorem PhysicalState.installResult_output_labels

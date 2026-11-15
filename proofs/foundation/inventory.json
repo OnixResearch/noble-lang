@@ -13546,6 +13546,18 @@
       "claim": "any decoded empty-result, empty-write, empty-publication image completes for two distinct live nonoverflowing consumed slots"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retire_preserves_outputs",
+      "phase": 1,
+      "role": "representation",
+      "claim": "retiring any physical slot leaves the entire ordered output table and its targets unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.execute_empty_image_preserves_outputs",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a successful decoded empty-result image with no external writes or publications preserves the entire output-target table"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.era_forward_candidate_exists",
       "phase": 1,
       "role": "representation",
