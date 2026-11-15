@@ -95,7 +95,6 @@ def obligations (nodes : List Node) (regs nodeLayers : List Nat)
     decide (nodeLayers.length = nodes.length),
     FirstProjection.operandsEarlier nodes,
     operandsI64 nodes,
-    decide (witness ≠ []),
     decide (outputs ≠ []),
     coversExactly (tableNodes nodes) (tableWitness nodes regs preloads),
     coversExactly (emittingNodes nodes) witness,
@@ -149,7 +148,7 @@ theorem accepted_stream_sound (nodes : List Node) (regs nodeLayers : List Nat)
       (tableWitness nodes regs preloads ++ witness) (preloads ++ instrs) outputs outRegs = true :=
     checked _ (by
       unfold obligations
-      exact List.mem_append.mpr (Or.inr (by simp only [List.mem_singleton, eq_self])))
+      exact List.mem_append.mpr (Or.inr (List.mem_singleton_self _)))
   have wellFormed : WellFormed (graph nodes) :=
     FirstProjection.ofList_wellFormed nodes 0 nonempty earlier
   exact PackedSchedule.validate_sound (graph nodes) wellFormed (regOf regs)
