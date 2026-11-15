@@ -543,8 +543,8 @@ impl Host {
                 representation: rep,
                 claim,
                 retained: self.owner.as_ref().map(ownership::Owner::handle),
-                offset,
-                length,
+                offset_bytes: offset,
+                length_bytes: length,
             },
             self.bytes.len(),
         )
@@ -1294,24 +1294,38 @@ mod tests {
                 representation: 1,
                 claim,
                 retained: Some(claim),
-                offset: 1,
-                length: 2,
+                offset_bytes: 1,
+                length_bytes: 2,
             },
             host.bytes.len(),
         )
         .unwrap();
-        assert_eq!(range, region_read::Range { start: 1, finish: 3 });
+        assert_eq!(
+            range,
+            region_read::Range {
+                start: 1,
+                finish: 3
+            }
+        );
         let owner = host.owner.take().unwrap();
         let admitted = host.table.begin(owner, required).unwrap();
         let scope = admitted.borrow.scope();
         let access = host.table.native_access(&admitted.borrow);
         assert!(region_read::authorize_copy(
-            access, claim, scope, range, host.bytes.len()
+            access,
+            claim,
+            scope,
+            range,
+            host.bytes.len()
         ));
         let mut substituted = claim;
         substituted.table.0 += 1;
         assert!(!region_read::authorize_copy(
-            access, substituted, scope, range, host.bytes.len()
+            access,
+            substituted,
+            scope,
+            range,
+            host.bytes.len()
         ));
         assert!(!region_read::authorize_copy(
             access,
@@ -1356,7 +1370,10 @@ mod tests {
             .table
             .complete(scope, ownership::Completion::Success)
             .unwrap();
-        assert_eq!(completed.owner.as_ref().map(ownership::Owner::handle), Some(claim));
+        assert_eq!(
+            completed.owner.as_ref().map(ownership::Owner::handle),
+            Some(claim)
+        );
         host.owner = completed.owner;
         assert_eq!(host.table.observation().native_pins, 0);
     }

@@ -10,6 +10,7 @@
     { "name": "RegionCutProof.access_refusal_prevents_copy", "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"] },
     { "name": "RegionCutProof.authorized_copy_has_native_access", "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"] },
     { "name": "RegionCutProof.state_eq_with_busy_total", "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"] },
+    { "name": "RegionCutProof.state_eq_busy_sound", "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"] },
     { "name": "RegionCutProof.authorized_copy_exact_identity_and_bounds", "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"] },
     { "name": "RegionCutProof.admitted_completion_decision", "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"] },
     { "name": "RegionCutProof.owner_return_commit_succeeds", "allowed_standard_axioms": ["propext", "Classical.choice", "Quot.sound"] },

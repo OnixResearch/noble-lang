@@ -13,7 +13,7 @@ namespace noble_kernel
 
 
 /-- [noble_kernel::region_read::Refusal]
-    Source: 'crates/noble-kernel/src/region_read.rs', lines 9:0-14:1
+    Source: 'crates/noble-kernel/src/resources/region_read.rs', lines 7:0-12:1
     Visibility: public -/
 @[discriminant isize]
 inductive region_read.Refusal where
@@ -23,24 +23,24 @@ inductive region_read.Refusal where
 | Bounds : region_read.Refusal
 
 /-- [noble_kernel::region_read::Request]
-    Source: 'crates/noble-kernel/src/region_read.rs', lines 17:0-23:1
+    Source: 'crates/noble-kernel/src/resources/region_read.rs', lines 15:0-21:1
     Visibility: public -/
 structure region_read.Request where
   representation : Std.U32
   claim : resources.Handle
   retained : Option resources.Handle
-  offset : Std.I64
-  length : Std.I64
+  offset_bytes : Std.I64
+  length_bytes : Std.I64
 
 /-- [noble_kernel::region_read::Range]
-    Source: 'crates/noble-kernel/src/region_read.rs', lines 26:0-29:1
+    Source: 'crates/noble-kernel/src/resources/region_read.rs', lines 24:0-27:1
     Visibility: public -/
 structure region_read.Range where
   start : Std.Usize
   finish : Std.Usize
 
 /-- [noble_kernel::region_read::MAX_REGION_BYTES]
-    Source: 'crates/noble-kernel/src/region_read.rs', lines 6:0-6:41
+    Source: 'crates/noble-kernel/src/resources/region_read.rs', lines 4:0-4:41
     Visibility: public -/
 @[global_simps, irreducible]
 def region_read.MAX_REGION_BYTES : Std.Usize := 4096#usize
@@ -56,7 +56,7 @@ def Usize.Insts.CoreConvertTryFromI64TryFromIntError.try_from
     | none => ok (.Err ())
 
 /-- [noble_kernel::region_read::preflight]:
-    Source: 'crates/noble-kernel/src/region_read.rs', lines 37:0-68:1
+    Source: 'crates/noble-kernel/src/resources/region_read.rs', lines 39:0-70:1
     Visibility: public -/
 def region_read.preflight
   (table : resources.table.Table) (required : resources.Requirement)
@@ -80,18 +80,19 @@ def region_read.preflight
         if b1
         then ok (core.result.Result.Err region_read.Refusal.Identity)
         else
-          let o ← lift (I64.checked_add request.offset request.length)
+          let o ←
+            lift (I64.checked_add request.offset_bytes request.length_bytes)
           match o with
           | none => ok (core.result.Result.Err region_read.Refusal.Bounds)
           | some «end» =>
             let r1 ←
               Usize.Insts.CoreConvertTryFromI64TryFromIntError.try_from
-                request.offset
+                request.offset_bytes
             match r1 with
             | core.result.Result.Ok start =>
               let r2 ←
                 Usize.Insts.CoreConvertTryFromI64TryFromIntError.try_from
-                  request.length
+                  request.length_bytes
               match r2 with
               | core.result.Result.Ok count =>
                 let r3 ←
@@ -117,7 +118,7 @@ def region_read.preflight
               ok (core.result.Result.Err region_read.Refusal.Bounds)
 
 /-- [noble_kernel::region_read::authorize_copy]:
-    Source: 'crates/noble-kernel/src/region_read.rs', lines 76:0-94:1
+    Source: 'crates/noble-kernel/src/resources/region_read.rs', lines 78:0-96:1
     Visibility: public -/
 def region_read.authorize_copy
   (access : core.result.Result resources.Snapshot resources.Error)

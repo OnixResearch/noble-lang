@@ -110,7 +110,8 @@ requireThat(names.length > 0 && new Set(names).size === names.length &&
 const proofCode = readFileSync(join(root, proof), 'utf8').replace(/\/-[\s\S]*?-\//g, '').replace(/--.*$/gm, '');
 requireThat(!/\b(?:sorry|admit|native_decide|implemented_by|unsafe|opaque|partial|run_cmd|run_elab)\b|^\s*axiom\s/m.test(proofCode),
   'proof escape hatch refused');
-const declared = [...proofCode.matchAll(/^theorem\s+(\w+)/gm)].map(match => `RegionCutProof.${match[1]}`);
+const declared = [...proofCode.matchAll(/^(?:@\[[^\n]+\]\s*)?theorem\s+(\w+)/gm)]
+  .map(match => `RegionCutProof.${match[1]}`);
 requireThat(declared.length === names.length && names.every(name => declared.includes(name)),
   `cut theorem inventory differs from declarations: ${declared}`);
 const project = join(root, 'proofs/m5');
@@ -148,7 +149,8 @@ requireThat(final.commit === initial.commit && final.tree === initial.tree && fi
 const paths = [source, proof, 'proofs/m5/HostLocality.lean', 'proofs/m5/M5Resources.lean',
   'proofs/m3/NobleKernel/Funs.lean',
   'proofs/m5/region-cut-inventory.json', 'proofs/m5/lakefile.toml',
-  'crates/noble-kernel/src/region_read.rs', 'crates/noble-cli/src/component/bounded_region.rs',
+  'crates/noble-kernel/src/resources/region_read.rs',
+  'crates/noble-kernel/src/lib.rs', 'crates/noble-cli/src/component/bounded_region.rs',
   'verification/host-locality/model-inputs.json',
   'verification/region-trace/region-cut-generate.mjs', 'verification/region-trace/region-cut-check.mjs',
   'verification/region-trace/region-cut-controls.mjs'];

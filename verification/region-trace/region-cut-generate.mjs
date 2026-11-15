@@ -13,7 +13,7 @@ const roots = ['noble_kernel.region_read.preflight', 'noble_kernel.region_read.a
 for (const root of roots) {
   const matches = metadata.functions.filter(row => row.lean_name === root && row.is_local &&
     !row.is_opaque && row.lean_file === 'Funs.lean' && row.source.file ===
-      'crates/noble-kernel/src/region_read.rs');
+      'crates/noble-kernel/src/resources/region_read.rs');
   if (matches.length !== 1) throw Error(`missing actual translated body: ${root}`);
 }
 const external = metadata.functions.filter(row => !row.is_local).map(row => row.lean_name).sort();

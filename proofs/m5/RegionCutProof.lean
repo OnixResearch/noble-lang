@@ -42,12 +42,12 @@ theorem conversion_refuses_negative (x : Std.I64) (negative : x.val < 0) :
     nonnegative range; no refused input is granted any of these premises. -/
 def rangeBinding (request : region_read.Request) (range : region_read.Range)
     (regionSize : Std.Usize) : Prop :=
-  0 ≤ request.offset.val ∧
-    0 ≤ request.length.val ∧
-    range.start.val = request.offset.val.toNat ∧
-    range.finish.val = (request.offset.val + request.length.val).toNat ∧
+  0 ≤ request.offset_bytes.val ∧
+    0 ≤ request.length_bytes.val ∧
+    range.start.val = request.offset_bytes.val.toNat ∧
+    range.finish.val = (request.offset_bytes.val + request.length_bytes.val).toNat ∧
     range.finish.val ≤ regionSize.val ∧
-    request.length.val.toNat ≤ region_read.MAX_REGION_BYTES.val
+    request.length_bytes.val.toNat ≤ region_read.MAX_REGION_BYTES.val
 
 theorem handle_eq_self (handle : resources.Handle) :
     resources.Handle.Insts.CoreCmpPartialEqHandle.eq handle handle =
@@ -107,14 +107,14 @@ theorem successful_preflight_binds_signed_range
   simp only [core.result.Result.is_err, bind_ok, pure] at accepted
   simp [core.cmp.PartialEq.ne.trait_default,
     core.cmp.PartialEq.ne.default, handle_eq_self, bind_ok, lift] at accepted
-  cases addition : request.offset.checked_add request.length with
+  cases addition : request.offset_bytes.checked_add request.length_bytes with
   | none =>
     rw [addition] at accepted
     simp at accepted
   | some total =>
     rw [addition] at accepted
-    have exactAddition := I64.checked_add_bv_spec request.offset request.length
-    change core.num.checked_add_IScalar request.offset request.length = some total at addition
+    have exactAddition := I64.checked_add_bv_spec request.offset_bytes request.length_bytes
+    change core.num.checked_add_IScalar request.offset_bytes request.length_bytes = some total at addition
     rw [addition] at exactAddition
     simp only [Usize.Insts.CoreConvertTryFromI64TryFromIntError.try_from] at accepted
     repeat (split at accepted <;> simp_all)
@@ -149,9 +149,30 @@ theorem state_eq_with_busy_total (state : resources.State) (serial : Std.U64) :
       core.cmp.impls.PartialEqU64.eq]
   all_goals try tauto
   split_ifs <;> simp_all [UScalar.eq_equiv]
+  all_goals tauto
+
+theorem state_eq_busy_sound (state : resources.State) (serial : Std.U64)
+    (matching : resources.State.Insts.CoreCmpPartialEqState.eq state
+      (.Busy serial) = Result.ok true) :
+    state = .Busy serial := by
+  cases state with
+  | Live =>
+    simp [resources.State.Insts.CoreCmpPartialEqState.eq,
+      resources.State.read_discriminant] at matching
+  | Busy current =>
+    simp [resources.State.Insts.CoreCmpPartialEqState.eq, lift,
+      core.cmp.impls.PartialEqU64.eq, resources.State.read_discriminant] at matching
+    grind [UScalar.eq_equiv]
+  | Retiring current =>
+    simp [resources.State.Insts.CoreCmpPartialEqState.eq,
+      resources.State.read_discriminant] at matching
+  | Retired =>
+    simp [resources.State.Insts.CoreCmpPartialEqState.eq,
+      resources.State.read_discriminant] at matching
 
 /-- Every successful native-copy decision has the exact admitted owner in
-    both the snapshot and borrow scope, and an interval inside storage. -/
+    both the snapshot and borrow scope, the current busy scope, and an
+    interval inside storage. -/
 theorem authorized_copy_exact_identity_and_bounds
     (snapshot : resources.Snapshot) (claim : resources.Handle)
     (scope : resources.Scope) (range : region_read.Range)
@@ -159,12 +180,15 @@ theorem authorized_copy_exact_identity_and_bounds
     (authorized : region_read.authorize_copy (.Ok snapshot) claim scope range
       regionSize = Result.ok true) :
     snapshot.handle = claim ∧ scope.handle = claim ∧
+      snapshot.state = .Busy scope.serial ∧
+      snapshot.last_scope = some scope.serial ∧
       range.start.val ≤ range.finish.val ∧ range.finish.val ≤ regionSize.val := by
   simp only [region_read.authorize_copy, handle_eq_truth, bind_ok] at authorized
   repeat (split at authorized <;> simp_all)
-  obtain ⟨answer, stateCheck⟩ := state_eq_with_busy_total snapshot.state scope.serial
-  cases answer <;> simp [stateCheck, bind_ok] at authorized
-  split_ifs at authorized <;> simp_all
+  all_goals obtain ⟨answer, stateCheck⟩ :=
+    state_eq_with_busy_total snapshot.state scope.serial
+  all_goals cases answer <;> simp [stateCheck, bind_ok] at authorized
+  all_goals exact ⟨state_eq_busy_sound snapshot.state scope.serial stateCheck, authorized⟩
 
 /-- At the borrow-completion boundary, the extracted table decision succeeds
     for a selected well-formed busy record under an authentic scope. This

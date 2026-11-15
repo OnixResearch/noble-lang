@@ -1,8 +1,6 @@
 //! Pure preflight and native-copy decisions for the synchronous bounded-region host.
 //! The shell alone owns the table, allocation, copy, completion and report effects.
 
-use crate::resources::{Handle, Requirement, Scope, Snapshot, State, Table};
-
 pub const MAX_REGION_BYTES: usize = 4096;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -16,10 +14,10 @@ pub enum Refusal {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Request {
     pub representation: u32,
-    pub claim: Handle,
-    pub retained: Option<Handle>,
-    pub offset: i64,
-    pub length: i64,
+    pub claim: crate::resources::Handle,
+    pub retained: Option<crate::resources::Handle>,
+    pub offset_bytes: i64,
+    pub length_bytes: i64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -34,9 +32,13 @@ pub struct Range {
     tigerstyle::usize_in_public_api,
     reason = "Owner: noble-maintainers; the range and storage length are adapter-local platform indices; signed guest arguments are converted only after checked addition."
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; every attacker-controlled preflight branch explicitly refuses before native work; redundant panic assertions are not an authority check."
+)]
 pub fn preflight(
-    table: &Table,
-    required: Requirement,
+    table: &crate::resources::Table,
+    required: crate::resources::Requirement,
     request: Request,
     region_len: usize,
 ) -> Result<Range, Refusal> {
@@ -49,13 +51,13 @@ pub fn preflight(
     if table.validate(request.claim, required).is_err() || request.claim != actual {
         return Err(Refusal::Identity);
     }
-    let Some(end) = request.offset.checked_add(request.length) else {
+    let Some(end) = request.offset_bytes.checked_add(request.length_bytes) else {
         return Err(Refusal::Bounds);
     };
-    let Ok(start) = usize::try_from(request.offset) else {
+    let Ok(start) = usize::try_from(request.offset_bytes) else {
         return Err(Refusal::Bounds);
     };
-    let Ok(count) = usize::try_from(request.length) else {
+    let Ok(count) = usize::try_from(request.length_bytes) else {
         return Err(Refusal::Bounds);
     };
     let Ok(finish) = usize::try_from(end) else {
@@ -74,9 +76,9 @@ pub fn preflight(
     reason = "Owner: noble-maintainers; these are adapter-local slice indices, bounded and checked by preflight before the host enters native work."
 )]
 pub fn authorize_copy(
-    access: Result<Snapshot, crate::resources::Error>,
-    claim: Handle,
-    scope: Scope,
+    access: Result<crate::resources::Snapshot, crate::resources::Error>,
+    claim: crate::resources::Handle,
+    scope: crate::resources::Scope,
     range: Range,
     region_len: usize,
 ) -> bool {
@@ -84,7 +86,7 @@ pub fn authorize_copy(
         Ok(snapshot) => {
             snapshot.handle == claim
                 && scope.handle == claim
-                && snapshot.state == State::Busy(scope.serial)
+                && snapshot.state == crate::resources::State::Busy(scope.serial)
                 && snapshot.last_scope == Some(scope.serial)
                 && range.start <= range.finish
                 && range.finish <= region_len
