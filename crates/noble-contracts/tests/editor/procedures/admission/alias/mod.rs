@@ -17,7 +17,7 @@ const NODES_PER_ADDITION: usize = 2;
 const MAX_LITERAL_SOURCE_BYTES: usize = 24;
 
 pub(super) fn polynomial_record(added: &[i64]) -> Result<ProcedureRecord, String> {
-    let node_capacity_nodes = added
+    let expected_node_count = added
         .len()
         .checked_mul(NODES_PER_ADDITION)
         .ok_or_else(|| String::from("node capacity overflow"))?;
@@ -26,8 +26,8 @@ pub(super) fn polynomial_record(added: &[i64]) -> Result<ProcedureRecord, String
         .checked_mul(MAX_LITERAL_SOURCE_BYTES)
         .ok_or_else(|| String::from("source capacity overflow"))?;
     let mut source = String::with_capacity(source_capacity_bytes);
-    let mut nodes = Vec::with_capacity(node_capacity_nodes);
-    let mut entry = Vec::with_capacity(node_capacity_nodes);
+    let mut nodes = Vec::with_capacity(expected_node_count);
+    let mut entry = Vec::with_capacity(expected_node_count);
     for value in added {
         source.push_str(&format!("{value} + "));
         entry.push(u32::try_from(nodes.len()).map_err(|error| error.to_string())?);
