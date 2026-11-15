@@ -109,6 +109,11 @@ function bindInputs() {
     && manifest.warning_only_amendment?.prior_receipt_sha256
       === 'b9604039262aeb5b4528b8f53a8507813cbd3d4c13c8263c950a5e5fbad7c8bb',
   'configuration-error', 'warning-only amendment must retain its exact pre-export refusal receipt');
+  requireThat(manifest.encoding_amendment?.prior_source_commit
+      === 'f45b7197166438c7699e4cf4baeca07ef5381722'
+    && manifest.encoding_amendment?.prior_receipt_sha256
+      === '1d5668a0de53990a6ee0bfe78d1182ae74b2184433cc91363adb2f38cae57a52',
+  'configuration-error', 'NDJSON encoding amendment must retain its exact checker-decline receipt');
   requireThat(manifest.cases.length === 7
     && new Set(manifest.cases.map((entry) => entry.id)).size === 7
     && same(manifest.cases.map((entry) => `${entry.category}:${entry.expected.lane}`),
@@ -346,7 +351,58 @@ function expressionIds(parsed, start) {
   return visited;
 }
 
-/** Mutate only a type-level expression; every proof and declaration stays byte-identical. */
+/**
+ * Copy the type path after the existing expression table. Back-references stay continuous and
+ * earlier than each use; original expression/proof records remain untouched, and only the final
+ * theorem type index changes. The mutation changes a single leaf on that copied type path.
+ */
+function replaceTypeLeaf(parsed, rootName, rootType, targetId, makeLeaf, lines) {
+  const theoremName = [...parsed.names].find(([, name]) => name === rootName)?.[0];
+  const theoremAt = lines.findIndex((line) => JSON.parse(line).thm?.name === theoremName);
+  requireThat(theoremAt >= 0 && theoremAt === lines.length - 1, 'mutation-shape-error',
+    'root theorem must be the last record of the export');
+  let nextId = Math.max(...parsed.exprs.keys()) + 1;
+  const appended = [];
+  const emit = (record) => {
+    const id = nextId++;
+    appended.push(JSON.stringify({ ...record, ie: id }));
+    return id;
+  };
+  const replacementId = makeLeaf(emit, parsed.exprs.get(targetId));
+  const parents = new Map();
+  function rewrite(id) {
+    if (id === targetId) return replacementId;
+    if (parents.has(id)) return parents.get(id);
+    const old = parsed.exprs.get(id);
+    requireThat(old, 'mutation-shape-error', `missing expression on theorem type path: ${id}`);
+    const kind = ['app', 'lam', 'forallE', 'letE', 'mdata', 'proj']
+      .find((key) => old[key] !== undefined);
+    if (!kind) return id;
+    const links = {
+      app: ['fn', 'arg'], lam: ['type', 'body'], forallE: ['type', 'body'],
+      letE: ['type', 'value', 'body'], mdata: ['expr'], proj: ['struct'],
+    }[kind];
+    const content = { ...old[kind] };
+    let changed = false;
+    for (const field of links) {
+      const updated = rewrite(content[field]);
+      if (updated !== content[field]) { content[field] = updated; changed = true; }
+    }
+    const result = changed ? emit({ ...old, [kind]: content }) : id;
+    parents.set(id, result);
+    return result;
+  }
+  const newType = rewrite(rootType);
+  requireThat(newType !== rootType, 'mutation-shape-error',
+    'chosen leaf is not reachable from the theorem type');
+  const theorem = JSON.parse(lines[theoremAt]);
+  theorem.thm.type = newType;
+  lines.splice(theoremAt, 1, ...appended, JSON.stringify(theorem));
+  return { original_type: rootType, amended_type: newType,
+    copied_expression_records: appended.length };
+}
+
+/** Alter one leaf on a copied statement type path; never mutate an existing proof expression. */
 function mutate(caseEntry, base, file) {
   const root = base.parsed.decls.get(caseEntry.root);
   requireThat(root?.kind === 'thm', 'mutation-shape-error', 'mutation root must be a theorem');
@@ -364,31 +420,30 @@ function mutate(caseEntry, base, file) {
     requireThat(targets.length === 1, 'mutation-shape-error',
       `expected exactly one eta lambda, found ${targets.length}`);
     const bodyId = base.parsed.exprs.get(targets[0]).lam.body;
-    const at = lines.findIndex((line) => JSON.parse(line).ie === bodyId);
-    requireThat(at >= 0, 'mutation-shape-error', 'eta application record missing');
-    const prior = JSON.parse(lines[at]);
-    const freshId = Math.max(...base.parsed.exprs.keys()) + 1;
-    const replacement = { ...prior, app: { ...prior.app, fn: freshId } };
-    lines.splice(at, 1, JSON.stringify({ ie: freshId, bvar: 1 }), JSON.stringify(replacement));
+    const prior = base.parsed.exprs.get(bodyId);
+    const copied = replaceTypeLeaf(base.parsed, caseEntry.root, root.record.type, bodyId,
+      (emit, old) => {
+        const g = emit({ bvar: 1 });
+        return emit({ ...old, app: { ...old.app, fn: g } });
+      }, lines);
     detail = {
-      target_expression: bodyId, added_expression: freshId,
-      before: prior, after: replacement,
+      target_expression: bodyId, before: prior, ...copied,
       explanation: 'the valid lambda applies bound f (#2); the mutated lambda applies bound g (#1) to x (#0)',
     };
   } else if (caseEntry.mutation === 'structure-eta-wrong-field') {
     const targets = [...typeIds].filter((id) => {
       const e = base.parsed.exprs.get(id);
-      return e?.proj?.idx === 1 && base.parsed.names.get(e.proj.typeName) === 'Prod';
+      return e?.const && base.parsed.names.get(e.const.name) === 'Prod.snd';
     });
     requireThat(targets.length === 1, 'mutation-shape-error',
-      `expected exactly one Prod.snd projection, found ${targets.length}`);
-    const at = lines.findIndex((line) => JSON.parse(line).ie === targets[0]);
-    requireThat(at >= 0, 'mutation-shape-error', 'second-projection record missing');
-    const prior = JSON.parse(lines[at]);
-    const replacement = { ...prior, proj: { ...prior.proj, idx: 0 } };
-    lines[at] = JSON.stringify(replacement);
+      `expected exactly one Prod.snd constant in the root statement, found ${targets.length}`);
+    const fst = [...base.parsed.names].find(([, name]) => name === 'Prod.fst')?.[0];
+    requireThat(fst !== undefined, 'mutation-shape-error', 'Prod.fst name missing');
+    const prior = base.parsed.exprs.get(targets[0]);
+    const copied = replaceTypeLeaf(base.parsed, caseEntry.root, root.record.type, targets[0],
+      (emit, old) => emit({ ...old, const: { ...old.const, name: fst } }), lines);
     detail = {
-      target_expression: targets[0], before: prior, after: replacement,
+      target_expression: targets[0], before: prior, replacement_name: 'Prod.fst', ...copied,
       explanation: 'the valid Prod.snd p is replaced with same-typed Prod.fst p',
     };
   } else {
@@ -506,6 +561,7 @@ function run() {
     resource_bounds: bounds,
     resource_bound_amendment: manifest.resource_bound_amendment,
     warning_only_amendment: manifest.warning_only_amendment,
+    encoding_amendment: manifest.encoding_amendment,
     compile: null, exports: [], cases: [],
     shared_corpus_consumption: {
       decision: 'NO-GO',

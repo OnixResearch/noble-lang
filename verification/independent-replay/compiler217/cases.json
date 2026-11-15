@@ -29,6 +29,15 @@
     "prior_outcome": "fixture compiled with exit 0, but the unused second function argument triggered the frozen warning-free compilation check; no fixture exported or checker ran",
     "source_change": "Rename the intentionally unused explicit second function binder from g to _g. Its binder position, type, body, exported proposition and expected semantic mutation are unchanged."
   },
+  "encoding_amendment": {
+    "prior_source_commit": "f45b7197166438c7699e4cf4baeca07ef5381722",
+    "prior_receipt_sha256": "1d5668a0de53990a6ee0bfe78d1182ae74b2184433cc91363adb2f38cae57a52",
+    "prior_outcomes": {
+      "function-eta-wrong-function": "Lean kernel rejected; Nanoda declined the malformed back-reference ordering as unsupported, not a semantic rejection",
+      "structure-eta-wrong-field": "No mutated export or checker run: the root type uses a Prod.snd constant rather than a direct projection"
+    },
+    "repair": "Copy only the theorem statement expression path after the existing expression table, in continuous back-reference order, and redirect only its type index; leave its proof expression and all preexisting records intact. Alter the Prod.snd constant to Prod.fst in the copied root type path."
+  },
   "bounds": {
     "compile_timeout_ms": 120000,
     "export_timeout_ms": 120000,
