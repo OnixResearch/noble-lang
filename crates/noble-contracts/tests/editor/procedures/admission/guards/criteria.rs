@@ -1,5 +1,16 @@
 use super::*;
 
+type Case = (&'static str, ProcedureRecord, RefusalKind, &'static str);
+
+fn unsupported_proof(name: &'static str, record: ProcedureRecord) -> Case {
+    (
+        name,
+        record,
+        RefusalKind::ForgedStatus,
+        "promotion.obligations",
+    )
+}
+
 fn complete_record() -> Result<ProcedureRecord, String> {
     let mut record =
         literal_record(6, Producer::Chunk).map_err(|error| format!("promoted: {error:?}"))?;
@@ -18,16 +29,13 @@ fn complete_record() -> Result<ProcedureRecord, String> {
     Ok(record)
 }
 
-fn refusal_cases(
-    promoted: &ProcedureRecord,
-) -> [(&'static str, ProcedureRecord, RefusalKind, &'static str); 8] {
+fn refusal_cases(promoted: &ProcedureRecord) -> [Case; 8] {
+    assert_eq!(promoted.evidence.len(), 6);
+    assert!(promoted.promotion.is_some());
     let mut omitted = promoted.clone();
-    omitted
-        .promotion
-        .as_mut()
-        .expect("promotion")
-        .obligations
-        .truncate(1);
+    if let Some(promotion) = omitted.promotion.as_mut() {
+        promotion.obligations.truncate(1);
+    }
     let mut absent_proof = promoted.clone();
     absent_proof.evidence.truncate(5);
     let mut test_passed = promoted.clone();
@@ -44,42 +52,15 @@ fn refusal_cases(
     let mut forged_status = promoted.clone();
     forged_status.evidence[5].class = EvidenceClass::Test;
     [
-        (
+        unsupported_proof(
             "omitted demanded obligations despite available proof",
             omitted,
-            RefusalKind::ForgedStatus,
-            "promotion.obligations",
         ),
-        (
-            "named obligation with no evidence",
-            absent_proof,
-            RefusalKind::ForgedStatus,
-            "promotion.obligations",
-        ),
-        (
-            "test passed is not proof",
-            test_passed,
-            RefusalKind::ForgedStatus,
-            "promotion.obligations",
-        ),
-        (
-            "proof class with passed outcome",
-            proof_class_passed,
-            RefusalKind::ForgedStatus,
-            "promotion.obligations",
-        ),
-        (
-            "proved evidence in a policy-disallowed class",
-            wrong_class,
-            RefusalKind::ForgedStatus,
-            "promotion.obligations",
-        ),
-        (
-            "proved evidence from another policy",
-            wrong_policy,
-            RefusalKind::ForgedStatus,
-            "promotion.obligations",
-        ),
+        unsupported_proof("named obligation with no evidence", absent_proof),
+        unsupported_proof("test passed is not proof", test_passed),
+        unsupported_proof("proof class with passed outcome", proof_class_passed),
+        unsupported_proof("proved evidence in a policy-disallowed class", wrong_class),
+        unsupported_proof("proved evidence from another policy", wrong_policy),
         (
             "proved evidence for another subject",
             wrong_subject,
@@ -93,6 +74,48 @@ fn refusal_cases(
             "evidence.outcome",
         ),
     ]
+}
+
+fn reject_model_only_refinement(
+    library: &mut ProcedureLibrary,
+    namespace: &Session,
+    promoted: &ProcedureRecord,
+) -> Result<(), String> {
+    let before = library
+        .encode()
+        .map_err(|error| format!("before refusal: {error:?}"))?;
+    // A model theorem for O1/O3 does not establish Rust encoder refinement.
+    // The consumer demands it separately; no obligation ID is privileged.
+    let refinement_policy = ConsumerPolicy {
+        revision: 3,
+        obligations: [1, 3, 7]
+            .into_iter()
+            .map(|id| ConsumerObligation {
+                id,
+                allowed_classes: vec![EvidenceClass::Lean],
+            })
+            .collect(),
+    };
+    let mut missing_refinement = promoted.clone();
+    if let Some(promotion) = missing_refinement.promotion.as_mut() {
+        promotion.obligations = vec![1, 3];
+    }
+    missing_refinement
+        .evidence
+        .retain(|proof| proof.obligation == 1 || proof.obligation == 3);
+    assert_eq!(missing_refinement.evidence.len(), 2);
+    let refused = library
+        .admit(namespace, Some(&refinement_policy), missing_refinement)
+        .expect_err("model-only evidence cannot omit demanded Rust encoder refinement");
+    assert_eq!(refused.kind, RefusalKind::ForgedStatus);
+    assert_eq!(refused.location.field, "promotion.obligations");
+    assert_eq!(
+        library
+            .encode()
+            .map_err(|error| format!("after refusal: {error:?}"))?,
+        before
+    );
+    Ok(())
 }
 
 #[test]
@@ -134,47 +157,21 @@ fn proof_demanding_promotion_requires_every_selected_obligation() -> Result<(), 
         );
         assert_eq!(library.records(), records.as_slice(), "{case}");
     }
-    // Model O1/O3 are distinct from implementation refinement, independently
-    // demanded as ID 7. No obligation ID is privileged in production code.
-    let refinement_policy = ConsumerPolicy {
-        revision: 3,
-        obligations: [1, 3, 7]
-            .into_iter()
-            .map(|id| ConsumerObligation {
-                id,
-                allowed_classes: vec![EvidenceClass::Lean],
-            })
-            .collect(),
-    };
-    let mut missing_refinement = promoted.clone();
-    missing_refinement
-        .promotion
-        .as_mut()
-        .expect("promotion")
-        .obligations = vec![1, 3];
-    missing_refinement
-        .evidence
-        .retain(|proof| proof.obligation == 1 || proof.obligation == 3);
-    let refused = library
-        .admit(&namespace, Some(&refinement_policy), missing_refinement)
-        .expect_err("model-only O1/O3 evidence cannot omit demanded Rust encoder refinement");
-    assert_eq!(refused.kind, RefusalKind::ForgedStatus);
-    assert_eq!(refused.location.field, "promotion.obligations");
-    assert_eq!(library.current_generation(), generation);
-    assert_eq!(
-        library
-            .generation_records()
-            .into_iter()
-            .cloned()
-            .collect::<Vec<_>>(),
-        generations
-    );
-    assert_eq!(library.records(), records.as_slice());
+    reject_model_only_refinement(&mut library, &namespace, &promoted)?;
 
     library
         .admit(&namespace, Some(&policy), promoted)
         .map_err(|error| format!("all six obligations proved: {error:?}"))?;
-    assert_eq!(library.current_generation(), generation + 1);
-    assert_eq!(library.records().len(), records.len() + 1);
+    assert_eq!(
+        library.current_generation(),
+        generation.checked_add(1).ok_or("generation overflow")?
+    );
+    assert_eq!(
+        library.records().len(),
+        records
+            .len()
+            .checked_add(1)
+            .ok_or("record count overflow")?
+    );
     Ok(())
 }

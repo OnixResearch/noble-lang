@@ -5,99 +5,16 @@
 
 use super::super::super::procedures::support::{literal_record, revision};
 use noble_contracts::source::procedures::{
-    ArmMetrics, CapabilityMarker, ConsumerObligation, ConsumerPolicy, EvidenceClass,
-    EvidenceOutcome, EvidenceRecord, Metrics, ProcedureLibrary, ProcedureRecord, Producer,
-    Promotion, RefusalKind, Status, MAX_EVIDENCE, MAX_GENERATIONS, MAX_MANIFEST_BYTES,
-    MAX_METRICS_BYTES, MAX_RECORDS,
+    CapabilityMarker, ConsumerObligation, ConsumerPolicy, EvidenceClass, EvidenceOutcome,
+    ProcedureLibrary, Producer, Promotion, RefusalKind, Status, MAX_EVIDENCE, MAX_GENERATIONS,
+    MAX_MANIFEST_BYTES, MAX_METRICS_BYTES, MAX_RECORDS,
 };
 use noble_contracts::source::Session;
 use std::string::String;
 use std::vec;
 
-fn fixture_evidence(
-    record: &ProcedureRecord,
-    obligation: u32,
-    class: EvidenceClass,
-    outcome: EvidenceOutcome,
-) -> EvidenceRecord {
-    EvidenceRecord {
-        obligation,
-        class,
-        outcome,
-        toolchain: vec![String::from("synthetic-schema-fixture")],
-        claim: String::from("unverified fixture reference; not a checked proof"),
-        subject_binding: record.procedure_id,
-        policy_revision: 3,
-        capability: None,
-    }
-}
-
-fn hex_identity(id: &[u8; 32]) -> String {
-    id.iter().map(|byte| format!("{byte:02x}")).collect()
-}
-
-fn assert_no_authority_fields(value: &serde_json::Value) {
-    match value {
-        serde_json::Value::Object(fields) => {
-            for (key, child) in fields {
-                let lower = key.to_ascii_lowercase();
-                for forbidden in [
-                    "capability",
-                    "handle",
-                    "secret",
-                    "training",
-                    "teacher_config",
-                    "private_key",
-                ] {
-                    assert!(
-                        !lower.contains(forbidden),
-                        "authority field exported: {key}"
-                    );
-                }
-                assert_no_authority_fields(child);
-            }
-        }
-        serde_json::Value::Array(items) => {
-            for item in items {
-                assert_no_authority_fields(item);
-            }
-        }
-        _ => {}
-    }
-}
-
-fn fixture_metrics(seed: u8) -> Metrics {
-    Metrics {
-        index_build_steps: 1,
-        index_build_monotonic_ns: 0,
-        arms: vec![ArmMetrics {
-            arm: String::from("schema-fixture"),
-            seed: u64::from(seed),
-            acquisition_entries: 4,
-            acquisition_tasks: 4,
-            surviving_generations: 5,
-            held_out_tasks: 0,
-            transfer_passed: 0,
-            earlier_tasks: 0,
-            regression_failed: 0,
-            growth_entries_added: 4,
-            growth_bytes_added: 0,
-            retrieval_queries: 0,
-            retrieval_examined: 0,
-            max_examined: 0,
-            retrieval_overhead_ns: 0,
-            restart_identity_match: true,
-            proposer_calls: 0,
-            teacher_calls: 0,
-            break_even_invocations: None,
-            break_even_reason: String::from("no runtime comparison"),
-        }],
-        model_synthesis: String::from("no model synthesis measured"),
-        executed_mechanics: String::from("schema-only fixture"),
-        correspondence: String::from("no implementation proof inferred"),
-        assumptions: String::from("synthetic evidence references are not proof attestations"),
-    }
-}
+#[path = "schema/support.rs"]
+mod support;
 
 #[test]
 fn generated_libraries_preserve_evidence_distinctions_without_capabilities() -> Result<(), String> {
@@ -107,10 +24,10 @@ fn generated_libraries_preserve_evidence_distinctions_without_capabilities() -> 
         let mut retired = literal_record(i64::from(seed) + 100, Producer::Chunk)
             .map_err(|error| format!("retired fixture: {error:?}"))?;
         retired.evidence = vec![
-            fixture_evidence(&retired, 11, EvidenceClass::Lean, EvidenceOutcome::NotRun),
-            fixture_evidence(&retired, 11, EvidenceClass::Test, EvidenceOutcome::Failed),
-            fixture_evidence(&retired, 12, EvidenceClass::Review, EvidenceOutcome::Passed),
-            fixture_evidence(
+            support::fixture_evidence(&retired, 11, EvidenceClass::Lean, EvidenceOutcome::NotRun),
+            support::fixture_evidence(&retired, 11, EvidenceClass::Test, EvidenceOutcome::Failed),
+            support::fixture_evidence(&retired, 12, EvidenceClass::Review, EvidenceOutcome::Passed),
+            support::fixture_evidence(
                 &retired,
                 13,
                 EvidenceClass::Assumption,
@@ -124,15 +41,15 @@ fn generated_libraries_preserve_evidence_distinctions_without_capabilities() -> 
         let mut tested = literal_record(i64::from(seed) + 200, Producer::Synthesis)
             .map_err(|error| format!("tested fixture: {error:?}"))?;
         tested.evidence = vec![
-            fixture_evidence(&tested, 11, EvidenceClass::Lean, EvidenceOutcome::Proved),
-            fixture_evidence(&tested, 11, EvidenceClass::Test, EvidenceOutcome::Passed),
-            fixture_evidence(
+            support::fixture_evidence(&tested, 11, EvidenceClass::Lean, EvidenceOutcome::Proved),
+            support::fixture_evidence(&tested, 11, EvidenceClass::Test, EvidenceOutcome::Passed),
+            support::fixture_evidence(
                 &tested,
                 14,
                 EvidenceClass::AeneasLean,
                 EvidenceOutcome::Unknown,
             ),
-            fixture_evidence(
+            support::fixture_evidence(
                 &tested,
                 15,
                 EvidenceClass::Validation,
@@ -148,8 +65,8 @@ fn generated_libraries_preserve_evidence_distinctions_without_capabilities() -> 
         let mut promoted = literal_record(i64::from(seed) + 300, Producer::Chunk)
             .map_err(|error| format!("promoted fixture: {error:?}"))?;
         promoted.evidence = vec![
-            fixture_evidence(&promoted, 16, EvidenceClass::Verus, EvidenceOutcome::Proved),
-            fixture_evidence(&promoted, 16, EvidenceClass::Test, EvidenceOutcome::Passed),
+            support::fixture_evidence(&promoted, 16, EvidenceClass::Verus, EvidenceOutcome::Proved),
+            support::fixture_evidence(&promoted, 16, EvidenceClass::Test, EvidenceOutcome::Passed),
         ];
         promoted.status = Status::Promoted;
         promoted.promotion = Some(Promotion {
@@ -171,7 +88,7 @@ fn generated_libraries_preserve_evidence_distinctions_without_capabilities() -> 
 
         let mut replacement = literal_record(i64::from(seed) + 400, Producer::Chunk)
             .map_err(|error| format!("replacement fixture: {error:?}"))?;
-        replacement.evidence = vec![fixture_evidence(
+        replacement.evidence = vec![support::fixture_evidence(
             &replacement,
             99,
             EvidenceClass::Validation,
@@ -201,7 +118,7 @@ fn generated_libraries_preserve_evidence_distinctions_without_capabilities() -> 
             .as_array()
             .ok_or("entries not an array")?;
         assert_eq!(entries.len(), 4);
-        assert_no_authority_fields(&manifest);
+        support::assert_no_authority_fields(&manifest);
         for (id, state, expected) in [
             (
                 retired_id,
@@ -234,7 +151,7 @@ fn generated_libraries_preserve_evidence_distinctions_without_capabilities() -> 
                 vec![(99, "validation", "passed")],
             ),
         ] {
-            let identity = hex_identity(&id);
+            let identity = support::hex_identity(&id);
             let entry = entries
                 .iter()
                 .find(|entry| entry["procedure_id"] == identity)
@@ -267,7 +184,7 @@ fn generated_libraries_preserve_evidence_distinctions_without_capabilities() -> 
         );
 
         let metrics_bytes = library
-            .metrics_record(&fixture_metrics(seed))
+            .metrics_record(&support::sample_report(seed))
             .map_err(|error| format!("generated metrics: {error:?}"))?;
         assert!(metrics_bytes.len() <= MAX_METRICS_BYTES);
         let parsed_metrics: serde_json::Value = serde_json::from_slice(&metrics_bytes)
@@ -282,7 +199,7 @@ fn generated_libraries_preserve_evidence_distinctions_without_capabilities() -> 
         );
         assert_eq!(parsed_metrics["index"]["entries"].as_u64(), Some(4));
         assert_eq!(parsed_metrics["teacher_calls"], 0);
-        assert_no_authority_fields(&parsed_metrics);
+        support::assert_no_authority_fields(&parsed_metrics);
 
         let before_storage = library
             .encode()
@@ -294,8 +211,12 @@ fn generated_libraries_preserve_evidence_distinctions_without_capabilities() -> 
         ] {
             let mut injected = literal_record(i64::from(seed) + 500, Producer::Chunk)
                 .map_err(|error| format!("injection fixture: {error:?}"))?;
-            let mut evidence =
-                fixture_evidence(&injected, 11, EvidenceClass::Test, EvidenceOutcome::Passed);
+            let mut evidence = support::fixture_evidence(
+                &injected,
+                11,
+                EvidenceClass::Test,
+                EvidenceOutcome::Passed,
+            );
             evidence.capability = Some(marker);
             injected.evidence.push(evidence);
             let refused = library
