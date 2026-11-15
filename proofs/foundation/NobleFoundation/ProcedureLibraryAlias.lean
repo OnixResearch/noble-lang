@@ -75,7 +75,7 @@ def evalStep : Instruction → List Word → Option (List Word)
   | _, _ => none
 
 /-- Canonical formal-polynomial stack interpretation of the same instructions. -/
-def normalizeStep : Instruction → List Polynomial → Option (List Polynomial)
+noncomputable def normalizeStep : Instruction → List Polynomial → Option (List Polynomial)
   | .literal value, stack => some (MvPolynomial.C (literal value) :: stack)
   | .capture value, stack => some (MvPolynomial.C (literal value) :: stack)
   | .dup, top :: stack => some (top :: top :: stack)
@@ -121,15 +121,15 @@ theorem body_sound (body : List Instruction) (stack : List Polynomial)
       | none =>
           have step := step_sound operation stack input
           simp [h] at step
-          simp [run, h, step]
+          simp [run, h, ← step]
       | some next =>
           have step := step_sound operation stack input
           simp [h] at step
-          simp [run, h, step, inductionHypothesis]
+          simp [run, h, ← step, inductionHypothesis]
 
 /-- Every declared input slot is represented by its formal variable. The
 reverse maps bottom-to-top interface order to head-first execution order. -/
-def initialPolynomials (slots : List Slot) : List Polynomial :=
+noncomputable def initialPolynomials (slots : List Slot) : List Polynomial :=
   slots.reverse.map MvPolynomial.X
 
 /-- Formal input variables evaluate to the actual ordered input stack. -/
