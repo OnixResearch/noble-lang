@@ -10,7 +10,7 @@ node verification/net-plans/regenerate-lean-corpus.mjs
 -- rules=noble-net-i64-rules/3; representation=noble-net-arena/1
 -- checker=noble-net-plan-checker/1; executor=noble-net-plan-executor/1
 -- source crates/noble-ngraph/src/net/rewrite.rs test-net-digest=2bdc30ff2aa3118e7c3dcb8bff53aa751133392b7a2df9c1a3d9671cfb96dd62
--- source crates/noble-ngraph/src/net.rs test-net-digest=832d995412d5b1c00825846f6b7c325d958c051d29f6a6181dd5909779bff360
+-- source crates/noble-ngraph/src/net.rs test-net-digest=231da7394f9690a158c38a34472f93bcd61514efdc2386b5d3e2359bab5ffde5
 -- source crates/noble-ngraph/src/net/plan/corpus.rs test-net-digest=06fad4f5918cb804b2a2923029e8138581f3a7ee7db445528b82cd713d6c59f1
 -- source proofs/foundation/NobleFoundation/NetI64Plans.lean test-net-digest=49beda9c3a213719041a30d761a28678b51814fdaf2b12ab2dc557c7e1917d9b
 -- length-framed emitted byte stream + revisions test-net-digest=9690658793bcea456e55e6db6e60b2c9d34d8d0fa705cdefe64182743ab572db
