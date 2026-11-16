@@ -415,6 +415,146 @@ fn a_constant_only_graph_needs_no_instruction_and_empty_observations_are_unsuppo
     ));
 }
 
+#[test]
+fn checked_permutation_executes_bool_input() {
+    let ids = &super::common::IDS;
+    let mut builder = GraphBuilder::new(
+        SubProfile::I64,
+        Subject::authored(ids, "permutation-bool-input"),
+    );
+    let input = builder.input(ScalarType::Bool);
+    builder.output(input);
+    let checked = check::check(ids, builder.finish()).expect("legal Bool input graph");
+    let compiled = Compiled::new(ids, &checked);
+    let artifact = permutation::from_compiled(&checked, &compiled).expect("total graph");
+    let accepted = permutation::check(&checked, &artifact).expect("valid layout and empty stream");
+
+    let args = [Value::Bool(true)];
+    assert_eq!(
+        eval::reference(&checked, &args, None, &mut Control::default()).obs,
+        Obs::Normal(vec![Value::Bool(true)])
+    );
+    assert_eq!(
+        permutation::execute(
+            accepted,
+            &args,
+            checked.graph().nodes.len() as u64,
+            u64::from(artifact.layout.regs) * 8,
+        ),
+        Ok(vec![Value::Bool(true)])
+    );
+}
+
+/// Reference, canonical packed and opt-in permutation observations must agree exactly; returns
+/// the shared observation.
+fn three_way(checked: &check::CheckedGraph, artifact: &Artifact, args: &[Value]) -> Vec<Value> {
+    let compiled = Compiled::new(&super::common::IDS, checked);
+    let accepted = permutation::check(checked, artifact).expect("own complete witness");
+    let actual = permutation::execute(
+        accepted,
+        args,
+        checked.graph().nodes.len() as u64,
+        u64::from(artifact.layout.regs) * 8,
+    )
+    .expect("admitted inputs under sufficient budgets");
+    assert_eq!(
+        eval::reference(checked, args, None, &mut Control::default()).obs,
+        Obs::Normal(actual.clone()),
+        "reference agrees with the permutation path"
+    );
+    assert_eq!(
+        compiled.evaluate(args, None, &mut Control::default()).obs,
+        Obs::Normal(actual.clone()),
+        "canonical packed evaluator agrees with the permutation path"
+    );
+    actual
+}
+
+#[test]
+fn bool_identity_inputs_agree_across_reference_canonical_and_permutation() {
+    let ids = &super::common::IDS;
+    let mut builder = GraphBuilder::new(
+        SubProfile::I64,
+        Subject::authored(ids, "permutation-bool-identity"),
+    );
+    let input = builder.input(ScalarType::Bool);
+    builder.output(input);
+    builder.output(input);
+    let checked = check::check(ids, builder.finish()).expect("legal Bool input graph");
+    let artifact = permutation::from_compiled(&checked, &Compiled::new(ids, &checked))
+        .expect("total Bool identity graph");
+    assert!(artifact.stream.is_empty());
+    for value in [true, false] {
+        assert_eq!(
+            three_way(&checked, &artifact, &[Value::Bool(value)]),
+            vec![Value::Bool(value); 2],
+            "Bool({value}) is observed as Bool({value})"
+        );
+    }
+}
+
+#[test]
+fn mixed_i64_and_bool_slots_agree_in_canonical_and_permuted_orders() {
+    let ids = &super::common::IDS;
+    let mut builder = GraphBuilder::new(
+        SubProfile::I64,
+        Subject::authored(ids, "permutation-mixed-bool-input"),
+    );
+    let left = builder.input(ScalarType::I64);
+    let flag = builder.input(ScalarType::Bool);
+    let right = builder.input(ScalarType::I64);
+    let other = builder.input(ScalarType::Bool);
+    let sum = builder.op(Op::I64Add(left, right));
+    let delta = builder.op(Op::I64Sub(right, left));
+    let equal = builder.op(Op::I64Eq(sum, delta));
+    for output in [flag, equal, sum, other, flag] {
+        builder.output(output);
+    }
+    let checked = check::check(ids, builder.finish()).expect("legal mixed I64/Bool graph");
+    let canonical = permutation::from_compiled(&checked, &Compiled::new(ids, &checked))
+        .expect("total mixed graph");
+    assert_eq!(canonical.stream.len(), 3);
+    let mut permuted = canonical.clone();
+    swap_pair(&mut permuted, 0, 1);
+    assert_ne!(permuted.stream, canonical.stream);
+    for artifact in [&canonical, &permuted] {
+        for (a, b) in [(true, false), (false, true), (true, true), (false, false)] {
+            for (x, y) in [(3, 8), (0, 0), (i64::MAX, i64::MIN), (i64::MIN, -1)] {
+                let args = [Value::I64(x), Value::Bool(a), Value::I64(y), Value::Bool(b)];
+                let s = x.wrapping_add(y);
+                let d = y.wrapping_sub(x);
+                assert_eq!(
+                    three_way(&checked, artifact, &args),
+                    vec![
+                        Value::Bool(a),
+                        Value::Bool(s == d),
+                        Value::I64(s),
+                        Value::Bool(b),
+                        Value::Bool(a),
+                    ],
+                    "independent wrapping-word and Bool expectation"
+                );
+            }
+        }
+    }
+    // Staging Bool as 0/1 does not widen input admission: a mistyped slot is still refused
+    // before execution, exactly as the reference and canonical evaluators refuse it.
+    let accepted = permutation::check(&checked, &canonical).expect("canonical witness");
+    for args in [
+        [Value::I64(1), Value::I64(1), Value::I64(2), Value::Bool(false)],
+        [Value::Bool(true), Value::Bool(true), Value::I64(2), Value::Bool(false)],
+    ] {
+        assert!(matches!(
+            permutation::execute(accepted, &args, u64::MAX, u64::MAX),
+            Err(permutation::RunRefusal::Input(_))
+        ));
+        assert!(matches!(
+            eval::reference(&checked, &args, None, &mut Control::default()).obs,
+            Obs::Refused(_)
+        ));
+    }
+}
+
 fn resident_bytes() -> Option<u64> {
     let text = std::fs::read_to_string("/proc/self/statm").ok()?;
     text.split_whitespace()
