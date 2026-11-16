@@ -38,6 +38,8 @@ mod common;
 mod parameters;
 #[path = "models/recurrent.rs"]
 mod recurrent;
+#[path = "layout_differential/workspace_binding.rs"]
+mod workspace_binding;
 
 fn f32_chain() -> Graph {
     let scheme = common::IDS;
