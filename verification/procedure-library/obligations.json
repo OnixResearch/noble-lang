@@ -120,7 +120,7 @@
   },
   "evidence_acceptance": {
     "issue": 131,
-    "change": ".cairn/changes/procedure-evidence-acceptance",
+    "change": ".cairn/archive/2026-11-16-procedure-evidence-acceptance",
     "requirement": "LPL-03",
     "rule": "EvidenceRecord values are submitter claims kept as visible, unverified provenance. Only VerifiedEvidence receipts, minted at admission from the EvidenceVerifier the library owner supplied, support tested or promoted; incoming receipts are discarded and re-derived, and load re-establishes every persisted receipt through the loading owner's verifier.",
     "red_observation": {

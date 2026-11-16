@@ -1979,6 +1979,22 @@
       "sha256": "7fab6c590a90950e7ff6813b1d804a2da0166a9a3ac58602b0004a6e09524894"
     },
     {
+      "file": ".cairn/archive/2026-11-16-procedure-evidence-acceptance/design.md",
+      "sha256": "44b97497cabb46539b145e9f8adc815578c39557c40fd2d80af7e4dcfe47f2da"
+    },
+    {
+      "file": ".cairn/archive/2026-11-16-procedure-evidence-acceptance/proposal.md",
+      "sha256": "1ab3b083802d546b872c6bd70e1d9465e7701b524744f85a67de31e001a51c60"
+    },
+    {
+      "file": ".cairn/archive/2026-11-16-procedure-evidence-acceptance/specs/learned-procedure-library/spec.md",
+      "sha256": "bc5d2397a42c4dec9cefd6092fc3fac702fb45adf321d57660ff33f7397cd27f"
+    },
+    {
+      "file": ".cairn/archive/2026-11-16-procedure-evidence-acceptance/tasks.md",
+      "sha256": "957a52d81eaae70b85766d7da39b41725211741743aff7c412dd4e58fdb67460"
+    },
+    {
       "file": ".cairn/changes/allocation-strategy-contract/design.md",
       "sha256": "6b34ad39dd8180a08464c66daf450af2f6a687f9dee4bf1c5abd0f3436f06b66"
     },
@@ -2385,22 +2401,6 @@
     {
       "file": ".cairn/changes/ownership-lifetime-contract/tasks.md",
       "sha256": "2a8b6f4efd090ebef4d97b6bfa3044a87e8dbdd6301b5303a710913cdee15e64"
-    },
-    {
-      "file": ".cairn/changes/procedure-evidence-acceptance/design.md",
-      "sha256": "44b97497cabb46539b145e9f8adc815578c39557c40fd2d80af7e4dcfe47f2da"
-    },
-    {
-      "file": ".cairn/changes/procedure-evidence-acceptance/proposal.md",
-      "sha256": "1ab3b083802d546b872c6bd70e1d9465e7701b524744f85a67de31e001a51c60"
-    },
-    {
-      "file": ".cairn/changes/procedure-evidence-acceptance/specs/learned-procedure-library/spec.md",
-      "sha256": "bc5d2397a42c4dec9cefd6092fc3fac702fb45adf321d57660ff33f7397cd27f"
-    },
-    {
-      "file": ".cairn/changes/procedure-evidence-acceptance/tasks.md",
-      "sha256": "b4218fc4905ea0933d516cae4f5949dccc2a59c4b5cf19d407984a129cff2598"
     },
     {
       "file": ".cairn/changes/proof-automation-diagnostics/design.md",
