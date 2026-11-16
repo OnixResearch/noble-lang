@@ -34,12 +34,12 @@ use noble_ngraph::layout::Refusal;
 use noble_ngraph::sem::Value;
 
 mod common;
+#[path = "layout_differential/ownership.rs"]
+mod ownership;
 #[path = "layout_differential/parameters.rs"]
 mod parameters;
 #[path = "models/recurrent.rs"]
 mod recurrent;
-#[path = "layout_differential/workspace_binding.rs"]
-mod workspace_binding;
 
 fn f32_chain() -> Graph {
     let scheme = common::IDS;

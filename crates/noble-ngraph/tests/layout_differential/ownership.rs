@@ -58,9 +58,9 @@ fn f32_constant(value: f32) -> Graph {
     b.finish()
 }
 
-/// `2x + 5`. Both variants keep the constant in register 1; with `constant_first`
-/// false the doubling is created before the constant, so node 1 (the doubling) and
-/// node 2 (the constant) exchange registers: only the register map differs.
+/// `2x + 5`. Both variants keep the constant in register 1 and the doubling in
+/// register 2, but with `constant_first` false the doubling is node 1 and the
+/// constant node 2, so only the node-to-register map differs.
 fn i64_doubled_offset(constant_first: bool) -> Graph {
     let mut b = builder(SubProfile::I64, "workspace-binding/i64-doubled-offset");
     let x = b.input(ScalarType::I64);
@@ -479,6 +479,10 @@ fn a_workspace_of_the_other_profile_is_refused_without_panic() {
         let mut integer_workspace = integer.compiled.workspace();
         assert_foreign_refused(&float.compiled, &mut integer_workspace, &float_inputs);
         assert_own(&integer, &mut integer_workspace, &integer_inputs);
+        // The binding is checked before the inputs: inputs that would fail this
+        // graph's preflight at a slot still get the graph-site workspace refusal.
+        assert_foreign_refused(&integer.compiled, &mut float_workspace, &float_inputs);
+        assert_foreign_refused(&float.compiled, &mut integer_workspace, &integer_inputs);
     }
 }
 

@@ -1201,7 +1201,7 @@ ordinary indexing panic.
   A later successful run writes each such register before reading it, and execution never writes a
   constant or the constant-one register. The scratch limit is still checked on every call, so a limit
   lowered after allocation refuses with `E-BUDGET-FORWARD-SCRATCH`.
-- **Concrete tests.** [`workspace_binding.rs`](../../crates/noble-ngraph/tests/layout_differential/workspace_binding.rs),
+- **Concrete tests.** [`ownership.rs`](../../crates/noble-ngraph/tests/layout_differential/ownership.rs),
   a module of the existing `layout_differential` target, builds checked graphs for the issue's
   constant-only A/B pair and for same-size pairs whose declared layouts differ only in constants,
   only in the register map, only in the input-slot map or only in the output map. It also covers
@@ -1209,7 +1209,7 @@ ordinary indexing panic.
   colliding identity scheme, clones and a recompilation, and reuse after an input refusal, a scratch
   refusal, a guard failure, fuel exhaustion and cancellation. It checks lowered scratch limits and
   compares fresh, reused and clone-reused runs with the reference interpreter. Reproduce with
-  `cargo test -p noble-ngraph --test layout_differential --all-features --offline --locked -- workspace_binding`.
+  `cargo test -p noble-ngraph --test layout_differential --all-features --offline --locked -- ownership`.
 - **Before the fix.** A form of the module that compiles against the unfixed source (`62bc0109`)
   failed 8 of 10 tests there. B returned A's constant as `Normal([I64(1)])`. A larger F32 workspace
   returned 6.5 for 1.5 + 1, because the constant 5 sat in the register that graph reads as its
