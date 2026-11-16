@@ -13,6 +13,79 @@ reopening conditions. The original frozen criterion is
 `36b8efc1d7f99485f3e1764a596ce014ab24dcb62d6f029bf32456c196a4dc79`),
 committed before either transfer attempt.
 
+## Erratum (2026-11-16, issue #131): earlier promoted and tested states were claim-only
+
+Before commit `e3198a85`, `ProcedureLibrary` admission treated every
+`EvidenceRecord` supplied with a record as evidence. A caller-chosen class
+and outcome, nonempty toolchain and claim strings, the recomputed subject
+binding and the policy revision were enough to retain `promoted`: one
+`lean`, `aeneas-lean` or `verus` record per demanded obligation with outcome
+`proved`. A `test` record with outcome `passed` was enough for `tested`.
+Nothing checked that a proof or test existed. Every `promoted` or `tested`
+state that this lane's earlier tests and receipts exercised therefore rested
+on claim-only evidence:
+
+- the positive control of
+  `procedures::admission::criteria::proof_demanding_promotion_requires_every_selected_obligation`,
+  which `obligations.json` binds through `executed_tests` and
+  `promotion_refusal` (six synthetic `lean`/`proved` strings);
+- the `tested` and `promoted` records of O6's schema test (synthetic
+  `verus`/`proved` and `test`/`passed` strings) and the `tested` record of
+  O5's generated retrieval fixture;
+- `evidence_classes_policy_and_dependency_edges_are_not_laundered`, which
+  asserted that a fabricated `lean`/`proved` record is admitted under a current
+  policy.
+
+The sections below already called these strings synthetic and not
+independently checked, and D14 kept real proof-demanding promotion NO-GO.
+The defect was that the library itself admitted them as `promoted` or
+`tested`. The issue's reproducer and a forged-`tested` control both failed on
+base `605c1d55`. Observed RED run, not a retained receipt: `cargo test -p
+noble-contracts --test editor --offline --locked --
+procedures::admission::fabricated_lean_proof_must_not_promote_procedure
+procedures::admission::unexecuted_test_claim_must_not_mark_procedure_tested`
+gave `0 passed; 2 failed`.
+
+The transfer outcomes are unaffected. Their retrieval used no status filter
+and their source records stayed `candidate`. Their retained manifests and
+canonical byte counts were written with store revision `NPLIB001` and export
+`schema_revision` 0, which the current code no longer writes, so they
+reproduce only at their recorded source commits. No retained receipt was
+edited.
+
+Correction (Cairn change `procedure-evidence-acceptance`, LPL-03 as synced):
+evidence records are submitter claims, kept as unverified provenance. Only a
+`VerifiedEvidence` receipt counts toward `tested` or `promoted`. The library
+mints one at admission from the `EvidenceVerifier` its owner supplied, and the
+receipt binds the exact subject, the claim's obligation, class, policy
+revision and digest, the verifier and toolchain identity, the command and
+input digests, and the verified outcome. Load re-establishes every persisted
+receipt through the loading owner's verifier (store `NPLIB002`). The export
+lists `verified_evidence` apart from the claims (`schema_revision` 1). The
+corrected tests route every status through an owner fixture ledger, which
+stands for independently recorded checks and is not a proof checker. The
+library still ships no verifier, so this lane checks no real Lean, Verus or
+test artifact, and D14's NO-GO is unchanged.
+
+GREEN evidence from clean commit `1ec82100`:
+`receipts/2026-11-16-evidence-acceptance.raw.log` (SHA-256
+`ca65bd898c2953da333ec269eed44a7d20172e7407ece13425d573def673e66a`) records
+`cargo test -p noble-contracts --test editor --offline --locked`: 121 passed,
+0 failed and the two ignored historical one-shots. This includes the
+reproducer and the control, now in `admission/acceptance/unverified.rs`,
+which pass. At the same commit, `cargo test -p noble-contracts --all-targets
+--all-features` passed 348 tests in 10 targets with 2 ignored, and
+`cargo test -p noble-cli --all-targets --all-features` passed 397 tests in 26
+targets with 7 ignored. Neither had a failure. `obligations.json` records the
+receipt under `evidence_acceptance`.
+The Octet deny-all and architecture gate over those sources, with the reviewed
+`EvidenceVerifier` dispatch entry in `policy/architecture.ncl`, reported a
+clean status, 0 lint and 0 architecture findings and 110 of 110 units. Six
+in-place mutants of the new guards were each killed by at least one test:
+self-attesting claims, trusted incoming receipts, load trusting bytes,
+rollback ignoring receipt toolchains, a proof outcome on a non-proof receipt,
+and re-asking retained claims. These are observations, not receipts.
+
 ## Execution and decision evidence
 
 The first run from clean source `e65f82c18d0763ffb0982527c348f359662c17cc`

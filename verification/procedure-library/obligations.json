@@ -26,7 +26,8 @@
     "exit_status": 0,
     "passed": 107,
     "failed": 0,
-    "ignored_historical_one_shots": 2
+    "ignored_historical_one_shots": 2,
+    "erratum": "Issue #131: the tested and promoted states these tests admitted rested on caller-supplied evidence claims, not verified evidence; see evidence_acceptance. The receipt itself is unchanged."
   },
   "obligations": [
     {
@@ -114,6 +115,51 @@
     "receipt": "executed_tests",
     "refusals": "eight missing/stale/forged/class/outcome cases plus a separately demanded Rust-encoder refinement absent despite model-only O1/O3 records",
     "positive_control": "all six synthetic proof-class evidence records accepted when each required ID is declared and matched; this verifies policy bookkeeping only, not proof validity",
-    "decision": "NO-GO for real proof-demanding promotion until independently checked implementation-refinement evidence is available and selected by the consumer policy"
+    "decision": "NO-GO for real proof-demanding promotion until independently checked implementation-refinement evidence is available and selected by the consumer policy",
+    "erratum": "Issue #131: this positive control admitted six unverified proof claims as promoted. Under evidence_acceptance the same test admits the record only after an owner fixture ledger verifies each claim, keeps every refusal reason with verified receipts present, and adds refusals for an unverified obligation and for a dissenting owner outcome."
+  },
+  "evidence_acceptance": {
+    "issue": 131,
+    "change": ".cairn/changes/procedure-evidence-acceptance",
+    "requirement": "LPL-03",
+    "rule": "EvidenceRecord values are submitter claims kept as visible, unverified provenance. Only VerifiedEvidence receipts, minted at admission from the EvidenceVerifier the library owner supplied, support tested or promoted; incoming receipts are discarded and re-derived, and load re-establishes every persisted receipt through the loading owner's verifier.",
+    "red_observation": {
+      "base_commit": "605c1d55",
+      "cargo_arguments": "test -p noble-contracts --test editor --offline --locked -- procedures::admission::fabricated_lean_proof_must_not_promote_procedure procedures::admission::unexecuted_test_claim_must_not_mark_procedure_tested",
+      "result": "0 passed, 2 failed: admission returned Ok for both fabricated records",
+      "retained": "not a receipt: the two tests were uncommitted additions to the base tree"
+    },
+    "receipt": {
+      "raw_path": "verification/procedure-library/receipts/2026-11-16-evidence-acceptance.raw.log",
+      "raw_sha256": "ca65bd898c2953da333ec269eed44a7d20172e7407ece13425d573def673e66a",
+      "cargo_arguments": "test -p noble-contracts --test editor --offline --locked",
+      "runner": "pinned nightly Rust toolchain, reviewed offline vendor and private Cargo target",
+      "source_commit": "1ec821005f100d73d5f3db3080940403a5a34383",
+      "clean_source": true,
+      "exit_status": 0,
+      "passed": 121,
+      "failed": 0,
+      "ignored_historical_one_shots": 2
+    },
+    "rust_tests": [
+      "procedures::admission::acceptance::unverified::fabricated_lean_proof_must_not_promote_procedure",
+      "procedures::admission::acceptance::unverified::unexecuted_test_claim_must_not_mark_procedure_tested",
+      "procedures::admission::acceptance::unverified::fabricated_claims_are_refused_with_forged_status_and_leave_the_library_unchanged",
+      "procedures::admission::acceptance::unverified::the_verified_outcome_not_the_claimed_outcome_decides",
+      "procedures::admission::acceptance::unverified::malformed_owner_attestations_are_refused",
+      "procedures::admission::acceptance::owner_verified_claims_establish_status_with_bound_receipts",
+      "procedures::admission::acceptance::readmission_reuses_decisions_and_new_claims_are_asked_once",
+      "procedures::admission::acceptance::isolation::receipts_do_not_travel_with_a_record",
+      "procedures::admission::acceptance::isolation::inspection_and_status_filters_never_run_the_verifier",
+      "procedures::admission::acceptance::reload::restart_reestablishes_every_receipt_and_reproduces_all_views",
+      "procedures::admission::acceptance::reload::persisted_receipts_are_not_trusted_without_the_same_owner_answer",
+      "procedures::admission::acceptance::reload::a_store_from_a_lenient_verifier_cannot_launder_a_fabricated_proof",
+      "procedures::admission::acceptance::reload::a_claims_only_store_revision_is_refused_explicitly",
+      "procedures::admission::acceptance::reload::rollback_requires_every_verified_toolchain_and_asks_nothing",
+      "procedures::admission::evidence_classes_policy_and_dependency_edges_are_not_laundered",
+      "procedures::admission::criteria::proof_demanding_promotion_requires_every_selected_obligation"
+    ],
+    "affected_entries": ["executed_tests", "promotion_refusal", "LPL-O5", "LPL-O6"],
+    "non_claims": "The owner fixture ledger in the tests stands for independently recorded checks; it is not a proof checker. The library ships no verifier, checks no Lean, Verus or test artifact, and proves no Rust-to-model refinement; D14's NO-GO is unchanged."
   }
 }
