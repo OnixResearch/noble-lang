@@ -13,6 +13,11 @@
 //! each layer it stops only once no unevaluated failure point precedes the
 //! earliest observed failure in canonical order. Agreement is tested, not
 //! proved (NG-PO-C stays open).
+//!
+//! A reusable [`Workspace`] belongs to the compiled value that created it and
+//! to that value's clones (issue #133). Evaluation and reset refuse every other
+//! workspace before writing a register, so one graph's constants or register
+//! layout never reach another graph's result.
 
 use crate::identity::IdentityScheme;
 /// Scheduler/compiler revision bound into the `PackedLayoutKey`.
@@ -84,13 +89,36 @@ pub struct Compiled {
     /// (register, slot) of interface slots.
     slot_regs: alloc::vec::Vec<(u32, u32)>,
     layout_key: crate::ir::Digest,
+    /// Identity of this compilation, shared by its clones and its workspaces.
+    owner: alloc::rc::Rc<Owner>,
 }
 
+/// The identity a [`Workspace`] is bound to: one allocation per
+/// [`Compiled::new`] call, shared by that value's clones and by every workspace
+/// it creates, and compared by address only. It holds no data, so a workspace
+/// keeps neither the graph nor the compiled code alive, and its allocation
+/// cannot be reused by another compilation while any workspace still refers to
+/// it.
+#[derive(Debug)]
+struct Owner;
+
 /// Reusable register workspace. Results are copied out of it (D12).
+///
+/// A workspace is bound to the compiled value that created it
+/// ([`Compiled::workspace`]): that value and its clones may evaluate in it and
+/// reset it, and every other compiled value is refused with `E-INTERFACE`
+/// before any register is written. Another [`Compiled::new`] call is another
+/// identity even for the same checked graph. The binding is an identity, not a
+/// comparison of register counts, declared layouts or digests, so neither an
+/// equal size, an equal layout nor a colliding identity scheme makes another
+/// graph's constants, register map, slot map or output map reachable. A
+/// workspace never changes its owner or its size, and a cloned workspace keeps
+/// the binding.
 #[derive(Clone, Debug)]
 pub struct Workspace {
     f: alloc::vec::Vec<f32>,
     i: alloc::vec::Vec<i64>,
+    owner: alloc::rc::Rc<Owner>,
 }
 
 impl Compiled {
@@ -248,6 +276,7 @@ impl Compiled {
             consts,
             slot_regs,
             layout_key,
+            owner: alloc::rc::Rc::new(Owner),
         }
     }
 
@@ -323,7 +352,13 @@ impl Compiled {
             }
     }
 
-    /// A fresh workspace with constants loaded.
+    /// A fresh workspace bound to this compiled value (see [`Workspace`]): every
+    /// register zero except this graph's constants and, for F32, the
+    /// constant-one register.
+    ///
+    /// It allocates [`Compiled::scratch_bytes`] of registers without consulting
+    /// a budget, so a caller that keeps it for several [`Compiled::evaluate_in`]
+    /// calls asks [`Compiled::scratch_refusal`] first.
     #[must_use]
     pub fn workspace(&self) -> Workspace {
         let n = self.regs as usize;
@@ -331,23 +366,48 @@ impl Compiled {
             Code::F32 { .. } => Workspace {
                 f: alloc::vec![0.0; n],
                 i: alloc::vec::Vec::new(),
+                owner: alloc::rc::Rc::clone(&self.owner),
             },
             Code::I64 { .. } => Workspace {
                 f: alloc::vec::Vec::new(),
                 i: alloc::vec![0; n],
+                owner: alloc::rc::Rc::clone(&self.owner),
             },
         };
-        self.reset(&mut w);
+        self.load_constants(&mut w);
         w
     }
 
-    /// Resets the workspace to its post-construction state (constants and
-    /// the constant-one register).
+    /// Restores a workspace bound to this compiled value to the state
+    /// [`Compiled::workspace`] creates: every register zero, then this graph's
+    /// constants and, for F32, the constant-one register. It never allocates.
+    ///
+    /// Evaluation never writes a constant or the constant-one register, so a
+    /// bound workspace needs no reset between evaluations; a reset only clears
+    /// values that earlier runs left in other registers.
+    ///
+    /// # Errors
+    /// `E-INTERFACE` when `w` is bound to another compiled value, under the same
+    /// contract as [`Compiled::evaluate_in`]; `w` is then left unchanged. A reset
+    /// never rebinds a workspace to another graph: that graph's own
+    /// [`Compiled::workspace`] provides one.
+    pub fn reset(&self, w: &mut Workspace) -> Result<(), crate::diag::Diagnostic> {
+        if let Some(refusal) = self.binding_refusal(w) {
+            return Err(refusal);
+        }
+        w.f.fill(0.0);
+        w.i.fill(0);
+        self.load_constants(w);
+        Ok(())
+    }
+
+    /// Writes this graph's constants and, for F32, the constant-one register
+    /// into a workspace bound to it.
     #[expect(
         tigerstyle::unchecked_narrowing,
         reason = "Owner: noble-maintainers; F32 constants are stored from f32::to_bits and already fit u32"
     )]
-    pub fn reset(&self, w: &mut Workspace) {
+    fn load_constants(&self, w: &mut Workspace) {
         match self.code {
             Code::F32 { .. } => {
                 for &(r, bits) in &self.consts {
@@ -361,6 +421,19 @@ impl Compiled {
                 }
             }
         }
+    }
+
+    /// The refusal of a workspace bound to another compiled value, or `None`
+    /// when `w` belongs to this one or to one of its clones.
+    fn binding_refusal(&self, w: &Workspace) -> Option<crate::diag::Diagnostic> {
+        if alloc::rc::Rc::ptr_eq(&w.owner, &self.owner) {
+            return None;
+        }
+        Some(crate::diag::Diagnostic::new(
+            crate::diag::Code::Interface,
+            crate::diag::Site::Graph,
+            "workspace belongs to another compiled graph; evaluate in this graph's own workspace",
+        ))
     }
 
     /// Evaluates with a fresh workspace.
@@ -408,7 +481,29 @@ impl Compiled {
         }
     }
 
-    /// Evaluates in a reusable workspace. Results are fresh values.
+    /// Evaluates in a reusable workspace. Results are fresh values copied out of
+    /// it.
+    ///
+    /// `w` must be bound to this compiled value: created by
+    /// [`Compiled::workspace`] on it or on one of its clones (see [`Workspace`]).
+    /// Any other workspace, including one of the same profile and size or of an
+    /// equal declared layout, is refused with `E-INTERFACE` first: before the
+    /// input preflight, before any scratch lease or caller counter is touched
+    /// and before any register is written, with no node evaluated. The refused
+    /// workspace still serves its owner unchanged. The check compares one
+    /// identity, so the valid repeated path adds no allocation and no per-node
+    /// work.
+    ///
+    /// The control's scratch limit is checked on every call, so a limit lowered
+    /// after the workspace was allocated still refuses with
+    /// `E-BUDGET-FORWARD-SCRATCH`.
+    ///
+    /// Failure atomicity: every refusal leaves the workspace and the caller's
+    /// counters unchanged. A guard failure, fuel exhaustion or cancellation may
+    /// leave the values of executed instructions in their registers. A later
+    /// successful evaluation writes each of those registers before reading it and
+    /// never writes a constant or the constant-one register, so no value of an
+    /// earlier call reaches its outputs.
     #[must_use]
     pub fn evaluate_in(
         &self,
@@ -417,6 +512,12 @@ impl Compiled {
         snapshot: Option<&crate::snapshot::ParamSnapshot>,
         control: &mut crate::eval::Control<'_>,
     ) -> crate::eval::Report {
+        if let Some(refusal) = self.binding_refusal(w) {
+            return crate::eval::Report {
+                obs: crate::eval::Obs::Refused(refusal),
+                evaluated_nodes: 0,
+            };
+        }
         let slots = match crate::eval::preflight(&self.checked, inputs, snapshot) {
             Ok(v) => v,
             Err(d) => {

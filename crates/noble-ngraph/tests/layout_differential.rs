@@ -34,6 +34,8 @@ use noble_ngraph::layout::Refusal;
 use noble_ngraph::sem::Value;
 
 mod common;
+#[path = "layout_differential/ownership.rs"]
+mod ownership;
 #[path = "layout_differential/parameters.rs"]
 mod parameters;
 #[path = "models/recurrent.rs"]
