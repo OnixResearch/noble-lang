@@ -1176,3 +1176,49 @@ assume sufficient execution budgets and no cancellation.
   proposal/check medians of 1.653/1.894 µs, input-fact medians of 2.464/2.755 µs, and 364 estimated
   structural bytes for each two-step derivation. These are descriptive shared-host timings, not a
   performance or optimization-benefit claim.
+
+# Reusable workspace binding (2026-11-16, issue #133)
+
+`Compiled::evaluate_in` and `Compiled::reset` take a caller-owned `Workspace`. Before this change the
+workspace recorded no owner: `evaluate_in` neither checked where it came from nor reloaded constants,
+and `reset` wrote into any workspace. A workspace of another graph with the same profile and register
+count therefore supplied that graph's constants, and a smaller or other-profile workspace reached an
+ordinary indexing panic.
+
+- **Contract.** [`compiled.rs`](../../crates/noble-ngraph/src/compiled.rs) binds every workspace to
+  the `Compiled::new` call that created it. The identity is a dataless shared token, held by that
+  compiled value, its clones and its workspaces, and compared by address. Another compilation is
+  another identity, even for the same checked graph. A workspace never changes its owner or size, and
+  `reset` never rebinds storage to another graph, so no rebind allocation exists to budget.
+- **Refusal.** `evaluate_in` refuses any other workspace with `E-INTERFACE` before the input
+  preflight, scratch lease, caller counters or any register write, with no node evaluated. `reset`
+  returns the same refusal and leaves the workspace unchanged. On its own workspace, `reset` restores
+  the exact post-construction registers: zero, then the constants and the F32 constant-one register.
+  The binding compares an identity, not register counts, declared layouts or digests, so equal
+  sizes, equal layouts and a colliding identity scheme are all refused alike.
+- **Failure atomicity.** Every refusal leaves the workspace and the caller's counters unchanged. A
+  guard failure, fuel exhaustion or cancellation may leave instruction values in their registers.
+  A later successful run writes each such register before reading it, and execution never writes a
+  constant or the constant-one register. The scratch limit is still checked on every call, so a limit
+  lowered after allocation refuses with `E-BUDGET-FORWARD-SCRATCH`.
+- **Concrete tests.** [`workspace_binding.rs`](../../crates/noble-ngraph/tests/layout_differential/workspace_binding.rs),
+  a module of the existing `layout_differential` target, builds checked graphs for the issue's
+  constant-only A/B pair and for same-size pairs whose declared layouts differ only in constants,
+  only in the register map, only in the input-slot map or only in the output map. It also covers
+  constant and input registers exchanged, other-profile, smaller and larger workspaces, `reset`, a
+  colliding identity scheme, clones and a recompilation, and reuse after an input refusal, a scratch
+  refusal, a guard failure, fuel exhaustion and cancellation. It checks lowered scratch limits and
+  compares fresh, reused and clone-reused runs with the reference interpreter. Reproduce with
+  `cargo test -p noble-ngraph --test layout_differential --all-features --offline --locked -- workspace_binding`.
+- **Before the fix.** A form of the module that compiles against the unfixed source (`62bc0109`)
+  failed 8 of 10 tests there. B returned A's constant as `Normal([I64(1)])`. A larger F32 workspace
+  returned 6.5 for 1.5 + 1, because the constant 5 sat in the register that graph reads as its
+  constant one. Smaller and other-profile workspaces panicked with index out of bounds, and a
+  foreign `reset` wrote 7 into the owner's constant register. Pairs differing only in register,
+  slot or output maps returned correct values by accident, because only constants and the constant
+  one are read without being written in the same call; they are refused now as well.
+- **Non-claims.** These are finite executed comparisons. They do not prove that the compiled
+  evaluator refines the reference (NG-PO-C) or that a packed layout corresponds to any Lean model.
+  The binding is an identity check, not a digest, layout or cost claim. It adds one pointer
+  comparison per call; no timing was re-measured, and the retained cost and batch receipts, whose
+  warm paths reuse their own compiled value's workspace, stay bound to their source commits.
