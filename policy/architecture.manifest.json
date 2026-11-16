@@ -8,8 +8,8 @@
       "output_format": "json",
       "source": {
         "path": "policy/architecture.ncl",
-        "blake3": "ff12ea58cc36c9ca485212eae0cc2619bdd2db21604fb677dbc42effb87500ff",
-        "bytes": 33428
+        "blake3": "d09ba2535fbc9f8fa0bb574773d1ae99ba1372f2babe648281c34f251a56263b",
+        "bytes": 34550
       },
       "dependencies": [
         {
@@ -20,8 +20,8 @@
       ],
       "output": {
         "path": "policy/architecture.json",
-        "blake3": "ca2b8f54c7e545c331e702fa82a14a844fb63f4992b3cd65f34099c2717a361a",
-        "bytes": 22681
+        "blake3": "26eb4d141abe0f6d171f1bce08a490b732549e33afc99cf3962bf7cba8033b95",
+        "bytes": 23806
       },
       "selector": "",
       "contract": "ProjectArchitecturePolicy and ProjectArchitecturePolicyRules",

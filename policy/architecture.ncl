@@ -362,6 +362,12 @@ let contracts = import "./architecture.contracts.ncl" in
         review_condition = "Reopen if any implementation acquires a capability effect, lives outside the workspace, or the core stops re-admitting every candidate.",
       },
       {
+        path = "noble_contracts::source::procedures::acceptance::EvidenceVerifier",
+        owner = "noble-maintainers",
+        reason = "EvidenceVerifier is the procedure-library owner's trust root for evidence acceptance: an open extension point with one method and no default body, whose implementations live in workspace crates (today only test fixtures) whose bodies Octet collects. The core calls it only while admitting a new claim or re-establishing a persisted receipt at load, passes the immutable subject and one claim by shared reference, copies the obligation, class, policy revision and subject identity into each receipt itself, refuses malformed attestations, and never calls it during inspection. It grants the verifier no capability or authority beyond accepting a claim.",
+        review_condition = "Reopen if an implementation acquires a capability effect or lives outside the workspace, the trait gains a default or additional method, or the core calls it during inspection or takes any receipt field other than verifier, toolchain, command and input digests and outcome from it.",
+      },
+      {
         path = "noble_ngraph::grad::Real",
         owner = "noble-maintainers",
         reason = "The trait and every implementation are declared in noble-ngraph; the dynamic call set is closed over those local implementation bodies, whose effect facts are collected separately.",
