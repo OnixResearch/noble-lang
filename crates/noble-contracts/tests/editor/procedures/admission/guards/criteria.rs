@@ -1,3 +1,4 @@
+use super::super::support::verifier::OwnerLedger;
 use super::*;
 
 type Case = (&'static str, ProcedureRecord, RefusalKind, &'static str);

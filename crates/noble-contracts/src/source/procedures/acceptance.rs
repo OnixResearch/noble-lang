@@ -246,28 +246,25 @@ pub(super) fn has_verified_proof(
     })
 }
 
-fn claim_position(
-    record: &ProcedureRecord,
+/// The retained claim a receipt answers, found by its exact claim digest.
+fn cited_claim<'a>(
+    record: &'a ProcedureRecord,
     receipt: &VerifiedEvidence,
     index: u32,
-) -> Result<usize, Refusal> {
-    let mut found = None;
-    for (position, claim) in record.evidence.iter().enumerate() {
+) -> Result<&'a EvidenceRecord, Refusal> {
+    for claim in &record.evidence {
         if persistence::claim_digest(claim)? == receipt.claim_digest {
-            found = Some(position);
-            break;
+            return Ok(claim);
         }
     }
-    found.ok_or_else(|| {
-        Refusal::at(
-            RefusalKind::Invalid,
-            Diagnostic {
-                field: "verified_evidence.claim_digest",
-                message: "a verification receipt must answer a retained claim; deleting the claim invalidates it",
-            },
-            index,
-        )
-    })
+    Err(Refusal::at(
+        RefusalKind::Invalid,
+        Diagnostic {
+            field: "verified_evidence.claim_digest",
+            message: "a verification receipt must answer a retained claim; deleting the claim invalidates it",
+        },
+        index,
+    ))
 }
 
 /// Consistency of retained receipts: each binds this exact subject, answers
@@ -296,19 +293,7 @@ pub(super) fn validate(record: &ProcedureRecord) -> Result<(), Refusal> {
                 position,
             ));
         }
-        let claim = record
-            .evidence
-            .get(claim_position(record, receipt, position)?)
-            .ok_or_else(|| {
-                Refusal::at(
-                    RefusalKind::Internal,
-                    Diagnostic {
-                        field: "verified_evidence.claim_digest",
-                        message: "cited claim disappeared",
-                    },
-                    position,
-                )
-            })?;
+        let claim = cited_claim(record, receipt, position)?;
         let is_answer = receipt.obligation == claim.obligation
             && receipt.class == claim.class
             && receipt.policy_revision == claim.policy_revision;
@@ -326,6 +311,8 @@ pub(super) fn validate(record: &ProcedureRecord) -> Result<(), Refusal> {
             ));
         }
         receipt.check_shape(position)?;
+        debug_assert_eq!(receipt.class, claim.class);
+        debug_assert_eq!(receipt.policy_revision, claim.policy_revision);
     }
     Ok(())
 }
@@ -370,30 +357,20 @@ pub(super) fn accept(
 /// Re-establish every persisted receipt of `record` through the loading
 /// owner's verifier. A persisted receipt is never trusted from bytes: absent a
 /// verifier, or when the verifier's answer differs, load refuses `invalid`.
-/// Receipts already re-established for the same subject and claim are reused.
+/// Receipts already re-established for the same subject and claim (an earlier
+/// generation retains the same receipt) are reused from `confirmed`, which is
+/// returned extended with this record's receipts.
 pub(super) fn confirm(
     verifier: Option<&dyn EvidenceVerifier>,
     record: &ProcedureRecord,
-    confirmed: &mut Vec<VerifiedEvidence>,
-) -> Result<(), Refusal> {
+    mut confirmed: Vec<VerifiedEvidence>,
+) -> Result<Vec<VerifiedEvidence>, Refusal> {
     for (index, receipt) in record.verified.iter().enumerate() {
         if confirmed.contains(receipt) {
             continue;
         }
         let position = index as u32;
-        let claim = record
-            .evidence
-            .get(claim_position(record, receipt, position)?)
-            .ok_or_else(|| {
-                Refusal::at(
-                    RefusalKind::Internal,
-                    Diagnostic {
-                        field: "verified_evidence.claim_digest",
-                        message: "cited claim disappeared",
-                    },
-                    position,
-                )
-            })?;
+        let claim = cited_claim(record, receipt, position)?;
         let subject = VerificationSubject { record };
         let reestablished = match verifier.and_then(|owner| owner.verify(subject, claim)) {
             Some(attestation) => Some(VerifiedEvidence::mint(record, claim, attestation)?),
@@ -409,7 +386,9 @@ pub(super) fn confirm(
                 position,
             ));
         }
+        debug_assert_eq!(receipt.subject_binding, record.procedure_id);
+        debug_assert_eq!(receipt.obligation, claim.obligation);
         confirmed.push(receipt.clone());
     }
-    Ok(())
+    Ok(confirmed)
 }

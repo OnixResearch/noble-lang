@@ -4,7 +4,7 @@
 use super::*;
 
 #[test]
-fn reload_reestablishes_every_receipt_and_reproduces_all_views() -> Result<(), String> {
+fn restart_reestablishes_every_receipt_and_reproduces_all_views() -> Result<(), String> {
     let fixture = fixture()?;
     let bytes = fixture
         .library

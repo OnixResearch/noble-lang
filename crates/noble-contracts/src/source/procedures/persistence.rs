@@ -1942,7 +1942,7 @@ impl ProcedureLibrary {
                 ));
             }
             for record in &snapshot.records {
-                super::acceptance::confirm(verifier.as_deref(), record, &mut confirmed)?;
+                confirmed = super::acceptance::confirm(verifier.as_deref(), record, confirmed)?;
             }
         }
         let last_generation_index = generations.len().checked_sub(1).ok_or_else(|| {
