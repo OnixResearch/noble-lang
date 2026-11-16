@@ -151,9 +151,13 @@ key fixtures above additionally pin their distinct production domains and field 
 The cache bounds entry count, variants per original recipe, manifest bytes, retained canonical
 graph/source/key/provenance bytes, lookup candidates examined and eviction candidates examined.
 Scratch manifests exceeding their bound bypass caching before key construction; insertion that
-cannot fit evicts bounded old entries or declines insertion. Returned graph owners are independent
-of eviction. Cache-hit admission and historical specialization/build/execution costs are separate
-stages. A hit does not claim that its work or resource use equals the first generation's.
+cannot fit evicts bounded old entries or declines insertion. Publication is all-or-nothing (#134):
+the complete eviction plan (oldest same-recipe variants, then oldest survivors) is computed without
+mutation, and a plan that exceeds the eviction-work bound or runs out of victims declines the
+insertion without evicting anything, so a declined publication never destroys reuse it did not
+replace. Returned graph owners are independent of eviction. Cache-hit admission and historical
+specialization/build/execution costs are separate stages. A hit does not claim that its work or
+resource use equals the first generation's.
 
 The differential receipt reports cache-disabled, cold-miss and warm-hit execution agreement, with
 lookup, specialization, source emission, current admission, cache publication, backend compilation,
