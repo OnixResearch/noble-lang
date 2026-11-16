@@ -810,6 +810,106 @@ theorem BytePlan.decode_emit (plan : BytePlan)
     publicationSound, BytePlan.readWord_emitWord, valid.arena,
     valid.scratch, valid.worklist]
 
+/-- A little-endian word of `size` bytes has exactly `size` bytes. -/
+private theorem emitWord_length : ∀ (size value : Nat), (emitWord size value).length = size
+  | 0, _ => rfl
+  | size + 1, value => by
+    simp [emitWord, emitWord_length size (value / 256)]
+
+/-- An emitted queued pair always occupies 24 bytes. -/
+private theorem emitPair_length (pair : Nat × Nat × Nat × Nat) :
+    (emitPair pair).length = 24 := by
+  simp [emitPair, emitWord_length]
+
+/-- An emitted boundary occupies at most 11 bytes. -/
+private theorem emitBoundary_length_le
+    (boundary : (Nat × Nat) × (Nat × Nat × Nat)) :
+    (emitBoundary boundary).length ≤ 11 := by
+  rcases boundary with ⟨⟨slot, port⟩, tag, index, endpointPort⟩
+  rcases tag with _ | _ | tag <;>
+    simp [emitBoundary, emitEndpoint, emitWord_length]
+
+/-- An emitted result occupies 18 bytes plus one byte per result port. -/
+private theorem emitResult_length
+    (result : Bool × Nat × NetSym × Nat × List (Option Nat)) :
+    (emitResult result).length = 18 + result.2.2.2.2.length := by
+  rcases result with ⟨fresh, slot, symbol, donor, ports⟩
+  rcases hsymbol : emitSymbol symbol with ⟨tag, payload⟩
+  simp [emitResult, hsymbol, emitWord_length]
+  omega
+
+/-- An emitted connection write always occupies three bytes. -/
+private theorem emitWrite_length (write : Nat × Nat × Nat) :
+    (emitWrite write).length = 3 := by
+  simp [emitWrite]
+
+/-- A flattened list of at most `bound`-element pieces has at most
+`items.length * bound` elements. -/
+private theorem flatMap_length_le {α β : Type} (items : List α) (f : α → List β)
+    (bound : Nat) (h : ∀ item ∈ items, (f item).length ≤ bound) :
+    (items.flatMap f).length ≤ items.length * bound := by
+  induction items with
+  | nil => simp
+  | cons item rest ih =>
+    have hhead := h item (by simp)
+    have hrest := ih (fun other hother => h other (by simp [hother]))
+    simp only [List.flatMap_cons, List.length_append, List.length_cons, Nat.succ_mul]
+    omega
+
+/-- **Admissibility from field bounds.** The total-length field of
+`BytePlan.Admissible` follows from the others: with at most two entries in
+every counted field and three ports per result, an emitted image has at most
+175 bytes, below the 256-byte version-one bound. -/
+theorem BytePlan.admissible_of_bounds (plan : BytePlan)
+    (hactionFirst : plan.action.1.toNat ≤ 1)
+    (hactionSecond : plan.action.2.toNat ≤ 1)
+    (hpair : plan.pair.1 < 256 ^ 4 ∧ plan.pair.2.1 < 256 ^ 8 ∧
+      plan.pair.2.2.1 < 256 ^ 4 ∧ plan.pair.2.2.2 < 256 ^ 8)
+    (hboundaries : plan.boundaries.length ≤ 2)
+    (hboundariesValid : ∀ boundary ∈ plan.boundaries,
+      boundary.1.1 < 256 ^ 4 ∧ boundary.1.2 < UInt8.size ∧
+      ((boundary.2.1 = 0 ∧ boundary.2.2.1 < 256 ^ 4 ∧ boundary.2.2.2 < UInt8.size) ∨
+        (boundary.2.1 = 1 ∧ boundary.2.2.1 < 256 ^ 4 ∧ boundary.2.2.2 = 0)))
+    (hresults : plan.results.length ≤ 2)
+    (hresultsValid : ∀ result ∈ plan.results,
+      result.2.1 < 256 ^ 4 ∧ result.2.2.2.1 < 256 ^ 4 ∧
+      result.2.2.2.2.length = 3 ∧
+      ∀ port ∈ result.2.2.2.2, ∀ value, port = some value → value < 255)
+    (hwrites : plan.writes.length ≤ 2)
+    (hwritesValid : ∀ write ∈ plan.writes,
+      write.1 < UInt8.size ∧ write.2.1 < UInt8.size ∧ write.2.2 < UInt8.size)
+    (hexternal : plan.externalWrites.length ≤ 2)
+    (hexternalValid : ∀ write ∈ plan.externalWrites,
+      write.1 < UInt8.size ∧ write.2.1 < UInt8.size ∧ write.2.2 < UInt8.size)
+    (harena : plan.arenaReservation < 256 ^ 4)
+    (hscratch : plan.scratchReservation < 256 ^ 4)
+    (hworklist : plan.worklistReservation < 256 ^ 4)
+    (hpublications : plan.publications.length ≤ 2)
+    (hpublicationsValid : ∀ pair ∈ plan.publications,
+      pair.1 < 256 ^ 4 ∧ pair.2.1 < 256 ^ 8 ∧
+        pair.2.2.1 < 256 ^ 4 ∧ pair.2.2.2 < 256 ^ 8) :
+    plan.Admissible := by
+  have hb := flatMap_length_le plan.boundaries emitBoundary 11
+    (fun boundary _ => emitBoundary_length_le boundary)
+  have hr := flatMap_length_le plan.results emitResult 21 (by
+    intro result hmem
+    have hports := (hresultsValid result hmem).2.2.1
+    rw [emitResult_length]
+    omega)
+  have hw := flatMap_length_le plan.writes emitWrite 3
+    (fun write _ => Nat.le_of_eq (emitWrite_length write))
+  have hx := flatMap_length_le plan.externalWrites emitWrite 3
+    (fun write _ => Nat.le_of_eq (emitWrite_length write))
+  have hp := flatMap_length_le plan.publications emitPair 24
+    (fun pair _ => Nat.le_of_eq (emitPair_length pair))
+  have hsize : plan.emit.length ≤ 256 := by
+    simp only [BytePlan.emit, List.length_append, List.length_cons, List.length_nil,
+      emitPair_length, emitWord_length]
+    omega
+  exact ⟨hsize, hactionFirst, hactionSecond, hpair, hboundaries, hboundariesValid,
+    hresults, hresultsValid, hwrites, hwritesValid, hexternal, hexternalValid,
+    harena, hscratch, hworklist, hpublications, hpublicationsValid⟩
+
 /-- Every accepted byte plan has the exact version-one magic and version header. -/
 theorem BytePlan.decode_header {bytes : List UInt8} {plan : BytePlan}
     (h : BytePlan.decode bytes = some plan) :
@@ -1039,7 +1139,7 @@ structure PhysicalState where
 
 /-- Retarget a Rust-indexed output while retaining the abstract free-port
 label. Out-of-range indices refuse instead of creating a new output. -/
-private def retargetOutputList : Nat → (Nat × Nat) → List PhysicalOutput →
+def retargetOutputList : Nat → (Nat × Nat) → List PhysicalOutput →
     Option (List PhysicalOutput)
   | _, _, [] => none
   | 0, target, output :: rest =>
@@ -1051,6 +1151,79 @@ def PhysicalState.retargetOutput (state : PhysicalState)
     (index : Nat) (target : Nat × Nat) : Option PhysicalState :=
   (retargetOutputList index target state.outputs).map fun outputs =>
     { state with outputs }
+
+/-- An existing output index can always be retargeted; missing indices are
+the only failure of this single table operation. -/
+theorem PhysicalState.retargetOutput_success
+    {state : PhysicalState} {index : Nat} {old : PhysicalOutput}
+    (target : Nat × Nat)
+    (houtput : state.outputs[index]? = some old) :
+    ∃ next, state.retargetOutput index target = some next := by
+  have hlist (outputs : List PhysicalOutput) (index : Nat)
+      (h : outputs[index]? = some old) :
+      ∃ next, retargetOutputList index target outputs = some next := by
+    induction outputs generalizing index with
+    | nil => simp at h
+    | cons output rest ih =>
+      cases index with
+      | zero => exact ⟨{output with target} :: rest, rfl⟩
+      | succ n =>
+        have hrest : rest[n]? = some old := by simpa using h
+        obtain ⟨updated, hu⟩ := ih n hrest
+        exact ⟨output :: updated, by simp [retargetOutputList, hu]⟩
+  obtain ⟨updated, hu⟩ := hlist state.outputs index houtput
+  exact ⟨{state with outputs := updated}, by
+    simp [PhysicalState.retargetOutput, hu]⟩
+
+/-- Retargeting an output never mutates any arena slot or its generation. -/
+theorem PhysicalState.retargetOutput_preserves_slots
+    {state next : PhysicalState} {index : Nat} {target : Nat × Nat}
+    (h : state.retargetOutput index target = some next) :
+    next.slots = state.slots := by
+  unfold PhysicalState.retargetOutput at h
+  cases ho : retargetOutputList index target state.outputs with
+  | none => simp [ho] at h
+  | some outputs =>
+    simp [ho] at h
+    cases h
+    rfl
+
+/-- A successful output-table retarget changes the selected entry's target
+to the requested physical result port, even for nonzero output indices. -/
+theorem PhysicalState.retargetOutput_target
+    {state next : PhysicalState} {index : Nat}
+    {target : Nat × Nat} {old : PhysicalOutput}
+    (houtput : state.outputs[index]? = some old)
+    (h : state.retargetOutput index target = some next) :
+    (next.outputs[index]?).map PhysicalOutput.target = some target := by
+  have hlist {outputs updated : List PhysicalOutput} {index : Nat}
+      {old : PhysicalOutput} {target : Nat × Nat}
+      (hlookup : outputs[index]? = some old)
+      (hupdate : retargetOutputList index target outputs = some updated) :
+      (updated[index]?).map PhysicalOutput.target = some target := by
+    induction outputs generalizing index updated with
+    | nil => simp at hlookup
+    | cons output rest ih =>
+      cases index with
+      | zero =>
+        simp [retargetOutputList] at hupdate
+        cases hupdate
+        rfl
+      | succ n =>
+        have hrest : rest[n]? = some old := by simpa using hlookup
+        cases hr : retargetOutputList n target rest with
+        | none => simp [retargetOutputList, hr] at hupdate
+        | some updatedRest =>
+          simp [retargetOutputList, hr] at hupdate
+          cases hupdate
+          simpa using ih hrest hr
+  unfold PhysicalState.retargetOutput at h
+  cases hu : retargetOutputList index target state.outputs with
+  | none => simp [hu] at h
+  | some updated =>
+    simp [hu] at h
+    cases h
+    exact hlist houtput hu
 
 private theorem retargetOutputList_labels (outputs : List PhysicalOutput)
     (index : Nat) (target : Nat × Nat) (next : List PhysicalOutput)
@@ -1088,6 +1261,14 @@ theorem PhysicalState.writeSlot_frame {state : PhysicalState}
     (state.writeSlot index replacement).slots[other]? = state.slots[other]? := by
   simp [PhysicalState.writeSlot, Array.getElem?_setIfInBounds_ne h]
 
+/-- Updating an existing physical slot stores exactly the replacement. -/
+theorem PhysicalState.writeSlot_self
+    {state : PhysicalState} {index : Nat} {old replacement : PhysicalSlot}
+    (hslot : state.slots[index]? = some old) :
+    (state.writeSlot index replacement).slots[index]? = some replacement := by
+  obtain ⟨hi, _⟩ := getElem?_eq_some_iff.mp hslot
+  simp [PhysicalState.writeSlot, hi]
+
 /-- A fresh physical slot is appended, without changing any prior slot. -/
 def PhysicalState.appendSlot (state : PhysicalState)
     (fresh : PhysicalSlot) : PhysicalState :=
@@ -1112,7 +1293,7 @@ theorem PhysicalState.logicalPort_writeSlot_away {state : PhysicalState}
   simp [PhysicalState.logicalPort, PhysicalState.writeSlot,
     Array.getElem?_setIfInBounds_ne h]
 
-private def PhysicalState.portWires (state : PhysicalState) (logical : Id) :
+def PhysicalState.portWires (state : PhysicalState) (logical : Id) :
     Nat → List (Option (Nat × Nat)) → Std.HashMap Port Port → Std.HashMap Port Port
   | _, [], wires => wires
   | index, target :: rest, wires =>
@@ -1156,9 +1337,152 @@ def PhysicalState.logicalPair (state : PhysicalState)
     let (right, _) ← second.agent
     some (left, right)
 
+/-- A pending generation may be current or stale, but never from the future.
+Both old endpoints must still name slots, including retired free slots. -/
+def PhysicalState.queuedGenerationsBound (state : PhysicalState) : Bool :=
+  state.work.all fun pair =>
+    ((state.slots[pair.first]?).map fun slot =>
+      decide (pair.firstGeneration.toNat ≤ slot.generation.toNat)).getD false &&
+    ((state.slots[pair.second]?).map fun slot =>
+      decide (pair.secondGeneration.toNat ≤ slot.generation.toNat)).getD false
+
+/-- A freshly constructed arena with no queued entries meets the generation
+bound regardless of its slot layout or current generation values. -/
+theorem PhysicalState.empty_work_queued_generations_bound
+    {state : PhysicalState} (hwork : state.work = []) :
+    state.queuedGenerationsBound = true := by
+  simp [PhysicalState.queuedGenerationsBound, hwork]
+
+/-- The Boolean legal-state condition is exactly a bound on both concrete
+array lookups of every old queued entry, including stale ones. -/
+theorem PhysicalState.queuedGenerationsBound_iff
+    {state : PhysicalState} :
+    state.queuedGenerationsBound = true ↔
+      ∀ pair ∈ state.work,
+        (∃ first, state.slots[pair.first]? = some first ∧
+          pair.firstGeneration.toNat ≤ first.generation.toNat) ∧
+        (∃ second, state.slots[pair.second]? = some second ∧
+          pair.secondGeneration.toNat ≤ second.generation.toNat) := by
+  simp only [PhysicalState.queuedGenerationsBound, List.all_eq_true]
+  constructor
+  · intro h pair hp
+    have hb := h pair hp
+    cases hf : state.slots[pair.first]? with
+    | none => simp [hf] at hb
+    | some first =>
+      cases hs : state.slots[pair.second]? with
+      | none => simp [hs] at hb
+      | some second =>
+        simp [hf, hs] at hb
+        exact ⟨⟨first, rfl, hb.1⟩, ⟨second, rfl, hb.2⟩⟩
+  · intro h pair hp
+    obtain ⟨⟨first, hf, hfirst⟩, ⟨second, hs, hsecond⟩⟩ := h pair hp
+    simp [hf, hs, hfirst, hsecond]
+
+/-- Updating an existing slot without decreasing its generation cannot
+turn an old bounded queued reference into a future-generation reference. -/
+theorem PhysicalState.queuedGenerationsBound_writeSlot_mono
+    {state : PhysicalState} {index : Nat} {old replacement : PhysicalSlot}
+    (hbound : state.queuedGenerationsBound = true)
+    (hslot : state.slots[index]? = some old)
+    (hgen : old.generation.toNat ≤ replacement.generation.toNat) :
+    (state.writeSlot index replacement).queuedGenerationsBound = true := by
+  apply PhysicalState.queuedGenerationsBound_iff.mpr
+  intro pair hp
+  obtain ⟨⟨first, hf, hfirst⟩, ⟨second, hs, hsecond⟩⟩ :=
+    PhysicalState.queuedGenerationsBound_iff.mp hbound pair
+      (by simpa [PhysicalState.writeSlot] using hp)
+  have boundAt (slot : Nat) (generation : UInt64) (source : PhysicalSlot)
+      (hsource : state.slots[slot]? = some source)
+      (hle : generation.toNat ≤ source.generation.toNat) :
+      ∃ target, (state.writeSlot index replacement).slots[slot]? =
+        some target ∧ generation.toNat ≤ target.generation.toNat := by
+    by_cases he : index = slot
+    · have hin : state.slots[slot]? = some old := by
+        simpa [he] using hslot
+      have same : source = old := Option.some.inj (hsource.symm.trans hin)
+      subst source
+      exact ⟨replacement,
+        by simpa [he] using (PhysicalState.writeSlot_self
+          (replacement := replacement) hslot),
+        by omega⟩
+    · exact ⟨source, (PhysicalState.writeSlot_frame he).trans hsource,
+        hle⟩
+  exact ⟨boundAt pair.first pair.firstGeneration first hf hfirst,
+    boundAt pair.second pair.secondGeneration second hs hsecond⟩
+
+/-- A fresh slot has no old queued references; append preserves every
+bounded old endpoint without requiring the new slot's generation to be zero. -/
+theorem PhysicalState.queuedGenerationsBound_appendSlot
+    {state : PhysicalState} {fresh : PhysicalSlot}
+    (hbound : state.queuedGenerationsBound = true) :
+    (state.appendSlot fresh).queuedGenerationsBound = true := by
+  apply PhysicalState.queuedGenerationsBound_iff.mpr
+  intro pair hp
+  obtain ⟨⟨first, hf, hfirst⟩, ⟨second, hs, hsecond⟩⟩ :=
+    PhysicalState.queuedGenerationsBound_iff.mp hbound pair
+      (by simpa [PhysicalState.appendSlot] using hp)
+  have hfb : pair.first < state.slots.size := (getElem?_eq_some_iff.mp hf).1
+  have hsb : pair.second < state.slots.size := (getElem?_eq_some_iff.mp hs).1
+  exact ⟨⟨first, (PhysicalState.appendSlot_frame hfb).trans hf,
+      hfirst⟩,
+    ⟨second, (PhysicalState.appendSlot_frame hsb).trans hs, hsecond⟩⟩
+
+/-- The physical headroom check makes an increment genuinely monotone;
+without it the fixed-width generation wraps and old references can revive. -/
+theorem PhysicalState.generation_increment_mono {generation : UInt64}
+    (hroom : generation ≠ UInt64.ofNat (UInt64.size - 1)) :
+    generation.toNat ≤ (generation + 1).toNat := by
+  have hmax : generation.toNat ≠ UInt64.size - 1 := by
+    intro he
+    apply hroom
+    rw [← UInt64.ofNat_toNat (x := generation), he]
+  have hlt : generation.toNat + 1 < UInt64.size := by
+    have hb := UInt64.toNat_lt generation
+    have hsize : UInt64.size = 2 ^ 64 := rfl
+    omega
+  rw [UInt64.toNat_add, UInt64.toNat_ofNat]
+  simp only [Nat.one_mod]
+  rw [Nat.mod_eq_of_lt (by simpa [UInt64.size] using hlt)]
+  omega
+
+/-- Output retargeting does not alter slot generations or pending entries. -/
+theorem PhysicalState.retargetOutput_preserves_queued_generations_bound
+    {state next : PhysicalState} {index : Nat} {target : Nat × Nat}
+    (hbound : state.queuedGenerationsBound = true)
+    (h : state.retargetOutput index target = some next) :
+    next.queuedGenerationsBound = true := by
+  unfold PhysicalState.retargetOutput at h
+  cases ho : retargetOutputList index target state.outputs with
+  | none => simp [ho] at h
+  | some outputs =>
+    simp [ho] at h
+    cases h
+    simpa [PhysicalState.queuedGenerationsBound] using hbound
+
+/-- A dead endpoint cannot be decoded as a current queued agent pair,
+regardless of whether its stored generation matches the queue entry. -/
+theorem PhysicalState.logicalPair_dead_endpoint
+    {state : PhysicalState} {pair : PhysicalPair}
+    (hdead :
+      (state.slots[pair.first]?).bind PhysicalSlot.agent = none ∨
+        (state.slots[pair.second]?).bind PhysicalSlot.agent = none) :
+    state.logicalPair pair = none := by
+  cases hf : state.slots[pair.first]? with
+  | none => simp [PhysicalState.logicalPair, hf]
+  | some first =>
+    cases hs : state.slots[pair.second]? with
+    | none => simp [PhysicalState.logicalPair, hs]
+    | some second =>
+      rcases hdead with hfirst | hsecond
+      · have ha : first.agent = none := by simpa [hf] using hfirst
+        simp [PhysicalState.logicalPair, hf, hs, ha]
+      · have ha : second.agent = none := by simpa [hs] using hsecond
+        simp [PhysicalState.logicalPair, hf, hs, ha]
+
 /-- The vendored inets worklist records both directed principal wires,
 whereas Rust queues each canonical physical pair only once. -/
-private def PhysicalState.pairOrientations (state : PhysicalState)
+def PhysicalState.pairOrientations (state : PhysicalState)
     (pair : PhysicalPair) : List (Id × Id) :=
   match state.logicalPair pair with
   | none => []
@@ -1211,6 +1535,26 @@ tagged pairs, without changing slots, wires or outputs. -/
 def PhysicalState.appendPublications (state : PhysicalState)
     (published : List PhysicalPair) : PhysicalState :=
   { state with work := state.work ++ published }
+
+/-- A newly queued pair records generations no greater than its concrete
+endpoint generations, leaving all earlier queued bounds intact. -/
+theorem PhysicalState.append_current_pair_preserves_queued_generations_bound
+    {state : PhysicalState} {pair : PhysicalPair}
+    {first second : PhysicalSlot}
+    (hbound : state.queuedGenerationsBound = true)
+    (hf : state.slots[pair.first]? = some first)
+    (hs : state.slots[pair.second]? = some second)
+    (hfg : pair.firstGeneration.toNat ≤ first.generation.toNat)
+    (hsg : pair.secondGeneration.toNat ≤ second.generation.toNat) :
+    (state.appendPublications [pair]).queuedGenerationsBound = true := by
+  apply PhysicalState.queuedGenerationsBound_iff.mpr
+  intro queued hq
+  have hmem : queued ∈ state.work ∨ queued = pair := by
+    simpa [PhysicalState.appendPublications] using hq
+  rcases hmem with hold | hnew
+  · exact PhysicalState.queuedGenerationsBound_iff.mp hbound queued hold
+  · subst queued
+    exact ⟨⟨first, hf, hfg⟩, ⟨second, hs, hsg⟩⟩
 
 theorem PhysicalState.appendPublications_project_work
     (state : PhysicalState) (published : List PhysicalPair) :
@@ -1286,7 +1630,7 @@ theorem PhysicalState.appendPublications_project_net
 
 /-- Turn one result-port boundary reference into its physical peer address.
 Output boundaries are represented by the separate mutable output table. -/
-private def BytePlan.resultTarget (plan : BytePlan) :
+def BytePlan.resultTarget (plan : BytePlan) :
     Option Nat → Option (Option (Nat × Nat))
   | none => some none
   | some index => do
@@ -1296,11 +1640,33 @@ private def BytePlan.resultTarget (plan : BytePlan) :
       | (1, _, 0) => some none
       | _ => none
 
+/-- A one-result image whose first boundary names an output resolves its
+single requested port to the output table, not a physical peer slot. -/
+theorem BytePlan.single_output_result_ports
+    {plan : BytePlan}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)} {output : Nat}
+    (hbound : plan.boundaries[0]? = some boundary)
+    (hkind : boundary.2 = (1, output, 0)) :
+    ([some 0, none, none] : List (Option Nat)).mapM plan.resultTarget =
+      some [none, none, none] := by
+  simp [BytePlan.resultTarget, hbound, hkind]
+
+/-- One result port connected to a live external peer resolves to the
+captured physical slot/port, unlike an output-table boundary. -/
+theorem BytePlan.single_peer_result_ports
+    {plan : BytePlan}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)} {peer port : Nat}
+    (hbound : plan.boundaries[0]? = some boundary)
+    (hkind : boundary.2 = (0, peer, port)) :
+    ([some 0, none, none] : List (Option Nat)).mapM plan.resultTarget =
+      some [some (peer, port), none, none] := by
+  simp [BytePlan.resultTarget, hbound, hkind]
+
 /-- Install one checked result into its declared physical slot. A freshly
 allocated result must occupy the next slot; reuse must name a live slot with
 room to increment its generation. The new logical identity is the inets
 rule-slot identity, not the reused physical index. -/
-private def PhysicalState.installResult (state : PhysicalState)
+def PhysicalState.installResult (state : PhysicalState)
     (plan : BytePlan) (logical : Id)
     (result : Bool × Nat × NetSym × Nat × List (Option Nat)) :
     Option PhysicalState := do
@@ -1325,9 +1691,149 @@ private def PhysicalState.installResult (state : PhysicalState)
           queuedGeneration := none
           ports })
 
+/-- A generated result installs whenever its donor is live, every declared
+port resolves, and the selected fresh/reused slot has the exact physical
+capacity and generation headroom. No semantic post-state is assumed. -/
+theorem PhysicalState.installResult_success
+    {state : PhysicalState} {plan : BytePlan} {logical : Id}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    {donor : PhysicalSlot}
+    {ports : List (Option (Nat × Nat))}
+    (hdonor : state.slots[result.2.2.2.1]? = some donor)
+    (hlive : donor.agent.isSome = true)
+    (hports : result.2.2.2.2.mapM plan.resultTarget = some ports)
+    (hfresh : result.1 = true → result.2.1 = state.slots.size)
+    (hreuse : result.1 = false →
+      ∃ old, state.slots[result.2.1]? = some old ∧
+        old.agent.isSome = true ∧
+        old.generation ≠ UInt64.ofNat (UInt64.size - 1)) :
+    ∃ next, state.installResult plan logical result = some next := by
+  cases ha : donor.agent with
+  | none => simp [ha] at hlive
+  | some owner =>
+    cases hr : result.1 with
+    | true =>
+      have hindex := hfresh hr
+      simp [PhysicalState.installResult, hdonor, ha,
+        hports, hr, hindex]
+    | false =>
+      obtain ⟨old, ho, hold, hroom⟩ := hreuse hr
+      cases hb : old.agent with
+      | none => simp [hb] at hold
+      | some live =>
+        simp [PhysicalState.installResult, hdonor, ha,
+          hports, hr, ho, hb]
+        simpa using hroom
+
+/-- Installing a physical result changes slots, not existing output targets.
+This allows the emitted OP1 external output write to inspect the same
+captured target immediately after result installation. -/
+theorem PhysicalState.installResult_preserves_outputs
+    {state next : PhysicalState} {plan : BytePlan} {logical : Id}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    (h : state.installResult plan logical result = some next) :
+    next.outputs = state.outputs := by
+  unfold PhysicalState.installResult at h
+  cases hd : state.slots[result.2.2.2.1]? with
+  | none => simp [hd] at h
+  | some donor =>
+    cases ha : donor.agent with
+    | none => simp [hd, ha] at h
+    | some _ =>
+      cases hp : result.2.2.2.2.mapM plan.resultTarget with
+      | none => simp [hd, hp] at h
+      | some ports =>
+        cases hr : result.1 with
+        | true =>
+          simp [hd, ha, hp, hr, PhysicalState.appendSlot] at h
+          rcases h with ⟨_, heq⟩
+          exact (congrArg PhysicalState.outputs heq).symm
+        | false =>
+          cases ho : state.slots[result.2.1]? with
+          | none => simp [hd, hp, hr, ho] at h
+          | some old =>
+            simp [hd, ha, hp, hr, ho, PhysicalState.writeSlot] at h
+            rcases h with ⟨_, heq⟩
+            exact (congrArg PhysicalState.outputs heq).symm
+
+/-- Every successful result installation increments a reused generation
+without wrap or appends a new slot, so old pending generations stay bounded. -/
+theorem PhysicalState.installResult_preserves_queued_generations_bound
+    {state next : PhysicalState} {plan : BytePlan} {logical : Id}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    (hbound : state.queuedGenerationsBound = true)
+    (h : state.installResult plan logical result = some next) :
+    next.queuedGenerationsBound = true := by
+  unfold PhysicalState.installResult at h
+  cases hd : state.slots[result.2.2.2.1]? with
+  | none => simp [hd] at h
+  | some donor =>
+    cases ha : donor.agent with
+    | none => simp [hd, ha] at h
+    | some _ =>
+      cases hp : result.2.2.2.2.mapM plan.resultTarget with
+      | none => simp [hd, hp] at h
+      | some ports =>
+        cases hr : result.1 with
+        | true =>
+          simp [hd, ha, hp, hr] at h
+          rcases h with ⟨_, heq⟩
+          rw [← heq]
+          exact PhysicalState.queuedGenerationsBound_appendSlot hbound
+        | false =>
+          cases ho : state.slots[result.2.1]? with
+          | none => simp [hd, hp, hr, ho] at h
+          | some old =>
+            cases hb : old.agent with
+            | none => simp [hd, hp, hr, ho, hb] at h
+            | some _ =>
+              have hroom : old.generation ≠
+                  UInt64.ofNat (UInt64.size - 1) := by
+                intro he
+                simp [hd, hp, hr, ho, hb, he] at h
+              simp [hd, hp, hr, ho, hb] at h
+              rw [← h.2.2]
+              exact PhysicalState.queuedGenerationsBound_writeSlot_mono
+                hbound ho (PhysicalState.generation_increment_mono hroom)
+
+/-- Installing a result cannot mutate an existing external peer whose
+physical slot is distinct from the result destination. -/
+theorem PhysicalState.installResult_external_slot_frame
+    {state next : PhysicalState} {plan : BytePlan} {logical : Id}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    {peer : Nat}
+    (h : state.installResult plan logical result = some next)
+    (hpeer : peer < state.slots.size)
+    (haway : result.2.1 ≠ peer) :
+    next.slots[peer]? = state.slots[peer]? := by
+  unfold PhysicalState.installResult at h
+  cases hd : state.slots[result.2.2.2.1]? with
+  | none => simp [hd] at h
+  | some donor =>
+    cases ha : donor.agent with
+    | none => simp [hd, ha] at h
+    | some _ =>
+      cases hp : result.2.2.2.2.mapM plan.resultTarget with
+      | none => simp [hd, hp] at h
+      | some ports =>
+        cases hr : result.1 with
+        | true =>
+          simp [hd, ha, hp, hr] at h
+          rcases h with ⟨_, heq⟩
+          rw [← heq]
+          exact PhysicalState.appendSlot_frame hpeer
+        | false =>
+          cases ho : state.slots[result.2.1]? with
+          | none => simp [hd, hp, hr, ho] at h
+          | some old =>
+            simp [hd, ha, hp, hr, ho] at h
+            rcases h with ⟨_, heq⟩
+            rw [← heq]
+            exact PhysicalState.writeSlot_frame haway
+
 /-- Decode each selected rule slot's stable child identity and install its
 physical result image in the same order as the checked Rust executor. -/
-private def PhysicalState.installResults (plan : BytePlan)
+def PhysicalState.installResults (plan : BytePlan)
     (left right : Id) (rhs : XRhs NetSym) :
     Nat → PhysicalState → List (Bool × Nat × NetSym × Nat × List (Option Nat)) →
       Option PhysicalState
@@ -1338,9 +1844,66 @@ private def PhysicalState.installResults (plan : BytePlan)
         let installed ← state.installResult plan (child left right slot.1 slot.2) result
         PhysicalState.installResults plan left right rhs (index + 1) installed rest
 
+/-- The one-result OP1/OP2 shape installs successfully from a selected RHS
+slot and a concrete donor/target/generation witness. This is a physical
+microstep guarantee, not the whole image or its abstract projection. -/
+theorem PhysicalState.install_single_result_success
+    {state : PhysicalState} {plan : BytePlan}
+    {left right : Id} {rhs : XRhs NetSym}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    {ruleSlot : Option Bool × Nat} {donor : PhysicalSlot}
+    {ports : List (Option (Nat × Nat))}
+    (hslot : rhs.slots[0]? = some ruleSlot)
+    (hlab : rhs.lab ruleSlot.1 ruleSlot.2 = some result.2.2.1)
+    (hdonor : state.slots[result.2.2.2.1]? = some donor)
+    (hlive : donor.agent.isSome = true)
+    (hports : result.2.2.2.2.mapM plan.resultTarget = some ports)
+    (hfresh : result.1 = true → result.2.1 = state.slots.size)
+    (hreuse : result.1 = false →
+      ∃ old, state.slots[result.2.1]? = some old ∧
+        old.agent.isSome = true ∧
+        old.generation ≠ UInt64.ofNat (UInt64.size - 1)) :
+    ∃ next, PhysicalState.installResults plan left right rhs 0 state
+      [result] = some next := by
+  obtain ⟨next, hinstall⟩ := PhysicalState.installResult_success
+    (logical := child left right ruleSlot.1 ruleSlot.2)
+    hdonor hlive hports hfresh hreuse
+  refine ⟨next, ?_⟩
+  simp [PhysicalState.installResults, hslot, hlab, hinstall]
+
+/-- A successful variable-length installation cannot revive any queued
+generation, including when several results reuse successive consumed slots. -/
+theorem PhysicalState.installResults_preserves_queued_generations_bound
+    {state next : PhysicalState} {plan : BytePlan}
+    {left right : Id} {rhs : XRhs NetSym}
+    {index : Nat}
+    {results : List (Bool × Nat × NetSym × Nat × List (Option Nat))}
+    (hbound : state.queuedGenerationsBound = true)
+    (h : PhysicalState.installResults plan left right rhs index state results =
+      some next) :
+    next.queuedGenerationsBound = true := by
+  induction results generalizing index state next with
+  | nil =>
+    simp [PhysicalState.installResults] at h
+    cases h
+    exact hbound
+  | cons result rest ih =>
+    cases hslot : rhs.slots[index]? with
+    | none => simp [PhysicalState.installResults, hslot] at h
+    | some ruleSlot =>
+      by_cases hlab : rhs.lab ruleSlot.1 ruleSlot.2 =
+          some result.2.2.1
+      · simp [PhysicalState.installResults, hslot, hlab] at h
+        obtain ⟨installed, hinstall, hrest⟩ :=
+          Option.bind_eq_some_iff.mp h
+        exact ih
+          (PhysicalState.installResult_preserves_queued_generations_bound
+            hbound hinstall) hrest
+      · simp [PhysicalState.installResults, hslot, hlab] at h
+
 /-- Retire a consumed slot not reused by a result, refusing stale or
 overflowing generations rather than publishing an invalid free slot. -/
-private def PhysicalState.retire (state : PhysicalState) (index : Nat)
+def PhysicalState.retire (state : PhysicalState) (index : Nat)
     (reuse : Bool) : Option PhysicalState := do
   if reuse then some state else do
     let old ← state.slots[index]?
@@ -1353,10 +1916,60 @@ private def PhysicalState.retire (state : PhysicalState) (index : Nat)
         queuedGeneration := none }
       some { retired with freeSlots := index :: retired.freeSlots }
 
+/-- Retirement either leaves a reused slot unchanged or increments an old
+generation with checked headroom; both preserve every old queue bound. -/
+theorem PhysicalState.retire_preserves_queued_generations_bound
+    {state next : PhysicalState} {index : Nat} {reuse : Bool}
+    (hbound : state.queuedGenerationsBound = true)
+    (h : state.retire index reuse = some next) :
+    next.queuedGenerationsBound = true := by
+  cases reuse with
+  | true =>
+    simp [PhysicalState.retire] at h
+    cases h
+    exact hbound
+  | false =>
+    cases hslot : state.slots[index]? with
+    | none => simp [PhysicalState.retire, hslot] at h
+    | some old =>
+      cases ha : old.agent with
+      | none => simp [PhysicalState.retire, hslot, ha] at h
+      | some _ =>
+        have hroom : old.generation ≠
+            UInt64.ofNat (UInt64.size - 1) := by
+          intro he
+          simp [PhysicalState.retire, hslot, ha, he] at h
+        let replacement : PhysicalSlot :=
+          { old with
+            agent := none
+            generation := old.generation + 1
+            queuedGeneration := none }
+        have hmono :=
+          PhysicalState.queuedGenerationsBound_writeSlot_mono
+            (replacement := replacement) hbound hslot
+            (PhysicalState.generation_increment_mono hroom)
+        simp [PhysicalState.retire, hslot, ha] at h
+        rw [← h.2]
+        simpa [PhysicalState.queuedGenerationsBound, replacement] using hmono
+
+/-- A successful non-reuse retirement removes the selected agent regardless
+of what other (possibly stale) queue entries still reference its slot. -/
+theorem PhysicalState.retire_erases_agent
+    {state next : PhysicalState} {index : Nat}
+    (h : state.retire index false = some next) :
+    (next.slots[index]?).bind PhysicalSlot.agent = none := by
+  unfold PhysicalState.retire at h
+  cases hslot : state.slots[index]? with
+  | none => simp [hslot] at h
+  | some old =>
+    simp [hslot] at h
+    rw [← h.2]
+    simp [PhysicalState.writeSlot_self hslot]
+
 /-- Apply the reciprocal side of one checked boundary wire: either update an
 external agent's exact prior physical endpoint or retarget a checked output.
 The result's own port was installed by `installResult`. -/
-private def PhysicalState.writeExternal (state : PhysicalState)
+def PhysicalState.writeExternal (state : PhysicalState)
     (plan : BytePlan) (write : Nat × Nat × Nat) : Option PhysicalState := do
   let result ← plan.results[write.1]?
   let boundary ← plan.boundaries[write.2.2]?
@@ -1378,18 +1991,220 @@ private def PhysicalState.writeExternal (state : PhysicalState)
           state.retargetOutput output target
     | _ => none
 
-private def PhysicalState.writeExternals (state : PhysicalState)
+/-- A reciprocal output write succeeds if its referenced output still owns
+the captured prestate endpoint, and its result port names that boundary. -/
+theorem PhysicalState.writeExternal_output_success
+    {state : PhysicalState} {plan : BytePlan}
+    {write : Nat × Nat × Nat}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {output : Nat} {old : PhysicalOutput}
+    (hresult : plan.results[write.1]? = some result)
+    (hboundary : plan.boundaries[write.2.2]? = some boundary)
+    (hport : result.2.2.2.2[write.2.1]? = some (some write.2.2))
+    (hkind : boundary.2 = (1, output, 0))
+    (houtput : state.outputs[output]? = some old)
+    (htarget : old.target = boundary.1) :
+    ∃ next, state.writeExternal plan write = some next := by
+  obtain ⟨next, hretarget⟩ :=
+    PhysicalState.retargetOutput_success (result.2.1, write.2.1) houtput
+  refine ⟨next, ?_⟩
+  simp [PhysicalState.writeExternal, hresult, hboundary, hport,
+    hkind, houtput, htarget, hretarget]
+
+/-- A reciprocal peer write succeeds if the peer is live and still points to
+the captured endpoint, and it is neither consumed principal. -/
+theorem PhysicalState.writeExternal_peer_success
+    {state : PhysicalState} {plan : BytePlan}
+    {write : Nat × Nat × Nat}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {peer port : Nat} {old : PhysicalSlot}
+    (hresult : plan.results[write.1]? = some result)
+    (hboundary : plan.boundaries[write.2.2]? = some boundary)
+    (hport : result.2.2.2.2[write.2.1]? = some (some write.2.2))
+    (hkind : boundary.2 = (0, peer, port))
+    (hleft : peer ≠ plan.pair.1)
+    (hright : peer ≠ plan.pair.2.2.1)
+    (hpeer : state.slots[peer]? = some old)
+    (hlive : old.agent.isSome = true)
+    (htarget : old.ports[port]? = some (some boundary.1)) :
+    ∃ next, state.writeExternal plan write = some next := by
+  have hsome : old.agent ≠ none := by
+    intro ha
+    simp [ha] at hlive
+  refine ⟨state.writeSlot peer {
+    old with
+    ports := old.ports.set port (some (result.2.1, write.2.1))
+    queuedGeneration := if port == 0 then none else old.queuedGeneration }, ?_⟩
+  simp [PhysicalState.writeExternal, hresult, hboundary, hport,
+    hkind, hleft, hright, hpeer, hsome, htarget]
+
+/-- A single external write only changes its external peer slot, or no slot
+at all when its target is an output. -/
+theorem PhysicalState.writeExternal_slot_frame
+    {state next : PhysicalState} {plan : BytePlan}
+    {write : Nat × Nat × Nat}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {index : Nat}
+    (hboundary : plan.boundaries[write.2.2]? = some boundary)
+    (haway : ∀ peer port, boundary.2 = (0, peer, port) → index ≠ peer)
+    (h : state.writeExternal plan write = some next) :
+    next.slots[index]? = state.slots[index]? := by
+  unfold PhysicalState.writeExternal at h
+  cases hr : plan.results[write.1]? with
+  | none => simp [hr] at h
+  | some result =>
+    cases hk : boundary.2 with
+    | mk kind rest =>
+      cases rest with
+      | mk peer port =>
+        cases kind with
+        | zero =>
+          cases hp : state.slots[peer]? with
+          | none => simp [hr, hboundary, hk, hp] at h
+          | some old =>
+            simp [hr, hboundary, hk, hp] at h
+            rcases h with ⟨_, _, _, heq⟩
+            rw [← heq]
+            exact PhysicalState.writeSlot_frame (haway peer port hk).symm
+        | succ k =>
+          cases k with
+          | zero =>
+            cases port with
+            | zero =>
+              cases ho : state.outputs[peer]? with
+              | none => simp [hr, hboundary, hk, ho] at h
+              | some old =>
+                simp [hr, hboundary, hk, ho] at h
+                rcases h with ⟨_, _, ht⟩
+                rw [PhysicalState.retargetOutput_preserves_slots ht]
+            | succ n => simp [hr, hboundary, hk] at h
+          | succ n => simp [hr, hboundary, hk] at h
+
+/-- Reciprocal writes change only peer port contents/queue marks, or an
+output target; neither operation decreases a physical generation. -/
+theorem PhysicalState.writeExternal_preserves_queued_generations_bound
+    {state next : PhysicalState} {plan : BytePlan}
+    {write : Nat × Nat × Nat}
+    (hbound : state.queuedGenerationsBound = true)
+    (h : state.writeExternal plan write = some next) :
+    next.queuedGenerationsBound = true := by
+  unfold PhysicalState.writeExternal at h
+  cases hr : plan.results[write.1]? with
+  | none => simp [hr] at h
+  | some result =>
+    cases hb : plan.boundaries[write.2.2]? with
+    | none => simp [hr, hb] at h
+    | some boundary =>
+      cases hk : boundary.2 with
+      | mk kind rest =>
+        cases rest with
+        | mk peer port =>
+          cases kind with
+          | zero =>
+            cases hp : state.slots[peer]? with
+            | none => simp [hr, hb, hk, hp] at h
+            | some old =>
+              simp [hr, hb, hk, hp] at h
+              rcases h with ⟨_, _, _, heq⟩
+              rw [← heq]
+              exact PhysicalState.queuedGenerationsBound_writeSlot_mono
+                hbound hp (Nat.le_refl _)
+          | succ k =>
+            cases k with
+            | zero =>
+              cases port with
+              | zero =>
+                cases ho : state.outputs[peer]? with
+                | none => simp [hr, hb, hk, ho] at h
+                | some old =>
+                  simp [hr, hb, hk, ho] at h
+                  rcases h with ⟨_, _, ht⟩
+                  exact PhysicalState.retargetOutput_preserves_queued_generations_bound
+                    hbound ht
+              | succ n => simp [hr, hb, hk] at h
+            | succ n => simp [hr, hb, hk] at h
+
+/-- A result installation cannot invalidate the prestate ownership of an
+external output boundary, so its reciprocal write follows immediately. -/
+theorem PhysicalState.install_then_write_output
+    {state installed : PhysicalState} {plan : BytePlan}
+    {logical : Id} {write : Nat × Nat × Nat}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {output : Nat} {old : PhysicalOutput}
+    (hinstall : state.installResult plan logical result = some installed)
+    (hresult : plan.results[write.1]? = some result)
+    (hboundary : plan.boundaries[write.2.2]? = some boundary)
+    (hport : result.2.2.2.2[write.2.1]? = some (some write.2.2))
+    (hkind : boundary.2 = (1, output, 0))
+    (houtput : state.outputs[output]? = some old)
+    (htarget : old.target = boundary.1) :
+    ∃ rewired, installed.writeExternal plan write = some rewired := by
+  have hsame := PhysicalState.installResult_preserves_outputs hinstall
+  exact PhysicalState.writeExternal_output_success
+    hresult hboundary hport hkind (by rw [hsame]; exact houtput) htarget
+
+/-- A result installation away from a live captured peer likewise preserves
+its reciprocal port, including a principal port that may later publish. -/
+theorem PhysicalState.install_then_write_peer
+    {state installed : PhysicalState} {plan : BytePlan}
+    {logical : Id} {write : Nat × Nat × Nat}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {peer port : Nat} {old : PhysicalSlot}
+    (hinstall : state.installResult plan logical result = some installed)
+    (hresult : plan.results[write.1]? = some result)
+    (hboundary : plan.boundaries[write.2.2]? = some boundary)
+    (hport : result.2.2.2.2[write.2.1]? = some (some write.2.2))
+    (hkind : boundary.2 = (0, peer, port))
+    (hleft : peer ≠ plan.pair.1)
+    (hright : peer ≠ plan.pair.2.2.1)
+    (hpeer : state.slots[peer]? = some old)
+    (hlive : old.agent.isSome = true)
+    (htarget : old.ports[port]? = some (some boundary.1))
+    (haway : result.2.1 ≠ peer) :
+    ∃ rewired, installed.writeExternal plan write = some rewired := by
+  have hbound : peer < state.slots.size :=
+    (getElem?_eq_some_iff.mp hpeer).1
+  have hsame := PhysicalState.installResult_external_slot_frame
+    hinstall hbound haway
+  exact PhysicalState.writeExternal_peer_success hresult hboundary hport
+    hkind hleft hright (by rw [hsame]; exact hpeer) hlive htarget
+
+def PhysicalState.writeExternals (state : PhysicalState)
     (plan : BytePlan) : List (Nat × Nat × Nat) → Option PhysicalState
   | [] => some state
   | write :: rest => do
       let next ← state.writeExternal plan write
       next.writeExternals plan rest
 
+/-- Every completed reciprocal-write list preserves the old queue's
+generation bound, regardless of output versus live-peer endpoint order. -/
+theorem PhysicalState.writeExternals_preserves_queued_generations_bound
+    {state next : PhysicalState} {plan : BytePlan}
+    {writes : List (Nat × Nat × Nat)}
+    (hbound : state.queuedGenerationsBound = true)
+    (h : state.writeExternals plan writes = some next) :
+    next.queuedGenerationsBound = true := by
+  induction writes generalizing state next with
+  | nil =>
+    simp [PhysicalState.writeExternals] at h
+    cases h
+    exact hbound
+  | cons write rest ih =>
+    simp [PhysicalState.writeExternals] at h
+    obtain ⟨rewired, hwrite, hrest⟩ := Option.bind_eq_some_iff.mp h
+    exact ih
+      (PhysicalState.writeExternal_preserves_queued_generations_bound
+        hbound hwrite) hrest
+
 /-- Publish one reciprocal principal pair after the existing queue, marking
 both current generations. Old pending entries and old-generation marks do not
 block a new publication: Rust may leave those stale entries to be skipped
 when popped. -/
-private def PhysicalState.publish (state : PhysicalState)
+def PhysicalState.publish (state : PhysicalState)
     (pair : PhysicalPair) : Option PhysicalState := do
   if pair.first >= pair.second then none else do
     let first ← state.slots[pair.first]?
@@ -1406,7 +2221,84 @@ private def PhysicalState.publish (state : PhysicalState)
         pair.second { second with queuedGeneration := some pair.secondGeneration }
       some (marked.appendPublications [pair])
 
-private def PhysicalState.publishAll (state : PhysicalState) :
+/-- A canonical live reciprocal principal pair publishes when both current
+generation marks are clear and the physical queue has one free entry. Old
+stale entries still count toward that finite capacity bound. -/
+theorem PhysicalState.publish_success
+    {state : PhysicalState} {pair : PhysicalPair}
+    {first second : PhysicalSlot} {a b : Id}
+    (horder : pair.first < pair.second)
+    (hfirst : state.slots[pair.first]? = some first)
+    (hsecond : state.slots[pair.second]? = some second)
+    (hcurrent : state.logicalPair pair = some (a, b))
+    (hfp : first.ports[0]? = some (some (pair.second, 0)))
+    (hsp : second.ports[0]? = some (some (pair.first, 0)))
+    (hmarkFirst : first.queuedGeneration ≠ some pair.firstGeneration)
+    (hmarkSecond : second.queuedGeneration ≠ some pair.secondGeneration)
+    (hcapacity : state.work.length < state.slots.size) :
+    ∃ next, state.publish pair = some next := by
+  simp [PhysicalState.publish, horder, hfirst, hsecond, hcurrent,
+    hfp, hsp, hmarkFirst, hmarkSecond, hcapacity]
+
+/-- Every successful canonical publication leaves existing generation tags
+bounded and appends the two current endpoint generations. -/
+theorem PhysicalState.publish_preserves_queued_generations_bound
+    {state next : PhysicalState} {pair : PhysicalPair}
+    (hbound : state.queuedGenerationsBound = true)
+    (h : state.publish pair = some next) :
+    next.queuedGenerationsBound = true := by
+  have horder : pair.first < pair.second := by
+    by_cases hn : pair.first < pair.second
+    · exact hn
+    have hge : pair.first ≥ pair.second := by omega
+    simp [PhysicalState.publish, hge] at h
+  cases hf : state.slots[pair.first]? with
+  | none => simp [PhysicalState.publish, hf] at h
+  | some first =>
+    cases hs : state.slots[pair.second]? with
+    | none => simp [PhysicalState.publish, hf, hs] at h
+    | some second =>
+      cases hc : state.logicalPair pair with
+      | none => simp [PhysicalState.publish, hf, hs, hc] at h
+      | some owners =>
+        have hfg : first.generation = pair.firstGeneration := by
+          by_cases he : first.generation = pair.firstGeneration
+          · exact he
+          simp [PhysicalState.logicalPair, hf, hs, he] at hc
+        have hsg : second.generation = pair.secondGeneration := by
+          by_cases he : second.generation = pair.secondGeneration
+          · exact he
+          simp [PhysicalState.logicalPair, hf, hs, he] at hc
+        let markedFirst := state.writeSlot pair.first
+          { first with queuedGeneration := some pair.firstGeneration }
+        let marked := markedFirst.writeSlot pair.second
+          { second with queuedGeneration := some pair.secondGeneration }
+        have hsMarkedFirst :
+            markedFirst.slots[pair.second]? = some second :=
+          (PhysicalState.writeSlot_frame (Nat.ne_of_lt horder)).trans hs
+        have hmarkedBound : marked.queuedGenerationsBound = true :=
+          PhysicalState.queuedGenerationsBound_writeSlot_mono
+            (PhysicalState.queuedGenerationsBound_writeSlot_mono
+              hbound hf (Nat.le_refl _))
+            hsMarkedFirst (Nat.le_refl _)
+        have hmf : marked.slots[pair.first]? =
+            some { first with queuedGeneration := some pair.firstGeneration } := by
+          rw [PhysicalState.writeSlot_frame (Nat.ne_of_gt horder)]
+          exact PhysicalState.writeSlot_self hf
+        have hms : marked.slots[pair.second]? =
+            some { second with queuedGeneration := some pair.secondGeneration } :=
+          PhysicalState.writeSlot_self hsMarkedFirst
+        have hafter :
+            (marked.appendPublications [pair]).queuedGenerationsBound = true :=
+          PhysicalState.append_current_pair_preserves_queued_generations_bound
+            hmarkedBound hmf hms
+            (by simp [hfg])
+            (by simp [hsg])
+        simp [PhysicalState.publish, horder, hf, hs, hc] at h
+        rw [← h.2]
+        exact hafter
+
+def PhysicalState.publishAll (state : PhysicalState) :
     List PhysicalPair → Option PhysicalState
   | [] => some state
   | pair :: rest => do
@@ -1438,6 +2330,484 @@ def PhysicalState.executeCheckedImage (state : PhysicalState)
       { first, firstGeneration := UInt64.ofNat firstGeneration,
         second, secondGeneration := UInt64.ofNat secondGeneration : PhysicalPair }
     retiredSecond.publishAll publications
+
+/-- Retiring one live generation below the counter maximum succeeds and
+leaves every other physical slot intact. It does not depend on the agent's
+rule symbol or the contents of the old pending queue. -/
+theorem PhysicalState.retire_live_success_frame
+    {state : PhysicalState} {index : Nat} {old : PhysicalSlot}
+    (hslot : state.slots[index]? = some old)
+    (hlive : old.agent.isSome = true)
+    (hroom : old.generation ≠ UInt64.ofNat (UInt64.size - 1)) :
+    ∃ next, state.retire index false = some next ∧
+      ∀ other, index ≠ other →
+        next.slots[other]? = state.slots[other]? := by
+  cases ha : old.agent with
+  | none => simp [ha] at hlive
+  | some owner =>
+    let replacement : PhysicalSlot :=
+      { old with agent := none, generation := old.generation + 1, queuedGeneration := none }
+    let retired := state.writeSlot index replacement
+    refine ⟨{retired with freeSlots := index :: retired.freeSlots}, ?_, ?_⟩
+    · simp [PhysicalState.retire, hslot, ha, retired, replacement]
+      simpa using hroom
+    · intro other hne
+      simpa only [retired] using PhysicalState.writeSlot_frame
+        (state := state) (replacement := replacement) hne
+
+/-- A decoded erasure image with no results, writes or publications completes
+for any current pair of distinct live slots with generation headroom. This
+isolates physical execution from rule-specific emission and map refinement. -/
+theorem PhysicalState.execute_empty_image_success
+    {state : PhysicalState} {bytes : List UInt8}
+    {redex : XRedex NetSym} {plan : BytePlan}
+    {first second : PhysicalSlot}
+    (hdecode : BytePlan.decode bytes = some plan)
+    (hcurrent : state.logicalPair
+      { first := plan.pair.1,
+        firstGeneration := UInt64.ofNat plan.pair.2.1,
+        second := plan.pair.2.2.1,
+        secondGeneration := UInt64.ofNat plan.pair.2.2.2 } =
+      some (redex.1, redex.2.1))
+    (hresults : plan.results = [])
+    (hwrites : plan.externalWrites = [])
+    (hpubs : plan.publications = [])
+    (haction : plan.action = (0, 0))
+    (hfirst : state.slots[plan.pair.1]? = some first)
+    (hsecond : state.slots[plan.pair.2.2.1]? = some second)
+    (hfirstLive : first.agent.isSome = true)
+    (hsecondLive : second.agent.isSome = true)
+    (hfirstRoom : first.generation ≠ UInt64.ofNat (UInt64.size - 1))
+    (hsecondRoom : second.generation ≠ UInt64.ofNat (UInt64.size - 1))
+    (hdistinct : plan.pair.1 ≠ plan.pair.2.2.1) :
+    ∃ next, state.executeCheckedImage bytes redex = some next := by
+  obtain ⟨afterFirst, hretireFirst, hframe⟩ :=
+    PhysicalState.retire_live_success_frame hfirst hfirstLive hfirstRoom
+  have hsecondAfter : afterFirst.slots[plan.pair.2.2.1]? = some second := by
+    rw [hframe _ hdistinct]
+    exact hsecond
+  obtain ⟨afterSecond, hretireSecond, _⟩ :=
+    PhysicalState.retire_live_success_frame hsecondAfter hsecondLive hsecondRoom
+  refine ⟨afterSecond, ?_⟩
+  simp [PhysicalState.executeCheckedImage, hdecode, hcurrent,
+    hresults, hwrites, hpubs, haction,
+    PhysicalState.installResults, PhysicalState.writeExternals,
+    hretireFirst, hretireSecond, PhysicalState.publishAll]
+
+/-- Retirement changes agent ownership and the free-slot inventory, not the
+ordered physical output table or any of its mutable targets. -/
+theorem PhysicalState.retire_preserves_outputs
+    {state next : PhysicalState} {index : Nat} {reuse : Bool}
+    (h : state.retire index reuse = some next) :
+    next.outputs = state.outputs := by
+  by_cases hr : reuse
+  · simp [PhysicalState.retire, hr] at h
+    cases h
+    rfl
+  · cases ho : state.slots[index]? with
+    | none => simp [PhysicalState.retire, hr, ho] at h
+    | some old =>
+      simp [PhysicalState.retire, hr, ho, PhysicalState.writeSlot] at h
+      rcases h with ⟨_, heq⟩
+      cases heq
+      rfl
+
+/-- Retiring a physical slot leaves any other slot byte-for-byte intact. -/
+theorem PhysicalState.retire_frame
+    {state next : PhysicalState} {index other : Nat}
+    (h : state.retire index false = some next)
+    (hne : index ≠ other) :
+    next.slots[other]? = state.slots[other]? := by
+  cases ho : state.slots[index]? with
+  | none => simp [PhysicalState.retire, ho] at h
+  | some old =>
+    simp [PhysicalState.retire, ho] at h
+    rw [← h.2]
+    exact PhysicalState.writeSlot_frame hne
+
+/-- Retirement cannot change the validity or identities of queued pairs
+whose physical endpoints are disjoint from the retired slot. -/
+theorem PhysicalState.logicalPair_retire_away
+    {state next : PhysicalState} {index : Nat} {pair : PhysicalPair}
+    (h : state.retire index false = some next)
+    (hfirst : index ≠ pair.first)
+    (hsecond : index ≠ pair.second) :
+    next.logicalPair pair = state.logicalPair pair := by
+  cases ho : state.slots[index]? with
+  | none => simp [PhysicalState.retire, ho] at h
+  | some old =>
+    simp [PhysicalState.retire, ho] at h
+    rw [← h.2]
+    exact PhysicalState.logicalPair_writeSlot_away hfirst hsecond
+
+/-- An empty-result, empty-write, empty-publication decoded execution leaves
+every output's physical target, not merely its stable label, unchanged. -/
+theorem PhysicalState.execute_empty_image_preserves_outputs
+    {state next : PhysicalState} {bytes : List UInt8}
+    {redex : XRedex NetSym} {plan : BytePlan}
+    (hdecode : BytePlan.decode bytes = some plan)
+    (hcurrent : state.logicalPair
+      { first := plan.pair.1,
+        firstGeneration := UInt64.ofNat plan.pair.2.1,
+        second := plan.pair.2.2.1,
+        secondGeneration := UInt64.ofNat plan.pair.2.2.2 } =
+      some (redex.1, redex.2.1))
+    (hresults : plan.results = [])
+    (hwrites : plan.externalWrites = [])
+    (hpubs : plan.publications = [])
+    (haction : plan.action = (0, 0))
+    (h : state.executeCheckedImage bytes redex = some next) :
+    next.outputs = state.outputs := by
+  simp [PhysicalState.executeCheckedImage, hdecode, hcurrent,
+    hresults, hwrites, hpubs, haction,
+    PhysicalState.installResults, PhysicalState.writeExternals,
+    PhysicalState.publishAll] at h
+  obtain ⟨afterFirst, hf, hs⟩ := Option.bind_eq_some_iff.mp h
+  exact (PhysicalState.retire_preserves_outputs hs).trans
+    (PhysicalState.retire_preserves_outputs hf)
+
+/-- Both consumed ERA agents are absent after an empty decoded image,
+irrespective of the generation-stale entries retained in the old queue. -/
+theorem PhysicalState.execute_empty_image_retires_pair
+    {state next : PhysicalState} {bytes : List UInt8}
+    {redex : XRedex NetSym} {plan : BytePlan}
+    (hdecode : BytePlan.decode bytes = some plan)
+    (hcurrent : state.logicalPair
+      { first := plan.pair.1,
+        firstGeneration := UInt64.ofNat plan.pair.2.1,
+        second := plan.pair.2.2.1,
+        secondGeneration := UInt64.ofNat plan.pair.2.2.2 } =
+      some (redex.1, redex.2.1))
+    (hresults : plan.results = [])
+    (hwrites : plan.externalWrites = [])
+    (hpubs : plan.publications = [])
+    (haction : plan.action = (0, 0))
+    (hdistinct : plan.pair.1 ≠ plan.pair.2.2.1)
+    (h : state.executeCheckedImage bytes redex = some next) :
+    (next.slots[plan.pair.1]?).bind PhysicalSlot.agent = none ∧
+      (next.slots[plan.pair.2.2.1]?).bind PhysicalSlot.agent = none := by
+  simp [PhysicalState.executeCheckedImage, hdecode, hcurrent,
+    hresults, hwrites, hpubs, haction,
+    PhysicalState.installResults, PhysicalState.writeExternals,
+    PhysicalState.publishAll] at h
+  obtain ⟨afterFirst, hf, hs⟩ := Option.bind_eq_some_iff.mp h
+  constructor
+  · rw [PhysicalState.retire_frame hs hdistinct.symm]
+    exact PhysicalState.retire_erases_agent hf
+  · exact PhysicalState.retire_erases_agent hs
+
+/-- A one-result, one-external-write image completes from local prestate
+guards when that write succeeds after installation and preserves the two
+consumed slots. This shared pipeline covers output and nonprincipal peer
+boundaries in either storage policy, without checker or execution premises. -/
+theorem PhysicalState.execute_single_external_image_success
+    {state : PhysicalState} {bytes : List UInt8}
+    {redex : XRedex NetSym} {plan : BytePlan}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    {ruleSlot : Option Bool × Nat}
+    {first second donor : PhysicalSlot}
+    {ports : List (Option (Nat × Nat))}
+    (hdecode : BytePlan.decode bytes = some plan)
+    (hcurrent : state.logicalPair
+      { first := plan.pair.1,
+        firstGeneration := UInt64.ofNat plan.pair.2.1,
+        second := plan.pair.2.2.1,
+        secondGeneration := UInt64.ofNat plan.pair.2.2.2 } =
+      some (redex.1, redex.2.1))
+    (hresults : plan.results = [result])
+    (hslot : redex.2.2.2.2.slots[0]? = some ruleSlot)
+    (hlab : redex.2.2.2.2.lab ruleSlot.1 ruleSlot.2 =
+      some result.2.2.1)
+    (hwrites : plan.externalWrites = [(0, 0, 0)])
+    (hpubs : plan.publications = [])
+    (hpolicy : (result.1 = true ∧ result.2.1 = state.slots.size ∧
+        plan.action = (0, 0)) ∨
+      (result.1 = false ∧ result.2.1 = plan.pair.1 ∧
+        plan.action = (1, 0)) ∨
+      (result.1 = false ∧ result.2.1 = plan.pair.2.2.1 ∧
+        plan.action = (0, 1)))
+    (hdonor : state.slots[result.2.2.2.1]? = some donor)
+    (hdonorLive : donor.agent.isSome = true)
+    (hports : result.2.2.2.2.mapM plan.resultTarget = some ports)
+    (hreuse : result.1 = false →
+      ∃ old, state.slots[result.2.1]? = some old ∧
+        old.agent.isSome = true ∧
+        old.generation ≠ UInt64.ofNat (UInt64.size - 1))
+    (hwriteAvailable : ∀ installed : PhysicalState,
+      state.installResult plan
+        (child redex.1 redex.2.1 ruleSlot.1 ruleSlot.2) result =
+        some installed →
+      ∃ rewired, installed.writeExternal plan (0, 0, 0) = some rewired)
+    (hwriteFrames : ∀ installed rewired : PhysicalState,
+      installed.writeExternal plan (0, 0, 0) = some rewired →
+      rewired.slots[plan.pair.1]? = installed.slots[plan.pair.1]? ∧
+        rewired.slots[plan.pair.2.2.1]? =
+          installed.slots[plan.pair.2.2.1]?)
+    (hf : state.slots[plan.pair.1]? = some first)
+    (hs : state.slots[plan.pair.2.2.1]? = some second)
+    (hfirstLive : first.agent.isSome = true)
+    (hsecondLive : second.agent.isSome = true)
+    (hfirstRoom : first.generation ≠ UInt64.ofNat (UInt64.size - 1))
+    (hsecondRoom : second.generation ≠ UInt64.ofNat (UInt64.size - 1))
+    (hdistinct : plan.pair.1 ≠ plan.pair.2.2.1) :
+    ∃ next, state.executeCheckedImage bytes redex = some next := by
+  have hfresh : result.1 = true → result.2.1 = state.slots.size := by
+    intro ht
+    rcases hpolicy with ⟨ht', hi, _⟩ | ⟨hf', _, _⟩ | ⟨hf', _, _⟩
+    · exact hi
+    · simp [ht] at hf'
+    · simp [ht] at hf'
+  obtain ⟨installed, hsingle⟩ := PhysicalState.install_single_result_success
+    hslot hlab hdonor hdonorLive hports hfresh hreuse
+  have hinstall : state.installResult plan
+      (child redex.1 redex.2.1 ruleSlot.1 ruleSlot.2) result =
+      some installed := by
+    simpa [PhysicalState.installResults, hslot, hlab] using hsingle
+  obtain ⟨rewired, hwrite⟩ := hwriteAvailable installed hinstall
+  have ⟨hwriteFirst, hwriteSecond⟩ :=
+    hwriteFrames installed rewired hwrite
+  have hfirstBound : plan.pair.1 < state.slots.size :=
+    (getElem?_eq_some_iff.mp hf).1
+  have hsecondBound : plan.pair.2.2.1 < state.slots.size :=
+    (getElem?_eq_some_iff.mp hs).1
+  rcases hpolicy with ⟨_, hindex, haction⟩ |
+      ⟨_, hindex, haction⟩ | ⟨_, hindex, haction⟩
+  · have hfirstAway : result.2.1 ≠ plan.pair.1 := by omega
+    have hsecondAway : result.2.1 ≠ plan.pair.2.2.1 := by omega
+    have hfirst :
+        rewired.slots[plan.pair.1]? = some first := by
+      rw [hwriteFirst, PhysicalState.installResult_external_slot_frame
+        hinstall hfirstBound hfirstAway]
+      exact hf
+    have hsecond :
+        rewired.slots[plan.pair.2.2.1]? = some second := by
+      rw [hwriteSecond, PhysicalState.installResult_external_slot_frame
+        hinstall hsecondBound hsecondAway]
+      exact hs
+    obtain ⟨retiredFirst, hretireFirst, hframe⟩ :=
+      PhysicalState.retire_live_success_frame
+        hfirst hfirstLive hfirstRoom
+    have hsecondAfter :
+        retiredFirst.slots[plan.pair.2.2.1]? = some second := by
+      rw [hframe _ hdistinct]
+      exact hsecond
+    obtain ⟨retiredSecond, hretireSecond, _⟩ :=
+      PhysicalState.retire_live_success_frame
+        hsecondAfter hsecondLive hsecondRoom
+    refine ⟨retiredSecond, ?_⟩
+    simp [PhysicalState.executeCheckedImage, hdecode, hcurrent,
+      hresults, hslot, hlab, hinstall, hwrites, hwrite,
+      hpubs, haction, hretireFirst, hretireSecond,
+      PhysicalState.installResults, PhysicalState.writeExternals,
+      PhysicalState.publishAll]
+  · have hsecondAway : result.2.1 ≠ plan.pair.2.2.1 := by
+      rw [hindex]
+      exact hdistinct
+    have hsecond :
+        rewired.slots[plan.pair.2.2.1]? = some second := by
+      rw [hwriteSecond, PhysicalState.installResult_external_slot_frame
+        hinstall hsecondBound hsecondAway]
+      exact hs
+    obtain ⟨retiredSecond, hretireSecond, _⟩ :=
+      PhysicalState.retire_live_success_frame
+        hsecond hsecondLive hsecondRoom
+    have hskip : rewired.retire plan.pair.1 true = some rewired := rfl
+    refine ⟨retiredSecond, ?_⟩
+    simp [PhysicalState.executeCheckedImage, hdecode, hcurrent,
+      hresults, hslot, hlab, hinstall, hwrites, hwrite,
+      hpubs, haction, hskip, hretireSecond,
+      PhysicalState.installResults, PhysicalState.writeExternals,
+      PhysicalState.publishAll]
+  · have hfirstAway : result.2.1 ≠ plan.pair.1 := by
+      rw [hindex]
+      exact hdistinct.symm
+    have hfirst :
+        rewired.slots[plan.pair.1]? = some first := by
+      rw [hwriteFirst, PhysicalState.installResult_external_slot_frame
+        hinstall hfirstBound hfirstAway]
+      exact hf
+    obtain ⟨retiredFirst, hretireFirst, _⟩ :=
+      PhysicalState.retire_live_success_frame
+        hfirst hfirstLive hfirstRoom
+    have hskip : retiredFirst.retire plan.pair.2.2.1 true =
+        some retiredFirst := rfl
+    refine ⟨retiredFirst, ?_⟩
+    simp [PhysicalState.executeCheckedImage, hdecode, hcurrent,
+      hresults, hslot, hlab, hinstall, hwrites, hwrite,
+      hpubs, haction, hskip, hretireFirst,
+      PhysicalState.installResults, PhysicalState.writeExternals,
+      PhysicalState.publishAll]
+
+/-- The single-external-write pipeline specializes to an output boundary.
+No physical slot changes during the reciprocal output retargeting. -/
+theorem PhysicalState.execute_single_output_image_success
+    {state : PhysicalState} {bytes : List UInt8}
+    {redex : XRedex NetSym} {plan : BytePlan}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    {ruleSlot : Option Bool × Nat}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {first second donor : PhysicalSlot}
+    {output : Nat} {oldOutput : PhysicalOutput}
+    (hdecode : BytePlan.decode bytes = some plan)
+    (hcurrent : state.logicalPair
+      { first := plan.pair.1,
+        firstGeneration := UInt64.ofNat plan.pair.2.1,
+        second := plan.pair.2.2.1,
+        secondGeneration := UInt64.ofNat plan.pair.2.2.2 } =
+      some (redex.1, redex.2.1))
+    (hresults : plan.results = [result])
+    (hslot : redex.2.2.2.2.slots[0]? = some ruleSlot)
+    (hlab : redex.2.2.2.2.lab ruleSlot.1 ruleSlot.2 =
+      some result.2.2.1)
+    (hbound : plan.boundaries[0]? = some boundary)
+    (hportShape : result.2.2.2.2 = [some 0, none, none])
+    (hkind : boundary.2 = (1, output, 0))
+    (houtput : state.outputs[output]? = some oldOutput)
+    (htarget : oldOutput.target = boundary.1)
+    (hwrites : plan.externalWrites = [(0, 0, 0)])
+    (hpubs : plan.publications = [])
+    (hpolicy : (result.1 = true ∧ result.2.1 = state.slots.size ∧
+        plan.action = (0, 0)) ∨
+      (result.1 = false ∧ result.2.1 = plan.pair.1 ∧
+        plan.action = (1, 0)) ∨
+      (result.1 = false ∧ result.2.1 = plan.pair.2.2.1 ∧
+        plan.action = (0, 1)))
+    (hdonor : state.slots[result.2.2.2.1]? = some donor)
+    (hdonorLive : donor.agent.isSome = true)
+    (hreuse : result.1 = false →
+      ∃ old, state.slots[result.2.1]? = some old ∧
+        old.agent.isSome = true ∧
+        old.generation ≠ UInt64.ofNat (UInt64.size - 1))
+    (hf : state.slots[plan.pair.1]? = some first)
+    (hs : state.slots[plan.pair.2.2.1]? = some second)
+    (hfirstLive : first.agent.isSome = true)
+    (hsecondLive : second.agent.isSome = true)
+    (hfirstRoom : first.generation ≠ UInt64.ofNat (UInt64.size - 1))
+    (hsecondRoom : second.generation ≠ UInt64.ofNat (UInt64.size - 1))
+    (hdistinct : plan.pair.1 ≠ plan.pair.2.2.1) :
+    ∃ next, state.executeCheckedImage bytes redex = some next := by
+  have hport : result.2.2.2.2[0]? = some (some 0) := by
+    simp [hportShape]
+  have hports : result.2.2.2.2.mapM plan.resultTarget =
+      some [none, none, none] := by
+    simpa [hportShape] using BytePlan.single_output_result_ports hbound hkind
+  have hwriteAvailable (installed : PhysicalState)
+      (hinstall : state.installResult plan
+        (child redex.1 redex.2.1 ruleSlot.1 ruleSlot.2) result =
+        some installed) :
+      ∃ rewired, installed.writeExternal plan (0, 0, 0) = some rewired :=
+    PhysicalState.install_then_write_output hinstall
+      (by simp [hresults]) hbound hport hkind houtput htarget
+  have hwriteFrames (installed rewired : PhysicalState)
+      (hwrite : installed.writeExternal plan (0, 0, 0) = some rewired) :
+      rewired.slots[plan.pair.1]? = installed.slots[plan.pair.1]? ∧
+        rewired.slots[plan.pair.2.2.1]? =
+          installed.slots[plan.pair.2.2.1]? := by
+    have frame (index : Nat) :
+        rewired.slots[index]? = installed.slots[index]? :=
+      PhysicalState.writeExternal_slot_frame hbound
+        (by intro peer port he; simp [hkind] at he) hwrite
+    exact ⟨frame _, frame _⟩
+  exact PhysicalState.execute_single_external_image_success
+    hdecode hcurrent hresults hslot hlab hwrites hpubs hpolicy
+    hdonor hdonorLive hports hreuse hwriteAvailable hwriteFrames
+    hf hs hfirstLive hsecondLive hfirstRoom hsecondRoom hdistinct
+
+/-- A nonpublishing live-peer boundary uses the same one-result pipeline.
+The prestate peer is outside the consumed pair, so its reciprocal write
+cannot invalidate either retirement. -/
+theorem PhysicalState.execute_single_peer_image_success
+    {state : PhysicalState} {bytes : List UInt8}
+    {redex : XRedex NetSym} {plan : BytePlan}
+    {result : Bool × Nat × NetSym × Nat × List (Option Nat)}
+    {ruleSlot : Option Bool × Nat}
+    {boundary : (Nat × Nat) × (Nat × Nat × Nat)}
+    {first second donor oldPeer : PhysicalSlot}
+    {peer port : Nat}
+    (hdecode : BytePlan.decode bytes = some plan)
+    (hcurrent : state.logicalPair
+      { first := plan.pair.1,
+        firstGeneration := UInt64.ofNat plan.pair.2.1,
+        second := plan.pair.2.2.1,
+        secondGeneration := UInt64.ofNat plan.pair.2.2.2 } =
+      some (redex.1, redex.2.1))
+    (hresults : plan.results = [result])
+    (hslot : redex.2.2.2.2.slots[0]? = some ruleSlot)
+    (hlab : redex.2.2.2.2.lab ruleSlot.1 ruleSlot.2 =
+      some result.2.2.1)
+    (hbound : plan.boundaries[0]? = some boundary)
+    (hportShape : result.2.2.2.2 = [some 0, none, none])
+    (hkind : boundary.2 = (0, peer, port))
+    (hpeer : state.slots[peer]? = some oldPeer)
+    (hpeerLive : oldPeer.agent.isSome = true)
+    (htarget : oldPeer.ports[port]? = some (some boundary.1))
+    (hleft : peer ≠ plan.pair.1)
+    (hright : peer ≠ plan.pair.2.2.1)
+    (hwrites : plan.externalWrites = [(0, 0, 0)])
+    (hpubs : plan.publications = [])
+    (hpolicy : (result.1 = true ∧ result.2.1 = state.slots.size ∧
+        plan.action = (0, 0)) ∨
+      (result.1 = false ∧ result.2.1 = plan.pair.1 ∧
+        plan.action = (1, 0)) ∨
+      (result.1 = false ∧ result.2.1 = plan.pair.2.2.1 ∧
+        plan.action = (0, 1)))
+    (hdonor : state.slots[result.2.2.2.1]? = some donor)
+    (hdonorLive : donor.agent.isSome = true)
+    (hreuse : result.1 = false →
+      ∃ old, state.slots[result.2.1]? = some old ∧
+        old.agent.isSome = true ∧
+        old.generation ≠ UInt64.ofNat (UInt64.size - 1))
+    (hf : state.slots[plan.pair.1]? = some first)
+    (hs : state.slots[plan.pair.2.2.1]? = some second)
+    (hfirstLive : first.agent.isSome = true)
+    (hsecondLive : second.agent.isSome = true)
+    (hfirstRoom : first.generation ≠ UInt64.ofNat (UInt64.size - 1))
+    (hsecondRoom : second.generation ≠ UInt64.ofNat (UInt64.size - 1))
+    (hdistinct : plan.pair.1 ≠ plan.pair.2.2.1) :
+    ∃ next, state.executeCheckedImage bytes redex = some next := by
+  have hport : result.2.2.2.2[0]? = some (some 0) := by
+    simp [hportShape]
+  have hports : result.2.2.2.2.mapM plan.resultTarget =
+      some [some (peer, port), none, none] := by
+    simpa [hportShape] using BytePlan.single_peer_result_ports hbound hkind
+  have hpeerBound : peer < state.slots.size :=
+    (getElem?_eq_some_iff.mp hpeer).1
+  have haway : result.2.1 ≠ peer := by
+    rcases hpolicy with ⟨_, hindex, _⟩ |
+        ⟨_, hindex, _⟩ | ⟨_, hindex, _⟩
+    · omega
+    · rw [hindex]
+      exact hleft.symm
+    · rw [hindex]
+      exact hright.symm
+  have hwriteAvailable (installed : PhysicalState)
+      (hinstall : state.installResult plan
+        (child redex.1 redex.2.1 ruleSlot.1 ruleSlot.2) result =
+        some installed) :
+      ∃ rewired, installed.writeExternal plan (0, 0, 0) = some rewired :=
+    PhysicalState.install_then_write_peer hinstall
+      (by simp [hresults]) hbound hport hkind hleft hright
+      hpeer hpeerLive htarget haway
+  have hwriteFrames (installed rewired : PhysicalState)
+      (hwrite : installed.writeExternal plan (0, 0, 0) = some rewired) :
+      rewired.slots[plan.pair.1]? = installed.slots[plan.pair.1]? ∧
+        rewired.slots[plan.pair.2.2.1]? =
+          installed.slots[plan.pair.2.2.1]? := by
+    have frame (index : Nat)
+        (hnot : index ≠ peer) :
+        rewired.slots[index]? = installed.slots[index]? :=
+      PhysicalState.writeExternal_slot_frame hbound
+        (by intro external externalPort he
+            have heq : peer = external := by
+              have ht : (0, peer, port) = (0, external, externalPort) :=
+                hkind.symm.trans he
+              simpa using congrArg (fun t : Nat × Nat × Nat => t.2.1) ht
+            simpa [← heq] using hnot) hwrite
+    exact ⟨frame _ hleft.symm, frame _ hright.symm⟩
+  exact PhysicalState.execute_single_external_image_success
+    hdecode hcurrent hresults hslot hlab hwrites hpubs hpolicy
+    hdonor hdonorLive hports hreuse hwriteAvailable hwriteFrames
+    hf hs hfirstLive hsecondLive hfirstRoom hsecondRoom hdistinct
 
 /-- Installing any admitted result, whether recycled or freshly appended,
 cannot alter the ordered external-output identities. -/
@@ -2094,6 +3464,43 @@ theorem PhysicalState.op2_output_refines :
   · intro p
     rfl
 
+/-- Independently compiled OP2 boundary and candidate work, plus the
+physical output-target observation needed for semantic admission. -/
+theorem PhysicalState.op2_output_compiled_observables :
+    (Plan.compile op2PhysicalStart.project op2PhysicalRedex (by rfl)).capturedBoundary.filter
+      (fun edge => edge.1.2 != 0) =
+        [(([1], 1), ([100], 0)), (([1], 2), ([101], 0))] ∧
+    (Plan.commit op2PhysicalStart.project
+      (Plan.compile op2PhysicalStart.project op2PhysicalRedex (by rfl))
+      op2PhysicalStart.project.work).work =
+        [(child [1] [2] (some false) 0, [100]),
+          ([100], child [1] [2] (some false) 0)] ∧
+    op2PhysicalAfter.outputs.all (fun output =>
+      decide (op2PhysicalAfter.logicalPort output.target =
+        op2PhysicalAfter.project.wires[output.label]?)) = true := by
+  refine ⟨?_, ?_, ?_⟩
+  · rw [op2_plan_boundary]
+    decide
+  · have published :
+        (Plan.compile op2PhysicalStart.project op2PhysicalRedex
+          (by rfl)).newlyActive =
+          [(child [1] [2] (some false) 0, [100]),
+            ([100], child [1] [2] (some false) 0)] := by
+      change principalPairs
+        ((HNet.nbhd NetI64.arity op2PhysicalStart.project [1] [2]
+          (.op2 .add) (.num (BitVec.ofNat 64 27))).fire
+          NetI64.arity [1] [2] (.op2 .add) (.num (BitVec.ofNat 64 27))
+          (NetI64.op2NumData .add (BitVec.ofNat 64 27)).toX).wires = _
+      rw [op2_nbhd]
+      set_option maxRecDepth 3000 in decide
+    change (Plan.compile op2PhysicalStart.project op2PhysicalRedex
+      (by rfl)).newlyActive ++ [] = _
+    rw [published]
+    rfl
+  · simp [PhysicalState.project, PhysicalState.wires,
+      PhysicalState.portWires, PhysicalState.logicalPort,
+      op2PhysicalAfter, hget_insert]
+
 /-- The byte grammar alone accepts an image omitting the second output write.
 The independent semantic plan checker must rule this out: successful physical
 decoding and execution do not themselves establish abstract refinement. -/
@@ -2308,6 +3715,31 @@ theorem PhysicalState.op2_published_refines :
     simp only [Plan.commit, op2_published_plan_pair, List.append_nil]
     exact List.Perm.refl _
 
+/-- The published OP2 image captures one live peer, retains an output
+boundary, and declares both orientations of the newly active pair. -/
+theorem PhysicalState.op2_published_compiled_observables :
+    (Plan.compile op2PublishedStart.project op2PhysicalRedex (by rfl)).capturedBoundary.filter
+      (fun edge => edge.1.2 != 0) =
+        [(([1], 1), ([3], 0)), (([1], 2), ([100], 0))] ∧
+    (Plan.commit op2PublishedStart.project
+      (Plan.compile op2PublishedStart.project op2PhysicalRedex (by rfl))
+      op2PublishedStart.project.work).work =
+        [(child [1] [2] (some false) 0, [3]),
+          ([3], child [1] [2] (some false) 0)] ∧
+    op2PublishedAfter.outputs.all (fun output =>
+      decide (op2PublishedAfter.logicalPort output.target =
+        op2PublishedAfter.project.wires[output.label]?)) = true := by
+  refine ⟨?_, ?_, ?_⟩
+  · rw [op2_published_plan_boundary]
+    decide
+  · change (Plan.compile op2PublishedStart.project op2PhysicalRedex
+      (by rfl)).newlyActive ++ [] = _
+    rw [op2_published_plan_pair]
+    rfl
+  · simp [PhysicalState.project, PhysicalState.wires,
+      PhysicalState.portWires, PhysicalState.logicalPort,
+      op2PublishedAfter, hget_insert]
+
 /-- The zero-result erasure image has no boundaries and retires both
 generation-zero slots without leaving a live agent or active pair. -/
 def eraPhysicalStart : PhysicalState :=
@@ -2415,6 +3847,36 @@ theorem PhysicalState.era_refines :
     intro hleft hright hleft'
     simp [hleft, hright]
   · intro p
+    rfl
+
+/-- The concrete erasure fixture's independently compiled boundary and work
+image are empty once its consumed principal connection is excluded. -/
+theorem PhysicalState.era_compiled_observables :
+    (Plan.compile eraPhysicalStart.project eraPhysicalRedex (by rfl)).capturedBoundary.filter
+      (fun edge => edge.1.2 != 0) = [] ∧
+    (Plan.compile eraPhysicalStart.project eraPhysicalRedex (by rfl)).initializedAgents.map
+      Prod.snd = [] ∧
+    (Plan.commit eraPhysicalStart.project
+      (Plan.compile eraPhysicalStart.project eraPhysicalRedex (by rfl))
+      eraPhysicalStart.project.work).work = [] := by
+  refine ⟨?_, ?_, ?_⟩
+  · rw [era_plan_boundary]
+    decide
+  · rw [era_plan_agents]
+    rfl
+  · have empty :
+        (Plan.compile eraPhysicalStart.project eraPhysicalRedex (by rfl)).newlyActive =
+          [] := by
+      change principalPairs
+        ((HNet.nbhd NetI64.arity eraPhysicalStart.project [1] [2]
+          .era (.num (BitVec.ofNat 64 42))).fire
+          NetI64.arity [1] [2] .era (.num (BitVec.ofNat 64 42))
+          NetI64.eraNumData.toX).wires = []
+      rw [era_nbhd]
+      decide
+    change (Plan.compile eraPhysicalStart.project eraPhysicalRedex
+      (by rfl)).newlyActive ++ [] = []
+    rw [empty]
     rfl
 
 /-- A checked OP1 subtraction output image replaces the consumed operation
@@ -2546,6 +4008,47 @@ theorem PhysicalState.op1_wrapping_refines :
     simp [hnew', hout', hleft0', hleft1', hright0']
   · intro p
     rfl
+
+/-- The wrapping subtraction fixture's captured external port and directed
+candidate work are independent of its physical reused-slot representation. -/
+theorem PhysicalState.op1_output_compiled_observables :
+    (Plan.compile op1PhysicalStart.project op1PhysicalRedex (by rfl)).capturedBoundary.filter
+      (fun edge => edge.1.2 != 0) =
+        [(([1], 1), ([100], 0))] ∧
+    (Plan.commit op1PhysicalStart.project
+      (Plan.compile op1PhysicalStart.project op1PhysicalRedex (by rfl))
+      op1PhysicalStart.project.work).work =
+        [(child [1] [2] (some false) 0, [100]),
+          ([100], child [1] [2] (some false) 0)] ∧
+    op1PhysicalAfter.outputs.all (fun output =>
+      decide (op1PhysicalAfter.logicalPort output.target =
+        op1PhysicalAfter.project.wires[output.label]?)) = true := by
+  refine ⟨?_, ?_, ?_⟩
+  · rw [op1_plan_boundary]
+    decide
+  · have published :
+        (Plan.compile op1PhysicalStart.project op1PhysicalRedex
+          (by rfl)).newlyActive =
+          [(child [1] [2] (some false) 0, [100]),
+            ([100], child [1] [2] (some false) 0)] := by
+      change principalPairs
+        ((HNet.nbhd NetI64.arity op1PhysicalStart.project [1] [2]
+          (.op1 .sub (BitVec.ofNat 64 7))
+          (.num (BitVec.ofNat 64 13))).fire
+          NetI64.arity [1] [2]
+          (.op1 .sub (BitVec.ofNat 64 7))
+          (.num (BitVec.ofNat 64 13))
+          (NetI64.op1NumData .sub (BitVec.ofNat 64 7)
+            (BitVec.ofNat 64 13)).toX).wires = _
+      rw [op1_nbhd]
+      set_option maxRecDepth 3000 in decide
+    change (Plan.compile op1PhysicalStart.project op1PhysicalRedex
+      (by rfl)).newlyActive ++ [] = _
+    rw [published]
+    rfl
+  · simp [PhysicalState.project, PhysicalState.wires,
+      PhysicalState.portWires, PhysicalState.logicalPort,
+      op1PhysicalAfter, hget_insert]
 
 /-- Two-result DUP stages both replacement numbers in the original physical
 slots and preserves each output's stable logical label separately. -/
@@ -2693,6 +4196,49 @@ theorem PhysicalState.dup_refines :
       hleft2', hright0']
   · intro p
     rfl
+
+/-- The independent two-result plan captures both outputs in order, and
+the physical result points each stable label at its own replacement. -/
+theorem PhysicalState.dup_output_compiled_observables :
+    (Plan.compile dupPhysicalStart.project dupPhysicalRedex (by rfl)).capturedBoundary.filter
+      (fun edge => edge.1.2 != 0) =
+        [(([1], 1), ([100], 0)), (([1], 2), ([101], 0))] ∧
+    (Plan.commit dupPhysicalStart.project
+      (Plan.compile dupPhysicalStart.project dupPhysicalRedex (by rfl))
+      dupPhysicalStart.project.work).work =
+        [(child [1] [2] (some false) 0, [100]),
+          (child [1] [2] (some false) 1, [101]),
+          ([100], child [1] [2] (some false) 0),
+          ([101], child [1] [2] (some false) 1)] ∧
+    dupPhysicalAfter.outputs.all (fun output =>
+      decide (dupPhysicalAfter.logicalPort output.target =
+        dupPhysicalAfter.project.wires[output.label]?)) = true := by
+  refine ⟨?_, ?_, ?_⟩
+  · rw [dup_plan_boundary]
+    decide
+  · have published :
+        (Plan.compile dupPhysicalStart.project dupPhysicalRedex
+          (by rfl)).newlyActive =
+          [(child [1] [2] (some false) 0, [100]),
+            (child [1] [2] (some false) 1, [101]),
+            ([100], child [1] [2] (some false) 0),
+            ([101], child [1] [2] (some false) 1)] := by
+      change principalPairs
+        ((HNet.nbhd NetI64.arity dupPhysicalStart.project [1] [2]
+          .dup (.num (BitVec.ofNat 64 42))).fire
+          NetI64.arity [1] [2] .dup (.num (BitVec.ofNat 64 42))
+          (NetI64.dupNumData (BitVec.ofNat 64 42)).toX).wires = _
+      rw [dup_nbhd]
+      set_option maxRecDepth 3000 in decide
+    change (Plan.compile dupPhysicalStart.project dupPhysicalRedex
+      (by rfl)).newlyActive ++ [] = _
+    rw [published]
+    rfl
+  · simp [PhysicalState.project, PhysicalState.wires,
+      PhysicalState.portWires, PhysicalState.logicalPort,
+      dupPhysicalAfter, hget_insert,
+      show child [1] [2] (some false) 0 = [0, 1] from rfl,
+      show child [1] [2] (some false) 1 = [2, 1] from rfl]
 
 /-- Ordered external free-port identities survive a physical slot write,
 including one that retags a slot formerly targeted by an output. Only the
@@ -2864,12 +4410,145 @@ theorem PhysicalState.executeCheckedImage_project_work_split
   rw [PhysicalState.executeCheckedImage_work_append hdecode h, List.flatMap_append,
     hpreserve state.work hpending]
 
+/-- Empty-image ERA retirement keeps the physical old queue, but its
+projection drops exactly the entries touching either consumed slot. Queue
+entries for unrelated slots retain their original validity and both directed
+logical orientations, whether current or already stale. -/
+theorem PhysicalState.execute_empty_image_project_work
+    {state next : PhysicalState} {bytes : List UInt8}
+    {redex : XRedex NetSym} {plan : BytePlan}
+    (hdecode : BytePlan.decode bytes = some plan)
+    (hcurrent : state.logicalPair
+      { first := plan.pair.1,
+        firstGeneration := UInt64.ofNat plan.pair.2.1,
+        second := plan.pair.2.2.1,
+        secondGeneration := UInt64.ofNat plan.pair.2.2.2 } =
+      some (redex.1, redex.2.1))
+    (hresults : plan.results = [])
+    (hwrites : plan.externalWrites = [])
+    (hpubs : plan.publications = [])
+    (haction : plan.action = (0, 0))
+    (hdistinct : plan.pair.1 ≠ plan.pair.2.2.1)
+    (h : state.executeCheckedImage bytes redex = some next) :
+    next.project.work =
+      (state.work.filter fun queued =>
+        decide (queued.first ≠ plan.pair.1 ∧
+          queued.second ≠ plan.pair.1 ∧
+          queued.first ≠ plan.pair.2.2.1 ∧
+          queued.second ≠ plan.pair.2.2.1)).flatMap
+        state.pairOrientations := by
+  let disjoint : PhysicalPair → Bool := fun queued =>
+    decide (queued.first ≠ plan.pair.1 ∧
+      queued.second ≠ plan.pair.1 ∧
+      queued.first ≠ plan.pair.2.2.1 ∧
+      queued.second ≠ plan.pair.2.2.1)
+  have hwork : next.work = state.work := by
+    simpa [hpubs] using PhysicalState.executeCheckedImage_work_append hdecode h
+  have ⟨hdeadFirst, hdeadSecond⟩ :=
+    PhysicalState.execute_empty_image_retires_pair hdecode hcurrent
+      hresults hwrites hpubs haction hdistinct h
+  have hretire : ∃ afterFirst,
+      state.retire plan.pair.1 false = some afterFirst ∧
+        afterFirst.retire plan.pair.2.2.1 false = some next := by
+    have hexec := h
+    simp [PhysicalState.executeCheckedImage, hdecode, hcurrent,
+      hresults, hwrites, hpubs, haction,
+      PhysicalState.installResults, PhysicalState.writeExternals,
+      PhysicalState.publishAll] at hexec
+    exact Option.bind_eq_some_iff.mp hexec
+  obtain ⟨afterFirst, hf, hs⟩ := hretire
+  have hpair (queued : PhysicalPair) :
+      next.pairOrientations queued =
+        if disjoint queued then state.pairOrientations queued else [] := by
+    by_cases hd : disjoint queued = true
+    · have hsides : queued.first ≠ plan.pair.1 ∧
+          queued.second ≠ plan.pair.1 ∧
+          queued.first ≠ plan.pair.2.2.1 ∧
+          queued.second ≠ plan.pair.2.2.1 := by
+        simpa [disjoint] using hd
+      have hp : next.logicalPair queued = state.logicalPair queued :=
+        (PhysicalState.logicalPair_retire_away hs
+          hsides.2.2.1.symm hsides.2.2.2.symm).trans
+          (PhysicalState.logicalPair_retire_away hf
+            hsides.1.symm hsides.2.1.symm)
+      simp [hd, PhysicalState.pairOrientations, hp]
+    · have hnot : ¬ (queued.first ≠ plan.pair.1 ∧
+          queued.second ≠ plan.pair.1 ∧
+          queued.first ≠ plan.pair.2.2.1 ∧
+          queued.second ≠ plan.pair.2.2.1) := by
+        simpa [disjoint] using hd
+      have htouch : queued.first = plan.pair.1 ∨
+          queued.second = plan.pair.1 ∨
+          queued.first = plan.pair.2.2.1 ∨
+          queued.second = plan.pair.2.2.1 := by omega
+      have hdead :
+          (next.slots[queued.first]?).bind PhysicalSlot.agent = none ∨
+            (next.slots[queued.second]?).bind PhysicalSlot.agent = none := by
+        rcases htouch with hfirst | hsecond | hfirst | hsecond
+        · left; simpa [hfirst] using hdeadFirst
+        · right; simpa [hsecond] using hdeadFirst
+        · left; simpa [hfirst] using hdeadSecond
+        · right; simpa [hsecond] using hdeadSecond
+      have hp := PhysicalState.logicalPair_dead_endpoint hdead
+      simp [hd, PhysicalState.pairOrientations, hp]
+  change next.work.flatMap next.pairOrientations =
+    (state.work.filter disjoint).flatMap state.pairOrientations
+  rw [hwork]
+  induction state.work with
+  | nil => rfl
+  | cons queued rest ih =>
+    simp only [List.flatMap_cons, List.filter_cons]
+    rw [hpair queued]
+    cases disjoint queued <;> simp [ih]
+
 /-- Pending pairs retain canonical slot order even if their generations have
 gone stale. The ghost free-slot inventory exactly classifies retired slots. -/
 def PhysicalState.WellFormed (state : PhysicalState) : Prop :=
   (∀ pair ∈ state.work, pair.first < pair.second) ∧
   (∀ index, index ∈ state.freeSlots ↔
     ∃ slot, state.slots[index]? = some slot ∧ slot.agent = none)
+
+/-- Every port of a live physical agent has the declared arity and exactly
+one owner: a reciprocal live peer or a single stable external output.
+Result slots may carry unused padded ports, but those must remain empty. -/
+def PhysicalState.reciprocalPorts (state : PhysicalState) : Bool :=
+  (List.range state.slots.size).all fun index =>
+    match state.slots[index]? with
+    | none => false
+    | some slot =>
+      match slot.agent with
+      | none => true
+      | some (_, symbol) =>
+        NetI64.arity symbol + 1 <= slot.ports.length &&
+          slot.ports.zipIdx.all fun (target, port) =>
+            if port > NetI64.arity symbol then target.isNone
+            else
+              match target with
+              | some (peer, peerPort) =>
+                match state.slots[peer]? with
+                | none => false
+                | some remote =>
+                  remote.agent.isSome &&
+                    remote.ports[peerPort]? == some (some (index, port)) &&
+                    !(state.outputs.any fun output => output.target == (index, port))
+              | none =>
+                (state.outputs.filter fun output =>
+                  output.target == (index, port)).length == 1
+
+/-- External identities and their mutable targets are each unique. Every
+output targets a live, unpaired physical port whose logical agent identity
+is different from that external identity. -/
+def PhysicalState.outputOwners (state : PhysicalState) : Bool :=
+  decide (state.outputs.map PhysicalOutput.label).Nodup &&
+    decide (state.outputs.map PhysicalOutput.target).Nodup &&
+    state.outputs.all fun output =>
+      match state.slots[output.target.1]? with
+      | none => false
+      | some slot =>
+        slot.agent.isSome &&
+          slot.ports[output.target.2]? == some none &&
+          !(state.slots.toList.any fun live =>
+            live.agent.map Prod.fst == some output.label.1)
 
 /-- The journal is the concrete, saved physical view seen by an observer until
 commit; intermediate writes to `current` are not admitted as committed nets. -/

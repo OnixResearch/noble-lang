@@ -13480,6 +13480,84 @@
       "claim": "every successful decoded physical image preserves the complete ordered abstract external free-port labels"
     },
     {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.projected_maps_perm_of_toNet_eq",
+      "phase": 1,
+      "role": "representation",
+      "claim": "whole-net equality implies exact finite agent and wire map inventories, independent of hash-table insertion order"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.semanticCheck_of_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "decoded and reserved physical execution with verified exact semantic fields is admitted by the independent model checker"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.semanticCheck_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "semantic admission entails decoded bytes, a successful reservation, actual physical execution, and all checked field conditions"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.semanticCheck_frame",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every admitted image reserves resources, has complete reciprocal-write inventories, and preserves each untouched physical slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op2_omitted_external_semantically_refused",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the model semantic checker refuses the parser-valid OP2 image with a missing reciprocal output write at every resource bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.semanticCheck_ownership",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every admitted image has unique live owners, an exact bounded free inventory and canonical physical queue entries"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.semanticCheck_journal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reserved model execution stages invisibly and rollback restores the original complete physical snapshot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.semanticCheck_refines",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every model-semantic-checker-admitted physical byte image commits one selected abstract rewrite with the entire net, stable ordered free-port labels, and directed live-agent pending-pair permutation"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.era_fixture_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the complete decoded ERA physical fixture passes the model semantic checker at exact resource reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op2_output_fixture_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the complete decoded OP2 output physical fixture passes the model semantic checker at exact resource reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op1_output_fixture_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the complete decoded wrapping OP1 physical fixture passes the model semantic checker at exact resource reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.dup_output_fixture_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the complete decoded two-output DUP physical fixture passes the model semantic checker at exact resource reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.op2_published_fixture_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the decoded OP2 image publishing an active external peer passes the semantic checker with both directed queue entries"
+    },
+    {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.project_boundary_frame",
       "phase": 1,
       "role": "representation",
@@ -13585,7 +13663,13 @@
       "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_output_refines",
       "phase": 1,
       "role": "abstract-reduction-step",
-      "claim": "the finite OP2 physical output rewrite projects to the selected abstract plan's whole net"
+      "claim": "the finite OP2 physical rewrite projects to the selected abstract result net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_output_compiled_observables",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the fixed OP2 output plan's captured boundary, directed work candidates and physical output targets"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_published_execution_exact",
@@ -13603,7 +13687,13 @@
       "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_published_refines",
       "phase": 1,
       "role": "abstract-reduction-step",
-      "claim": "the finite OP2 active publication projects to the checked abstract net and matching directed-pair worklist"
+      "claim": "the finite OP2 physical publication projects to the selected abstract net and both directed pending pairs"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_published_compiled_observables",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the fixed OP2 peer-publication plan's captured boundary, directed work candidates and physical output target"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_execution_exact",
@@ -13615,7 +13705,13 @@
       "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_wrapping_refines",
       "phase": 1,
       "role": "abstract-reduction-step",
-      "claim": "the finite OP1 subtraction rewrite projects to the selected abstract plan's whole net"
+      "claim": "the finite wrapping OP1 physical rewrite projects to the selected abstract result net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_output_compiled_observables",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the fixed OP1 output plan's captured boundary, directed work candidates and physical output target"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_execution_exact",
@@ -13627,7 +13723,13 @@
       "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_refines",
       "phase": 1,
       "role": "abstract-reduction-step",
-      "claim": "the finite DUP physical rewrite projects to the selected abstract plan's whole net"
+      "claim": "the finite DUP physical rewrite projects to the selected two-result abstract net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_output_compiled_observables",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the fixed DUP output plan's two ordered boundary ports, directed work candidates and physical output targets"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalState.era_execution_exact",
@@ -13640,6 +13742,12 @@
       "phase": 1,
       "role": "abstract-reduction-step",
       "claim": "the finite ERA physical rewrite projects to the selected abstract empty-result net"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_compiled_observables",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the fixed ERA model plan captures no external boundary or result agents and publishes no pending pairs"
     },
     {
       "name": "NobleFoundation.NetI64Plans.PhysicalTransaction.stage_stutters",
@@ -13802,6 +13910,798 @@
       "phase": 1,
       "role": "representation",
       "claim": "Rust-emitted reverse ERA allocate bytes decode to the empty result and retirement plan fields"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_decodes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every model-lowered physical plan roundtrips through the independent versioned byte decoder"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.withRequiredWrites_exact",
+      "phase": 1,
+      "role": "representation",
+      "claim": "construction of both reciprocal write lists from result ports yields exact ordered inventories"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.planCandidate_writes_exact",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every successful model emitter candidate derives both complete ordered write inventories from result ports"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.candidateBody_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the physical candidate builder derives ordered capture and rule-slot result symbols, opcode and exact reservation counters"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.planCandidate_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every successful model candidate derives rule opcode, ordered physical capture, result payloads, reciprocal write inventory and reservations without semantic-checker assumptions"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retire_live_success_frame",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a live nonoverflowing physical slot retires successfully without modifying any other slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.execute_empty_image_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any decoded empty-result, empty-write, empty-publication image completes for two distinct live nonoverflowing consumed slots"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retire_preserves_outputs",
+      "phase": 1,
+      "role": "representation",
+      "claim": "retiring any physical slot leaves the entire ordered output table and its targets unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.execute_empty_image_preserves_outputs",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a successful decoded empty-result image with no external writes or publications preserves the entire output-target table"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retire_erases_agent",
+      "phase": 1,
+      "role": "representation",
+      "claim": "successful non-reuse retirement removes its agent irrespective of stale worklist references"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retire_frame",
+      "phase": 1,
+      "role": "representation",
+      "claim": "non-reuse retirement preserves every unrelated physical slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.logicalPair_dead_endpoint",
+      "phase": 1,
+      "role": "representation",
+      "claim": "queued pair decoding refuses a missing agent at either endpoint"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.logicalPair_retire_away",
+      "phase": 1,
+      "role": "representation",
+      "claim": "retirement leaves generation and identity decoding of disjoint queued pairs unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.execute_empty_image_retires_pair",
+      "phase": 1,
+      "role": "representation",
+      "claim": "an empty decoded image retires both distinct consumed physical agents"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.execute_empty_image_project_work",
+      "phase": 1,
+      "role": "representation",
+      "claim": "empty decoded image projects exactly old queued pairs disjoint from consumed slots, preserving their directed orientation order"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.installResult_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one physical result installs from independent live donor, port resolution, slot capacity and generation headroom guards"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.install_single_result_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "an OP1 or OP2 one-result RHS installs from source-slot label agreement and concrete per-result guards"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.installResult_preserves_outputs",
+      "phase": 1,
+      "role": "representation",
+      "claim": "installing one physical result leaves every ordered output target unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.installResult_external_slot_frame",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one result installation leaves every distinct old external peer slot unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.single_output_result_ports",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a result's single output port resolves without a physical peer slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.single_peer_result_ports",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one result's peer port resolves exactly to the independently captured physical endpoint"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retargetOutput_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any existing physical output table entry can be retargeted"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retargetOutput_preserves_slots",
+      "phase": 1,
+      "role": "representation",
+      "claim": "output retargeting leaves all physical slots and generations unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retargetOutput_target",
+      "phase": 1,
+      "role": "representation",
+      "claim": "successful output retargeting stores the requested physical target at the selected index"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeExternal_output_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "an external output endpoint still owning its captured target accepts an emitted result's reciprocal write"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeExternal_peer_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a distinct live external peer still owning its captured target accepts an emitted result's reciprocal write"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeExternal_slot_frame",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one reciprocal external write preserves slots away from its live peer, or every slot for an output"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.install_then_write_output",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one result installation preserves a captured output target for its following reciprocal write"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.install_then_write_peer",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one result installation away from a captured live peer preserves its following reciprocal write"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.publish_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a canonical current reciprocal pair publishes with clear generation marks and physical queue headroom"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.execute_single_external_image_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one decoded result and reciprocal write execute for fresh or either reuse policy when their independent installation, write and frame guards hold and no pair publishes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.execute_single_output_image_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one-result one-output decoded image physically executes under local prestate guards in fresh or either reuse mode"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.execute_single_peer_image_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one-result one-live-peer decoded image physically executes without pair publication when the peer is distinct from the consumed pair"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowered_empty_image_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a lowered empty-result image physically completes and preserves outputs and work for distinct live consumed slots"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_forward_lowered_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every actually lowered forward ERA image physically executes under current distinct reciprocal principal slots, preserving output targets and work"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_reverse_lowered_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every actually lowered reverse ERA image physically executes under current distinct reciprocal principal slots, preserving output targets and work"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_forward_candidate_exists",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any current and reciprocal forward ERA pair with correct physical symbols creates a candidate in both storage policies"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_reverse_candidate_exists",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any current and reciprocal reverse ERA pair with correct physical symbols creates a candidate in both storage policies"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_candidate_exists",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any forward OP1 pair with a valid prestate capture and publication creates a candidate independent of the checker"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_reverse_candidate_exists",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any reverse OP1 pair with a valid prestate capture and publication creates a candidate independent of the checker"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_candidate_shape",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP1 candidate has exactly one result, one captured boundary and one reciprocal write with matching storage action"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_reverse_candidate_shape",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP1 candidate has exactly one result, one captured boundary and one reciprocal write with matching storage action"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_output_candidate_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a byte-roundtripped forward OP1 output-boundary candidate completes its physical step in both storage modes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_reverse_output_candidate_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a byte-roundtripped reverse OP1 output-boundary candidate completes its physical step in both storage modes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_nonprincipal_peer_candidate_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP1 emitted candidate with a distinct live nonprincipal peer completes reciprocal wiring and retirement in either storage mode"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_reverse_nonprincipal_peer_candidate_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP1 emitted candidate with a distinct live nonprincipal peer completes reciprocal wiring and retirement in either storage mode"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_output_lowered_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "actually emitted forward OP1 output-boundary image executes under current physical prestate capture guards"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_reverse_output_lowered_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "actually emitted reverse OP1 output-boundary image executes under current physical prestate capture guards"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_nonprincipal_peer_lowered_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "actually lowered forward OP1 image with a live nonprincipal peer completes in both storage modes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_reverse_nonprincipal_peer_lowered_completes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "actually lowered reverse OP1 image with a live nonprincipal peer completes in both storage modes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_output_lowered_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP1 emitted physical output capture equals its abstract boundary under independent prestate endpoint witnesses"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_reverse_output_lowered_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP1 emitted physical output capture equals its abstract boundary under independent prestate endpoint witnesses"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.op1_forward_output_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP1 abstract nonprincipal capture contains only its sole auxiliary wire"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.op1_reverse_output_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP1 abstract nonprincipal capture contains only its sole auxiliary wire"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.single_output_logical_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one physical output boundary resolves to the stable prestate logical output label"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_forward_candidate_exists",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any forward OP2 pair with two distinct valid captures and a prestate publication creates a candidate"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_reverse_candidate_exists",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any reverse OP2 pair with two distinct valid captures and a prestate publication creates a candidate"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_forward_candidate_exists",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any forward DUP pair with two distinct valid captures and both prestate publications creates a candidate"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_reverse_candidate_exists",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any reverse DUP pair with two distinct valid captures and both prestate publications creates a candidate"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.rule_result_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any total selected rule-slot labeling matches the abstract compiler result-symbol order"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.zero_arity_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every selected pair of two zero-arity agents has no nonprincipal abstract captured boundary"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowered_zero_arity_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a physically empty boundary for a zero-arity pair agrees with the abstract selected boundary"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_forward_lowered_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every actually emitted forward ERA candidate has exactly the independent abstract boundary"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_reverse_lowered_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every actually emitted reverse ERA candidate has exactly the independent abstract boundary"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_semantic_prefix",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every emitted image with a logical-boundary witness meets the first eight semantic fields without checker assumptions"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.reserve_if_queue_capacity",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the negated physical queue exclusion admits an exact-headroom journal given the emitted scratch reservation"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refuses_exhausted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "generation-headroom exhaustion refuses plan emission for every selected rule and storage mode"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refuses_unrepresentable",
+      "phase": 1,
+      "role": "representation",
+      "claim": "an arena or output table exceeding the conservative 32-bit image envelope refuses any model lowering"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.planCandidate_refuses_alias",
+      "phase": 1,
+      "role": "representation",
+      "claim": "consumed-agent auxiliary boundary aliases refuse every model candidate before any bytes are emitted"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refuses_alias",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the consumed-pair boundary-alias exclusion refuses model lowering in either storage mode"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.decode_refuses_oversized_emit",
+      "phase": 1,
+      "role": "representation",
+      "claim": "any emitted byte image longer than the version-one maximum of 256 bytes refuses decoding"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refuses_unencodable_candidate",
+      "phase": 1,
+      "role": "representation",
+      "claim": "model lowering refuses an assembled plan whenever its independently decoded image differs"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refuses_oversized_candidate",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a model candidate whose byte image exceeds 256 bytes refuses plan lowering"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.semanticCheck_refuses_queue_capacity",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a checker with physical slot-derived queue headroom refuses any image requesting more publication entries"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.queue_full_is_independent_exclusion",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a legal matched non-aliased and byte-encodable layout can emit a plan while stale physical entries fill the queue and independently refuse execution"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_requires_headroom",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every model-emitted plan has generation headroom in both consumed slots"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.five_initial_layouts_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "five physical fixture starts satisfy finite reciprocal-port, output-ownership and unique-owner legality"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.five_committed_layouts_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "five physical fixture committed states satisfy the same structural legality predicate"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.overflow_layout_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a structurally legal live pair can independently exhaust generation headroom and refuse emission"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.aux_loop_is_explicit_exclusion",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a legal reciprocal auxiliary loop on a matched pair has headroom but explicitly refuses model emission"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.checked_ownership_inventory",
+      "phase": 1,
+      "role": "representation",
+      "claim": "semantic checker ensures owner, free-slot and canonical-work subset of physical legality"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.semanticCheck_result_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every checked physical commit has structural legality, including bounded queued generations, reciprocal ports and unique owned outputs"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.semanticCheck_result_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every checker-admitted physical state has no future-generation queued endpoints, even for an illegal prestate"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.empty_work_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every initial arena with an empty pending queue satisfies the generation bound independent of slot contents"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeSlot_self",
+      "phase": 1,
+      "role": "representation",
+      "claim": "updating an existing physical slot stores exactly the replacement slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.op2_forward_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP2 compiles to an explicit captured boundary, one op1 child and four symbolic reciprocal wire writes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.op2_reverse_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP2 compiles to an explicit captured boundary, one op1 child and four symbolic reciprocal wire writes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.op1_forward_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP1 compiles to an explicit captured boundary, one number child and two symbolic reciprocal wire writes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.op1_reverse_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP1 compiles to an explicit captured boundary, one number child and two symbolic reciprocal wire writes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.dup_forward_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward DUP compiles to an explicit captured boundary, two number children and four symbolic reciprocal wire writes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.dup_reverse_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse DUP compiles to an explicit captured boundary, two number children and four symbolic reciprocal wire writes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.era_forward_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward ERA compiles to the principal-only captured boundary with no children or wire writes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.era_reverse_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse ERA compiles to the principal-only captured boundary with no children or wire writes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.commit_agents_getElem?",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one committed abstract agent lookup is the initialized child, else absent for the consumed pair, else the prestate agent"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.Plan.commit_wires_getElem?",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one committed abstract wire lookup is the declared write, else absent at a captured wire end, else the prestate wire"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_has_candidate",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a successful lowering returns exactly the candidate assembled before its byte roundtrip check"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.queuedGenerationsBound_iff",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the Boolean queued-generation bound is exactly an in-bounds slot lookup bounding both generations of every old queued entry"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.queuedGenerationsBound_writeSlot_mono",
+      "phase": 1,
+      "role": "representation",
+      "claim": "overwriting an existing slot without decreasing its generation preserves the queued-generation bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.queuedGenerationsBound_appendSlot",
+      "phase": 1,
+      "role": "representation",
+      "claim": "appending a fresh slot of any generation preserves every old queued-generation bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.generation_increment_mono",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a generation increment under the physical headroom check does not wrap and is numerically monotone"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retargetOutput_preserves_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a successful output retarget leaves slot generations and pending entries unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.append_current_pair_preserves_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "appending one pair whose generations are bounded by its endpoint slots preserves the queued-generation bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.installResult_preserves_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every successful fresh or reused result installation preserves the queued-generation bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.installResults_preserves_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every successful variable-length result installation preserves the queued-generation bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retire_preserves_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every successful reuse or checked-headroom retirement preserves the queued-generation bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeExternal_preserves_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every successful peer or output reciprocal write preserves the queued-generation bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeExternals_preserves_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every successful reciprocal-write list preserves the queued-generation bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.publish_preserves_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every successful canonical pair publication preserves old bounds and appends current endpoint generations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalTransaction.stage_preserves_visible_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every internal physical microstep leaves the saved visible structural legality unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refines_if_checked",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every semantically admitted model-emitted plan decodes and refines the selected whole-net rewrite"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_refines_of_physical_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "generic emitted image execution with independently established semantic fields and resources composes into checker admission and one abstract step"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.overflow_pair_refuses_both_modes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "live matched physical pairs at exhausted generation refuse both lowering policies before emitting bytes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.five_fixture_images_from_lowering",
+      "phase": 1,
+      "role": "representation",
+      "claim": "model lowering derives the exact five independently specified physical fixture images"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.five_lowered_images_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "all five model-emitted physical fixture images pass the complete semantic admission checker"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanLoweringCorpus.all_sixteen_bytes_match",
+      "phase": 1,
+      "role": "representation",
+      "claim": "model lowering independently reproduces 16 Rust-emitted images across four rules, both orientations and storage policies"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanLoweringCorpus.extra_sixteen_bytes_match",
+      "phase": 1,
+      "role": "representation",
+      "claim": "model lowering independently reproduces 16 additional Rust-emitted extreme and zero payload images"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op2MaxForwardReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted maximum-payload OP2 forward reuse bytes decode and match selected rule symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op2MaxForwardAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted maximum-payload OP2 forward allocate bytes decode and match selected rule symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op2MaxReverseReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted maximum-payload OP2 reverse reuse bytes decode and match selected rule symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op2MaxReverseAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted maximum-payload OP2 reverse allocate bytes decode and match selected rule symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op1ZeroForwardReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload OP1 forward reuse bytes decode and match selected staged symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op1ZeroForwardAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload OP1 forward allocate bytes decode and match selected staged symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op1ZeroReverseReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload OP1 reverse reuse bytes decode and match selected staged symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.op1ZeroReverseAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload OP1 reverse allocate bytes decode and match selected staged symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.dupZeroForwardReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload DUP forward reuse bytes decode and match both fanout symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.dupZeroForwardAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload DUP forward allocate bytes decode and match both fanout symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.dupZeroReverseReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload DUP reverse reuse bytes decode and match both fanout symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.dupZeroReverseAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload DUP reverse allocate bytes decode and match both fanout symbols"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.eraZeroForwardReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload ERA forward reuse bytes decode and match the empty result"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.eraZeroForwardAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload ERA forward allocate bytes decode and match the empty result"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.eraZeroReverseReuse_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload ERA reverse reuse bytes decode and match the empty result"
+    },
+    {
+      "name": "NobleFoundation.NetI64PlanCorpus.eraZeroReverseAllocate_decoded_fields_and_symbols",
+      "phase": 1,
+      "role": "representation",
+      "claim": "Rust-emitted zero-payload ERA reverse allocate bytes decode and match the empty result"
     },
     {
       "name": "NobleFoundation.NetI64Resource.xRule_time_obligation",
@@ -14090,6 +14990,588 @@
       "phase": 1,
       "role": "recurrent-bitcell",
       "claim": "the abstract per-step admission predicate refuses every completed count at or above 1000"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.mem_liveIds",
+      "phase": 1,
+      "role": "representation",
+      "claim": "membership in the live identities is exactly a live slot carrying it"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.slot_index_unique",
+      "phase": 1,
+      "role": "representation",
+      "claim": "unique live identities determine their physical slot index"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.agents_getElem?_of_slot",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a live slot's symbol is the projected agent of its unique identity"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.agents_getElem?_of_not_live",
+      "phase": 1,
+      "role": "representation",
+      "claim": "an identity carried by no live slot has no projected agent"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.wires_label",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a stable output label resolves to its current physical target"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.wires_endpoint",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the logical port targeted by an output resolves back to its label"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.wires_internal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a live port not targeted by any output resolves through its own stored physical reference"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.wires_absent",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a key that is neither a live port nor an output label has no wire"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.reciprocalPorts_iff",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reciprocalPorts holds exactly when every live slot satisfies the per-slot proposition"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.outputOwners_iff",
+      "phase": 1,
+      "role": "representation",
+      "claim": "outputOwners as a proposition over the ordered output table"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.Legal.keysSeparated",
+      "phase": 1,
+      "role": "representation",
+      "claim": "structural legality separates every projected key space"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.captureAux_project",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every live port at or below its symbol's arity is captured by the physical auxiliary-capture reader, either as a reciprocal live peer whose projected wire is the peer's logical port, or as the unique output whose projected wire is its stable label"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.redex_physical_pair",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a matching projection wires the two principal ports of a redex directly, and legality turns that into the physical reciprocal principal pair"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.output_target_in_arity",
+      "phase": 1,
+      "role": "representation",
+      "claim": "in a matching projection of a legal arena, every output targets a port at or below the arity of a live slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.extension_unused",
+      "phase": 1,
+      "role": "representation",
+      "claim": "names extending a live agent's identity are unused: no live slot and no output label carries them. This is the matching projection's freshness"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.installResult_fresh_eq",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a fresh result is appended exactly at the next physical index"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.installResult_reuse_eq",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a reused result rewrites its live slot with the next generation"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeExternal_peer_eq",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a peer write rewrites exactly its captured live peer slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeExternal_output_eq",
+      "phase": 1,
+      "role": "representation",
+      "claim": "an output write retargets exactly its captured output entry"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retire_eq",
+      "phase": 1,
+      "role": "representation",
+      "claim": "retiring a live slot with headroom clears it and frees its index"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retire_reused",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a reused consumed slot is not retired"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.publish_eq",
+      "phase": 1,
+      "role": "representation",
+      "claim": "publication marks both current endpoints and appends the canonical pair"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retargetOutput_eq",
+      "phase": 1,
+      "role": "representation",
+      "claim": "retargeting an existing output replaces exactly that table entry"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeExternal_ready",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the exact effect of one admissible reciprocal write"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeReady_after",
+      "phase": 1,
+      "role": "representation",
+      "claim": "an admissible write remains admissible after another write with a different target: peers keep their liveness and other ports, and other outputs keep their targets"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeExternal_post",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one admissible reciprocal write has exactly the single-write observations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writesPost_cons",
+      "phase": 1,
+      "role": "representation",
+      "claim": "write observations compose when the head write's target is not written again by the remaining writes"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeExternals_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "list-fold reciprocal writes. Every write of a list whose targets are pairwise distinct and admissible in the starting arena succeeds in order, and the final arena has exactly the cumulative write observations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.installResults_fresh",
+      "phase": 1,
+      "role": "representation",
+      "claim": "list-fold fresh installation. Results that each occupy the next reserved fresh index, with a live consumed donor and resolvable ports, all install in order; every old slot is untouched and each appended slot holds exactly its result"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.installResults_reuse",
+      "phase": 1,
+      "role": "representation",
+      "claim": "list-fold reuse installation. Results that each rewrite a distinct live consumed donor slot with generation headroom all install in order; other slots are untouched and each reused slot holds exactly its result at the next generation"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.publishAll_success",
+      "phase": 1,
+      "role": "representation",
+      "claim": "list-fold publication. Pairs with pairwise disjoint endpoints, each publishable in the starting arena, all publish when the physical queue has room for every one of them; only queue marks and the queue change"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.executeCheckedImage_phases",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the executor is exactly its five phases once the image decodes and its selected pair is current"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.retire_flag",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one retire step with either flag: a set flag leaves the arena unchanged; a clear flag retires a live slot with headroom and changes nothing else"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.writeReady_installed",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a write admissible in the prestate stays admissible after installation when its peer is an old slot that no result occupies"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.publishAll_preserves_queued_generations_bound",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every successful publication list preserves the queued-generation bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.execute_observations",
+      "phase": 1,
+      "role": "representation",
+      "claim": "generic emitted-image execution. Installation into reserved result slots, admissible pairwise-distinct reciprocal writes to captured endpoints, retire flags matching the consumed slots no result reuses, publishable canonical pairs with disjoint endpoints, and queue room for all of them make the whole decoded image execute; the post-state has exactly the observations of the given result and edge views"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_forward_candidate_shape",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a selected forward OP2 candidate has one result reading both captured endpoints in auxiliary-port order"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_reverse_candidate_shape",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a selected reverse OP2 candidate reads the second physical slot's captured endpoints into its one result"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_forward_candidate_shape",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a selected forward DUP candidate has two number results, the first donated by the duplicator slot and the second by the number slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_reverse_candidate_shape",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a selected reverse DUP candidate takes its donors in rule-slot, number-slot order, i.e. second then first physical slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.free_fields",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the free-slot inventory stays exact, duplicate-free and in bounds"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.work_canonical",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every physical queue entry stays in canonical slot order"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.reciprocalPorts",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every live port of the executed arena has a reciprocal owner"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.outputOwners",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every output keeps a unique label and a unique empty live target"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.work_perm",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the projected physical queue permutes the abstract live pending pairs"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.liveIds_nodup",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the executed arena keeps one live slot per logical identity"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.keysSeparated",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the executed arena's projected key spaces remain separated"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.agents_eq",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every projected agent lookup equals the abstract commit's lookup"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.wires_eq",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every projected wire lookup equals the abstract commit's lookup"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.outputs_field",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every output's current target resolves to the abstract wire of its label"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.semanticCheck_of_local_rewrite",
+      "phase": 1,
+      "role": "representation",
+      "claim": "admission from a local rewrite"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.resultTarget_boundary",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a result port naming a captured peer or output resolves to that boundary's physical reference"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.publicationFor_quiet",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a result whose principal port reads an output or a nonprincipal peer port publishes no pair"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.publicationFor_fresh_active",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a fresh result whose principal port reads a live peer's principal port publishes exactly the canonical tuple at generation zero"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.publicationFor_reuse_active",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a reused result whose principal port reads a live peer's principal port publishes exactly the canonical tuple at the reused slot's next generation"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.capture_edge",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one non-aliased auxiliary port of a legal live rule slot yields a captured edge: its physical endpoint is a reciprocal live peer outside the consumed pair or its unique output, and the prestate projection wires the rule port to that endpoint's logical port or stable label"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.captured_targets_distinct",
+      "phase": 1,
+      "role": "representation",
+      "claim": "captured edges leaving two different ports of the same rule slot have different physical endpoints"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.install_one_result",
+      "phase": 1,
+      "role": "representation",
+      "claim": "installing the single result of an OP1/OP2 image, donated by a live rule slot with headroom, either rewrites that slot at the next generation (reuse) or appends it at generation zero (fresh)"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.logicalBoundary_eq_mapM",
+      "phase": 1,
+      "role": "representation",
+      "claim": "bytePlan.logicalBoundary decodes entry by entry"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.logicalBoundary_entry",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a captured boundary decodes against the prestate to the rule agent's logical port and the captured endpoint's logical port or stable label"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "emitted OP2 admission, for either orientation and storage policy: an actually lowered OP2 image of a legal, current, matched arena that is not excluded by queue capacity executes and passes the independent semantic checker at its exact reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_no_alias",
+      "phase": 1,
+      "role": "representation",
+      "claim": "an actually emitted image is not refused by the consumed-boundary alias"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_slot_headroom",
+      "phase": 1,
+      "role": "representation",
+      "claim": "an actually emitted image has generation headroom at both consumed slots"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.captured_endpoint_away",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a captured endpoint never names either consumed agent: a peer endpoint is a live identity outside the consumed slots and an output label is not live"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.publicationFor_defined",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the single result's publication of a one-result image is always defined when its principal port reads a captured endpoint: quiet for outputs and nonprincipal peers, one canonical tuple for a live peer's principal port"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_forward_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP2 emitted admission"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_reverse_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP2 emitted admission"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.publicationFor_defined_outside",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the same definedness for a result that may occupy the value slot (DUP's second result): the captured peer differs from both consumed slots, so it suffices that no live slot outside them is the result slot"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_forward_candidate_of_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP2 has a candidate in every legal, current, matched, non-aliased arena with generation headroom"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op2_reverse_candidate_of_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP2 has a candidate in every legal, current, matched, non-aliased arena with generation headroom"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_candidate_of_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP1 has a candidate in every legal, current, matched, non-aliased arena with generation headroom"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_reverse_candidate_of_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP1 has a candidate in every legal, current, matched, non-aliased arena with generation headroom"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_forward_candidate_of_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward ERA always has its empty candidate in a legal, current, matched arena"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_reverse_candidate_of_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse ERA always has its empty candidate in a legal, current, matched arena"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_forward_candidate_of_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward DUP has a candidate in every legal, current, matched, non-aliased arena with generation headroom"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_reverse_candidate_of_legal",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse DUP has a candidate in every legal, current, matched, non-aliased arena with generation headroom"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "emitted ERA admission, for either orientation and storage policy: an actually lowered erasure image (no results, boundaries, writes or publications, both consumed slots retired) of a legal, current, matched arena that is not excluded by queue capacity executes and passes the independent semantic checker at its exact reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_forward_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward ERA emitted admission"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.era_reverse_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse ERA emitted admission"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "emitted OP1 admission, for either orientation and storage policy: an actually lowered OP1 image of a legal, current, matched arena that is not excluded by queue capacity executes and passes the independent semantic checker at its exact reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_forward_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward OP1 emitted admission. From a legal arena, a current selected op1 ⋈ num pair, a matching projection and its redex alone, an actually lowered image that is not excluded by queue capacity passes the semantic checker at its exact reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.op1_reverse_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse OP1 emitted admission. The mirrored num ⋈ op1 orientation: the op1 agent is the second selected identity and its physical slot donates the single result"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.candidate_of_representable",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every representable instance of a selected rule has a model-emitter candidate unless the alias exclusion holds or generation headroom is exhausted, in every orientation and storage policy"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.accepted_of_representable",
+      "phase": 1,
+      "role": "representation",
+      "claim": "every actually emitted image of a representable instance that is not excluded by queue capacity is admitted by the independent semantic checker at its exact reservations, in every orientation and storage policy"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.emitted_image_physical_fields_on_representable_layout",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the physical-field bridge. Every actually emitted image of a representable instance that is not excluded by queue capacity supplies all three witnesses of lowerPlan_refines_of_physical_fields at its exact reservations: the resource reservation succeeds, the generic physical executor runs the emitted bytes, and every independently specified semantic field holds"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.emitter_classification",
+      "phase": 1,
+      "role": "representation",
+      "claim": "universal emitter classification. For every representable instance of a selected revision-3 rule, in either orientation and storage policy, one of the following holds: a named exclusion refuses it (consumed-boundary alias; unencodable index table; exhausted generation; unencodable byte image; physical queue capacity, which the checker refuses before any mutation at every queue limit up to the slot-derived headroom), or the lowered image is admitted by BytePlan.semanticCheck at its exact reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.emitter_refines",
+      "phase": 1,
+      "role": "representation",
+      "claim": "unconditional refinement corollary. Every representable instance whose lowering is not refused by a named exclusion is admitted, and its admitted commit is one abstract CStep of the matched net, with the projected generation-checked queue a permutation of the abstract live pending pairs and the stable free-port list unchanged"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "emitted DUP acceptance, for either orientation and storage policy: an actually lowered DUP image of a legal, current, matched arena that is not excluded by queue capacity executes and passes the independent semantic checker at its exact reservations"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_forward_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "forward DUP emitted acceptance"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.dup_reverse_accepted",
+      "phase": 1,
+      "role": "representation",
+      "claim": "reverse DUP emitted acceptance"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.BytePlan.admissible_of_bounds",
+      "phase": 1,
+      "role": "representation",
+      "claim": "admissibility from field bounds. The total-length field of BytePlan.Admissible follows from the others: with at most two entries in every counted field and three ports per result, an emitted image has at most 175 bytes, below the 256-byte version-one bound"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.planIndicesEncodable_bounds",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the encodability gate's two numeric bounds"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.captureAux_encodable",
+      "phase": 1,
+      "role": "representation",
+      "claim": "a captured boundary of an encodable arena fits the version-one boundary fields: an in-range source slot and port, and either a live peer slot with a port byte or an in-range output index"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.publicationFor_encodable",
+      "phase": 1,
+      "role": "representation",
+      "claim": "one result's publications in an encodable arena: at most one canonical pair, whose slot indices and generations fit the version-one pair fields, provided the result's own slot index fits"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.planCandidate_admissible",
+      "phase": 1,
+      "role": "representation",
+      "claim": "encodable candidates are admissible. Every candidate the model emitter assembles in an arena inside the version-one 32-bit index envelope satisfies BytePlan.Admissible, for every selected rule, orientation and storage policy, without any legality premise"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.planCandidate_decodes",
+      "phase": 1,
+      "role": "representation",
+      "claim": "the byte-roundtrip exclusion is uninhabited. In an arena inside the version-one index envelope, every model-emitter candidate decodes back to exactly itself"
+    },
+    {
+      "name": "NobleFoundation.NetI64Plans.PhysicalState.lowerPlan_eq_candidate",
+      "phase": 1,
+      "role": "representation",
+      "claim": "lowering an encodable pair with generation headroom returns exactly the model-emitter candidate: its byte-roundtrip check never refuses"
     }
   ],
   "private_theorems": [
@@ -14316,6 +15798,158 @@
     "NobleFoundation.NetI64Plans.dup_nbhd",
     "NobleFoundation.NetI64Plans.dup_plan_agents",
     "NobleFoundation.NetI64Plans.dup_plan_boundary",
-    "NobleFoundation.NetI64Plans.dup_plan_writes"
+    "NobleFoundation.NetI64Plans.dup_plan_writes",
+    "NobleFoundation.NetI64Plans.lookup_eq_of_some_iff",
+    "NobleFoundation.NetI64Plans.BytePlan.semanticFieldsCheck_iff",
+    "NobleFoundation.NetI64Plans.mapM_preserves_projection",
+    "NobleFoundation.NetI64Plans.mapM_filterMap_symbols",
+    "NobleFoundation.NetI64Plans.foldl_insert_getElem?",
+    "NobleFoundation.NetI64Plans.foldl_erase_getElem?",
+    "NobleFoundation.NetI64Plans.agents_eq_fold",
+    "NobleFoundation.NetI64Plans.portWires_cons",
+    "NobleFoundation.NetI64Plans.wires_eq_fold",
+    "NobleFoundation.NetI64Plans.mem_filterMap_agent",
+    "NobleFoundation.NetI64Plans.filterMap_agent_cons_some",
+    "NobleFoundation.NetI64Plans.filterMap_agent_cons_none",
+    "NobleFoundation.NetI64Plans.index_unique_of_nodup",
+    "NobleFoundation.NetI64Plans.agentFold_of_not_mem",
+    "NobleFoundation.NetI64Plans.agentFold_of_mem",
+    "NobleFoundation.NetI64Plans.logicalPort_live",
+    "NobleFoundation.NetI64Plans.logicalPort_of_slot",
+    "NobleFoundation.NetI64Plans.logicalPort_mem_liveIds",
+    "NobleFoundation.NetI64Plans.logicalPort_injective",
+    "NobleFoundation.NetI64Plans.portStep_getElem?",
+    "NobleFoundation.NetI64Plans.portWires_away",
+    "NobleFoundation.NetI64Plans.portWires_self",
+    "NobleFoundation.NetI64Plans.internalFold_of_not_mem",
+    "NobleFoundation.NetI64Plans.internalFold_of_mem",
+    "NobleFoundation.NetI64Plans.internal_of_not_live",
+    "NobleFoundation.NetI64Plans.outputFold_away",
+    "NobleFoundation.NetI64Plans.PhysicalState.KeysSeparated.label_ne_endpoint",
+    "NobleFoundation.NetI64Plans.any_live_eq_false",
+    "NobleFoundation.NetI64Plans.filter_zipIdx_map_fst",
+    "NobleFoundation.NetI64Plans.logicalPair_eq_some",
+    "NobleFoundation.NetI64Plans.not_output_target_of_live_wire",
+    "NobleFoundation.NetI64Plans.port_of_live_wire",
+    "NobleFoundation.NetI64Plans.array_lt_of_some",
+    "NobleFoundation.NetI64Plans.inj_of_nodup_map",
+    "NobleFoundation.NetI64Plans.index_inj_of_nodup",
+    "NobleFoundation.NetI64Plans.nodup_of_index_inj",
+    "NobleFoundation.NetI64Plans.filter_length_one",
+    "NobleFoundation.NetI64Plans.filter_length_congr",
+    "NobleFoundation.NetI64Plans.prestate_free_iff",
+    "NobleFoundation.NetI64Plans.prestate_reciprocal",
+    "NobleFoundation.NetI64Plans.edge_inj",
+    "NobleFoundation.NetI64Plans.edge_peer",
+    "NobleFoundation.NetI64Plans.edge_output",
+    "NobleFoundation.NetI64Plans.not_result_of_other",
+    "NobleFoundation.NetI64Plans.slot_cases",
+    "NobleFoundation.NetI64Plans.rule_aux",
+    "NobleFoundation.NetI64Plans.untouched_output",
+    "NobleFoundation.NetI64Plans.untouched_not_result",
+    "NobleFoundation.NetI64Plans.next_output",
+    "NobleFoundation.NetI64Plans.result_port_outputs",
+    "NobleFoundation.NetI64Plans.other_no_output",
+    "NobleFoundation.NetI64Plans.edge_result_port",
+    "NobleFoundation.NetI64Plans.label_not_live",
+    "NobleFoundation.NetI64Plans.result_reciprocal",
+    "NobleFoundation.NetI64Plans.other_reciprocal",
+    "NobleFoundation.NetI64Plans.generation_succ_toNat",
+    "NobleFoundation.NetI64Plans.eq_of_mem_of_map_nodup",
+    "NobleFoundation.NetI64Plans.flatMap_congr_mem",
+    "NobleFoundation.NetI64Plans.nodup_filterMap",
+    "NobleFoundation.NetI64Plans.mem_principalPairs_iff",
+    "NobleFoundation.NetI64Plans.principal_some",
+    "NobleFoundation.NetI64Plans.logicalPair_some",
+    "NobleFoundation.NetI64Plans.logicalPair_none_first",
+    "NobleFoundation.NetI64Plans.logicalPair_none_second",
+    "NobleFoundation.NetI64Plans.logicalPair_congr",
+    "NobleFoundation.NetI64Plans.mem_orientations",
+    "NobleFoundation.NetI64Plans.nodup_orientations",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_consumed_live",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_agents",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_dead",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_live_result",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_live_state",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_dead_label",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_consumed_stale",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_consumed_id",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_old",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_peer_edge",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_edge_resultId",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_endpoint_ne",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_edge_eq",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_orientations",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_published",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_edge_published",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.queue_new",
+    "NobleFoundation.NetI64Plans.index_eq_of_nodup",
+    "NobleFoundation.NetI64Plans.nodup_of_index_eq",
+    "NobleFoundation.NetI64Plans.index_eq_of_nodup_map",
+    "NobleFoundation.NetI64Plans.filterMap_nodup",
+    "NobleFoundation.NetI64Plans.liveIds_nodup_of",
+    "NobleFoundation.NetI64Plans.triple_eq",
+    "NobleFoundation.NetI64Plans.assoc_some",
+    "NobleFoundation.NetI64Plans.assoc_none",
+    "NobleFoundation.NetI64Plans.port_above_arity",
+    "NobleFoundation.NetI64Plans.reciprocal_ref",
+    "NobleFoundation.NetI64Plans.state_target_empty",
+    "NobleFoundation.NetI64Plans.logicalPort_congr",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.stateRecip",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.rule_live",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.value_live",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.consumed_iff",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.edge_resultId",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.result_slot_ne",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.edge_of_port",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.edge_peer",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.edge_output",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.edge_port",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.endpoint_ne_result",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.endpoint_target",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.untouched_output",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.ref_into_pair",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.next_live",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.mem_next_liveIds",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.next_labels",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.next_label_mem",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.next_output",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.next_output_result",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.next_output_old",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.next_logicalPort_result",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.next_logicalPort_old",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.next_logicalPort_edge",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.writes_nodup",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.not_forward",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.unwritten",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.commit_forward",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.commit_backward",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.commit_unwritten_captured",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.commit_unwritten_none",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.commit_unwritten_plain",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.state_wires_above",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.wires_result",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.wires_edge_endpoint",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.wires_consumed",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.wires_label_free",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.wires_old",
+    "NobleFoundation.NetI64Plans.PhysicalState.LocalRewrite.wires_dead",
+    "NobleFoundation.NetI64Plans.PhysicalState.dup_install_results",
+    "NobleFoundation.NetI64Plans.PhysicalState.dup_publication_shape",
+    "NobleFoundation.NetI64Plans.PhysicalState.dup_published_mem",
+    "NobleFoundation.NetI64Plans.PhysicalState.canonicalPair_ends",
+    "NobleFoundation.NetI64Plans.PhysicalState.canonicalPair_ends_nodup",
+    "NobleFoundation.NetI64Plans.PhysicalState.canonicalPairs_ends_nodup",
+    "NobleFoundation.NetI64Plans.PhysicalState.canonicalPairs_nodup",
+    "NobleFoundation.NetI64Plans.emitWord_length",
+    "NobleFoundation.NetI64Plans.emitPair_length",
+    "NobleFoundation.NetI64Plans.emitBoundary_length_le",
+    "NobleFoundation.NetI64Plans.emitResult_length",
+    "NobleFoundation.NetI64Plans.emitWrite_length",
+    "NobleFoundation.NetI64Plans.flatMap_length_le",
+    "NobleFoundation.NetI64Plans.arity_le_two",
+    "NobleFoundation.NetI64Plans.mapM_some_mem",
+    "NobleFoundation.NetI64Plans.ruleOpcode_cases",
+    "NobleFoundation.NetI64Plans.ruleSlots_cases"
   ]
 }

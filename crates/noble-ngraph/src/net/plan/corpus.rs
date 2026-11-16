@@ -94,7 +94,34 @@ struct EmittedCase {
     reverse: bool,
     policy: StoragePolicy,
     bytes: rewrite::PlanBytes,
+    model_fixture: bool,
 }
+
+// Fresh Rust compiler inputs beyond the four independently modeled physical
+// examples: extreme payloads and an erased zero. Only their emitted bytes and
+// selected-rule fields are compared, not a fabricated physical fixture proof.
+const EXTRAS: [RuleCase; 4] = [
+    RuleCase {
+        name: "op2Max",
+        value: u64::MAX,
+        ..RULES[0]
+    },
+    RuleCase {
+        name: "op1Zero",
+        value: 0,
+        ..RULES[1]
+    },
+    RuleCase {
+        name: "dupZero",
+        value: 0,
+        ..RULES[2]
+    },
+    RuleCase {
+        name: "eraZero",
+        value: 0,
+        ..RULES[3]
+    },
+];
 
 #[test]
 fn generated_lean_plan_corpus_is_fresh() {
@@ -111,8 +138,12 @@ fn regenerate_lean_plan_corpus() {
 }
 
 fn emitted_cases() -> alloc::vec::Vec<EmittedCase> {
-    let mut cases = alloc::vec::Vec::with_capacity(RULES.len() * 4);
-    for rule in RULES {
+    let mut cases = alloc::vec::Vec::with_capacity((RULES.len() + EXTRAS.len()) * 4);
+    for (rule, model_fixture) in RULES
+        .into_iter()
+        .map(|rule| (rule, true))
+        .chain(EXTRAS.into_iter().map(|rule| (rule, false)))
+    {
         for reverse in [false, true] {
             for policy in [StoragePolicy::Reuse, StoragePolicy::Allocate] {
                 let (slots, outputs, pair) = plan_fixture(rule.symbol, rule.value, reverse);
@@ -132,6 +163,7 @@ fn emitted_cases() -> alloc::vec::Vec<EmittedCase> {
                     reverse,
                     policy,
                     bytes,
+                    model_fixture,
                 });
             }
         }
@@ -200,8 +232,10 @@ fn render_corpus() -> alloc::string::String {
     let model_source = crate::ir::hex(&digest_bytes(
         &IDS,
         &[
-            b"net-plan-model-source/1",
+            b"net-plan-model-and-lowering-source/2",
             include_str!("../../../../../proofs/foundation/NobleFoundation/NetI64Plans.lean")
+                .as_bytes(),
+            include_str!("../../../../../proofs/foundation/NobleFoundation/NetI64PlanLowering.lean")
                 .as_bytes(),
         ],
     ));
@@ -221,7 +255,7 @@ Rust compiler correctness proof. Regenerate with:
 -- source crates/noble-ngraph/src/net/rewrite.rs test-net-digest={compiler_source}
 -- source crates/noble-ngraph/src/net.rs test-net-digest={net_source}
 -- source crates/noble-ngraph/src/net/plan/corpus.rs test-net-digest={generator_source}
--- source proofs/foundation/NobleFoundation/NetI64Plans.lean test-net-digest={model_source}
+-- source proofs/foundation/NobleFoundation/NetI64Plans.lean + NetI64PlanLowering.lean test-net-digest={model_source}
 -- length-framed emitted byte stream + revisions test-net-digest={digest}
 -- test-net is a test-only identity scheme, not a cryptographic signature.
 
@@ -319,7 +353,7 @@ fn write_case(source: &mut impl core::fmt::Write, case: &EmittedCase) {
 "#
     )
     .expect("write decoded field and model-rule comparison");
-    if !case.reverse && is_reused {
+    if case.model_fixture && !case.reverse && is_reused {
         let model_bytes = rule.model_bytes;
         let physical_start = rule.physical_start;
         let physical_redex = rule.physical_redex;
