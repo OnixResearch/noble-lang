@@ -18,15 +18,140 @@ use alloc::{
 mod named_v2;
 pub use named_v2::prepare_named_contract;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug, Eq)]
 pub struct Form {
     pub kind: FormKind,
     pub span: Span,
 }
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Eq)]
 pub enum FormKind {
     Atom(String),
     List(Vec<Form>),
+}
+
+// `Form` and `FormKind` are mutually recursive through `Vec<Form>`. Derived
+// `Clone`, `PartialEq` and `Debug` impls call each other through their trait
+// impls, and the pinned Aeneas refuses such mixed function/trait-impl groups.
+// The copy and equality walks below recurse through plain functions instead,
+// with exactly the derived results; `FormKind`'s rendering is the one reviewed
+// opaque formatting boundary (see `debug_form_kind`).
+impl Clone for Form {
+    fn clone(&self) -> Self {
+        clone_form(self)
+    }
+}
+impl Clone for FormKind {
+    fn clone(&self) -> Self {
+        clone_form_kind(self)
+    }
+}
+impl PartialEq for Form {
+    fn eq(&self, other: &Self) -> bool {
+        form_equal(self, other)
+    }
+}
+impl PartialEq for FormKind {
+    fn eq(&self, other: &Self) -> bool {
+        form_kind_equal(self, other)
+    }
+}
+impl core::fmt::Debug for FormKind {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        debug_form_kind(self, f)
+    }
+}
+
+/// Deep-copy one form, field by field, as the derived `Clone` did.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; the copy follows the finite, already constructed form tree, and plain-function recursion keeps the Form/FormKind cycle out of their trait impls for the pinned extraction"
+)]
+fn clone_form(form: &Form) -> Form {
+    Form {
+        kind: clone_form_kind(&form.kind),
+        span: form.span,
+    }
+}
+
+/// Deep-copy one form kind, variant by variant, as the derived `Clone` did.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; the copy follows the finite, already constructed form tree, and plain-function recursion keeps the Form/FormKind cycle out of their trait impls for the pinned extraction"
+)]
+fn clone_form_kind(kind: &FormKind) -> FormKind {
+    match kind {
+        FormKind::Atom(atom) => FormKind::Atom(atom.clone()),
+        FormKind::List(forms) => FormKind::List(clone_forms(forms)),
+    }
+}
+
+/// Copy a list of forms in order into an exactly sized vector, as `Vec::clone` did.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; the copy follows the finite, already constructed form tree, and plain-function recursion keeps the Form/FormKind cycle out of their trait impls for the pinned extraction"
+)]
+fn clone_forms(forms: &[Form]) -> Vec<Form> {
+    let mut copy = Vec::with_capacity(forms.len());
+    let mut index = 0;
+    while index < forms.len() {
+        copy.push(clone_form(&forms[index]));
+        index += 1;
+    }
+    copy
+}
+
+/// Field-wise form equality in declaration order, as the derived `PartialEq` did.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; the comparison follows two finite, already constructed form trees, and plain-function recursion keeps the Form/FormKind cycle out of their trait impls for the pinned extraction"
+)]
+fn form_equal(left: &Form, right: &Form) -> bool {
+    form_kind_equal(&left.kind, &right.kind) && left.span == right.span
+}
+
+/// Variant-wise form kind equality, as the derived `PartialEq` did.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; the comparison follows two finite, already constructed form trees, and plain-function recursion keeps the Form/FormKind cycle out of their trait impls for the pinned extraction"
+)]
+fn form_kind_equal(left: &FormKind, right: &FormKind) -> bool {
+    match (left, right) {
+        (FormKind::Atom(left), FormKind::Atom(right)) => left == right,
+        (FormKind::List(left), FormKind::List(right)) => forms_equal(left, right),
+        (FormKind::Atom(_), FormKind::List(_)) | (FormKind::List(_), FormKind::Atom(_)) => false,
+    }
+}
+
+/// Slice equality: equal lengths and pairwise equal forms in order.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; the comparison follows two finite, already constructed form trees, and plain-function recursion keeps the Form/FormKind cycle out of their trait impls for the pinned extraction"
+)]
+fn forms_equal(left: &[Form], right: &[Form]) -> bool {
+    if left.len() != right.len() {
+        return false;
+    }
+    let mut index = 0;
+    let mut equal = true;
+    while equal && index < left.len() {
+        equal = form_equal(&left[index], &right[index]);
+        index += 1;
+    }
+    equal
+}
+
+/// Render a form kind exactly as `#[derive(Debug)]` did.
+///
+/// Reviewed opaque extraction boundary: any rendering of `List` must format the
+/// nested forms through `Form`'s `Debug` impl, which in turn formats this kind,
+/// so no transparent body can avoid the mixed trait-impl cycle the pinned Aeneas
+/// refuses. Formatting layout is already an abstracted trust boundary.
+#[charon::opaque]
+fn debug_form_kind(kind: &FormKind, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    match kind {
+        FormKind::Atom(atom) => f.debug_tuple("Atom").field(atom).finish(),
+        FormKind::List(forms) => f.debug_tuple("List").field(forms).finish(),
+    }
 }
 #[derive(Clone, Debug)]
 pub struct ResolvedSourceModule {
@@ -2959,4 +3084,114 @@ fn lower_unary_add(literal: i64) -> String {
         rfl rfl).mpr rfl))
 "#;
     TERM.replace("__N__", &literal.to_string())
+}
+
+#[cfg(test)]
+mod form_impl_tests {
+    //! The hand-written `Form`/`FormKind` impls must agree exactly with the
+    //! derived impls they replace; `mirror` keeps those derives for comparison.
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+    )]
+    use super::{Form, FormKind};
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+    )]
+    use alloc::{format, string::String, vec, vec::Vec};
+
+    mod mirror {
+        #[derive(Clone, Debug, PartialEq, Eq)]
+        pub struct Form {
+            pub kind: FormKind,
+            pub span: crate::Span,
+        }
+        #[derive(Clone, Debug, PartialEq, Eq)]
+        pub enum FormKind {
+            Atom(alloc::string::String),
+            List(alloc::vec::Vec<Form>),
+        }
+    }
+
+    fn atom(text: &str, start: u32) -> Form {
+        Form {
+            kind: FormKind::Atom(String::from(text)),
+            span: crate::Span {
+                start,
+                end: start + 1,
+            },
+        }
+    }
+
+    fn list(forms: Vec<Form>, start: u32) -> Form {
+        Form {
+            kind: FormKind::List(forms),
+            span: crate::Span {
+                start,
+                end: start + 10,
+            },
+        }
+    }
+
+    fn mirrored(form: &Form) -> mirror::Form {
+        mirror::Form {
+            kind: match &form.kind {
+                FormKind::Atom(text) => mirror::FormKind::Atom(text.clone()),
+                FormKind::List(forms) => mirror::FormKind::List(forms.iter().map(mirrored).collect()),
+            },
+            span: form.span,
+        }
+    }
+
+    fn samples() -> Vec<Form> {
+        vec![
+            atom("a", 0),
+            atom("a\"\n", 0),
+            atom("a", 1),
+            list(Vec::new(), 0),
+            list(vec![atom("a", 0)], 0),
+            list(vec![atom("a", 0), list(vec![atom("b", 2)], 1)], 0),
+            list(vec![atom("a", 0), list(vec![atom("b", 2)], 1)], 3),
+            list(vec![atom("a", 0), list(vec![atom("c", 2)], 1)], 0),
+        ]
+    }
+
+    #[test]
+    fn debug_matches_the_derived_rendering() {
+        for form in samples() {
+            let expected = mirrored(&form);
+            assert_eq!(format!("{form:?}"), format!("{expected:?}"));
+            assert_eq!(format!("{form:#?}"), format!("{expected:#?}"));
+            assert_eq!(format!("{form:4?}"), format!("{expected:4?}"));
+            assert_eq!(format!("{:?}", form.kind), format!("{:?}", expected.kind));
+            assert_eq!(format!("{:#?}", form.kind), format!("{:#?}", expected.kind));
+        }
+    }
+
+    #[test]
+    fn equality_matches_the_derived_relation() {
+        let forms = samples();
+        for left in &forms {
+            for right in &forms {
+                let expected = mirrored(left) == mirrored(right);
+                assert_eq!(left == right, expected);
+                assert_eq!(left != right, !expected);
+                assert_eq!(left.kind == right.kind, mirrored(left).kind == mirrored(right).kind);
+            }
+        }
+    }
+
+    #[test]
+    fn clone_is_an_equal_independent_deep_copy() {
+        for form in samples() {
+            let mut copy = form.clone();
+            assert_eq!(mirrored(&copy), mirrored(&form));
+            assert_eq!(copy.kind.clone(), form.kind);
+            if let FormKind::List(items) = &mut copy.kind {
+                items.push(atom("z", 9));
+                assert_ne!(copy, form);
+            }
+        }
+    }
 }

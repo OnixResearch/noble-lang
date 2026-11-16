@@ -473,10 +473,35 @@ pub enum OriginProgramValue {
     },
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum OriginOperand {
     I64(OriginI64),
     Program(alloc::rc::Rc<OriginProgramValue>),
+}
+
+impl core::fmt::Debug for OriginOperand {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        debug_origin_operand(self, f)
+    }
+}
+
+/// Render an origin operand exactly as `#[derive(Debug)]` did.
+///
+/// Reviewed opaque extraction boundary: `OriginProgramValue` and
+/// `OriginOperand` are mutually recursive, so any rendering of `Program` must
+/// format the nested value through `OriginProgramValue`'s `Debug` impl, which in
+/// turn formats operands; no transparent body can avoid the mixed trait-impl
+/// cycle the pinned Aeneas refuses. Formatting layout is already an abstracted
+/// trust boundary.
+#[charon::opaque]
+fn debug_origin_operand(
+    operand: &OriginOperand,
+    f: &mut core::fmt::Formatter<'_>,
+) -> core::fmt::Result {
+    match operand {
+        OriginOperand::I64(value) => f.debug_tuple("I64").field(value).finish(),
+        OriginOperand::Program(value) => f.debug_tuple("Program").field(value).finish(),
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -2420,5 +2445,71 @@ mod signed_dispatch_tests {
             matches!(signed(&submission), Err(Diagnostic::Invalid)),
             "a valid generic alternate effect cannot invoke the owner's checked ceiling"
         );
+    }
+}
+
+#[cfg(test)]
+mod origin_operand_debug_tests {
+    //! `OriginOperand`'s hand-written `Debug` must render exactly as the derive
+    //! it replaces; `mirror` keeps that derive over the same payload types.
+    #![allow(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-wasm-maintainers; the origin types under test are imported directly."
+    )]
+    use super::{OriginFixedExpression, OriginI64, OriginOperand, OriginProgramValue};
+    use alloc::{format, rc::Rc, vec, vec::Vec};
+
+    mod mirror {
+        #[derive(Debug)]
+        pub enum OriginOperand {
+            I64(super::OriginI64),
+            Program(alloc::rc::Rc<super::OriginProgramValue>),
+        }
+    }
+
+    fn mirrored(operand: &OriginOperand) -> mirror::OriginOperand {
+        match operand {
+            OriginOperand::I64(value) => mirror::OriginOperand::I64(value.clone()),
+            OriginOperand::Program(value) => mirror::OriginOperand::Program(Rc::clone(value)),
+        }
+    }
+
+    fn samples() -> Vec<OriginOperand> {
+        let node = noble_kernel::untrusted::NodeId(7);
+        let leaf = Rc::new(OriginProgramValue::Static {
+            node,
+            program_index: 3,
+        });
+        let quoted = Rc::new(OriginProgramValue::Quote {
+            node,
+            table_entry: 2,
+            operand: OriginOperand::I64(OriginI64::RootInput(1)),
+        });
+        let composed = Rc::new(OriginProgramValue::Compose {
+            node,
+            table_entry: 4,
+            left: Rc::clone(&leaf),
+            right: Rc::clone(&quoted),
+        });
+        vec![
+            OriginOperand::I64(OriginI64::RootInput(0)),
+            OriginOperand::I64(OriginI64::Fixed {
+                value: -5,
+                recipe: Rc::new(OriginFixedExpression::Literal(-5)),
+            }),
+            OriginOperand::Program(leaf),
+            OriginOperand::Program(quoted),
+            OriginOperand::Program(composed),
+        ]
+    }
+
+    #[test]
+    fn debug_matches_the_derived_rendering() {
+        for operand in samples() {
+            let expected = mirrored(&operand);
+            assert_eq!(format!("{operand:?}"), format!("{expected:?}"));
+            assert_eq!(format!("{operand:#?}"), format!("{expected:#?}"));
+            assert_eq!(format!("{operand:4?}"), format!("{expected:4?}"));
+        }
     }
 }
