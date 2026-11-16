@@ -1185,6 +1185,10 @@ and `reset` wrote into any workspace. A workspace of another graph with the same
 count therefore supplied that graph's constants, and a smaller or other-profile workspace reached an
 ordinary indexing panic.
 
+[`workspace-binding-decision.md`](workspace-binding-decision.md) records why this contract was
+selected over size or digest comparison, per-call reinitialization and an explicit rebind, with its
+criteria and reopen conditions.
+
 - **Contract.** [`compiled.rs`](../../crates/noble-ngraph/src/compiled.rs) binds every workspace to
   the `Compiled::new` call that created it. The identity is a dataless shared token, held by that
   compiled value, its clones and its workspaces, and compared by address. Another compilation is
