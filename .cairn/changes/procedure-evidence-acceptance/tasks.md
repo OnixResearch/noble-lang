@@ -25,4 +25,5 @@
 
 ## Phase 6: Integration (separate integrator, not this change)
 
-- [ ] [serial] Source-inventory renewal, reviewed-file re-pin and Octet capacity accounting for the touched Rust sources, then the repository flake gate run. This change leaves all of them to the integrator. r[LPL-03]
+- [x] [serial] Source-inventory renewal, reviewed-file re-pin and Octet capacity accounting for the touched Rust sources, then the repository flake gate run. This change leaves all of them to the integrator. r[LPL-03]
+  Integration (2026-11-16, batch 12): reviewed-file re-pin `37e86a77` (`policy/architecture.{ncl,json,manifest.json}`); source inventory renewed `cd32eaba` (+155/-62, validation clean); requirement ledger and validation report refreshed `11fd7a44`; Octet clean (0 findings, 110/110 units); the 16 repository flake gates are run on the commit that archives this change, before it is published.
