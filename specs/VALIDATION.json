@@ -2688,7 +2688,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "e33a8e50824415d34241b3a33dabafaa45c55823c835bb6dbe19631736eab6a0"
+      "sha256": "9647646652f3ebc4fb2c73a04c070384e817fcb22f43f4710012cc6fcbcf4d2a"
     },
     {
       "file": "proofs/inets/README.md",
@@ -3268,7 +3268,11 @@
     },
     {
       "file": "verification/ngraph/README.md",
-      "sha256": "4848e2883c10a289edf58e2928a3d070970c45aa7fedb876737ce9482a824449"
+      "sha256": "42a04ca684f793bb03edba5857eb452c3535980caa57aed06f5852f3d77c9bd2"
+    },
+    {
+      "file": "verification/ngraph/workspace-binding-decision.md",
+      "sha256": "08c2f6bed5c7b9c0c5df44d7f8a29cd17f6801368588ad17fef372cc3e4ece85"
     },
     {
       "file": "verification/numeric-graph-v1/architecture-exceptions.md",
