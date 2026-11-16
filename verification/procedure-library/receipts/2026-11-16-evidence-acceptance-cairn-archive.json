@@ -1,0 +1,81 @@
+{
+  "schema": "noble-procedure-evidence-acceptance-cairn-archive-receipt/1",
+  "issue": 131,
+  "source_commit": "342bb58244e13e4725d1241ef5ef16e58f7ec452",
+  "source_tree": "c35d1476e87b1f5e584c577e6e6e95b37fef54d4",
+  "source_clean_before_checks": true,
+  "base_commit": "11fd7a44",
+  "before_archive_source_commit": "17a98f1e8cbc63a258fa5f5f3b178bda31dd7113",
+  "before_archive_tree": "3b0218d0a709b36555c7cd608306671d08107032",
+  "tool": {
+    "path": "/nix/store/bvz6kl88qkfi15n8ml1xr7p22syykggd-cairn-0.1.0/bin/cairn",
+    "sha256": "570eeae7f5abd5ec0259ced4776bf6e4a19c2e82864935fb59c91d08221ce8c6",
+    "policy_path": "/nix/store/jqz083ahq10fdrakci9xzvf7bl4nh075-source/cairn-policy/generated/cairn-policy.json",
+    "policy_sha256": "62b9ade2bc8af10b2c68776dba8abb374a6c7331aae7ad8bb41ca938ef100d27"
+  },
+  "tasks": {
+    "done": 11,
+    "todo": 0,
+    "original_final_row_preserved": true,
+    "integration_annotation": "batch 12: reviewed-file re-pin 37e86a77 (policy/architecture.{ncl,json,manifest.json}); source inventory renewed cd32eaba (+155/-62, validation clean); requirement ledger and validation report refreshed 11fd7a44; Octet clean (0 findings, 110/110 units); the 16 repository flake gates are run on the archiving commit before publication",
+    "archived_tasks_path": ".cairn/archive/2026-11-16-procedure-evidence-acceptance/tasks.md",
+    "archived_tasks_sha256": "957a52d81eaae70b85766d7da39b41725211741743aff7c412dd4e58fdb67460",
+    "archived_design_sha256": "44b97497cabb46539b145e9f8adc815578c39557c40fd2d80af7e4dcfe47f2da",
+    "archived_delta_spec_sha256": "bc5d2397a42c4dec9cefd6092fc3fac702fb45adf321d57660ff33f7397cd27f"
+  },
+  "archive_actions": [
+    "pinned Cairn sync procedure-evidence-acceptance preview: blocked=false, one MODIFIED LPL-03 operation, merge preflight changed=false with accepted_before_hash=expected_after_hash=82c085c83356c49b00421aa53a7ffe6431dd860cfbbfd4bbbc3781773af80efa (already canonical); execute: blocked=false, mutated=false, plan_hash=500e1ba0a6e70ba8a35645ebda2dc1bf368a05757f3a2655ad56013c894de06a",
+    "pinned Cairn archive procedure-evidence-acceptance preview: blocked=false, plan_hash=aa3fce07b44d03b827c9a0d3af642c99ac02e565d2771da39905aada8b072a5a; execute: mutated=true, moved five active files",
+    "Cairn emitted the deterministic epoch path .cairn/archive/1970-01-01-procedure-evidence-acceptance; moved the unchanged five files to the repository actual-date 2026-11-16 archive convention; no empty epoch directory remained",
+    "compatibility views and requirement ledger regenerated with no change; specs/VALIDATION.json re-reported to index the archive paths; verification/procedure-library/obligations.json evidence_acceptance.change repointed to the archive; no verification/procedure-library/*.md link referenced the active change path"
+  ],
+  "after_archive": {
+    "active_change_absent": true,
+    "archive_path": ".cairn/archive/2026-11-16-procedure-evidence-acceptance",
+    "canonical_spec_path": ".cairn/specs/learned-procedure-library/spec.md",
+    "canonical_spec_sha256": "1a9c966f2875d178d31cad20f44394ff4928354b7ef23003a2c318fb7bc97376",
+    "compatibility_view_path": "specs/LEARNED-PROCEDURE-LIBRARY.md",
+    "compatibility_view_sha256": "87f3106029bec143668b273d589fcfd805a9aa5f761129e786a3612e76791111",
+    "obligations_path": "verification/procedure-library/obligations.json",
+    "obligations_sha256": "57d9428e0ec345d7b3513de723acda848d390072d978abeac0e5e18069c09625",
+    "requirement_ledger_sha256": "0bce5965255d1eab1f357476e0f42a054684e914ea00ee59f45dd62db23550be",
+    "validation_report_sha256": "efccb4b9323de8e51b2dcf28ba97c81b687fdab52e7abc9cd74fc6208ac673e0"
+  },
+  "checks_from_clean_source": [
+    {
+      "command": "cairn validate --root . --policy <pinned-policy>",
+      "exit": 0,
+      "result": "valid=true, issues=[], findings=[], change_issues=[], spec_issues=[]"
+    },
+    {
+      "command": "cairn compact verify --root . --policy <pinned-policy>",
+      "exit": 0,
+      "result": "valid=true, issues=[], latest_chain_hash=8b02f7ffe23f41feda7625b6a7f4d782d082736cc39626af807328d127828bc7"
+    },
+    {
+      "command": "bun tools/cairn-specs.mjs --self-test",
+      "exit": 0,
+      "result": "passed; 16 specs, 274 scenarios, 26 self-tests"
+    },
+    {
+      "command": "bun tools/check-specs.mjs --self-test",
+      "exit": 0,
+      "result": "passed; 16 documents, 612 requirements, 274 scenarios, 230 self-tests"
+    },
+    {
+      "command": "bun test tools/cairn-specs.test.mjs tools/check-specs.test.mjs tools/calculator-headroom.test.mjs tools/source-inventory-renew.test.mjs",
+      "exit": 0,
+      "result": "114 pass, 0 fail"
+    },
+    {
+      "command": "node tools/check-specs.mjs (pinned Node 24.13.0)",
+      "exit": 0,
+      "result": "passed; 16 documents, 612 requirements, 274 scenarios"
+    }
+  ],
+  "non_claims": [
+    "Cairn structure and document checks do not establish runtime correctness or proof validity",
+    "The 16 repository flake gates had not run on the archiving commit when this receipt was written; the task annotation records them as run before publication",
+    "Verified evidence receipts attest owner-verifier bookkeeping only; real proof-demanding promotion remains NO-GO without independently checked implementation-refinement evidence"
+  ]
+}
