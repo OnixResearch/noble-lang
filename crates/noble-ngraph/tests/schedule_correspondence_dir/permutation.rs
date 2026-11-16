@@ -541,8 +541,18 @@ fn mixed_i64_and_bool_slots_agree_in_canonical_and_permuted_orders() {
     // before execution, exactly as the reference and canonical evaluators refuse it.
     let accepted = permutation::check(&checked, &canonical).expect("canonical witness");
     for args in [
-        [Value::I64(1), Value::I64(1), Value::I64(2), Value::Bool(false)],
-        [Value::Bool(true), Value::Bool(true), Value::I64(2), Value::Bool(false)],
+        [
+            Value::I64(1),
+            Value::I64(1),
+            Value::I64(2),
+            Value::Bool(false),
+        ],
+        [
+            Value::Bool(true),
+            Value::Bool(true),
+            Value::I64(2),
+            Value::Bool(false),
+        ],
     ] {
         assert!(matches!(
             permutation::execute(accepted, &args, u64::MAX, u64::MAX),
