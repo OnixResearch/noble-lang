@@ -1056,6 +1056,13 @@ profile allows only input nodes, I64 constants, wrapping Add/Sub/Mul and I64 equ
 rejects guards, parameters, Bool constants, F32, cross-layer motion, reuse and new buffer
 operations.
 
+Input nodes may declare I64 or Bool slots, because the I64 sub-profile admits both
+(issue #132). `permutation::execute` stages an admitted `Bool` value as the word 0 or 1 and
+decodes every checked `Bool` output as "word is nonzero", exactly as the canonical packed
+evaluator does; mistyped values are still refused by the shared input preflight before any
+register is written. Add, Sub, Mul and Eq take only I64 operands, so a Bool input slot can
+reach an observation only as a direct (possibly repeated) output.
+
 The real `Compiled::new` emission is exported to an explicit binary byte format and a generated
 Lean corpus by the existing `schedule_correspondence` integration target. The retained
 `permutation-noncanonical-0.bin` is the first swapped within-layer operation pair. A freshness
@@ -1068,6 +1075,10 @@ sufficient instruction budget and no cancellation. Its theorem and the concrete 
 theorems are inventoried in `proofs/foundation/inventory.json`; the clean foundation proof
 receipt records each statement and its **transitive** axioms. The Lean model is not a general
 proof that the Rust decoder, validator or executor implements that model.
+The model's input assignment is a 64-bit word per slot and its input nodes produce I64
+values: it has **no Bool input slot**. The 0/1 staging of Bool inputs and the Bool decoding of
+an output that selects a Bool input node are therefore a Rust-side encoding boundary that the
+model theorem does not cover; they rest only on the finite tests below.
 
 The binary reader checks a 32 MiB byte cap before reading any contents and checks each length
 against remaining bytes before allocating. `check_within` bounds the sum of graph nodes,
@@ -1085,7 +1096,10 @@ The integration target checks body swaps, dependent/cross-layer movement, duplic
 nodes, early reads, duplicate destinations, wrong input/constant/output bindings, stale
 identity and changed replay subjects. At boundary input pairs it compares the independent
 wrapping-word formula, the checked-graph reference interpreter and the opt-in stream
-interpreter. These finite comparisons support execution evidence; they do not prove any
+interpreter. For Bool input slots it compares the reference interpreter, the canonical
+`Compiled::evaluate` and the opt-in stream interpreter on `Bool(true)`, `Bool(false)`, and
+interleaved I64/Bool slots with Bool and I64 outputs, in the canonical and a swapped
+within-layer order. These finite comparisons support execution evidence; they do not prove any
 general Rust executor theorem, and low-fuel/cancellation equivalence is not claimed.
 
 Reproduce with the repository's pinned Rust/Lean tools; outputs stay outside the worktree:

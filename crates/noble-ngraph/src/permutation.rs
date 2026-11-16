@@ -503,6 +503,8 @@ pub enum RunRefusal {
 
 /// Interpret **only** this already validated, immutable artifact under sufficient fuel and
 /// scratch. Existing canonical execution is not called and no Rust executor theorem follows.
+/// Admitted `Bool` input slots are staged as the words 0/1 and checked `Bool` outputs decode a
+/// nonzero word as `true`, mirroring the canonical packed evaluator.
 ///
 /// # Errors
 /// Input rejection or insufficient budget before any arithmetic executes.
@@ -526,16 +528,17 @@ pub fn execute(
         regs[register as usize] = bits as i64;
     }
     for &(register, slot) in &artifact.layout.slot_regs {
-        match slots[slot as usize] {
-            crate::sem::Value::I64(bits) => regs[register as usize] = bits,
-            _ => {
+        regs[register as usize] = match slots[slot as usize] {
+            crate::sem::Value::I64(bits) => bits,
+            crate::sem::Value::Bool(flag) => i64::from(flag),
+            crate::sem::Value::F32(_) => {
                 return Err(RunRefusal::Input(crate::diag::Diagnostic::new(
                     crate::diag::Code::Interface,
                     crate::diag::Site::Slot(slot),
-                    "the permutation profile requires I64 inputs",
+                    "the permutation profile admits only I64 and Bool inputs",
                 )))
             }
-        }
+        };
     }
     for instruction in &artifact.stream {
         let (dst, value) = match *instruction {

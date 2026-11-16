@@ -1981,6 +1981,13 @@ lies in its declared node's layer, dependencies lie in earlier layers, and
 ordered/repeated outputs select their declared registers. An empty output is
 refused; an empty witness is refused when the graph has emitting nodes.
 
+The model's inputs are one 64-bit word per slot, and an input node always
+produces an I64 value; Bool values arise only from equality. The Rust profile
+also admits Bool input slots (issue #132), which its interpreter stages as the
+words 0/1 and decodes by the checked output type. That encoding is outside
+this model: the theorems below say nothing about Bool input slots, which are
+covered only by finite Rust tests.
+
 `NobleFoundation.PackedPermutation.accepted_stream_sound` applies the
 PackedSchedule model's already proved step invariant to the **supplied**
 table and stream, not a freshly emitted stream. For every input assignment it
