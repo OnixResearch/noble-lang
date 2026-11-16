@@ -1521,7 +1521,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "94ea8e1e3bb51654f4a16787d01797c7d81eedac68fbbb8c50c22a01317ec92b"
+      "sha256": "e33a8e50824415d34241b3a33dabafaa45c55823c835bb6dbe19631736eab6a0"
     },
     {
       "file": "proofs/inets/README.md",
@@ -2073,7 +2073,7 @@
     },
     {
       "file": "verification/net-plans/decision.md",
-      "sha256": "7d951106024a63eed8d0203c05853ccaf97058088adb3b8953044bd553e2880c"
+      "sha256": "494ea7ef7ec1c44a915433b6bf9c5fd76a0a7c3645e03234a2660fb6d4d281e7"
     },
     {
       "file": "verification/ngraph-bytes-issue-31/README.md",
