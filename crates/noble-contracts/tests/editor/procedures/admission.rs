@@ -1,3 +1,4 @@
+use super::super::procedures::support::verifier::{OwnerLedger, OWNER_VERIFIER};
 use super::super::procedures::support::{
     add_record, envelope, literal_record, provenance, revision,
 };
@@ -13,6 +14,8 @@ use noble_kernel::types::{EffId, EffSet, Ty};
 use std::string::String;
 use std::vec;
 
+#[path = "admission/acceptance/mod.rs"]
+mod acceptance;
 #[path = "admission/alias/mod.rs"]
 mod alias;
 #[path = "admission/guards/criteria.rs"]
@@ -139,9 +142,29 @@ fn evidence_classes_policy_and_dependency_edges_are_not_laundered() -> Result<()
             allowed_classes: vec![EvidenceClass::Lean],
         }],
     };
+    // A matching class, outcome, subject and policy revision is still only a
+    // claim: without the owner's verifier it cannot establish promotion.
+    let refused = library
+        .admit(&namespace, Some(&current_policy), promoted.clone())
+        .expect_err("an unverified proof claim must not promote");
+    assert_eq!(refused.kind, RefusalKind::ForgedStatus);
+    assert_eq!(refused.location.field, "promotion.obligations");
+    assert!(library.records().is_empty());
+    assert_eq!(library.current_generation(), 0);
+
+    // The same claim promotes once the library owner's verifier has
+    // independently checked exactly that claim for this subject.
+    let mut ledger = OwnerLedger::empty();
+    ledger.confirm(&promoted.evidence[0]);
+    let mut library = ProcedureLibrary::with_verifier(revision(7), ledger.boxed());
     library
         .admit(&namespace, Some(&current_policy), promoted.clone())
-        .map_err(|error| format!("current promotion: {error:?}"))?;
+        .map_err(|error| format!("owner-verified promotion: {error:?}"))?;
+    let receipts = library.records()[0].verified_evidence();
+    assert_eq!(receipts.len(), 1);
+    assert_eq!(receipts[0].verifier(), OWNER_VERIFIER);
+    assert_eq!(receipts[0].outcome(), EvidenceOutcome::Proved);
+    assert_eq!(library.records()[0].evidence, promoted.evidence);
     let stale_candidate = literal_record(6, Producer::Chunk)
         .map_err(|error| format!("stale candidate: {error:?}"))?;
     let refusal = library
@@ -276,5 +299,64 @@ fn an_alias_digest_cannot_replace_a_verified_exact_pair_certificate() -> Result<
     assert_eq!(refusal.kind, RefusalKind::Unsupported);
     assert_eq!(refusal.location.field, "alias_of");
     assert!(library.records().is_empty());
+    Ok(())
+}
+
+#[test]
+fn fabricated_lean_proof_must_not_promote_procedure() -> Result<(), String> {
+    let namespace = Session::without_test_hosts();
+    let mut library = ProcedureLibrary::new(revision(7));
+    let mut record = literal_record(6, Producer::Chunk).map_err(|e| format!("{e:?}"))?;
+    record.evidence.push(EvidenceRecord {
+        obligation: 7,
+        class: EvidenceClass::Lean,
+        outcome: EvidenceOutcome::Proved,
+        toolchain: vec![String::from("unverified-caller-string")],
+        claim: String::from("no proof artifact exists"),
+        subject_binding: record.procedure_id,
+        policy_revision: 3,
+        capability: None,
+    });
+    record.status = Status::Promoted;
+    record.promotion = Some(noble_contracts::source::procedures::Promotion {
+        policy_revision: 3,
+        obligations: vec![7],
+    });
+    record.refresh_retrieval_signature();
+    let policy = ConsumerPolicy {
+        revision: 3,
+        obligations: vec![ConsumerObligation {
+            id: 7,
+            allowed_classes: vec![EvidenceClass::Lean],
+        }],
+    };
+
+    // Required invariant: an unauthenticated string claiming Lean success
+    // must not establish a verified/promoted procedure.
+    assert!(library.admit(&namespace, Some(&policy), record).is_err());
+    Ok(())
+}
+
+#[test]
+fn unexecuted_test_claim_must_not_mark_procedure_tested() -> Result<(), String> {
+    let namespace = Session::without_test_hosts();
+    let mut library = ProcedureLibrary::new(revision(7));
+    let mut record = literal_record(6, Producer::Chunk).map_err(|e| format!("{e:?}"))?;
+    record.evidence.push(EvidenceRecord {
+        obligation: 7,
+        class: EvidenceClass::Test,
+        outcome: EvidenceOutcome::Passed,
+        toolchain: vec![String::from("unverified-caller-string")],
+        claim: String::from("no test was executed"),
+        subject_binding: record.procedure_id,
+        policy_revision: 3,
+        capability: None,
+    });
+    record.status = Status::Tested;
+    record.refresh_retrieval_signature();
+
+    // Same root cause: a caller-forged `test/passed` string is not an
+    // executed test outcome and must not establish `tested`.
+    assert!(library.admit(&namespace, None, record).is_err());
     Ok(())
 }

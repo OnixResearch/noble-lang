@@ -14,7 +14,8 @@ fn unsupported_proof(name: &'static str, record: ProcedureRecord) -> Case {
 fn complete_record() -> Result<ProcedureRecord, String> {
     let mut record =
         literal_record(6, Producer::Chunk).map_err(|error| format!("promoted: {error:?}"))?;
-    // A proof-class record is not itself an independently checked proof.
+    // A proof-class claim is not itself an independently checked proof; the
+    // owner's verifier below decides which of these claims are verified.
     for obligation in 1..=6 {
         let mut proof = evidence(&record, EvidenceClass::Lean, EvidenceOutcome::Proved);
         proof.obligation = obligation;
@@ -27,6 +28,20 @@ fn complete_record() -> Result<ProcedureRecord, String> {
     });
     record.refresh_retrieval_signature();
     Ok(record)
+}
+
+/// The owner independently checked every claim used below and observed what
+/// each one asserts, so each refusal comes from the consumer policy rules,
+/// not from a missing verification.
+fn owner_ledger(promoted: &ProcedureRecord, cases: &[Case]) -> OwnerLedger {
+    let mut ledger = OwnerLedger::empty();
+    let case_claims = cases
+        .iter()
+        .flat_map(|(_, record, _, _)| record.evidence.iter());
+    for claim in promoted.evidence.iter().chain(case_claims) {
+        ledger.confirm(claim);
+    }
+    ledger
 }
 
 fn refusal_cases(promoted: &ProcedureRecord) -> [Case; 8] {
@@ -118,10 +133,40 @@ fn reject_model_only_refinement(
     Ok(())
 }
 
+/// A demanded obligation the owner never verified, or verified with another
+/// outcome than the claim asserts, cannot complete the promotion.
+fn reject_unverified_obligation(
+    namespace: &Session,
+    policy: &ConsumerPolicy,
+    promoted: &ProcedureRecord,
+) -> Result<(), String> {
+    for observed in [None, Some(EvidenceOutcome::Unknown)] {
+        let mut ledger = OwnerLedger::empty();
+        for claim in &promoted.evidence[..5] {
+            ledger.confirm(claim);
+        }
+        if let Some(outcome) = observed {
+            ledger.observe(&promoted.evidence[5], outcome);
+        }
+        let mut library = ProcedureLibrary::with_verifier(revision(7), ledger.boxed());
+        let refused = library
+            .admit(namespace, Some(policy), promoted.clone())
+            .expect_err("an unverified demanded obligation must not promote");
+        assert_eq!(refused.kind, RefusalKind::ForgedStatus, "{observed:?}");
+        assert_eq!(refused.location.field, "promotion.obligations");
+        assert_eq!(refused.location.index, Some(5));
+        assert!(library.records().is_empty());
+    }
+    Ok(())
+}
+
 #[test]
 fn proof_demanding_promotion_requires_every_selected_obligation() -> Result<(), String> {
     let namespace = Session::without_test_hosts();
-    let mut library = ProcedureLibrary::new(revision(7));
+    let promoted = complete_record()?;
+    let cases = refusal_cases(&promoted);
+    let mut library =
+        ProcedureLibrary::with_verifier(revision(7), owner_ledger(&promoted, &cases).boxed());
     let seed = literal_record(9, Producer::Chunk).map_err(|error| format!("seed: {error:?}"))?;
     library
         .admit(&namespace, None, seed)
@@ -138,8 +183,7 @@ fn proof_demanding_promotion_requires_every_selected_obligation() -> Result<(), 
             })
             .collect(),
     };
-    let promoted = complete_record()?;
-    for (case, record, kind, field) in refusal_cases(&promoted) {
+    for (case, record, kind, field) in cases {
         let refused = library
             .admit(&namespace, Some(&policy), record)
             .expect_err(case);
@@ -158,10 +202,11 @@ fn proof_demanding_promotion_requires_every_selected_obligation() -> Result<(), 
         assert_eq!(library.records(), records.as_slice(), "{case}");
     }
     reject_model_only_refinement(&mut library, &namespace, &promoted)?;
+    reject_unverified_obligation(&namespace, &policy, &promoted)?;
 
     library
         .admit(&namespace, Some(&policy), promoted)
-        .map_err(|error| format!("all six obligations proved: {error:?}"))?;
+        .map_err(|error| format!("all six obligations verified as proved: {error:?}"))?;
     assert_eq!(
         library.current_generation(),
         generation.checked_add(1).ok_or("generation overflow")?

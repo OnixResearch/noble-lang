@@ -5,6 +5,8 @@ use std::string::String;
 use std::vec;
 use std::vec::Vec;
 
+pub mod verifier;
+
 pub const fn revision(seed: u8) -> [u8; 32] {
     let mut output = [0; 32];
     let mut index = 0;

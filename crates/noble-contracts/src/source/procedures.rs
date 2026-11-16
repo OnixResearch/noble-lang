@@ -4,6 +4,10 @@
 //! recomputed from immutable subject fields and never authorize a program;
 //! every retained chunk is admitted by `chunks::Library`, and every composed
 //! source is freshly checked by `Session::prepare` under the caller's limits.
+//!
+//! Evidence records are submitter claims. They stay visible as unverified
+//! provenance; `tested` and `promoted` count only verification receipts that
+//! the library minted at admission from its owner's `EvidenceVerifier`.
 
 #![expect(
     tigerstyle::non_trait_imports,
@@ -18,11 +22,13 @@
     reason = "Owner: noble-contracts; library transitions mutate their explicitly owned generation state after all candidate checks succeed"
 )]
 
+mod acceptance;
 mod alias;
 mod composition;
 mod persistence;
 mod retrieval;
 
+pub use acceptance::{Attestation, EvidenceVerifier, VerificationSubject, VerifiedEvidence};
 pub use alias::{
     Certificate, ExactPairCertificate, Monomial, Polynomial, MAX_ALIAS_INPUTS, MAX_ALIAS_OUTPUTS,
     MAX_ALIAS_TERMS,
@@ -32,6 +38,7 @@ pub use persistence::{ArmMetrics, Metrics};
 pub use retrieval::{Query, QueryBudget, QueryResult, RuntimeProducer};
 
 use super::chunks;
+use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
 use noble_kernel::types::{EffSet, Ty};
@@ -173,6 +180,10 @@ pub enum CapabilityMarker {
     Session,
 }
 
+/// A submitter's evidence claim. The library retains it as visible,
+/// unverified provenance. By itself it never establishes `tested` or
+/// `promoted`: only a `VerifiedEvidence` receipt, minted at admission from the
+/// library owner's verifier for this exact claim, counts toward those states.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct EvidenceRecord {
     pub obligation: u32,
@@ -262,7 +273,12 @@ pub struct ProcedureRecord {
     pub chunk: chunks::Envelope,
     pub provenance: Provenance,
     pub library_dependencies: Vec<LibraryDependency>,
+    /// Submitter claims, kept as unverified provenance.
     pub evidence: Vec<EvidenceRecord>,
+    /// Receipts minted by the admitting library from its owner's verifier.
+    /// Callers can read them but never construct, edit or transplant one: an
+    /// incoming record's receipts are discarded and re-derived on admission.
+    verified: Vec<VerifiedEvidence>,
     pub status: Status,
     pub promotion: Option<Promotion>,
     pub cost: Cost,
@@ -305,6 +321,7 @@ impl ProcedureRecord {
             provenance,
             library_dependencies,
             evidence: Vec::new(),
+            verified: Vec::new(),
             status: Status::Candidate,
             promotion: None,
             cost: Cost::default(),
@@ -338,6 +355,13 @@ impl ProcedureRecord {
 
     pub fn source_revision(&self) -> &[u8; chunks::REVISION_BYTES] {
         &self.chunk.source_revision
+    }
+
+    /// Verification receipts the library minted from its owner's verifier.
+    /// Only these, never the claims in `evidence`, support `tested` and
+    /// `promoted`. Reading them never runs a verifier.
+    pub fn verified_evidence(&self) -> &[VerifiedEvidence] {
+        &self.verified
     }
 }
 
@@ -512,9 +536,15 @@ pub struct ProcedureLibrary {
     pub(super) chunk_library: chunks::Library,
     pub(super) generations: Vec<Snapshot>,
     pub(super) current_generation: u32,
+    /// The owner's trust root for evidence acceptance; `None` keeps every
+    /// claim unverified, so `tested` and `promoted` cannot be reached.
+    pub(super) verifier: Option<Box<dyn EvidenceVerifier>>,
 }
 
 impl ProcedureLibrary {
+    /// A library without an owner verifier. Every evidence record stays a
+    /// visible, unverified claim, so no record can become `tested` or
+    /// `promoted`.
     pub fn new(revision: [u8; chunks::REVISION_BYTES]) -> Self {
         let chunk_library = chunks::Library::new(revision);
         let empty_records = Vec::new();
@@ -535,7 +565,20 @@ impl ProcedureLibrary {
                 records: empty_records,
             }],
             current_generation: 0,
+            verifier: None,
         }
+    }
+
+    /// A library whose owner supplies the verifier that alone decides which
+    /// claims become verification receipts at admission. Records and their
+    /// submitters cannot select or replace it.
+    pub fn with_verifier(
+        revision: [u8; chunks::REVISION_BYTES],
+        verifier: Box<dyn EvidenceVerifier>,
+    ) -> Self {
+        let mut library = Self::new(revision);
+        library.verifier = Some(verifier);
+        library
     }
 
     pub const fn chunk_library_revision(&self) -> &[u8; chunks::REVISION_BYTES] {
@@ -658,8 +701,8 @@ impl ProcedureLibrary {
         }
         let mut candidate_records = self.current().records.clone();
         let mut identities = Vec::with_capacity(incoming_records.len());
-        for record in incoming_records {
-            Self::validate_record(&record, policy, true)?;
+        for mut record in incoming_records {
+            Self::validate_claims(&record)?;
             if record.identity_digest()? != record.procedure_id {
                 return Err(Refusal::new(RefusalKind::Invalid, Diagnostic { field: "procedure_id", message: "retained procedure identity differs from recomputed immutable subject fields" }));
             }
@@ -673,10 +716,16 @@ impl ProcedureLibrary {
                     },
                 ));
             }
-            if let Some(existing_index) = candidate_records
+            let existing_position = candidate_records
                 .iter()
-                .position(|existing| existing.procedure_id == record.procedure_id)
-            {
+                .position(|existing| existing.procedure_id == record.procedure_id);
+            acceptance::accept(
+                self.verifier.as_deref(),
+                &mut record,
+                existing_position.and_then(|index| candidate_records.get(index)),
+            )?;
+            Self::validate_record(&record, policy, true)?;
+            if let Some(existing_index) = existing_position {
                 let existing = candidate_records.get(existing_index).ok_or_else(|| {
                     Refusal::new(
                         RefusalKind::Internal,
@@ -828,20 +877,26 @@ impl ProcedureLibrary {
         &mut self,
         namespace: &super::Session,
         policy: Option<&ConsumerPolicy>,
-        record: ProcedureRecord,
+        mut record: ProcedureRecord,
         replacement: bool,
     ) -> Result<ProcedureId, Refusal> {
-        Self::validate_record(&record, policy, true)?;
+        Self::validate_claims(&record)?;
         let recomputed = record.identity_digest()?;
         if recomputed != record.procedure_id {
             return Err(Refusal::new(RefusalKind::Invalid, Diagnostic { field: "procedure_id", message: "retained procedure identity differs from recomputed immutable subject fields" }));
         }
         let result_id = record.procedure_id;
         let mut candidate_records = self.current().records.clone();
-        if let Some(existing_index) = candidate_records
+        let existing_position = candidate_records
             .iter()
-            .position(|existing| existing.procedure_id == record.procedure_id)
-        {
+            .position(|existing| existing.procedure_id == record.procedure_id);
+        acceptance::accept(
+            self.verifier.as_deref(),
+            &mut record,
+            existing_position.and_then(|index| candidate_records.get(index)),
+        )?;
+        Self::validate_record(&record, policy, true)?;
+        if let Some(existing_index) = existing_position {
             let existing = candidate_records.get(existing_index).ok_or_else(|| {
                 Refusal::new(
                     RefusalKind::Internal,
@@ -989,6 +1044,12 @@ impl ProcedureLibrary {
                 incoming.evidence.push(evidence.clone());
             }
         }
+        // Retained claims keep the receipts the library minted for them.
+        for receipt in existing.verified.iter() {
+            if !incoming.verified.contains(receipt) {
+                incoming.verified.push(receipt.clone());
+            }
+        }
         if existing.status.rank() < incoming.status.rank() && incoming.status != Status::Superseded
         {
             incoming.status = existing.status;
@@ -1024,6 +1085,7 @@ impl ProcedureLibrary {
     fn canonicalize_evidence(records: &mut [ProcedureRecord]) -> Result<(), Refusal> {
         for record in records.iter_mut() {
             record.evidence.sort_by(persistence::compare_evidence);
+            record.verified.sort_by(acceptance::compare);
             if record.evidence.len() > MAX_EVIDENCE {
                 return Err(Refusal::new(
                     RefusalKind::Exhausted,
@@ -1037,11 +1099,9 @@ impl ProcedureLibrary {
         Ok(())
     }
 
-    fn validate_record(
-        record: &ProcedureRecord,
-        policy: Option<&ConsumerPolicy>,
-        require_selected_policy: bool,
-    ) -> Result<(), Refusal> {
+    /// Shape, bounds, projection and per-claim checks: everything that holds
+    /// before the library decides which claims its owner's verifier accepts.
+    fn validate_claims(record: &ProcedureRecord) -> Result<(), Refusal> {
         if record.format != RECORD_FORMAT || record.semantic_revision != SEMANTIC_REVISION {
             return Err(Refusal::new(
                 RefusalKind::Unsupported,
@@ -1141,6 +1201,18 @@ impl ProcedureLibrary {
                 ));
             }
         }
+        Ok(())
+    }
+
+    /// The full record check. Status is decided only by verification
+    /// receipts, never by the claims they answer.
+    fn validate_record(
+        record: &ProcedureRecord,
+        policy: Option<&ConsumerPolicy>,
+        require_selected_policy: bool,
+    ) -> Result<(), Refusal> {
+        Self::validate_claims(record)?;
+        acceptance::validate(record)?;
         match record.status {
             Status::Candidate => {
                 if record.promotion.is_some() {
@@ -1154,13 +1226,8 @@ impl ProcedureLibrary {
                 }
             }
             Status::Tested => {
-                if record.promotion.is_some()
-                    || !record.evidence.iter().any(|evidence| {
-                        evidence.class == EvidenceClass::Test
-                            && evidence.outcome == EvidenceOutcome::Passed
-                    })
-                {
-                    return Err(Refusal::new(RefusalKind::ForgedStatus, Diagnostic { field: "status", message: "tested status requires passing test evidence and no promotion decision" }));
+                if record.promotion.is_some() || !acceptance::has_verified_passing_test(record) {
+                    return Err(Refusal::new(RefusalKind::ForgedStatus, Diagnostic { field: "status", message: "tested status requires a passing test outcome verified by the library owner's verifier and no promotion decision" }));
                 }
             }
             Status::Promoted => {
@@ -1231,17 +1298,14 @@ impl ProcedureLibrary {
                     } else {
                         None
                     };
-                    let is_satisfied = record.evidence.iter().any(|evidence| {
-                        evidence.obligation == *obligation
-                            && evidence.policy_revision == promotion.policy_revision
-                            && evidence.outcome == EvidenceOutcome::Proved
-                            && evidence.class.proves()
-                            && policy_obligation.is_none_or(|required| {
-                                required.allowed_classes.contains(&evidence.class)
-                            })
-                    });
+                    let is_satisfied = acceptance::has_verified_proof(
+                        record,
+                        promotion,
+                        *obligation,
+                        policy_obligation,
+                    );
                     if !is_satisfied {
-                        return Err(Refusal::at(RefusalKind::ForgedStatus, Diagnostic { field: "promotion.obligations", message: "each promoted obligation requires exact-subject proof evidence allowed by policy" }, index as u32));
+                        return Err(Refusal::at(RefusalKind::ForgedStatus, Diagnostic { field: "promotion.obligations", message: "each promoted obligation requires exact-subject proof evidence verified by the library owner's verifier and allowed by policy" }, index as u32));
                     }
                 }
                 if let Some(policy) = policy {
@@ -1599,9 +1663,7 @@ impl ProcedureLibrary {
                 },
             ));
         }
-        record.status = if record.evidence.iter().any(|evidence| {
-            evidence.class == EvidenceClass::Test && evidence.outcome == EvidenceOutcome::Passed
-        }) {
+        record.status = if acceptance::has_verified_passing_test(&record) {
             Status::Tested
         } else {
             Status::Candidate
@@ -1715,6 +1777,23 @@ impl ProcedureLibrary {
                                 "rollback refused because an evidence toolchain is unavailable",
                         },
                         evidence_index as u32,
+                    ));
+                }
+            }
+            for (receipt_index, receipt) in record.verified.iter().enumerate() {
+                if receipt
+                    .toolchain
+                    .iter()
+                    .any(|toolchain| !available_toolchains.contains(toolchain))
+                {
+                    return Err(Refusal::at(
+                        RefusalKind::Invalid,
+                        Diagnostic {
+                            field: "verified_evidence.toolchain",
+                            message:
+                                "rollback refused because a verified evidence toolchain is unavailable",
+                        },
+                        receipt_index as u32,
                     ));
                 }
             }

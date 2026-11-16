@@ -1,3 +1,4 @@
+use super::super::support::verifier::OwnerLedger;
 use super::super::support::{limits, revision};
 use noble_contracts::source::procedures::{
     CapabilityMarker, ComposeContext, EvidenceClass, EvidenceOutcome, EvidenceRecord, ProcedureId,
@@ -20,6 +21,7 @@ struct QueryFixture<'a> {
     namespace: &'a Session,
     library: &'a ProcedureLibrary,
     records: &'a [ProcedureRecord],
+    owner: &'a OwnerLedger,
 }
 
 // Walk the record's declared parents, not the retrieval index's reverse-closure algorithm.
@@ -86,14 +88,16 @@ fn expected_ids(records: &[ProcedureRecord], query: &Query) -> Vec<ProcedureId> 
 }
 
 fn readmit_and_exercise(
-    namespace: &Session,
-    original: &[ProcedureRecord],
+    fixture: &QueryFixture<'_>,
     selected: &[ProcedureId],
 ) -> Result<(), String> {
     if selected.is_empty() {
         return Ok(());
     }
-    let mut fresh = ProcedureLibrary::new(revision(7));
+    let (namespace, original) = (fixture.namespace, fixture.records);
+    // Retrieved receipts do not travel: the fresh library re-derives them
+    // through its own owner's verifier.
+    let mut fresh = ProcedureLibrary::with_verifier(revision(7), fixture.owner.replica().boxed());
     fresh
         .admit_batch(namespace, None, original.to_vec())
         .map_err(|error| format!("fresh ordinary chunk/source/kernel admission: {error:?}"))?;
@@ -161,7 +165,7 @@ fn check_generated_query(
             .iter()
             .any(|record| record.procedure_id == *id && record.status == Status::Tested)
     });
-    readmit_and_exercise(fixture.namespace, fixture.records, &result.candidates)?;
+    readmit_and_exercise(fixture, &result.candidates)?;
     Ok((
         is_nonempty,
         expected.is_empty(),
@@ -175,8 +179,9 @@ fn check_generated_query(
 #[test]
 fn generated_queries_return_only_ids_and_require_readmission() -> Result<(), String> {
     let namespace = Session::without_test_hosts();
-    let mut library = ProcedureLibrary::new(revision(7));
     let fixture = fixtures::records()?;
+    let owner = fixtures::owner(&fixture);
+    let mut library = ProcedureLibrary::with_verifier(revision(7), owner.replica().boxed());
     library
         .admit_batch(&namespace, None, fixture)
         .map_err(|error| format!("initial admission: {error:?}"))?;
@@ -186,6 +191,7 @@ fn generated_queries_return_only_ids_and_require_readmission() -> Result<(), Str
         namespace: &namespace,
         library: &library,
         records: &original,
+        owner: &owner,
     };
     let mut is_nonempty = false;
     let mut is_empty = false;

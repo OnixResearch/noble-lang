@@ -4,6 +4,7 @@
 )]
 
 use super::*;
+use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
 use core::cmp::Ordering;
@@ -12,12 +13,15 @@ const DOMAIN_ID: u64 = 0x4e_50_52_4f_43_00_00_01;
 const DOMAIN_STATE: u64 = 0x4e_50_52_4f_43_00_00_02;
 const DOMAIN_LIBRARY: u64 = 0x4e_50_52_4f_43_00_00_03;
 const DOMAIN_ALIAS_CLOSURE: u64 = 0x4e_50_52_4f_43_00_00_04;
+const DOMAIN_CLAIM: u64 = 0x4e_50_52_4f_43_00_00_05;
 const MAX_STRING_BYTES: u32 = 4_096;
 const MAX_TOOLCHAINS: u32 = 16;
 const MAX_BINDINGS: u32 = 16;
 const MAX_RECIPE_NODES: u32 = chunks::MAX_RECIPE_NODES;
 const MAX_DEPTH_LIST: u32 = chunks::MAX_STACK_HEIGHT;
-const MAGIC: &[u8; 8] = b"NPLIB001";
+/// Revision 2 of the store adds the verification receipts minted at
+/// admission; revision-1 bytes carried claims only and are refused.
+const MAGIC: &[u8; 8] = b"NPLIB002";
 
 #[derive(Clone, Copy)]
 struct JsonLimitDiagnostic {
@@ -543,6 +547,14 @@ pub(super) fn procedure_revision(records: &[ProcedureRecord]) -> Result<Procedur
         writer.raw(&state_digest(record)?);
     }
     Ok(digest32(DOMAIN_LIBRARY, &writer.bytes))
+}
+
+/// Digest of one claim's canonical bytes; a verification receipt cites the
+/// exact claim it answers by this value.
+pub(super) fn claim_digest(evidence: &EvidenceRecord) -> Result<ProcedureId, Refusal> {
+    let mut writer = Writer::new();
+    write_evidence_record(&mut writer, evidence)?;
+    Ok(digest32(DOMAIN_CLAIM, &writer.bytes))
 }
 
 pub(super) fn compare_evidence(left: &EvidenceRecord, right: &EvidenceRecord) -> Ordering {
@@ -1120,6 +1132,7 @@ fn read_status(reader: &mut Reader<'_>) -> Result<Status, Refusal> {
 fn write_state(writer: &mut Writer, record: &ProcedureRecord) -> Result<(), Refusal> {
     write_library_dependencies(writer, &record.library_dependencies)?;
     write_evidence_records(writer, &record.evidence)?;
+    write_verified_evidence(writer, &record.verified)?;
     write_status(writer, record.status);
     write_promotion(writer, record.promotion.as_ref())?;
     write_cost(writer, record.cost);
@@ -1152,26 +1165,58 @@ fn write_evidence_records(
 ) -> Result<(), Refusal> {
     writer.bounded_count(evidence_records.len(), MAX_EVIDENCE, "evidence")?;
     for evidence in evidence_records {
-        writer.u32(evidence.obligation);
-        write_evidence_class(writer, evidence.class);
-        write_outcome(writer, evidence.outcome);
+        write_evidence_record(writer, evidence)?;
+    }
+    Ok(())
+}
+
+fn write_evidence_record(writer: &mut Writer, evidence: &EvidenceRecord) -> Result<(), Refusal> {
+    writer.u32(evidence.obligation);
+    write_evidence_class(writer, evidence.class);
+    write_outcome(writer, evidence.outcome);
+    writer.bounded_count(
+        evidence.toolchain.len(),
+        MAX_TOOLCHAINS,
+        "evidence.toolchain",
+    )?;
+    for toolchain in &evidence.toolchain {
+        writer.string(toolchain)?;
+    }
+    writer.string(&evidence.claim)?;
+    writer.raw(&evidence.subject_binding);
+    writer.u32(evidence.policy_revision);
+    match evidence.capability {
+        None => writer.byte(0),
+        Some(CapabilityMarker::LiveCapability) => writer.byte(1),
+        Some(CapabilityMarker::ServiceHandle) => writer.byte(2),
+        Some(CapabilityMarker::Session) => writer.byte(3),
+    }
+    Ok(())
+}
+
+fn write_verified_evidence(
+    writer: &mut Writer,
+    receipts: &[VerifiedEvidence],
+) -> Result<(), Refusal> {
+    writer.bounded_count(receipts.len(), MAX_EVIDENCE, "verified_evidence")?;
+    for receipt in receipts {
+        writer.u32(receipt.obligation);
+        write_evidence_class(writer, receipt.class);
+        write_outcome(writer, receipt.outcome);
+        writer.raw(&receipt.subject_binding);
+        writer.u32(receipt.policy_revision);
+        writer.raw(&receipt.claim_digest);
+        writer.string(&receipt.verifier)?;
         writer.bounded_count(
-            evidence.toolchain.len(),
+            receipt.toolchain.len(),
             MAX_TOOLCHAINS,
-            "evidence.toolchain",
+            "verified_evidence.toolchain",
         )?;
-        for toolchain in &evidence.toolchain {
+        for toolchain in &receipt.toolchain {
             writer.string(toolchain)?;
         }
-        writer.string(&evidence.claim)?;
-        writer.raw(&evidence.subject_binding);
-        writer.u32(evidence.policy_revision);
-        match evidence.capability {
-            None => writer.byte(0),
-            Some(CapabilityMarker::LiveCapability) => writer.byte(1),
-            Some(CapabilityMarker::ServiceHandle) => writer.byte(2),
-            Some(CapabilityMarker::Session) => writer.byte(3),
-        }
+        writer.raw(&receipt.command_digest);
+        writer.raw(&receipt.input_digest);
     }
     Ok(())
 }
@@ -1275,6 +1320,7 @@ fn write_alias_form(writer: &mut Writer, form: &[Polynomial]) -> Result<(), Refu
 fn read_state(reader: &mut Reader<'_>, record: &mut ProcedureRecord) -> Result<(), Refusal> {
     record.library_dependencies = read_library_dependencies(reader)?;
     record.evidence = read_evidence_records(reader)?;
+    record.verified = read_verified_evidence(reader)?;
     record.status = read_status(reader)?;
     record.promotion = read_promotion(reader)?;
     record.cost = read_cost(reader)?;
@@ -1337,6 +1383,40 @@ fn read_evidence_record(reader: &mut Reader<'_>) -> Result<EvidenceRecord, Refus
         policy_revision,
         capability: None,
     })
+}
+
+/// Persisted receipts are parsed here but trusted only after load re-derives
+/// each one through the loading owner's verifier (`acceptance::confirm`).
+fn read_verified_evidence(reader: &mut Reader<'_>) -> Result<Vec<VerifiedEvidence>, Refusal> {
+    let receipt_count = reader.count("verified_evidence", MAX_EVIDENCE)?;
+    let mut receipts = Vec::with_capacity(receipt_count);
+    for _ in 0..receipt_count {
+        let obligation = reader.u32("verified_evidence.obligation")?;
+        let class = read_evidence_class(reader)?;
+        let outcome = read_outcome(reader)?;
+        let subject_binding = reader.raw("verified_evidence.subject_binding")?;
+        let policy_revision = reader.u32("verified_evidence.policy_revision")?;
+        let claim_digest = reader.raw("verified_evidence.claim_digest")?;
+        let verifier = reader.string("verified_evidence.verifier")?;
+        let toolchain_count = reader.count("verified_evidence.toolchain", MAX_TOOLCHAINS)?;
+        let mut toolchain = Vec::with_capacity(toolchain_count);
+        for _ in 0..toolchain_count {
+            toolchain.push(reader.string("verified_evidence.toolchain.name")?);
+        }
+        receipts.push(VerifiedEvidence {
+            obligation,
+            class,
+            outcome,
+            subject_binding,
+            policy_revision,
+            claim_digest,
+            verifier,
+            toolchain,
+            command_digest: reader.raw("verified_evidence.command_digest")?,
+            input_digest: reader.raw("verified_evidence.input_digest")?,
+        });
+    }
+    Ok(receipts)
 }
 
 fn read_promotion(reader: &mut Reader<'_>) -> Result<Option<Promotion>, Refusal> {
@@ -1483,6 +1563,7 @@ fn read_record(reader: &mut Reader<'_>) -> Result<ProcedureRecord, Refusal> {
         provenance,
         library_dependencies: Vec::new(),
         evidence: Vec::new(),
+        verified: Vec::new(),
         status: Status::Candidate,
         promotion: None,
         cost: Cost::default(),
@@ -1624,7 +1705,29 @@ impl ProcedureLibrary {
         )
     }
 
+    /// Load without an owner verifier. Every persisted verification receipt
+    /// must be re-established at load, so bytes carrying a receipt refuse.
     pub fn load(bytes: &[u8], namespace: &super::super::Session) -> Result<Self, Refusal> {
+        Self::load_with(bytes, namespace, None)
+    }
+
+    /// Load under the owner's verifier. Each persisted receipt is accepted
+    /// only if this verifier re-derives the identical receipt for the same
+    /// subject and claim; claims stay unverified and no receipt is minted.
+    /// The verifier then serves later admissions to the loaded library.
+    pub fn load_with_verifier(
+        bytes: &[u8],
+        namespace: &super::super::Session,
+        verifier: Box<dyn EvidenceVerifier>,
+    ) -> Result<Self, Refusal> {
+        Self::load_with(bytes, namespace, Some(verifier))
+    }
+
+    fn load_with(
+        bytes: &[u8],
+        namespace: &super::super::Session,
+        verifier: Option<Box<dyn EvidenceVerifier>>,
+    ) -> Result<Self, Refusal> {
         if bytes.len() > MAX_STORAGE_BYTES {
             return Err(Refusal::new(
                 RefusalKind::Exhausted,
@@ -1678,6 +1781,7 @@ impl ProcedureLibrary {
                 },
             ));
         }
+        let mut confirmed = Vec::new();
         for (index, snapshot) in generations.iter().enumerate() {
             let generation_index = u32::try_from(index).map_err(|_| {
                 Refusal::new(
@@ -1837,6 +1941,9 @@ impl ProcedureLibrary {
                     generation_index,
                 ));
             }
+            for record in &snapshot.records {
+                super::acceptance::confirm(verifier.as_deref(), record, &mut confirmed)?;
+            }
         }
         let last_generation_index = generations.len().checked_sub(1).ok_or_else(|| {
             Refusal::new(
@@ -1875,12 +1982,13 @@ impl ProcedureLibrary {
             chunk_library,
             generations,
             current_generation,
+            verifier,
         })
     }
 
     pub fn identity_manifest(&self) -> Result<Vec<u8>, Refusal> {
         let mut out = BoundedJson::new(MAX_MANIFEST_BYTES);
-        out.push_str("{\"schema\":\"noble-procedure-library-export/1\",\"schema_revision\":0,");
+        out.push_str("{\"schema\":\"noble-procedure-library-export/1\",\"schema_revision\":1,");
         out.push_str("\"profile\":\"pure-i64-bool/1\",\"semantic_revision\":0,");
         out.push_str("\"encoder\":{\"id\":");
         out.push_json_string(ENCODER_ID);
@@ -1932,7 +2040,7 @@ impl ProcedureLibrary {
             out.push_hex(&record.procedure_id);
             out.push('"');
         }
-        out.push_str("],\"non_claims\":[\"experimental library-local identity; not a canonical Noble hash\"]}");
+        out.push_str("],\"non_claims\":[\"experimental library-local identity; not a canonical Noble hash\",\"evidence lists submitter claims kept as unverified provenance; only verified_evidence, minted at admission by the library owner's verifier, supports tested or promoted\"]}");
         out.finish(MANIFEST_LIMIT_DIAGNOSTIC)
     }
 
@@ -2244,6 +2352,7 @@ fn write_manifest_record(out: &mut BoundedJson, record: &ProcedureRecord) -> Res
     write_manifest_dependencies(out, record);
     write_manifest_promotion(out, record);
     write_manifest_evidence(out, record);
+    write_manifest_verified_evidence(out, record);
     write_manifest_cost_and_links(out, record);
     out.push('}');
     Ok(())
@@ -2355,6 +2464,42 @@ fn write_manifest_evidence(out: &mut BoundedJson, record: &ProcedureRecord) {
         out.push_str("\",\"policy_revision\":");
         out.push_u32(evidence.policy_revision);
         out.push('}');
+    }
+    out.push(']');
+}
+
+fn write_manifest_verified_evidence(out: &mut BoundedJson, record: &ProcedureRecord) {
+    out.push_str(",\"verified_evidence\":[");
+    for (index, receipt) in record.verified.iter().enumerate() {
+        if index != 0 {
+            out.push(',');
+        }
+        out.push_str("{\"obligation\":");
+        out.push_u32(receipt.obligation);
+        out.push_str(",\"class\":");
+        out.push_json_string(receipt.class.code());
+        out.push_str(",\"outcome\":");
+        out.push_json_string(receipt.outcome.code());
+        out.push_str(",\"subject_binding\":\"");
+        out.push_hex(&receipt.subject_binding);
+        out.push_str("\",\"policy_revision\":");
+        out.push_u32(receipt.policy_revision);
+        out.push_str(",\"claim_digest\":\"");
+        out.push_hex(&receipt.claim_digest);
+        out.push_str("\",\"verifier\":");
+        out.push_json_string(&receipt.verifier);
+        out.push_str(",\"toolchain\":[");
+        for (tool_index, toolchain) in receipt.toolchain.iter().enumerate() {
+            if tool_index != 0 {
+                out.push(',');
+            }
+            out.push_json_string(toolchain);
+        }
+        out.push_str("],\"command_digest\":\"");
+        out.push_hex(&receipt.command_digest);
+        out.push_str("\",\"input_digest\":\"");
+        out.push_hex(&receipt.input_digest);
+        out.push_str("\"}");
     }
     out.push(']');
 }

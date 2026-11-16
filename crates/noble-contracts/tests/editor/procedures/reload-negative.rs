@@ -23,6 +23,10 @@ const LIBRARY_HEADER_BYTES: usize = 48;
 const GENERATION_STATE_BYTES: usize = 65;
 const PROCEDURE_STATE_BYTES: usize = 17;
 const DEPENDENCY_EDGE_BYTES: usize = 80;
+/// Obligation, class, outcome, subject, policy revision and claim digest.
+const RECEIPT_HEAD_BYTES: usize = 74;
+/// Command and input digests.
+const RECEIPT_BINDING_BYTES: usize = 64;
 
 #[derive(Clone, Copy, Debug)]
 struct RecordOffsets {
@@ -162,6 +166,14 @@ impl Cursor<'_> {
             self.skip(37)?;
         }
         let evidence_end_bytes = self.byte_offset_bytes;
+        for _ in 0..self.count()? {
+            self.skip(RECEIPT_HEAD_BYTES)?;
+            self.sized()?;
+            for _ in 0..self.count()? {
+                self.sized()?;
+            }
+            self.skip(RECEIPT_BINDING_BYTES)?;
+        }
         self.skip(1)?;
         if self.byte()? != 0 {
             self.skip(4)?;

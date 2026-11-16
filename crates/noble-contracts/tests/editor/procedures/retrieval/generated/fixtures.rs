@@ -1,3 +1,4 @@
+use super::super::super::support::verifier::OwnerLedger;
 use super::super::super::support::{
     add_record, add_seven_record, envelope, provenance, times_five_record,
 };
@@ -70,4 +71,18 @@ pub(super) fn records() -> Result<Vec<ProcedureRecord>, String> {
         child.procedure_id
     );
     Ok(vec![first, tested, binary, child, grandchild])
+}
+
+/// The library owner executed the fixture test behind every `tested` record.
+pub(super) fn owner(records: &[ProcedureRecord]) -> OwnerLedger {
+    let mut ledger = OwnerLedger::empty();
+    for record in records
+        .iter()
+        .filter(|record| record.status == Status::Tested)
+    {
+        for claim in &record.evidence {
+            ledger.confirm(claim);
+        }
+    }
+    ledger
 }

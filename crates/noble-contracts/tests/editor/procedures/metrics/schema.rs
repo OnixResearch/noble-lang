@@ -3,6 +3,9 @@
     reason = "Owner: noble-contracts; the generated matrix checks every evidence tuple in exported JSON and capability refusal against the same retained snapshot"
 )]
 
+use super::super::super::procedures::support::verifier::{
+    OwnerLedger, OWNER_TOOLCHAIN, OWNER_VERIFIER,
+};
 use super::super::super::procedures::support::{literal_record, revision};
 use noble_contracts::source::procedures::{
     CapabilityMarker, ConsumerObligation, ConsumerPolicy, EvidenceClass, EvidenceOutcome,
@@ -20,7 +23,6 @@ mod support;
 fn generated_libraries_preserve_evidence_distinctions_without_capabilities() -> Result<(), String> {
     for seed in [1_u8, 7, 23] {
         let namespace = Session::without_test_hosts();
-        let mut library = ProcedureLibrary::new(revision(seed));
         let mut retired = literal_record(i64::from(seed) + 100, Producer::Chunk)
             .map_err(|error| format!("retired fixture: {error:?}"))?;
         retired.evidence = vec![
@@ -34,10 +36,6 @@ fn generated_libraries_preserve_evidence_distinctions_without_capabilities() -> 
                 EvidenceOutcome::Unknown,
             ),
         ];
-        let retired_id = library
-            .admit(&namespace, None, retired)
-            .map_err(|error| format!("retired admission: {error:?}"))?;
-
         let mut tested = literal_record(i64::from(seed) + 200, Producer::Synthesis)
             .map_err(|error| format!("tested fixture: {error:?}"))?;
         tested.evidence = vec![
@@ -58,10 +56,6 @@ fn generated_libraries_preserve_evidence_distinctions_without_capabilities() -> 
         ];
         tested.status = Status::Tested;
         tested.refresh_retrieval_signature();
-        let tested_id = library
-            .admit(&namespace, None, tested)
-            .map_err(|error| format!("tested admission: {error:?}"))?;
-
         let mut promoted = literal_record(i64::from(seed) + 300, Producer::Chunk)
             .map_err(|error| format!("promoted fixture: {error:?}"))?;
         promoted.evidence = vec![
@@ -74,6 +68,18 @@ fn generated_libraries_preserve_evidence_distinctions_without_capabilities() -> 
             obligations: vec![16],
         });
         promoted.refresh_retrieval_signature();
+        // The owner verified only the claims each status needs; every other
+        // claim, including the tested record's Lean `proved`, stays claimed.
+        let mut ledger = OwnerLedger::empty();
+        ledger.confirm(&tested.evidence[1]);
+        ledger.confirm(&promoted.evidence[0]);
+        let mut library = ProcedureLibrary::with_verifier(revision(seed), ledger.boxed());
+        let retired_id = library
+            .admit(&namespace, None, retired)
+            .map_err(|error| format!("retired admission: {error:?}"))?;
+        let tested_id = library
+            .admit(&namespace, None, tested)
+            .map_err(|error| format!("tested admission: {error:?}"))?;
         // A synthetic policy exercises the schema branch; claim strings are not proof attestations.
         let policy = ConsumerPolicy {
             revision: 3,
@@ -113,13 +119,14 @@ fn generated_libraries_preserve_evidence_distinctions_without_capabilities() -> 
         let manifest: serde_json::Value = serde_json::from_slice(&manifest_bytes)
             .map_err(|error| format!("generated manifest JSON: {error}"))?;
         assert_eq!(manifest["schema"], "noble-procedure-library-export/1");
+        assert_eq!(manifest["schema_revision"], 1);
         assert_eq!(manifest["library"]["generation"], 4);
         let entries = manifest["entries"]
             .as_array()
             .ok_or("entries not an array")?;
         assert_eq!(entries.len(), 4);
         support::assert_no_authority_fields(&manifest);
-        for (id, state, expected) in [
+        for (id, state, expected, verified) in [
             (
                 retired_id,
                 "superseded",
@@ -129,6 +136,7 @@ fn generated_libraries_preserve_evidence_distinctions_without_capabilities() -> 
                     (12, "review", "passed"),
                     (13, "assumption", "unknown"),
                 ],
+                vec![],
             ),
             (
                 tested_id,
@@ -139,16 +147,19 @@ fn generated_libraries_preserve_evidence_distinctions_without_capabilities() -> 
                     (14, "aeneas-lean", "unknown"),
                     (15, "validation", "passed"),
                 ],
+                vec![(11, "test", "passed")],
             ),
             (
                 promoted_id,
                 "promoted",
                 vec![(16, "verus", "proved"), (16, "test", "passed")],
+                vec![(16, "verus", "proved")],
             ),
             (
                 replacement_id,
                 "candidate",
                 vec![(99, "validation", "passed")],
+                vec![],
             ),
         ] {
             let identity = support::hex_identity(&id);
@@ -174,6 +185,21 @@ fn generated_libraries_preserve_evidence_distinctions_without_capabilities() -> 
                         "policy_revision": 3,
                     })
                 );
+            }
+            let receipts = entry["verified_evidence"]
+                .as_array()
+                .ok_or("verified evidence not an array")?;
+            assert_eq!(receipts.len(), verified.len());
+            for (receipt, (obligation, class, outcome)) in receipts.iter().zip(verified) {
+                assert_eq!(receipt["obligation"], obligation);
+                assert_eq!(receipt["class"], class);
+                assert_eq!(receipt["outcome"], outcome);
+                assert_eq!(receipt["subject_binding"], identity);
+                assert_eq!(receipt["policy_revision"], 3);
+                assert_eq!(receipt["verifier"], OWNER_VERIFIER);
+                assert_eq!(receipt["toolchain"], serde_json::json!([OWNER_TOOLCHAIN]));
+                assert_eq!(receipt["input_digest"], identity);
+                assert_eq!(receipt["claim_digest"].as_str().map(str::len), Some(64));
             }
             assert_eq!(entry["promotion"].is_object(), state == "promoted");
             assert_eq!(entry["interface"]["effects"], serde_json::json!([]));
