@@ -168909,206 +168909,6 @@
       "refinement": "open"
     },
     {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:100387:106686",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:106704:112048",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:112066:113512",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:113530:114961",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:114979:116277",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:116295:118889",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:118907:121194",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:121212:121870",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:121888:124637",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:124655:125878",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:125896:128942",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:126085:126133",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:127506:127513",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:128960:130362",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:130380:132106",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:88798:90198",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:90216:91292",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:91310:92369",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:92387:94445",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:94463:100369",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net/plan/corpus.rs:2952:3061",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net/plan/corpus.rs:3213:3466",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net/plan/corpus.rs:3935:3942",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net/plan/corpus.rs:4104:4111",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-ngraph",
-      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net/plan/corpus.rs:8319:8326",
-      "refinement": "open"
-    },
-    {
       "category": "body",
       "disposition": "open",
       "note": "Renewed Campaign batch 9: #32 executed PE cases and Program contract, #62 replay follow-ups, #78 measured scratch and owner arms, #110 emitted plan corpus, #118 alias verifier and v3 transfer from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
@@ -173867,6 +173667,246 @@
       "package": "noble-ngraph",
       "qualified_path": "noble_ngraph::tick::{use#0}",
       "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:101990:108289",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:108307:113651",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:113669:115115",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:115133:116564",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:116582:117880",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:117898:120492",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:120510:122797",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:122815:123473",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:123491:126240",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:126258:127481",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:127499:130545",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:127688:127736",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:129109:129116",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:130563:131965",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:131983:133709",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:79878:80728",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:89666:91066",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:91084:92160",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:92178:93237",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:93255:95313",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:95331:96048",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net.rs:96066:101972",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net/plan/corpus.rs:3590:3699",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net/plan/corpus.rs:3851:4104",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net/plan/corpus.rs:4727:4734",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net/plan/corpus.rs:4896:4903",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble-ngraph::closure@crates/noble-ngraph/src/net/plan/corpus.rs:9315:9322",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::net::tests::checked_plan_refuses_reciprocal_auxiliary_loop",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive from compiler kind constant: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::net::tests::emission::EXTRAS",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Campaign batch 11: #110 checker-admitted refinement and universal emitter classification, #32 Cairn archive from compiler kind constant/function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-ngraph",
+      "qualified_path": "noble_ngraph::net::tests::enqueue_refuses_full_stale_queue_without_mutating_pair_marks",
+      "refinement": "open"
     }
   ],
   "test_subjects": [
