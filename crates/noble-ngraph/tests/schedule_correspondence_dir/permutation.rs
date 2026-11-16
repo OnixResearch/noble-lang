@@ -416,7 +416,7 @@ fn a_constant_only_graph_needs_no_instruction_and_empty_observations_are_unsuppo
 }
 
 #[test]
-fn checked_permutation_executes_bool_input() {
+fn checked_artifact_executes_bool_input() {
     let ids = &super::common::IDS;
     let mut builder = GraphBuilder::new(
         SubProfile::I64,
@@ -471,7 +471,7 @@ fn three_way(checked: &check::CheckedGraph, artifact: &Artifact, args: &[Value])
 }
 
 #[test]
-fn bool_identity_inputs_agree_across_reference_canonical_and_permutation() {
+fn bool_identity_inputs_agree_across_reference_canonical_and_opt_in_paths() {
     let ids = &super::common::IDS;
     let mut builder = GraphBuilder::new(
         SubProfile::I64,
