@@ -1,16 +1,11 @@
 # ServiceRef codec: refinement of the Lean model (issue #48)
 
-**Historical input, not a current #97 extraction check.** The retained proof
-receipt used Aeneas `505b6ca` and Lean 4.31.0. The current
-`model-inputs.json` names the selected `1238879f` **Lean library** for a
-possible rerun, while its extraction receipt and lock still record the older
-translator. After #97's partial re-extraction, none of the five checked-in M3
-generated/model input hashes matches this profile. The checker rejects that
-drift before compiling or claiming refinement; it has no fallback that
-silently treats the old receipt as current. The commands and theorem claims
-below describe the retained source-bound run, not a successful proof over
-the new checked-in subject or today's Rust sources. See the
-[#97 classification](../aeneas-re-extraction/README.md#generated-subjects-and-lane-receipts).
+The current lane requires matching Aeneas extractor/library revision `1238879f`,
+Lean 4.35.0, and the independent M4 extraction check together with its reviewed
+lock. A changed input or an older record fails before a refinement receipt can
+be emitted. The historical `505b6ca`/Lean 4.31.0 receipts below remain unchanged;
+they are not current-subject evidence. The declared-modules-v1 extraction record
+also remains historical and is no longer a selected authority for this lane.
 
 This lane proves statements about two generated Lean functions:
 `noble_kernel.dataspace.wire.decode_service` and `noble_kernel.dataspace.wire.encode_service`. Both
@@ -25,7 +20,8 @@ nine seeded decoder faults.
 
 ```sh
 env -i HOME="$HOME" USER="$USER" LOGNAME="$USER" PATH=/run/current-system/sw/bin:/usr/bin:/bin \
-  "$(selected node)" verification/service-wire-refinement/check.mjs --output /tmp/service-wire-check
+  "<policy-selected Node executable>" verification/service-wire-refinement/check.mjs \
+  --output "<new directory outside the repository>"
 ```
 
 The harness refuses three things:
@@ -37,12 +33,24 @@ The harness refuses three things:
 
 ## What one run checks
 
-1. **The generated input.** For a new successful run, the five
-   `proofs/m3/NobleKernel` sources must match [the profile](model-inputs.json)
-   and two independent records of the same extraction:
-   - `verification/declared-modules-v1/extraction.json`, for the generated outputs and the
-     handwritten external models it read;
+1. **The generated and handwritten inputs.** The generated entry, Types and Funs
+   must match [the profile](model-inputs.json) and two independently produced
+   records of the same extraction:
+   - `verification/m4/implementation.json`, a passed independent extraction in
+     check mode, whose reviewed-lock hash must equal the selected lock;
    - `verification/m4/extraction-lock.json`.
+
+   Extractor and library revisions must agree, and both records must name the
+   policy-selected Charon/Aeneas binary identities. The checker walks the local
+   import closure from NobleKernel. Every handwritten import, including any
+   StdModels module, must be listed separately in `handwritten_inputs`, match
+   both records' real `source_files` entries and the current source bytes, and
+   be copied into the isolated tree. Such modules are not generated outputs:
+   omitting one or fabricating a generated-file entry cannot satisfy the profile.
+   The current kernel imports TypesExternal and FunsExternal, not the MC1 or
+   M3-Wasm StdModels modules. Those modules belong to the corresponding M4
+   subjects' source snapshots; importing them here without a new source binding
+   is refused, not silently supplied from a retained build.
 
    The foundation model `ServiceWire.lean` must match its pinned hash. The
    [project](../../proofs/service-wire)'s `lean-toolchain` must equal M7's byte for byte, and its
@@ -70,7 +78,9 @@ The harness refuses three things:
    the extraction recorded (`exact-file`). There is no archived fallback for this extraction, so
    a reachable Rust file that has changed since then fails the run and needs a new extraction.
    Elaborator-shared matchers and side proofs are traversed but bind no Rust item. Reachable
-   handwritten external models are listed as a trust boundary.
+   handwritten external models are listed as a trust boundary. The receipt also
+   records every staged handwritten input, including imports whose declarations
+   are not reached by the codec theorems.
 4. **Mutation controls.** Each structure-preserving edit changes one behaviour of the generated
    codec. Each mutated kernel must still compile, and elaborating the unchanged theorems against it
    must fail. The targeted theorems must then depend on `sorryAx`, while the other theorems keep
@@ -95,6 +105,35 @@ The remaining 30 theorems are lemmas these rest on:
 - eighteen generated-step lemmas: range and element indexing, slice lengths, the generated prefix
   and suffix constants, the fifteen-byte minimum, saturating subtraction, slice copies and a guarded
   boolean step.
+
+## `1238879f` proof and input review (#97)
+
+The current inventory has **61 theorems**: the original sixty plus the normal-return
+inversion lemma `specReturns`, added during the Lean 4.35 port. The current-subject
+port changes only the proof bodies of `from_utf8_ascii` and `from_utf8_cases`: the
+renewed external model names its byte array in a local let, which must be reduced
+before splitting the UTF-8 match. No statement, premise, specification definition,
+subject set or axiom allowlist was changed. Explicit compiled-pin observation
+against the inventory reported **all 61 statement/subject pins and all seven
+specification pins unchanged**, so no inventory renewal was accepted or needed.
+
+The input-profile renewal is separate from that proof-pin result:
+
+| Input pin | Previous profile SHA-256 prefix | Current subject SHA-256 prefix | Review |
+|---|---|---|---|
+| Generated NobleKernel entry | `3cad0c3d` | `bd411e32` | Fresh extractor output, not a handwritten compatibility entry. |
+| Generated Types | `af81688c` | `45b7510f` | Renewed generated declarations; the unchanged compiled statements still name the codec's types. |
+| Generated Funs | `0ca1f67f` | `37552261` | Renewed generated bodies; the refinement proofs are re-elaborated against these bodies. |
+| Handwritten TypesExternal | `286ff400` | `816e8689` | A real source input in both extraction records, not a fabricated translator output. |
+| Handwritten FunsExternal | `d2907d53` | `65c26944` | A real source input in both extraction records. The UTF-8 proof reductions above do not weaken its byte-preserving success/error contract. |
+| Foundation ServiceWire model | `3d395fe3` | `3e61096e` | Earlier proof-syntax and stray-closer witness changes; the decoder/encoder specification definitions are unchanged. This port does not edit the model. |
+| Extraction authority | declared-modules-v1 receipt | independent M4 check and reviewed lock | A new producer result is required; updating input hashes or matching the Lean-library revision alone is not extraction evidence. |
+
+The full hashes and selected record identities are in the profile and each new
+receipt. Both reached Rust files, dataspace/wire.rs and dataspace/mod.rs, remain
+byte-identical to the historical sixty-theorem run. This is not a claim that the
+whole renewed kernel equals the historical extraction: the universal codec
+theorems are checked again against the selected new subject and trusted models.
 
 ## Retained runs
 

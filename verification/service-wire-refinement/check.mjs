@@ -33,9 +33,8 @@ const projectFiles = ['lakefile.toml', 'lake-manifest.json', 'lean-toolchain'].m
 const modelFile = 'proofs/foundation/NobleFoundation/ServiceWire.lean';
 const generatedInputs = [
   'proofs/m3/NobleKernel.lean',
-  ...['Types', 'TypesExternal', 'Funs', 'FunsExternal'].map(name => `proofs/m3/NobleKernel/${name}.lean`),
+  ...['Types', 'Funs'].map(name => `proofs/m3/NobleKernel/${name}.lean`),
 ];
-const handwrittenModels = new Set(['proofs/m3/NobleKernel/TypesExternal.lean', 'proofs/m3/NobleKernel/FunsExternal.lean']);
 const funsFile = 'proofs/m3/NobleKernel/Funs.lean';
 const standardAxioms = new Set(['propext', 'Classical.choice', 'Quot.sound']);
 let commandSerial = 0;
@@ -121,11 +120,34 @@ function checkDeclarations(inventory) {
   return { names, specifications, text };
 }
 
-/** The generated inputs are the outputs of one recorded extraction; the handwritten external models
- *  are inputs of that same extraction. Two independent records must agree on every byte. */
+/** Resolve every local import from the generated entry point. New handwritten modules (including
+ *  StdModels) must be staged and source-bound, never invented as translator outputs. */
+function kernelImportClosure() {
+  const files = new Set();
+  const pending = ['NobleKernel'];
+  while (pending.length > 0) {
+    const module = pending.pop();
+    const file = `proofs/m3/${module.replaceAll('.', '/')}.lean`;
+    if (files.has(file)) continue;
+    files.add(file);
+    const code = readFileSync(join(root, file), 'utf8')
+      .replace(/\/-[\s\S]*?-\//g, '').replace(/--.*$/gm, '');
+    for (const match of code.matchAll(/^\s*(?:public\s+)?(?:meta\s+)?import\s+(.+)$/gm)) {
+      for (const dependency of match[1].trim().split(/\s+/)) {
+        if (dependency === 'NobleKernel' || dependency.startsWith('NobleKernel.')) pending.push(dependency);
+        else requireThat(/^(?:Aeneas|Mathlib|Lean|Std|Batteries)(?:\.[A-Za-z_0-9]+)*$/.test(dependency),
+          `unselected kernel import: ${dependency}`);
+      }
+    }
+  }
+  return [...files].sort();
+}
+
+/** The generated inputs are outputs of the independently checked M4 extraction; handwritten
+ *  modules are real source inputs of that same extraction. Its receipt and reviewed lock must agree. */
 function verifyProfile(profile) {
-  requireThat(profile.schema === 'noble-service-wire-refinement-inputs/v1', 'wrong model-input schema');
-  requireThat(profile.extraction_receipt === 'verification/declared-modules-v1/extraction.json' &&
+  requireThat(profile.schema === 'noble-service-wire-refinement-inputs/v2', 'wrong model-input schema');
+  requireThat(profile.extraction_receipt === 'verification/m4/implementation.json' &&
     profile.extraction_lock === 'verification/m4/extraction-lock.json', 'unselected extraction records');
   requireThat(fileHash(join(root, profile.extraction_receipt)) === profile.extraction_receipt_sha256,
     'extraction receipt changed');
@@ -133,20 +155,43 @@ function verifyProfile(profile) {
     'extraction lock changed');
   const receipt = JSON.parse(readFileSync(join(root, profile.extraction_receipt)));
   const lock = JSON.parse(readFileSync(join(root, profile.extraction_lock)));
-  requireThat(receipt.result === 'passed', 'recorded extraction did not pass');
+  requireThat(receipt.schema === 'm4-implementation-evidence/v1' && receipt.mode === 'check' &&
+    receipt.result === 'passed', 'recorded independent extraction check did not pass');
+  requireThat(lock.schema === 'm4-extraction-lock/v1' &&
+    receipt.reviewed_lock_sha256 === profile.extraction_lock_sha256, 'extraction check did not use the reviewed lock');
+  requireThat(selection.sources.aeneas.rev === profile.aeneas_revision &&
+    selection.sources.aeneas_lean.rev === profile.aeneas_revision, 'extractor and library revisions differ');
+  for (const tool of ['aeneas', 'charon']) {
+    const binary = join(selection.tool_paths[tool].output, 'bin', tool);
+    requireThat(receipt.tools[tool].path === binary && receipt.tools[tool].sha256 === fileHash(binary) &&
+      JSON.stringify(receipt.tools[tool]) === JSON.stringify(lock.tools[tool]),
+      `recorded extraction used an unselected tool: ${tool}`);
+  }
   requireThat(JSON.stringify(Object.keys(profile.generated_inputs).sort()) === JSON.stringify([...generatedInputs].sort()),
     'generated input set changed');
+  const kernelInputs = kernelImportClosure();
+  requireThat(generatedInputs.every(file => kernelInputs.includes(file)), 'generated import closure changed');
+  const handwrittenModels = new Set(kernelInputs.filter(file => !generatedInputs.includes(file)));
+  requireThat(handwrittenModels.has('proofs/m3/NobleKernel/TypesExternal.lean') &&
+    handwrittenModels.has('proofs/m3/NobleKernel/FunsExternal.lean'), 'external model import closure changed');
+  requireThat(JSON.stringify(Object.keys(profile.handwritten_inputs).sort()) ===
+    JSON.stringify([...handwrittenModels].sort()), 'handwritten input set differs from the local import closure');
   // A passing profile binds checked-in inputs to its recorded extraction, not
   // merely to the currently selected Lean library. A stale profile fails here.
   for (const file of generatedInputs) {
-    const recorded = handwrittenModels.has(file)
-      ? [receipt.source_files[file], lock.source_files[file]]
-      : [receipt.extractions.kernel.generated[basename(file)], lock.generated_files.kernel[basename(file)]];
+    const recorded = [receipt.extractions.kernel.generated[basename(file)], lock.generated_files.kernel[basename(file)]];
     requireThat(recorded.every(hash => hash === profile.generated_inputs[file]),
       `generated input detached from the recorded extraction: ${file}`);
     const current = readFileSync(join(root, file));
     requireThat(digest(current) === profile.generated_inputs[file], `generated input changed: ${file}`);
   }
+  for (const file of handwrittenModels) {
+    const hash = profile.handwritten_inputs[file];
+    requireThat(receipt.source_files[file] === hash && lock.source_files[file] === hash,
+      `handwritten input detached from the recorded extraction: ${file}`);
+    requireThat(fileHash(join(root, file)) === hash, `handwritten input changed: ${file}`);
+  }
+  requireThat(JSON.stringify(Object.keys(profile.model)) === JSON.stringify([modelFile]), 'model input set changed');
   for (const [file, hash] of Object.entries(profile.model)) {
     requireThat(file === modelFile && fileHash(join(root, file)) === hash, `model changed: ${file}`);
   }
@@ -162,7 +207,7 @@ function verifyProfile(profile) {
     'lake manifest differs from the reviewed reference beyond its package name');
   requireThat(Array.isArray(profile.mutation_controls) && profile.mutation_controls.length > 0,
     'mutation controls required');
-  return { receipt, lock, manifest };
+  return { receipt, lock, manifest, kernelInputs, handwrittenModels };
 }
 
 function dependencyPackages(profile, manifest) {
@@ -354,7 +399,7 @@ const auxiliary = /^(?:match_\d+|_proof_\d+|proof_\d+|_auxLemma\.\d+|eq_\d+|eq_d
  *  this extraction, so a changed file fails closed and needs a new extraction. */
 function bindReachable(reachable, records) {
   const declared = new Map();
-  for (const file of generatedInputs.filter(file => file !== 'proofs/m3/NobleKernel.lean')) {
+  for (const file of records.kernelInputs.filter(file => file !== 'proofs/m3/NobleKernel.lean')) {
     const lines = readFileSync(join(root, file), 'utf8').split('\n');
     let pending = null;
     for (let index = 0; index < lines.length; index++) {
@@ -383,7 +428,7 @@ function bindReachable(reachable, records) {
     }
     if (owner === null) { unresolved.push(full); continue; }
     const [name, { file, source }] = owner;
-    if (handwrittenModels.has(file)) externalModels.add(`${basename(file)}:${name}`);
+    if (records.handwrittenModels.has(file)) externalModels.add(`${basename(file)}:${name}`);
     else {
       requireThat(source, `generated declaration without a Rust source: ${name}`);
       generatedDeclarations.set(name, source);
@@ -406,6 +451,8 @@ function bindReachable(reachable, records) {
     reachable_project_constants: reachable.length,
     shared_auxiliaries: auxiliaries,
     source_files: bound,
+    handwritten_inputs: [...records.handwrittenModels].sort().map(file =>
+      ({ file, binding: 'exact-file', sha256: fileHash(join(root, file)) })),
     external_models: [...externalModels].sort(),
   };
 }
@@ -477,13 +524,13 @@ try {
   const records = verifyProfile(profile);
   const checkedFiles = [codeFile, inventoryFile, profileFile, 'verification/service-wire-refinement/check.mjs',
     ...projectFiles, `${profile.toolchain_reference}/lean-toolchain`, `${profile.toolchain_reference}/lake-manifest.json`,
-    modelFile, ...generatedInputs, profile.extraction_receipt, profile.extraction_lock, 'policy/tool-selection.json'];
+    modelFile, ...records.kernelInputs, profile.extraction_receipt, profile.extraction_lock, 'policy/tool-selection.json'];
   const sources = Object.fromEntries(checkedFiles.map(file => [file, fileHash(join(root, file))]));
   const version = run(join(leanBin, 'lean'), ['--version']).trim();
   requireThat(version.includes('version 4.35.0') && version.includes('eb6cafb7290e8bd5f2937522d8d804f58f02bafc'),
     'wrong pinned Lean executable');
   const dependencies = dependencyPackages(profile, records.manifest);
-  const files = Object.fromEntries([...projectFiles, codeFile, modelFile, ...generatedInputs]
+  const files = Object.fromEntries([...projectFiles, codeFile, modelFile, ...records.kernelInputs]
     .map(file => [file, readFileSync(join(root, file))]));
   const project = makeTree(join(output, 'baseline'), files, dependencies);
   const build = run(lake, ['build', 'ServiceWireRefinement'], project);
@@ -500,7 +547,7 @@ try {
   for (const [file, hash] of Object.entries(sources)) requireThat(fileHash(join(root, file)) === hash, `source changed: ${file}`);
   const roleCount = role => theorems.filter(theorem => theorem.role === role).length;
   const receipt = {
-    schema: 'noble-service-wire-refinement-proof/v1', issue: 'https://github.com/OnixResearch/noble-lang/issues/48',
+    schema: 'noble-service-wire-refinement-proof/v2', issue: 'https://github.com/OnixResearch/noble-lang/issues/48',
     source_commit: initial.source_commit, source_tree: initial.source_tree,
     clean_source: initial.status === '', allow_dirty: allowDirty, lean: version,
     lean_path: join(leanBin, 'lean'), lean_sha256: fileHash(join(leanBin, 'lean')),
@@ -515,12 +562,12 @@ try {
       rust_round_trips: [`${namespace}.decode_service_encode_service`, `${namespace}.encode_service_decode_service`],
       implementation_subjects: [...new Set(theorems.flatMap(theorem => theorem.subjects))].sort(),
       finite_rust_comparisons: 'none in this lane; verification/service-ref/differential.json remains the finite Rust-level comparison',
-      correspondence: 'statements name the checked-in generated functions; the recorded Charon/Aeneas translation of the bound Rust sources is trusted, not re-run',
+      correspondence: 'statements name the checked-in generated functions; their bytes match the independent M4 extraction check and reviewed lock; the Charon/Aeneas translation is trusted, not re-run by this lane',
     },
     assumptions: [
       'Pinned Lean and the imported Aeneas/Mathlib dependency libraries are trusted; downloaded dependency .oleans are not rebuilt by this audit.',
       'The checked-in kernel subjects match the recorded extraction and build against the selected Aeneas Lean library without compatibility aliases; matching the library pin alone does not renew extraction provenance.',
-      'The recorded Charon/Aeneas translation (verification/declared-modules-v1/extraction.json) is trusted to model the bound Rust sources; this lane does not re-run it.',
+      'The independently checked Charon/Aeneas translation (verification/m4/implementation.json and extraction-lock.json) is trusted to model the bound Rust sources; this lane does not re-run it.',
       'Reachable handwritten external models are part of the trusted base and are listed in binding.external_models; core.str.converts.from_utf8 is modelled as returning its input on valid UTF-8 and Utf8Error.Invalid otherwise.',
       'The Aeneas library models of slices, arrays, range indexing and range writes, slice copies, scalars, checked arithmetic and loops are trusted.',
     ],
