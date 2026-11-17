@@ -1546,8 +1546,8 @@ def alloc.rc.Rc.Insts.CoreOpsDerefDeref.deref {T : Type} (_A : Type) (rc : alloc
 
 /-- A clone shares the allocation, hence the value. -/
 @[rust_fun "alloc::rc::{core::clone::Clone<alloc::rc::Rc<@T>>}::clone"]
-def alloc.rc.Rc.Insts.CoreCloneClone.clone {T A : Type} (_ : core.alloc.AllocatorClone A)
-    (rc : alloc.rc.Rc T) : Result (alloc.rc.Rc T) :=
+def alloc.rc.Rc.Insts.CoreCloneClone.clone {T : Type} {A : Type _}
+    (_ : core.alloc.AllocatorClone A) (rc : alloc.rc.Rc T) : Result (alloc.rc.Rc T) :=
   ok rc
 
 /-- `fmt::Debug::fmt(&**self, f)`. -/
@@ -1572,8 +1572,8 @@ def alloc.sync.Arc.ptr_eq {T : Type} (_A : Type) (_ _ : alloc.sync.Arc T) : Resu
   fail .undef
 
 @[rust_fun "alloc::sync::{core::clone::Clone<alloc::sync::Arc<@T>>}::clone"]
-def alloc.sync.Arc.Insts.CoreCloneClone.clone {T A : Type} (_ : core.alloc.AllocatorClone A)
-    (arc : alloc.sync.Arc T) : Result (alloc.sync.Arc T) :=
+def alloc.sync.Arc.Insts.CoreCloneClone.clone {T : Type} {A : Type _}
+    (_ : core.alloc.AllocatorClone A) (arc : alloc.sync.Arc T) : Result (alloc.sync.Arc T) :=
   ok arc
 
 @[rust_fun "alloc::sync::{core::fmt::Debug<alloc::sync::Arc<@T>>}::fmt"]
@@ -1615,7 +1615,7 @@ def alloc.collections.btree.set.BTreeSet.insert {T A : Type} (_ : core.alloc.All
 
 /-- Lexicographic comparison by the element `cmp`, then by length (Rust's
 `SliceOrd::compare`); stops at the first unequal pair. -/
-def lexCompare {T : Type} (compare : T → T → Result Ordering) :
+def lexCompare {T : Type _} (compare : T → T → Result Ordering) :
     List T → List T → Result Ordering
   | [], [] => ok .eq
   | [], _ :: _ => ok .lt
@@ -1627,7 +1627,7 @@ def lexCompare {T : Type} (compare : T → T → Result Ordering) :
 
 /-- The same with the element `partial_cmp` (Rust's `SlicePartialOrd`): any
 result other than `Some(Equal)` ends the comparison. -/
-def lexPartialCompare {T : Type} (compare : T → T → Result (Option Ordering)) :
+def lexPartialCompare {T : Type _} (compare : T → T → Result (Option Ordering)) :
     List T → List T → Result (Option Ordering)
   | [], [] => ok (some .eq)
   | [], _ :: _ => ok (some .lt)
@@ -1639,14 +1639,14 @@ def lexPartialCompare {T : Type} (compare : T → T → Result (Option Ordering)
 
 /-- `[T; N]::partial_cmp` is the slice comparison. -/
 @[rust_fun "core::array::{core::cmp::PartialOrd<[@T; @N], [@T; @N]>}::partial_cmp"]
-def Array.Insts.CoreCmpPartialOrdArray.partial_cmp {T : Type} {N : Usize}
+def Array.Insts.CoreCmpPartialOrdArray.partial_cmp {T : Type _} {N : Usize}
     (inst : core.cmp.PartialOrd T T) (left right : Array T N) : Result (Option Ordering) :=
   lexPartialCompare inst.partial_cmp left.val right.val
 
 /-- `[T; N]::ge` is the slice `__chaining_ge`: the first element pair that
 is not `Some(Equal)` decides (`None` is `false`), and equal lengths are `true`. -/
 @[rust_fun "core::array::{core::cmp::PartialOrd<[@T; @N], [@T; @N]>}::ge"]
-def Array.Insts.CoreCmpPartialOrdArray.ge {T : Type} {N : Usize}
+def Array.Insts.CoreCmpPartialOrdArray.ge {T : Type _} {N : Usize}
     (inst : core.cmp.PartialOrd T T) (left right : Array T N) : Result Bool := do
   match ← lexPartialCompare inst.partial_cmp left.val right.val with
   | some .gt => ok true
@@ -1654,7 +1654,7 @@ def Array.Insts.CoreCmpPartialOrdArray.ge {T : Type} {N : Usize}
   | _ => ok false
 
 @[rust_fun "core::array::{core::cmp::Ord<[@T; @N]>}::cmp"]
-def Array.Insts.CoreCmpOrd.cmp {T : Type} {N : Usize} (inst : core.cmp.Ord T)
+def Array.Insts.CoreCmpOrd.cmp {T : Type _} {N : Usize} (inst : core.cmp.Ord T)
     (left right : Array T N) : Result Ordering :=
   lexCompare inst.cmp left.val right.val
 
