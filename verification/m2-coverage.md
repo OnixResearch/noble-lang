@@ -328,10 +328,10 @@ emitter skeleton (§6) with these classifications:
 |---|---|---|
 | `extracted` | 2268 | every generated def in `Funs.lean` except `acceptance.check` |
 | `fixture-checked` | 1 | `noble_kernel.acceptance.check`: the same 13 citations as before (12 closed fixtures, the conditional `accepted_via_refinement` handoff) |
-| `modeled` | 66 | the template's external std surface in `FunsExternal.lean` |
+| `modeled` | 69 | the template's 66 external std functions in `FunsExternal.lean`, plus `Option::map`, `Result::unwrap_or` and `Formatter::debug_c_like_enum_write_str`, kept for the MC1/M3-Wasm `StdModels` that delegate to them (the generated `map`/`unwrap_or` calls resolve to these copies) |
 | `excepted` | 5 | the crate's five `#[charon::opaque]` helpers, unchanged |
 | `open` | 0 | |
-| **total** | **2340** | `Funs.lean` 2269 + `FunsExternal.lean` 71 |
+| **total** | **2343** | `Funs.lean` 2269 + `FunsExternal.lean` 74 |
 
 Every citation's axiom class is now `native`: the generated checker itself
 depends on three literal-size evaluation axioms that the pinned Aeneas
@@ -366,9 +366,9 @@ Gate run (2026-11-16, pinned Lean 4.35.0 and `bun` on PATH):
 
 ```
 [m2-coverage] PASS COVERAGE-DERIVE (Funs.lean + FunsExternal.lean defs with rust names and source spans; keyword parity holds)
-[m2-coverage] PASS COVERAGE-JOIN (total=2340 classified=2340 extracted=2268 proved=0 fixture-checked=1 modeled=66 excepted=5 open=0)
+[m2-coverage] PASS COVERAGE-JOIN (total=2343 classified=2343 extracted=2268 proved=0 fixture-checked=1 modeled=69 excepted=5 open=0)
 [m2-coverage] PASS EXCEPTED-DISCLOSURE (5 excepted entries == #[charon::opaque] declarations in the crate)
-info: m2-coverage: ENV-A-PASS 2340 classified constants bound to their modules; 302 elaborator matchers and 4 partial_fixpoint mutual packings tolerated
+info: m2-coverage: ENV-A-PASS 2343 classified constants bound to their modules; 302 elaborator matchers and 4 partial_fixpoint mutual packings tolerated
 info: m2-coverage: ENV-B-PASS 13 refinement citations verified (theorem exists, statement mentions the constant)
 [m2-coverage] PASS STRENGTH (citations=13 fixture=12 conditional=1 universal=0 strict=0 native=13 strict_universal=0)
 [m2-coverage] PASS (all checks)

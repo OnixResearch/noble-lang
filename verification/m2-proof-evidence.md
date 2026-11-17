@@ -381,11 +381,12 @@ extraction of `crates/noble-kernel` by Charon `9e95cf31` (with
 addendum describes the current tree.
 
 **External models (supersedes the §6 list).** `NobleKernel/FunsExternal.lean`
-defines exactly the template's 71 externals — 66 `rust_fun` functions plus
-the five `#[charon::opaque]` helpers — and `TypesExternal.lean` its six
-external types; both files are shared verbatim with `proofs/m3`. Their
-headers and per-definition comments are the review record. Two decisions
-matter for readers of the theorems:
+defines the template's 71 externals — 66 `rust_fun` functions plus the five
+`#[charon::opaque]` helpers — and three more functions the template no
+longer lists, and `TypesExternal.lean` its six external types; both files
+are shared verbatim with `proofs/m3`. Their headers and per-definition
+comments are the review record. Two decisions matter for readers of the
+theorems:
 
 - `core::mem::size_of::<T>` returns `fail .undef`. Its value is rustc's
   layout size for `T`, which the Rust source does not determine; the
@@ -397,9 +398,14 @@ matter for readers of the theorems:
   calls the clone-budget walk (`acceptance::check` does not). No `ok`
   clone-budget result is derivable in the model, and a partial-correctness
   statement about the clone budget would hold vacuously.
-- `Option::map` and `Result::unwrap_or` are no longer external (the pinned
-  library models both), and `Formatter::debug_c_like_enum_write_str` is no
-  longer referenced.
+- `Option::map`, `Result::unwrap_or` and
+  `Formatter::debug_c_like_enum_write_str` are not in the template: the
+  pinned library models the first two and the regenerated kernel no longer
+  calls the third. They are kept because the MC1 and M3-Wasm `StdModels`,
+  which compile this module from `proofs/m3`, delegate to them by name.
+  Inside `noble_kernel` the generated calls to `Option::map` and
+  `Result::unwrap_or` therefore resolve to these copies, which have the
+  library functions' semantics.
 
 **Embedding (`NobleM2/Embed.lean`).** The extracted environment's twelve
 fields that fragment v0 does not model are fixed at the Rust bootstrap
