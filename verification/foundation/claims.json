@@ -4,13 +4,13 @@
   "owner_decision": "2026-10-26",
   "audit_is_document_check_only": true,
   "tables": {
-    "rows": 92,
-    "proved": 86,
+    "rows": 93,
+    "proved": 87,
     "tested": 21,
     "assumed": 0,
-    "open": 49
+    "open": 50
   },
-  "inventoried_theorems": 2594,
+  "inventoried_theorems": 2602,
   "receipts_checked": 108,
   "document_only_names": {
     "acceptLiteral": "Phase-1 literal-acceptance specification function, transcribed and proved through accumulate_eq_acceptLiteral",

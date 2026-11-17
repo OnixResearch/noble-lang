@@ -167,10 +167,16 @@
           # Only the root Cargo build directory is excluded: tracked source modules may be named
           # `target` (crates/noble-ngraph/src/belt/target/).
           && path != toString ./target
+          && path != toString ./site-dist
+          && path != toString ./.wrangler
           && !(builtins.elem (baseNameOf path) [
             "NobleKernel.lean"
             "translation.json"
           ]);
+      };
+      staticSite = import ./nix/site.nix {
+        inherit pkgs src;
+        revision = self.rev or "main";
       };
       noble = (pkgs.makeRustPlatform {
         cargo = rust;
@@ -371,6 +377,7 @@
         source-inventory = sourceInventory;
         extract-kernel = extractKernel;
         native-assurance = nativeAssurance;
+        site = staticSite.site;
         m3-wasm = m3Wasm;
         elan = pkgs.elan;
       };
@@ -434,6 +441,7 @@
 
       # These are incremental gates, not the complete M1 acceptance matrix.
       checks.${system} = {
+        site = staticSite.check;
         boundary-controls = boundaryControls.check;
         tool-selection = mkCheck "noble-tool-selection" [ nickel pkgs.diffutils ] ''
           nickel export --format json policy/tool-selection.ncl > "$TMPDIR/tool-selection.json"

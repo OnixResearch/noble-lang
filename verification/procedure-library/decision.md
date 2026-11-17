@@ -42,6 +42,12 @@ wire producer changes links and recomputes state and library integrity
 indexes: fork, cycle, self-cycle, dangling-target, live-target and orphan
 controls must refuse at `supersedes`, rather than merely at a stale checksum.
 
+The lineage cases live in `tests/editor/procedures/generations/lineage.rs`
+and `tests/editor/procedures/reload-negative/lineage.rs`, under the existing
+editor test target. After splitting the oversized files and making wire-offset
+arithmetic checked, that target still passed 126 tests with 2 historical
+measurements ignored; no test or Cargo target was dropped.
+
 Observed verification for this correction, not retained clean-source
 receipts:
 
@@ -62,6 +68,62 @@ These finite observations do not establish universal Rust/Lean refinement or
 revise any retained historical receipt. D14's NO-GO remains unchanged. Shared
 integration lint, inventory and extraction evidence must bind the final
 integrated source rather than a predecessor's generated subject.
+
+### Persisted-history acceptance follow-up (2026-11-17)
+
+A source review found three further loader/producer asymmetries that were
+not covered by the original malformed-graph cases: rollback metadata could
+name a retained generation with a different closure; a publication could
+swap two existing predecessors while leaving valid single-successor chains;
+and a generation could repeat an independent identity. The predecessor and
+duplicate controls recompute the affected integrity bindings rather than
+relying on a stale checksum to obtain refusal.
+
+Tests-only commit `4cc3095` added the three consumer-visible load regressions
+in `tests/editor/procedures/reload-negative/lineage/history.rs`, without
+changing production. The integrator executed them against that unchanged
+production: **0 passed, 3 failed**, with Cargo exit 101. Each failed because
+`ProcedureLibrary::load` accepted the malformed store, not because of a
+compilation or setup failure.
+
+Correction `155cf52` adds bounded, allocation-free history checks to the
+loader. Each generation must contain unique procedure identities. A rollback
+must contain exactly the records of its named parent, compared as records
+rather than accepted from matching integrity indexes alone. A publication
+must retain its parent's subjects and preserve every existing nonempty
+predecessor edge. An independent record may still gain its first predecessor
+through atomic replacement, and a rollback may restore an earlier exact
+closure. The wire encoding and public API are unchanged; no extraction,
+exception or proof boundary was widened.
+
+After the correction and selected Rust formatting, the integrator executed
+the complete existing editor target: **129 passed, 0 failed, 2 ignored**.
+The ignored cases remain the historical one-shot measurements. The run
+includes the three formerly failing load regressions and the existing
+lineage, independent-successor, unchanged-duplicate, rollback and reload
+controls; no test or Cargo target was removed.
+
+A separate throwaway native consumer was compiled against the freshly built
+fixed public libraries, without the test harness or private hooks. It built
+genuine literal records through public admission and replacement APIs, fed
+the three forged encodings directly to `ProcedureLibrary::load`, and observed
+distinct `Invalid` refusals:
+
+- rollback-parent: `generation.closure`;
+- predecessor-swap: `supersedes`;
+- duplicate-identity: `procedure_id`.
+
+The same consumer checked A → B → C, independent-to-successor conversion,
+unchanged duplicate admission, candidate-head retrieval, exact rollback,
+restoration and byte-identical reloads. It printed
+`HISTORY_SMOKE_OK malformed_stores=3 valid_chain=A->B->C independent_successors=ok duplicate_admission=unchanged rollback_reload=exact`.
+
+These are integrator-observed finite regressions and runtime checks, not
+retained clean-source receipts, an exhaustive producer/validator equivalence
+result or universal Rust/Lean refinement. They do not revise any immutable
+historical receipt or frozen measurement, and D14's NO-GO remains unchanged.
+Final integration lint, extraction and source-inventory evidence must bind
+the integrated source separately.
 
 ## Erratum (2026-11-16, issue #131): earlier promoted and tested states were claim-only
 
@@ -345,7 +407,7 @@ proof claim: independent MC2 checked-evidence remains required.
 | Reuse, two-record composition, ordinary source/kernel re-admission, invalid contract/effect/capability/policy refusals | DONE | `tests/editor/procedures/composition.rs`, `admission.rs`; `procedures/composition.rs`. Resulting authority is checked under the caller's budgets. |
 | Exact-record deduplication and refusal of digest-only alias claims | DONE | `tests/editor/procedures/identity.rs` and `admission::an_alias_digest_cannot_replace_a_verified_exact_pair_certificate`; no claim that a digest proves semantic equivalence. |
 | Positive semantic alias of distinct records in the bounded pure-I64 fragment (LPL-04) | DONE | `procedures/alias.rs` recomputes bounded polynomial forms and empty closure digests from both retained records on admission and reload; `admission/alias/{mod,forgery}.rs` tests distribution, wraparound, success, replay and forged/unsupported refusals. The distinct `validation/passed` evidence does not claim a #56 proof, proof-demanding promotion or formal Rust/Lean refinement. |
-| Two-process reload equality, deterministic dependency order, mutation/encoder-drift refusals, replacement and rollback | DONE, with the issue #136 correction above | `tests/editor/procedures/identity.rs`, `reload-negative.rs`, `generations.rs`. Two child processes compare the exact identity manifest against the parent. Single-successor chains retain predecessor edges; rebound forks, cycles and dangling links refuse, and rollback/reload preserve exact closures. |
+| Two-process reload equality, deterministic dependency order, mutation/encoder-drift refusals, replacement and rollback | DONE, with the issue #136 corrections above | `tests/editor/procedures/identity.rs`, `reload-negative/lineage.rs`, `reload-negative/lineage/history.rs`, `generations/lineage.rs`. Two child processes compare the exact identity manifest against the parent. The finite controls cover retained single-successor chains, rebound malformed graphs, predecessor rewrites, duplicate stored identities and rollback parents naming a different closure; valid rollback/reload preserve exact records and closures. |
 | Frozen held-out composed-task evaluation and per-seed library growth/retrieval overhead | DONE for the **repaired fixture** | Criterion SHA-256 above; both attempts retained separately; one repaired repeat meets 8/8 and 24/24. Per-arm rows, bytes, query counts, restart, retention, regression and null break-even reasons are in `transfer-repeat.json`. This is not an incremental benefit over the frozen-hand library. |
 | #116-generated held-out **transfer measurement**, with grammar/budget/trace/verifier status and no target leakage | DONE for frozen v3 | `criteria-producer-targets-v3.json`/`producer-targets-v3.txt` were mechanically derived and committed before target generation. One clean-source #116 producer receipt retains candidates, budgets, trace, external solver answers, held-out producer examples and normal CLI re-admission. One clean-source four-arm receipt `producer-transfer-v3.json` plus raw log gives GO, learned 8/8 and 24/24, hand 8/8, other controls 0/8, all restart/regression checks passed. Generated target bodies are oracle-only; acquired source procedures alone enter the library. Neither v1 nor defective v2 was rerun. |
 | No runtime teacher/proposer fallback, including an attempted-call refusal | DONE for v3; historical original frozen clause unmet | V3's 16 scored rows have zero attempts and calls; its four isolated negative controls each deliberately attempted both producer types and refused before any callbacks or library mutation. The original frozen repeat missed the attempted-call clause and is not retroactively repaired. |

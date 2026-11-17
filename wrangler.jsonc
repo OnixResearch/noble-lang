@@ -1,0 +1,6 @@
+{
+  "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/wrangler%404.72.0/packages/wrangler/config-schema.json",
+  "name": "noble-lang",
+  "pages_build_output_dir": "site-dist",
+  "compatibility_date": "2026-11-17"
+}

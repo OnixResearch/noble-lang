@@ -2688,7 +2688,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "9647646652f3ebc4fb2c73a04c070384e817fcb22f43f4710012cc6fcbcf4d2a"
+      "sha256": "e447f982a1b2148d433475cf61db85f2cedb91253d0113d2a648502a78fd5fe3"
     },
     {
       "file": "proofs/inets/README.md",
@@ -2700,7 +2700,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "a1d848dbfb95c446f0eeded24da708da01b1aa15c2a5e4dcc5bc2186690e8f9c"
+      "sha256": "1f553e4636c5efdc3cfe360462e9f9866a658d1cf9342ace80571c7351d41c2e"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -3104,7 +3104,7 @@
     },
     {
       "file": "verification/labelled-sup/decision.md",
-      "sha256": "1bc8c41aa9374e4231a7ad9c2139a45d0cdbfcc0a1c50793ba69fa2e17834e61"
+      "sha256": "0fe6a8dd59fc250259fee9d5816af2237b54954857b5b1203f2b05f9618e8843"
     },
     {
       "file": "verification/labelled-sup/README.md",
@@ -3348,7 +3348,7 @@
     },
     {
       "file": "verification/procedure-library/decision.md",
-      "sha256": "045d369c272509ddb5ca797ce7ad94b251ead1df6137a33de8b923a6b140078f"
+      "sha256": "1f2aa62fa564c12ce7b3420a4877b4b2d5f5cd5c7a8739d44a4a5f51a006e03e"
     },
     {
       "file": "verification/program-inspection/README.md",
