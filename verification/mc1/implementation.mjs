@@ -154,12 +154,16 @@ try {
   const contracts = extract('contracts', 'crates/noble-contracts/Cargo.toml', 'noble_contract_impl',
     'proofs/mc1/NobleContractImpl', reviewedContractsOpaque.map(entry => entry.rust));
   const proofRoot = path.join(root, 'proofs/mc1');
-  // ContractGate.lean also imports the three library modules outside the
-  // NobleContracts root's import closure; build them rather than load any
-  // pre-existing object files.
+  // Build every MC1 library module, including the named-model examples and
+  // conservative-extension proofs outside the root import closure. Neither
+  // verdict may depend on pre-existing object files.
   run('lean-build', tool('lean', 'lake'), ['build', 'NobleContracts',
+    'NobleContracts.NamedSubjectConservative', 'NobleContracts.NamedSubjectTests',
+    'NobleContracts.NamedV2Examples',
     'NobleContracts.NamedV3', 'NobleContracts.SpecQuality', 'NobleContracts.Wire',
-    'NobleContractImpl.Projection', 'NobleContractImpl.Statement'], proofRoot);
+    'NobleContractImpl', 'NobleContractImpl.Projection', 'NobleContractImpl.Statement'], proofRoot);
+  // This CLI-embedded witness is a standalone file, not a lake library target.
+  run('intrinsic-type-witness', tool('lean', 'lake'), ['env', 'lean', 'IntrinsicTypeWitness.lean'], proofRoot);
   const library = run('contract-library', tool('lean', 'lake'), ['env', 'lean', 'ContractGate.lean'], proofRoot);
   // The contract library grew with NamedV3 (T1/T6), the specification-quality module
   // (#65), the submission-refusal witnesses for #65 and the recheck-during-shrinking lane
