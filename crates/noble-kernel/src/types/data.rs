@@ -9,8 +9,8 @@ impl super::Ty {
     /// duplicating it.
     ///
     /// The first ineligible node or exhausted bound returns `false` directly
-    /// rather than breaking out with a flag: the selected Aeneas cannot end
-    /// the borrowed work stack's loans on the `break` paths.
+    /// rather than breaking out with a flag: on the `break` form the selected
+    /// Aeneas finds a loan and its borrow in one region abstraction and stops.
     pub fn is_data(&self) -> bool {
         let mut work: alloc::vec::Vec<&super::Ty> = alloc::vec::Vec::with_capacity(8);
         work.push(self);
