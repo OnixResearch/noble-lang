@@ -1,0 +1,981 @@
+{
+  "schema": "noble-host-locality-proof/v1",
+  "source_commit": "879bfd663986e6bbc61dbf2c33d628eba2665408",
+  "source_tree": "862082da21e0bf614acc32d9ee8bdfa2bd1ce412",
+  "clean_source": true,
+  "allow_dirty": false,
+  "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
+  "lean_path": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lean",
+  "lean_sha256": "f494cd9b0cbe5b85fe87ab98e31b4b1d2b3857db19db4acbfd5eb0c0af39380c",
+  "model_inputs": {
+    "schema": "noble-host-locality-model-inputs/v1",
+    "source": "verification/m5/discovery.tar.gz",
+    "archive_sha256": "833328e02ca406e241442534d8c754b2d94c74f399ce01df48b78329bd3f09a1",
+    "historical_extraction_receipt": "verification/m5/extraction.json",
+    "historical_source_revision": "sha256:2565ee6c1e596ce562058ab146f95da047e9211f00a93fccde1b082ac292bd3d",
+    "members": {
+      "./workspace/proofs/m3/NobleKernel.lean": {
+        "sha256": "3cad0c3dd3e10a7c030124ad47e550f70367de25defcd1923c180d48d814b237",
+        "bytes": 24
+      },
+      "./workspace/proofs/m3/NobleKernel/Types.lean": {
+        "sha256": "1dc658e3196df56a7bd5535fec6e631a5c3bb205f8edb7d60456806457b33bd8",
+        "bytes": 42777
+      },
+      "./workspace/proofs/m3/NobleKernel/TypesExternal.lean": {
+        "sha256": "da81bda2798bdcabaaa2b88d276c929a2db93c56a3d9fc2888177bb73a4b9333",
+        "bytes": 1449
+      },
+      "./workspace/proofs/m3/NobleKernel/Funs.lean": {
+        "sha256": "9a79bac89999e5035da5e68320843d2a5f6965f70aad324e66951e8bbfc81b8a",
+        "bytes": 819809
+      },
+      "./workspace/proofs/m3/NobleKernel/FunsExternal.lean": {
+        "sha256": "4c1db4c216843f5c0c2b1bdd9dbd4231824d6154d6f643b00bf55cde559a7da0",
+        "bytes": 13952
+      },
+      "./workspace/proofs/m5/M5Resources.lean": {
+        "sha256": "5ff34ffd231d241c675c95bab6bf5175d932ca4a47b79d75c9520526a1fc599f",
+        "bytes": 15141
+      }
+    },
+    "scope": "Pinned historical M5 generated table decision model, rebuilt from source for this pilot. Current resource-table Rust and CLI/Wasmtime wrapper refinement are separate obligations; archival source reuse is not fresh Rust extraction.",
+    "lean_version": "4.35.0",
+    "aeneas_revision": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+    "mathlib_revision": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+    "historical_extraction_receipt_sha256": "ba163c920777ab7cb555471314e5c6567a73d61b63737a33bc2000bd14c1c572",
+    "historical_resource_source_sha256": {
+      "crates/noble-kernel/src/resources/mod.rs": "8669397e41d886c4b795a1a76df08c4e8665669dc533586d1587191b9577b0e3",
+      "crates/noble-kernel/src/resources/table.rs": "e4a7c7add3fedae1b590601e12f13daa169da6a5d625ccae1ad51c75d27adc35",
+      "crates/noble-kernel/src/resources/table/access.rs": "8fb0aa1c1b7c53407ac56238923b4b9a6a75e149dd781c36322183b13e84421b",
+      "crates/noble-kernel/src/resources/table/inspection.rs": "ea6c0522621552be0d2eaa0528035dd88e08913cf5901cf57c7d7df860da4a58",
+      "crates/noble-kernel/src/resources/table/transfer.rs": "2a380ae1f469d3153e1a09a297d8da51d8d871098285021adbeebe3e99e74cff",
+      "crates/noble-kernel/src/resources/transition.rs": "f1afba83433c04ae07a4ac165b3ef614af1c12c31336ef80736add52268bdc6f"
+    }
+  },
+  "dependencies": {
+    "aeneas": {
+      "revision": "1238879f9ea550512096e9bf8bd6fe7407b3eaef",
+      "tree": "6b9c1d973dbdd9e74415fe8b8d7e0f8388a4f2e4"
+    },
+    "mathlib": {
+      "revision": "56a005855ea17e0b0958f73ec801ae140b0a1679",
+      "tree": "0db52fa68e6b0c5b917c22bc6383325391a00610"
+    },
+    "plausible": {
+      "revision": "dfa4f38190d07c37e315953e08b90fe2d95b3c24",
+      "tree": "4cb8bf2ba49da888f56e270a08c7803000c1da89"
+    },
+    "LeanSearchClient": {
+      "revision": "d6b4c7be5be75ec4917c873ac50c756dc1436372",
+      "tree": "bf548235194a21930a91aa9ab852dea26ca0f039"
+    },
+    "importGraph": {
+      "revision": "a41f0e9a4dea23188ea9cc1c41ac9f8bbafe0b93",
+      "tree": "c50cb794df9a6a8618884d0ea5151f0a26c59257"
+    },
+    "proofwidgets": {
+      "revision": "df72b022e558978a1c50264cfc4d7fec86fa8e04",
+      "tree": "6f39a3ce916f1cd8c298b85695b620444719e14b"
+    },
+    "aesop": {
+      "revision": "4a174c490d8707121c4a9290800489f105d85e07",
+      "tree": "883b9af90cca8b2d83811a507a62be85b2f3c312"
+    },
+    "Qq": {
+      "revision": "dce0ad79c486cb1fb504af04f953c3466b0c6db8",
+      "tree": "356cde3a20d62d1008736a4bb98c632a799c4aa6"
+    },
+    "batteries": {
+      "revision": "66e469188fe07963e5cf666c7d4433f45b8131c5",
+      "tree": "8b834e0208f1bc8eb66f1816519aef3982e7fb8b"
+    },
+    "Cli": {
+      "revision": "c24fe6078c630e89b489bffe59b3e20ac30d12c8",
+      "tree": "915a71e36b9b7067b2bdf21c7362ec883bcbb214"
+    }
+  },
+  "sources_sha256": {
+    "proofs/m5/HostLocality.lean": "3971f7502d79ff7e5c1289f70f19ec5e9f145c7065b14f225cd99fb26764e697",
+    "proofs/m5/host-locality-inventory.json": "715025d042740209a5bd27a334827abfa07f950a11fe3118d70c8fd13078d5a6",
+    "verification/host-locality/model-inputs.json": "fdba570e3c24850d6c00ae64f490cce643e3334e3d0f81334cc30955c6ddaecd",
+    "verification/host-locality/check.mjs": "e816e5b65db463fafde9fefb600db795acf1f40c60b8f1db92c7c80b9f7015cd",
+    "proofs/m5/M5Resources.lean": "5ff34ffd231d241c675c95bab6bf5175d932ca4a47b79d75c9520526a1fc599f",
+    "proofs/m5/lake-manifest.json": "88b20dc276ffc63ed44b5963a80000ba09731ab2e88a104e9a266efda436afd3",
+    "proofs/m5/lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c",
+    "verification/m5/discovery.tar.gz": "833328e02ca406e241442534d8c754b2d94c74f399ce01df48b78329bd3f09a1",
+    "verification/m5/extraction.json": "ba163c920777ab7cb555471314e5c6567a73d61b63737a33bc2000bd14c1c572",
+    "policy/tool-selection.json": "180756851683c308f90d49a4157364c5d8254d2303ffecfccb50a38ec2f274e6",
+    "verification/aeneas-library-compatibility.mjs": "f4aba447b662ea07310baeebfbafb5de4e010f634bdde5b0709ccf35851b8027",
+    "verification/m5-archived-library-compatibility.lean": "e31034cbf1dc33c900c73e55c8cc9a6258f0db0c724d8c4fdfbb3d91653c73b7",
+    "crates/noble-kernel/src/resources/mod.rs": "8669397e41d886c4b795a1a76df08c4e8665669dc533586d1587191b9577b0e3",
+    "crates/noble-kernel/src/resources/table/access.rs": "8fb0aa1c1b7c53407ac56238923b4b9a6a75e149dd781c36322183b13e84421b",
+    "crates/noble-kernel/src/resources/table/inspection.rs": "ea6c0522621552be0d2eaa0528035dd88e08913cf5901cf57c7d7df860da4a58",
+    "crates/noble-kernel/src/resources/table/transfer.rs": "2a380ae1f469d3153e1a09a297d8da51d8d871098285021adbeebe3e99e74cff",
+    "crates/noble-kernel/src/resources/table.rs": "e4a7c7add3fedae1b590601e12f13daa169da6a5d625ccae1ad51c75d27adc35",
+    "crates/noble-kernel/src/resources/transition.rs": "f1afba83433c04ae07a4ac165b3ef614af1c12c31336ef80736add52268bdc6f"
+  },
+  "library_compatibility": {
+    "source": "verification/m5-archived-library-compatibility.lean",
+    "sha256": "e31034cbf1dc33c900c73e55c8cc9a6258f0db0c724d8c4fdfbb3d91653c73b7",
+    "appended_to": "NobleKernel/TypesExternal.lean"
+  },
+  "artifacts_sha256": {
+    "Audit.lean": "2e9a04915078c688161d98916e28754abea8d38b1ef42985205169c22a51b217",
+    "commands/001/stdout": "efb0604b9472d05bc9b9797668b25b29c3ca52f6d47a38668e1628de8fe10453",
+    "commands/001/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/001/command.json": "8221476fcf2ceeaade243c48dc51af9a4197edd4a3b99e52a2d4ee369fb9dc07",
+    "commands/002/stdout": "f9b6a4ac52ac0b4e693e62a4a4051dfd53bf98ddf818aa0b1de90714dada4b63",
+    "commands/002/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/002/command.json": "6bec8281067c694f62e14dbc24b28fd1fb8912a6e6d560706ea7a4bae5f001c4",
+    "commands/003/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/003/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/003/command.json": "ee18c9e7c5d20e32dc81df587e7c6aa9df085238c3712f1608b43c71b0c3118a",
+    "commands/004/stdout": "eb22144228dd41cd51a0c84af4f976cd0cef473102dcf99b60be756b11f2b95a",
+    "commands/004/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/004/command.json": "e5bbda9d9304ed747db8207abf4835ca1ab59c98ec5684db1f8083d9efb8e74d",
+    "commands/005/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/005/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/005/command.json": "5ca474058223df22d7da0cd25a6bcd06e6774181e28512f1b9d30bbfb21d6c49",
+    "commands/006/stdout": "bdbde4660eed09fdbaf31abe856dcad17bb6840e9e30086984964fcd9a3dc9bc",
+    "commands/006/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/006/command.json": "87464fcaa2ef253cca66df7f635be836d91f11bc7c23d049086a1218de213626",
+    "commands/007/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/007/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/007/command.json": "d97dc2502cecce44d094da26a701b472d56f265cafe93a6cf90e9573e38c5172",
+    "commands/008/stdout": "90d027909d57051a62d39a286ec8c719703aa849aaed9518d958c5d31b528cba",
+    "commands/008/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/008/command.json": "cd897090ab28db422a1f717060718c99978fadb6b108efe981a7e73e0f27a208",
+    "commands/009/stdout": "b8229665c405f86369704b424ffcfc2e08db2b809280cab9e0aaaa806fddf2e7",
+    "commands/009/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/009/command.json": "39b15c26c8780882100213540f9bcded7e184141a1495e1b041d8c292bd6fc78",
+    "commands/010/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/010/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/010/command.json": "168b16cb7d7f014eac6ff8ad3cd96f9d840cf35e4740c85cd4bb2b911aa72fdb",
+    "commands/011/stdout": "128ac2c255c47dbb266523785fc2d3ebb5c81dcef13c1add564247baca4c5113",
+    "commands/011/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/011/command.json": "584fb70f438f292eb7987ccad7aeb0f893bddbe2bdc73a4eb858fa9f0a74649c",
+    "commands/012/stdout": "d730b95c27722b2eb44f818512df47ab62e115e1ed64fe79c5e4ef63a2985415",
+    "commands/012/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/012/command.json": "d99dea70aa91b1c69a15dbab4facd52977014f372a7d999de7c935f6d0037483",
+    "commands/013/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/013/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/013/command.json": "35e9499603dc276c52bf1d669954c110eb4b665a3c055e7f6f22f839ac6e099e",
+    "commands/014/stdout": "f96c515c4098caa75842067eb83c9162b333c162591442c7282d409de8281937",
+    "commands/014/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/014/command.json": "c98bd5a04b931b901360649fc786aadef9bc8ffab7e2fc548ed30e04577d415f",
+    "commands/015/stdout": "ff5938c8d727868a984ba7e3a53351458fcb498ab525e4541eaab4717936df11",
+    "commands/015/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/015/command.json": "09e5dceba57c26d3e506e4ecb07abd220aae7ab63efe77838c41699823670a47",
+    "commands/016/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/016/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/016/command.json": "1b573651068d038d142888ab2c197e853d57657ca184fe1c4a66f9e83a789bda",
+    "commands/017/stdout": "0e3d56f3491056700a72067a846e3fcfd3bfd917dfa54caf8134daa615604596",
+    "commands/017/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/017/command.json": "a36627e3ae249604cd55b106175ae9d5a4f6b252fdb4a7b27d74e25a33211536",
+    "commands/018/stdout": "e4f2c09ac2341eb19583e9ac452600614f5d57dd481407156846612d23bf52b3",
+    "commands/018/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/018/command.json": "113554bacf6d4d71eddf233737d0149464c9536db414178882981a3d004bfde9",
+    "commands/019/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/019/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/019/command.json": "a9c0fe164fa4c1079b59bd3fe9dde0efa35318df0d5decf43bb63c8de3f71429",
+    "commands/020/stdout": "5adccfad412cebae4eb5d8fdfc6cdfcd56c32f0831f45ea777332fca2b2ee39c",
+    "commands/020/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/020/command.json": "0232d147b01d004102c2adab73e6b75ebe0bf1da885cdb6a0f7de93ddaf0b830",
+    "commands/021/stdout": "931756f9a8b6c5f48bec79b679703b7b48d31b9c0cdc9ae3b3ed197d3da3b0f8",
+    "commands/021/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/021/command.json": "1ff710434ba1065abacb4c24d059907d7a313151951cd4dfec33a2e79c913b71",
+    "commands/022/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/022/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/022/command.json": "dcb78885008a80a1bbcb6955c2788a020be2458a830cda388cfe2d0f90fcb6d3",
+    "commands/023/stdout": "0ea7d090a3c4382dae9626d300f1d553e59faf0a433b90be4cde468bb3959f01",
+    "commands/023/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/023/command.json": "67fd12c9ee4159f5eb29f8c0157ab3830ff3c3c4f9f843370e7b9a4a4a62a963",
+    "commands/024/stdout": "80e4949281db195075562868091bd1910a4a4f1480a8ec538ed93f50c53e5648",
+    "commands/024/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/024/command.json": "bd12407aa3ee8115e7d1c95524ac7e362b9636d6fd0600e852a3bf250ca07c26",
+    "commands/025/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/025/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/025/command.json": "f88e078e84a82feba49d73b850ee4c812cff8c19ae41541595c7cb9c60af3d1e",
+    "commands/026/stdout": "a1a5b11c851755e42ceda1cb2a3e57af442240b1a13f9caf36362f72cf9844d4",
+    "commands/026/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/026/command.json": "8d2349c0b7511775f41da352038a4ccbd88012815ce90b6d76b45fdf4c7252f1",
+    "commands/027/stdout": "02650859e6949cf622ec0737a58200ec93ae4fcb947a26e880259c5a5eb7b23d",
+    "commands/027/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/027/command.json": "39053e763fe0fcddb60d1c58472bc874c020c4bce81bfcad49361305a9710f42",
+    "commands/028/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/028/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/028/command.json": "4c092824f3e98c36df274f75463a2b660e6b1db9a6781bab12542e815dfd451c",
+    "commands/029/stdout": "7b6e8026f2488f05e72ba684a06ea4bfe7b65c66424646f36ba288dbe5945092",
+    "commands/029/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/029/command.json": "03a29260e35efe9f1495934be349b0ebe21154fbf84229131f2bd0adae8491d1",
+    "commands/030/stdout": "1e0930b192dd58d5d04b1a588f0e2431d4e888cacdc95723384c5dcdfa410ae8",
+    "commands/030/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/030/command.json": "25eda3955906349be1ef8bdcaad7ea0e2b9604a4d3e6213bf4e1172ecf57e4e7",
+    "commands/031/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/031/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/031/command.json": "e53f48c27f52a48b5942b2cbc1047a08ecef48f04c1cb6d8bd695d7d8a392498",
+    "commands/032/stdout": "1dd1c99fa7e263b807afd92e51f3a60d3708efac930d0c4b7c9023242f2b45fa",
+    "commands/032/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/032/command.json": "dbeb64fa47f96907fef5baf9e7b3ad7eb254f0ae46ecfd7aba4d31858a0ad4bc",
+    "commands/033/stdout": "74d733b897b8c450f0880d93ab02593440b80760b7ac10cdbe9a2fd8268dd6ec",
+    "commands/033/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/033/command.json": "b136cf136ee544322a94b70e67557579ca909476ec1e846fd0148e961e9939b1",
+    "commands/034/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/034/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/034/command.json": "58ca075ff9cb45b005695f0a6da28fe1c535318bc988d1cb752ba760ae016b79",
+    "commands/035/stdout": "3f65c88bdf1d7cff575ae61358b6dbd06b5785b39189c226cf54481dae537572",
+    "commands/035/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/035/command.json": "41d5c9c69a12c91f0ef6310839cdb652bb4c9c9fdbecaf3a24214aeaf22cc246",
+    "commands/036/stdout": "85e65e59bedc818fc652ea4669a9901b13eb7c498bccdb0982a99b9e979fbed4",
+    "commands/036/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/036/command.json": "5b57104a22bf7453bd70e3e99ef25fd6e99e5b773b816f9ff16028f89482c095",
+    "commands/037/stdout": "2fbfbca1eb5806c3be8ad2593497c615b4e9537c20e530df1edda855a5d6f6ef",
+    "commands/037/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/037/command.json": "06f59a2b579864624345c6107325e210182faf534841e9821d4855b36fb3ba23",
+    "commands/038/stdout": "efb0604b9472d05bc9b9797668b25b29c3ca52f6d47a38668e1628de8fe10453",
+    "commands/038/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/038/command.json": "8221476fcf2ceeaade243c48dc51af9a4197edd4a3b99e52a2d4ee369fb9dc07",
+    "commands/039/stdout": "f9b6a4ac52ac0b4e693e62a4a4051dfd53bf98ddf818aa0b1de90714dada4b63",
+    "commands/039/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/039/command.json": "6bec8281067c694f62e14dbc24b28fd1fb8912a6e6d560706ea7a4bae5f001c4",
+    "commands/040/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/040/stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands/040/command.json": "ee18c9e7c5d20e32dc81df587e7c6aa9df085238c3712f1608b43c71b0c3118a"
+  },
+  "generated_source_lint_warnings": [
+    "warning: NobleKernel/Funs.lean:9040:4: The declaration 'authority.permit.DebugDenial.fmt.__OFFSET' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:9051:4: The declaration 'authority.permit.DebugDenial.fmt.__NAMES' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:10633:4: The declaration 'authority.report.DebugBoundaryError.fmt.__OFFSET' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:10644:4: The declaration 'authority.report.DebugBoundaryError.fmt.__NAMES' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:12110:4: The declaration 'contracts.DebugBehavior.fmt.__OFFSET' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:12121:4: The declaration 'contracts.DebugBehavior.fmt.__NAMES' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:14865:4: The declaration 'resources.DebugError.fmt.__OFFSET' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead.",
+    "warning: NobleKernel/Funs.lean:14875:4: The declaration 'resources.DebugError.fmt.__NAMES' contains '__', which does not follow the mathlib naming conventions. Consider using single underscores instead."
+  ],
+  "theorem_count": 43,
+  "reused_m5_theorem_count": 5,
+  "theorems": [
+    {
+      "name": "HostLocality.encodeDecision_wellFormed",
+      "role": "response-encoding",
+      "claim": "Both modeled bounded-read outcomes encode with a recognized result tag and an exact payload length.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.encodeDecision_wellFormed : ∀ (decision : HostLocality.ReadDecision), HostLocality.responseWellFormed (HostLocality.encodeDecision decision)",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.readDecision_success",
+      "role": "bounded-read-decision",
+      "claim": "An exact-representation, exact-handle, in-bounds request with authorized access returns precisely the selected byte slice.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.readDecision_success : ∀ (region : HostLocality.Region) (request : HostLocality.ReadRequest), request.representation = 1 → request.claim = region.identity → HostLocality.withinBounds region request → ∀ (accessAllowed : Bool), accessAllowed = true → HostLocality.readDecision region request accessAllowed = HostLocality.ReadDecision.success (List.take request.length (List.drop request.offset region.bytes))",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.readDecision_domainError",
+      "role": "bounded-read-decision",
+      "claim": "An exact-representation, exact-handle, in-bounds request denied by native access yields the modeled invalid-handle domain error.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.readDecision_domainError : ∀ (region : HostLocality.Region) (request : HostLocality.ReadRequest), request.representation = 1 → request.claim = region.identity → HostLocality.withinBounds region request → ∀ (accessAllowed : Bool), accessAllowed = false → HostLocality.readDecision region request accessAllowed = HostLocality.ReadDecision.domainError HostLocality.invalidHandleBytes",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.t5_decision_logic_relation",
+      "role": "t5-model-relation",
+      "claim": "Under the explicit wrapper-response refinement premise, result validation precedes restoration of only the declared borrowed handle, preserves its original prefix position, and pushes the exact response.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.t5_decision_logic_relation : ∀ (borrow : HostLocality.BorrowState) (decision : HostLocality.ReadDecision) (response : HostLocality.WireResponse), HostLocality.WrapperResponseRefines decision response → response = HostLocality.encodeDecision decision ∧ HostLocality.restoreBorrow (HostLocality.validateExit (HostLocality.collectGuest borrow) (HostLocality.HostExit.returned response)) = HostLocality.restoredGuest borrow response ∧ (HostLocality.restoredGuest borrow response).stack = borrow.prefix ++ [HostLocality.StackCell.owner borrow.owner, HostLocality.StackCell.response response] ∧ borrow.position = borrow.prefix.length",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.guest_call_collection_exact",
+      "role": "guest-stack-model",
+      "claim": "The modeled call stack contains the owner, offset, and length after its unchanged prefix; argument collection saves the owner and leaves exactly that prefix.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.guest_call_collection_exact : ∀ (borrow : HostLocality.BorrowState) (request : HostLocality.ReadRequest), HostLocality.guestCallStack borrow request = borrow.prefix ++ [HostLocality.StackCell.owner borrow.owner, HostLocality.StackCell.natural request.offset, HostLocality.StackCell.natural request.length] ∧ (HostLocality.collectGuest borrow).stack = borrow.prefix ∧ (HostLocality.collectGuest borrow).borrowed = some borrow ∧ borrow.position = borrow.prefix.length",
+      "axioms": []
+    },
+    {
+      "name": "HostLocality.restoration_before_validation_is_noop",
+      "role": "ordering-control",
+      "claim": "Before result validation, restoration is a no-op and its stack differs from a mutant that prematurely appends the borrowed owner.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.restoration_before_validation_is_noop : ∀ (borrow : HostLocality.BorrowState), HostLocality.restoreBorrow (HostLocality.collectGuest borrow) = HostLocality.collectGuest borrow ∧ (HostLocality.restoreBorrow (HostLocality.collectGuest borrow)).stack = borrow.prefix ∧ (HostLocality.restoreBorrow (HostLocality.collectGuest borrow)).phase = HostLocality.GuestPhase.suspended ∧ (HostLocality.restoreBorrow (HostLocality.collectGuest borrow)).stack ≠ borrow.prefix ++ [HostLocality.StackCell.owner borrow.owner]",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "HostLocality.malformed_return_has_no_guest_continuation",
+      "role": "abnormal-guest-exit",
+      "claim": "An ABI-malformed returned response aborts the modeled guest call without continuing or restoring the owner to its guest stack.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.malformed_return_has_no_guest_continuation : ∀ (borrow : HostLocality.BorrowState) (response : HostLocality.WireResponse), ¬HostLocality.responseWellFormed response → have after := HostLocality.restoreBorrow (HostLocality.validateExit (HostLocality.collectGuest borrow) (HostLocality.HostExit.returned response)); after.phase = HostLocality.GuestPhase.aborted ∧ after.stack = borrow.prefix ∧ after.borrowed = some borrow ∧ after.response = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.trapped_call_has_no_guest_continuation",
+      "role": "abnormal-guest-exit",
+      "claim": "A trapped modeled call aborts without guest continuation or owner restoration.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.trapped_call_has_no_guest_continuation : ∀ (borrow : HostLocality.BorrowState), have after := HostLocality.restoreBorrow (HostLocality.validateExit (HostLocality.collectGuest borrow) HostLocality.HostExit.trapped); after.phase = HostLocality.GuestPhase.aborted ∧ after.stack = borrow.prefix ∧ after.borrowed = some borrow ∧ after.response = none",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.malformed_tag_rejected",
+      "role": "response-control",
+      "claim": "The unsupported result-tag fixture fails the modeled ABI response validation.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.malformed_tag_rejected : ¬HostLocality.responseWellFormed HostLocality.malformedTagFixture",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.altered_result_length_rejected",
+      "role": "response-control",
+      "claim": "The inconsistent result-length fixture fails the modeled ABI response validation.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.altered_result_length_rejected : ¬HostLocality.responseWellFormed HostLocality.alteredLengthFixture",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.altered_result_tag_breaks_wrapper_refinement",
+      "role": "response-control",
+      "claim": "Two responses cannot both exactly refine one decision when their result tags differ.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.altered_result_tag_breaks_wrapper_refinement : ∀ (decision : HostLocality.ReadDecision) (expected altered : HostLocality.WireResponse), HostLocality.WrapperResponseRefines decision expected → HostLocality.WrapperResponseRefines decision altered → altered.tag ≠ expected.tag → False",
+      "axioms": []
+    },
+    {
+      "name": "HostLocality.altered_result_length_breaks_wrapper_refinement",
+      "role": "response-control",
+      "claim": "Two responses cannot both exactly refine one decision when their lengths differ.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.altered_result_length_breaks_wrapper_refinement : ∀ (decision : HostLocality.ReadDecision) (expected altered : HostLocality.WireResponse), HostLocality.WrapperResponseRefines decision expected → HostLocality.WrapperResponseRefines decision altered → altered.length ≠ expected.length → False",
+      "axioms": []
+    },
+    {
+      "name": "HostLocality.malformed_tag_does_not_restore",
+      "role": "abnormal-guest-exit-control",
+      "claim": "The unsupported-tag fixture aborts with the exact suspended stack and borrowed-owner state unchanged.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.malformed_tag_does_not_restore : ∀ (borrow : HostLocality.BorrowState), have after := HostLocality.restoreBorrow (HostLocality.validateExit (HostLocality.collectGuest borrow) (HostLocality.HostExit.returned HostLocality.malformedTagFixture)); after.phase = HostLocality.GuestPhase.aborted ∧ after.stack = borrow.prefix ∧ after.borrowed = some borrow",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.altered_length_does_not_restore",
+      "role": "abnormal-guest-exit-control",
+      "claim": "The altered-length fixture aborts without restoring the borrowed owner or continuing the guest.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.altered_length_does_not_restore : ∀ (borrow : HostLocality.BorrowState), have after := HostLocality.restoreBorrow (HostLocality.validateExit (HostLocality.collectGuest borrow) (HostLocality.HostExit.returned HostLocality.alteredLengthFixture)); after.phase = HostLocality.GuestPhase.aborted ∧ after.stack = borrow.prefix ∧ after.borrowed = some borrow",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.host_locality_preserves_projection",
+      "role": "horizontal-frame",
+      "claim": "The independent host-locality premise preserves the unrelated owner, resource snapshot, and protected surrounding cells in the frame projection.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.host_locality_preserves_projection : ∀ (before after : HostLocality.FrameProjection), HostLocality.PreservesFrame before after → HostLocality.frameProjection before = HostLocality.frameProjection after",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.m5_table_complete_exact",
+      "role": "actual-m5-table-correspondence",
+      "claim": "For the selected actual M5 table record in an authentic Busy scope, Table.decide completion agrees with normal_completion_owner_once and table_decide_refines, returning exactly one owner and the exact M5 accounting.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.m5_table_complete_exact : ∀ (table : noble_kernel.resources.table.Table) (record : noble_kernel.resources.Snapshot) (serial : Aeneas.Std.U64) (outcome : noble_kernel.resources.Completion), (↑table.records)[↑record.handle.slot]? = some record → M5Resources.valid record = true → record.state = noble_kernel.resources.State.Busy serial → M5Resources.scopeCheck record serial = Aeneas.Std.core.result.Result.Ok () → table.decide record.handle (noble_kernel.resources.Event.Complete serial outcome) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok { record := { handle := record.handle, state := noble_kernel.resources.State.Live, last_scope := record.last_scope, retirement := record.retirement }, action := noble_kernel.resources.Action.OwnerReturned outcome }) ∧ { record := { handle := record.handle, state := noble_kernel.resources.State.Live, last_scope := record.last_scope, retirement := record.retirement }, action := noble_kernel.resources.Action.OwnerReturned outcome }.accounting = Aeneas.Std.Result.ok { pins_acquired := 0#usize, pins_released := 1#usize, owners_returned := 1#usize, owners_transferred := 0#usize, local_releases := 0#usize }",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "HostLocality.bounded_read_frame_and_restoration",
+      "role": "bounded-host-boundary-model",
+      "claim": "Given independent frame-locality, exact wrapper response, adapter-update, identity, bounds, and actual M5-table premises, a completed bounded read preserves the frame, restores only the declared owner in order, preserves response and read/release counters, and uses the actual M5 completion decision and accounting.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.bounded_read_frame_and_restoration : ∀ (scenario : HostLocality.CompletedReadScenario), HostLocality.frameProjection scenario.frameBefore = HostLocality.frameProjection scenario.frameAfter ∧ scenario.adapterAfter.region = scenario.adapterBefore.region ∧ scenario.adapterBefore.region = scenario.region ∧ scenario.adapterBefore.owner = none ∧ (scenario.adapterAfter.record = have __src := scenario.record; { handle := __src.handle, state := noble_kernel.resources.State.Live, last_scope := __src.last_scope, retirement := __src.retirement }) ∧ scenario.adapterAfter.owner = some { handle := scenario.record.handle } ∧ scenario.adapterAfter.counters = HostLocality.countersAfterRead scenario.adapterBefore.counters (HostLocality.readDecision scenario.region scenario.request scenario.accessAllowed) ∧ scenario.adapterAfter.counters.releases = scenario.adapterBefore.counters.releases ∧ HostLocality.readCounterRoom scenario.adapterBefore.counters ∧ HostLocality.restoreBorrow (HostLocality.validateExit (HostLocality.collectGuest scenario.borrow) (HostLocality.HostExit.returned scenario.response)) = HostLocality.restoredGuest scenario.borrow scenario.response ∧ scenario.borrow.owner = scenario.record.handle ∧ scenario.response = HostLocality.encodeDecision (HostLocality.readDecision scenario.region scenario.request scenario.accessAllowed) ∧ HostLocality.FrameSeparated scenario.record.handle scenario.frameAfter ∧ scenario.table.decide scenario.record.handle (noble_kernel.resources.Event.Complete scenario.serial (HostLocality.completionOf (HostLocality.readDecision scenario.region scenario.request scenario.accessAllowed))) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok { record := have __src := scenario.record; { handle := __src.handle, state := noble_kernel.resources.State.Live, last_scope := __src.last_scope, retirement := __src.retirement }, action := noble_kernel.resources.Action.OwnerReturned (HostLocality.completionOf (HostLocality.readDecision scenario.region scenario.request scenario.accessAllowed)) }) ∧ { record := have __src := scenario.record; { handle := __src.handle, state := noble_kernel.resources.State.Live, last_scope := __src.last_scope, retirement := __src.retirement }, action := noble_kernel.resources.Action.OwnerReturned (HostLocality.completionOf (HostLocality.readDecision scenario.region scenario.request scenario.accessAllowed)) }.accounting = Aeneas.Std.Result.ok { pins_acquired := 0#usize, pins_released := 1#usize, owners_returned := 1#usize, owners_transferred := 0#usize, local_releases := 0#usize }",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "HostLocality.successful_read_frame_and_restoration",
+      "role": "successful-read-boundary",
+      "claim": "An authorized bounded read returns the exact region slice, restores only the declared borrowed owner, preserves the frame and release count, increments protected/read counters once, and follows the actual M5 Success completion accounting.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.successful_read_frame_and_restoration : ∀ (scenario : HostLocality.CompletedReadScenario), scenario.accessAllowed = true → HostLocality.frameProjection scenario.frameBefore = HostLocality.frameProjection scenario.frameAfter ∧ scenario.adapterAfter.region = scenario.adapterBefore.region ∧ scenario.adapterBefore.region = scenario.region ∧ scenario.adapterBefore.owner = none ∧ (scenario.adapterAfter.record = have __src := scenario.record; { handle := __src.handle, state := noble_kernel.resources.State.Live, last_scope := __src.last_scope, retirement := __src.retirement }) ∧ scenario.adapterAfter.owner = some { handle := scenario.record.handle } ∧ scenario.adapterAfter.counters = HostLocality.countersAfterRead scenario.adapterBefore.counters (HostLocality.ReadDecision.success (List.take scenario.request.length (List.drop scenario.request.offset scenario.region.bytes))) ∧ scenario.adapterAfter.counters.releases = scenario.adapterBefore.counters.releases ∧ HostLocality.readCounterRoom scenario.adapterBefore.counters ∧ HostLocality.restoreBorrow (HostLocality.validateExit (HostLocality.collectGuest scenario.borrow) (HostLocality.HostExit.returned scenario.response)) = HostLocality.restoredGuest scenario.borrow scenario.response ∧ scenario.borrow.owner = scenario.record.handle ∧ scenario.response = HostLocality.encodeDecision (HostLocality.ReadDecision.success (List.take scenario.request.length (List.drop scenario.request.offset scenario.region.bytes))) ∧ HostLocality.FrameSeparated scenario.record.handle scenario.frameAfter ∧ scenario.table.decide scenario.record.handle (noble_kernel.resources.Event.Complete scenario.serial noble_kernel.resources.Completion.Success) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok { record := have __src := scenario.record; { handle := __src.handle, state := noble_kernel.resources.State.Live, last_scope := __src.last_scope, retirement := __src.retirement }, action := noble_kernel.resources.Action.OwnerReturned noble_kernel.resources.Completion.Success }) ∧ { record := have __src := scenario.record; { handle := __src.handle, state := noble_kernel.resources.State.Live, last_scope := __src.last_scope, retirement := __src.retirement }, action := noble_kernel.resources.Action.OwnerReturned noble_kernel.resources.Completion.Success }.accounting = Aeneas.Std.Result.ok { pins_acquired := 0#usize, pins_released := 1#usize, owners_returned := 1#usize, owners_transferred := 0#usize, local_releases := 0#usize }",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "HostLocality.domain_error_read_frame_and_restoration",
+      "role": "domain-error-boundary",
+      "claim": "An in-bounds exact-handle read denied by native access returns the exact modeled domain error, restores only the declared borrowed owner, preserves frame and adapter counters, and follows the actual M5 DomainError completion accounting.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.domain_error_read_frame_and_restoration : ∀ (scenario : HostLocality.CompletedReadScenario), scenario.accessAllowed = false → HostLocality.frameProjection scenario.frameBefore = HostLocality.frameProjection scenario.frameAfter ∧ scenario.adapterAfter.region = scenario.adapterBefore.region ∧ scenario.adapterBefore.region = scenario.region ∧ scenario.adapterBefore.owner = none ∧ (scenario.adapterAfter.record = have __src := scenario.record; { handle := __src.handle, state := noble_kernel.resources.State.Live, last_scope := __src.last_scope, retirement := __src.retirement }) ∧ scenario.adapterAfter.owner = some { handle := scenario.record.handle } ∧ scenario.adapterAfter.counters = scenario.adapterBefore.counters ∧ scenario.adapterAfter.counters.releases = scenario.adapterBefore.counters.releases ∧ HostLocality.readCounterRoom scenario.adapterBefore.counters ∧ HostLocality.restoreBorrow (HostLocality.validateExit (HostLocality.collectGuest scenario.borrow) (HostLocality.HostExit.returned scenario.response)) = HostLocality.restoredGuest scenario.borrow scenario.response ∧ scenario.borrow.owner = scenario.record.handle ∧ scenario.response = HostLocality.encodeDecision (HostLocality.ReadDecision.domainError HostLocality.invalidHandleBytes) ∧ HostLocality.FrameSeparated scenario.record.handle scenario.frameAfter ∧ scenario.table.decide scenario.record.handle (noble_kernel.resources.Event.Complete scenario.serial noble_kernel.resources.Completion.DomainError) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok { record := have __src := scenario.record; { handle := __src.handle, state := noble_kernel.resources.State.Live, last_scope := __src.last_scope, retirement := __src.retirement }, action := noble_kernel.resources.Action.OwnerReturned noble_kernel.resources.Completion.DomainError }) ∧ { record := have __src := scenario.record; { handle := __src.handle, state := noble_kernel.resources.State.Live, last_scope := __src.last_scope, retirement := __src.retirement }, action := noble_kernel.resources.Action.OwnerReturned noble_kernel.resources.Completion.DomainError }.accounting = Aeneas.Std.Result.ok { pins_acquired := 0#usize, pins_released := 1#usize, owners_returned := 1#usize, owners_transferred := 0#usize, local_releases := 0#usize }",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "HostLocality.preflight_domain_error_frame_and_restoration",
+      "role": "preflight-error-boundary",
+      "claim": "A representation, handle, or bounds preflight refusal has a modeled domain-error response, leaves adapter state and the unrelated frame unchanged, and restores only the declared borrowed owner after response validation without claiming an M5 completion.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.preflight_domain_error_frame_and_restoration : ∀ (scenario : HostLocality.PreflightReadScenario), HostLocality.frameProjection scenario.frameBefore = HostLocality.frameProjection scenario.frameAfter ∧ scenario.adapterAfter = scenario.adapterBefore ∧ scenario.adapterAfter.counters = scenario.adapterBefore.counters ∧ HostLocality.restoreBorrow (HostLocality.validateExit (HostLocality.collectGuest scenario.borrow) (HostLocality.HostExit.returned scenario.response)) = HostLocality.restoredGuest scenario.borrow scenario.response ∧ scenario.borrow.owner = scenario.request.claim ∧ scenario.response = HostLocality.encodeDecision (HostLocality.readDecision scenario.region scenario.request scenario.accessAllowed) ∧ (∃ message, HostLocality.readDecision scenario.region scenario.request scenario.accessAllowed = HostLocality.ReadDecision.domainError message) ∧ HostLocality.FrameSeparated scenario.adapterBefore.record.handle scenario.frameAfter",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.m5_table_release_exact",
+      "role": "actual-m5-consuming-release",
+      "claim": "For a valid selected Live M5 record, Table.decide and the generated release refinement retire the record as LocalRelease with no owner return and exactly one local-release accounting unit.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.m5_table_release_exact : ∀ (table : noble_kernel.resources.table.Table) (record : noble_kernel.resources.Snapshot), (↑table.records)[↑record.handle.slot]? = some record → M5Resources.valid record = true → record.state = noble_kernel.resources.State.Live → M5Resources.liveCheck record (HostLocality.requirementFor record.handle) = Aeneas.Std.core.result.Result.Ok () → table.decide record.handle (noble_kernel.resources.Event.Release (HostLocality.requirementFor record.handle)) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok { record := { handle := record.handle, state := noble_kernel.resources.State.Retired, last_scope := record.last_scope, retirement := record.retirement }, action := noble_kernel.resources.Action.LocalRelease }) ∧ noble_kernel.resources.transition.release record (HostLocality.requirementFor record.handle) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok { record := { handle := record.handle, state := noble_kernel.resources.State.Retired, last_scope := record.last_scope, retirement := record.retirement }, action := noble_kernel.resources.Action.LocalRelease }) ∧ { record := { handle := record.handle, state := noble_kernel.resources.State.Retired, last_scope := record.last_scope, retirement := record.retirement }, action := noble_kernel.resources.Action.LocalRelease }.accounting = Aeneas.Std.Result.ok { pins_acquired := 0#usize, pins_released := 0#usize, owners_returned := 0#usize, owners_transferred := 0#usize, local_releases := 1#usize }",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "HostLocality.consuming_release_does_not_restore_guest_owner",
+      "role": "consuming-guest-owner",
+      "claim": "The consuming-release model removes the owner from the guest stack, clears borrowed state, continues without returning it, and differs from appending the consumed owner.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.consuming_release_does_not_restore_guest_owner : ∀ (borrow : HostLocality.BorrowState), (HostLocality.consumeGuestOwner borrow).stack = borrow.prefix ∧ (HostLocality.consumeGuestOwner borrow).borrowed = none ∧ (HostLocality.consumeGuestOwner borrow).phase = HostLocality.GuestPhase.continuing ∧ (HostLocality.consumeGuestOwner borrow).stack ≠ borrow.prefix ++ [HostLocality.StackCell.owner borrow.owner]",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "HostLocality.consuming_release_boundary_does_not_restore_and_accounts_once",
+      "role": "consuming-release-boundary",
+      "claim": "Under the explicit successful Host::release refinement, consuming release preserves the unrelated frame, does not restore the guest owner, clears the host owner, increments the release counter once without overflow, and agrees with actual M5 release decisions and accounting.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.consuming_release_boundary_does_not_restore_and_accounts_once : ∀ (scenario : HostLocality.ConsumingReleaseScenario), HostLocality.frameProjection scenario.frameBefore = HostLocality.frameProjection scenario.frameAfter ∧ scenario.adapterAfter.region = scenario.adapterBefore.region ∧ (scenario.adapterAfter.record = have __src := scenario.record; { handle := __src.handle, state := noble_kernel.resources.State.Retired, last_scope := __src.last_scope, retirement := __src.retirement }) ∧ scenario.adapterAfter.owner = none ∧ scenario.adapterBefore.owner = some { handle := scenario.record.handle } ∧ scenario.adapterAfter.counters.protectedOperations = scenario.adapterBefore.counters.protectedOperations ∧ scenario.adapterAfter.counters.regionReads = scenario.adapterBefore.counters.regionReads ∧ scenario.adapterAfter.counters.releases = scenario.adapterBefore.counters.releases + 1 ∧ HostLocality.releaseCounterRoom scenario.adapterBefore.counters ∧ (HostLocality.consumeGuestOwner scenario.borrow).stack = scenario.borrow.prefix ∧ (HostLocality.consumeGuestOwner scenario.borrow).borrowed = none ∧ (HostLocality.consumeGuestOwner scenario.borrow).phase = HostLocality.GuestPhase.continuing ∧ (HostLocality.consumeGuestOwner scenario.borrow).stack ≠ scenario.borrow.prefix ++ [HostLocality.StackCell.owner scenario.borrow.owner] ∧ scenario.borrow.owner = scenario.record.handle ∧ HostLocality.FrameSeparated scenario.record.handle scenario.frameAfter ∧ scenario.table.decide scenario.record.handle (noble_kernel.resources.Event.Release (HostLocality.requirementFor scenario.record.handle)) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok { record := have __src := scenario.record; { handle := __src.handle, state := noble_kernel.resources.State.Retired, last_scope := __src.last_scope, retirement := __src.retirement }, action := noble_kernel.resources.Action.LocalRelease }) ∧ noble_kernel.resources.transition.release scenario.record (HostLocality.requirementFor scenario.record.handle) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok { record := have __src := scenario.record; { handle := __src.handle, state := noble_kernel.resources.State.Retired, last_scope := __src.last_scope, retirement := __src.retirement }, action := noble_kernel.resources.Action.LocalRelease }) ∧ { record := have __src := scenario.record; { handle := __src.handle, state := noble_kernel.resources.State.Retired, last_scope := __src.last_scope, retirement := __src.retirement }, action := noble_kernel.resources.Action.LocalRelease }.accounting = Aeneas.Std.Result.ok { pins_acquired := 0#usize, pins_released := 0#usize, owners_returned := 0#usize, owners_transferred := 0#usize, local_releases := 1#usize }",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "HostLocality.consuming_release_does_not_restore",
+      "role": "consuming-release-control",
+      "claim": "The actual M5 table and generated release refinement plus the guest consuming model return no owner and account only a local release.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.consuming_release_does_not_restore : ∀ (table : noble_kernel.resources.table.Table) (record : noble_kernel.resources.Snapshot), (↑table.records)[↑record.handle.slot]? = some record → M5Resources.valid record = true → record.state = noble_kernel.resources.State.Live → M5Resources.liveCheck record (HostLocality.requirementFor record.handle) = Aeneas.Std.core.result.Result.Ok () → ∀ (borrow : HostLocality.BorrowState), borrow.owner = record.handle → (HostLocality.consumeGuestOwner borrow).stack = borrow.prefix ∧ (HostLocality.consumeGuestOwner borrow).borrowed = none ∧ (HostLocality.consumeGuestOwner borrow).phase = HostLocality.GuestPhase.continuing ∧ (HostLocality.consumeGuestOwner borrow).stack ≠ borrow.prefix ++ [HostLocality.StackCell.owner borrow.owner] ∧ borrow.owner = record.handle ∧ table.decide record.handle (noble_kernel.resources.Event.Release (HostLocality.requirementFor record.handle)) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok { record := { handle := record.handle, state := noble_kernel.resources.State.Retired, last_scope := record.last_scope, retirement := record.retirement }, action := noble_kernel.resources.Action.LocalRelease }) ∧ noble_kernel.resources.transition.release record (HostLocality.requirementFor record.handle) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok { record := { handle := record.handle, state := noble_kernel.resources.State.Retired, last_scope := record.last_scope, retirement := record.retirement }, action := noble_kernel.resources.Action.LocalRelease }) ∧ { record := { handle := record.handle, state := noble_kernel.resources.State.Retired, last_scope := record.last_scope, retirement := record.retirement }, action := noble_kernel.resources.Action.LocalRelease }.accounting = Aeneas.Std.Result.ok { pins_acquired := 0#usize, pins_released := 0#usize, owners_returned := 0#usize, owners_transferred := 0#usize, local_releases := 1#usize }",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "HostLocality.cleanup_success_is_selected_invoked_and_consuming",
+      "role": "cleanup-model",
+      "claim": "When an owner remains, successful cleanup selects and invokes one release and leaves no owner retained by the adapter model.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.cleanup_success_is_selected_invoked_and_consuming : ∀ (owner : noble_kernel.resources.Owner), HostLocality.runCleanup (some owner) true = { selection := HostLocality.CleanupSelection.release owner, invocation := HostLocality.CleanupInvocation.invokeRelease owner, outcome := HostLocality.CleanupOutcome.succeeded, ownerAfter := none }",
+      "axioms": []
+    },
+    {
+      "name": "HostLocality.cleanup_failure_is_selected_invoked_and_retained",
+      "role": "cleanup-model",
+      "claim": "When cleanup release fails, the selection and invocation are recorded and the rejected owner remains retained; cleanup success is not assumed.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.cleanup_failure_is_selected_invoked_and_retained : ∀ (owner : noble_kernel.resources.Owner), HostLocality.runCleanup (some owner) false = { selection := HostLocality.CleanupSelection.release owner, invocation := HostLocality.CleanupInvocation.invokeRelease owner, outcome := HostLocality.CleanupOutcome.failed, ownerAfter := some owner }",
+      "axioms": []
+    },
+    {
+      "name": "HostLocality.cleanup_success_counts_one_release",
+      "role": "cleanup-accounting",
+      "claim": "A successful modeled cleanup contributes exactly one release to its accounting delta.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.cleanup_success_counts_one_release : ∀ (owner : noble_kernel.resources.Owner), HostLocality.cleanupReleaseDelta (HostLocality.runCleanup (some owner) true) = 1",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.cleanup_failure_counts_no_release",
+      "role": "cleanup-accounting",
+      "claim": "A failed modeled cleanup contributes no successful release to its accounting delta.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.cleanup_failure_counts_no_release : ∀ (owner : noble_kernel.resources.Owner), HostLocality.cleanupReleaseDelta (HostLocality.runCleanup (some owner) false) = 0",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.cleanup_without_owner_is_skipped",
+      "role": "cleanup-model",
+      "claim": "Cleanup with no retained owner is skipped and does not invoke release.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.cleanup_without_owner_is_skipped : HostLocality.runCleanup none true = { selection := HostLocality.CleanupSelection.skip, invocation := HostLocality.CleanupInvocation.notInvoked, outcome := HostLocality.CleanupOutcome.skipped, ownerAfter := none }",
+      "axioms": []
+    },
+    {
+      "name": "HostLocality.abnormal_cleanup_does_not_restore_guest",
+      "role": "abnormal-cleanup",
+      "claim": "Cleanup success or failure after a malformed response cannot revive guest continuation or restore the borrowed owner.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.abnormal_cleanup_does_not_restore_guest : ∀ (borrow : HostLocality.BorrowState) (response : HostLocality.WireResponse), ¬HostLocality.responseWellFormed response → ∀ (owner : Option noble_kernel.resources.Owner) (cleanupSucceeded : Bool), have guest := HostLocality.restoreBorrow (HostLocality.validateExit (HostLocality.collectGuest borrow) (HostLocality.HostExit.returned response)); have result := HostLocality.applyCleanup guest owner cleanupSucceeded; result.1.phase = HostLocality.GuestPhase.aborted ∧ result.1.stack = borrow.prefix ∧ result.1.borrowed = some borrow",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.trapped_cleanup_does_not_restore_guest",
+      "role": "abnormal-cleanup",
+      "claim": "Cleanup success or failure after a trap cannot revive guest continuation or restore the borrowed owner.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.trapped_cleanup_does_not_restore_guest : ∀ (borrow : HostLocality.BorrowState) (owner : Option noble_kernel.resources.Owner) (cleanupSucceeded : Bool), have guest := HostLocality.restoreBorrow (HostLocality.validateExit (HostLocality.collectGuest borrow) HostLocality.HostExit.trapped); have result := HostLocality.applyCleanup guest owner cleanupSucceeded; result.1.phase = HostLocality.GuestPhase.aborted ∧ result.1.stack = borrow.prefix ∧ result.1.borrowed = some borrow",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.cleanup_success_is_not_selected_twice",
+      "role": "double-cleanup-control",
+      "claim": "After successful cleanup clears the owner, a second cleanup is skipped, not invoked, and contributes no second release.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.cleanup_success_is_not_selected_twice : ∀ (owner : noble_kernel.resources.Owner), have traces := HostLocality.cleanupTwice (some owner) true true; traces.1.selection = HostLocality.CleanupSelection.release owner ∧ traces.1.invocation = HostLocality.CleanupInvocation.invokeRelease owner ∧ traces.1.outcome = HostLocality.CleanupOutcome.succeeded ∧ traces.2.selection = HostLocality.CleanupSelection.skip ∧ traces.2.invocation = HostLocality.CleanupInvocation.notInvoked ∧ traces.2.outcome = HostLocality.CleanupOutcome.skipped ∧ HostLocality.cleanupReleaseDelta traces.1 = 1 ∧ HostLocality.cleanupReleaseDelta traces.2 = 0",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.m5_double_retirement_has_no_second_release",
+      "role": "actual-m5-double-retirement",
+      "claim": "The first M5 retirement performs LocalRelease and a second retirement of the already-retired record is unchanged with zero further accounting.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.m5_double_retirement_has_no_second_release : ∀ (record : noble_kernel.resources.Snapshot) (firstReason secondReason : noble_kernel.resources.Retirement), M5Resources.valid record = true → record.state = noble_kernel.resources.State.Live → noble_kernel.resources.transition.transition record record.handle (noble_kernel.resources.Event.Retire firstReason) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok { record := { handle := record.handle, state := noble_kernel.resources.State.Retired, last_scope := record.last_scope, retirement := some firstReason }, action := noble_kernel.resources.Action.LocalRelease }) ∧ noble_kernel.resources.transition.transition { handle := record.handle, state := noble_kernel.resources.State.Retired, last_scope := record.last_scope, retirement := some firstReason } record.handle (noble_kernel.resources.Event.Retire secondReason) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok (M5Resources.unchanged { handle := record.handle, state := noble_kernel.resources.State.Retired, last_scope := record.last_scope, retirement := some firstReason })) ∧ (M5Resources.unchanged { handle := record.handle, state := noble_kernel.resources.State.Retired, last_scope := record.last_scope, retirement := some firstReason }).accounting = Aeneas.Std.Result.ok { pins_acquired := 0#usize, pins_released := 0#usize, owners_returned := 0#usize, owners_transferred := 0#usize, local_releases := 0#usize }",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "HostLocality.abnormal_late_completion_is_idempotent",
+      "role": "actual-m5-abnormal-completion",
+      "claim": "A completion arriving after an M5 record is Retired remains unchanged and contributes zero accounting.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.abnormal_late_completion_is_idempotent : ∀ (record : noble_kernel.resources.Snapshot) (serial : Aeneas.Std.U64) (outcome : noble_kernel.resources.Completion), M5Resources.valid record = true → record.state = noble_kernel.resources.State.Retired → M5Resources.scopeCheck record serial = Aeneas.Std.core.result.Result.Ok () → noble_kernel.resources.transition.transition record record.handle (noble_kernel.resources.Event.Complete serial outcome) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok (M5Resources.unchanged record)) ∧ (M5Resources.unchanged record).accounting = Aeneas.Std.Result.ok { pins_acquired := 0#usize, pins_released := 0#usize, owners_returned := 0#usize, owners_transferred := 0#usize, local_releases := 0#usize }",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "HostLocality.wrong_table_identity_rejected",
+      "role": "identity-control",
+      "claim": "A mismatch in the actual M5 Handle table component is rejected as InvalidHandle.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.wrong_table_identity_rejected : ∀ (retained claim : HostLocality.Handle), retained.table ≠ claim.table → M5Resources.handleCheck retained claim = Aeneas.Std.core.result.Result.Err noble_kernel.resources.Error.InvalidHandle",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "HostLocality.wrong_slot_identity_rejected",
+      "role": "identity-control",
+      "claim": "A mismatch in the actual M5 Handle slot component is rejected as InvalidHandle.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.wrong_slot_identity_rejected : ∀ (retained claim : HostLocality.Handle), retained.table = claim.table → retained.slot ≠ claim.slot → M5Resources.handleCheck retained claim = Aeneas.Std.core.result.Result.Err noble_kernel.resources.Error.InvalidHandle",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.wrong_context_identity_rejected",
+      "role": "identity-control",
+      "claim": "A context-only M5 Handle mismatch with table and slot held equal is rejected as WrongContext.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.wrong_context_identity_rejected : ∀ (retained claim : HostLocality.Handle), retained.table = claim.table → retained.slot = claim.slot → retained.context ≠ claim.context → M5Resources.handleCheck retained claim = Aeneas.Std.core.result.Result.Err noble_kernel.resources.Error.WrongContext",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.wrong_generation_identity_rejected",
+      "role": "identity-control",
+      "claim": "A generation-only M5 Handle mismatch with earlier checked components equal is rejected as WrongGeneration.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.wrong_generation_identity_rejected : ∀ (retained claim : HostLocality.Handle), retained.table = claim.table → retained.slot = claim.slot → retained.context = claim.context → retained.kind = claim.kind → retained.generation ≠ claim.generation → M5Resources.handleCheck retained claim = Aeneas.Std.core.result.Result.Err noble_kernel.resources.Error.WrongGeneration",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.wrong_kind_identity_rejected",
+      "role": "identity-control",
+      "claim": "A kind-only M5 Handle mismatch with table, slot, and context equal is rejected as WrongKind.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.wrong_kind_identity_rejected : ∀ (retained claim : HostLocality.Handle), retained.table = claim.table → retained.slot = claim.slot → retained.context = claim.context → retained.kind ≠ claim.kind → M5Resources.handleCheck retained claim = Aeneas.Std.core.result.Result.Err noble_kernel.resources.Error.WrongKind",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.wrong_rights_identity_rejected",
+      "role": "identity-control",
+      "claim": "A rights-only M5 Handle mismatch with earlier checked components equal is rejected as WrongRights.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.wrong_rights_identity_rejected : ∀ (retained claim : HostLocality.Handle), retained.table = claim.table → retained.slot = claim.slot → retained.context = claim.context → retained.generation = claim.generation → retained.kind = claim.kind → retained.rights ≠ claim.rights → M5Resources.handleCheck retained claim = Aeneas.Std.core.result.Result.Err noble_kernel.resources.Error.WrongRights",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.unrelated_frame_mutation_rejected",
+      "role": "frame-control",
+      "claim": "A mutation of protected surrounding cells while unrelated owner and state remain equal violates the locality premise.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.unrelated_frame_mutation_rejected : ∀ (before after : HostLocality.FrameProjection), before.unrelatedOwner.handle = after.unrelatedOwner.handle → before.unrelatedState = after.unrelatedState → before.protectedCells ≠ after.protectedCells → ¬HostLocality.PreservesFrame before after",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.unrelated_owner_mutation_rejected",
+      "role": "frame-control",
+      "claim": "Changing the unrelated owner's exact M5 Handle violates the locality premise.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.unrelated_owner_mutation_rejected : ∀ (before after : HostLocality.FrameProjection), before.unrelatedOwner.handle ≠ after.unrelatedOwner.handle → ¬HostLocality.PreservesFrame before after",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "HostLocality.unrelated_state_mutation_rejected",
+      "role": "frame-control",
+      "claim": "Changing the unrelated resource snapshot violates the locality premise.",
+      "allowed_standard_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "status": "proved",
+      "statement": "HostLocality.unrelated_state_mutation_rejected : ∀ (before after : HostLocality.FrameProjection), before.unrelatedState ≠ after.unrelatedState → ¬HostLocality.PreservesFrame before after",
+      "axioms": [
+        "propext"
+      ]
+    },
+    {
+      "name": "M5Resources.transition_refines",
+      "role": "reused M5 table theorem",
+      "status": "proved",
+      "statement": "M5Resources.transition_refines : ∀ (record : noble_kernel.resources.Snapshot) (claim : noble_kernel.resources.Handle) (event : noble_kernel.resources.Event), noble_kernel.resources.transition.transition record claim event = Aeneas.Std.Result.ok (M5Resources.step record claim event)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Resources.table_decide_refines",
+      "role": "reused M5 table theorem",
+      "status": "proved",
+      "statement": "M5Resources.table_decide_refines : ∀ (table : noble_kernel.resources.table.Table) (claim : noble_kernel.resources.Handle) (event : noble_kernel.resources.Event), table.decide claim event = Aeneas.Std.Result.ok (M5Resources.tableStep table claim event)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Resources.normal_completion_owner_once",
+      "role": "reused M5 table theorem",
+      "status": "proved",
+      "statement": "M5Resources.normal_completion_owner_once : ∀ (record : noble_kernel.resources.Snapshot) (serial : Aeneas.Std.U64) (outcome : noble_kernel.resources.Completion), M5Resources.valid record = true → record.state = noble_kernel.resources.State.Busy serial → M5Resources.scopeCheck record serial = Aeneas.Std.core.result.Result.Ok () → noble_kernel.resources.transition.transition record record.handle (noble_kernel.resources.Event.Complete serial outcome) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok { record := { handle := record.handle, state := noble_kernel.resources.State.Live, last_scope := record.last_scope, retirement := record.retirement }, action := noble_kernel.resources.Action.OwnerReturned outcome }) ∧ { record := { handle := record.handle, state := noble_kernel.resources.State.Live, last_scope := record.last_scope, retirement := record.retirement }, action := noble_kernel.resources.Action.OwnerReturned outcome }.accounting = Aeneas.Std.Result.ok { pins_acquired := 0#usize, pins_released := 1#usize, owners_returned := 1#usize, owners_transferred := 0#usize, local_releases := 0#usize }",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Resources.release_refines",
+      "role": "reused M5 table theorem",
+      "status": "proved",
+      "statement": "M5Resources.release_refines : ∀ (record : noble_kernel.resources.Snapshot) (required : noble_kernel.resources.Requirement), noble_kernel.resources.transition.release record required = Aeneas.Std.Result.ok (M5Resources.release record required)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    },
+    {
+      "name": "M5Resources.retired_completion_idempotent",
+      "role": "reused M5 table theorem",
+      "status": "proved",
+      "statement": "M5Resources.retired_completion_idempotent : ∀ (record : noble_kernel.resources.Snapshot) (serial : Aeneas.Std.U64) (outcome : noble_kernel.resources.Completion), M5Resources.valid record = true → record.state = noble_kernel.resources.State.Retired → M5Resources.scopeCheck record serial = Aeneas.Std.core.result.Result.Ok () → noble_kernel.resources.transition.transition record record.handle (noble_kernel.resources.Event.Complete serial outcome) = Aeneas.Std.Result.ok (Aeneas.Std.core.result.Result.Ok (M5Resources.unchanged record)) ∧ (M5Resources.unchanged record).accounting = Aeneas.Std.Result.ok { pins_acquired := 0#usize, pins_released := 0#usize, owners_returned := 0#usize, owners_transferred := 0#usize, local_releases := 0#usize }",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    }
+  ],
+  "implementation_theorem": false,
+  "scope": "Conditional bounded synchronous adapter/guest model and reused extracted M5 decision lemmas; not Rust host, lowering, Wasmtime or whole-engine refinement.",
+  "assumptions": [
+    "Pinned Lean and imported Aeneas/Mathlib dependency libraries are trusted; downloaded dependency .oleans are not rebuilt by this audit.",
+    "The retained generated M5 sources are compiled anew, not replaced with a handwritten table; all six resource decision source files must retain their extraction-recorded bytes.",
+    "The temporary M5 proof root appends aliases from verification/m5-archived-library-compatibility.lean solely for the archived generated subject; current checked-in subjects do not use them.",
+    "Current CLI host wrapper, guest lowering and Wasmtime/Canonical ABI correspondence remain separate explicit obligations."
+  ],
+  "artifact_directory": "/dev/shm/noble-iss/archive-lanes-97/archived-879bfd66/host-locality",
+  "command_count": 40
+}

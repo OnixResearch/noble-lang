@@ -284,7 +284,7 @@ writeFileSync(join(project, 'lean-toolchain'), readFileSync(join(root, 'proofs/m
 writeFileSync(join(project, 'lakefile.toml'),
   ['name = "noble_region_trace"', 'defaultTargets = ["RegionTrace", "RegionTraceRuntime"]', '',
    '[[lean_lib]]', 'name = "RegionTrace"', '', '[[lean_lib]]', 'name = "RegionTraceRuntime"', ''].join('\n'));
-run(join(leanBin, 'lake'), ['build', 'RegionTrace', 'RegionTraceRuntime'], project);
+run(join(leanBin, 'lake'), ['--no-cache', 'build', 'RegionTrace', 'RegionTraceRuntime'], project);
 const theorems = auditTheorems(project, inventory, names);
 const cutOutput = join(output, 'region-cut');
 run(node, ['verification/region-trace/region-cut-check.mjs',

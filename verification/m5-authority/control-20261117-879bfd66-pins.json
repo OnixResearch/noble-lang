@@ -1,0 +1,58 @@
+{
+  "schema": "noble-m5-authority-negative-pins/v1",
+  "recorded": "2026-11-17T20:19:02.730Z",
+  "positive_source_commit": "879bfd663986e6bbc61dbf2c33d628eba2665408",
+  "positive_source_tree": "862082da21e0bf614acc32d9ee8bdfa2bd1ce412",
+  "positive_clean_source": true,
+  "positive_receipt": "verification/m5-authority/receipt-20261117-879bfd66.json",
+  "control_source_was_intentionally_dirty": true,
+  "command": [
+    "/nix/store/sy0c7j0npsq33d9zhnnzvjnzc52f4y0p-nodejs-24.13.0/bin/node",
+    "verification/m5-authority/check.mjs",
+    "--allow-dirty",
+    "--output",
+    "/dev/shm/noble-iss/archive-lanes-97/authority-negative-pins-879bfd66"
+  ],
+  "mutations": [
+    {
+      "name": "M5Authority.reachable_ledger_consistent",
+      "pin": "statement",
+      "replacement": "M5Authority.reachable_ledger_consistent : True"
+    },
+    {
+      "name": "M5Authority.committed_admission_binds_the_exact_plan",
+      "pin": "subjects",
+      "replacement": []
+    },
+    {
+      "name": "M5Authority.LedgerConsistent",
+      "pin": "specification",
+      "replacement": "def M5Authority.LedgerConsistent : noble_kernel.authority.Authority → Prop := fun _ => True"
+    }
+  ],
+  "observed_exit": 1,
+  "observed_diagnostic": "inventory pins differ from the compiled module; renewal is explicit (observed-pins.json): subjects M5Authority.committed_admission_binds_the_exact_plan; statement M5Authority.reachable_ledger_consistent; specification M5Authority.LedgerConsistent",
+  "observed_pins_sha256": "398536225370cd209358b5e87814d09e9f631bc3298f584b9a53bb4b4feb07bd",
+  "audit_command": {
+    "command": "/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin/lake",
+    "executable_sha256": "f6b0733782cb24932ed45979f88eccfb0e466f966a578c9f35e70ea468ee67ad",
+    "argv": [
+      "env",
+      "lean",
+      "--json",
+      "/dev/shm/noble-iss/archive-lanes-97/authority-negative-pins-879bfd66/Audit.lean"
+    ],
+    "cwd": "/dev/shm/noble-iss/archive-lanes-97/authority-negative-pins-879bfd66/baseline/project",
+    "expect": "success",
+    "exit": 0,
+    "signal": null,
+    "error": null,
+    "stdout_sha256": "35d9def0854e3650607700fe82bb57fbd4dc6731ce99a4f9ff532cfbc1c3f754",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "original_inventory_sha256": "73272c1aa6b171632de72eadaf44c5e49c9e1e2c425360d1c9dfb31a5c783868",
+  "restored_inventory_sha256": "73272c1aa6b171632de72eadaf44c5e49c9e1e2c425360d1c9dfb31a5c783868",
+  "restored_source_clean": true,
+  "result": "passed",
+  "scope": "All three deliberate expectation weakenings were refused; proof sources, archival input, compatibility aliases and accepted inventory bytes were unchanged after restoration."
+}
