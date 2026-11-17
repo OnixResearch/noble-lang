@@ -47,6 +47,10 @@ anything else reject. **Gate note (M3DxGates):** the m2 predicate matches
 the literal suffix `ax_1_1`; the v1 policy must match the family
 (`._native.native_decide.ax_` prefix), or twelve sound theorems below will
 be refused by accident.
+Since the #97 regeneration one further axiom shape is admitted on every
+audited name and reported separately as generated literal-size evaluation
+(not strict); §7.3 records the shape, the trust it adds and its refusal
+controls.
 
 The family is admitted only on reviewed theorem names: the gate's
 evaluation-closed required list, checker B's refinement rows, and eight
@@ -212,6 +216,9 @@ semantic subject check; the extracted checker itself is trifecta):
   rows evaluated false and the `proofs/m3` root stopped building; the same
   regeneration also made `Ty` mutual with the new `NominalShape`, whose
   `BEq` instances `NobleM3/Refine.lean` now derives (#88).
+  Since 2026-11-16 the extracted instantiation path takes the
+  witness-resolution fuel as an argument, and the three rows pass it
+  explicitly (§7.2).
 - **The generalized composition**: `outcomes_via_refinement_v1` (trifecta —
   one agreement equation yields the full five-way outcome correspondence)
   and `accepted_via_refinement_v1` (trifecta — the v0 statement over the
@@ -302,3 +309,101 @@ verified name by name on 2026-09-19 with the then two-tier
   refinement_kind_crossed_reference, refinement_duplication_negative,
   refinement_implicit_union_negative, eligibility_dup, eligibility_drop,
   eligibility_quote, inclusion_extracted}`.
+
+## 7. The #97 regeneration port (2026-11-16)
+
+`proofs/m3/NobleKernel/Funs.lean` and `Types.lean` are now the whole
+`noble-kernel` crate's extraction with the selected Charon `9e95cf31` and
+Aeneas `1238879f` (regenerated at `acf98da0`; a re-extraction at `cffcad64`
+was byte-identical). The subject grew from the earlier fragment-era kernel
+to the current crate: live references, generic nominal families, signed
+owners, live slots, the calculator and text-cursor profiles and the clone
+budget are all in the generated module. This section records what the port
+changed. No theorem was deleted or weakened, and every name of §6 still
+resolves.
+
+### 7.1 External models
+
+`NobleKernel/FunsExternal.lean` and `TypesExternal.lean` define exactly the
+template's 66 functions and 6 types, plus the five `#[charon::opaque]`
+helpers; they are byte-identical to the `proofs/m2` copies. New models:
+`Option`'s `Try::branch` and `FromResidual::from_residual` (mirroring the
+library's `Result` models), `[T; N]::into_iter` with the array `IntoIter`
+and its `next`, `repeat_n`/`RepeatN::next` and `repeat_with`/`RepeatWith::next`
+(following the pinned std bodies, including which items are clones),
+`slice::first`, `TryFrom<u64>` for `u32`, `TryFrom<i64>` for `usize` and
+`String != &str`. The `Option` `Clone` model carries the template's new name
+pattern. `Option::map` and `Result::unwrap_or` are now library definitions,
+so their local copies, which shadowed them, were removed, together with the
+unused `debug_c_like_enum_write_str`.
+
+`core::mem::size_of::<T>` is modelled as a failure (`fail .undef`), with the
+review note in the file header. The generated `Counter::vector::<T>` and
+`Counter::node::<T>` call it with `T` a bound type variable, so no per-type
+value can be supplied at the concrete call sites, and `ok c` would assert
+one false size for every type. Only `Env::calculator_clone_budget` reaches
+it; `acceptance::check` does not. No `ok` result about the clone budget is
+derivable from this model.
+
+### 7.2 Embedding, reference model and changed statements
+
+- `NobleM2.Embed`'s empty admission fragment also fixes `generic_variants`
+  and `live_resource_nominals` empty and `live_slots`, `live_test_hosts`,
+  `text_cursor` and `calculator` false, the values of the kernel's
+  `Env::default()`. Nothing in this milestone is evidence about a run that
+  selects any of those surfaces.
+- The reference `Ty` gains `liveRef` and `genericNominal`, and the reference
+  `Constraint` gains `borrowProvenance` and `slotSite`, so the new kernel
+  types and rejection reasons project without loss. Like `nominal`, the two
+  types are outside the admitted fragment and never `Data`; the reference
+  checker never emits the two reasons. The kernel's
+  `Checked.live_sites` has no reference counterpart and is not projected.
+- `acceptance.parts.instantiate.apply` now takes the witness-resolution fuel
+  and returns the work it spent, and `parts.Ctx` carries `signed_owner`.
+  The per-word instantiation rows (§3.3) and the decision-path rows (§3.5)
+  run ordinary acceptance (`signed_owner = none`) and pass `wordFuel n`, the
+  fixture request's declared work, which is exactly the value the earlier
+  path read from `ctx.request.limits.work`. The statements of
+  `NobleM3.Refine.eligibility_dup`, `eligibility_drop` and
+  `eligibility_quote` therefore gain that argument. The `word_refinement_*`
+  statements are unchanged over the updated `wordAgrees`. The rows compare
+  the interface or the constraint only, as before.
+
+### 7.3 Generated literal-size evaluation axioms
+
+The pinned Aeneas library's `toStr` proves each string literal's UTF-8 size
+bound with `decide +native`, which leaves one `<decl>._native.decide.ax_<n>`
+axiom per literal in the generated module. Since this regeneration
+`noble_kernel.acceptance.check` reaches three of them: the adapter identities
+`contracts.TEST_SEND_ADAPTER_IDENTITY` and
+`contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY`, and the assertion message in
+`acceptance.parts.join`. Every theorem that mentions the checker inherits
+them.
+
+Trust note: each such axiom trusts the compiled evaluation of
+`(String.toByteArray "<literal>").size ≤ U32.max` for one closed literal. It
+is the shape `proofs/m4/M4Audit.lean` reviews as `nativeStringBound`. The M3
+gate (and the M2 gate, with the same matcher) admits exactly that shape on
+every audited name: owner `NobleKernel.Funs` or `NobleKernel.FunsExternal`,
+the name pattern, an axiom with no universe parameters, and a type that is
+exactly `decide ((String.toByteArray <string literal>).size ≤
+Aeneas.Std.U32.max) = true`. It logs them on separate lines as "generated
+literal-size evaluation (not strict)". A strict name is therefore held to the
+trifecta plus these separately reported literal bounds, and to nothing else.
+Two refusal cells show that any other `_native.decide`
+axiom still rejects: `foreign-native-type` (a non-literal bound owned by the
+external models) and `foreign-owner-literal` (the exact literal shape owned by
+`NobleM2.Embed`).
+
+### 7.4 Results
+
+With the selected Lean 4.35.0 first on `PATH`:
+
+- `lake build NobleKernel NobleM2 NobleM2.Refinement NobleM3` in
+  `proofs/m3`: build completed successfully (1868 jobs). The only warnings
+  predate the port: an unused `termination_by` reported for `NobleM2/Shapes.lean`
+  and the unused binder `checked` in `NobleM2.Refinement.accepted_via_refinement`.
+- `verification/m3-proof-gate.sh`: every check passes. Checker A audits 2390
+  theorems in 69 modules and checker B 110 theorems in one module. The
+  axioms of `noble_kernel.acceptance.check` are `propext`, `Classical.choice`,
+  `Quot.sound` and the three literal-size axioms above.

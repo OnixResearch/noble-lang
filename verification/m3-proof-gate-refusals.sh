@@ -46,6 +46,16 @@
 #                             an m3 root: it builds and passes the        THEOREMS
 #                             construct scan, so only the enumerated
 #                             axiom audit's reviewed-name rule refuses it
+#   foreign-native-type       a `decide +native` on a Nat bound inside   -> REQUIRED-
+#                             the external model of slice/array          THEOREMS
+#                             equality, which acceptance.check reaches:
+#                             owner and axiom name have the generated
+#                             literal-size shape, the type does not
+#   foreign-owner-literal     the exact literal-size shape (a `toStr`    -> REQUIRED-
+#                             literal) elaborated inside embedEnv, so    THEOREMS
+#                             every refinement theorem depends on an
+#                             axiom of that shape owned by NobleM2.Embed
+#                             instead of the generated kernel modules
 #   missing-per-word-theorem  the per-word application refinement        -> REQUIRED-
 #                             theorem (apply_refines) no longer          THEOREMS
 #                             stated
@@ -238,6 +248,43 @@ STUB
     out="$("$GATE" "$copy" 2>&1)"; rc=$?
     ;;
 
+  foreign-native-type)
+    fresh_copy "$copy"
+    # A local `decide +native` on a Nat bound inside the external model of
+    # slice/array equality, which acceptance.check reaches: owner and axiom
+    # name have the generated shape, the type does not. Written to a temp file
+    # and moved, so the hard-linked repository file is untouched.
+    awk '
+      /^def Shared0Slice\.Insts\.CoreCmpPartialEqArray\.eq$/ { target = 1 }
+      { print }
+      target && /^  \(left : Slice T\) \(right : Array U N\) : Result Bool :=$/ {
+        print "  have _nonLiteral : (4 : Nat) ≤ 2 ^ 32 - 1 := by decide +native"
+        target = 0
+      }
+    ' "$PROOF_ROOT/NobleKernel/FunsExternal.lean" > "$SCRATCH/foreign-native-type.lean"
+    [ "$(grep -c '_nonLiteral' "$SCRATCH/foreign-native-type.lean")" -eq 1 ] \
+      || { echo "APPLY FAILED"; return 1; }
+    mv "$SCRATCH/foreign-native-type.lean" "$copy/NobleKernel/FunsExternal.lean"
+    out="$("$GATE" "$copy" 2>&1)"; rc=$?
+    ;;
+
+  foreign-owner-literal)
+    fresh_copy "$copy"
+    # The exact literal-size shape (a `toStr` literal) elaborated inside
+    # embedEnv, so every refinement theorem depends on an axiom of that shape
+    # owned by NobleM2.Embed instead of the generated kernel modules.
+    awk '
+      { print }
+      /^def embedEnv \(env : Env\) : noble_kernel\.contracts\.Env :=$/ {
+        print "  have _foreignLiteral : Aeneas.Std.Str := Aeneas.Std.toStr \"refusal-probe\""
+      }
+    ' "$PROOF_ROOT/NobleM2/Embed.lean" > "$SCRATCH/foreign-owner-literal.lean"
+    [ "$(grep -c '_foreignLiteral' "$SCRATCH/foreign-owner-literal.lean")" -eq 1 ] \
+      || { echo "APPLY FAILED"; return 1; }
+    mv "$SCRATCH/foreign-owner-literal.lean" "$copy/NobleM2/Embed.lean"
+    out="$("$GATE" "$copy" 2>&1)"; rc=$?
+    ;;
+
   removed-eliminator-oracle-arm)
     fresh_crate_copy "$copy"
     # The `case` arm deleted from the oracle's contract table: the oracle
@@ -300,6 +347,23 @@ STUB
     printf '%s\n' "$out" | grep '^\[m3-gate\] FAIL' | head -3
     return 1
   fi
+  # The two literal-size controls must be refused for their probe axiom, not
+  # for an unrelated reason that happens to fail the same check.
+  local reason=''
+  case "$label" in
+    foreign-native-type) reason='CoreCmpPartialEqArray.eq._native.decide.ax_' ;;
+    foreign-owner-literal) reason='embedEnv._native.decide.ax_' ;;
+  esac
+  if [ -n "$reason" ]; then
+    # Lean wraps the axiom list over several lines, so the two facts are
+    # matched separately: the audit refused, and its output names the probe.
+    if ! printf '%s\n' "$out" | grep -q 'm3-gate: forbidden axiom' \
+        || ! printf '%s\n' "$out" | grep -q "$reason"; then
+      echo "REFUSAL without naming the probe axiom (*$reason*)"
+      return 1
+    fi
+    echo "refused for the probe axiom: *$reason*"
+  fi
   echo "refused: gate exit $rc at $expect"
   return 0
 }
@@ -311,6 +375,8 @@ for case_label in \
   'admit-tactic NO-PROOF-HOLE' \
   'local-axiom NO-PROOF-HOLE' \
   'unreviewed-native-decide REQUIRED-THEOREMS' \
+  'foreign-native-type REQUIRED-THEOREMS' \
+  'foreign-owner-literal REQUIRED-THEOREMS' \
   'missing-per-word-theorem REQUIRED-THEOREMS' \
   'substituted-subject GENERATED-KERNEL' \
   'unexplained-external EXTERNAL-MODELS' \
