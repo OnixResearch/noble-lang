@@ -471,7 +471,12 @@ let contracts = import "./architecture.contracts.ncl" in
     max_shards = 110,
     # M7's kernel dataspace module pushes both kernel library shards over the
     # earlier 1024 module-fact cap. Preserve complete compiler coverage.
-    max_modules = 2048,
+    # Issue #97's Aeneas restructuring of noble-contracts (extraction helper
+    # modules and per-item lint expectations) pushes the noble_contracts
+    # lib+test unit over the 2048 cap: the architecture phase measured 2,116
+    # module facts at 2596b6dd, so that shard was incomplete. Double the cap for
+    # complete compiler coverage; this is capacity, not a waiver.
+    max_modules = 4096,
     max_items = 8192,
     max_types = 4096,
     max_traits = 512,
@@ -493,7 +498,10 @@ let contracts = import "./architecture.contracts.ncl" in
     # M5's frontend saturates the previous 1024 compiler-observed attribute/
     # configuration facts per unit. Retain complete collection without widening
     # the single declared target/feature configuration.
-    max_configurations = 4096,
+    # The same #97 noble_contracts lib+test unit measured 4,320 configuration
+    # facts at 2596b6dd, over the 4096 cap. Double the cap for complete
+    # collection; the single declared target/feature configuration is unchanged.
+    max_configurations = 8192,
     max_type_shapes = 4096,
     max_function_safety_facts = 4096,
     max_value_provenance_facts = 8192,
