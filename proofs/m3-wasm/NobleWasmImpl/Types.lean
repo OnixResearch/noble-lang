@@ -2216,17 +2216,17 @@ def source.Compiler.prepare_declared_text.closure_1 := Unit
 def source.Compiler.prepare_declared_text.closure := Unit
 
 /-- [noble_wasm::source::origin::build::{closure}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1268:29-1268:37 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1271:29-1271:37 -/
 @[reducible]
 def source.origin.build.closure := Unit
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::StaticFrames]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1089:4-1091:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1092:4-1094:5 -/
 structure source.origin.bounded_graph_cells.StaticFrames where
   frames : alloc.vec.Vec (Std.Usize × Std.Usize)
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::is_same_cell::{closure}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1049:35-1049:67 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1052:35-1052:67 -/
 @[reducible]
 def source.origin.bounded_graph_cells.is_same_cell.closure :=
   alloc.rc.Rc source.OriginProgramValue
@@ -2242,7 +2242,7 @@ inductive source.origin.Value where
   source.origin.Value
 
 /-- [noble_wasm::source::origin::apply_operation::{closure}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 789:36-794:17 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 792:36-797:17 -/
 def source.origin.apply_operation.closure :=
   source.OriginOperation × Std.Usize
 
@@ -2272,7 +2272,7 @@ structure source.origin.Machine where
   frames : alloc.vec.Vec source.origin.Frame
 
 /-- [noble_wasm::source::origin::returned_outputs::{closure}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 880:43-880:62 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 883:43-883:62 -/
 @[reducible]
 def source.origin.returned_outputs.closure := Unit
 
