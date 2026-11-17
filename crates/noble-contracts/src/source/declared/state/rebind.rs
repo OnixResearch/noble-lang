@@ -301,11 +301,15 @@ fn has_outside_alias_use(definitions: &[crate::source::Named], spelling: &str, o
     let mut is_used = false;
     let mut at = 0usize;
     while !is_used && at < definitions.len() {
-        is_used = definitions[at].owner.is_none()
-            && alias_used(&definitions[at].alias_uses, spelling, owner);
+        is_used = outside_alias_use(&definitions[at], spelling, owner);
         at += 1;
     }
     is_used
+}
+
+/// Whether one outside definition uses alias `spelling` bound to `owner`.
+fn outside_alias_use(definition: &crate::source::Named, spelling: &str, owner: u64) -> bool {
+    definition.owner.is_none() && alias_used(&definition.alias_uses, spelling, owner)
 }
 
 #[expect(
@@ -396,8 +400,7 @@ fn same_node_ordinals(
 #[expect(
     tigerstyle::assertion_density,
     tigerstyle::missing_const_fn,
-    tigerstyle::platform_dependent_cast,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply; usize is at least 32 bits on every supported target, so the u32-to-usize widening is lossless."
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply."
 )]
 /// Whether the replayed node at `at` keeps the original node, or changes only
 /// a call to a replaced dependency or exactly the rebound alias edge.
@@ -422,32 +425,66 @@ fn node_preserved(
         (crate::source::Kind::Quotation(left), crate::source::Kind::Quotation(right)) => {
             left == right
         }
-        (crate::source::Kind::Call(left), crate::source::Kind::Call(right)) => {
-            if left == right {
-                return true;
-            }
-            let is_rebuilt_edge = match (left, right) {
-                (crate::source::Target::Named(before), crate::source::Target::Named(after)) => {
-                    replacements.get(*before as usize).and_then(|entry| *entry)
-                        == Some(*after as usize)
-                }
-                _ => false,
-            };
-            let is_alias_edge = alias_covers(
-                &original.alias_uses,
-                rebind.spelling,
-                rebind.prior_owner,
-                (ordinal, *left),
-            ) && alias_covers(
-                &replayed.alias_uses,
-                rebind.spelling,
-                rebind.next_owner,
-                (ordinal, *right),
-            );
-            is_rebuilt_edge || is_alias_edge
-        }
+        (crate::source::Kind::Call(left), crate::source::Kind::Call(right)) => call_preserved(
+            original,
+            replayed,
+            rebind,
+            replacements,
+            (ordinal, *left, *right),
+        ),
         _ => false,
     }
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+/// Whether a replayed call at `ordinal` keeps the original target, or changes
+/// only a call to a replaced dependency or exactly the rebound alias edge.
+/// Every verdict is read before combining, so only booleans join.
+fn call_preserved(
+    original: &crate::source::Named,
+    replayed: &crate::source::Named,
+    rebind: Rebind<'_>,
+    replacements: &[Option<usize>],
+    call: (u32, crate::source::Target, crate::source::Target),
+) -> bool {
+    let (ordinal, left, right) = call;
+    let is_same = left == right;
+    let is_rebuilt_edge = rebuilt_edge(left, right, replacements);
+    let is_prior_alias = alias_covers(
+        &original.alias_uses,
+        rebind.spelling,
+        rebind.prior_owner,
+        (ordinal, left),
+    );
+    let is_next_alias = alias_covers(
+        &replayed.alias_uses,
+        rebind.spelling,
+        rebind.next_owner,
+        (ordinal, right),
+    );
+    is_same || is_rebuilt_edge || (is_prior_alias && is_next_alias)
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    tigerstyle::platform_dependent_cast,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply; usize is at least 32 bits on every supported target, so the u32-to-usize widening is lossless."
+)]
+/// Whether a replayed named call targets the replacement of the original
+/// named target.
+fn rebuilt_edge(
+    left: crate::source::Target,
+    right: crate::source::Target,
+    replacements: &[Option<usize>],
+) -> bool {
+    let (crate::source::Target::Named(before), crate::source::Target::Named(after)) = (left, right)
+    else {
+        return false;
+    };
+    replacements.get(before as usize).and_then(|entry| *entry) == Some(after as usize)
 }
 
 /// Whether an alias use spelled `spelling` and bound to `owner` covers `node`.

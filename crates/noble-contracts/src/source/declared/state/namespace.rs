@@ -41,85 +41,88 @@ impl super::ModuleSession {
                 crate::source::Stage::Resolve,
                 "expected versioned exported type"
             )));
-        let located = if let Some((name, version)) = super::super::split_once_ascii(module, b'@') {
-            let version = attempt!(super::super::canonical_version(version).ok_or_else(|| {
-                super::super::error(crate::source::Stage::Resolve, "invalid type module version")
-            }));
-            crate::scan::find_first(&self.modules, |entry| {
-                entry.name == name && entry.version == version
-            })
-        } else {
-            // The latest checked alias with this spelling names the module.
-            let mut found_at = None;
-            let mut at = self.aliases.len();
-            while found_at.is_none() && at != 0 {
-                at -= 1;
-                if checked_alias_spelled(&self.aliases[at], module) {
-                    found_at = Some(at);
-                }
-            }
-            match found_at {
-                Some(alias_at) => self.modules.get(self.aliases[alias_at].module),
-                None => None,
-            }
-        };
-        let mut ty = None;
-        if let Some(entry) = located {
-            let mut types = alloc::vec::Vec::new();
-            let mut families = alloc::vec::Vec::new();
-            let mut is_overflowing = false;
-            let mut at = 0usize;
-            while !is_overflowing && at < entry.exports.len() {
-                let export = &entry.exports[at];
-                if is_type_export(export, type_name) {
-                    ty = export.ty.clone();
-                    break;
-                }
-                if let Some(value) = &export.ty {
-                    // One entry per scanned export, so this bound is never reached.
-                    if types.len() >= entry.exports.len() {
-                        is_overflowing = true;
-                    } else {
-                        types.push((export.name.clone(), value.clone()));
-                    }
-                }
-                if !is_overflowing {
-                    if let Some(id) = export.generic {
-                        if families.len() >= entry.exports.len() {
-                            is_overflowing = true;
-                        } else {
-                            families.push((export.name.clone(), id));
-                        }
-                    }
-                }
-                at += 1;
-            }
-            if is_overflowing {
-                return Err(super::super::error(
-                    crate::source::Stage::Resolve,
-                    "type export scan exceeds module exports",
-                ));
-            }
-            if ty.is_none() && !families.is_empty() {
-                if let Some(context) = &self.source.declared {
-                    ty = super::super::types::parse_with_families(
-                        type_name,
-                        &types,
-                        &families,
-                        Some(&context.environment),
-                        super::super::SPAN,
-                    )
-                    .ok()
-                    .map(|parsed| parsed.ty);
-                }
-            }
-        }
+        let located = attempt!(self.type_module(module));
+        let ty = attempt!(self.exported_type(located, type_name));
         ty.ok_or_else(|| {
             super::super::error(
                 crate::source::Stage::Resolve,
                 "unknown or unexported versioned type",
             )
         })
+    }
+
+    /// The concrete type a located module exports under `type_name`, else a
+    /// checked instance of one of its generic families.
+    fn exported_type(
+        &self,
+        located: Option<&super::super::Module>,
+        type_name: &str,
+    ) -> Result<Option<noble_kernel::types::Ty>, crate::source::Error> {
+        let Some(entry) = located else {
+            return Ok(None);
+        };
+        let (exported, (types, families)) = attempt!(scan_type_exports(entry, type_name));
+        if exported.is_some() || families.is_empty() {
+            return Ok(exported);
+        }
+        Ok(self.family_type(type_name, &types, &families))
+    }
+
+    /// The generic family instance `type_name` spells, checked in the declared
+    /// environment; no declared context resolves none.
+    fn family_type(
+        &self,
+        type_name: &str,
+        types: &[(alloc::string::String, noble_kernel::types::Ty)],
+        families: &[(alloc::string::String, noble_kernel::types::NominalTypeId)],
+    ) -> Option<noble_kernel::types::Ty> {
+        let context = self.source.declared.as_ref()?;
+        super::super::types::parse_with_families(
+            type_name,
+            types,
+            families,
+            Some(&context.environment),
+            super::super::SPAN,
+        )
+        .ok()
+        .map(|parsed| parsed.ty)
+    }
+
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
+    /// The module a type spelling's module part names: `name@version`, else
+    /// the latest checked alias spelled that way.
+    fn type_module(
+        &self,
+        module: &str,
+    ) -> Result<Option<&super::super::Module>, crate::source::Error> {
+        let Some((name, version)) = super::super::split_once_ascii(module, b'@') else {
+            return Ok(self.aliased_module(module));
+        };
+        let version = attempt!(super::super::canonical_version(version).ok_or_else(|| {
+            super::super::error(crate::source::Stage::Resolve, "invalid type module version")
+        }));
+        Ok(crate::scan::find_first(&self.modules, |entry| {
+            entry.name == name && entry.version == version
+        }))
+    }
+
+    /// The module of the latest checked alias spelled `spelling`.
+    fn aliased_module(&self, spelling: &str) -> Option<&super::super::Module> {
+        let mut found_at = None;
+        let mut at = self.aliases.len();
+        while found_at.is_none() && at != 0 {
+            at -= 1;
+            if checked_alias_spelled(&self.aliases[at], spelling) {
+                found_at = Some(at);
+            }
+        }
+        match found_at {
+            Some(alias_at) => self.modules.get(self.aliases[alias_at].module),
+            None => None,
+        }
     }
 
     pub fn bindings(&self) -> &[super::super::BoundOperation] {
@@ -349,6 +352,70 @@ fn checked_alias_spelled(alias: &super::super::Alias, spelling: &str) -> bool {
 /// Whether an export is the concrete type named `type_name`.
 fn is_type_export(export: &super::super::Export, type_name: &str) -> bool {
     export.name == type_name && export.ty.is_some()
+}
+
+/// Concrete and generic family type exports of one module, by name.
+type TypeRows = (
+    alloc::vec::Vec<(alloc::string::String, noble_kernel::types::Ty)>,
+    alloc::vec::Vec<(alloc::string::String, noble_kernel::types::NominalTypeId)>,
+);
+
+/// Scans a module's exports in order: the concrete type named `type_name`
+/// once it is reached, and every concrete and generic family row before it.
+fn scan_type_exports(
+    entry: &super::super::Module,
+    type_name: &str,
+) -> Result<(Option<noble_kernel::types::Ty>, TypeRows), crate::source::Error> {
+    let mut ty = None;
+    let mut rows = Ok((alloc::vec::Vec::new(), alloc::vec::Vec::new()));
+    let mut at = 0usize;
+    while ty.is_none() && rows.is_ok() && at < entry.exports.len() {
+        let export = &entry.exports[at];
+        if is_type_export(export, type_name) {
+            ty = export.ty.clone();
+        } else {
+            rows = match rows {
+                Ok(scanned) => record_type_export(export, entry.exports.len(), scanned),
+                Err(problem) => Err(problem),
+            };
+        }
+        at += 1;
+    }
+    let rows = attempt!(rows);
+    Ok((ty, rows))
+}
+
+/// Appends one export's concrete type and generic family rows; a row past
+/// `bound`, which one row per scanned export never reaches, is refused.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+fn record_type_export(
+    export: &super::super::Export,
+    bound: usize,
+    rows: TypeRows,
+) -> Result<TypeRows, crate::source::Error> {
+    let (mut types, mut families) = rows;
+    if let Some(value) = &export.ty {
+        if types.len() >= bound {
+            return Err(super::super::error(
+                crate::source::Stage::Resolve,
+                "type export scan exceeds module exports",
+            ));
+        }
+        types.push((export.name.clone(), value.clone()));
+    }
+    if let Some(id) = export.generic {
+        if families.len() >= bound {
+            return Err(super::super::error(
+                crate::source::Stage::Resolve,
+                "type export scan exceeds module exports",
+            ));
+        }
+        families.push((export.name.clone(), id));
+    }
+    Ok((types, families))
 }
 
 #[expect(

@@ -570,28 +570,8 @@ impl ModulePrepared {
             return None;
         }
         let environment = &self.staged.source.declared.as_ref()?.environment;
-        // Exactly one adapter row may match: a second one is ambiguous.
-        let mut matched = None;
-        let mut is_ambiguous = false;
-        let mut at = 0usize;
-        while !is_ambiguous && at < environment.bound_adapters.len() {
-            if adapter_matches(
-                environment,
-                &environment.bound_adapters[at],
-                binding,
-                module.identity,
-            ) {
-                is_ambiguous = matched.is_some();
-                if !is_ambiguous {
-                    matched = Some(at);
-                }
-            }
-            at += 1;
-        }
-        if is_ambiguous {
-            return None;
-        }
-        environment.bound_adapters.get(matched?)
+        let index = unique_adapter(environment, binding, module.identity)?;
+        environment.bound_adapters.get(index)
     }
 
     fn checked_program_closure_source(
@@ -1227,6 +1207,10 @@ impl ModulePrepared {
         tigerstyle::sentinel_fallback,
         reason = "Owner: noble-contracts; an unrepresentable definition index maps to usize::MAX, which get() reports as absent, so the ownership guard fails closed."
     )]
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
     fn check_specialization(
         submission: &noble_kernel::execution::Submission,
         specialization: &noble_kernel::execution::Definition,
@@ -1465,10 +1449,10 @@ impl ModulePrepared {
             return None;
         }
         let root = usize::try_from(body[0].0).ok()?;
-        if !matches!(
-            submission.body.candidate.nodes.get(root),
-            Some(noble_kernel::untrusted::Node::Invocation { def, .. })
-                if *def == definition.definition
+        if !root_invokes(
+            &submission.body.candidate.nodes,
+            root,
+            definition.definition,
         ) {
             return None;
         }
@@ -1499,19 +1483,7 @@ impl ModulePrepared {
             Some(context) => &context.environment,
             None => return alloc::vec::Vec::new(),
         };
-        let mut recursive_count = 0usize;
-        for definition in &definitions[start..] {
-            if crate::source::sizechange::calls_self(definition) {
-                recursive_count += 1;
-            }
-        }
-        let mut evidence = alloc::vec::Vec::with_capacity(recursive_count);
-        for definition in &definitions[start..] {
-            if crate::source::sizechange::calls_self(definition) {
-                evidence.push(crate::source::sizechange::evidence(definition, environment));
-            }
-        }
-        evidence
+        size_change_rows(&definitions[start..], environment)
     }
     /// Typed, non-executable contract metadata for the newly staged module,
     /// including modules with no proof; this is not a proof receipt.
@@ -2005,12 +1977,103 @@ fn calls_builtin(definition: &crate::source::Named, target: u32) -> bool {
     let mut is_found = false;
     let mut at = 0usize;
     while !is_found && at < definition.tree.nodes.len() {
-        is_found = matches!(definition.tree.nodes[at].kind,
-            crate::source::Kind::Call(crate::source::Target::Builtin(called))
-                if called == target);
+        is_found = is_builtin_call(&definition.tree.nodes[at], target);
         at += 1;
     }
     is_found
+}
+
+/// Whether one node calls builtin `target`.
+const fn is_builtin_call(node: &crate::source::Node, target: u32) -> bool {
+    if let crate::source::Kind::Call(crate::source::Target::Builtin(called)) = &node.kind {
+        *called == target
+    } else {
+        false
+    }
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+/// Whether `nodes[root]` invokes `definition`.
+fn root_invokes(
+    nodes: &[noble_kernel::untrusted::Node],
+    root: usize,
+    definition: noble_kernel::contracts::Definition,
+) -> bool {
+    if let Some(noble_kernel::untrusted::Node::Invocation { def, .. }) = nodes.get(root) {
+        *def == definition
+    } else {
+        false
+    }
+}
+
+/// The index of the only adapter row matching `binding` for the module, or
+/// `None` when no row or a second row matches.
+fn unique_adapter(
+    environment: &noble_kernel::contracts::Env,
+    binding: &super::BoundOperation,
+    module_identity: u64,
+) -> Option<usize> {
+    let is_match = |adapter: &noble_kernel::contracts::BoundAdapter| {
+        adapter_matches(environment, adapter, binding, module_identity)
+    };
+    let first = position_first(&environment.bound_adapters, is_match)?;
+    let later = environment.bound_adapters.get(first.saturating_add(1)..)?;
+    if position_first(later, is_match).is_some() {
+        return None;
+    }
+    Some(first)
+}
+
+/// Size-change evidence for each self-recursive definition, in order.
+fn size_change_rows(
+    definitions: &[crate::source::Named],
+    environment: &noble_kernel::contracts::Env,
+) -> alloc::vec::Vec<crate::source::Evidence> {
+    let mut recursive_count = 0usize;
+    for definition in definitions {
+        if crate::source::sizechange::calls_self(definition) {
+            recursive_count += 1;
+        }
+    }
+    let mut evidence = alloc::vec::Vec::with_capacity(recursive_count);
+    for definition in definitions {
+        if crate::source::sizechange::calls_self(definition) {
+            evidence.push(crate::source::sizechange::evidence(definition, environment));
+        }
+    }
+    evidence
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+#[expect(
+    tigerstyle::foreign_enum_catch_all,
+    reason = "Owner: noble-contracts; the foreign enum is matched only to translate its known variants, and a new variant is a deliberate fail-closed default"
+)]
+/// Whether `kind` is the bound behavior of the binding's operation in its
+/// adapter slot.
+fn is_bound_behavior(
+    kind: Option<noble_kernel::contracts::Behavior>,
+    binding: &super::BoundOperation,
+) -> bool {
+    match kind {
+        Some(noble_kernel::contracts::Behavior::BoundEmit(slot)) => {
+            slot == binding.adapter_slot && binding.operation == "test.emit"
+        }
+        Some(noble_kernel::contracts::Behavior::BoundCodeExport(slot)) => {
+            slot == binding.adapter_slot && binding.operation == "test.code-export"
+        }
+        Some(noble_kernel::contracts::Behavior::BoundSend(slot)) => {
+            slot == binding.adapter_slot && binding.operation == "test.send"
+        }
+        // No other behavior, nor its absence, is a bound host operation.
+        _ => false,
+    }
 }
 
 #[expect(
@@ -2038,18 +2101,7 @@ fn adapter_matches(
             .definition_owners
             .get(adapter.definition.0 as usize)
             == Some(&Some(module_identity))
-        && (matches!(environment.kind(adapter.definition),
-            Some(noble_kernel::contracts::Behavior::BoundEmit(slot))
-                if slot == binding.adapter_slot
-                    && binding.operation == "test.emit")
-            || matches!(environment.kind(adapter.definition),
-                Some(noble_kernel::contracts::Behavior::BoundCodeExport(slot))
-                    if slot == binding.adapter_slot
-                        && binding.operation == "test.code-export")
-            || matches!(environment.kind(adapter.definition),
-                Some(noble_kernel::contracts::Behavior::BoundSend(slot))
-                    if slot == binding.adapter_slot
-                        && binding.operation == "test.send"))
+        && is_bound_behavior(environment.kind(adapter.definition), binding)
 }
 
 /// How many submitted adapter rows are exactly `adapter` under `binding`.
@@ -2085,18 +2137,7 @@ fn actual_adapter_matches(
         && actual.input == binding.input
         && actual.output == binding.output
         && actual.effects == adapter.effects
-        && (matches!(environment.kind(actual.definition),
-            Some(noble_kernel::contracts::Behavior::BoundEmit(slot))
-                if slot == binding.adapter_slot
-                    && binding.operation == "test.emit")
-            || matches!(environment.kind(actual.definition),
-                Some(noble_kernel::contracts::Behavior::BoundCodeExport(slot))
-                    if slot == binding.adapter_slot
-                        && binding.operation == "test.code-export")
-            || matches!(environment.kind(actual.definition),
-                Some(noble_kernel::contracts::Behavior::BoundSend(slot))
-                    if slot == binding.adapter_slot
-                        && binding.operation == "test.send"))
+        && is_bound_behavior(environment.kind(actual.definition), binding)
 }
 
 #[expect(

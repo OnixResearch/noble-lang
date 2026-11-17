@@ -8,6 +8,56 @@ struct StagedUnit {
 
 const DECLARED_INPUT_SOURCE_BYTES: u32 = 65_536;
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+/// Whether a scanned first token is the `module` keyword.
+fn is_module_keyword(first: Option<&crate::source::lexer::Token>) -> bool {
+    let Some(token) = first else {
+        return false;
+    };
+    let crate::source::lexer::TokenKind::Word(spelling) = &token.kind else {
+        return false;
+    };
+    spelling.as_slice() == b"module".as_slice()
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+/// Whether a staged calculator session lost its environment or grew past the
+/// calculator row limit.
+fn calculator_rows_exceeded(staged: &super::ModuleSession) -> bool {
+    staged.source.calculator
+        && staged.source.declared.as_ref().is_none_or(|context| {
+            context.environment.defs.len()
+                > noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
+        })
+}
+
+/// Authenticates a signed expression's owners against their original sources
+/// and records them as certified in the staged namespace; any other prepared
+/// unit is returned unchanged.
+fn certify_signed_expression(
+    mut prepared: super::ModulePrepared,
+) -> Result<super::ModulePrepared, crate::source::Error> {
+    if prepared.signed_expression.is_empty() {
+        return Ok(prepared);
+    }
+    attempt!(prepared.verify_signed_origins());
+    let submission = prepared.submission.as_ref().ok_or_else(|| {
+        crate::source::declared::error(
+            crate::source::Stage::Check,
+            "signed expression lacks its concrete checked submission",
+        )
+    })?;
+    prepared.staged = attempt!(prepared.staged.record_signed_certified(submission));
+    attempt!(prepared.staged.check_retained(0));
+    Ok(prepared)
+}
+
 impl super::ModuleSession {
     pub fn prepare(
         &self,
@@ -15,6 +65,61 @@ impl super::ModuleSession {
         inputs: &[noble_kernel::types::Ty],
         limits: crate::Limits,
     ) -> Result<super::ModulePrepared, crate::source::Error> {
+        let unit = attempt!(self.parse_admitted(input_bytes, limits));
+        attempt!(self.admit_calculator_environment(limits));
+        let StagedUnit {
+            session: mut staged,
+            kind,
+            submission,
+            output,
+            pending,
+        } = attempt!(self
+            .snapshot()
+            .stage_unit(unit, input_bytes, inputs, limits));
+        if calculator_rows_exceeded(&staged) {
+            return Err(crate::source::declared::diagnostic(
+                crate::source::Stage::Check,
+                crate::source::exhausted(
+                    super::super::SPAN,
+                    "calculator environment row limit exceeded",
+                ),
+            ));
+        }
+        let rebuilt_import_definitions =
+            attempt!(self.rebuild_if_import(kind, &mut staged, limits));
+        attempt!(staged.check_retained(0));
+        let signed_expression = self.retained_expression(kind, submission.as_ref(), input_bytes);
+        let prepared = super::ModulePrepared {
+            kind,
+            generation: self.generation,
+            limits,
+            previous_source_generation: self.source.generation,
+            previous_source_definitions_len: self.source.definitions.len(),
+            previous_modules: self.modules.clone(),
+            previous_aliases: self.aliases.clone(),
+            previous_next_module_identity: self.next_module_identity,
+            previous_history: self.source.history.clone(),
+            staged,
+            submission,
+            output,
+            pending,
+            signed_expression,
+            rebuilt_import_definitions,
+        };
+        certify_signed_expression(prepared)
+    }
+
+    /// Admits the input bytes against the declared and retained budgets, then
+    /// parses them; a definition must also fit once retained.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
+    fn parse_admitted(
+        &self,
+        input_bytes: &[u8],
+        limits: crate::Limits,
+    ) -> Result<crate::source::declared::parsing::ParsedUnit, crate::source::Error> {
         // DX-MODULE-05 caps ordinary declared inputs; the separately selected
         // calculator profile keeps its own per-input and clone budgets.
         if !self.source.calculator && limits.bytes > DECLARED_INPUT_SOURCE_BYTES {
@@ -48,25 +153,7 @@ impl super::ModuleSession {
         // Only modules retain the candidate source. If the aggregate would overflow,
         // classify the first lexical token before parsing or cloning prior sources.
         if let Err(error) = self.check_retained(input_bytes.len()) {
-            let mut meter = crate::Meter::pooled(limits, self.source.request_work());
-            let mut scanner = attempt!(crate::source::lexer::Scanner::new_declared(
-                input_bytes,
-                &mut meter,
-            )
-            .map_err(|problem| crate::source::declared::diagnostic(
-                crate::source::Stage::Parse,
-                problem
-            )));
-            let first = attempt!(scanner.next(&mut meter).map_err(|problem| {
-                crate::source::declared::diagnostic(crate::source::Stage::Parse, problem)
-            }));
-            if matches!(first, Some(crate::source::lexer::Token {
-                kind: crate::source::lexer::TokenKind::Word(ref spelling),
-                ..
-            }) if spelling == b"module")
-            {
-                return Err(error);
-            }
+            attempt!(self.refuse_retained_module(input_bytes, limits, error));
         }
         let unit = attempt!(crate::source::declared::parsing::parse(
             input_bytes,
@@ -88,74 +175,59 @@ impl super::ModuleSession {
             }));
             attempt!(self.check_retained(extra));
         }
-        if self.source.calculator {
-            let environment = attempt!(self.source.declared.as_ref().ok_or_else(|| {
-                crate::source::declared::diagnostic(
-                    crate::source::Stage::Check,
-                    crate::source::exhausted(
-                        super::super::SPAN,
-                        "calculator source environment missing",
-                    ),
-                )
-            }));
-            if environment.environment.defs.len()
-                > noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
-            {
-                return Err(crate::source::declared::diagnostic(
-                    crate::source::Stage::Check,
-                    crate::source::exhausted(
-                        super::super::SPAN,
-                        "calculator environment row limit exceeded",
-                    ),
-                ));
-            }
-            let budget = attempt!(environment
-                .environment
-                .calculator_clone_budget()
-                .ok_or_else(|| crate::source::declared::diagnostic(
-                    crate::source::Stage::Check,
-                    crate::source::exhausted(
-                        super::super::SPAN,
-                        "calculator environment clone bound exceeded"
-                    )
-                )));
-            let copies =
-                attempt!(budget
-                    .reserved_bytes
-                    .checked_mul(2)
-                    .filter(|total| *total
-                        <= noble_kernel::contracts::CALCULATOR_ENV_CLONE_FANOUT_LIMIT)
-                    .ok_or_else(|| crate::source::declared::diagnostic(
-                        crate::source::Stage::Check,
-                        crate::source::exhausted(
-                            super::super::SPAN,
-                            "calculator environment clone fanout exceeded"
-                        )
-                    )));
-            if copies > u64::from(limits.work) {
-                return Err(crate::source::declared::diagnostic(
-                    crate::source::Stage::Check,
-                    crate::source::exhausted(
-                        super::super::SPAN,
-                        "calculator environment clone work exceeded",
-                    ),
-                ));
-            }
+        Ok(unit)
+    }
+
+    /// Refuses with `error` a unit whose first lexical token is `module`:
+    /// only a module retains its candidate source.
+    fn refuse_retained_module(
+        &self,
+        input_bytes: &[u8],
+        limits: crate::Limits,
+        error: crate::source::Error,
+    ) -> Result<(), crate::source::Error> {
+        let mut meter = crate::Meter::pooled(limits, self.source.request_work());
+        let mut scanner = attempt!(crate::source::lexer::Scanner::new_declared(
+            input_bytes,
+            &mut meter,
+        )
+        .map_err(|problem| crate::source::declared::diagnostic(
+            crate::source::Stage::Parse,
+            problem
+        )));
+        let first = attempt!(scanner.next(&mut meter).map_err(|problem| {
+            crate::source::declared::diagnostic(crate::source::Stage::Parse, problem)
+        }));
+        if is_module_keyword(first.as_ref()) {
+            return Err(error);
         }
-        let StagedUnit {
-            session: mut staged,
-            kind,
-            submission,
-            output,
-            pending,
-        } = attempt!(self
-            .snapshot()
-            .stage_unit(unit, input_bytes, inputs, limits));
-        if staged.source.calculator
-            && staged.source.declared.as_ref().is_none_or(|context| {
-                context.environment.defs.len()
-                    > noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
-            })
+        Ok(())
+    }
+
+    /// The calculator profile's environment row, clone and clone-work
+    /// budgets; no other profile has them.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
+    fn admit_calculator_environment(
+        &self,
+        limits: crate::Limits,
+    ) -> Result<(), crate::source::Error> {
+        if !self.source.calculator {
+            return Ok(());
+        }
+        let environment = attempt!(self.source.declared.as_ref().ok_or_else(|| {
+            crate::source::declared::diagnostic(
+                crate::source::Stage::Check,
+                crate::source::exhausted(
+                    super::super::SPAN,
+                    "calculator source environment missing",
+                ),
+            )
+        }));
+        if environment.environment.defs.len()
+            > noble_kernel::contracts::CALCULATOR_ENVIRONMENT_ROW_LIMIT
         {
             return Err(crate::source::declared::diagnostic(
                 crate::source::Stage::Check,
@@ -165,53 +237,76 @@ impl super::ModuleSession {
                 ),
             ));
         }
-        let rebuilt_import_definitions = if kind == super::ModuleKind::Import {
-            attempt!(self.rebuild_import_alias(&mut staged, limits))
-        } else {
-            None
-        };
-        attempt!(staged.check_retained(0));
-        let signed_expression = if kind == super::ModuleKind::Expression
-            && (self
-                .source
-                .declared
-                .as_ref()
-                .is_some_and(|context| context.declared_text)
-                || has_signed_self_body(submission.as_ref()))
-        {
+        let budget = attempt!(environment
+            .environment
+            .calculator_clone_budget()
+            .ok_or_else(|| crate::source::declared::diagnostic(
+                crate::source::Stage::Check,
+                crate::source::exhausted(
+                    super::super::SPAN,
+                    "calculator environment clone bound exceeded"
+                )
+            )));
+        let copies = attempt!(budget
+            .reserved_bytes
+            .checked_mul(2)
+            .filter(|total| *total <= noble_kernel::contracts::CALCULATOR_ENV_CLONE_FANOUT_LIMIT)
+            .ok_or_else(|| crate::source::declared::diagnostic(
+                crate::source::Stage::Check,
+                crate::source::exhausted(
+                    super::super::SPAN,
+                    "calculator environment clone fanout exceeded"
+                )
+            )));
+        if copies > u64::from(limits.work) {
+            return Err(crate::source::declared::diagnostic(
+                crate::source::Stage::Check,
+                crate::source::exhausted(
+                    super::super::SPAN,
+                    "calculator environment clone work exceeded",
+                ),
+            ));
+        }
+        Ok(())
+    }
+
+    /// The checked transitive dependent rebuild of an import rebind; no
+    /// other unit has one.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
+    fn rebuild_if_import(
+        &self,
+        kind: super::ModuleKind,
+        staged: &mut Self,
+        limits: crate::Limits,
+    ) -> Result<Option<alloc::vec::Vec<super::RebuiltImportDefinition>>, crate::source::Error> {
+        if kind != super::ModuleKind::Import {
+            return Ok(None);
+        }
+        self.rebuild_import_alias(staged, limits)
+    }
+
+    /// The expression bytes kept for signed source rederivation: only a
+    /// declared-text or signed-self expression retains them.
+    fn retained_expression(
+        &self,
+        kind: super::ModuleKind,
+        submission: Option<&noble_kernel::execution::Submission>,
+        input_bytes: &[u8],
+    ) -> alloc::vec::Vec<u8> {
+        let is_retained = kind == super::ModuleKind::Expression
+            && (self.declared_text() || has_signed_self_body(submission));
+        if is_retained {
             input_bytes.to_vec()
         } else {
             alloc::vec::Vec::new()
-        };
-        let mut prepared = super::ModulePrepared {
-            kind,
-            generation: self.generation,
-            limits,
-            previous_source_generation: self.source.generation,
-            previous_source_definitions_len: self.source.definitions.len(),
-            previous_modules: self.modules.clone(),
-            previous_aliases: self.aliases.clone(),
-            previous_next_module_identity: self.next_module_identity,
-            previous_history: self.source.history.clone(),
-            staged,
-            submission,
-            output,
-            pending,
-            signed_expression,
-            rebuilt_import_definitions,
-        };
-        if !prepared.signed_expression.is_empty() {
-            attempt!(prepared.verify_signed_origins());
-            let submission = prepared.submission.as_ref().ok_or_else(|| {
-                crate::source::declared::error(
-                    crate::source::Stage::Check,
-                    "signed expression lacks its concrete checked submission",
-                )
-            })?;
-            prepared.staged = attempt!(prepared.staged.record_signed_certified(submission));
-            attempt!(prepared.staged.check_retained(0));
         }
-        Ok(prepared)
     }
 
     fn stage_unit(
@@ -633,20 +728,37 @@ impl Selection {
         let mut charged = if is_selected { Some(remaining) } else { None };
         let mut local = 0usize;
         while charged.is_some() && local < proofs.len() {
-            let candidate = &proofs[local].reference;
-            if uses(term, &candidate.name) {
-                charged = match charged {
-                    Some((bytes, nodes)) => charge_dependency(candidate, bytes, nodes),
-                    None => None,
-                };
-                if charged.is_some() && !self.push(index) {
-                    charged = None;
-                }
-            }
+            let (next, is_used) = charge_if_used(term, &proofs[local].reference, charged);
+            charged = self.push_charged(index, next, is_used);
             index += 1;
             local += 1;
         }
         charged
+    }
+
+    /// Selects a used local candidate once its closure was charged; `None`
+    /// when the charge failed or every candidate is already selected. An
+    /// unused candidate leaves the charge unchanged. The loop calls this on
+    /// every step, so no branch of it holds the exclusive borrow.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    fn push_charged(
+        &mut self,
+        index: usize,
+        charged: Option<(usize, usize)>,
+        is_used: bool,
+    ) -> Option<(usize, usize)> {
+        if !is_used {
+            return charged;
+        }
+        let remaining = charged?;
+        if self.push(index) {
+            Some(remaining)
+        } else {
+            None
+        }
     }
 
     /// Records one selected candidate index, or refuses once every candidate
@@ -721,17 +833,33 @@ fn charge_obligation(
 ) -> Option<(usize, usize)> {
     let mut charged = charge_batch_source(batch, remaining);
     let mut dependency_at = 0usize;
-    while dependency_at < batch.dependencies.len() {
-        let Some((bytes, nodes)) = charged else {
-            break;
-        };
+    while charged.is_some() && dependency_at < batch.dependencies.len() {
         let imported = &batch.dependencies[dependency_at];
-        if uses(&obligation.term, &imported.name) {
-            charged = charge_dependency(imported, bytes, nodes);
-        }
+        (charged, _) = charge_if_used(&obligation.term, imported, charged);
         dependency_at += 1;
     }
     charged
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+/// Charges the closure of `proof` when `term` uses it, reporting whether it
+/// does; an unused proof leaves the budget untouched.
+fn charge_if_used(
+    term: &crate::intrinsic::Form,
+    proof: &crate::intrinsic::ProofDependency,
+    charged: Option<(usize, usize)>,
+) -> (Option<(usize, usize)>, bool) {
+    if !uses(term, &proof.name) {
+        return (charged, false);
+    }
+    let charged = match charged {
+        Some((bytes, nodes)) => charge_dependency(proof, bytes, nodes),
+        None => None,
+    };
+    (charged, true)
 }
 
 /// Charges the batch source bytes and one node for an obligation.
@@ -755,11 +883,22 @@ fn source_claims_differ(
     let mut is_different = false;
     let mut at = 0usize;
     while !is_different && at < checked.len() && at < source_checked.len() {
-        is_different = checked[at].claim != source_checked[at].claim
-            || checked[at].lean_term != source_checked[at].lean_term;
+        is_different = claim_differs(&checked[at], &source_checked[at]);
         at += 1;
     }
     is_different
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+/// Whether a host result's claim or term differs from the source-checked one.
+fn claim_differs(
+    result: &crate::intrinsic::CheckedProof,
+    source: &crate::intrinsic::CheckedProof,
+) -> bool {
+    result.claim != source.claim || result.lean_term != source.lean_term
 }
 
 /// Whether a host result is not bound to its obligation, over the shorter of
@@ -790,18 +929,26 @@ fn result_differs(
     result.name != obligation.name
         || !revision(&result.model_revision)
         || !revision(&result.checker_revision)
-        || result.kind
-            != match &obligation.goal {
-                crate::intrinsic::PendingGoal::Pure { .. } => crate::intrinsic::ProofKind::Pure,
-                crate::intrinsic::PendingGoal::Contract { contract }
-                    if contract.revision == 2 && obligation.revision == 2 =>
-                {
-                    crate::intrinsic::ProofKind::NamedContract
-                }
-                crate::intrinsic::PendingGoal::Contract { .. } => {
-                    crate::intrinsic::ProofKind::Contract
-                }
+        || result.kind != expected_kind(obligation)
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+/// The proof kind an obligation's goal requires: a revision-2 contract with
+/// a revision-2 obligation is a named contract.
+fn expected_kind(obligation: &crate::intrinsic::ProofObligation) -> crate::intrinsic::ProofKind {
+    match &obligation.goal {
+        crate::intrinsic::PendingGoal::Pure { .. } => crate::intrinsic::ProofKind::Pure,
+        crate::intrinsic::PendingGoal::Contract { contract } => {
+            if contract.revision == 2 && obligation.revision == 2 {
+                crate::intrinsic::ProofKind::NamedContract
+            } else {
+                crate::intrinsic::ProofKind::Contract
             }
+        }
+    }
 }
 
 /// Whether `value` is 64 lowercase hexadecimal digits.
@@ -1303,5 +1450,50 @@ mod tests {
         );
         // The first used local closure costs four bytes, so three refuse it.
         assert_eq!(selection.select(&term, &batch, &proofs, (3, 10_000)), None);
+    }
+
+    /// Once the retained sources fill their cap, the first lexical token
+    /// classifies a unit before the rest is scanned: a module is refused by the
+    /// retained budget even when a later token is malformed, a definition is
+    /// scanned first and reports that token, and an expression, which retains
+    /// nothing, still prepares.
+    #[test]
+    fn retained_overflow_refuses_only_modules_before_parsing() {
+        let limits = crate::Limits {
+            bytes: 65_536,
+            nodes: 16_384,
+            depth: 64,
+            work: 2_000_000,
+        };
+        let first: &[u8] = b"module a@1 [ export one def one [ 1 + ] ]";
+        let cap = u32::try_from(first.len()).expect("small module");
+        let retained =
+            crate::source::RetainedSourceLimit::new(cap).expect("valid retained source bound");
+        let session = ModuleSession::new(&[], retained).expect("source session");
+        let prepared = session
+            .prepare(first, &[], limits)
+            .expect("the first module fits the cap exactly");
+        let (session, linked) = session.commit(prepared);
+        linked.expect("the first module commits");
+        let module = session
+            .prepare(b"module b@1 [ \"", &[], limits)
+            .expect_err("a full session refuses another module");
+        assert_eq!(module.stage(), crate::source::Stage::Check, "{module:?}");
+        assert_eq!(
+            module.diagnostic().kind,
+            crate::DiagnosticKind::Exhausted,
+            "{module:?}"
+        );
+        let definition = session
+            .prepare(b"def x [ \"", &[], limits)
+            .expect_err("an unterminated text literal is refused");
+        assert_eq!(
+            definition.stage(),
+            crate::source::Stage::Parse,
+            "{definition:?}"
+        );
+        session
+            .prepare(b"1", &[], limits)
+            .expect("an expression retains no source");
     }
 }
