@@ -4,7 +4,7 @@
 `verification/m5/discovery.tar.gz` and its extraction receipt predate #97 and
 record Aeneas `505b6ca`. The profile's `aeneas_revision: 1238879f` names the
 selected **Lean library for compiling the archived subject**; it does not
-re-extract the archive or make it a current-kernel receipt. The four aliases
+re-extract the archive or make it a current-kernel receipt. The four compatibility declarations
 in `verification/m5-archived-library-compatibility.lean` are appended only to
 the temporary archive replay, never to checked-in current proof sources.
 Retained proof receipts record their own earlier source and Lean versions.
@@ -36,6 +36,8 @@ worktree. `--allow-dirty` records a dirty run instead of refusing it, but does n
    historical extraction receipt `verification/m5/extraction.json`. It compiles them anew; archived
    `.olean` files are never imported. The pinned Lean executable and the Aeneas/Mathlib
    checkouts must match the M5 lake manifest.
+   Builds select `lake --no-cache build`: the checked local dependency sources are used without
+   attempting an optional upstream release download. The strict build-diagnostic guard is unchanged.
 2. **Statements, subjects and axioms.** Every theorem in
    [`M5Authority.lean`](../../proofs/m5/M5Authority.lean) must appear in
    [the inventory](../../proofs/m5/authority-inventory.json), and the reverse. The inventory pins
@@ -84,6 +86,33 @@ the terminating quota scan and witness-retirement loop, the per-check validator 
 commit steps, the quota frames, and three `countP` list lemmas.
 
 ## Retained runs
+
+### 2026-11-17: archived replay at `879bfd66`
+
+[`receipt-20261117-879bfd66.json`](receipt-20261117-879bfd66.json) records a clean-source Lean
+4.35.0 replay of **95** unchanged inventoried theorems, all ten specification pins and all seven
+mutation controls. Each mutated generated kernel compiled, every required target lost strict
+axioms, and the remaining strict-theorem counts were 89, 85, 93, 93, 84, 85 and 87 in the profile's
+control order. The binding remains seven exact authority files plus the six reachable item-text
+declarations in types.rs; the archive and archive-only compatibility hook were not changed.
+
+[`control-20261117-879bfd66-pins.json`](control-20261117-879bfd66-pins.json) records the deliberate
+three-pin negative control. The checker refused exactly the weakened ledger statement, emptied
+exact-plan subject set and weakened ledger specification. Only the inventory expectations were
+temporarily changed; their original bytes and the clean source state were restored afterward.
+
+The same clean commit also produced these separate lane receipts:
+
+| Lane | Result | Receipt |
+|---|---|---|
+| Region table | 30 table-refinement theorems over the archived subject, plus four reused roots | [receipt](../region-table/receipt-20261117-879bfd66.json) |
+| Host locality | 43 bounded model theorems, plus five reused M5 roots; no fresh host execution | [proof receipt](../host-locality/proof-20261117-879bfd66.json) |
+| Nested session | 193 handwritten-model theorems; no implementation or runtime correspondence | [receipt](../nested-session/receipt-20261117-879bfd66.json) |
+
+[`owned-checks-20261117-879bfd66.json`](owned-checks-20261117-879bfd66.json) records the exact four
+commands and their zero exits. These are new compilations and audits of the selected subjects,
+**not** a fresh Rust extraction or a reclassification of the immutable M5 archive as current output.
+All earlier receipts below remain unchanged.
 
 ### `af46d978d`: [receipt-af46d978d.json](receipt-af46d978d.json)
 

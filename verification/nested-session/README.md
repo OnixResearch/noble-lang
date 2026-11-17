@@ -14,6 +14,8 @@ env -i HOME="$HOME" USER="$USER" LOGNAME="$USER" PATH=/run/current-system/sw/bin
 Same refusals as the region-trace harness: a caller environment carrying `LEAN*`, `LAKE*`, `BASH*`,
 `GIT_*`, `NIX_*` or `ELAN*` is refused, an output directory inside the source tree is refused, and a
 dirty worktree needs the explicit `--allow-dirty` flag (which the receipt then records).
+The isolated model build uses `lake --no-cache build`; no release-cache fetch or compatibility
+alias is needed by this handwritten model.
 
 ## What is modelled and proved
 
@@ -86,8 +88,10 @@ declared stack limit, so its accepted bounded subset is finite.
 | `pact_label_set_erases_to_the_fixture`, `pact_reannotation_is_not_observable`, `pact_label_set_duality_holds`, `pact_label_set_wrong_branch_is_refused`, `pact_label_set_preserves_the_endpoint_identity`, `pact_work_bound_is_the_skeleton_bound`, `pact_factor_does_not_select` | **Pact preference-factor adjunct, default off**: an annotated table's only meaning is its erasure to the plain skeleton, so duality, wrong-branch refusal, endpoint identity preservation and the work bound are the skeleton's, and reversing the factors neither enables, refuses nor selects a label. Factors only: no utility function, decision rule or solver |
 | `vine_source_forms_denote_the_same_fixture`, `vine_source_continuation_mismatch_is_refused`, `vine_source_continuation_match_is_accepted` | **Vine source-form comparison, design examples only**: both proposed source forms denote the model's fixture, a source continuation that differs from the model's is refused with the witness trace `[send i64, recv bool]`, and the matched form is the same type. See [`vine-comparison.md`](vine-comparison.md) |
 
-`verification/nested-session/receipt-017fdf4b.json` is the retained receipt of the current
-clean-source run: **193** model theorems, every axiom inside the standard allow-list:
+`verification/nested-session/receipt-20261117-879bfd66.json` records the 2026-11-17 replay from
+clean commit `879bfd66` with Lean 4.35.0: **193** unchanged model theorems, every axiom inside the
+standard allow-list. The earlier `receipt-017fdf4b.json` and all other historical receipts remain
+unchanged. The fresh replay retains the same axiom distribution:
 - 43 theorems use no axiom, including the table check's decided controls and its definitional
   inversion lemmas, `stackState_within_the_limit`, `dualAction_is_involutive`, `StackAction.dual_dual`,
   `lookup_mem`, and the erasure equations `pact_label_set_erases_to_the_fixture` and
