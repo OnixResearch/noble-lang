@@ -134,6 +134,31 @@ let Pin = { rev | String, narHash | String } in
     producer_build = "cargo build --locked --manifest-path mm0-rs/Cargo.toml --bin mm0-rs",
     role = "opt-in-experimental-graph-certificate-only",
   },
+  # Issue #127 qualified backend: compiler-lab #220 `validate mm0-certificate`.
+  # Compiler-lab is private, so Noble records its commit and the identities of
+  # the Nix-built checker closure instead of a fetch location. Noble consumes the
+  # backend's admission report; it does not build or run this checker itself.
+  # verification/ngraph/mm0/compiler-lab-request.mjs refuses any other commit,
+  # closure, checker, pins or base theory.
+  qualified_mm0 = {
+    backend = "compiler-lab validate mm0-certificate",
+    compiler_lab_commit = "46a988bcbc3bf9b3a6296cecbef8eb4d499c454e",
+    checker_profile = "mm0-c-parser-v1",
+    obligation_profile = "ngraph-i64-wrapping-v1",
+    system = "x86_64-linux",
+    pins_sha256 = "563a90f813ec7693d19e58e36cfe63e5a7cbe816be82bf85be478db1f69ee3b0",
+    expression_sha256 = "a5c3385cb11246534cc26e64343209b5bb39a2122f1bd5ed8c83cd4772cca0ef",
+    tools_closure = "/nix/store/xkfk12m94zcdffzc98dnl57mmkyqs6y9-compiler-lab-mm0-certificate-tools",
+    closure_identity_sha256 = "9800e8c5a12b8fd5f6bd50c6e866d48a64bc52b398be83e75f28ea0c00e993d1",
+    checker_sha256 = "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+    negative_checker_sha256 = "4f690e9da63e89d8bbd90fda0da94034da3a281d7f04dccb0d8ebaf4e52afb30",
+    mm0_source_rev = "0d414c0bfdaaeb7fea571895127abc1fa5a3d956",
+    base_theory_sha256 = {
+      "peano.mm0" = "463a7d6e4f4791313dedcfd737053dcf2cc07b466371e263c38a994c6fb72052",
+      "peano_hex.mm0" = "e2f5e461c568e0e3ef784b507e9111272b38956093df98b943ccc4cd806e351b",
+    },
+    role = "opt-in-experimental-graph-certificate-only",
+  },
   owned_wasm_runtime = {
     assets | Array String = [
       "crates/noble-wasm/runtime/accounting.wat",

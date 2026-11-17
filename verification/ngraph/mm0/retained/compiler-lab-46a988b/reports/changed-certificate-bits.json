@@ -1,0 +1,1724 @@
+{
+  "admission": {
+    "accepted": false,
+    "checker_stage": null,
+    "outcome": "refused",
+    "refused_stages": [
+      "claim-reconstruction",
+      "subject-identity"
+    ],
+    "stage": "claim-reconstruction"
+  },
+  "authority": "An accepted MM0 certificate is experimental model-level evidence for the reconstructed claim only. It grants no Lean admission, no other evidence family's authority, no deployment gate, and no promotion.",
+  "binding": {
+    "files": {
+      "generator-receipt": "3ee2ccf85ec152eb3af0b10c5f1aaf1aeec09915fc80b29bacb45741181b4103",
+      "original-request.json": "31a9b9bcbcf4495853ed835dbeb0d0419a34c33d96d22f8c6a39cc9fd5adefe0",
+      "proof.mmb": "2ced26177614e3af86ed74fb92c4ad3ef43d3d249512a357652f9b2111a56860",
+      "request.json": "cfebc499a5ead332b854483cec0cfe14115e8304d718d329fdbc31ca652d5c3b",
+      "specification.mm0": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+      "subjects/boundary/after.graph": "e01ec5c72c0497a37b233270effb98d2b751ae1b04ea14b002a7fa1cdd4026c5",
+      "subjects/boundary/before.graph": "af8c7a8872b8cd53b61d52e2b47dcb67e19211518ad34af057e8d1c4f6883870",
+      "subjects/boundary/certificate.wire": "f0da255c6b5b1f665c1d87e0e82c5eb7509e0e3c7bd4042f2dbcde6c13f1d749",
+      "subjects/small/after.graph": "221caaec0bb54ffcf84b22c37de383d0427a42f2ee871b6b915ab4f3c29a3a40",
+      "subjects/small/before.graph": "3dd69fc4527c12d40cecf542a4d8e248db02ae7901b25321fad084489ec2c000",
+      "subjects/small/certificate.wire": "948b038c48f691989f1a400a326434014ecf30761a700862ac7c8e38955b8d5e",
+      "theory.mm0": "66dab1e31835d93fe4e9ac44aabfad084655d643dbdfa80f736b56b1c288d8f9"
+    },
+    "frozen_sha256": "0989392a15949c185b7c991b1b3dcf44feab525e8b6031d686644e8a0e649735",
+    "kind": "compiler-lab-mm0-certificate-binding",
+    "request_sha256": "31a9b9bcbcf4495853ed835dbeb0d0419a34c33d96d22f8c6a39cc9fd5adefe0",
+    "schema": 1
+  },
+  "checks": [
+    {
+      "detail": "The frozen request names one supported profile, a nonempty inventory, and exact digests.",
+      "stage": "request",
+      "verdict": "passed"
+    },
+    {
+      "detail": "The frozen checker settings equal the qualified parser-enabled profile.",
+      "stage": "checker-profile",
+      "verdict": "passed"
+    },
+    {
+      "detail": "The closure is the canonical pinned derivation and the checker binary is qualified.",
+      "stage": "checker-identity",
+      "verdict": "passed"
+    },
+    {
+      "detail": "The flattened specification follows the pinned MM0 statement grammar.",
+      "stage": "specification-parse",
+      "verdict": "passed"
+    },
+    {
+      "detail": "Every axiom is an approved pinned base-theory declaration, and none proves an arbitrary proposition.",
+      "stage": "assumption-policy",
+      "verdict": "passed"
+    },
+    {
+      "detail": "The caller definitions equal the frozen definitions.",
+      "stage": "definitions",
+      "verdict": "passed"
+    },
+    {
+      "detail": "The interpretation reads wrapping I64 add and mul as Peano operations modulo 2^64.",
+      "stage": "interpretation",
+      "verdict": "passed"
+    },
+    {
+      "detail": "Every frozen theorem is present exactly, and no axiom states one.",
+      "stage": "obligations",
+      "verdict": "passed"
+    },
+    {
+      "detail": "The subject small certificate does not replay: The certified value 9 is not the 64-bit wrapping sum.",
+      "findings": [
+        "The subject small certificate does not replay: The certified value 9 is not the 64-bit wrapping sum",
+        "The obligation ufold_small does not state the subject claim: The stated fold (add 3 5) = 8 differs from the certified fold (add 3 5) = 9"
+      ],
+      "stage": "claim-reconstruction",
+      "verdict": "refused"
+    },
+    {
+      "detail": "The specification is the exact flattening of the caller theory and the pinned base theory.",
+      "stage": "theory-authentication",
+      "verdict": "passed"
+    },
+    {
+      "detail": "The theory and flattened specification bytes equal the frozen digests.",
+      "stage": "specification-identity",
+      "verdict": "passed"
+    },
+    {
+      "detail": "The small certificate digest 948b038c48f691989f1a400a326434014ecf30761a700862ac7c8e38955b8d5e differs from the frozen digest.",
+      "findings": [
+        "The small certificate digest 948b038c48f691989f1a400a326434014ecf30761a700862ac7c8e38955b8d5e differs from the frozen digest"
+      ],
+      "stage": "subject-identity",
+      "verdict": "refused"
+    },
+    {
+      "detail": "The pinned parser-enabled checker verified every theorem of the specification.",
+      "stage": "logical-check",
+      "verdict": "passed"
+    }
+  ],
+  "claim_descriptor": {
+    "abstract_definitions": [
+      "ifp",
+      "if",
+      "div",
+      "mod",
+      "fst",
+      "snd",
+      "Sum",
+      "rec",
+      "obind",
+      "pow",
+      "sn",
+      "ins",
+      "sep",
+      "srec",
+      "srecp",
+      "card",
+      "lrec",
+      "lmems",
+      "len",
+      "append",
+      "snoc",
+      "nth",
+      "repeat",
+      "map",
+      "ljoin"
+    ],
+    "approved_axioms": 49,
+    "checker_profile": "mm0-c-parser-v1",
+    "definitions": [
+      "def modulus: nat = $ x1 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 $;",
+      "def uadd (a b: nat): nat = $ (a + b) % modulus $;",
+      "def umul (a b: nat): nat = $ (a * b) % modulus $;",
+      "def wmax: nat = $ x7 :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf $;",
+      "def wmin: nat = $ x8 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 $;"
+    ],
+    "evidence_kind": "fresh-mm0-c-check",
+    "input_domain": "Every natural number for each theorem binder. Each I64 input embeds as its unsigned residue below 2^64.",
+    "kind": "compiler-lab-claim-descriptor",
+    "obligation_profile": "ngraph-i64-wrapping-v1",
+    "observable_outputs": "Every ordered output of both graphs",
+    "preconditions": [],
+    "propositions": [
+      {
+        "declaration": "theorem endpoint_small (a: nat): $ 3 : 5 : umul a (uadd 3 5) : 0 = 3 : 5 : umul a 8 : 0 $;",
+        "role": "endpoint-equivalence",
+        "subject": "small"
+      },
+      {
+        "declaration": "theorem endpoint_boundary (a: nat): $ wmax : 1 : umul a (uadd wmax 1) : 0 = wmax : 1 : umul a wmin : 0 $;",
+        "role": "endpoint-equivalence",
+        "subject": "boundary"
+      },
+      {
+        "declaration": "theorem ufold_small: $ uadd 3 5 = 8 $;",
+        "role": "fold-fact",
+        "subject": "small"
+      },
+      {
+        "declaration": "theorem ufold_boundary: $ uadd wmax 1 = wmin $;",
+        "role": "fold-fact",
+        "subject": "boundary"
+      },
+      {
+        "declaration": "theorem fold_small: $ 3 + 5 = 8 $;",
+        "role": "lemma"
+      },
+      {
+        "declaration": "theorem fold_boundary: $ (x7 :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf) + 1 = (x8 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0) $;",
+        "role": "lemma"
+      }
+    ],
+    "quantifiers": "One universally quantified nat binder per graph input slot, with no hypothesis.",
+    "reconstructed_claims": [
+      {
+        "inputs": [
+          "a"
+        ],
+        "matched": true,
+        "obligation": "endpoint_small",
+        "original_outputs": [
+          "3",
+          "5",
+          "(mul input0 (add 3 5))"
+        ],
+        "rewritten_outputs": [
+          "3",
+          "5",
+          "(mul input0 8)"
+        ],
+        "role": "endpoint-equivalence",
+        "subject": "small"
+      },
+      {
+        "inputs": [
+          "a"
+        ],
+        "matched": true,
+        "obligation": "endpoint_boundary",
+        "original_outputs": [
+          "9223372036854775807",
+          "1",
+          "(mul input0 (add 9223372036854775807 1))"
+        ],
+        "rewritten_outputs": [
+          "9223372036854775807",
+          "1",
+          "(mul input0 9223372036854775808)"
+        ],
+        "role": "endpoint-equivalence",
+        "subject": "boundary"
+      },
+      {
+        "detail": "The stated fold (add 3 5) = 8 differs from the certified fold (add 3 5) = 9",
+        "matched": false,
+        "obligation": "ufold_small",
+        "role": "fold-fact",
+        "subject": "small"
+      },
+      {
+        "certified": {
+          "claimed": 9223372036854775808,
+          "first_bits": 9223372036854775807,
+          "node": 3,
+          "operands": [
+            1,
+            2
+          ],
+          "second_bits": 1
+        },
+        "matched": true,
+        "obligation": "ufold_boundary",
+        "role": "fold-fact",
+        "step": 0,
+        "subject": "boundary"
+      }
+    ],
+    "representation_relation": {
+      "modulus": "modulus",
+      "operations": {
+        "i64.add": "uadd",
+        "i64.mul": "umul"
+      },
+      "outputs": "All ordered outputs as one cons list that ends in 0",
+      "sharing": "Shared graph nodes unfold into repeated subterms",
+      "word": "I64 bits b denote the natural number b below 2^64"
+    },
+    "schema": 1,
+    "specification": {
+      "base_theory": {
+        "peano.mm0": "463a7d6e4f4791313dedcfd737053dcf2cc07b466371e263c38a994c6fb72052",
+        "peano_hex.mm0": "e2f5e461c568e0e3ef784b507e9111272b38956093df98b943ccc4cd806e351b"
+      },
+      "flattened_sha256": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+      "mm0_revision": "0d414c0bfdaaeb7fea571895127abc1fa5a3d956",
+      "theory_sha256": "66dab1e31835d93fe4e9ac44aabfad084655d643dbdfa80f736b56b1c288d8f9"
+    },
+    "subjects": [
+      {
+        "after_sha256": "221caaec0bb54ffcf84b22c37de383d0427a42f2ee871b6b915ab4f3c29a3a40",
+        "before_sha256": "3dd69fc4527c12d40cecf542a4d8e248db02ae7901b25321fad084489ec2c000",
+        "certificate_format": "ngraph-cert/0 ngraph-sem/0",
+        "certificate_sha256": "33117f988d5d1e708a233b29dfafaa0ece27cfce37c902b47c1bd3852eca90c6",
+        "name": "small",
+        "representation": "ngraph-ir/0 ngraph-i64/0"
+      },
+      {
+        "after_sha256": "e01ec5c72c0497a37b233270effb98d2b751ae1b04ea14b002a7fa1cdd4026c5",
+        "before_sha256": "af8c7a8872b8cd53b61d52e2b47dcb67e19211518ad34af057e8d1c4f6883870",
+        "certificate_format": "ngraph-cert/0 ngraph-sem/0",
+        "certificate_sha256": "f0da255c6b5b1f665c1d87e0e82c5eb7509e0e3c7bd4042f2dbcde6c13f1d749",
+        "name": "boundary",
+        "representation": "ngraph-ir/0 ngraph-i64/0"
+      }
+    ],
+    "target": "No target or ABI. The claim concerns the graph model only."
+  },
+  "controls": {
+    "complete": true,
+    "failed": 0,
+    "held": 23,
+    "passed": true,
+    "presented_proof_checked": true,
+    "required": [
+      "mmb-sorry",
+      "arbitrary-axiom",
+      "arbitrary-axiom-named-sorry",
+      "different-theorem",
+      "different-proof-frozen-specification",
+      "extra-axiom",
+      "changed-axiom-formula",
+      "renamed-axiom",
+      "changed-definition",
+      "missing-obligation",
+      "weaker-postcondition",
+      "stronger-precondition",
+      "reordered-outputs",
+      "unrelated-endpoint",
+      "changed-shared-use",
+      "changed-consumed-bits",
+      "stale-subject",
+      "truncated-proof",
+      "malformed-proof",
+      "no-parser-checker",
+      "changed-checker-settings",
+      "exhausted-address-space",
+      "exhausted-wall-clock"
+    ],
+    "results": [
+      {
+        "derived_from_submission": false,
+        "detail": "The checker rejected the proof at its sorry stage: some theorems used sorry.",
+        "expected": {
+          "checker_stages": [
+            "sorry"
+          ],
+          "finding": null,
+          "raw_checker": null,
+          "stage": "logical-check",
+          "verdict": "refused"
+        },
+        "name": "mmb-sorry",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000006-mm0-check-control-mmb-sorry",
+            "elapsed_ms": 6,
+            "exit_code": 3,
+            "label": "control-mmb-sorry",
+            "peak_rss_kib": 1116,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "message": "some theorems used sorry",
+              "stage": "sorry",
+              "verdict": "rejected"
+            }
+          },
+          "first_stage": "assumption-policy",
+          "refused_stages": [
+            "assumption-policy",
+            "definitions",
+            "interpretation",
+            "obligations",
+            "claim-reconstruction",
+            "theory-authentication",
+            "specification-identity",
+            "subject-identity",
+            "logical-check"
+          ],
+          "stage_findings": [
+            "checker stage sorry"
+          ]
+        },
+        "passed": true,
+        "purpose": "A proof stream with the MMB Sorry opcode must fail in the checker itself."
+      },
+      {
+        "derived_from_submission": false,
+        "detail": "The axiom oracle_any concludes an arbitrary proposition: axiom oracle_any ( p : wff ) : $ p $ ;.",
+        "expected": {
+          "checker_stages": [],
+          "finding": "concludes an arbitrary proposition",
+          "raw_checker": "accepted",
+          "stage": "assumption-policy",
+          "verdict": "refused"
+        },
+        "name": "arbitrary-axiom",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000007-mm0-check-control-arbitrary-axiom",
+            "elapsed_ms": 5,
+            "exit_code": 0,
+            "label": "control-arbitrary-axiom",
+            "peak_rss_kib": 860,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "verdict": "accepted"
+            }
+          },
+          "first_stage": "assumption-policy",
+          "refused_stages": [
+            "assumption-policy",
+            "definitions",
+            "interpretation",
+            "obligations",
+            "claim-reconstruction",
+            "theory-authentication",
+            "specification-identity",
+            "subject-identity"
+          ],
+          "stage_findings": [
+            "The axiom oracle_any concludes an arbitrary proposition: axiom oracle_any ( p : wff ) : $ p $ ;",
+            "The approved axiom is absent from the specification: axiom add0 ( a : nat ) : $ a + 0 = a $ ;",
+            "The approved axiom is absent from the specification: axiom addS ( a b : nat ) : $ a + suc b = suc (a + b) $ ;",
+            "The approved axiom is absent from the specification: axiom addeq ( a b c d : nat ) : $ a = b -> c = d -> a + c = b + d $ ;",
+            "The approved axiom is absent from the specification: axiom ax_1 ( a b : wff ) : $ a -> b -> a $ ;",
+            "The approved axiom is absent from the specification: axiom ax_10 { x : nat } ( p : wff x ) : $ ~(A. x p) -> A. x ~(A. x p) $ ;",
+            "The approved axiom is absent from the specification: axiom ax_11 { x y : nat } ( p : wff x y ) : $ A. x A. y p -> A. y A. x p $ ;",
+            "The approved axiom is absent from the specification: axiom ax_12 { x : nat } ( a : nat ) ( p : wff x ) : $ x = a -> p -> A. x (x = a -> p) $ ;",
+            "The approved axiom is absent from the specification: axiom ax_2 ( a b c : wff ) : $ (a -> b -> c) -> (a -> b) -> a -> c $ ;",
+            "The approved axiom is absent from the specification: axiom ax_3 ( a b : wff ) : $ (~a -> ~b) -> b -> a $ ;",
+            "The approved axiom is absent from the specification: axiom ax_4 { x : nat } ( p q : wff x ) : $ A. x (p -> q) -> A. x p -> A. x q $ ;",
+            "The approved axiom is absent from the specification: axiom ax_5 { x : nat } ( p : wff ) : $ p -> A. x p $ ;",
+            "The approved axiom is absent from the specification: axiom ax_6 ( a : nat ) { x : nat } : $ E. x x = a $ ;",
+            "The approved axiom is absent from the specification: axiom ax_7 ( a b c : nat ) : $ a = b -> a = c -> b = c $ ;",
+            "The approved axiom is absent from the specification: axiom ax_8 ( a b : nat ) ( A : set ) : $ a = b -> a e. A -> b e. A $ ;",
+            "The approved axiom is absent from the specification: axiom ax_gen { x : nat } ( p : wff x ) : $ p $ > $ A. x p $ ;",
+            "The approved axiom is absent from the specification: axiom ax_mp ( a b : wff ) : $ a -> b $ > $ a $ > $ b $ ;",
+            "The approved axiom is absent from the specification: axiom c2nch ( hi lo : hex ) : $ ch hi lo = hi * 16 + lo $ ;",
+            "The approved axiom is absent from the specification: axiom c2nlt ( c : char ) : $ c < 16 * 16 $ ;",
+            "The approved axiom is absent from the specification: axiom elab ( a : nat ) { x : nat } ( p : wff x ) : $ a e. {x | p} <-> [ a / x ] p $ ;",
+            "The approved axiom is absent from the specification: axiom h2n0 : $ x0 = 0 $ ;",
+            "The approved axiom is absent from the specification: axiom h2n1 : $ x1 = 1 $ ;",
+            "The approved axiom is absent from the specification: axiom h2n2 : $ x2 = 2 $ ;",
+            "The approved axiom is absent from the specification: axiom h2n3 : $ x3 = 3 $ ;",
+            "The approved axiom is absent from the specification: axiom h2n4 : $ x4 = 4 $ ;",
+            "The approved axiom is absent from the specification: axiom h2n5 : $ x5 = 5 $ ;",
+            "The approved axiom is absent from the specification: axiom h2n6 : $ x6 = 6 $ ;",
+            "The approved axiom is absent from the specification: axiom h2n7 : $ x7 = 7 $ ;",
+            "The approved axiom is absent from the specification: axiom h2n8 : $ x8 = 8 $ ;",
+            "The approved axiom is absent from the specification: axiom h2n9 : $ x9 = 9 $ ;",
+            "The approved axiom is absent from the specification: axiom h2na : $ xa = 10 $ ;",
+            "The approved axiom is absent from the specification: axiom h2nb : $ xb = 11 $ ;",
+            "The approved axiom is absent from the specification: axiom h2nc : $ xc = 12 $ ;",
+            "The approved axiom is absent from the specification: axiom h2nd : $ xd = 13 $ ;",
+            "The approved axiom is absent from the specification: axiom h2ne : $ xe = 14 $ ;",
+            "The approved axiom is absent from the specification: axiom h2nf : $ xf = 15 $ ;",
+            "The approved axiom is absent from the specification: axiom h2nlt ( h : hex ) : $ h < 16 $ ;",
+            "The approved axiom is absent from the specification: axiom itru : $ T. $ ;",
+            "The approved axiom is absent from the specification: axiom mul0 ( a : nat ) : $ a * 0 = 0 $ ;",
+            "The approved axiom is absent from the specification: axiom mulS ( a b : nat ) : $ a * suc b = a * b + a $ ;",
+            "The approved axiom is absent from the specification: axiom muleq ( a b c d : nat ) : $ a = b -> c = d -> a * c = b * d $ ;",
+            "The approved axiom is absent from the specification: axiom peano1 ( a : nat ) : $ suc a != 0 $ ;",
+            "The approved axiom is absent from the specification: axiom peano2 ( a b : nat ) : $ suc a = suc b <-> a = b $ ;",
+            "The approved axiom is absent from the specification: axiom peano5 { x : nat } ( p : wff x ) : $ [ 0 / x ] p -> A. x (p -> [ suc x / x ] p) -> A. x p $ ;",
+            "The approved axiom is absent from the specification: axiom s2ns0 : $ s0 = 0 $ ;",
+            "The approved axiom is absent from the specification: axiom s2ns1 ( c : char ) : $ s1 c = c : 0 $ ;",
+            "The approved axiom is absent from the specification: axiom s2nsadd ( s t : string ) : $ s '+ t = s ++ t $ ;",
+            "The approved axiom is absent from the specification: axiom s2nstr ( s : string ) : $ isStr s $ ;",
+            "The approved axiom is absent from the specification: axiom the0 { x y : nat } ( A : set ) : $ ~E. y A == {x | x = y} -> the A = 0 $ ;",
+            "The approved axiom is absent from the specification: axiom theid { x : nat } ( A : set ) ( a : nat ) : $ A == {x | x = a} -> the A = a $ ;"
+          ]
+        },
+        "passed": true,
+        "purpose": "A valid derivation from a declared arbitrary-proposition axiom passes raw checking, and the assumption policy refuses it."
+      },
+      {
+        "derived_from_submission": false,
+        "detail": "The axiom sorry concludes an arbitrary proposition: axiom sorry ( p : wff ) : $ p $ ;.",
+        "expected": {
+          "checker_stages": [],
+          "finding": "The axiom sorry concludes an arbitrary proposition",
+          "raw_checker": "accepted",
+          "stage": "assumption-policy",
+          "verdict": "refused"
+        },
+        "name": "arbitrary-axiom-named-sorry",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000008-mm0-check-control-arbitrary-axiom-named-sorry",
+            "elapsed_ms": 5,
+            "exit_code": 0,
+            "label": "control-arbitrary-axiom-named-sorry",
+            "peak_rss_kib": 828,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "verdict": "accepted"
+            }
+          },
+          "first_stage": "assumption-policy",
+          "refused_stages": [
+            "assumption-policy",
+            "definitions",
+            "interpretation",
+            "obligations",
+            "claim-reconstruction",
+            "theory-authentication",
+            "specification-identity",
+            "subject-identity"
+          ],
+          "stage_findings": [
+            "The axiom sorry concludes an arbitrary proposition: axiom sorry ( p : wff ) : $ p $ ;",
+            "The approved axiom is absent from the specification: axiom add0 ( a : nat ) : $ a + 0 = a $ ;",
+            "The approved axiom is absent from the specification: axiom addS ( a b : nat ) : $ a + suc b = suc (a + b) $ ;",
+            "The approved axiom is absent from the specification: axiom addeq ( a b c d : nat ) : $ a = b -> c = d -> a + c = b + d $ ;",
+            "The approved axiom is absent from the specification: axiom ax_1 ( a b : wff ) : $ a -> b -> a $ ;",
+            "The approved axiom is absent from the specification: axiom ax_10 { x : nat } ( p : wff x ) : $ ~(A. x p) -> A. x ~(A. x p) $ ;",
+            "The approved axiom is absent from the specification: axiom ax_11 { x y : nat } ( p : wff x y ) : $ A. x A. y p -> A. y A. x p $ ;",
+            "The approved axiom is absent from the specification: axiom ax_12 { x : nat } ( a : nat ) ( p : wff x ) : $ x = a -> p -> A. x (x = a -> p) $ ;",
+            "The approved axiom is absent from the specification: axiom ax_2 ( a b c : wff ) : $ (a -> b -> c) -> (a -> b) -> a -> c $ ;",
+            "The approved axiom is absent from the specification: axiom ax_3 ( a b : wff ) : $ (~a -> ~b) -> b -> a $ ;",
+            "The approved axiom is absent from the specification: axiom ax_4 { x : nat } ( p q : wff x ) : $ A. x (p -> q) -> A. x p -> A. x q $ ;",
+            "The approved axiom is absent from the specification: axiom ax_5 { x : nat } ( p : wff ) : $ p -> A. x p $ ;",
+            "The approved axiom is absent from the specification: axiom ax_6 ( a : nat ) { x : nat } : $ E. x x = a $ ;",
+            "The approved axiom is absent from the specification: axiom ax_7 ( a b c : nat ) : $ a = b -> a = c -> b = c $ ;",
+            "The approved axiom is absent from the specification: axiom ax_8 ( a b : nat ) ( A : set ) : $ a = b -> a e. A -> b e. A $ ;",
+            "The approved axiom is absent from the specification: axiom ax_gen { x : nat } ( p : wff x ) : $ p $ > $ A. x p $ ;",
+            "The approved axiom is absent from the specification: axiom ax_mp ( a b : wff ) : $ a -> b $ > $ a $ > $ b $ ;",
+            "The approved axiom is absent from the specification: axiom c2nch ( hi lo : hex ) : $ ch hi lo = hi * 16 + lo $ ;",
+            "The approved axiom is absent from the specification: axiom c2nlt ( c : char ) : $ c < 16 * 16 $ ;",
+            "The approved axiom is absent from the specification: axiom elab ( a : nat ) { x : nat } ( p : wff x ) : $ a e. {x | p} <-> [ a / x ] p $ ;",
+            "The approved axiom is absent from the specification: axiom h2n0 : $ x0 = 0 $ ;",
+            "The approved axiom is absent from the specification: axiom h2n1 : $ x1 = 1 $ ;",
+            "The approved axiom is absent from the specification: axiom h2n2 : $ x2 = 2 $ ;",
+            "The approved axiom is absent from the specification: axiom h2n3 : $ x3 = 3 $ ;",
+            "The approved axiom is absent from the specification: axiom h2n4 : $ x4 = 4 $ ;",
+            "The approved axiom is absent from the specification: axiom h2n5 : $ x5 = 5 $ ;",
+            "The approved axiom is absent from the specification: axiom h2n6 : $ x6 = 6 $ ;",
+            "The approved axiom is absent from the specification: axiom h2n7 : $ x7 = 7 $ ;",
+            "The approved axiom is absent from the specification: axiom h2n8 : $ x8 = 8 $ ;",
+            "The approved axiom is absent from the specification: axiom h2n9 : $ x9 = 9 $ ;",
+            "The approved axiom is absent from the specification: axiom h2na : $ xa = 10 $ ;",
+            "The approved axiom is absent from the specification: axiom h2nb : $ xb = 11 $ ;",
+            "The approved axiom is absent from the specification: axiom h2nc : $ xc = 12 $ ;",
+            "The approved axiom is absent from the specification: axiom h2nd : $ xd = 13 $ ;",
+            "The approved axiom is absent from the specification: axiom h2ne : $ xe = 14 $ ;",
+            "The approved axiom is absent from the specification: axiom h2nf : $ xf = 15 $ ;",
+            "The approved axiom is absent from the specification: axiom h2nlt ( h : hex ) : $ h < 16 $ ;",
+            "The approved axiom is absent from the specification: axiom itru : $ T. $ ;",
+            "The approved axiom is absent from the specification: axiom mul0 ( a : nat ) : $ a * 0 = 0 $ ;",
+            "The approved axiom is absent from the specification: axiom mulS ( a b : nat ) : $ a * suc b = a * b + a $ ;",
+            "The approved axiom is absent from the specification: axiom muleq ( a b c d : nat ) : $ a = b -> c = d -> a * c = b * d $ ;",
+            "The approved axiom is absent from the specification: axiom peano1 ( a : nat ) : $ suc a != 0 $ ;",
+            "The approved axiom is absent from the specification: axiom peano2 ( a b : nat ) : $ suc a = suc b <-> a = b $ ;",
+            "The approved axiom is absent from the specification: axiom peano5 { x : nat } ( p : wff x ) : $ [ 0 / x ] p -> A. x (p -> [ suc x / x ] p) -> A. x p $ ;",
+            "The approved axiom is absent from the specification: axiom s2ns0 : $ s0 = 0 $ ;",
+            "The approved axiom is absent from the specification: axiom s2ns1 ( c : char ) : $ s1 c = c : 0 $ ;",
+            "The approved axiom is absent from the specification: axiom s2nsadd ( s t : string ) : $ s '+ t = s ++ t $ ;",
+            "The approved axiom is absent from the specification: axiom s2nstr ( s : string ) : $ isStr s $ ;",
+            "The approved axiom is absent from the specification: axiom the0 { x y : nat } ( A : set ) : $ ~E. y A == {x | x = y} -> the A = 0 $ ;",
+            "The approved axiom is absent from the specification: axiom theid { x : nat } ( A : set ) ( a : nat ) : $ A == {x | x = a} -> the A = a $ ;"
+          ]
+        },
+        "passed": true,
+        "purpose": "The same axiom named sorry passes raw checking, and the assumption policy still refuses it."
+      },
+      {
+        "derived_from_submission": false,
+        "detail": "The required theorem endpoint_small is missing.",
+        "expected": {
+          "checker_stages": [],
+          "finding": "is missing",
+          "raw_checker": "accepted",
+          "stage": "obligations",
+          "verdict": "refused"
+        },
+        "name": "different-theorem",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000009-mm0-check-control-different-theorem",
+            "elapsed_ms": 5,
+            "exit_code": 0,
+            "label": "control-different-theorem",
+            "peak_rss_kib": 836,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "verdict": "accepted"
+            }
+          },
+          "first_stage": "assumption-policy",
+          "refused_stages": [
+            "assumption-policy",
+            "definitions",
+            "interpretation",
+            "obligations",
+            "claim-reconstruction",
+            "theory-authentication",
+            "specification-identity",
+            "subject-identity"
+          ],
+          "stage_findings": [
+            "The required theorem endpoint_small is missing",
+            "The required theorem endpoint_boundary is missing",
+            "The required theorem ufold_small is missing",
+            "The required theorem ufold_boundary is missing",
+            "The required theorem fold_small is missing",
+            "The required theorem fold_boundary is missing",
+            "The caller theorem different is not in the frozen inventory"
+          ]
+        },
+        "passed": true,
+        "purpose": "A valid proof of another theorem against its own specification cannot satisfy the frozen inventory."
+      },
+      {
+        "derived_from_submission": true,
+        "detail": "The checker rejected the proof at its specification-match stage: sort modifiers do not match.",
+        "expected": {
+          "checker_stages": [
+            "specification-match",
+            "proof-or-specification"
+          ],
+          "finding": null,
+          "raw_checker": null,
+          "stage": "logical-check",
+          "verdict": "refused"
+        },
+        "name": "different-proof-frozen-specification",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000010-mm0-check-control-different-proof-frozen-specification",
+            "elapsed_ms": 6,
+            "exit_code": 255,
+            "label": "control-different-proof-frozen-specification",
+            "peak_rss_kib": 1092,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "message": "sort modifiers do not match",
+              "stage": "specification-match",
+              "verdict": "rejected"
+            }
+          },
+          "first_stage": "claim-reconstruction",
+          "refused_stages": [
+            "claim-reconstruction",
+            "subject-identity",
+            "logical-check"
+          ],
+          "stage_findings": [
+            "checker stage specification-match"
+          ]
+        },
+        "passed": true,
+        "purpose": "A valid proof of another theorem fails against the frozen specification inside the parser-enabled checker."
+      },
+      {
+        "derived_from_submission": true,
+        "detail": "The axiom oracle_any concludes an arbitrary proposition: axiom oracle_any ( p : wff ) : $ p $ ;.",
+        "expected": {
+          "checker_stages": [],
+          "finding": "The axiom oracle_any concludes an arbitrary proposition",
+          "raw_checker": null,
+          "stage": "assumption-policy",
+          "verdict": "refused"
+        },
+        "name": "extra-axiom",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000011-mm0-check-control-extra-axiom",
+            "elapsed_ms": 11,
+            "exit_code": 255,
+            "label": "control-extra-axiom",
+            "peak_rss_kib": 2160,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "message": "expecting an axiom",
+              "stage": "specification-match",
+              "verdict": "rejected"
+            }
+          },
+          "first_stage": "assumption-policy",
+          "refused_stages": [
+            "assumption-policy",
+            "claim-reconstruction",
+            "theory-authentication",
+            "specification-identity",
+            "subject-identity",
+            "logical-check"
+          ],
+          "stage_findings": [
+            "The axiom oracle_any concludes an arbitrary proposition: axiom oracle_any ( p : wff ) : $ p $ ;"
+          ]
+        },
+        "passed": true,
+        "purpose": "An added arbitrary-proposition axiom cannot satisfy the frozen assumptions."
+      },
+      {
+        "derived_from_submission": true,
+        "detail": "The axiom add0 is not an approved declaration: axiom add0 ( a : nat ) : $ a + 0 = 0 $ ;.",
+        "expected": {
+          "checker_stages": [],
+          "finding": "The axiom add0 is not an approved declaration",
+          "raw_checker": null,
+          "stage": "assumption-policy",
+          "verdict": "refused"
+        },
+        "name": "changed-axiom-formula",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000012-mm0-check-control-changed-axiom-formula",
+            "elapsed_ms": 6,
+            "exit_code": 255,
+            "label": "control-changed-axiom-formula",
+            "peak_rss_kib": 1408,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "message": "expression mismatch",
+              "stage": "specification-match",
+              "verdict": "rejected"
+            }
+          },
+          "first_stage": "assumption-policy",
+          "refused_stages": [
+            "assumption-policy",
+            "claim-reconstruction",
+            "theory-authentication",
+            "specification-identity",
+            "subject-identity",
+            "logical-check"
+          ],
+          "stage_findings": [
+            "The axiom add0 is not an approved declaration: axiom add0 ( a : nat ) : $ a + 0 = 0 $ ;",
+            "The approved axiom is absent from the specification: axiom add0 ( a : nat ) : $ a + 0 = a $ ;"
+          ]
+        },
+        "passed": true,
+        "purpose": "A changed formula of an approved axiom is not an approved declaration."
+      },
+      {
+        "derived_from_submission": true,
+        "detail": "The axiom peano1_renamed is not an approved declaration: axiom peano1_renamed ( a : nat ) : $ suc a != 0 $ ;.",
+        "expected": {
+          "checker_stages": [],
+          "finding": "The axiom peano1_renamed is not an approved declaration",
+          "raw_checker": "accepted",
+          "stage": "assumption-policy",
+          "verdict": "refused"
+        },
+        "name": "renamed-axiom",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000013-mm0-check-control-renamed-axiom",
+            "elapsed_ms": 12,
+            "exit_code": 0,
+            "label": "control-renamed-axiom",
+            "peak_rss_kib": 1896,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "verdict": "accepted"
+            }
+          },
+          "first_stage": "assumption-policy",
+          "refused_stages": [
+            "assumption-policy",
+            "claim-reconstruction",
+            "theory-authentication",
+            "specification-identity",
+            "subject-identity"
+          ],
+          "stage_findings": [
+            "The axiom peano1_renamed is not an approved declaration: axiom peano1_renamed ( a : nat ) : $ suc a != 0 $ ;",
+            "The approved axiom is absent from the specification: axiom peano1 ( a : nat ) : $ suc a != 0 $ ;"
+          ]
+        },
+        "passed": true,
+        "purpose": "The checker ignores axiom names, so raw checking accepts a renamed axiom. The exact declaration policy refuses it."
+      },
+      {
+        "derived_from_submission": true,
+        "detail": "The interpretation operation uadd is not 64-bit wrapping +: def uadd ( a b : nat ) : nat = $ (a * b) % modulus $ ;.",
+        "expected": {
+          "checker_stages": [],
+          "finding": "is not 64-bit wrapping +",
+          "raw_checker": null,
+          "stage": "interpretation",
+          "verdict": "refused"
+        },
+        "name": "changed-definition",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000014-mm0-check-control-changed-definition",
+            "elapsed_ms": 11,
+            "exit_code": 255,
+            "label": "control-changed-definition",
+            "peak_rss_kib": 2188,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "message": "unify failure at term",
+              "stage": "proof-or-specification",
+              "verdict": "rejected"
+            }
+          },
+          "first_stage": "definitions",
+          "refused_stages": [
+            "definitions",
+            "interpretation",
+            "claim-reconstruction",
+            "theory-authentication",
+            "specification-identity",
+            "subject-identity",
+            "logical-check"
+          ],
+          "stage_findings": [
+            "The interpretation operation uadd is not 64-bit wrapping +: def uadd ( a b : nat ) : nat = $ (a * b) % modulus $ ;"
+          ]
+        },
+        "passed": true,
+        "purpose": "A changed arithmetic definition cannot satisfy the frozen interpretation."
+      },
+      {
+        "derived_from_submission": true,
+        "detail": "The required theorem endpoint_small is missing.",
+        "expected": {
+          "checker_stages": [],
+          "finding": "is missing",
+          "raw_checker": null,
+          "stage": "obligations",
+          "verdict": "refused"
+        },
+        "name": "missing-obligation",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000015-mm0-check-control-missing-obligation",
+            "elapsed_ms": 11,
+            "exit_code": 255,
+            "label": "control-missing-obligation",
+            "peak_rss_kib": 2164,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "message": "32DDC: Save",
+              "stage": "unknown",
+              "verdict": "rejected"
+            }
+          },
+          "first_stage": "obligations",
+          "refused_stages": [
+            "obligations",
+            "claim-reconstruction",
+            "theory-authentication",
+            "specification-identity",
+            "subject-identity",
+            "logical-check"
+          ],
+          "stage_findings": [
+            "The required theorem endpoint_small is missing"
+          ]
+        },
+        "passed": true,
+        "purpose": "A specification without a required theorem cannot satisfy the frozen inventory."
+      },
+      {
+        "derived_from_submission": true,
+        "detail": "The subject small certificate does not replay: The certified value 9 is not the 64-bit wrapping sum.",
+        "expected": {
+          "checker_stages": [],
+          "finding": "does not state the subject claim",
+          "raw_checker": null,
+          "stage": "claim-reconstruction",
+          "verdict": "refused"
+        },
+        "name": "weaker-postcondition",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000016-mm0-check-control-weaker-postcondition",
+            "elapsed_ms": 6,
+            "exit_code": 255,
+            "label": "control-weaker-postcondition",
+            "peak_rss_kib": 2176,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "message": "unify failure at term",
+              "stage": "proof-or-specification",
+              "verdict": "rejected"
+            }
+          },
+          "first_stage": "claim-reconstruction",
+          "refused_stages": [
+            "claim-reconstruction",
+            "theory-authentication",
+            "specification-identity",
+            "subject-identity",
+            "logical-check"
+          ],
+          "stage_findings": [
+            "The subject small certificate does not replay: The certified value 9 is not the 64-bit wrapping sum",
+            "The obligation endpoint_small does not state the subject claim: An endpoint side is not a cons list of ordered outputs that ends in 0",
+            "The obligation ufold_small does not state the subject claim: The stated fold (add 3 5) = 8 differs from the certified fold (add 3 5) = 9"
+          ]
+        },
+        "passed": true,
+        "purpose": "A frozen endpoint obligation that states only a scalar fact does not state the subject claim."
+      },
+      {
+        "derived_from_submission": true,
+        "detail": "The subject small certificate does not replay: The certified value 9 is not the 64-bit wrapping sum.",
+        "expected": {
+          "checker_stages": [],
+          "finding": "stronger precondition",
+          "raw_checker": null,
+          "stage": "claim-reconstruction",
+          "verdict": "refused"
+        },
+        "name": "stronger-precondition",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000017-mm0-check-control-stronger-precondition",
+            "elapsed_ms": 6,
+            "exit_code": 255,
+            "label": "control-stronger-precondition",
+            "peak_rss_kib": 2172,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "message": "unfinished hypothesis stack",
+              "stage": "proof-or-specification",
+              "verdict": "rejected"
+            }
+          },
+          "first_stage": "claim-reconstruction",
+          "refused_stages": [
+            "claim-reconstruction",
+            "theory-authentication",
+            "specification-identity",
+            "subject-identity",
+            "logical-check"
+          ],
+          "stage_findings": [
+            "The subject small certificate does not replay: The certified value 9 is not the 64-bit wrapping sum",
+            "The obligation endpoint_small does not state the subject claim: The theorem has a hypothesis or an anonymous argument, so it states a stronger precondition",
+            "The obligation ufold_small does not state the subject claim: The stated fold (add 3 5) = 8 differs from the certified fold (add 3 5) = 9"
+          ]
+        },
+        "passed": true,
+        "purpose": "A frozen endpoint obligation with an added hypothesis does not state the subject claim."
+      },
+      {
+        "derived_from_submission": true,
+        "detail": "The subject small certificate does not replay: The certified value 9 is not the 64-bit wrapping sum.",
+        "expected": {
+          "checker_stages": [],
+          "finding": "does not state the subject claim",
+          "raw_checker": null,
+          "stage": "claim-reconstruction",
+          "verdict": "refused"
+        },
+        "name": "reordered-outputs",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000018-mm0-check-control-reordered-outputs",
+            "elapsed_ms": 11,
+            "exit_code": 0,
+            "label": "control-reordered-outputs",
+            "peak_rss_kib": 1888,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "verdict": "accepted"
+            }
+          },
+          "first_stage": "claim-reconstruction",
+          "refused_stages": [
+            "claim-reconstruction",
+            "subject-identity"
+          ],
+          "stage_findings": [
+            "The subject small certificate does not replay: The certified value 9 is not the 64-bit wrapping sum",
+            "The obligation endpoint_small does not state the subject claim: The stated endpoints [\"3\", \"5\", \"(mul input0 (add 3 5))\"] = [\"3\", \"5\", \"(mul input0 8)\"] differ from the subject endpoints [\"3\", \"5\", \"(mul input0 (add 3 5))\"] = [\"5\", \"3\", \"(mul input0 8)\"]",
+            "The obligation ufold_small does not state the subject claim: The stated fold (add 3 5) = 8 differs from the certified fold (add 3 5) = 9"
+          ]
+        },
+        "passed": true,
+        "purpose": "Swapped ordered outputs change the endpoint claim."
+      },
+      {
+        "derived_from_submission": true,
+        "detail": "The subject small certificate does not replay: The certified value 9 is not the 64-bit wrapping sum.",
+        "expected": {
+          "checker_stages": [],
+          "finding": "does not state the subject claim",
+          "raw_checker": null,
+          "stage": "claim-reconstruction",
+          "verdict": "refused"
+        },
+        "name": "unrelated-endpoint",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000019-mm0-check-control-unrelated-endpoint",
+            "elapsed_ms": 11,
+            "exit_code": 0,
+            "label": "control-unrelated-endpoint",
+            "peak_rss_kib": 1896,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "verdict": "accepted"
+            }
+          },
+          "first_stage": "claim-reconstruction",
+          "refused_stages": [
+            "claim-reconstruction",
+            "subject-identity"
+          ],
+          "stage_findings": [
+            "The subject small certificate does not replay: The certified value 9 is not the 64-bit wrapping sum",
+            "The obligation endpoint_small does not state the subject claim: The stated endpoints [\"3\", \"5\", \"(mul input0 (add 3 5))\"] = [\"3\", \"5\", \"(mul input0 8)\"] differ from the subject endpoints [\"3\", \"5\", \"(mul input0 (add 3 5))\"] = [\"3\", \"5\", \"(mul input0 input0)\"]",
+            "The obligation ufold_small does not state the subject claim: The stated fold (add 3 5) = 8 differs from the certified fold (add 3 5) = 9"
+          ]
+        },
+        "passed": true,
+        "purpose": "Another valid rewritten graph does not satisfy the frozen endpoint claim."
+      },
+      {
+        "derived_from_submission": true,
+        "detail": "The subject small certificate does not replay: The certified value 9 is not the 64-bit wrapping sum.",
+        "expected": {
+          "checker_stages": [],
+          "finding": "does not state the subject claim",
+          "raw_checker": null,
+          "stage": "claim-reconstruction",
+          "verdict": "refused"
+        },
+        "name": "changed-shared-use",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000020-mm0-check-control-changed-shared-use",
+            "elapsed_ms": 7,
+            "exit_code": 0,
+            "label": "control-changed-shared-use",
+            "peak_rss_kib": 1908,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "verdict": "accepted"
+            }
+          },
+          "first_stage": "claim-reconstruction",
+          "refused_stages": [
+            "claim-reconstruction",
+            "subject-identity"
+          ],
+          "stage_findings": [
+            "The subject small certificate does not replay: The certified value 9 is not the 64-bit wrapping sum",
+            "The obligation endpoint_small does not state the subject claim: The stated endpoints [\"3\", \"5\", \"(mul input0 (add 3 5))\"] = [\"3\", \"5\", \"(mul input0 8)\"] differ from the subject endpoints [\"3\", \"5\", \"(mul input0 input0)\"] = [\"3\", \"5\", \"(mul input0 8)\"]",
+            "The obligation ufold_small does not state the subject claim: The stated fold (add 3 5) = 8 differs from the certified fold (add 3 5) = 9"
+          ]
+        },
+        "passed": true,
+        "purpose": "A changed use of the folded node changes the original endpoint."
+      },
+      {
+        "derived_from_submission": true,
+        "detail": "The subject small certificate does not replay: The fold operand %1 does not hold the certified bits 3.",
+        "expected": {
+          "checker_stages": [],
+          "finding": "does not state the subject claim",
+          "raw_checker": null,
+          "stage": "claim-reconstruction",
+          "verdict": "refused"
+        },
+        "name": "changed-consumed-bits",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000021-mm0-check-control-changed-consumed-bits",
+            "elapsed_ms": 7,
+            "exit_code": 0,
+            "label": "control-changed-consumed-bits",
+            "peak_rss_kib": 1920,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "verdict": "accepted"
+            }
+          },
+          "first_stage": "claim-reconstruction",
+          "refused_stages": [
+            "claim-reconstruction",
+            "subject-identity"
+          ],
+          "stage_findings": [
+            "The subject small certificate does not replay: The fold operand %1 does not hold the certified bits 3",
+            "The obligation endpoint_small does not state the subject claim: The stated endpoints [\"3\", \"5\", \"(mul input0 (add 3 5))\"] = [\"3\", \"5\", \"(mul input0 8)\"] differ from the subject endpoints [\"4\", \"5\", \"(mul input0 (add 4 5))\"] = [\"3\", \"5\", \"(mul input0 8)\"]",
+            "The obligation ufold_small does not state the subject claim: The stated fold (add 3 5) = 8 differs from the certified fold (add 3 5) = 9"
+          ]
+        },
+        "passed": true,
+        "purpose": "Changed constant bits under the fold break the certified replay and the claim."
+      },
+      {
+        "derived_from_submission": true,
+        "detail": "The small original graph digest 069a0d7375dc11e5a9cf83659093a6012e654b7c659251112ee077c65c69a42e differs from the frozen digest.",
+        "expected": {
+          "checker_stages": [],
+          "finding": "differs from the frozen digest",
+          "raw_checker": null,
+          "stage": "subject-identity",
+          "verdict": "refused"
+        },
+        "name": "stale-subject",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000022-mm0-check-control-stale-subject",
+            "elapsed_ms": 6,
+            "exit_code": 0,
+            "label": "control-stale-subject",
+            "peak_rss_kib": 1932,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "verdict": "accepted"
+            }
+          },
+          "first_stage": "claim-reconstruction",
+          "refused_stages": [
+            "claim-reconstruction",
+            "subject-identity"
+          ],
+          "stage_findings": [
+            "The small original graph digest 069a0d7375dc11e5a9cf83659093a6012e654b7c659251112ee077c65c69a42e differs from the frozen digest",
+            "The small rewritten graph digest eb14dd069a4e9e114a57da8859d7ae3596e88b6781e19964eb653055069d69ff differs from the frozen digest",
+            "The small certificate digest 948b038c48f691989f1a400a326434014ecf30761a700862ac7c8e38955b8d5e differs from the frozen digest"
+          ]
+        },
+        "passed": true,
+        "purpose": "A graph pair with a stale subject identity keeps its meaning, so only the exact subject bytes refuse it."
+      },
+      {
+        "derived_from_submission": true,
+        "detail": "The checker rejected the proof at its mmb-proof stage: proof command out of range.",
+        "expected": {
+          "checker_stages": [
+            "mmb-header",
+            "mmb-proof",
+            "proof-or-specification"
+          ],
+          "finding": null,
+          "raw_checker": null,
+          "stage": "logical-check",
+          "verdict": "refused"
+        },
+        "name": "truncated-proof",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000023-mm0-check-control-truncated-proof",
+            "elapsed_ms": 7,
+            "exit_code": 255,
+            "label": "control-truncated-proof",
+            "peak_rss_kib": 1612,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "message": "proof command out of range",
+              "stage": "mmb-proof",
+              "verdict": "rejected"
+            }
+          },
+          "first_stage": "claim-reconstruction",
+          "refused_stages": [
+            "claim-reconstruction",
+            "subject-identity",
+            "logical-check"
+          ],
+          "stage_findings": [
+            "checker stage mmb-proof"
+          ]
+        },
+        "passed": true,
+        "purpose": "A proof cut inside its proof stream cannot produce acceptance. The checker names the stage that refused it."
+      },
+      {
+        "derived_from_submission": true,
+        "detail": "The checker rejected the proof at its mmb-header stage: Not a MM0B file.",
+        "expected": {
+          "checker_stages": [
+            "mmb-header"
+          ],
+          "finding": null,
+          "raw_checker": null,
+          "stage": "logical-check",
+          "verdict": "refused"
+        },
+        "name": "malformed-proof",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000024-mm0-check-control-malformed-proof",
+            "elapsed_ms": 7,
+            "exit_code": 255,
+            "label": "control-malformed-proof",
+            "peak_rss_kib": 1120,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "message": "Not a MM0B file",
+              "stage": "mmb-header",
+              "verdict": "rejected"
+            }
+          },
+          "first_stage": "claim-reconstruction",
+          "refused_stages": [
+            "claim-reconstruction",
+            "subject-identity",
+            "logical-check"
+          ],
+          "stage_findings": [
+            "checker stage mmb-header"
+          ]
+        },
+        "passed": true,
+        "purpose": "A proof with a destroyed header fails in the checker header stage."
+      },
+      {
+        "derived_from_submission": true,
+        "detail": "The executable /nix/store/xkfk12m94zcdffzc98dnl57mmkyqs6y9-compiler-lab-mm0-certificate-tools/libexec/mm0-c-no-parser is the NO_PARSER build, not the qualified checker.",
+        "expected": {
+          "checker_stages": [],
+          "finding": "NO_PARSER",
+          "raw_checker": "accepted",
+          "stage": "checker-identity",
+          "verdict": "refused"
+        },
+        "name": "no-parser-checker",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000025-mm0-check-control-no-parser-checker",
+            "elapsed_ms": 7,
+            "exit_code": 0,
+            "label": "control-no-parser-checker",
+            "peak_rss_kib": 1668,
+            "program_sha256": "4f690e9da63e89d8bbd90fda0da94034da3a281d7f04dccb0d8ebaf4e52afb30",
+            "verdict": {
+              "verdict": "accepted"
+            }
+          },
+          "first_stage": "checker-identity",
+          "refused_stages": [
+            "checker-identity",
+            "definitions",
+            "interpretation",
+            "claim-reconstruction",
+            "theory-authentication",
+            "specification-identity",
+            "subject-identity"
+          ],
+          "stage_findings": [
+            "The executable /nix/store/xkfk12m94zcdffzc98dnl57mmkyqs6y9-compiler-lab-mm0-certificate-tools/libexec/mm0-c-no-parser is the NO_PARSER build, not the qualified checker",
+            "The checker digest 4f690e9da63e89d8bbd90fda0da94034da3a281d7f04dccb0d8ebaf4e52afb30 differs from the qualified digest"
+          ]
+        },
+        "passed": true,
+        "purpose": "The NO_PARSER build accepts the changed-definition specification, and its identity cannot satisfy the profile."
+      },
+      {
+        "derived_from_submission": true,
+        "detail": "The requested defines [\"HIGHWATER\"] differ from the qualified defines [].",
+        "expected": {
+          "checker_stages": [],
+          "finding": "HIGHWATER",
+          "raw_checker": null,
+          "stage": "checker-profile",
+          "verdict": "refused"
+        },
+        "name": "changed-checker-settings",
+        "observed": {
+          "admission": "refused",
+          "checker": {
+            "archive": "commands/000026-mm0-check-control-changed-checker-settings",
+            "elapsed_ms": 12,
+            "exit_code": 0,
+            "label": "control-changed-checker-settings",
+            "peak_rss_kib": 1908,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "verdict": "accepted"
+            }
+          },
+          "first_stage": "checker-profile",
+          "refused_stages": [
+            "checker-profile",
+            "claim-reconstruction",
+            "subject-identity"
+          ],
+          "stage_findings": [
+            "The requested defines [\"HIGHWATER\"] differ from the qualified defines []",
+            "The define HIGHWATER is prohibited in this profile"
+          ]
+        },
+        "passed": true,
+        "purpose": "A diagnostic build option needs a separately qualified profile."
+      },
+      {
+        "derived_from_submission": true,
+        "detail": "The run stopped without acceptance.",
+        "expected": {
+          "checker_verdict": "resource-exhausted"
+        },
+        "input": "presented",
+        "name": "exhausted-address-space",
+        "observed": {
+          "checker": {
+            "archive": "commands/000027-mm0-check-control-exhausted-address-space",
+            "elapsed_ms": 7,
+            "exit_code": 139,
+            "label": "control-exhausted-address-space",
+            "peak_rss_kib": 276,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "detail": "The checker stopped with signal 11",
+              "verdict": "resource-exhausted"
+            }
+          }
+        },
+        "passed": true,
+        "purpose": "An address-space limit below the checker arrays stops the run without acceptance."
+      },
+      {
+        "derived_from_submission": true,
+        "detail": "The run stopped without acceptance.",
+        "expected": {
+          "checker_verdict": "timeout"
+        },
+        "input": "presented",
+        "name": "exhausted-wall-clock",
+        "observed": {
+          "checker": {
+            "archive": "commands/000028-mm0-check-control-exhausted-wall-clock",
+            "elapsed_ms": 1001,
+            "exit_code": null,
+            "label": "control-exhausted-wall-clock",
+            "peak_rss_kib": null,
+            "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+            "verdict": {
+              "verdict": "timeout"
+            }
+          }
+        },
+        "passed": true,
+        "purpose": "A specification stream that never ends reaches the wall-clock limit without acceptance."
+      }
+    ],
+    "schema": 1,
+    "scope": "Controls derived from the submission need a submission whose proof checks. A refused submission stays refused whatever these controls show."
+  },
+  "correspondence": {
+    "scope": "Representation and runtime correspondence beyond this model are not established here.",
+    "status": "unproved"
+  },
+  "detail": "The subject small certificate does not replay: The certified value 9 is not the 64-bit wrapping sum.",
+  "exact_subject_admission": {
+    "claims": [
+      {
+        "inputs": [
+          "a"
+        ],
+        "matched": true,
+        "obligation": "endpoint_small",
+        "original_outputs": [
+          "3",
+          "5",
+          "(mul input0 (add 3 5))"
+        ],
+        "rewritten_outputs": [
+          "3",
+          "5",
+          "(mul input0 8)"
+        ],
+        "role": "endpoint-equivalence",
+        "subject": "small"
+      },
+      {
+        "inputs": [
+          "a"
+        ],
+        "matched": true,
+        "obligation": "endpoint_boundary",
+        "original_outputs": [
+          "9223372036854775807",
+          "1",
+          "(mul input0 (add 9223372036854775807 1))"
+        ],
+        "rewritten_outputs": [
+          "9223372036854775807",
+          "1",
+          "(mul input0 9223372036854775808)"
+        ],
+        "role": "endpoint-equivalence",
+        "subject": "boundary"
+      },
+      {
+        "detail": "The stated fold (add 3 5) = 8 differs from the certified fold (add 3 5) = 9",
+        "matched": false,
+        "obligation": "ufold_small",
+        "role": "fold-fact",
+        "subject": "small"
+      },
+      {
+        "certified": {
+          "claimed": 9223372036854775808,
+          "first_bits": 9223372036854775807,
+          "node": 3,
+          "operands": [
+            1,
+            2
+          ],
+          "second_bits": 1
+        },
+        "matched": true,
+        "obligation": "ufold_boundary",
+        "role": "fold-fact",
+        "step": 0,
+        "subject": "boundary"
+      }
+    ],
+    "scope": "The adapter binds the exact subject bytes and reconstructs each stated claim from them.",
+    "subjects": [
+      {
+        "after_sha256": "221caaec0bb54ffcf84b22c37de383d0427a42f2ee871b6b915ab4f3c29a3a40",
+        "before_sha256": "3dd69fc4527c12d40cecf542a4d8e248db02ae7901b25321fad084489ec2c000",
+        "certificate_format": "ngraph-cert/0 ngraph-sem/0",
+        "certificate_sha256": "33117f988d5d1e708a233b29dfafaa0ece27cfce37c902b47c1bd3852eca90c6",
+        "name": "small",
+        "representation": "ngraph-ir/0 ngraph-i64/0"
+      },
+      {
+        "after_sha256": "e01ec5c72c0497a37b233270effb98d2b751ae1b04ea14b002a7fa1cdd4026c5",
+        "before_sha256": "af8c7a8872b8cd53b61d52e2b47dcb67e19211518ad34af057e8d1c4f6883870",
+        "certificate_format": "ngraph-cert/0 ngraph-sem/0",
+        "certificate_sha256": "f0da255c6b5b1f665c1d87e0e82c5eb7509e0e3c7bd4042f2dbcde6c13f1d749",
+        "name": "boundary",
+        "representation": "ngraph-ir/0 ngraph-i64/0"
+      }
+    ]
+  },
+  "host_arch": "x86_64",
+  "host_os": "linux",
+  "inventory": {
+    "abstract_definitions": [
+      "ifp",
+      "if",
+      "div",
+      "mod",
+      "fst",
+      "snd",
+      "Sum",
+      "rec",
+      "obind",
+      "pow",
+      "sn",
+      "ins",
+      "sep",
+      "srec",
+      "srecp",
+      "card",
+      "lrec",
+      "lmems",
+      "len",
+      "append",
+      "snoc",
+      "nth",
+      "repeat",
+      "map",
+      "ljoin"
+    ],
+    "axioms": [
+      "ax_1",
+      "ax_2",
+      "ax_3",
+      "ax_mp",
+      "itru",
+      "ax_gen",
+      "ax_4",
+      "ax_5",
+      "ax_6",
+      "ax_7",
+      "ax_10",
+      "ax_11",
+      "ax_12",
+      "elab",
+      "ax_8",
+      "peano1",
+      "peano2",
+      "peano5",
+      "theid",
+      "the0",
+      "addeq",
+      "muleq",
+      "add0",
+      "addS",
+      "mul0",
+      "mulS",
+      "h2nlt",
+      "h2n0",
+      "h2n1",
+      "h2n2",
+      "h2n3",
+      "h2n4",
+      "h2n5",
+      "h2n6",
+      "h2n7",
+      "h2n8",
+      "h2n9",
+      "h2na",
+      "h2nb",
+      "h2nc",
+      "h2nd",
+      "h2ne",
+      "h2nf",
+      "c2nlt",
+      "c2nch",
+      "s2nstr",
+      "s2ns0",
+      "s2ns1",
+      "s2nsadd"
+    ],
+    "caller_definitions": [
+      "modulus",
+      "uadd",
+      "umul",
+      "wmax",
+      "wmin"
+    ],
+    "caller_theorems": [
+      "fold_small",
+      "fold_boundary",
+      "ufold_small",
+      "ufold_boundary",
+      "endpoint_small",
+      "endpoint_boundary"
+    ],
+    "statements": 358
+  },
+  "invocation": {
+    "replay": null,
+    "request": "<run-directory>/requests/changed-certificate-bits.json",
+    "tools_root": "<tools-root>"
+  },
+  "kind": "compiler-lab-mm0-certificate-report",
+  "logical_checking": {
+    "checker": {
+      "executable": {
+        "build": "cc -O2 main.c -o mm0-c",
+        "defines": [],
+        "flags": [
+          "-O2"
+        ],
+        "parser_enabled": true,
+        "path": "/nix/store/xkfk12m94zcdffzc98dnl57mmkyqs6y9-compiler-lab-mm0-certificate-tools/bin/mm0-c",
+        "pinned_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+        "sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb"
+      },
+      "time": {
+        "build": "GNU time 1.10 from the pinned nixpkgs",
+        "defines": [],
+        "flags": [],
+        "parser_enabled": false,
+        "path": "/nix/store/xkfk12m94zcdffzc98dnl57mmkyqs6y9-compiler-lab-mm0-certificate-tools/libexec/time",
+        "pinned_sha256": "3ee3e79d92f9c32a1afb6df2856db0a4887f5cf4c0d01c103a2d868953d5d23a",
+        "sha256": "3ee3e79d92f9c32a1afb6df2856db0a4887f5cf4c0d01c103a2d868953d5d23a"
+      }
+    },
+    "run": {
+      "archive": "commands/000005-mm0-check-submission",
+      "blocked_input": false,
+      "label": "submission",
+      "limits": {
+        "address_space_bytes": 1073741824,
+        "core_bytes": 0,
+        "cpu_seconds": 20,
+        "file_size_bytes": 16777216
+      },
+      "process": {
+        "elapsed_ms": 11,
+        "exit_code": 0,
+        "status": "success",
+        "stderr": "",
+        "stdout": "",
+        "termination": {
+          "schema": 1,
+          "state": {
+            "code": 0,
+            "kind": "exit"
+          }
+        }
+      },
+      "program": "/nix/store/xkfk12m94zcdffzc98dnl57mmkyqs6y9-compiler-lab-mm0-certificate-tools/bin/mm0-c",
+      "program_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+      "proof_sha256": "2ced26177614e3af86ed74fb92c4ad3ef43d3d249512a357652f9b2111a56860",
+      "reduced_limits": false,
+      "specification_sha256": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+      "time": {
+        "elapsed_seconds": "0.00",
+        "exit": 0,
+        "peak_rss_kib": 1840,
+        "signal": null
+      },
+      "verdict": {
+        "verdict": "accepted"
+      },
+      "wall_limit_ms": 30000
+    },
+    "scope": "The pinned checker derives every theorem of the flattened specification from its axioms and definitions."
+  },
+  "obligation_profile": "ngraph-i64-wrapping-v1",
+  "outcome": "fail",
+  "passed": false,
+  "pins": {
+    "checker": {
+      "binary_sha256": {
+        "x86_64-linux": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb"
+      },
+      "build": "cc -O2 main.c -o mm0-c",
+      "build_log": "share/compiler-lab/build-checker.log",
+      "compiler": "gcc 15.2.0 from the pinned nixpkgs stdenv, with hardening flags disabled",
+      "defines": [],
+      "flags": [
+        "-O2"
+      ],
+      "parser_enabled": true,
+      "program": "bin/mm0-c",
+      "prohibited_defines": [
+        "NO_PARSER",
+        "BARE",
+        "HIGHWATER"
+      ]
+    },
+    "limits": {
+      "address_space_bytes": 1073741824,
+      "core_bytes": 0,
+      "cpu_seconds": 20,
+      "file_size_bytes": 16777216
+    },
+    "measurement": {
+      "binary_sha256": {
+        "x86_64-linux": "3ee3e79d92f9c32a1afb6df2856db0a4887f5cf4c0d01c103a2d868953d5d23a"
+      },
+      "package": "GNU time 1.10 from the pinned nixpkgs",
+      "program": "libexec/time"
+    },
+    "mm0": {
+      "base_theory": {
+        "peano.mm0": "463a7d6e4f4791313dedcfd737053dcf2cc07b466371e263c38a994c6fb72052",
+        "peano_hex.mm0": "e2f5e461c568e0e3ef784b507e9111272b38956093df98b943ccc4cd806e351b"
+      },
+      "checker_sources": {
+        "mm0-c/index.c": "88214d057ad2c1e7569357022948c0cea1417b2b82a3fe5ce2f8c61bb176a1ac",
+        "mm0-c/main.c": "ecde31379241e38ca0b375df0f40b216e9108f6cfd45952ccb282658d883de17",
+        "mm0-c/parser.c": "695bf56b4fe190e6ba369a8be854cd1031b2624929fc5fda995551e7bad00c39",
+        "mm0-c/types.c": "b3fc325b9269f50298b1d388c80b6544845a7185bc99df0dd9970ff306a215d1",
+        "mm0-c/verifier.c": "71428a117c96a37b81e183ce57ef34b71e99efecba019e65a47ce27dd4faa4b5",
+        "mm0-c/verifier_debug.c": "6db6e3dd5f4edf11a0a019bae785c5cde43dcc2601dcd7f11e90f9c7190b0ca1",
+        "mm0-c/verifier_types.c": "87a0b9470de5ae0beff5edfa565952520957a39b250591b0067ebc4786b5490e"
+      },
+      "format": "mm0-c/mmb.md",
+      "git_archive_sha256": "741ee2b6e13eb189dcf75dead7dbbfc6f818e33800ea781bda99926b1dcf01db",
+      "repository": "https://github.com/digama0/mm0",
+      "revision": "0d414c0bfdaaeb7fea571895127abc1fa5a3d956",
+      "source_nar_hash": "sha256-EIzcXTX6bqhq/IRCDRvHcuXDuKashy+a1p7taUsunBw="
+    },
+    "negative_checker": {
+      "binary_sha256": {
+        "x86_64-linux": "4f690e9da63e89d8bbd90fda0da94034da3a281d7f04dccb0d8ebaf4e52afb30"
+      },
+      "build": "cc -O2 -DNO_PARSER main.c -o mm0-c-no-parser",
+      "build_log": "share/compiler-lab/build-negative.log",
+      "defines": [
+        "NO_PARSER"
+      ],
+      "flags": [
+        "-O2"
+      ],
+      "parser_enabled": false,
+      "program": "libexec/mm0-c-no-parser"
+    },
+    "nixpkgs": {
+      "nar_hash": "sha256-/NAkDSsve+GNM0Bt6tleJdCGfsTlK89nPjkVOzZMo0s=",
+      "revision": "f205b5574fd0cb7da5b702a2da51507b7f4fdd1b"
+    },
+    "producer": {
+      "build": "nixpkgs rustPlatform.buildRustPackage, rustc 1.95.0, cargo build --release --frozen --no-default-features",
+      "cargo_lock_sha256": "3faa2cc6cc6f5e322aa3001677a6c5a28ed90827ab855bf98a6cb8b38fad621f",
+      "cargo_vendor_hash": "sha256-LgqCWvQHPbV/sa5F37kbi3F4DRDewN0ifdAyoBL7ig8=",
+      "program": "bin/mm0-rs",
+      "trusted_for_admission": false
+    },
+    "profile": "mm0-c-parser-v1",
+    "schema": 1
+  },
+  "producer_invoked": false,
+  "profile": "mm0-c-parser-v1",
+  "replay": null,
+  "schema": 1,
+  "tools": {
+    "build_logs_sha256": {
+      "share/compiler-lab/build-checker.log": "dfe051c455035b41e7ddcaeca6dc9ee07f7ee0ae58b2bd31cda45b742f53000b",
+      "share/compiler-lab/build-negative.log": "55d574f74122521e0351af970f3721cf0711f6935e2c3d7758426ca405d59818"
+    },
+    "checker_derivation_output": "/nix/store/s4ym7lg2agbb7fxf1wi4gfma0hqpzsc7-mm0-c-0d414c0bfdaa",
+    "closure_identity_sha256": "9800e8c5a12b8fd5f6bd50c6e866d48a64bc52b398be83e75f28ea0c00e993d1",
+    "compiler": "gcc (GCC) 15.2.0",
+    "compiler_path": "/nix/store/xcnqqnhw9hb4j5rjgds2yjryi8qki5f3-gcc-wrapper-15.2.0/bin/gcc",
+    "expression_sha256": "a5c3385cb11246534cc26e64343209b5bb39a2122f1bd5ed8c83cd4772cca0ef",
+    "nixpkgs_source": "/nix/store/swsq9fz5xzbzqd2864z9k0xkq009cpg6-source",
+    "pins_sha256": "563a90f813ec7693d19e58e36cfe63e5a7cbe816be82bf85be478db1f69ee3b0",
+    "root": "/nix/store/xkfk12m94zcdffzc98dnl57mmkyqs6y9-compiler-lab-mm0-certificate-tools",
+    "system": "x86_64-linux"
+  },
+  "trust": {
+    "assumed": [
+      "Closed numerals denote natural numbers in the standard model of the pinned Peano axioms: d0, suc, add, mul, and the h2n digit axioms.",
+      "Equality of two cons lists means equality of every ordered output. Cons injectivity is not checked in this run.",
+      "The abstract definitions div and mod mean Euclidean division, as the checked divmod and modlt theorems constrain them.",
+      "ngraph-sem/0 reads i64.add and i64.mul as 64-bit wrapping operations and input k as slot k.",
+      "The pinned mm0-c source, the pinned GCC build, glibc, the kernel, and the hardware execute the check correctly."
+    ],
+    "checked": [
+      "The pinned parser-enabled mm0-c checked every theorem of the flattened specification against the presented MMB proof in this run.",
+      "The specification is the exact flattening of the caller theory and the pinned upstream base theory.",
+      "Every axiom equals an approved declaration of the pinned base theory, and no axiom proves an arbitrary proposition.",
+      "The caller definitions, the interpretation operations, and the required theorems equal their frozen declarations.",
+      "The adapter decoded the exact subject bytes, replayed every certified fold, and matched each stated endpoint and fold claim.",
+      "The closure is the canonical pinned Nix derivation, and the checker binary has the qualified digest."
+    ],
+    "unresolved": [
+      "No checked representation argument connects this MM0 model to the Noble Lean denotation.",
+      "The graph-to-term projection and the subject decoder are adapter code, not proved code.",
+      "Correspondence with the Rust certificate checker, compiler lowering, emitted Wasm, and runtime remains unproved."
+    ]
+  }
+}

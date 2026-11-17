@@ -1,0 +1,153 @@
+{
+  "schema": 1,
+  "kind": "compiler-lab-mm0-certificate-request",
+  "frozen": {
+    "checker": {
+      "profile": "mm0-c-parser-v1",
+      "build": "cc -O2 main.c -o mm0-c",
+      "flags": [
+        "-O2"
+      ],
+      "defines": [],
+      "parser_enabled": true
+    },
+    "obligation_profile": "ngraph-i64-wrapping-v1",
+    "specification": {
+      "theory_sha256": "66dab1e31835d93fe4e9ac44aabfad084655d643dbdfa80f736b56b1c288d8f9",
+      "imports": [
+        "peano_hex.mm0",
+        "peano.mm0"
+      ],
+      "flattened_sha256": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d"
+    },
+    "approved_axioms": [
+      "axiom ax_1 (a b: wff): $ a -> b -> a $;",
+      "axiom ax_2 (a b c: wff): $ (a -> b -> c) -> (a -> b) -> a -> c $;",
+      "axiom ax_3 (a b: wff): $ (~a -> ~b) -> b -> a $;",
+      "axiom ax_mp (a b: wff): $ a -> b $ > $ a $ > $ b $;",
+      "axiom itru: $ T. $;",
+      "axiom ax_gen {x: nat} (p: wff x): $ p $ > $ A. x p $;",
+      "axiom ax_4 {x: nat} (p q: wff x): $ A. x (p -> q) -> A. x p -> A. x q $;",
+      "axiom ax_5 {x: nat} (p: wff): $ p -> A. x p $;",
+      "axiom ax_6 (a: nat) {x: nat}: $ E. x x = a $;",
+      "axiom ax_7 (a b c: nat): $ a = b -> a = c -> b = c $;",
+      "axiom ax_10 {x: nat} (p: wff x): $ ~(A. x p) -> A. x ~(A. x p) $;",
+      "axiom ax_11 {x y: nat} (p: wff x y): $ A. x A. y p -> A. y A. x p $;",
+      "axiom ax_12 {x: nat} (a: nat) (p: wff x): $ x = a -> p -> A. x (x = a -> p) $;",
+      "axiom elab (a: nat) {x: nat} (p: wff x): $ a e. {x | p} <-> [ a / x ] p $;",
+      "axiom ax_8 (a b: nat) (A: set): $ a = b -> a e. A -> b e. A $;",
+      "axiom peano1 (a: nat): $ suc a != 0 $;",
+      "axiom peano2 (a b: nat): $ suc a = suc b <-> a = b $;",
+      "axiom peano5 {x: nat} (p: wff x): $ [ 0 / x ] p -> A. x (p -> [ suc x / x ] p) -> A. x p $;",
+      "axiom theid {x: nat} (A: set) (a: nat): $ A == {x | x = a} -> the A = a $;",
+      "axiom the0 {x y: nat} (A: set): $ ~E. y A == {x | x = y} -> the A = 0 $;",
+      "axiom addeq (a b c d: nat): $ a = b -> c = d -> a + c = b + d $;",
+      "axiom muleq (a b c d: nat): $ a = b -> c = d -> a * c = b * d $;",
+      "axiom add0 (a: nat): $ a + 0 = a $;",
+      "axiom addS (a b: nat): $ a + suc b = suc (a + b) $;",
+      "axiom mul0 (a: nat): $ a * 0 = 0 $;",
+      "axiom mulS (a b: nat): $ a * suc b = a * b + a $;",
+      "axiom h2nlt (h: hex): $ h < 16 $;",
+      "axiom h2n0: $ x0 = 0 $;",
+      "axiom h2n1: $ x1 = 1 $;",
+      "axiom h2n2: $ x2 = 2 $;",
+      "axiom h2n3: $ x3 = 3 $;",
+      "axiom h2n4: $ x4 = 4 $;",
+      "axiom h2n5: $ x5 = 5 $;",
+      "axiom h2n6: $ x6 = 6 $;",
+      "axiom h2n7: $ x7 = 7 $;",
+      "axiom h2n8: $ x8 = 8 $;",
+      "axiom h2n9: $ x9 = 9 $;",
+      "axiom h2na: $ xa = 10 $;",
+      "axiom h2nb: $ xb = 11 $;",
+      "axiom h2nc: $ xc = 12 $;",
+      "axiom h2nd: $ xd = 13 $;",
+      "axiom h2ne: $ xe = 14 $;",
+      "axiom h2nf: $ xf = 15 $;",
+      "axiom c2nlt (c: char): $ c < 16 * 16 $;",
+      "axiom c2nch (hi lo: hex): $ ch hi lo = hi * 16 + lo $;",
+      "axiom s2nstr (s: string): $ isStr s $;",
+      "axiom s2ns0: $ s0 = 0 $;",
+      "axiom s2ns1 (c: char): $ s1 c = c : 0 $;",
+      "axiom s2nsadd (s t: string): $ s '+ t = s ++ t $;"
+    ],
+    "definitions": [
+      "def modulus: nat = $ x1 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 $;",
+      "def uadd (a b: nat): nat = $ (a + b) % modulus $;",
+      "def umul (a b: nat): nat = $ (a * b) % modulus $;",
+      "def wmax: nat = $ x7 :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf $;",
+      "def wmin: nat = $ x8 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 $;"
+    ],
+    "interpretation": {
+      "modulus": "modulus",
+      "add": "uadd",
+      "mul": "umul"
+    },
+    "obligations": [
+      {
+        "role": "endpoint-equivalence",
+        "declaration": "theorem endpoint_small (a: nat): $ 3 : 5 : umul a (uadd 3 5) : 0 = 3 : 5 : umul a 8 : 0 $;",
+        "subject": "small"
+      },
+      {
+        "role": "endpoint-equivalence",
+        "declaration": "theorem endpoint_boundary (a: nat): $ wmax : 1 : umul a (uadd wmax 1) : 0 = wmax : 1 : umul a wmin : 0 $;",
+        "subject": "boundary"
+      },
+      {
+        "role": "fold-fact",
+        "declaration": "theorem ufold_small: $ uadd 3 5 = 8 $;",
+        "subject": "small"
+      },
+      {
+        "role": "fold-fact",
+        "declaration": "theorem ufold_boundary: $ uadd wmax 1 = wmin $;",
+        "subject": "boundary"
+      },
+      {
+        "role": "lemma",
+        "declaration": "theorem fold_small: $ 3 + 5 = 8 $;"
+      },
+      {
+        "role": "lemma",
+        "declaration": "theorem fold_boundary: $ (x7 :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf) + 1 = (x8 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0) $;"
+      }
+    ],
+    "subjects": [
+      {
+        "name": "small",
+        "representation": "ngraph-ir/0 ngraph-i64/0",
+        "certificate_format": "ngraph-cert/0 ngraph-sem/0",
+        "before_sha256": "3dd69fc4527c12d40cecf542a4d8e248db02ae7901b25321fad084489ec2c000",
+        "after_sha256": "221caaec0bb54ffcf84b22c37de383d0427a42f2ee871b6b915ab4f3c29a3a40",
+        "certificate_sha256": "33117f988d5d1e708a233b29dfafaa0ece27cfce37c902b47c1bd3852eca90c6"
+      },
+      {
+        "name": "boundary",
+        "representation": "ngraph-ir/0 ngraph-i64/0",
+        "certificate_format": "ngraph-cert/0 ngraph-sem/0",
+        "before_sha256": "af8c7a8872b8cd53b61d52e2b47dcb67e19211518ad34af057e8d1c4f6883870",
+        "after_sha256": "e01ec5c72c0497a37b233270effb98d2b751ae1b04ea14b002a7fa1cdd4026c5",
+        "certificate_sha256": "f0da255c6b5b1f665c1d87e0e82c5eb7509e0e3c7bd4042f2dbcde6c13f1d749"
+      }
+    ]
+  },
+  "presented": {
+    "theory": "<noble-checkout>/verification/ngraph/mm0/theory.mm0",
+    "specification": "<noble-checkout>/verification/ngraph/mm0/retained/spec.mm0",
+    "proof": "<noble-checkout>/verification/ngraph/mm0/retained/proof.mmb",
+    "subjects": {
+      "small": {
+        "before": "<noble-checkout>/verification/ngraph/mm0/subjects/small/before.graph",
+        "after": "<noble-checkout>/verification/ngraph/mm0/subjects/small/after.graph",
+        "certificate": "<noble-checkout>/verification/ngraph/mm0/subjects/small/certificate.wire"
+      },
+      "boundary": {
+        "before": "<noble-checkout>/verification/ngraph/mm0/subjects/boundary/before.graph",
+        "after": "<noble-checkout>/verification/ngraph/mm0/subjects/boundary/after.graph",
+        "certificate": "<noble-checkout>/verification/ngraph/mm0/subjects/boundary/certificate.wire"
+      }
+    },
+    "generator": "<noble-checkout>/verification/ngraph/mm0/retained/production.json"
+  }
+}

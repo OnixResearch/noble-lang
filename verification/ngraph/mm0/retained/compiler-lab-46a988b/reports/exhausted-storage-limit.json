@@ -1,0 +1,987 @@
+{
+  "admission": {
+    "accepted": false,
+    "checker_stage": null,
+    "outcome": "unavailable",
+    "refused_stages": [],
+    "stage": "checker-identity"
+  },
+  "authority": "An accepted MM0 certificate is experimental model-level evidence for the reconstructed claim only. It grants no Lean admission, no other evidence family's authority, no deployment gate, and no promotion.",
+  "binding": {
+    "files": {
+      "generator-receipt": "3ee2ccf85ec152eb3af0b10c5f1aaf1aeec09915fc80b29bacb45741181b4103",
+      "original-request.json": "f3ced2dba340c7a72f091a2da2562b7a33bd5578d2f15861372951966e82e0c3",
+      "proof.mmb": "2ced26177614e3af86ed74fb92c4ad3ef43d3d249512a357652f9b2111a56860",
+      "request.json": "cfebc499a5ead332b854483cec0cfe14115e8304d718d329fdbc31ca652d5c3b",
+      "specification.mm0": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+      "subjects/boundary/after.graph": "e01ec5c72c0497a37b233270effb98d2b751ae1b04ea14b002a7fa1cdd4026c5",
+      "subjects/boundary/before.graph": "af8c7a8872b8cd53b61d52e2b47dcb67e19211518ad34af057e8d1c4f6883870",
+      "subjects/boundary/certificate.wire": "f0da255c6b5b1f665c1d87e0e82c5eb7509e0e3c7bd4042f2dbcde6c13f1d749",
+      "subjects/small/after.graph": "221caaec0bb54ffcf84b22c37de383d0427a42f2ee871b6b915ab4f3c29a3a40",
+      "subjects/small/before.graph": "3dd69fc4527c12d40cecf542a4d8e248db02ae7901b25321fad084489ec2c000",
+      "subjects/small/certificate.wire": "33117f988d5d1e708a233b29dfafaa0ece27cfce37c902b47c1bd3852eca90c6",
+      "theory.mm0": "66dab1e31835d93fe4e9ac44aabfad084655d643dbdfa80f736b56b1c288d8f9"
+    },
+    "frozen_sha256": "0989392a15949c185b7c991b1b3dcf44feab525e8b6031d686644e8a0e649735",
+    "kind": "compiler-lab-mm0-certificate-binding",
+    "request_sha256": "f3ced2dba340c7a72f091a2da2562b7a33bd5578d2f15861372951966e82e0c3",
+    "schema": 1
+  },
+  "checks": [
+    {
+      "detail": "The frozen request names one supported profile, a nonempty inventory, and exact digests.",
+      "stage": "request",
+      "verdict": "passed"
+    },
+    {
+      "detail": "The frozen checker settings equal the qualified parser-enabled profile.",
+      "stage": "checker-profile",
+      "verdict": "passed"
+    },
+    {
+      "detail": "The pinned Nix source identity is unavailable.",
+      "stage": "checker-identity",
+      "verdict": "unavailable"
+    },
+    {
+      "detail": "The flattened specification follows the pinned MM0 statement grammar.",
+      "stage": "specification-parse",
+      "verdict": "passed"
+    },
+    {
+      "detail": "The pinned base theory is unavailable.",
+      "stage": "assumption-policy",
+      "verdict": "unavailable"
+    },
+    {
+      "detail": "The pinned base theory is unavailable.",
+      "stage": "definitions",
+      "verdict": "unavailable"
+    },
+    {
+      "detail": "The interpretation reads wrapping I64 add and mul as Peano operations modulo 2^64.",
+      "stage": "interpretation",
+      "verdict": "passed"
+    },
+    {
+      "detail": "Every frozen theorem is present exactly, and no axiom states one.",
+      "stage": "obligations",
+      "verdict": "passed"
+    },
+    {
+      "detail": "Every endpoint and fold obligation states the claim reconstructed from the exact subject bytes.",
+      "stage": "claim-reconstruction",
+      "verdict": "passed"
+    },
+    {
+      "detail": "The pinned base theory is unavailable.",
+      "stage": "theory-authentication",
+      "verdict": "unavailable"
+    },
+    {
+      "detail": "The theory and flattened specification bytes equal the frozen digests.",
+      "stage": "specification-identity",
+      "verdict": "passed"
+    },
+    {
+      "detail": "Every subject byte string equals its frozen digest.",
+      "stage": "subject-identity",
+      "verdict": "passed"
+    },
+    {
+      "detail": "The checker did not run, because its identity did not authenticate.",
+      "stage": "logical-check",
+      "verdict": "unavailable"
+    }
+  ],
+  "claim_descriptor": {
+    "abstract_definitions": [
+      "ifp",
+      "if",
+      "div",
+      "mod",
+      "fst",
+      "snd",
+      "Sum",
+      "rec",
+      "obind",
+      "pow",
+      "sn",
+      "ins",
+      "sep",
+      "srec",
+      "srecp",
+      "card",
+      "lrec",
+      "lmems",
+      "len",
+      "append",
+      "snoc",
+      "nth",
+      "repeat",
+      "map",
+      "ljoin"
+    ],
+    "approved_axioms": 49,
+    "checker_profile": "mm0-c-parser-v1",
+    "definitions": [
+      "def modulus: nat = $ x1 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 $;",
+      "def uadd (a b: nat): nat = $ (a + b) % modulus $;",
+      "def umul (a b: nat): nat = $ (a * b) % modulus $;",
+      "def wmax: nat = $ x7 :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf $;",
+      "def wmin: nat = $ x8 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 $;"
+    ],
+    "evidence_kind": "fresh-mm0-c-check",
+    "input_domain": "Every natural number for each theorem binder. Each I64 input embeds as its unsigned residue below 2^64.",
+    "kind": "compiler-lab-claim-descriptor",
+    "obligation_profile": "ngraph-i64-wrapping-v1",
+    "observable_outputs": "Every ordered output of both graphs",
+    "preconditions": [],
+    "propositions": [
+      {
+        "declaration": "theorem endpoint_small (a: nat): $ 3 : 5 : umul a (uadd 3 5) : 0 = 3 : 5 : umul a 8 : 0 $;",
+        "role": "endpoint-equivalence",
+        "subject": "small"
+      },
+      {
+        "declaration": "theorem endpoint_boundary (a: nat): $ wmax : 1 : umul a (uadd wmax 1) : 0 = wmax : 1 : umul a wmin : 0 $;",
+        "role": "endpoint-equivalence",
+        "subject": "boundary"
+      },
+      {
+        "declaration": "theorem ufold_small: $ uadd 3 5 = 8 $;",
+        "role": "fold-fact",
+        "subject": "small"
+      },
+      {
+        "declaration": "theorem ufold_boundary: $ uadd wmax 1 = wmin $;",
+        "role": "fold-fact",
+        "subject": "boundary"
+      },
+      {
+        "declaration": "theorem fold_small: $ 3 + 5 = 8 $;",
+        "role": "lemma"
+      },
+      {
+        "declaration": "theorem fold_boundary: $ (x7 :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf :x xf) + 1 = (x8 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0 :x x0) $;",
+        "role": "lemma"
+      }
+    ],
+    "quantifiers": "One universally quantified nat binder per graph input slot, with no hypothesis.",
+    "reconstructed_claims": [
+      {
+        "inputs": [
+          "a"
+        ],
+        "matched": true,
+        "obligation": "endpoint_small",
+        "original_outputs": [
+          "3",
+          "5",
+          "(mul input0 (add 3 5))"
+        ],
+        "rewritten_outputs": [
+          "3",
+          "5",
+          "(mul input0 8)"
+        ],
+        "role": "endpoint-equivalence",
+        "subject": "small"
+      },
+      {
+        "inputs": [
+          "a"
+        ],
+        "matched": true,
+        "obligation": "endpoint_boundary",
+        "original_outputs": [
+          "9223372036854775807",
+          "1",
+          "(mul input0 (add 9223372036854775807 1))"
+        ],
+        "rewritten_outputs": [
+          "9223372036854775807",
+          "1",
+          "(mul input0 9223372036854775808)"
+        ],
+        "role": "endpoint-equivalence",
+        "subject": "boundary"
+      },
+      {
+        "certified": {
+          "claimed": 8,
+          "first_bits": 3,
+          "node": 3,
+          "operands": [
+            1,
+            2
+          ],
+          "second_bits": 5
+        },
+        "matched": true,
+        "obligation": "ufold_small",
+        "role": "fold-fact",
+        "step": 0,
+        "subject": "small"
+      },
+      {
+        "certified": {
+          "claimed": 9223372036854775808,
+          "first_bits": 9223372036854775807,
+          "node": 3,
+          "operands": [
+            1,
+            2
+          ],
+          "second_bits": 1
+        },
+        "matched": true,
+        "obligation": "ufold_boundary",
+        "role": "fold-fact",
+        "step": 0,
+        "subject": "boundary"
+      }
+    ],
+    "representation_relation": {
+      "modulus": "modulus",
+      "operations": {
+        "i64.add": "uadd",
+        "i64.mul": "umul"
+      },
+      "outputs": "All ordered outputs as one cons list that ends in 0",
+      "sharing": "Shared graph nodes unfold into repeated subterms",
+      "word": "I64 bits b denote the natural number b below 2^64"
+    },
+    "schema": 1,
+    "specification": {
+      "base_theory": {
+        "peano.mm0": "463a7d6e4f4791313dedcfd737053dcf2cc07b466371e263c38a994c6fb72052",
+        "peano_hex.mm0": "e2f5e461c568e0e3ef784b507e9111272b38956093df98b943ccc4cd806e351b"
+      },
+      "flattened_sha256": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+      "mm0_revision": "0d414c0bfdaaeb7fea571895127abc1fa5a3d956",
+      "theory_sha256": "66dab1e31835d93fe4e9ac44aabfad084655d643dbdfa80f736b56b1c288d8f9"
+    },
+    "subjects": [
+      {
+        "after_sha256": "221caaec0bb54ffcf84b22c37de383d0427a42f2ee871b6b915ab4f3c29a3a40",
+        "before_sha256": "3dd69fc4527c12d40cecf542a4d8e248db02ae7901b25321fad084489ec2c000",
+        "certificate_format": "ngraph-cert/0 ngraph-sem/0",
+        "certificate_sha256": "33117f988d5d1e708a233b29dfafaa0ece27cfce37c902b47c1bd3852eca90c6",
+        "name": "small",
+        "representation": "ngraph-ir/0 ngraph-i64/0"
+      },
+      {
+        "after_sha256": "e01ec5c72c0497a37b233270effb98d2b751ae1b04ea14b002a7fa1cdd4026c5",
+        "before_sha256": "af8c7a8872b8cd53b61d52e2b47dcb67e19211518ad34af057e8d1c4f6883870",
+        "certificate_format": "ngraph-cert/0 ngraph-sem/0",
+        "certificate_sha256": "f0da255c6b5b1f665c1d87e0e82c5eb7509e0e3c7bd4042f2dbcde6c13f1d749",
+        "name": "boundary",
+        "representation": "ngraph-ir/0 ngraph-i64/0"
+      }
+    ],
+    "target": "No target or ABI. The claim concerns the graph model only."
+  },
+  "controls": {
+    "passed": false,
+    "required": [
+      "mmb-sorry",
+      "arbitrary-axiom",
+      "arbitrary-axiom-named-sorry",
+      "different-theorem",
+      "different-proof-frozen-specification",
+      "extra-axiom",
+      "changed-axiom-formula",
+      "renamed-axiom",
+      "changed-definition",
+      "missing-obligation",
+      "weaker-postcondition",
+      "stronger-precondition",
+      "reordered-outputs",
+      "unrelated-endpoint",
+      "changed-shared-use",
+      "changed-consumed-bits",
+      "stale-subject",
+      "truncated-proof",
+      "malformed-proof",
+      "no-parser-checker",
+      "changed-checker-settings",
+      "exhausted-address-space",
+      "exhausted-wall-clock"
+    ],
+    "results": [
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "mmb-sorry",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "arbitrary-axiom",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "arbitrary-axiom-named-sorry",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "different-theorem",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "different-proof-frozen-specification",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "extra-axiom",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "changed-axiom-formula",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "renamed-axiom",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "changed-definition",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "missing-obligation",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "weaker-postcondition",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "stronger-precondition",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "reordered-outputs",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "unrelated-endpoint",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "changed-shared-use",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "changed-consumed-bits",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "stale-subject",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "truncated-proof",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "malformed-proof",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "no-parser-checker",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "changed-checker-settings",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "exhausted-address-space",
+        "passed": false,
+        "purpose": ""
+      },
+      {
+        "constructed": false,
+        "detail": "The control could not be constructed: the pinned checker closure is unavailable",
+        "name": "exhausted-wall-clock",
+        "passed": false,
+        "purpose": ""
+      }
+    ],
+    "schema": 1
+  },
+  "correspondence": {
+    "scope": "Representation and runtime correspondence beyond this model are not established here.",
+    "status": "unproved"
+  },
+  "detail": "The pinned Nix source identity is unavailable.",
+  "exact_subject_admission": {
+    "claims": [
+      {
+        "inputs": [
+          "a"
+        ],
+        "matched": true,
+        "obligation": "endpoint_small",
+        "original_outputs": [
+          "3",
+          "5",
+          "(mul input0 (add 3 5))"
+        ],
+        "rewritten_outputs": [
+          "3",
+          "5",
+          "(mul input0 8)"
+        ],
+        "role": "endpoint-equivalence",
+        "subject": "small"
+      },
+      {
+        "inputs": [
+          "a"
+        ],
+        "matched": true,
+        "obligation": "endpoint_boundary",
+        "original_outputs": [
+          "9223372036854775807",
+          "1",
+          "(mul input0 (add 9223372036854775807 1))"
+        ],
+        "rewritten_outputs": [
+          "9223372036854775807",
+          "1",
+          "(mul input0 9223372036854775808)"
+        ],
+        "role": "endpoint-equivalence",
+        "subject": "boundary"
+      },
+      {
+        "certified": {
+          "claimed": 8,
+          "first_bits": 3,
+          "node": 3,
+          "operands": [
+            1,
+            2
+          ],
+          "second_bits": 5
+        },
+        "matched": true,
+        "obligation": "ufold_small",
+        "role": "fold-fact",
+        "step": 0,
+        "subject": "small"
+      },
+      {
+        "certified": {
+          "claimed": 9223372036854775808,
+          "first_bits": 9223372036854775807,
+          "node": 3,
+          "operands": [
+            1,
+            2
+          ],
+          "second_bits": 1
+        },
+        "matched": true,
+        "obligation": "ufold_boundary",
+        "role": "fold-fact",
+        "step": 0,
+        "subject": "boundary"
+      }
+    ],
+    "scope": "The adapter binds the exact subject bytes and reconstructs each stated claim from them.",
+    "subjects": [
+      {
+        "after_sha256": "221caaec0bb54ffcf84b22c37de383d0427a42f2ee871b6b915ab4f3c29a3a40",
+        "before_sha256": "3dd69fc4527c12d40cecf542a4d8e248db02ae7901b25321fad084489ec2c000",
+        "certificate_format": "ngraph-cert/0 ngraph-sem/0",
+        "certificate_sha256": "33117f988d5d1e708a233b29dfafaa0ece27cfce37c902b47c1bd3852eca90c6",
+        "name": "small",
+        "representation": "ngraph-ir/0 ngraph-i64/0"
+      },
+      {
+        "after_sha256": "e01ec5c72c0497a37b233270effb98d2b751ae1b04ea14b002a7fa1cdd4026c5",
+        "before_sha256": "af8c7a8872b8cd53b61d52e2b47dcb67e19211518ad34af057e8d1c4f6883870",
+        "certificate_format": "ngraph-cert/0 ngraph-sem/0",
+        "certificate_sha256": "f0da255c6b5b1f665c1d87e0e82c5eb7509e0e3c7bd4042f2dbcde6c13f1d749",
+        "name": "boundary",
+        "representation": "ngraph-ir/0 ngraph-i64/0"
+      }
+    ]
+  },
+  "host_arch": "x86_64",
+  "host_os": "linux",
+  "inventory": {
+    "abstract_definitions": [
+      "ifp",
+      "if",
+      "div",
+      "mod",
+      "fst",
+      "snd",
+      "Sum",
+      "rec",
+      "obind",
+      "pow",
+      "sn",
+      "ins",
+      "sep",
+      "srec",
+      "srecp",
+      "card",
+      "lrec",
+      "lmems",
+      "len",
+      "append",
+      "snoc",
+      "nth",
+      "repeat",
+      "map",
+      "ljoin"
+    ],
+    "axioms": [
+      "ax_1",
+      "ax_2",
+      "ax_3",
+      "ax_mp",
+      "itru",
+      "ax_gen",
+      "ax_4",
+      "ax_5",
+      "ax_6",
+      "ax_7",
+      "ax_10",
+      "ax_11",
+      "ax_12",
+      "elab",
+      "ax_8",
+      "peano1",
+      "peano2",
+      "peano5",
+      "theid",
+      "the0",
+      "addeq",
+      "muleq",
+      "add0",
+      "addS",
+      "mul0",
+      "mulS",
+      "h2nlt",
+      "h2n0",
+      "h2n1",
+      "h2n2",
+      "h2n3",
+      "h2n4",
+      "h2n5",
+      "h2n6",
+      "h2n7",
+      "h2n8",
+      "h2n9",
+      "h2na",
+      "h2nb",
+      "h2nc",
+      "h2nd",
+      "h2ne",
+      "h2nf",
+      "c2nlt",
+      "c2nch",
+      "s2nstr",
+      "s2ns0",
+      "s2ns1",
+      "s2nsadd"
+    ],
+    "caller_definitions": [
+      "an",
+      "iff",
+      "or",
+      "ifp",
+      "fal",
+      "ex",
+      "ne",
+      "sb",
+      "eqs",
+      "subset",
+      "Inter",
+      "Union",
+      "Compl",
+      "Univ",
+      "sbs",
+      "d1",
+      "d2",
+      "d3",
+      "d4",
+      "d5",
+      "d6",
+      "d7",
+      "d8",
+      "d9",
+      "d10",
+      "sbn",
+      "sub",
+      "le",
+      "lt",
+      "finite",
+      "if",
+      "true",
+      "bool",
+      "nat",
+      "min",
+      "max",
+      "div",
+      "mod",
+      "dvd",
+      "b0",
+      "b1",
+      "odd",
+      "pr",
+      "fst",
+      "snd",
+      "pi11",
+      "pi12",
+      "pi21",
+      "pi22",
+      "pi221",
+      "pi222",
+      "isfun",
+      "sab",
+      "xab",
+      "Xp",
+      "Dom",
+      "Ran",
+      "Im",
+      "cnv",
+      "comp",
+      "res",
+      "lam",
+      "app",
+      "case",
+      "Sum",
+      "rec",
+      "obind",
+      "pow",
+      "shl",
+      "shr",
+      "ns",
+      "lower",
+      "sn",
+      "ins",
+      "upto",
+      "Bool",
+      "Option",
+      "Power",
+      "power",
+      "sUnion",
+      "cons",
+      "sep",
+      "Arrow",
+      "rlam",
+      "write",
+      "srec",
+      "srecp",
+      "card",
+      "lrec",
+      "lmems",
+      "lmem",
+      "all",
+      "List",
+      "len",
+      "Array",
+      "append",
+      "snoc",
+      "nth",
+      "repeat",
+      "map",
+      "ljoin",
+      "sublistAt",
+      "all2",
+      "ex2",
+      "scons",
+      "d11",
+      "d12",
+      "d13",
+      "d14",
+      "d15",
+      "d16",
+      "isStr",
+      "hex",
+      "modulus",
+      "uadd",
+      "umul",
+      "wmax",
+      "wmin"
+    ],
+    "caller_theorems": [
+      "ifppos",
+      "ifpneg",
+      "ifpos",
+      "ifneg",
+      "div0",
+      "divmod",
+      "modlt",
+      "pr0",
+      "fstpr",
+      "sndpr",
+      "fstsnd",
+      "casel",
+      "caser",
+      "Suml",
+      "Sumr",
+      "rec0",
+      "recS",
+      "obind0",
+      "obindS",
+      "pow0",
+      "powS",
+      "axext",
+      "ellt",
+      "nel0",
+      "eqlower",
+      "elsn",
+      "elins",
+      "elupto",
+      "elsep",
+      "writeEq",
+      "writeNe",
+      "srecval",
+      "srecpval",
+      "card0",
+      "cardS",
+      "lrec0",
+      "lrecS",
+      "lmems0",
+      "lmemsS",
+      "len0",
+      "lenS",
+      "append0",
+      "appendS",
+      "snoc0",
+      "snocS",
+      "snoclt",
+      "nth0",
+      "nthZ",
+      "nthS",
+      "repeat0",
+      "repeatS",
+      "map0",
+      "mapS",
+      "ljoin0",
+      "ljoinS",
+      "d0lt16",
+      "d1lt16",
+      "d2lt16",
+      "d3lt16",
+      "d4lt16",
+      "d5lt16",
+      "d6lt16",
+      "d7lt16",
+      "d8lt16",
+      "d9lt16",
+      "d10lt16",
+      "d11lt16",
+      "d12lt16",
+      "d13lt16",
+      "d14lt16",
+      "d15lt16",
+      "chlt256",
+      "s0str",
+      "s1str",
+      "saddstr",
+      "fold_small",
+      "fold_boundary",
+      "ufold_small",
+      "ufold_boundary",
+      "endpoint_small",
+      "endpoint_boundary"
+    ],
+    "statements": 358
+  },
+  "invocation": {
+    "replay": null,
+    "request": "<run-directory>/requests/exhausted-storage-limit.json",
+    "tools_root": "<tools-root>"
+  },
+  "kind": "compiler-lab-mm0-certificate-report",
+  "logical_checking": {
+    "checker": null,
+    "run": null,
+    "scope": "The pinned checker derives every theorem of the flattened specification from its axioms and definitions."
+  },
+  "obligation_profile": "ngraph-i64-wrapping-v1",
+  "outcome": "storage_limit",
+  "passed": false,
+  "pins": {
+    "checker": {
+      "binary_sha256": {
+        "x86_64-linux": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb"
+      },
+      "build": "cc -O2 main.c -o mm0-c",
+      "build_log": "share/compiler-lab/build-checker.log",
+      "compiler": "gcc 15.2.0 from the pinned nixpkgs stdenv, with hardening flags disabled",
+      "defines": [],
+      "flags": [
+        "-O2"
+      ],
+      "parser_enabled": true,
+      "program": "bin/mm0-c",
+      "prohibited_defines": [
+        "NO_PARSER",
+        "BARE",
+        "HIGHWATER"
+      ]
+    },
+    "limits": {
+      "address_space_bytes": 1073741824,
+      "core_bytes": 0,
+      "cpu_seconds": 20,
+      "file_size_bytes": 16777216
+    },
+    "measurement": {
+      "binary_sha256": {
+        "x86_64-linux": "3ee3e79d92f9c32a1afb6df2856db0a4887f5cf4c0d01c103a2d868953d5d23a"
+      },
+      "package": "GNU time 1.10 from the pinned nixpkgs",
+      "program": "libexec/time"
+    },
+    "mm0": {
+      "base_theory": {
+        "peano.mm0": "463a7d6e4f4791313dedcfd737053dcf2cc07b466371e263c38a994c6fb72052",
+        "peano_hex.mm0": "e2f5e461c568e0e3ef784b507e9111272b38956093df98b943ccc4cd806e351b"
+      },
+      "checker_sources": {
+        "mm0-c/index.c": "88214d057ad2c1e7569357022948c0cea1417b2b82a3fe5ce2f8c61bb176a1ac",
+        "mm0-c/main.c": "ecde31379241e38ca0b375df0f40b216e9108f6cfd45952ccb282658d883de17",
+        "mm0-c/parser.c": "695bf56b4fe190e6ba369a8be854cd1031b2624929fc5fda995551e7bad00c39",
+        "mm0-c/types.c": "b3fc325b9269f50298b1d388c80b6544845a7185bc99df0dd9970ff306a215d1",
+        "mm0-c/verifier.c": "71428a117c96a37b81e183ce57ef34b71e99efecba019e65a47ce27dd4faa4b5",
+        "mm0-c/verifier_debug.c": "6db6e3dd5f4edf11a0a019bae785c5cde43dcc2601dcd7f11e90f9c7190b0ca1",
+        "mm0-c/verifier_types.c": "87a0b9470de5ae0beff5edfa565952520957a39b250591b0067ebc4786b5490e"
+      },
+      "format": "mm0-c/mmb.md",
+      "git_archive_sha256": "741ee2b6e13eb189dcf75dead7dbbfc6f818e33800ea781bda99926b1dcf01db",
+      "repository": "https://github.com/digama0/mm0",
+      "revision": "0d414c0bfdaaeb7fea571895127abc1fa5a3d956",
+      "source_nar_hash": "sha256-EIzcXTX6bqhq/IRCDRvHcuXDuKashy+a1p7taUsunBw="
+    },
+    "negative_checker": {
+      "binary_sha256": {
+        "x86_64-linux": "4f690e9da63e89d8bbd90fda0da94034da3a281d7f04dccb0d8ebaf4e52afb30"
+      },
+      "build": "cc -O2 -DNO_PARSER main.c -o mm0-c-no-parser",
+      "build_log": "share/compiler-lab/build-negative.log",
+      "defines": [
+        "NO_PARSER"
+      ],
+      "flags": [
+        "-O2"
+      ],
+      "parser_enabled": false,
+      "program": "libexec/mm0-c-no-parser"
+    },
+    "nixpkgs": {
+      "nar_hash": "sha256-/NAkDSsve+GNM0Bt6tleJdCGfsTlK89nPjkVOzZMo0s=",
+      "revision": "f205b5574fd0cb7da5b702a2da51507b7f4fdd1b"
+    },
+    "producer": {
+      "build": "nixpkgs rustPlatform.buildRustPackage, rustc 1.95.0, cargo build --release --frozen --no-default-features",
+      "cargo_lock_sha256": "3faa2cc6cc6f5e322aa3001677a6c5a28ed90827ab855bf98a6cb8b38fad621f",
+      "cargo_vendor_hash": "sha256-LgqCWvQHPbV/sa5F37kbi3F4DRDewN0ifdAyoBL7ig8=",
+      "program": "bin/mm0-rs",
+      "trusted_for_admission": false
+    },
+    "profile": "mm0-c-parser-v1",
+    "schema": 1
+  },
+  "producer_invoked": false,
+  "profile": "mm0-c-parser-v1",
+  "replay": null,
+  "schema": 1,
+  "storage_error": "Storage limit reached: used 1341323 bytes, maximum 1048576 bytes, free 6613106688 bytes, minimum free 1073741824 bytes.",
+  "tools": null,
+  "trust": {
+    "assumed": [
+      "Closed numerals denote natural numbers in the standard model of the pinned Peano axioms: d0, suc, add, mul, and the h2n digit axioms.",
+      "Equality of two cons lists means equality of every ordered output. Cons injectivity is not checked in this run.",
+      "The abstract definitions div and mod mean Euclidean division, as the checked divmod and modlt theorems constrain them.",
+      "ngraph-sem/0 reads i64.add and i64.mul as 64-bit wrapping operations and input k as slot k.",
+      "The pinned mm0-c source, the pinned GCC build, glibc, the kernel, and the hardware execute the check correctly."
+    ],
+    "checked": [
+      "The pinned parser-enabled mm0-c checked every theorem of the flattened specification against the presented MMB proof in this run.",
+      "The specification is the exact flattening of the caller theory and the pinned upstream base theory.",
+      "Every axiom equals an approved declaration of the pinned base theory, and no axiom proves an arbitrary proposition.",
+      "The caller definitions, the interpretation operations, and the required theorems equal their frozen declarations.",
+      "The adapter decoded the exact subject bytes, replayed every certified fold, and matched each stated endpoint and fold claim.",
+      "The closure is the canonical pinned Nix derivation, and the checker binary has the qualified digest."
+    ],
+    "unresolved": [
+      "No checked representation argument connects this MM0 model to the Noble Lean denotation.",
+      "The graph-to-term projection and the subject decoder are adapter code, not proved code.",
+      "Correspondence with the Rust certificate checker, compiler lowering, emitted Wasm, and runtime remains unproved."
+    ]
+  }
+}
