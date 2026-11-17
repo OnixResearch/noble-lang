@@ -1,0 +1,2904 @@
+{
+  "schema": "noble-compiler-lab-pilot-receipt/v1",
+  "issue": 107,
+  "date": "2026-11-16",
+  "scope": "compiler-lab optimization-pilot report for the retained ngraph-llvm-i64/0 graph pair, run against the unchanged bundle at the recorded Noble commit. Each stage keeps its own semantic and concrete status; no stage inherits another stage result. The graph-to-LLVM claims in it are Noble claims that compiler-lab consumed by SHA-256, not rechecked; the LLVM optimisation relation is the pinned Alive2 result; the native stage is concrete agreement on the frozen 24-input workload, not a machine-code proof.",
+  "compiler_lab": {
+    "repository": "https://github.com/brittonr/compiler-lab",
+    "commit": "2ff04a542a43fe635385b9b23b6a7b99daf1a6ec",
+    "contract": {
+      "path": "src/validation/optimization_pilot/noble-i64.json",
+      "sha256": "aa87572886a6673621766b1c46c77fe60e85d5a96af57445c37a70f51dd21cc1"
+    },
+    "tool_setup": "nix/llvm-translation.nix (LLVM 21.1.8, Alive2 913e1556032ee70a9ebf147b5a0c7e10086b7490)",
+    "run_command": "compiler-lab validate optimization-pilot --contract src/validation/optimization_pilot/noble-i64.json --bundle <noble checkout>/verification/llvm-lowering/bundle.json --alive-tv <tools>/bin/alive-tv --opt <tools>/bin/opt --llc <tools>/bin/llc --clang <tools>/bin/clang --out <run directory>",
+    "replay_command": "compiler-lab validate optimization-pilot --replay <run directory> --alive-tv <tools>/bin/alive-tv --opt <tools>/bin/opt --llc <tools>/bin/llc --clang <tools>/bin/clang --out <replay directory>"
+  },
+  "noble": {
+    "source_commit": "6248573077ea647372918b493ff20ef7b9d685b3",
+    "clean_source": true,
+    "bundle": "verification/llvm-lowering/bundle.json",
+    "bundle_sha256": "fc70619b8795f04d3649968ea0d6e7b7f637d9f0ad3d862aa7f31e05dd30118f"
+  },
+  "run": {
+    "exit_status": 0,
+    "validation": "pass",
+    "report_sha256": "b830deae8e5b2a8c0aae1f7e0de1a58ac528a2c326f82eb59542fca0857f4f78"
+  },
+  "replay": {
+    "exit_status": 0,
+    "validation": "pass",
+    "report_sha256": "eea4fe28754fd1545f899e5883866715a3cb3a448e5b55322b29aba76c2ade4c",
+    "replay": {
+      "differences": [],
+      "matches": true,
+      "scope": "The replay reads only retained files, reruns every check and build, and compares claim statuses, eligibility, control results, artifact identities, and the decision. Timing samples are fresh measurements."
+    },
+    "recommendation": "stop",
+    "comparison": {
+      "code_bytes": {
+        "baseline": 9,
+        "candidate": 9
+      },
+      "contract_function": true,
+      "detail": "The candidate machine code equals the baseline machine code. Identical code supplies no runtime improvement.",
+      "kernel": "identical-machine-code",
+      "machine_code": "identical",
+      "median_ns_per_call": {
+        "baseline": 1.040252685546875,
+        "candidate": 1.4104105631510417
+      },
+      "settings": "matched",
+      "settings_sha256": {
+        "baseline": "71f3522216b2eb184bcfa34c5f01663c6e1886c5139b9096d5491db612a7978a",
+        "candidate": "71f3522216b2eb184bcfa34c5f01663c6e1886c5139b9096d5491db612a7978a"
+      }
+    }
+  },
+  "retention": {
+    "report": "The report member is a projection of the run report. report_sha256 names the unprojected file, which stays outside the repository because it records build-host paths; applying the filter below to that file with jq yields a JSON value equal to the report member.",
+    "filter": "{schema, kind, profile, outcome, passed, detail, host_os, host_arch, contract, producer: (.producer | del(.source)), pins, tools: (.tools | map_values(del(.path) | .version |= (split(\"\\n\") | map(select(startswith(\"InstalledDir:\") | not)) | join(\"\\n\")))), target, workload, measurement, coverage, costs_ms, decision, admission, admission_controls, stage_report, claims, identities, trust_boundaries, producer_gaps}",
+    "omitted": [
+      "candidates and subjects: per-process command records with build-host and tool-store paths; their statuses, eligibility and digests are repeated in claims, identities, coverage and stage_report",
+      "producer.source: the build-host path of the consumed bundle (its SHA-256 is producer.bundle_sha256)",
+      "tools.*.path and the clang InstalledDir line: tool-store paths (tool identities are kept as BLAKE3 digests and version strings)"
+    ]
+  },
+  "report": {
+    "schema": 1,
+    "kind": "compiler-lab-optimization-pilot-report",
+    "profile": "optimization-pilot-v1",
+    "outcome": "pass",
+    "passed": true,
+    "detail": "Every control met its declared outcome, and the eligible candidates carry complete evidence. The decision is stop.",
+    "host_os": "linux",
+    "host_arch": "x86_64",
+    "contract": {
+      "name": "noble-i64-graph-llvm-pilot",
+      "path": "retained/contract.json",
+      "policy": {
+        "name": "universal-graph-and-llvm-v1",
+        "requirements": {
+          "graph-rewrite": "semantic-validation",
+          "graph-to-llvm-lowering": "semantic-validation",
+          "llvm-optimisation": "semantic-validation",
+          "llvm-pair": "semantic-validation",
+          "native-artifact": "concrete-agreement"
+        }
+      },
+      "sha256": "aa87572886a6673621766b1c46c77fe60e85d5a96af57445c37a70f51dd21cc1",
+      "source": "src/validation/optimization_pilot/noble-i64.json"
+    },
+    "producer": {
+      "bundle": "retained/bundle/bundle.json",
+      "bundle_sha256": "fc70619b8795f04d3649968ea0d6e7b7f637d9f0ad3d862aa7f31e05dd30118f",
+      "identity_note": "The producer identities use its own logical scheme. Compiler-lab cannot recompute them, so it binds every consumed file by SHA-256.",
+      "identity_scheme": "test",
+      "profile": "ngraph-llvm-i64/0",
+      "revisions": {
+        "facts": "ngraph-facts/0",
+        "ir": "ngraph-ir/0",
+        "llvm_parser": "ngraph-llvm-i64/0",
+        "llvm_validator": "ngraph-llvm-i64/0",
+        "lowering": "ngraph-llvm-i64/0",
+        "production_backend": "ngraph-layered/0",
+        "rewrite_certificate": "ngraph-cert/0",
+        "semantic": "ngraph-sem/0"
+      },
+      "schema": "noble-llvm-lowering-bundle/v1",
+      "stages": [
+        {
+          "evidence": "cert::check accepts the retained derivation",
+          "stage": "graph-rewrite",
+          "status": "accepted"
+        },
+        {
+          "evidence": "llvm::validate on the retained bytes",
+          "stage": "graph-to-llvm-lowering",
+          "status": "validated"
+        },
+        {
+          "evidence": "LlvmLowering.validate_sound over all BitVec 64 input pairs",
+          "stage": "semantic-validation",
+          "status": "proved"
+        },
+        {
+          "evidence": "parsed artifacts versus graph reference at the recorded finite inputs",
+          "stage": "concrete-agreement",
+          "status": "checked"
+        },
+        {
+          "evidence": "compiler-lab #124 owns it; no pinned LLVM here",
+          "stage": "llvm-optimisation",
+          "status": "not-run"
+        },
+        {
+          "evidence": "compiler-lab #124 owns it; no pinned LLVM here",
+          "stage": "native-artifact",
+          "status": "not-run"
+        }
+      ]
+    },
+    "pins": {
+      "alive2": {
+        "license": "MIT",
+        "llvm_major": 21,
+        "repository": "https://github.com/AliveToolkit/alive2",
+        "revision": "913e1556032ee70a9ebf147b5a0c7e10086b7490",
+        "source_nar_hash": "sha256-LL6/Epn6iHQJGKb8PX+U6zvXK/WTlvOIJPr6JuGRsSU=",
+        "tag": "v21.0"
+      },
+      "compatibility": "Rust 1.99 uses LLVM 23. Supply separate compatible tools for that lane. Do not rewrite IR to hide a version mismatch.",
+      "nixpkgs": {
+        "llvm_package": "llvmPackages_21",
+        "llvm_version": "21.1.8",
+        "nar_hash": "sha256-/NAkDSsve+GNM0Bt6tleJdCGfsTlK89nPjkVOzZMo0s=",
+        "revision": "f205b5574fd0cb7da5b702a2da51507b7f4fdd1b"
+      },
+      "rust": {
+        "llvm_major": 21,
+        "llvm_source": "https://raw.githubusercontent.com/rust-lang/llvm-project/4f74b76fb69688474e073fb26b316d9ea571388f/cmake/Modules/LLVMVersion.cmake",
+        "llvm_source_revision": "4f74b76fb69688474e073fb26b316d9ea571388f",
+        "llvm_version": "21.1.3",
+        "toolchain": "1.92.0"
+      },
+      "schema": 1,
+      "setup": "nix/llvm-translation.nix"
+    },
+    "tools": {
+      "alive-tv": {
+        "blake3": "4d2dd01fee48eb34864a1c23e0fa40c9015cce68bb7680941fad0177c9a0a34f",
+        "llvm_major": 21,
+        "llvm_version": "21.1.8",
+        "name": "alive-tv",
+        "version": "LLVM (http://llvm.org/):\n  LLVM version 21.1.8\n  Optimized build.\n"
+      },
+      "clang": {
+        "blake3": "fc1899853288580e367e71781886828087184ee6f78e42f13b87533ec21460f1",
+        "llvm_major": 21,
+        "llvm_version": "21.1.8",
+        "name": "clang",
+        "version": "clang version 21.1.8\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\n"
+      },
+      "llc": {
+        "blake3": "45cf3ea38a291a3bf35529186f121f2ed97c06aaf7534be9baadb38c9f8c3439",
+        "llvm_major": 21,
+        "llvm_version": "21.1.8",
+        "name": "llc",
+        "version": "LLVM (http://llvm.org/):\n  LLVM version 21.1.8\n  Optimized build.\n  Default target: x86_64-unknown-linux-gnu\n  Host CPU: znver5\n\n  Registered Targets:\n    aarch64     - AArch64 (little endian)\n    aarch64_32  - AArch64 (little endian ILP32)\n    aarch64_be  - AArch64 (big endian)\n    amdgcn      - AMD GCN GPUs\n    arm         - ARM\n    arm64       - ARM64 (little endian)\n    arm64_32    - ARM64 (little endian ILP32)\n    armeb       - ARM (big endian)\n    avr         - Atmel AVR Microcontroller\n    bpf         - BPF (host endian)\n    bpfeb       - BPF (big endian)\n    bpfel       - BPF (little endian)\n    hexagon     - Hexagon\n    lanai       - Lanai\n    loongarch32 - 32-bit LoongArch\n    loongarch64 - 64-bit LoongArch\n    mips        - MIPS (32-bit big endian)\n    mips64      - MIPS (64-bit big endian)\n    mips64el    - MIPS (64-bit little endian)\n    mipsel      - MIPS (32-bit little endian)\n    msp430      - MSP430 [experimental]\n    nvptx       - NVIDIA PTX 32-bit\n    nvptx64     - NVIDIA PTX 64-bit\n    ppc32       - PowerPC 32\n    ppc32le     - PowerPC 32 LE\n    ppc64       - PowerPC 64\n    ppc64le     - PowerPC 64 LE\n    r600        - AMD GPUs HD2XXX-HD6XXX\n    riscv32     - 32-bit RISC-V\n    riscv64     - 64-bit RISC-V\n    sparc       - Sparc\n    sparcel     - Sparc LE\n    sparcv9     - Sparc V9\n    spirv       - SPIR-V Logical\n    spirv32     - SPIR-V 32-bit\n    spirv64     - SPIR-V 64-bit\n    systemz     - SystemZ\n    thumb       - Thumb\n    thumbeb     - Thumb (big endian)\n    ve          - VE\n    wasm32      - WebAssembly 32-bit\n    wasm64      - WebAssembly 64-bit\n    x86         - 32-bit X86: Pentium-Pro and above\n    x86-64      - 64-bit X86: EM64T and AMD64\n    xcore       - XCore\n"
+      },
+      "opt": {
+        "blake3": "621a7299e56e1b205fd1c950be27a9677b75ec92916af136859578abe1f7d50f",
+        "llvm_major": 21,
+        "llvm_version": "21.1.8",
+        "name": "opt",
+        "version": "LLVM (http://llvm.org/):\n  LLVM version 21.1.8\n  Optimized build.\n  Default target: x86_64-unknown-linux-gnu\n  Host CPU: znver5\n"
+      }
+    },
+    "target": {
+      "cpu": "x86-64",
+      "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+      "data_layout_confirmed": true,
+      "reported_data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128",
+      "triple": "x86_64-unknown-linux-gnu"
+    },
+    "workload": {
+      "boundary_pairs": 16,
+      "inputs": [
+        [
+          "0x0000000000000000",
+          "0x0000000000000000"
+        ],
+        [
+          "0x0000000000000000",
+          "0x0000000000000001"
+        ],
+        [
+          "0x0000000000000000",
+          "0x8000000000000000"
+        ],
+        [
+          "0x0000000000000000",
+          "0xFFFFFFFFFFFFFFFF"
+        ],
+        [
+          "0x0000000000000001",
+          "0x0000000000000000"
+        ],
+        [
+          "0x0000000000000001",
+          "0x0000000000000001"
+        ],
+        [
+          "0x0000000000000001",
+          "0x8000000000000000"
+        ],
+        [
+          "0x0000000000000001",
+          "0xFFFFFFFFFFFFFFFF"
+        ],
+        [
+          "0x8000000000000000",
+          "0x0000000000000000"
+        ],
+        [
+          "0x8000000000000000",
+          "0x0000000000000001"
+        ],
+        [
+          "0x8000000000000000",
+          "0x8000000000000000"
+        ],
+        [
+          "0x8000000000000000",
+          "0xFFFFFFFFFFFFFFFF"
+        ],
+        [
+          "0xFFFFFFFFFFFFFFFF",
+          "0x0000000000000000"
+        ],
+        [
+          "0xFFFFFFFFFFFFFFFF",
+          "0x0000000000000001"
+        ],
+        [
+          "0xFFFFFFFFFFFFFFFF",
+          "0x8000000000000000"
+        ],
+        [
+          "0xFFFFFFFFFFFFFFFF",
+          "0xFFFFFFFFFFFFFFFF"
+        ],
+        [
+          "0x0000000000000002",
+          "0x0000000000000000"
+        ],
+        [
+          "0x0000000000000003",
+          "0x0000000000000005"
+        ],
+        [
+          "0x0123456789ABCDEF",
+          "0xFEDCBA9876543210"
+        ],
+        [
+          "0x7FFFFFFFFFFFFFFF",
+          "0x8000000000000001"
+        ],
+        [
+          "0x0000000000003039",
+          "0x0000000000010932"
+        ],
+        [
+          "0x00000000DEADBEEF",
+          "0x00000000CAFEBABE"
+        ],
+        [
+          "0xFFFFFFFFFFFFFFFE",
+          "0x0000000000000002"
+        ],
+        [
+          "0x0000000100000000",
+          "0x0000000080000000"
+        ]
+      ],
+      "interior_pairs": 8,
+      "sha256": "aa6d6d5e8884d834ebbe0733b92067c6477195468ab28a3b29e8c58e7b0ea27c"
+    },
+    "measurement": {
+      "clock": "CLOCK_MONOTONIC_RAW",
+      "harness": {
+        "object": {
+          "path": "harness/harness.o",
+          "sha256": "98d9c1fb72f73e481a6ccab29738720b0090b1ab1f04543f0269d7c4d8309ceb"
+        },
+        "source": {
+          "path": "harness/harness.c",
+          "sha256": "fb979056fee08f2dadd777d6c1c9f4391fd6628efa1d11ee786dd202807a763f"
+        }
+      },
+      "protocol": "optimization-pilot-kernel-batch-v1",
+      "repetitions": 4096,
+      "samples": 15,
+      "timed_region": "One clock pair surrounds the repeated calls over the whole workload. Value output occurs outside the timed region.",
+      "warmups": 3
+    },
+    "coverage": {
+      "attempted_candidates": 23,
+      "controls": {
+        "declared": 20,
+        "met": 20
+      },
+      "eligible_candidates": 6,
+      "nonidentity": {
+        "attempted": 1,
+        "eligible": 1
+      },
+      "refused_by_edge": {
+        "graph-rewrite": 6,
+        "graph-to-llvm-lowering": 12,
+        "llvm-optimisation": 4,
+        "llvm-pair": 10,
+        "native-artifact": 9
+      },
+      "subjects": 5
+    },
+    "costs_ms": {
+      "checking_ms": 30343.985797999998,
+      "code_generation_ms": 1617.0,
+      "execution_ms": 851.0,
+      "link_ms": 15582.0,
+      "optimizer_ms": 916.0,
+      "proposal_detail": "The producer bundle records no proposal, emission, or validation cost.",
+      "proposal_ms": null,
+      "scope": "Every subject and every attempted candidate, including refused candidates and controls. Process times include process launch."
+    },
+    "decision": {
+      "continue_with": [],
+      "reasons": [
+        "foldable-producer is eligible, and its machine code equals the baseline machine code under the frozen backend. The graph rewrite supplies no native improvement."
+      ],
+      "recommendation": "stop",
+      "rule": {
+        "continue": "Continue when an eligible nonidentity candidate has machine code that differs from its baseline, and every candidate kernel sample is faster than every baseline kernel sample.",
+        "stop": "Stop otherwise. Identical machine code, overlapping samples, and slower samples are no improvement."
+      }
+    },
+    "admission": [],
+    "admission_controls": [
+      {
+        "kind": "bundle",
+        "met": true,
+        "mismatches": [],
+        "name": "stale-model-revision",
+        "pointer": "/revisions/semantic",
+        "refusals": [
+          "The producer bundle names semantic revision ngraph-sem/1, and the contract freezes ngraph-sem/0"
+        ],
+        "replace": null,
+        "subject": "foldable",
+        "value": "ngraph-sem/1"
+      },
+      {
+        "kind": "bundle",
+        "met": true,
+        "mismatches": [],
+        "name": "changed-bundle-target",
+        "pointer": "/target/triple",
+        "refusals": [
+          "The producer bundle names target triple aarch64-unknown-linux-gnu, and the contract freezes x86_64-unknown-linux-gnu"
+        ],
+        "replace": null,
+        "subject": "foldable",
+        "value": "aarch64-unknown-linux-gnu"
+      },
+      {
+        "kind": "frozen-graph",
+        "met": true,
+        "mismatches": [],
+        "name": "stale-graph-identity",
+        "pointer": null,
+        "refusals": [
+          "The foldable graph text has SHA-256 4e2f0761ac386a601071f734235954b4c41ca9c75656e851c7c00c21e1a0e81f, and the contract freezes 2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f"
+        ],
+        "replace": [
+          "%2 = const i64 3\n",
+          "%2 = const i64 4\n"
+        ],
+        "subject": "foldable",
+        "value": null
+      }
+    ],
+    "stage_report": [
+      {
+        "candidate": "foldable-producer",
+        "comparison": {
+          "code_bytes": {
+            "baseline": 9,
+            "candidate": 9
+          },
+          "contract_function": true,
+          "detail": "The candidate machine code equals the baseline machine code. Identical code supplies no runtime improvement.",
+          "kernel": "identical-machine-code",
+          "machine_code": "identical",
+          "median_ns_per_call": {
+            "baseline": 1.3518168131510417,
+            "candidate": 1.4305928548177083
+          },
+          "settings": "matched",
+          "settings_sha256": {
+            "baseline": "71f3522216b2eb184bcfa34c5f01663c6e1886c5139b9096d5491db612a7978a",
+            "candidate": "71f3522216b2eb184bcfa34c5f01663c6e1886c5139b9096d5491db612a7978a"
+          }
+        },
+        "eligible": true,
+        "original": "foldable",
+        "rewritten": "foldable-rewritten",
+        "stages": [
+          {
+            "concrete": "concrete-agreement",
+            "concrete_detail": "The candidate graph and the original graph agree on all 24 frozen workload inputs.",
+            "detail": "The independent replay of 1 fold steps reconstructs the candidate graph exactly. Each fold replaces an addition of two constants by their wrapping sum for every input pair.",
+            "method": "compiler-lab certificate replay",
+            "semantic": "semantic-validation",
+            "side": "pair",
+            "stage": "graph-rewrite",
+            "status": "semantic-validation"
+          },
+          {
+            "concrete": "concrete-agreement",
+            "concrete_detail": "The unoptimized module and the graph reference agree on all 24 frozen workload inputs.",
+            "detail": "The producer validator accepted these exact bytes as the lowering of foldable. The producer's Lean model theorem covers every BitVec 64 input pair. Its parser-to-model and checker-to-model links stay trusted.",
+            "method": "consumed producer claim",
+            "semantic": "semantic-validation",
+            "side": "baseline",
+            "stage": "graph-to-llvm-lowering",
+            "status": "semantic-validation"
+          },
+          {
+            "concrete": "concrete-agreement",
+            "concrete_detail": "The unoptimized module and the graph reference agree on all 24 frozen workload inputs.",
+            "detail": "The producer validator accepted these exact bytes as the lowering of foldable-rewritten. The producer's Lean model theorem covers every BitVec 64 input pair. Its parser-to-model and checker-to-model links stay trusted.",
+            "method": "consumed producer claim",
+            "semantic": "semantic-validation",
+            "side": "candidate",
+            "stage": "graph-to-llvm-lowering",
+            "status": "semantic-validation"
+          },
+          {
+            "concrete": "concrete-agreement",
+            "concrete_detail": "The llvm-pair lane reports agreement on 16 standard boundary input pairs. Both modules agree on 16 boundary input pairs. No relation checker ran.",
+            "detail": "Alive2 proves refinement in both directions, so the modules are equivalent for every u64 input pair.",
+            "method": "pinned Alive2",
+            "semantic": "semantic-validation",
+            "side": "pair",
+            "stage": "llvm-pair",
+            "status": "semantic-validation"
+          },
+          {
+            "concrete": "concrete-agreement",
+            "concrete_detail": "The optimized artifact and the unoptimized module agree on all 24 frozen workload inputs.",
+            "detail": "Alive2 reports one correct transformation for every concrete u64 input pair.",
+            "method": "pinned Alive2",
+            "semantic": "semantic-validation",
+            "side": "baseline",
+            "stage": "llvm-optimisation",
+            "status": "semantic-validation"
+          },
+          {
+            "concrete": "concrete-agreement",
+            "concrete_detail": "The optimized artifact and the unoptimized module agree on all 24 frozen workload inputs.",
+            "detail": "Alive2 reports one correct transformation for every concrete u64 input pair.",
+            "method": "pinned Alive2",
+            "semantic": "semantic-validation",
+            "side": "candidate",
+            "stage": "llvm-optimisation",
+            "status": "semantic-validation"
+          },
+          {
+            "concrete": "concrete-agreement",
+            "concrete_detail": "The optimized native artifact and the graph reference agree on all 24 frozen workload inputs.",
+            "detail": "No machine-code checker runs in this profile. Code generation stays trusted.",
+            "method": "none",
+            "semantic": "not-run",
+            "side": "baseline",
+            "stage": "native-artifact",
+            "status": "concrete-agreement"
+          },
+          {
+            "concrete": "concrete-agreement",
+            "concrete_detail": "The optimized native artifact and the graph reference agree on all 24 frozen workload inputs.",
+            "detail": "No machine-code checker runs in this profile. Code generation stays trusted.",
+            "method": "none",
+            "semantic": "not-run",
+            "side": "candidate",
+            "stage": "native-artifact",
+            "status": "concrete-agreement"
+          }
+        ]
+      }
+    ],
+    "claims": [
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-to-llvm-lowering",
+        "from": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f",
+        "owner": "subject/foldable",
+        "semantic": "semantic-validation",
+        "side": "baseline",
+        "status": "semantic-validation",
+        "to": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757",
+        "owner": "subject/foldable",
+        "semantic": "semantic-validation",
+        "side": "baseline",
+        "status": "semantic-validation",
+        "to": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "native-artifact",
+        "from": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e",
+        "owner": "subject/foldable",
+        "semantic": "not-run",
+        "side": "baseline",
+        "status": "concrete-agreement",
+        "to": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-to-llvm-lowering",
+        "from": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee",
+        "owner": "subject/wrapping",
+        "semantic": "semantic-validation",
+        "side": "baseline",
+        "status": "semantic-validation",
+        "to": "232000dbda2cf3c11a54a2592c84dc7c49027725587e3fc9b9f487d0aec0068a"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "232000dbda2cf3c11a54a2592c84dc7c49027725587e3fc9b9f487d0aec0068a",
+        "owner": "subject/wrapping",
+        "semantic": "semantic-validation",
+        "side": "baseline",
+        "status": "semantic-validation",
+        "to": "368d909835f7796ad4fb9cc9060e7dd934b638b821a588a182fc42e22c59a105"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "native-artifact",
+        "from": "368d909835f7796ad4fb9cc9060e7dd934b638b821a588a182fc42e22c59a105",
+        "owner": "subject/wrapping",
+        "semantic": "not-run",
+        "side": "baseline",
+        "status": "concrete-agreement",
+        "to": "822bf02536f2b7e1e2a43fbffbbf57b9ea9927d5b94572c0dfc479af66a7cc41"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-to-llvm-lowering",
+        "from": "a73f5ac53a8cea2f1022d81cdc8246fbec00911cbd3a5e8f51cacb94aeadf0ed",
+        "owner": "subject/negative",
+        "semantic": "semantic-validation",
+        "side": "baseline",
+        "status": "semantic-validation",
+        "to": "61e1bc7703eeb17048100cc02e0fbf86f659c9c3b3d168b68ad9481663285180"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "61e1bc7703eeb17048100cc02e0fbf86f659c9c3b3d168b68ad9481663285180",
+        "owner": "subject/negative",
+        "semantic": "semantic-validation",
+        "side": "baseline",
+        "status": "semantic-validation",
+        "to": "4d3abb21c149ef55bc9b27ddf0ade85fce895a7cb8fed0bea1aede82c6a5ca5c"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "native-artifact",
+        "from": "4d3abb21c149ef55bc9b27ddf0ade85fce895a7cb8fed0bea1aede82c6a5ca5c",
+        "owner": "subject/negative",
+        "semantic": "not-run",
+        "side": "baseline",
+        "status": "concrete-agreement",
+        "to": "3e937787e16badd57c5092512be66b4884d17597317247ab60010732ec166e22"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-to-llvm-lowering",
+        "from": "52aa5b2b3c76c268200aa23cfe79a35839fd4ce9b21dbcf93cf4c7a5b3454e59",
+        "owner": "subject/subtractive",
+        "semantic": "semantic-validation",
+        "side": "baseline",
+        "status": "semantic-validation",
+        "to": "f016c33558612da3624719c0d685200b27676a53d5fe901d72a470421354c22c"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "f016c33558612da3624719c0d685200b27676a53d5fe901d72a470421354c22c",
+        "owner": "subject/subtractive",
+        "semantic": "semantic-validation",
+        "side": "baseline",
+        "status": "semantic-validation",
+        "to": "2454400b05d935a88b824359a0fda45e31b3786f7c42ccd3f38773c4b4a321f3"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "native-artifact",
+        "from": "2454400b05d935a88b824359a0fda45e31b3786f7c42ccd3f38773c4b4a321f3",
+        "owner": "subject/subtractive",
+        "semantic": "not-run",
+        "side": "baseline",
+        "status": "concrete-agreement",
+        "to": "8a8f9f2596cb7a58d9bbc966a4a3220574ec39bc9fb85ac056269cc11b936a4a"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-to-llvm-lowering",
+        "from": "135281fb192d657eac664397fc003679f3956d9b341e90cb037f60c534fb1453",
+        "owner": "subject/shared",
+        "semantic": "semantic-validation",
+        "side": "baseline",
+        "status": "semantic-validation",
+        "to": "c9b420a0d15c6908941f3c178c473d23cb7ce5b08c01b11e0f2232e1f4c3b05f"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "c9b420a0d15c6908941f3c178c473d23cb7ce5b08c01b11e0f2232e1f4c3b05f",
+        "owner": "subject/shared",
+        "semantic": "semantic-validation",
+        "side": "baseline",
+        "status": "semantic-validation",
+        "to": "5feee2fde50084beba0b437148e8daf81a45b9276a928ef827c785a1f73215ee"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "native-artifact",
+        "from": "5feee2fde50084beba0b437148e8daf81a45b9276a928ef827c785a1f73215ee",
+        "owner": "subject/shared",
+        "semantic": "not-run",
+        "side": "baseline",
+        "status": "concrete-agreement",
+        "to": "dbcb497322b89cee82e9be0332ba98e4b0d7887a4f5694824c4b1a6df2c4e7d1"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f",
+        "owner": "candidate/foldable-identity",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-pair",
+        "from": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757",
+        "owner": "candidate/foldable-identity",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-to-llvm-lowering",
+        "from": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f",
+        "owner": "candidate/foldable-identity",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757",
+        "owner": "candidate/foldable-identity",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "native-artifact",
+        "from": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e",
+        "owner": "candidate/foldable-identity",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "concrete-agreement",
+        "to": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee",
+        "owner": "candidate/wrapping-identity",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-pair",
+        "from": "232000dbda2cf3c11a54a2592c84dc7c49027725587e3fc9b9f487d0aec0068a",
+        "owner": "candidate/wrapping-identity",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "232000dbda2cf3c11a54a2592c84dc7c49027725587e3fc9b9f487d0aec0068a"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-to-llvm-lowering",
+        "from": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee",
+        "owner": "candidate/wrapping-identity",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "232000dbda2cf3c11a54a2592c84dc7c49027725587e3fc9b9f487d0aec0068a"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "232000dbda2cf3c11a54a2592c84dc7c49027725587e3fc9b9f487d0aec0068a",
+        "owner": "candidate/wrapping-identity",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "368d909835f7796ad4fb9cc9060e7dd934b638b821a588a182fc42e22c59a105"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "native-artifact",
+        "from": "368d909835f7796ad4fb9cc9060e7dd934b638b821a588a182fc42e22c59a105",
+        "owner": "candidate/wrapping-identity",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "concrete-agreement",
+        "to": "822bf02536f2b7e1e2a43fbffbbf57b9ea9927d5b94572c0dfc479af66a7cc41"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "a73f5ac53a8cea2f1022d81cdc8246fbec00911cbd3a5e8f51cacb94aeadf0ed",
+        "owner": "candidate/negative-identity",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "a73f5ac53a8cea2f1022d81cdc8246fbec00911cbd3a5e8f51cacb94aeadf0ed"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-pair",
+        "from": "61e1bc7703eeb17048100cc02e0fbf86f659c9c3b3d168b68ad9481663285180",
+        "owner": "candidate/negative-identity",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "61e1bc7703eeb17048100cc02e0fbf86f659c9c3b3d168b68ad9481663285180"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-to-llvm-lowering",
+        "from": "a73f5ac53a8cea2f1022d81cdc8246fbec00911cbd3a5e8f51cacb94aeadf0ed",
+        "owner": "candidate/negative-identity",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "61e1bc7703eeb17048100cc02e0fbf86f659c9c3b3d168b68ad9481663285180"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "61e1bc7703eeb17048100cc02e0fbf86f659c9c3b3d168b68ad9481663285180",
+        "owner": "candidate/negative-identity",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "4d3abb21c149ef55bc9b27ddf0ade85fce895a7cb8fed0bea1aede82c6a5ca5c"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "native-artifact",
+        "from": "4d3abb21c149ef55bc9b27ddf0ade85fce895a7cb8fed0bea1aede82c6a5ca5c",
+        "owner": "candidate/negative-identity",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "concrete-agreement",
+        "to": "3e937787e16badd57c5092512be66b4884d17597317247ab60010732ec166e22"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "52aa5b2b3c76c268200aa23cfe79a35839fd4ce9b21dbcf93cf4c7a5b3454e59",
+        "owner": "candidate/subtractive-identity",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "52aa5b2b3c76c268200aa23cfe79a35839fd4ce9b21dbcf93cf4c7a5b3454e59"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-pair",
+        "from": "f016c33558612da3624719c0d685200b27676a53d5fe901d72a470421354c22c",
+        "owner": "candidate/subtractive-identity",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "f016c33558612da3624719c0d685200b27676a53d5fe901d72a470421354c22c"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-to-llvm-lowering",
+        "from": "52aa5b2b3c76c268200aa23cfe79a35839fd4ce9b21dbcf93cf4c7a5b3454e59",
+        "owner": "candidate/subtractive-identity",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "f016c33558612da3624719c0d685200b27676a53d5fe901d72a470421354c22c"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "f016c33558612da3624719c0d685200b27676a53d5fe901d72a470421354c22c",
+        "owner": "candidate/subtractive-identity",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "2454400b05d935a88b824359a0fda45e31b3786f7c42ccd3f38773c4b4a321f3"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "native-artifact",
+        "from": "2454400b05d935a88b824359a0fda45e31b3786f7c42ccd3f38773c4b4a321f3",
+        "owner": "candidate/subtractive-identity",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "concrete-agreement",
+        "to": "8a8f9f2596cb7a58d9bbc966a4a3220574ec39bc9fb85ac056269cc11b936a4a"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "135281fb192d657eac664397fc003679f3956d9b341e90cb037f60c534fb1453",
+        "owner": "candidate/shared-identity",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "135281fb192d657eac664397fc003679f3956d9b341e90cb037f60c534fb1453"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-pair",
+        "from": "c9b420a0d15c6908941f3c178c473d23cb7ce5b08c01b11e0f2232e1f4c3b05f",
+        "owner": "candidate/shared-identity",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "c9b420a0d15c6908941f3c178c473d23cb7ce5b08c01b11e0f2232e1f4c3b05f"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-to-llvm-lowering",
+        "from": "135281fb192d657eac664397fc003679f3956d9b341e90cb037f60c534fb1453",
+        "owner": "candidate/shared-identity",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "c9b420a0d15c6908941f3c178c473d23cb7ce5b08c01b11e0f2232e1f4c3b05f"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "c9b420a0d15c6908941f3c178c473d23cb7ce5b08c01b11e0f2232e1f4c3b05f",
+        "owner": "candidate/shared-identity",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "5feee2fde50084beba0b437148e8daf81a45b9276a928ef827c785a1f73215ee"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "native-artifact",
+        "from": "5feee2fde50084beba0b437148e8daf81a45b9276a928ef827c785a1f73215ee",
+        "owner": "candidate/shared-identity",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "concrete-agreement",
+        "to": "dbcb497322b89cee82e9be0332ba98e4b0d7887a4f5694824c4b1a6df2c4e7d1"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f",
+        "owner": "candidate/foldable-producer",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-pair",
+        "from": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757",
+        "owner": "candidate/foldable-producer",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-to-llvm-lowering",
+        "from": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550",
+        "owner": "candidate/foldable-producer",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11",
+        "owner": "candidate/foldable-producer",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "native-artifact",
+        "from": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e",
+        "owner": "candidate/foldable-producer",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "concrete-agreement",
+        "to": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f",
+        "owner": "candidate/control-changed-arithmetic",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550"
+      },
+      {
+        "concrete": "refuted",
+        "edge": "llvm-pair",
+        "from": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757",
+        "owner": "candidate/control-changed-arithmetic",
+        "semantic": "refuted",
+        "side": "pair",
+        "status": "refuted",
+        "to": "77284ae1736f5fd2c445d443feea23457c253ad9a9962e6121718d07c4d9adf5"
+      },
+      {
+        "concrete": "refuted",
+        "edge": "graph-to-llvm-lowering",
+        "from": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550",
+        "owner": "candidate/control-changed-arithmetic",
+        "semantic": "unknown",
+        "side": "candidate",
+        "status": "refuted",
+        "to": "77284ae1736f5fd2c445d443feea23457c253ad9a9962e6121718d07c4d9adf5"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "77284ae1736f5fd2c445d443feea23457c253ad9a9962e6121718d07c4d9adf5",
+        "owner": "candidate/control-changed-arithmetic",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "7678e614cfdd37de87e92935c656f279216e53d28b2a91a02af40651b0069972"
+      },
+      {
+        "concrete": "refuted",
+        "edge": "native-artifact",
+        "from": "7678e614cfdd37de87e92935c656f279216e53d28b2a91a02af40651b0069972",
+        "owner": "candidate/control-changed-arithmetic",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "refuted",
+        "to": "ac3a76f76b0995a73d961d5227f56e9605f9e4e04326dec306146ee0c154a428"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f",
+        "owner": "candidate/control-changed-output",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550"
+      },
+      {
+        "concrete": "refuted",
+        "edge": "llvm-pair",
+        "from": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757",
+        "owner": "candidate/control-changed-output",
+        "semantic": "refuted",
+        "side": "pair",
+        "status": "refuted",
+        "to": "763cdc4f7b845904986f03324909724c77715d1c7e7684d511f1c205ab3f970d"
+      },
+      {
+        "concrete": "refuted",
+        "edge": "graph-to-llvm-lowering",
+        "from": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550",
+        "owner": "candidate/control-changed-output",
+        "semantic": "unknown",
+        "side": "candidate",
+        "status": "refuted",
+        "to": "763cdc4f7b845904986f03324909724c77715d1c7e7684d511f1c205ab3f970d"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "763cdc4f7b845904986f03324909724c77715d1c7e7684d511f1c205ab3f970d",
+        "owner": "candidate/control-changed-output",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "254188d845c438d8e75c89024ecb39cbd11258ae4f6224d7820a1de5be851120"
+      },
+      {
+        "concrete": "refuted",
+        "edge": "native-artifact",
+        "from": "254188d845c438d8e75c89024ecb39cbd11258ae4f6224d7820a1de5be851120",
+        "owner": "candidate/control-changed-output",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "refuted",
+        "to": "baa873eca1a8f38a7fe11db288b023caa2b1ccd1fa8338ca6b098036770b77ff"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f",
+        "owner": "candidate/control-boundary-agreement",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-pair",
+        "from": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757",
+        "owner": "candidate/control-boundary-agreement",
+        "semantic": "refuted",
+        "side": "pair",
+        "status": "refuted",
+        "to": "8afc76620e1b53722525b72f1518e34322aae7c92f14955351ef302051a04cd0"
+      },
+      {
+        "concrete": "refuted",
+        "edge": "graph-to-llvm-lowering",
+        "from": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550",
+        "owner": "candidate/control-boundary-agreement",
+        "semantic": "unknown",
+        "side": "candidate",
+        "status": "refuted",
+        "to": "8afc76620e1b53722525b72f1518e34322aae7c92f14955351ef302051a04cd0"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "8afc76620e1b53722525b72f1518e34322aae7c92f14955351ef302051a04cd0",
+        "owner": "candidate/control-boundary-agreement",
+        "semantic": "timeout",
+        "side": "candidate",
+        "status": "concrete-agreement",
+        "to": "521469dc5ad7183deef6505d1267588458b54a2d6bbd367a39cc50f516b7d3ae"
+      },
+      {
+        "concrete": "refuted",
+        "edge": "native-artifact",
+        "from": "521469dc5ad7183deef6505d1267588458b54a2d6bbd367a39cc50f516b7d3ae",
+        "owner": "candidate/control-boundary-agreement",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "refuted",
+        "to": "3f40e1fe38d636e1b73bf607bbdc805dd9e7c292899cdeb9726c402088b2ddeb"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f",
+        "owner": "candidate/control-withheld-llvm-relation",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-pair",
+        "from": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757",
+        "owner": "candidate/control-withheld-llvm-relation",
+        "semantic": "not-run",
+        "side": "pair",
+        "status": "concrete-agreement",
+        "to": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-to-llvm-lowering",
+        "from": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550",
+        "owner": "candidate/control-withheld-llvm-relation",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11",
+        "owner": "candidate/control-withheld-llvm-relation",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "native-artifact",
+        "from": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e",
+        "owner": "candidate/control-withheld-llvm-relation",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "concrete-agreement",
+        "to": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f",
+        "owner": "candidate/control-missing-graph-correspondence",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-pair",
+        "from": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757",
+        "owner": "candidate/control-missing-graph-correspondence",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-to-llvm-lowering",
+        "from": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f",
+        "owner": "candidate/control-missing-graph-correspondence",
+        "semantic": "unknown",
+        "side": "candidate",
+        "status": "concrete-agreement",
+        "to": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11",
+        "owner": "candidate/control-missing-graph-correspondence",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "native-artifact",
+        "from": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e",
+        "owner": "candidate/control-missing-graph-correspondence",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "concrete-agreement",
+        "to": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "52aa5b2b3c76c268200aa23cfe79a35839fd4ce9b21dbcf93cf4c7a5b3454e59",
+        "owner": "candidate/control-reversed-subtraction",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "52aa5b2b3c76c268200aa23cfe79a35839fd4ce9b21dbcf93cf4c7a5b3454e59"
+      },
+      {
+        "concrete": "refuted",
+        "edge": "llvm-pair",
+        "from": "f016c33558612da3624719c0d685200b27676a53d5fe901d72a470421354c22c",
+        "owner": "candidate/control-reversed-subtraction",
+        "semantic": "refuted",
+        "side": "pair",
+        "status": "refuted",
+        "to": "b76c44c47f5d198b5efb7b2a7b71dec225a4a45cf03ad36532b1cf1bda4339b6"
+      },
+      {
+        "concrete": "refuted",
+        "edge": "graph-to-llvm-lowering",
+        "from": "52aa5b2b3c76c268200aa23cfe79a35839fd4ce9b21dbcf93cf4c7a5b3454e59",
+        "owner": "candidate/control-reversed-subtraction",
+        "semantic": "unknown",
+        "side": "candidate",
+        "status": "refuted",
+        "to": "b76c44c47f5d198b5efb7b2a7b71dec225a4a45cf03ad36532b1cf1bda4339b6"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "b76c44c47f5d198b5efb7b2a7b71dec225a4a45cf03ad36532b1cf1bda4339b6",
+        "owner": "candidate/control-reversed-subtraction",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "b09b5eadda4c6b650eeae8a089f0f60e5caf3b0ac31b72243f566f2b4bc4886f"
+      },
+      {
+        "concrete": "refuted",
+        "edge": "native-artifact",
+        "from": "b09b5eadda4c6b650eeae8a089f0f60e5caf3b0ac31b72243f566f2b4bc4886f",
+        "owner": "candidate/control-reversed-subtraction",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "refuted",
+        "to": "d4cf38ae1d6033b999c12cc06fdd960a9f9510ce559b999477bbb886ed50e626"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee",
+        "owner": "candidate/control-overflow-flag-nsw",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee"
+      },
+      {
+        "concrete": "unsupported",
+        "edge": "llvm-pair",
+        "from": "232000dbda2cf3c11a54a2592c84dc7c49027725587e3fc9b9f487d0aec0068a",
+        "owner": "candidate/control-overflow-flag-nsw",
+        "semantic": "refuted",
+        "side": "pair",
+        "status": "refuted",
+        "to": "a985b299308a62332d9eb9a8b6ac2993c28e83086cb78c0575f781092d417eae"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-to-llvm-lowering",
+        "from": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee",
+        "owner": "candidate/control-overflow-flag-nsw",
+        "semantic": "unknown",
+        "side": "candidate",
+        "status": "concrete-agreement",
+        "to": "a985b299308a62332d9eb9a8b6ac2993c28e83086cb78c0575f781092d417eae"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "a985b299308a62332d9eb9a8b6ac2993c28e83086cb78c0575f781092d417eae",
+        "owner": "candidate/control-overflow-flag-nsw",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "368d909835f7796ad4fb9cc9060e7dd934b638b821a588a182fc42e22c59a105"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "native-artifact",
+        "from": "368d909835f7796ad4fb9cc9060e7dd934b638b821a588a182fc42e22c59a105",
+        "owner": "candidate/control-overflow-flag-nsw",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "concrete-agreement",
+        "to": "822bf02536f2b7e1e2a43fbffbbf57b9ea9927d5b94572c0dfc479af66a7cc41"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee",
+        "owner": "candidate/control-overflow-flag-nuw",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee"
+      },
+      {
+        "concrete": "unsupported",
+        "edge": "llvm-pair",
+        "from": "232000dbda2cf3c11a54a2592c84dc7c49027725587e3fc9b9f487d0aec0068a",
+        "owner": "candidate/control-overflow-flag-nuw",
+        "semantic": "refuted",
+        "side": "pair",
+        "status": "refuted",
+        "to": "04f794c569e7351d46c35c29ae36f67eebd037fa875c5088ac2c564a0dc42dd2"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-to-llvm-lowering",
+        "from": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee",
+        "owner": "candidate/control-overflow-flag-nuw",
+        "semantic": "unknown",
+        "side": "candidate",
+        "status": "concrete-agreement",
+        "to": "04f794c569e7351d46c35c29ae36f67eebd037fa875c5088ac2c564a0dc42dd2"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "04f794c569e7351d46c35c29ae36f67eebd037fa875c5088ac2c564a0dc42dd2",
+        "owner": "candidate/control-overflow-flag-nuw",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "368d909835f7796ad4fb9cc9060e7dd934b638b821a588a182fc42e22c59a105"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "native-artifact",
+        "from": "368d909835f7796ad4fb9cc9060e7dd934b638b821a588a182fc42e22c59a105",
+        "owner": "candidate/control-overflow-flag-nuw",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "concrete-agreement",
+        "to": "822bf02536f2b7e1e2a43fbffbbf57b9ea9927d5b94572c0dfc479af66a7cc41"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee",
+        "owner": "candidate/control-changed-triple",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee"
+      },
+      {
+        "concrete": "unsupported",
+        "edge": "llvm-pair",
+        "from": "232000dbda2cf3c11a54a2592c84dc7c49027725587e3fc9b9f487d0aec0068a",
+        "owner": "candidate/control-changed-triple",
+        "semantic": "unsupported",
+        "side": "pair",
+        "status": "unsupported",
+        "to": "dee21907cde3d5436d7f73175039609e80587542d53e03d8708feb539fa5d6e6"
+      },
+      {
+        "concrete": "not-run",
+        "edge": "graph-to-llvm-lowering",
+        "from": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee",
+        "owner": "candidate/control-changed-triple",
+        "semantic": "unknown",
+        "side": "candidate",
+        "status": "unknown",
+        "to": "dee21907cde3d5436d7f73175039609e80587542d53e03d8708feb539fa5d6e6"
+      },
+      {
+        "concrete": "not-run",
+        "edge": "llvm-optimisation",
+        "from": "dee21907cde3d5436d7f73175039609e80587542d53e03d8708feb539fa5d6e6",
+        "owner": "candidate/control-changed-triple",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "not-run",
+        "to": ""
+      },
+      {
+        "concrete": "not-run",
+        "edge": "native-artifact",
+        "from": "",
+        "owner": "candidate/control-changed-triple",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "not-run",
+        "to": ""
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee",
+        "owner": "candidate/control-changed-data-layout",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee"
+      },
+      {
+        "concrete": "unsupported",
+        "edge": "llvm-pair",
+        "from": "232000dbda2cf3c11a54a2592c84dc7c49027725587e3fc9b9f487d0aec0068a",
+        "owner": "candidate/control-changed-data-layout",
+        "semantic": "unsupported",
+        "side": "pair",
+        "status": "unsupported",
+        "to": "8a9aacbaa663f572ee9f0cbe34f1b0312ac456ee675d116be02b255850de6ec0"
+      },
+      {
+        "concrete": "not-run",
+        "edge": "graph-to-llvm-lowering",
+        "from": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee",
+        "owner": "candidate/control-changed-data-layout",
+        "semantic": "unknown",
+        "side": "candidate",
+        "status": "unknown",
+        "to": "8a9aacbaa663f572ee9f0cbe34f1b0312ac456ee675d116be02b255850de6ec0"
+      },
+      {
+        "concrete": "not-run",
+        "edge": "llvm-optimisation",
+        "from": "8a9aacbaa663f572ee9f0cbe34f1b0312ac456ee675d116be02b255850de6ec0",
+        "owner": "candidate/control-changed-data-layout",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "not-run",
+        "to": ""
+      },
+      {
+        "concrete": "not-run",
+        "edge": "native-artifact",
+        "from": "",
+        "owner": "candidate/control-changed-data-layout",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "not-run",
+        "to": ""
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee",
+        "owner": "candidate/control-changed-abi",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-pair",
+        "from": "232000dbda2cf3c11a54a2592c84dc7c49027725587e3fc9b9f487d0aec0068a",
+        "owner": "candidate/control-changed-abi",
+        "semantic": "unsupported",
+        "side": "pair",
+        "status": "concrete-agreement",
+        "to": "07fb2cc5d0f8388febc0febc9077dd94bd696f434d952c7d6b84be377b495b1c"
+      },
+      {
+        "concrete": "not-run",
+        "edge": "graph-to-llvm-lowering",
+        "from": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee",
+        "owner": "candidate/control-changed-abi",
+        "semantic": "unknown",
+        "side": "candidate",
+        "status": "unknown",
+        "to": "07fb2cc5d0f8388febc0febc9077dd94bd696f434d952c7d6b84be377b495b1c"
+      },
+      {
+        "concrete": "not-run",
+        "edge": "llvm-optimisation",
+        "from": "07fb2cc5d0f8388febc0febc9077dd94bd696f434d952c7d6b84be377b495b1c",
+        "owner": "candidate/control-changed-abi",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "not-run",
+        "to": ""
+      },
+      {
+        "concrete": "not-run",
+        "edge": "native-artifact",
+        "from": "",
+        "owner": "candidate/control-changed-abi",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "not-run",
+        "to": ""
+      },
+      {
+        "concrete": "refuted",
+        "edge": "graph-rewrite",
+        "from": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f",
+        "owner": "candidate/control-changed-graph-arithmetic",
+        "semantic": "unknown",
+        "side": "pair",
+        "status": "refuted",
+        "to": "3d668668cc2978dbc1df001cc7d364353edda54eecae045d122f70ac3b483504"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-pair",
+        "from": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757",
+        "owner": "candidate/control-changed-graph-arithmetic",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "concrete": "refuted",
+        "edge": "graph-to-llvm-lowering",
+        "from": "3d668668cc2978dbc1df001cc7d364353edda54eecae045d122f70ac3b483504",
+        "owner": "candidate/control-changed-graph-arithmetic",
+        "semantic": "unknown",
+        "side": "candidate",
+        "status": "refuted",
+        "to": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11",
+        "owner": "candidate/control-changed-graph-arithmetic",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "concrete": "refuted",
+        "edge": "native-artifact",
+        "from": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e",
+        "owner": "candidate/control-changed-graph-arithmetic",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "refuted",
+        "to": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "concrete": "refuted",
+        "edge": "graph-rewrite",
+        "from": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f",
+        "owner": "candidate/control-changed-graph-output",
+        "semantic": "unknown",
+        "side": "pair",
+        "status": "refuted",
+        "to": "6d6578b75fd51ad52e2366f61a9f923311f5c2b4b17c210a23d8973f54fcc4e3"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-pair",
+        "from": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757",
+        "owner": "candidate/control-changed-graph-output",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "concrete": "refuted",
+        "edge": "graph-to-llvm-lowering",
+        "from": "6d6578b75fd51ad52e2366f61a9f923311f5c2b4b17c210a23d8973f54fcc4e3",
+        "owner": "candidate/control-changed-graph-output",
+        "semantic": "unknown",
+        "side": "candidate",
+        "status": "refuted",
+        "to": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11",
+        "owner": "candidate/control-changed-graph-output",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "concrete": "refuted",
+        "edge": "native-artifact",
+        "from": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e",
+        "owner": "candidate/control-changed-graph-output",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "refuted",
+        "to": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f",
+        "owner": "candidate/control-malformed-certificate",
+        "semantic": "unknown",
+        "side": "pair",
+        "status": "concrete-agreement",
+        "to": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-pair",
+        "from": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757",
+        "owner": "candidate/control-malformed-certificate",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-to-llvm-lowering",
+        "from": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550",
+        "owner": "candidate/control-malformed-certificate",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11",
+        "owner": "candidate/control-malformed-certificate",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "native-artifact",
+        "from": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e",
+        "owner": "candidate/control-malformed-certificate",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "concrete-agreement",
+        "to": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f",
+        "owner": "candidate/control-substituted-certificate-claim",
+        "semantic": "unknown",
+        "side": "pair",
+        "status": "concrete-agreement",
+        "to": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-pair",
+        "from": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757",
+        "owner": "candidate/control-substituted-certificate-claim",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-to-llvm-lowering",
+        "from": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550",
+        "owner": "candidate/control-substituted-certificate-claim",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11",
+        "owner": "candidate/control-substituted-certificate-claim",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "native-artifact",
+        "from": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e",
+        "owner": "candidate/control-substituted-certificate-claim",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "concrete-agreement",
+        "to": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f",
+        "owner": "candidate/control-substituted-certificate-endpoint",
+        "semantic": "unknown",
+        "side": "pair",
+        "status": "concrete-agreement",
+        "to": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-pair",
+        "from": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757",
+        "owner": "candidate/control-substituted-certificate-endpoint",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-to-llvm-lowering",
+        "from": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550",
+        "owner": "candidate/control-substituted-certificate-endpoint",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11",
+        "owner": "candidate/control-substituted-certificate-endpoint",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "native-artifact",
+        "from": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e",
+        "owner": "candidate/control-substituted-certificate-endpoint",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "concrete-agreement",
+        "to": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-rewrite",
+        "from": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f",
+        "owner": "candidate/control-stale-certificate-revision",
+        "semantic": "unsupported",
+        "side": "pair",
+        "status": "concrete-agreement",
+        "to": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-pair",
+        "from": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757",
+        "owner": "candidate/control-stale-certificate-revision",
+        "semantic": "semantic-validation",
+        "side": "pair",
+        "status": "semantic-validation",
+        "to": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "graph-to-llvm-lowering",
+        "from": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550",
+        "owner": "candidate/control-stale-certificate-revision",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "llvm-optimisation",
+        "from": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11",
+        "owner": "candidate/control-stale-certificate-revision",
+        "semantic": "semantic-validation",
+        "side": "candidate",
+        "status": "semantic-validation",
+        "to": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "concrete": "concrete-agreement",
+        "edge": "native-artifact",
+        "from": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e",
+        "owner": "candidate/control-stale-certificate-revision",
+        "semantic": "not-run",
+        "side": "candidate",
+        "status": "concrete-agreement",
+        "to": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "control": null,
+        "edge": "eligibility",
+        "owner": "candidate/foldable-identity",
+        "side": "policy",
+        "status": true,
+        "witness": null
+      },
+      {
+        "control": null,
+        "edge": "eligibility",
+        "owner": "candidate/wrapping-identity",
+        "side": "policy",
+        "status": true,
+        "witness": null
+      },
+      {
+        "control": null,
+        "edge": "eligibility",
+        "owner": "candidate/negative-identity",
+        "side": "policy",
+        "status": true,
+        "witness": null
+      },
+      {
+        "control": null,
+        "edge": "eligibility",
+        "owner": "candidate/subtractive-identity",
+        "side": "policy",
+        "status": true,
+        "witness": null
+      },
+      {
+        "control": null,
+        "edge": "eligibility",
+        "owner": "candidate/shared-identity",
+        "side": "policy",
+        "status": true,
+        "witness": null
+      },
+      {
+        "control": null,
+        "edge": "eligibility",
+        "owner": "candidate/foldable-producer",
+        "side": "policy",
+        "status": true,
+        "witness": null
+      },
+      {
+        "control": true,
+        "edge": "eligibility",
+        "owner": "candidate/control-changed-arithmetic",
+        "side": "policy",
+        "status": false,
+        "witness": "reproduced"
+      },
+      {
+        "control": true,
+        "edge": "eligibility",
+        "owner": "candidate/control-changed-output",
+        "side": "policy",
+        "status": false,
+        "witness": "reproduced"
+      },
+      {
+        "control": true,
+        "edge": "eligibility",
+        "owner": "candidate/control-boundary-agreement",
+        "side": "policy",
+        "status": false,
+        "witness": "reproduced"
+      },
+      {
+        "control": true,
+        "edge": "eligibility",
+        "owner": "candidate/control-withheld-llvm-relation",
+        "side": "policy",
+        "status": false,
+        "witness": null
+      },
+      {
+        "control": true,
+        "edge": "eligibility",
+        "owner": "candidate/control-missing-graph-correspondence",
+        "side": "policy",
+        "status": false,
+        "witness": null
+      },
+      {
+        "control": true,
+        "edge": "eligibility",
+        "owner": "candidate/control-reversed-subtraction",
+        "side": "policy",
+        "status": false,
+        "witness": "reproduced"
+      },
+      {
+        "control": true,
+        "edge": "eligibility",
+        "owner": "candidate/control-overflow-flag-nsw",
+        "side": "policy",
+        "status": false,
+        "witness": "not-reproduced"
+      },
+      {
+        "control": true,
+        "edge": "eligibility",
+        "owner": "candidate/control-overflow-flag-nuw",
+        "side": "policy",
+        "status": false,
+        "witness": "not-reproduced"
+      },
+      {
+        "control": true,
+        "edge": "eligibility",
+        "owner": "candidate/control-changed-triple",
+        "side": "policy",
+        "status": false,
+        "witness": null
+      },
+      {
+        "control": true,
+        "edge": "eligibility",
+        "owner": "candidate/control-changed-data-layout",
+        "side": "policy",
+        "status": false,
+        "witness": null
+      },
+      {
+        "control": true,
+        "edge": "eligibility",
+        "owner": "candidate/control-changed-abi",
+        "side": "policy",
+        "status": false,
+        "witness": null
+      },
+      {
+        "control": true,
+        "edge": "eligibility",
+        "owner": "candidate/control-changed-graph-arithmetic",
+        "side": "policy",
+        "status": false,
+        "witness": null
+      },
+      {
+        "control": true,
+        "edge": "eligibility",
+        "owner": "candidate/control-changed-graph-output",
+        "side": "policy",
+        "status": false,
+        "witness": null
+      },
+      {
+        "control": true,
+        "edge": "eligibility",
+        "owner": "candidate/control-malformed-certificate",
+        "side": "policy",
+        "status": false,
+        "witness": null
+      },
+      {
+        "control": true,
+        "edge": "eligibility",
+        "owner": "candidate/control-substituted-certificate-claim",
+        "side": "policy",
+        "status": false,
+        "witness": null
+      },
+      {
+        "control": true,
+        "edge": "eligibility",
+        "owner": "candidate/control-substituted-certificate-endpoint",
+        "side": "policy",
+        "status": false,
+        "witness": null
+      },
+      {
+        "control": true,
+        "edge": "eligibility",
+        "owner": "candidate/control-stale-certificate-revision",
+        "side": "policy",
+        "status": false,
+        "witness": null
+      }
+    ],
+    "identities": [
+      {
+        "artifact": "graph",
+        "owner": "subject/foldable",
+        "sha256": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f"
+      },
+      {
+        "artifact": "module",
+        "owner": "subject/foldable",
+        "sha256": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "subject/foldable",
+        "sha256": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "artifact": "object",
+        "owner": "subject/foldable",
+        "sha256": "b46516532899b555c1eda5d09cd1754eb598892a0331f988c6e4e37f189275d4"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "subject/foldable",
+        "sha256": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "artifact": "graph",
+        "owner": "subject/wrapping",
+        "sha256": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee"
+      },
+      {
+        "artifact": "module",
+        "owner": "subject/wrapping",
+        "sha256": "232000dbda2cf3c11a54a2592c84dc7c49027725587e3fc9b9f487d0aec0068a"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "subject/wrapping",
+        "sha256": "368d909835f7796ad4fb9cc9060e7dd934b638b821a588a182fc42e22c59a105"
+      },
+      {
+        "artifact": "object",
+        "owner": "subject/wrapping",
+        "sha256": "8576461bbb226ee33b73b47d8d28b095455742b30557a391ffa3ef06d784fd46"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "subject/wrapping",
+        "sha256": "822bf02536f2b7e1e2a43fbffbbf57b9ea9927d5b94572c0dfc479af66a7cc41"
+      },
+      {
+        "artifact": "graph",
+        "owner": "subject/negative",
+        "sha256": "a73f5ac53a8cea2f1022d81cdc8246fbec00911cbd3a5e8f51cacb94aeadf0ed"
+      },
+      {
+        "artifact": "module",
+        "owner": "subject/negative",
+        "sha256": "61e1bc7703eeb17048100cc02e0fbf86f659c9c3b3d168b68ad9481663285180"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "subject/negative",
+        "sha256": "4d3abb21c149ef55bc9b27ddf0ade85fce895a7cb8fed0bea1aede82c6a5ca5c"
+      },
+      {
+        "artifact": "object",
+        "owner": "subject/negative",
+        "sha256": "414dd0cbaf141c08de8e978d81a006b36a71eaafd0c566b0d9da70923237e7ff"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "subject/negative",
+        "sha256": "3e937787e16badd57c5092512be66b4884d17597317247ab60010732ec166e22"
+      },
+      {
+        "artifact": "graph",
+        "owner": "subject/subtractive",
+        "sha256": "52aa5b2b3c76c268200aa23cfe79a35839fd4ce9b21dbcf93cf4c7a5b3454e59"
+      },
+      {
+        "artifact": "module",
+        "owner": "subject/subtractive",
+        "sha256": "f016c33558612da3624719c0d685200b27676a53d5fe901d72a470421354c22c"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "subject/subtractive",
+        "sha256": "2454400b05d935a88b824359a0fda45e31b3786f7c42ccd3f38773c4b4a321f3"
+      },
+      {
+        "artifact": "object",
+        "owner": "subject/subtractive",
+        "sha256": "a872f35439bf0662737051bae99b2d4ae39ab7f4d0f086b02afa6df215ff5e57"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "subject/subtractive",
+        "sha256": "8a8f9f2596cb7a58d9bbc966a4a3220574ec39bc9fb85ac056269cc11b936a4a"
+      },
+      {
+        "artifact": "graph",
+        "owner": "subject/shared",
+        "sha256": "135281fb192d657eac664397fc003679f3956d9b341e90cb037f60c534fb1453"
+      },
+      {
+        "artifact": "module",
+        "owner": "subject/shared",
+        "sha256": "c9b420a0d15c6908941f3c178c473d23cb7ce5b08c01b11e0f2232e1f4c3b05f"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "subject/shared",
+        "sha256": "5feee2fde50084beba0b437148e8daf81a45b9276a928ef827c785a1f73215ee"
+      },
+      {
+        "artifact": "object",
+        "owner": "subject/shared",
+        "sha256": "054466ae3ff828d5704f9606598749c4a3a80b4793f1091ab0e587c1380ed488"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "subject/shared",
+        "sha256": "dbcb497322b89cee82e9be0332ba98e4b0d7887a4f5694824c4b1a6df2c4e7d1"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/foldable-identity",
+        "sha256": "2226ba29ef2e09accfe89d2a1dd5ef8abdaa91aa3b8837bd05f775797467791a"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/foldable-identity",
+        "sha256": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/foldable-identity",
+        "sha256": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/foldable-identity",
+        "sha256": "af14ab38b498f4ba52a30204490aa65a9e19b22f1662a4702c3bc3634d122757"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/foldable-identity",
+        "sha256": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/foldable-identity",
+        "sha256": "b46516532899b555c1eda5d09cd1754eb598892a0331f988c6e4e37f189275d4"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/foldable-identity",
+        "sha256": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/wrapping-identity",
+        "sha256": "b56511d711afd2001e9ce11e6cbbd4350aee6440782cbf25655b17d83c4b5cb6"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/wrapping-identity",
+        "sha256": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/wrapping-identity",
+        "sha256": "232000dbda2cf3c11a54a2592c84dc7c49027725587e3fc9b9f487d0aec0068a"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/wrapping-identity",
+        "sha256": "232000dbda2cf3c11a54a2592c84dc7c49027725587e3fc9b9f487d0aec0068a"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/wrapping-identity",
+        "sha256": "368d909835f7796ad4fb9cc9060e7dd934b638b821a588a182fc42e22c59a105"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/wrapping-identity",
+        "sha256": "8576461bbb226ee33b73b47d8d28b095455742b30557a391ffa3ef06d784fd46"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/wrapping-identity",
+        "sha256": "822bf02536f2b7e1e2a43fbffbbf57b9ea9927d5b94572c0dfc479af66a7cc41"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/negative-identity",
+        "sha256": "c1a1ceddf34f4a4514b0a348fcf7ad639f3389713cd0b6a53fb9bee9e0633f77"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/negative-identity",
+        "sha256": "a73f5ac53a8cea2f1022d81cdc8246fbec00911cbd3a5e8f51cacb94aeadf0ed"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/negative-identity",
+        "sha256": "61e1bc7703eeb17048100cc02e0fbf86f659c9c3b3d168b68ad9481663285180"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/negative-identity",
+        "sha256": "61e1bc7703eeb17048100cc02e0fbf86f659c9c3b3d168b68ad9481663285180"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/negative-identity",
+        "sha256": "4d3abb21c149ef55bc9b27ddf0ade85fce895a7cb8fed0bea1aede82c6a5ca5c"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/negative-identity",
+        "sha256": "414dd0cbaf141c08de8e978d81a006b36a71eaafd0c566b0d9da70923237e7ff"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/negative-identity",
+        "sha256": "3e937787e16badd57c5092512be66b4884d17597317247ab60010732ec166e22"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/subtractive-identity",
+        "sha256": "d583979cfcb354ed4029366600c0b377e3a2e6aadc09b81b09d2d2433cffed7d"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/subtractive-identity",
+        "sha256": "52aa5b2b3c76c268200aa23cfe79a35839fd4ce9b21dbcf93cf4c7a5b3454e59"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/subtractive-identity",
+        "sha256": "f016c33558612da3624719c0d685200b27676a53d5fe901d72a470421354c22c"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/subtractive-identity",
+        "sha256": "f016c33558612da3624719c0d685200b27676a53d5fe901d72a470421354c22c"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/subtractive-identity",
+        "sha256": "2454400b05d935a88b824359a0fda45e31b3786f7c42ccd3f38773c4b4a321f3"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/subtractive-identity",
+        "sha256": "a872f35439bf0662737051bae99b2d4ae39ab7f4d0f086b02afa6df215ff5e57"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/subtractive-identity",
+        "sha256": "8a8f9f2596cb7a58d9bbc966a4a3220574ec39bc9fb85ac056269cc11b936a4a"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/shared-identity",
+        "sha256": "fba84142cdcb7f396574ae5f5f93b45974812ea70d3859c572ae462870cad345"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/shared-identity",
+        "sha256": "135281fb192d657eac664397fc003679f3956d9b341e90cb037f60c534fb1453"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/shared-identity",
+        "sha256": "c9b420a0d15c6908941f3c178c473d23cb7ce5b08c01b11e0f2232e1f4c3b05f"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/shared-identity",
+        "sha256": "c9b420a0d15c6908941f3c178c473d23cb7ce5b08c01b11e0f2232e1f4c3b05f"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/shared-identity",
+        "sha256": "5feee2fde50084beba0b437148e8daf81a45b9276a928ef827c785a1f73215ee"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/shared-identity",
+        "sha256": "054466ae3ff828d5704f9606598749c4a3a80b4793f1091ab0e587c1380ed488"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/shared-identity",
+        "sha256": "dbcb497322b89cee82e9be0332ba98e4b0d7887a4f5694824c4b1a6df2c4e7d1"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/foldable-producer",
+        "sha256": "253df30d2243cc77d102d87005bf32c3a92f5cfd695d1d2dfe668ae8841240eb"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/foldable-producer",
+        "sha256": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/foldable-producer",
+        "sha256": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/foldable-producer",
+        "sha256": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/foldable-producer",
+        "sha256": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/foldable-producer",
+        "sha256": "b46516532899b555c1eda5d09cd1754eb598892a0331f988c6e4e37f189275d4"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/foldable-producer",
+        "sha256": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/control-changed-arithmetic",
+        "sha256": "253df30d2243cc77d102d87005bf32c3a92f5cfd695d1d2dfe668ae8841240eb"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/control-changed-arithmetic",
+        "sha256": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-changed-arithmetic",
+        "sha256": "77284ae1736f5fd2c445d443feea23457c253ad9a9962e6121718d07c4d9adf5"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-changed-arithmetic",
+        "sha256": "77284ae1736f5fd2c445d443feea23457c253ad9a9962e6121718d07c4d9adf5"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/control-changed-arithmetic",
+        "sha256": "7678e614cfdd37de87e92935c656f279216e53d28b2a91a02af40651b0069972"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/control-changed-arithmetic",
+        "sha256": "a0c6e2d80f35e8b4adf35138f1c31337d7550d1df25c49132131bb339aeb71b6"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/control-changed-arithmetic",
+        "sha256": "ac3a76f76b0995a73d961d5227f56e9605f9e4e04326dec306146ee0c154a428"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/control-changed-output",
+        "sha256": "253df30d2243cc77d102d87005bf32c3a92f5cfd695d1d2dfe668ae8841240eb"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/control-changed-output",
+        "sha256": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-changed-output",
+        "sha256": "763cdc4f7b845904986f03324909724c77715d1c7e7684d511f1c205ab3f970d"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-changed-output",
+        "sha256": "763cdc4f7b845904986f03324909724c77715d1c7e7684d511f1c205ab3f970d"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/control-changed-output",
+        "sha256": "254188d845c438d8e75c89024ecb39cbd11258ae4f6224d7820a1de5be851120"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/control-changed-output",
+        "sha256": "37b6fc8d8373ca7359a588ab153359b3bb0363968cf8f77a1003431d28a0942a"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/control-changed-output",
+        "sha256": "baa873eca1a8f38a7fe11db288b023caa2b1ccd1fa8338ca6b098036770b77ff"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/control-boundary-agreement",
+        "sha256": "253df30d2243cc77d102d87005bf32c3a92f5cfd695d1d2dfe668ae8841240eb"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/control-boundary-agreement",
+        "sha256": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-boundary-agreement",
+        "sha256": "8afc76620e1b53722525b72f1518e34322aae7c92f14955351ef302051a04cd0"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-boundary-agreement",
+        "sha256": "8afc76620e1b53722525b72f1518e34322aae7c92f14955351ef302051a04cd0"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/control-boundary-agreement",
+        "sha256": "521469dc5ad7183deef6505d1267588458b54a2d6bbd367a39cc50f516b7d3ae"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/control-boundary-agreement",
+        "sha256": "bedca039906979a9270320c59c16a6ccbae6c1c42e1bf289fc244876ec15a956"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/control-boundary-agreement",
+        "sha256": "3f40e1fe38d636e1b73bf607bbdc805dd9e7c292899cdeb9726c402088b2ddeb"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/control-withheld-llvm-relation",
+        "sha256": "253df30d2243cc77d102d87005bf32c3a92f5cfd695d1d2dfe668ae8841240eb"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/control-withheld-llvm-relation",
+        "sha256": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-withheld-llvm-relation",
+        "sha256": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-withheld-llvm-relation",
+        "sha256": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/control-withheld-llvm-relation",
+        "sha256": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/control-withheld-llvm-relation",
+        "sha256": "b46516532899b555c1eda5d09cd1754eb598892a0331f988c6e4e37f189275d4"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/control-withheld-llvm-relation",
+        "sha256": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/control-missing-graph-correspondence",
+        "sha256": "2226ba29ef2e09accfe89d2a1dd5ef8abdaa91aa3b8837bd05f775797467791a"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/control-missing-graph-correspondence",
+        "sha256": "2bb9b6a5de5d6561329d968870e9e6db8d1e851330e15798addb2eb08834e67f"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-missing-graph-correspondence",
+        "sha256": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-missing-graph-correspondence",
+        "sha256": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/control-missing-graph-correspondence",
+        "sha256": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/control-missing-graph-correspondence",
+        "sha256": "b46516532899b555c1eda5d09cd1754eb598892a0331f988c6e4e37f189275d4"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/control-missing-graph-correspondence",
+        "sha256": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/control-reversed-subtraction",
+        "sha256": "d583979cfcb354ed4029366600c0b377e3a2e6aadc09b81b09d2d2433cffed7d"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/control-reversed-subtraction",
+        "sha256": "52aa5b2b3c76c268200aa23cfe79a35839fd4ce9b21dbcf93cf4c7a5b3454e59"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-reversed-subtraction",
+        "sha256": "b76c44c47f5d198b5efb7b2a7b71dec225a4a45cf03ad36532b1cf1bda4339b6"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-reversed-subtraction",
+        "sha256": "b76c44c47f5d198b5efb7b2a7b71dec225a4a45cf03ad36532b1cf1bda4339b6"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/control-reversed-subtraction",
+        "sha256": "b09b5eadda4c6b650eeae8a089f0f60e5caf3b0ac31b72243f566f2b4bc4886f"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/control-reversed-subtraction",
+        "sha256": "e8250525d460321bdc6aeafe2ed448683960dd8d2762c3910a6265b4a4909c04"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/control-reversed-subtraction",
+        "sha256": "d4cf38ae1d6033b999c12cc06fdd960a9f9510ce559b999477bbb886ed50e626"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/control-overflow-flag-nsw",
+        "sha256": "b56511d711afd2001e9ce11e6cbbd4350aee6440782cbf25655b17d83c4b5cb6"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/control-overflow-flag-nsw",
+        "sha256": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-overflow-flag-nsw",
+        "sha256": "a985b299308a62332d9eb9a8b6ac2993c28e83086cb78c0575f781092d417eae"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-overflow-flag-nsw",
+        "sha256": "a985b299308a62332d9eb9a8b6ac2993c28e83086cb78c0575f781092d417eae"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/control-overflow-flag-nsw",
+        "sha256": "368d909835f7796ad4fb9cc9060e7dd934b638b821a588a182fc42e22c59a105"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/control-overflow-flag-nsw",
+        "sha256": "8576461bbb226ee33b73b47d8d28b095455742b30557a391ffa3ef06d784fd46"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/control-overflow-flag-nsw",
+        "sha256": "822bf02536f2b7e1e2a43fbffbbf57b9ea9927d5b94572c0dfc479af66a7cc41"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/control-overflow-flag-nuw",
+        "sha256": "b56511d711afd2001e9ce11e6cbbd4350aee6440782cbf25655b17d83c4b5cb6"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/control-overflow-flag-nuw",
+        "sha256": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-overflow-flag-nuw",
+        "sha256": "04f794c569e7351d46c35c29ae36f67eebd037fa875c5088ac2c564a0dc42dd2"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-overflow-flag-nuw",
+        "sha256": "04f794c569e7351d46c35c29ae36f67eebd037fa875c5088ac2c564a0dc42dd2"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/control-overflow-flag-nuw",
+        "sha256": "368d909835f7796ad4fb9cc9060e7dd934b638b821a588a182fc42e22c59a105"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/control-overflow-flag-nuw",
+        "sha256": "8576461bbb226ee33b73b47d8d28b095455742b30557a391ffa3ef06d784fd46"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/control-overflow-flag-nuw",
+        "sha256": "822bf02536f2b7e1e2a43fbffbbf57b9ea9927d5b94572c0dfc479af66a7cc41"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/control-changed-triple",
+        "sha256": "b56511d711afd2001e9ce11e6cbbd4350aee6440782cbf25655b17d83c4b5cb6"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/control-changed-triple",
+        "sha256": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-changed-triple",
+        "sha256": "dee21907cde3d5436d7f73175039609e80587542d53e03d8708feb539fa5d6e6"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/control-changed-data-layout",
+        "sha256": "b56511d711afd2001e9ce11e6cbbd4350aee6440782cbf25655b17d83c4b5cb6"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/control-changed-data-layout",
+        "sha256": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-changed-data-layout",
+        "sha256": "8a9aacbaa663f572ee9f0cbe34f1b0312ac456ee675d116be02b255850de6ec0"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/control-changed-abi",
+        "sha256": "b56511d711afd2001e9ce11e6cbbd4350aee6440782cbf25655b17d83c4b5cb6"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/control-changed-abi",
+        "sha256": "2ebbf58faaf8ff5441d679ec46eb89b0bed4c37fdc73a2932424dd1e6bd27dee"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-changed-abi",
+        "sha256": "07fb2cc5d0f8388febc0febc9077dd94bd696f434d952c7d6b84be377b495b1c"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/control-changed-graph-arithmetic",
+        "sha256": "253df30d2243cc77d102d87005bf32c3a92f5cfd695d1d2dfe668ae8841240eb"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/control-changed-graph-arithmetic",
+        "sha256": "3d668668cc2978dbc1df001cc7d364353edda54eecae045d122f70ac3b483504"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-changed-graph-arithmetic",
+        "sha256": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-changed-graph-arithmetic",
+        "sha256": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/control-changed-graph-arithmetic",
+        "sha256": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/control-changed-graph-arithmetic",
+        "sha256": "b46516532899b555c1eda5d09cd1754eb598892a0331f988c6e4e37f189275d4"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/control-changed-graph-arithmetic",
+        "sha256": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/control-changed-graph-output",
+        "sha256": "253df30d2243cc77d102d87005bf32c3a92f5cfd695d1d2dfe668ae8841240eb"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/control-changed-graph-output",
+        "sha256": "6d6578b75fd51ad52e2366f61a9f923311f5c2b4b17c210a23d8973f54fcc4e3"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-changed-graph-output",
+        "sha256": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-changed-graph-output",
+        "sha256": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/control-changed-graph-output",
+        "sha256": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/control-changed-graph-output",
+        "sha256": "b46516532899b555c1eda5d09cd1754eb598892a0331f988c6e4e37f189275d4"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/control-changed-graph-output",
+        "sha256": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/control-malformed-certificate",
+        "sha256": "8f3a4088eeab8eb1b8ea3e099d6020cfcbd6f5d315930680a6b3cc2c64ebabf8"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/control-malformed-certificate",
+        "sha256": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-malformed-certificate",
+        "sha256": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-malformed-certificate",
+        "sha256": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/control-malformed-certificate",
+        "sha256": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/control-malformed-certificate",
+        "sha256": "b46516532899b555c1eda5d09cd1754eb598892a0331f988c6e4e37f189275d4"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/control-malformed-certificate",
+        "sha256": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/control-substituted-certificate-claim",
+        "sha256": "18315d50ea61ca09e0d771a76493007504665a56bfd0fb031b369e6aea81b8ed"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/control-substituted-certificate-claim",
+        "sha256": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-substituted-certificate-claim",
+        "sha256": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-substituted-certificate-claim",
+        "sha256": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/control-substituted-certificate-claim",
+        "sha256": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/control-substituted-certificate-claim",
+        "sha256": "b46516532899b555c1eda5d09cd1754eb598892a0331f988c6e4e37f189275d4"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/control-substituted-certificate-claim",
+        "sha256": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/control-substituted-certificate-endpoint",
+        "sha256": "f0e0c2ca892341a14880bf85a929aa0d8a474ad18e9758a8cf52fd0a20ffb234"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/control-substituted-certificate-endpoint",
+        "sha256": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-substituted-certificate-endpoint",
+        "sha256": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-substituted-certificate-endpoint",
+        "sha256": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/control-substituted-certificate-endpoint",
+        "sha256": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/control-substituted-certificate-endpoint",
+        "sha256": "b46516532899b555c1eda5d09cd1754eb598892a0331f988c6e4e37f189275d4"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/control-substituted-certificate-endpoint",
+        "sha256": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "artifact": "certificate",
+        "owner": "candidate/control-stale-certificate-revision",
+        "sha256": "f1bb9d6b0b9f135615c5673007a879e91d8697a151da18727f85488783bde1bd"
+      },
+      {
+        "artifact": "graph",
+        "owner": "candidate/control-stale-certificate-revision",
+        "sha256": "de6e0b08bd74879a20f332ac5164e40e46583cbb6b662c12cb2dd4c395dff550"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-stale-certificate-revision",
+        "sha256": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "artifact": "module",
+        "owner": "candidate/control-stale-certificate-revision",
+        "sha256": "0c899936a530937a45332a49e8c972f78cea17c14040bed4577d79c53a381f11"
+      },
+      {
+        "artifact": "optimized",
+        "owner": "candidate/control-stale-certificate-revision",
+        "sha256": "d9b4de07c1c3140d4756c4039388b3f07a299d1e3a4eb26868ad5ca6b621e40e"
+      },
+      {
+        "artifact": "object",
+        "owner": "candidate/control-stale-certificate-revision",
+        "sha256": "b46516532899b555c1eda5d09cd1754eb598892a0331f988c6e4e37f189275d4"
+      },
+      {
+        "artifact": "machine-code",
+        "owner": "candidate/control-stale-certificate-revision",
+        "sha256": "bf2f07805cfd81f9a52aa2eec38900583fb45ba79217dd98865d24b6e4006976"
+      },
+      {
+        "artifact": "harness-source",
+        "owner": "run",
+        "sha256": "fb979056fee08f2dadd777d6c1c9f4391fd6628efa1d11ee786dd202807a763f"
+      },
+      {
+        "artifact": "harness-object",
+        "owner": "run",
+        "sha256": "98d9c1fb72f73e481a6ccab29738720b0090b1ab1f04543f0269d7c4d8309ceb"
+      }
+    ],
+    "trust_boundaries": [
+      "The producer's graph-to-LLVM claims are consumed, not rechecked. Compiler-lab cannot run the producer's Rust validator or its Lean kernel check. Compiler-lab binds each consumed claim to exact bytes through its own SHA-256 digests.",
+      "The certificate replay and the soundness of the fold rule are trusted compiler-lab code. No theorem binds them to the producer checker or its Lean model.",
+      "Alive2 at the pinned revision checks LLVM refinement for every concrete u64 input pair, with undef and poison inputs excluded. Its LLVM encoding and its SMT solver stay trusted.",
+      "LLVM code generation, the linker, and the host processor stay trusted. Native results are concrete observations on the frozen workload, not a machine-code proof.",
+      "Kernel samples come from one host and one process for each side. They establish no performance on another host or processor.",
+      "The llvm-pair lane observes 16 standard boundary input pairs. Its agreement is concrete evidence and never a universal relation."
+    ],
+    "producer_gaps": [
+      "The producer identities are not cryptographic, so a consumer cannot recompute the certificate endpoint bindings. Compiler-lab binds the endpoint graphs by SHA-256 and replays the certificate.",
+      "The bundle records no proposal, emission, or validation cost.",
+      "The bundle exports one nonidentity candidate and no chained certificate candidate.",
+      "Producer verdicts are exporter-authored fields without retained checker process records."
+    ]
+  }
+}

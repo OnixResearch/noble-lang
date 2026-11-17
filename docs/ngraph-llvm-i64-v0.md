@@ -163,8 +163,10 @@ Trusted, and listed so the reader can price it:
   from `admit_graph`. The implementation-to-model correspondence of the Rust checker is the open
   NG-PO-B obligation, not a result of this lane.
 - **T3 — the target.** The data layout and triple are the `x86_64-unknown-linux-gnu` values LLVM 18
-  and later report, recorded by inspection. No pinned LLVM exists on this host, so compiler-lab owns
-  confirming them against the LLVM it builds the pair with.
+  and later report. Compiler-lab's pinned clang (LLVM 21.1.8) reports exactly this data layout for
+  this triple (`data_layout_confirmed: true` in
+  [`verification/llvm-lowering/compiler-lab-pilot-2026-11-16.json`](../verification/llvm-lowering/compiler-lab-pilot-2026-11-16.json)).
+  That confirmation is for the pinned LLVM only; another LLVM release must be checked again.
 - **T4 — Lean.** The kernel, the pinned toolchain and Mathlib's downloaded oleans; the foundation
   lane's receipt records the exact source and tool identities.
 
@@ -177,8 +179,12 @@ inherits no other stage's evidence.
 |---|---|---|
 | graph rewrite | #42 (`cert::emit`/`cert::check`) | retains the original and rewritten endpoints and their certificate verdict; the implementation-to-Lean correspondence of the rewrite stays open |
 | graph → LLVM lowering | this document, issue #107 | emits, validates, and states the universal claim |
-| LLVM optimisation (LLVM may fold `add i64 3, 5`) | compiler-lab #124 | **not run here**: reported unknown |
-| native artifact and performance | compiler-lab #124 / #135 | **not run here**: reported unknown |
+| LLVM optimisation (LLVM may fold `add i64 3, 5`) | compiler-lab #124 / #176 | **semantic validation by compiler-lab**: its pinned Alive2 accepts each pair module's `opt default<O2>` result for every concrete `u64` input pair; both sides optimize to the same module |
+| native artifact and performance | compiler-lab #124 / #176 / #135 | **concrete agreement by compiler-lab**: pinned `llc`/`clang` native code agrees with the graph reference on 24 frozen inputs; no machine-code checker runs; both sides compile to identical machine code, so there is no speedup (decision stop) |
+
+The retained compiler-lab report, its binding and the full per-stage table, including the
+`unknown`, `unsupported`, `refuted` and `timeout` results of its controls, are described in the lane
+README's [compiler-lab section](../verification/llvm-lowering/README.md#compiler-lab-optimization-pilot).
 
 The compiler-lab request is
 [`verification/llvm-lowering/request.json`](../verification/llvm-lowering/request.json): `schema 1`,
@@ -189,7 +195,8 @@ directions, `arguments ["i64","i64"]`, `result "i64"`, `calling_convention "ccc"
 `permitted_externals []`. The attributes `llvm-pair-v1` admits are `nounwind`, `noundef`, `signext`
 and `zeroext`, and the profile writes **only** `noundef` on the two parameters (**T3**-adjacent
 assumption A2: admission was checked against the admitted-attribute list of the reviewed
-implementation; the lane itself was not run here).
+implementation). Compiler-lab's optimization pilot submitted the retained pair to its `llvm-pair`
+lane in a separate process, which admitted it and agreed on its 16 boundary input pairs.
 
 `verification/llvm-lowering/bundle.json` retains these assumptions, the exact revision labels, and
 path-bound identities for the Rust profile/parser/validator, graph checker and semantics, graph
@@ -215,8 +222,11 @@ claim as covering the LLVM optimiser or the machine code.
 - Not a correspondence theorem between the Rust emitter, the Rust parser or the Rust checker and the
   Lean model. The universal statement is about the Lean model of the parsed form (**T1**, **T2**).
 - Not a statement about the LLVM optimiser, the backend, the generated machine code or any native
-  artifact. Only compiler-lab's stages can say anything there, and only for the pairs it reads.
+  artifact. Only compiler-lab's stages say anything there, and only for the pairs it reads: for the
+  retained pair, its Alive2 result for `opt` and its concrete native agreement are compiler-lab's
+  evidence, not consequences of this document's theorem.
 - Not a statement about the graph rewriter: the certificate's implementation-to-Lean correspondence
   stays open, and the retained pair inherits #42's premises, not its conclusion.
-- Not a performance result. No measurement of lowering cost, of LLVM's optimisation or of runtime is
-  claimed here.
+- Not a performance result. Noble measures no lowering cost. Compiler-lab's pilot reports its own
+  optimizer, code-generation and checking costs and kernel timings for the retained pair; the machine
+  code is identical on both sides, so those timings are descriptive and show no improvement.

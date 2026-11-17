@@ -24,8 +24,9 @@ pub const PROFILE: &str = "ngraph-llvm-i64/0";
 pub const TARGET_TRIPLE: &str = "x86_64-unknown-linux-gnu";
 /// The `x86_64-unknown-linux-gnu` data layout as LLVM 18 and later report it.
 ///
-/// Recorded as an assumption: no pinned LLVM exists on this host to query, so compiler-lab owns
-/// confirming it against the LLVM it builds the pair with.
+/// Compiler-lab's pinned clang (LLVM 21.1.8) reports exactly this layout for the triple; the
+/// retained `verification/llvm-lowering/compiler-lab-pilot-2026-11-16.json` records the check.
+/// Another LLVM release must be checked again.
 pub const DATA_LAYOUT: &str =
     "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128";
 /// The single defined function's name.
