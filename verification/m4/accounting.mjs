@@ -539,6 +539,34 @@ function isDropGlue(decl, crate) {
 function isVTable(decl) {
   return decl?.src?.VTableInstance && decl.item_meta.name.some(part => part.Builtin?.[0] === 'VTable');
 }
+function loweredClosureMethods(decl, crate, functions) {
+  const kind = decl.src.Closure.kind;
+  const trait = crate.trait_decls[decl.impl_trait?.id];
+  if (!['Fn', 'FnMut', 'FnOnce'].includes(kind) ||
+      trait?.item_meta.is_local !== false || trait.item_meta.lang_item !== kind ||
+      directRustName(trait) !== `core::ops::function::${kind}` ||
+      decl.is_negative !== false || decl.is_unsafe !== false ||
+      decl.consts?.length !== 0 || decl.types?.length !== 0 || decl.methods?.length !== 1) {
+    fail('CLOSURE-INSTANCE', `invalid compiler call-trait instance ${decl.def_id}`);
+  }
+  const method = decl.methods[0];
+  const body = crate.fun_decls[method.skip_binder?.id];
+  const owner = body?.src?.TraitImpl;
+  equal(method.kind, { TraitMethod: [decl.impl_trait.id, 0] }, 'CLOSURE-INSTANCE', 'method slot');
+  if (!Number.isInteger(method.skip_binder?.id) || body?.def_id !== method.skip_binder.id ||
+      body?.item_meta.is_local !== true || !body.body?.Structured ||
+      owner?.impl_ref?.id !== decl.def_id || owner.trait_ref?.id !== decl.impl_trait.id ||
+      owner.item_id !== 0 || owner.reuses_default !== false) {
+    fail('CLOSURE-INSTANCE', `method does not belong to compiler instance ${decl.def_id}`);
+  }
+  equal(body.item_meta.span, decl.item_meta.span, 'CLOSURE-INSTANCE', 'closure source span');
+  const methodName = { Fn: 'call', FnMut: 'call_mut', FnOnce: 'call_once' }[kind];
+  const translated = functions.filter(row => row.is_local && !row.is_opaque && !row.loop &&
+    row.def_id === body.def_id && row.rust_name.endsWith(`::${methodName}`) &&
+    row.lean_name.endsWith(`.${methodName}`));
+  if (translated.length !== 1) fail('CLOSURE-INSTANCE', `method is not independently translated: ${body.def_id}`);
+  return translated.map(row => ({ def_id: row.def_id, lean_name: row.lean_name }));
+}
 function directRustName(decl) {
   return decl.item_meta.name.every(part => part.Ident)
     ? decl.item_meta.name.map(part => part.Ident[0]).join('::') : null;
@@ -669,6 +697,7 @@ export function account(lane, llbc, translation, sources) {
     collector[kind] = local.map(decl => {
       let translated = rows.filter(row => row.is_local && row.def_id === decl.def_id);
       let disposition = 'translated';
+      let loweredMethods = null;
       if (kind === 'functions' && decl.src?.GlobalInitializer) {
         const global = crate.global_decls[decl.src.GlobalInitializer.id];
         translated = translation.globals.filter(row => row.is_local && row.def_id === decl.src.GlobalInitializer.id);
@@ -683,9 +712,15 @@ export function account(lane, llbc, translation, sources) {
       } else if (kind === 'types' && decl.kind?.Alias && !translated.length) {
         // Aliases have no independent body; the translator expands their type.
         disposition = 'type-alias-expanded';
+      } else if (kind === 'trait_impls' && decl.src?.Closure && !translated.length) {
+        // Aeneas may lower a compiler closure instance to its own call method.
+        // Every real method body must already have passed function accounting.
+        loweredMethods = loweredClosureMethods(decl, crate, inventories.functions);
+        disposition = 'compiler-closure-instance-methods-translated';
       }
       if (!translated.length && !['compiler-generated-destruct-not-translated',
-        'compiler-generated-vtable-not-translated', 'type-alias-expanded'].includes(disposition)) {
+        'compiler-generated-vtable-not-translated', 'type-alias-expanded',
+        'compiler-closure-instance-methods-translated'].includes(disposition)) {
         fail('OMITTED-BODY', `${lane.id}: ${kind} ${decl.def_id} ${directRustName(decl) ?? ''}`);
       }
       // An ADT constructor has a real compiler body and a real translated
@@ -709,6 +744,7 @@ export function account(lane, llbc, translation, sources) {
       }
       return { def_id: decl.def_id, source_name: decl.item_meta.name, source_span: decl.item_meta.span,
         disposition, expanded_alias: disposition === 'type-alias-expanded' ? decl.kind.Alias : null,
+        ...(loweredMethods === null ? {} : { lowered_methods: loweredMethods }),
         lean_names: translated.map(row => row.lean_name).sort() };
     }).sort((a, b) => a.def_id - b.def_id);
     inventories[kind] = rows;

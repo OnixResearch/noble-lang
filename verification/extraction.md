@@ -124,6 +124,32 @@ These are source-selection admission controls over mutated source strings,
 not executions of those Rust fixtures through Charon/Aeneas. They establish
 neither Rust/Lean refinement nor fresh extraction evidence or M4 acceptance.
 
+### Compiler closure instances and real bodies
+
+The compiler inventory distinguishes an authored closure method from its
+compiler-generated call-trait instance. Aeneas may emit the method without a
+separate instance declaration. Such an instance is accounted only when it is
+the standard Fn, FnMut or FnOnce trait, has exactly one method and no associated
+items, and that method belongs to the same compiler instance and source span.
+Its real body must already have passed ordinary function accounting and have
+exactly one nonopaque translated entrypoint. The inventory records those method
+identities separately; it does not invent a translated instance or waive a body.
+
+Direct accounting of retained contracts extraction accepted seven such
+method-lowered instances. Substituting an unrelated method or a contradictory
+call-trait kind was refused as M4-CLOSURE-INSTANCE. Both mutations are also
+required controls of the full M4 gate. Conversely, two kernel scheme closures
+had untranslatable call-adapter bodies, not merely missing instance records;
+they were replaced with direct named helpers. No missing-body exemption was
+added. The regenerated kernel passed declaration accounting and 231 native
+tests, with one historical measurement ignored; this is not a complete
+multi-subject extraction receipt.
+
+The reviewed whole-subject translator wall limit is 300 seconds. The renewed
+contracts subject required 166 seconds, exceeding the historical 120-second
+limit. This resource change does not relax source, generated-byte, model or
+axiom checks; receipts produced under the old configuration remain historical.
+
 ## Allocators at this boundary (#121)
 
 This route erases the allocator, so it cannot report on one. Charon sets `hide_allocator: true` under

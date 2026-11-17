@@ -123,6 +123,28 @@ export function refusals({ raw, accounts, sources, tools, packet, packets, audit
     translation.functions = translation.functions.filter(item => item.def_id !== constructor.def_id);
     account(contracts, raw.contracts.llbc, translation, sources);
   });
+  const contracts = lanes.find(lane => lane.id === 'contracts');
+  const closureInstance = accounts.contracts.collector.trait_impls.find(item =>
+    item.disposition === 'compiler-closure-instance-methods-translated');
+  if (!closureInstance) fail('REFUSAL', 'missing actual method-lowered compiler closure instance');
+  const instance = raw.contracts.llbc.translated.trait_impls[closureInstance.def_id];
+  reject('forged-closure-instance-method-target', 'CLOSURE-INSTANCE', () => {
+    const method = instance.methods[0].skip_binder;
+    const original = method.id;
+    try {
+      method.id = raw.contracts.translation.functions.find(item => item.is_local && !item.is_opaque &&
+        !item.loop && raw.contracts.llbc.translated.fun_decls[item.def_id]?.src?.TraitImpl?.impl_ref?.id !==
+          instance.def_id).def_id;
+      account(contracts, raw.contracts.llbc, raw.contracts.translation, sources);
+    } finally { method.id = original; }
+  });
+  reject('forged-closure-instance-call-trait', 'CLOSURE-INSTANCE', () => {
+    const original = instance.src.Closure.kind;
+    try {
+      instance.src.Closure.kind = original === 'Fn' ? 'FnMut' : 'Fn';
+      account(contracts, raw.contracts.llbc, raw.contracts.translation, sources);
+    } finally { instance.src.Closure.kind = original; }
+  });
   reject('omitted-function-with-retained-loop-helpers', 'OMITTED-BODY', () => {
     const changed = copied();
     const loop = changed.translation.functions.find(item => item.is_local && item.lean_name.endsWith('_loop.body'));
