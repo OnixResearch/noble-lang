@@ -130,6 +130,29 @@ The full-suite command is:
 SELECTED_NODE --test verification/m4/opaque-model-review.test.mjs
 ```
 
+### Expanded conditional controls and direct API smoke
+
+The expanded suite adds `macro-fed conditional metadata refuses unreviewed source selection`
+and `spaced conditional metadata refuses unreviewed source selection`. Each
+checks both `cfg` and `cfg_attr` metadata with recomputed source hashes. At
+`a2947e5`, the full suite reported 72 passed, 0 failed.
+
+A separate direct `sourcePolicy` API smoke also ran at `a2947e5`, recomputing
+the source SHA-256 values for every mutation. The canonical reviewed sources
+were accepted, and all five malformed cases were refused:
+
+| Direct API case | Result |
+|---|---|
+| Macro-fed `charon::exclude` | Refused |
+| Spaced `# [charon::exclude]` | Refused |
+| Quoted suffix `Code` changed to `Co de` | Refused |
+| Macro-fed `cfg(any())` | Refused |
+| Spaced `# [cfg(any())]` | Refused |
+
+The direct smoke summary was `malformed=5 accepted=0`, exit 0. Before the
+conditional-metadata fix, the same smoke accepted the two malformed `cfg`
+cases and exited 1 with `malformed=5 accepted=2`.
+
 These are source-selection admission controls over mutated source strings,
 not executions of those Rust fixtures through Charon/Aeneas. They establish
 neither Rust/Lean refinement nor fresh extraction evidence or M4 acceptance.
