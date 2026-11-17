@@ -1651,7 +1651,7 @@ impl ProcedureLibrary {
                 index as u32,
             )
         })?;
-        if successors[old_index].replace(index).is_some() {
+        if successors[old_index].is_some() {
             return Err(Refusal::at(
                 RefusalKind::Invalid,
                 Diagnostic {
@@ -1661,6 +1661,7 @@ impl ProcedureLibrary {
                 index as u32,
             ));
         }
+        successors[old_index] = Some(index);
         Ok(())
     }
 
