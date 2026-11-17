@@ -12,6 +12,7 @@ order-variation harness and records whether bounded parallel execution may be pr
 | [invariants.md](invariants.md) | invariants I1-I9, allowed differences A1-A5, unsupported cases U1-U10 |
 | [decision.md](decision.md) | frozen NO-GO for parallel execution, gate evaluation and reopen conditions |
 | [run.mjs](run.mjs) | source-bound receipt runner |
+| [receipts/2026-11-16-422283f.json](receipts/2026-11-16-422283f.json) | the harness receipt on clean commit `422283f9` |
 
 ## The harness
 
@@ -113,6 +114,27 @@ crates' regression tests failed on the unfixed sources and pass on the fixed one
 The documentation of `net::Plan::max_worklist_entries` described a per-plan bound; the cap includes
 the live queue length, which depends on the schedule, so it now says that worklist admission can
 differ between schedules (F7 exercises it as an A3 difference).
+
+## Results
+
+[`receipts/2026-11-16-422283f.json`](receipts/2026-11-16-422283f.json) was produced by `run.mjs` on
+the clean commit `422283f9` with the pinned 1.96 nightly toolchain, under criteria revision 1
+(SHA-256 `92df81a30516c543af1336b3ae76b54d45f3f585e36cb498963efa61513ffd14`):
+`test result: ok. 12 passed; 0 failed`, nine families, zero divergences, two retained minimized
+fixtures. *Schedules* counts the admitted orders run, the serial
+baseline included (F7: distinct pair-selection schedules; F2 and F9: worker runs).
+
+| Family | Cases | Schedules | Comparisons | A1 | A2 | A3 | A4 | A5 | Divergences |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| F1 kernel-dependencies | 40 | 730 | 730 | 0 | 122 | 30 | 0 | 0 | 0 |
+| F2 kernel-threads | 16 | 32 | 512 | 0 | 0 | 0 | 0 | 0 | 0 |
+| F3 contracts-queries | 2 | 70 | 828 | 0 | 0 | 0 | 0 | 259 | 0 |
+| F4 contracts-commits | 1 | 11 | 110 | 31 | 0 | 0 | 0 | 0 | 0 |
+| F5 contracts-modules | 3 | 75 | 75 | 0 | 12 | 0 | 0 | 0 | 0 |
+| F6 graph-orders | 6 | 204 | 204 | 0 | 27 | 0 | 0 | 0 | 0 |
+| F7 net-schedules | 6 | 204 | 1224 | 0 | 0 | 204 | 126 | 0 | 0 |
+| F8 cache-sequences | 6 | 210 | 2898 | 0 | 0 | 0 | 340 | 0 | 0 |
+| F9 threads | 21 | 96 | 672 | 0 | 0 | 0 | 0 | 0 | 0 |
 
 ## Evidence boundary
 
