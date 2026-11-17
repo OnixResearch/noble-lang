@@ -15,7 +15,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { homedir, hostname } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -401,9 +401,16 @@ const refusals = [
   }, { stage: 'subject-identity' }],
 ];
 // Resource exhaustion through the caller's limits; the presented files are unchanged.
+// Either limit stops the first Nix command of closure authentication (a 1 ms
+// wall limit kills it; a 1 MiB storage limit is exceeded by the retained
+// submission, so it never starts). The backend then reports the checker
+// identity unavailable, not `timeout` or `storage-limit`, and the checker
+// never runs. The receipt keeps the command status that names the cause.
 const limited = [
-  ['exhausted-wall-limit', ['--timeout-ms', '1'], { outcome: 'timeout' }],
-  ['exhausted-storage-limit', ['--max-storage-mib', '1'], { outcome: 'storage-limit' }],
+  ['exhausted-wall-limit', ['--timeout-ms', '1'],
+    { outcome: 'unavailable', stage: 'checker-identity', command_status: 'timeout' }],
+  ['exhausted-storage-limit', ['--max-storage-mib', '1'],
+    { outcome: 'unavailable', stage: 'checker-identity', command_status: 'storage_limit' }],
 ];
 
 const runs = path.join(out, 'runs');
@@ -520,6 +527,16 @@ for (const [name, flags, expected] of limited) {
   row.caller_limits = flags;
   assert.notEqual(result.exit, 0, `${name} was accepted`);
   assert.equal(row.observed.outcome, expected.outcome, `${name}: outcome ${row.observed.outcome}`);
+  if (expected.stage) assert.equal(row.observed.stage, expected.stage, `${name}: refused at ${row.observed.stage}`);
+  if (expected.command_status) {
+    const commands = path.join(result.runDir, 'commands');
+    const statuses = readdirSync(commands).sort().map((entry) =>
+      JSON.parse(readFileSync(path.join(commands, entry, 'process.json'), 'utf8')).status);
+    assert.equal(statuses.at(-1), expected.command_status, `${name}: last command did not ${expected.command_status}`);
+    row.command_statuses = statuses;
+  }
+  const storage = path.join(result.runDir, 'storage.json');
+  if (existsSync(storage)) row.storage = JSON.parse(readFileSync(storage, 'utf8')).error ?? null;
 }
 
 const receipt = {
