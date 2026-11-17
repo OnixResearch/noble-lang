@@ -180,41 +180,66 @@ fn binding_block(
     }
     cursor.at += 1;
     let mut bindings = alloc::vec::Vec::new();
-    loop {
-        let Some(token) = cursor.tokens.get(cursor.at) else {
-            return Err(super::parse_diagnostic(
-                cursor.span,
-                "unclosed stack bindings",
-            ));
-        };
+    let tokens = cursor.tokens;
+    let mut is_closed = false;
+    let mut problem = None;
+    while cursor.at < tokens.len() && !is_closed && problem.is_none() {
+        let token = &tokens[cursor.at];
         if matches!(&token.kind, crate::source::lexer::TokenKind::Close) {
             cursor.at += 1;
-            return Ok((cursor, bindings));
+            is_closed = true;
+        } else {
+            let current = super::Cursor {
+                tokens,
+                at: cursor.at,
+                span: cursor.span,
+            };
+            match binding(current, token.span, &bindings) {
+                Ok((next, entry)) => {
+                    bindings.push(entry);
+                    cursor = next;
+                }
+                Err(error) => problem = Some(error),
+            }
         }
-        let span = token.span;
-        let (next, name) = attempt!(cursor.ident());
-        let (next, ty) = attempt!(next.next());
-        if bindings
-            .iter()
-            .any(|known: &super::Binding| known.name == name)
-        {
-            return Err(super::parse_diagnostic(span, "duplicate stack binding"));
-        }
-        // Each binding consumes two tokens, so this bound is never reached
-        // before the duplicate or unclosed-block diagnostics.
-        if bindings.len() >= next.tokens.len() {
-            return Err(super::parse_diagnostic(
-                span,
-                "stack bindings exceed their token block",
-            ));
-        }
-        bindings.push(super::Binding {
+    }
+    match problem {
+        Some(problem) => Err(problem),
+        None if is_closed => Ok((cursor, bindings)),
+        None => Err(super::parse_diagnostic(
+            cursor.span,
+            "unclosed stack bindings",
+        )),
+    }
+}
+
+/// One `name Type` stack binding after the bindings already admitted.
+fn binding<'a>(
+    cursor: super::Cursor<'a>,
+    span: crate::Span,
+    bindings: &[super::Binding],
+) -> Result<(super::Cursor<'a>, super::Binding), crate::Diagnostic> {
+    let (next, name) = attempt!(cursor.ident());
+    let (next, ty) = attempt!(next.next());
+    if super::super::position_first(bindings, |known| known.name == name).is_some() {
+        return Err(super::parse_diagnostic(span, "duplicate stack binding"));
+    }
+    // Each binding consumes two tokens, so this bound is never reached
+    // before the duplicate or unclosed-block diagnostics.
+    if bindings.len() >= next.tokens.len() {
+        return Err(super::parse_diagnostic(
+            span,
+            "stack bindings exceed their token block",
+        ));
+    }
+    Ok((
+        next,
+        super::Binding {
             name,
             ty: alloc::string::String::from(ty),
             span,
-        });
-        cursor = next;
-    }
+        },
+    ))
 }
 
 #[expect(
@@ -233,17 +258,17 @@ fn reference(text: &str, logical_target: bool) -> bool {
             super::name(name)
         }
     };
-    let Some((scope, local)) = text.split_once('.') else {
+    let Some((scope, local)) = crate::scan::split_once_byte(text, b'.') else {
         return target_name(text);
     };
-    if !target_name(local) || local.contains('.') {
+    if !target_name(local) || local.as_bytes().contains(&b'.') {
         return false;
     }
-    if let Some((module, version)) = scope.split_once('@') {
+    if let Some((module, version)) = crate::scan::split_once_byte(scope, b'@') {
         super::name(module)
             && !version.is_empty()
             && version.as_bytes()[0] != b'0'
-            && version.bytes().all(|byte| byte.is_ascii_digit())
+            && super::super::all_ascii_digits(version)
             && version.parse::<u32>().is_ok()
     } else {
         super::name(scope)
@@ -367,11 +392,11 @@ fn proof(
         }
     };
     let (cursor, term) = attempt!(logical(cursor));
-    let Some(last) = cursor
-        .at
-        .checked_sub(1)
-        .and_then(|index| cursor.tokens.get(index))
-    else {
+    let last = match cursor.at.checked_sub(1) {
+        Some(index) => cursor.tokens.get(index),
+        None => None,
+    };
+    let Some(last) = last else {
         return Err(super::parse_diagnostic(
             span,
             "proof term has no closing token",
@@ -402,7 +427,7 @@ fn signature(
 ) -> Result<(super::Cursor<'_>, super::Member), crate::Diagnostic> {
     let (cursor, name) = attempt!(cursor.ident());
     let (mut cursor, binders) = attempt!(cursor.next());
-    if !binders.starts_with("forall<") || !binders.ends_with('>') {
+    if !binders.as_bytes().starts_with(b"forall<") || !binders.as_bytes().ends_with(b">") {
         return Err(super::parse_diagnostic(
             cursor.span,
             "invalid signature binder list",
@@ -417,38 +442,66 @@ fn signature(
     let interface_start = cursor.tokens[cursor.at].span.start;
     cursor.at += 1;
     let mut words = alloc::vec::Vec::new();
-    while cursor.at < cursor.tokens.len() {
-        if let crate::source::lexer::TokenKind::Close = &cursor.tokens[cursor.at].kind {
-            let end = cursor.tokens[cursor.at].span.end;
+    let tokens = cursor.tokens;
+    let mut end = None;
+    let mut problem = None;
+    while cursor.at < tokens.len() && end.is_none() && problem.is_none() {
+        let token = &tokens[cursor.at];
+        if let crate::source::lexer::TokenKind::Close = &token.kind {
+            end = Some(token.span.end);
             cursor.at += 1;
-            return Ok((
-                cursor,
-                super::Member::Signature {
-                    name,
-                    binders: alloc::string::String::from(binders),
-                    words,
-                    span: crate::Span {
-                        start: interface_start,
-                        end,
-                    },
-                },
-            ));
+        } else {
+            let current = super::Cursor {
+                tokens,
+                at: cursor.at,
+                span: cursor.span,
+            };
+            match signature_word(current, words.len()) {
+                Ok((next, word)) => {
+                    words.push(alloc::string::String::from(word));
+                    cursor = next;
+                }
+                Err(error) => problem = Some(error),
+            }
         }
-        let (next, word) = attempt!(cursor.next());
-        // Each word consumes one token of this bracketed interface.
-        if words.len() >= next.tokens.len() {
-            return Err(super::parse_diagnostic(
-                next.span,
-                "signature interface exceeds its token block",
-            ));
-        }
-        words.push(alloc::string::String::from(word));
-        cursor = next;
     }
-    Err(super::parse_diagnostic(
-        cursor.span,
-        "unclosed signature interface",
+    if let Some(problem) = problem {
+        return Err(problem);
+    }
+    let Some(end) = end else {
+        return Err(super::parse_diagnostic(
+            cursor.span,
+            "unclosed signature interface",
+        ));
+    };
+    Ok((
+        cursor,
+        super::Member::Signature {
+            name,
+            binders: alloc::string::String::from(binders),
+            words,
+            span: crate::Span {
+                start: interface_start,
+                end,
+            },
+        },
     ))
+}
+
+/// One word of a bracketed signature interface after `count` earlier words.
+fn signature_word(
+    cursor: super::Cursor<'_>,
+    count: usize,
+) -> Result<(super::Cursor<'_>, &str), crate::Diagnostic> {
+    let (next, word) = attempt!(cursor.next());
+    // Each word consumes one token of this bracketed interface.
+    if count >= next.tokens.len() {
+        return Err(super::parse_diagnostic(
+            next.span,
+            "signature interface exceeds its token block",
+        ));
+    }
+    Ok((next, word))
 }
 
 fn opaque(
@@ -501,7 +554,7 @@ fn variant_name(
     ),
     crate::Diagnostic,
 > {
-    let Some((name, arguments)) = spelling.split_once('<') else {
+    let Some((name, arguments)) = crate::scan::split_once_byte(spelling, b'<') else {
         if super::name(spelling) {
             return Ok((
                 alloc::string::String::from(spelling),
@@ -510,13 +563,13 @@ fn variant_name(
         }
         return Err(super::parse_diagnostic(span, "invalid variant name"));
     };
-    let Some(arguments) = arguments.strip_suffix('>') else {
+    let Some(arguments) = crate::scan::strip_suffix_str(arguments, ">") else {
         return Err(super::parse_diagnostic(
             span,
             "invalid generic variant parameters",
         ));
     };
-    let Some((first, second)) = arguments.split_once(',') else {
+    let Some((first, second)) = crate::scan::split_once_byte(arguments, b',') else {
         return Err(super::parse_diagnostic(
             span,
             "generic variant requires two type parameters",

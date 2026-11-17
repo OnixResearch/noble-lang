@@ -126,21 +126,35 @@ impl PartialEq for Module {
             && self.proof_exports == other.proof_exports
             && self.contracts.len() == other.contracts.len()
             && self.proofs.len() == other.proofs.len()
-            && self.proofs.iter().zip(&other.proofs).all(|(a, b)| {
-                a.reference.name == b.reference.name
-                    && a.reference.module == b.reference.module
-                    && a.reference.version == b.reference.version
-                    && a.reference.source == b.reference.source
-                    && a.reference.model_revision == b.reference.model_revision
-                    && a.reference.checker_revision == b.reference.checker_revision
-                    && a.checked.name == b.checked.name
-                    && a.checked.kind == b.checked.kind
-                    && a.checked.claim == b.checked.claim
-                    && a.checked.lean_term == b.checked.lean_term
-                    && a.checked.model_revision == b.checked.model_revision
-                    && a.checked.checker_revision == b.checked.checker_revision
-            })
+            && published_proofs_equal(&self.proofs, &other.proofs)
     }
+}
+
+/// Pairwise equality of published proofs over the shorter list, in order.
+fn published_proofs_equal(left: &[PublishedProof], right: &[PublishedProof]) -> bool {
+    let mut index = 0usize;
+    let mut is_equal = true;
+    while is_equal && index < left.len() && index < right.len() {
+        is_equal = published_proof_equal(&left[index], &right[index]);
+        index += 1;
+    }
+    is_equal
+}
+
+/// Equality of one published host result: its reference and checked proof.
+fn published_proof_equal(a: &PublishedProof, b: &PublishedProof) -> bool {
+    a.reference.name == b.reference.name
+        && a.reference.module == b.reference.module
+        && a.reference.version == b.reference.version
+        && a.reference.source == b.reference.source
+        && a.reference.model_revision == b.reference.model_revision
+        && a.reference.checker_revision == b.reference.checker_revision
+        && a.checked.name == b.checked.name
+        && a.checked.kind == b.checked.kind
+        && a.checked.claim == b.checked.claim
+        && a.checked.lean_term == b.checked.lean_term
+        && a.checked.model_revision == b.checked.model_revision
+        && a.checked.checker_revision == b.checked.checker_revision
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -185,10 +199,6 @@ pub(crate) fn verify_definition_origin(
 }
 
 #[expect(
-    tigerstyle::compound_condition,
-    reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
-)]
-#[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
@@ -211,9 +221,8 @@ pub(super) fn verify_definition_origin_in_request(
         module_source,
         module,
         version,
-        definition,
-        ordinal,
         span: source_span,
+        ..
     } = origin;
     let parsed = attempt!(parsing::parse(module_source, limits, request_work));
     let parsing::ParsedUnit::Module {
@@ -233,40 +242,71 @@ pub(super) fn verify_definition_origin_in_request(
             "subject module identity differs from source",
         ));
     }
-    let mut at = 0u32;
-    let mut found = None;
-    for member in members {
-        if let parsing::Member::Definition {
-            name,
-            bytes,
-            span,
-            body_span,
-        } = member
-        {
-            if name == definition {
-                if found.is_some()
-                    || at != ordinal
-                    || span != source_span
-                    || bytes.as_slice() != definition_source
-                {
-                    return Err(crate::invalid(
-                        source_span,
-                        "ambiguous or mismatched lexical subject definition",
-                    ));
-                }
-                found = Some(body_span);
-            }
-            at = attempt!(at.checked_add(1).ok_or_else(|| {
-                crate::source::exhausted(source_span, "module definition ordinal limit exceeded")
-            }));
+    let mut scan = OriginScan { at: 0, found: None };
+    let mut failure = None;
+    let mut index = 0usize;
+    while failure.is_none() && index < members.len() {
+        match origin_member(&members[index], origin, definition_source, scan) {
+            Ok(next) => scan = next,
+            Err(problem) => failure = Some(problem),
         }
+        index += 1;
     }
-    found.ok_or_else(|| {
+    if let Some(problem) = failure {
+        return Err(problem);
+    }
+    scan.found.ok_or_else(|| {
         crate::invalid(
             source_span,
             "subject definition is absent from module source",
         )
     })
+}
+
+/// Lexical definitions seen so far by an origin reparse.
+#[derive(Clone, Copy)]
+struct OriginScan {
+    at: u32,
+    found: Option<crate::Span>,
+}
+
+#[expect(
+    tigerstyle::compound_condition,
+    reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+)]
+/// One member of an origin reparse: bind the subject and count lexical definitions.
+fn origin_member(
+    member: &parsing::Member,
+    origin: DefinitionOrigin<'_>,
+    definition_source: &[u8],
+    mut scan: OriginScan,
+) -> Result<OriginScan, crate::Diagnostic> {
+    let source_span = origin.span;
+    if let parsing::Member::Definition {
+        name,
+        bytes,
+        span,
+        body_span,
+    } = member
+    {
+        if name == origin.definition {
+            if scan.found.is_some()
+                || scan.at != origin.ordinal
+                || *span != source_span
+                || bytes.as_slice() != definition_source
+            {
+                return Err(crate::invalid(
+                    source_span,
+                    "ambiguous or mismatched lexical subject definition",
+                ));
+            }
+            scan.found = Some(*body_span);
+        }
+        scan.at = attempt!(scan.at.checked_add(1).ok_or_else(|| {
+            crate::source::exhausted(source_span, "module definition ordinal limit exceeded")
+        }));
+    }
+    Ok(scan)
 }
 
 #[expect(
@@ -303,7 +343,7 @@ pub(crate) fn verify_named_call_origin<'a>(
     let mut meter = crate::Meter::new(limits);
     let (tree, parsed_name) = attempt!(crate::source::parsing::parse_declared(source, &mut meter));
     if parsed_name.as_deref() != Some(caller_definition)
-        || tree.body.iter().filter(|id| **id == source_node).count() != 1
+        || count_equal(&tree.body, source_node) != 1
     {
         return Err(crate::invalid(
             source_span,
@@ -350,6 +390,19 @@ pub(crate) fn verify_named_call_origin<'a>(
         .map_err(|_| crate::invalid(source_span, "named call word is not UTF-8"))
 }
 
+/// The number of `items` equal to `value`.
+fn count_equal(items: &[u32], value: u32) -> usize {
+    let mut index = 0usize;
+    let mut count = 0usize;
+    while index < items.len() {
+        if items[index] == value {
+            count += 1;
+        }
+        index += 1;
+    }
+    count
+}
+
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
@@ -392,47 +445,78 @@ pub(crate) fn verify_named_export(
             "named export module differs from source",
         ));
     }
-    let mut at = 0u32;
-    let mut is_found = false;
-    let mut is_exported = false;
-    for member in members {
-        match member {
-            parsing::Member::Export(name) if name == definition => {
-                if is_exported {
-                    return Err(crate::invalid(
-                        definition_span,
-                        "duplicate named source export",
-                    ));
-                }
-                is_exported = true;
-            }
-            parsing::Member::Definition { name, span, .. } => {
-                if name == definition {
-                    if is_found || at != ordinal || span != definition_span {
-                        return Err(crate::invalid(
-                            definition_span,
-                            "named source export has a different lexical definition",
-                        ));
-                    }
-                    is_found = true;
-                }
-                at = attempt!(at.checked_add(1).ok_or_else(|| {
-                    crate::source::exhausted(
-                        definition_span,
-                        "module definition ordinal limit exceeded",
-                    )
-                }));
-            }
-            _ => (),
+    let mut scan = ExportScan {
+        at: 0,
+        is_found: false,
+        is_exported: false,
+    };
+    let mut failure = None;
+    let mut index = 0usize;
+    while failure.is_none() && index < members.len() {
+        match export_member(&members[index], definition, ordinal, definition_span, scan) {
+            Ok(next) => scan = next,
+            Err(problem) => failure = Some(problem),
         }
+        index += 1;
     }
-    if !is_found || !is_exported {
+    if let Some(problem) = failure {
+        return Err(problem);
+    }
+    if !scan.is_found || !scan.is_exported {
         return Err(crate::invalid(
             definition_span,
             "named source definition is absent or not is_exported",
         ));
     }
     Ok(())
+}
+
+/// Export and definition members seen so far by a named-export reparse.
+#[derive(Clone, Copy)]
+struct ExportScan {
+    at: u32,
+    is_found: bool,
+    is_exported: bool,
+}
+
+/// One member of a named-export reparse: record the export and count lexical definitions.
+fn export_member(
+    member: &parsing::Member,
+    definition: &str,
+    ordinal: u32,
+    definition_span: crate::Span,
+    mut scan: ExportScan,
+) -> Result<ExportScan, crate::Diagnostic> {
+    match member {
+        parsing::Member::Export(name) if name == definition => {
+            if scan.is_exported {
+                return Err(crate::invalid(
+                    definition_span,
+                    "duplicate named source export",
+                ));
+            }
+            scan.is_exported = true;
+        }
+        parsing::Member::Definition { name, span, .. } => {
+            if name == definition {
+                if scan.is_found || scan.at != ordinal || *span != definition_span {
+                    return Err(crate::invalid(
+                        definition_span,
+                        "named source export has a different lexical definition",
+                    ));
+                }
+                scan.is_found = true;
+            }
+            scan.at = attempt!(scan.at.checked_add(1).ok_or_else(|| {
+                crate::source::exhausted(
+                    definition_span,
+                    "module definition ordinal limit exceeded",
+                )
+            }));
+        }
+        _ => (),
+    }
+    Ok(scan)
 }
 
 #[expect(
@@ -477,10 +561,41 @@ fn canonical_version(text: &str) -> Option<u32> {
     if text.is_empty() || text.as_bytes().first() == Some(&b'0') {
         return None;
     }
-    if !text.bytes().all(|byte| byte.is_ascii_digit()) {
+    if !all_ascii_digits(text) {
         return None;
     }
     text.parse::<u32>().ok()
+}
+
+/// Whether every byte of `text` is an ASCII digit, as `text.bytes().all(..)`.
+fn all_ascii_digits(text: &str) -> bool {
+    position_first(text.as_bytes(), |byte| !byte.is_ascii_digit()).is_none()
+}
+
+/// The index of the first element satisfying `predicate`, as
+/// `items.iter().position(..)`: elements are tested in order and none after
+/// the first match.
+fn position_first<T>(items: &[T], mut predicate: impl FnMut(&T) -> bool) -> Option<usize> {
+    let mut index = 0usize;
+    let mut found = None;
+    while found.is_none() && index < items.len() {
+        if predicate(&items[index]) {
+            found = Some(index);
+        }
+        index += 1;
+    }
+    found
+}
+
+/// Whether any of `parts` is empty, as `parts.iter().any(|part| part.is_empty())`.
+fn has_empty_part(parts: &[alloc::string::String]) -> bool {
+    let mut index = 0usize;
+    let mut is_found = false;
+    while !is_found && index < parts.len() {
+        is_found = parts[index].is_empty();
+        index += 1;
+    }
+    is_found
 }
 
 const fn quotation_step(depth: u32, token: &crate::source::lexer::Token) -> Option<(u32, bool)> {
@@ -550,11 +665,13 @@ enum SchemaKind {
 }
 
 // A payload node is either accepted, rejected, or exposes checked children.
+// Children are owned: the walk consumes a copy of the payload instead of a
+// worklist of borrows into it.
 #[octet::sealed_enum]
-enum Exposure<'a> {
+enum Exposure {
     Public,
-    Binary(&'a noble_kernel::types::Ty, &'a noble_kernel::types::Ty),
-    Unary(&'a noble_kernel::types::Ty),
+    Binary(noble_kernel::types::Ty, noble_kernel::types::Ty),
+    Unary(noble_kernel::types::Ty),
     Hidden,
 }
 
@@ -565,7 +682,7 @@ fn exposed_payload(
     root: &noble_kernel::types::Ty,
     environment: &noble_kernel::contracts::Env,
 ) -> bool {
-    match exposed_node(root, environment) {
+    match exposed_node(root.clone(), environment) {
         Exposure::Public => true,
         Exposure::Hidden => false,
         Exposure::Binary(left, right) => {
@@ -575,8 +692,8 @@ fn exposed_payload(
     }
 }
 
-struct ExposureState<'a> {
-    pending: alloc::vec::Vec<&'a noble_kernel::types::Ty>,
+struct ExposureState {
+    pending: alloc::vec::Vec<noble_kernel::types::Ty>,
     remaining: usize,
 }
 
@@ -585,7 +702,7 @@ struct ExposureState<'a> {
     reason = "Owner: noble-maintainers; the bounded owned payload worklist rejects hidden or over-budget types without panicking on untrusted shapes; reassess fallible-check density."
 )]
 fn walk_exposure(
-    pending: alloc::vec::Vec<&noble_kernel::types::Ty>,
+    pending: alloc::vec::Vec<noble_kernel::types::Ty>,
     environment: &noble_kernel::contracts::Env,
 ) -> bool {
     let Some(remaining) = CONSTRUCTOR_CAP.checked_sub(1) else {
@@ -614,10 +731,10 @@ fn walk_exposure(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; Vec pop/push and owned state drop are non-const on pinned compilers; budget and pending-capacity failures reject without panic; reassess const APIs and fallible-check density."
 )]
-fn exposure_step<'a>(
-    mut state: ExposureState<'a>,
+fn exposure_step(
+    mut state: ExposureState,
     environment: &noble_kernel::contracts::Env,
-) -> Option<ExposureState<'a>> {
+) -> Option<ExposureState> {
     let Some(ty) = state.pending.pop() else {
         return Some(state);
     };
@@ -650,40 +767,54 @@ fn exposure_step<'a>(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
-fn exposed_node<'a>(
-    ty: &'a noble_kernel::types::Ty,
+fn exposed_node(
+    ty: noble_kernel::types::Ty,
     environment: &noble_kernel::contracts::Env,
-) -> Exposure<'a> {
-    if scalar_payload(ty) {
+) -> Exposure {
+    if scalar_payload(&ty) {
         return Exposure::Public;
     }
     if let noble_kernel::types::Ty::Pair(left, right) | noble_kernel::types::Ty::Sum(left, right) =
         ty
     {
-        return Exposure::Binary(left, right);
+        return Exposure::Binary(*left, *right);
     }
     if let noble_kernel::types::Ty::List(item) = ty {
-        return Exposure::Unary(item);
+        return Exposure::Unary(*item);
     }
     if let noble_kernel::types::Ty::Nominal(id, _) = ty {
-        return nominal_exposure(*id, environment);
+        return nominal_exposure(id, environment);
     }
-    if let noble_kernel::types::Ty::GenericNominal(id, arguments, _) = ty {
-        if environment
-            .generic_variant(*id)
-            .is_some_and(|declaration| declaration.exported)
-            && environment.valid_generic_instance(ty)
-        {
-            return Exposure::Binary(&arguments[0], &arguments[1]);
+    if exported_generic_instance(&ty, environment) {
+        if let noble_kernel::types::Ty::GenericNominal(_, mut arguments, _) = ty {
+            // Move each argument out behind a cheap placeholder.
+            let left = core::mem::replace(&mut arguments[0], noble_kernel::types::Ty::Unit);
+            let right = core::mem::replace(&mut arguments[1], noble_kernel::types::Ty::Unit);
+            return Exposure::Binary(left, right);
         }
     }
     Exposure::Hidden
 }
 
-fn nominal_exposure<'a>(
+/// Whether `ty` is a valid instance of an exported generic variant family.
+fn exported_generic_instance(
+    ty: &noble_kernel::types::Ty,
+    environment: &noble_kernel::contracts::Env,
+) -> bool {
+    if let noble_kernel::types::Ty::GenericNominal(id, _, _) = ty {
+        environment
+            .generic_variant(*id)
+            .is_some_and(|declaration| declaration.exported)
+            && environment.valid_generic_instance(ty)
+    } else {
+        false
+    }
+}
+
+fn nominal_exposure(
     id: noble_kernel::types::NominalTypeId,
     environment: &noble_kernel::contracts::Env,
-) -> Exposure<'a> {
+) -> Exposure {
     if environment
         .nominal(id)
         .is_some_and(|declaration| declaration.exported)

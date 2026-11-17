@@ -122,19 +122,22 @@ fn word(
 }
 
 pub(super) fn name(name: &str) -> bool {
-    let mut bytes = name.bytes();
-    let first = bytes.next();
-    matches!(first, Some(b'a'..=b'z' | b'A'..=b'Z' | b'_'))
-        && bytes.all(|c| c.is_ascii_alphanumeric() || c == b'_')
+    let bytes = name.as_bytes();
+    matches!(bytes.first(), Some(&(b'a'..=b'z' | b'A'..=b'Z' | b'_')))
+        && super::position_first(&bytes[1..], |c| !(c.is_ascii_alphanumeric() || *c == b'_'))
+            .is_none()
         && !reserved_name(name)
 }
 
 // Intrinsic declaration identifiers include hyphenated proof/theorem names,
 // without widening ordinary definition, type, module, or alias identifiers.
 pub(super) fn logical_name(name: &str) -> bool {
-    let mut bytes = name.bytes();
-    matches!(bytes.next(), Some(b'a'..=b'z' | b'A'..=b'Z' | b'_'))
-        && bytes.all(|c| c.is_ascii_alphanumeric() || matches!(c, b'_' | b'-'))
+    let bytes = name.as_bytes();
+    matches!(bytes.first(), Some(&(b'a'..=b'z' | b'A'..=b'Z' | b'_')))
+        && super::position_first(&bytes[1..], |c| {
+            !(c.is_ascii_alphanumeric() || matches!(*c, b'_' | b'-'))
+        })
+        .is_none()
         && !reserved_name(name)
 }
 
@@ -172,7 +175,7 @@ fn reserved_name(name: &str) -> bool {
 )]
 fn valid_version(version: &str) -> bool {
     !version.is_empty()
-        && version.bytes().all(|c| c.is_ascii_digit())
+        && super::all_ascii_digits(version)
         && version.as_bytes().first() != Some(&b'0')
 }
 

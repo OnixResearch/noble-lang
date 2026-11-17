@@ -142,10 +142,8 @@ impl Parser<'_> {
                     noble_kernel::types::ResourceKind(0),
                 ));
             } else {
-                let family = self
-                    .families
-                    .iter()
-                    .find_map(|(known, id)| (known == name).then_some(*id));
+                let family = crate::scan::find_first(self.families, |(known, _)| known == name)
+                    .map(|(_, id)| *id);
                 self.pending.push(match name {
                     "List" => Frame::List,
                     "Pair" => Frame::PairLeft,
@@ -165,9 +163,8 @@ impl Parser<'_> {
                     let mut at = self.names.len();
                     while at != 0 {
                         at -= 1;
-                        let (known, ty) = &self.names[at];
-                        if known == name {
-                            found = Some(ty.clone());
+                        if names_type(&self.names[at], name) {
+                            found = Some(self.names[at].1.clone());
                             break;
                         }
                     }
@@ -225,7 +222,7 @@ impl Parser<'_> {
             crate::invalid(self.span, "type constructor nesting limit exceeded")
         }));
         let (inputs, input_nodes) = attempt!(parse_program_stack(
-            fields[0],
+            &fields[0],
             self.names,
             self.families,
             self.environment,
@@ -233,7 +230,7 @@ impl Parser<'_> {
             nested,
         ));
         let (outputs, output_nodes) = attempt!(parse_program_stack(
-            fields[1],
+            &fields[1],
             self.names,
             self.families,
             self.environment,
@@ -241,7 +238,7 @@ impl Parser<'_> {
             nested,
         ));
         let effects = attempt!(parse_callable_effects(
-            fields[2],
+            &fields[2],
             self.environment,
             self.span,
         ));
@@ -367,29 +364,49 @@ fn parse_callable_effects(
     if text == "pure" {
         return Ok(noble_kernel::types::EffSet::empty());
     }
+    let words = attempt!(split_top_level(text, b'+', span));
     let mut effects = alloc::vec::Vec::new();
-    for word in attempt!(split_top_level(text, b'+', span)) {
-        let id = match word {
-            "test.emit" => noble_kernel::contracts::TEST_EMIT,
-            "test.clock" => noble_kernel::contracts::TEST_CLOCK,
-            "test.code-export" => noble_kernel::contracts::TEST_CODE_EXPORT,
-            "test.send" => noble_kernel::contracts::TEST_SEND,
-            "live.dispatch" => noble_kernel::contracts::LIVE_DISPATCH,
-            _ => return Err(crate::invalid(span, "unknown callable effect bound")),
-        };
-        if !environment.is_some_and(|environment| {
-            environment.effects.contains(&id)
-                && (id != noble_kernel::contracts::LIVE_DISPATCH || environment.live_slots)
-        }) || effects.contains(&id)
-        {
-            return Err(crate::invalid(
-                span,
-                "unregistered or duplicate callable effect",
-            ));
+    let mut failure = None;
+    let mut index = 0usize;
+    while failure.is_none() && index < words.len() {
+        match callable_effect(&words[index], environment, span, &effects) {
+            Ok(id) => effects.push(id),
+            Err(problem) => failure = Some(problem),
         }
-        effects.push(id);
+        index += 1;
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
     }
     Ok(noble_kernel::types::EffSet::from_ids(&effects))
+}
+
+/// One registered, not yet bound callable effect named by `word`.
+fn callable_effect(
+    word: &str,
+    environment: Option<&noble_kernel::contracts::Env>,
+    span: crate::Span,
+    effects: &[noble_kernel::types::EffId],
+) -> Result<noble_kernel::types::EffId, crate::Diagnostic> {
+    let id = match word {
+        "test.emit" => noble_kernel::contracts::TEST_EMIT,
+        "test.clock" => noble_kernel::contracts::TEST_CLOCK,
+        "test.code-export" => noble_kernel::contracts::TEST_CODE_EXPORT,
+        "test.send" => noble_kernel::contracts::TEST_SEND,
+        "live.dispatch" => noble_kernel::contracts::LIVE_DISPATCH,
+        _ => return Err(crate::invalid(span, "unknown callable effect bound")),
+    };
+    if !environment.is_some_and(|environment| {
+        environment.effects.contains(&id)
+            && (id != noble_kernel::contracts::LIVE_DISPATCH || environment.live_slots)
+    }) || effects.contains(&id)
+    {
+        return Err(crate::invalid(
+            span,
+            "unregistered or duplicate callable effect",
+        ));
+    }
+    Ok(id)
 }
 
 #[expect(
@@ -417,17 +434,20 @@ fn parse_program_stack(
     }
     let mut stack = alloc::vec::Vec::with_capacity(parts.len());
     let mut nodes = 0usize;
-    for part in parts {
-        let parsed = attempt!(parse_with_depth(
-            part,
-            types,
-            families,
-            environment,
-            span,
-            depth,
-        ));
-        nodes = nodes.saturating_add(parsed.nodes);
-        stack.push(parsed.ty);
+    let mut failure = None;
+    let mut index = 0usize;
+    while failure.is_none() && index < parts.len() {
+        match parse_with_depth(&parts[index], types, families, environment, span, depth) {
+            Ok(parsed) => {
+                nodes = nodes.saturating_add(parsed.nodes);
+                stack.push(parsed.ty);
+            }
+            Err(problem) => failure = Some(problem),
+        }
+        index += 1;
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
     }
     Ok((stack, nodes))
 }
@@ -440,45 +460,79 @@ fn split_top_level(
     word: &str,
     separator: u8,
     span: crate::Span,
-) -> Result<alloc::vec::Vec<&str>, crate::Diagnostic> {
-    let mut parts = alloc::vec::Vec::new();
-    let mut start = 0usize;
-    let mut depth = 0usize;
-    for (at, byte) in word.bytes().enumerate() {
-        match byte {
-            b'<' => depth = depth.saturating_add(1),
-            b'>' => {
-                depth = attempt!(depth
-                    .checked_sub(1)
-                    .ok_or_else(|| crate::invalid(span, "unbalanced type argument")));
-            }
-            byte if byte == separator && depth == 0 => {
-                // Parts end at distinct separator bytes, so this bound is never reached.
-                if parts.len() >= word.len() {
-                    return Err(crate::invalid(
-                        span,
-                        "unbalanced or oversized type argument",
-                    ));
-                }
-                parts.push(&word[start..at]);
-                start = attempt!(at
-                    .checked_add(1)
-                    .ok_or_else(|| crate::invalid(span, "unbalanced or oversized type argument")));
-            }
-            _ => {}
-        }
+) -> Result<alloc::vec::Vec<alloc::string::String>, crate::Diagnostic> {
+    let mut split = Ok(TopLevel {
+        parts: alloc::vec::Vec::new(),
+        start: 0,
+        depth: 0,
+    });
+    let mut at = 0usize;
+    while split.is_ok() && at < word.len() {
+        split = match split {
+            Ok(current) => top_level_step(word, separator, at, span, current),
+            Err(problem) => Err(problem),
+        };
+        at += 1;
     }
+    let TopLevel {
+        mut parts,
+        start,
+        depth,
+    } = attempt!(split);
     if depth != 0 || parts.len() > 256 {
         return Err(crate::invalid(
             span,
             "unbalanced or oversized type argument",
         ));
     }
-    parts.push(&word[start..]);
-    if parts.iter().any(|part| part.is_empty()) {
+    parts.push(alloc::string::String::from(&word[start..]));
+    if super::has_empty_part(&parts) {
         return Err(crate::invalid(span, "empty type argument"));
     }
     Ok(parts)
+}
+
+/// The owned parts, current part start and nesting depth of a top-level split.
+struct TopLevel {
+    parts: alloc::vec::Vec<alloc::string::String>,
+    start: usize,
+    depth: usize,
+}
+
+/// Classify the byte of `word` at `at`: track nesting or cut a top-level part.
+fn top_level_step(
+    word: &str,
+    separator: u8,
+    at: usize,
+    span: crate::Span,
+    mut split: TopLevel,
+) -> Result<TopLevel, crate::Diagnostic> {
+    match word.as_bytes()[at] {
+        b'<' => split.depth = split.depth.saturating_add(1),
+        b'>' => {
+            split.depth = attempt!(split
+                .depth
+                .checked_sub(1)
+                .ok_or_else(|| crate::invalid(span, "unbalanced type argument")));
+        }
+        byte if byte == separator && split.depth == 0 => {
+            // Parts end at distinct separator bytes, so this bound is never reached.
+            if split.parts.len() >= word.len() {
+                return Err(crate::invalid(
+                    span,
+                    "unbalanced or oversized type argument",
+                ));
+            }
+            split
+                .parts
+                .push(alloc::string::String::from(&word[split.start..at]));
+            split.start = attempt!(at
+                .checked_add(1)
+                .ok_or_else(|| crate::invalid(span, "unbalanced or oversized type argument")));
+        }
+        _ => {}
+    }
+    Ok(split)
 }
 #[expect(
     tigerstyle::missing_const_fn,
@@ -490,6 +544,11 @@ fn type_name_byte(text: &[u8], at: usize) -> bool {
     } else {
         false
     }
+}
+
+/// Whether the named-type entry is spelled `name`.
+fn names_type(entry: &(alloc::string::String, noble_kernel::types::Ty), name: &str) -> bool {
+    entry.0 == name
 }
 
 fn contains_ascii_whitespace(bytes: &[u8]) -> bool {
