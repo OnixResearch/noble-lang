@@ -211,9 +211,9 @@ impl World {
     /// a host still has to authenticate and install the actual Program cell.
     pub fn select_worker_program(
         self,
-        source: &crate::source::CheckedProgramInterface,
+        checked: &crate::source::CheckedProgramInterface,
     ) -> Result<Self, Error> {
-        if !source.is_pure_i64_endomorphism() {
+        if !checked.is_pure_i64_endomorphism() {
             return Err(unsupported("Worker WIT requires checked pure I64 Program"));
         }
         self.select_worker_program_shape(None)
@@ -223,9 +223,9 @@ impl World {
     /// test.emit. This is a WIT type selection, never a host operation grant.
     pub fn select_worker_program_for_test_emit(
         self,
-        source: &crate::source::CheckedProgramInterface,
+        checked: &crate::source::CheckedProgramInterface,
     ) -> Result<Self, Error> {
-        if !source.is_test_emit_i64_endomorphism() {
+        if !checked.is_test_emit_i64_endomorphism() {
             return Err(unsupported(
                 "Worker WIT requires checked I64 Program bound to test.emit",
             ));
@@ -237,9 +237,9 @@ impl World {
     /// source effect. WIT selection alone does not authorize publication.
     pub fn select_worker_program_for_test_code_export(
         self,
-        source: &crate::source::CheckedProgramInterface,
+        checked: &crate::source::CheckedProgramInterface,
     ) -> Result<Self, Error> {
-        if !source.is_test_code_export_i64_endomorphism() {
+        if !checked.is_test_code_export_i64_endomorphism() {
             return Err(unsupported(
                 "Worker WIT requires checked test.code-export Program",
             ));
@@ -251,9 +251,9 @@ impl World {
     /// effect. WIT selection alone authorizes, admits and observes nothing.
     pub fn select_worker_program_for_test_send(
         self,
-        source: &crate::source::CheckedProgramInterface,
+        checked: &crate::source::CheckedProgramInterface,
     ) -> Result<Self, Error> {
-        if !source.is_test_send_i64_endomorphism() {
+        if !checked.is_test_send_i64_endomorphism() {
             return Err(unsupported("Worker WIT requires checked test.send Program"));
         }
         self.select_worker_program_shape(Some(noble_kernel::contracts::TEST_SEND))
@@ -301,7 +301,7 @@ impl World {
     /// validates both frames against `state`, `event` and `action`.
     pub fn select_worker_transition(
         mut self,
-        source: &crate::source::CheckedProgramInterface,
+        checked: &crate::source::CheckedProgramInterface,
         state: &noble_kernel::types::Ty,
         event: &noble_kernel::types::Ty,
         action: &noble_kernel::types::Ty,
@@ -314,7 +314,7 @@ impl World {
             ],
             noble_kernel::types::EffSet::empty(),
         );
-        if source.ty() != expected || self.identity != "noble-test:worker-transition/guest@1.0.0" {
+        if checked.ty() != expected || self.identity != "noble-test:worker-transition/guest@1.0.0" {
             return Err(unsupported(
                 "Worker transition WIT requires the checked schema Program",
             ));
@@ -324,16 +324,15 @@ impl World {
                 "Worker transition WIT requires the checked schema Program",
             ));
         }
-        let mut matches = self.resources.iter().filter(|resource| {
-            resource.identity == "noble-test:worker-transition/programs@1.0.0#program"
-        });
-        let resource = matches
-            .next()
-            .ok_or_else(|| unsupported("selected transition Program resource is absent"))?;
-        if matches.next().is_some() {
+        let (first, is_duplicate) = matching_resource(
+            &self.resources,
+            "noble-test:worker-transition/programs@1.0.0#program",
+        );
+        let kind =
+            first.ok_or_else(|| unsupported("selected transition Program resource is absent"))?;
+        if is_duplicate {
             return Err(invalid("duplicate transition Program resource"));
         }
-        let kind = resource.kind;
         if !self.has_transition_operation_shape(kind) {
             return Err(unsupported(
                 "Worker transition WIT operation or ownership shape differs",
@@ -358,16 +357,14 @@ impl World {
         {
             return Err(unsupported("Worker Program WIT world differs"));
         }
-        let mut matches = self.resources.iter().filter(|resource| {
-            resource.identity == "noble-test:worker-program/programs@2.0.0#program"
-        });
-        let resource = matches
-            .next()
-            .ok_or_else(|| unsupported("selected WIT Program resource is absent"))?;
-        if matches.next().is_some() {
+        let (first, is_duplicate) = matching_resource(
+            &self.resources,
+            "noble-test:worker-program/programs@2.0.0#program",
+        );
+        let kind = first.ok_or_else(|| unsupported("selected WIT Program resource is absent"))?;
+        if is_duplicate {
             return Err(invalid("duplicate WIT Program resource"));
         }
-        let kind = resource.kind;
         if self.resources.len() != 1
             || self.imports.len() != 3
             || self.exports.len() != 1
@@ -509,6 +506,36 @@ fn exhausted() -> Error {
     )
 }
 
+/// The kind of the first resource named `identity`, and whether a second one follows it.
+fn matching_resource(
+    resources: &[Resource],
+    identity: &str,
+) -> (Option<noble_kernel::types::ResourceKind>, bool) {
+    let mut first = None;
+    let mut is_duplicate = false;
+    let mut at = 0;
+    while !is_duplicate && at < resources.len() {
+        if has_identity(&resources[at], identity) {
+            if first.is_none() {
+                first = Some(resources[at].kind);
+            } else {
+                is_duplicate = true;
+            }
+        }
+        at += 1;
+    }
+    (first, is_duplicate)
+}
+
+/// Whether `resource` is named `identity`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; String content equality is a non-const trait call."
+)]
+fn has_identity(resource: &Resource, identity: &str) -> bool {
+    resource.identity == identity
+}
+
 /// Only actual source preparation can construct an export. All getters borrow.
 pub struct CheckedExport {
     world: alloc::vec::Vec<u8>,
@@ -532,5 +559,73 @@ impl CheckedExport {
     }
     pub fn submission(&self) -> Option<&noble_kernel::execution::Submission> {
         self.prepared.submission()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    fn resource(identity: &str, kind: u32) -> super::Resource {
+        super::Resource {
+            identity: alloc::string::String::from(identity),
+            interface: alloc::string::String::from("programs"),
+            name: alloc::string::String::from("program"),
+            kind: noble_kernel::types::ResourceKind(kind),
+        }
+    }
+
+    #[test]
+    fn matching_resource_selects_the_first_and_flags_a_second_match() {
+        let resources = [resource("a#x", 1), resource("b#y", 2), resource("a#x", 3)];
+        assert_eq!(
+            super::matching_resource(&resources, "b#y"),
+            (Some(noble_kernel::types::ResourceKind(2)), false)
+        );
+        assert_eq!(
+            super::matching_resource(&resources, "a#x"),
+            (Some(noble_kernel::types::ResourceKind(1)), true)
+        );
+        assert_eq!(super::matching_resource(&resources, "c#z"), (None, false));
+    }
+
+    #[test]
+    fn build_context_binds_every_selected_boundary_in_wire_order() {
+        let world = super::World {
+            identity: alloc::string::String::from("ns:pkg/w@1.0.0"),
+            name: alloc::string::String::from("w"),
+            wit: alloc::vec![b'x', b'y'],
+            imports: alloc::vec::Vec::new(),
+            exports: alloc::vec::Vec::new(),
+            resources: alloc::vec::Vec::new(),
+            asynchronous: false,
+            checked_u64: true,
+            worker_program_kind: Some(noble_kernel::types::ResourceKind(7)),
+            worker_program_effect: Some(noble_kernel::contracts::TEST_EMIT),
+            worker_transition_kind: Some(noble_kernel::types::ResourceKind(9)),
+            limits: crate::Limits::default(),
+        };
+        let mut expected = alloc::vec::Vec::new();
+        expected.extend_from_slice(super::PROFILE.as_bytes());
+        expected.push(0);
+        expected.extend_from_slice(super::BINDING_SCHEMA.as_bytes());
+        expected.push(0);
+        expected.extend_from_slice(super::CHECKED_U64_SCHEMA.as_bytes());
+        expected.push(0);
+        expected.extend_from_slice(b"worker-program-v2:Program([I64]->[I64]!{test.emit})");
+        expected.extend_from_slice(&7u32.to_le_bytes());
+        expected.push(0);
+        expected.extend_from_slice(b"worker-program-v2:transition-frames");
+        expected.extend_from_slice(&9u32.to_le_bytes());
+        expected.push(0);
+        expected.extend_from_slice(&super::STREAM_U8_KIND.0.to_le_bytes());
+        expected.extend_from_slice(&super::FUTURE_S64_KIND.0.to_le_bytes());
+        expected.extend_from_slice(&super::FUTURE_RESULT_S64_STRING_KIND.0.to_le_bytes());
+        expected.extend_from_slice(super::SYNC_ABI.as_bytes());
+        expected.push(0);
+        expected.extend_from_slice(b"ns:pkg/w@1.0.0");
+        expected.push(0);
+        expected.extend_from_slice(b"xy");
+        let context = world.build_context();
+        assert_eq!(context.len(), expected.len());
+        assert_eq!(context, expected);
     }
 }

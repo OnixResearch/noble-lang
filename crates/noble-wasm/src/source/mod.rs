@@ -77,15 +77,8 @@ fn builtin_count(env: &noble_kernel::contracts::Env) -> u32 {
     if env.has_checked_i64() {
         return 30;
     }
-    if env.calculator && env.declared_modules {
-        return 32;
-    }
-    // Declared text extends the cursor prefix with signed I64 `<` at 27.
-    if env.text_cursor && env.declared_modules {
-        return 28;
-    }
     if env.declared_modules {
-        return 23;
+        return declared_builtin_count(env);
     }
     if env.text_cursor {
         return 27;
@@ -99,7 +92,19 @@ fn builtin_count(env: &noble_kernel::contracts::Env) -> u32 {
     23
 }
 
-struct Work {
+/// The fixed prefix of a declared-module session.
+const fn declared_builtin_count(env: &noble_kernel::contracts::Env) -> u32 {
+    if env.calculator {
+        return 32;
+    }
+    // Declared text extends the cursor prefix with signed I64 `<` at 27.
+    if env.text_cursor {
+        return 28;
+    }
+    23
+}
+
+pub(crate) struct Work {
     // Spent is always issued - remaining; both the original caller budget
     // and every selected allowance stay in the same cumulative ledger.
     remaining: u64,
@@ -118,6 +123,41 @@ struct Work {
     reason = "Owner: noble-maintainers; the budget belongs to one private preparation and tracks consumed work without modifying the borrowed submission or published compiler."
 )]
 impl Work {
+    /// The ledger of ordinary, unmetered interning. It cannot refuse: with
+    /// both calculator flags clear, `charge` only subtracts the visited
+    /// amount from `remaining`, every `usize` count fits in `u64`, and one
+    /// interning call visits fewer than `u64::MAX` entries in total, because
+    /// each charge is bounded by the in-memory keys and bytes it actually
+    /// visits.
+    pub(crate) const fn unmetered() -> Self {
+        Self {
+            remaining: u64::MAX,
+            issued: 0,
+            calculator_preflight: false,
+            calculator_plan: false,
+            max_type_nodes: 0,
+        }
+    }
+
+    /// An ordinary ledger holding exactly `remaining` units, for tests that
+    /// charge or exhaust a small budget.
+    #[cfg(test)]
+    pub(crate) const fn limited(remaining: u64) -> Self {
+        Self {
+            remaining,
+            issued: remaining,
+            calculator_preflight: false,
+            calculator_plan: false,
+            max_type_nodes: 0,
+        }
+    }
+
+    /// The units still unspent, for tests that observe what was charged.
+    #[cfg(test)]
+    pub(crate) const fn remaining(&self) -> u64 {
+        self.remaining
+    }
+
     const fn charge(&mut self, amount: u64) -> Result<(), crate::Diagnostic> {
         if self.calculator_preflight && amount != 0 {
             // No owned kernel clone can begin until the complete borrowed
@@ -154,11 +194,7 @@ impl Work {
         Ok(())
     }
 
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; charging a platform-sized entry count uses non-const TryFrom and preserves Exhausted when the count cannot fit the u64 work meter."
-    )]
-    fn entries(&mut self, count: usize) -> Result<(), crate::Diagnostic> {
+    pub(crate) fn entries(&mut self, count: usize) -> Result<(), crate::Diagnostic> {
         match u64::try_from(count) {
             Ok(count) => self.charge(count),
             Err(_) => Err(crate::Diagnostic::Exhausted),
@@ -442,7 +478,7 @@ pub enum OriginFixedArithmetic {
     Mul,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone)]
 pub enum OriginFixedExpression {
     Literal(i64),
     Arithmetic {
@@ -454,7 +490,82 @@ pub enum OriginFixedExpression {
     },
 }
 
-#[derive(Clone, Debug)]
+// Equality compares recipes structurally, exactly as the derive did. A
+// derived impl would recurse through `Rc<Self>`, so its generated trait
+// instance would name itself before it exists; an explicit worklist of
+// shallow node clones walks the two trees instead.
+impl PartialEq for OriginFixedExpression {
+    fn eq(&self, other: &Self) -> bool {
+        recipes_equal(self, other)
+    }
+}
+
+impl Eq for OriginFixedExpression {}
+
+/// Whether two fixed recipes have equal shapes, literals, kinds and bounds.
+fn recipes_equal(left: &OriginFixedExpression, right: &OriginFixedExpression) -> bool {
+    let mut pending = RecipePairs {
+        pairs: alloc::vec::Vec::with_capacity(8),
+    };
+    pending.pairs.push((left.clone(), right.clone()));
+    let mut is_equal = true;
+    while is_equal && !pending.pairs.is_empty() {
+        is_equal = pending.compare_next();
+    }
+    is_equal
+}
+
+/// Recipe node pairs still to compare, innermost last.
+struct RecipePairs {
+    pairs: alloc::vec::Vec<(OriginFixedExpression, OriginFixedExpression)>,
+}
+
+impl RecipePairs {
+    /// Compare the next pending pair and queue its children; `false` at a difference.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-wasm-maintainers; the comparison mutates only its own private worklist of recipe pairs."
+    )]
+    fn compare_next(&mut self) -> bool {
+        let Some(pair) = self.pairs.pop() else {
+            return true;
+        };
+        match pair {
+            (OriginFixedExpression::Literal(left), OriginFixedExpression::Literal(right)) => {
+                left == right
+            }
+            (
+                OriginFixedExpression::Arithmetic {
+                    kind,
+                    left,
+                    right,
+                    nodes,
+                    depth,
+                },
+                OriginFixedExpression::Arithmetic {
+                    kind: other_kind,
+                    left: other_left,
+                    right: other_right,
+                    nodes: other_nodes,
+                    depth: other_depth,
+                },
+            ) => {
+                if kind != other_kind || nodes != other_nodes || depth != other_depth {
+                    return false;
+                }
+                self.pairs
+                    .push((right.as_ref().clone(), other_right.as_ref().clone()));
+                self.pairs
+                    .push((left.as_ref().clone(), other_left.as_ref().clone()));
+                true
+            }
+            // A literal never equals an arithmetic node.
+            _ => false,
+        }
+    }
+}
+
+#[derive(Clone)]
 pub enum OriginProgramValue {
     Static {
         node: noble_kernel::untrusted::NodeId,
@@ -473,10 +584,122 @@ pub enum OriginProgramValue {
     },
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum OriginOperand {
     I64(OriginI64),
     Program(alloc::rc::Rc<OriginProgramValue>),
+}
+
+impl core::fmt::Debug for OriginOperand {
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-wasm-maintainers; Debug formatting writes only to the caller's Formatter, which is the operation"
+    )]
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        debug_origin(OriginRendering::Operand(self), f)
+    }
+}
+
+impl core::fmt::Debug for OriginProgramValue {
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-wasm-maintainers; Debug formatting writes only to the caller's Formatter, which is the operation"
+    )]
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        debug_origin(OriginRendering::Value(self), f)
+    }
+}
+
+impl core::fmt::Debug for OriginFixedExpression {
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-wasm-maintainers; Debug formatting writes only to the caller's Formatter, which is the operation"
+    )]
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        debug_origin(OriginRendering::Recipe(self), f)
+    }
+}
+
+/// One borrowed value of the recursive origin types to render.
+#[derive(Clone, Copy)]
+enum OriginRendering<'a> {
+    Operand(&'a OriginOperand),
+    Value(&'a OriginProgramValue),
+    Recipe(&'a OriginFixedExpression),
+}
+
+/// Render the recursive origin types exactly as `#[derive(Debug)]` did.
+///
+/// Reviewed opaque extraction boundary: `OriginProgramValue`, `OriginOperand`
+/// and `OriginFixedExpression` recurse through `Rc`, so rendering any nested
+/// value formats it through its own `Debug` impl; no transparent body can
+/// avoid the self- and mutually-referencing trait instances that the pinned
+/// Aeneas refuses or emits before they are defined. Formatting layout is
+/// already an abstracted trust boundary.
+#[charon::opaque]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-wasm-maintainers; Debug formatting writes only to the caller's Formatter, which is the operation"
+)]
+fn debug_origin(
+    rendering: OriginRendering<'_>,
+    f: &mut core::fmt::Formatter<'_>,
+) -> core::fmt::Result {
+    match rendering {
+        OriginRendering::Operand(OriginOperand::I64(value)) => {
+            f.debug_tuple("I64").field(value).finish()
+        }
+        OriginRendering::Operand(OriginOperand::Program(value)) => {
+            f.debug_tuple("Program").field(value).finish()
+        }
+        OriginRendering::Value(OriginProgramValue::Static {
+            node,
+            program_index,
+        }) => f
+            .debug_struct("Static")
+            .field("node", node)
+            .field("program_index", program_index)
+            .finish(),
+        OriginRendering::Value(OriginProgramValue::Quote {
+            node,
+            table_entry,
+            operand,
+        }) => f
+            .debug_struct("Quote")
+            .field("node", node)
+            .field("table_entry", table_entry)
+            .field("operand", operand)
+            .finish(),
+        OriginRendering::Value(OriginProgramValue::Compose {
+            node,
+            table_entry,
+            left,
+            right,
+        }) => f
+            .debug_struct("Compose")
+            .field("node", node)
+            .field("table_entry", table_entry)
+            .field("left", left)
+            .field("right", right)
+            .finish(),
+        OriginRendering::Recipe(OriginFixedExpression::Literal(value)) => {
+            f.debug_tuple("Literal").field(value).finish()
+        }
+        OriginRendering::Recipe(OriginFixedExpression::Arithmetic {
+            kind,
+            left,
+            right,
+            nodes,
+            depth,
+        }) => f
+            .debug_struct("Arithmetic")
+            .field("kind", kind)
+            .field("left", left)
+            .field("right", right)
+            .field("nodes", nodes)
+            .field("depth", depth)
+            .finish(),
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -591,22 +814,24 @@ impl Prepared {
         let count =
             u32::try_from(self.next.descriptors.len()).map_err(|_| crate::Diagnostic::Exhausted)?;
         bytes.extend_from_slice(&count.to_le_bytes());
-        for ((address, length), signature) in
-            self.next.descriptors.iter().zip(&self.next.signatures.keys)
-        {
-            if usize::try_from(*length).ok() != Some(signature.len())
-                || *address < TEXT_START
-                || address
-                    .checked_add(*length)
-                    .is_none_or(|end| end > MEMORY_BYTES)
-            {
-                return Err(crate::Diagnostic::Defective);
+        let mut index = 0usize;
+        let mut failure = None;
+        while index < self.next.descriptors.len() {
+            let (address, length) = self.next.descriptors[index];
+            let signature = &self.next.signatures.keys[index];
+            if is_defective_descriptor(address, length, signature) {
+                failure = Some(crate::Diagnostic::Defective);
+                break;
             }
             bytes.extend_from_slice(&address.to_le_bytes());
             bytes.extend_from_slice(&length.to_le_bytes());
             bytes.extend_from_slice(signature);
+            index += 1;
         }
-        Ok(bytes)
+        match failure {
+            Some(problem) => Err(problem),
+            None => Ok(bytes),
+        }
     }
 
     /// The exact table span installed by this module's successful submission.
@@ -685,37 +910,60 @@ impl Compiler {
                 generation: self.generation,
             });
         }
-        let mut start = self.functions;
-        if self.live_slots {
-            if let Some(index) = self.free_code.iter().position(|free| free.slots >= slots) {
-                let free = &mut self.free_code[index];
-                start = free.start;
-                free.start += slots;
-                free.slots -= slots;
-                if free.slots == 0 {
-                    self.free_code.remove(index);
-                }
-            } else {
-                self.functions = match self.functions.checked_add(slots) {
-                    Some(end) if end <= TABLE_LIMIT => end,
-                    Some(_) | None => return Err(crate::Diagnostic::Exhausted),
-                };
-            }
-        } else {
-            self.functions = match self.functions.checked_add(slots) {
-                Some(end) if end <= TABLE_LIMIT => end,
-                Some(_) | None => return Err(crate::Diagnostic::Exhausted),
-            };
-        }
+        let start = attempt!(self.code_start(slots));
         let span = CodeSpan {
             start,
             slots,
             generation: self.generation,
         };
-        if self.live || self.declared_live || self.live_slots {
+        if self.owns_code() {
             self.installed_code.push(span);
         }
         Ok(span)
+    }
+
+    /// The first slot of `slots` new code slots: the first free span that fits
+    /// under live slots, else the table's end, which then grows by `slots`.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-wasm-maintainers; reserve_code updates only the unpublished prospective compiler table and preserves every refusal as a diagnostic."
+    )]
+    fn code_start(&mut self, slots: u32) -> Result<u32, crate::Diagnostic> {
+        if let Some(index) = self.fitting_free_code(slots) {
+            return Ok(self.take_free_code(index, slots));
+        }
+        let start = self.functions;
+        self.functions = attempt!(extended_table(self.functions, slots));
+        Ok(start)
+    }
+
+    /// The first free span holding `slots` slots; only live slots reuse code.
+    fn fitting_free_code(&self, slots: u32) -> Option<usize> {
+        if !self.live_slots {
+            return None;
+        }
+        position_of(&self.free_code, |free| free.slots >= slots)
+    }
+
+    /// Take `slots` slots from the front of free span `index`, dropping it once empty.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-wasm-maintainers; reserve_code updates only the unpublished prospective compiler table and preserves every refusal as a diagnostic."
+    )]
+    fn take_free_code(&mut self, index: usize, slots: u32) -> u32 {
+        let free = &mut self.free_code[index];
+        let start = free.start;
+        free.start += slots;
+        free.slots -= slots;
+        if free.slots == 0 {
+            self.free_code.remove(index);
+        }
+        start
+    }
+
+    /// Whether a live or declared-live profile owns its installed code spans.
+    const fn owns_code(&self) -> bool {
+        self.live || self.declared_live || self.live_slots
     }
 
     #[expect(
@@ -730,9 +978,7 @@ impl Compiler {
         let bytes = attempt!(admission::meter::stack(stack, work));
         attempt!(work.charge(bytes));
         if self.calculator {
-            return self
-                .signatures
-                .intern_charged(stack, |visited| work.entries(visited));
+            return self.signatures.intern_charged(stack, work);
         }
         let mut index = 0usize;
         let mut failure = None;
@@ -905,7 +1151,7 @@ impl Compiler {
         {
             return Err(crate::Diagnostic::Unsupported);
         }
-        self.prepare_from(submission, None, self.functions, false, false, false)
+        self.prepare_from(submission, self.functions, false, false, false)
     }
 
     /// Rebuild a signed staged-source snapshot before authorizing `SignedSelf`.
@@ -916,7 +1162,7 @@ impl Compiler {
     )]
     pub fn prepare_signed(
         &self,
-        source: &noble_contracts::source::SignedSourceOwner<'_>,
+        owner: &noble_contracts::source::SignedSourceOwner<'_>,
     ) -> Result<Prepared, crate::Diagnostic> {
         if self.live
             || self.live_slots
@@ -928,14 +1174,14 @@ impl Compiler {
         {
             return Err(crate::Diagnostic::Unsupported);
         }
-        let submission = source.rederive().map_err(|_| crate::Diagnostic::Invalid)?;
+        let submission = owner.rederive().map_err(|_| crate::Diagnostic::Invalid)?;
         if !submission.environment.declared_modules
             || submission.environment.live_slots
             || submission.environment.text_cursor
         {
             return Err(crate::Diagnostic::Unsupported);
         }
-        self.prepare_from(&submission, None, self.functions, false, false, true)
+        self.prepare_from(&submission, self.functions, false, false, true)
     }
 
     /// Worker ingress for a pure Program with signed, scoped recursion. Like
@@ -948,7 +1194,7 @@ impl Compiler {
     )]
     pub fn prepare_worker_signed(
         &self,
-        source: &noble_contracts::source::SignedSourceOwner<'_>,
+        owner: &noble_contracts::source::SignedSourceOwner<'_>,
     ) -> Result<Prepared, crate::Diagnostic> {
         if !self.worker_inputs
             || self.live
@@ -960,8 +1206,8 @@ impl Compiler {
         {
             return Err(crate::Diagnostic::Unsupported);
         }
-        let submission = source.rederive().map_err(|_| crate::Diagnostic::Invalid)?;
-        self.prepare_from(&submission, None, self.functions, false, false, true)
+        let submission = owner.rederive().map_err(|_| crate::Diagnostic::Invalid)?;
+        self.prepare_from(&submission, self.functions, false, false, true)
     }
 
     /// The merged cursor/declared profile has no raw Submission ingress.
@@ -973,7 +1219,7 @@ impl Compiler {
     )]
     pub fn prepare_declared_text(
         &self,
-        source: &noble_contracts::source::DeclaredTextSourceOwner<'_>,
+        owner: &noble_contracts::source::DeclaredTextSourceOwner<'_>,
     ) -> Result<Prepared, crate::Diagnostic> {
         if !self.declared_text
             || !self.text_cursor
@@ -986,19 +1232,18 @@ impl Compiler {
         {
             return Err(crate::Diagnostic::Unsupported);
         }
-        let submission = source.rederive().map_err(|_| crate::Diagnostic::Invalid)?;
+        let submission = owner.rederive().map_err(|_| crate::Diagnostic::Invalid)?;
         if !submission.environment.declared_modules || !submission.environment.text_cursor {
             return Err(crate::Diagnostic::Unsupported);
         }
-        let is_signed = submission.definitions.iter().any(|definition| {
-            definition
-                .body
-                .candidate
-                .nodes
-                .iter()
-                .any(|node| matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. }))
-        });
-        self.prepare_from(&submission, None, self.functions, false, false, is_signed)
+        let is_signed = crate::scan::find_first(&submission.definitions, |definition| {
+            crate::scan::find_first(&definition.body.candidate.nodes, |node| {
+                matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. })
+            })
+            .is_some()
+        })
+        .is_some();
+        self.prepare_from(&submission, self.functions, false, false, is_signed)
     }
 
     /// Calculator-only preparation at a quiescent submission boundary: the
@@ -1017,14 +1262,7 @@ impl Compiler {
         if !self.calculator {
             return Err(crate::Diagnostic::Invalid);
         }
-        self.prepare_from(
-            submission,
-            None,
-            CALCULATOR_FUNCTION_BASE,
-            true,
-            false,
-            false,
-        )
+        self.prepare_from(submission, CALCULATOR_FUNCTION_BASE, true, false, false)
     }
 
     /// Calculator-only preparation at a Program-free submission boundary: the
@@ -1040,30 +1278,29 @@ impl Compiler {
         if !self.calculator {
             return Err(crate::Diagnostic::Invalid);
         }
-        self.prepare_from(
-            submission,
-            None,
-            CALCULATOR_FUNCTION_BASE,
-            true,
-            true,
-            false,
-        )
+        self.prepare_from(submission, CALCULATOR_FUNCTION_BASE, true, true, false)
     }
 
-    #[expect(
-        tigerstyle::allocation_in_loop,
-        tigerstyle::too_many_parameters,
-        reason = "Owner: noble-wasm-maintainers; each iteration's buffer is bounded by the checked input that drives the loop; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
-    )]
+    /// Independently accept and lower a submission into a preparation.
     fn prepare_from(
         &self,
         submission: &noble_kernel::execution::Submission,
-        selected: Option<&noble_contracts::source::proof::CheckedSelectedTarget<'_>>,
         functions: u32,
         quiescent: bool,
         program_free: bool,
         signed: bool,
     ) -> Result<Prepared, crate::Diagnostic> {
+        let (prepared, _) =
+            attempt!(self.prepare_layout(submission, functions, quiescent, program_free, signed));
+        Ok(prepared)
+    }
+
+    /// Charge borrowed preflight and independent admission of a submission.
+    fn admitted(
+        &self,
+        submission: &noble_kernel::execution::Submission,
+        signed: bool,
+    ) -> Result<Admitted, crate::Diagnostic> {
         if self.calculator
             && u64::from(submission.request.limits.work) > CALCULATOR_COMPILER_WORK_LIMIT
         {
@@ -1111,15 +1348,35 @@ impl Compiler {
             &mut work,
         ));
         let admission_issued = work.issued;
+        Ok(Admitted {
+            work,
+            checked,
+            preflight_issued,
+            admission_issued,
+        })
+    }
+
+    /// Independently accept and lower a submission. The unpublished plan is
+    /// returned beside the preparation, so a selected preparation derives the
+    /// returned target's lineage from it and no borrowed source state flows
+    /// through this preparation.
+    fn prepare_layout(
+        &self,
+        submission: &noble_kernel::execution::Submission,
+        functions: u32,
+        quiescent: bool,
+        program_free: bool,
+        signed: bool,
+    ) -> Result<(Prepared, plan::Layout), crate::Diagnostic> {
+        let Admitted {
+            mut work,
+            checked,
+            preflight_issued,
+            admission_issued,
+        } = attempt!(self.admitted(submission, signed));
         // A Program-free epoch interns into a fresh calculator pool, so no
         // committed key is retained, copied or charged.
-        let fresh_signatures = if program_free {
-            let mut pool = crate::signatures::Pool::source();
-            pool.select_calculator();
-            Some(pool)
-        } else {
-            None
-        };
+        let fresh_signatures = fresh_signature_pool(program_free);
         let signature_key_charge = attempt!(admission::meter::compilation(
             &checked,
             fresh_signatures.as_ref().unwrap_or(&self.signatures),
@@ -1127,69 +1384,12 @@ impl Compiler {
         ));
         // A quiescent epoch starts with an empty identity ledger: nothing of
         // the committed ledger is retained, so none of it is copied or charged.
-        let retained = if quiescent { 0 } else { self.identities.len() };
-        let mut identity = 0usize;
-        let mut identity_charge = 0u64;
-        let mut failure = None;
-        while identity < retained {
-            let entries = self.identities[identity].recipe.len();
-            match work.entries(entries) {
-                Ok(()) => {
-                    identity_charge = identity_charge.saturating_add(entries as u64);
-                    identity += 1;
-                }
-                Err(problem) => {
-                    failure = Some(problem);
-                    break;
-                }
-            }
-        }
-        if let Some(problem) = failure {
-            return Err(problem);
-        }
+        let retained = self.retained_identities(quiescent);
+        let identity_charge = attempt!(identity_copy_charge(&self.identities, retained, &mut work));
         // The literal table is copied into the prospective compiler.
-        attempt!(work.entries(
-            self.static_literals
-                .keys()
-                .fold(0usize, |total, key| total.saturating_add(key.len() + 1))
-        ));
-        let mut next = Self {
-            live: self.live,
-            declared_live: self.declared_live,
-            live_slots: self.live_slots,
-            text_cursor: self.text_cursor,
-            declared_text: self.declared_text,
-            calculator: self.calculator,
-            checked_i64: self.checked_i64,
-            worker_inputs: self.worker_inputs,
-            worker_interruption: self.worker_interruption,
-            type_directed_experimental: self.type_directed_experimental,
-            experimental_cleanup: self.experimental_cleanup,
-            generation: match self.generation.checked_add(1) {
-                Some(value) => value,
-                None => return Err(crate::Diagnostic::Exhausted),
-            },
-            functions,
-            retention_revision: self.retention_revision,
-            free_code: self.free_code.clone(),
-            installed_code: self.installed_code.clone(),
-            text_end: self.text_end,
-            static_literals: self.static_literals.clone(),
-            signatures: match fresh_signatures {
-                Some(pool) => pool,
-                None => self.signatures.clone(),
-            },
-            descriptors: if program_free {
-                alloc::vec::Vec::new()
-            } else {
-                self.descriptors.clone()
-            },
-            identities: if quiescent {
-                alloc::vec::Vec::new()
-            } else {
-                self.identities.clone()
-            },
-        };
+        attempt!(work.entries(literal_copy_entries(&self.static_literals)));
+        let mut next =
+            attempt!(self.prospective(functions, quiescent, program_free, fresh_signatures));
         attempt!(admission::identity::check(
             submission,
             &mut next.identities,
@@ -1199,143 +1399,17 @@ impl Compiler {
         ));
         work.calculator_plan = self.calculator;
         let mut plan = attempt!(plan::lower(submission, &checked, &mut next, &mut work));
-        // Worker literals share the scratch-region boundary used by calculator
-        // signature expansion; neither profile may let static Text overlap it.
-        if self.worker_inputs && next.text_end > CALCULATOR_TEXT_END {
-            return Err(crate::Diagnostic::Exhausted);
-        }
-        // A calculator module publishes only the signatures new since the
-        // committed compiler's descriptor table (all of its own after a
-        // Program-free rewind); the trusted engine retains that published
-        // prefix, so per-module metadata is history-independent.
-        let published = if program_free {
-            0
-        } else {
-            self.descriptors.len()
-        };
-        let wat = if next.calculator {
-            let keys = attempt!(next
-                .signatures
-                .expanded_keys(published, |bytes| work.entries(bytes)));
-            attempt!(emit::module(&plan, self.generation, published, &keys))
-        } else {
-            attempt!(emit::module(
-                &plan,
-                self.generation,
-                0,
-                &next.signatures.keys
-            ))
-        };
+        let (published, wat) = attempt!(self.emitted(&plan, &next, program_free, &mut work));
         let code_span = CodeSpan {
             start: plan.first_function,
             slots: plan.functions - plan.first_function,
             generation: next.generation,
         };
-        let target_metadata = if self.live_slots || self.worker_inputs {
-            let root = attempt!(plan
-                .programs
-                .get(plan.root)
-                .ok_or(crate::Diagnostic::Invalid));
-            Some(TargetMetadata {
-                root_program_index: plan.root,
-                input_signature: root.input,
-                output_signature: root.output,
-                effect_mask: root.effects,
-                stack_in: submission.request.expected.stack_in.clone(),
-                stack_out: submission.request.expected.stack_out.clone(),
-                effects: checked.root.interface.effects.clone(),
-            })
-        } else {
-            None
-        };
-        let mut named_targets = alloc::vec::Vec::new();
-        if self.live_slots || self.worker_inputs {
-            for (index, definition) in submission.definitions.iter().enumerate() {
-                let checked_body = attempt!(checked
-                    .definitions
-                    .get(index)
-                    .ok_or(crate::Diagnostic::Invalid));
-                let program_index = attempt!(plan
-                    .definition_roots
-                    .get(index)
-                    .copied()
-                    .ok_or(crate::Diagnostic::Invalid));
-                let program = attempt!(plan
-                    .programs
-                    .get(program_index)
-                    .ok_or(crate::Diagnostic::Invalid));
-                let recipe = attempt!(next
-                    .identities
-                    .iter()
-                    .find(|identity| identity.id == definition.identity)
-                    .ok_or(crate::Diagnostic::Invalid));
-                named_targets.push(NamedTargetMetadata {
-                    definition: definition.definition,
-                    definition_identity: definition.identity,
-                    program_index,
-                    entry: program.entry,
-                    input_signature: program.input,
-                    output_signature: program.output,
-                    effect_mask: program.effects,
-                    stack_in: checked_body.interface.stack_in.clone(),
-                    stack_out: checked_body.interface.stack_out.clone(),
-                    effects: checked_body.interface.effects.clone(),
-                    checked_recipe: recipe.recipe.clone(),
-                });
-            }
-        }
-        let selected_origin = selected.and_then(|selected| origin::build(selected, &plan));
-        let mut program_metadata = alloc::vec::Vec::new();
-        if self.live_slots || self.worker_inputs {
-            program_metadata.reserve(plan.programs.len());
-            let text_witness = plan.text_witness;
-            for (program_index, program) in plan.programs.iter_mut().enumerate() {
-                let logical = attempt!(program.logical.take().ok_or(crate::Diagnostic::Defective));
-                let runtime_atoms = if self.worker_inputs {
-                    program
-                        .operations
-                        .iter()
-                        .map(|operation| plan::atom_metadata(operation, text_witness))
-                        .collect()
-                } else {
-                    alloc::vec::Vec::new()
-                };
-                program_metadata.push(ProgramMetadata {
-                    program_index,
-                    entry: program.entry,
-                    input_signature: program.input,
-                    output_signature: program.output,
-                    effect_mask: program.effects,
-                    stack_in: logical.stack_in,
-                    stack_out: logical.stack_out,
-                    effects: logical.effects,
-                    capture_left: 0,
-                    capture_right: 0,
-                    recipe_depth: program.depth,
-                    recipe_leaves: program.leaves,
-                    runtime_atoms,
-                });
-            }
-        }
-        let mut resource_catalog = alloc::vec::Vec::new();
-        if self.live_slots {
-            for id in &submission.environment.live_resource_nominals {
-                let declaration = attempt!(submission
-                    .environment
-                    .nominal(*id)
-                    .ok_or(crate::Diagnostic::Invalid));
-                let noble_kernel::types::NominalShape::Opaque(value) = &declaration.shape else {
-                    return Err(crate::Diagnostic::Invalid);
-                };
-                let noble_kernel::types::Ty::Resource(kind) = value.as_ref() else {
-                    return Err(crate::Diagnostic::Invalid);
-                };
-                resource_catalog.push(ResourceCatalogEntry {
-                    declaration: declaration.clone(),
-                    kind: *kind,
-                });
-            }
-        }
+        let target_metadata = attempt!(self.root_metadata(submission, &checked, &plan));
+        let named_targets =
+            attempt!(self.named_metadata(submission, &checked, &plan, &next.identities));
+        let program_metadata = attempt!(self.program_metadata(&mut plan));
+        let resource_catalog = attempt!(self.resource_metadata(&submission.environment));
         let named_bodies = submission.definitions.len() as u64;
         let work_environment_grant = admission_issued - preflight_issued;
         let metrics = CompileMetrics {
@@ -1364,37 +1438,217 @@ impl Compiler {
             type_directed_specializations: plan.type_directed_specializations,
             type_directed_fallback_operations: plan.type_directed_fallback_operations,
         };
-        Ok(Prepared {
-            base: transaction::Base::capture(
-                self,
-                retained,
-                if program_free {
-                    0
-                } else {
-                    self.signatures.len()
-                },
-                published,
-            ),
+        let signature_base = self.retained_signatures(program_free);
+        let epoch = self.program_free_epoch(program_free);
+        let live_sites = core::mem::take(&mut plan.live_sites);
+        let prepared = Prepared {
+            base: transaction::Base::capture(self, retained, signature_base, published),
             base_live_slots: self.live_slots,
             base_retention_revision: self.retention_revision,
             next,
             code_span,
-            live_sites: plan.live_sites,
+            live_sites,
             target_metadata,
             program_metadata,
             named_targets,
             selected_target: None,
-            selected_origin,
+            selected_origin: None,
             resource_catalog,
             wat,
             metrics,
-            epoch: if program_free {
-                self.canonical_epoch()
-            } else {
-                None
-            },
+            epoch,
             work_issued: work.issued,
+        };
+        Ok((prepared, plan))
+    }
+
+    /// The committed identities a preparation retains: none at a quiescent boundary.
+    fn retained_identities(&self, quiescent: bool) -> usize {
+        if quiescent {
+            0
+        } else {
+            self.identities.len()
+        }
+    }
+
+    /// The committed signature prefix a preparation retains: none at a Program-free boundary.
+    fn retained_signatures(&self, program_free: bool) -> usize {
+        if program_free {
+            0
+        } else {
+            self.signatures.len()
+        }
+    }
+
+    /// The canonical epoch recorded by a Program-free preparation, if any.
+    fn program_free_epoch(&self, program_free: bool) -> Option<CanonicalEpoch> {
+        if program_free {
+            self.canonical_epoch()
+        } else {
+            None
+        }
+    }
+
+    /// The prospective compiler a preparation lowers into: the committed state
+    /// at the next generation, rewound where the epoch restarts it.
+    fn prospective(
+        &self,
+        functions: u32,
+        quiescent: bool,
+        program_free: bool,
+        fresh_signatures: Option<crate::signatures::Pool>,
+    ) -> Result<Self, crate::Diagnostic> {
+        let generation = match self.generation.checked_add(1) {
+            Some(value) => value,
+            None => return Err(crate::Diagnostic::Exhausted),
+        };
+        let free_code = self.free_code.clone();
+        let installed_code = self.installed_code.clone();
+        let static_literals = self.static_literals.clone();
+        let signatures = fresh_signatures.unwrap_or_else(|| self.signatures.clone());
+        let descriptors = if program_free {
+            alloc::vec::Vec::new()
+        } else {
+            self.descriptors.clone()
+        };
+        let identities = if quiescent {
+            alloc::vec::Vec::new()
+        } else {
+            self.identities.clone()
+        };
+        Ok(Self {
+            live: self.live,
+            declared_live: self.declared_live,
+            live_slots: self.live_slots,
+            text_cursor: self.text_cursor,
+            declared_text: self.declared_text,
+            calculator: self.calculator,
+            checked_i64: self.checked_i64,
+            worker_inputs: self.worker_inputs,
+            worker_interruption: self.worker_interruption,
+            type_directed_experimental: self.type_directed_experimental,
+            experimental_cleanup: self.experimental_cleanup,
+            generation,
+            functions,
+            retention_revision: self.retention_revision,
+            free_code,
+            installed_code,
+            text_end: self.text_end,
+            static_literals,
+            signatures,
+            descriptors,
+            identities,
         })
+    }
+
+    /// Emit the module and report the committed descriptor prefix it publishes after.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-maintainers; the budget belongs to one private preparation and tracks consumed work without modifying the borrowed submission or published compiler."
+    )]
+    fn emitted(
+        &self,
+        plan: &plan::Layout,
+        next: &Self,
+        program_free: bool,
+        work: &mut Work,
+    ) -> Result<(usize, alloc::vec::Vec<u8>), crate::Diagnostic> {
+        // Worker literals share the scratch-region boundary used by calculator
+        // signature expansion; neither profile may let static Text overlap it.
+        if self.worker_inputs && next.text_end > CALCULATOR_TEXT_END {
+            return Err(crate::Diagnostic::Exhausted);
+        }
+        // A calculator module publishes only the signatures new since the
+        // committed compiler's descriptor table (all of its own after a
+        // Program-free rewind); the trusted engine retains that published
+        // prefix, so per-module metadata is history-independent.
+        let published = self.retained_descriptors(program_free);
+        if next.calculator {
+            let keys = attempt!(next.signatures.expanded_keys(published, work));
+            let wat = attempt!(emit::module(plan, self.generation, published, &keys));
+            return Ok((published, wat));
+        }
+        let wat = attempt!(emit::module(
+            plan,
+            self.generation,
+            0,
+            &next.signatures.keys
+        ));
+        Ok((published, wat))
+    }
+
+    /// The committed descriptor prefix a preparation retains: none at a Program-free boundary.
+    fn retained_descriptors(&self, program_free: bool) -> usize {
+        if program_free {
+            0
+        } else {
+            self.descriptors.len()
+        }
+    }
+
+    /// The checked root interface the live-slot and Worker profiles publish.
+    fn root_metadata(
+        &self,
+        submission: &noble_kernel::execution::Submission,
+        checked: &admission::Accepted,
+        plan: &plan::Layout,
+    ) -> Result<Option<TargetMetadata>, crate::Diagnostic> {
+        if !(self.live_slots || self.worker_inputs) {
+            return Ok(None);
+        }
+        let root = attempt!(plan
+            .programs
+            .get(plan.root)
+            .ok_or(crate::Diagnostic::Invalid));
+        Ok(Some(TargetMetadata {
+            root_program_index: plan.root,
+            input_signature: root.input,
+            output_signature: root.output,
+            effect_mask: root.effects,
+            stack_in: submission.request.expected.stack_in.clone(),
+            stack_out: submission.request.expected.stack_out.clone(),
+            effects: checked.root.interface.effects.clone(),
+        }))
+    }
+
+    /// The named targets the live-slot and Worker profiles publish.
+    fn named_metadata(
+        &self,
+        submission: &noble_kernel::execution::Submission,
+        checked: &admission::Accepted,
+        plan: &plan::Layout,
+        identities: &[Identity],
+    ) -> Result<alloc::vec::Vec<NamedTargetMetadata>, crate::Diagnostic> {
+        if !(self.live_slots || self.worker_inputs) {
+            return Ok(alloc::vec::Vec::new());
+        }
+        checked_named_targets(submission, checked, plan, identities)
+    }
+
+    /// The program metadata the live-slot and Worker profiles publish.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-maintainers; metadata publication moves each logical interface out of the unpublished plan that this preparation owns; the borrowed submission stays immutable."
+    )]
+    fn program_metadata(
+        &self,
+        plan: &mut plan::Layout,
+    ) -> Result<alloc::vec::Vec<ProgramMetadata>, crate::Diagnostic> {
+        if !(self.live_slots || self.worker_inputs) {
+            return Ok(alloc::vec::Vec::new());
+        }
+        checked_program_metadata(plan, self.worker_inputs)
+    }
+
+    /// The resource catalog the live-slot profile publishes.
+    fn resource_metadata(
+        &self,
+        environment: &noble_kernel::contracts::Env,
+    ) -> Result<alloc::vec::Vec<ResourceCatalogEntry>, crate::Diagnostic> {
+        if !self.live_slots {
+            return Ok(alloc::vec::Vec::new());
+        }
+        admitted_resource_catalog(environment)
     }
 
     /// Recompile the exact independently accepted source-selected target, and
@@ -1409,38 +1663,37 @@ impl Compiler {
         if !self.live_slots {
             return Err(crate::Diagnostic::Unsupported);
         }
-        let mut prepared = attempt!(self.prepare_from(
+        let (mut prepared, plan) = attempt!(self.prepare_layout(
             selected.submission(),
-            Some(selected),
             self.functions,
             false,
             false,
             false,
         ));
+        prepared.selected_origin = origin::build(selected, &plan);
         let id = selected.definition_id();
-        let mut matches = prepared.named_targets.iter().filter(|named| {
-            named.definition == selected.definition().definition
-                && named.definition_identity == id.identity()
-        });
-        let Some(named) = matches.next() else {
+        let (first, has_duplicate) = selected_named_target(
+            &prepared.named_targets,
+            selected.definition().definition,
+            id.identity(),
+        );
+        let Some(index) = first else {
             return Err(crate::Diagnostic::Invalid);
         };
-        let has_interface_mismatch = matches.next().is_some()
-            || named.stack_in != selected.body().interface.stack_in
-            || named.stack_out != selected.body().interface.stack_out
-            || named.effects != selected.body().interface.effects
-            || !prepared.target_metadata.as_ref().is_some_and(|root| {
-                root.stack_in == selected.root().interface.stack_in
-                    && root.stack_out == selected.root().interface.stack_out
-                    && root.effects == selected.root().interface.effects
-            });
-        if has_interface_mismatch {
+        let named_program_index = prepared.named_targets[index].program_index;
+        if selection_mismatch(
+            &prepared.named_targets[index],
+            has_duplicate,
+            &selected.body().interface,
+            prepared.target_metadata.as_ref(),
+            &selected.root().interface,
+        ) {
             return Err(crate::Diagnostic::Invalid);
         }
         prepared.selected_target = Some(SelectedTargetArtifact {
             definition_id: id,
             source_generation: selected.source_generation(),
-            named_program_index: named.program_index,
+            named_program_index,
         });
         Ok(prepared)
     }
@@ -1539,13 +1792,10 @@ impl Compiler {
         span: CodeSpan,
         verify_and_clear: impl FnOnce(CodeSpan) -> Result<(), crate::Diagnostic>,
     ) -> Result<(), crate::Diagnostic> {
-        if !(self.live || self.declared_live || self.live_slots)
-            || span.slots == 0
-            || span.start < 4
-        {
+        if !self.owns_code() || span.slots == 0 || span.start < 4 {
             return Err(crate::Diagnostic::Invalid);
         }
-        let Some(index) = self.installed_code.iter().position(|owned| *owned == span) else {
+        let Some(index) = position_of(&self.installed_code, |owned| *owned == span) else {
             return Err(crate::Diagnostic::Invalid);
         };
         let Some(end) = span.start.checked_add(span.slots) else {
@@ -1556,7 +1806,7 @@ impl Compiler {
         }
         attempt!(verify_and_clear(span));
         self.installed_code.remove(index);
-        let mut index = self
+        let index = self
             .free_code
             .partition_point(|free| free.start < span.start);
         self.free_code.insert(
@@ -1566,27 +1816,66 @@ impl Compiler {
                 slots: span.slots,
             },
         );
-        if index > 0
-            && self.free_code[index - 1].start + self.free_code[index - 1].slots
-                == self.free_code[index].start
-        {
-            let right = self.free_code.remove(index);
-            self.free_code[index - 1].slots += right.slots;
-            index -= 1;
-        }
-        if index + 1 < self.free_code.len()
-            && self.free_code[index].start + self.free_code[index].slots
-                == self.free_code[index + 1].start
-        {
-            let right = self.free_code.remove(index + 1);
-            self.free_code[index].slots += right.slots;
-        }
-        if self.free_code[index].start + self.free_code[index].slots == self.functions {
-            self.functions = self.free_code[index].start;
-            self.free_code.remove(index);
-        }
+        let index = self.coalesce_left(index);
+        self.coalesce_right(index);
+        self.release_table_end(index);
         self.retention_revision += 1;
         Ok(())
+    }
+
+    /// Merge free span `index` into its left neighbour when they touch,
+    /// returning the index of the span that now holds it.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-maintainers; successful retirement explicitly clears trusted runtime table entries and publishes a revised compiler allocation state."
+    )]
+    fn coalesce_left(&mut self, index: usize) -> usize {
+        if !self.touches_left(index) {
+            return index;
+        }
+        let right = self.free_code.remove(index);
+        self.free_code[index - 1].slots += right.slots;
+        index - 1
+    }
+
+    /// Whether free span `index` starts where its left neighbour ends.
+    fn touches_left(&self, index: usize) -> bool {
+        index > 0
+            && self.free_code[index - 1].start + self.free_code[index - 1].slots
+                == self.free_code[index].start
+    }
+
+    /// Merge free span `index`'s right neighbour into it when they touch.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-maintainers; successful retirement explicitly clears trusted runtime table entries and publishes a revised compiler allocation state."
+    )]
+    fn coalesce_right(&mut self, index: usize) {
+        if !self.touches_right(index) {
+            return;
+        }
+        let right = self.free_code.remove(index + 1);
+        self.free_code[index].slots += right.slots;
+    }
+
+    /// Whether free span `index`'s right neighbour starts where it ends.
+    fn touches_right(&self, index: usize) -> bool {
+        index + 1 < self.free_code.len()
+            && self.free_code[index].start + self.free_code[index].slots
+                == self.free_code[index + 1].start
+    }
+
+    /// Shrink the table when free span `index` ends exactly at the table's end.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-maintainers; successful retirement explicitly clears trusted runtime table entries and publishes a revised compiler allocation state."
+    )]
+    fn release_table_end(&mut self, index: usize) {
+        if self.free_code[index].start + self.free_code[index].slots != self.functions {
+            return;
+        }
+        self.functions = self.free_code[index].start;
+        self.free_code.remove(index);
     }
 }
 
@@ -1594,6 +1883,352 @@ impl Default for Compiler {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// The index of the first element satisfying `predicate`, as `items.iter().position(..)`.
+fn position_of<T>(items: &[T], mut predicate: impl FnMut(&T) -> bool) -> Option<usize> {
+    let mut index = 0usize;
+    let mut found = None;
+    while found.is_none() && index < items.len() {
+        if predicate(&items[index]) {
+            found = Some(index);
+        }
+        index += 1;
+    }
+    found
+}
+
+/// The table end after `slots` more functions, refused past the table limit.
+fn extended_table(functions: u32, slots: u32) -> Result<u32, crate::Diagnostic> {
+    match functions.checked_add(slots) {
+        Some(end) if end <= TABLE_LIMIT => Ok(end),
+        Some(_) | None => Err(crate::Diagnostic::Exhausted),
+    }
+}
+
+/// The work budget and checked submission after borrowed preflight and
+/// independent admission, with the issued work recorded at each stage.
+struct Admitted {
+    work: Work,
+    checked: admission::Accepted,
+    preflight_issued: u64,
+    admission_issued: u64,
+}
+
+/// A fresh calculator signature pool for a Program-free epoch.
+fn fresh_signature_pool(program_free: bool) -> Option<crate::signatures::Pool> {
+    if program_free {
+        let mut pool = crate::signatures::Pool::source();
+        pool.select_calculator();
+        Some(pool)
+    } else {
+        None
+    }
+}
+
+/// Whether the selected named target or the root disagrees with the checked selection.
+fn selection_mismatch(
+    named: &NamedTargetMetadata,
+    has_duplicate: bool,
+    body: &noble_kernel::untrusted::Interface,
+    target: Option<&TargetMetadata>,
+    root: &noble_kernel::untrusted::Interface,
+) -> bool {
+    has_duplicate
+        || named.stack_in != body.stack_in
+        || named.stack_out != body.stack_out
+        || named.effects != body.effects
+        || !target.is_some_and(|target| {
+            target.stack_in == root.stack_in
+                && target.stack_out == root.stack_out
+                && target.effects == root.effects
+        })
+}
+
+/// Whether a published descriptor fails to name exactly its key's bytes in memory.
+fn is_defective_descriptor(address: u32, length_bytes: u32, signature: &[u8]) -> bool {
+    usize::try_from(length_bytes).ok() != Some(signature.len())
+        || address < TEXT_START
+        || address
+            .checked_add(length_bytes)
+            .is_none_or(|end| end > MEMORY_BYTES)
+}
+
+/// Charge copying the first `retained` identity recipes, returning the charged entries.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; the budget belongs to one private preparation and tracks consumed work without modifying the borrowed submission or published compiler."
+)]
+fn identity_copy_charge(
+    identities: &[Identity],
+    retained: usize,
+    work: &mut Work,
+) -> Result<u64, crate::Diagnostic> {
+    let mut identity = 0usize;
+    let mut identity_charge = 0u64;
+    let mut failure = None;
+    while identity < retained {
+        let entries = identities[identity].recipe.len();
+        match work.entries(entries) {
+            Ok(()) => {
+                identity_charge = identity_charge.saturating_add(entries as u64);
+                identity += 1;
+            }
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(identity_charge),
+    }
+}
+
+/// The entries of copying the static literal table: every key plus one.
+fn literal_copy_entries(
+    static_literals: &alloc::collections::BTreeMap<alloc::vec::Vec<u8>, u32>,
+) -> usize {
+    let mut total = 0usize;
+    for key in static_literals.keys() {
+        total = total.saturating_add(key.len() + 1);
+    }
+    total
+}
+
+/// The named target of every accepted definition, in definition order.
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-wasm-maintainers; growth is bounded by the checked input or admission limits that drive the loop."
+)]
+fn checked_named_targets(
+    submission: &noble_kernel::execution::Submission,
+    checked: &admission::Accepted,
+    plan: &plan::Layout,
+    identities: &[Identity],
+) -> Result<alloc::vec::Vec<NamedTargetMetadata>, crate::Diagnostic> {
+    let mut targets = alloc::vec::Vec::new();
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < submission.definitions.len() {
+        match checked_named_target(submission, checked, plan, identities, index) {
+            Ok(target) => {
+                targets.push(target);
+                index += 1;
+            }
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(targets),
+    }
+}
+
+/// The emitted program and checked recipe of accepted definition `index`.
+fn checked_named_target(
+    submission: &noble_kernel::execution::Submission,
+    checked: &admission::Accepted,
+    plan: &plan::Layout,
+    identities: &[Identity],
+    index: usize,
+) -> Result<NamedTargetMetadata, crate::Diagnostic> {
+    let definition = &submission.definitions[index];
+    let checked_body = attempt!(checked
+        .definitions
+        .get(index)
+        .ok_or(crate::Diagnostic::Invalid));
+    let program_index = attempt!(plan
+        .definition_roots
+        .get(index)
+        .copied()
+        .ok_or(crate::Diagnostic::Invalid));
+    let program = attempt!(plan
+        .programs
+        .get(program_index)
+        .ok_or(crate::Diagnostic::Invalid));
+    let identity = definition.identity;
+    let recipe = attempt!(
+        crate::scan::find_first(identities, |row| row.id == identity)
+            .ok_or(crate::Diagnostic::Invalid)
+    );
+    Ok(NamedTargetMetadata {
+        definition: definition.definition,
+        definition_identity: definition.identity,
+        program_index,
+        entry: program.entry,
+        input_signature: program.input,
+        output_signature: program.output,
+        effect_mask: program.effects,
+        stack_in: checked_body.interface.stack_in.clone(),
+        stack_out: checked_body.interface.stack_out.clone(),
+        effects: checked_body.interface.effects.clone(),
+        checked_recipe: recipe.recipe.clone(),
+    })
+}
+
+/// Every emitted program's metadata, moving out each program's logical interface.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; metadata publication moves each logical interface out of the unpublished plan that this preparation owns; the borrowed submission stays immutable."
+)]
+fn checked_program_metadata(
+    plan: &mut plan::Layout,
+    worker_inputs: bool,
+) -> Result<alloc::vec::Vec<ProgramMetadata>, crate::Diagnostic> {
+    let mut metadata = alloc::vec::Vec::with_capacity(plan.programs.len());
+    let text_witness = plan.text_witness;
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < plan.programs.len() {
+        match program_entry(
+            &mut plan.programs[index],
+            index,
+            text_witness,
+            worker_inputs,
+        ) {
+            Ok(entry) => {
+                metadata.push(entry);
+                index += 1;
+            }
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(metadata),
+    }
+}
+
+/// One program's metadata; a worker module also retains its runtime atoms.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; metadata publication moves each logical interface out of the unpublished plan that this preparation owns; the borrowed submission stays immutable."
+)]
+fn program_entry(
+    program: &mut plan::Program,
+    program_index: usize,
+    text_witness: u32,
+    worker_inputs: bool,
+) -> Result<ProgramMetadata, crate::Diagnostic> {
+    let logical = attempt!(program.logical.take().ok_or(crate::Diagnostic::Defective));
+    let runtime_atoms = if worker_inputs {
+        runtime_atoms(&program.operations, text_witness)
+    } else {
+        alloc::vec::Vec::new()
+    };
+    Ok(ProgramMetadata {
+        program_index,
+        entry: program.entry,
+        input_signature: program.input,
+        output_signature: program.output,
+        effect_mask: program.effects,
+        stack_in: logical.stack_in,
+        stack_out: logical.stack_out,
+        effects: logical.effects,
+        capture_left: 0,
+        capture_right: 0,
+        recipe_depth: program.depth,
+        recipe_leaves: program.leaves,
+        runtime_atoms,
+    })
+}
+
+/// The closed runtime atom of every operation, in order.
+fn runtime_atoms(
+    operations: &[plan::Operation],
+    text_witness: u32,
+) -> alloc::vec::Vec<ProgramAtomMetadata> {
+    let mut atoms = alloc::vec::Vec::with_capacity(operations.len());
+    for operation in operations {
+        atoms.push(plan::atom_metadata(operation, text_witness));
+    }
+    atoms
+}
+
+/// Every admitted live resource descriptor, in environment order.
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-wasm-maintainers; growth is bounded by the checked input or admission limits that drive the loop."
+)]
+fn admitted_resource_catalog(
+    environment: &noble_kernel::contracts::Env,
+) -> Result<alloc::vec::Vec<ResourceCatalogEntry>, crate::Diagnostic> {
+    let mut catalog = alloc::vec::Vec::new();
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < environment.live_resource_nominals.len() {
+        match resource_entry(environment, environment.live_resource_nominals[index]) {
+            Ok(entry) => {
+                catalog.push(entry);
+                index += 1;
+            }
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(catalog),
+    }
+}
+
+/// The admitted descriptor of one opaque live resource nominal.
+fn resource_entry(
+    environment: &noble_kernel::contracts::Env,
+    id: noble_kernel::types::NominalTypeId,
+) -> Result<ResourceCatalogEntry, crate::Diagnostic> {
+    let declaration = attempt!(environment.nominal(id).ok_or(crate::Diagnostic::Invalid));
+    let noble_kernel::types::NominalShape::Opaque(value) = &declaration.shape else {
+        return Err(crate::Diagnostic::Invalid);
+    };
+    let noble_kernel::types::Ty::Resource(kind) = value.as_ref() else {
+        return Err(crate::Diagnostic::Invalid);
+    };
+    Ok(ResourceCatalogEntry {
+        declaration: declaration.clone(),
+        kind: *kind,
+    })
+}
+
+/// The first named target compiled for the selection, and whether another follows it.
+fn selected_named_target(
+    named_targets: &[NamedTargetMetadata],
+    definition: noble_kernel::contracts::Definition,
+    identity: u64,
+) -> (Option<usize>, bool) {
+    let mut first = None;
+    let mut has_duplicate = false;
+    let mut index = 0usize;
+    while !has_duplicate && index < named_targets.len() {
+        if is_named_selection(&named_targets[index], definition, identity) {
+            if first.is_none() {
+                first = Some(index);
+            } else {
+                has_duplicate = true;
+            }
+        }
+        index += 1;
+    }
+    (first, has_duplicate)
+}
+
+/// Whether a named target was compiled for `definition` with `identity`.
+fn is_named_selection(
+    named: &NamedTargetMetadata,
+    definition: noble_kernel::contracts::Definition,
+    identity: u64,
+) -> bool {
+    named.definition == definition && named.definition_identity == identity
 }
 
 #[cfg(test)]
@@ -2082,6 +2717,288 @@ mod tests {
             retained_steady.len()
         );
     }
+
+    /// FNV-1a of an emitted module, enough to pin its exact bytes in a fixture.
+    fn wat_digest(wat: &[u8]) -> u64 {
+        let mut hash = 0xcbf2_9ce4_8422_2325u64;
+        for byte in wat {
+            hash ^= u64::from(*byte);
+            hash = hash.wrapping_mul(0x0100_0000_01b3);
+        }
+        hash
+    }
+
+    fn fixture_limits() -> noble_contracts::Limits {
+        noble_contracts::Limits {
+            bytes: 262_144,
+            nodes: 524_288,
+            depth: 64,
+            work: 512_000_000,
+        }
+    }
+
+    // Recorded from the lowering before its loops were restructured for the
+    // pinned Aeneas extraction (issue #97): every charge, grant, allocation and
+    // emitted byte of these ordinary, experimental, calculator and nominal
+    // fixtures must stay identical.
+    #[test]
+    fn restructured_lowering_keeps_its_recorded_accounting_and_bytes() {
+        let ordinary_session = noble_contracts::source::Session::new();
+        let known_sum = ordinary_session
+            .prepare(b"10 inl [ 1 + ] [ 2 + ] case", &[], fixture_limits())
+            .unwrap_or_else(|_| panic!("known-sum source refused"));
+        let submission = known_sum
+            .submission()
+            .unwrap_or_else(|| panic!("missing known-sum submission"));
+        let ordinary = Compiler::new()
+            .prepare(submission)
+            .unwrap_or_else(|_| panic!("ordinary compile refused"));
+        let ordinary_metrics = super::CompileMetrics {
+            work_initial: 512_000_000,
+            work_preflight_grant: 0,
+            work_environment_grant: 0,
+            work_plan_grant: 0,
+            work_issued: 512_000_000,
+            work_spent: 256_109_871,
+            environment_rows: 24,
+            environment_work: 0,
+            named_bodies: 0,
+            max_type_nodes: 3,
+            type_nodes_cap: 256,
+            signature_keys: 7,
+            signature_key_charge: 0,
+            identity_charge: 0,
+            table_end: 13,
+            text_end: 262_274,
+            wat_bytes: 62_439,
+            type_directed_specializations: 0,
+            type_directed_fallback_operations: 0,
+        };
+        assert_eq!(ordinary.metrics(), ordinary_metrics);
+        assert_eq!(wat_digest(ordinary.wat()), 0x4db9_0ea5_8a6a_6d3d);
+        let experimental = Compiler::new_type_directed_experimental()
+            .prepare(submission)
+            .unwrap_or_else(|_| panic!("experimental compile refused"));
+        assert_eq!(
+            experimental.metrics(),
+            super::CompileMetrics {
+                work_spent: 256_109_876,
+                wat_bytes: 63_045,
+                type_directed_specializations: 1,
+                type_directed_fallback_operations: 4,
+                ..ordinary_metrics
+            }
+        );
+        assert_eq!(wat_digest(experimental.wat()), 0x01dc_dfc9_8cfc_9c28);
+
+        let mut calculator = noble_contracts::source::Session::new_calculator();
+        let defined = calculator
+            .prepare(b"def identity_epoch_word [ 1 drop ]", &[], fixture_limits())
+            .unwrap_or_else(|_| panic!("calculator definition refused"));
+        calculator
+            .commit(defined)
+            .unwrap_or_else(|_| panic!("calculator definition commit refused"));
+        let call = calculator
+            .prepare(b"identity_epoch_word", &[], fixture_limits())
+            .unwrap_or_else(|_| panic!("calculator call refused"));
+        let submission = call
+            .submission()
+            .unwrap_or_else(|| panic!("missing calculator submission"));
+        let calculator_metrics = super::CompileMetrics {
+            work_initial: 512_000_000,
+            work_preflight_grant: 37_325,
+            work_environment_grant: 1_790_468,
+            work_plan_grant: 0,
+            work_issued: 513_827_793,
+            work_spent: 257_604_957,
+            environment_rows: 33,
+            environment_work: 447_617,
+            named_bodies: 1,
+            max_type_nodes: 1,
+            type_nodes_cap: 256,
+            signature_keys: 3,
+            signature_key_charge: 0,
+            identity_charge: 0,
+            table_end: 7,
+            text_end: 524_288,
+            wat_bytes: 80_934,
+            type_directed_specializations: 0,
+            type_directed_fallback_operations: 0,
+        };
+        for prepared in [
+            Compiler::new_calculator().prepare(submission),
+            Compiler::new_calculator().prepare_quiescent(submission),
+            Compiler::new_calculator().prepare_program_free(submission),
+        ] {
+            let prepared = prepared.unwrap_or_else(|_| panic!("calculator compile refused"));
+            assert_eq!(prepared.metrics(), calculator_metrics);
+            assert_eq!(wat_digest(prepared.wat()), 0x0e66_33b3_71d5_56e0);
+        }
+
+        let module = b"module capsule@1 [
+            opaque Secret Pair<I64,I64> private
+            export Secret
+            signature make forall<S:stack> [ S -- S Secret ! pure ]
+            export make
+            def make [ 7 11 pair Secret.new ]
+            signature sum forall<S:stack> [ S Secret -- S I64 ! pure ]
+            export sum
+            def sum [ Secret.into unpair + ]
+        ]";
+        let session = noble_contracts::source::ModuleSession::new_calculator()
+            .unwrap_or_else(|_| panic!("calculator module session refused"));
+        let pending = session
+            .prepare(module, &[], fixture_limits())
+            .unwrap_or_else(|_| panic!("nominal module refused"));
+        let (session, installed) = session.commit(pending);
+        installed.unwrap_or_else(|_| panic!("nominal module not installed"));
+        let make = session
+            .prepare(b"capsule@1.make", &[], fixture_limits())
+            .unwrap_or_else(|_| panic!("nominal creator refused"));
+        let carrier = make.output().to_vec();
+        let mut compiler = Compiler::new_calculator();
+        let created = compiler
+            .prepare(
+                make.submission()
+                    .unwrap_or_else(|| panic!("missing creator submission")),
+            )
+            .unwrap_or_else(|_| panic!("nominal creator compile refused"));
+        let make_metrics = super::CompileMetrics {
+            work_preflight_grant: 70_444,
+            work_environment_grant: 1_825_284,
+            work_issued: 513_895_728,
+            work_spent: 257_677_711,
+            environment_rows: 35,
+            environment_work: 456_321,
+            max_type_nodes: 4,
+            signature_keys: 5,
+            wat_bytes: 89_382,
+            ..calculator_metrics
+        };
+        assert_eq!(created.metrics(), make_metrics);
+        assert_eq!(wat_digest(created.wat()), 0xb780_9508_aaf8_180b);
+        compiler
+            .commit(created)
+            .unwrap_or_else(|_| panic!("nominal creator commit refused"));
+        let (session, committed) = session.commit(make);
+        committed.unwrap_or_else(|_| panic!("nominal creator not committed"));
+        let sum = session
+            .prepare(b"capsule@1.sum", &carrier, fixture_limits())
+            .unwrap_or_else(|_| panic!("nominal consumer refused"));
+        let consumed = compiler
+            .prepare(
+                sum.submission()
+                    .unwrap_or_else(|| panic!("missing consumer submission")),
+            )
+            .unwrap_or_else(|_| panic!("nominal consumer compile refused"));
+        assert_eq!(
+            consumed.metrics(),
+            super::CompileMetrics {
+                work_preflight_grant: 75_416,
+                work_environment_grant: 1_827_332,
+                work_issued: 513_902_748,
+                work_spent: 257_687_918,
+                environment_work: 456_833,
+                signature_keys: 6,
+                signature_key_charge: 36,
+                identity_charge: 38,
+                table_end: 9,
+                wat_bytes: 87_789,
+                ..make_metrics
+            }
+        );
+        assert_eq!(wat_digest(consumed.wat()), 0x4220_b858_9924_b696);
+    }
+
+    #[test]
+    fn runtime_signature_catalog_lists_descriptors_until_the_first_defective_one() {
+        let session = noble_contracts::source::Session::new();
+        let known_sum = session
+            .prepare(b"10 inl [ 1 + ] [ 2 + ] case", &[], fixture_limits())
+            .unwrap_or_else(|_| panic!("known-sum source refused"));
+        let submission = known_sum
+            .submission()
+            .unwrap_or_else(|| panic!("missing known-sum submission"));
+        let mut prepared = Compiler::new()
+            .prepare(submission)
+            .unwrap_or_else(|_| panic!("ordinary compile refused"));
+        assert!(matches!(
+            prepared.runtime_signature_catalog(),
+            Err(crate::Diagnostic::Invalid)
+        ));
+        prepared.next.live = true;
+        let descriptors = prepared.next.descriptors.clone();
+        assert!(descriptors.len() >= 2);
+        let count = u32::try_from(descriptors.len())
+            .unwrap_or_else(|_| panic!("descriptor count exceeds u32"));
+        let mut expected = count.to_le_bytes().to_vec();
+        for (index, (address, length)) in descriptors.iter().enumerate() {
+            expected.extend_from_slice(&address.to_le_bytes());
+            expected.extend_from_slice(&length.to_le_bytes());
+            expected.extend_from_slice(&prepared.next.signatures.keys[index]);
+        }
+        assert_eq!(prepared.runtime_signature_catalog().ok(), Some(expected));
+
+        // A defect after a valid first descriptor refuses the whole catalogue.
+        prepared.next.descriptors[1].1 += 1;
+        assert!(matches!(
+            prepared.runtime_signature_catalog(),
+            Err(crate::Diagnostic::Defective)
+        ));
+        prepared.next.descriptors[1] = descriptors[1];
+        prepared.next.descriptors[1].0 = super::TEXT_START - 1;
+        assert!(matches!(
+            prepared.runtime_signature_catalog(),
+            Err(crate::Diagnostic::Defective)
+        ));
+        prepared.next.descriptors[1].0 = super::MEMORY_BYTES;
+        prepared.next.descriptors[1].1 = 1;
+        prepared.next.signatures.keys[1] = alloc::vec![0];
+        assert!(matches!(
+            prepared.runtime_signature_catalog(),
+            Err(crate::Diagnostic::Defective)
+        ));
+    }
+
+    #[test]
+    fn reusable_retained_bytes_counts_every_identity_and_literal_record() {
+        let mut calculator = noble_contracts::source::Session::new_calculator();
+        let defined = calculator
+            .prepare(b"def retained_word [ 1 drop ]", &[], fixture_limits())
+            .unwrap_or_else(|_| panic!("calculator definition refused"));
+        calculator
+            .commit(defined)
+            .unwrap_or_else(|_| panic!("calculator definition commit refused"));
+        let call = calculator
+            .prepare(
+                b"\"abc\" text.length \"de\" text.length retained_word",
+                &[],
+                fixture_limits(),
+            )
+            .unwrap_or_else(|_| panic!("calculator call refused"));
+        let submission = call
+            .submission()
+            .unwrap_or_else(|| panic!("missing calculator submission"));
+        let prepared = Compiler::new_calculator()
+            .prepare_program_free(submission)
+            .unwrap_or_else(|_| panic!("program-free compile refused"));
+        let reusable = prepared
+            .reusable()
+            .unwrap_or_else(|| panic!("program-free preparation is reusable"));
+        assert!(!prepared.next.identities.is_empty());
+        assert_eq!(prepared.next.static_literals.len(), 2);
+        let mut expected = core::mem::size_of::<super::Reusable>()
+            + reusable.wat().len()
+            + prepared.next.signatures.retained_bytes()
+            + prepared.next.descriptors.len() * 8;
+        for key in prepared.next.static_literals.keys() {
+            expected += key.len() + 64;
+        }
+        for identity in &prepared.next.identities {
+            expected += identity.recipe.len() + 64;
+        }
+        assert_eq!(reusable.retained_bytes(), expected);
+    }
 }
 
 // Test harness only: scenario-named tests over checked fixtures.
@@ -2198,7 +3115,7 @@ mod declared_text_ingress_tests {
         );
         assert!(compiler.prepare_declared_text(&owner).is_ok());
         assert!(compiler
-            .prepare_from(&original, None, compiler.functions, false, false, true)
+            .prepare_from(&original, compiler.functions, false, false, true)
             .is_ok());
         let signed_owner = prepared.signed_source_owner().expect("signed owner source");
         assert!(
@@ -2220,7 +3137,7 @@ mod declared_text_ingress_tests {
             noble_kernel::words::Binding::Stack(alloc::vec![noble_kernel::types::Ty::Bool]);
         assert!(
             compiler
-                .prepare_from(&changed, None, compiler.functions, false, false, true)
+                .prepare_from(&changed, compiler.functions, false, false, true)
                 .is_err(),
             "fresh or foreign self Inst cannot dispatch to checked owner"
         );
@@ -2313,7 +3230,7 @@ mod signed_dispatch_tests {
         submission: &noble_kernel::execution::Submission,
     ) -> Result<super::Prepared, Diagnostic> {
         let compiler = Compiler::new();
-        compiler.prepare_from(submission, None, compiler.functions, false, false, true)
+        compiler.prepare_from(submission, compiler.functions, false, false, true)
     }
 
     fn prepared(
@@ -2419,6 +3336,316 @@ mod signed_dispatch_tests {
         assert!(
             matches!(signed(&submission), Err(Diagnostic::Invalid)),
             "a valid generic alternate effect cannot invoke the owner's checked ceiling"
+        );
+    }
+}
+
+#[cfg(test)]
+mod origin_operand_debug_tests {
+    //! The recursive origin types' hand-written `Debug` must render exactly as
+    //! the derives they replace, and recipe equality must agree with the
+    //! derived `PartialEq`; `mirror` keeps those derives over mirrored trees.
+    #![allow(
+        tigerstyle::non_trait_imports,
+        tigerstyle::no_recursion,
+        tigerstyle::path_segment_repetition,
+        reason = "Owner: noble-wasm-maintainers; the origin types under test are imported directly, the mirror conversions follow the test trees recursively, and the mirror and test names repeat the module's origin/debug subject on purpose."
+    )]
+    use super::{
+        OriginFixedArithmetic, OriginFixedExpression, OriginI64, OriginOperand, OriginProgramValue,
+    };
+    use alloc::{format, rc::Rc, vec, vec::Vec};
+
+    mod mirror {
+        use super::super::OriginFixedArithmetic;
+        use alloc::rc::Rc;
+
+        #[derive(Debug, PartialEq, Eq)]
+        pub enum OriginFixedExpression {
+            Literal(i64),
+            Arithmetic {
+                kind: OriginFixedArithmetic,
+                left: Rc<Self>,
+                right: Rc<Self>,
+                nodes: usize,
+                depth: usize,
+            },
+        }
+
+        #[derive(Debug)]
+        #[expect(
+            dead_code,
+            reason = "Owner: noble-wasm-maintainers; the mirror's payloads are read only by its derived Debug rendering under test."
+        )]
+        pub enum OriginI64 {
+            RootInput(u32),
+            Fixed {
+                value: i64,
+                recipe: Rc<OriginFixedExpression>,
+            },
+        }
+
+        #[derive(Debug)]
+        #[expect(
+            dead_code,
+            reason = "Owner: noble-wasm-maintainers; the mirror's payloads are read only by its derived Debug rendering under test."
+        )]
+        pub enum OriginProgramValue {
+            Static {
+                node: noble_kernel::untrusted::NodeId,
+                program_index: usize,
+            },
+            Quote {
+                node: noble_kernel::untrusted::NodeId,
+                table_entry: u32,
+                operand: OriginOperand,
+            },
+            Compose {
+                node: noble_kernel::untrusted::NodeId,
+                table_entry: u32,
+                left: Rc<Self>,
+                right: Rc<Self>,
+            },
+        }
+
+        #[derive(Debug)]
+        #[expect(
+            dead_code,
+            reason = "Owner: noble-wasm-maintainers; the mirror's payloads are read only by its derived Debug rendering under test."
+        )]
+        pub enum OriginOperand {
+            I64(OriginI64),
+            Program(Rc<OriginProgramValue>),
+        }
+    }
+
+    fn mirrored_recipe(recipe: &OriginFixedExpression) -> Rc<mirror::OriginFixedExpression> {
+        Rc::new(match recipe {
+            OriginFixedExpression::Literal(value) => mirror::OriginFixedExpression::Literal(*value),
+            OriginFixedExpression::Arithmetic {
+                kind,
+                left,
+                right,
+                nodes,
+                depth,
+            } => mirror::OriginFixedExpression::Arithmetic {
+                kind: *kind,
+                left: mirrored_recipe(left),
+                right: mirrored_recipe(right),
+                nodes: *nodes,
+                depth: *depth,
+            },
+        })
+    }
+
+    fn mirrored_i64(value: &OriginI64) -> mirror::OriginI64 {
+        match value {
+            OriginI64::RootInput(input) => mirror::OriginI64::RootInput(*input),
+            OriginI64::Fixed { value, recipe } => mirror::OriginI64::Fixed {
+                value: *value,
+                recipe: mirrored_recipe(recipe),
+            },
+        }
+    }
+
+    fn mirrored_value(value: &OriginProgramValue) -> Rc<mirror::OriginProgramValue> {
+        Rc::new(match value {
+            OriginProgramValue::Static {
+                node,
+                program_index,
+            } => mirror::OriginProgramValue::Static {
+                node: *node,
+                program_index: *program_index,
+            },
+            OriginProgramValue::Quote {
+                node,
+                table_entry,
+                operand,
+            } => mirror::OriginProgramValue::Quote {
+                node: *node,
+                table_entry: *table_entry,
+                operand: mirrored(operand),
+            },
+            OriginProgramValue::Compose {
+                node,
+                table_entry,
+                left,
+                right,
+            } => mirror::OriginProgramValue::Compose {
+                node: *node,
+                table_entry: *table_entry,
+                left: mirrored_value(left),
+                right: mirrored_value(right),
+            },
+        })
+    }
+
+    fn mirrored(operand: &OriginOperand) -> mirror::OriginOperand {
+        match operand {
+            OriginOperand::I64(value) => mirror::OriginOperand::I64(mirrored_i64(value)),
+            OriginOperand::Program(value) => mirror::OriginOperand::Program(mirrored_value(value)),
+        }
+    }
+
+    fn literal(value: i64) -> Rc<OriginFixedExpression> {
+        Rc::new(OriginFixedExpression::Literal(value))
+    }
+
+    fn arithmetic(
+        kind: OriginFixedArithmetic,
+        left: Rc<OriginFixedExpression>,
+        right: Rc<OriginFixedExpression>,
+        nodes: usize,
+        depth: usize,
+    ) -> Rc<OriginFixedExpression> {
+        Rc::new(OriginFixedExpression::Arithmetic {
+            kind,
+            left,
+            right,
+            nodes,
+            depth,
+        })
+    }
+
+    /// Recipes covering every variant and field, with value-equal trees in
+    /// separate allocations and a shared subtree.
+    fn recipes() -> Vec<Rc<OriginFixedExpression>> {
+        let shared = arithmetic(OriginFixedArithmetic::Add, literal(1), literal(2), 3, 2);
+        vec![
+            literal(-5),
+            literal(-5),
+            literal(3),
+            Rc::clone(&shared),
+            arithmetic(OriginFixedArithmetic::Add, literal(1), literal(2), 3, 2),
+            arithmetic(OriginFixedArithmetic::Sub, literal(1), literal(2), 3, 2),
+            arithmetic(OriginFixedArithmetic::Add, literal(1), literal(2), 4, 2),
+            arithmetic(OriginFixedArithmetic::Add, literal(1), literal(2), 3, 3),
+            arithmetic(OriginFixedArithmetic::Add, literal(1), literal(9), 3, 2),
+            arithmetic(
+                OriginFixedArithmetic::Mul,
+                Rc::clone(&shared),
+                literal(7),
+                5,
+                3,
+            ),
+            arithmetic(
+                OriginFixedArithmetic::Mul,
+                arithmetic(OriginFixedArithmetic::Add, literal(1), literal(2), 3, 2),
+                literal(7),
+                5,
+                3,
+            ),
+            arithmetic(
+                OriginFixedArithmetic::Mul,
+                arithmetic(OriginFixedArithmetic::Add, literal(1), literal(8), 3, 2),
+                literal(7),
+                5,
+                3,
+            ),
+            arithmetic(
+                OriginFixedArithmetic::Mul,
+                literal(7),
+                Rc::clone(&shared),
+                5,
+                3,
+            ),
+        ]
+    }
+
+    fn samples() -> Vec<OriginOperand> {
+        let node = noble_kernel::untrusted::NodeId(7);
+        let leaf = Rc::new(OriginProgramValue::Static {
+            node,
+            program_index: 3,
+        });
+        let quoted = Rc::new(OriginProgramValue::Quote {
+            node,
+            table_entry: 2,
+            operand: OriginOperand::I64(OriginI64::RootInput(1)),
+        });
+        let composed = Rc::new(OriginProgramValue::Compose {
+            node,
+            table_entry: 4,
+            left: Rc::clone(&leaf),
+            right: Rc::clone(&quoted),
+        });
+        let fixed = Rc::new(OriginProgramValue::Quote {
+            node,
+            table_entry: 5,
+            operand: OriginOperand::I64(OriginI64::Fixed {
+                value: 21,
+                recipe: arithmetic(OriginFixedArithmetic::Mul, literal(3), literal(7), 3, 2),
+            }),
+        });
+        let nested = Rc::new(OriginProgramValue::Quote {
+            node,
+            table_entry: 6,
+            operand: OriginOperand::Program(Rc::clone(&composed)),
+        });
+        let mut operands = vec![
+            OriginOperand::I64(OriginI64::RootInput(0)),
+            OriginOperand::I64(OriginI64::Fixed {
+                value: -5,
+                recipe: Rc::new(OriginFixedExpression::Literal(-5)),
+            }),
+            OriginOperand::Program(leaf),
+            OriginOperand::Program(quoted),
+            OriginOperand::Program(composed),
+            OriginOperand::Program(fixed),
+            OriginOperand::Program(nested),
+        ];
+        for recipe in recipes() {
+            operands.push(OriginOperand::I64(OriginI64::Fixed { value: 0, recipe }));
+        }
+        operands
+    }
+
+    #[test]
+    fn debug_matches_the_derived_rendering() {
+        for operand in samples() {
+            let expected = mirrored(&operand);
+            assert_eq!(format!("{operand:?}"), format!("{expected:?}"));
+            assert_eq!(format!("{operand:#?}"), format!("{expected:#?}"));
+            assert_eq!(format!("{operand:4?}"), format!("{expected:4?}"));
+            if let OriginOperand::Program(value) = &operand {
+                let expected = mirrored_value(value);
+                assert_eq!(format!("{value:?}"), format!("{expected:?}"));
+                assert_eq!(format!("{value:#?}"), format!("{expected:#?}"));
+            }
+        }
+        for recipe in recipes() {
+            let expected = mirrored_recipe(&recipe);
+            assert_eq!(format!("{recipe:?}"), format!("{expected:?}"));
+            assert_eq!(format!("{recipe:#?}"), format!("{expected:#?}"));
+        }
+    }
+
+    #[test]
+    fn recipe_equality_matches_the_derived_equality() {
+        let recipes = recipes();
+        for left in &recipes {
+            for right in &recipes {
+                let is_expected = mirrored_recipe(left) == mirrored_recipe(right);
+                assert_eq!(**left == **right, is_expected, "{left:?} == {right:?}");
+                assert_eq!(left == right, is_expected, "Rc {left:?} == {right:?}");
+                assert_eq!(**left != **right, !is_expected, "{left:?} != {right:?}");
+            }
+        }
+        assert!(
+            recipes[0] == recipes[1],
+            "value-equal literals in separate allocations"
+        );
+        assert!(
+            recipes[3] == recipes[4],
+            "value-equal trees in separate allocations"
+        );
+        assert!(
+            recipes[9] == recipes[10],
+            "a shared subtree equals its separate copy"
+        );
+        assert!(
+            recipes[10] != recipes[11],
+            "a difference deep in the left subtree"
         );
     }
 }

@@ -135,32 +135,54 @@ pub(super) fn builtin(
 /// A signed occurrence uses the already instantiated owner body's variables.
 /// In particular, a quotation cannot choose a fresh stack row or effect for
 /// its recursive call; that would silently admit polymorphic recursion.
+///
+/// Each owner-signature source continues in its own arm, so no borrowed
+/// scheme is joined across the two sources.
 #[expect(
-    tigerstyle::assertion_density,
     tigerstyle::fragile_exhaustive_enum_match,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added."
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added."
 )]
 pub(super) fn signed_self(
     span: crate::Span,
     frame: &mut super::Frame,
     state: &mut super::State,
-    scope: &super::Scope<'_>,
+    scope: super::Scope<'_>,
     meter: &mut crate::Meter,
 ) -> Result<(), crate::Diagnostic> {
-    let scheme = match frame.tree {
-        super::TreeKey::Root => scope.root_signature,
-        super::TreeKey::Named(index) => scope
-            .session
-            .definitions
-            .get(attempt!(crate::offset(index, span)))
-            .and_then(|definition| definition.signature.as_ref()),
-    };
-    let Some(scheme) = scheme else {
-        return Err(crate::invalid(
-            span,
-            "signed self requires its owner signature",
-        ));
-    };
+    match frame.tree {
+        super::TreeKey::Root => match scope.root_signature {
+            Some(scheme) => signed_self_with(scheme, span, frame, state, meter),
+            None => Err(unsigned_owner(span)),
+        },
+        super::TreeKey::Named(index) => {
+            let at = attempt!(crate::offset(index, span));
+            match scope.session.definitions.get(at) {
+                Some(definition) => match definition.signature.as_ref() {
+                    Some(scheme) => signed_self_with(scheme, span, frame, state, meter),
+                    None => Err(unsigned_owner(span)),
+                },
+                None => Err(unsigned_owner(span)),
+            }
+        }
+    }
+}
+
+fn unsigned_owner(span: crate::Span) -> crate::Diagnostic {
+    crate::invalid(span, "signed self requires its owner signature")
+}
+
+/// Instantiate a signed self occurrence against its owner's `scheme`.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+fn signed_self_with(
+    scheme: &noble_kernel::words::Scheme,
+    span: crate::Span,
+    frame: &mut super::Frame,
+    state: &mut super::State,
+    meter: &mut crate::Meter,
+) -> Result<(), crate::Diagnostic> {
     let Some(body) = state.bodies.get(frame.body) else {
         return Err(crate::internal(span));
     };
@@ -232,18 +254,10 @@ fn producer(frame: &super::Frame, state: &super::State) -> Option<crate::Span> {
     tigerstyle::platform_dependent_cast,
     reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
 )]
-#[expect(
-    tigerstyle::unbounded_collection_growth,
-    reason = "Owner: noble-contracts; the collection is bounded by the surrounding admission limits, which are checked before this loop runs"
-)]
 /// A ref is selected from the root's typed borrowed-input sidecar, never
 /// constructed from a value or literal. The unqualified spelling chooses the
 /// uniquely most-specific compatible interface; ambiguous peers require the
 /// explicit borrowed formal ordinal (`slot.invoke.N`).
-#[expect(
-    tigerstyle::allocation_in_loop,
-    reason = "Owner: noble-contracts; the loop owns one forwarded slot vector per parameter and the allocation is charged to the metered budget"
-)]
 pub(super) fn slot_invoke(
     selected: Option<u32>,
     span: crate::Span,
@@ -254,49 +268,28 @@ pub(super) fn slot_invoke(
     let actual = attempt!(state.arena.stack_value(frame.stack, span, meter));
     let mut choice: Option<(u32, alloc::vec::Vec<u32>, usize)> = None;
     let mut is_ambiguous = false;
-    for borrowed in &state.borrows {
-        attempt!(meter.charge(1, span));
+    let mut at = 0;
+    let mut failure = None;
+    // A failure always leaves the loop through `break`, so the loop condition
+    // never tests the (then constant) absent failure.
+    while at < state.borrows.len() {
+        let borrowed = &state.borrows[at];
+        at += 1;
+        if let Err(problem) = meter.charge(1, span) {
+            failure = Some(problem);
+            break;
+        }
         if selected.is_some_and(|ordinal| ordinal != borrowed.ordinal) {
             continue;
         }
-        let noble_kernel::types::Ty::LiveRef(input, _, _) = &borrowed.ty else {
-            return Err(crate::internal(span));
-        };
-        let value_count = input
-            .iter()
-            .filter(|ty| !matches!(ty, noble_kernel::types::Ty::LiveRef(..)))
-            .count();
-        if value_count > actual.len()
-            || !input
-                .iter()
-                .filter(|ty| !matches!(ty, noble_kernel::types::Ty::LiveRef(..)))
-                .zip(&actual[actual.len().saturating_sub(value_count)..])
-                .all(|(left, right)| left == right)
-        {
-            continue;
-        }
-        let mut forwarded = alloc::vec::Vec::new();
-        let mut is_compatible = true;
-        for formal in input
-            .iter()
-            .filter(|ty| matches!(ty, noble_kernel::types::Ty::LiveRef(..)))
-        {
-            let mut positions = state
-                .borrows
-                .iter()
-                .filter(|candidate| &candidate.ty == formal)
-                .map(|candidate| candidate.logical_position);
-            match (positions.next(), positions.next()) {
-                (Some(position), None) => forwarded.push(position),
-                (None, _) | (Some(_), Some(_)) => {
-                    is_compatible = false;
-                    break;
-                }
+        let forwarded = match slot_candidate(borrowed, &actual, &state.borrows, span) {
+            Ok(Some(forwarded)) => forwarded,
+            Ok(None) => continue,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
             }
-        }
-        if !is_compatible {
-            continue;
-        }
+        };
         let specificity = forwarded.len();
         if selected.is_some()
             || choice
@@ -311,6 +304,9 @@ pub(super) fn slot_invoke(
         {
             is_ambiguous = true;
         }
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
     }
     if is_ambiguous {
         return Err(crate::invalid(
@@ -330,16 +326,14 @@ pub(super) fn slot_invoke(
         return Err(crate::internal(span));
     };
     // Source preflight excludes refs from output; only values enter the stack.
-    if output
-        .iter()
-        .any(|ty| matches!(ty, noble_kernel::types::Ty::LiveRef(..)))
+    if crate::scan::find_first(output, |ty| {
+        matches!(ty, noble_kernel::types::Ty::LiveRef(..))
+    })
+    .is_some()
     {
         return Err(crate::invalid(span, "live reference cannot be returned"));
     }
-    let value_count = input
-        .iter()
-        .filter(|ty| !matches!(ty, noble_kernel::types::Ty::LiveRef(..)))
-        .count();
+    let value_count = value_count(input);
     let prefix = &actual[..actual.len().saturating_sub(value_count)];
     let mut resulting = alloc::vec::Vec::with_capacity(prefix.len().saturating_add(output.len()));
     resulting.extend_from_slice(prefix);
@@ -369,10 +363,127 @@ pub(super) fn slot_invoke(
     Ok(())
 }
 
+/// The forwarded reference positions if one borrowed input can serve this slot.invoke.
 #[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; candidate selection compares interned kernel types and allocates the forwarded positions."
 )]
+fn slot_candidate(
+    borrowed: &super::Borrowed,
+    actual: &[noble_kernel::types::Ty],
+    borrows: &[super::Borrowed],
+    span: crate::Span,
+) -> Result<Option<alloc::vec::Vec<u32>>, crate::Diagnostic> {
+    let noble_kernel::types::Ty::LiveRef(input, _, _) = &borrowed.ty else {
+        return Err(crate::internal(span));
+    };
+    let value_count = value_count(input);
+    if value_count > actual.len()
+        || !values_match(input, &actual[actual.len().saturating_sub(value_count)..])
+    {
+        return Ok(None);
+    }
+    Ok(forwarded_refs(input, borrows))
+}
+
+/// The number of value (non-reference) types in a slot interface.
+fn value_count(types: &[noble_kernel::types::Ty]) -> usize {
+    let mut count = 0;
+    for ty in types {
+        if !matches!(ty, noble_kernel::types::Ty::LiveRef(..)) {
+            count += 1;
+        }
+    }
+    count
+}
+
+/// Whether the value types of `input`, in order, equal `top` pairwise.
+fn values_match(input: &[noble_kernel::types::Ty], top: &[noble_kernel::types::Ty]) -> bool {
+    let mut at = 0;
+    let mut position = 0;
+    let mut is_matched = true;
+    while is_matched && at < input.len() && position < top.len() {
+        if !matches!(input[at], noble_kernel::types::Ty::LiveRef(..)) {
+            is_matched = same_ty(&input[at], &top[position]);
+            position += 1;
+        }
+        at += 1;
+    }
+    is_matched
+}
+
+/// Kernel type equality, kept out of loop bodies for extraction.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; kernel type equality is a non-const PartialEq call."
+)]
+fn same_ty(left: &noble_kernel::types::Ty, right: &noble_kernel::types::Ty) -> bool {
+    left == right
+}
+
+/// The positions of the unique borrowed input matching each reference formal, in order.
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; the collection is bounded by the surrounding admission limits, which are checked before this loop runs"
+)]
+fn forwarded_refs(
+    input: &[noble_kernel::types::Ty],
+    borrows: &[super::Borrowed],
+) -> Option<alloc::vec::Vec<u32>> {
+    let mut forwarded = alloc::vec::Vec::new();
+    let mut at = 0;
+    let mut is_compatible = true;
+    while is_compatible && at < input.len() {
+        if matches!(input[at], noble_kernel::types::Ty::LiveRef(..)) {
+            match unique_position(borrows, &input[at]) {
+                Some(position) => forwarded.push(position),
+                None => is_compatible = false,
+            }
+        }
+        at += 1;
+    }
+    if is_compatible {
+        Some(forwarded)
+    } else {
+        None
+    }
+}
+
+/// The logical position of the only borrowed input of type `formal`, if exactly one exists.
+fn unique_position(borrows: &[super::Borrowed], formal: &noble_kernel::types::Ty) -> Option<u32> {
+    let mut first = None;
+    let mut is_unique = true;
+    let mut at = 0;
+    while is_unique && at < borrows.len() {
+        (first, is_unique) = unique_step(first, matching_position(&borrows[at], formal));
+        at += 1;
+    }
+    if is_unique {
+        first
+    } else {
+        None
+    }
+}
+
+/// The logical position of `borrowed` when its type is `formal`.
+fn matching_position(borrowed: &super::Borrowed, formal: &noble_kernel::types::Ty) -> Option<u32> {
+    if same_ty(&borrowed.ty, formal) {
+        Some(borrowed.logical_position)
+    } else {
+        None
+    }
+}
+
+/// Fold one candidate position into the first match so far: the next first
+/// match, and whether the match is still unique.
+const fn unique_step(first: Option<u32>, position: Option<u32>) -> (Option<u32>, bool) {
+    match (first, position) {
+        (Some(_), Some(_)) => (first, false),
+        (None, Some(_)) => (position, true),
+        (_, None) => (first, true),
+    }
+}
+
 fn mismatched_literal_origin(
     frame: &super::Frame,
     state: &super::State,
@@ -388,21 +499,31 @@ fn mismatched_literal_origin(
         return None;
     };
     let expected = scheme.stack_in.last()?;
-    let is_matches = match (expected, literal) {
-        (noble_kernel::shapes::Pattern::I64, noble_kernel::untrusted::Lit::I64(_))
-        | (noble_kernel::shapes::Pattern::Bool, noble_kernel::untrusted::Lit::Bool(_))
-        | (noble_kernel::shapes::Pattern::Text, noble_kernel::untrusted::Lit::Text)
-        | (noble_kernel::shapes::Pattern::Unit, noble_kernel::untrusted::Lit::Unit) => true,
-        (
-            noble_kernel::shapes::Pattern::I64
-            | noble_kernel::shapes::Pattern::Bool
-            | noble_kernel::shapes::Pattern::Text
-            | noble_kernel::shapes::Pattern::Unit,
-            _,
-        ) => false,
-        _ => return None,
-    };
+    let is_matches = literal_matches(expected, literal)?;
     (!is_matches).then_some(draft.span)
+}
+
+/// Whether `literal` has the scalar type `expected` names; `None` when
+/// `expected` is not one of the four literal types.
+const fn literal_matches(
+    expected: &noble_kernel::shapes::Pattern,
+    literal: &noble_kernel::untrusted::Lit,
+) -> Option<bool> {
+    match expected {
+        noble_kernel::shapes::Pattern::I64 => {
+            Some(matches!(literal, noble_kernel::untrusted::Lit::I64(_)))
+        }
+        noble_kernel::shapes::Pattern::Bool => {
+            Some(matches!(literal, noble_kernel::untrusted::Lit::Bool(_)))
+        }
+        noble_kernel::shapes::Pattern::Text => {
+            Some(matches!(literal, noble_kernel::untrusted::Lit::Text))
+        }
+        noble_kernel::shapes::Pattern::Unit => {
+            Some(matches!(literal, noble_kernel::untrusted::Lit::Unit))
+        }
+        _ => None,
+    }
 }
 
 #[expect(
@@ -445,18 +566,20 @@ fn contextualize(
         word,
         expected_stack,
         actual_stack,
-        constraint: if matches!(
-            behavior,
-            Some(
-                noble_kernel::contracts::Behavior::If
-                    | noble_kernel::contracts::Behavior::Case
-                    | noble_kernel::contracts::Behavior::ListCase
-            )
-        ) {
-            "branch-join"
-        } else {
-            "stack-type"
-        },
+        constraint: alloc::string::String::from(
+            if matches!(
+                behavior,
+                Some(
+                    noble_kernel::contracts::Behavior::If
+                        | noble_kernel::contracts::Behavior::Case
+                        | noble_kernel::contracts::Behavior::ListCase
+                )
+            ) {
+                "branch-join"
+            } else {
+                "stack-type"
+            },
+        ),
         value_origin: if caller.is_some() { None } else { origin },
         // While specializing a resolved definition the words lie in another body, so, as for the
         // value origin, only the positional difference is kept.

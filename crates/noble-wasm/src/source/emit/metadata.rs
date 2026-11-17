@@ -93,15 +93,36 @@ pub(super) fn signature_segment(
     attempt!(out.index(index));
     attempt!(out.append(b" \""));
     let mut start = 0usize;
-    for (index, &byte) in key.iter().enumerate() {
-        if !(32..=126).contains(&byte) || byte == b'"' || byte == b'\\' {
-            attempt!(out.append(&key[start..index]));
-            attempt!(escaped_byte(out, byte));
-            start = index + 1;
+    let mut at = 0usize;
+    let mut failure = None;
+    while at < key.len() {
+        let byte = key[at];
+        if !matches!(byte, 32..=126) || byte == b'"' || byte == b'\\' {
+            match escaped_run(out, &key[start..at], byte) {
+                Ok(()) => start = at + 1,
+                Err(problem) => {
+                    failure = Some(problem);
+                    break;
+                }
+            }
         }
+        at += 1;
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
     }
     attempt!(out.append(&key[start..]));
     out.append(b"\")\n")
+}
+
+/// The printable run before an escaped key byte, then that byte's escape.
+fn escaped_run(
+    out: &mut crate::output::Buffer,
+    run: &[u8],
+    byte: u8,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(run));
+    escaped_byte(out, byte)
 }
 
 fn escaped_byte(out: &mut crate::output::Buffer, byte: u8) -> Result<(), crate::Diagnostic> {
@@ -172,30 +193,52 @@ fn calculator_signature_address(
     // Reject a missing scratch page before any passive segment can overwrite
     // memory. The selected module imports at least sixteen 64-KiB pages.
     attempt!(out.append(b"(if (i32.lt_u (memory.size) (i32.const 16)) (then (call $fail (i32.const 4)) (return (i32.const 0))))\n"));
-    for (index, key) in keys.iter().enumerate() {
-        let Some(&(address, length)) = descriptors.get(index) else {
-            return Err(crate::Diagnostic::Defective);
-        };
-        if address != 983_040 || usize::try_from(length).ok() != Some(key.len()) || length > 65_536
-        {
-            return Err(crate::Diagnostic::Defective);
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < keys.len() {
+        match signature_address_case(out, first, descriptors, index, &keys[index]) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
         }
-        let Some(id) = first.checked_add(index) else {
-            return Err(crate::Diagnostic::Defective);
-        };
-        attempt!(out.append(b"(if (i32.eq (local.get $id) "));
-        attempt!(out.i32(attempt!(super::super::plan::number(id))));
-        attempt!(out.append(b") (then\n"));
-        // The guard above reserves sixteen pages before any branch. This
-        // checked key is at most 65,536 bytes at 983,040, so even its final
-        // byte ends at 1,048,576; Wasm memory can grow but never shrink.
-        attempt!(out.append(b"(memory.init $sig"));
-        attempt!(out.index(id));
-        attempt!(out.append(b" (i32.const 983040) (i32.const 0) "));
-        attempt!(out.i32(length));
-        attempt!(out.append(b")\n(return (i32.const 983040))))\n"));
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
     }
     out.append(b"(call $fail (i32.const 4))\n(i32.const 0))\n")
+}
+
+/// The `signature_address` arm copying key `index` (ID `first + index`) from
+/// its passive segment into the fixed scratch page.
+fn signature_address_case(
+    out: &mut crate::output::Buffer,
+    first: usize,
+    descriptors: &[(u32, u32)],
+    index: usize,
+    key: &[u8],
+) -> Result<(), crate::Diagnostic> {
+    let Some(&(address, length)) = descriptors.get(index) else {
+        return Err(crate::Diagnostic::Defective);
+    };
+    if address != 983_040 || usize::try_from(length).ok() != Some(key.len()) || length > 65_536 {
+        return Err(crate::Diagnostic::Defective);
+    }
+    let Some(id) = first.checked_add(index) else {
+        return Err(crate::Diagnostic::Defective);
+    };
+    attempt!(out.append(b"(if (i32.eq (local.get $id) "));
+    attempt!(out.i32(attempt!(super::super::plan::number(id))));
+    attempt!(out.append(b") (then\n"));
+    // The guard above reserves sixteen pages before any branch. This
+    // checked key is at most 65,536 bytes at 983,040, so even its final
+    // byte ends at 1,048,576; Wasm memory can grow but never shrink.
+    attempt!(out.append(b"(memory.init $sig"));
+    attempt!(out.index(id));
+    attempt!(out.append(b" (i32.const 983040) (i32.const 0) "));
+    attempt!(out.i32(length));
+    out.append(b")\n(return (i32.const 983040))))\n")
 }
 
 pub(super) fn signature_count(

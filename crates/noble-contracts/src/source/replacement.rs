@@ -29,8 +29,16 @@ pub(super) fn compatible(
     limits: crate::Limits,
 ) -> Result<Compatibility, crate::Diagnostic> {
     let environment = session.environment()?;
-    let old = infer(session, previous, &environment, limits)?;
-    let new = infer(session, replacement, &environment, limits)?;
+    // The environment is read through an explicit match on its copy-on-write
+    // state; the pinned Aeneas cannot translate `Cow`'s Deref.
+    let old = match &environment {
+        alloc::borrow::Cow::Borrowed(borrowed) => infer(session, previous, borrowed, limits),
+        alloc::borrow::Cow::Owned(owned) => infer(session, previous, owned, limits),
+    }?;
+    let new = match &environment {
+        alloc::borrow::Cow::Borrowed(borrowed) => infer(session, replacement, borrowed, limits),
+        alloc::borrow::Cow::Owned(owned) => infer(session, replacement, owned, limits),
+    }?;
     let span = replacement.tree.span;
     let (Some(a), Some(b)) = (old.bodies.first(), new.bodies.first()) else {
         return Err(crate::internal(span));
@@ -40,10 +48,10 @@ pub(super) fn compatible(
     // A replacement may drop an effect, never add one. An effectful old
     // definition therefore admits a pure new implementation of the same
     // ordered stack interface.
-    if new_effects
-        .as_slice()
-        .iter()
-        .any(|effect| !old_effects.as_slice().contains(effect))
+    if crate::scan::find_first(new_effects.as_slice(), |effect| {
+        !old_effects.as_slice().contains(effect)
+    })
+    .is_some()
     {
         return Ok(Compatibility::EffectGrowth);
     }
@@ -84,6 +92,10 @@ pub(super) enum Compatibility {
 /// each side still ends in an unconstrained stack variable. This is an
 /// inference result; it is not a runtime observation, not evidence of
 /// behavioural equivalence, and never acceptance.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
 pub(super) fn ordered(
     session: &super::Session,
     definition: &super::Named,
@@ -91,7 +103,10 @@ pub(super) fn ordered(
 ) -> Result<super::OrderedInterface, crate::Diagnostic> {
     let span = definition.tree.span;
     let environment = session.environment()?;
-    let state = infer(session, definition, &environment, limits)?;
+    let state = match &environment {
+        alloc::borrow::Cow::Borrowed(borrowed) => infer(session, definition, borrowed, limits),
+        alloc::borrow::Cow::Owned(owned) => infer(session, definition, owned, limits),
+    }?;
     let body = state.bodies.first().ok_or_else(|| crate::internal(span))?;
     let (stack_in, stack_in_tail, meter) =
         ordered_side(&state.arena, body.input, span, crate::Meter::new(limits))?;
@@ -110,6 +125,10 @@ pub(super) fn ordered(
 
 /// One ordered stack side and whether it ends in a concrete stack or retains an
 /// unconstrained tail variable.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the suffix walk has already refused every shape other than a finite Push chain, so malformed terms return diagnostics instead of assertions"
+)]
 fn ordered_side(
     arena: &crate::inference::Arena,
     stack: u32,
@@ -128,19 +147,30 @@ fn ordered_side(
     // The suffix walk refuses any shape other than a finite Push chain ending in
     // one of the three documented tails, so the tail walk below cannot diverge.
     let ordered = arena.editor_stack_suffix(cursor, span, &mut work_meter)?;
-    loop {
-        let id = arena.root(cursor, span, &mut work_meter)?;
-        match arena.get(id, span)? {
-            crate::inference::Term::Push(rest, _) => cursor = rest,
-            crate::inference::Term::Empty => {
-                return Ok((ordered, super::InterfaceTail::Closed, work_meter));
+    let mut walked = Ok(None);
+    while matches!(walked, Ok(None)) {
+        let term = match arena.root(cursor, span, &mut work_meter) {
+            Ok(id) => arena.get(id, span),
+            Err(problem) => Err(problem),
+        };
+        walked = match term {
+            Ok(crate::inference::Term::Push(rest, _)) => {
+                cursor = rest;
+                Ok(None)
             }
-            crate::inference::Term::Hole(crate::inference::Sort::Stack)
-            | crate::inference::Term::RigidStack(_) => {
-                return Ok((ordered, super::InterfaceTail::Unconstrained, work_meter));
-            }
-            _ => return Err(crate::internal(span)),
-        }
+            Ok(crate::inference::Term::Empty) => Ok(Some(super::InterfaceTail::Closed)),
+            Ok(
+                crate::inference::Term::Hole(crate::inference::Sort::Stack)
+                | crate::inference::Term::RigidStack(_),
+            ) => Ok(Some(super::InterfaceTail::Unconstrained)),
+            Ok(_) => Err(crate::internal(span)),
+            Err(problem) => Err(problem),
+        };
+    }
+    match walked {
+        Ok(Some(tail)) => Ok((ordered, tail, work_meter)),
+        Ok(None) => Err(crate::internal(span)),
+        Err(problem) => Err(problem),
     }
 }
 
@@ -159,65 +189,82 @@ impl Comparison<'_> {
         reason = "Owner: noble-contracts; the parameter is the owned builder state this stage accumulates into, not a borrowed input"
     )]
     fn compare(&mut self) -> Result<bool, crate::Diagnostic> {
-        while let Some((left, right)) = self.pending.pop() {
-            self.meter.node(self.span)?;
-            let left = self.old.root(left, self.span, &mut self.meter)?;
-            let right = self.new.root(right, self.span, &mut self.meter)?;
-            let before = self.old.get(left, self.span)?;
-            let after = self.new.get(right, self.span)?;
-            #[expect(
-                tigerstyle::non_trait_imports,
-                reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
-            )]
-            use crate::inference::Term;
-            match (before, after) {
-                (Term::Hole(a), Term::Hole(b)) if a == b => {
-                    if self.holes.iter().any(|(l, r)| *l == left || *r == right) {
-                        if !self.holes.contains(&(left, right)) {
-                            return Ok(false);
-                        }
-                    } else {
-                        self.holes.push((left, right));
-                    }
-                }
-                (Term::RigidValue(a), Term::RigidValue(b))
-                | (Term::RigidStack(a), Term::RigidStack(b))
-                    if a == b => {}
-                (Term::Unit, Term::Unit)
-                | (Term::Bool, Term::Bool)
-                | (Term::I64, Term::I64)
-                | (Term::Text, Term::Text)
-                | (Term::Syntax, Term::Syntax)
-                | (Term::Contract, Term::Contract)
-                | (Term::Evidence, Term::Evidence)
-                | (Term::Certified, Term::Certified)
-                | (Term::Empty, Term::Empty) => {}
-                (Term::Resource(a), Term::Resource(b)) if a == b => {}
-                (Term::Nominal(a), Term::Nominal(b)) if a == b => {}
-                (Term::GenericNominal(a, x, y), Term::GenericNominal(b, u, v)) if a == b => {
-                    self.pending.push((x, u));
-                    self.pending.push((y, v));
-                }
-                (Term::Pair(a, b), Term::Pair(c, d))
-                | (Term::Sum(a, b), Term::Sum(c, d))
-                | (Term::Push(a, b), Term::Push(c, d)) => {
-                    self.pending.push((a, c));
-                    self.pending.push((b, d));
-                }
-                (Term::List(a), Term::List(b)) => self.pending.push((a, b)),
-                (Term::Program(a, b), Term::Program(c, d)) => {
-                    let before = self.old.program_effect(left, self.span, &mut self.meter)?;
-                    let after = self.new.program_effect(right, self.span, &mut self.meter)?;
-                    if self.old.effect_value(before, self.span)?
-                        != self.new.effect_value(after, self.span)?
-                    {
+        let mut outcome = Ok(true);
+        while let Some(pair) = self.pending.pop() {
+            outcome = self.step(pair);
+            if !matches!(outcome, Ok(true)) {
+                break;
+            }
+        }
+        outcome
+    }
+
+    /// Compare one pending pair of terms, queueing their children.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; the parameter is the owned builder state this stage accumulates into, not a borrowed input"
+    )]
+    fn step(&mut self, pair: (u32, u32)) -> Result<bool, crate::Diagnostic> {
+        let (left, right) = pair;
+        self.meter.node(self.span)?;
+        let left = self.old.root(left, self.span, &mut self.meter)?;
+        let right = self.new.root(right, self.span, &mut self.meter)?;
+        let before = self.old.get(left, self.span)?;
+        let after = self.new.get(right, self.span)?;
+        #[expect(
+            tigerstyle::non_trait_imports,
+            reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+        )]
+        use crate::inference::Term;
+        match (before, after) {
+            (Term::Hole(a), Term::Hole(b)) if a == b => {
+                if crate::scan::find_first(&self.holes, |(l, r)| *l == left || *r == right)
+                    .is_some()
+                {
+                    if !self.holes.contains(&(left, right)) {
                         return Ok(false);
                     }
-                    self.pending.push((a, c));
-                    self.pending.push((b, d));
+                } else {
+                    self.holes.push((left, right));
                 }
-                _ => return Ok(false),
             }
+            (Term::RigidValue(a), Term::RigidValue(b))
+            | (Term::RigidStack(a), Term::RigidStack(b))
+                if a == b => {}
+            (Term::Unit, Term::Unit)
+            | (Term::Bool, Term::Bool)
+            | (Term::I64, Term::I64)
+            | (Term::Text, Term::Text)
+            | (Term::Syntax, Term::Syntax)
+            | (Term::Contract, Term::Contract)
+            | (Term::Evidence, Term::Evidence)
+            | (Term::Certified, Term::Certified)
+            | (Term::Empty, Term::Empty) => {}
+            (Term::Resource(a), Term::Resource(b)) if a == b => {}
+            (Term::Nominal(a), Term::Nominal(b)) if a == b => {}
+            (Term::GenericNominal(a, x, y), Term::GenericNominal(b, u, v)) if a == b => {
+                self.pending.push((x, u));
+                self.pending.push((y, v));
+            }
+            (Term::Pair(a, b), Term::Pair(c, d))
+            | (Term::Sum(a, b), Term::Sum(c, d))
+            | (Term::Push(a, b), Term::Push(c, d)) => {
+                self.pending.push((a, c));
+                self.pending.push((b, d));
+            }
+            (Term::List(a), Term::List(b)) => self.pending.push((a, b)),
+            (Term::Program(a, b), Term::Program(c, d)) => {
+                let before = self.old.program_effect(left, self.span, &mut self.meter)?;
+                let after = self.new.program_effect(right, self.span, &mut self.meter)?;
+                if self.old.effect_value(before, self.span)?
+                    != self.new.effect_value(after, self.span)?
+                {
+                    return Ok(false);
+                }
+                self.pending.push((a, c));
+                self.pending.push((b, d));
+            }
+            _ => return Ok(false),
         }
         Ok(true)
     }

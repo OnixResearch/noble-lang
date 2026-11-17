@@ -81,17 +81,7 @@ pub(super) fn world(
     {
         return Err(crate::component::exhausted());
     }
-    let is_unsigned = world
-        .imports
-        .iter()
-        .chain(world.exports.iter())
-        .any(|operation| {
-            operation
-                .parameters
-                .iter()
-                .chain(operation.results.iter())
-                .any(|ty| *ty == crate::component::Type::CheckedU64)
-        });
+    let is_unsigned = any_uses_checked_u64(&world.imports) || any_uses_checked_u64(&world.exports);
     if !checked_u64 && is_unsigned {
         return Err(crate::component::error(
             crate::component::Stage::Binding,
@@ -106,25 +96,7 @@ pub(super) fn world(
             "checked u64 boundary requires an import-free world",
         ));
     }
-    if checked_u64
-        && world.exports.iter().any(|operation| {
-            let is_unsigned = operation
-                .parameters
-                .iter()
-                .chain(operation.results.iter())
-                .any(|ty| *ty == crate::component::Type::CheckedU64);
-            is_unsigned
-                && (world.asynchronous
-                    || operation.asynchronous
-                    || operation.parameters.len() != 1
-                    || operation.results.len() != 1
-                    || operation
-                        .parameters
-                        .iter()
-                        .chain(operation.results.iter())
-                        .any(|ty| *ty != crate::component::Type::CheckedU64))
-        })
-    {
+    if checked_u64 && any_unsupported_checked_export(world.asynchronous, &world.exports) {
         return Err(crate::component::error(
             crate::component::Stage::Binding,
             crate::DiagnosticKind::Unsupported,
@@ -133,6 +105,128 @@ pub(super) fn world(
     }
     attempt!(crate::component::bindings::make(&world));
     Ok(world)
+}
+
+/// Whether some type of `types` satisfies `matches_type`.
+fn any_type(
+    types: &[crate::component::Type],
+    mut matches_type: impl FnMut(crate::component::Type) -> bool,
+) -> bool {
+    let mut is_found = false;
+    let mut at = 0;
+    while !is_found && at < types.len() {
+        is_found = matches_type(types[at]);
+        at += 1;
+    }
+    is_found
+}
+
+/// Whether a parameter or result of `operation` is a WIT u64.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the type scan calls a generic closure predicate, which const fn cannot do."
+)]
+fn uses_checked_u64(operation: &crate::component::Operation) -> bool {
+    any_type(&operation.parameters, |ty| {
+        ty == crate::component::Type::CheckedU64
+    }) || any_type(&operation.results, |ty| {
+        ty == crate::component::Type::CheckedU64
+    })
+}
+
+/// Whether any of `operations` uses a WIT u64.
+fn any_uses_checked_u64(operations: &[crate::component::Operation]) -> bool {
+    let mut is_found = false;
+    let mut at = 0;
+    while !is_found && at < operations.len() {
+        is_found = uses_checked_u64(&operations[at]);
+        at += 1;
+    }
+    is_found
+}
+
+/// Whether some u64 export is not a synchronous scalar `u64 -> u64` operation.
+fn any_unsupported_checked_export(
+    is_async_world: bool,
+    exports: &[crate::component::Operation],
+) -> bool {
+    let mut is_found = false;
+    let mut at = 0;
+    while !is_found && at < exports.len() {
+        is_found = is_unsupported_checked_export(is_async_world, &exports[at]);
+        at += 1;
+    }
+    is_found
+}
+
+/// Whether `operation` uses a WIT u64 outside a synchronous scalar `u64 -> u64` shape.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the type scans call a generic closure predicate, which const fn cannot do."
+)]
+fn is_unsupported_checked_export(
+    is_async_world: bool,
+    operation: &crate::component::Operation,
+) -> bool {
+    if !uses_checked_u64(operation) {
+        return false;
+    }
+    if is_async_world || operation.asynchronous {
+        return true;
+    }
+    if operation.parameters.len() != 1 || operation.results.len() != 1 {
+        return true;
+    }
+    any_type(&operation.parameters, |ty| {
+        ty != crate::component::Type::CheckedU64
+    }) || any_type(&operation.results, |ty| {
+        ty != crate::component::Type::CheckedU64
+    })
+}
+
+/// Whether `operation` repeats the word or export name of an earlier operation.
+fn is_duplicate_operation(
+    operations: &[crate::component::Operation],
+    operation: &crate::component::Operation,
+) -> bool {
+    let mut is_found = false;
+    let mut at = 0;
+    while !is_found && at < operations.len() {
+        is_found = collides(&operations[at], operation);
+        at += 1;
+    }
+    is_found
+}
+
+/// Whether two operations share a generated word or an export name.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; String content equality is a non-const trait call."
+)]
+fn collides(old: &crate::component::Operation, operation: &crate::component::Operation) -> bool {
+    old.word == operation.word || old.export_name == operation.export_name
+}
+
+/// The position of the local interface named `name`.
+fn interface_position(interfaces: &[super::Interface], name: &str) -> Option<usize> {
+    let mut position = None;
+    let mut at = 0;
+    while position.is_none() && at < interfaces.len() {
+        if is_interface_named(&interfaces[at], name) {
+            position = Some(at);
+        }
+        at += 1;
+    }
+    position
+}
+
+/// Whether `interface` is named `name`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; String content equality is a non-const trait call."
+)]
+fn is_interface_named(interface: &super::Interface, name: &str) -> bool {
+    interface.name == name
 }
 
 fn qualified(package: &super::Package, name: &str) -> alloc::string::String {
@@ -207,11 +301,7 @@ impl Context<'_> {
                 self.install(None, function, *is_imported, world)
             }
             super::Item::Interface(is_imported, name) => {
-                let position = self
-                    .package
-                    .interfaces
-                    .iter()
-                    .position(|interface| &interface.name == name);
+                let position = interface_position(&self.package.interfaces, name);
                 let index = match position {
                     Some(index) => index,
                     None => return Err(crate::component::invalid("unknown local WIT interface")),
@@ -290,10 +380,7 @@ impl Context<'_> {
         if target.len() >= crate::component::MAX_OPERATIONS {
             return Err(crate::component::exhausted());
         }
-        if target
-            .iter()
-            .any(|old| old.word == operation.word || old.export_name == operation.export_name)
-        {
+        if is_duplicate_operation(target, &operation) {
             return Err(crate::component::invalid(
                 "duplicate or ambiguous generated WIT word",
             ));

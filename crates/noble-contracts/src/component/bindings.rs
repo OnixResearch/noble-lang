@@ -51,7 +51,10 @@ pub(super) fn make(world: &super::World) -> Result<super::Bindings, super::Error
         }
     }
     let program_type_effects = match world.worker_program_effect {
-        Some(effect) => 1u64.checked_shl(effect.0).ok_or_else(super::exhausted)?,
+        Some(effect) => match 1u64.checked_shl(effect.0) {
+            Some(bit) => bit,
+            None => return Err(super::exhausted()),
+        },
         None => 0,
     };
     environment.resource_kinds = resource_kinds(world);

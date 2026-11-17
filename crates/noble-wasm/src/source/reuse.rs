@@ -77,18 +77,21 @@ impl Reusable {
     )]
     pub fn retained_bytes(&self) -> usize {
         const RECORD: usize = 64;
-        let identities = self.next.identities.iter().fold(0usize, |total, identity| {
-            total
+        let mut identities = 0usize;
+        for identity in &self.next.identities {
+            identities = identities
                 .saturating_add(identity.recipe.len())
-                .saturating_add(RECORD)
-        });
+                .saturating_add(RECORD);
+        }
+        let mut literals = 0usize;
+        for key in self.next.static_literals.keys() {
+            literals = literals.saturating_add(key.len() + RECORD);
+        }
         core::mem::size_of::<Self>()
             .saturating_add(self.wat.len())
             .saturating_add(self.next.signatures.retained_bytes())
             .saturating_add(self.next.descriptors.len().saturating_mul(8))
-            .saturating_add(self.next.static_literals.keys().fold(0usize, |total, key| {
-                total.saturating_add(key.len() + RECORD)
-            }))
+            .saturating_add(literals)
             .saturating_add(identities)
     }
 }
@@ -121,7 +124,11 @@ impl super::Compiler {
         &self,
         artifact: &Reusable,
     ) -> Result<super::Prepared, crate::Diagnostic> {
-        if self.canonical_epoch().as_ref() != Some(&artifact.epoch) {
+        let is_same_epoch = match self.canonical_epoch() {
+            Some(epoch) => epoch == artifact.epoch,
+            None => false,
+        };
+        if !is_same_epoch {
             return Err(crate::Diagnostic::Invalid);
         }
         let generation = match self.generation.checked_add(1) {

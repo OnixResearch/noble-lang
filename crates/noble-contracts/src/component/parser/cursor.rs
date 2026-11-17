@@ -71,7 +71,7 @@ impl<'a> super::Cursor<'a> {
         let token = attempt!(self.next());
         if token.is_empty()
             || token.len() > super::MAX_VERSION_DIGITS
-            || !token.bytes().all(|byte| byte.is_ascii_digit())
+            || !is_ascii_digits(token.as_bytes())
         {
             return Err(crate::component::unsupported(
                 "WIT requires an exact major.minor.patch version",
@@ -101,6 +101,17 @@ fn append_version_part(version: &mut alloc::string::String, at: u32, token: &str
         version.push('.');
     }
     version.push_str(token);
+}
+
+/// Whether every byte is an ASCII digit.
+fn is_ascii_digits(bytes: &[u8]) -> bool {
+    let mut is_digits = true;
+    let mut at = 0;
+    while is_digits && at < bytes.len() {
+        is_digits = bytes[at].is_ascii_digit();
+        at += 1;
+    }
+    is_digits
 }
 
 #[expect(

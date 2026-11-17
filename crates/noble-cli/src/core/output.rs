@@ -257,7 +257,7 @@ impl Report {
                 ),
                 (
                     "constraint",
-                    crate::workflow::encoding::string(join.constraint),
+                    crate::workflow::encoding::string(&join.constraint),
                 ),
                 (
                     "value_origin_or_unavailable",

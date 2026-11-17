@@ -12,6 +12,8 @@ use std::rc::Rc;
 mod isolation;
 #[path = "reload.rs"]
 mod reload;
+#[path = "retention.rs"]
+mod retention;
 #[path = "unverified.rs"]
 mod unverified;
 

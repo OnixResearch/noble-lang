@@ -152,16 +152,11 @@ impl<'a> Resolution<'a> {
                 return self.declare_generic(ordinal, parameters, left_type, right_type);
             }
         }
-        let environment = self
-            .session
-            .as_ref()
-            .and_then(|session| session.source.declared.as_ref())
-            .map(|context| &context.environment);
         let (meter, parsed) = types::parse_shape(
             schema,
             &self.local_types,
             &self.local_generics,
-            environment,
+            session_environment(&self.session),
             self.meter,
         );
         self.meter = meter;
@@ -223,23 +218,11 @@ impl<'a> Resolution<'a> {
         left_type: &str,
         right_type: &str,
     ) -> (Self, Result<bool, crate::source::Error>) {
-        let parameter_index = |spelling: &str| -> Result<u8, crate::source::Error> {
-            parameters
-                .iter()
-                .position(|name| name == spelling)
-                .and_then(|index| u8::try_from(index).ok())
-                .ok_or_else(|| {
-                    crate::source::declared::error(
-                        crate::source::Stage::Resolve,
-                        "generic variant payload must name a declared type parameter",
-                    )
-                })
-        };
-        let left = match parameter_index(left_type) {
+        let left = match parameter_index(parameters, left_type) {
             Ok(index) => index,
             Err(problem) => return (self, Err(problem)),
         };
-        let right = match parameter_index(right_type) {
+        let right = match parameter_index(parameters, right_type) {
             Ok(index) => index,
             Err(problem) => return (self, Err(problem)),
         };
@@ -294,5 +277,54 @@ impl<'a> Resolution<'a> {
         self.local_generics.push((schema.name.clone(), id));
         self.resolved[ordinal] = Some(ResolvedSchema::Generic(id, ops));
         (self, Ok(true))
+    }
+}
+
+/// The payload index of the declared type parameter named `spelling`.
+fn parameter_index(
+    parameters: &[alloc::string::String],
+    spelling: &str,
+) -> Result<u8, crate::source::Error> {
+    let mut index = 0;
+    let mut found = None;
+    while found.is_none() && index < parameters.len() {
+        if is_parameter(&parameters[index], spelling) {
+            found = Some(index);
+        }
+        index += 1;
+    }
+    found
+        .and_then(|index| u8::try_from(index).ok())
+        .ok_or_else(|| {
+            crate::source::declared::error(
+                crate::source::Stage::Resolve,
+                "generic variant payload must name a declared type parameter",
+            )
+        })
+}
+
+/// Whether a declared type parameter is spelled `spelling`.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the predicate compares a declared parameter name with a spelled payload type, and equality is symmetric, so swapped arguments give the same result."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; str PartialEq is not a stable const trait (E0658)."
+)]
+fn is_parameter(name: &str, spelling: &str) -> bool {
+    name == spelling
+}
+
+/// The declared environment of the session, when both are present.
+const fn session_environment(
+    session: &Option<crate::source::declared::ModuleSession>,
+) -> Option<&noble_kernel::contracts::Env> {
+    match session {
+        Some(session) => match &session.source.declared {
+            Some(context) => Some(&context.environment),
+            None => None,
+        },
+        None => None,
     }
 }

@@ -141,7 +141,7 @@ fn lookup(
             if suffix.is_empty()
                 || suffix.len() > 10
                 || (suffix.len() > 1 && suffix[0] == b'0')
-                || !suffix.iter().all(u8::is_ascii_digit)
+                || !super::every_byte(suffix, |byte| byte.is_ascii_digit())
             {
                 return Err(crate::invalid(span, "invalid borrowed input ordinal"));
             }
@@ -313,31 +313,65 @@ fn declared_lookup(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; a fixed spelling table compared one entry at a time; an unknown word is reported as absent rather than asserted."
+)]
 fn calculator_word(word: &[u8]) -> Option<super::Target> {
-    let identity = match word {
-        b"text.byte" => 26,
-        b"iterate" => 27,
-        b"i64.cmp" => 28,
-        b"i64.div-rem" => 29,
-        b"text.from-ascii" => 30,
-        b"text.length" => 31,
-        _ => return None,
-    };
-    Some(super::Target::Builtin(identity))
+    // Slice equality, not byte-string patterns: the pinned Aeneas cannot
+    // project the pointer metadata such a pattern matches on.
+    if word == b"text.byte" {
+        return Some(super::Target::Builtin(26));
+    }
+    if word == b"iterate" {
+        return Some(super::Target::Builtin(27));
+    }
+    if word == b"i64.cmp" {
+        return Some(super::Target::Builtin(28));
+    }
+    if word == b"i64.div-rem" {
+        return Some(super::Target::Builtin(29));
+    }
+    if word == b"text.from-ascii" {
+        return Some(super::Target::Builtin(30));
+    }
+    if word == b"text.length" {
+        return Some(super::Target::Builtin(31));
+    }
+    None
 }
 
-const fn checked_i64_word(word: &[u8]) -> Option<super::Target> {
-    let identity = match word {
-        b"i64.checked-add" => 23,
-        b"i64.checked-sub" => 24,
-        b"i64.checked-mul" => 25,
-        b"i64.checked-neg" => 26,
-        b"i64.checked-abs" => 27,
-        b"i64.lt" => 28,
-        b"i64.checked-div-rem" => 29,
-        _ => return None,
-    };
-    Some(super::Target::Builtin(identity))
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; slice equality is not const, and byte-string patterns cannot be extracted by the pinned Aeneas."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; a fixed spelling table compared one entry at a time; an unknown word is reported as absent rather than asserted."
+)]
+fn checked_i64_word(word: &[u8]) -> Option<super::Target> {
+    if word == b"i64.checked-add" {
+        return Some(super::Target::Builtin(23));
+    }
+    if word == b"i64.checked-sub" {
+        return Some(super::Target::Builtin(24));
+    }
+    if word == b"i64.checked-mul" {
+        return Some(super::Target::Builtin(25));
+    }
+    if word == b"i64.checked-neg" {
+        return Some(super::Target::Builtin(26));
+    }
+    if word == b"i64.checked-abs" {
+        return Some(super::Target::Builtin(27));
+    }
+    if word == b"i64.lt" {
+        return Some(super::Target::Builtin(28));
+    }
+    if word == b"i64.checked-div-rem" {
+        return Some(super::Target::Builtin(29));
+    }
+    None
 }
 
 #[expect(
@@ -404,5 +438,54 @@ fn named_at(
         Ok(Some(super::Target::Named(attempt!(crate::index(at, span)))))
     } else {
         Ok(None)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn calculator_and_checked_i64_words_resolve_their_exact_spellings_only() {
+        let calculator: [(&[u8], u32); 6] = [
+            (b"text.byte", 26),
+            (b"iterate", 27),
+            (b"i64.cmp", 28),
+            (b"i64.div-rem", 29),
+            (b"text.from-ascii", 30),
+            (b"text.length", 31),
+        ];
+        for (word, builtin) in calculator {
+            let target = Some(super::super::Target::Builtin(builtin));
+            assert_eq!(super::calculator_word(word), target);
+            assert_eq!(super::checked_i64_word(word), None);
+        }
+        let checked: [(&[u8], u32); 7] = [
+            (b"i64.checked-add", 23),
+            (b"i64.checked-sub", 24),
+            (b"i64.checked-mul", 25),
+            (b"i64.checked-neg", 26),
+            (b"i64.checked-abs", 27),
+            (b"i64.lt", 28),
+            (b"i64.checked-div-rem", 29),
+        ];
+        for (word, builtin) in checked {
+            let target = Some(super::super::Target::Builtin(builtin));
+            assert_eq!(super::checked_i64_word(word), target);
+            assert_eq!(super::calculator_word(word), None);
+        }
+        // Empty words, prefixes, extensions and case variants are not
+        // spellings of either table.
+        let refused: [&[u8]; 7] = [
+            b"",
+            b"text",
+            b"text.byte ",
+            b"iterated",
+            b"I64.lt",
+            b"i64.checked",
+            b"i64.lt2",
+        ];
+        for word in refused {
+            assert_eq!(super::calculator_word(word), None);
+            assert_eq!(super::checked_i64_word(word), None);
+        }
     }
 }

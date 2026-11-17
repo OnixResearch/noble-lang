@@ -71,32 +71,55 @@ impl State {
         Ok(index)
     }
     fn value(&mut self, ty: noble_kernel::types::Ty) -> Result<Value, crate::Diagnostic> {
+        let canonical = attempt!(self.canonical(&ty));
+        let locals = match canonical {
+            Some(canonical) => attempt!(self.flat_locals(canonical)),
+            None => [None; VALUE_LANES],
+        };
+        Ok(Value {
+            ty,
+            storage: Storage::Flat(locals),
+        })
+    }
+    /// The canonical WIT type of `ty`, with the selected worker Program type.
+    fn canonical(
+        &self,
+        ty: &noble_kernel::types::Ty,
+    ) -> Result<Option<noble_contracts::component::Type>, crate::Diagnostic> {
         let selected = self.worker_program.zip(self.worker_program_type.as_ref());
-        let canonical = attempt!(super::abi::value_type(&ty, selected));
+        super::abi::value_type(ty, selected)
+    }
+    /// One fresh local per canonical lane of `canonical`, in lane order.
+    fn flat_locals(
+        &mut self,
+        canonical: noble_contracts::component::Type,
+    ) -> Result<[Option<u32>; VALUE_LANES], crate::Diagnostic> {
         let mut locals = [None; VALUE_LANES];
         let mut at = 0usize;
         let mut failure = None;
-        if let Some(canonical) = canonical {
-            let count = super::abi::lane_count(canonical);
-            while at < count && failure.is_none() {
-                if at >= locals.len() {
-                    failure = Some(crate::Diagnostic::Defective);
-                } else {
-                    match self.typed_local(canonical, at) {
-                        Ok(local) => locals[at] = Some(local),
-                        Err(error) => failure = Some(error),
-                    }
-                }
-                at = at.saturating_add(1);
+        let count = super::abi::lane_count(canonical);
+        while at < count && failure.is_none() {
+            match self.flat_local(canonical, at) {
+                Ok(local) => locals[at] = Some(local),
+                Err(error) => failure = Some(error),
             }
+            at = at.saturating_add(1);
         }
         match failure {
             Some(error) => Err(error),
-            None => Ok(Value {
-                ty,
-                storage: Storage::Flat(locals),
-            }),
+            None => Ok(locals),
         }
+    }
+    /// The local for lane `at`, refusing a lane beyond the flat storage.
+    fn flat_local(
+        &mut self,
+        canonical: noble_contracts::component::Type,
+        at: usize,
+    ) -> Result<u32, crate::Diagnostic> {
+        if at >= VALUE_LANES {
+            return Err(crate::Diagnostic::Defective);
+        }
+        self.typed_local(canonical, at)
     }
     fn typed_local(
         &mut self,

@@ -14,10 +14,7 @@ impl BoundedProgramBytes {
     }
 
     fn append(&mut self, part: &[u8]) -> Result<(), Refusal> {
-        let should_add_separator = !self.bytes.is_empty()
-            && self.bytes.last() != Some(&b' ')
-            && !part.is_empty()
-            && part.first() != Some(&b' ');
+        let should_add_separator = needs_separator(&self.bytes, part);
         let separator_bytes = if should_add_separator { 1usize } else { 0usize };
         let next_len = self
             .bytes
@@ -63,6 +60,14 @@ impl BoundedProgramBytes {
     }
 }
 
+/// Whether appending `part` after `bytes` needs one separating space.
+fn needs_separator(bytes: &[u8], part: &[u8]) -> bool {
+    !bytes.is_empty()
+        && bytes.last() != Some(&b' ')
+        && !part.is_empty()
+        && part.first() != Some(&b' ')
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct ComposeContext {
     pub prefix: Vec<u8>,
@@ -75,6 +80,9 @@ pub struct ComposeContext {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ComposedProgram {
+    // Extraction-only name: a Lean field called `source` would shadow the
+    // `source.*` namespace of the later field types. Rust is unchanged.
+    #[charon::rename("source_bytes")]
     pub source: Vec<u8>,
     pub interface: RetrievalSignature,
     pub selected: Vec<ProcedureId>,
@@ -131,57 +139,25 @@ impl ProcedureLibrary {
                 },
             ));
         }
-        let mut source = BoundedProgramBytes::new();
+        let mut composed = BoundedProgramBytes::new();
         let mut retained_ids = Vec::with_capacity(selected.len());
-        source.append(&context.prefix)?;
-        for id in selected {
-            let record = self
-                .records()
-                .iter()
-                .find(|record| record.procedure_id == *id)
-                .ok_or_else(|| {
-                    Refusal::new(
-                        RefusalKind::UnknownRecord,
-                        super::Diagnostic {
-                            field: "composition.selected",
-                            message: "selected identity is not in the current generation",
-                        },
-                    )
-                })?;
-            if record.chunk.interface.effects != EffSet::empty() {
-                return Err(Refusal::new(
-                    RefusalKind::Unsupported,
-                    super::Diagnostic {
-                        field: "chunk.interface.effects",
-                        message: "a selected procedure has a nonempty effect closure",
-                    },
-                ));
+        composed.append(&context.prefix)?;
+        let mut failure = None;
+        let mut index = 0;
+        while failure.is_none() && index < selected.len() {
+            match self.append_selected(&selected[index], &mut composed) {
+                Ok(()) => retained_ids.push(selected[index]),
+                Err(refusal) => failure = Some(refusal),
             }
-            let entry = self
-                .chunk_library
-                .entries()
-                .iter()
-                .find(|entry| {
-                    entry.envelope().chunk_id == record.chunk.chunk_id
-                        && entry.envelope().source_revision == record.chunk.source_revision
-                })
-                .ok_or_else(|| {
-                    Refusal::new(
-                        RefusalKind::Invalid,
-                        super::Diagnostic {
-                            field: "composition.selected",
-                            message:
-                                "selected procedure is absent from the admitted #73 chunk view",
-                        },
-                    )
-                })?;
-            source.append(entry.source())?;
-            retained_ids.push(*id);
+            index += 1;
         }
-        source.append(&context.suffix)?;
-        let source = source.into_bytes();
+        if let Some(refusal) = failure {
+            return Err(refusal);
+        }
+        composed.append(&context.suffix)?;
+        let composed_source = composed.into_bytes();
         let prepared = namespace
-            .prepare(&source, &context.stack_in, context.limits)
+            .prepare(&composed_source, &context.stack_in, context.limits)
             .map_err(|_| {
                 Refusal::new(
                     RefusalKind::Invalid,
@@ -230,10 +206,51 @@ impl ProcedureLibrary {
             cost_key: [0; 3],
         };
         Ok(ComposedProgram {
-            source,
+            source: composed_source,
             interface,
             selected: retained_ids,
         })
+    }
+
+    /// Append the admitted source of the selected procedure `id` to `composed`.
+    fn append_selected(
+        &self,
+        id: &ProcedureId,
+        composed: &mut BoundedProgramBytes,
+    ) -> Result<(), Refusal> {
+        let record = crate::scan::find_first(self.records(), |record| record.procedure_id == *id)
+            .ok_or_else(|| {
+            Refusal::new(
+                RefusalKind::UnknownRecord,
+                super::Diagnostic {
+                    field: "composition.selected",
+                    message: "selected identity is not in the current generation",
+                },
+            )
+        })?;
+        if record.chunk.interface.effects != EffSet::empty() {
+            return Err(Refusal::new(
+                RefusalKind::Unsupported,
+                super::Diagnostic {
+                    field: "chunk.interface.effects",
+                    message: "a selected procedure has a nonempty effect closure",
+                },
+            ));
+        }
+        let entry = crate::scan::find_first(self.chunk_library.entries(), |entry| {
+            entry.envelope().chunk_id == record.chunk.chunk_id
+                && entry.envelope().source_revision == record.chunk.source_revision
+        })
+        .ok_or_else(|| {
+            Refusal::new(
+                RefusalKind::Invalid,
+                super::Diagnostic {
+                    field: "composition.selected",
+                    message: "selected procedure is absent from the admitted #73 chunk view",
+                },
+            )
+        })?;
+        composed.append(entry.source())
     }
 
     /// Bind an MC2 proof to the exact retained source artifact. The host-side
@@ -242,16 +259,14 @@ impl ProcedureLibrary {
     pub fn bind_companion_evidence(
         &self,
         namespace: &Session,
-        core: &Core,
+        companion_core: &Core,
         procedure_id: ProcedureId,
         evidence: EvidenceId,
         limits: Limits,
     ) -> Result<BoundOperand, Refusal> {
-        let record = self
-            .records()
-            .iter()
-            .find(|record| record.procedure_id == procedure_id)
-            .ok_or_else(|| {
+        let record =
+            crate::scan::find_first(self.records(), |record| record.procedure_id == procedure_id)
+                .ok_or_else(|| {
                 Refusal::new(
                     RefusalKind::UnknownRecord,
                     super::Diagnostic {
@@ -260,23 +275,19 @@ impl ProcedureLibrary {
                     },
                 )
             })?;
-        let entry = self
-            .chunk_library
-            .entries()
-            .iter()
-            .find(|entry| {
-                entry.envelope().chunk_id == record.chunk.chunk_id
-                    && entry.envelope().source_revision == record.chunk.source_revision
-            })
-            .ok_or_else(|| {
-                Refusal::new(
-                    RefusalKind::Invalid,
-                    super::Diagnostic {
-                        field: "chunk",
-                        message: "admitted chunk source unavailable",
-                    },
-                )
-            })?;
+        let entry = crate::scan::find_first(self.chunk_library.entries(), |entry| {
+            entry.envelope().chunk_id == record.chunk.chunk_id
+                && entry.envelope().source_revision == record.chunk.source_revision
+        })
+        .ok_or_else(|| {
+            Refusal::new(
+                RefusalKind::Invalid,
+                super::Diagnostic {
+                    field: "chunk",
+                    message: "admitted chunk source unavailable",
+                },
+            )
+        })?;
         let prepared = namespace
             .prepare(entry.source(), &record.chunk.interface.stack_in, limits)
             .map_err(|_| {
@@ -306,7 +317,7 @@ impl ProcedureLibrary {
                 },
             )
         })?;
-        let subject = core
+        let subject = companion_core
             .bind_checked_program(evidence, submission)
             .map_err(Refusal::from_companion)?;
         let expected_input = interface_signature(&record.chunk.interface.stack_in);
@@ -334,7 +345,7 @@ impl ProcedureLibrary {
     pub fn compose_certified(
         &self,
         namespace: &Session,
-        core: &mut Core,
+        companion_core: &mut Core,
         left: &BoundOperand,
         right: &BoundOperand,
         context: &ComposeContext,
@@ -351,15 +362,15 @@ impl ProcedureLibrary {
         }
         let composition =
             self.compose(namespace, &[left.procedure_id, right.procedure_id], context)?;
-        let left_subject = core
+        let left_subject = companion_core
             .bind(left.evidence, &left.subject)
             .map_err(Refusal::from_companion)?;
-        let right_subject = core
+        let right_subject = companion_core
             .bind(right.evidence, &right.subject)
             .map_err(Refusal::from_companion)?;
         let joint = Core::compose_subject(&left_subject, &right_subject)
             .map_err(Refusal::from_companion)?;
-        let derivation = core
+        let derivation = companion_core
             .derive_compose(left.evidence, right.evidence, &joint)
             .map_err(Refusal::from_companion)?;
         Ok(CertifiedComposedProgram {

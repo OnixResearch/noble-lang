@@ -91,29 +91,13 @@ fn checked(
         ));
     }
     let mut seen = 0u8;
-    for id in &body.candidate.body {
-        let index = usize::try_from(id.0).map_err(|_| invalid(span, "invalid named node"))?;
-        if index >= count {
-            return Err(invalid(
-                span,
-                "named node lies outside selected flat recipe",
-            ));
-        }
-        let bit = 1u8 << index;
-        if seen & bit != 0 {
-            return Err(invalid(
-                span,
-                "named proof has duplicate or missing node occurrence",
-            ));
-        }
-        seen |= bit;
-        if matches!(body.candidate.nodes[index], Node::Quotation { .. }) {
-            return Err(invalid(
-                span,
-                "quoted named proof is outside selected v2 rule",
-            ));
-        }
+    let mut position = 0;
+    let mut occurrences = Ok(());
+    while occurrences.is_ok() && position < body.candidate.body.len() {
+        occurrences = record_occurrence(body, body.candidate.body[position], &mut seen, span);
+        position += 1;
     }
+    occurrences?;
     if Some(seen) != (1u8 << count).checked_sub(1) {
         return Err(invalid(span, "named proof has unreachable candidate node"));
     }
@@ -127,11 +111,7 @@ fn checked(
         || result.interface.stack_in != request.expected.stack_in
         || result.interface.stack_out != request.expected.stack_out
         || result.interface.effects != request.expected.allowed_effects
-        || result
-            .derivations
-            .iter()
-            .zip(&body.candidate.body)
-            .any(|(derived, id)| derived.node != *id)
+        || derivation_differs(&result.derivations, &body.candidate.body)
     {
         return Err(invalid(
             span,
@@ -139,6 +119,65 @@ fn checked(
         ));
     }
     Ok(result)
+}
+/// Record one body occurrence in the `seen` node mask, refusing a node outside
+/// the recipe, a repeated node or a quotation.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the occurrence mask is the caller's locally owned state, borrowed only for one loop-free step"
+)]
+fn record_occurrence(
+    body: &execution::Body,
+    id: untrusted::NodeId,
+    seen: &mut u8,
+    span: Span,
+) -> Result<(), Diagnostic> {
+    let count = body.candidate.nodes.len();
+    let index = usize::try_from(id.0).map_err(|_| invalid(span, "invalid named node"))?;
+    if index >= count {
+        return Err(invalid(
+            span,
+            "named node lies outside selected flat recipe",
+        ));
+    }
+    let bit = 1u8 << index;
+    if *seen & bit != 0 {
+        return Err(invalid(
+            span,
+            "named proof has duplicate or missing node occurrence",
+        ));
+    }
+    *seen |= bit;
+    if matches!(body.candidate.nodes[index], Node::Quotation { .. }) {
+        return Err(invalid(
+            span,
+            "quoted named proof is outside selected v2 rule",
+        ));
+    }
+    Ok(())
+}
+/// Whether some derivation names another node than the body occurrence at its
+/// position, as `derivations.iter().zip(body).any(..)`.
+fn derivation_differs(derivations: &[untrusted::Derivation], body: &[untrusted::NodeId]) -> bool {
+    let mut index = 0;
+    let mut is_different = false;
+    while !is_different && index < derivations.len() && index < body.len() {
+        is_different = derives_other_node(&derivations[index], body[index]);
+        index += 1;
+    }
+    is_different
+}
+/// Whether `derived` names another node than `id`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn derives_other_node(derived: &untrusted::Derivation, id: untrusted::NodeId) -> bool {
+    derived.node != id
 }
 fn node(body: &execution::Body, index: usize, span: Span) -> Result<&Node, Diagnostic> {
     let id = body
@@ -164,16 +203,25 @@ fn empty_inst(inst: &Inst) -> bool {
 )]
 fn named_scheme(env: &noble_kernel::contracts::Env, slot: Definition, owner: u64) -> bool {
     env.kind(slot) == Some(Behavior::Named)
-        && usize::try_from(slot.0)
-            .ok()
-            .and_then(|index| env.definition_owners.get(index))
-            == Some(&Some(owner))
+        && is_owned_by(env, slot, owner)
         && env.scheme(slot).is_some_and(|scheme| {
             scheme.var_kinds.is_empty()
                 && scheme.stack_in == [Pattern::I64]
                 && scheme.stack_out == [Pattern::I64]
                 && scheme.effects.is_empty()
         })
+}
+/// Whether `slot` records `owner`, as
+/// `usize::try_from(slot.0).ok().and_then(|index| owners.get(index)) == Some(&Some(owner))`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn is_owned_by(env: &noble_kernel::contracts::Env, slot: Definition, owner: u64) -> bool {
+    match usize::try_from(slot.0) {
+        Ok(index) => env.definition_owners.get(index) == Some(&Some(owner)),
+        Err(_) => false,
+    }
 }
 #[expect(
     tigerstyle::assertion_density,
@@ -215,10 +263,6 @@ fn source_origin(
     Ok(body)
 }
 #[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
-)]
-#[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
@@ -255,56 +299,115 @@ fn source_call(
         .source_dependencies
         .get(callee.module_index)
         .ok_or_else(|| invalid(span, "callee module source is absent"))?;
-    let (scope, word) = match original.rsplit_once('.') {
-        Some((scope, word)) => (Some(scope), word),
-        None => (None, original),
-    };
+    match crate::scan::rsplit_once_byte(original, b'.') {
+        Some((scope, word)) => {
+            callee_word(word, callee, span)?;
+            scoped_call(subject, module, callee, scope, span)
+        }
+        None => {
+            callee_word(original, callee, span)?;
+            if module.owner == caller.definition_owner && callee.module_index == caller.module_index
+            {
+                Ok(())
+            } else {
+                Err(invalid(
+                    span,
+                    "unqualified named word has another original owner",
+                ))
+            }
+        }
+    }
+}
+/// Refuse an original word other than the source-resolved callee's name.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn callee_word(word: &str, callee: &NamedUseOrigin, span: Span) -> Result<(), Diagnostic> {
     if word != callee.definition_name {
         return Err(invalid(
             span,
             "original named word differs from source-resolved callee",
         ));
     }
-    match scope {
-        None if module.owner == caller.definition_owner
-            && callee.module_index == caller.module_index =>
-        {
-            Ok(())
-        }
-        None => Err(invalid(
-            span,
-            "unqualified named word has another original owner",
-        )),
-        Some(qualified)
-            if qualified.rsplit_once('@').is_some_and(|(name, version)| {
-                name == module.module && version.parse::<u32>() == Ok(module.version)
-            }) =>
-        {
-            Ok(())
-        }
-        Some(alias) => {
-            let mut bindings = subject
-                .named_imports
-                .iter()
-                .filter(|binding| binding.alias == alias);
-            let Some(binding) = bindings.next() else {
-                return Err(invalid(
-                    span,
-                    "original named word has no retained import alias",
-                ));
-            };
-            if bindings.next().is_some()
-                || binding.owner != module.owner
-                || binding.module_index != callee.module_index
-            {
-                return Err(invalid(
-                    span,
-                    "original import alias was rebound to another module",
-                ));
-            }
-            Ok(())
-        }
+    Ok(())
+}
+/// Resolve a qualified call scope: either `module@version` naming the callee's
+/// module, or one retained import alias bound to exactly that module.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn scoped_call(
+    subject: &super::SubjectBinding,
+    module: &super::ResolvedSourceModule,
+    callee: &NamedUseOrigin,
+    scope: &str,
+    span: Span,
+) -> Result<(), Diagnostic> {
+    if names_module(scope, module) {
+        return Ok(());
     }
+    let Some(position) = alias_position(&subject.named_imports, scope, 0) else {
+        return Err(invalid(
+            span,
+            "original named word has no retained import alias",
+        ));
+    };
+    let binding = &subject.named_imports[position];
+    if alias_position(&subject.named_imports, scope, position.saturating_add(1)).is_some()
+        || binding.owner != module.owner
+        || binding.module_index != callee.module_index
+    {
+        return Err(invalid(
+            span,
+            "original import alias was rebound to another module",
+        ));
+    }
+    Ok(())
+}
+/// Whether `qualified` is `name@version` naming exactly `module`, as
+/// `qualified.rsplit_once('@').is_some_and(..)`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn names_module(qualified: &str, module: &super::ResolvedSourceModule) -> bool {
+    match crate::scan::rsplit_once_byte(qualified, b'@') {
+        Some((name, version)) => {
+            name == module.module && version.parse::<u32>() == Ok(module.version)
+        }
+        None => false,
+    }
+}
+/// The first import at or after `from` bound to `alias`, as the next item of
+/// `imports.iter().filter(|binding| binding.alias == alias)`.
+fn alias_position(
+    imports: &[super::NamedImportBinding],
+    alias: &str,
+    from: usize,
+) -> Option<usize> {
+    let mut index = from;
+    let mut found = None;
+    while found.is_none() && index < imports.len() {
+        if is_bound_to(&imports[index], alias) {
+            found = Some(index);
+        }
+        index += 1;
+    }
+    found
+}
+/// Whether `binding` is bound to `alias`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn is_bound_to(binding: &super::NamedImportBinding, alias: &str) -> bool {
+    binding.alias == alias
 }
 fn body_request(
     submission: &execution::Submission,
@@ -325,16 +428,7 @@ fn same_derived(left: &untrusted::Checked, right: &untrusted::Checked) -> bool {
         && left.interface.stack_out == right.interface.stack_out
         && left.interface.effects == right.interface.effects
         && left.derivations.len() == right.derivations.len()
-        && left
-            .derivations
-            .iter()
-            .zip(&right.derivations)
-            .all(|(a, b)| {
-                a.node == b.node
-                    && a.interface.stack_in == b.interface.stack_in
-                    && a.interface.stack_out == b.interface.stack_out
-                    && a.interface.effects == b.interface.effects
-            })
+        && super::derivations_agree(&left.derivations, &right.derivations)
 }
 #[expect(
     tigerstyle::compound_condition,
@@ -417,20 +511,8 @@ fn source_step(
             }
         )
     ) || candidate.nodes.len() != original.body.candidate.nodes.len()
-        || [
-            (actual_first, original_first),
-            (actual_second, original_second),
-        ]
-        .into_iter()
-        .any(|(a, b)| match (a, b) {
-            (Node::Literal { lit: la, inst: ia }, Node::Literal { lit: lb, inst: ib }) => {
-                la != lb || !super::same_inst(ia, ib)
-            }
-            (Node::Invocation { def: da, inst: ia }, Node::Invocation { def: db, inst: ib }) => {
-                da != db || !super::same_inst(ia, ib)
-            }
-            _ => true,
-        })
+        || node_differs(actual_first, original_first)
+        || node_differs(actual_second, original_second)
     {
         return Err(invalid(
             origin.definition_span,
@@ -451,36 +533,37 @@ fn source_step(
     }
     Ok(())
 }
-#[expect(
-    tigerstyle::compound_condition,
-    reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
-)]
-#[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
-)]
+/// Verify the named v2 source graph in stage order: the subject, then its
+/// selected definition and call occurrences, then the two named steps.
+fn verify(goal: &ContractGoal, limits: Limits) -> Result<Graph<'_>, Diagnostic> {
+    let subject_body_span = verify_subject(goal, limits)?;
+    let (selected, selected_check) = verify_selected(goal, subject_body_span)?;
+    verify_steps(goal, selected, &selected_check, limits)?;
+    Ok(Graph {
+        first_use: &goal.subject.named_uses[1],
+        second_use: &goal.subject.named_uses[2],
+    })
+}
+/// The subject's shape, accepted submission and original source binding;
+/// returns the subject body's span in its original module.
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
-fn verify(goal: &ContractGoal, limits: Limits) -> Result<Graph<'_>, Diagnostic> {
+fn verify_subject(goal: &ContractGoal, limits: Limits) -> Result<Span, Diagnostic> {
     let subject = &goal.subject;
     let span = subject.source_span;
-    if goal.revision != 2
-        || !subject.effects.is_empty()
-        || subject.input_types != [Ty::I64]
-        || subject.output_types != [Ty::I64]
-        || subject.named_uses.len() != 3
-        || subject.source_dependencies.len() != 2
-    {
+    if subject_shape_differs(goal) {
         return Err(invalid(
             span,
             "named v2 needs a pure unary subject and one original imported module",
         ));
     }
-    let [root, first_use, second_use] = subject.named_uses.as_slice() else {
+    if subject.named_uses.len() != 3 {
         return Err(invalid(span, "named v2 use graph is incomplete"));
-    };
+    }
+    let root = &subject.named_uses[0];
+    let first_use = &subject.named_uses[1];
     if root.definition_owner == first_use.definition_owner
         || root.module_index == first_use.module_index
     {
@@ -489,64 +572,25 @@ fn verify(goal: &ContractGoal, limits: Limits) -> Result<Graph<'_>, Diagnostic> 
             "named v2 requires an original imported named definition",
         ));
     }
-    for (index, module) in subject.source_dependencies.iter().enumerate() {
-        if subject.source_dependencies[..index]
-            .iter()
-            .any(|prior| prior.owner == module.owner)
-        {
-            return Err(invalid(span, "duplicate named source module"));
-        }
+    if has_repeated_owner(&subject.source_dependencies) {
+        return Err(invalid(span, "duplicate named source module"));
     }
-    for (index, binding) in subject.named_imports.iter().enumerate() {
-        if binding.alias.is_empty()
-            || subject.named_imports[..index]
-                .iter()
-                .any(|earlier| earlier.alias == binding.alias)
-            || subject
-                .source_dependencies
-                .get(binding.module_index)
-                .is_none_or(|module| module.owner != binding.owner)
-        {
-            return Err(invalid(
-                span,
-                "retained import alias lacks unique original module",
-            ));
-        }
+    if has_unbound_alias(subject) {
+        return Err(invalid(
+            span,
+            "retained import alias lacks unique original module",
+        ));
     }
     let accepted = &subject.accepted_submission;
     let env = &accepted.environment;
-    if !unary(&accepted.request.expected)
-        || accepted.definitions.len() != 3
-        || env.defs.len() != env.kinds.len()
-        || env.defs.len() != env.deps.len()
-        || env.defs.len() != env.definition_owners.len()
-        || !super::canonical_wrapping_add(env)
-    {
+    if submission_differs(accepted) {
         return Err(invalid(
             span,
             "named submission or canonical wrapping add differs",
         ));
     }
     checked(&accepted.body, &accepted.request, env, span)?;
-    if root.caller_definition.is_some()
-        || root.source_node.is_some()
-        || root.source_span.is_some()
-        || root.definition_identity != subject.definition_identity
-        || root.definition_owner != subject.definition_owner
-        || root.definition_name != subject.definition
-        || root.definition_ordinal != subject.definition_ordinal
-        || root.definition_span != span
-        || at(span, &subject.module_source)? != subject.definition_source
-        || subject
-            .source_dependencies
-            .get(root.module_index)
-            .is_none_or(|module| {
-                module.owner != subject.definition_owner
-                    || module.module != subject.module
-                    || module.version != subject.version
-                    || module.full_source != subject.module_source
-            })
-    {
+    if root_binding_differs(subject, root)? {
         return Err(invalid(
             span,
             "subject source binding differs from original module",
@@ -571,41 +615,39 @@ fn verify(goal: &ContractGoal, limits: Limits) -> Result<Graph<'_>, Diagnostic> 
             "selected subject body differs from original source",
         ));
     }
-    let Some(selected) = accepted.definitions.iter().find(|item| {
+    Ok(subject_body_span)
+}
+/// The selected subject definition, the accepted root invocation and the two
+/// ordered call occurrences inside the subject body at `subject_body_span`;
+/// returns the selected definition with its checked body.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+fn verify_selected(
+    goal: &ContractGoal,
+    subject_body_span: Span,
+) -> Result<(&execution::Definition, untrusted::Checked), Diagnostic> {
+    let subject = &goal.subject;
+    let span = subject.source_span;
+    let root = &subject.named_uses[0];
+    let first_use = &subject.named_uses[1];
+    let second_use = &subject.named_uses[2];
+    let accepted = &subject.accepted_submission;
+    let env = &accepted.environment;
+    let Some(selected) = crate::scan::find_first(&accepted.definitions, |item| {
         item.definition == root.definition && item.identity == subject.definition_identity
     }) else {
         return Err(invalid(span, "unique selected named subject is absent"));
     };
-    if accepted
-        .definitions
-        .iter()
-        .filter(|item| {
-            item.definition == root.definition || item.identity == subject.definition_identity
-        })
-        .count()
-        != 1
-        || !named_scheme(env, selected.definition, subject.definition_owner)
-        || !unary(&selected.expected)
-        || selected.definition.0.checked_add(1) != Some(first_use.definition.0)
-        || first_use.definition.0.checked_add(1) != Some(second_use.definition.0)
-        || usize::try_from(second_use.definition.0)
-            .ok()
-            .and_then(|last| last.checked_add(1))
-            != Some(env.defs.len())
-        || usize::try_from(selected.definition.0)
-            .ok()
-            .and_then(|index| env.deps.get(index))
-            .map(Vec::as_slice)
-            != Some(&[first_use.definition, second_use.definition][..])
-    {
+    if selected_graph_differs(subject, selected) {
         return Err(invalid(
             span,
             "selected subject definition, owner or closed graph differs",
         ));
     }
     let root_node = node(&accepted.body, 0, span)?;
-    if !matches!(root_node, Node::Invocation {def,inst} if
-        *def == selected.definition && empty_inst(inst))
+    if !is_plain_invocation(root_node, selected.definition)
         || accepted.body.candidate.body != [root.candidate_node]
     {
         return Err(invalid(
@@ -616,22 +658,7 @@ fn verify(goal: &ContractGoal, limits: Limits) -> Result<Graph<'_>, Diagnostic> 
     let selected_check = checked(&selected.body, &body_request(accepted, selected), env, span)?;
     let first_node = node(&selected.body, 0, span)?;
     let second_node = node(&selected.body, 1, span)?;
-    if !matches!((first_node,second_node), (Node::Invocation {def:a,inst:ia},
-        Node::Invocation {def:b,inst:ib}) if *a == first_use.definition &&
-        *b == second_use.definition && empty_inst(ia) && empty_inst(ib))
-        || selected.body.candidate.body != [first_use.candidate_node, second_use.candidate_node]
-        || first_use.candidate_node == second_use.candidate_node
-        || first_use.source_node == second_use.source_node
-        || first_use.source_node.is_none()
-        || second_use.source_node.is_none()
-        || first_use.source_node != Some(first_use.candidate_node.0)
-        || second_use.source_node != Some(second_use.candidate_node.0)
-        || first_use.caller_definition != Some(selected.definition)
-        || second_use.caller_definition != Some(selected.definition)
-        || first_use.definition == second_use.definition
-        || first_use.definition == selected.definition
-        || second_use.definition == selected.definition
-    {
+    if calls_differ(subject, selected, first_node, second_node) {
         return Err(invalid(
             span,
             "subject body does not contain two distinct ordered source calls",
@@ -643,59 +670,47 @@ fn verify(goal: &ContractGoal, limits: Limits) -> Result<Graph<'_>, Diagnostic> 
             "named calls have no lexical source occurrences",
         ));
     };
-    if a_span.start < subject_body_span.start
-        || a_span.end > subject_body_span.end
-        || b_span.start < a_span.end
-        || b_span.end > subject_body_span.end
-        || at(a_span, &subject.module_source)?.is_empty()
-        || at(b_span, &subject.module_source)?.is_empty()
-    {
+    if occurrences_outside(subject, subject_body_span, a_span, b_span)? {
         return Err(invalid(
             span,
             "named call occurrence is outside ordered original subject body",
         ));
     }
+    Ok((selected, selected_check))
+}
+/// The two named steps: their source calls and typed occurrences, their fresh
+/// specializations of one original step, and that step's export.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+fn verify_steps(
+    goal: &ContractGoal,
+    selected: &execution::Definition,
+    selected_check: &untrusted::Checked,
+    limits: Limits,
+) -> Result<(), Diagnostic> {
+    let subject = &goal.subject;
+    let span = subject.source_span;
+    let root = &subject.named_uses[0];
+    let first_use = &subject.named_uses[1];
+    let second_use = &subject.named_uses[2];
+    let accepted = &subject.accepted_submission;
+    let env = &accepted.environment;
     source_call(goal, root, first_use, limits)?;
     source_call(goal, root, second_use, limits)?;
-    for (use_record, derived) in [first_use, second_use]
-        .into_iter()
-        .zip(&selected_check.derivations)
-    {
-        if derived.node != use_record.candidate_node
-            || derived.interface.stack_in != [Ty::I64]
-            || derived.interface.stack_out != [Ty::I64]
-            || derived.interface.effects != EffSet::empty()
-        {
-            return Err(invalid(span, "named occurrence has wrong typed derivation"));
-        }
-    }
-    let first = accepted
-        .definitions
-        .iter()
-        .find(|d| d.definition == first_use.definition)
-        .ok_or_else(|| invalid(span, "first named specialization is absent"))?;
-    let second = accepted
-        .definitions
-        .iter()
-        .find(|d| d.definition == second_use.definition)
-        .ok_or_else(|| invalid(span, "second named specialization is absent"))?;
-    for (use_record, definition) in [(first_use, first), (second_use, second)] {
-        source_origin(goal, use_record, limits)?;
-        if definition.identity != use_record.definition_identity
-            || !named_scheme(env, definition.definition, use_record.definition_owner)
-            || !unary(&definition.expected)
-            || usize::try_from(definition.definition.0)
-                .ok()
-                .and_then(|index| env.deps.get(index))
-                .map(Vec::as_slice)
-                != Some(&[Definition(4)][..])
-        {
-            return Err(invalid(
-                use_record.definition_span,
-                "named step identity, scheme or dependencies differ",
-            ));
-        }
-    }
+    unary_occurrence(first_use, selected_check.derivations.first(), span)?;
+    unary_occurrence(second_use, selected_check.derivations.get(1), span)?;
+    let first = crate::scan::find_first(&accepted.definitions, |d| {
+        d.definition == first_use.definition
+    })
+    .ok_or_else(|| invalid(span, "first named specialization is absent"))?;
+    let second = crate::scan::find_first(&accepted.definitions, |d| {
+        d.definition == second_use.definition
+    })
+    .ok_or_else(|| invalid(span, "second named specialization is absent"))?;
+    step_specialization(goal, first_use, first, limits)?;
+    step_specialization(goal, second_use, second, limits)?;
     let checked_first = checked(
         &first.body,
         &body_request(accepted, first),
@@ -708,45 +723,14 @@ fn verify(goal: &ContractGoal, limits: Limits) -> Result<Graph<'_>, Diagnostic> 
         env,
         second_use.definition_span,
     )?;
-    let a = &first.body.candidate;
-    let b = &second.body.candidate;
-    if a.format != b.format
-        || a.revision != b.revision
-        || a.body != b.body
-        || a.nodes.len() != b.nodes.len()
-        || a.nodes.iter().zip(&b.nodes).any(|(a, b)| match (a, b) {
-            (Node::Literal { lit: la, inst: ia }, Node::Literal { lit: lb, inst: ib }) => {
-                la != lb || !super::same_inst(ia, ib)
-            }
-            (Node::Invocation { def: da, inst: ia }, Node::Invocation { def: db, inst: ib }) => {
-                da != db || !super::same_inst(ia, ib)
-            }
-            _ => true,
-        })
-        || !same_derived(&checked_first, &checked_second)
-    {
+    if specializations_differ(first, second, &checked_first, &checked_second) {
         return Err(invalid(
             span,
             "fresh named specializations differ from one original step",
         ));
     }
     source_step(goal, first_use, first, &checked_first, limits)?;
-    if accepted.definitions.iter().any(|item| {
-        item.definition != selected.definition
-            && item.definition != first.definition
-            && item.definition != second.definition
-    }) || first_use.definition_owner != second_use.definition_owner
-        || first_use.definition_name != second_use.definition_name
-        || first_use.definition_ordinal != second_use.definition_ordinal
-        || first_use.definition_span != second_use.definition_span
-        || first_use.body_span != second_use.body_span
-        || first_use.module_index != second_use.module_index
-        || subject
-            .source_dependencies
-            .iter()
-            .enumerate()
-            .any(|(index, _)| index != root.module_index && index != first_use.module_index)
-    {
+    if step_graph_differs(subject, selected, first, second) {
         return Err(invalid(
             span,
             "named graph has orphan entries or inconsistent original step",
@@ -764,10 +748,417 @@ fn verify(goal: &ContractGoal, limits: Limits) -> Result<Graph<'_>, Diagnostic> 
             limits,
         )?;
     }
-    Ok(Graph {
-        first_use,
-        second_use,
-    })
+    Ok(())
+}
+/// Whether the subject is not a pure unary revision-2 subject with three
+/// named uses over two source modules.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn subject_shape_differs(goal: &ContractGoal) -> bool {
+    let subject = &goal.subject;
+    goal.revision != 2
+        || !subject.effects.is_empty()
+        || subject.input_types != [Ty::I64]
+        || subject.output_types != [Ty::I64]
+        || subject.named_uses.len() != 3
+        || subject.source_dependencies.len() != 2
+}
+/// Whether the accepted submission is not the unary three-definition
+/// canonical wrapping-add environment.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn submission_differs(accepted: &execution::Submission) -> bool {
+    let env = &accepted.environment;
+    !unary(&accepted.request.expected)
+        || accepted.definitions.len() != 3
+        || env.defs.len() != env.kinds.len()
+        || env.defs.len() != env.deps.len()
+        || env.defs.len() != env.definition_owners.len()
+        || !super::canonical_wrapping_add(env)
+}
+/// Whether the root use differs from the subject's own original source
+/// binding; refuses a subject span outside its retained module.
+fn root_binding_differs(
+    subject: &super::SubjectBinding,
+    root: &NamedUseOrigin,
+) -> Result<bool, Diagnostic> {
+    let span = subject.source_span;
+    Ok(root.caller_definition.is_some()
+        || root.source_node.is_some()
+        || root.source_span.is_some()
+        || root.definition_identity != subject.definition_identity
+        || root.definition_owner != subject.definition_owner
+        || root.definition_name != subject.definition
+        || root.definition_ordinal != subject.definition_ordinal
+        || root.definition_span != span
+        || at(span, &subject.module_source)? != subject.definition_source
+        || !is_subject_module(subject, root.module_index))
+}
+/// Whether `selected` is not the unique subject definition whose closed graph
+/// is the two named uses that directly follow it.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+fn selected_graph_differs(
+    subject: &super::SubjectBinding,
+    selected: &execution::Definition,
+) -> bool {
+    let accepted = &subject.accepted_submission;
+    let env = &accepted.environment;
+    let root = &subject.named_uses[0];
+    let first_use = &subject.named_uses[1];
+    let second_use = &subject.named_uses[2];
+    count_root_matches(
+        &accepted.definitions,
+        root.definition,
+        subject.definition_identity,
+    ) != 1
+        || !named_scheme(env, selected.definition, subject.definition_owner)
+        || !unary(&selected.expected)
+        || selected.definition.0.checked_add(1) != Some(first_use.definition.0)
+        || first_use.definition.0.checked_add(1) != Some(second_use.definition.0)
+        || usize::try_from(second_use.definition.0)
+            .ok()
+            .and_then(|last| last.checked_add(1))
+            != Some(env.defs.len())
+        || !definition_deps_are(
+            &env.deps,
+            selected.definition,
+            &[first_use.definition, second_use.definition],
+        )
+}
+/// Whether the selected body is not two distinct, ordered, plain source calls
+/// of the subject's first and second named uses.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn calls_differ(
+    subject: &super::SubjectBinding,
+    selected: &execution::Definition,
+    first_node: &Node,
+    second_node: &Node,
+) -> bool {
+    let first_use = &subject.named_uses[1];
+    let second_use = &subject.named_uses[2];
+    !(is_plain_invocation(first_node, first_use.definition)
+        && is_plain_invocation(second_node, second_use.definition))
+        || selected.body.candidate.body != [first_use.candidate_node, second_use.candidate_node]
+        || first_use.candidate_node == second_use.candidate_node
+        || first_use.source_node == second_use.source_node
+        || first_use.source_node.is_none()
+        || second_use.source_node.is_none()
+        || first_use.source_node != Some(first_use.candidate_node.0)
+        || second_use.source_node != Some(second_use.candidate_node.0)
+        || first_use.caller_definition != Some(selected.definition)
+        || second_use.caller_definition != Some(selected.definition)
+        || first_use.definition == second_use.definition
+        || first_use.definition == selected.definition
+        || second_use.definition == selected.definition
+}
+/// Whether the call occurrences `a_span` then `b_span` are not ordered inside
+/// the subject body or name empty source; refuses a span outside the module.
+fn occurrences_outside(
+    subject: &super::SubjectBinding,
+    body: Span,
+    a_span: Span,
+    b_span: Span,
+) -> Result<bool, Diagnostic> {
+    Ok(a_span.start < body.start
+        || a_span.end > body.end
+        || b_span.start < a_span.end
+        || b_span.end > body.end
+        || at(a_span, &subject.module_source)?.is_empty()
+        || at(b_span, &subject.module_source)?.is_empty())
+}
+/// Whether the two fresh named specializations differ as candidates or in
+/// their checked derivations.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn specializations_differ(
+    first: &execution::Definition,
+    second: &execution::Definition,
+    checked_first: &untrusted::Checked,
+    checked_second: &untrusted::Checked,
+) -> bool {
+    let a = &first.body.candidate;
+    let b = &second.body.candidate;
+    a.format != b.format
+        || a.revision != b.revision
+        || a.body != b.body
+        || a.nodes.len() != b.nodes.len()
+        || nodes_differ(&a.nodes, &b.nodes)
+        || !same_derived(checked_first, checked_second)
+}
+/// Whether the graph holds a definition outside the subject and its two
+/// steps, or the two uses do not name one original step in another module.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn step_graph_differs(
+    subject: &super::SubjectBinding,
+    selected: &execution::Definition,
+    first: &execution::Definition,
+    second: &execution::Definition,
+) -> bool {
+    let root = &subject.named_uses[0];
+    let first_use = &subject.named_uses[1];
+    let second_use = &subject.named_uses[2];
+    has_orphan_definition(
+        &subject.accepted_submission.definitions,
+        selected.definition,
+        first.definition,
+        second.definition,
+    ) || first_use.definition_owner != second_use.definition_owner
+        || first_use.definition_name != second_use.definition_name
+        || first_use.definition_ordinal != second_use.definition_ordinal
+        || first_use.definition_span != second_use.definition_span
+        || first_use.body_span != second_use.body_span
+        || first_use.module_index != second_use.module_index
+        || has_other_module(&subject.source_dependencies, root, first_use)
+}
+/// Whether `node` invokes `definition` with an empty `Inst`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn is_plain_invocation(node: &Node, definition: Definition) -> bool {
+    matches!(node, Node::Invocation { def, inst } if *def == definition && empty_inst(inst))
+}
+/// Whether the module at `index` is the subject's own original module, as
+/// the negation of `get(index).is_none_or(..)` over its differences.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn is_subject_module(subject: &super::SubjectBinding, index: usize) -> bool {
+    match subject.source_dependencies.get(index) {
+        Some(module) => {
+            module.owner == subject.definition_owner
+                && module.module == subject.module
+                && module.version == subject.version
+                && module.full_source == subject.module_source
+        }
+        None => false,
+    }
+}
+/// Whether some module repeats the owner of an earlier one.
+fn has_repeated_owner(modules: &[super::ResolvedSourceModule]) -> bool {
+    let mut index = 0;
+    let mut is_repeated = false;
+    while !is_repeated && index < modules.len() {
+        is_repeated = owner_seen_before(modules, index);
+        index += 1;
+    }
+    is_repeated
+}
+/// Whether a module before `index` has the owner of the module at `index`.
+fn owner_seen_before(modules: &[super::ResolvedSourceModule], index: usize) -> bool {
+    let owner = modules[index].owner;
+    let mut prior = 0;
+    let mut is_seen = false;
+    while !is_seen && prior < index {
+        is_seen = modules[prior].owner == owner;
+        prior += 1;
+    }
+    is_seen
+}
+/// Whether some retained import alias lacks a unique original module.
+fn has_unbound_alias(subject: &super::SubjectBinding) -> bool {
+    let mut index = 0;
+    let mut is_unbound = false;
+    while !is_unbound && index < subject.named_imports.len() {
+        is_unbound = is_unbound_alias(subject, index);
+        index += 1;
+    }
+    is_unbound
+}
+/// Whether the import at `index` has an empty alias, repeats an earlier alias,
+/// or names a module index whose retained module has another owner.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn is_unbound_alias(subject: &super::SubjectBinding, index: usize) -> bool {
+    let binding = &subject.named_imports[index];
+    binding.alias.is_empty()
+        || alias_position(&subject.named_imports, &binding.alias, 0)
+            .is_some_and(|first| first < index)
+        || match subject.source_dependencies.get(binding.module_index) {
+            Some(module) => module.owner != binding.owner,
+            None => true,
+        }
+}
+/// The number of definitions in `definition`'s slot or with `identity`, as
+/// `definitions.iter().filter(..).count()`.
+fn count_root_matches(
+    definitions: &[execution::Definition],
+    definition: Definition,
+    identity: u64,
+) -> usize {
+    let mut index = 0;
+    let mut count = 0usize;
+    while index < definitions.len() {
+        if is_root_match(&definitions[index], definition, identity) {
+            count += 1;
+        }
+        index += 1;
+    }
+    count
+}
+/// Whether `item` occupies `definition`'s slot or carries `identity`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn is_root_match(item: &execution::Definition, definition: Definition, identity: u64) -> bool {
+    item.definition == definition || item.identity == identity
+}
+/// Whether `definition` depends on exactly `expected`, as
+/// `usize::try_from(definition.0).ok().and_then(|index| deps.get(index)).map(Vec::as_slice) == Some(expected)`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn definition_deps_are(
+    deps: &[Vec<Definition>],
+    definition: Definition,
+    expected: &[Definition],
+) -> bool {
+    match usize::try_from(definition.0) {
+        Ok(index) => super::deps_are(deps, index, expected),
+        Err(_) => false,
+    }
+}
+/// Refuse a named occurrence whose derivation at the same position, when
+/// there is one, is not the pure unary I64 typing of that occurrence's node.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn unary_occurrence(
+    use_record: &NamedUseOrigin,
+    derived: Option<&untrusted::Derivation>,
+    span: Span,
+) -> Result<(), Diagnostic> {
+    match derived {
+        Some(derived)
+            if derived.node != use_record.candidate_node
+                || derived.interface.stack_in != [Ty::I64]
+                || derived.interface.stack_out != [Ty::I64]
+                || derived.interface.effects != EffSet::empty() =>
+        {
+            Err(invalid(span, "named occurrence has wrong typed derivation"))
+        }
+        Some(_) | None => Ok(()),
+    }
+}
+/// Check one named step: its original source, then its identity, scheme,
+/// unary interface and sole builtin dependency.
+#[expect(
+    tigerstyle::compound_condition,
+    reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+)]
+fn step_specialization(
+    goal: &ContractGoal,
+    use_record: &NamedUseOrigin,
+    definition: &execution::Definition,
+    limits: Limits,
+) -> Result<(), Diagnostic> {
+    source_origin(goal, use_record, limits)?;
+    let env = &goal.subject.accepted_submission.environment;
+    if definition.identity != use_record.definition_identity
+        || !named_scheme(env, definition.definition, use_record.definition_owner)
+        || !unary(&definition.expected)
+        || !definition_deps_are(&env.deps, definition.definition, &[Definition(4)])
+    {
+        return Err(invalid(
+            use_record.definition_span,
+            "named step identity, scheme or dependencies differ",
+        ));
+    }
+    Ok(())
+}
+/// Whether two nodes differ in kind, literal, definition or `Inst`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn node_differs(a: &Node, b: &Node) -> bool {
+    match (a, b) {
+        (Node::Literal { lit: la, inst: ia }, Node::Literal { lit: lb, inst: ib }) => {
+            la != lb || !super::same_inst(ia, ib)
+        }
+        (Node::Invocation { def: da, inst: ia }, Node::Invocation { def: db, inst: ib }) => {
+            da != db || !super::same_inst(ia, ib)
+        }
+        _ => true,
+    }
+}
+/// Whether some pair of nodes at the same position differs, as
+/// `left.iter().zip(right).any(..)` over `node_differs`.
+fn nodes_differ(left: &[Node], right: &[Node]) -> bool {
+    let mut index = 0;
+    let mut is_different = false;
+    while !is_different && index < left.len() && index < right.len() {
+        is_different = node_differs(&left[index], &right[index]);
+        index += 1;
+    }
+    is_different
+}
+/// Whether some definition is none of the selected subject and its two steps.
+fn has_orphan_definition(
+    definitions: &[execution::Definition],
+    selected: Definition,
+    first: Definition,
+    second: Definition,
+) -> bool {
+    let mut index = 0;
+    let mut is_orphan = false;
+    while !is_orphan && index < definitions.len() {
+        is_orphan = is_other_definition(&definitions[index], selected, first, second);
+        index += 1;
+    }
+    is_orphan
+}
+/// Whether `item` is none of the three given definitions.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn is_other_definition(
+    item: &execution::Definition,
+    selected: Definition,
+    first: Definition,
+    second: Definition,
+) -> bool {
+    item.definition != selected && item.definition != first && item.definition != second
+}
+/// Whether some retained module index is neither the root's nor the step's.
+fn has_other_module(
+    modules: &[super::ResolvedSourceModule],
+    root: &NamedUseOrigin,
+    step: &NamedUseOrigin,
+) -> bool {
+    let mut index = 0;
+    let mut is_other = false;
+    while !is_other && index < modules.len() {
+        is_other = index != root.module_index && index != step.module_index;
+        index += 1;
+    }
+    is_other
 }
 
 fn bytes(mut out: String, source: &[u8]) -> String {
@@ -822,22 +1213,15 @@ fn statement(goal: &ContractGoal, graph: &Graph<'_>, limits: Limits) -> Result<S
     out = provenance(out, goal, &goal.subject.named_uses[0])?;
     out.push_str("\nprivate def callee : Provenance := ");
     out = provenance(out, goal, graph.first_use)?;
-    for (name, record) in [("A", graph.first_use), ("B", graph.second_use)] {
-        let occurrence = record
-            .source_node
-            .ok_or_else(|| invalid(record.definition_span, "named source occurrence is absent"))?;
-        out.push_str(&format!("\ndef use{name} : Use := {{ slot := {}, occurrence := {}, caller, origin := callee, input := [.i64], output := [.i64] }}",
-            record.definition.0, occurrence));
-        out.push_str(&format!("\ndef entry{name} : Entry := {{ slot := {}, origin := callee, input := [.i64], output := [.i64], body := [.lit (.i64 1), .word 4], dependencies := [], rank := 0 }}",record.definition.0));
-    }
+    out = use_entry(out, "A", graph.first_use)?;
+    out = use_entry(out, "B", graph.second_use)?;
     out.push_str("\nprivate def env : Environment := { entries := [entryA, entryB] }\n");
     out.push_str("private def root : List NamedV1.Op := [.call useA, .call useB]\n");
     out.push_str("private theorem closure : ExactClosure env caller root [useA.slot, useB.slot] 1 := by\n  simp [ExactClosure, env, entryA, entryB, root, useA, useB, usesCode, usesOp, usesValue, Environment.lookup, Entry.matches]\n");
     out.push_str("private theorem typedA : NamedV1.CodeTyped env entryA.body [.i64] [.i64] := by\n  exact .cons (.lit .i64) (.cons (NamedV1.OpTyped.add (s := [])) .nil)\n");
     out.push_str("private theorem typedB : NamedV1.CodeTyped env entryB.body [.i64] [.i64] := by\n  exact .cons (.lit .i64) (.cons (NamedV1.OpTyped.add (s := [])) .nil)\n");
     out.push_str("private theorem typedRoot : NamedV1.CodeTyped env root [.i64] [.i64] := by\n  exact .cons (NamedV1.OpTyped.call (entry := entryA) (s := []) (by rfl) (by simp [Entry.matches, entryA, useA]) typedA) (.cons (NamedV1.OpTyped.call (entry := entryB) (s := []) (by rfl) (by simp [Entry.matches, entryB, useB]) typedB) .nil)\n");
-    out.push_str("def subject : Subject :=\n  { provenance := caller, env, root, dependencies := [useA.slot, useB.slot], rank := 1,\n    closure, checkedEntries := by\n      intro entry he\n      simp only [env, List.mem_cons, List.mem_nil_iff, or_false] at he\n      rcases he with rfl | rfl\n      · exact typedA\n      · exact typedB,\n    input := [.i64], output := [.i64], typed := typedRoot }\n");
-    out.push_str("def claim : Prop := NobleContracts.NamedV2.exportedNamedClaim subject []\n  (fun before after params => NobleContracts.NamedV2.Holds₂ subject.env (.bool true) before after params)\n  (fun before after params => NobleContracts.NamedV2.Holds₂ subject.env (.eq (.output 0) (.add (.input 0) (.i64 2))) before after params)\nend NamedV2Obligation\n");
+    out = subject_and_claim(out);
     let is_within_work = u32::try_from(out.len()).is_ok_and(|len| len <= limits.work);
     let is_within_bytes = u64::try_from(out.len())
         .ok()
@@ -849,6 +1233,32 @@ fn statement(goal: &ContractGoal, graph: &Graph<'_>, limits: Limits) -> Result<S
             "named proof statement exceeds bounded source budget",
         ));
     }
+    Ok(out)
+}
+/// `out` with the obligation's `subject` and `claim` definitions appended.
+/// Their non-ASCII Lean symbols (U+00B7 and U+2082) are appended as code
+/// points, because the extraction cannot print non-ASCII string literals.
+fn subject_and_claim(mut out: String) -> String {
+    out.push_str("def subject : Subject :=\n  { provenance := caller, env, root, dependencies := [useA.slot, useB.slot], rank := 1,\n    closure, checkedEntries := by\n      intro entry he\n      simp only [env, List.mem_cons, List.mem_nil_iff, or_false] at he\n      rcases he with rfl | rfl\n      ");
+    out = super::push_code_point(out, 0x00B7);
+    out.push_str(" exact typedA\n      ");
+    out = super::push_code_point(out, 0x00B7);
+    out.push_str(" exact typedB,\n    input := [.i64], output := [.i64], typed := typedRoot }\n");
+    out.push_str("def claim : Prop := NobleContracts.NamedV2.exportedNamedClaim subject []\n  (fun before after params => NobleContracts.NamedV2.Holds");
+    out = super::push_code_point(out, 0x2082);
+    out.push_str(" subject.env (.bool true) before after params)\n  (fun before after params => NobleContracts.NamedV2.Holds");
+    out = super::push_code_point(out, 0x2082);
+    out.push_str(" subject.env (.eq (.output 0) (.add (.input 0) (.i64 2))) before after params)\nend NamedV2Obligation\n");
+    out
+}
+/// Append the Lean `use` and `entry` definitions of one named occurrence.
+fn use_entry(mut out: String, name: &str, record: &NamedUseOrigin) -> Result<String, Diagnostic> {
+    let occurrence = record
+        .source_node
+        .ok_or_else(|| invalid(record.definition_span, "named source occurrence is absent"))?;
+    out.push_str(&format!("\ndef use{name} : Use := {{ slot := {}, occurrence := {}, caller, origin := callee, input := [.i64], output := [.i64] }}",
+        record.definition.0, occurrence));
+    out.push_str(&format!("\ndef entry{name} : Entry := {{ slot := {}, origin := callee, input := [.i64], output := [.i64], body := [.lit (.i64 1), .word 4], dependencies := [], rank := 0 }}",record.definition.0));
     Ok(out)
 }
 #[expect(
@@ -910,46 +1320,74 @@ fn selected_assertion(goal: &ContractGoal) -> Result<(), Diagnostic> {
     }
     Ok(())
 }
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
-)]
 pub(super) fn check_contract<'m>(
     obligation: &ProofObligation,
     goal: &ContractGoal,
     mut meter: Meter<'m>,
 ) -> Transition<'m, CheckedProof> {
-    let result = (|| -> Result<CheckedProof, Diagnostic> {
-        selected_assertion(goal)?;
-        let _ = verify(goal, meter.limits)?;
-        // A source proof explicitly supplies both ordered call slices and their
-        // literal/add expansions. No unchecked Lean source is accepted as a term.
-        let rule = operation(&obligation.term, "export-named-unary-I64", 4)?;
-        for (index, slice) in rule[..2].iter().enumerate() {
-            let call = operation(slice, "pc-named-call", 3)?;
-            if atom(&call[0])?.parse::<usize>().ok() != Some(index) {
-                return Err(invalid(
-                    call[0].span,
-                    "named call slice does not match source order",
-                ));
-            }
-            operation(&call[1], "exec-literal-1", 0)?;
-            operation(&call[2], "exec-add", 0)?;
-        }
-        operation(&rule[2], "by-exact-tail", 0)?;
-        operation(&rule[3], "named-true-eq-wrap", 0)?;
-        let lean_term = String::from("(NobleContracts.NamedV2.twoStepClaim NamedV2Obligation.subject NamedV2Obligation.useA NamedV2Obligation.useB NamedV2Obligation.entryA NamedV2Obligation.entryB (by rfl) (by rfl) (by rfl) (by decide) (by decide) (by rfl) (by rfl) (by simp [NamedV1.Entry.matches, NamedV2Obligation.entryA, NamedV2Obligation.useA]) (by simp [NamedV1.Entry.matches, NamedV2Obligation.entryB, NamedV2Obligation.useB]) (by rfl) (by rfl))");
-        let (next, charged) = meter.charge(lean_term.len(), obligation.span);
-        meter = next;
-        charged?;
-        Ok(CheckedProof {
-            name: obligation.name.clone(),
-            kind: ProofKind::NamedContract,
-            lean_term,
-            claim: String::from("NamedV2Obligation.claim"),
-            model_revision: String::new(),
-            checker_revision: String::new(),
-        })
-    })();
+    let result = two_call_proof(obligation, goal, &mut meter);
     (meter, result)
+}
+/// Check the selected two-call named rule of a source proof against its contract.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the meter is the caller's owned transition state, written back through this borrow on every path"
+)]
+fn two_call_proof(
+    obligation: &ProofObligation,
+    goal: &ContractGoal,
+    meter: &mut Meter<'_>,
+) -> Result<CheckedProof, Diagnostic> {
+    selected_assertion(goal)?;
+    let _ = verify(goal, meter.limits)?;
+    // A source proof explicitly supplies both ordered call slices and their
+    // literal/add expansions. No unchecked Lean source is accepted as a term.
+    let rule = operation(&obligation.term, "export-named-unary-I64", 4)?;
+    call_slice(&rule[0], 0)?;
+    call_slice(&rule[1], 1)?;
+    operation(&rule[2], "by-exact-tail", 0)?;
+    operation(&rule[3], "named-true-eq-wrap", 0)?;
+    let lean_term = String::from("(NobleContracts.NamedV2.twoStepClaim NamedV2Obligation.subject NamedV2Obligation.useA NamedV2Obligation.useB NamedV2Obligation.entryA NamedV2Obligation.entryB (by rfl) (by rfl) (by rfl) (by decide) (by decide) (by rfl) (by rfl) (by simp [NamedV1.Entry.matches, NamedV2Obligation.entryA, NamedV2Obligation.useA]) (by simp [NamedV1.Entry.matches, NamedV2Obligation.entryB, NamedV2Obligation.useB]) (by rfl) (by rfl))");
+    let (next, charged) = meter.charge(lean_term.len(), obligation.span);
+    *meter = next;
+    charged?;
+    Ok(CheckedProof {
+        name: obligation.name.clone(),
+        kind: ProofKind::NamedContract,
+        lean_term,
+        claim: String::from("NamedV2Obligation.claim"),
+        model_revision: String::new(),
+        checker_revision: String::new(),
+    })
+}
+/// Check one ordered named call slice: its source position, literal and add.
+fn call_slice(slice: &Form, index: usize) -> Result<(), Diagnostic> {
+    let call = operation(slice, "pc-named-call", 3)?;
+    if atom(&call[0])?.parse::<usize>().ok() != Some(index) {
+        return Err(invalid(
+            call[0].span,
+            "named call slice does not match source order",
+        ));
+    }
+    operation(&call[1], "exec-literal-1", 0)?;
+    operation(&call[2], "exec-add", 0)?;
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    /// The `subject` and `claim` templates as literals, before their non-ASCII
+    /// symbols moved to code points.
+    const SUBJECT: &str = "def subject : Subject :=\n  { provenance := caller, env, root, dependencies := [useA.slot, useB.slot], rank := 1,\n    closure, checkedEntries := by\n      intro entry he\n      simp only [env, List.mem_cons, List.mem_nil_iff, or_false] at he\n      rcases he with rfl | rfl\n      · exact typedA\n      · exact typedB,\n    input := [.i64], output := [.i64], typed := typedRoot }\n";
+    const CLAIM: &str = "def claim : Prop := NobleContracts.NamedV2.exportedNamedClaim subject []\n  (fun before after params => NobleContracts.NamedV2.Holds₂ subject.env (.bool true) before after params)\n  (fun before after params => NobleContracts.NamedV2.Holds₂ subject.env (.eq (.output 0) (.add (.input 0) (.i64 2))) before after params)\nend NamedV2Obligation\n";
+
+    #[test]
+    fn subject_and_claim_match_the_literal_templates() {
+        let emitted = super::subject_and_claim(alloc::string::String::from("prefix\n"));
+        assert_eq!(emitted, alloc::format!("prefix\n{SUBJECT}{CLAIM}"));
+    }
 }

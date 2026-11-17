@@ -122,20 +122,54 @@ fn word(
 }
 
 pub(super) fn name(name: &str) -> bool {
-    let mut bytes = name.bytes();
-    let first = bytes.next();
-    matches!(first, Some(b'a'..=b'z' | b'A'..=b'Z' | b'_'))
-        && bytes.all(|c| c.is_ascii_alphanumeric() || c == b'_')
+    let bytes = name.as_bytes();
+    starts_identifier(bytes)
+        && super::position_first(&bytes[1..], |c| outside_name(*c)).is_none()
         && !reserved_name(name)
 }
 
 // Intrinsic declaration identifiers include hyphenated proof/theorem names,
 // without widening ordinary definition, type, module, or alias identifiers.
 pub(super) fn logical_name(name: &str) -> bool {
-    let mut bytes = name.bytes();
-    matches!(bytes.next(), Some(b'a'..=b'z' | b'A'..=b'Z' | b'_'))
-        && bytes.all(|c| c.is_ascii_alphanumeric() || matches!(c, b'_' | b'-'))
+    let bytes = name.as_bytes();
+    starts_identifier(bytes)
+        && super::position_first(&bytes[1..], |c| outside_logical_name(*c)).is_none()
         && !reserved_name(name)
+}
+
+/// Whether `byte` cannot continue an ordinary name.
+const fn outside_name(byte: u8) -> bool {
+    // An if/else chain rather than a negated disjunction: the pinned Aeneas
+    // binds the disjunction so that the negation elaborates as a Prop.
+    if byte.is_ascii_alphanumeric() {
+        false
+    } else {
+        byte != b'_'
+    }
+}
+
+/// Whether `byte` cannot continue a logical name.
+#[expect(
+    clippy::if_same_then_else,
+    reason = "Owner: noble-contracts; the branches stay separate so the pinned Aeneas never binds a disjunction whose negation elaborates as a Prop"
+)]
+const fn outside_logical_name(byte: u8) -> bool {
+    if byte.is_ascii_alphanumeric() {
+        false
+    } else if byte == b'_' {
+        false
+    } else {
+        byte != b'-'
+    }
+}
+
+/// Whether `bytes` begins with an ASCII letter or underscore.
+const fn starts_identifier(bytes: &[u8]) -> bool {
+    if bytes.is_empty() {
+        return false;
+    }
+    let first = bytes[0];
+    first.is_ascii_alphabetic() || first == b'_'
 }
 
 fn reserved_name(name: &str) -> bool {
@@ -172,7 +206,7 @@ fn reserved_name(name: &str) -> bool {
 )]
 fn valid_version(version: &str) -> bool {
     !version.is_empty()
-        && version.bytes().all(|c| c.is_ascii_digit())
+        && super::all_ascii_digits(version)
         && version.as_bytes().first() != Some(&b'0')
 }
 
@@ -493,4 +527,21 @@ fn token_slots(limits: crate::Limits, source_bytes: usize) -> Result<usize, crat
                 "token limit exceeds the host address space",
             )
         })
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn name_byte_predicates_match_the_negated_disjunctions_on_every_byte() {
+        for byte in 0..=u8::MAX {
+            assert_eq!(
+                super::outside_name(byte),
+                !(byte.is_ascii_alphanumeric() || byte == b'_')
+            );
+            assert_eq!(
+                super::outside_logical_name(byte),
+                !(byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-')
+            );
+        }
+    }
 }

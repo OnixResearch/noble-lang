@@ -248,7 +248,7 @@ fn listed_edge(
         return Err(crate::Diagnostic::Invalid);
     }
     let mut previous = 0usize;
-    while previous < edge && listed[edge] != listed[previous] {
+    while previous < edge && listed[edge].0 != listed[previous].0 {
         previous += 1;
     }
     if previous != edge {

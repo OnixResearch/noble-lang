@@ -19,6 +19,8 @@ mod acceptance;
 mod alias;
 #[path = "admission/guards/criteria.rs"]
 mod criteria;
+#[path = "admission/guards/ordering.rs"]
+mod ordering;
 
 fn evidence(
     record: &ProcedureRecord,

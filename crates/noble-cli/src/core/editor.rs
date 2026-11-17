@@ -185,7 +185,7 @@ fn failure_object(
             ("failing_word", string(&join.word)),
             ("expected_stack", string(&join.expected_stack)),
             ("actual_stack", string(&join.actual_stack)),
-            ("constraint", string(join.constraint)),
+            ("constraint", string(&join.constraint)),
             (
                 "value_origin",
                 match join.value_origin {
@@ -501,7 +501,7 @@ mod tests {
             word: word.into(),
             expected_stack: "?stack I64 I64".into(),
             actual_stack: "?stack Text".into(),
-            constraint: "joining:stack",
+            constraint: "joining:stack".into(),
             value_origin: Some(span),
             difference: Some(noble_contracts::StackDifference {
                 shared_prefix: 0,
@@ -551,7 +551,7 @@ mod tests {
             word: "dup dup".into(),
             expected_stack: "?stack".into(),
             actual_stack: "?stack".into(),
-            constraint: "joining:stack",
+            constraint: "joining:stack".into(),
             value_origin: None,
             difference: None,
         });

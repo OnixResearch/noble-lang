@@ -7,6 +7,77 @@ pub(super) struct Output<'a> {
 }
 
 impl<'a> Output<'a> {
+    /// The action of a declared non-`Named` behaviour. A builtin behaviour on
+    /// a definition past the builtin prefix is refused.
+    pub(super) fn behavior_action(
+        self,
+        kind: noble_kernel::contracts::Behavior,
+    ) -> Result<super::super::Action, crate::Diagnostic> {
+        match kind {
+            noble_kernel::contracts::Behavior::BoundEmit(slot) => self.bound_action(slot),
+            noble_kernel::contracts::Behavior::BoundClock(slot) => self.clock_action(slot),
+            noble_kernel::contracts::Behavior::BoundCodeExport(slot) => {
+                self.code_export_action(slot)
+            }
+            noble_kernel::contracts::Behavior::BoundSend(slot) => self.send_action(slot),
+            noble_kernel::contracts::Behavior::NominalNew(id) => self.new_action(id),
+            noble_kernel::contracts::Behavior::NominalInto(id) => {
+                let input_index = attempt!(Self::checked_input(self.env, self.interface, id, 1));
+                self.into_action(id, input_index)
+            }
+            noble_kernel::contracts::Behavior::NominalLeft(id) => self.variant_action(true, id),
+            noble_kernel::contracts::Behavior::NominalRight(id) => self.variant_action(false, id),
+            noble_kernel::contracts::Behavior::NominalMatch(id) => {
+                let input_index = attempt!(Self::checked_input(self.env, self.interface, id, 3));
+                self.match_action(id, input_index)
+            }
+            noble_kernel::contracts::Behavior::GenericLeft(id) => {
+                self.generic_variant_action(true, id)
+            }
+            noble_kernel::contracts::Behavior::GenericRight(id) => {
+                self.generic_variant_action(false, id)
+            }
+            noble_kernel::contracts::Behavior::GenericMatch(id) => self.generic_match_action(id),
+            noble_kernel::contracts::Behavior::Dup
+            | noble_kernel::contracts::Behavior::Drop
+            | noble_kernel::contracts::Behavior::Swap
+            | noble_kernel::contracts::Behavior::Dip
+            | noble_kernel::contracts::Behavior::Arith
+            | noble_kernel::contracts::Behavior::Equals
+            | noble_kernel::contracts::Behavior::Quote
+            | noble_kernel::contracts::Behavior::Compose
+            | noble_kernel::contracts::Behavior::Run
+            | noble_kernel::contracts::Behavior::Reflect
+            | noble_kernel::contracts::Behavior::Unit
+            | noble_kernel::contracts::Behavior::Pair
+            | noble_kernel::contracts::Behavior::Unpair
+            | noble_kernel::contracts::Behavior::Inl
+            | noble_kernel::contracts::Behavior::Inr
+            | noble_kernel::contracts::Behavior::Case
+            | noble_kernel::contracts::Behavior::If
+            | noble_kernel::contracts::Behavior::Nil
+            | noble_kernel::contracts::Behavior::Cons
+            | noble_kernel::contracts::Behavior::ListCase
+            | noble_kernel::contracts::Behavior::TestEmit
+            | noble_kernel::contracts::Behavior::Reserved
+            | noble_kernel::contracts::Behavior::TextByte
+            | noble_kernel::contracts::Behavior::I64Less
+            | noble_kernel::contracts::Behavior::CheckedI64Add
+            | noble_kernel::contracts::Behavior::CheckedI64Sub
+            | noble_kernel::contracts::Behavior::CheckedI64Mul
+            | noble_kernel::contracts::Behavior::CheckedI64Neg
+            | noble_kernel::contracts::Behavior::CheckedI64Abs
+            | noble_kernel::contracts::Behavior::CheckedI64Less
+            | noble_kernel::contracts::Behavior::CheckedI64DivRem
+            | noble_kernel::contracts::Behavior::CalculatorIterate
+            | noble_kernel::contracts::Behavior::CalculatorCompare
+            | noble_kernel::contracts::Behavior::CalculatorDivRem
+            | noble_kernel::contracts::Behavior::CalculatorTextFromAscii
+            | noble_kernel::contracts::Behavior::CalculatorTextLength
+            | noble_kernel::contracts::Behavior::Named => Err(crate::Diagnostic::Invalid),
+        }
+    }
+
     pub(super) fn new_action(
         self,
         id: noble_kernel::types::NominalTypeId,
@@ -44,33 +115,30 @@ impl<'a> Output<'a> {
 
     pub(super) fn bound_action(self, slot: u32) -> Result<super::super::Action, crate::Diagnostic> {
         let env = self.env;
-        let mut index = 0;
-        while index < env.bound_adapters.len() {
-            if env.bound_adapters[index].adapter_slot == slot {
-                return Ok(super::super::Action::EmitBound(slot));
-            }
-            index += 1;
+        let is_bound_adapter =
+            crate::scan::find_first(&env.bound_adapters, |row| row.adapter_slot == slot).is_some();
+        if is_bound_adapter {
+            Ok(super::super::Action::EmitBound(slot))
+        } else {
+            Err(crate::Diagnostic::Invalid)
         }
-        Err(crate::Diagnostic::Invalid)
     }
 
     pub(super) fn clock_action(self, slot: u32) -> Result<super::super::Action, crate::Diagnostic> {
-        for row in &self.env.bound_adapters {
-            let is_clock_adapter = row.adapter_slot == slot
+        let is_clock_adapter = crate::scan::find_first(&self.env.bound_adapters, |row| {
+            row.adapter_slot == slot
                 && row.input.is_empty()
                 && row.output.as_slice() == [noble_kernel::types::Ty::I64]
-                && row.effects.as_slice() == [noble_kernel::contracts::TEST_CLOCK];
-            if is_clock_adapter {
-                return Ok(super::super::Action::ClockBound(slot));
-            }
+                && row.effects.as_slice() == [noble_kernel::contracts::TEST_CLOCK]
+        })
+        .is_some();
+        if is_clock_adapter {
+            Ok(super::super::Action::ClockBound(slot))
+        } else {
+            Err(crate::Diagnostic::Invalid)
         }
-        Err(crate::Diagnostic::Invalid)
     }
 
-    #[expect(
-        tigerstyle::compound_condition,
-        reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
-    )]
     pub(super) fn code_export_action(
         self,
         slot: u32,
@@ -78,37 +146,37 @@ impl<'a> Output<'a> {
         if !self.compiler.worker_inputs {
             return Err(crate::Diagnostic::Invalid);
         }
-        for row in &self.env.bound_adapters {
-            if row.adapter_slot == slot
+        let is_code_export_adapter = crate::scan::find_first(&self.env.bound_adapters, |row| {
+            row.adapter_slot == slot
                 && row.input.as_slice()
                     == [noble_kernel::types::Ty::Text, noble_kernel::types::Ty::Text]
                 && row.output.is_empty()
                 && row.effects.as_slice() == [noble_kernel::contracts::TEST_CODE_EXPORT]
-            {
-                return Ok(super::super::Action::CodeExportBound(slot));
-            }
+        })
+        .is_some();
+        if is_code_export_adapter {
+            Ok(super::super::Action::CodeExportBound(slot))
+        } else {
+            Err(crate::Diagnostic::Invalid)
         }
-        Err(crate::Diagnostic::Invalid)
     }
 
-    #[expect(
-        tigerstyle::compound_condition,
-        reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
-    )]
     pub(super) fn send_action(self, slot: u32) -> Result<super::super::Action, crate::Diagnostic> {
         if !self.compiler.worker_inputs {
             return Err(crate::Diagnostic::Invalid);
         }
-        for row in &self.env.bound_adapters {
-            if row.adapter_slot == slot
+        let is_send_adapter = crate::scan::find_first(&self.env.bound_adapters, |row| {
+            row.adapter_slot == slot
                 && row.input.as_slice() == [noble_kernel::types::Ty::Text]
                 && row.output.is_empty()
                 && row.effects.as_slice() == [noble_kernel::contracts::TEST_SEND]
-            {
-                return Ok(super::super::Action::SendBound(slot));
-            }
+        })
+        .is_some();
+        if is_send_adapter {
+            Ok(super::super::Action::SendBound(slot))
+        } else {
+            Err(crate::Diagnostic::Invalid)
         }
-        Err(crate::Diagnostic::Invalid)
     }
 
     pub(super) fn into_action(
@@ -151,9 +219,12 @@ impl<'a> Output<'a> {
         let env = self.env;
         let interface = self.interface;
         let ty = match interface.stack_out.last() {
-            Some(ty) if env.generic_instance_matches(ty, id) => ty,
-            Some(_) | None => return Err(crate::Diagnostic::Invalid),
+            Some(ty) => ty,
+            None => return Err(crate::Diagnostic::Invalid),
         };
+        if !env.generic_instance_matches(ty, id) {
+            return Err(crate::Diagnostic::Invalid);
+        }
         let noble_kernel::types::Ty::GenericNominal(_, _, shape) = ty else {
             return Err(crate::Diagnostic::Invalid);
         };

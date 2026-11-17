@@ -73,12 +73,11 @@ impl WordBuilder {
     }
     #[expect(
         tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; E0277/E0658 Vec deref and E0015 Iterator::any prevent const on both pinned Rust compilers; reassess const exported-name scanning."
+        reason = "Owner: noble-maintainers; E0277/E0658 Vec deref and E0015 scan::find_first prevent const on both pinned Rust compilers; reassess const exported-name scanning."
     )]
     fn has_exported_word(&self, exported: &str) -> bool {
-        self.exported_words
-            .iter()
-            .any(|(name, _)| name.as_str() == exported)
+        crate::scan::find_first(&self.exported_words, |(name, _)| name.as_str() == exported)
+            .is_some()
     }
 
     #[expect(

@@ -104,6 +104,9 @@ struct Frame {
     signature: Option<(u32, u32, bool)>,
 }
 
+/// The read-only inputs of one inference. It is a copy of borrows, passed by
+/// value so the pinned Aeneas never reads a borrow stored behind a borrow.
+#[derive(Clone, Copy)]
 pub(super) struct Scope<'a> {
     pub(super) root: &'a super::Tree,
     pub(super) session: &'a super::Session,
@@ -220,7 +223,7 @@ pub(super) fn infer(
             frame,
             &mut frames,
             &mut state,
-            &scope,
+            scope,
             matches!(mode, Mode::EditorAnalysis),
             meter,
         ) {
@@ -279,9 +282,16 @@ fn initial(
     inputs: &[noble_kernel::types::Ty],
     meter: &mut crate::Meter,
 ) -> Result<State, crate::Diagnostic> {
+    // Every session option is read once, before any branch on it, so the
+    // pinned Aeneas never folds an option a branch has shown absent into a
+    // literal `none` passed to a generic method.
+    let has_bindings = session.bindings.is_some();
+    let has_declared = session.declared.is_some();
+    let has_live_slots = session.live_slots.is_some();
+    let owner = session.declared.as_ref().and_then(|context| context.owner);
     let mut arena = crate::inference::Arena::source(
         session.effect_universe(),
-        session.bindings.is_some() || session.declared.is_some() || session.live_slots.is_some(),
+        has_bindings || has_declared || has_live_slots,
     );
     if let Some(bindings) = &session.bindings {
         arena.allow_program_type_effects(bindings.program_type_effects);
@@ -297,36 +307,28 @@ fn initial(
         arena.nominals = nominals;
         arena.generic_nominals = context.environment.generic_variants.clone();
     } else if let Some(profile) = &session.live_slots {
-        arena.nominals = profile
-            .environment
-            .nominals
-            .iter()
-            .map(|decl| (decl.id, decl.shape.clone()))
-            .collect();
+        let mut nominals = alloc::vec::Vec::with_capacity(profile.environment.nominals.len());
+        let mut at = 0usize;
+        while at < profile.environment.nominals.len() {
+            let declaration = &profile.environment.nominals[at];
+            nominals.push((declaration.id, declaration.shape.clone()));
+            at += 1;
+        }
+        arena.nominals = nominals;
         arena.generic_nominals = profile.environment.generic_variants.clone();
     }
-    let mut borrows = alloc::vec::Vec::new();
-    let mut value_inputs = alloc::vec::Vec::new();
-    if session.live_slots.is_some() {
-        for (position, ty) in inputs.iter().enumerate() {
-            if matches!(ty, noble_kernel::types::Ty::LiveRef(..)) {
-                borrows.push(Borrowed {
-                    ordinal: attempt!(crate::index(borrows.len(), tree.span)),
-                    logical_position: attempt!(crate::index(position, tree.span)),
-                    ty: ty.clone(),
-                });
-            } else {
-                value_inputs.push(ty.clone());
-            }
-        }
-    }
+    let (borrows, value_inputs) = if has_live_slots {
+        attempt!(split_inputs(inputs, tree.span))
+    } else {
+        (alloc::vec::Vec::new(), alloc::vec::Vec::new())
+    };
     #[expect(
         tigerstyle::fragile_exhaustive_enum_match,
         reason = "Owner: noble-maintainers; declarations must retain quantified stack holes while executable submissions use their supplied stack; any new inference mode must make this choice explicitly."
     )]
     let input = match mode {
         Mode::Submission => attempt!(arena.stack(
-            if session.live_slots.is_some() {
+            if has_live_slots {
                 &value_inputs
             } else {
                 inputs
@@ -335,20 +337,12 @@ fn initial(
             meter
         )),
         Mode::EditorAnalysis => {
-            let mut stack = attempt!(arena.add(
+            let stack = attempt!(arena.add(
                 crate::inference::Term::Hole(crate::inference::Sort::Stack),
                 tree.span,
                 meter
             ));
-            for ty in inputs {
-                let item = attempt!(arena.ty(ty, tree.span, meter));
-                stack = attempt!(arena.add(
-                    crate::inference::Term::Push(stack, item),
-                    tree.span,
-                    meter
-                ));
-            }
-            stack
+            attempt!(push_inputs(&mut arena, stack, inputs, tree.span, meter))
         }
         Mode::Declaration => attempt!(arena.add(
             crate::inference::Term::Hole(crate::inference::Sort::Stack),
@@ -358,6 +352,11 @@ fn initial(
     };
     let effect = attempt!(arena.effect_empty(tree.span, meter));
     attempt!(meter.node(tree.span));
+    let logical_inputs = if has_live_slots {
+        Some(inputs.to_vec())
+    } else {
+        None
+    };
     let mut bodies = alloc::vec::Vec::with_capacity(1);
     bodies.push(Body {
         nodes: alloc::vec::Vec::new(),
@@ -366,7 +365,7 @@ fn initial(
         output: input,
         effect,
         identity: None,
-        owner: session.declared.as_ref().and_then(|context| context.owner),
+        owner,
         owner_slot: None,
         owner_variables: None,
         span: tree.span,
@@ -378,9 +377,85 @@ fn initial(
         text_bytes: 0,
         definition_base: 0,
         holes: alloc::vec::Vec::new(),
-        logical_inputs: session.live_slots.as_ref().map(|_| inputs.to_vec()),
+        logical_inputs,
         borrows,
     })
+}
+
+/// Split supplied live-slot inputs into borrowed references and the value stack.
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions; growth is bounded by the supplied input slice that drives the loop."
+)]
+fn split_inputs(
+    inputs: &[noble_kernel::types::Ty],
+    span: crate::Span,
+) -> Result<
+    (
+        alloc::vec::Vec<Borrowed>,
+        alloc::vec::Vec<noble_kernel::types::Ty>,
+    ),
+    crate::Diagnostic,
+> {
+    let mut borrows = alloc::vec::Vec::new();
+    let mut value_inputs = alloc::vec::Vec::new();
+    let mut position = 0;
+    let mut failure = None;
+    while failure.is_none() && position < inputs.len() {
+        let ty = &inputs[position];
+        if matches!(ty, noble_kernel::types::Ty::LiveRef(..)) {
+            let borrowed = match crate::index(borrows.len(), span) {
+                Ok(ordinal) => match crate::index(position, span) {
+                    Ok(logical_position) => Ok(Borrowed {
+                        ordinal,
+                        logical_position,
+                        ty: ty.clone(),
+                    }),
+                    Err(problem) => Err(problem),
+                },
+                Err(problem) => Err(problem),
+            };
+            match borrowed {
+                Ok(borrowed) => borrows.push(borrowed),
+                Err(problem) => failure = Some(problem),
+            }
+        } else {
+            value_inputs.push(ty.clone());
+        }
+        position += 1;
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok((borrows, value_inputs)),
+    }
+}
+
+/// Push each supplied input type onto `stack`, bottom first.
+fn push_inputs(
+    arena: &mut crate::inference::Arena,
+    mut stack: u32,
+    inputs: &[noble_kernel::types::Ty],
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> Result<u32, crate::Diagnostic> {
+    let mut at = 0;
+    let mut failure = None;
+    while failure.is_none() && at < inputs.len() {
+        let pushed = match arena.ty(&inputs[at], span, meter) {
+            Ok(item) => arena.add(crate::inference::Term::Push(stack, item), span, meter),
+            Err(problem) => Err(problem),
+        };
+        match pushed {
+            Ok(next) => stack = next,
+            Err(problem) => failure = Some(problem),
+        }
+        at += 1;
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(stack),
+    }
 }
 
 #[expect(

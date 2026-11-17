@@ -329,10 +329,10 @@ fn checked(
         .map(|id| identity::specialization(id, admission.environment, admission.linked_slots));
     let draft_owner = draft.owner;
     let owner_slot = draft.owner_slot;
-    let owner_inst = if draft
-        .nodes
-        .iter()
-        .any(|node| matches!(node.kind, super::inference::DraftKind::SignedSelf(_)))
+    let owner_inst = if crate::scan::find_first(&draft.nodes, |node| {
+        matches!(node.kind, super::inference::DraftKind::SignedSelf(_))
+    })
+    .is_some()
     {
         let variables = draft.owner_variables.as_ref().ok_or_else(|| {
             super::Error::at(
@@ -357,11 +357,10 @@ fn checked(
     // alone is not evidence for any definition's implementation.
     let mut caller_environment = admission.environment.clone();
     caller_environment.caller_module = draft_owner;
-    let self_owner = if body
-        .candidate
-        .nodes
-        .iter()
-        .any(|node| matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. }))
+    let self_owner = if crate::scan::find_first(&body.candidate.nodes, |node| {
+        matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. })
+    })
+    .is_some()
     {
         let Some(owner_offset) = position.checked_sub(1) else {
             return Err(super::Error::at(
@@ -384,17 +383,26 @@ fn checked(
         None
     };
     let (result, work_used) = match self_owner {
-        Some(owner) => crate::program::check_signed_structure_with_work(
-            &caller_environment,
-            &body.candidate,
-            &request,
-            &spans,
-            span,
-            owner,
-            owner_inst.as_ref().ok_or_else(|| {
-                super::Error::at(crate::source::Stage::Check, crate::internal(span))
-            })?,
-        ),
+        Some(owner) => {
+            // Branch directly: on the path without signed nodes the owner
+            // instantiation is provably absent, and the extraction cannot
+            // type a generic Option helper applied to that constant.
+            let Some(inst) = &owner_inst else {
+                return Err(super::Error::at(
+                    crate::source::Stage::Check,
+                    crate::internal(span),
+                ));
+            };
+            crate::program::check_signed_structure_with_work(
+                &caller_environment,
+                &body.candidate,
+                &request,
+                &spans,
+                span,
+                owner,
+                inst,
+            )
+        }
         None => crate::program::check_with_work(
             &caller_environment,
             &body.candidate,

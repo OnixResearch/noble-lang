@@ -58,17 +58,22 @@ pub(super) fn resource(
 
 #[expect(
     tigerstyle::ambiguous_params,
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; this private resolver's interface and member name are separately named at both callsites and matched against their corresponding fields; iterator search, string equality and owned diagnostics are non-const."
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; this private resolver's interface and member name are separately named at both callsites and matched against their corresponding fields; an unknown resource is ordinary malformed WIT and returns a typed error rather than an assertion failure."
 )]
 fn scoped_resource(
     resources: &[crate::component::Resource],
     interface: &str,
     name: &str,
 ) -> Result<noble_kernel::types::ResourceKind, crate::component::Error> {
-    let position = resources
-        .iter()
-        .position(|resource| resource.name == name && resource.interface == interface);
+    let mut position = None;
+    let mut at = 0;
+    while position.is_none() && at < resources.len() {
+        if is_scoped_resource(&resources[at], interface, name) {
+            position = Some(at);
+        }
+        at += 1;
+    }
     let index = match position {
         Some(index) => index,
         None => {
@@ -85,10 +90,6 @@ fn scoped_resource(
     }
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; the finite immutable use scan returns an explicit ambiguity diagnostic rather than asserting namespace uniqueness on parsed input."
-)]
 fn use_index(
     selected: &super::super::RawWorld,
     name: &str,
@@ -97,19 +98,39 @@ fn use_index(
     let mut at = 0usize;
     let mut failure = None;
     while let Some(item) = selected.items.get(at) {
-        if let super::super::Item::Use(usage) = item {
-            if usage.name == name {
-                if scope.is_some() {
-                    failure = Some(crate::component::invalid("ambiguous WIT resource use"));
-                    break;
-                }
-                scope = Some(at);
+        if is_named_use(item, name) {
+            if scope.is_some() {
+                failure = Some(crate::component::invalid("ambiguous WIT resource use"));
+                break;
             }
+            scope = Some(at);
         }
         at = at.saturating_add(1);
     }
     match failure {
         Some(problem) => Err(problem),
         None => Ok(scope),
+    }
+}
+
+#[expect(
+    tigerstyle::ambiguous_params,
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the interface and member name are matched against their corresponding fields, mirroring scoped_resource; String content equality is non-const."
+)]
+/// Whether `resource` is the member `name` of `interface`.
+fn is_scoped_resource(resource: &crate::component::Resource, interface: &str, name: &str) -> bool {
+    resource.name == name && resource.interface == interface
+}
+
+/// Whether `item` is a `use` of the resource `name`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; String content equality is a non-const trait call."
+)]
+fn is_named_use(item: &super::super::Item, name: &str) -> bool {
+    match item {
+        super::super::Item::Use(usage) => usage.name == name,
+        super::super::Item::Function(..) | super::super::Item::Interface(..) => false,
     }
 }

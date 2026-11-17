@@ -139,12 +139,14 @@ impl Sections {
             return Err(crate::Diagnostic::Defective);
         };
         if interruptible {
-            let Some((before, after)) = head.split_once(OBSERVATION_TICK) else {
+            let Some((before, after)) =
+                super::split_once_bytes(head.as_bytes(), OBSERVATION_TICK.as_bytes())
+            else {
                 return Err(crate::Diagnostic::Defective);
             };
-            attempt!(out.append(before.as_bytes()));
+            attempt!(out.append(before));
             attempt!(out.append(b"(func $observation_charge (result i32)"));
-            attempt!(out.append(after.as_bytes()));
+            attempt!(out.append(after));
         } else {
             attempt!(out.append(head.as_bytes()));
         }

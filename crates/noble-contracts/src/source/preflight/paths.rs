@@ -1,30 +1,25 @@
+/// The type reached from `root` by following `path` in order, stopping at the
+/// first invalid step. It recurses over the path rather than looping: the
+/// pinned Aeneas accepts no loop that carries a borrow into the type tree.
 #[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; only the bounded private traversal builds these structural paths, and every child selection returns a diagnostic on an invalid path without recursion or input assertions."
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-maintainers; each call consumes one step of a path that the bounded private traversal builds within the admitted type-size and depth limits, so the recursion depth is the path length."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; borrowed child selection uses non-const Box dereferencing and constructs owned diagnostics on mismatched paths."
 )]
 pub(in crate::source) fn locate<'a>(
     root: &'a noble_kernel::types::Ty,
     path: &[super::PathStep],
     span: crate::Span,
 ) -> Result<&'a noble_kernel::types::Ty, crate::Diagnostic> {
-    let mut ty = root;
-    let mut at = 0usize;
-    let mut failure = None;
-    while at < path.len() {
-        match child(ty, path[at], span) {
-            Ok(next) => {
-                ty = next;
-                at = at.saturating_add(1);
-            }
-            Err(problem) => {
-                failure = Some(problem);
-                break;
-            }
-        }
-    }
-    match failure {
-        Some(problem) => Err(problem),
-        None => Ok(ty),
+    match path.split_first() {
+        None => Ok(root),
+        Some((step, rest)) => match child(root, *step, span) {
+            Ok(next) => locate(next, rest, span),
+            Err(problem) => Err(problem),
+        },
     }
 }
 

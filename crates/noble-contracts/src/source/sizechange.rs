@@ -151,6 +151,9 @@ impl MeasureIndex {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct GraphEdge {
     /// The old measure's row.
+    // A Lean field named `source` would shadow the `source.*` namespace of the
+    // next field's type in the extracted structure; the Rust name is unchanged.
+    #[charon::rename("source_measure")]
     pub source: MeasureIndex,
     /// The new measure's column.
     pub target: MeasureIndex,
@@ -418,6 +421,50 @@ struct StackEffect {
     outputs: usize,
 }
 
+/// What one self-call site passes for one measure, and the graph edge it certifies.
+struct SiteMeasure {
+    argument: Argument,
+    is_guarded: bool,
+    edge: Option<(GraphEdge, Relation)>,
+}
+
+/// The second branch of a two-way word, started once the first completes.
+struct Pending {
+    /// The stack the second branch starts from.
+    base: alloc::vec::Vec<Value>,
+    run: BranchRun,
+}
+
+/// One pending step of the walk. Program runs are scheduled on an explicit
+/// task stack rather than recursing, so no loop lies on a recursive cycle
+/// and native stack use stays flat; tasks run in the order the recursive
+/// walk would reach them. A task names its word sequence (the body, or a
+/// quotation node) instead of borrowing it, so the walker never stores a
+/// borrow of its own tree.
+#[octet::sealed_enum]
+enum Task {
+    /// Run the words of the body (`None`) or of a quotation node from `at` onwards.
+    Sequence {
+        quotation: Option<u32>,
+        at: usize,
+        depth: u32,
+    },
+    /// After a `dip` program: push the value it set aside.
+    Restore { value: Value, span: crate::Span },
+    /// After the first of two branches: keep its stack and start the second.
+    Second {
+        saved_guard: u32,
+        second: Pending,
+        span: crate::Span,
+    },
+    /// After the second branch: restore the guard and join both stacks.
+    Join {
+        saved_guard: u32,
+        first: alloc::vec::Vec<Value>,
+        span: crate::Span,
+    },
+}
+
 /// The bounded symbolic walk over one checked body.
 struct Walker<'a> {
     tree: &'a crate::source::Tree,
@@ -430,6 +477,8 @@ struct Walker<'a> {
     sites: alloc::vec::Vec<Site>,
     halt: Option<(Unsupported, crate::Span)>,
     steps: u32,
+    /// Scheduled steps, the most recent on top.
+    tasks: alloc::vec::Vec<Task>,
 }
 
 #[expect(
@@ -461,7 +510,7 @@ impl<'a> Walker<'a> {
         if self.stack.len() <= 1 {
             return self.fail(Unsupported::PrefixTouched, span);
         }
-        if matches!(self.stack.as_slice().last(), Some(Value::Prefix)) {
+        if ends_with_prefix(self.stack.as_slice()) {
             return self.fail(Unsupported::PrefixTouched, span);
         }
         match self.stack.pop() {
@@ -478,10 +527,10 @@ impl<'a> Walker<'a> {
         }
     }
 
-    /// Run one program value on the current stack.
+    /// Schedule one program value to run on the current stack.
     #[expect(
         tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; program follows a dynamically parsed source tree through Tree::node and recursively executes its checked quotation nodes; that runtime lookup is not const-evaluable."
+        reason = "Owner: noble-maintainers; program follows a dynamically parsed source tree through Tree::node and schedules its checked quotation nodes on the Vec-backed task stack; that runtime lookup is not const-evaluable."
     )]
     fn program(&mut self, invocation: ProgramRun) -> Step {
         if invocation.depth >= MAX_DEPTH {
@@ -492,44 +541,125 @@ impl<'a> Walker<'a> {
             Err(_) => return self.fail(Unsupported::UnhandledWord, self.tree.span),
         };
         match &quotation.kind {
-            crate::source::Kind::Quotation(items) => {
-                self.sequence(items, invocation.depth.saturating_add(1))
+            crate::source::Kind::Quotation(_) => {
+                self.tasks.push(Task::Sequence {
+                    quotation: Some(invocation.node),
+                    at: 0,
+                    depth: invocation.depth.saturating_add(1),
+                });
+                Ok(())
             }
             _ => self.fail(Unsupported::UnhandledWord, quotation.span),
         }
     }
 
-    /// Run a word sequence on the current stack.
-    fn sequence(&mut self, items: &'a [u32], depth: u32) -> Step {
-        for node in items {
-            self.word(ProgramRun { node: *node, depth })?;
+    /// Walk the body on the current stack: run scheduled tasks until none
+    /// remain or one halts the walk.
+    fn walk(&mut self) -> Step {
+        self.tasks.push(Task::Sequence {
+            quotation: None,
+            at: 0,
+            depth: 0,
+        });
+        let mut outcome = Ok(());
+        let mut is_pending = true;
+        while outcome.is_ok() && is_pending {
+            match self.tasks.pop() {
+                Some(task) => outcome = self.task(task),
+                None => is_pending = false,
+            }
         }
-        Ok(())
+        outcome
     }
 
-    /// Run one branch from `base` under an explicit guard, restoring the caller's stack and guard.
-    fn branch(
-        &mut self,
-        base: &[Value],
-        invocation: BranchRun,
-    ) -> Result<alloc::vec::Vec<Value>, ()> {
-        let saved_guard = self.guard;
-        self.stack = base.to_vec();
-        self.guard = invocation.guard;
-        let outcome = self.program(ProgramRun {
-            node: invocation.node,
-            depth: invocation.depth.saturating_add(1),
+    /// Run one scheduled task.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; a task runs words on the Vec-backed symbolic stack and task stack, which is interpreter state rather than a const computation."
+    )]
+    fn task(&mut self, task: Task) -> Step {
+        match task {
+            Task::Sequence {
+                quotation,
+                at,
+                depth,
+            } => self.sequence_step(quotation, at, depth),
+            Task::Restore { value, span } => self.push(value, span),
+            Task::Second {
+                saved_guard,
+                second,
+                span,
+            } => self.second_branch(saved_guard, second, span),
+            Task::Join {
+                saved_guard,
+                first,
+                span,
+            } => {
+                let second = core::mem::take(&mut self.stack);
+                self.guard = saved_guard;
+                self.join_branches(first, second, span)
+            }
+        }
+    }
+
+    /// Run the word at `at` of a sequence, scheduling the rest of the sequence after it.
+    fn sequence_step(&mut self, quotation: Option<u32>, at: usize, depth: u32) -> Step {
+        let Some(node) = sequence_word(self.tree, quotation, at) else {
+            return Ok(());
+        };
+        self.tasks.push(Task::Sequence {
+            quotation,
+            at: at.saturating_add(1),
+            depth,
         });
-        let produced = core::mem::take(&mut self.stack);
-        self.guard = saved_guard;
-        outcome?;
-        Ok(produced)
+        self.word(ProgramRun { node, depth })
+    }
+
+    /// Start the first of two branches from `base` under its own guard; the
+    /// second branch and the join run after it, and the caller's guard is
+    /// restored before the join.
+    fn branches(
+        &mut self,
+        base: alloc::vec::Vec<Value>,
+        first: BranchRun,
+        second: Pending,
+        span: crate::Span,
+    ) -> Step {
+        let saved_guard = self.guard;
+        self.stack = base;
+        self.guard = first.guard;
+        self.tasks.push(Task::Second {
+            saved_guard,
+            second,
+            span,
+        });
+        self.program(ProgramRun {
+            node: first.node,
+            depth: first.depth.saturating_add(1),
+        })
+    }
+
+    /// After the first branch: keep its stack and start the second branch
+    /// from its own base under its own guard.
+    fn second_branch(&mut self, saved_guard: u32, second: Pending, span: crate::Span) -> Step {
+        let first = core::mem::take(&mut self.stack);
+        self.stack = second.base;
+        self.guard = second.run.guard;
+        self.tasks.push(Task::Join {
+            saved_guard,
+            first,
+            span,
+        });
+        self.program(ProgramRun {
+            node: second.run.node,
+            depth: second.run.depth.saturating_add(1),
+        })
     }
 
     /// Record one self-call site and replace the frame with the declared result.
     fn self_call(&mut self, span: crate::Span) -> Step {
         let measures = self.measures;
-        if !matches!(self.stack.first(), Some(Value::Prefix)) {
+        if !starts_with_prefix(self.stack.as_slice()) {
             return self.fail(Unsupported::PrefixTouched, span);
         }
         if self.stack.len() != measures.len().saturating_add(1) {
@@ -541,61 +671,22 @@ impl<'a> Walker<'a> {
         let mut arguments = alloc::vec::Vec::with_capacity(measures.len());
         let mut guarded = alloc::vec::Vec::with_capacity(measures.len());
         let mut graph = Graph::unknown();
-        for (index, measure) in measures.iter().enumerate() {
-            let Some(target) = MeasureIndex::from_usize(index) else {
-                return self.fail(Unsupported::SelfArityMismatch, span);
-            };
-            let is_guarded = self.guard & Self::measure_bit(index) != 0;
-            let value = match self.stack.get(index.saturating_add(1)) {
-                Some(value) => value,
-                None => return self.fail(Unsupported::SelfArityMismatch, span),
-            };
-            let argument = classify(*measure, index, value, is_guarded);
-            arguments.push(argument);
-            guarded.push(is_guarded);
-            match value {
-                Value::Formal(source) => {
-                    let Some(source_index) = Self::measure_index(*source, measures.len()) else {
-                        continue;
-                    };
-                    if measures[source_index] == *measure {
-                        let Some(source) = MeasureIndex::from_usize(source_index) else {
-                            continue;
-                        };
-                        graph = graph.with_relation(GraphEdge { source, target }, Relation::Same);
+        let mut index = 0;
+        let mut outcome = Ok(());
+        while outcome.is_ok() && index < measures.len() {
+            match self.site_measure(index, span) {
+                Ok(site) => {
+                    arguments.push(site.argument);
+                    guarded.push(site.is_guarded);
+                    if let Some((edge, relation)) = site.edge {
+                        graph = graph.with_relation(edge, relation);
                     }
                 }
-                Value::Predecessor(source) => {
-                    let Some(source_index) = Self::measure_index(*source, measures.len()) else {
-                        continue;
-                    };
-                    let is_source_guarded = self.guard & Self::measure_bit(source_index) != 0;
-                    if is_source_guarded
-                        && measures[source_index] == Measure::Counter
-                        && *measure == Measure::Counter
-                    {
-                        let Some(source) = MeasureIndex::from_usize(source_index) else {
-                            continue;
-                        };
-                        graph = graph.with_relation(GraphEdge { source, target }, Relation::Strict);
-                    }
-                }
-                Value::Tail(source) => {
-                    let Some(source_index) = Self::measure_index(*source, measures.len()) else {
-                        continue;
-                    };
-                    if measures[source_index] == Measure::Structural
-                        && *measure == Measure::Structural
-                    {
-                        let Some(source) = MeasureIndex::from_usize(source_index) else {
-                            continue;
-                        };
-                        graph = graph.with_relation(GraphEdge { source, target }, Relation::Strict);
-                    }
-                }
-                _ => {}
+                Err(()) => outcome = Err(()),
             }
+            index += 1;
         }
+        outcome?;
         self.sites.push(Site {
             span,
             arguments,
@@ -603,10 +694,36 @@ impl<'a> Walker<'a> {
             graph,
         });
         self.stack.truncate(1);
-        for _ in 0..self.result_frame {
-            self.push(Value::Other, span)?;
+        let mut pushed = 0;
+        while outcome.is_ok() && pushed < self.result_frame {
+            outcome = self.push(Value::Other, span);
+            pushed += 1;
         }
-        Ok(())
+        outcome
+    }
+
+    /// What one self-call site passes for measure `index`, its guard, and the edge it certifies.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; classifying a site reads the runtime symbolic stack and records halts in the Vec-backed walker state."
+    )]
+    fn site_measure(&mut self, index: usize, span: crate::Span) -> Result<SiteMeasure, ()> {
+        let measure = self.measures[index];
+        let Some(target) = MeasureIndex::from_usize(index) else {
+            return self.fail(Unsupported::SelfArityMismatch, span);
+        };
+        let is_guarded = self.guard & Self::measure_bit(index) != 0;
+        let value = match self.stack.get(index.saturating_add(1)) {
+            Some(value) => value,
+            None => return self.fail(Unsupported::SelfArityMismatch, span),
+        };
+        let argument = classify(measure, index, value, is_guarded);
+        let edge = site_edge(self.measures, self.guard, value, measure, target);
+        Ok(SiteMeasure {
+            argument,
+            is_guarded,
+            edge,
+        })
     }
 
     /// The guard bit of one measure index.
@@ -691,9 +808,9 @@ impl<'a> Walker<'a> {
             7 => self.compare_equals(span),
             9 => self.fail(Unsupported::UnmodelledCall, span),
             10 => {
-                let program = self.pop_program(span)?;
+                let quoted = self.pop_program(span)?;
                 self.program(ProgramRun {
-                    node: program,
+                    node: quoted,
                     depth: invocation.depth.saturating_add(1),
                 })
             }
@@ -718,7 +835,11 @@ impl<'a> Walker<'a> {
         reason = "Owner: noble-maintainers; generic derives a stack effect from a runtime scheme and mutates the Vec-backed symbolic stack, so it is an interpreter step rather than a const helper."
     )]
     fn generic(&mut self, scheme: Option<&noble_kernel::words::Scheme>, span: crate::Span) -> Step {
-        let (inputs, outputs) = match scheme.and_then(split_frame) {
+        let frame = match scheme {
+            Some(scheme) => split_frame(scheme),
+            None => None,
+        };
+        let (inputs, outputs) = match frame {
             Some(frame) => frame,
             None => return self.fail(Unsupported::UnmodelledCall, span),
         };
@@ -727,13 +848,18 @@ impl<'a> Walker<'a> {
 
     /// Consume `inputs` concrete cells and produce `outputs` opaque ones.
     fn consume(&mut self, effect: StackEffect, span: crate::Span) -> Step {
-        for _ in 0..effect.inputs {
-            self.pop(span)?;
+        let mut outcome = Ok(());
+        let mut popped = 0;
+        while outcome.is_ok() && popped < effect.inputs {
+            outcome = self.pop(span).map(|_| ());
+            popped += 1;
         }
-        for _ in 0..effect.outputs {
-            self.push(Value::Other, span)?;
+        let mut pushed = 0;
+        while outcome.is_ok() && pushed < effect.outputs {
+            outcome = self.push(Value::Other, span);
+            pushed += 1;
         }
-        Ok(())
+        outcome
     }
 
     /// `dup`.
@@ -753,13 +879,13 @@ impl<'a> Walker<'a> {
 
     /// `dip`: run one program under the top value, then restore it.
     fn dip(&mut self, span: crate::Span, depth: u32) -> Step {
-        let program = self.pop_program(span)?;
+        let quoted = self.pop_program(span)?;
         let value = self.pop(span)?;
+        self.tasks.push(Task::Restore { value, span });
         self.program(ProgramRun {
-            node: program,
+            node: quoted,
             depth: depth.saturating_add(1),
-        })?;
-        self.push(value, span)
+        })
     }
 
     /// `+`, `-` and `*`.
@@ -785,14 +911,7 @@ impl<'a> Walker<'a> {
     fn compare_less(&mut self, span: crate::Span) -> Step {
         let upper = self.pop(span)?;
         let lower = self.pop(span)?;
-        let value = match (&lower, &upper) {
-            (Value::Zero, Value::Formal(index))
-                if Self::measure_index(*index, self.measures.len()).is_some() =>
-            {
-                Value::Positive(*index)
-            }
-            _ => Value::OtherBoolean,
-        };
+        let value = positivity(self.measures, &lower, &upper);
         self.push(value, span)
     }
 
@@ -817,23 +936,23 @@ impl<'a> Walker<'a> {
             _ => outer_guard,
         };
         let base = self.stack.clone();
-        let taken = self.branch(
-            &base,
+        self.branches(
+            base.clone(),
             BranchRun {
                 node: consequent,
                 guard: guarded,
                 depth,
             },
-        )?;
-        let other = self.branch(
-            &base,
-            BranchRun {
-                node: alternative,
-                guard: outer_guard,
-                depth,
+            Pending {
+                base,
+                run: BranchRun {
+                    node: alternative,
+                    guard: outer_guard,
+                    depth,
+                },
             },
-        )?;
-        self.join_branches(taken, other, span)
+            span,
+        )
     }
 
     /// `case`: either constructor is possible, so both payloads are opaque and both branches are
@@ -845,23 +964,23 @@ impl<'a> Walker<'a> {
         let guard = self.guard;
         let mut payload = self.stack.clone();
         payload.push(Value::Other);
-        let first = self.branch(
-            &payload,
+        self.branches(
+            payload.clone(),
             BranchRun {
                 node: left,
                 guard,
                 depth,
             },
-        )?;
-        let second = self.branch(
-            &payload,
-            BranchRun {
-                node: right,
-                guard,
-                depth,
+            Pending {
+                base: payload,
+                run: BranchRun {
+                    node: right,
+                    guard,
+                    depth,
+                },
             },
-        )?;
-        self.join_branches(first, second, span)
+            span,
+        )
     }
 
     /// `list.case`: the cons branch receives the structural tail of a list measure.
@@ -869,37 +988,29 @@ impl<'a> Walker<'a> {
         let cons = self.pop_program(span)?;
         let nil = self.pop_program(span)?;
         let list = self.pop(span)?;
-        let tail = match &list {
-            Value::Formal(index)
-                if Self::measure_index(*index, self.measures.len())
-                    .is_some_and(|index| self.measures[index] == Measure::Structural) =>
-            {
-                Value::Tail(*index)
-            }
-            _ => Value::Other,
-        };
+        let tail = structural_tail(self.measures, &list);
         let base = self.stack.clone();
         let guard = self.guard;
         let mut extended = base.clone();
         extended.push(Value::Other);
         extended.push(tail);
-        let first = self.branch(
-            &base,
+        self.branches(
+            base,
             BranchRun {
                 node: nil,
                 guard,
                 depth,
             },
-        )?;
-        let second = self.branch(
-            &extended,
-            BranchRun {
-                node: cons,
-                guard,
-                depth,
+            Pending {
+                base: extended,
+                run: BranchRun {
+                    node: cons,
+                    guard,
+                    depth,
+                },
             },
-        )?;
-        self.join_branches(first, second, span)
+            span,
+        )
     }
 
     /// Join two branch results; a cell that differs becomes opaque.
@@ -913,11 +1024,142 @@ impl<'a> Walker<'a> {
             return self.fail(Unsupported::FinalFrameMismatch, span);
         }
         let mut joined = alloc::vec::Vec::with_capacity(first.len());
-        for (left, right) in first.into_iter().zip(second) {
-            joined.push(if left == right { left } else { Value::Other });
+        let mut at = 0;
+        while at < first.len() && at < second.len() {
+            joined.push(joined_value(&first[at], &second[at]));
+            at += 1;
         }
         self.stack = joined;
         Ok(())
+    }
+}
+
+/// The word at `at` of a scheduled sequence: the definition body (`None`) or
+/// the items of a quotation node `program` has already checked. A copied
+/// node identity is returned, never a borrow of the tree.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the lookup resolves a runtime source node through Tree::node and Vec indexing, which are not const."
+)]
+fn sequence_word(tree: &crate::source::Tree, quotation: Option<u32>, at: usize) -> Option<u32> {
+    let Some(node) = quotation else {
+        return tree.body.get(at).copied();
+    };
+    match tree.node(node) {
+        Ok(node) => match &node.kind {
+            crate::source::Kind::Quotation(items) => items.get(at).copied(),
+            crate::source::Kind::Literal(_)
+            | crate::source::Kind::Text(_)
+            | crate::source::Kind::Word(_)
+            | crate::source::Kind::Call(_)
+            | crate::source::Kind::EditorHole => None,
+        },
+        Err(_) => None,
+    }
+}
+
+/// The value of `lower < upper`: a positivity guard when it is `0 < measure`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the measure index uses a checked non-const TryFrom conversion."
+)]
+fn positivity(measures: &[Measure], lower: &Value, upper: &Value) -> Value {
+    match (lower, upper) {
+        (Value::Zero, Value::Formal(index))
+            if Walker::measure_index(*index, measures.len()).is_some() =>
+        {
+            Value::Positive(*index)
+        }
+        _ => Value::OtherBoolean,
+    }
+}
+
+/// The cons-branch tail of a list: structural only for a list measure.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the measure index uses a checked non-const TryFrom conversion."
+)]
+fn structural_tail(measures: &[Measure], list: &Value) -> Value {
+    match list {
+        Value::Formal(index)
+            if Walker::measure_index(*index, measures.len())
+                .is_some_and(|index| measures[index] == Measure::Structural) =>
+        {
+            Value::Tail(*index)
+        }
+        _ => Value::Other,
+    }
+}
+
+/// One joined branch cell: the shared value, or opaque where the branches differ.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; comparing and cloning symbolic stack values uses non-const PartialEq and Clone."
+)]
+fn joined_value(left: &Value, right: &Value) -> Value {
+    if left == right {
+        left.clone()
+    } else {
+        Value::Other
+    }
+}
+
+/// The graph edge a passed value certifies for measure `target`, if any.
+fn site_edge(
+    measures: &[Measure],
+    guard: u32,
+    value: &Value,
+    measure: Measure,
+    target: MeasureIndex,
+) -> Option<(GraphEdge, Relation)> {
+    match value {
+        Value::Formal(formal) => {
+            let source_index = Walker::measure_index(*formal, measures.len())?;
+            if measures[source_index] == measure {
+                let origin = MeasureIndex::from_usize(source_index)?;
+                return Some((
+                    GraphEdge {
+                        source: origin,
+                        target,
+                    },
+                    Relation::Same,
+                ));
+            }
+            None
+        }
+        Value::Predecessor(formal) => {
+            let source_index = Walker::measure_index(*formal, measures.len())?;
+            let is_source_guarded = guard & Walker::measure_bit(source_index) != 0;
+            if is_source_guarded
+                && measures[source_index] == Measure::Counter
+                && measure == Measure::Counter
+            {
+                let origin = MeasureIndex::from_usize(source_index)?;
+                return Some((
+                    GraphEdge {
+                        source: origin,
+                        target,
+                    },
+                    Relation::Strict,
+                ));
+            }
+            None
+        }
+        Value::Tail(formal) => {
+            let source_index = Walker::measure_index(*formal, measures.len())?;
+            if measures[source_index] == Measure::Structural && measure == Measure::Structural {
+                let origin = MeasureIndex::from_usize(source_index)?;
+                return Some((
+                    GraphEdge {
+                        source: origin,
+                        target,
+                    },
+                    Relation::Strict,
+                ));
+            }
+            None
+        }
+        _ => None,
     }
 }
 
@@ -955,8 +1197,7 @@ fn predecessor(measures: &[Measure], left: Value, right: Value) -> Value {
         (Value::Formal(index), Value::One)
             if usize::try_from(*index)
                 .ok()
-                .and_then(|index| measures.get(index))
-                .is_some_and(|measure| *measure == Measure::Counter) =>
+                .is_some_and(|index| matches!(measures.get(index), Some(Measure::Counter))) =>
         {
             Value::Predecessor(*index)
         }
@@ -977,17 +1218,26 @@ fn split_frame(scheme: &noble_kernel::words::Scheme) -> Option<(usize, usize)> {
 
 /// The number of fixed positions after a scheme stack's single prefix variable.
 fn concrete_positions(stack: &[noble_kernel::shapes::Pattern]) -> Option<usize> {
-    let (prefix, fixed) = stack.split_first()?;
-    if !matches!(prefix, noble_kernel::shapes::Pattern::StackVar(_)) {
+    let prefix = stack.first()?;
+    if !is_stack_variable(prefix) {
         return None;
     }
-    if fixed
-        .iter()
-        .any(|pattern| matches!(pattern, noble_kernel::shapes::Pattern::StackVar(_)))
-    {
-        return None;
+    let mut at = 1;
+    let mut is_fixed = true;
+    while is_fixed && at < stack.len() {
+        is_fixed = !is_stack_variable(&stack[at]);
+        at += 1;
     }
-    Some(fixed.len())
+    if is_fixed {
+        Some(stack.len().saturating_sub(1))
+    } else {
+        None
+    }
+}
+
+/// Whether one scheme stack pattern is a stack variable.
+const fn is_stack_variable(pattern: &noble_kernel::shapes::Pattern) -> bool {
+    matches!(pattern, noble_kernel::shapes::Pattern::StackVar(_))
 }
 
 #[octet::sealed_enum]
@@ -1020,24 +1270,31 @@ fn measures_of(
         return Err(ProfileError::Outside);
     }
     let mut measures = alloc::vec::Vec::with_capacity(fixed.len());
-    for pattern in fixed {
-        measures.push(match pattern {
-            noble_kernel::shapes::Pattern::I64 => Measure::Counter,
-            noble_kernel::shapes::Pattern::List(_) => Measure::Structural,
-            _ => return Err(ProfileError::Outside),
-        });
+    let mut at = 0;
+    let mut is_profiled = true;
+    while is_profiled && at < fixed.len() {
+        match &fixed[at] {
+            noble_kernel::shapes::Pattern::I64 => measures.push(Measure::Counter),
+            noble_kernel::shapes::Pattern::List(_) => measures.push(Measure::Structural),
+            _ => is_profiled = false,
+        }
+        at += 1;
+    }
+    if !is_profiled {
+        return Err(ProfileError::Outside);
     }
     Ok((measures, result_frame))
 }
 
 /// Whether a definition's tree contains a lexical self call.
 pub fn calls_self(definition: &crate::source::Named) -> bool {
-    definition.tree.nodes.iter().any(|node| {
+    crate::scan::find_first(&definition.tree.nodes, |node| {
         matches!(
             node.kind,
             crate::source::Kind::Call(crate::source::Target::SelfOwner)
         )
     })
+    .is_some()
 }
 
 /// Build the size-change evidence for one checked definition.
@@ -1045,12 +1302,10 @@ pub fn evidence(
     definition: &crate::source::Named,
     environment: &noble_kernel::contracts::Env,
 ) -> Evidence {
-    let profile = definition
-        .signature
-        .as_ref()
-        .map(measures_of)
-        .unwrap_or(Err(ProfileError::Outside));
-    let (measures, result_frame) = match profile {
+    let Some(scheme) = definition.signature.as_ref() else {
+        return profile_refusal(definition, ProfileError::Outside);
+    };
+    let (measures, result_frame) = match measures_of(scheme) {
         Ok(profile) => profile,
         Err(error) => return profile_refusal(definition, error),
     };
@@ -1095,15 +1350,15 @@ fn walk_definition(
         sites: alloc::vec::Vec::new(),
         halt: None,
         steps: 0,
+        tasks: alloc::vec::Vec::new(),
     };
     walker.stack.push(Value::Prefix);
-    for index in 0..MAX_MEASURE_INDEX {
-        if usize::from(index) >= measures.len() {
-            break;
-        }
+    let mut index = 0;
+    while index < MAX_MEASURE_INDEX && usize::from(index) < measures.len() {
         walker.stack.push(Value::Formal(u32::from(index)));
+        index += 1;
     }
-    let walked = walker.sequence(&definition.tree.body, 0);
+    let walked = walker.walk();
     let halt = match walker.halt {
         Some(halt) => Some(halt),
         None => match walked {
@@ -1152,11 +1407,32 @@ const fn final_shape(walker: &Walker<'_>) -> Option<(Unsupported, crate::Span)> 
     if walker.stack.len() != walker.result_frame.saturating_add(1) {
         return Some((Unsupported::FinalFrameMismatch, walker.tree.span));
     }
-    if !matches!(walker.stack.as_slice().first(), Some(Value::Prefix)) {
+    if !starts_with_prefix(walker.stack.as_slice()) {
         return Some((Unsupported::PrefixTouched, walker.tree.span));
     }
     debug_assert!(!walker.measures.is_empty());
     None
+}
+
+/// Whether a walked stack's bottom cell is the opaque prefix.
+const fn starts_with_prefix(stack: &[Value]) -> bool {
+    match stack.first() {
+        Some(value) => is_prefix(value),
+        None => false,
+    }
+}
+
+/// Whether a walked stack's top cell is the opaque prefix.
+const fn ends_with_prefix(stack: &[Value]) -> bool {
+    match stack.last() {
+        Some(value) => is_prefix(value),
+        None => false,
+    }
+}
+
+/// Whether one walked value is the opaque prefix.
+const fn is_prefix(value: &Value) -> bool {
+    matches!(value, Value::Prefix)
 }
 
 /// Sequential composition matches the four-relation model's absorbing unknown.
@@ -1184,23 +1460,17 @@ fn compose_graph(left: &Graph, right: &Graph, measure_count: usize) -> Graph {
     assert!(measure_count > 0);
     assert!(measure_count <= MAX_MEASURES);
     let mut product = Graph::unknown();
-    for source in 0..MAX_MEASURE_INDEX {
-        if usize::from(source) >= measure_count {
-            break;
-        }
-        for target in 0..MAX_MEASURE_INDEX {
-            if usize::from(target) >= measure_count {
-                break;
-            }
+    let mut row = 0;
+    while row < MAX_MEASURE_INDEX && usize::from(row) < measure_count {
+        let mut target = 0;
+        while target < MAX_MEASURE_INDEX && usize::from(target) < measure_count {
             let mut joined = Relation::Unknown;
-            for middle in 0..MAX_MEASURE_INDEX {
-                if usize::from(middle) >= measure_count {
-                    break;
-                }
+            let mut middle = 0;
+            while middle < MAX_MEASURE_INDEX && usize::from(middle) < measure_count {
                 joined = join_relation(
                     compose_relation(
                         left.get(GraphEdge {
-                            source: MeasureIndex(source),
+                            source: MeasureIndex(row),
                             target: MeasureIndex(middle),
                         }),
                         right.get(GraphEdge {
@@ -1210,15 +1480,18 @@ fn compose_graph(left: &Graph, right: &Graph, measure_count: usize) -> Graph {
                     ),
                     joined,
                 );
+                middle += 1;
             }
             product = product.with_relation(
                 GraphEdge {
-                    source: MeasureIndex(source),
+                    source: MeasureIndex(row),
                     target: MeasureIndex(target),
                 },
                 joined,
             );
+            target += 1;
         }
+        row += 1;
     }
     product
 }
@@ -1230,48 +1503,86 @@ fn close_graphs(sites: &[Site], measure_count: usize) -> Result<alloc::vec::Vec<
     assert!(measure_count > 0);
     assert!(measure_count <= MAX_MEASURES);
     let mut closure = alloc::vec::Vec::with_capacity(sites.len().min(MAX_CLOSURE));
-    for (site_index, site) in sites.iter().enumerate() {
-        if closure
-            .iter()
-            .any(|entry: &ClosureEntry| entry.graph == site.graph)
-        {
-            continue;
+    let mut site_index = 0;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && site_index < sites.len() {
+        match seed_entry(&closure, site_index, &sites[site_index]) {
+            Ok(Some(entry)) => closure.push(entry),
+            Ok(None) => {}
+            Err(()) => outcome = Err(()),
         }
-        if closure.len() >= MAX_CLOSURE {
-            return Err(());
-        }
-        let site_index = u32::try_from(site_index).map_err(|_| ())?;
-        closure.push(ClosureEntry {
-            graph: site.graph,
-            path: alloc::vec![site_index],
-        });
+        site_index += 1;
     }
+    outcome?;
     assert!(!closure.is_empty());
     assert!(closure.len() <= MAX_CLOSURE);
     let mut cursor = 0;
-    while cursor < closure.len() {
+    while outcome.is_ok() && cursor < closure.len() {
         let graph = closure[cursor].graph;
         let path = closure[cursor].path.clone();
-        for (site_index, site) in sites.iter().enumerate() {
-            let product = compose_graph(&graph, &site.graph, measure_count);
-            if closure.iter().any(|entry| entry.graph == product) {
-                continue;
+        let mut site_index = 0;
+        while outcome.is_ok() && site_index < sites.len() {
+            match product_entry(
+                &closure,
+                (&graph, &path),
+                (site_index, &sites[site_index]),
+                measure_count,
+            ) {
+                Ok(Some(entry)) => closure.push(entry),
+                Ok(None) => {}
+                Err(()) => outcome = Err(()),
             }
-            if closure.len() >= MAX_CLOSURE || path.len() >= MAX_CLOSURE {
-                return Err(());
-            }
-            let site_index = u32::try_from(site_index).map_err(|_| ())?;
-            let mut product_path = path.clone();
-            product_path.push(site_index);
-            assert!(product_path.len() <= MAX_CLOSURE);
-            closure.push(ClosureEntry {
-                graph: product,
-                path: product_path,
-            });
+            site_index += 1;
         }
         cursor += 1;
     }
+    outcome?;
     Ok(closure)
+}
+
+/// One site's own closure entry, unless an equal matrix is already present.
+fn seed_entry(
+    closure: &[ClosureEntry],
+    site_index: usize,
+    site: &Site,
+) -> Result<Option<ClosureEntry>, ()> {
+    if crate::scan::find_first(closure, |entry| entry.graph == site.graph).is_some() {
+        return Ok(None);
+    }
+    if closure.len() >= MAX_CLOSURE {
+        return Err(());
+    }
+    let site_index = u32::try_from(site_index).map_err(|_| ())?;
+    Ok(Some(ClosureEntry {
+        graph: site.graph,
+        path: alloc::vec![site_index],
+    }))
+}
+
+/// The entry composing one closure path with one more site, unless its matrix is already present.
+fn product_entry(
+    closure: &[ClosureEntry],
+    prefix: (&Graph, &[u32]),
+    site: (usize, &Site),
+    measure_count: usize,
+) -> Result<Option<ClosureEntry>, ()> {
+    let (graph, path) = prefix;
+    let (site_index, site) = site;
+    let product = compose_graph(graph, &site.graph, measure_count);
+    if crate::scan::find_first(closure, |entry| entry.graph == product).is_some() {
+        return Ok(None);
+    }
+    if closure.len() >= MAX_CLOSURE || path.len() >= MAX_CLOSURE {
+        return Err(());
+    }
+    let site_index = u32::try_from(site_index).map_err(|_| ())?;
+    let mut product_path = path.to_vec();
+    product_path.push(site_index);
+    assert!(product_path.len() <= MAX_CLOSURE);
+    Ok(Some(ClosureEntry {
+        graph: product,
+        path: product_path,
+    }))
 }
 
 #[octet::sealed_enum]
@@ -1288,42 +1599,88 @@ fn check_closure(closure: &[ClosureEntry], measure_count: usize) -> ClosureCrite
     assert!(measure_count <= MAX_MEASURES);
     let mut has_idempotent = false;
     let mut strict_witnesses = alloc::vec::Vec::with_capacity(closure.len().min(MAX_CLOSURE));
-    for (closure_index, entry) in closure.iter().enumerate() {
-        let square = compose_graph(&entry.graph, &entry.graph, measure_count);
-        if square != entry.graph {
-            continue;
+    let mut closure_index = 0;
+    let mut stopped = None;
+    while stopped.is_none() && closure_index < closure.len() {
+        match entry_witness(
+            (closure_index, &closure[closure_index]),
+            measure_count,
+            &strict_witnesses,
+        ) {
+            Ok(Some(witness)) => {
+                has_idempotent = true;
+                strict_witnesses.push(witness);
+            }
+            Ok(None) => {}
+            Err(criterion) => stopped = Some(criterion),
         }
-        has_idempotent = true;
-        let measure = (0..measure_count).find(|measure| {
-            let Some(index) = MeasureIndex::from_usize(*measure) else {
-                return false;
-            };
-            entry.graph.get(GraphEdge {
-                source: index,
-                target: index,
-            }) == Relation::Strict
-        });
-        let Some(measure) = measure else {
-            return ClosureCriterion::Refused(entry.clone());
-        };
-        let (Ok(closure_entry), Ok(measure)) =
-            (u32::try_from(closure_index), u32::try_from(measure))
-        else {
-            return ClosureCriterion::MissingIdempotent;
-        };
-        if strict_witnesses.len() >= MAX_CLOSURE {
-            return ClosureCriterion::MissingIdempotent;
-        }
-        strict_witnesses.push(StrictWitness {
-            closure_entry,
-            measure,
-        });
+        closure_index += 1;
+    }
+    if let Some(criterion) = stopped {
+        return criterion;
     }
     if has_idempotent {
         ClosureCriterion::Accepted(strict_witnesses)
     } else {
         ClosureCriterion::MissingIdempotent
     }
+}
+
+/// The strict-diagonal witness of one idempotent closure entry, `None` for a
+/// non-idempotent entry, or the criterion that ends the check.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; a missing strict diagonal or unrepresentable witness index is a typed closure verdict, not an assertion failure."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the check composes matrices, clones the refusing entry and uses checked non-const TryFrom conversions."
+)]
+fn entry_witness(
+    indexed: (usize, &ClosureEntry),
+    measure_count: usize,
+    recorded: &[StrictWitness],
+) -> Result<Option<StrictWitness>, ClosureCriterion> {
+    let (closure_index, entry) = indexed;
+    let square = compose_graph(&entry.graph, &entry.graph, measure_count);
+    if square != entry.graph {
+        return Ok(None);
+    }
+    let Some(measure) = strict_measure(&entry.graph, measure_count) else {
+        return Err(ClosureCriterion::Refused(entry.clone()));
+    };
+    let (Ok(closure_entry), Ok(measure)) = (u32::try_from(closure_index), u32::try_from(measure))
+    else {
+        return Err(ClosureCriterion::MissingIdempotent);
+    };
+    if recorded.len() >= MAX_CLOSURE {
+        return Err(ClosureCriterion::MissingIdempotent);
+    }
+    Ok(Some(StrictWitness {
+        closure_entry,
+        measure,
+    }))
+}
+
+/// The first measure whose diagonal relation in `graph` is strict.
+fn strict_measure(graph: &Graph, measure_count: usize) -> Option<usize> {
+    let mut measure = 0;
+    let mut found = None;
+    while found.is_none() && measure < measure_count {
+        if let Some(index) = MeasureIndex::from_usize(measure) {
+            if matches!(
+                graph.get(GraphEdge {
+                    source: index,
+                    target: index,
+                }),
+                Relation::Strict
+            ) {
+                found = Some(measure);
+            }
+        }
+        measure += 1;
+    }
+    found
 }
 
 /// Decide the bounded closure criterion and build the evidence.
@@ -1372,18 +1729,15 @@ fn verdict(
 
 /// The first measure that decreases at every site, mirroring `certifiedAll`.
 fn shared_measure(measures: &[Measure], sites: &[Site]) -> Option<u32> {
-    for index in 0..measures.len() {
-        let is_everywhere = sites.iter().all(|site| {
-            matches!(
-                site.arguments.get(index),
-                Some(Argument::Predecessor | Argument::Tail)
-            )
-        });
-        if is_everywhere {
-            return u32::try_from(index).ok();
+    let mut index = 0;
+    let mut shared = None;
+    while shared.is_none() && index < measures.len() {
+        if first_non_decreasing(sites, index).is_none() {
+            shared = Some(u32::try_from(index).ok());
         }
+        index += 1;
     }
-    None
+    shared.flatten()
 }
 
 /// One witness per measure: the first site that does not decrease it.
@@ -1391,26 +1745,43 @@ fn refusal_witnesses(measures: &[Measure], sites: &[Site]) -> alloc::vec::Vec<Wi
     debug_assert!(!measures.is_empty());
     debug_assert!(!sites.is_empty());
     let mut witnesses = alloc::vec::Vec::with_capacity(measures.len());
-    for index in 0..measures.len() {
-        let failing = sites.iter().enumerate().find(|(_, site)| {
-            !matches!(
-                site.arguments.get(index),
-                Some(Argument::Predecessor | Argument::Tail)
-            )
-        });
-        if let Some((site, entry)) = failing {
+    let mut index = 0;
+    while index < measures.len() {
+        if let Some(site) = first_non_decreasing(sites, index) {
             witnesses.push(Witness {
                 measure: u32::try_from(index).unwrap_or(0),
                 site: u32::try_from(site).unwrap_or(0),
-                argument: entry
+                argument: sites[site]
                     .arguments
                     .get(index)
                     .copied()
                     .unwrap_or(Argument::Opaque),
             });
         }
+        index += 1;
     }
     witnesses
+}
+
+/// The first site that does not pass a decrease for measure `index`.
+fn first_non_decreasing(sites: &[Site], index: usize) -> Option<usize> {
+    let mut at = 0;
+    let mut found = None;
+    while found.is_none() && at < sites.len() {
+        if !decreases(&sites[at], index) {
+            found = Some(at);
+        }
+        at += 1;
+    }
+    found
+}
+
+/// Whether `site` passes a decrease for measure `index`.
+fn decreases(site: &Site, index: usize) -> bool {
+    matches!(
+        site.arguments.get(index).copied(),
+        Some(Argument::Predecessor | Argument::Tail)
+    )
 }
 
 fn append_named_index(
@@ -1484,23 +1855,21 @@ fn append_graph_edges(
 ) -> alloc::string::String {
     assert!(measure_count > 0);
     assert!(measure_count <= MAX_MEASURES);
-    for source in 0..MAX_MEASURE_INDEX {
-        if usize::from(source) >= measure_count {
-            break;
-        }
-        for target in 0..MAX_MEASURE_INDEX {
-            if usize::from(target) >= measure_count {
-                break;
-            }
+    let mut row = 0;
+    while row < MAX_MEASURE_INDEX && usize::from(row) < measure_count {
+        let mut target = 0;
+        while target < MAX_MEASURE_INDEX && usize::from(target) < measure_count {
             output = append_graph_edge(
                 output,
                 graph,
                 GraphEdge {
-                    source: MeasureIndex(source),
+                    source: MeasureIndex(row),
                     target: MeasureIndex(target),
                 },
             );
+            target += 1;
         }
+        row += 1;
     }
     output
 }
@@ -1518,18 +1887,12 @@ fn append_graph_definition(
     output
 }
 
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; path validation traverses a runtime slice iterator with all, which is not const on the pinned compiler."
-)]
 fn is_valid_site_path(path: &[u32], site_count: u32) -> bool {
-    !path.is_empty() && path.len() <= MAX_CLOSURE && path.iter().all(|site| *site < site_count)
+    !path.is_empty()
+        && path.len() <= MAX_CLOSURE
+        && crate::scan::find_first(path, |site| *site >= site_count).is_none()
 }
 
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; closure validation performs checked TryFrom and runtime slice iteration with derived Graph equality."
-)]
 fn is_valid_closure_model(sites: &[Site], measure_count: usize, closure: &[ClosureEntry]) -> bool {
     if !closure_dimensions_valid(sites, measure_count, closure) {
         return false;
@@ -1537,12 +1900,45 @@ fn is_valid_closure_model(sites: &[Site], measure_count: usize, closure: &[Closu
     let Some(site_count) = u32::try_from(sites.len()).ok() else {
         return false;
     };
-    sites
-        .iter()
-        .all(|site| closure.iter().any(|entry| entry.graph == site.graph))
-        && closure
-            .iter()
-            .all(|entry| is_valid_site_path(&entry.path, site_count))
+    sites_in_closure(sites, closure)
+        && crate::scan::find_first(closure, |entry| {
+            !is_valid_site_path(&entry.path, site_count)
+        })
+        .is_none()
+}
+
+/// Whether every site's matrix occurs in the closure.
+fn sites_in_closure(sites: &[Site], closure: &[ClosureEntry]) -> bool {
+    let mut at = 0;
+    let mut is_present = true;
+    while is_present && at < sites.len() {
+        let graph = sites[at].graph;
+        is_present = crate::scan::find_first(closure, |entry| entry.graph == graph).is_some();
+        at += 1;
+    }
+    is_present
+}
+
+/// The index of the first closure entry whose matrix equals `graph`.
+fn graph_position(closure: &[ClosureEntry], graph: &Graph) -> Option<usize> {
+    let mut at = 0;
+    let mut found = None;
+    while found.is_none() && at < closure.len() {
+        if same_graph(&closure[at], graph) {
+            found = Some(at);
+        }
+        at += 1;
+    }
+    found
+}
+
+/// Whether a closure entry's matrix equals `graph`, kept out of loop bodies for extraction.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; derived Graph equality is a non-const PartialEq call."
+)]
+fn same_graph(entry: &ClosureEntry, graph: &Graph) -> bool {
+    entry.graph == *graph
 }
 
 const fn closure_dimensions_valid(
@@ -1571,6 +1967,27 @@ fn append_closure_graphs(
     output
 }
 
+/// `→` in the emitted Lean.
+const RIGHTWARDS_ARROW: u32 = 0x2192;
+/// `⟨` in the emitted Lean.
+const LEFT_ANGLE_BRACKET: u32 = 0x27E8;
+/// `⟩` in the emitted Lean.
+const RIGHT_ANGLE_BRACKET: u32 = 0x27E9;
+/// `∀` in the emitted Lean.
+const FOR_ALL: u32 = 0x2200;
+/// `¬` in the emitted Lean.
+const NOT_SIGN: u32 = 0x00AC;
+
+/// Append one Unicode symbol of the emitted Lean. Every non-ASCII symbol is
+/// pushed through here, never written in a string or char literal: the
+/// pinned Aeneas prints such literals in escapes Lean cannot parse.
+fn push_code_point(mut output: alloc::string::String, code: u32) -> alloc::string::String {
+    if let Some(symbol) = char::from_u32(code) {
+        output.push(symbol);
+    }
+    output
+}
+
 #[expect(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; Lean site-table emission grows an owned String through runtime push_str calls."
@@ -1584,7 +2001,9 @@ fn append_site_table_header(
     output.push_str(name);
     output.push_str("Sites : Fin ");
     output = append_decimal(output, shape.site_count);
-    output.push_str(" → MGraph ");
+    output.push(' ');
+    output = push_code_point(output, RIGHTWARDS_ARROW);
+    output.push_str(" MGraph ");
     output = append_decimal(output, shape.measure_count);
     output.push_str(" := fun site =>\n  match site.val with\n");
     output
@@ -1596,15 +2015,17 @@ fn append_site_table_rows(
     sites: &[Site],
     closure: &[ClosureEntry],
 ) -> alloc::string::String {
-    for (site_index, site) in sites.iter().enumerate() {
-        let Some(graph_index) = closure.iter().position(|entry| entry.graph == site.graph) else {
-            return output;
+    let mut site_index = 0;
+    while site_index < sites.len() {
+        let Some(graph_index) = graph_position(closure, &sites[site_index].graph) else {
+            break;
         };
         output.push_str("  | ");
         output = append_decimal(output, site_index);
         output.push_str(" => ");
         output = append_named_index(output, name, graph_index);
         output.push('\n');
+        site_index += 1;
     }
     output
 }
@@ -1616,11 +2037,13 @@ fn append_closure_entry(
     entry: &ClosureEntry,
     has_next: bool,
 ) -> alloc::string::String {
-    output.push_str("    ⟨");
+    output.push_str("    ");
+    output = push_code_point(output, LEFT_ANGLE_BRACKET);
     output = append_named_index(output, name, index);
     output.push_str(", [");
     output = append_site_path(output, &entry.path);
-    output.push_str("]⟩");
+    output.push(']');
+    output = push_code_point(output, RIGHT_ANGLE_BRACKET);
     if has_next {
         output.push(',');
     }
@@ -1717,12 +2140,22 @@ fn valid_accepted_evidence(
     let Some(measure_count) = u32::try_from(measures.len()).ok() else {
         return false;
     };
-    witnesses.iter().all(|witness| {
-        let Some(closure_index) = usize::try_from(witness.closure_entry).ok() else {
-            return false;
-        };
-        closure.get(closure_index).is_some() && witness.measure < measure_count
+    crate::scan::find_first(witnesses, |witness| {
+        !witness_in_range(witness, closure, measure_count)
     })
+    .is_none()
+}
+
+/// Whether one strict witness names an existing closure entry and a declared measure.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the closure index uses a checked non-const TryFrom conversion."
+)]
+fn witness_in_range(witness: &StrictWitness, closure: &[ClosureEntry], measure_count: u32) -> bool {
+    let Some(closure_index) = usize::try_from(witness.closure_entry).ok() else {
+        return false;
+    };
+    closure.get(closure_index).is_some() && witness.measure < measure_count
 }
 
 #[expect(
@@ -1736,7 +2169,7 @@ fn valid_refused_evidence(
     cycle: &ClosureEntry,
 ) -> bool {
     is_valid_closure_model(sites, measures.len(), closure)
-        && closure.iter().any(|entry| entry.graph == cycle.graph)
+        && crate::scan::find_first(closure, |entry| entry.graph == cycle.graph).is_some()
         && u32::try_from(sites.len())
             .ok()
             .is_some_and(|site_count| is_valid_site_path(&cycle.path, site_count))
@@ -1872,7 +2305,9 @@ fn append_accepted_definition(
 ) -> alloc::string::String {
     let output = append_accepted_head(output, name, shape);
     let mut output = append_strict_witnesses(output, name, witnesses);
-    output.push_str("], by decide, by decide⟩\n\n");
+    output.push_str("], by decide, by decide");
+    output = push_code_point(output, RIGHT_ANGLE_BRACKET);
+    output.push_str("\n\n");
     output
 }
 
@@ -1889,7 +2324,8 @@ fn append_accepted_head(
     output = append_decimal(output, shape.measure_count);
     output.push(' ');
     output.push_str(name);
-    output.push_str("Sites :=\n  ⟨");
+    output.push_str("Sites :=\n  ");
+    output = push_code_point(output, LEFT_ANGLE_BRACKET);
     output.push_str(name);
     output.push_str("Entries, [");
     output
@@ -1904,11 +2340,11 @@ fn append_strict_witnesses(
         if witness_index > 0 {
             output.push_str(", ");
         }
-        output.push('⟨');
+        output = push_code_point(output, LEFT_ANGLE_BRACKET);
         output = append_named_u32(output, name, witness.closure_entry);
         output.push_str(", ");
         output = append_u32(output, witness.measure);
-        output.push('⟩');
+        output = push_code_point(output, RIGHT_ANGLE_BRACKET);
     }
     output
 }
@@ -1920,11 +2356,17 @@ fn append_criterion_theorem(
 ) -> alloc::string::String {
     output.push_str("theorem ");
     output.push_str(name);
-    output.push_str("Criterion : ∀ {graph : MGraph ");
+    output.push_str("Criterion : ");
+    output = push_code_point(output, FOR_ALL);
+    output.push_str(" {graph : MGraph ");
     output = append_decimal(output, measure_count);
     output.push_str("}, MatrixClosure ");
     output.push_str(name);
-    output.push_str("Sites graph → composeMatrix graph graph = graph → HasStrictDiagonal graph := by\n  intro graph member idempotent\n  exact certificate_closure_criterion ");
+    output.push_str("Sites graph ");
+    output = push_code_point(output, RIGHTWARDS_ARROW);
+    output.push_str(" composeMatrix graph graph = graph ");
+    output = push_code_point(output, RIGHTWARDS_ARROW);
+    output.push_str(" HasStrictDiagonal graph := by\n  intro graph member idempotent\n  exact certificate_closure_criterion ");
     output.push_str(name);
     output.push_str("Certificate member idempotent\n");
     output
@@ -1955,15 +2397,18 @@ fn append_closure_set_certificate(
     output = append_decimal(output, shape.measure_count);
     output.push(' ');
     output.push_str(name);
-    output.push_str("Sites := ⟨");
+    output.push_str("Sites := ");
+    output = push_code_point(output, LEFT_ANGLE_BRACKET);
     output.push_str(name);
-    output.push_str("Entries, by decide⟩\n\ndef ");
+    output.push_str("Entries, by decide");
+    output = push_code_point(output, RIGHT_ANGLE_BRACKET);
+    output.push_str("\n\ndef ");
     output
 }
 
 #[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; refusal emission searches runtime closure entries and grows an owned String for the selected path."
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; append_refusal_definition is a straight-line serializer of an already validated refusal; it returns the text unchanged when the cycle is absent from the closure and has no invariant of its own to assert."
 )]
 fn append_refusal_definition(
     mut output: alloc::string::String,
@@ -1971,17 +2416,23 @@ fn append_refusal_definition(
     closure: &[ClosureEntry],
     cycle: &ClosureEntry,
 ) -> alloc::string::String {
-    let Some(graph_index) = closure.iter().position(|entry| entry.graph == cycle.graph) else {
+    let Some(graph_index) = graph_position(closure, &cycle.graph) else {
         return output;
     };
     output.push_str(name);
     output.push_str("Refusal : MatrixIdempotentRefusal ");
     output.push_str(name);
-    output.push_str("ClosureSetCertificate :=\n  ⟨⟨");
+    output.push_str("ClosureSetCertificate :=\n  ");
+    output = push_code_point(output, LEFT_ANGLE_BRACKET);
+    output = push_code_point(output, LEFT_ANGLE_BRACKET);
     output = append_named_index(output, name, graph_index);
     output.push_str(", [");
     output = append_site_path(output, &cycle.path);
-    output.push_str("]⟩, by decide, by decide, by decide⟩\n\n");
+    output.push(']');
+    output = push_code_point(output, RIGHT_ANGLE_BRACKET);
+    output.push_str(", by decide, by decide, by decide");
+    output = push_code_point(output, RIGHT_ANGLE_BRACKET);
+    output.push_str("\n\n");
     output
 }
 
@@ -2022,7 +2473,9 @@ fn append_refusal_diagonal_theorem(
 ) -> alloc::string::String {
     output.push_str("theorem ");
     output.push_str(name);
-    output.push_str("RefusalHasNoStrictDiagonal : ¬ HasStrictDiagonal ");
+    output.push_str("RefusalHasNoStrictDiagonal : ");
+    output = push_code_point(output, NOT_SIGN);
+    output.push_str(" HasStrictDiagonal ");
     output.push_str(name);
     output.push_str("Refusal.entry.graph := refusal_no_strict_diagonal ");
     output.push_str(name);
@@ -2038,28 +2491,36 @@ fn append_refusal_diagonal_theorem(
 fn append_decimal(mut output: alloc::string::String, mut value: usize) -> alloc::string::String {
     let mut digits = [0_u8; core::mem::size_of::<usize>().saturating_mul(3)];
     let mut at = digits.len();
-    loop {
-        at = match at.checked_sub(1) {
-            Some(at) => at,
-            None => return output,
-        };
-        let digit = match u8::try_from(value % 10) {
-            Ok(digit) => digit,
-            Err(_) => return output,
-        };
-        digits[at] = match b'0'.checked_add(digit) {
-            Some(ascii) => ascii,
-            None => return output,
-        };
-        value /= 10;
-        if value == 0 {
-            break;
+    let mut is_written = true;
+    let mut has_more = true;
+    while has_more {
+        match digit_slot(at, u8::try_from(value % 10).ok()) {
+            Some((slot, ascii)) => {
+                at = slot;
+                digits[at] = ascii;
+                value /= 10;
+                has_more = value != 0;
+            }
+            None => {
+                is_written = false;
+                has_more = false;
+            }
         }
+    }
+    if !is_written {
+        return output;
     }
     for digit in &digits[at..] {
         output.push(char::from(*digit));
     }
     output
+}
+
+/// The next lower digit slot and the ASCII form of `digit`, when both exist.
+fn digit_slot(at: usize, digit: Option<u8>) -> Option<(usize, u8)> {
+    let slot = at.checked_sub(1)?;
+    let ascii = b'0'.checked_add(digit?)?;
+    Some((slot, ascii))
 }
 
 #[expect(
@@ -2069,22 +2530,24 @@ fn append_decimal(mut output: alloc::string::String, mut value: usize) -> alloc:
 fn append_u32(mut output: alloc::string::String, mut value: u32) -> alloc::string::String {
     let mut digits = [0_u8; 10];
     let mut at = digits.len();
-    loop {
-        let Some(previous) = at.checked_sub(1) else {
-            return output;
-        };
-        at = previous;
-        let Some(digit) = u8::try_from(value % 10).ok() else {
-            return output;
-        };
-        let Some(ascii) = b'0'.checked_add(digit) else {
-            return output;
-        };
-        digits[at] = ascii;
-        value /= 10;
-        if value == 0 {
-            break;
+    let mut is_written = true;
+    let mut has_more = true;
+    while has_more {
+        match digit_slot(at, u8::try_from(value % 10).ok()) {
+            Some((slot, ascii)) => {
+                at = slot;
+                digits[at] = ascii;
+                value /= 10;
+                has_more = value != 0;
+            }
+            None => {
+                is_written = false;
+                has_more = false;
+            }
         }
+    }
+    if !is_written {
+        return output;
     }
     for digit in &digits[at..] {
         output.push(char::from(*digit));

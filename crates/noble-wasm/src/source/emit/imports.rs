@@ -3,11 +3,53 @@
     reason = "Owner: noble-maintainers; emission mutates only the fresh private output sink; checked plans and caller inputs remain immutable and no partial output escapes preparation."
 )]
 
+// Runtime fragments are named constants so that their large literal text
+// stays out of the branching emitters that select them.
+const ACCOUNTING: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/runtime/accounting.wat"
+));
+const LINEAR_ADDRESS: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/runtime/linear-address.wat"
+));
+const LINEAR_STORAGE: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/runtime/linear-storage.wat"
+));
+const STACK: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/stack.wat"));
+const CORE_LIVE_OWNERS: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/runtime/core-live-owners.wat"
+));
+const PROGRAMS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/programs.wat"));
+const OPERATIONS: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/runtime/operations.wat"
+));
+const DATA: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/data.wat"));
+const SOURCE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/source.wat"));
+
 pub(super) fn write(
     out: &mut crate::output::Buffer,
     plan: &super::super::plan::Layout,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(module\n(type $entry (func (param i32)))\n"));
+    attempt!(memory_and_table(out, plan));
+    attempt!(host_functions(out, plan));
+    attempt!(globals(out));
+    attempt!(module_globals(out, plan));
+    attempt!(out.append(
+        b"(export \"memory\" (memory 0))\n(global $source_reflection i32 (i32.const 1))\n"
+    ));
+    arena_limits(out, plan.calculator)
+}
+
+/// The memory and table imports, plus the live-slot host imports.
+fn memory_and_table(
+    out: &mut crate::output::Buffer,
+    plan: &super::super::plan::Layout,
+) -> Result<(), crate::Diagnostic> {
     if plan.live_slots {
         attempt!(out.append(b"(import \"noble\" \"memory\" (memory 20 20))\n"));
     } else if plan.calculator {
@@ -26,8 +68,14 @@ pub(super) fn write(
 (import \"noble\" \"resource_bind_validate\" (func $host_resource_bind_validate (param i32 i32 i32 i32 i32 i32) (result i32)))\n"
         ));
     }
-    attempt!(host_functions(out, plan));
-    attempt!(globals(out));
+    Ok(())
+}
+
+/// The calculator generation import, accounting totals and profile globals.
+fn module_globals(
+    out: &mut crate::output::Buffer,
+    plan: &super::super::plan::Layout,
+) -> Result<(), crate::Diagnostic> {
     if plan.calculator {
         // Immutable and per instance: the compiler generation this module was
         // validated against, bound by the engine at instantiation.
@@ -49,15 +97,22 @@ pub(super) fn write(
 (global $core_live_queued_proposal_root (mut i32) (i32.const 0))\n"
         ));
     }
-    attempt!(out.append(
-        b"(export \"memory\" (memory 0))\n(global $source_reflection i32 (i32.const 1))\n"
-    ));
-    arena_limits(out, plan.calculator)
+    Ok(())
 }
 
 /// Imported host functions selected by the plan's effects and profile, in
 /// their fixed declaration order.
 fn host_functions(
+    out: &mut crate::output::Buffer,
+    plan: &super::super::plan::Layout,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(core_host_functions(out, plan));
+    attempt!(bound_host_functions(out, plan));
+    live_host_functions(out, plan)
+}
+
+/// Core emit and abort, and bound emit, host imports.
+fn core_host_functions(
     out: &mut crate::output::Buffer,
     plan: &super::super::plan::Layout,
 ) -> Result<(), crate::Diagnostic> {
@@ -72,6 +127,14 @@ fn host_functions(
     if plan.has_bound_emit {
         attempt!(out.append(b"(import \"noble\" \"test_emit_bound\" (func $host_emit_bound (param i32 i32 i32) (result i32)))\n"));
     }
+    Ok(())
+}
+
+/// Bound clock, code-export and send host imports.
+fn bound_host_functions(
+    out: &mut crate::output::Buffer,
+    plan: &super::super::plan::Layout,
+) -> Result<(), crate::Diagnostic> {
     if plan.has_bound_clock {
         attempt!(out.append(b"(import \"noble\" \"test_clock_bound\" (func $host_clock_bound (param i32) (result i32 i64)))\n"));
     }
@@ -81,7 +144,14 @@ fn host_functions(
     if plan.has_bound_send {
         attempt!(out.append(b"(import \"noble\" \"test_send_bound\" (func $host_send_bound (param i32 i32 i32) (result i32)))\n"));
     }
+    Ok(())
+}
 
+/// Worker interruption and live proposal and generation host imports.
+fn live_host_functions(
+    out: &mut crate::output::Buffer,
+    plan: &super::super::plan::Layout,
+) -> Result<(), crate::Diagnostic> {
     if plan.worker_interruption {
         attempt!(out.append(b"(import \"noble\" \"worker_interrupt_check\" (func $host_interrupt_check (param i32) (result i32)))\n"));
     }
@@ -181,43 +251,16 @@ pub(super) fn bridge(out: &mut crate::output::Buffer) -> Result<(), crate::Diagn
 
 fn core_runtime(out: &mut crate::output::Buffer, core_live: bool) -> Result<(), crate::Diagnostic> {
     // Same order as the ordinary guest runtime: Core live is never calculator.
-    for text in [
-        include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/runtime/accounting.wat"
-        )),
-        include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/runtime/linear-address.wat"
-        )),
-        include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/runtime/linear-storage.wat"
-        )),
-        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/stack.wat")),
-    ] {
-        attempt!(fragment(out, text));
-    }
+    attempt!(fragment(out, ACCOUNTING));
+    attempt!(fragment(out, LINEAR_ADDRESS));
+    attempt!(fragment(out, LINEAR_STORAGE));
+    attempt!(fragment(out, STACK));
     if core_live {
-        attempt!(fragment(
-            out,
-            include_str!(concat!(
-                env!("CARGO_MANIFEST_DIR"),
-                "/runtime/core-live-owners.wat"
-            ))
-        ));
+        attempt!(fragment(out, CORE_LIVE_OWNERS));
     }
-    for text in [
-        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/programs.wat")),
-        include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/runtime/operations.wat"
-        )),
-        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/data.wat")),
-    ] {
-        attempt!(fragment(out, text));
-    }
-    Ok(())
+    attempt!(fragment(out, PROGRAMS));
+    attempt!(fragment(out, OPERATIONS));
+    fragment(out, DATA)
 }
 
 pub(super) fn bridge_runtime(
@@ -226,15 +269,8 @@ pub(super) fn bridge_runtime(
 ) -> Result<(), crate::Diagnostic> {
     attempt!(core_runtime(out, true));
     attempt!(super::reflection::write(out, declared_modules, false));
-    fragment(
-        out,
-        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/source.wat")),
-    )
+    fragment(out, SOURCE)
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-maintainers; immutable manifest-root runtime fragments are appended in their required order to the private bounded sink; output exhaustion propagates a diagnostic and no producer invariant needs an assertion."
-)]
 #[path = "imports/entry.rs"]
 pub(in crate::source::emit) mod entry;

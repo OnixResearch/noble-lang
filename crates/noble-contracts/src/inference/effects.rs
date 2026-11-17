@@ -26,27 +26,53 @@ impl super::Arena {
         let mut pending = alloc::vec![id];
         let mut bits = 0u64;
         let mut is_unknown = false;
+        let mut failure = None;
         while let Some(id) = pending.pop() {
-            attempt!(meter.charge(1, span));
-            match self.effects.get(attempt!(crate::offset(id, span))) {
-                Some(Effect::Constant(value)) => bits |= value,
-                Some(Effect::Hole | Effect::Rigid(_)) => is_unknown = true,
-                Some(Effect::Union(left, right)) => {
-                    pending.push(*left);
-                    pending.push(*right);
+            match self.charged_effect(id, span, meter) {
+                Ok(Effect::Constant(value)) => bits |= value,
+                Ok(Effect::Hole | Effect::Rigid(_)) => is_unknown = true,
+                Ok(Effect::Union(left, right)) => {
+                    pending.push(left);
+                    pending.push(right);
                 }
-                None => return Err(crate::internal(span)),
+                Err(problem) => {
+                    failure = Some(problem);
+                    break;
+                }
             }
+        }
+        if let Some(problem) = failure {
+            return Err(problem);
         }
         // The finite host-effect universe has one output per set bit.
         let count = attempt!(usize::try_from(bits.count_ones()).map_err(|_| crate::internal(span)));
         let mut known = alloc::vec::Vec::with_capacity(count);
-        for bit in 0..64 {
+        let mut bit = 0u32;
+        while bit < 64 {
             if bits & (1u64 << bit) != 0 {
                 known.push(bit);
             }
+            bit += 1;
         }
         Ok((known, is_unknown))
+    }
+
+    /// Charge one unit of work, then read the effect stored at `id`.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; metering and checked offset conversion are non-const and refusals construct owned diagnostics."
+    )]
+    fn charged_effect(
+        &self,
+        id: u32,
+        span: crate::Span,
+        meter: &mut crate::Meter,
+    ) -> Result<Effect, crate::Diagnostic> {
+        attempt!(meter.charge(1, span));
+        match self.effects.get(attempt!(crate::offset(id, span))) {
+            Some(effect) => Ok(*effect),
+            None => Err(crate::internal(span)),
+        }
     }
 
     #[expect(
@@ -101,10 +127,14 @@ impl super::Arena {
         reason = "Owner: noble-contracts; the same-typed parameters are positional coordinates at each checked call site; a newtype would not change the call shape."
     )]
     pub(crate) fn is_rigid_effect(&self, id: u32, identity: u32) -> bool {
-        usize::try_from(id)
-            .ok()
-            .and_then(|index| self.effects.get(index))
-            .is_some_and(|effect| matches!(effect, Effect::Rigid(index) if *index == identity))
+        let effect = match usize::try_from(id) {
+            Ok(index) => self.effects.get(index),
+            Err(_) => None,
+        };
+        match effect {
+            Some(Effect::Rigid(index)) => *index == identity,
+            Some(Effect::Hole | Effect::Constant(_) | Effect::Union(_, _)) | None => false,
+        }
     }
 
     pub fn effect_empty(

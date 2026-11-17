@@ -358,3 +358,34 @@ mod finite_bases;
 
 #[path = "models/semantic-merge-model.rs"]
 mod semantic_merge_model;
+
+/// The ordered-interface walk meters each inferred term and each stack-tail step: the first
+/// admitting work bound of each installed definition is pinned.
+#[test]
+fn ordered_interface_meters_a_fixed_work_bound() -> Result<(), String> {
+    let mut session = noble_contracts::source::Session::new();
+    define(&mut session, b"def addone [ 1 + ]")?;
+    define(&mut session, b"def twice [ addone addone ]")?;
+    define(&mut session, b"def pairs [ [ 1 ] [ 2 ] ]")?;
+    for (name, expected) in [("pairs", 153), ("twice", 238)] {
+        let mut work = 0;
+        loop {
+            let bounded = noble_contracts::Limits { work, ..limits() };
+            match session.installed_ordered_interface(name, bounded) {
+                Ok(interface) => {
+                    assert!(interface.is_some(), "{name} is installed");
+                    break;
+                }
+                Err(error) => assert_eq!(
+                    error.diagnostic().kind,
+                    noble_contracts::DiagnosticKind::Exhausted,
+                    "{name} bound {work}: {error:?}"
+                ),
+            }
+            work += 1;
+            assert!(work <= 10_000, "no admitting work bound for {name}");
+        }
+        assert_eq!(work, expected, "{name}");
+    }
+    Ok(())
+}

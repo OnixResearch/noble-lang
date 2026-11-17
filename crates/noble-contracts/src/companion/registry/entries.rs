@@ -83,11 +83,7 @@ impl crate::companion::registry::Registry {
         let mut index = 0usize;
         let mut found = None;
         while index < self.evidence.len() {
-            let entry = &self.evidence[index];
-            if entry.contract == contract
-                && entry.statement == statement
-                && entry.subject == *subject
-            {
+            if is_evidence_for(&self.evidence[index], contract, statement, subject) {
                 found = u32::try_from(index)
                     .ok()
                     .map(crate::companion::registry::EvidenceId);
@@ -104,13 +100,17 @@ impl crate::companion::registry::Registry {
         subject: crate::companion::SubjectDigest,
     ) -> Option<&[(u32, u64)]> {
         let mut index = 0usize;
-        while index < self.observations.len() {
-            if self.observations[index].subject == subject {
-                return Some(&self.observations[index].events);
+        let mut found = None;
+        while found.is_none() && index < self.observations.len() {
+            if observes(&self.observations[index], subject) {
+                found = Some(index);
             }
             index = index.saturating_add(1);
         }
-        None
+        match found {
+            Some(at) => Some(&self.observations[at].events),
+            None => None,
+        }
     }
 
     pub(crate) fn add_evidence(
@@ -203,6 +203,32 @@ const fn has_capacity(count: usize, capacity: Option<usize>) -> bool {
         Some(limit) => count < limit,
         None => false,
     }
+}
+
+/// Whether `entry` is evidence for exactly this contract, statement and subject.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; derived ContractId and Subject equality are non-const trait calls."
+)]
+fn is_evidence_for(
+    entry: &crate::companion::registry::EvidenceEntry,
+    contract: crate::companion::registry::ContractId,
+    statement: u64,
+    subject: &crate::companion::Subject,
+) -> bool {
+    entry.contract == contract && entry.statement == statement && entry.subject == *subject
+}
+
+/// Whether `observation` was recorded for `subject`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; derived SubjectDigest equality is a non-const trait call."
+)]
+fn observes(
+    observation: &crate::companion::registry::Observation,
+    subject: crate::companion::SubjectDigest,
+) -> bool {
+    observation.subject == subject
 }
 
 #[expect(

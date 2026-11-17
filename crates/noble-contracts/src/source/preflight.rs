@@ -187,19 +187,7 @@ impl Traversal {
                 }
             }
             noble_kernel::types::Ty::Nominal(id, shape) => {
-                let environment = session
-                    .declared
-                    .as_ref()
-                    .map(|context| &context.environment)
-                    .or_else(|| {
-                        session
-                            .live_slots
-                            .as_ref()
-                            .map(|profile| &profile.environment)
-                    });
-                if environment
-                    .is_some_and(|env| env.nominal(*id).is_some_and(|decl| decl.shape == **shape))
-                {
+                if is_registered_nominal(session, *id, shape) {
                     Ok(())
                 } else {
                     Err(crate::invalid(
@@ -209,18 +197,7 @@ impl Traversal {
                 }
             }
             noble_kernel::types::Ty::GenericNominal(_, _, _) => {
-                if session
-                    .declared
-                    .as_ref()
-                    .map(|context| &context.environment)
-                    .or_else(|| {
-                        session
-                            .live_slots
-                            .as_ref()
-                            .map(|profile| &profile.environment)
-                    })
-                    .is_some_and(|env| env.valid_generic_instance(ty))
-                {
+                if is_registered_generic(session, ty) {
                     Ok(())
                 } else {
                     Err(crate::invalid(
@@ -380,5 +357,49 @@ fn host_effects(
     match failure {
         Some(problem) => Err(problem),
         None => Ok(()),
+    }
+}
+
+/// The registered schema environment of a declared or live-slot session.
+const fn nominal_environment(session: &super::Session) -> Option<&noble_kernel::contracts::Env> {
+    match &session.declared {
+        Some(context) => Some(&context.environment),
+        None => match &session.live_slots {
+            Some(profile) => Some(&profile.environment),
+            None => None,
+        },
+    }
+}
+
+/// Whether nominal input `id` names a schema the session registered with
+/// exactly `shape`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; schema lookup and shape comparison are runtime table reads."
+)]
+fn is_registered_nominal(
+    session: &super::Session,
+    id: noble_kernel::types::NominalTypeId,
+    shape: &noble_kernel::types::NominalShape,
+) -> bool {
+    let Some(environment) = nominal_environment(session) else {
+        return false;
+    };
+    let Some(declaration) = environment.nominal(id) else {
+        return false;
+    };
+    declaration.shape == *shape
+}
+
+/// Whether generic nominal input `ty` is a valid instance of a family the
+/// session registered.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; generic instance validation reads runtime family tables."
+)]
+fn is_registered_generic(session: &super::Session, ty: &noble_kernel::types::Ty) -> bool {
+    match nominal_environment(session) {
+        Some(environment) => environment.valid_generic_instance(ty),
+        None => false,
     }
 }

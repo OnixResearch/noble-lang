@@ -54,64 +54,88 @@ impl Cursor {
         outcome
     }
 
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; pinned const trials fail on Vec indexing, NominalTypeId comparison and owned Cursor destruction (March E0277/E0493, August E0015/E0658/E0493); reassess when these operations become const-capable."
-    )]
     fn check_row(
-        mut self,
+        self,
         env: &noble_kernel::contracts::Env,
         expected: &ExpectedRows,
         index: usize,
     ) -> Result<Self, crate::Diagnostic> {
-        if index >= self.fixed.defs.len() {
-            if let noble_kernel::contracts::Behavior::NominalNew(id)
-            | noble_kernel::contracts::Behavior::NominalLeft(id) = env.kinds[index]
-            {
-                let decl = match env.nominals.get(self.next_nominal) {
-                    Some(decl) => decl,
-                    None => return Err(crate::Diagnostic::Invalid),
-                };
-                if decl.id != id {
-                    return Err(crate::Diagnostic::Invalid);
-                }
-                self = attempt!(self.append_nominal(decl));
-            } else if let noble_kernel::contracts::Behavior::GenericLeft(id) = env.kinds[index] {
-                let decl = match env.generic_variants.get(self.next_generic) {
-                    Some(decl) => decl,
-                    None => return Err(crate::Diagnostic::Invalid),
-                };
-                if decl.id != id {
-                    return Err(crate::Diagnostic::Invalid);
-                }
-                self = attempt!(self.append_generic_variant(decl));
-            } else {
-                self = attempt!(self.append_non_nominal(env, index));
-            }
-        }
-        let has_matching_contract = self.fixed.kinds.get(index) == env.kinds.get(index)
-            && super::same_scheme(&self.fixed.defs[index], &env.defs[index]);
-        let has_matching_owner =
-            self.fixed.definition_owners[index] == env.definition_owners[index];
-        let has_matching_dependencies = env.kinds[index]
-            == noble_kernel::contracts::Behavior::Named
-            || env.deps[index] == self.fixed.deps[index];
-        if !has_matching_contract || !has_matching_owner || !has_matching_dependencies {
+        let mut cursor = attempt!(self.grow(env, index));
+        if !is_replayed_row(env, &cursor.fixed, index) {
             return Err(crate::Diagnostic::Invalid);
         }
-        if env.kinds[index] == noble_kernel::contracts::Behavior::Named && index >= expected.prefix
-        {
-            self.named += 1;
+        if is_counted_row(env, expected, index) {
+            cursor.named += 1;
         }
-        Ok(self)
+        Ok(cursor)
+    }
+
+    /// Replay supplied row `index` when it lies beyond the rows already
+    /// replayed. The kind is read once, so every later test of it is decided
+    /// by the first.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; pinned const trials fail on Vec indexing, NominalTypeId comparison and owned Cursor destruction (March E0277/E0493, August E0015/E0658/E0493); reassess when these operations become const-capable."
+    )]
+    fn grow(
+        self,
+        env: &noble_kernel::contracts::Env,
+        index: usize,
+    ) -> Result<Self, crate::Diagnostic> {
+        if index < self.fixed.defs.len() {
+            return Ok(self);
+        }
+        let kind = env.kinds[index];
+        if let noble_kernel::contracts::Behavior::NominalNew(id)
+        | noble_kernel::contracts::Behavior::NominalLeft(id) = kind
+        {
+            return self.replay_nominal(env, id);
+        }
+        if let noble_kernel::contracts::Behavior::GenericLeft(id) = kind {
+            return self.replay_generic_variant(env, id);
+        }
+        self.append_non_nominal(env, index, kind)
+    }
+
+    /// Replay the next supplied nominal declaration, which must declare `id`.
+    fn replay_nominal(
+        self,
+        env: &noble_kernel::contracts::Env,
+        id: noble_kernel::types::NominalTypeId,
+    ) -> Result<Self, crate::Diagnostic> {
+        let decl = match env.nominals.get(self.next_nominal) {
+            Some(decl) => decl,
+            None => return Err(crate::Diagnostic::Invalid),
+        };
+        if decl.id != id {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        self.append_nominal(decl)
+    }
+
+    /// Replay the next supplied generic family, which must declare `id`.
+    fn replay_generic_variant(
+        self,
+        env: &noble_kernel::contracts::Env,
+        id: noble_kernel::types::NominalTypeId,
+    ) -> Result<Self, crate::Diagnostic> {
+        let decl = match env.generic_variants.get(self.next_generic) {
+            Some(decl) => decl,
+            None => return Err(crate::Diagnostic::Invalid),
+        };
+        if decl.id != id {
+            return Err(crate::Diagnostic::Invalid);
+        }
+        self.append_generic_variant(decl)
     }
 
     fn append_non_nominal(
         mut self,
         env: &noble_kernel::contracts::Env,
         index: usize,
+        kind: noble_kernel::contracts::Behavior,
     ) -> Result<Self, crate::Diagnostic> {
-        if let noble_kernel::contracts::Behavior::Named = env.kinds[index] {
+        if let noble_kernel::contracts::Behavior::Named = kind {
             self.fixed.defs.push(env.defs[index].clone());
             self.fixed
                 .kinds
@@ -122,16 +146,16 @@ impl Cursor {
                 .push(env.definition_owners[index]);
             return Ok(self);
         }
-        if let noble_kernel::contracts::Behavior::BoundEmit(slot) = env.kinds[index] {
+        if let noble_kernel::contracts::Behavior::BoundEmit(slot) = kind {
             return self.append_bound_emit(env, index, slot);
         }
-        if let noble_kernel::contracts::Behavior::BoundClock(slot) = env.kinds[index] {
+        if let noble_kernel::contracts::Behavior::BoundClock(slot) = kind {
             return self.append_bound_clock(env, index, slot);
         }
-        if let noble_kernel::contracts::Behavior::BoundCodeExport(slot) = env.kinds[index] {
+        if let noble_kernel::contracts::Behavior::BoundCodeExport(slot) = kind {
             return self.append_bound_code_export(env, index, slot);
         }
-        if let noble_kernel::contracts::Behavior::BoundSend(slot) = env.kinds[index] {
+        if let noble_kernel::contracts::Behavior::BoundSend(slot) = kind {
             return self.append_bound_send(env, index, slot);
         }
         // Builtins and derived nominal/family operations cannot begin a declaration.
@@ -148,15 +172,9 @@ impl Cursor {
             Ok(value) => noble_kernel::contracts::Definition(value),
             Err(_) => return Err(crate::Diagnostic::Invalid),
         };
-        let mut row_index = 0usize;
-        while row_index < env.bound_adapters.len() {
-            let row = &env.bound_adapters[row_index];
-            if row.definition == def && row.adapter_slot == slot {
-                break;
-            }
-            row_index += 1;
-        }
-        let row = match env.bound_adapters.get(row_index) {
+        let row = match crate::scan::find_first(&env.bound_adapters, |row| {
+            row.definition == def && row.adapter_slot == slot
+        }) {
             Some(row) => row,
             None => return Err(crate::Diagnostic::Invalid),
         };
@@ -192,11 +210,10 @@ impl Cursor {
         let def = noble_kernel::contracts::Definition(
             u32::try_from(index).map_err(|_| crate::Diagnostic::Invalid)?,
         );
-        let row = env
-            .bound_adapters
-            .iter()
-            .find(|row| row.definition == def && row.adapter_slot == slot)
-            .ok_or(crate::Diagnostic::Invalid)?;
+        let row = crate::scan::find_first(&env.bound_adapters, |row| {
+            row.definition == def && row.adapter_slot == slot
+        })
+        .ok_or(crate::Diagnostic::Invalid)?;
         let owner = env.definition_owners[index].ok_or(crate::Diagnostic::Invalid)?;
         let registration = noble_kernel::contracts::BoundClockRegistration {
             adapter_identity: row.adapter_identity.clone(),
@@ -226,11 +243,10 @@ impl Cursor {
         let def = noble_kernel::contracts::Definition(
             u32::try_from(index).map_err(|_| crate::Diagnostic::Invalid)?,
         );
-        let row = env
-            .bound_adapters
-            .iter()
-            .find(|row| row.definition == def && row.adapter_slot == slot)
-            .ok_or(crate::Diagnostic::Invalid)?;
+        let row = crate::scan::find_first(&env.bound_adapters, |row| {
+            row.definition == def && row.adapter_slot == slot
+        })
+        .ok_or(crate::Diagnostic::Invalid)?;
         let owner = env.definition_owners[index].ok_or(crate::Diagnostic::Invalid)?;
         let registration = noble_kernel::contracts::BoundCodeExportRegistration {
             adapter_identity: row.adapter_identity.clone(),
@@ -260,11 +276,10 @@ impl Cursor {
         let def = noble_kernel::contracts::Definition(
             u32::try_from(index).map_err(|_| crate::Diagnostic::Invalid)?,
         );
-        let row = env
-            .bound_adapters
-            .iter()
-            .find(|row| row.definition == def && row.adapter_slot == slot)
-            .ok_or(crate::Diagnostic::Invalid)?;
+        let row = crate::scan::find_first(&env.bound_adapters, |row| {
+            row.definition == def && row.adapter_slot == slot
+        })
+        .ok_or(crate::Diagnostic::Invalid)?;
         let owner = env.definition_owners[index].ok_or(crate::Diagnostic::Invalid)?;
         let registration = noble_kernel::contracts::BoundSendRegistration {
             adapter_identity: row.adapter_identity.clone(),
@@ -310,4 +325,28 @@ impl Cursor {
         self.next_generic += 1;
         Ok(self)
     }
+}
+
+/// Whether replayed row `index` has the supplied row's exact kind, scheme
+/// and owner and, unless it is a named definition, its exact dependencies.
+fn is_replayed_row(
+    env: &noble_kernel::contracts::Env,
+    fixed: &noble_kernel::contracts::Env,
+    index: usize,
+) -> bool {
+    let has_matching_contract = fixed.kinds.get(index).copied() == env.kinds.get(index).copied()
+        && super::same_scheme(&fixed.defs[index], &env.defs[index]);
+    let has_matching_owner = fixed.definition_owners[index] == env.definition_owners[index];
+    let has_matching_dependencies = env.kinds[index] == noble_kernel::contracts::Behavior::Named
+        || env.deps[index] == fixed.deps[index];
+    has_matching_contract && has_matching_owner && has_matching_dependencies
+}
+
+/// Whether row `index` is a named definition after the canonical prefix.
+fn is_counted_row(
+    env: &noble_kernel::contracts::Env,
+    expected: &ExpectedRows,
+    index: usize,
+) -> bool {
+    env.kinds[index] == noble_kernel::contracts::Behavior::Named && index >= expected.prefix
 }

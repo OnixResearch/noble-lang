@@ -55,39 +55,48 @@ fn named_handles(
 (func (export \"worker_named_handle\") (param $index i32) (result i32)\n\
 (if (i32.eqz (global.get $worker_installed)) (then (return (i32.const 0))))\n"
     ));
-    for (index, program) in plan.definition_roots.iter().enumerate() {
-        attempt!(out.append(b"(if (i32.eq (local.get $index) "));
-        attempt!(out.i32(attempt!(
-            u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
-        )));
-        attempt!(out.append(b") (then (return "));
-        attempt!(super::get_global(out, *program));
-        attempt!(out.append(b")))\n"));
-    }
+    attempt!(definition_handle_cases(out, &plan.definition_roots));
     attempt!(out.append(
         b"(i32.const 0))\n\
 (func (export \"worker_program_handle\") (param $index i32) (result i32)\n\
 (if (i32.eqz (global.get $worker_installed)) (then (return (i32.const 0))))\n"
     ));
-    for index in 0..plan.programs.len() {
-        attempt!(out.append(b"(if (i32.eq (local.get $index) "));
-        attempt!(out.i32(attempt!(
-            u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
-        )));
-        attempt!(out.append(b") (then (return "));
-        attempt!(super::get_global(out, index));
-        attempt!(out.append(b")))\n"));
-    }
+    attempt!(super::program_handle_cases(out, plan.programs.len()));
     out.append(b"(i32.const 0))\n")
 }
 
+/// Handle dispatch arms returning each named definition's root Program, in
+/// definition order.
+fn definition_handle_cases(
+    out: &mut crate::output::Buffer,
+    roots: &[usize],
+) -> Result<(), crate::Diagnostic> {
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < roots.len() {
+        match super::handle_case(out, index, roots[index]) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
+}
+
 /// One checked invoke entry for the trusted host, plus the interruptible
-/// profile's two-cell stack entry.
+/// profile's two-cell stack entry. The entries are ASCII `str` literals
+/// emitted through `as_bytes`, so no large constant byte array is built.
 fn invoke(
     out: &mut crate::output::Buffer,
     plan: &super::super::plan::Layout,
 ) -> Result<(), crate::Diagnostic> {
-    attempt!(out.append(b"\
+    attempt!(out.append(
+        "\
 (func (export \"worker_invoke\") (param $handle i32) (param $operand i64) (result i64)\n\
 (if (i32.or (i32.eqz (global.get $worker_installed))\n (i32.or (global.get $sp) (global.get $cp)))\n (then (call $fail (i32.const 4)) (return (i64.const 0))))\n\
 (if (global.get $failure) (then (return (i64.const 0))))\n\
@@ -99,12 +108,15 @@ fn invoke(
 (call $enqueue_program (local.get $handle))\n(call $dispatch)\n\
 (if (global.get $failure) (then (return (i64.const 0))))\n\
 (if (i32.ne (global.get $sp) (i32.const 1))\n (then (call $fail (i32.const 4)) (return (i64.const 0))))\n\
-(call $pop_kind (i32.const 1)))\n"));
+(call $pop_kind (i32.const 1)))\n"
+            .as_bytes()
+    ));
     if plan.worker_interruption {
         // A transition host injects two checked data values first and reads
         // two checked results afterwards. This stack entry is exposed only
         // in the interruptible worker profile.
-        attempt!(out.append(b"(func (export \"worker_invoke_stack\") (param $handle i32) (param $inputs i32) (param $outputs i32) (result i32)\n\
+        attempt!(out.append(
+            "(func (export \"worker_invoke_stack\") (param $handle i32) (param $inputs i32) (param $outputs i32) (result i32)\n\
 (if (i32.or (i32.eqz (global.get $worker_installed))\n\
  (i32.or (global.get $cp) (i32.ne (global.get $sp) (local.get $inputs))))\n\
  (then (call $fail (i32.const 4)) (return (global.get $failure))))\n\
@@ -117,7 +129,9 @@ fn invoke(
 (if (global.get $failure) (then (return (global.get $failure))))\n\
 (if (i32.ne (global.get $sp) (local.get $outputs))\n\
  (then (call $fail (i32.const 4))))\n\
-(global.get $failure))\n"));
+(global.get $failure))\n"
+                .as_bytes()
+        ));
     }
     Ok(())
 }

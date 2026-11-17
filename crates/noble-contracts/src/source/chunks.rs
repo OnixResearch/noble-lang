@@ -81,6 +81,10 @@ const REVISION_BYTES_U64: u64 = 32;
 
 /// One immutable scalar capture or fixture value. The variant *is* the type,
 /// so a capture cannot claim a type its value does not have.
+///
+/// The extracted constructors carry a `Scalar` suffix: `Bool` would otherwise
+/// shadow Lean's own `Bool` inside this type's derived instances.
+#[charon::variants_suffix("Scalar")]
 #[octet::sealed_enum]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Scalar {
@@ -179,22 +183,43 @@ impl Op {
     /// Resolve a spelling to a profile operation. A spelling outside this
     /// table is not a profile node, whatever the namespace defines.
     pub fn of(word: &[u8]) -> Option<Self> {
-        match word {
-            b"dup" => Some(Op::Dup),
-            b"drop" => Some(Op::Drop),
-            b"swap" => Some(Op::Swap),
-            b"+" => Some(Op::Add),
-            b"-" => Some(Op::Sub),
-            b"*" => Some(Op::Mul),
-            b"=" => Some(Op::Eq),
-            b"run" => Some(Op::Run),
-            _ => None,
+        if spells(word, b"dup") {
+            Some(Op::Dup)
+        } else if spells(word, b"drop") {
+            Some(Op::Drop)
+        } else if spells(word, b"swap") {
+            Some(Op::Swap)
+        } else if spells(word, b"+") {
+            Some(Op::Add)
+        } else if spells(word, b"-") {
+            Some(Op::Sub)
+        } else if spells(word, b"*") {
+            Some(Op::Mul)
+        } else if spells(word, b"=") {
+            Some(Op::Eq)
+        } else if spells(word, b"run") {
+            Some(Op::Run)
+        } else {
+            None
         }
     }
 }
 
+/// Whether `word` is exactly the byte spelling `spelling`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; byte-spelling comparison uses slice equality, which is not a stable const trait"
+)]
+fn spells(word: &[u8], spelling: &[u8]) -> bool {
+    *word == *spelling
+}
+
 /// One retained recipe node. References are indices into the recipe's own
 /// node arena and are canonical only when a node refers to an earlier node.
+///
+/// The extracted constructors carry a `Node` suffix: `Bool` would otherwise
+/// shadow Lean's own `Bool` inside this type's derived instances.
+#[charon::variants_suffix("Node")]
 #[octet::sealed_enum]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Node {
@@ -252,6 +277,7 @@ pub struct Envelope {
 #[derive(Clone, Debug)]
 pub struct Entry {
     envelope: Envelope,
+    #[charon::rename("source_bytes")]
     source: alloc::vec::Vec<u8>,
     interface: Interface,
     expanded_nodes: u32,
@@ -517,19 +543,24 @@ impl Budget {
 }
 
 /// One exact refusal location: a stable field name and an optional ordinal.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// The field name is owned: a `'static` borrow in a refusal type would keep
+/// every `?` and loop over it out of the Aeneas extraction (issue #97).
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Location {
-    pub field: &'static str,
+    pub field: alloc::string::String,
     pub index: Option<u32>,
 }
 
 impl Location {
-    pub const fn field(field: &'static str) -> Self {
-        Self { field, index: None }
-    }
-    pub const fn at(field: &'static str, index: u32) -> Self {
+    pub fn field(field: &str) -> Self {
         Self {
-            field,
+            field: alloc::string::String::from(field),
+            index: None,
+        }
+    }
+    pub fn at(field: &str, index: u32) -> Self {
+        Self {
+            field: alloc::string::String::from(field),
             index: Some(index),
         }
     }
@@ -740,6 +771,10 @@ impl Ledger {
 
 /// One flat emitted element. `Open`/`Close` are the quotation brackets, so one
 /// ordered list is both what gets emitted and what gets replayed.
+///
+/// The extracted constructors carry an `Element` suffix: `Bool` would
+/// otherwise shadow Lean's own `Bool` inside this type's derived instances.
+#[charon::variants_suffix("Element")]
 #[octet::sealed_enum]
 #[derive(Clone, Debug, PartialEq)]
 pub enum Element {
@@ -797,11 +832,11 @@ fn absorb_bytes_lanes(domain: u64, bytes: &[u8], lanes: usize, out: &mut [u8]) {
 
 /// The canonical source revision of one emitted program. An integrity index,
 /// never admission authority (VC-ID-03): admission re-prepares the source.
-pub fn canonical_revision(source: &[u8]) -> [u8; REVISION_BYTES] {
+pub fn canonical_revision(emitted: &[u8]) -> [u8; REVISION_BYTES] {
     let mut out = [0u8; REVISION_BYTES];
     absorb_bytes_lanes(
         crate::companion::digest::DOMAIN_CHUNK_SOURCE,
-        source,
+        emitted,
         REVISION_BYTES / 8,
         &mut out,
     );
@@ -966,187 +1001,261 @@ struct Expansion {
     expanded_nodes: u32,
 }
 
-/// One expansion frame: a node arena plus the reference list being walked.
-struct Segment<'a> {
-    envelope: &'a Envelope,
-    body: &'a [u32],
+/// One expansion frame: the node arena it walks (by index, so the frame holds
+/// no borrow), the reference list being walked and its progress.
+struct Segment {
+    /// `None` is the envelope being expanded; `Some(index)` is a library entry.
+    owner: Option<u16>,
+    /// `None` walks the owner's entry list; `Some(node)` that quotation's body.
+    quotation: Option<usize>,
     at: usize,
     close: bool,
+}
+
+/// The mutable state of one recipe expansion.
+struct ExpansionWalk {
+    frames: alloc::vec::Vec<Segment>,
+    elements: alloc::vec::Vec<Element>,
+    depth: u32,
+    spent: u32,
+}
+
+/// The envelope and reference list one expansion frame walks.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; segment lookups use the slice `get`, which is not a stable const fn"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; a missing owner entry or quotation node is returned as `None`, which the expansion turns into a typed refusal, so there is no invariant here to assert"
+)]
+fn segment_body<'a>(
+    entries: &'a [Entry],
+    root: &'a Envelope,
+    segment: &Segment,
+) -> Option<(&'a Envelope, &'a [u32])> {
+    let owner = match segment.owner {
+        None => root,
+        Some(index) => match entries.get(usize::from(index)) {
+            Some(entry) => &entry.envelope,
+            None => return None,
+        },
+    };
+    match segment.quotation {
+        None => Some((owner, owner.body.entry.as_slice())),
+        Some(node) => match owner.body.nodes.get(node) {
+            Some(Node::Quotation { body, .. }) => Some((owner, body.as_slice())),
+            Some(
+                Node::I64(_)
+                | Node::Bool(_)
+                | Node::Capture { .. }
+                | Node::Operation { .. }
+                | Node::Invoke { .. },
+            )
+            | None => None,
+        },
+    }
 }
 
 /// Expand one envelope's recipe, inlining every invoked library entry, into the
 /// flat element list that is emitted. A dependency edge, a quotation level and
 /// an instantiation binding are each charged here; nothing is inferred from a
 /// signature.
-#[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-contracts; one explicit frame loop expands a recipe and its dependencies; splitting it would separate each emitted element from the bound that refused it."
-)]
 fn expand_recipe(
     entries: &[Entry],
     envelope: &Envelope,
     ledger: &mut Ledger,
     at: Location,
 ) -> Result<Expansion, Refusal> {
-    let mut frames: alloc::vec::Vec<Segment<'_>> =
-        alloc::vec::Vec::with_capacity(MAX_QUOTATION_FRAMES);
-    frames.push(Segment {
-        envelope,
-        body: &envelope.body.entry,
+    let mut walk = ExpansionWalk {
+        frames: alloc::vec::Vec::with_capacity(MAX_QUOTATION_FRAMES),
+        elements: alloc::vec::Vec::with_capacity(MAX_EXPANDED_NODE_CAPACITY),
+        depth: 0,
+        spent: 0,
+    };
+    walk.frames.push(Segment {
+        owner: None,
+        quotation: None,
         at: 0,
         close: false,
     });
-    let mut elements = alloc::vec::Vec::with_capacity(MAX_EXPANDED_NODE_CAPACITY);
-    let mut depth = 0u32;
-    let mut spent = 0u32;
-    while let Some(top) = frames.len().checked_sub(1) {
-        let Some(frame) = frames.get_mut(top) else {
-            return Err(Refusal::new(
-                Class::Internal,
-                at,
-                "expansion lost its frame",
-            ));
-        };
-        if frame.at >= frame.body.len() {
-            let should_close = frame.close;
-            let _ = frames.pop();
-            if should_close {
-                depth = depth.saturating_sub(1);
-                ledger.charge(Resource::ExpandedNodes, 1, at)?;
-                elements.push(Element::Close);
-                spent = spent.saturating_add(1);
-            }
-            continue;
-        }
-        let position = frame.at;
-        frame.at = frame.at.saturating_add(1);
-        let owner = frame.envelope;
-        let body = frame.body;
-        let Some(reference) = body.get(position).copied() else {
-            return Err(Refusal::new(
-                Class::Invalid,
-                at,
-                "recipe reference list ends unexpectedly",
-            ));
-        };
-        let Some(node_index) = usize::try_from(reference).ok() else {
-            return Err(Refusal::new(
-                Class::Invalid,
-                at,
-                "recipe node reference exceeds the host address space",
-            ));
-        };
-        let Some(node) = owner.body.nodes.get(node_index) else {
-            return Err(Refusal::new(
-                Class::Invalid,
-                at,
-                "recipe node reference points outside the finite arena",
-            ));
-        };
-        let node_at = Location::at("envelope.body.nodes", reference);
-        if !matches!(node, Node::Invoke { .. }) {
-            ledger.charge(Resource::ExpandedNodes, 1, at)?;
-        }
-        match node {
-            Node::I64(value) => elements.push(Element::I64(*value)),
-            Node::Bool(value) => elements.push(Element::Bool(*value)),
-            Node::Capture { index } => {
-                let Some(capture) = owner.captures.get(usize::from(*index)) else {
-                    return Err(Refusal::new(
-                        Class::Invalid,
-                        at,
-                        "recipe capture index is outside the retained capture list",
-                    ));
-                };
-                match capture.value {
-                    Scalar::I64(value) => elements.push(Element::I64(value)),
-                    Scalar::Bool(value) => elements.push(Element::Bool(value)),
-                }
-            }
-            Node::Operation { op, instantiation } => {
-                charge_instantiation(owner, *instantiation, ledger, at)?;
-                let Some(witness) = owner.instantiations.get(usize::from(*instantiation)) else {
-                    return Err(Refusal::new(
-                        Class::Invalid,
-                        at,
-                        "operation witness is outside the retained instantiation list",
-                    ));
-                };
-                elements.push(Element::Op {
-                    op: *op,
-                    witness: Some(witness.clone()),
-                });
-            }
-            Node::Invoke {
-                dependency,
-                instantiation,
-            } => {
-                charge_instantiation(owner, *instantiation, ledger, node_at)?;
-                check_closed_instantiation(owner, *instantiation, node_at)?;
-                ledger.charge(Resource::DependencySteps, 1, at)?;
-                let Some(record) = owner.dependencies.get(usize::from(*dependency)) else {
-                    return Err(Refusal::new(
-                        Class::Invalid,
-                        at,
-                        "recipe dependency index is outside the retained dependency list",
-                    ));
-                };
-                let Some(target) = find_entry(entries, record) else {
-                    return Err(Refusal::new(
-                        Class::Invalid,
-                        at,
-                        "recipe dependency record does not resolve to a retained earlier entry",
-                    ));
-                };
-                let Some(entry) = entries.get(usize::from(target)) else {
-                    return Err(Refusal::new(
-                        Class::Internal,
-                        at,
-                        "resolved dependency is not retained",
-                    ));
-                };
-                frames.push(Segment {
-                    envelope: &entry.envelope,
-                    body: &entry.envelope.body.entry,
-                    at: 0,
-                    close: false,
-                });
-                continue;
-            }
-            Node::Quotation {
-                body: quoted,
-                instantiation,
-            } => {
-                charge_instantiation(owner, *instantiation, ledger, node_at)?;
-                check_closed_instantiation(owner, *instantiation, node_at)?;
-                depth = depth.saturating_add(1);
-                ledger.observe(Resource::QuotationDepth, depth, at)?;
-                elements.push(Element::Open);
-                spent = spent.saturating_add(1);
-                frames.push(Segment {
-                    envelope: owner,
-                    body: quoted,
-                    at: 0,
-                    close: true,
-                });
-                continue;
-            }
-        }
-        spent = spent.saturating_add(1);
+    let mut outcome = Ok(());
+    while outcome.is_ok() && !walk.frames.is_empty() {
+        outcome = expand_step(entries, envelope, &mut walk, ledger, at.clone());
     }
-    if !frames.is_empty() || depth != 0 {
+    outcome?;
+    if !walk.frames.is_empty() || walk.depth != 0 {
         return Err(Refusal::new(
             Class::Internal,
             at,
             "recipe expansion ended mid-quotation",
         ));
     }
-    debug_assert_eq!(depth, 0);
-    debug_assert!(spent <= MAX_EXPANDED_NODES);
+    debug_assert_eq!(walk.depth, 0);
+    debug_assert!(walk.spent <= MAX_EXPANDED_NODES);
     Ok(Expansion {
-        elements,
-        expanded_nodes: spent,
+        elements: walk.elements,
+        expanded_nodes: walk.spent,
     })
+}
+
+/// One expansion step: close the finished top frame or expand its next node.
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; one explicit frame step expands a recipe node and its dependencies; splitting it would separate each emitted element from the bound that refused it."
+)]
+fn expand_step(
+    entries: &[Entry],
+    envelope: &Envelope,
+    walk: &mut ExpansionWalk,
+    ledger: &mut Ledger,
+    at: Location,
+) -> Result<(), Refusal> {
+    debug_assert!(!walk.frames.is_empty());
+    let Some(top) = walk.frames.len().checked_sub(1) else {
+        return Ok(());
+    };
+    let Some(frame) = walk.frames.get(top) else {
+        return Err(Refusal::new(
+            Class::Internal,
+            at,
+            "expansion lost its frame",
+        ));
+    };
+    let Some((owner, body)) = segment_body(entries, envelope, frame) else {
+        return Err(Refusal::new(
+            Class::Internal,
+            at,
+            "expansion lost its frame",
+        ));
+    };
+    let owner_index = frame.owner;
+    let position = frame.at;
+    if position >= body.len() {
+        let should_close = frame.close;
+        let _ = walk.frames.pop();
+        if should_close {
+            walk.depth = walk.depth.saturating_sub(1);
+            ledger.charge(Resource::ExpandedNodes, 1, at)?;
+            walk.elements.push(Element::Close);
+            walk.spent = walk.spent.saturating_add(1);
+        }
+        return Ok(());
+    }
+    if let Some(frame) = walk.frames.get_mut(top) {
+        frame.at = position.saturating_add(1);
+    }
+    let Some(reference) = body.get(position).copied() else {
+        return Err(Refusal::new(
+            Class::Invalid,
+            at,
+            "recipe reference list ends unexpectedly",
+        ));
+    };
+    let Some(node_index) = usize::try_from(reference).ok() else {
+        return Err(Refusal::new(
+            Class::Invalid,
+            at,
+            "recipe node reference exceeds the host address space",
+        ));
+    };
+    let Some(node) = owner.body.nodes.get(node_index) else {
+        return Err(Refusal::new(
+            Class::Invalid,
+            at,
+            "recipe node reference points outside the finite arena",
+        ));
+    };
+    if !matches!(node, Node::Invoke { .. }) {
+        ledger.charge(Resource::ExpandedNodes, 1, at.clone())?;
+    }
+    match node {
+        Node::I64(value) => walk.elements.push(Element::I64(*value)),
+        Node::Bool(value) => walk.elements.push(Element::Bool(*value)),
+        Node::Capture { index } => {
+            let Some(capture) = owner.captures.get(usize::from(*index)) else {
+                return Err(Refusal::new(
+                    Class::Invalid,
+                    at,
+                    "recipe capture index is outside the retained capture list",
+                ));
+            };
+            match capture.value {
+                Scalar::I64(value) => walk.elements.push(Element::I64(value)),
+                Scalar::Bool(value) => walk.elements.push(Element::Bool(value)),
+            }
+        }
+        Node::Operation { op, instantiation } => {
+            charge_instantiation(owner, *instantiation, ledger, at.clone())?;
+            let Some(witness) = owner.instantiations.get(usize::from(*instantiation)) else {
+                return Err(Refusal::new(
+                    Class::Invalid,
+                    at,
+                    "operation witness is outside the retained instantiation list",
+                ));
+            };
+            walk.elements.push(Element::Op {
+                op: *op,
+                witness: Some(witness.clone()),
+            });
+        }
+        Node::Invoke {
+            dependency,
+            instantiation,
+        } => {
+            let node_at = Location::at("envelope.body.nodes", reference);
+            charge_instantiation(owner, *instantiation, ledger, node_at.clone())?;
+            check_closed_instantiation(owner, *instantiation, node_at)?;
+            ledger.charge(Resource::DependencySteps, 1, at.clone())?;
+            let Some(record) = owner.dependencies.get(usize::from(*dependency)) else {
+                return Err(Refusal::new(
+                    Class::Invalid,
+                    at,
+                    "recipe dependency index is outside the retained dependency list",
+                ));
+            };
+            let Some(target) = find_entry(entries, record) else {
+                return Err(Refusal::new(
+                    Class::Invalid,
+                    at,
+                    "recipe dependency record does not resolve to a retained earlier entry",
+                ));
+            };
+            if entries.get(usize::from(target)).is_none() {
+                return Err(Refusal::new(
+                    Class::Internal,
+                    at,
+                    "resolved dependency is not retained",
+                ));
+            }
+            walk.frames.push(Segment {
+                owner: Some(target),
+                quotation: None,
+                at: 0,
+                close: false,
+            });
+            return Ok(());
+        }
+        Node::Quotation { instantiation, .. } => {
+            let node_at = Location::at("envelope.body.nodes", reference);
+            charge_instantiation(owner, *instantiation, ledger, node_at.clone())?;
+            check_closed_instantiation(owner, *instantiation, node_at)?;
+            walk.depth = walk.depth.saturating_add(1);
+            ledger.observe(Resource::QuotationDepth, walk.depth, at)?;
+            walk.elements.push(Element::Open);
+            walk.spent = walk.spent.saturating_add(1);
+            walk.frames.push(Segment {
+                owner: owner_index,
+                quotation: Some(node_index),
+                at: 0,
+                close: true,
+            });
+            return Ok(());
+        }
+    }
+    walk.spent = walk.spent.saturating_add(1);
+    debug_assert!(walk.spent > 0);
+    Ok(())
 }
 
 fn charge_instantiation(
@@ -1248,35 +1357,63 @@ fn emit_i64(value: i64, digits: &mut [u8; 20]) -> usize {
     start
 }
 
-fn emit(elements: &[Element], at: Location) -> Result<alloc::vec::Vec<u8>, Refusal> {
-    let mut out = alloc::vec::Vec::with_capacity(elements.len());
-    let mut digits = [0u8; 20];
-    for element in elements {
-        match element {
-            Element::I64(value) => {
-                let start = emit_i64(*value, &mut digits);
-                if let Some(encoded) = digits.get(start..) {
-                    out.extend_from_slice(encoded);
-                }
-            }
-            Element::Bool(true) => out.extend_from_slice(b"true"),
-            Element::Bool(false) => out.extend_from_slice(b"false"),
-            Element::Op { op, .. } => out.extend_from_slice(op.spelling().as_bytes()),
-            Element::Open => out.push(b'['),
-            Element::Close => out.push(b']'),
-            Element::Hole => {
-                return Err(Refusal::new(
-                    Class::Invalid,
-                    at,
-                    "an editor hole cannot be emitted as source",
-                ))
+/// The source bytes emitted so far plus the decimal scratch buffer.
+struct Emission {
+    out: alloc::vec::Vec<u8>,
+    digits: [u8; 20],
+}
+
+/// Append one element's canonical spelling and its separator.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; emission appends tokens to the runtime output Vec"
+)]
+fn emit_element(emission: &mut Emission, element: &Element, at: &Location) -> Result<(), Refusal> {
+    debug_assert!(encoded_len(emission.out.len()) <= u64::from(MAX_SOURCE_BYTES));
+    match element {
+        Element::I64(value) => {
+            let start = emit_i64(*value, &mut emission.digits);
+            if let Some(encoded) = emission.digits.get(start..) {
+                emission.out.extend_from_slice(encoded);
             }
         }
-        out.push(b' ');
-        if u32::try_from(out.len()).map_or(true, |length| length > MAX_SOURCE_BYTES) {
-            return Err(byte_budget_refusal(encoded_len(out.len()), at));
+        Element::Bool(true) => emission.out.extend_from_slice(b"true"),
+        Element::Bool(false) => emission.out.extend_from_slice(b"false"),
+        Element::Op { op, .. } => emission.out.extend_from_slice(op.spelling().as_bytes()),
+        Element::Open => emission.out.push(b'['),
+        Element::Close => emission.out.push(b']'),
+        Element::Hole => {
+            return Err(Refusal::new(
+                Class::Invalid,
+                at.clone(),
+                "an editor hole cannot be emitted as source",
+            ))
         }
     }
+    emission.out.push(b' ');
+    if u32::try_from(emission.out.len()).map_or(true, |length| length > MAX_SOURCE_BYTES) {
+        return Err(byte_budget_refusal(
+            encoded_len(emission.out.len()),
+            at.clone(),
+        ));
+    }
+    debug_assert!(!emission.out.is_empty());
+    Ok(())
+}
+
+fn emit(elements: &[Element], at: Location) -> Result<alloc::vec::Vec<u8>, Refusal> {
+    let mut emission = Emission {
+        out: alloc::vec::Vec::with_capacity(elements.len()),
+        digits: [0u8; 20],
+    };
+    let mut index = 0usize;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < elements.len() {
+        outcome = emit_element(&mut emission, &elements[index], &at);
+        index = index.saturating_add(1);
+    }
+    outcome?;
+    let out = emission.out;
     debug_assert!(out.len() >= elements.len());
     debug_assert!(u32::try_from(out.len()).is_ok_and(|length| length <= MAX_SOURCE_BYTES));
     Ok(out)
@@ -1308,26 +1445,36 @@ fn integer_token_len(value: i64) -> u64 {
     digits.saturating_add(u64::from(value < 0))
 }
 
+/// The canonical token bytes of one element; the hole contributes none.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; integer token widths come from the non-const digit counter"
+)]
+fn element_token_len(element: &Element) -> u64 {
+    match element {
+        Element::I64(value) => integer_token_len(*value),
+        Element::Bool(true) => 4,
+        Element::Bool(false) => 5,
+        Element::Op { op, .. } => encoded_len(op.spelling().len()),
+        Element::Open | Element::Close => 1,
+        Element::Hole => 0,
+    }
+}
+
 /// Lower-bound a completed source's bytes from its editor context, omitting
 /// the single hole. No proposal can make this context smaller.
 fn editor_context_bytes(elements: &[Element], at: Location) -> Result<u32, Refusal> {
     let mut bytes = 0u64;
-    for element in elements {
-        let token = match element {
-            Element::I64(value) => integer_token_len(*value),
-            Element::Bool(true) => 4,
-            Element::Bool(false) => 5,
-            Element::Op { op, .. } => encoded_len(op.spelling().len()),
-            Element::Open | Element::Close => 1,
-            Element::Hole => 0,
-        };
-        if token == 0 {
-            continue;
+    let mut index = 0usize;
+    while bytes <= u64::from(MAX_SOURCE_BYTES) && index < elements.len() {
+        let token = element_token_len(&elements[index]);
+        if token != 0 {
+            bytes = bytes.saturating_add(token).saturating_add(1);
         }
-        bytes = bytes.saturating_add(token).saturating_add(1);
-        if bytes > u64::from(MAX_SOURCE_BYTES) {
-            return Err(byte_budget_refusal(bytes, at));
-        }
+        index = index.saturating_add(1);
+    }
+    if bytes > u64::from(MAX_SOURCE_BYTES) {
+        return Err(byte_budget_refusal(bytes, at));
     }
     debug_assert!(bytes <= u64::from(MAX_SOURCE_BYTES));
     let mut non_hole_count = 0usize;
@@ -1365,28 +1512,44 @@ impl Replay {
         }
     }
 
-    fn push(&mut self, ty: Ty, ledger: &mut Ledger, at: Location) -> Result<(), Refusal> {
-        self.stack.push(ty);
-        ledger.observe_count(Resource::StackHeight, encoded_len(self.stack.len()), at)
+    /// Whether the recorded boundary stack is exactly `stack`.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the recorded stack is compared with slice equality, which is not a stable const trait"
+    )]
+    fn marks(&self, stack: &[Ty]) -> bool {
+        match &self.mark {
+            Some(mark) => *mark.as_slice() == *stack,
+            None => false,
+        }
     }
 
-    fn pop(&mut self, at: Location) -> Result<Ty, Refusal> {
+    fn push(&mut self, ty: Ty, ledger: &mut Ledger, at: &Location) -> Result<(), Refusal> {
+        self.stack.push(ty);
+        ledger.observe_count(
+            Resource::StackHeight,
+            encoded_len(self.stack.len()),
+            at.clone(),
+        )
+    }
+
+    fn pop(&mut self, at: &Location) -> Result<Ty, Refusal> {
         match self.stack.pop() {
             Some(ty) => Ok(ty),
             None => Err(Refusal::new(
                 Class::Invalid,
-                at,
+                at.clone(),
                 "ordered stack underflow while replaying the profile",
             )),
         }
     }
 
-    fn pop_i64(&mut self, at: Location) -> Result<(), Refusal> {
+    fn pop_i64(&mut self, at: &Location) -> Result<(), Refusal> {
         let ty = self.pop(at)?;
         if ty != Ty::I64 {
             return Err(Refusal::new(
                 Class::Invalid,
-                at,
+                at.clone(),
                 "the profile operation requires an I64 operand",
             ));
         }
@@ -1401,14 +1564,14 @@ impl Replay {
         &mut self,
         element: &Element,
         ledger: &mut Ledger,
-        context: Location,
+        context: &Location,
         index: u32,
     ) -> Result<(), Refusal> {
-        let at = Location::at(context.field, index);
-        ledger.charge(Resource::CheckingWork, 1, at)?;
+        let at = Location::at(&context.field, index);
+        ledger.charge(Resource::CheckingWork, 1, at.clone())?;
         match element {
-            Element::I64(_) => self.push(Ty::I64, ledger, at),
-            Element::Bool(_) => self.push(Ty::Bool, ledger, at),
+            Element::I64(_) => self.push(Ty::I64, ledger, &at),
+            Element::Bool(_) => self.push(Ty::Bool, ledger, &at),
             Element::Open => {
                 self.depth = self.depth.saturating_add(1);
                 ledger.observe(Resource::QuotationDepth, self.depth, at)?;
@@ -1433,10 +1596,10 @@ impl Replay {
                         noble_kernel::types::EffSet::empty(),
                     ),
                     ledger,
-                    at,
+                    &at,
                 )
             }
-            Element::Op { op, witness } => self.operation(*op, witness.as_ref(), ledger, at),
+            Element::Op { op, witness } => self.operation(*op, witness.as_ref(), ledger, &at),
             Element::Hole => Err(Refusal::new(
                 Class::Internal,
                 at,
@@ -1450,19 +1613,19 @@ impl Replay {
         op: Op,
         witness: Option<&Instantiation>,
         ledger: &mut Ledger,
-        at: Location,
+        at: &Location,
     ) -> Result<(), Refusal> {
         match op {
             Op::Dup => {
                 let Some(value) = self.stack.last() else {
                     return Err(Refusal::new(
                         Class::Invalid,
-                        at,
+                        at.clone(),
                         "ordered stack underflow while replaying the profile",
                     ));
                 };
                 if !witness_matches(witness, &[(1, value.clone())]) {
-                    return Err(invalid_witness(at));
+                    return Err(invalid_witness(at.clone()));
                 }
                 let value = self.pop(at)?;
                 self.push(value.clone(), ledger, at)?;
@@ -1472,32 +1635,35 @@ impl Replay {
                 let Some(value) = self.stack.last() else {
                     return Err(Refusal::new(
                         Class::Invalid,
-                        at,
+                        at.clone(),
                         "ordered stack underflow while replaying the profile",
                     ));
                 };
                 if !witness_matches(witness, &[(1, value.clone())]) {
-                    return Err(invalid_witness(at));
+                    return Err(invalid_witness(at.clone()));
                 }
                 let _ = self.pop(at)?;
                 Ok(())
             }
             Op::Swap => {
                 let split = self.stack.len().saturating_sub(2);
-                let expected = match (self.stack.get(split), self.stack.last()) {
-                    (Some(lower), Some(top)) if self.stack.len() >= 2 => {
-                        [(1, lower.clone()), (2, top.clone())]
-                    }
+                let pair = if self.stack.len() >= 2 {
+                    (self.stack.get(split), self.stack.last())
+                } else {
+                    (None, None)
+                };
+                let expected = match pair {
+                    (Some(lower), Some(top)) => [(1, lower.clone()), (2, top.clone())],
                     _ => {
                         return Err(Refusal::new(
                             Class::Invalid,
-                            at,
+                            at.clone(),
                             "ordered stack underflow while replaying the profile",
                         ))
                     }
                 };
                 if !witness_matches(witness, &expected) {
-                    return Err(invalid_witness(at));
+                    return Err(invalid_witness(at.clone()));
                 }
                 let top = self.pop(at)?;
                 let next = self.pop(at)?;
@@ -1506,7 +1672,7 @@ impl Replay {
             }
             Op::Add | Op::Sub | Op::Mul => {
                 if !witness_matches(witness, &[]) {
-                    return Err(invalid_witness(at));
+                    return Err(invalid_witness(at.clone()));
                 }
                 self.pop_i64(at)?;
                 self.pop_i64(at)?;
@@ -1514,7 +1680,7 @@ impl Replay {
             }
             Op::Eq => {
                 if !witness_matches(witness, &[]) {
-                    return Err(invalid_witness(at));
+                    return Err(invalid_witness(at.clone()));
                 }
                 self.pop_i64(at)?;
                 self.pop_i64(at)?;
@@ -1522,25 +1688,29 @@ impl Replay {
             }
             Op::Run => {
                 if !witness_matches(witness, &[]) {
-                    return Err(invalid_witness(at));
+                    return Err(invalid_witness(at.clone()));
                 }
                 let value = self.pop(at)?;
                 let Ty::Program(required, produced, _) = value else {
                     return Err(Refusal::new(
                         Class::Invalid,
-                        at,
+                        at.clone(),
                         "run operand is not a quotation value",
                     ));
                 };
                 if self.stack.as_slice() != required.as_slice() {
                     return Err(Refusal::new(
                         Class::Invalid,
-                        at,
+                        at.clone(),
                         "run operand does not match the ordered stack it executes on",
                     ));
                 }
                 self.stack = produced.as_ref().clone();
-                ledger.observe_count(Resource::StackHeight, encoded_len(self.height()), at)
+                ledger.observe_count(
+                    Resource::StackHeight,
+                    encoded_len(self.height()),
+                    at.clone(),
+                )
             }
         }
     }
@@ -1568,7 +1738,7 @@ impl Replay {
             };
             let position = index as u32;
             self.steps = self.steps.saturating_add(1);
-            self.step(element, ledger, context, position)?;
+            self.step(element, ledger, &context, position)?;
             if boundary == Some(index.saturating_add(1)) {
                 self.mark = Some(self.stack.clone());
             }
@@ -1579,7 +1749,7 @@ impl Replay {
         } else {
             Err(Refusal::new(
                 Class::Invalid,
-                Location::field(context.field),
+                Location::field(&context.field),
                 "replay ended inside an unclosed quotation",
             ))
         }
@@ -1593,15 +1763,31 @@ fn witness_matches(witness: Option<&Instantiation>, expected: &[(u16, Ty)]) -> b
     if witness.bindings.len() != expected.len() {
         return false;
     }
-    for (binding, (variable, ty)) in witness.bindings.iter().zip(expected) {
-        if binding.variable != *variable
-            || binding.kind != noble_kernel::words::VariableKind::Value
-            || !binding.ty.eq(ty)
-        {
-            return false;
-        }
+    debug_assert_eq!(witness.bindings.len(), expected.len());
+    let mut is_match = true;
+    let mut index = 0usize;
+    while is_match && index < expected.len() {
+        is_match = binding_matches_at(&witness.bindings, expected, index);
+        index = index.saturating_add(1);
     }
-    true
+    debug_assert!(!is_match || index == expected.len());
+    is_match
+}
+
+/// Whether the witness binding at `index` binds the expected value variable and type.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; witness lookups use the non-const slice `get` and derived type equality"
+)]
+fn binding_matches_at(bindings: &[Binding], expected: &[(u16, Ty)], index: usize) -> bool {
+    match (bindings.get(index), expected.get(index)) {
+        (Some(binding), Some((variable, ty))) => {
+            binding.variable == *variable
+                && binding.kind == noble_kernel::words::VariableKind::Value
+                && binding.ty.eq(ty)
+        }
+        _ => false,
+    }
 }
 
 #[expect(
@@ -1623,7 +1809,7 @@ fn replay_interface(
     at: Location,
 ) -> Result<(), Refusal> {
     let mut replay = Replay::new(&interface.stack_in);
-    replay.run(elements, None, ledger, true, at)?;
+    replay.run(elements, None, ledger, true, at.clone())?;
     if replay.stack != interface.stack_out {
         return Err(Refusal::new(
             Class::Invalid,
@@ -1756,6 +1942,25 @@ pub struct CandidateAttemptCost {
 /// Caller-owned sink for the bounded candidate attempt stream.
 pub type CandidateOutcomeObserver<'a> = dyn FnMut(&CandidateOutcome) + 'a;
 
+/// The caller's candidate-outcome observer as the search holds it.
+///
+/// Reviewed extraction exception (#97): Aeneas cannot represent `dyn`
+/// closure types, so this host plug-in handle is an opaque type and its
+/// `observe` is opaque; translated code only moves the handle and calls it.
+#[charon::opaque]
+struct ObserverHandle<'a>(&'a mut CandidateOutcomeObserver<'a>);
+
+impl ObserverHandle<'_> {
+    /// Deliver one attempted candidate outcome to the caller's observer.
+    ///
+    /// Reviewed extraction exception (#97): opaque because it calls through
+    /// the trait object.
+    #[charon::opaque]
+    fn observe(&mut self, outcome: &CandidateOutcome) {
+        (self.0)(outcome);
+    }
+}
+
 /// Exact, opaque identity of one candidate in a bounded ranking request.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CandidateId {
@@ -1779,7 +1984,7 @@ pub struct RankingIdentity {
     /// Exact immutable chunk library revision.
     pub library_revision: [u8; REVISION_BYTES],
     /// Feature-vector schema revision.
-    pub feature_revision: &'static str,
+    pub feature_revision: alloc::string::String,
     /// Source semantics used by #73.
     pub semantic_revision: u32,
     /// Policy, profile, request-envelope and caller-budget identity.
@@ -1814,7 +2019,7 @@ pub struct CandidateScoreRequest<'a> {
 }
 
 /// Adapter reply bound to the exact request, model artifact and eligible candidate.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct CandidateScoreResponse {
     pub request_identity: [u8; REVISION_BYTES],
     pub model_identity: [u8; REVISION_BYTES],
@@ -1822,22 +2027,95 @@ pub struct CandidateScoreResponse {
     pub score: f32,
 }
 
+impl PartialEq for CandidateScoreResponse {
+    /// Field-wise equality exactly as derived; the score compares through
+    /// `f32`'s `PartialEq`, which Aeneas translates (a raw float `==` it does not).
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; a `PartialEq` impl method cannot be const because `PartialEq` is not a stable const trait"
+    )]
+    fn eq(&self, other: &Self) -> bool {
+        self.request_identity == other.request_identity
+            && self.model_identity == other.model_identity
+            && self.candidate == other.candidate
+            && PartialEq::eq(&self.score, &other.score)
+    }
+}
+
 /// Host-pinned model identity and one optional local scorer adapter.
 pub struct RankerSession<'a> {
-    ranker: &'a mut dyn CandidateRanker,
+    ranker: RankerHandle<'a>,
     expected_model_identity: [u8; REVISION_BYTES],
 }
 
 impl<'a> RankerSession<'a> {
     /// Bind an adapter to the consumer-selected immutable model identity.
+    ///
+    /// Reviewed extraction exclusion (#97): the signature names a `dyn`
+    /// trait object; the checked logic is `RankerHandle` and the completion
+    /// functions that receive this session.
+    #[charon::exclude]
     pub const fn new(
         ranker: &'a mut dyn CandidateRanker,
         expected_model_identity: [u8; REVISION_BYTES],
     ) -> Self {
         Self {
-            ranker,
+            ranker: RankerHandle(ranker),
             expected_model_identity,
         }
+    }
+
+    /// A session reborrowing this one's scorer for one completion call.
+    ///
+    /// Reviewed extraction exclusion (#97): the body reborrows the `dyn`
+    /// scorer inside the opaque handle; only the excluded public completion
+    /// adapters call it.
+    #[charon::exclude]
+    fn reborrow(&mut self) -> RankerSession<'_> {
+        RankerSession {
+            ranker: RankerHandle(&mut *self.ranker.0),
+            expected_model_identity: self.expected_model_identity,
+        }
+    }
+}
+
+/// The host scorer adapter as a ranker session holds it.
+///
+/// Reviewed extraction exception (#97): Aeneas cannot represent trait
+/// objects, so this host plug-in handle is an opaque type and its three
+/// methods are opaque; translated code only reaches the scorer through them.
+#[charon::opaque]
+struct RankerHandle<'a>(&'a mut dyn CandidateRanker);
+
+impl RankerHandle<'_> {
+    /// The scorer's immutable model artifact identity.
+    ///
+    /// Reviewed extraction exception (#97): opaque because it calls through
+    /// the trait object.
+    #[charon::opaque]
+    fn model_identity(&self) -> [u8; REVISION_BYTES] {
+        self.0.model_identity()
+    }
+
+    /// Whether the scorer's lineage matches the bound ranking identity.
+    ///
+    /// Reviewed extraction exception (#97): opaque because it calls through
+    /// the trait object.
+    #[charon::opaque]
+    fn provenance_matches(&self, identity: &RankingIdentity) -> bool {
+        self.0.provenance_matches(identity)
+    }
+
+    /// Score one eligible candidate.
+    ///
+    /// Reviewed extraction exception (#97): opaque because it calls through
+    /// the trait object.
+    #[charon::opaque]
+    fn score(
+        &mut self,
+        request: &CandidateScoreRequest<'_>,
+    ) -> Result<CandidateScoreResponse, ScorerFailure> {
+        self.0.score(request)
     }
 }
 
@@ -1933,11 +2211,31 @@ struct StoredRankingControl<'a> {
     expected_model_identity: [u8; REVISION_BYTES],
 }
 
-struct CompletionControl<'session, 'ranker, 'observer, 'stored> {
-    ranker: Option<&'session mut RankerSession<'ranker>>,
-    observer: Option<&'observer mut CandidateOutcomeObserver<'observer>>,
+/// The host-supplied monotonic nanosecond clock.
+///
+/// Reviewed extraction exception (#97): Aeneas cannot represent `fn`
+/// pointer types, so this host plug-in handle is an opaque type and its
+/// `now_ns` is opaque; each read threads the clock state mutably, so two
+/// reads are not assumed equal.
+#[charon::opaque]
+struct MonotonicClock(fn() -> u64);
+
+impl MonotonicClock {
+    /// Read the host clock.
+    ///
+    /// Reviewed extraction exception (#97): opaque because it calls the host
+    /// function pointer.
+    #[charon::opaque]
+    fn now_ns(&mut self) -> u64 {
+        (self.0)()
+    }
+}
+
+struct CompletionControl<'session, 'callback, 'stored, 'clock> {
+    ranker: Option<RankerSession<'session>>,
+    observer: Option<ObserverHandle<'callback>>,
     stored: Option<StoredRankingControl<'stored>>,
-    monotonic_now_ns: fn() -> u64,
+    clock: &'clock mut MonotonicClock,
 }
 
 struct RankingStatus {
@@ -1945,6 +2243,18 @@ struct RankingStatus {
     invalid_scores: u32,
     identity: Option<RankingIdentity>,
     ranked_candidates: alloc::vec::Vec<CandidateId>,
+}
+
+impl RankingStatus {
+    /// The status of a completion whose scorer has not run yet.
+    const fn not_evaluated() -> Self {
+        Self {
+            disposition: RankingDisposition::NotEvaluated,
+            invalid_scores: 0,
+            identity: None,
+            ranked_candidates: alloc::vec::Vec::new(),
+        }
+    }
 }
 
 /// The complete ordered stack equation one accepted proposal satisfies.
@@ -1962,6 +2272,7 @@ pub struct Equation {
 /// chunk identities and the equation it satisfies.
 #[derive(Clone, Debug)]
 pub struct Accepted {
+    #[charon::rename("source_bytes")]
     pub source: alloc::vec::Vec<u8>,
     pub candidate: noble_kernel::untrusted::Candidate,
     pub interface: Interface,
@@ -2130,18 +2441,22 @@ impl Library {
         check_envelope(&envelope, &mut ledger)?;
         self.check_dependencies(&envelope)?;
         let body_at = Location::field("envelope.body");
-        let envelope_bytes = envelope_size(&envelope, body_at)?;
-        ledger.charge(Resource::LibraryBytes, envelope_bytes, body_at)?;
-        ledger.charge(Resource::RetainedBytes, envelope_bytes, body_at)?;
-        let expansion = expand_recipe(&self.entries, &envelope, &mut ledger, body_at)?;
+        let envelope_bytes = envelope_size(&envelope, body_at.clone())?;
+        ledger.charge(Resource::LibraryBytes, envelope_bytes, body_at.clone())?;
+        ledger.charge(Resource::RetainedBytes, envelope_bytes, body_at.clone())?;
+        let expansion = expand_recipe(&self.entries, &envelope, &mut ledger, body_at.clone())?;
         replay_interface(
             &expansion.elements,
             &envelope.interface,
             &mut ledger,
             Location::field("envelope.interface"),
         )?;
-        let source = emit(&expansion.elements, body_at)?;
-        ledger.observe_count(Resource::SourceBytes, encoded_len(source.len()), body_at)?;
+        let source = emit(&expansion.elements, body_at.clone())?;
+        ledger.observe_count(
+            Resource::SourceBytes,
+            encoded_len(source.len()),
+            body_at.clone(),
+        )?;
         if canonical_revision(&source) != envelope.source_revision {
             return Err(Refusal::new(
                 Class::Invalid,
@@ -2149,13 +2464,13 @@ impl Library {
                 "declared source revision does not match the canonical emitted source",
             ));
         }
-        let mut admission = AdmissionContext {
+        let admission = AdmissionContext {
             namespace,
-            ledger: &mut ledger,
             at: Location::field("envelope.interface"),
         };
         let (interface, _) = derived_interface(
-            &mut admission,
+            &admission,
+            &mut ledger,
             &source,
             &expansion.elements,
             &envelope.interface,
@@ -2203,23 +2518,35 @@ impl Library {
     }
 
     fn check_dependencies(&self, envelope: &Envelope) -> Result<(), Refusal> {
-        for index in 0..envelope.dependencies.len() {
-            let Some(record) = envelope.dependencies.get(index) else {
-                return Err(internal(
-                    Location::field("envelope.dependencies"),
-                    "dependency index exceeds the checked record slice",
-                ));
-            };
-            if self.find(record).is_none() {
-                let position = index as u32;
-                return Err(Refusal::new(
-                    Class::Invalid,
-                    Location::at("envelope.dependencies", position),
-                    "dependency record does not resolve to an earlier retained entry with the exact revisions",
-                ));
-            }
+        let mut index = 0usize;
+        let mut failure = None;
+        while failure.is_none() && index < envelope.dependencies.len() {
+            failure = self.dependency_refusal(envelope, index);
+            index = index.saturating_add(1);
         }
-        Ok(())
+        match failure {
+            Some(refusal) => Err(refusal),
+            None => Ok(()),
+        }
+    }
+
+    /// The refusal for dependency record `index` of `envelope`, if it does not resolve.
+    fn dependency_refusal(&self, envelope: &Envelope, index: usize) -> Option<Refusal> {
+        let Some(record) = envelope.dependencies.get(index) else {
+            return Some(internal(
+                Location::field("envelope.dependencies"),
+                "dependency index exceeds the checked record slice",
+            ));
+        };
+        if self.find(record).is_some() {
+            return None;
+        }
+        let position = index as u32;
+        Some(Refusal::new(
+            Class::Invalid,
+            Location::at("envelope.dependencies", position),
+            "dependency record does not resolve to an earlier retained entry with the exact revisions",
+        ))
     }
 }
 
@@ -2227,12 +2554,17 @@ fn first_eight(bytes: &[u8; IDENTITY_BYTES]) -> [u8; 8] {
     let mut out = [0u8; 8];
     let mut at = 0usize;
     while at < out.len() {
-        if let (Some(slot), Some(value)) = (out.get_mut(at), bytes.get(at)) {
-            *slot = *value;
-        }
+        copy_identity_byte(&mut out, bytes, at);
         at = at.saturating_add(1);
     }
     out
+}
+
+/// Copy identity byte `at` into `out` when both positions exist.
+fn copy_identity_byte(out: &mut [u8; 8], bytes: &[u8; IDENTITY_BYTES], at: usize) {
+    if let (Some(slot), Some(value)) = (out.get_mut(at), bytes.get(at)) {
+        *slot = *value;
+    }
 }
 
 fn check_envelope(envelope: &Envelope, ledger: &mut Ledger) -> Result<(), Refusal> {
@@ -2304,11 +2636,11 @@ fn check_envelope(envelope: &Envelope, ledger: &mut Ledger) -> Result<(), Refusa
     Ok(())
 }
 
-fn add_encoded_size(total: &mut u64, amount: u64, at: Location) -> Result<(), Refusal> {
+fn add_encoded_size(total: &mut u64, amount: u64, at: &Location) -> Result<(), Refusal> {
     let next = total.checked_add(amount).ok_or_else(|| {
         let mut refusal = Refusal::new(
             Class::Exhausted,
-            at,
+            at.clone(),
             "canonical encoded size exceeds the finite byte counter",
         );
         refusal.resource = Some(Resource::RetainedBytes);
@@ -2319,7 +2651,7 @@ fn add_encoded_size(total: &mut u64, amount: u64, at: Location) -> Result<(), Re
     if next > u64::from(MAX_RETAINED_BYTES) {
         let mut refusal = Refusal::new(
             Class::Exhausted,
-            at,
+            at.clone(),
             "canonical encoded size exceeds the finite retained-byte bound",
         );
         refusal.resource = Some(Resource::RetainedBytes);
@@ -2347,8 +2679,8 @@ const fn encoded_len(count: usize) -> u64 {
 /// the profile spelling; source bytes are charged separately by `Library`.
 fn envelope_size(envelope: &Envelope, at: Location) -> Result<u32, Refusal> {
     let mut encoded_bytes = 0u64;
-    add_envelope_metadata_size(&mut encoded_bytes, envelope, at)?;
-    add_recipe_size(&mut encoded_bytes, &envelope.body, at)?;
+    add_envelope_metadata_size(&mut encoded_bytes, envelope, &at)?;
+    add_recipe_size(&mut encoded_bytes, &envelope.body, &at)?;
     u32::try_from(encoded_bytes).map_err(|_| {
         internal(
             at,
@@ -2364,7 +2696,7 @@ fn envelope_size(envelope: &Envelope, at: Location) -> Result<u32, Refusal> {
 fn add_envelope_metadata_size(
     encoded_bytes: &mut u64,
     envelope: &Envelope,
-    at: Location,
+    at: &Location,
 ) -> Result<(), Refusal> {
     add_encoded_size(
         encoded_bytes,
@@ -2372,10 +2704,13 @@ fn add_envelope_metadata_size(
         at,
     )?;
     let identity_revision_bytes = IDENTITY_BYTES.saturating_add(REVISION_BYTES);
-    let identity_revision_bytes = u64::from(
-        u32::try_from(identity_revision_bytes)
-            .map_err(|_| internal(at, "fixed identity widths exceed their bounded format"))?,
-    );
+    let identity_revision_bytes =
+        u64::from(u32::try_from(identity_revision_bytes).map_err(|_| {
+            internal(
+                at.clone(),
+                "fixed identity widths exceed their bounded format",
+            )
+        })?);
     add_encoded_size(encoded_bytes, identity_revision_bytes, at)?;
     add_encoded_size(encoded_bytes, 4, at)?;
     add_encoded_size(
@@ -2396,13 +2731,7 @@ fn add_envelope_metadata_size(
         at,
     )?;
     add_encoded_size(encoded_bytes, 4, at)?;
-    for capture in &envelope.captures {
-        let capture_bytes = match capture.value {
-            Scalar::I64(_) => 11,
-            Scalar::Bool(_) => 4,
-        };
-        add_encoded_size(encoded_bytes, capture_bytes, at)?;
-    }
+    add_capture_sizes(encoded_bytes, &envelope.captures, at)?;
     add_encoded_size(encoded_bytes, 4, at)?;
     add_encoded_size(
         encoded_bytes,
@@ -2410,36 +2739,60 @@ fn add_envelope_metadata_size(
         at,
     )?;
     add_encoded_size(encoded_bytes, 4, at)?;
-    for instantiation in &envelope.instantiations {
-        add_encoded_size(encoded_bytes, 4, at)?;
-        add_encoded_size(
-            encoded_bytes,
-            encoded_len(instantiation.bindings.len()).saturating_mul(4),
-            at,
-        )?;
-    }
-    Ok(())
+    add_instantiation_sizes(encoded_bytes, &envelope.instantiations, at)
 }
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; this size walker must return bounded refusals for malformed retained recipes rather than assert on caller-owned fields"
-)]
-fn add_recipe_size(encoded_bytes: &mut u64, recipe: &Recipe, at: Location) -> Result<(), Refusal> {
-    add_encoded_size(encoded_bytes, 4, at)?;
-    for node in &recipe.nodes {
-        let node_bytes = match node {
-            Node::I64(_) => 9,
-            Node::Bool(_) => 2,
-            Node::Capture { .. } => 3,
-            Node::Operation { .. } => 4,
-            Node::Invoke { .. } => 5,
-            Node::Quotation { body, .. } => {
-                7u64.saturating_add(encoded_len(body.len()).saturating_mul(4))
-            }
+/// Add each retained capture's fixed scalar encoding, in capture order.
+fn add_capture_sizes(
+    encoded_bytes: &mut u64,
+    captures: &[Capture],
+    at: &Location,
+) -> Result<(), Refusal> {
+    let mut index = 0usize;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < captures.len() {
+        let capture_bytes = match captures[index].value {
+            Scalar::I64(_) => 11,
+            Scalar::Bool(_) => 4,
         };
-        add_encoded_size(encoded_bytes, node_bytes, at)?;
+        outcome = add_encoded_size(encoded_bytes, capture_bytes, at);
+        index = index.saturating_add(1);
     }
+    outcome
+}
+
+/// Add each instantiation witness's header and bindings, in witness order.
+fn add_instantiation_sizes(
+    encoded_bytes: &mut u64,
+    instantiations: &[Instantiation],
+    at: &Location,
+) -> Result<(), Refusal> {
+    let mut index = 0usize;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < instantiations.len() {
+        outcome = add_instantiation_size(encoded_bytes, &instantiations[index], at);
+        index = index.saturating_add(1);
+    }
+    outcome
+}
+
+/// Add one instantiation witness's header and bindings.
+fn add_instantiation_size(
+    encoded_bytes: &mut u64,
+    instantiation: &Instantiation,
+    at: &Location,
+) -> Result<(), Refusal> {
+    add_encoded_size(encoded_bytes, 4, at)?;
+    add_encoded_size(
+        encoded_bytes,
+        encoded_len(instantiation.bindings.len()).saturating_mul(4),
+        at,
+    )
+}
+
+fn add_recipe_size(encoded_bytes: &mut u64, recipe: &Recipe, at: &Location) -> Result<(), Refusal> {
+    add_encoded_size(encoded_bytes, 4, at)?;
+    add_recipe_node_sizes(encoded_bytes, &recipe.nodes, at)?;
     add_encoded_size(encoded_bytes, 4, at)?;
     add_encoded_size(
         encoded_bytes,
@@ -2449,17 +2802,36 @@ fn add_recipe_size(encoded_bytes: &mut u64, recipe: &Recipe, at: Location) -> Re
     Ok(())
 }
 
-fn check_stack(stack: &[Ty], ledger: &mut Ledger, field: &'static str) -> Result<(), Refusal> {
+/// Add each recipe node's fixed-width encoding, in arena order.
+fn add_recipe_node_sizes(
+    encoded_bytes: &mut u64,
+    nodes: &[Node],
+    at: &Location,
+) -> Result<(), Refusal> {
+    let mut index = 0usize;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < nodes.len() {
+        outcome = add_encoded_size(encoded_bytes, recipe_node_bytes(&nodes[index]), at);
+        index = index.saturating_add(1);
+    }
+    outcome
+}
+
+fn check_stack(stack: &[Ty], ledger: &mut Ledger, field: &str) -> Result<(), Refusal> {
     let at = Location::field(field);
-    ledger.observe_count(Resource::StackHeight, encoded_len(stack.len()), at)?;
-    for ty in stack {
-        if !profile_type(ty) {
-            return Err(Refusal::new(
-                Class::Unsupported,
-                at,
-                "interface holds a type outside the pure I64/Bool profile",
-            ));
-        }
+    ledger.observe_count(Resource::StackHeight, encoded_len(stack.len()), at.clone())?;
+    let mut index = 0usize;
+    let mut is_profile_stack = true;
+    while is_profile_stack && index < stack.len() {
+        is_profile_stack = profile_type(&stack[index]);
+        index = index.saturating_add(1);
+    }
+    if !is_profile_stack {
+        return Err(Refusal::new(
+            Class::Unsupported,
+            at,
+            "interface holds a type outside the pure I64/Bool profile",
+        ));
     }
     Ok(())
 }
@@ -2479,30 +2851,14 @@ fn check_captures(envelope: &Envelope) -> Result<(), Refusal> {
             "capture list exceeds the eight-capture bound",
         ));
     }
-    for position in 0..envelope.captures.len() {
-        let Some(capture) = envelope.captures.get(position) else {
-            return Err(internal(
-                at,
-                "capture index exceeds the checked capture slice",
-            ));
-        };
-        let expected = match u16::try_from(position) {
-            Ok(expected) => expected,
-            Err(_) => {
-                return Err(Refusal::new(
-                    Class::Invalid,
-                    at,
-                    "capture ordinal exceeds the finite format",
-                ))
-            }
-        };
-        if capture.index != expected || !profile_type(&capture.value.ty()) {
-            return Err(Refusal::new(
-                Class::Invalid,
-                Location::at("envelope.captures", u32::from(expected)),
-                "capture list must be contiguous from zero with profile scalars",
-            ));
-        }
+    let mut position = 0usize;
+    let mut failure = None;
+    while failure.is_none() && position < envelope.captures.len() {
+        failure = capture_refusal(envelope, position, &at);
+        position = position.saturating_add(1);
+    }
+    if let Some(refusal) = failure {
+        return Err(refusal);
     }
     debug_assert!(u32::try_from(envelope.captures.len()).is_ok_and(|count| count <= MAX_CAPTURES));
     debug_assert!(envelope.captures.last().is_none_or(|capture| {
@@ -2511,70 +2867,142 @@ fn check_captures(envelope: &Envelope) -> Result<(), Refusal> {
     Ok(())
 }
 
-fn check_instantiations(envelope: &Envelope, ledger: &mut Ledger) -> Result<(), Refusal> {
-    for position in 0..envelope.instantiations.len() {
-        let at = Location::at("envelope.instantiations", position as u32);
-        let Some(instantiation) = envelope.instantiations.get(position) else {
-            return Err(internal(
-                at,
-                "instantiation index exceeds the checked slice",
-            ));
-        };
-        if u64::try_from(instantiation.bindings.len())
-            .map_or(true, |count| count > u64::from(MAX_INSTANTIATION_BINDINGS))
-        {
-            return Err(Refusal::new(
-                Class::Invalid,
-                at,
-                "instantiation retains more than the 16-binding profile bound",
-            ));
-        }
-        ledger.charge_count(
-            Resource::InstantiationBindings,
-            encoded_len(instantiation.bindings.len()),
-            at,
-        )?;
-        let mut previous: Option<u16> = None;
-        for binding in &instantiation.bindings {
-            if !profile_type(&binding.ty) {
-                return Err(Refusal::new(
-                    Class::Unsupported,
-                    at,
-                    "instantiation binds a variable outside the profile",
-                ));
-            }
-            if binding.kind != noble_kernel::words::VariableKind::Value {
-                return Err(Refusal::new(
-                    Class::Unsupported,
-                    at,
-                    "the pure I64/Bool profile supports only value-variable witnesses",
-                ));
-            }
-            if let Some(seen) = previous {
-                if binding.variable <= seen {
-                    return Err(Refusal::new(
-                        Class::Invalid,
-                        at,
-                        "instantiation bindings must be in increasing variable order",
-                    ));
-                }
-            }
-            previous = Some(binding.variable);
-        }
+/// The refusal for one capture slot that is not contiguous with a profile scalar.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; capture lookups use the non-const slice `get` and refusals allocate their message"
+)]
+fn capture_refusal(envelope: &Envelope, position: usize, at: &Location) -> Option<Refusal> {
+    debug_assert!(position < envelope.captures.len());
+    debug_assert!(encoded_len(envelope.captures.len()) <= u64::from(MAX_CAPTURES));
+    let Some(capture) = envelope.captures.get(position) else {
+        return Some(internal(
+            at.clone(),
+            "capture index exceeds the checked capture slice",
+        ));
+    };
+    let Ok(expected) = u16::try_from(position) else {
+        return Some(Refusal::new(
+            Class::Invalid,
+            at.clone(),
+            "capture ordinal exceeds the finite format",
+        ));
+    };
+    if capture.index != expected || !profile_type(&capture.value.ty()) {
+        return Some(Refusal::new(
+            Class::Invalid,
+            Location::at("envelope.captures", u32::from(expected)),
+            "capture list must be contiguous from zero with profile scalars",
+        ));
     }
+    None
+}
+
+fn check_instantiations(envelope: &Envelope, ledger: &mut Ledger) -> Result<(), Refusal> {
+    let mut position = 0usize;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && position < envelope.instantiations.len() {
+        outcome = check_instantiation(envelope, position, ledger);
+        position = position.saturating_add(1);
+    }
+    outcome?;
     let mut has_bounded_instantiations = true;
     let mut has_supported_bindings = true;
     for instantiation in &envelope.instantiations {
         has_bounded_instantiations &= u32::try_from(instantiation.bindings.len())
             .is_ok_and(|count| count <= MAX_INSTANTIATION_BINDINGS);
         for binding in &instantiation.bindings {
-            has_supported_bindings &= binding.kind == noble_kernel::words::VariableKind::Value
-                && profile_type(&binding.ty);
+            has_supported_bindings &= binding_is_profile(binding);
         }
     }
     debug_assert!(has_bounded_instantiations);
     debug_assert!(has_supported_bindings);
     Ok(())
+}
+
+/// Check one retained instantiation witness and charge its bindings.
+fn check_instantiation(
+    envelope: &Envelope,
+    position: usize,
+    ledger: &mut Ledger,
+) -> Result<(), Refusal> {
+    debug_assert!(position < envelope.instantiations.len());
+    let at = Location::at("envelope.instantiations", position as u32);
+    let Some(instantiation) = envelope.instantiations.get(position) else {
+        return Err(internal(
+            at,
+            "instantiation index exceeds the checked slice",
+        ));
+    };
+    if u64::try_from(instantiation.bindings.len())
+        .map_or(true, |count| count > u64::from(MAX_INSTANTIATION_BINDINGS))
+    {
+        return Err(Refusal::new(
+            Class::Invalid,
+            at,
+            "instantiation retains more than the 16-binding profile bound",
+        ));
+    }
+    debug_assert!(
+        encoded_len(instantiation.bindings.len()) <= u64::from(MAX_INSTANTIATION_BINDINGS)
+    );
+    ledger.charge_count(
+        Resource::InstantiationBindings,
+        encoded_len(instantiation.bindings.len()),
+        at.clone(),
+    )?;
+    match bindings_refusal(&instantiation.bindings, &at) {
+        Some(refusal) => Err(refusal),
+        None => Ok(()),
+    }
+}
+
+/// The first profile, kind or ordering refusal among one witness's bindings.
+fn bindings_refusal(bindings: &[Binding], at: &Location) -> Option<Refusal> {
+    let mut previous: Option<u16> = None;
+    let mut index = 0usize;
+    let mut failure = None;
+    while failure.is_none() && index < bindings.len() {
+        let binding = &bindings[index];
+        failure = binding_refusal(binding, previous, at);
+        previous = Some(binding.variable);
+        index = index.saturating_add(1);
+    }
+    failure
+}
+
+/// The refusal for one binding outside the profile, of the wrong kind or out of order.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; constructing a refusal allocates its message"
+)]
+fn binding_refusal(binding: &Binding, previous: Option<u16>, at: &Location) -> Option<Refusal> {
+    if !profile_type(&binding.ty) {
+        return Some(Refusal::new(
+            Class::Unsupported,
+            at.clone(),
+            "instantiation binds a variable outside the profile",
+        ));
+    }
+    if binding.kind != noble_kernel::words::VariableKind::Value {
+        return Some(Refusal::new(
+            Class::Unsupported,
+            at.clone(),
+            "the pure I64/Bool profile supports only value-variable witnesses",
+        ));
+    }
+    debug_assert!(profile_type(&binding.ty));
+    debug_assert!(binding.kind == noble_kernel::words::VariableKind::Value);
+    if let Some(seen) = previous {
+        if binding.variable <= seen {
+            return Some(Refusal::new(
+                Class::Invalid,
+                at.clone(),
+                "instantiation bindings must be in increasing variable order",
+            ));
+        }
+    }
+    None
 }
 
 fn check_recipe(envelope: &Envelope) -> Result<(), Refusal> {
@@ -2586,47 +3014,22 @@ fn check_recipe(envelope: &Envelope) -> Result<(), Refusal> {
             "recipe entry list is empty",
         ));
     }
-    for position in 0..envelope.body.entry.len() {
-        let Some(reference) = envelope.body.entry.get(position) else {
-            return Err(internal(
-                at,
-                "recipe entry index exceeds the checked entry slice",
-            ));
-        };
-        if !reference_precedes(*reference, envelope.body.nodes.len()) {
-            let Ok(position) = u32::try_from(position) else {
-                return Err(Refusal::new(
-                    Class::Invalid,
-                    at,
-                    "recipe entry ordinal exceeds the finite format",
-                ));
-            };
-            return Err(Refusal::new(
-                Class::Invalid,
-                Location::at("envelope.body.entry", position),
-                "recipe entry references a node outside the finite arena",
-            ));
-        }
+    let mut position = 0usize;
+    let mut failure = None;
+    while failure.is_none() && position < envelope.body.entry.len() {
+        failure = recipe_entry_refusal(envelope, position, &at);
+        position = position.saturating_add(1);
     }
-    for position in 0..envelope.body.nodes.len() {
-        let Some(node) = envelope.body.nodes.get(position) else {
-            return Err(internal(
-                at,
-                "recipe node index exceeds the checked node arena",
-            ));
-        };
-        let own = match u32::try_from(position) {
-            Ok(position) => position,
-            Err(_) => {
-                return Err(Refusal::new(
-                    Class::Invalid,
-                    at,
-                    "recipe node ordinal exceeds the finite format",
-                ))
-            }
-        };
-        check_recipe_node(envelope, node, own, position)?;
+    if let Some(refusal) = failure {
+        return Err(refusal);
     }
+    let mut position = 0usize;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && position < envelope.body.nodes.len() {
+        outcome = check_recipe_position(envelope, position, &at);
+        position = position.saturating_add(1);
+    }
+    outcome?;
     debug_assert!(!envelope.body.entry.is_empty());
     let mut has_preceding_references = true;
     for reference in &envelope.body.entry {
@@ -2634,6 +3037,66 @@ fn check_recipe(envelope: &Envelope) -> Result<(), Refusal> {
     }
     debug_assert!(has_preceding_references);
     Ok(())
+}
+
+/// The refusal for one recipe entry reference outside the node arena.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; entry lookups use the non-const slice `get` and refusals allocate their message"
+)]
+fn recipe_entry_refusal(envelope: &Envelope, position: usize, at: &Location) -> Option<Refusal> {
+    debug_assert!(position < envelope.body.entry.len());
+    debug_assert!(!envelope.body.entry.is_empty());
+    let Some(reference) = envelope.body.entry.get(position) else {
+        return Some(internal(
+            at.clone(),
+            "recipe entry index exceeds the checked entry slice",
+        ));
+    };
+    if reference_precedes(*reference, envelope.body.nodes.len()) {
+        return None;
+    }
+    let Ok(position) = u32::try_from(position) else {
+        return Some(Refusal::new(
+            Class::Invalid,
+            at.clone(),
+            "recipe entry ordinal exceeds the finite format",
+        ));
+    };
+    Some(Refusal::new(
+        Class::Invalid,
+        Location::at("envelope.body.entry", position),
+        "recipe entry references a node outside the finite arena",
+    ))
+}
+
+/// Check one recipe node's references against its own arena position.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; node lookups use the non-const slice `get` and refusals allocate their message"
+)]
+fn check_recipe_position(
+    envelope: &Envelope,
+    position: usize,
+    at: &Location,
+) -> Result<(), Refusal> {
+    let Some(node) = envelope.body.nodes.get(position) else {
+        return Err(internal(
+            at.clone(),
+            "recipe node index exceeds the checked node arena",
+        ));
+    };
+    let own = match u32::try_from(position) {
+        Ok(position) => position,
+        Err(_) => {
+            return Err(Refusal::new(
+                Class::Invalid,
+                at.clone(),
+                "recipe node ordinal exceeds the finite format",
+            ))
+        }
+    };
+    check_recipe_node(envelope, node, own, position)
 }
 
 #[expect(
@@ -2647,9 +3110,24 @@ fn reference_precedes(reference: u32, boundary: usize) -> bool {
     }
 }
 
+/// Whether every reference in a quotation body precedes `boundary`.
+fn references_precede(references: &[u32], boundary: usize) -> bool {
+    let mut index = 0usize;
+    let mut is_preceding = true;
+    while is_preceding && index < references.len() {
+        is_preceding = reference_precedes(references[index], boundary);
+        index = index.saturating_add(1);
+    }
+    is_preceding
+}
+
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; recipe references are untrusted and each invalid ordinal must return its located refusal instead of panicking"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; constructing a refusal allocates its message"
 )]
 fn check_recipe_node(
     envelope: &Envelope,
@@ -2699,14 +3177,12 @@ fn check_recipe_node(
                     "quotation references exceed the earlier recipe node prefix",
                 ));
             }
-            for reference in body {
-                if !reference_precedes(*reference, position) {
-                    return Err(Refusal::new(
-                        Class::Invalid,
-                        Location::at("envelope.body.nodes", own),
-                        "quotation body must reference strictly earlier nodes",
-                    ));
-                }
+            if !references_precede(body, position) {
+                return Err(Refusal::new(
+                    Class::Invalid,
+                    Location::at("envelope.body.nodes", own),
+                    "quotation body must reference strictly earlier nodes",
+                ));
             }
         }
         Node::Operation { instantiation, .. } => {
@@ -2750,109 +3226,219 @@ fn check_bootstrap_targets(
     elements: &[Element],
     at: Location,
 ) -> Result<(), Refusal> {
-    let expected = expected_bootstrap_targets(elements, at)?;
+    let expected = expected_bootstrap_targets(elements, &at)?;
     check_invocation_targets(candidate, &expected, at)
 }
 
 fn expected_bootstrap_targets(
     elements: &[Element],
-    at: Location,
+    at: &Location,
 ) -> Result<alloc::vec::Vec<noble_kernel::contracts::Definition>, Refusal> {
     let mut expected = alloc::vec::Vec::with_capacity(elements.len());
-    for (index, element) in elements.iter().enumerate() {
-        let Element::Op { op, .. } = element else {
-            continue;
-        };
-        let Some(definition) = crate::program::bootstrap_word(op.spelling().as_bytes()) else {
-            return Err(Refusal::new(
-                Class::Unsupported,
-                Location::at(at.field, index as u32),
-                "profile operation has no canonical bootstrap definition",
-            ));
-        };
-        expected.push(definition);
+    let mut index = 0usize;
+    let mut failure = None;
+    while failure.is_none() && index < elements.len() {
+        match bootstrap_target(&elements[index], index, at) {
+            Ok(Some(definition)) => expected.push(definition),
+            Ok(None) => {}
+            Err(refusal) => failure = Some(refusal),
+        }
+        index = index.saturating_add(1);
     }
-    Ok(expected)
+    debug_assert!(failure.is_some() || index == elements.len());
+    debug_assert!(expected.len() <= elements.len());
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(expected),
+    }
 }
 
-struct CandidateFrame<'a> {
-    body: &'a [noble_kernel::untrusted::NodeId],
+/// The bootstrap definition one element must invoke, if it is a profile operation.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; bootstrap resolution calls the non-const program word table and refusals allocate their message"
+)]
+fn bootstrap_target(
+    element: &Element,
+    index: usize,
+    at: &Location,
+) -> Result<Option<noble_kernel::contracts::Definition>, Refusal> {
+    let Element::Op { op, .. } = element else {
+        return Ok(None);
+    };
+    match crate::program::bootstrap_word(op.spelling().as_bytes()) {
+        Some(definition) => Ok(Some(definition)),
+        None => Err(Refusal::new(
+            Class::Unsupported,
+            Location::at(&at.field, index as u32),
+            "profile operation has no canonical bootstrap definition",
+        )),
+    }
+}
+
+/// One candidate target walk frame: the body it walks (by node index, so the
+/// frame holds no borrow) and its progress.
+struct CandidateFrame {
+    /// `None` walks the candidate body; `Some(node)` that quotation's body.
+    quotation: Option<usize>,
     at: usize,
 }
 
+/// The mutable state of one candidate target walk.
+struct TargetWalk {
+    frames: alloc::vec::Vec<CandidateFrame>,
+    next: usize,
+}
+
+/// The node references one candidate target walk frame visits.
 #[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; source preparation output is checked with fail-closed located refusals and must not panic on malformed or adversarial parser output"
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; quotation lookups use the slice `get`, which is not a stable const fn"
 )]
+fn candidate_frame_body<'a>(
+    candidate: &'a noble_kernel::untrusted::Candidate,
+    frame: &CandidateFrame,
+) -> Option<&'a [noble_kernel::untrusted::NodeId]> {
+    match frame.quotation {
+        None => Some(candidate.body.as_slice()),
+        Some(node) => match candidate.nodes.get(node) {
+            Some(noble_kernel::untrusted::Node::Quotation { body, .. }) => Some(body.as_slice()),
+            Some(
+                noble_kernel::untrusted::Node::Literal { .. }
+                | noble_kernel::untrusted::Node::Invocation { .. }
+                | noble_kernel::untrusted::Node::SignedSelf { .. }
+                | noble_kernel::untrusted::Node::SlotInvoke { .. },
+            )
+            | None => None,
+        },
+    }
+}
+
 fn check_invocation_targets(
     candidate: &noble_kernel::untrusted::Candidate,
     expected: &[noble_kernel::contracts::Definition],
     at: Location,
 ) -> Result<(), Refusal> {
-    let mut frames = alloc::vec::Vec::with_capacity(MAX_QUOTATION_FRAMES);
-    frames.push(CandidateFrame {
-        body: &candidate.body,
+    let mut walk = TargetWalk {
+        frames: alloc::vec::Vec::with_capacity(MAX_QUOTATION_FRAMES),
+        next: 0,
+    };
+    walk.frames.push(CandidateFrame {
+        quotation: None,
         at: 0,
     });
-    let mut next = 0usize;
-    while let Some(top) = frames.len().checked_sub(1) {
-        let Some(frame) = frames.get_mut(top) else {
-            return Err(internal(at, "candidate target walk lost its frame"));
-        };
-        if frame.at >= frame.body.len() {
-            let _ = frames.pop();
-            continue;
-        }
-        let position = frame.at;
-        frame.at = frame.at.saturating_add(1);
-        let Some(reference) = frame.body.get(position) else {
-            return Err(internal(at, "candidate target walk lost a node reference"));
-        };
-        let Ok(node_index) = usize::try_from(reference.0) else {
-            return Err(internal(
-                at,
-                "source parser emitted a node reference outside the host address space",
-            ));
-        };
-        let Some(node) = candidate.nodes.get(node_index) else {
-            return Err(internal(
-                at,
-                "source parser emitted an invalid candidate reference",
-            ));
-        };
-        match node {
-            noble_kernel::untrusted::Node::Invocation { def, .. } => {
-                if expected.get(next) != Some(def) {
-                    return Err(Refusal::new(
-                        Class::Unsupported,
-                        Location::at(at.field, next as u32),
-                        "profile source spelling resolves outside its exact bootstrap operation",
-                    ));
-                }
-                next = next.saturating_add(1);
-            }
-            noble_kernel::untrusted::Node::Quotation { body, .. } => {
-                frames.push(CandidateFrame { body, at: 0 });
-            }
-            noble_kernel::untrusted::Node::Literal { .. } => {}
-            noble_kernel::untrusted::Node::SignedSelf { .. }
-            | noble_kernel::untrusted::Node::SlotInvoke { .. } => {
-                return Err(Refusal::new(
-                    Class::Unsupported,
-                    at,
-                    "profile source contains a signed or live invocation",
-                ));
-            }
-        }
+    let mut outcome = Ok(());
+    while outcome.is_ok() && !walk.frames.is_empty() {
+        outcome = invocation_target_step(candidate, expected, &mut walk, &at);
     }
-    if next != expected.len() {
+    outcome?;
+    debug_assert!(walk.frames.is_empty());
+    if walk.next != expected.len() {
         return Err(Refusal::new(
             Class::Internal,
             at,
             "source parser and emitted operation sequence disagree",
         ));
     }
+    debug_assert_eq!(walk.next, expected.len());
     Ok(())
+}
+
+/// One target-walk step: close the finished top frame or check its next node.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; source preparation output is checked with fail-closed located refusals and must not panic on malformed or adversarial parser output"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the target walk mutates its runtime frame Vec and refusals allocate their message"
+)]
+fn invocation_target_step(
+    candidate: &noble_kernel::untrusted::Candidate,
+    expected: &[noble_kernel::contracts::Definition],
+    walk: &mut TargetWalk,
+    at: &Location,
+) -> Result<(), Refusal> {
+    let Some(top) = walk.frames.len().checked_sub(1) else {
+        return Ok(());
+    };
+    let Some(frame) = walk.frames.get(top) else {
+        return Err(internal(at.clone(), "candidate target walk lost its frame"));
+    };
+    let Some(body) = candidate_frame_body(candidate, frame) else {
+        return Err(internal(at.clone(), "candidate target walk lost its frame"));
+    };
+    let position = frame.at;
+    if position >= body.len() {
+        let _ = walk.frames.pop();
+        return Ok(());
+    }
+    if let Some(frame) = walk.frames.get_mut(top) {
+        frame.at = position.saturating_add(1);
+    }
+    let Some(reference) = body.get(position) else {
+        return Err(internal(
+            at.clone(),
+            "candidate target walk lost a node reference",
+        ));
+    };
+    let Ok(node_index) = usize::try_from(reference.0) else {
+        return Err(internal(
+            at.clone(),
+            "source parser emitted a node reference outside the host address space",
+        ));
+    };
+    let Some(node) = candidate.nodes.get(node_index) else {
+        return Err(internal(
+            at.clone(),
+            "source parser emitted an invalid candidate reference",
+        ));
+    };
+    match node {
+        noble_kernel::untrusted::Node::Invocation { def, .. } => {
+            let is_expected = is_expected_target(expected, walk.next, def);
+            if !is_expected {
+                return Err(Refusal::new(
+                    Class::Unsupported,
+                    Location::at(&at.field, walk.next as u32),
+                    "profile source spelling resolves outside its exact bootstrap operation",
+                ));
+            }
+            walk.next = walk.next.saturating_add(1);
+        }
+        noble_kernel::untrusted::Node::Quotation { .. } => {
+            walk.frames.push(CandidateFrame {
+                quotation: Some(node_index),
+                at: 0,
+            });
+        }
+        noble_kernel::untrusted::Node::Literal { .. } => {}
+        noble_kernel::untrusted::Node::SignedSelf { .. }
+        | noble_kernel::untrusted::Node::SlotInvoke { .. } => {
+            return Err(Refusal::new(
+                Class::Unsupported,
+                at.clone(),
+                "profile source contains a signed or live invocation",
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// Whether the `next` expected bootstrap definition is exactly `def`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; target lookups use the non-const slice `get` and derived definition equality"
+)]
+fn is_expected_target(
+    expected: &[noble_kernel::contracts::Definition],
+    next: usize,
+    def: &noble_kernel::contracts::Definition,
+) -> bool {
+    match expected.get(next) {
+        Some(target) => *target == *def,
+        None => false,
+    }
 }
 
 #[expect(
@@ -2861,7 +3447,11 @@ fn check_invocation_targets(
 )]
 fn exhaust_checking_work(ledger: &mut Ledger, at: Location) -> Refusal {
     let remaining = ledger.remaining(Resource::CheckingWork);
-    match ledger.charge(Resource::CheckingWork, remaining.saturating_add(1), at) {
+    match ledger.charge(
+        Resource::CheckingWork,
+        remaining.saturating_add(1),
+        at.clone(),
+    ) {
         Err(refusal) => refusal,
         Ok(()) => internal(
             at,
@@ -2873,7 +3463,6 @@ fn exhaust_checking_work(ledger: &mut Ledger, at: Location) -> Refusal {
 /// Host-owned state shared by the admission steps for one emitted candidate.
 struct AdmissionContext<'a> {
     namespace: &'a super::Session,
-    ledger: &'a mut Ledger,
     at: Location,
 }
 
@@ -2881,24 +3470,28 @@ struct AdmissionContext<'a> {
 /// independently re-check the resulting submission in the kernel. The derived
 /// interface is what returns; the declared one is only compared.
 fn derived_interface(
-    context: &mut AdmissionContext<'_>,
-    source: &[u8],
+    context: &AdmissionContext<'_>,
+    ledger: &mut Ledger,
+    emitted: &[u8],
     elements: &[Element],
     declared: &Interface,
 ) -> Result<(Interface, noble_kernel::untrusted::Candidate), Refusal> {
     let prepared = prepare_candidate(
         context.namespace,
-        source,
+        emitted,
         &declared.stack_in,
-        context.ledger,
-        context.at,
+        ledger,
+        context.at.clone(),
     )?;
-    let derived = prepared_interface(&prepared, declared, context.at)?;
+    let derived = prepared_interface(&prepared, declared, context.at.clone())?;
     let Some(submission) = prepared.submission() else {
-        return Err(internal(context.at, "preparation retained no submission"));
+        return Err(internal(
+            context.at.clone(),
+            "preparation retained no submission",
+        ));
     };
-    check_bootstrap_targets(&submission.body.candidate, elements, context.at)?;
-    let candidate = independently_accept(submission, &derived, context.ledger, context.at)?;
+    check_bootstrap_targets(&submission.body.candidate, elements, context.at.clone())?;
+    let candidate = independently_accept(submission, &derived, ledger, context.at.clone())?;
     debug_assert_eq!(derived.stack_in, declared.stack_in);
     debug_assert!(derived.effects.is_empty());
     Ok((derived, candidate))
@@ -2906,7 +3499,7 @@ fn derived_interface(
 
 fn prepare_candidate(
     namespace: &super::Session,
-    source: &[u8],
+    emitted: &[u8],
     inputs: &[Ty],
     ledger: &mut Ledger,
     at: Location,
@@ -2916,7 +3509,7 @@ fn prepare_candidate(
         return Err(exhaust_checking_work(ledger, at));
     }
     debug_assert!(remaining_work > 0);
-    match namespace.prepare(source, inputs, ledger.prepare_limits(remaining_work)) {
+    match namespace.prepare(emitted, inputs, ledger.prepare_limits(remaining_work)) {
         Ok(prepared) => {
             debug_assert!(prepared.work_used() <= remaining_work);
             debug_assert!(prepared.checked().is_some());
@@ -2925,8 +3518,8 @@ fn prepare_candidate(
             Ok(prepared)
         }
         Err(failure) => {
-            ledger.charge(Resource::CheckingWork, failure.work_used(), at)?;
-            let refusal = refusal_of_failure(&failure, at);
+            ledger.charge(Resource::CheckingWork, failure.work_used(), at.clone())?;
+            let refusal = refusal_of_failure(&failure, at.clone());
             if refusal.class == Class::Exhausted {
                 return Err(exhaust_checking_work(ledger, at));
             }
@@ -2989,7 +3582,7 @@ fn independently_accept(
         &request,
         &submission.body.candidate,
     );
-    ledger.charge(Resource::CheckingWork, work_used, at)?;
+    ledger.charge(Resource::CheckingWork, work_used, at.clone())?;
     match outcome {
         noble_kernel::untrusted::Outcome::Accepted(again) => {
             if again.interface.stack_in == derived.stack_in
@@ -3023,14 +3616,51 @@ struct FlatRequest {
     hole: usize,
 }
 
-struct EditorWalkFrame<'a> {
+/// The editor node list reached from `nodes` by descending through the
+/// quotation at each position of `path`.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; each call descends one quotation level of an editor tree whose depth the request checks bound, and direct recursion keeps a borrowed work stack out of the pinned Aeneas extraction"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; editor node lookups use the slice `get`, which is not a stable const fn"
+)]
+fn editor_nodes_at<'a>(
     nodes: &'a [super::editor::Node],
-    next: usize,
+    path: &[usize],
+) -> Option<&'a [super::editor::Node]> {
+    match path.split_first() {
+        None => Some(nodes),
+        Some((first, rest)) => match nodes.get(*first) {
+            Some(super::editor::Node::Quotation(children)) => editor_nodes_at(children, rest),
+            Some(
+                super::editor::Node::Integer(_)
+                | super::editor::Node::Boolean(_)
+                | super::editor::Node::Word(_)
+                | super::editor::Node::Hole,
+            )
+            | None => None,
+        },
+    }
+}
+
+/// Where one editor walk frame sits: the quotation positions from the root
+/// node list (so the frame holds no borrow) and the reported path trail.
+#[derive(Clone)]
+struct EditorPath {
+    positions: alloc::vec::Vec<usize>,
     trail: alloc::vec::Vec<u32>,
 }
 
+struct EditorWalkFrame {
+    path: EditorPath,
+    next: usize,
+}
+
 struct EditorWalk<'a> {
-    frames: alloc::vec::Vec<EditorWalkFrame<'a>>,
+    root: &'a [super::editor::Node],
+    frames: alloc::vec::Vec<EditorWalkFrame>,
     elements: alloc::vec::Vec<Element>,
     hole: Option<(usize, alloc::vec::Vec<u32>)>,
     depth: u32,
@@ -3040,11 +3670,14 @@ impl<'a> EditorWalk<'a> {
     fn new(nodes: &'a [super::editor::Node]) -> Self {
         let mut frames = alloc::vec::Vec::with_capacity(MAX_QUOTATION_FRAMES);
         frames.push(EditorWalkFrame {
-            nodes,
+            path: EditorPath {
+                positions: alloc::vec::Vec::with_capacity(MAX_QUOTATION_FRAMES),
+                trail: alloc::vec::Vec::with_capacity(MAX_QUOTATION_FRAMES),
+            },
             next: 0,
-            trail: alloc::vec::Vec::with_capacity(MAX_QUOTATION_FRAMES),
         });
         Self {
+            root: nodes,
             frames,
             elements: alloc::vec::Vec::with_capacity(nodes.len()),
             hole: None,
@@ -3052,16 +3685,19 @@ impl<'a> EditorWalk<'a> {
         }
     }
 
-    fn advance(&mut self, ledger: &mut Ledger, at: Location) -> Result<bool, Refusal> {
+    fn advance(&mut self, ledger: &mut Ledger, at: &Location) -> Result<bool, Refusal> {
         let Some(top) = self.frames.len().checked_sub(1) else {
             return Ok(false);
         };
+        let root: &'a [super::editor::Node] = self.root;
         let (nodes, index, finished) = {
             let Some(frame) = self.frames.get_mut(top) else {
-                return Err(internal(at, "editor walk lost its frame"));
+                return Err(internal(at.clone(), "editor walk lost its frame"));
             };
-            let nodes: &'a [super::editor::Node] = frame.nodes;
-            if frame.next >= frame.nodes.len() {
+            let Some(nodes) = editor_nodes_at(root, &frame.path.positions) else {
+                return Err(internal(at.clone(), "editor walk lost its frame"));
+            };
+            if frame.next >= nodes.len() {
                 (nodes, frame.next, true)
             } else {
                 let index = frame.next;
@@ -3079,16 +3715,17 @@ impl<'a> EditorWalk<'a> {
         }
         let Some(node) = nodes.get(index) else {
             return Err(internal(
-                at,
+                at.clone(),
                 "editor node reference is outside the finite tree",
             ));
         };
         match node {
             super::editor::Node::Hole | super::editor::Node::Quotation(_) => {
                 let Some(frame) = self.frames.get(top) else {
-                    return Err(internal(at, "editor walk lost its path frame"));
+                    return Err(internal(at.clone(), "editor walk lost its path frame"));
                 };
-                self.append_path_node(node, index, frame.trail.clone(), ledger, at)?;
+                let path = frame.path.clone();
+                self.append_path_node(node, index, path, ledger, at)?;
             }
             _ => self.append_leaf(node, at)?,
         }
@@ -3099,7 +3736,7 @@ impl<'a> EditorWalk<'a> {
         tigerstyle::missing_const_fn,
         reason = "Owner: noble-contracts; leaf handling mutates the runtime editor Vec and allocates typed refusal messages"
     )]
-    fn append_leaf(&mut self, node: &super::editor::Node, at: Location) -> Result<(), Refusal> {
+    fn append_leaf(&mut self, node: &super::editor::Node, at: &Location) -> Result<(), Refusal> {
         match node {
             super::editor::Node::Integer(value) => self.elements.push(Element::I64(*value)),
             super::editor::Node::Boolean(value) => self.elements.push(Element::Bool(*value)),
@@ -3108,14 +3745,14 @@ impl<'a> EditorWalk<'a> {
                 None => {
                     return Err(Refusal::new(
                         Class::Unsupported,
-                        at,
+                        at.clone(),
                         "editor word is outside the published profile whitelist",
                     ))
                 }
             },
             super::editor::Node::Hole | super::editor::Node::Quotation(_) => {
                 return Err(internal(
-                    at,
+                    at.clone(),
                     "editor path node was sent to the leaf handler",
                 ))
             }
@@ -3125,43 +3762,45 @@ impl<'a> EditorWalk<'a> {
 
     fn append_path_node(
         &mut self,
-        node: &'a super::editor::Node,
+        node: &super::editor::Node,
         index: usize,
-        mut trail: alloc::vec::Vec<u32>,
+        mut path: EditorPath,
         ledger: &mut Ledger,
-        at: Location,
+        at: &Location,
     ) -> Result<(), Refusal> {
         let position = u32::try_from(index).map_err(|_| {
             Refusal::new(
                 Class::Invalid,
-                at,
+                at.clone(),
                 "editor path position exceeds the path index width",
             )
         })?;
-        trail.push(position);
+        path.trail.push(position);
+        path.positions.push(index);
         match node {
             super::editor::Node::Hole => {
                 if self.hole.is_some() {
                     return Err(Refusal::new(
                         Class::Invalid,
-                        at,
+                        at.clone(),
                         "editor tree holds more than one hole",
                     ));
                 }
-                self.hole = Some((self.elements.len(), trail));
+                self.hole = Some((self.elements.len(), path.trail));
                 self.elements.push(Element::Hole);
             }
-            super::editor::Node::Quotation(children) => {
+            super::editor::Node::Quotation(_) => {
                 self.depth = self.depth.saturating_add(1);
-                ledger.observe(Resource::QuotationDepth, self.depth, at)?;
+                ledger.observe(Resource::QuotationDepth, self.depth, at.clone())?;
                 self.elements.push(Element::Open);
-                self.frames.push(EditorWalkFrame {
-                    nodes: children,
-                    next: 0,
-                    trail,
-                });
+                self.frames.push(EditorWalkFrame { path, next: 0 });
             }
-            _ => return Err(internal(at, "editor leaf was sent to the path handler")),
+            _ => {
+                return Err(internal(
+                    at.clone(),
+                    "editor leaf was sent to the path handler",
+                ))
+            }
         }
         Ok(())
     }
@@ -3189,7 +3828,11 @@ fn flatten_editor_tree(
     at: Location,
 ) -> Result<(alloc::vec::Vec<Element>, usize, alloc::vec::Vec<u32>), Refusal> {
     let mut walk = EditorWalk::new(nodes);
-    while walk.advance(ledger, at)? {}
+    let mut walking = Ok(true);
+    while matches!(walking, Ok(true)) {
+        walking = walk.advance(ledger, &at);
+    }
+    walking?;
     let Some((hole, trail)) = walk.hole else {
         return Err(Refusal::new(
             Class::Invalid,
@@ -3235,18 +3878,22 @@ fn record(
     if matches!(refusal.class, Class::Exhausted | Class::Internal) {
         return Err(refusal);
     }
-    for retained in diagnostics.iter() {
-        if retained.class == refusal.class && retained.location == refusal.location {
-            return Ok(());
-        }
+    debug_assert!(!matches!(refusal.class, Class::Exhausted | Class::Internal));
+    let is_recorded = crate::scan::find_first(diagnostics.as_slice(), |retained| {
+        retained.class == refusal.class && retained.location == refusal.location
+    })
+    .is_some();
+    if is_recorded {
+        return Ok(());
     }
-    ledger.charge(Resource::Diagnostics, 1, refusal.location)?;
+    ledger.charge(Resource::Diagnostics, 1, refusal.location.clone())?;
     ledger.charge(
         Resource::RetainedBytes,
         refusal_encoded_size(&refusal)?,
-        refusal.location,
+        refusal.location.clone(),
     )?;
     diagnostics.push(refusal);
+    debug_assert!(!diagnostics.is_empty());
     Ok(())
 }
 
@@ -3280,16 +3927,31 @@ struct Composition {
     untouched: usize,
 }
 
-/// One scalar or quotation value during fixture evaluation.
+/// One scalar or quotation value during fixture evaluation. A quotation is
+/// the element range `start..end` of the evaluated program, so a value holds
+/// no borrow.
+///
+/// The extracted constructors carry a `Value` suffix: `Bool` would otherwise
+/// shadow Lean's own `Bool` inside this type's derived instances.
+#[charon::variants_suffix("Value")]
 #[octet::sealed_enum]
 #[derive(Clone, Debug)]
-enum Value<'a> {
+enum Value {
     I64(i64),
     Bool(bool),
-    Program(&'a [Element]),
+    Program { start: usize, end: usize },
 }
 
-fn collect_quotation(program: &[Element], start: usize) -> Option<(&[Element], usize)> {
+/// One fixture evaluation frame: the program range it runs and its offset.
+struct EvalFrame {
+    start: usize,
+    end: usize,
+    index: usize,
+}
+
+/// The end of the quotation body that starts at `start` in `program` and the
+/// position just past its closing bracket.
+fn collect_quotation(program: &[Element], start: usize) -> Option<(usize, usize)> {
     let mut depth = 0u32;
     let mut at = start;
     while let Some(element) = program.get(at) {
@@ -3297,7 +3959,7 @@ fn collect_quotation(program: &[Element], start: usize) -> Option<(&[Element], u
             Element::Open => depth = depth.saturating_add(1),
             Element::Close => {
                 if depth == 0 {
-                    return Some((program.get(start..at)?, at.saturating_add(1)));
+                    return Some((at, at.saturating_add(1)));
                 }
                 depth = depth.saturating_sub(1);
             }
@@ -3316,11 +3978,11 @@ fn collect_quotation(program: &[Element], start: usize) -> Option<(&[Element], u
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-contracts; fixture dispatch invokes runtime-only Vec mutation and bounded evaluation helpers"
 )]
-fn eval_operation<'a>(
+fn eval_operation(
     op: Op,
-    stack: &mut alloc::vec::Vec<Value<'a>>,
-    frames: &mut alloc::vec::Vec<(&'a [Element], usize)>,
-    at: Location,
+    stack: &mut alloc::vec::Vec<Value>,
+    frames: &mut alloc::vec::Vec<EvalFrame>,
+    at: &Location,
 ) -> Result<(), Refusal> {
     debug_assert!(stack.len() <= MAX_STACK_CAPACITY);
     let outcome = match op {
@@ -3340,11 +4002,11 @@ fn eval_operation<'a>(
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-contracts; fixture duplication must push onto the bounded owned evaluation stack"
 )]
-fn eval_duplicate<'a>(stack: &mut alloc::vec::Vec<Value<'a>>, at: Location) -> Result<(), Refusal> {
+fn eval_duplicate(stack: &mut alloc::vec::Vec<Value>, at: &Location) -> Result<(), Refusal> {
     let Some(value) = stack.last().cloned() else {
         return Err(Refusal::new(
             Class::Invalid,
-            at,
+            at.clone(),
             "fixture evaluation underflowed",
         ));
     };
@@ -3356,11 +4018,11 @@ fn eval_duplicate<'a>(stack: &mut alloc::vec::Vec<Value<'a>>, at: Location) -> R
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-contracts; fixture drop consumes an owned value from the bounded evaluation stack"
 )]
-fn eval_drop<'a>(stack: &mut alloc::vec::Vec<Value<'a>>, at: Location) -> Result<(), Refusal> {
+fn eval_drop(stack: &mut alloc::vec::Vec<Value>, at: &Location) -> Result<(), Refusal> {
     if stack.pop().is_none() {
         return Err(Refusal::new(
             Class::Invalid,
-            at,
+            at.clone(),
             "fixture evaluation underflowed",
         ));
     }
@@ -3371,11 +4033,11 @@ fn eval_drop<'a>(stack: &mut alloc::vec::Vec<Value<'a>>, at: Location) -> Result
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-contracts; fixture swap transfers ownership of two values through the bounded evaluation stack"
 )]
-fn eval_swap<'a>(stack: &mut alloc::vec::Vec<Value<'a>>, at: Location) -> Result<(), Refusal> {
+fn eval_swap(stack: &mut alloc::vec::Vec<Value>, at: &Location) -> Result<(), Refusal> {
     let (Some(top), Some(next)) = (stack.pop(), stack.pop()) else {
         return Err(Refusal::new(
             Class::Invalid,
-            at,
+            at.clone(),
             "fixture evaluation underflowed",
         ));
     };
@@ -3388,20 +4050,24 @@ fn eval_swap<'a>(stack: &mut alloc::vec::Vec<Value<'a>>, at: Location) -> Result
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-contracts; fixture run transfers an owned quotation value into the bounded evaluation frame stack"
 )]
-fn eval_run<'a>(
-    stack: &mut alloc::vec::Vec<Value<'a>>,
-    frames: &mut alloc::vec::Vec<(&'a [Element], usize)>,
-    at: Location,
+fn eval_run(
+    stack: &mut alloc::vec::Vec<Value>,
+    frames: &mut alloc::vec::Vec<EvalFrame>,
+    at: &Location,
 ) -> Result<(), Refusal> {
     let value = pop_value(stack, at)?;
-    let Value::Program(body) = value else {
+    let Value::Program { start, end } = value else {
         return Err(Refusal::new(
             Class::Invalid,
-            at,
+            at.clone(),
             "fixture run operand is not a quotation value",
         ));
     };
-    frames.push((body, 0));
+    frames.push(EvalFrame {
+        start,
+        end,
+        index: 0,
+    });
     Ok(())
 }
 
@@ -3409,17 +4075,13 @@ fn eval_run<'a>(
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-contracts; binary fixture operations replace two stack values with one result"
 )]
-fn eval_binary<'a>(
-    op: Op,
-    stack: &mut alloc::vec::Vec<Value<'a>>,
-    at: Location,
-) -> Result<(), Refusal> {
+fn eval_binary(op: Op, stack: &mut alloc::vec::Vec<Value>, at: &Location) -> Result<(), Refusal> {
     let initial_len = stack.len();
     let (Value::I64(right), Value::I64(left)) = (pop_value(stack, at)?, pop_value(stack, at)?)
     else {
         return Err(Refusal::new(
             Class::Invalid,
-            at,
+            at.clone(),
             "fixture binary operation requires two I64 operands",
         ));
     };
@@ -3430,17 +4092,19 @@ fn eval_binary<'a>(
         Op::Eq => stack.push(Value::Bool(left == right)),
         Op::Dup | Op::Drop | Op::Swap | Op::Run => {
             return Err(internal(
-                at,
+                at.clone(),
                 "fixture binary operation received a non-binary word",
             ));
         }
     }
     debug_assert_eq!(stack.len().saturating_add(1), initial_len);
-    debug_assert!(matches!(
-        stack.last(),
-        Some(Value::I64(_)) | Some(Value::Bool(_))
-    ));
+    debug_assert!(top_is_scalar(stack));
     Ok(())
+}
+
+/// Whether the fixture stack's top value is an `I64` or `Bool` scalar.
+const fn top_is_scalar(stack: &[Value]) -> bool {
+    matches!(stack.last(), Some(Value::I64(_)) | Some(Value::Bool(_)))
 }
 
 #[expect(
@@ -3451,89 +4115,133 @@ fn eval_binary<'a>(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-contracts; popping a runtime Vec cannot be evaluated during const evaluation"
 )]
-fn pop_value<'a>(
-    stack: &mut alloc::vec::Vec<Value<'a>>,
-    at: Location,
-) -> Result<Value<'a>, Refusal> {
+fn pop_value(stack: &mut alloc::vec::Vec<Value>, at: &Location) -> Result<Value, Refusal> {
     match stack.pop() {
         Some(value) => Ok(value),
         None => Err(Refusal::new(
             Class::Invalid,
-            at,
+            at.clone(),
             "fixture evaluation underflowed",
         )),
     }
 }
 
+/// The value and frame stacks of one fixture evaluation.
+struct Evaluation {
+    stack: alloc::vec::Vec<Value>,
+    frames: alloc::vec::Vec<EvalFrame>,
+}
+
 /// Evaluate one completed program over host-supplied inputs. The result is
 /// fixture evidence only: it is reported beside checking, never as acceptance.
-fn evaluate<'a>(
-    elements: &'a [Element],
+fn evaluate(
+    elements: &[Element],
     inputs: &[Scalar],
     ledger: &mut Ledger,
 ) -> Result<Option<alloc::vec::Vec<Scalar>>, Refusal> {
     let at = Location::field("request.fixtures");
-    let mut stack: alloc::vec::Vec<Value<'a>> = alloc::vec::Vec::with_capacity(MAX_STACK_CAPACITY);
+    let mut evaluation = Evaluation {
+        stack: alloc::vec::Vec::with_capacity(MAX_STACK_CAPACITY),
+        frames: alloc::vec::Vec::with_capacity(MAX_QUOTATION_FRAMES),
+    };
     for input in inputs {
-        stack.push(match input {
+        evaluation.stack.push(match input {
             Scalar::I64(value) => Value::I64(*value),
             Scalar::Bool(value) => Value::Bool(*value),
         });
     }
-    let mut frames: alloc::vec::Vec<(&'a [Element], usize)> =
-        alloc::vec::Vec::with_capacity(MAX_QUOTATION_FRAMES);
-    frames.push((elements, 0));
-    while let Some(top) = frames.len().checked_sub(1) {
-        let is_finished = match frames.get(top) {
-            Some((program, index)) => *index >= program.len(),
-            None => return Ok(None),
-        };
-        if is_finished {
-            let _ = frames.pop();
-            continue;
-        }
-        let (program, position) = match frames.get(top) {
-            Some((program, index)) => (*program, *index),
-            None => return Ok(None),
-        };
-        let Some(element) = program.get(position) else {
-            return Ok(None);
-        };
-        if let Some((_, index)) = frames.get_mut(top) {
-            *index = index.saturating_add(1);
-        }
-        ledger.charge(Resource::EvaluationSteps, 1, at)?;
-        match element {
-            Element::I64(value) => stack.push(Value::I64(*value)),
-            Element::Bool(value) => stack.push(Value::Bool(*value)),
-            Element::Open => {
-                let Some((body, after)) = collect_quotation(program, position.saturating_add(1))
-                else {
-                    return Ok(None);
-                };
-                if let Some((_, index)) = frames.get_mut(top) {
-                    *index = after;
-                } else {
-                    return Ok(None);
-                }
-                stack.push(Value::Program(body));
-            }
-            Element::Op { op, .. } => eval_operation(*op, &mut stack, &mut frames, at)?,
-            Element::Close | Element::Hole => return Ok(None),
-        }
-        ledger.observe_count(Resource::StackHeight, encoded_len(stack.len()), at)?;
+    evaluation.frames.push(EvalFrame {
+        start: 0,
+        end: elements.len(),
+        index: 0,
+    });
+    let mut outcome = Ok(true);
+    while matches!(outcome, Ok(true)) && !evaluation.frames.is_empty() {
+        outcome = evaluate_step(elements, &mut evaluation, ledger, &at);
     }
-    debug_assert!(stack.len() <= MAX_STACK_CAPACITY);
-    let mut out = alloc::vec::Vec::with_capacity(stack.len());
-    for value in stack {
-        match value {
-            Value::I64(value) => out.push(Scalar::I64(value)),
-            Value::Bool(value) => out.push(Scalar::Bool(value)),
-            Value::Program(_) => return Ok(None),
+    if !outcome? {
+        return Ok(None);
+    }
+    debug_assert!(evaluation.stack.len() <= MAX_STACK_CAPACITY);
+    let mut out = alloc::vec::Vec::with_capacity(evaluation.stack.len());
+    let mut is_scalar_stack = true;
+    let mut index = 0usize;
+    while is_scalar_stack && index < evaluation.stack.len() {
+        match &evaluation.stack[index] {
+            Value::I64(value) => out.push(Scalar::I64(*value)),
+            Value::Bool(value) => out.push(Scalar::Bool(*value)),
+            Value::Program { .. } => is_scalar_stack = false,
         }
+        index = index.saturating_add(1);
+    }
+    if !is_scalar_stack {
+        return Ok(None);
     }
     debug_assert!(out.len() <= MAX_STACK_CAPACITY);
     Ok(Some(out))
+}
+
+/// One fixture-evaluation step: finish the top frame or run its next element.
+/// `Ok(false)` ends the evaluation without a result.
+fn evaluate_step(
+    elements: &[Element],
+    evaluation: &mut Evaluation,
+    ledger: &mut Ledger,
+    at: &Location,
+) -> Result<bool, Refusal> {
+    debug_assert!(!evaluation.frames.is_empty());
+    debug_assert!(evaluation.stack.len() <= MAX_STACK_CAPACITY);
+    let Some(top) = evaluation.frames.len().checked_sub(1) else {
+        return Ok(true);
+    };
+    let Some(frame) = evaluation.frames.get(top) else {
+        return Ok(false);
+    };
+    let start = frame.start;
+    let position = frame.index;
+    let Some(program) = elements.get(frame.start..frame.end) else {
+        return Ok(false);
+    };
+    if position >= program.len() {
+        let _ = evaluation.frames.pop();
+        return Ok(true);
+    }
+    let Some(element) = program.get(position) else {
+        return Ok(false);
+    };
+    if let Some(frame) = evaluation.frames.get_mut(top) {
+        frame.index = frame.index.saturating_add(1);
+    }
+    ledger.charge(Resource::EvaluationSteps, 1, at.clone())?;
+    match element {
+        Element::I64(value) => evaluation.stack.push(Value::I64(*value)),
+        Element::Bool(value) => evaluation.stack.push(Value::Bool(*value)),
+        Element::Open => {
+            let body_start = position.saturating_add(1);
+            let Some((body_end, after)) = collect_quotation(program, body_start) else {
+                return Ok(false);
+            };
+            if let Some(frame) = evaluation.frames.get_mut(top) {
+                frame.index = after;
+            } else {
+                return Ok(false);
+            }
+            evaluation.stack.push(Value::Program {
+                start: start.saturating_add(body_start),
+                end: start.saturating_add(body_end),
+            });
+        }
+        Element::Op { op, .. } => {
+            eval_operation(*op, &mut evaluation.stack, &mut evaluation.frames, at)?
+        }
+        Element::Close | Element::Hole => return Ok(false),
+    }
+    ledger.observe_count(
+        Resource::StackHeight,
+        encoded_len(evaluation.stack.len()),
+        at.clone(),
+    )?;
+    Ok(true)
 }
 
 /// One completion attempt: one shared ledger, one request, one hole equation.
@@ -3549,6 +4257,12 @@ struct Search<'a> {
     rejected: u32,
     checked_candidates: u32,
     fixtures: Option<FixtureReport>,
+}
+
+/// The worklist of one selected chunk's transitive revalidation.
+struct Revalidation {
+    pending: alloc::vec::Vec<u16>,
+    selected: Option<Expansion>,
 }
 
 impl Search<'_> {
@@ -3569,91 +4283,17 @@ impl Search<'_> {
         ledger: &mut Ledger,
         start: u16,
     ) -> Result<Expansion, Refusal> {
-        let mut pending = alloc::vec::Vec::with_capacity(MAX_DEPENDENCY_PENDING);
-        pending.push(start);
-        let mut selected_expansion = None;
-        while let Some(index) = pending.pop() {
-            let Some(entry) = library.entries().get(usize::from(index)) else {
-                return Err(internal(
-                    Location::field("proposal.sequence"),
-                    "selected dependency is not retained",
-                ));
-            };
-            let envelope = entry.envelope();
-            ledger.observe_count(
-                Resource::RecipeNodes,
-                encoded_len(envelope.body.nodes.len()),
-                Location::field("proposal.revalidation"),
-            )?;
-            let expansion = expand_recipe(
-                library.entries(),
-                envelope,
-                ledger,
-                Location::field("proposal.revalidation"),
-            )?;
-            replay_interface(
-                &expansion.elements,
-                entry.interface(),
-                ledger,
-                Location::field("proposal.revalidation"),
-            )?;
-            let source = emit(
-                &expansion.elements,
-                Location::field("proposal.revalidation"),
-            )?;
-            ledger.observe_count(
-                Resource::SourceBytes,
-                encoded_len(source.len()),
-                Location::field("proposal.revalidation"),
-            )?;
-            if source != entry.source || canonical_revision(&source) != envelope.source_revision {
-                return Err(Refusal::new(
-                    Class::Invalid,
-                    Location::field("proposal.revalidation"),
-                    "retained chunk source no longer matches its immutable recipe revision",
-                ));
-            }
-            let mut admission = AdmissionContext {
-                namespace,
-                ledger,
-                at: Location::field("proposal.revalidation"),
-            };
-            let (interface, _) = derived_interface(
-                &mut admission,
-                &source,
-                &expansion.elements,
-                entry.interface(),
-            )?;
-            if interface != *entry.interface() {
-                return Err(Refusal::new(
-                    Class::Invalid,
-                    Location::field("proposal.revalidation"),
-                    "re-admitted chunk interface differs from the immutable library entry",
-                ));
-            }
-            if index == start {
-                selected_expansion = Some(expansion);
-            }
-            for position in 0..envelope.dependencies.len() {
-                let Some(dependency) = envelope.dependencies.get(position) else {
-                    return Err(internal(
-                        Location::field("proposal.dependencies"),
-                        "dependency index exceeds the checked record slice",
-                    ));
-                };
-                let at = Location::at("proposal.dependencies", position as u32);
-                ledger.charge(Resource::DependencySteps, 1, at)?;
-                let Some(target) = library.find(dependency) else {
-                    return Err(Refusal::new(
-                        Class::Invalid,
-                        at,
-                        "transitive dependency no longer resolves by its exact identity and revisions",
-                    ));
-                };
-                pending.push(target);
-            }
+        let mut revalidation = Revalidation {
+            pending: alloc::vec::Vec::with_capacity(MAX_DEPENDENCY_PENDING),
+            selected: None,
+        };
+        revalidation.pending.push(start);
+        let mut outcome = Ok(());
+        while outcome.is_ok() && !revalidation.pending.is_empty() {
+            outcome = Self::revalidate_step(namespace, library, ledger, start, &mut revalidation);
         }
-        selected_expansion.ok_or_else(|| {
+        outcome?;
+        revalidation.selected.ok_or_else(|| {
             internal(
                 Location::field("proposal.revalidation"),
                 "selected chunk was not revalidated",
@@ -3661,53 +4301,205 @@ impl Search<'_> {
         })
     }
 
+    /// Revalidate the next pending library entry and queue its dependencies.
+    fn revalidate_step(
+        namespace: &super::Session,
+        library: &Library,
+        ledger: &mut Ledger,
+        start: u16,
+        revalidation: &mut Revalidation,
+    ) -> Result<(), Refusal> {
+        let Some(index) = revalidation.pending.pop() else {
+            return Ok(());
+        };
+        let Some(entry) = library.entries().get(usize::from(index)) else {
+            return Err(internal(
+                Location::field("proposal.sequence"),
+                "selected dependency is not retained",
+            ));
+        };
+        let envelope = entry.envelope();
+        ledger.observe_count(
+            Resource::RecipeNodes,
+            encoded_len(envelope.body.nodes.len()),
+            Location::field("proposal.revalidation"),
+        )?;
+        let expansion = expand_recipe(
+            library.entries(),
+            envelope,
+            ledger,
+            Location::field("proposal.revalidation"),
+        )?;
+        replay_interface(
+            &expansion.elements,
+            entry.interface(),
+            ledger,
+            Location::field("proposal.revalidation"),
+        )?;
+        let source = emit(
+            &expansion.elements,
+            Location::field("proposal.revalidation"),
+        )?;
+        ledger.observe_count(
+            Resource::SourceBytes,
+            encoded_len(source.len()),
+            Location::field("proposal.revalidation"),
+        )?;
+        if source != entry.source || canonical_revision(&source) != envelope.source_revision {
+            return Err(Refusal::new(
+                Class::Invalid,
+                Location::field("proposal.revalidation"),
+                "retained chunk source no longer matches its immutable recipe revision",
+            ));
+        }
+        let admission = AdmissionContext {
+            namespace,
+            at: Location::field("proposal.revalidation"),
+        };
+        let (interface, _) = derived_interface(
+            &admission,
+            ledger,
+            &source,
+            &expansion.elements,
+            entry.interface(),
+        )?;
+        if interface != *entry.interface() {
+            return Err(Refusal::new(
+                Class::Invalid,
+                Location::field("proposal.revalidation"),
+                "re-admitted chunk interface differs from the immutable library entry",
+            ));
+        }
+        Self::record_selected(revalidation, index == start, expansion);
+        Self::queue_dependencies(library, envelope, ledger, revalidation)
+    }
+
+    /// Keep `expansion` as the selected chunk's expansion when it is the start entry.
+    fn record_selected(revalidation: &mut Revalidation, is_start: bool, expansion: Expansion) {
+        if is_start {
+            revalidation.selected = Some(expansion);
+        }
+    }
+
+    /// Queue every dependency of one revalidated entry, in record order.
+    fn queue_dependencies(
+        library: &Library,
+        envelope: &Envelope,
+        ledger: &mut Ledger,
+        revalidation: &mut Revalidation,
+    ) -> Result<(), Refusal> {
+        let mut position = 0usize;
+        let mut outcome = Ok(());
+        while outcome.is_ok() && position < envelope.dependencies.len() {
+            outcome = Self::queue_dependency(library, envelope, position, ledger, revalidation);
+            position = position.saturating_add(1);
+        }
+        outcome
+    }
+
+    /// Charge one transitive dependency step and queue the entry it resolves to.
+    fn queue_dependency(
+        library: &Library,
+        envelope: &Envelope,
+        position: usize,
+        ledger: &mut Ledger,
+        revalidation: &mut Revalidation,
+    ) -> Result<(), Refusal> {
+        let Some(dependency) = envelope.dependencies.get(position) else {
+            return Err(internal(
+                Location::field("proposal.dependencies"),
+                "dependency index exceeds the checked record slice",
+            ));
+        };
+        let at = Location::at("proposal.dependencies", position as u32);
+        ledger.charge(Resource::DependencySteps, 1, at.clone())?;
+        let Some(target) = library.find(dependency) else {
+            return Err(Refusal::new(
+                Class::Invalid,
+                at,
+                "transitive dependency no longer resolves by its exact identity and revisions",
+            ));
+        };
+        revalidation.pending.push(target);
+        Ok(())
+    }
+
     /// Expand one ordered chunk sequence and compute the ordered stack it
     /// produces at the hole. Every boundary must match exactly.
     fn compose(&mut self, sequence: &[u16]) -> Result<Result<Composition, Refusal>, Refusal> {
         let at = Location::field("proposal");
-        // Copy the library reference out first: the entries are borrowed while
-        // the shared ledger is charged, and the two borrows are independent.
-        let library: &Library = self.library;
-        let entries = library.entries();
-        let mut elements = alloc::vec::Vec::with_capacity(MAX_EXPANDED_NODE_CAPACITY);
-        let mut current = self.stack_in.clone();
-        let mut untouched = current.len();
-        for position in 0..sequence.len() {
-            let Some(index) = sequence.get(position) else {
-                return Err(internal(at, "sequence index exceeds the checked slice"));
-            };
-            let expansion =
-                Self::revalidate_entry(self.namespace, self.library, &mut self.ledger, *index)?;
-            let Some(entry) = entries.get(usize::from(*index)) else {
-                return Err(internal(at, "selected entry is not retained"));
-            };
-            elements.extend(expansion.elements);
-            let interface = entry.interface();
-            if !current.ends_with(&interface.stack_in) {
-                return Ok(Err(Refusal::new(
-                    Class::Invalid,
-                    Location::at(
-                        "proposal.sequence",
-                        position as u32,
-                    ),
-                    "selected chunk does not fit the exact ordered stack at this composition boundary",
-                )));
-            }
-            let above_untouched = current.len().saturating_sub(untouched);
-            let consumed_from_untouched = interface.stack_in.len().saturating_sub(above_untouched);
-            untouched = untouched.saturating_sub(consumed_from_untouched);
-            current.truncate(current.len().saturating_sub(interface.stack_in.len()));
-            for ty in &interface.stack_out {
-                current.push(ty.clone());
-            }
-            self.ledger
-                .observe_count(Resource::StackHeight, encoded_len(current.len()), at)?;
-        }
-        Ok(Ok(Composition {
-            elements,
+        let current = self.stack_in.clone();
+        let untouched = current.len();
+        let mut composition = Composition {
+            elements: alloc::vec::Vec::with_capacity(MAX_EXPANDED_NODE_CAPACITY),
             stack: current,
             untouched,
-        }))
+        };
+        let mut position = 0usize;
+        let mut outcome = Ok(None);
+        while matches!(outcome, Ok(None)) && position < sequence.len() {
+            outcome = self.compose_step(sequence, position, &mut composition, &at);
+            position = position.saturating_add(1);
+        }
+        match outcome? {
+            Some(refusal) => Ok(Err(refusal)),
+            None => Ok(Ok(composition)),
+        }
+    }
+
+    /// Revalidate one selected chunk and apply it at the current composition
+    /// boundary. `Ok(Some(..))` refuses this proposal; `Err` stops the search.
+    fn compose_step(
+        &mut self,
+        sequence: &[u16],
+        position: usize,
+        composition: &mut Composition,
+        at: &Location,
+    ) -> Result<Option<Refusal>, Refusal> {
+        let Some(index) = sequence.get(position) else {
+            return Err(internal(
+                at.clone(),
+                "sequence index exceeds the checked slice",
+            ));
+        };
+        let expansion =
+            Self::revalidate_entry(self.namespace, self.library, &mut self.ledger, *index)?;
+        // Copy the library reference out: the entry is borrowed while the
+        // shared ledger is charged, and the two borrows are independent.
+        let library: &Library = self.library;
+        let Some(entry) = library.entries().get(usize::from(*index)) else {
+            return Err(internal(at.clone(), "selected entry is not retained"));
+        };
+        composition.elements.extend(expansion.elements);
+        let interface = entry.interface();
+        if !composition.stack.ends_with(&interface.stack_in) {
+            return Ok(Some(Refusal::new(
+                Class::Invalid,
+                Location::at("proposal.sequence", position as u32),
+                "selected chunk does not fit the exact ordered stack at this composition boundary",
+            )));
+        }
+        let above_untouched = composition
+            .stack
+            .len()
+            .saturating_sub(composition.untouched);
+        let consumed_from_untouched = interface.stack_in.len().saturating_sub(above_untouched);
+        composition.untouched = composition
+            .untouched
+            .saturating_sub(consumed_from_untouched);
+        composition.stack.truncate(
+            composition
+                .stack
+                .len()
+                .saturating_sub(interface.stack_in.len()),
+        );
+        composition.stack.extend_from_slice(&interface.stack_out);
+        self.ledger.observe_count(
+            Resource::StackHeight,
+            encoded_len(composition.stack.len()),
+            at.clone(),
+        )?;
+        Ok(None)
     }
 
     /// Prepare one emitted program against the original task contract.
@@ -3717,17 +4509,16 @@ impl Search<'_> {
     )]
     fn prepare(
         &mut self,
-        source: &[u8],
+        emitted: &[u8],
         elements: &[Element],
         declared: &Interface,
         at: Location,
     ) -> Result<Result<(Interface, noble_kernel::untrusted::Candidate), Refusal>, Refusal> {
-        let mut admission = AdmissionContext {
+        let admission = AdmissionContext {
             namespace: self.namespace,
-            ledger: &mut self.ledger,
             at,
         };
-        match derived_interface(&mut admission, source, elements, declared) {
+        match derived_interface(&admission, &mut self.ledger, emitted, elements, declared) {
             Ok(admitted) => Ok(Ok(admitted)),
             Err(refusal) => match refusal.class {
                 Class::Invalid | Class::Unsupported => Ok(Err(refusal)),
@@ -3746,24 +4537,20 @@ impl Search<'_> {
             .charge(Resource::RetainedBytes, fixture_report_size(set)?, at)?;
         let mut cases = alloc::vec::Vec::with_capacity(set.cases.len());
         let mut is_agreement = true;
-        for fixture in &set.cases {
-            self.ledger.charge(
-                Resource::EvaluationSteps,
-                1,
-                Location::field("request.fixtures"),
-            )?;
-            let actual = evaluate(program, &fixture.inputs, &mut self.ledger)?;
-            let is_agreed = match &actual {
-                Some(values) => *values == fixture.outputs,
-                None => false,
-            };
-            is_agreement &= is_agreed;
-            cases.push(FixtureCaseReport {
-                inputs: fixture.inputs.clone(),
-                expected: fixture.outputs.clone(),
-                actual,
-                agrees: is_agreed,
-            });
+        let mut index = 0usize;
+        let mut failure = None;
+        while failure.is_none() && index < set.cases.len() {
+            match self.fixture_case(program, &set.cases[index]) {
+                Ok(case) => {
+                    is_agreement &= case.agrees;
+                    cases.push(case);
+                }
+                Err(refusal) => failure = Some(refusal),
+            }
+            index = index.saturating_add(1);
+        }
+        if let Some(refusal) = failure {
+            return Err(refusal);
         }
         Ok(FixtureReport {
             id: set.id,
@@ -3773,13 +4560,40 @@ impl Search<'_> {
         })
     }
 
+    /// Charge and evaluate one host fixture case against the completed program.
+    fn fixture_case(
+        &mut self,
+        program: &[Element],
+        fixture: &Fixture,
+    ) -> Result<FixtureCaseReport, Refusal> {
+        self.ledger.charge(
+            Resource::EvaluationSteps,
+            1,
+            Location::field("request.fixtures"),
+        )?;
+        let actual = evaluate(program, &fixture.inputs, &mut self.ledger)?;
+        let is_agreed = match &actual {
+            Some(values) => *values == fixture.outputs,
+            None => false,
+        };
+        Ok(FixtureCaseReport {
+            inputs: fixture.inputs.clone(),
+            expected: fixture.outputs.clone(),
+            actual,
+            agrees: is_agreed,
+        })
+    }
+
     /// Attempt one shortlex proposal. `Ok(Step::Refused)` keeps the search
     /// going; `Err` is a request-level budget exhaustion and stops it.
     fn candidate(&mut self, sequence: &[u16]) -> Result<Step, Refusal> {
         let at = Location::field("proposal");
-        self.ledger.charge(Resource::Candidates, 1, at)?;
-        self.ledger
-            .observe_count(Resource::ComposedChunks, encoded_len(sequence.len()), at)?;
+        self.ledger.charge(Resource::Candidates, 1, at.clone())?;
+        self.ledger.observe_count(
+            Resource::ComposedChunks,
+            encoded_len(sequence.len()),
+            at.clone(),
+        )?;
         let Composition {
             elements,
             stack,
@@ -3791,10 +4605,13 @@ impl Search<'_> {
         let filled = fill(&self.flat.elements, self.flat.hole, &elements);
         let mut replay = Replay::new(&self.request.task.stack_in);
         let boundary = self.flat.hole.saturating_add(elements.len());
-        if let Err(refusal) = replay.run(&filled, Some(boundary), &mut self.ledger, true, at) {
+        if let Err(refusal) =
+            replay.run(&filled, Some(boundary), &mut self.ledger, true, at.clone())
+        {
             return Ok(Step::Refused(refusal));
         }
-        if replay.mark.as_deref() != Some(stack.as_slice()) {
+        let is_marked_stack = replay.marks(&stack);
+        if !is_marked_stack {
             return Err(internal(
                 at,
                 "the ordered equation and the emitted program disagree",
@@ -3807,45 +4624,46 @@ impl Search<'_> {
                 "completed program does not produce the task's exact ordered output stack",
             )));
         }
-        let source = match emit(&filled, at) {
-            Ok(source) => source,
+        let emitted = match emit(&filled, at.clone()) {
+            Ok(emitted) => emitted,
             Err(refusal) => return Ok(Step::Refused(refusal)),
         };
-        self.ledger
-            .observe_count(Resource::SourceBytes, encoded_len(source.len()), at)?;
+        self.ledger.observe_count(
+            Resource::SourceBytes,
+            encoded_len(emitted.len()),
+            at.clone(),
+        )?;
         let declared = Interface {
             stack_in: self.request.task.stack_in.clone(),
             stack_out: self.request.task.stack_out.clone(),
             effects: self.request.task.allowed_effects.clone(),
         };
         self.checked_candidates = self.checked_candidates.saturating_add(1);
-        let (interface, candidate) = match self.prepare(&source, &filled, &declared, at)? {
+        let (interface, candidate) = match self.prepare(&emitted, &filled, &declared, at.clone())? {
             Ok(admitted) => admitted,
             Err(refusal) => return Ok(Step::Refused(refusal)),
         };
         let tail = u32::try_from(untouched)
-            .map_err(|_| internal(at, "stack tail exceeds the fixed report width"))?;
+            .map_err(|_| internal(at.clone(), "stack tail exceeds the fixed report width"))?;
         let mut selected = alloc::vec::Vec::with_capacity(sequence.len());
-        for position in 0..sequence.len() {
-            let Some(index) = sequence.get(position) else {
-                continue;
-            };
-            let Some(entry) = self.library.entries().get(usize::from(*index)) else {
-                continue;
-            };
-            selected.push(entry.envelope().chunk_id);
+        let mut position = 0usize;
+        while position < sequence.len() {
+            if let Some(chunk_id) = selected_chunk_id(self.library, sequence, position) {
+                selected.push(chunk_id);
+            }
+            position = position.saturating_add(1);
         }
-        let stack_bytes = [
+        let stack_lengths = [
             self.stack_in.len(),
             stack.len(),
             interface.stack_in.len(),
             interface.stack_out.len(),
-        ]
-        .iter()
-        .fold(0u64, |total, length| {
-            total.saturating_add(encoded_len(*length))
-        });
-        let output_bytes = encoded_len(source.len())
+        ];
+        let mut stack_bytes = 0u64;
+        for length in stack_lengths {
+            stack_bytes = stack_bytes.saturating_add(encoded_len(length));
+        }
+        let output_bytes = encoded_len(emitted.len())
             .saturating_mul(2)
             .saturating_add(encoded_len(selected.len()).saturating_mul(IDENTITY_BYTES_U64))
             .saturating_add(stack_bytes);
@@ -3855,7 +4673,7 @@ impl Search<'_> {
             self.fixtures = Some(self.fixtures_for(&filled, set)?);
         }
         Ok(Step::Admitted(alloc::boxed::Box::new(Accepted {
-            source,
+            source: emitted,
             candidate,
             interface,
             selected,
@@ -3866,6 +4684,17 @@ impl Search<'_> {
             },
         })))
     }
+}
+
+/// The chunk identity of the retained entry selected at `position`, if any.
+fn selected_chunk_id(
+    library: &Library,
+    sequence: &[u16],
+    position: usize,
+) -> Option<[u8; IDENTITY_BYTES]> {
+    let index = sequence.get(position)?;
+    let entry = library.entries().get(usize::from(*index))?;
+    Some(entry.envelope().chunk_id)
 }
 
 /// The canonical library order: `(stack_in, stack_out, effects, chunk_id)`.
@@ -3909,10 +4738,12 @@ fn comes_before(left: &Entry, right: &Entry) -> core::cmp::Ordering {
 
 fn canonical_order(library: &Library) -> alloc::vec::Vec<u16> {
     let mut order: alloc::vec::Vec<u16> = alloc::vec::Vec::with_capacity(library.entries().len());
-    for index in 0..library.entries().len() {
-        if let Ok(index) = u16::try_from(index) {
-            order.push(index);
+    let mut index = 0usize;
+    while index < library.entries().len() {
+        if let Ok(position) = u16::try_from(index) {
+            order.push(position);
         }
+        index = index.saturating_add(1);
     }
     order.sort_by(|left, right| {
         match (
@@ -3927,12 +4758,16 @@ fn canonical_order(library: &Library) -> alloc::vec::Vec<u16> {
     });
     debug_assert!(order.len() <= library.entries().len());
     let mut is_ordered = true;
-    for index in 0..order.len().saturating_sub(1) {
-        let Some(pair) = order.get(index..index.saturating_add(2)) else {
-            is_ordered = false;
-            break;
-        };
-        is_ordered &= canonical_pair_is_ordered(library, pair);
+    let mut index = 0usize;
+    while index < order.len().saturating_sub(1) {
+        match order.get(index..index.saturating_add(2)) {
+            Some(pair) => is_ordered &= canonical_pair_is_ordered(library, pair),
+            None => {
+                is_ordered = false;
+                break;
+            }
+        }
+        index = index.saturating_add(1);
     }
     debug_assert!(is_ordered);
     order
@@ -3955,50 +4790,81 @@ pub fn candidate_queue(library: &Library, candidate_limit: CandidateLimit) -> Ca
     let order = canonical_entry_order(library);
     debug_assert!(u32::try_from(bounded_candidate_count).is_ok_and(|count| count <= MAX_CANDIDATES));
     debug_assert!(encoded_len(order.len()) <= u64::from(MAX_LIBRARY_ENTRIES));
-    let mut candidates = alloc::vec::Vec::with_capacity(bounded_candidate_count);
-    for chunk_count in 0..=MAX_COMPOSED_CHUNKS {
+    let mut build = QueueBuild {
+        order,
+        bounded_count: bounded_candidate_count,
+        queue: CandidateQueue {
+            candidates: alloc::vec::Vec::with_capacity(bounded_candidate_count),
+            next_candidate: None,
+        },
+    };
+    let mut chunk_count = 0u32;
+    while build.queue.next_candidate.is_none() && chunk_count <= MAX_COMPOSED_CHUNKS {
         let count = usize::try_from(chunk_count).unwrap_or(0);
-        if count > 0 && order.is_empty() {
+        if count > 0 && build.order.is_empty() {
             break;
         }
-        let mut digits: alloc::vec::Vec<u16> = alloc::vec![0; count];
-        loop {
-            let mut sequence = alloc::vec::Vec::with_capacity(count);
-            for digit in &digits {
-                if let Some(index) = order.get(usize::from(*digit)) {
-                    sequence.push(*index);
-                }
-            }
-            let ordinal = u32::try_from(candidates.len()).unwrap_or(MAX_CANDIDATES);
-            if candidates.len() == bounded_candidate_count {
-                debug_assert!(candidates.len() <= bounded_candidate_count);
-                return CandidateQueue {
-                    candidates,
-                    next_candidate: Some(QueueCandidate::unscored(ordinal, sequence)),
-                };
-            }
-            candidates.push(QueueCandidate::unscored(ordinal, sequence));
-            if !advance(&mut digits, order.len()) {
+        queue_length(&mut build, count);
+        chunk_count = chunk_count.saturating_add(1);
+    }
+    if build.queue.next_candidate.is_some() {
+        return build.queue;
+    }
+    let candidates = build.queue.candidates;
+    debug_assert!(candidates.len() <= bounded_candidate_count);
+    let mut has_ordered_ordinals = true;
+    let mut index = 0usize;
+    while index < candidates.len().saturating_sub(1) {
+        match (
+            candidates.get(index),
+            candidates.get(index.saturating_add(1)),
+        ) {
+            (Some(left), Some(right)) => has_ordered_ordinals &= left.ordinal < right.ordinal,
+            _ => {
+                has_ordered_ordinals = false;
                 break;
             }
         }
-    }
-    debug_assert!(candidates.len() <= bounded_candidate_count);
-    let mut has_ordered_ordinals = true;
-    for index in 0..candidates.len().saturating_sub(1) {
-        let (Some(left), Some(right)) = (
-            candidates.get(index),
-            candidates.get(index.saturating_add(1)),
-        ) else {
-            has_ordered_ordinals = false;
-            break;
-        };
-        has_ordered_ordinals &= left.ordinal < right.ordinal;
+        index = index.saturating_add(1);
     }
     debug_assert!(has_ordered_ordinals);
     CandidateQueue {
         candidates,
         next_candidate: None,
+    }
+}
+
+/// The bounded shortlex candidate queue under construction.
+struct QueueBuild {
+    order: alloc::vec::Vec<u16>,
+    bounded_count: usize,
+    queue: CandidateQueue,
+}
+
+/// Queue every `count`-chunk sequence in shortlex order until the bound is
+/// reached; the first sequence past the bound becomes the overflow witness.
+fn queue_length(build: &mut QueueBuild, count: usize) {
+    debug_assert!(build.queue.candidates.len() <= build.bounded_count);
+    let mut digits: alloc::vec::Vec<u16> = alloc::vec![0; count];
+    let mut has_more = true;
+    while has_more && build.queue.next_candidate.is_none() {
+        let mut sequence = alloc::vec::Vec::with_capacity(count);
+        for digit in &digits {
+            if let Some(index) = build.order.get(usize::from(*digit)) {
+                sequence.push(*index);
+            }
+        }
+        let ordinal = u32::try_from(build.queue.candidates.len()).unwrap_or(MAX_CANDIDATES);
+        if build.queue.candidates.len() == build.bounded_count {
+            debug_assert!(build.queue.candidates.len() <= build.bounded_count);
+            build.queue.next_candidate = Some(QueueCandidate::unscored(ordinal, sequence));
+        } else {
+            build
+                .queue
+                .candidates
+                .push(QueueCandidate::unscored(ordinal, sequence));
+            has_more = advance(&mut digits, build.order.len());
+        }
     }
 }
 
@@ -4036,37 +4902,39 @@ fn fixture_values_match_types(values: &[Scalar], expected: &[Ty]) -> bool {
     if values.len() != expected.len() {
         return false;
     }
-    for index in 0..values.len() {
-        let (Some(value), Some(ty)) = (values.get(index), expected.get(index)) else {
-            return false;
-        };
-        if value.ty() != *ty {
-            return false;
-        }
+    let mut index = 0usize;
+    let mut is_match = true;
+    while is_match && index < values.len() {
+        is_match = scalar_has_type_at(values, expected, index);
+        index = index.saturating_add(1);
     }
-    true
+    is_match
+}
+
+/// Whether the scalar at `index` has exactly the expected profile type at `index`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; fixture lookups use the non-const slice `get` and derived type equality"
+)]
+fn scalar_has_type_at(values: &[Scalar], expected: &[Ty], index: usize) -> bool {
+    match (values.get(index), expected.get(index)) {
+        (Some(value), Some(ty)) => value.ty() == *ty,
+        _ => false,
+    }
 }
 
 fn check_fixtures(request: &Request) -> Result<(), Refusal> {
     let Some(set) = &request.fixtures else {
         return Ok(());
     };
-    for position in 0..set.cases.len() {
-        let Some(fixture) = set.cases.get(position) else {
-            return Err(internal(
-                Location::field("request.fixtures.cases"),
-                "fixture index exceeds the checked case slice",
-            ));
-        };
-        let is_input_match = fixture_values_match_types(&fixture.inputs, &request.task.stack_in);
-        let is_output_match = fixture_values_match_types(&fixture.outputs, &request.task.stack_out);
-        if !is_input_match || !is_output_match {
-            return Err(Refusal::new(
-                Class::Invalid,
-                Location::at("request.fixtures.cases", position as u32),
-                "fixture values do not match the original ordered task interface",
-            ));
-        }
+    let mut position = 0usize;
+    let mut failure = None;
+    while failure.is_none() && position < set.cases.len() {
+        failure = fixture_case_refusal(request, set, position);
+        position = position.saturating_add(1);
+    }
+    if let Some(refusal) = failure {
+        return Err(refusal);
     }
     let mut has_matching_fixture_inputs = true;
     let mut has_matching_fixture_outputs = true;
@@ -4079,6 +4947,30 @@ fn check_fixtures(request: &Request) -> Result<(), Refusal> {
     Ok(())
 }
 
+/// The refusal for one fixture case whose values do not match the task interface.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; fixture case lookups use the non-const slice `get` and refusals allocate their message"
+)]
+fn fixture_case_refusal(request: &Request, set: &FixtureSet, position: usize) -> Option<Refusal> {
+    let Some(fixture) = set.cases.get(position) else {
+        return Some(internal(
+            Location::field("request.fixtures.cases"),
+            "fixture index exceeds the checked case slice",
+        ));
+    };
+    let is_input_match = fixture_values_match_types(&fixture.inputs, &request.task.stack_in);
+    let is_output_match = fixture_values_match_types(&fixture.outputs, &request.task.stack_out);
+    if is_input_match && is_output_match {
+        return None;
+    }
+    Some(Refusal::new(
+        Class::Invalid,
+        Location::at("request.fixtures.cases", position as u32),
+        "fixture values do not match the original ordered task interface",
+    ))
+}
+
 const fn scalar_encoded_size(value: Scalar) -> u64 {
     match value {
         Scalar::I64(_) => 9,
@@ -4089,7 +4981,7 @@ const fn scalar_encoded_size(value: Scalar) -> u64 {
 /// Size one retained refusal using the fixed report representation.
 fn refusal_encoded_size(refusal: &Refusal) -> Result<u32, Refusal> {
     let mut encoded_bytes = 0u64;
-    let at = refusal.location;
+    let at = &refusal.location;
     add_encoded_size(
         &mut encoded_bytes,
         4u64.saturating_add(encoded_len(refusal.location.field.len())),
@@ -4117,7 +5009,7 @@ fn refusal_encoded_size(refusal: &Refusal) -> Result<u32, Refusal> {
     u32::try_from(encoded_bytes).map_err(|_| {
         let mut exhausted = Refusal::new(
             Class::Exhausted,
-            at,
+            at.clone(),
             "retained diagnostic exceeds the finite byte counter",
         );
         exhausted.resource = Some(Resource::RetainedBytes);
@@ -4140,23 +5032,15 @@ fn fixture_report_size(set: &FixtureSet) -> Result<u32, Refusal> {
             .saturating_add(4)
             .saturating_add(1)
             .saturating_add(4),
-        at,
+        &at,
     )?;
-    for fixture in &set.cases {
-        add_encoded_size(&mut encoded_bytes, 4, at)?;
-        for value in &fixture.inputs {
-            add_encoded_size(&mut encoded_bytes, scalar_encoded_size(*value), at)?;
-        }
-        add_encoded_size(&mut encoded_bytes, 4, at)?;
-        for value in &fixture.outputs {
-            add_encoded_size(&mut encoded_bytes, scalar_encoded_size(*value), at)?;
-        }
-        add_encoded_size(&mut encoded_bytes, 1 + 4, at)?;
-        for value in &fixture.outputs {
-            add_encoded_size(&mut encoded_bytes, scalar_encoded_size(*value), at)?;
-        }
-        add_encoded_size(&mut encoded_bytes, 1, at)?;
+    let mut index = 0usize;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < set.cases.len() {
+        outcome = add_fixture_report_case_size(&mut encoded_bytes, &set.cases[index], &at);
+        index = index.saturating_add(1);
     }
+    outcome?;
     debug_assert!(encoded_bytes > 0);
     debug_assert!(encoded_bytes <= u64::from(MAX_RETAINED_BYTES));
     u32::try_from(encoded_bytes).map_err(|_| {
@@ -4172,15 +5056,45 @@ fn fixture_report_size(set: &FixtureSet) -> Result<u32, Refusal> {
     })
 }
 
+/// Add one fixture case's report copy: inputs, expected and actual outputs.
+fn add_fixture_report_case_size(
+    encoded_bytes: &mut u64,
+    fixture: &Fixture,
+    at: &Location,
+) -> Result<(), Refusal> {
+    add_encoded_size(encoded_bytes, 4, at)?;
+    add_scalar_sizes(encoded_bytes, &fixture.inputs, at)?;
+    add_encoded_size(encoded_bytes, 4, at)?;
+    add_scalar_sizes(encoded_bytes, &fixture.outputs, at)?;
+    add_encoded_size(encoded_bytes, 1 + 4, at)?;
+    add_scalar_sizes(encoded_bytes, &fixture.outputs, at)?;
+    add_encoded_size(encoded_bytes, 1, at)
+}
+
+/// Add each scalar's fixed encoding, in order.
+fn add_scalar_sizes(
+    encoded_bytes: &mut u64,
+    values: &[Scalar],
+    at: &Location,
+) -> Result<(), Refusal> {
+    let mut index = 0usize;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < values.len() {
+        outcome = add_encoded_size(encoded_bytes, scalar_encoded_size(values[index]), at);
+        index = index.saturating_add(1);
+    }
+    outcome
+}
+
 /// Count the canonical request representation before walking its tree. This
 /// makes the retained/request-byte limit apply to attacker-controlled words,
 /// nested editor nodes, fixture values and metadata, not only emitted source.
 fn request_size(request: &Request, ledger: &mut Ledger) -> Result<u32, Refusal> {
     let at = Location::field("request.retained");
     let mut encoded_bytes = 0u64;
-    add_request_header_size(&mut encoded_bytes, request, at)?;
-    add_editor_tree_size(&mut encoded_bytes, &request.editor.nodes, ledger, at)?;
-    add_request_tail_size(&mut encoded_bytes, request, at)?;
+    add_request_header_size(&mut encoded_bytes, request, &at)?;
+    add_editor_tree_size(&mut encoded_bytes, &request.editor.nodes, ledger, &at)?;
+    add_request_tail_size(&mut encoded_bytes, request, &at)?;
     u32::try_from(encoded_bytes)
         .map_err(|_| internal(at, "bounded request size did not fit the reporting counter"))
 }
@@ -4188,7 +5102,7 @@ fn request_size(request: &Request, ledger: &mut Ledger) -> Result<u32, Refusal> 
 fn add_request_header_size(
     encoded_bytes: &mut u64,
     request: &Request,
-    at: Location,
+    at: &Location,
 ) -> Result<(), Refusal> {
     add_encoded_size(
         encoded_bytes,
@@ -4212,48 +5126,97 @@ fn add_editor_tree_size(
     encoded_bytes: &mut u64,
     editor_nodes: &[super::editor::Node],
     ledger: &mut Ledger,
-    at: Location,
+    at: &Location,
 ) -> Result<(), Refusal> {
     add_encoded_size(encoded_bytes, 4, at)?;
-    let mut frames: alloc::vec::Vec<(&[super::editor::Node], usize, u32)> =
-        alloc::vec::Vec::with_capacity(MAX_QUOTATION_FRAMES);
-    frames.push((editor_nodes, 0, 0));
+    let mut walk = SizeWalk {
+        frames: alloc::vec::Vec::with_capacity(MAX_QUOTATION_FRAMES),
+    };
+    walk.frames.push(SizeFrame {
+        path: alloc::vec::Vec::new(),
+        index: 0,
+        depth: 0,
+    });
     add_encoded_size(encoded_bytes, 4, at)?;
-    while let Some(top) = frames.len().checked_sub(1) {
-        let Some((nodes, index, depth)) = frames.get_mut(top) else {
-            return Err(internal(at, "request size walk lost its frame"));
-        };
-        if *index >= nodes.len() {
-            let _ = frames.pop();
-            continue;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && !walk.frames.is_empty() {
+        outcome = editor_size_step(&mut walk, editor_nodes, encoded_bytes, ledger, at);
+    }
+    outcome
+}
+
+/// One request-size walk frame: the quotation positions from the root node
+/// list (so the frame holds no borrow), the next node and its quotation depth.
+struct SizeFrame {
+    path: alloc::vec::Vec<usize>,
+    index: usize,
+    depth: u32,
+}
+
+/// The frame stack of the request-size editor walk.
+struct SizeWalk {
+    frames: alloc::vec::Vec<SizeFrame>,
+}
+
+/// One request-size walk step: finish the top frame or size its next node.
+fn editor_size_step(
+    walk: &mut SizeWalk,
+    editor_nodes: &[super::editor::Node],
+    encoded_bytes: &mut u64,
+    ledger: &mut Ledger,
+    at: &Location,
+) -> Result<(), Refusal> {
+    let Some(top) = walk.frames.len().checked_sub(1) else {
+        return Ok(());
+    };
+    let Some(frame) = walk.frames.get(top) else {
+        return Err(internal(at.clone(), "request size walk lost its frame"));
+    };
+    let Some(nodes) = editor_nodes_at(editor_nodes, &frame.path) else {
+        return Err(internal(at.clone(), "request size walk lost its frame"));
+    };
+    let index = frame.index;
+    let depth = frame.depth;
+    if index >= nodes.len() {
+        let _ = walk.frames.pop();
+        return Ok(());
+    }
+    let Some(node) = nodes.get(index) else {
+        return Err(internal(
+            at.clone(),
+            "request size walk lost an editor node",
+        ));
+    };
+    if let Some(frame) = walk.frames.get_mut(top) {
+        frame.index = index.saturating_add(1);
+    }
+    debug_assert!(index.saturating_add(1) <= nodes.len());
+    match node {
+        super::editor::Node::Integer(_) => add_encoded_size(encoded_bytes, 9, at)?,
+        super::editor::Node::Boolean(_) => add_encoded_size(encoded_bytes, 2, at)?,
+        super::editor::Node::Word(word) => {
+            add_encoded_size(
+                encoded_bytes,
+                5u64.saturating_add(encoded_len(word.len())),
+                at,
+            )?;
         }
-        let Some(node) = nodes.get(*index) else {
-            return Err(internal(at, "request size walk lost an editor node"));
-        };
-        *index = index.saturating_add(1);
-        debug_assert!(*index <= nodes.len());
-        let mut nested = None;
-        match node {
-            super::editor::Node::Integer(_) => add_encoded_size(encoded_bytes, 9, at)?,
-            super::editor::Node::Boolean(_) => add_encoded_size(encoded_bytes, 2, at)?,
-            super::editor::Node::Word(word) => {
-                add_encoded_size(
-                    encoded_bytes,
-                    5u64.saturating_add(encoded_len(word.len())),
-                    at,
-                )?;
-            }
-            super::editor::Node::Hole => add_encoded_size(encoded_bytes, 1, at)?,
-            super::editor::Node::Quotation(children) => {
-                add_encoded_size(encoded_bytes, 5, at)?;
-                let next_depth = depth.saturating_add(1);
-                ledger.observe(Resource::QuotationDepth, next_depth, at)?;
-                nested = Some((children.as_slice(), next_depth));
-            }
-        }
-        if let Some((children, next_depth)) = nested {
-            frames.push((children, 0, next_depth));
-            debug_assert!(frames.len() <= MAX_QUOTATION_FRAMES);
+        super::editor::Node::Hole => add_encoded_size(encoded_bytes, 1, at)?,
+        super::editor::Node::Quotation(_) => {
+            add_encoded_size(encoded_bytes, 5, at)?;
+            let next_depth = depth.saturating_add(1);
+            ledger.observe(Resource::QuotationDepth, next_depth, at.clone())?;
+            let Some(frame) = walk.frames.get(top) else {
+                return Err(internal(at.clone(), "request size walk lost its frame"));
+            };
+            let mut path = frame.path.clone();
+            path.push(index);
+            walk.frames.push(SizeFrame {
+                path,
+                index: 0,
+                depth: next_depth,
+            });
+            debug_assert!(walk.frames.len() <= MAX_QUOTATION_FRAMES);
         }
     }
     Ok(())
@@ -4266,7 +5229,7 @@ fn add_editor_tree_size(
 fn add_request_tail_size(
     encoded_bytes: &mut u64,
     request: &Request,
-    at: Location,
+    at: &Location,
 ) -> Result<(), Refusal> {
     add_encoded_size(encoded_bytes, 4, at)?;
     add_encoded_size(
@@ -4280,20 +5243,29 @@ fn add_request_tail_size(
     if let Some(fixtures) = &request.fixtures {
         let fixture_header_bytes = 21u64;
         add_encoded_size(encoded_bytes, fixture_header_bytes, at)?;
-        for fixture in &fixtures.cases {
-            add_encoded_size(encoded_bytes, 4, at)?;
-            for value in &fixture.inputs {
-                add_encoded_size(encoded_bytes, scalar_encoded_size(*value), at)?;
-            }
-            add_encoded_size(encoded_bytes, 4, at)?;
-            for value in &fixture.outputs {
-                add_encoded_size(encoded_bytes, scalar_encoded_size(*value), at)?;
-            }
+        let mut index = 0usize;
+        let mut outcome = Ok(());
+        while outcome.is_ok() && index < fixtures.cases.len() {
+            outcome = add_request_fixture_size(encoded_bytes, &fixtures.cases[index], at);
+            index = index.saturating_add(1);
         }
+        outcome?;
     } else {
         add_encoded_size(encoded_bytes, 1, at)?;
     }
     Ok(())
+}
+
+/// Add one request fixture case: its input and expected output scalars.
+fn add_request_fixture_size(
+    encoded_bytes: &mut u64,
+    fixture: &Fixture,
+    at: &Location,
+) -> Result<(), Refusal> {
+    add_encoded_size(encoded_bytes, 4, at)?;
+    add_scalar_sizes(encoded_bytes, &fixture.inputs, at)?;
+    add_encoded_size(encoded_bytes, 4, at)?;
+    add_scalar_sizes(encoded_bytes, &fixture.outputs, at)
 }
 
 /// Validate the request envelope, its task contract, its editor tree and its
@@ -4421,13 +5393,13 @@ fn analyze_editor_context(
         match namespace.analyze_editor_metered(&request.editor, &request.task.stack_in, limits) {
             Ok((analysis, work_used)) => (analysis, work_used),
             Err(failure) => {
-                ledger.charge(Resource::CheckingWork, failure.work_used(), at)?;
+                ledger.charge(Resource::CheckingWork, failure.work_used(), at.clone())?;
                 if failure.diagnostic().kind == crate::DiagnosticKind::Exhausted {
                     // `Candidate::build` can refuse before its meter is returned;
                     // reserve the remaining allowance on this fail-closed path.
                     let remaining = ledger.remaining(Resource::CheckingWork);
                     let observed = remaining.saturating_add(1);
-                    return match ledger.charge(Resource::CheckingWork, observed, at) {
+                    return match ledger.charge(Resource::CheckingWork, observed, at.clone()) {
                         Err(refusal) => Err(refusal),
                         Ok(()) => Err(internal(
                             at,
@@ -4438,7 +5410,7 @@ fn analyze_editor_context(
                 return Err(refusal_of_failure(&failure, at));
             }
         };
-    ledger.charge(Resource::CheckingWork, work_used, at)?;
+    ledger.charge(Resource::CheckingWork, work_used, at.clone())?;
     if analysis.holes.len() != 1 {
         return Err(internal(
             at,
@@ -4498,10 +5470,10 @@ struct CandidateObservation<'a> {
     cost: CandidateAttemptCost,
 }
 
-struct CandidateCapture<'observer, 'callback, 'identity> {
-    observer: Option<&'observer mut CandidateOutcomeObserver<'callback>>,
-    identity: Option<&'identity RankingIdentity>,
-    monotonic_now_ns: fn() -> u64,
+struct CandidateCapture<'callback, 'clock> {
+    observer: Option<ObserverHandle<'callback>>,
+    identity: Option<RankingIdentity>,
+    clock: &'clock mut MonotonicClock,
 }
 
 struct CandidateAttempt<'a> {
@@ -4519,18 +5491,18 @@ struct CandidateAttemptOutcome<'a> {
     cost: CandidateAttemptCost,
 }
 
-struct CandidateAttemptMeasurement {
+struct CandidateAttemptMeasurement<'clock> {
     resources_before: [u32; Resource::COUNT],
     started_ns: u64,
     feature_extraction_ns: u64,
     scorer_elapsed_ns: u64,
-    monotonic_now_ns: fn() -> u64,
+    clock: &'clock mut MonotonicClock,
 }
 
-struct CandidateScoringControl<'a> {
-    identity: &'a RankingIdentity,
+struct CandidateScoringControl<'clock> {
+    request_identity: [u8; REVISION_BYTES],
     should_measure_candidate_time: bool,
-    monotonic_now_ns: fn() -> u64,
+    clock: &'clock mut MonotonicClock,
 }
 
 fn resource_snapshot(ledger: &Ledger) -> [u32; Resource::COUNT] {
@@ -4544,33 +5516,41 @@ fn resource_snapshot(ledger: &Ledger) -> [u32; Resource::COUNT] {
 }
 
 fn candidate_attempt_cost(
-    search: &Search<'_>,
-    measurement: CandidateAttemptMeasurement,
+    ledger: &Ledger,
+    measurement: CandidateAttemptMeasurement<'_>,
 ) -> CandidateAttemptCost {
-    let mut resource_deltas = [0; Resource::COUNT];
-    for resource in Resource::ALL {
-        if let (Some(before), Some(delta)) = (
-            measurement.resources_before.get(resource.slot()),
-            resource_deltas.get_mut(resource.slot()),
-        ) {
-            *delta = search.ledger.observed(resource).saturating_sub(*before);
-        }
-    }
+    let resource_deltas = resource_deltas(ledger, &measurement.resources_before);
     CandidateAttemptCost {
         feature_extraction_ns: measurement.feature_extraction_ns,
         scorer_elapsed_ns: measurement.scorer_elapsed_ns,
-        re_admission_ns: (measurement.monotonic_now_ns)().saturating_sub(measurement.started_ns),
+        re_admission_ns: measurement
+            .clock
+            .now_ns()
+            .saturating_sub(measurement.started_ns),
         resource_deltas,
     }
 }
 
+/// Each resource's ledger growth since `before`, in [`Resource::ALL`] order.
+fn resource_deltas(ledger: &Ledger, before: &[u32; Resource::COUNT]) -> [u32; Resource::COUNT] {
+    let mut deltas = [0; Resource::COUNT];
+    for resource in Resource::ALL {
+        if let (Some(previous), Some(delta)) =
+            (before.get(resource.slot()), deltas.get_mut(resource.slot()))
+        {
+            *delta = ledger.observed(resource).saturating_sub(*previous);
+        }
+    }
+    deltas
+}
+
 fn observe_candidate(
-    observer: &mut Option<&mut CandidateOutcomeObserver<'_>>,
+    capture: &mut CandidateCapture<'_, '_>,
     observation: CandidateObservation<'_>,
 ) {
     debug_assert!(encoded_len(observation.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
     debug_assert_eq!(observation.accepted, observation.refusal_class.is_none());
-    if let Some(observer) = observer.as_mut() {
+    if let Some(observer) = &mut capture.observer {
         let Some((request_identity, candidate)) = observation.binding else {
             debug_assert!(
                 false,
@@ -4588,40 +5568,46 @@ fn observe_candidate(
             fixture_agreement: observation.fixture_agreement,
             cost: observation.cost,
         };
-        (**observer)(&outcome);
+        observer.observe(&outcome);
     }
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; binding an observed candidate digests its runtime identity and refusals allocate their message"
+)]
 fn candidate_binding(
     search: &Search<'_>,
     attempt: &CandidateAttempt<'_>,
-    capture: &CandidateCapture<'_, '_, '_>,
+    is_observed: bool,
+    identity: Option<&RankingIdentity>,
 ) -> Result<Option<([u8; REVISION_BYTES], CandidateId)>, Refusal> {
     debug_assert!(attempt.ordinal <= MAX_CANDIDATES);
     debug_assert!(encoded_len(attempt.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
-    if capture.observer.is_none() {
+    if !is_observed {
         return Ok(None);
     }
-    let Some(identity) = capture.identity else {
+    let Some(identity) = identity else {
         return Err(internal(
             Location::field("ranking.identity"),
             "an observation request has no immutable identity",
         ));
     };
-    let candidate = attempt
-        .identity
-        .unwrap_or_else(|| candidate_identity(search.library, attempt.ordinal, attempt.sequence));
+    let candidate = match attempt.identity {
+        Some(candidate) => candidate,
+        None => candidate_identity(search.library, attempt.ordinal, attempt.sequence),
+    };
     Ok(Some((identity.request, candidate)))
 }
 
 fn observe_refusal(
     attempt: &CandidateAttemptOutcome<'_>,
     refusal: &Refusal,
-    capture: &mut CandidateCapture<'_, '_, '_>,
+    capture: &mut CandidateCapture<'_, '_>,
 ) {
     let refusal_class = refusal.class;
     observe_candidate(
-        &mut capture.observer,
+        capture,
         CandidateObservation {
             binding: attempt.binding,
             ordinal: attempt.ordinal,
@@ -4638,13 +5624,13 @@ fn accept_candidate(
     search: &mut Search<'_>,
     attempt: &CandidateAttemptOutcome<'_>,
     accepted: alloc::boxed::Box<Accepted>,
-    capture: &mut CandidateCapture<'_, '_, '_>,
+    capture: &mut CandidateCapture<'_, '_>,
 ) -> Result<(), alloc::boxed::Box<Response>> {
     debug_assert!(attempt.ordinal <= MAX_CANDIDATES);
     debug_assert_eq!(accepted.selected.len(), attempt.sequence.len());
     let fixture_agreement = search.fixtures.as_ref().map(|fixtures| fixtures.agreement);
     observe_candidate(
-        &mut capture.observer,
+        capture,
         CandidateObservation {
             binding: attempt.binding,
             ordinal: attempt.ordinal,
@@ -4665,36 +5651,43 @@ fn accept_candidate(
 fn run_candidate_attempt(
     search: &mut Search<'_>,
     attempt: CandidateAttempt<'_>,
-    capture: &mut CandidateCapture<'_, '_, '_>,
+    capture: &mut CandidateCapture<'_, '_>,
 ) -> Result<(), alloc::boxed::Box<Response>> {
     debug_assert!(attempt.ordinal <= MAX_CANDIDATES);
     debug_assert!(encoded_len(attempt.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
-    let binding = match candidate_binding(search, &attempt, capture) {
+    let binding = match candidate_binding(
+        search,
+        &attempt,
+        capture.observer.is_some(),
+        capture.identity.as_ref(),
+    ) {
         Ok(binding) => binding,
         Err(refusal) => return Err(alloc::boxed::Box::new(response_of_search(refusal, search))),
     };
-    let resources_before = capture
-        .observer
-        .as_ref()
-        .map(|_| resource_snapshot(&search.ledger));
+    let resources_before = if capture.observer.is_some() {
+        Some(resource_snapshot(&search.ledger))
+    } else {
+        None
+    };
     let started_ns = if resources_before.is_some() {
-        (capture.monotonic_now_ns)()
+        capture.clock.now_ns()
     } else {
         0
     };
     let result = search.candidate(attempt.sequence);
-    let cost = resources_before.map_or_else(CandidateAttemptCost::default, |resources_before| {
-        candidate_attempt_cost(
-            search,
+    let cost = match resources_before {
+        Some(resources_before) => candidate_attempt_cost(
+            &search.ledger,
             CandidateAttemptMeasurement {
                 resources_before,
                 started_ns,
                 feature_extraction_ns: attempt.feature_extraction_ns,
                 scorer_elapsed_ns: attempt.scorer_elapsed_ns,
-                monotonic_now_ns: capture.monotonic_now_ns,
+                clock: capture.clock,
             },
-        )
-    });
+        ),
+        None => CandidateAttemptCost::default(),
+    };
     let outcome = CandidateAttemptOutcome {
         ordinal: attempt.ordinal,
         sequence: attempt.sequence,
@@ -4726,7 +5719,7 @@ fn run_length(
     order: &[u16],
     chunk_count: u32,
     next_ordinal: &mut u32,
-    capture: &mut CandidateCapture<'_, '_, '_>,
+    capture: &mut CandidateCapture<'_, '_>,
 ) -> Result<(), alloc::boxed::Box<Response>> {
     let width = order.len();
     debug_assert!(u32::try_from(width).is_ok_and(|count| count <= MAX_LIBRARY_ENTRIES));
@@ -4754,17 +5747,14 @@ fn run_length(
     };
     let mut digits: alloc::vec::Vec<u16> = alloc::vec![0u16; count];
     let mut sequence: alloc::vec::Vec<u16> = alloc::vec::Vec::with_capacity(count);
-    loop {
-        sequence.clear();
-        for digit in &digits {
-            if let Some(index) = order.get(usize::from(*digit)) {
-                sequence.push(*index);
-            }
-        }
+    let mut outcome = Ok(());
+    let mut has_next = true;
+    while outcome.is_ok() && has_next {
+        sequence = refill_sequence(sequence, order, &digits);
         debug_assert_eq!(sequence.len(), digits.len());
         let ordinal = *next_ordinal;
         *next_ordinal = (*next_ordinal).saturating_add(1);
-        run_candidate_attempt(
+        outcome = run_candidate_attempt(
             search,
             CandidateAttempt {
                 ordinal,
@@ -4774,44 +5764,94 @@ fn run_length(
                 scorer_elapsed_ns: 0,
             },
             capture,
-        )?;
-        if !advance(&mut digits, width) {
-            break;
+        );
+        has_next = outcome.is_ok() && advance(&mut digits, width);
+    }
+    outcome
+}
+
+/// Refill the reused sequence buffer with the order indices `digits` select.
+fn refill_sequence(
+    mut sequence: alloc::vec::Vec<u16>,
+    order: &[u16],
+    digits: &[u16],
+) -> alloc::vec::Vec<u16> {
+    sequence.clear();
+    for digit in digits {
+        if let Some(index) = order_index(order, *digit) {
+            sequence.push(index);
         }
     }
-    Ok(())
+    sequence
 }
 
-const fn feature_ratio(value: u64, maximum: u32) -> f32 {
+/// The library entry index that `digit` selects in the canonical order.
+fn order_index(order: &[u16], digit: u16) -> Option<u16> {
+    order.get(usize::from(digit)).copied()
+}
+
+/// `min(value, maximum) / maximum` as `f32`, or zero for a zero maximum.
+/// Float literals, integer-to-float casts and the float `/` operator are
+/// outside the pinned Aeneas, so the ratio is built from exact conversions
+/// and the `Div` trait; the result is bit-identical to the cast quotient.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the ratio is built from `From` conversions and the `Div` trait, which are not stable const traits"
+)]
+fn feature_ratio(value: u64, maximum: u32) -> f32 {
     if maximum == 0 {
-        0.0
+        f32::from(0_u8)
     } else {
-        let maximum_value = maximum as u64;
-        let bounded = if value < maximum_value {
-            value
-        } else {
-            maximum_value
+        let bounded = match u32::try_from(value) {
+            Ok(count) => {
+                if count < maximum {
+                    count
+                } else {
+                    maximum
+                }
+            }
+            Err(_) => maximum,
         };
-        bounded as f32 / maximum as f32
+        core::ops::Div::div(count_as_f32(bounded), count_as_f32(maximum))
     }
 }
 
-const fn feature_bit(value: bool) -> f32 {
-    if value {
-        1.0
-    } else {
-        0.0
-    }
+/// The exact `value as f32`: both 16-bit halves convert losslessly and the
+/// 2^16 scaling is exact, so the one rounding of the final sum is the
+/// round-to-nearest-even rounding the cast performs.
+fn count_as_f32(value: u32) -> f32 {
+    let bytes = value.to_le_bytes();
+    let low = f32::from(u16::from_le_bytes([bytes[0], bytes[1]]));
+    let high = f32::from(u16::from_le_bytes([bytes[2], bytes[3]]));
+    let half_scale = f32::from(256_u16);
+    let scale = core::ops::Mul::mul(half_scale, half_scale);
+    core::ops::Add::add(core::ops::Mul::mul(high, scale), low)
+}
+
+/// One for `true` and zero for `false`, as `f32`.
+fn feature_bit(value: bool) -> f32 {
+    f32::from(value)
 }
 
 fn feature_type_count(stack: &[Ty], ty: Ty) -> u64 {
     let mut count = 0usize;
-    for item in stack {
-        if *item == ty {
+    let mut index = 0usize;
+    while index < stack.len() {
+        if is_same_type(&stack[index], &ty) {
             count = count.saturating_add(1);
         }
+        index = index.saturating_add(1);
     }
     encoded_len(count)
+}
+
+/// Whether two kernel types are equal.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; identity comparison uses the non-const derived type equality"
+)]
+fn is_same_type(left: &Ty, right: &Ty) -> bool {
+    *left == *right
 }
 
 #[expect(
@@ -4824,9 +5864,11 @@ fn feature_type_count(stack: &[Ty], ty: Ty) -> u64 {
 )]
 fn feature_apply_interface(stack: &mut alloc::vec::Vec<Ty>, interface: &Interface) -> bool {
     let input_len = interface.stack_in.len();
-    if stack.len() < input_len
-        || stack.get(stack.len().saturating_sub(input_len)..) != Some(interface.stack_in.as_slice())
-    {
+    if stack.len() < input_len {
+        return false;
+    }
+    let is_matching_suffix = stack_ends_with(stack, &interface.stack_in);
+    if !is_matching_suffix {
         return false;
     }
     stack.truncate(stack.len().saturating_sub(input_len));
@@ -4834,6 +5876,18 @@ fn feature_apply_interface(stack: &mut alloc::vec::Vec<Ty>, interface: &Interfac
     match usize::try_from(MAX_STACK_HEIGHT) {
         Ok(maximum) => stack.len() <= maximum,
         Err(_) => false,
+    }
+}
+
+/// Whether `stack` ends with exactly the interface inputs `inputs`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the suffix lookup uses the non-const slice `get` and slice equality"
+)]
+fn stack_ends_with(stack: &[Ty], inputs: &[Ty]) -> bool {
+    match stack.get(stack.len().saturating_sub(inputs.len())..) {
+        Some(suffix) => *suffix == *inputs,
+        None => false,
     }
 }
 
@@ -4854,35 +5908,89 @@ fn recipe_quotation_depth(recipe: &Recipe) -> Option<u32> {
     debug_assert!(encoded_len(recipe.nodes.len()) <= u64::from(MAX_RECIPE_NODES));
     debug_assert!(encoded_len(recipe.entry.len()) <= u64::from(MAX_RECIPE_NODES));
     let mut node_depths = [0u32; 64];
-    for node_index in 0..recipe.nodes.len() {
-        let node = recipe.nodes.get(node_index)?;
-        if node_index >= node_depths.len() {
-            return None;
-        }
-        if let Node::Quotation { body, .. } = node {
-            let mut nested_depth = 0u32;
-            for reference in body {
-                let child_index = usize::try_from(*reference).ok()?;
-                if child_index >= node_index {
-                    return None;
-                }
-                let child_depth = node_depths[child_index];
-                if child_depth > nested_depth {
-                    nested_depth = child_depth;
-                }
-            }
-            node_depths[node_index] = nested_depth.saturating_add(1);
-        }
+    let mut node_index = 0usize;
+    let mut is_valid = true;
+    while is_valid && node_index < recipe.nodes.len() {
+        is_valid = record_node_depth(recipe, node_index, &mut node_depths);
+        node_index = node_index.saturating_add(1);
     }
     let mut deepest = 0u32;
-    for reference in &recipe.entry {
-        let index = usize::try_from(*reference).ok()?;
-        let depth = *node_depths.get(index)?;
-        if depth > deepest {
-            deepest = depth;
+    let mut entry_index = 0usize;
+    while is_valid && entry_index < recipe.entry.len() {
+        match entry_depth(&node_depths, recipe.entry[entry_index]) {
+            Some(depth) => {
+                if depth > deepest {
+                    deepest = depth;
+                }
+            }
+            None => is_valid = false,
         }
+        entry_index = entry_index.saturating_add(1);
     }
-    Some(deepest)
+    if is_valid {
+        Some(deepest)
+    } else {
+        None
+    }
+}
+
+/// Record one recipe node's quotation depth. False when the node is outside
+/// the depth table or a quotation references a node that is not earlier.
+fn record_node_depth(recipe: &Recipe, node_index: usize, node_depths: &mut [u32; 64]) -> bool {
+    let Some(node) = recipe.nodes.get(node_index) else {
+        return false;
+    };
+    if node_index >= node_depths.len() {
+        return false;
+    }
+    if let Node::Quotation { body, .. } = node {
+        let Some(nested_depth) = deepest_child(body, node_index, node_depths) else {
+            return false;
+        };
+        node_depths[node_index] = nested_depth.saturating_add(1);
+    }
+    true
+}
+
+/// The deepest recorded depth among a quotation body's references, each of
+/// which must point to a node before `node_index`.
+fn deepest_child(body: &[u32], node_index: usize, node_depths: &[u32; 64]) -> Option<u32> {
+    debug_assert!(node_index < node_depths.len());
+    let mut nested_depth = 0u32;
+    let mut index = 0usize;
+    let mut is_valid = true;
+    while is_valid && index < body.len() {
+        match child_depth(body[index], node_index, node_depths) {
+            Some(depth) => {
+                if depth > nested_depth {
+                    nested_depth = depth;
+                }
+            }
+            None => is_valid = false,
+        }
+        index = index.saturating_add(1);
+    }
+    debug_assert!(!is_valid || index == body.len());
+    if is_valid {
+        Some(nested_depth)
+    } else {
+        None
+    }
+}
+
+/// The recorded depth of a strictly earlier referenced node.
+fn child_depth(reference: u32, node_index: usize, node_depths: &[u32; 64]) -> Option<u32> {
+    let child_index = usize::try_from(reference).ok()?;
+    if child_index >= node_index {
+        return None;
+    }
+    Some(node_depths[child_index])
+}
+
+/// The recorded depth of one recipe entry reference.
+fn entry_depth(node_depths: &[u32; 64], reference: u32) -> Option<u32> {
+    let index = usize::try_from(reference).ok()?;
+    node_depths.get(index).copied()
 }
 
 #[derive(Default)]
@@ -4948,74 +6056,157 @@ fn feature_metadata_matches(
         dependencies: true,
         instantiations: true,
     };
-    for index in &candidate.sequence {
-        let Some(entry) = library.entries().get(usize::from(*index)) else {
+    let mut position = 0usize;
+    let mut is_resolved = true;
+    while is_resolved && position < candidate.sequence.len() {
+        is_resolved = fold_selected_metadata(library, candidate, position, &mut matches);
+        position = position.saturating_add(1);
+    }
+    matches
+}
+
+/// Fold the selected entry at `position` into `matches`; false when it is not retained.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; entry lookups use the non-const slice `get` and recompute runtime identities"
+)]
+fn fold_selected_metadata(
+    library: &Library,
+    candidate: &QueueCandidate,
+    position: usize,
+    matches: &mut FeatureMetadataMatches,
+) -> bool {
+    match library
+        .entries()
+        .get(usize::from(candidate.sequence[position]))
+    {
+        Some(entry) => {
+            fold_entry_metadata(library, entry, matches);
+            true
+        }
+        None => {
             matches.body = false;
             matches.dependencies = false;
             matches.instantiations = false;
-            return matches;
-        };
-        let envelope = entry.envelope();
-        let mut is_dependencies_match = true;
-        for dependency in &envelope.dependencies {
-            if library.find(dependency).is_none() {
-                is_dependencies_match = false;
-                break;
-            }
+            false
         }
-        let mut is_instantiations_match = true;
-        for instantiation in &envelope.instantiations {
-            for binding_index in 0..instantiation.bindings.len().saturating_sub(1) {
-                let (Some(left), Some(right)) = (
-                    instantiation.bindings.get(binding_index),
-                    instantiation.bindings.get(binding_index.saturating_add(1)),
-                ) else {
-                    is_instantiations_match = false;
-                    break;
-                };
-                if left.variable >= right.variable {
-                    is_instantiations_match = false;
-                    break;
-                }
-            }
-            if !is_instantiations_match {
-                break;
-            }
-            for binding in &instantiation.bindings {
-                if binding.kind != noble_kernel::words::VariableKind::Value
-                    || !profile_type(&binding.ty)
-                {
-                    is_instantiations_match = false;
-                    break;
-                }
-            }
-            if !is_instantiations_match {
-                break;
-            }
-        }
-        matches.body &= envelope.chunk_id == chunk_identity_of(envelope)
-            && envelope.source_revision == canonical_revision(entry.source());
-        matches.dependencies &= is_dependencies_match;
-        matches.instantiations &= is_instantiations_match;
     }
-    matches
+}
+
+/// Fold one selected entry's recomputed identities and witness shapes into `matches`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; identity lanes invoke canonical source and envelope digest calculations at runtime"
+)]
+fn fold_entry_metadata(library: &Library, entry: &Entry, matches: &mut FeatureMetadataMatches) {
+    let envelope = entry.envelope();
+    let is_dependencies_match = dependencies_resolve(library, &envelope.dependencies);
+    let is_instantiations_match = instantiations_are_profile(&envelope.instantiations);
+    matches.body &= envelope.chunk_id == chunk_identity_of(envelope)
+        && envelope.source_revision == canonical_revision(entry.source());
+    matches.dependencies &= is_dependencies_match;
+    matches.instantiations &= is_instantiations_match;
+}
+
+/// Whether every dependency record still resolves in the library snapshot.
+fn dependencies_resolve(library: &Library, dependencies: &[DefinitionRef]) -> bool {
+    let mut index = 0usize;
+    let mut is_resolved = true;
+    while is_resolved && index < dependencies.len() {
+        is_resolved = library.find(&dependencies[index]).is_some();
+        index = index.saturating_add(1);
+    }
+    is_resolved
+}
+
+/// Whether every witness binds strictly increasing value variables to
+/// profile types.
+fn instantiations_are_profile(instantiations: &[Instantiation]) -> bool {
+    let mut index = 0usize;
+    let mut is_match = true;
+    while is_match && index < instantiations.len() {
+        let bindings = &instantiations[index].bindings;
+        is_match = bindings_are_ordered(bindings) && bindings_are_profile(bindings);
+        index = index.saturating_add(1);
+    }
+    is_match
+}
+
+/// Whether a witness's bindings name strictly increasing variables.
+fn bindings_are_ordered(bindings: &[Binding]) -> bool {
+    let mut index = 0usize;
+    let mut is_ordered = true;
+    while is_ordered && index < bindings.len().saturating_sub(1) {
+        is_ordered = binding_precedes_next(bindings, index);
+        index = index.saturating_add(1);
+    }
+    is_ordered
+}
+
+/// Whether the binding at `index` names a smaller variable than the next binding.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; binding lookups use the slice `get`, which is not a stable const fn"
+)]
+fn binding_precedes_next(bindings: &[Binding], index: usize) -> bool {
+    match (bindings.get(index), bindings.get(index.saturating_add(1))) {
+        (Some(left), Some(right)) => left.variable < right.variable,
+        _ => false,
+    }
+}
+
+/// Whether every binding is a value variable bound to a profile type.
+fn bindings_are_profile(bindings: &[Binding]) -> bool {
+    let mut index = 0usize;
+    let mut is_profile = true;
+    while is_profile && index < bindings.len() {
+        is_profile = binding_is_profile(&bindings[index]);
+        index = index.saturating_add(1);
+    }
+    is_profile
+}
+
+/// Whether one binding is a value variable bound to a profile type.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the kind check uses the non-const derived variable-kind equality"
+)]
+fn binding_is_profile(binding: &Binding) -> bool {
+    binding.kind == noble_kernel::words::VariableKind::Value && profile_type(&binding.ty)
 }
 
 fn candidate_features(
     search: &Search<'_>,
     candidate: &QueueCandidate,
 ) -> Result<CandidateFeatureVector, ScorerFailure> {
-    let mut features = [0.0f32; FEATURE_LANES];
+    let mut features = [f32::from(0_u8); FEATURE_LANES];
     feature_request_lanes(&mut features, search)?;
-    let counts = collect_candidate_features(&mut features, search, candidate)?;
+    let counts = collect_candidate_features(
+        &mut features,
+        search.library,
+        search.request,
+        &search.stack_in,
+        candidate,
+    )?;
     feature_candidate_lanes(&mut features, search.request, candidate, &counts);
     feature_budget_lanes(&mut features, search, candidate);
     feature_identity_lanes(&mut features, search, candidate)?;
-    if features.iter().all(|feature| feature.is_finite()) {
+    if features_are_finite(&features) {
         Ok(features)
     } else {
         Err(ScorerFailure::InvalidFeature)
     }
+}
+
+/// Whether every feature lane is finite.
+fn features_are_finite(features: &CandidateFeatureVector) -> bool {
+    let mut index = 0usize;
+    let mut is_finite = true;
+    while is_finite && index < features.len() {
+        is_finite = features[index].is_finite();
+        index = index.saturating_add(1);
+    }
+    is_finite
 }
 
 fn feature_request_lanes(
@@ -5060,67 +6251,91 @@ fn feature_request_lanes(
 
 fn collect_candidate_features(
     features: &mut CandidateFeatureVector,
-    search: &Search<'_>,
+    library: &Library,
+    request: &Request,
+    stack_in: &[Ty],
     candidate: &QueueCandidate,
 ) -> Result<CandidateFeatureCounts, ScorerFailure> {
     debug_assert!(encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
-    debug_assert!(encoded_len(search.library.entries().len()) <= u64::from(MAX_LIBRARY_ENTRIES));
+    debug_assert!(encoded_len(library.entries().len()) <= u64::from(MAX_LIBRARY_ENTRIES));
     let mut counts = CandidateFeatureCounts {
-        stack_after: search.stack_in.clone(),
+        stack_after: stack_in.to_vec(),
         stack_matches: true,
         effects_match: true,
         ..CandidateFeatureCounts::default()
     };
     let mut chunk_at = 0usize;
-    for index in &candidate.sequence {
-        let entry = search
-            .library
-            .entries()
-            .get(usize::from(*index))
-            .ok_or(ScorerFailure::InvalidFeature)?;
-        let envelope = entry.envelope();
-        let interface = entry.interface();
-        counts.stack_matches &= feature_apply_interface(&mut counts.stack_after, interface);
-        counts.effects_match &= interface.effects == search.request.task.allowed_effects;
-        counts.expanded_nodes = counts
-            .expanded_nodes
-            .saturating_add(u64::from(entry.expanded_nodes()));
-        counts.capture_count = counts
-            .capture_count
-            .saturating_add(encoded_len(envelope.captures.len()));
-        counts.dependency_count = counts
-            .dependency_count
-            .saturating_add(encoded_len(envelope.dependencies.len()));
-        counts.instantiation_count = counts
-            .instantiation_count
-            .saturating_add(encoded_len(envelope.instantiations.len()));
-        counts.source_bytes = counts
-            .source_bytes
-            .saturating_add(encoded_len(entry.source().len()));
-        feature_recipe_metrics(&envelope.body, &mut counts);
-        let quote_depth =
-            u64::from(recipe_quotation_depth(&envelope.body).ok_or(ScorerFailure::InvalidFeature)?);
-        if quote_depth > counts.quote_depth {
-            counts.quote_depth = quote_depth;
-        }
-        let base = 32usize.saturating_add(chunk_at.saturating_mul(4));
-        let input = &interface.stack_in;
-        let output = &interface.stack_out;
-        let stack_max = MAX_STACK_HEIGHT;
-        features[base] = feature_ratio(encoded_len(input.len()), stack_max);
-        features[base.saturating_add(1)] = feature_ratio(encoded_len(output.len()), stack_max);
-        features[base.saturating_add(2)] = feature_ratio(
-            feature_type_count(input, Ty::I64).saturating_add(feature_type_count(output, Ty::I64)),
-            stack_max,
-        );
-        features[base.saturating_add(3)] = feature_ratio(
-            feature_type_count(input, Ty::Bool)
-                .saturating_add(feature_type_count(output, Ty::Bool)),
-            stack_max,
+    let mut outcome = Ok(());
+    while outcome.is_ok() && chunk_at < candidate.sequence.len() {
+        outcome = collect_chunk_features(
+            features,
+            library
+                .entries()
+                .get(usize::from(candidate.sequence[chunk_at])),
+            request,
+            chunk_at,
+            &mut counts,
         );
         chunk_at = chunk_at.saturating_add(1);
     }
+    outcome?;
     Ok(counts)
+}
+
+/// Fold one selected chunk into the running counts and its four per-chunk
+/// lanes; a chunk that is not retained is an invalid feature.
+fn collect_chunk_features(
+    features: &mut CandidateFeatureVector,
+    entry: Option<&Entry>,
+    request: &Request,
+    chunk_at: usize,
+    counts: &mut CandidateFeatureCounts,
+) -> Result<(), ScorerFailure> {
+    let Some(entry) = entry else {
+        return Err(ScorerFailure::InvalidFeature);
+    };
+    debug_assert!(encoded_len(chunk_at) < u64::from(MAX_COMPOSED_CHUNKS));
+    let envelope = entry.envelope();
+    let interface = entry.interface();
+    counts.stack_matches &= feature_apply_interface(&mut counts.stack_after, interface);
+    counts.effects_match &= interface.effects == request.task.allowed_effects;
+    counts.expanded_nodes = counts
+        .expanded_nodes
+        .saturating_add(u64::from(entry.expanded_nodes()));
+    counts.capture_count = counts
+        .capture_count
+        .saturating_add(encoded_len(envelope.captures.len()));
+    counts.dependency_count = counts
+        .dependency_count
+        .saturating_add(encoded_len(envelope.dependencies.len()));
+    counts.instantiation_count = counts
+        .instantiation_count
+        .saturating_add(encoded_len(envelope.instantiations.len()));
+    counts.source_bytes = counts
+        .source_bytes
+        .saturating_add(encoded_len(entry.source().len()));
+    feature_recipe_metrics(&envelope.body, counts);
+    let quote_depth =
+        u64::from(recipe_quotation_depth(&envelope.body).ok_or(ScorerFailure::InvalidFeature)?);
+    if quote_depth > counts.quote_depth {
+        counts.quote_depth = quote_depth;
+    }
+    let base = 32usize.saturating_add(chunk_at.saturating_mul(4));
+    debug_assert!(base.saturating_add(3) < FEATURE_LANES);
+    let input = &interface.stack_in;
+    let output = &interface.stack_out;
+    let stack_max = MAX_STACK_HEIGHT;
+    features[base] = feature_ratio(encoded_len(input.len()), stack_max);
+    features[base.saturating_add(1)] = feature_ratio(encoded_len(output.len()), stack_max);
+    features[base.saturating_add(2)] = feature_ratio(
+        feature_type_count(input, Ty::I64).saturating_add(feature_type_count(output, Ty::I64)),
+        stack_max,
+    );
+    features[base.saturating_add(3)] = feature_ratio(
+        feature_type_count(input, Ty::Bool).saturating_add(feature_type_count(output, Ty::Bool)),
+        stack_max,
+    );
+    Ok(())
 }
 
 #[expect(
@@ -5236,8 +6451,8 @@ fn feature_identity_lanes(
     features[59] = feature_bit(metadata_matches.body);
     features[60] = feature_bit(metadata_matches.dependencies);
     features[61] = feature_bit(metadata_matches.instantiations);
-    features[62] = 1.0;
-    features[63] = 0.0;
+    features[62] = f32::from(1_u8);
+    features[63] = f32::from(0_u8);
     Ok(())
 }
 
@@ -5284,6 +6499,14 @@ fn identity_push_count(bytes: &mut IdentityBytes, count: usize) {
     bytes.extend_from_slice(&encoded_len(count).to_le_bytes());
 }
 
+/// Append the counted hole path, one little-endian part at a time.
+fn identity_push_hole_path(bytes: &mut IdentityBytes, hole_path: &[u32]) {
+    identity_push_count(bytes, hole_path.len());
+    for part in hole_path {
+        bytes.extend_from_slice(&part.to_le_bytes());
+    }
+}
+
 fn identity_push_type(bytes: &mut IdentityBytes, ty: &Ty) {
     bytes.push(match ty {
         Ty::I64 => 1,
@@ -5322,54 +6545,96 @@ fn identity_push_budget(bytes: &mut IdentityBytes, budget: Budget) {
 }
 
 fn identity_push_editor_nodes(bytes: &mut IdentityBytes, nodes: &[super::editor::Node]) {
-    struct Frame<'a> {
-        nodes: &'a [super::editor::Node],
-        next: usize,
-    }
     identity_push_count(bytes, nodes.len());
-    let mut frames = alloc::vec![Frame { nodes, next: 0 }];
-    loop {
-        debug_assert!(u64::try_from(frames.len())
+    let mut walk = IdentityWalk {
+        frames: alloc::vec::Vec::with_capacity(1),
+    };
+    walk.frames.push(IdentityFrame {
+        path: alloc::vec::Vec::new(),
+        next: 0,
+    });
+    let mut is_walking = true;
+    while is_walking && !walk.frames.is_empty() {
+        debug_assert!(u64::try_from(walk.frames.len())
             .is_ok_and(|depth| depth <= u64::from(MAX_QUOTATION_DEPTH).saturating_add(1)));
-        let Some(frame) = frames.last_mut() else {
-            break;
-        };
-        debug_assert!(frame.next <= frame.nodes.len());
-        if frame.next == frame.nodes.len() {
-            bytes.push(0);
-            frames.pop();
-            continue;
-        }
-        let Some(node) = frame.nodes.get(frame.next) else {
-            bytes.push(255);
-            break;
-        };
-        frame.next = frame.next.saturating_add(1);
-        match node {
-            super::editor::Node::Integer(value) => {
-                bytes.push(1);
-                bytes.extend_from_slice(&value.to_le_bytes());
-            }
-            super::editor::Node::Boolean(value) => {
-                bytes.push(2);
-                bytes.push(u8::from(*value));
-            }
-            super::editor::Node::Word(word) => {
-                bytes.push(3);
-                identity_push_count(bytes, word.len());
-                bytes.extend_from_slice(word.as_bytes());
-            }
-            super::editor::Node::Quotation(children) => {
-                bytes.push(4);
-                identity_push_count(bytes, children.len());
-                frames.push(Frame {
-                    nodes: children,
-                    next: 0,
-                });
-            }
-            super::editor::Node::Hole => bytes.push(5),
-        }
+        is_walking = identity_editor_step(bytes, nodes, &mut walk);
     }
+}
+
+/// One editor-identity walk frame: the quotation positions from the root
+/// node list (so the frame holds no borrow) and the next node.
+struct IdentityFrame {
+    path: alloc::vec::Vec<usize>,
+    next: usize,
+}
+
+/// The frame stack of the editor-identity walk.
+struct IdentityWalk {
+    frames: alloc::vec::Vec<IdentityFrame>,
+}
+
+/// One editor-identity step: close the finished top frame or encode its
+/// next node. False stops the walk after a lost node.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the identity walk mutates its runtime frame Vec and appends identity bytes"
+)]
+fn identity_editor_step(
+    bytes: &mut IdentityBytes,
+    root: &[super::editor::Node],
+    walk: &mut IdentityWalk,
+) -> bool {
+    debug_assert!(!walk.frames.is_empty());
+    let Some(top) = walk.frames.len().checked_sub(1) else {
+        return false;
+    };
+    let Some(frame) = walk.frames.get(top) else {
+        return false;
+    };
+    let next = frame.next;
+    let Some(nodes) = editor_nodes_at(root, &frame.path) else {
+        bytes.push(255);
+        return false;
+    };
+    debug_assert!(next <= nodes.len());
+    if next == nodes.len() {
+        bytes.push(0);
+        let _ = walk.frames.pop();
+        return true;
+    }
+    let Some(node) = nodes.get(next) else {
+        bytes.push(255);
+        return false;
+    };
+    if let Some(frame) = walk.frames.get_mut(top) {
+        frame.next = next.saturating_add(1);
+    }
+    match node {
+        super::editor::Node::Integer(value) => {
+            bytes.push(1);
+            bytes.extend_from_slice(&value.to_le_bytes());
+        }
+        super::editor::Node::Boolean(value) => {
+            bytes.push(2);
+            bytes.push(u8::from(*value));
+        }
+        super::editor::Node::Word(word) => {
+            bytes.push(3);
+            identity_push_count(bytes, word.len());
+            bytes.extend_from_slice(word.as_bytes());
+        }
+        super::editor::Node::Quotation(children) => {
+            bytes.push(4);
+            identity_push_count(bytes, children.len());
+            if let Some(frame) = walk.frames.get(top) {
+                let mut path = frame.path.clone();
+                path.push(next);
+                walk.frames.push(IdentityFrame { path, next: 0 });
+            }
+        }
+        super::editor::Node::Hole => bytes.push(5),
+    }
+    true
 }
 
 fn task_interface_identity(request: &Request) -> [u8; REVISION_BYTES] {
@@ -5511,10 +6776,7 @@ fn ranking_identity(
     debug_assert!(encoded_len(queue.candidates.len()) <= u64::from(request.budget.candidates));
     let mut editor_bytes = IdentityBytes::default();
     editor_bytes.extend_from_slice(&request.editor.format.to_le_bytes());
-    identity_push_count(&mut editor_bytes, request.hole_path.len());
-    for part in &request.hole_path {
-        editor_bytes.extend_from_slice(&part.to_le_bytes());
-    }
+    identity_push_hole_path(&mut editor_bytes, &request.hole_path);
     identity_push_editor_nodes(&mut editor_bytes, &request.editor.nodes);
     let editor_request = ranking_digest(DOMAIN_RANKING_EDITOR, editor_bytes.as_slice());
     let task_interface = task_interface_identity(request);
@@ -5532,32 +6794,51 @@ fn ranking_identity(
     request_bytes.extend_from_slice(&independent_goal);
     request_bytes.extend_from_slice(&candidate_set);
     request_bytes.extend_from_slice(library.revision());
-    identity_push_count(&mut request_bytes, FEATURE_REVISION.len());
-    request_bytes.extend_from_slice(FEATURE_REVISION.as_bytes());
+    identity_push_feature_revision(&mut request_bytes);
     request_bytes.extend_from_slice(&request.semantic_revision.to_le_bytes());
     request_bytes.extend_from_slice(&policy);
     request_bytes.extend_from_slice(&editor_request);
     identity_push_budget(&mut request_bytes, request.budget);
-    match model_identity {
-        Some(identity) => {
-            request_bytes.push(1);
-            request_bytes.extend_from_slice(&identity);
-        }
-        None => request_bytes.push(0),
-    }
+    identity_push_model(&mut request_bytes, model_identity);
     RankingIdentity {
         request: ranking_digest(DOMAIN_RANKING_REQUEST, request_bytes.as_slice()),
         task_interface,
         independent_goal,
         candidate_set,
         library_revision: *library.revision(),
-        feature_revision: FEATURE_REVISION,
+        feature_revision: feature_revision_string(),
         semantic_revision: request.semantic_revision,
         policy,
         editor_request,
         model_identity,
         budget: request.budget,
     }
+}
+
+/// Append the counted feature-layout revision spelling.
+fn identity_push_feature_revision(bytes: &mut IdentityBytes) {
+    identity_push_count(bytes, FEATURE_REVISION.len());
+    bytes.extend_from_slice(FEATURE_REVISION.as_bytes());
+}
+
+/// Append the frozen model identity behind a presence byte.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the model identity is appended to the runtime identity byte buffer"
+)]
+fn identity_push_model(bytes: &mut IdentityBytes, model_identity: Option<[u8; REVISION_BYTES]>) {
+    match model_identity {
+        Some(identity) => {
+            bytes.push(1);
+            bytes.extend_from_slice(&identity);
+        }
+        None => bytes.push(0),
+    }
+}
+
+/// The owned feature-layout revision recorded in a ranking identity.
+fn feature_revision_string() -> alloc::string::String {
+    alloc::string::String::from(FEATURE_REVISION)
 }
 
 fn candidate_sequences_are_bounded(queue: &CandidateQueue) -> bool {
@@ -5577,32 +6858,60 @@ fn candidate_sequences_are_bounded(queue: &CandidateQueue) -> bool {
 fn run_candidate_queue(
     search: &mut Search<'_>,
     queue: &CandidateQueue,
-    capture: &mut CandidateCapture<'_, '_, '_>,
+    capture: &mut CandidateCapture<'_, '_>,
 ) -> Result<(), alloc::boxed::Box<Response>> {
     debug_assert!(encoded_len(queue.candidates.len()) <= u64::from(MAX_CANDIDATES));
     debug_assert!(candidate_sequences_are_bounded(queue));
-    let Some(identity) = capture.identity else {
-        let refusal = internal(
-            Location::field("ranking.identity"),
-            "a ranked queue has no immutable identity",
-        );
+    if let Some(refusal) = ranked_identity_refusal(
+        capture.identity.as_ref(),
+        capture.observer.is_some(),
+        search.library,
+    ) {
         return Err(alloc::boxed::Box::new(response_of_search(refusal, search)));
-    };
-    debug_assert_eq!(identity.library_revision, *search.library.revision());
-    debug_assert!(capture.observer.is_none() || identity.model_identity.is_some());
-    for candidate in &queue.candidates {
-        run_ranked_candidate(search, candidate, capture)?;
     }
+    run_ranked_candidates(search, queue, capture)?;
     if let Some(candidate) = &queue.next_candidate {
         return run_overflow_candidate(search, candidate, capture);
     }
     Ok(())
 }
 
+/// Run the queued candidates in ranked order until one stops the search.
+fn run_ranked_candidates(
+    search: &mut Search<'_>,
+    queue: &CandidateQueue,
+    capture: &mut CandidateCapture<'_, '_>,
+) -> Result<(), alloc::boxed::Box<Response>> {
+    let mut index = 0usize;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < queue.candidates.len() {
+        outcome = run_ranked_candidate(search, &queue.candidates[index], capture);
+        index = index.saturating_add(1);
+    }
+    outcome
+}
+
+/// The refusal for a ranked queue that carries no immutable identity.
+fn ranked_identity_refusal(
+    identity: Option<&RankingIdentity>,
+    is_observed: bool,
+    library: &Library,
+) -> Option<Refusal> {
+    let Some(identity) = identity else {
+        return Some(internal(
+            Location::field("ranking.identity"),
+            "a ranked queue has no immutable identity",
+        ));
+    };
+    debug_assert_eq!(identity.library_revision, *library.revision());
+    debug_assert!(!is_observed || identity.model_identity.is_some());
+    None
+}
+
 fn run_overflow_candidate(
     search: &mut Search<'_>,
     candidate: &QueueCandidate,
-    capture: &mut CandidateCapture<'_, '_, '_>,
+    capture: &mut CandidateCapture<'_, '_>,
 ) -> Result<(), alloc::boxed::Box<Response>> {
     debug_assert!(candidate.ordinal <= MAX_CANDIDATES);
     debug_assert!(encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
@@ -5613,32 +6922,39 @@ fn run_overflow_candidate(
         feature_extraction_ns: candidate.feature_extraction_ns,
         scorer_elapsed_ns: candidate.scorer_elapsed_ns,
     };
-    let binding = match candidate_binding(search, &attempt, capture) {
+    let binding = match candidate_binding(
+        search,
+        &attempt,
+        capture.observer.is_some(),
+        capture.identity.as_ref(),
+    ) {
         Ok(binding) => binding,
         Err(refusal) => return Err(alloc::boxed::Box::new(response_of_search(refusal, search))),
     };
-    let resources_before = capture
-        .observer
-        .as_ref()
-        .map(|_| resource_snapshot(&search.ledger));
+    let resources_before = if capture.observer.is_some() {
+        Some(resource_snapshot(&search.ledger))
+    } else {
+        None
+    };
     let started_ns = if resources_before.is_some() {
-        (capture.monotonic_now_ns)()
+        capture.clock.now_ns()
     } else {
         0
     };
     let result = search.candidate(attempt.sequence);
-    let cost = resources_before.map_or_else(CandidateAttemptCost::default, |resources_before| {
-        candidate_attempt_cost(
-            search,
+    let cost = match resources_before {
+        Some(resources_before) => candidate_attempt_cost(
+            &search.ledger,
             CandidateAttemptMeasurement {
                 resources_before,
                 started_ns,
                 feature_extraction_ns: attempt.feature_extraction_ns,
                 scorer_elapsed_ns: attempt.scorer_elapsed_ns,
-                monotonic_now_ns: capture.monotonic_now_ns,
+                clock: capture.clock,
             },
-        )
-    });
+        ),
+        None => CandidateAttemptCost::default(),
+    };
     match result {
         Err(refusal) => {
             observe_refusal(
@@ -5670,7 +6986,7 @@ fn run_overflow_candidate(
 fn run_ranked_candidate(
     search: &mut Search<'_>,
     candidate: &QueueCandidate,
-    capture: &mut CandidateCapture<'_, '_, '_>,
+    capture: &mut CandidateCapture<'_, '_>,
 ) -> Result<(), alloc::boxed::Box<Response>> {
     debug_assert!(candidate.ordinal < MAX_CANDIDATES);
     debug_assert!(encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
@@ -5692,20 +7008,18 @@ fn run_ranked_candidate(
 /// The search is deterministic shortlex over the canonical library order. It
 /// never commits, never publishes and never treats a signature, a digest or a
 /// fixture result as acceptance authority.
+///
+/// Reviewed extraction exclusion (#97): the signature names a host `fn`
+/// clock; the checked logic is `complete_fixed`.
+#[charon::exclude]
 pub fn complete(
     namespace: &super::Session,
     library: &Library,
     request: &Request,
     monotonic_now_ns: fn() -> u64,
 ) -> Response {
-    let started = monotonic_now_ns();
-    let mut ranking = RankingStatus {
-        disposition: RankingDisposition::NotEvaluated,
-        invalid_scores: 0,
-        identity: None,
-        ranked_candidates: alloc::vec::Vec::new(),
-    };
-    let mut response = complete_inner(
+    let mut clock = MonotonicClock(monotonic_now_ns);
+    complete_fixed(
         namespace,
         library,
         request,
@@ -5713,23 +7027,17 @@ pub fn complete(
             ranker: None,
             observer: None,
             stored: None,
-            monotonic_now_ns,
+            clock: &mut clock,
         },
-        &mut ranking,
-    );
-    let finished = monotonic_now_ns();
-    let total_latency_ns = finished.saturating_sub(started);
-    debug_assert_eq!(
-        started.saturating_add(total_latency_ns),
-        finished.max(started)
-    );
-    response.report_mut().total_latency_ns = total_latency_ns;
-    debug_assert_eq!(response.report_mut().total_latency_ns, total_latency_ns);
-    response
+    )
 }
 
 /// Run the deterministic shortlex completion while streaming attempted
 /// candidate outcomes to a caller-owned observer.
+///
+/// Reviewed extraction exclusion (#97): the signature names a `dyn`
+/// observer and a host `fn` clock; the checked logic is `complete_fixed`.
+#[charon::exclude]
 pub fn complete_observed(
     namespace: &super::Session,
     library: &Library,
@@ -5737,39 +7045,27 @@ pub fn complete_observed(
     observer: &mut CandidateOutcomeObserver<'_>,
     monotonic_now_ns: fn() -> u64,
 ) -> Response {
-    let started = monotonic_now_ns();
-    let mut ranking = RankingStatus {
-        disposition: RankingDisposition::NotEvaluated,
-        invalid_scores: 0,
-        identity: None,
-        ranked_candidates: alloc::vec::Vec::new(),
-    };
-    let mut response = complete_inner(
+    let mut clock = MonotonicClock(monotonic_now_ns);
+    complete_fixed(
         namespace,
         library,
         request,
         CompletionControl {
             ranker: None,
-            observer: Some(observer),
+            observer: Some(ObserverHandle(observer)),
             stored: None,
-            monotonic_now_ns,
+            clock: &mut clock,
         },
-        &mut ranking,
-    );
-    let finished = monotonic_now_ns();
-    let total_latency_ns = finished.saturating_sub(started);
-    debug_assert_eq!(
-        started.saturating_add(total_latency_ns),
-        finished.max(started)
-    );
-    response.report_mut().total_latency_ns = total_latency_ns;
-    debug_assert_eq!(response.report_mut().total_latency_ns, total_latency_ns);
-    response
+    )
 }
 
 /// Run completion with a bounded untrusted scorer that can only reorder the
 /// canonical finite queue. Every selected candidate follows the ordinary
 /// #73 re-admission path; scorer failures use fixed shortlex.
+///
+/// Reviewed extraction exclusion (#97): the signature names a host `fn`
+/// clock; the checked logic is `complete_scored`.
+#[charon::exclude]
 pub fn complete_ranked(
     namespace: &super::Session,
     library: &Library,
@@ -5777,52 +7073,30 @@ pub fn complete_ranked(
     ranker: &mut RankerSession<'_>,
     monotonic_now_ns: fn() -> u64,
 ) -> RankedResponse {
-    let started = monotonic_now_ns();
-    let mut ranking = RankingStatus {
-        disposition: RankingDisposition::NotEvaluated,
-        invalid_scores: 0,
-        identity: None,
-        ranked_candidates: alloc::vec::Vec::new(),
-    };
-    let mut response = complete_inner(
+    let mut clock = MonotonicClock(monotonic_now_ns);
+    complete_scored(
         namespace,
         library,
         request,
         CompletionControl {
-            ranker: Some(ranker),
+            ranker: Some(ranker.reborrow()),
             observer: None,
             stored: None,
-            monotonic_now_ns,
+            clock: &mut clock,
         },
-        &mut ranking,
-    );
-    let finished = monotonic_now_ns();
-    let total_latency_ns = finished.saturating_sub(started);
-    debug_assert_eq!(
-        started.saturating_add(total_latency_ns),
-        finished.max(started)
-    );
-    response.report_mut().total_latency_ns = total_latency_ns;
-    debug_assert_eq!(response.report_mut().total_latency_ns, total_latency_ns);
-    debug_assert!(ranking.invalid_scores <= MAX_CANDIDATES);
-    debug_assert!(
-        ranking.disposition != RankingDisposition::Applied || ranking.invalid_scores == 0
-    );
-    RankedResponse {
-        response,
-        disposition: ranking.disposition,
-        invalid_scores: ranking.invalid_scores,
-        identity: ranking.identity,
-        ranked_candidates: ranking.ranked_candidates,
-    }
+    )
 }
 
 /// Ranked completion with the same candidate-outcome stream as
 /// [`complete_observed`].
+///
+/// Reviewed extraction exclusion (#97): the signature names a `dyn`
+/// observer and a host `fn` clock; the checked logic is `complete_scored`.
 #[expect(
     tigerstyle::too_many_parameters,
     reason = "Owner: noble-contracts; this one-shot public API explicitly binds namespace, immutable library/request, scorer, consumer observer and monotonic clock trust boundaries"
 )]
+#[charon::exclude]
 pub fn complete_ranked_observed(
     namespace: &super::Session,
     library: &Library,
@@ -5831,53 +7105,31 @@ pub fn complete_ranked_observed(
     observer: &mut CandidateOutcomeObserver<'_>,
     monotonic_now_ns: fn() -> u64,
 ) -> RankedResponse {
-    let started = monotonic_now_ns();
-    let mut ranking = RankingStatus {
-        disposition: RankingDisposition::NotEvaluated,
-        invalid_scores: 0,
-        identity: None,
-        ranked_candidates: alloc::vec::Vec::new(),
-    };
-    let mut response = complete_inner(
+    let mut clock = MonotonicClock(monotonic_now_ns);
+    complete_scored(
         namespace,
         library,
         request,
         CompletionControl {
-            ranker: Some(ranker),
-            observer: Some(observer),
+            ranker: Some(ranker.reborrow()),
+            observer: Some(ObserverHandle(observer)),
             stored: None,
-            monotonic_now_ns,
+            clock: &mut clock,
         },
-        &mut ranking,
-    );
-    let finished = monotonic_now_ns();
-    let total_latency_ns = finished.saturating_sub(started);
-    debug_assert_eq!(
-        started.saturating_add(total_latency_ns),
-        finished.max(started)
-    );
-    response.report_mut().total_latency_ns = total_latency_ns;
-    debug_assert_eq!(response.report_mut().total_latency_ns, total_latency_ns);
-    debug_assert!(ranking.invalid_scores <= MAX_CANDIDATES);
-    debug_assert!(
-        ranking.disposition != RankingDisposition::Applied || ranking.invalid_scores == 0
-    );
-    RankedResponse {
-        response,
-        disposition: ranking.disposition,
-        invalid_scores: ranking.invalid_scores,
-        identity: ranking.identity,
-        ranked_candidates: ranking.ranked_candidates,
-    }
+    )
 }
 
 /// Replay a stored candidate-ID ordering without invoking a model. A stale
 /// request or malformed candidate set falls back to the canonical shortlex
 /// queue; every attempted proposal still uses ordinary #73 re-admission.
+///
+/// Reviewed extraction exclusion (#97): the signature names a `dyn`
+/// observer and a host `fn` clock; the checked logic is `complete_stored`.
 #[expect(
     tigerstyle::too_many_parameters,
     reason = "Owner: noble-contracts; this replay entry point binds the request, immutable library, persisted ranking, current model identity, optional consumer observer and monotonic clock"
 )]
+#[charon::exclude]
 pub fn complete_replayed<'observer>(
     namespace: &super::Session,
     library: &Library,
@@ -5887,36 +7139,51 @@ pub fn complete_replayed<'observer>(
     observer: Option<&'observer mut CandidateOutcomeObserver<'observer>>,
     monotonic_now_ns: fn() -> u64,
 ) -> RankedResponse {
-    let started = monotonic_now_ns();
-    let mut ranking = RankingStatus {
-        disposition: RankingDisposition::NotEvaluated,
-        invalid_scores: 0,
-        identity: None,
-        ranked_candidates: alloc::vec::Vec::new(),
-    };
-    let mut response = complete_inner(
+    let mut clock = MonotonicClock(monotonic_now_ns);
+    complete_stored(
         namespace,
         library,
         request,
         CompletionControl {
             ranker: None,
-            observer,
+            observer: observer.map(ObserverHandle),
             stored: Some(StoredRankingControl {
                 ranking: stored_ranking,
                 expected_model_identity,
             }),
-            monotonic_now_ns,
+            clock: &mut clock,
         },
-        &mut ranking,
+    )
+}
+
+/// Fixed shortlex completion, optionally observed, timed on the host clock.
+fn complete_fixed(
+    namespace: &super::Session,
+    library: &Library,
+    request: &Request,
+    control: CompletionControl<'_, '_, '_, '_>,
+) -> Response {
+    let mut ranking = RankingStatus::not_evaluated();
+    complete_timed(namespace, library, request, control, &mut ranking)
+}
+
+/// Scorer-ranked completion, timed on the host clock, with its scorer status.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; completion dispatch initializes runtime search state and reads the host clock"
+)]
+fn complete_scored(
+    namespace: &super::Session,
+    library: &Library,
+    request: &Request,
+    control: CompletionControl<'_, '_, '_, '_>,
+) -> RankedResponse {
+    let mut ranking = RankingStatus::not_evaluated();
+    let response = complete_timed(namespace, library, request, control, &mut ranking);
+    debug_assert!(ranking.invalid_scores <= MAX_CANDIDATES);
+    debug_assert!(
+        ranking.disposition != RankingDisposition::Applied || ranking.invalid_scores == 0
     );
-    let finished = monotonic_now_ns();
-    let total_latency_ns = finished.saturating_sub(started);
-    debug_assert_eq!(
-        started.saturating_add(total_latency_ns),
-        finished.max(started)
-    );
-    response.report_mut().total_latency_ns = total_latency_ns;
-    debug_assert_eq!(response.report_mut().total_latency_ns, total_latency_ns);
     RankedResponse {
         response,
         disposition: ranking.disposition,
@@ -5924,6 +7191,63 @@ pub fn complete_replayed<'observer>(
         identity: ranking.identity,
         ranked_candidates: ranking.ranked_candidates,
     }
+}
+
+/// Stored-ranking replay completion, timed on the host clock, with its status.
+fn complete_stored(
+    namespace: &super::Session,
+    library: &Library,
+    request: &Request,
+    control: CompletionControl<'_, '_, '_, '_>,
+) -> RankedResponse {
+    let mut ranking = RankingStatus::not_evaluated();
+    let response = complete_timed(namespace, library, request, control, &mut ranking);
+    RankedResponse {
+        response,
+        disposition: ranking.disposition,
+        invalid_scores: ranking.invalid_scores,
+        identity: ranking.identity,
+        ranked_candidates: ranking.ranked_candidates,
+    }
+}
+
+/// Run one completion, reading the host clock before and after it to record
+/// the total latency.
+fn complete_timed(
+    namespace: &super::Session,
+    library: &Library,
+    request: &Request,
+    control: CompletionControl<'_, '_, '_, '_>,
+    ranking: &mut RankingStatus,
+) -> Response {
+    let CompletionControl {
+        ranker,
+        observer,
+        stored,
+        clock,
+    } = control;
+    let started = clock.now_ns();
+    let mut response = complete_inner(
+        namespace,
+        library,
+        request,
+        CompletionControl {
+            ranker,
+            observer,
+            stored,
+            clock: &mut *clock,
+        },
+        ranking,
+    );
+    let finished = clock.now_ns();
+    let total_latency_ns = finished.saturating_sub(started);
+    debug_assert_eq!(
+        started.saturating_add(total_latency_ns),
+        finished.max(started)
+    );
+    response.report_mut().total_latency_ns = total_latency_ns;
+    debug_assert_eq!(response.report_mut().total_latency_ns, total_latency_ns);
+    response
 }
 
 fn charge_ranking_queue(search: &mut Search<'_>, queue: &CandidateQueue) -> Result<(), Refusal> {
@@ -5958,17 +7282,27 @@ fn charge_ranking_queue(search: &mut Search<'_>, queue: &CandidateQueue) -> Resu
 
 fn ranked_candidate_ids(queue: &CandidateQueue, library: &Library) -> alloc::vec::Vec<CandidateId> {
     let mut identities = alloc::vec::Vec::with_capacity(queue.candidates.len());
-    for index in 0..queue.candidates.len() {
-        let Some(candidate) = queue.candidates.get(index) else {
-            continue;
-        };
-        let identity = match candidate.identity {
-            Some(identity) => identity,
-            None => candidate_identity(library, candidate.ordinal, &candidate.sequence),
-        };
-        identities.push(identity);
+    let mut index = 0usize;
+    while index < queue.candidates.len() {
+        if let Some(identity) = ranked_candidate_id_at(queue, library, index) {
+            identities.push(identity);
+        }
+        index = index.saturating_add(1);
     }
     identities
+}
+
+/// The identity of the queued candidate at `index`, recomputed when not yet bound.
+fn ranked_candidate_id_at(
+    queue: &CandidateQueue,
+    library: &Library,
+    index: usize,
+) -> Option<CandidateId> {
+    let candidate = queue.candidates.get(index)?;
+    Some(match candidate.identity {
+        Some(identity) => identity,
+        None => candidate_identity(library, candidate.ordinal, &candidate.sequence),
+    })
 }
 
 fn replay_candidate_queue(
@@ -6034,37 +7368,15 @@ fn validate_and_apply_stored_order(
         return Err(RankingDisposition::FallbackInvalidResponse);
     }
     let mut seen = alloc::vec![false; queue.candidates.len()];
-    for position in 0..stored.ordered_candidates.len() {
-        let Some(candidate_id) = stored.ordered_candidates.get(position) else {
-            return Err(RankingDisposition::FallbackInvalidResponse);
-        };
-        let Some(index) = usize::try_from(candidate_id.ordinal).ok() else {
-            return Err(RankingDisposition::FallbackInvalidResponse);
-        };
-        let Some(candidate) = queue.candidates.get_mut(index) else {
-            return Err(RankingDisposition::FallbackInvalidResponse);
-        };
-        let Some(seen_slot) = seen.get_mut(index) else {
-            return Err(RankingDisposition::FallbackInvalidResponse);
-        };
-        let ranking_position = match u32::try_from(position) {
-            Ok(position) => position,
-            Err(_) => return Err(RankingDisposition::FallbackInvalidResponse),
-        };
-        if *seen_slot
-            || candidate.ordinal != candidate_id.ordinal
-            || candidate_identity(library, candidate.ordinal, &candidate.sequence) != *candidate_id
-        {
-            return Err(RankingDisposition::FallbackInvalidResponse);
-        }
-        *seen_slot = true;
-        candidate.identity = Some(*candidate_id);
-        candidate.ranking_position = ranking_position;
+    let mut position = 0usize;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && position < stored.ordered_candidates.len() {
+        outcome = apply_stored_position(queue, stored, library, &mut seen, position);
+        position = position.saturating_add(1);
     }
-    for was_seen in &seen {
-        if !*was_seen {
-            return Err(RankingDisposition::FallbackInvalidResponse);
-        }
+    outcome?;
+    if seen.contains(&false) {
+        return Err(RankingDisposition::FallbackInvalidResponse);
     }
     queue
         .candidates
@@ -6072,11 +7384,53 @@ fn validate_and_apply_stored_order(
     Ok(())
 }
 
+/// Validate one stored candidate identity and give it its stored position.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; stored positions are looked up and applied through non-const slice accessors"
+)]
+fn apply_stored_position(
+    queue: &mut CandidateQueue,
+    stored: &StoredRanking,
+    library: &Library,
+    seen: &mut [bool],
+    position: usize,
+) -> Result<(), RankingDisposition> {
+    debug_assert!(position < stored.ordered_candidates.len());
+    debug_assert_eq!(seen.len(), queue.candidates.len());
+    let Some(candidate_id) = stored.ordered_candidates.get(position) else {
+        return Err(RankingDisposition::FallbackInvalidResponse);
+    };
+    let Some(index) = usize::try_from(candidate_id.ordinal).ok() else {
+        return Err(RankingDisposition::FallbackInvalidResponse);
+    };
+    let Some(candidate) = queue.candidates.get_mut(index) else {
+        return Err(RankingDisposition::FallbackInvalidResponse);
+    };
+    let Some(seen_slot) = seen.get_mut(index) else {
+        return Err(RankingDisposition::FallbackInvalidResponse);
+    };
+    let ranking_position = match u32::try_from(position) {
+        Ok(position) => position,
+        Err(_) => return Err(RankingDisposition::FallbackInvalidResponse),
+    };
+    if *seen_slot
+        || candidate.ordinal != candidate_id.ordinal
+        || candidate_identity(library, candidate.ordinal, &candidate.sequence) != *candidate_id
+    {
+        return Err(RankingDisposition::FallbackInvalidResponse);
+    }
+    *seen_slot = true;
+    candidate.identity = Some(*candidate_id);
+    candidate.ranking_position = ranking_position;
+    Ok(())
+}
+
 fn rank_candidate_queue(
     search: &mut Search<'_>,
     session: &mut RankerSession<'_>,
     should_measure_candidate_time: bool,
-    monotonic_now_ns: fn() -> u64,
+    clock: &mut MonotonicClock,
 ) -> Result<(CandidateQueue, RankingDisposition, u32, RankingIdentity), Refusal> {
     let candidate_limit = CandidateLimit::from(search.ledger.limits().candidates);
     debug_assert!(candidate_limit.0 <= MAX_CANDIDATES);
@@ -6104,9 +7458,9 @@ fn rank_candidate_queue(
         &mut queue,
         session,
         CandidateScoringControl {
-            identity: &identity,
+            request_identity: identity.request,
             should_measure_candidate_time,
-            monotonic_now_ns,
+            clock,
         },
     )?;
     if let Some(disposition) = fallback {
@@ -6120,30 +7474,37 @@ fn score_candidate_queue(
     search: &mut Search<'_>,
     queue: &mut CandidateQueue,
     session: &mut RankerSession<'_>,
-    control: CandidateScoringControl<'_>,
+    mut control: CandidateScoringControl<'_>,
 ) -> Result<(u32, Option<RankingDisposition>), Refusal> {
     debug_assert!(encoded_len(queue.candidates.len()) <= u64::from(MAX_CANDIDATES));
     debug_assert!(candidate_sequences_are_bounded(queue));
     let mut invalid_scores = 0u32;
-    for candidate in &mut queue.candidates {
-        match score_candidate(search, candidate, session, &control)? {
-            Ok(score) => {
+    let mut fallback = None;
+    let mut index = 0usize;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && fallback.is_none() && index < queue.candidates.len() {
+        let candidate = &mut queue.candidates[index];
+        match score_candidate(search, candidate, session, &mut control) {
+            Ok(Ok(score)) => {
                 if !score.is_finite() {
                     invalid_scores = invalid_scores.saturating_add(1);
                 }
                 candidate.score = Some(score);
             }
-            Err(disposition) => return Ok((invalid_scores, Some(disposition))),
+            Ok(Err(disposition)) => fallback = Some(disposition),
+            Err(refusal) => outcome = Err(refusal),
         }
+        index = index.saturating_add(1);
     }
-    Ok((invalid_scores, None))
+    outcome?;
+    Ok((invalid_scores, fallback))
 }
 
 fn score_candidate(
     search: &mut Search<'_>,
     candidate: &mut QueueCandidate,
     session: &mut RankerSession<'_>,
-    control: &CandidateScoringControl<'_>,
+    control: &mut CandidateScoringControl<'_>,
 ) -> Result<Result<f32, RankingDisposition>, Refusal> {
     debug_assert!(candidate.ordinal < MAX_CANDIDATES);
     debug_assert!(encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
@@ -6164,33 +7525,33 @@ fn score_candidate(
         Location::at("ranking.score", candidate.ordinal),
     )?;
     let score_request = CandidateScoreRequest {
-        request_identity: control.identity.request,
+        request_identity: control.request_identity,
         model_identity: session.expected_model_identity,
         candidate: candidate_id,
         features: &features,
     };
     let score_started_ns = if control.should_measure_candidate_time {
-        (control.monotonic_now_ns)()
+        control.clock.now_ns()
     } else {
         0
     };
     let score_result = session.ranker.score(&score_request);
     if control.should_measure_candidate_time {
-        candidate.scorer_elapsed_ns = (control.monotonic_now_ns)().saturating_sub(score_started_ns);
+        candidate.scorer_elapsed_ns = control.clock.now_ns().saturating_sub(score_started_ns);
     }
     match score_result {
-        Ok(response)
-            if response.request_identity == control.identity.request
+        Ok(response) => {
+            if response.request_identity == control.request_identity
                 && response.model_identity == session.expected_model_identity
-                && response.candidate == candidate_id =>
-        {
-            Ok(Ok(response.score))
+                && response.candidate == candidate_id
+            {
+                Ok(Ok(response.score))
+            } else if response.model_identity != session.expected_model_identity {
+                Ok(Err(RankingDisposition::FallbackStaleProvenance))
+            } else {
+                Ok(Err(RankingDisposition::FallbackInvalidResponse))
+            }
         }
-        Ok(response) if response.model_identity != session.expected_model_identity => {
-            let _ = response;
-            Ok(Err(RankingDisposition::FallbackStaleProvenance))
-        }
-        Ok(_) => Ok(Err(RankingDisposition::FallbackInvalidResponse)),
         Err(failure) => {
             let disposition = match failure {
                 ScorerFailure::StaleProvenance => RankingDisposition::FallbackStaleProvenance,
@@ -6207,7 +7568,7 @@ fn score_candidate(
 fn extract_candidate_features(
     search: &mut Search<'_>,
     candidate: &mut QueueCandidate,
-    control: &CandidateScoringControl<'_>,
+    control: &mut CandidateScoringControl<'_>,
 ) -> Result<Result<CandidateFeatureVector, RankingDisposition>, Refusal> {
     debug_assert!(candidate.ordinal < MAX_CANDIDATES);
     debug_assert!(encoded_len(candidate.sequence.len()) <= u64::from(MAX_COMPOSED_CHUNKS));
@@ -6217,14 +7578,13 @@ fn extract_candidate_features(
         Location::at("ranking.features", candidate.ordinal),
     )?;
     let feature_started_ns = if control.should_measure_candidate_time {
-        (control.monotonic_now_ns)()
+        control.clock.now_ns()
     } else {
         0
     };
     let features = candidate_features(search, candidate);
     if control.should_measure_candidate_time {
-        candidate.feature_extraction_ns =
-            (control.monotonic_now_ns)().saturating_sub(feature_started_ns);
+        candidate.feature_extraction_ns = control.clock.now_ns().saturating_sub(feature_started_ns);
     }
     match features {
         Ok(features) => Ok(Ok(features)),
@@ -6336,12 +7696,12 @@ fn complete_inner(
         ranker,
         observer,
         stored,
-        monotonic_now_ns,
+        clock,
     } = control;
     let capture = CandidateCapture {
         observer,
         identity: None,
-        monotonic_now_ns,
+        clock,
     };
     if let Some(ranker) = ranker {
         return complete_with_ranker(search, library, ranker, capture, ranking);
@@ -6355,19 +7715,21 @@ fn complete_inner(
 fn complete_with_ranker(
     mut search: Search<'_>,
     library: &Library,
-    ranker: &mut RankerSession<'_>,
-    capture: CandidateCapture<'_, '_, '_>,
+    mut ranker: RankerSession<'_>,
+    capture: CandidateCapture<'_, '_>,
     ranking: &mut RankingStatus,
 ) -> Response {
     debug_assert!(search.ledger.limits().candidates <= MAX_CANDIDATES);
     debug_assert!(capture.identity.is_none());
     let should_measure_candidate_time = capture.observer.is_some();
-    let monotonic_now_ns = capture.monotonic_now_ns;
+    let CandidateCapture {
+        observer, clock, ..
+    } = capture;
     let (queue, status, invalid, identity) = match rank_candidate_queue(
         &mut search,
-        ranker,
+        &mut ranker,
         should_measure_candidate_time,
-        monotonic_now_ns,
+        clock,
     ) {
         Ok(ranked) => ranked,
         Err(refusal) => return response_of_search(refusal, &search),
@@ -6378,11 +7740,10 @@ fn complete_with_ranker(
     ranking.ranked_candidates = ranked_candidate_ids(&queue, library);
     debug_assert!(ranking.invalid_scores <= MAX_CANDIDATES);
     debug_assert_eq!(identity.library_revision, *search.library.revision());
-    let CandidateCapture { observer, .. } = capture;
     let mut ranked_capture = CandidateCapture {
         observer,
-        identity: Some(&identity),
-        monotonic_now_ns,
+        identity: Some(identity),
+        clock,
     };
     if let Err(response) = run_candidate_queue(&mut search, &queue, &mut ranked_capture) {
         return *response;
@@ -6396,12 +7757,14 @@ fn complete_with_stored_ranking(
     mut search: Search<'_>,
     library: &Library,
     stored: StoredRankingControl<'_>,
-    capture: CandidateCapture<'_, '_, '_>,
+    capture: CandidateCapture<'_, '_>,
     ranking: &mut RankingStatus,
 ) -> Response {
     debug_assert!(search.ledger.limits().candidates <= MAX_CANDIDATES);
     debug_assert!(capture.identity.is_none());
-    let monotonic_now_ns = capture.monotonic_now_ns;
+    let CandidateCapture {
+        observer, clock, ..
+    } = capture;
     let (queue, disposition, identity) = match replay_candidate_queue(&mut search, &stored) {
         Ok(replayed) => replayed,
         Err(refusal) => return response_of_search(refusal, &search),
@@ -6414,11 +7777,10 @@ fn complete_with_stored_ranking(
     ranking.ranked_candidates = ranked_candidate_ids(&queue, library);
     debug_assert_eq!(identity.library_revision, *search.library.revision());
     debug_assert!(ranking.invalid_scores <= MAX_CANDIDATES);
-    let CandidateCapture { observer, .. } = capture;
     let mut replay_capture = CandidateCapture {
         observer,
-        identity: Some(&identity),
-        monotonic_now_ns,
+        identity: Some(identity),
+        clock,
     };
     if let Err(response) = run_candidate_queue(&mut search, &queue, &mut replay_capture) {
         return *response;
@@ -6432,42 +7794,44 @@ fn complete_shortlex(
     mut search: Search<'_>,
     library: &Library,
     request: &Request,
-    capture: CandidateCapture<'_, '_, '_>,
+    capture: CandidateCapture<'_, '_>,
 ) -> Response {
     debug_assert!(search.ledger.limits().candidates <= MAX_CANDIDATES);
     debug_assert!(capture.identity.is_none());
-    let observation_identity = capture.observer.as_ref().map(|_| {
+    let observation_identity = if capture.observer.is_some() {
         let queue = candidate_queue(
             library,
             CandidateLimit::from(search.ledger.limits().candidates),
         );
-        ranking_identity(request, library, &queue, None)
-    });
+        Some(ranking_identity(request, library, &queue, None))
+    } else {
+        None
+    };
     let CandidateCapture {
-        observer,
-        monotonic_now_ns,
-        ..
+        observer, clock, ..
     } = capture;
     let mut shortlex_capture = CandidateCapture {
         observer,
-        identity: observation_identity.as_ref(),
-        monotonic_now_ns,
+        identity: observation_identity,
+        clock,
     };
     let order = canonical_order(library);
     debug_assert!(encoded_len(order.len()) <= u64::from(MAX_LIBRARY_ENTRIES));
     let mut chunk_count = 0u32;
     let mut next_ordinal = 0u32;
-    while chunk_count <= MAX_COMPOSED_CHUNKS {
-        if let Err(response) = run_length(
+    let mut outcome = Ok(());
+    while outcome.is_ok() && chunk_count <= MAX_COMPOSED_CHUNKS {
+        outcome = run_length(
             &mut search,
             &order,
             chunk_count,
             &mut next_ordinal,
             &mut shortlex_capture,
-        ) {
-            return *response;
-        }
+        );
         chunk_count = chunk_count.saturating_add(1);
+    }
+    if let Err(response) = outcome {
+        return *response;
     }
     debug_assert!(chunk_count > MAX_COMPOSED_CHUNKS);
     Response::NoResult {

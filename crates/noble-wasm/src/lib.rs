@@ -57,6 +57,47 @@ macro_rules! attempt {
     };
 }
 
+/// Sequence searches written as explicit index walks.
+///
+/// The pinned Aeneas cannot translate `Iterator::find` (its predicate has a
+/// higher-ranked bound). Each helper visits in the same order, stops at the
+/// same element and returns the same value as the method it replaces.
+pub(crate) mod scan {
+    /// The first element satisfying `predicate`, as `items.iter().find(..)`:
+    /// elements are tested in order and none after the first match.
+    pub(crate) fn find_first<T>(items: &[T], mut predicate: impl FnMut(&T) -> bool) -> Option<&T> {
+        let mut index = 0;
+        let mut found = None;
+        while found.is_none() && index < items.len() {
+            if predicate(&items[index]) {
+                found = Some(index);
+            }
+            index += 1;
+        }
+        match found {
+            Some(position) => Some(&items[position]),
+            None => None,
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        #[test]
+        fn find_first_visits_in_order_and_stops_at_the_first_match() {
+            let items = [3u32, 5, 4, 5, 6];
+            let mut visited = alloc::vec::Vec::new();
+            let found = super::find_first(&items, |item| {
+                visited.push(*item);
+                *item == 5
+            });
+            assert_eq!(found, items.iter().find(|item| **item == 5));
+            assert!(core::ptr::eq(found.unwrap_or(&0), &items[1]));
+            assert_eq!(visited, [3, 5]);
+            assert_eq!(super::find_first(&items, |item| *item == 9), None);
+        }
+    }
+}
+
 mod admission;
 pub mod component;
 mod emit;
