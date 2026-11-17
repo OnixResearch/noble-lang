@@ -22,7 +22,10 @@
 #   ENV-BINDING       every classified constant exists as a definition in its
 #                     generated module (elaborated environment, not just
 #                     text), and the only residual definitions in those
-#                     modules are elaborator matchers
+#                     modules are elaborator matchers and the packed
+#                     fixpoints (`<first>.mutual`) Lean's partial_fixpoint
+#                     builds for generated mutual blocks whose first
+#                     declaration is classified and defined through them
 #   CITATIONS         every citation exists, is a theorem, and its
 #                     statement mentions the classified constant
 #   STRENGTH          every citation's statement shape and axiom class is
@@ -187,6 +190,20 @@ def isElabMatcher (s : String) : Bool :=
           && ((c.drop 6).all Char.isDigit || c.drop 6 == "splitter"))
         || c.startsWith "_sparseCasesOn")
 
+/-- The packed fixpoint Lean'"'"'s `partial_fixpoint` elaborates for a generated
+    `mutual` block, named `<first declaration>.mutual`. Tolerated only when
+    that first declaration is classified and its own definition is built from
+    the packed fixpoint, so a definition that merely borrows the suffix is
+    still unclassified. -/
+def isMutualFixpoint (env : Environment) (classified : NameSet) (n : Name) : Bool :=
+  match n with
+  | .str parent "mutual" =>
+    classified.contains parent &&
+      match env.find? parent with
+      | some (.defnInfo info) => info.value.getUsedConstants.contains n
+      | _ => false
+  | _ => false
+
 run_cmd do
   let env ← getEnv
   let txt ← IO.FS.readFile "DATAFILE"
@@ -237,7 +254,10 @@ CHECKER_A_BODY='  let mut classified : NameSet := {}
           errs := errs + 1
         else
           reportStrength "m3-coverage" n cn ci.type
+  -- Residual definitions in the generated modules: matchers and the packed
+  -- fixpoints of generated `partial_fixpoint` mutual blocks only.
   let mut residual := 0
+  let mut packed := 0
   for (n, ci) in env.constants.toList do
     if !(n.toString.startsWith "noble_kernel.") then continue
     if !(ci matches .defnInfo _) then continue
@@ -247,11 +267,13 @@ CHECKER_A_BODY='  let mut classified : NameSet := {}
     if classified.contains n then continue
     if isElabMatcher n.toString then
       residual := residual + 1
+    else if isMutualFixpoint env classified n then
+      packed := packed + 1
     else
       logError m!"m3-coverage: FAIL ENV-UNCLASSIFIED: {n} ({mod}) is a definition in the generated modules absent from the record"
       errs := errs + 1
   if errs == 0 then
-    logInfo m!"m3-coverage: ENV-A-PASS {entries.size} classified constants bound to their modules; {residual} elaborator matchers tolerated"'
+    logInfo m!"m3-coverage: ENV-A-PASS {entries.size} classified constants bound to their modules; {residual} elaborator matchers and {packed} partial_fixpoint mutual packings tolerated"'
 
 CHECKER_CIT_BODY='  let mut errs := 0
   let mut ncits := 0

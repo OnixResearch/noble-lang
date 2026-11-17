@@ -88,6 +88,14 @@ mutual
     | _ + 1, .certified => .CertifiedType
     | _ + 1, .nominal module ordinal =>
       .NominalType ⟨⟨BitVec.ofNat 64 module⟩, ⟨BitVec.ofNat 32 ordinal⟩⟩ (.Opaque .UnitType)
+    -- A live reference carries its stacks and bound exactly like a program type.
+    | fuel + 1, .liveRef i o e =>
+      .LiveRefType (embedTyListFuel fuel i) (embedTyListFuel fuel o) (vecOf embedU32 e.ids)
+    -- A generic nominal instance carries its identity and both type arguments; as for `nominal`, the
+    -- unmodelled canonical descriptor is the opaque unit shape no theorem in this milestone depends on.
+    | fuel + 1, .genericNominal module ordinal a b =>
+      .GenericNominalType ⟨⟨BitVec.ofNat 64 module⟩, ⟨BitVec.ofNat 32 ordinal⟩⟩
+        (Array.make 2#usize [embedTyFuel fuel a, embedTyFuel fuel b]) (.Opaque .UnitType)
     termination_by fuel
 
   /-- Fuel-driven stack (list) embedding; the whole stack shares the budget. -/
@@ -315,28 +323,47 @@ def embedSchemaDecl (decl : SchemaDecl) : noble_kernel.contracts.SchemaDecl :=
 
     The reference environment (`NobleM2.Env`) models schemes, behavior kinds, effects, dependency lists
     and user-declared schemas. The extracted kernel's environment additionally carries nominal types,
-    resource kinds, the caller module, declared-module admission, definition owners and bound adapters.
-    This milestone does not model those, so the embedding lifts the EMPTY admission fragment:
+    generic variant families, resource kinds, live resource nominals, the live-slot, live-test-host,
+    text-cursor and calculator profile selections, the caller module, declared-module admission,
+    definition owners and bound adapters. This milestone does not model those, so the embedding lifts
+    the EMPTY admission fragment:
 
-    - no nominal declarations (`nominals` empty),
+    - no nominal declarations (`nominals` empty) and no generic variant families (`generic_variants`
+      empty),
     - the resource kinds are NOT part of this assumption: the reference environment declares them
       (`Env.resourceKinds`) and they embed directly, because the kernel admits a `resource` type only
       when its kind is declared,
+    - no live resource nominals (`live_resource_nominals` empty),
+    - every optional profile unselected: `live_slots`, `live_test_hosts`, `text_cursor` and
+      `calculator` are all `false`, the values of the kernel's `Env::default()`,
     - no caller module (`caller_module` = `none`) and no declared modules (`declared_modules` = `false`),
     - no definition owners (`definition_owners` empty) and no bound adapters (`bound_adapters` empty).
 
     Consequence, and it MUST NOT be overstated: every theorem in this milestone is about a kernel run
     whose environment declares exactly the resource kinds the reference environment declares and
     whose admission surface is that empty fragment. Nothing here is evidence about a run carrying
-    nominals beyond its declared kinds, a caller module, declared modules, owners or adapters. `emptyAdmission`
-    exists so that extending the reference model later means changing one function, not every literal. -/
+    nominals, generic variants or live resources, a selected live-slot, live-test-host, text-cursor or
+    calculator profile, a caller module, declared modules, owners or adapters. `emptyAdmission` exists so
+    that extending the reference model later means changing one function, not every literal. -/
 structure Admission where
   /-- Nominal type declarations the embedding claims. Fragment v1: none. -/
   nominals : alloc.vec.Vec noble_kernel.contracts.NominalDecl
+  /-- Generic variant family declarations the embedding claims. Fragment v1: none. -/
+  genericVariants : alloc.vec.Vec noble_kernel.contracts.GenericVariantDecl
+  /-- Host-registered live resource nominals the embedding claims. Fragment v1: none. -/
+  liveResourceNominals : alloc.vec.Vec noble_kernel.types.NominalTypeId
+  /-- Whether the embedding selects the live-slot profile. Fragment v1: no. -/
+  liveSlots : Bool
+  /-- Whether the embedding selects live-slot test hosts. Fragment v1: no. -/
+  liveTestHosts : Bool
   /-- The caller module the embedding claims. Fragment v1: none. -/
   callerModule : Option Std.U64
   /-- Whether the embedding claims declared-module admission. Fragment v1: no. -/
   declaredModules : Bool
+  /-- Whether the embedding selects the standalone text-cursor profile. Fragment v1: no. -/
+  textCursor : Bool
+  /-- Whether the embedding selects the calculator profile. Fragment v1: no. -/
+  calculator : Bool
   /-- One owner per definition, or `none`. Fragment v1: no owners. -/
   definitionOwners : alloc.vec.Vec (Option Std.U64)
   /-- Bound adapters the embedding claims. Fragment v1: none. -/
@@ -346,8 +373,14 @@ structure Admission where
     theorems, not a fact about the Rust kernel. -/
 def emptyAdmission : Admission :=
   { nominals := alloc.vec.Vec.new noble_kernel.contracts.NominalDecl
+    genericVariants := alloc.vec.Vec.new noble_kernel.contracts.GenericVariantDecl
+    liveResourceNominals := alloc.vec.Vec.new noble_kernel.types.NominalTypeId
+    liveSlots := false
+    liveTestHosts := false
     callerModule := none
     declaredModules := false
+    textCursor := false
+    calculator := false
     definitionOwners := alloc.vec.Vec.new (Option Std.U64)
     boundAdapters := alloc.vec.Vec.new noble_kernel.contracts.BoundAdapter }
 
@@ -362,8 +395,14 @@ def embedEnv (env : Env) : noble_kernel.contracts.Env :=
     schemas := vecOf embedSchemaDecl env.schemas
     resource_kinds := vecOf embedU32 env.resourceKinds
     nominals := admission.nominals
+    generic_variants := admission.genericVariants
+    live_resource_nominals := admission.liveResourceNominals
+    live_slots := admission.liveSlots
+    live_test_hosts := admission.liveTestHosts
     caller_module := admission.callerModule
     declared_modules := admission.declaredModules
+    text_cursor := admission.textCursor
+    calculator := admission.calculator
     definition_owners := admission.definitionOwners
     bound_adapters := admission.boundAdapters
     effects := vecOf embedU32 env.effects }
@@ -409,10 +448,28 @@ theorem sizeOf_vec2_lt_programType (i o : alloc.vec.Vec noble_kernel.types.Ty)
   simp only [hv, hs, hN] at h3 ⊢
   omega
 
+/-- The argument list of a `GenericNominalType` node is smaller than the node
+    itself: the arguments sit behind the `Array`/`ListN` field chain. -/
+theorem sizeOf_args_lt_genericNominalType (id : noble_kernel.types.NominalTypeId)
+    (args : Aeneas.Std.Array noble_kernel.types.Ty 2#usize)
+    (shape : noble_kernel.types.NominalShape) :
+    sizeOf args.list < sizeOf (noble_kernel.types.Ty.GenericNominalType id args shape) := by
+  have h3 : sizeOf (noble_kernel.types.Ty.GenericNominalType id args shape)
+      = 1 + sizeOf id + sizeOf args + sizeOf shape := by
+    rw [noble_kernel.types.Ty.GenericNominalType.sizeOf_spec]
+  obtain ⟨list⟩ := args
+  have ha := Aeneas.Std.Array.mk.sizeOf_spec (α := noble_kernel.types.Ty) (n := 2#usize) list
+  simp only [ha] at h3 ⊢
+  omega
+
 /-! A size measure for extracted types: one point per constructor node. Its
-    `ProgramType` arm recurses through the `Vec`/`Slice`/`ListN` field chain,
-    discharged by `sizeOf_programType_lt`. The body never touches `sizeOf`, so
-    the size instances of the extracted module are not needed at run time. -/
+    `ProgramType` and `LiveRefType` arms recurse through the `Vec`/`Slice`/`ListN`
+    field chain and its `GenericNominalType` arm through the `Array`/`ListN` one,
+    discharged by the `sizeOf_*_lt_*` lemmas above. The two `ProgramType` lemmas
+    also close the `LiveRefType` goals: both constructors carry the same three
+    fields, so their `sizeOf` values unfold to the same sum. The body never
+    touches `sizeOf`, so the size instances of the extracted module are not
+    needed at run time. -/
 
 mutual
 
@@ -428,14 +485,19 @@ mutual
     | .ProgramType i o _ =>
       1 + genTyListSizeN i.slice.leng i.slice.list
         + genTyListSizeN o.slice.leng o.slice.list
+    | .LiveRefType i o _ =>
+      1 + genTyListSizeN i.slice.leng i.slice.list
+        + genTyListSizeN o.slice.leng o.slice.list
     | .ResourceType _ => 1
     | .ContractType | .EvidenceType | .CertifiedType | .NominalType _ _ => 1
+    | .GenericNominalType _ args _ => 1 + genTyListSizeN _ args.list
     termination_by t => sizeOf t
     decreasing_by
       all_goals
         first
           | exact sizeOf_vec1_lt_programType _ _ _
           | exact sizeOf_vec2_lt_programType _ _ _
+          | exact sizeOf_args_lt_genericNominalType _ _ _
           | (rw [noble_kernel.types.Ty.PairType.sizeOf_spec]; omega)
           | (rw [noble_kernel.types.Ty.SumType.sizeOf_spec]; omega)
           | (rw [noble_kernel.types.Ty.ListType.sizeOf_spec]; omega)
@@ -477,6 +539,15 @@ mutual
       .program (projectTyListFuel fuel i.val) (projectTyListFuel fuel o.val)
         (projectEffSet e)
     | _ + 1, .ResourceType k => .resource (projectU32 k)
+    | fuel + 1, .LiveRefType i o e =>
+      .liveRef (projectTyListFuel fuel i.val) (projectTyListFuel fuel o.val)
+        (projectEffSet e)
+    -- The descriptor is dropped as for `NominalType`; the array always holds
+    -- exactly two arguments, so the `getD` defaults are never read.
+    | fuel + 1, .GenericNominalType id args _ =>
+      .genericNominal (projectU64 id.module) (projectU32 id.ordinal)
+        (projectTyFuel fuel (args.val.getD 0 .UnitType))
+        (projectTyFuel fuel (args.val.getD 1 .UnitType))
     termination_by fuel
 
   /-- Fuel-driven stack projection over the extracted type list. -/
@@ -508,7 +579,10 @@ def projectDerivation (d : noble_kernel.untrusted.Derivation) : Derivation :=
   { node := projectU32 d.node
     interface := projectInterface d.interface }
 
-/-- Extracted checked result → reference checked result. -/
+/-- Extracted checked result → reference checked result. The kernel's
+    `live_sites` (the live-slot dispatch sites an accepted program records) have
+    no reference counterpart: the reference model has no live slots, so the
+    projection carries the interface and the derivations only. -/
 def project_checked (c : noble_kernel.untrusted.Checked) : Checked :=
   { interface := projectInterface c.interface
     derivations := c.derivations.val.map projectDerivation }
@@ -530,6 +604,8 @@ def projectConstraint : noble_kernel.untrusted.Constraint → Constraint
   | .InvalidType => .invalidType
   | .InvalidContract => .invalidContract
   | .PrivateDefinition d => .privateDefinition (projectU32 d)
+  | .BorrowProvenance => .borrowProvenance
+  | .SlotSite => .slotSite
 
 /-- Extracted diagnostic → reference diagnostic. -/
 def projectDiagnostic (d : noble_kernel.untrusted.Diagnostic) : Diagnostic :=

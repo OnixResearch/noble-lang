@@ -358,7 +358,8 @@ theorem eligibility_iff {env : Env} {index : Nat} {inst : Inst} :
 
 /-- The constraint a rejected extracted instantiation reports, projected. -/
 def extractedConstraint
-    (r : Result (core.result.Result (untrusted.Interface × words.Inst) acceptance.Fail)) :
+    (r : Result (core.result.Result (untrusted.Interface × words.Inst × Std.U32)
+      acceptance.Fail)) :
     Option Constraint :=
   match r.match with
   | .ok (core.result.Result.Err (acceptance.Fail.Invalid d)) =>
@@ -374,17 +375,19 @@ extracted path refuses the witness as an invalid type before it ever reaches
 the eligibility guard these rows exist to compare. -/
 def resourceEnv : Env := { bootstrapEnv with resourceKinds := [fixtureResource] }
 
-/-- Word position `n`'s extracted instantiation context over `resourceEnv`. -/
+/-- Word position `n`'s extracted instantiation context over `resourceEnv`:
+ordinary acceptance, so no signed owner. -/
 def resourceCtx (n : Nat) : acceptance.parts.Ctx :=
-  ⟨embedRequest (wordRequestOf n), embedEnv resourceEnv⟩
+  ⟨embedRequest (wordRequestOf n), embedEnv resourceEnv, none⟩
 
 /-- `dup`: the extracted path rejects a resource witness with the eligibility
-constraint exactly where the reference guard declines `DataOk`. -/
+constraint exactly where the reference guard declines `DataOk`. The witness
+resolves with the fixture request's declared work as its fuel (`wordFuel`). -/
 theorem eligibility_dup :
     dataOkAt resourceEnv 0 resourceWit = false
       ∧ extractedConstraint (acceptance.parts.instantiate.apply (embedScheme dupScheme)
           (embedInst resourceWit) (some (embedU32 1)) ⟨none, none⟩
-          (resourceCtx 0))
+          (resourceCtx 0) (wordFuel 0))
         = some (.eligibility (.resource fixtureResource)) := by
   constructor <;> native_decide
 
@@ -393,7 +396,7 @@ theorem eligibility_drop :
     dataOkAt resourceEnv 1 resourceWit = false
       ∧ extractedConstraint (acceptance.parts.instantiate.apply (embedScheme dropScheme)
           (embedInst resourceWit) (some (embedU32 1)) ⟨none, none⟩
-          (resourceCtx 1))
+          (resourceCtx 1) (wordFuel 1))
         = some (.eligibility (.resource fixtureResource)) := by
   constructor <;> native_decide
 
@@ -406,7 +409,7 @@ theorem eligibility_quote :
     dataOkAt resourceEnv 8 quoteResourceWit = false
       ∧ extractedConstraint (acceptance.parts.instantiate.apply (embedScheme quoteScheme)
           (embedInst quoteResourceWit) (some (embedU32 1)) ⟨none, none⟩
-          (resourceCtx 8))
+          (resourceCtx 8) (wordFuel 8))
         = some (.eligibility (.resource fixtureResource)) := by
   constructor <;> native_decide
 
