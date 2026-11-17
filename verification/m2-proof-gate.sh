@@ -3,7 +3,7 @@
 #
 # Positive baseline: every check below must pass on the repository's proofs/m2
 # tree. Refusal controls: verification/m2-proof-gate-refusals.sh runs this gate
-# against four mutated scratch copies; each mutation must fail hard.
+# against six mutated scratch copies; each mutation must fail hard.
 #
 #   PRF-MISSING  a required theorem deleted            -> REQUIRED-THEOREMS
 #   PRF-HOLE     a `sorry` in any proof source         -> NO-SORRY (and
@@ -16,6 +16,24 @@
 #   unexplained  an external model left as a template  -> EXTERNAL-MODELS
 #   external     axiom, or its implementation deleted  (axiom scan) or
 #                so the generated module breaks        BUILD
+#   foreign      a `_native.decide` axiom outside the   -> REQUIRED-THEOREMS
+#   native       generated literal-size shape: another
+#                type in a kernel module, or the exact
+#                shape owned by another module
+#
+# Generated literal-size evaluation (#97). The pinned Aeneas library's
+# `toStr (s) (h : s.toByteArray.size ≤ U32.max := by decide +native)` leaves
+# one `<decl>._native.decide.ax_<n>` axiom per string literal of the
+# generated code. Since the whole-crate re-extraction the generated
+# `noble_kernel.acceptance.check` reaches three of them (the
+# TEST_CODE_EXPORT/TEST_SEND adapter identities and one literal in
+# `acceptance.parts.join`), so it and the refinement family are no longer
+# trifecta-only. Checker B admits exactly M4Audit's reviewed
+# `nativeStringBound` shape (proofs/m4/M4Audit.lean), owned by
+# NobleKernel.Funs or NobleKernel.FunsExternal, and logs those axioms
+# separately as "generated literal-size evaluation (not strict)"; any other
+# `_native.decide` axiom still rejects. verification/m3-proof-gate.sh carries
+# a byte-identical matcher.
 #
 # Usage (from any directory; the pinned Lean must be first on PATH):
 #
@@ -101,7 +119,10 @@ pass "REFINEMENT-SUBJECT (Refinement.lean and Embed.lean import NobleKernel)"
 # use only Lean's trifecta {propext, Classical.choice, Quot.sound}; the
 # evaluation-closed theorems may additionally use the per-declaration
 # native_decide axioms emitted by Lean 4.31 (name suffix
-# "._native.native_decide.ax_1_1"). sorryAx and anything else reject.
+# "._native.native_decide.ax_1_1"). In checker B both classes may also
+# depend on the generated literal-size axioms described in the header, which
+# are reported separately and never counted as strict. sorryAx and anything
+# else reject.
 cat > "$GATE_A" <<'LEAN_A'
 import Lean.Elab.Command
 import NobleM2
@@ -141,6 +162,44 @@ import Lean.Elab.Command
 import NobleM2.Refinement
 
 open Lean in
+/-- The pinned Aeneas `toStr` proves each string literal's UTF-8 size bound
+    with `decide +native`, which leaves one `<decl>._native.decide.ax_<n>`
+    axiom per literal in the generated module. This is M4Audit's reviewed
+    `nativeStringBound` shape (proofs/m4/M4Audit.lean), restricted to the
+    generated kernel modules: exactly that axiom shape is admitted, logged as
+    generated literal-size evaluation (not strict); a `_native.decide` axiom
+    of any other type or owner still rejects. -/
+def generatedLiteralSizeAxiom (env : Environment) (decl : Name) : Bool := Id.run do
+  let owner := match env.getModuleIdxFor? decl with
+    | some index => env.header.moduleNames[index.toNat]?.getD .anonymous
+    | none => .anonymous
+  unless [`NobleKernel.Funs, `NobleKernel.FunsExternal].contains owner do return false
+  match decl with
+  | .str (.str (.str _ "_native") "decide") suffix =>
+    unless suffix.startsWith "ax_" && suffix.length > 3 &&
+        (suffix.toList.drop 3).all Char.isDigit do return false
+  | _ => return false
+  let some (.axiomInfo info) := env.find? decl | return false
+  if info.isUnsafe || !info.levelParams.isEmpty then return false
+  let type := info.type.consumeMData
+  unless type.isAppOfArity ``Eq 3 do return false
+  let equation := type.getAppArgs
+  unless equation[0]!.isConstOf ``Bool && equation[2]!.isConstOf ``Bool.true do return false
+  let decision := equation[1]!.consumeMData
+  unless decision.isAppOfArity ``decide 2 do return false
+  let proposition := decision.getAppArgs[0]!.consumeMData
+  unless proposition.isAppOfArity ``LE.le 4 do return false
+  let bound := proposition.getAppArgs
+  unless bound[0]!.isConstOf ``Nat && bound[3]!.isConstOf ``Aeneas.Std.U32.max do return false
+  let size := bound[2]!.consumeMData
+  unless size.isAppOfArity ``ByteArray.size 1 do return false
+  let bytes := size.appArg!.consumeMData
+  unless bytes.isAppOfArity ``String.toByteArray 1 do return false
+  match bytes.appArg!.consumeMData with
+  | .lit (.strVal _) => return true
+  | _ => return false
+
+open Lean in
 run_cmd do
   let gen := ``noble_kernel.acceptance.check
   let strict : List Name := [``propext, ``Classical.choice, ``Quot.sound]
@@ -172,7 +231,11 @@ run_cmd do
     | some ci =>
       let axs ← Lean.collectAxioms n
       logInfo m!"m2-gate: axioms {n} {axs}"
-      let bad := axs.filter (fun a => !(okAxiom isStrict a))
+      let env ← getEnv
+      let literal := axs.filter (generatedLiteralSizeAxiom env)
+      if !literal.isEmpty then
+        logInfo m!"m2-gate: generated literal-size evaluation (not strict) {n} {literal}"
+      let bad := axs.filter (fun a => !(okAxiom isStrict a) && !(generatedLiteralSizeAxiom env a))
       if !bad.isEmpty then
         logError m!"m2-gate: forbidden axioms on {n}: {bad}"
       if n != gen then
