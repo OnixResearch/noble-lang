@@ -8,6 +8,17 @@
 -- extracted type or function definitions of this crate (the extraction of the
 -- reachable code never mentions it); we still give it a faithful model: a
 -- value which is either uninitialized or holds a `T`.
+--
+-- `TryReserveError` records element-capacity overflow in the existing
+-- layout-free Aeneas vector model. Allocator exhaustion and byte-layout
+-- limits are outside that model; no physical allocation guarantee follows.
+--
+-- The three iterator states (`core::array::iter::IntoIter`,
+-- `core::iter::sources::repeat_n::RepeatN` and
+-- `core::iter::sources::repeat_with::RepeatWith`) keep exactly the state
+-- their Rust `next` reads and writes, in the value-only representation used
+-- for the rest of the subject (no `MaybeUninit` storage, no drop flags). The
+-- functions over them are in `FunsExternal.lean`.
 module
 public import Aeneas
 @[expose] public section
@@ -28,11 +39,70 @@ set_option maxRecDepth 2048
 
 namespace noble_kernel
 
+/-- [core::array::iter::IntoIter]:
+    Source: '/rustc/library/core/src/array/iter.rs', lines 20:0-20:38
+    Name pattern: [core::array::iter::IntoIter]
+    Visibility: public
+
+    Rust keeps the moved-in array as `[MaybeUninit<T>; N]` together with an
+    `alive: IndexRange` (`alive.end ≤ N`); the elements still owned by the
+    iterator are exactly `data[alive]`, and `next` reads `data[alive.start]`
+    and advances `alive.start`. The model keeps that alive window, front
+    first, and the bound inherited from `alive.end ≤ N`. Slots outside the
+    window are never read again, so they carry no observable state. -/
+@[rust_type "core::array::iter::IntoIter"]
+structure core.array.iter.IntoIter (T : Type) (N : Usize) where
+  alive : List T
+  alive_le : alive.length ≤ N.val
+
+/-- The live part of `core::iter::sources::repeat_n::RepeatN` (Rust's private
+    `RepeatNInner`): the remaining count, a `NonZero<usize>`, and the stored
+    element. -/
+structure core.iter.sources.repeat_n.RepeatNInner (A : Type) where
+  count : Usize
+  element : A
+  count_ne_zero : count.val ≠ 0
+
+/-- [core::iter::sources::repeat_n::RepeatN]:
+    Source: '/rustc/library/core/src/iter/sources/repeat_n.rs', lines 82:0-82:21
+    Name pattern: [core::iter::sources::repeat_n::RepeatN]
+    Visibility: public
+
+    Rust: `RepeatN { inner: Option<RepeatNInner<A>> }`; `inner` is `None`
+    once the count reached zero (or was zero to begin with) and the element
+    has been moved out or dropped. -/
+@[rust_type "core::iter::sources::repeat_n::RepeatN"]
+structure core.iter.sources.repeat_n.RepeatN (A : Type) where
+  inner : Option (core.iter.sources.repeat_n.RepeatNInner A)
+
+/-- [core::iter::sources::repeat_with::RepeatWith]:
+    Source: '/rustc/library/core/src/iter/sources/repeat_with.rs', lines 77:0-77:24
+    Name pattern: [core::iter::sources::repeat_with::RepeatWith]
+    Visibility: public
+
+    Rust: `RepeatWith { repeater: F }`, the closure state. -/
+@[rust_type "core::iter::sources::repeat_with::RepeatWith"]
+structure core.iter.sources.repeat_with.RepeatWith (F : Type) where
+  repeater : F
+
 /-- [core::mem::maybe_uninit::MaybeUninit]:
     Source: '/rustc/library/core/src/mem/maybe_uninit.rs', lines 355:0-355:24
     Name pattern: [core::mem::maybe_uninit::MaybeUninit]
     Visibility: public -/
 @[rust_type "core::mem::maybe_uninit::MaybeUninit"]
 def core.mem.maybe_uninit.MaybeUninit (T : Type) : Type := Option T
+
+/-- The dataspace decoder discards UTF-8 diagnostic position and length
+    immediately, retaining only success versus failure. This value-only
+    external model therefore has one observable error constructor. -/
+@[rust_type "core::str::error::Utf8Error"]
+inductive core.str.error.Utf8Error where
+  | Invalid
+
+/-- The observable reservation rejection represented by the value-only
+    vector abstraction. Rust's allocator/layout error payload is not modeled. -/
+@[rust_type "alloc::collections::TryReserveError"]
+inductive alloc.collections.TryReserveError where
+  | CapacityOverflow
 
 end noble_kernel

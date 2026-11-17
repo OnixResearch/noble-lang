@@ -370,3 +370,122 @@ the gate's policy check makes any other axiom a hard failure).
   two controls compose. Aggregate `m1-controls`-style matrix enumeration
   stays reserved (task 5.2 of M1's plan; the M2 runner covers the four
   named task-4.5 cells).
+
+## 8. Addendum: the whole-crate re-extraction (#97, 2026-11-16)
+
+Sections 1–7 record the 2026-09-18 subject and gate. Since #97 the
+checked-in `proofs/m2/NobleKernel/{Funs,Types}.lean` are the whole-crate
+extraction of `crates/noble-kernel` by Charon `9e95cf31` (with
+`--inline-anon-consts`) and Aeneas `1238879f`, byte-identical to
+`proofs/m3/NobleKernel`. Where this addendum and §1–§7 differ, the
+addendum describes the current tree.
+
+**External models (supersedes the §6 list).** `NobleKernel/FunsExternal.lean`
+defines the template's 71 externals — 66 `rust_fun` functions plus the five
+`#[charon::opaque]` helpers — and three more functions the template no
+longer lists, and `TypesExternal.lean` its six external types; both files
+are shared verbatim with `proofs/m3`. Their headers and per-definition
+comments are the review record. Two decisions matter for readers of the
+theorems:
+
+- `core::mem::size_of::<T>` returns `fail .undef`. Its value is rustc's
+  layout size for `T`, which the Rust source does not determine; the
+  generated `Counter::vector::<T>`/`Counter::node::<T>` call it with `T` a
+  bound type variable, so no computable per-type model exists, a constant
+  would assert one false size, and a classical choice would stop the
+  computable generated module compiling. Only
+  `Env::calculator_clone_budget` reaches it, and no other kernel function
+  calls the clone-budget walk (`acceptance::check` does not). No `ok`
+  clone-budget result is derivable in the model, and a partial-correctness
+  statement about the clone budget would hold vacuously.
+- `Option::map`, `Result::unwrap_or` and
+  `Formatter::debug_c_like_enum_write_str` are not in the template: the
+  pinned library models the first two and the regenerated kernel no longer
+  calls the third. They are kept because the MC1 and M3-Wasm `StdModels`,
+  which compile this module from `proofs/m3`, delegate to them by name.
+  Inside `noble_kernel` the generated calls to `Option::map` and
+  `Result::unwrap_or` therefore resolve to these copies, which have the
+  library functions' semantics.
+
+**Embedding (`NobleM2/Embed.lean`).** The extracted environment's twelve
+fields that fragment v0 does not model are fixed at the Rust bootstrap
+environment's values (`contracts::environment`): resource kinds
+`[fixtureResource]`, no nominals, generic variants, live-resource nominals,
+owners or bound adapters, every optional profile off, no caller module and
+no declared-module admission. `embedEnv`'s docstring states this admission
+surface as a premise of every refinement theorem. Kernel-only types
+(contract, evidence, certified, live-reference, nominal, generic-nominal)
+project to a resource type of kind `2^32 + tag`, outside the `U32` range,
+so they never coincide with a projected in-fragment type; the five
+kernel-only constraints project to matching reference constructors that
+the fragment v0 checker never emits (`NobleM2/Candidate.lean`); the
+kernel's live-site list is dropped because the embedded environment
+disables live slots. No theorem statement changed.
+
+**Axioms (supersedes the "Extracted checker" paragraph of §3).** The
+pinned Aeneas library's
+`toStr (s) (h : s.toByteArray.size ≤ U32.max := by decide +native)`
+leaves one `<decl>._native.decide.ax_<n>` axiom per string literal of the
+generated code. `noble_kernel.acceptance.check` reaches three of them:
+
+```
+_private.NobleKernel.Funs.0.noble_kernel.contracts.TEST_CODE_EXPORT_ADAPTER_IDENTITY._native.decide.ax_1
+_private.NobleKernel.Funs.0.noble_kernel.contracts.TEST_SEND_ADAPTER_IDENTITY._native.decide.ax_1
+_private.NobleKernel.Funs.0.noble_kernel.acceptance.parts.join._native.decide.ax_5
+```
+
+each of type `decide ((String.toByteArray "<literal>").size ≤ U32.max) =
+true`. The extracted checker, `accepted_via_refinement` and every
+`refinement_*` theorem are therefore **no longer trifecta-only**: each also
+trusts the compiled evaluation of those literal sizes. The gate's checker B
+admits exactly M4Audit's reviewed `nativeStringBound` shape
+(`proofs/m4/M4Audit.lean`) owned by `NobleKernel.Funs` or
+`NobleKernel.FunsExternal`, and reports those axioms on their own line as
+`generated literal-size evaluation (not strict)`; any other axiom keeps the
+§1 policy. `verification/m3-proof-gate.sh` carries a byte-identical
+matcher. The reference-model theorems of checker A are unchanged:
+trifecta only, plus their own `native_decide` axiom for the three
+evaluation-closed ones.
+
+**Refusal controls.** `verification/m2-proof-gate-refusals.sh` gains two
+cells, each required to be refused at `REQUIRED-THEOREMS` *for its probe
+axiom*:
+
+- `foreign-native-type`: a `decide +native` on a `Nat` bound inside the
+  external model `Shared0Slice.Insts.CoreCmpPartialEqArray.eq`, which
+  `acceptance.check` reaches — owner and name have the generated shape, the
+  type does not;
+- `foreign-owner-literal`: a `toStr` literal inside `embedEnv` — the exact
+  literal-size shape, owned by `NobleM2.Embed`.
+
+**Commands and results (2026-11-16, pinned Lean 4.35.0 first on PATH).**
+`lake build NobleM2 NobleM2.Refinement NobleKernel` in `proofs/m2`: build
+completed successfully; all twelve refinement theorems close by
+`native_decide` on the regenerated checker, and the fixture harness of
+`NobleM2/Fixtures.lean` reports 12/12. The only build warnings are the
+pre-existing `Shapes.lean` unused `termination_by` and the unused
+`checked` binder of `accepted_via_refinement`, both already in the Lean
+4.31 build logs.
+
+```
+$ verification/m2-proof-gate-refusals.sh
+== positive baseline ==
+[m2-gate] PASS (all checks)
+baseline: gate exit 0 (all checks pass)
+refused: gate exit 1 at NO-SORRY                (proof-hole)
+refused: gate exit 1 at REFINEMENT-SUBJECT      (substituted-subject)
+refused: gate exit 1 at BUILD                   (unexplained-external)
+refused: gate exit 1 at REQUIRED-THEOREMS       (unexecuted-coverage)
+refused for the probe axiom: *CoreCmpPartialEqArray.eq._native.decide.ax_*
+refused: gate exit 1 at REQUIRED-THEOREMS       (foreign-native-type)
+refused for the probe axiom: *embedEnv._native.decide.ax_*
+refused: gate exit 1 at REQUIRED-THEOREMS       (foreign-owner-literal)
+== refusal matrix complete: baseline passes, all six mutations refused ==
+```
+
+(Trimmed to the result lines; the per-cell case labels in parentheses are
+added here.) In the two new cells the gate names exactly the probe
+axiom as forbidden —
+`_private.NobleKernel.FunsExternal.0.noble_kernel.Shared0Slice.Insts.CoreCmpPartialEqArray.eq._native.decide.ax_1`
+and `NobleM2.embedEnv._native.decide.ax_1` — while the three generated
+literal-size axioms stay on the separate "not strict" line.
