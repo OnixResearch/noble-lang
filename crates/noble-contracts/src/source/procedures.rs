@@ -1635,30 +1635,31 @@ impl ProcedureLibrary {
         index: usize,
         successors: &mut [Option<usize>],
     ) -> Result<(), Refusal> {
-        if let Some(replaced_id) = records[index].supersedes {
-            let old_index = position_first(records, |old| {
-                old.procedure_id == replaced_id && old.status == Status::Superseded
-            })
-            .ok_or_else(|| {
-                Refusal::at(
-                    RefusalKind::Invalid,
-                    Diagnostic {
-                        field: "supersedes",
-                        message: "replacement target is not retained as superseded",
-                    },
-                    index as u32,
-                )
-            })?;
-            if successors[old_index].replace(index).is_some() {
-                return Err(Refusal::at(
-                    RefusalKind::Invalid,
-                    Diagnostic {
-                        field: "supersedes",
-                        message: "a replaced subject must have exactly one retained successor",
-                    },
-                    index as u32,
-                ));
-            }
+        let Some(replaced_id) = records[index].supersedes else {
+            return Ok(());
+        };
+        let old_index = position_first(records, |old| {
+            old.procedure_id == replaced_id && old.status == Status::Superseded
+        })
+        .ok_or_else(|| {
+            Refusal::at(
+                RefusalKind::Invalid,
+                Diagnostic {
+                    field: "supersedes",
+                    message: "replacement target is not retained as superseded",
+                },
+                index as u32,
+            )
+        })?;
+        if successors[old_index].replace(index).is_some() {
+            return Err(Refusal::at(
+                RefusalKind::Invalid,
+                Diagnostic {
+                    field: "supersedes",
+                    message: "a replaced subject must have exactly one retained successor",
+                },
+                index as u32,
+            ));
         }
         Ok(())
     }
