@@ -45,11 +45,8 @@ pub fn export_lean(prepared: &crate::Prepared) -> alloc::string::String {
     tigerstyle::no_recursion,
     reason = "Owner: noble-maintainers. Division by ten strictly decreases multi-digit u64 values, bounding decimal serialization to 20 frames without a temporary buffer."
 )]
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; decimal serialization grows the caller's String through non-const push."
-)]
-fn number(out: &mut alloc::string::String, value: u64) {
+/// Append the decimal digits of `value`: exactly its `{value}` rendering.
+pub(crate) fn number(out: &mut alloc::string::String, value: u64) {
     // Division strictly decreases non-single-digit inputs: at most 20 frames.
     if value >= 10 {
         number(out, value / 10);
@@ -73,17 +70,23 @@ fn number(out: &mut alloc::string::String, value: u64) {
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-maintainers. Appending signed integer syntax requires the caller's growable String, not a fixed str slice."
 )]
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; signed serialization grows the caller's String through non-const push."
-)]
 fn signed(out: &mut alloc::string::String, value: i64) {
     out.push('(');
+    integer(out, value);
+    out.push(')');
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-maintainers. Appending integer syntax requires the caller's growable String, not a fixed str slice."
+)]
+/// Append `value` in decimal with a leading `-` when it is negative: exactly
+/// its `{value}` rendering, without the formatting machinery.
+pub(crate) fn integer(out: &mut alloc::string::String, value: i64) {
     if value < 0 {
         out.push('-');
     }
     number(out, value.unsigned_abs());
-    out.push(')');
 }
 
 #[expect(
@@ -98,4 +101,48 @@ fn rejected(out: &mut alloc::string::String, message: &str) {
     out.push_str(message);
     out.push('"');
     out.push(')');
+}
+
+#[cfg(test)]
+mod tests {
+    /// The digit renderers produce exactly the `format!` decimal text.
+    #[test]
+    fn decimals_match_the_formatted_text() {
+        for value in [
+            0,
+            1,
+            9,
+            10,
+            99,
+            100,
+            4_096,
+            u64::from(u32::MAX),
+            18_446_744_073_709_551_614,
+            u64::MAX,
+        ] {
+            let mut out = alloc::string::String::from("x");
+            super::number(&mut out, value);
+            assert_eq!(out, alloc::format!("x{value}"));
+        }
+        for value in [
+            i64::MIN,
+            -9_223_372_036_854_775_807,
+            -100,
+            -10,
+            -9,
+            -1,
+            0,
+            1,
+            9,
+            10,
+            i64::MAX,
+        ] {
+            let mut out = alloc::string::String::from("x");
+            super::integer(&mut out, value);
+            assert_eq!(out, alloc::format!("x{value}"));
+            let mut signed = alloc::string::String::new();
+            super::signed(&mut signed, value);
+            assert_eq!(signed, alloc::format!("({value})"));
+        }
+    }
 }

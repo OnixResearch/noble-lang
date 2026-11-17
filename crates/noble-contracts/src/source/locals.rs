@@ -793,16 +793,16 @@ impl Lower<'_> {
         // Swap the copy above each older hidden local, `which + 1` up to the
         // oldest. Every iteration makes the same single call, so no branch
         // in the loop decides whether `self` is borrowed.
-        let Some(mut hidden) = which.checked_add(1) else {
+        let Some(mut older) = which.checked_add(1) else {
             return Err(crate::internal(span));
         };
         let mut failure = None;
-        while hidden < locals.len() {
+        while older < locals.len() {
             if let Err(problem) = self.operation(
                 code,
                 2,
                 locals,
-                hidden,
+                older,
                 depth,
                 span,
                 Generation::ProjectionSwap,
@@ -812,7 +812,7 @@ impl Lower<'_> {
                 failure = Some(problem);
                 break;
             }
-            hidden += 1;
+            older += 1;
         }
         match failure {
             Some(problem) => Err(problem),

@@ -50136,7 +50136,7 @@ def source.Compiler.prepare_program_free
   else ok (core.result.Result.Err Diagnostic.Invalid)
 
 /-- [noble_wasm::source::origin::build::{impl core::ops::function::FnMut<(usize,), core::option::Option<alloc::rc::Rc<noble_wasm::source::OriginProgramValue>>> for noble_wasm::source::origin::build::{closure}}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1268:29-1268:37 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1271:29-1271:37 -/
 def
   source.origin.build.closure.Insts.CoreOpsFunctionFnMutTupleUsizeOptionRcOriginProgramValue.call_mut
   (c : source.origin.build.closure) (tupled_args : Std.Usize) :
@@ -50146,7 +50146,7 @@ def
   ok (none, c)
 
 /-- [noble_wasm::source::origin::build::{impl core::ops::function::FnOnce<(usize,), core::option::Option<alloc::rc::Rc<noble_wasm::source::OriginProgramValue>>> for noble_wasm::source::origin::build::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1268:29-1268:37 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1271:29-1271:37 -/
 def
   source.origin.build.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionRcOriginProgramValue.call_once
   (c : source.origin.build.closure) (i : Std.Usize) :
@@ -50158,7 +50158,7 @@ def
   ok o
 
 /-- Trait implementation: [noble_wasm::source::origin::build::{impl core::ops::function::FnOnce<(usize,), core::option::Option<alloc::rc::Rc<noble_wasm::source::OriginProgramValue>>> for noble_wasm::source::origin::build::{closure}}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1268:29-1268:37 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1271:29-1271:37 -/
 @[reducible]
 def
   source.origin.build.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeOptionRcOriginProgramValue
@@ -50169,7 +50169,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::origin::build::{impl core::ops::function::FnMut<(usize,), core::option::Option<alloc::rc::Rc<noble_wasm::source::OriginProgramValue>>> for noble_wasm::source::origin::build::{closure}}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1268:29-1268:37 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1271:29-1271:37 -/
 @[reducible]
 def
   source.origin.build.closure.Insts.CoreOpsFunctionFnMutTupleUsizeOptionRcOriginProgramValue
@@ -50192,7 +50192,7 @@ def source.origin.MAX_ORIGIN_DEPTH : Std.Usize := 32#usize
 def source.origin.MAX_ORIGIN_OPERATIONS : Std.Usize := 128#usize
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::fixed_recipe]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1151:4-1167:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1154:4-1170:5 -/
 def source.origin.bounded_graph_cells.fixed_recipe
   (recipe : alloc.rc.Rc source.OriginFixedExpression) (depth : Std.Usize)
   (nodes : Std.Usize) :
@@ -50232,7 +50232,7 @@ def source.origin.bounded_graph_cells.fixed_recipe
 partial_fixpoint
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::scalar_recipe]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1173:4-1178:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1176:4-1181:5 -/
 def source.origin.bounded_graph_cells.scalar_recipe
   (scalar : source.OriginI64) (fixed_nodes : Std.Usize) :
   Result ((Option Unit) × Std.Usize)
@@ -50248,7 +50248,7 @@ def source.origin.bounded_graph_cells.scalar_recipe
 def source.origin.MAX_ORIGIN_PROGRAMS : Std.Usize := 32#usize
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::charge]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1014:4-1017:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1017:4-1020:5 -/
 def source.origin.bounded_graph_cells.charge
   (total : Std.Usize) (cells : Std.Usize) :
   Result ((Option Unit) × Std.Usize)
@@ -50267,7 +50267,7 @@ def source.origin.bounded_graph_cells.charge
     ok (o1, total)
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::static_enter]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1098:4-1115:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1101:4-1118:5 -/
 def source.origin.bounded_graph_cells.static_enter
   (index : Std.Usize) (programs : Slice source.OriginProgram)
   (seen : Slice Bool) (total : Std.Usize) :
@@ -50355,7 +50355,7 @@ def source.origin.bounded_graph_cells.static_enter
     ok (o1, seen, total)
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::static_step]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1123:4-1145:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1126:4-1148:5 -/
 def source.origin.bounded_graph_cells.static_step
   (programs : Slice source.OriginProgram) (seen : Slice Bool)
   (total : Std.Usize) (frames : source.origin.bounded_graph_cells.StaticFrames)
@@ -50442,7 +50442,7 @@ def source.origin.bounded_graph_cells.static_step
       ok (some true, seen, total, { frames := v })
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::static_body]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1073:8-1081:9 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1076:8-1084:9 -/
 @[rust_loop_body]
 def source.origin.bounded_graph_cells.static_body_loop.body
   (programs : Slice source.OriginProgram) (seen : Slice Bool)
@@ -50462,7 +50462,7 @@ def source.origin.bounded_graph_cells.static_body_loop.body
   else ok (done (seen, total, is_refused))
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::static_body]: loop 0:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1073:8-1081:9 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1076:8-1084:9 -/
 @[rust_loop]
 def source.origin.bounded_graph_cells.static_body_loop
   (programs : Slice source.OriginProgram) (seen : Slice Bool)
@@ -50477,7 +50477,7 @@ def source.origin.bounded_graph_cells.static_body_loop
     (seen, total, frames, is_walking, is_refused)
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::static_body]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1058:4-1086:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1061:4-1089:5 -/
 def source.origin.bounded_graph_cells.static_body
   (index : Std.Usize) (programs : Slice source.OriginProgram)
   (seen : Slice Bool) (total : Std.Usize) :
@@ -50508,7 +50508,7 @@ def source.origin.bounded_graph_cells.static_body
     ok (o1, seen1, total1)
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::is_same_cell::{impl core::ops::function::FnOnce<(&'_1 alloc::rc::Rc<noble_wasm::source::OriginProgramValue>,), bool> for noble_wasm::source::origin::bounded_graph_cells::is_same_cell::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1049:35-1049:67 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1052:35-1052:67 -/
 def
   source.origin.bounded_graph_cells.is_same_cell.closure.Insts.CoreOpsFunctionFnOnceTupleShared1RcOriginProgramValueBool.call_once
   (c : source.origin.bounded_graph_cells.is_same_cell.closure)
@@ -50518,7 +50518,7 @@ def
   alloc.rc.Rc.ptr_eq Global tupled_args c
 
 /-- Trait implementation: [noble_wasm::source::origin::bounded_graph_cells::is_same_cell::{impl core::ops::function::FnOnce<(&'_1 alloc::rc::Rc<noble_wasm::source::OriginProgramValue>,), bool> for noble_wasm::source::origin::bounded_graph_cells::is_same_cell::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1049:35-1049:67 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1052:35-1052:67 -/
 @[reducible]
 def
   source.origin.bounded_graph_cells.is_same_cell.closure.Insts.CoreOpsFunctionFnOnceTupleShared1RcOriginProgramValueBool
@@ -50530,7 +50530,7 @@ def
 }
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::is_same_cell]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1045:4-1050:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1048:4-1053:5 -/
 def source.origin.bounded_graph_cells.is_same_cell
   (prior : Option (alloc.rc.Rc source.OriginProgramValue))
   (value : alloc.rc.Rc source.OriginProgramValue) :
@@ -50542,7 +50542,7 @@ def source.origin.bounded_graph_cells.is_same_cell
     o value
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::counted_before]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1030:8-1033:9 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1033:8-1036:9 -/
 @[rust_loop_body]
 def source.origin.bounded_graph_cells.counted_before_loop.body
   (value : alloc.rc.Rc source.OriginProgramValue)
@@ -50564,7 +50564,7 @@ def source.origin.bounded_graph_cells.counted_before_loop.body
     else ok (done is_counted)
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::counted_before]: loop 0:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1030:8-1033:9 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1033:8-1036:9 -/
 @[rust_loop]
 def source.origin.bounded_graph_cells.counted_before_loop
   (value : alloc.rc.Rc source.OriginProgramValue)
@@ -50580,7 +50580,7 @@ def source.origin.bounded_graph_cells.counted_before_loop
     (index, is_counted)
 
 /-- [noble_wasm::source::origin::bounded_graph_cells::counted_before]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1023:4-1043:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1026:4-1046:5 -/
 def source.origin.bounded_graph_cells.counted_before
   (value : alloc.rc.Rc source.OriginProgramValue)
   (constructed : Array (Option (alloc.rc.Rc source.OriginProgramValue))
@@ -50613,7 +50613,7 @@ def source.origin.bounded_graph_cells.counted_before
       ok (some false, constructed1, constructed_count1)
 
 /-- [noble_wasm::source::origin::bounded_graph_cells]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1001:0-1231:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1004:0-1234:1 -/
 def source.origin.bounded_graph_cells
   (value : alloc.rc.Rc source.OriginProgramValue)
   (programs : Slice source.OriginProgram)
@@ -50728,7 +50728,7 @@ def source.origin.bounded_graph_cells
 partial_fixpoint
 
 /-- [noble_wasm::source::origin::i64_output]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 987:0-992:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 990:0-995:1 -/
 def source.origin.i64_output
   (value : source.origin.Value) :
   Result (Option (Option source.OriginOutput))
@@ -50738,7 +50738,7 @@ def source.origin.i64_output
   | source.origin.Value.Program _ _ => ok none
 
 /-- [noble_wasm::source::origin::program_output]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 971:0-984:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 974:0-987:1 -/
 def source.origin.program_output
   (value : source.origin.Value) (stack_position : Std.Usize) :
   Result (Option (Option source.OriginOutput))
@@ -50761,7 +50761,7 @@ def source.origin.program_output
       ok (some (some { stack_position, result := r }))
 
 /-- [noble_wasm::source::origin::returned_output]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 962:0-968:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 965:0-971:1 -/
 def source.origin.returned_output
   (ty : noble_kernel.types.Ty) (value : source.origin.Value)
   (stack_position : Std.Usize) :
@@ -50797,7 +50797,7 @@ def source.origin.program_value
   | source.origin.Value.Program result depth => ok (some (result, depth))
 
 /-- [noble_wasm::source::origin::quoted_operand]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 855:0-864:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 858:0-867:1 -/
 def source.origin.quoted_operand
   (captured : source.origin.Value) (is_program_operand : Bool) :
   Result (Option (source.OriginOperand × Std.Usize))
@@ -50827,7 +50827,7 @@ def source.origin.quoted_operand
     | source.origin.Value.Program _ _ => ok none
 
 /-- [noble_wasm::source::origin::fixed_arithmetic]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 840:0-852:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 843:0-855:1 -/
 def source.origin.fixed_arithmetic
   (action : source.OriginAction) (left : Std.I64) (right : Std.I64) :
   Result (Option (Std.I64 × source.OriginFixedArithmetic))
@@ -50854,7 +50854,7 @@ def source.origin.fixed_arithmetic
   | source.OriginAction.CallSelected _ => ok none
 
 /-- [noble_wasm::source::origin::apply_operation::{impl core::ops::function::FnOnce<(), alloc::rc::Rc<noble_wasm::source::OriginProgramValue>> for noble_wasm::source::origin::apply_operation::{closure}<'_0, '_1>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 789:36-794:17 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 792:36-797:17 -/
 def
   source.origin.apply_operation.closure.Insts.CoreOpsFunctionFnOnceTupleRcOriginProgramValue.call_once
   (c : source.origin.apply_operation.closure) (_ : Unit) :
@@ -50864,7 +50864,7 @@ def
   alloc.rc.Rc.new (source.OriginProgramValue.Static oo.node i)
 
 /-- Trait implementation: [noble_wasm::source::origin::apply_operation::{impl core::ops::function::FnOnce<(), alloc::rc::Rc<noble_wasm::source::OriginProgramValue>> for noble_wasm::source::origin::apply_operation::{closure}<'_0, '_1>}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 789:36-794:17 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 792:36-797:17 -/
 @[reducible]
 def
   source.origin.apply_operation.closure.Insts.CoreOpsFunctionFnOnceTupleRcOriginProgramValue
@@ -50902,7 +50902,7 @@ def source.origin.Value.Insts.CoreCloneClone.clone
     ok (source.origin.Value.Program r i)
 
 /-- [noble_wasm::source::origin::apply_operation]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 702:0-837:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 705:0-840:1 -/
 def source.origin.apply_operation
   (plan : source.plan.Layout) (operation : source.OriginOperation)
   (machine : source.origin.Machine) :
@@ -51463,7 +51463,7 @@ def source.origin.apply_operation
 def source.origin.MAX_REPLAY_STEPS : Std.Usize := 4096#usize
 
 /-- [noble_wasm::source::origin::execute_operation]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 671:0-689:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 674:0-692:1 -/
 def source.origin.execute_operation
   (plan : source.plan.Layout) (operation : source.OriginOperation)
   (machine : source.origin.Machine) :
@@ -51501,7 +51501,7 @@ def source.origin.execute_operation
     ok (o1, machine)
 
 /-- [noble_wasm::source::origin::close_frame]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 651:0-663:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 654:0-666:1 -/
 def source.origin.close_frame
   (machine : source.origin.Machine) :
   Result ((Option Bool) × source.origin.Machine)
@@ -51512,8 +51512,8 @@ def source.origin.close_frame
   | some frame =>
     match frame.hidden with
     | none => ok (some false, { machine with frames := v })
-    | some hidden =>
-      let v1 ← alloc.vec.Vec.push machine.stack hidden
+    | some restored =>
+      let v1 ← alloc.vec.Vec.push machine.stack restored
       let i := alloc.vec.Vec.len v1
       if i > source.origin.MAX_ORIGIN_OPERATIONS
       then ok (none, { machine with stack := v1, frames := v })
@@ -51552,7 +51552,7 @@ def source.origin.enter_program
         ok (some (), { machine with active := a, frames := v })
 
 /-- [noble_wasm::source::origin::replay_step]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 625:0-642:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 625:0-645:1 -/
 def source.origin.replay_step
   (programs : Slice source.OriginProgram) (plan : source.plan.Layout)
   (machine : source.origin.Machine) :
@@ -51583,10 +51583,11 @@ def source.origin.replay_step
     | core.ops.control_flow.ControlFlow.Continue val =>
       match val with
       | source.origin.Applied.Done => ok (some true, machine1)
-      | source.origin.Applied.Dip child hidden =>
+      | source.origin.Applied.Dip child set_aside =>
         let i3 ← f.level + 1#usize
         let (o1, machine2) ←
-          source.origin.enter_program programs child i3 (some hidden) machine1
+          source.origin.enter_program programs child i3 (some set_aside)
+            machine1
         let cf1 ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o1
         match cf1 with
         | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -51657,7 +51658,7 @@ def source.origin.execute
     ok (o1, machine1)
 
 /-- [noble_wasm::source::origin::replay_outputs]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 904:4-915:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 907:4-918:5 -/
 @[rust_loop_body]
 def source.origin.replay_outputs_loop0.body
   (inputs : Slice noble_kernel.types.Ty)
@@ -51681,7 +51682,7 @@ def source.origin.replay_outputs_loop0.body
   else ok (done (stack, false))
 
 /-- [noble_wasm::source::origin::replay_outputs]: loop 0:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 904:4-915:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 907:4-918:5 -/
 @[rust_loop]
 def source.origin.replay_outputs_loop0
   (inputs : Slice noble_kernel.types.Ty)
@@ -51694,7 +51695,7 @@ def source.origin.replay_outputs_loop0
     (stack, position)
 
 /-- [noble_wasm::source::origin::replay_outputs]: loop body 1:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 933:4-949:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 936:4-952:5 -/
 @[rust_loop_body]
 def source.origin.replay_outputs_loop1.body
   (outputs : Slice noble_kernel.types.Ty) (is_refused : Bool)
@@ -51725,7 +51726,7 @@ def source.origin.replay_outputs_loop1.body
   else ok (done (is_refused, result))
 
 /-- [noble_wasm::source::origin::replay_outputs]: loop 1:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 933:4-949:5 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 936:4-952:5 -/
 @[rust_loop]
 def source.origin.replay_outputs_loop1
   (outputs : Slice noble_kernel.types.Ty) (is_refused : Bool)
@@ -51739,7 +51740,7 @@ def source.origin.replay_outputs_loop1
     (result, stack_position)
 
 /-- [noble_wasm::source::origin::replay_outputs]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 893:0-959:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 896:0-962:1 -/
 def source.origin.replay_outputs
   (inputs : Slice noble_kernel.types.Ty)
   (outputs : Slice noble_kernel.types.Ty) (plan : source.plan.Layout)
@@ -51805,7 +51806,7 @@ def source.origin.replay_outputs
       (alloc.vec.Vec source.OriginOutput) residual
 
 /-- [noble_wasm::source::origin::returned_outputs::{impl core::ops::function::FnMut<(&'_0 noble_kernel::types::Ty,), bool> for noble_wasm::source::origin::returned_outputs::{closure}}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 880:43-880:62 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 883:43-883:62 -/
 def
   source.origin.returned_outputs.closure.Insts.CoreOpsFunctionFnMutTupleShared0TyBool.call_mut
   (c : source.origin.returned_outputs.closure)
@@ -51819,7 +51820,7 @@ def
   ok (b, c)
 
 /-- [noble_wasm::source::origin::returned_outputs::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::types::Ty,), bool> for noble_wasm::source::origin::returned_outputs::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 880:43-880:62 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 883:43-883:62 -/
 def
   source.origin.returned_outputs.closure.Insts.CoreOpsFunctionFnOnceTupleShared0TyBool.call_once
   (c : source.origin.returned_outputs.closure) (t : noble_kernel.types.Ty) :
@@ -51831,7 +51832,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_wasm::source::origin::returned_outputs::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::types::Ty,), bool> for noble_wasm::source::origin::returned_outputs::{closure}}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 880:43-880:62 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 883:43-883:62 -/
 @[reducible]
 def
   source.origin.returned_outputs.closure.Insts.CoreOpsFunctionFnOnceTupleShared0TyBool
@@ -51842,7 +51843,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::origin::returned_outputs::{impl core::ops::function::FnMut<(&'_0 noble_kernel::types::Ty,), bool> for noble_wasm::source::origin::returned_outputs::{closure}}]
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 880:43-880:62 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 883:43-883:62 -/
 @[reducible]
 def
   source.origin.returned_outputs.closure.Insts.CoreOpsFunctionFnMutTupleShared0TyBool
@@ -51855,7 +51856,7 @@ def
 }
 
 /-- [noble_wasm::source::origin::returned_outputs]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 870:0-886:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 873:0-889:1 -/
 def source.origin.returned_outputs
   (selected : noble_contracts.source.proof.CheckedSelectedTarget)
   (plan : source.plan.Layout) (programs : Slice source.OriginProgram)
@@ -52867,7 +52868,7 @@ def source.origin.programs
           (alloc.vec.Vec source.OriginProgram) residual
 
 /-- [noble_wasm::source::origin::build]:
-    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1237:0-1288:1 -/
+    Source: 'crates/noble-wasm/src/source/origin.rs', lines 1240:0-1291:1 -/
 def source.origin.build
   (selected : noble_contracts.source.proof.CheckedSelectedTarget)
   (plan : source.plan.Layout) :

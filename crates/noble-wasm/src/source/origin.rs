@@ -634,8 +634,11 @@ fn replay_step(programs: &[OriginProgram], plan: &Layout, machine: &mut Machine)
     machine.frames[top].next += 1;
     match execute_operation(plan, &program_ops[position], machine)? {
         Applied::Done => Some(true),
-        Applied::Dip { child, hidden } => {
-            enter_program(programs, child, level + 1, Some(hidden), machine)?;
+        Applied::Dip {
+            child,
+            hidden: set_aside,
+        } => {
+            enter_program(programs, child, level + 1, Some(set_aside), machine)?;
             Some(true)
         }
     }
@@ -652,10 +655,10 @@ fn close_frame(machine: &mut Machine) -> Option<bool> {
     let Some(frame) = machine.frames.pop() else {
         return Some(false);
     };
-    let Some(hidden) = frame.hidden else {
+    let Some(restored) = frame.hidden else {
         return Some(false);
     };
-    machine.stack.push(hidden);
+    machine.stack.push(restored);
     if machine.stack.len() > MAX_ORIGIN_OPERATIONS {
         return None;
     }
