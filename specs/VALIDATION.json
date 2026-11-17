@@ -2700,7 +2700,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "535d623c254d7d20993cbb1bbf9ded1b1059e037de62b4e69798530fcf4222e9"
+      "sha256": "a1d848dbfb95c446f0eeded24da708da01b1aa15c2a5e4dcc5bc2186690e8f9c"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -3132,11 +3132,11 @@
     },
     {
       "file": "verification/live-update-corpus/README.md",
-      "sha256": "37d68a1e028e4a24e1997f802d6032b5e89221453262d5708b1757288aa333b5"
+      "sha256": "401d17ece423686b95a96792748dbca4881d15fdf71784cde48c3c9d90cf0a92"
     },
     {
       "file": "verification/llvm-lowering/README.md",
-      "sha256": "53b82f063c01e3aab38b11a4a213a8106732c3056ff69b02a6063f1791a6ef6f"
+      "sha256": "855aaf6bfb9039cad229e558424dc53455aa1d0674e55d16f0c8b600a774e57d"
     },
     {
       "file": "verification/m1-controls.md",
@@ -3256,7 +3256,7 @@
     },
     {
       "file": "verification/ngraph/mm0/decision.md",
-      "sha256": "f281a087b9deac4339f51e9a4f8bc40273d225bbf84df15a40b22005aeca3f40"
+      "sha256": "88f9ca1ac7ab8159bec432ef78337456470559856c26e6c4682b1765312f0487"
     },
     {
       "file": "verification/ngraph/net-continuation-criteria.md",
@@ -3379,6 +3379,26 @@
       "sha256": "10620294e3b79d3f556f5bc0e635dc6ff5144f6ac575dd723784d46bf10b4c00"
     },
     {
+      "file": "verification/schedule-independence/criteria.md",
+      "sha256": "92df81a30516c543af1336b3ae76b54d45f3f585e36cb498963efa61513ffd14"
+    },
+    {
+      "file": "verification/schedule-independence/decision.md",
+      "sha256": "55fe3adf9a840df6aee20c4f81f60859ce96a1dbb05d5b96fe191da5cc06d7e5"
+    },
+    {
+      "file": "verification/schedule-independence/invariants.md",
+      "sha256": "5c4b6e6e65ecd1906113a77d371663e7e6f48374535b3e89bdcab763eca34d00"
+    },
+    {
+      "file": "verification/schedule-independence/inventory.md",
+      "sha256": "087a60f775de580c85751ed2131c6dd30dda5c23f9f3b858938c5d05642b2b5d"
+    },
+    {
+      "file": "verification/schedule-independence/README.md",
+      "sha256": "7b637a5dd9195fc4caa02d5f17a4ece1e8b53290ee330fde2340200a56d6efb2"
+    },
+    {
       "file": "verification/service-wire-refinement/README.md",
       "sha256": "492a6ad7f85e416a4b31d2be13c12f017cc920c3c135b89dd0e564eca5aff6bc"
     },
@@ -3412,7 +3432,7 @@
     },
     {
       "file": "verification/specialization-cache/design.md",
-      "sha256": "f53e67a41bd21bfe48c254711a336b88127fafbc13b14041c173046ac7f65c2d"
+      "sha256": "e16361e616c83679a22da9576d1e38bf40eb7861e9b42035befb7f9c0fe26c02"
     },
     {
       "file": "verification/stage2-guard-deadline/README.md",

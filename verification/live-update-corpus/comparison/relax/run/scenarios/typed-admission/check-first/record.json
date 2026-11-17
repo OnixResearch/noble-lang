@@ -1,0 +1,1553 @@
+{
+  "case_id": "noble-live-update/typed-cases-and-bounds",
+  "scenario": "typed-admission",
+  "admission": "check-first",
+  "runtime": "makepad-relax",
+  "profile": {
+    "id": "compiler-lab-relax-live-profile/relax-5441582-v1",
+    "path": "src/validation/relax_live/profile.json",
+    "sha256": "7acb97fbec6ee1fe225f0ec1ae1b889cdcf0dd1cf45e1aadb71cb104a65cbb1a"
+  },
+  "corpus": {
+    "path": "<noble-export>/corpus.json",
+    "sha256": "99dc1505ceed462ccbfbbc64a4ae1e9c241145bad0fb2a87e52bc6e14d5310dd",
+    "corpus_revision": "2",
+    "source_commit": "6407c5ea0651530b3de8bb47541d045fdd698915",
+    "noble_profile_path": "verification/live-update-corpus/profiles/noble.json",
+    "noble_profile_id": "noble-live-update-profile/noble-v1",
+    "noble_profile_sha256": "38e64d885d3ff34def91be9e0a4f9b746e7837eaa58664d91b1840a1cf9da67d"
+  },
+  "noble": {
+    "case_id": "noble-live-update/typed-cases-and-bounds",
+    "expectations": [
+      {
+        "expectation_id": "typed.direct-pure-repeat1",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "typed.direct-pure-repeat2",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "typed.direct-emit-repeat1",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "typed.direct-emit-repeat2",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "typed.nested-chain",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "typed.coverage-totals",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "typed.negative-families",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "typed.minimization-is-minimal",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "typed.retention-saturation",
+        "status": "holds"
+      },
+      {
+        "expectation_id": "typed.type-boundaries",
+        "status": "holds"
+      }
+    ],
+    "profile_refs": [
+      "dimensions.incompatible_layout_behavior",
+      "dimensions.reclamation"
+    ],
+    "result_class": "supported-outcome",
+    "sha256": "7959f135061dd33bdbf05ef9ba32542c73033dde2c1c9bee8b6e07011a18ee03",
+    "title": "Typed generated cases, negative families and the declared host bounds"
+  },
+  "session": "fc5da40ec9f8caac3c499faa1bf7bd5c",
+  "edits": [
+    {
+      "version": "v0",
+      "artifact": {
+        "path": "scenarios/typed-admission/check-first/source/v0.rs",
+        "bytes": 2668,
+        "sha256": "5cad4eddb0e62d4fbf7946456395f677b3a4581e3bfe4b44f9f908023d27ffe4"
+      }
+    },
+    {
+      "version": "v1",
+      "artifact": {
+        "path": "scenarios/typed-admission/check-first/source/v1.rs",
+        "bytes": 2705,
+        "sha256": "292efa8877d6c7d79119541cabd8275382328a0079101c02c6f3c091c85937be"
+      }
+    },
+    {
+      "version": "v2",
+      "artifact": {
+        "path": "scenarios/typed-admission/check-first/source/v2.rs",
+        "bytes": 2676,
+        "sha256": "c5319ffb7442d7228519099f859368c92ee918fa2c9e36b860fc74ccb03d7cde"
+      }
+    },
+    {
+      "version": "v3",
+      "artifact": {
+        "path": "scenarios/typed-admission/check-first/source/v3.rs",
+        "bytes": 2699,
+        "sha256": "17007d1e5e6d7f5fd4c4fec89e3f2efb53ba78ffd9bb4e59969677b88f14450d"
+      }
+    },
+    {
+      "version": "v4",
+      "artifact": {
+        "path": "scenarios/typed-admission/check-first/source/v4.rs",
+        "bytes": 2719,
+        "sha256": "a580726b4e0e45055ffb1b6c7dec8858c4c44e3ca31d7226958e09fd1b5dbfdb"
+      }
+    },
+    {
+      "version": "v5",
+      "artifact": {
+        "path": "scenarios/typed-admission/check-first/source/v5.rs",
+        "bytes": 2668,
+        "sha256": "73355c239e5d249488ef6b3d4ae6bb9649625830d7596a391c34edda6e2ecba5"
+      }
+    }
+  ],
+  "event_binding_sha256": "c4817f69dd0124195766cfe6df0f5e5a0026a20d7d9e30304c2af4f8cdb4562d",
+  "provenance": [
+    {
+      "role": "live-stdout",
+      "artifact": {
+        "path": "scenarios/typed-admission/check-first/live.stdout",
+        "bytes": 3487,
+        "sha256": "ca31c39fafb9824d7099e7ee03efe0681a772e0f5dff602a901bec1e9f1e2d01"
+      }
+    },
+    {
+      "role": "live-stderr",
+      "artifact": {
+        "path": "scenarios/typed-admission/check-first/live.stderr",
+        "bytes": 222,
+        "sha256": "2b06685a5335c646f65025ace6349dc742711cb9b0d44cc451d642aba4510a8a"
+      }
+    },
+    {
+      "role": "live-log",
+      "artifact": {
+        "path": "scenarios/typed-admission/check-first/live-log.jsonl",
+        "bytes": 957,
+        "sha256": "da2ad012b1adb369b2e22b223ac9a1073a9b0976e75fe15dcff3ea993f855ab4"
+      }
+    }
+  ],
+  "host": {
+    "configuration": {
+      "admission": "check-first",
+      "cache": "off",
+      "cpu_cores": "4",
+      "environment": {
+        "COMPILER_LAB_RELAX_CHECK_FIRST": "1",
+        "MAKEPAD_CPU_CORES": "4",
+        "MAKEPAD_RUN_CACHE": "off"
+      },
+      "profile": "default"
+    },
+    "executable_sha256": "fed38792ec30d29829fae808398f39444008c03f6e90cf2eb4418a711738e260",
+    "reported_version": "makepad run makepad d08642ed5eee jit 7c8930659157",
+    "std_tree_sha256": "73077222c2c40e616d2a58bb14921ebb9cd6f78cd1e7c96be4ddd30e64ba7c25"
+  },
+  "exit_code": 0,
+  "process_status": "Success",
+  "run": {
+    "segments": [
+      {
+        "index": 0,
+        "phase": "first-run",
+        "after_edit": null,
+        "lines": [
+          {
+            "kind": "sample",
+            "fields": {
+              "backend": "relax",
+              "domain": "0",
+              "hwm_kb": "143064",
+              "image": "29a718c5ada4c9ce",
+              "pid": "3674414",
+              "rss_kb": "140504",
+              "segment": "0",
+              "session": "fc5da40ec9f8caac3c499faa1bf7bd5c"
+            }
+          },
+          {
+            "kind": "typed-admission",
+            "fields": {
+              "held": "5",
+              "scaled": "22",
+              "value": "11"
+            }
+          }
+        ],
+        "passed": true,
+        "milliseconds": 560.99,
+        "crash_report": null
+      },
+      {
+        "index": 1,
+        "phase": "second-run",
+        "after_edit": null,
+        "lines": [
+          {
+            "kind": "sample",
+            "fields": {
+              "backend": "relax",
+              "domain": "0",
+              "hwm_kb": "147776",
+              "image": "29a718c5ada4c9ce",
+              "pid": "3674414",
+              "rss_kb": "147776",
+              "segment": "1",
+              "session": "fc5da40ec9f8caac3c499faa1bf7bd5c"
+            }
+          },
+          {
+            "kind": "typed-admission",
+            "fields": {
+              "held": "5",
+              "scaled": "22",
+              "value": "11"
+            }
+          }
+        ],
+        "passed": true,
+        "milliseconds": 0.12,
+        "crash_report": null
+      },
+      {
+        "index": 2,
+        "phase": "after-edit",
+        "after_edit": 1,
+        "lines": [
+          {
+            "kind": "sample",
+            "fields": {
+              "backend": "relax",
+              "domain": "0",
+              "hwm_kb": "141492",
+              "image": "29a718c5ada4c9ce",
+              "pid": "3674414",
+              "rss_kb": "141492",
+              "segment": "2",
+              "session": "fc5da40ec9f8caac3c499faa1bf7bd5c"
+            }
+          },
+          {
+            "kind": "typed-admission",
+            "fields": {
+              "held": "5",
+              "scaled": "22",
+              "value": "11"
+            }
+          }
+        ],
+        "passed": true,
+        "milliseconds": 0.15,
+        "crash_report": null
+      },
+      {
+        "index": 3,
+        "phase": "after-edit",
+        "after_edit": 2,
+        "lines": [
+          {
+            "kind": "sample",
+            "fields": {
+              "backend": "relax",
+              "domain": "0",
+              "hwm_kb": "141548",
+              "image": "29a718c5ada4c9ce",
+              "pid": "3674414",
+              "rss_kb": "141548",
+              "segment": "3",
+              "session": "fc5da40ec9f8caac3c499faa1bf7bd5c"
+            }
+          },
+          {
+            "kind": "typed-admission",
+            "fields": {
+              "held": "5",
+              "scaled": "22",
+              "value": "11"
+            }
+          }
+        ],
+        "passed": true,
+        "milliseconds": 0.2,
+        "crash_report": null
+      },
+      {
+        "index": 4,
+        "phase": "after-edit",
+        "after_edit": 3,
+        "lines": [
+          {
+            "kind": "sample",
+            "fields": {
+              "backend": "relax",
+              "domain": "0",
+              "hwm_kb": "141708",
+              "image": "29a718c5ada4c9ce",
+              "pid": "3674414",
+              "rss_kb": "141708",
+              "segment": "4",
+              "session": "fc5da40ec9f8caac3c499faa1bf7bd5c"
+            }
+          },
+          {
+            "kind": "typed-admission",
+            "fields": {
+              "held": "5",
+              "scaled": "22",
+              "value": "11"
+            }
+          }
+        ],
+        "passed": true,
+        "milliseconds": 0.15,
+        "crash_report": null
+      },
+      {
+        "index": 5,
+        "phase": "after-edit",
+        "after_edit": 4,
+        "lines": [
+          {
+            "kind": "sample",
+            "fields": {
+              "backend": "relax",
+              "domain": "0",
+              "hwm_kb": "141796",
+              "image": "29a718c5ada4c9ce",
+              "pid": "3674414",
+              "rss_kb": "141796",
+              "segment": "5",
+              "session": "fc5da40ec9f8caac3c499faa1bf7bd5c"
+            }
+          },
+          {
+            "kind": "typed-admission",
+            "fields": {
+              "held": "5",
+              "scaled": "22",
+              "value": "11"
+            }
+          }
+        ],
+        "passed": true,
+        "milliseconds": 0.18,
+        "crash_report": null
+      },
+      {
+        "index": 6,
+        "phase": "after-edit",
+        "after_edit": 5,
+        "lines": [
+          {
+            "kind": "sample",
+            "fields": {
+              "backend": "relax",
+              "domain": "0",
+              "hwm_kb": "142084",
+              "image": "29a718c5ada4c9ce",
+              "pid": "3674414",
+              "rss_kb": "142084",
+              "segment": "6",
+              "session": "fc5da40ec9f8caac3c499faa1bf7bd5c"
+            }
+          },
+          {
+            "kind": "typed-admission",
+            "fields": {
+              "held": "5",
+              "scaled": "32",
+              "value": "16"
+            }
+          }
+        ],
+        "passed": true,
+        "milliseconds": 0.13,
+        "crash_report": null
+      }
+    ],
+    "edits": [
+      {
+        "index": 1,
+        "step": "v1.rs",
+        "rung": "refuse",
+        "changed_items": 1,
+        "installed": [],
+        "milliseconds": {
+          "check": 3.581,
+          "compile": 0.002,
+          "install": 0.0,
+          "parse+classify": 1.164
+        },
+        "notes": [
+          "  <compiler-lab-run>/scenarios/typed-admission/check-first/source/v1.rs:64:21: E0308: mismatched types: expected `u64`, found `&str`"
+        ],
+        "error_codes": [
+          "E0308"
+        ],
+        "rollback": null
+      },
+      {
+        "index": 2,
+        "step": "v2.rs",
+        "rung": "refuse",
+        "changed_items": 2,
+        "installed": [],
+        "milliseconds": {
+          "check": 20.832,
+          "compile": 0.002,
+          "install": 0.0,
+          "parse+classify": 7.588
+        },
+        "notes": [
+          "  <compiler-lab-run>/scenarios/typed-admission/check-first/source/v2.rs:81:77: E0061: this function takes 2 arguments but 1 was supplied -- missing argument `y: u64`"
+        ],
+        "error_codes": [
+          "E0061"
+        ],
+        "rollback": null
+      },
+      {
+        "index": 3,
+        "step": "v3.rs",
+        "rung": "restart",
+        "changed_items": 3,
+        "installed": [],
+        "milliseconds": {
+          "check": 11.206,
+          "compile": 0.002,
+          "install": 0.0,
+          "parse+classify": 19.953
+        },
+        "notes": [
+          "  <compiler-lab-run>/scenarios/typed-admission/check-first/source/v3.rs:18:1: struct `Held` changed its layout, and `live::HELD` may hold values of it in the old one -- restart the app"
+        ],
+        "error_codes": [],
+        "rollback": null
+      },
+      {
+        "index": 4,
+        "step": "v4.rs",
+        "rung": "refuse",
+        "changed_items": 1,
+        "installed": [],
+        "milliseconds": {
+          "check": 1.445,
+          "compile": 0.002,
+          "install": 0.0,
+          "parse+classify": 16.678
+        },
+        "notes": [
+          "  refused by the borrow checker (1 error(s))",
+          "  error[E0506]: cannot assign to `x` because it is borrowed",
+          "  --> <compiler-lab-run>/scenarios/typed-admission/check-first/source/v4.rs:66:5",
+          "   |",
+          "65 | <fixture source line withheld>",
+          "   |             -- `x` is borrowed here",
+          "66 | <fixture source line withheld>",
+          "   |     ^^^^^^ `x` is assigned to here but it was already borrowed",
+          "67 | <fixture source line withheld>",
+          "   |     -- borrow later used here",
+          "   |",
+          ""
+        ],
+        "error_codes": [
+          "E0506"
+        ],
+        "rollback": null
+      },
+      {
+        "index": 5,
+        "step": "v5.rs",
+        "rung": "patch",
+        "changed_items": 1,
+        "installed": [
+          "live::value"
+        ],
+        "milliseconds": {
+          "check": 0.911,
+          "compile": 0.768,
+          "install": 0.125,
+          "parse+classify": 6.378
+        },
+        "notes": [],
+        "error_codes": [],
+        "rollback": null
+      }
+    ],
+    "unparsed": []
+  },
+  "ordering": [
+    {
+      "after_edit": null,
+      "event": "checkpoint",
+      "passed": true,
+      "phase": "first-run",
+      "segment": 0
+    },
+    {
+      "after_edit": null,
+      "event": "checkpoint",
+      "passed": true,
+      "phase": "second-run",
+      "segment": 1
+    },
+    {
+      "edit": 1,
+      "event": "edit",
+      "rung": "refuse",
+      "step": "v1.rs"
+    },
+    {
+      "after_edit": 1,
+      "event": "checkpoint",
+      "passed": true,
+      "phase": "after-edit",
+      "segment": 2
+    },
+    {
+      "edit": 2,
+      "event": "edit",
+      "rung": "refuse",
+      "step": "v2.rs"
+    },
+    {
+      "after_edit": 2,
+      "event": "checkpoint",
+      "passed": true,
+      "phase": "after-edit",
+      "segment": 3
+    },
+    {
+      "edit": 3,
+      "event": "edit",
+      "rung": "restart",
+      "step": "v3.rs"
+    },
+    {
+      "after_edit": 3,
+      "event": "checkpoint",
+      "passed": true,
+      "phase": "after-edit",
+      "segment": 4
+    },
+    {
+      "edit": 4,
+      "event": "edit",
+      "rung": "refuse",
+      "step": "v4.rs"
+    },
+    {
+      "after_edit": 4,
+      "event": "checkpoint",
+      "passed": true,
+      "phase": "after-edit",
+      "segment": 5
+    },
+    {
+      "edit": 5,
+      "event": "edit",
+      "rung": "patch",
+      "step": "v5.rs"
+    },
+    {
+      "after_edit": 5,
+      "event": "checkpoint",
+      "passed": true,
+      "phase": "after-edit",
+      "segment": 6
+    }
+  ],
+  "selected_identities": [
+    {
+      "segment": 0,
+      "subject": "root",
+      "function": "value",
+      "version": "v0"
+    },
+    {
+      "segment": 1,
+      "subject": "root",
+      "function": "value",
+      "version": "v0"
+    },
+    {
+      "segment": 2,
+      "subject": "root",
+      "function": "value",
+      "version": "v0"
+    },
+    {
+      "segment": 3,
+      "subject": "root",
+      "function": "value",
+      "version": "v0"
+    },
+    {
+      "segment": 4,
+      "subject": "root",
+      "function": "value",
+      "version": "v0"
+    },
+    {
+      "segment": 5,
+      "subject": "root",
+      "function": "value",
+      "version": "v0"
+    },
+    {
+      "segment": 6,
+      "subject": "root",
+      "function": "value",
+      "version": "v5"
+    }
+  ],
+  "effect_prefixes": {
+    "abnormal": [],
+    "normal": [
+      {
+        "fields": {
+          "held": "5",
+          "scaled": "22",
+          "value": "11"
+        },
+        "kind": "typed-admission",
+        "segment": 0
+      },
+      {
+        "fields": {
+          "held": "5",
+          "scaled": "22",
+          "value": "11"
+        },
+        "kind": "typed-admission",
+        "segment": 1
+      },
+      {
+        "fields": {
+          "held": "5",
+          "scaled": "22",
+          "value": "11"
+        },
+        "kind": "typed-admission",
+        "segment": 2
+      },
+      {
+        "fields": {
+          "held": "5",
+          "scaled": "22",
+          "value": "11"
+        },
+        "kind": "typed-admission",
+        "segment": 3
+      },
+      {
+        "fields": {
+          "held": "5",
+          "scaled": "22",
+          "value": "11"
+        },
+        "kind": "typed-admission",
+        "segment": 4
+      },
+      {
+        "fields": {
+          "held": "5",
+          "scaled": "22",
+          "value": "11"
+        },
+        "kind": "typed-admission",
+        "segment": 5
+      },
+      {
+        "fields": {
+          "held": "5",
+          "scaled": "32",
+          "value": "16"
+        },
+        "kind": "typed-admission",
+        "segment": 6
+      }
+    ]
+  },
+  "expectations": [
+    {
+      "expectation_id": "typed.first-run",
+      "origin": {
+        "kind": "fixture",
+        "reference": "src/validation/relax_live/typed_admission/v0.rs:1-7",
+        "text": "Version 0 prints value 11."
+      },
+      "claim": "equals",
+      "declared": "11",
+      "observed": "11",
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "wrong-version"
+    },
+    {
+      "expectation_id": "typed.type-error-refused",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.incompatible_layout_behavior; libs/relax/compiler/tests/live/item_refuse/v0.rs:1-4",
+        "text": "The type error of version 1 refuses the edit whole."
+      },
+      "claim": "equals",
+      "declared": "refuse",
+      "observed": "refuse",
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "admitted-invalid-edit"
+    },
+    {
+      "expectation_id": "typed.type-error-reason",
+      "origin": {
+        "kind": "rust-reference",
+        "reference": "the pinned rustc rejects version 1 with E0308",
+        "text": "Relax names the same type error as the rustc reference."
+      },
+      "claim": "equals",
+      "declared": [
+        "E0308"
+      ],
+      "observed": [
+        "E0308"
+      ],
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": null
+    },
+    {
+      "expectation_id": "typed.old-version-after-type-error",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.incompatible_layout_behavior",
+        "text": "After the refusal, version 0 keeps running."
+      },
+      "claim": "equals",
+      "declared": "11",
+      "observed": "11",
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "wrong-version"
+    },
+    {
+      "expectation_id": "typed.signature-change-refused",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.incompatible_layout_behavior; libs/relax/compiler/tests/live/sig_change/v0.rs:1-4",
+        "text": "A signature change without its caller is refused with the caller's error, E0061."
+      },
+      "claim": "equals",
+      "declared": [
+        "E0061"
+      ],
+      "observed": [
+        "E0061"
+      ],
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "admitted-invalid-edit"
+    },
+    {
+      "expectation_id": "typed.old-version-after-signature-change",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.incompatible_layout_behavior",
+        "text": "After the refusal, version 0 keeps running."
+      },
+      "claim": "equals",
+      "declared": "11",
+      "observed": "11",
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "wrong-version"
+    },
+    {
+      "expectation_id": "typed.layout-change-restart",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.incompatible_layout_behavior; libs/relax/compiler/tests/live/pattern_refuse_restart/v0.rs:1-7",
+        "text": "A layout change of the struct that a thread-local holds needs a restart."
+      },
+      "claim": "equals",
+      "declared": "restart",
+      "observed": "restart",
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "admitted-invalid-edit"
+    },
+    {
+      "expectation_id": "typed.old-version-after-layout-change",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.incompatible_layout_behavior",
+        "text": "The live driver does not restart, so version 0 keeps running."
+      },
+      "claim": "equals",
+      "declared": "11",
+      "observed": "11",
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "wrong-version"
+    },
+    {
+      "expectation_id": "typed.borrow-error-check-first",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.admission (check-first: borrow-check-before-install)",
+        "text": "With check-first the borrow checker refuses version 4 with E0506."
+      },
+      "claim": "equals",
+      "declared": [
+        "E0506"
+      ],
+      "observed": [
+        "E0506"
+      ],
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "admitted-invalid-edit"
+    },
+    {
+      "expectation_id": "typed.old-version-after-borrow-error",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.admission (check-first: borrow-check-before-install)",
+        "text": "After the refusal, version 0 keeps running."
+      },
+      "claim": "equals",
+      "declared": "11",
+      "observed": "11",
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "wrong-version"
+    },
+    {
+      "expectation_id": "typed.corrected-edit",
+      "origin": {
+        "kind": "relax-profile",
+        "reference": "dimensions.version_selection_boundary",
+        "text": "The corrected version 5 applies as a patch, and the next run prints 16."
+      },
+      "claim": "equals",
+      "declared": "16",
+      "observed": "16",
+      "status": "holds",
+      "mismatch_class": "unexpected-refusal",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "wrong-version"
+    },
+    {
+      "expectation_id": "typed.runs",
+      "origin": {
+        "kind": "driver",
+        "reference": "libs/relax/compiler/src/live.rs:1-3",
+        "text": "The driver runs the test twice before the first edit, once after each edit step, and once more after a rollback."
+      },
+      "claim": "equals",
+      "declared": 7,
+      "observed": 7,
+      "status": "holds",
+      "mismatch_class": "runtime-failure",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "runtime-failure"
+    },
+    {
+      "expectation_id": "typed.verdicts",
+      "origin": {
+        "kind": "fixture",
+        "reference": "the scenario's version comments",
+        "text": "Each run's test verdict follows the fixture: only a run of a deliberately panicking version fails."
+      },
+      "claim": "equals",
+      "declared": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "observed": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "status": "holds",
+      "mismatch_class": "runtime-failure",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "runtime-failure"
+    },
+    {
+      "expectation_id": "typed.same-process",
+      "origin": {
+        "kind": "driver",
+        "reference": "compiler-lab issue 190, session identity",
+        "text": "Every run reports the driver's session token from one process image and one process id under Relax's standard library, so each edit patched the running process."
+      },
+      "claim": "equals",
+      "declared": {
+        "backends": [
+          "relax"
+        ],
+        "driver_session": true,
+        "images": 1,
+        "pids": 1,
+        "samples": 7
+      },
+      "observed": {
+        "backends": [
+          "relax"
+        ],
+        "driver_session": true,
+        "images": 1,
+        "pids": 1,
+        "samples": 7
+      },
+      "status": "holds",
+      "mismatch_class": "contract-violation",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "not-hot-patched"
+    },
+    {
+      "expectation_id": "typed.strict-output",
+      "origin": {
+        "kind": "driver",
+        "reference": "the strict output rule",
+        "text": "Every output line has a known form."
+      },
+      "claim": "equals",
+      "declared": 0,
+      "observed": 0,
+      "status": "holds",
+      "mismatch_class": "runtime-failure",
+      "mapping": "A Noble root invocation maps to one test-function invocation; a Noble publication maps to one Relax edit step.",
+      "violation": "malformed-output"
+    }
+  ],
+  "references": [
+    {
+      "version": "v0",
+      "compiler": "rustc",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "native",
+            "domain": "na",
+            "hwm_kb": "2268",
+            "image": "83256379ccf1dc09",
+            "pid": "3672590",
+            "rss_kb": "2264",
+            "segment": "0",
+            "session": "fc5da40ec9f8caac3c499faa1bf7bd5c"
+          }
+        },
+        {
+          "kind": "typed-admission",
+          "fields": {
+            "held": "5",
+            "scaled": "22",
+            "value": "11"
+          }
+        }
+      ],
+      "passed": true,
+      "command": "typed-admission-check-first-v0-rustc-run",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "held": "5",
+              "scaled": "22",
+              "value": "11"
+            },
+            "kind": "typed-admission"
+          }
+        ],
+        "passed": true
+      },
+      "holds": true
+    },
+    {
+      "version": "v0",
+      "compiler": "relax",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "relax",
+            "domain": "0",
+            "hwm_kb": "147512",
+            "image": "d78635ce90c5d85d",
+            "pid": "3672605",
+            "rss_kb": "144040",
+            "segment": "0",
+            "session": "fc5da40ec9f8caac3c499faa1bf7bd5c"
+          }
+        },
+        {
+          "kind": "typed-admission",
+          "fields": {
+            "held": "5",
+            "scaled": "22",
+            "value": "11"
+          }
+        }
+      ],
+      "passed": true,
+      "command": "typed-admission-check-first-v0-relax",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "held": "5",
+              "scaled": "22",
+              "value": "11"
+            },
+            "kind": "typed-admission"
+          }
+        ],
+        "passed": true
+      },
+      "holds": true
+    },
+    {
+      "version": "v1",
+      "compiler": "rustc",
+      "accepted": false,
+      "error_codes": [
+        "E0308"
+      ],
+      "lines": [],
+      "passed": null,
+      "command": "typed-admission-check-first-v1-rustc",
+      "declared": {
+        "rejected": "E0308"
+      },
+      "holds": true
+    },
+    {
+      "version": "v1",
+      "compiler": "relax",
+      "accepted": false,
+      "error_codes": [
+        "E0308"
+      ],
+      "lines": [],
+      "passed": null,
+      "command": "typed-admission-check-first-v1-relax",
+      "declared": {
+        "rejected": "E0308"
+      },
+      "holds": true
+    },
+    {
+      "version": "v2",
+      "compiler": "rustc",
+      "accepted": false,
+      "error_codes": [
+        "E0061"
+      ],
+      "lines": [],
+      "passed": null,
+      "command": "typed-admission-check-first-v2-rustc",
+      "declared": {
+        "rejected": "E0061"
+      },
+      "holds": true
+    },
+    {
+      "version": "v2",
+      "compiler": "relax",
+      "accepted": false,
+      "error_codes": [
+        "E0061"
+      ],
+      "lines": [],
+      "passed": null,
+      "command": "typed-admission-check-first-v2-relax",
+      "declared": {
+        "rejected": "E0061"
+      },
+      "holds": true
+    },
+    {
+      "version": "v3",
+      "compiler": "rustc",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "native",
+            "domain": "na",
+            "hwm_kb": "2216",
+            "image": "fe15014e4b5385f2",
+            "pid": "3673412",
+            "rss_kb": "2212",
+            "segment": "0",
+            "session": "fc5da40ec9f8caac3c499faa1bf7bd5c"
+          }
+        },
+        {
+          "kind": "typed-admission",
+          "fields": {
+            "held": "5",
+            "scaled": "26",
+            "value": "13"
+          }
+        }
+      ],
+      "passed": true,
+      "command": "typed-admission-check-first-v3-rustc-run",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "held": "5",
+              "scaled": "26",
+              "value": "13"
+            },
+            "kind": "typed-admission"
+          }
+        ],
+        "passed": true
+      },
+      "holds": true
+    },
+    {
+      "version": "v3",
+      "compiler": "relax",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "relax",
+            "domain": "0",
+            "hwm_kb": "147148",
+            "image": "0ebd184b241b4431",
+            "pid": "3673417",
+            "rss_kb": "143668",
+            "segment": "0",
+            "session": "fc5da40ec9f8caac3c499faa1bf7bd5c"
+          }
+        },
+        {
+          "kind": "typed-admission",
+          "fields": {
+            "held": "5",
+            "scaled": "26",
+            "value": "13"
+          }
+        }
+      ],
+      "passed": true,
+      "command": "typed-admission-check-first-v3-relax",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "held": "5",
+              "scaled": "26",
+              "value": "13"
+            },
+            "kind": "typed-admission"
+          }
+        ],
+        "passed": true
+      },
+      "holds": true
+    },
+    {
+      "version": "v4",
+      "compiler": "rustc",
+      "accepted": false,
+      "error_codes": [
+        "E0506"
+      ],
+      "lines": [],
+      "passed": null,
+      "command": "typed-admission-check-first-v4-rustc",
+      "declared": {
+        "rejected": "E0506"
+      },
+      "holds": true
+    },
+    {
+      "version": "v4",
+      "compiler": "relax",
+      "accepted": false,
+      "error_codes": [
+        "E0506"
+      ],
+      "lines": [],
+      "passed": null,
+      "command": "typed-admission-check-first-v4-relax",
+      "declared": {
+        "rejected": "E0506"
+      },
+      "holds": true
+    },
+    {
+      "version": "v5",
+      "compiler": "rustc",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "native",
+            "domain": "na",
+            "hwm_kb": "2248",
+            "image": "85acbd45f7a47f6e",
+            "pid": "3674096",
+            "rss_kb": "2244",
+            "segment": "0",
+            "session": "fc5da40ec9f8caac3c499faa1bf7bd5c"
+          }
+        },
+        {
+          "kind": "typed-admission",
+          "fields": {
+            "held": "5",
+            "scaled": "32",
+            "value": "16"
+          }
+        }
+      ],
+      "passed": true,
+      "command": "typed-admission-check-first-v5-rustc-run",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "held": "5",
+              "scaled": "32",
+              "value": "16"
+            },
+            "kind": "typed-admission"
+          }
+        ],
+        "passed": true
+      },
+      "holds": true
+    },
+    {
+      "version": "v5",
+      "compiler": "relax",
+      "accepted": true,
+      "error_codes": [],
+      "lines": [
+        {
+          "kind": "sample",
+          "fields": {
+            "backend": "relax",
+            "domain": "0",
+            "hwm_kb": "146536",
+            "image": "f38a3e7b8c5e72e9",
+            "pid": "3674098",
+            "rss_kb": "142928",
+            "segment": "0",
+            "session": "fc5da40ec9f8caac3c499faa1bf7bd5c"
+          }
+        },
+        {
+          "kind": "typed-admission",
+          "fields": {
+            "held": "5",
+            "scaled": "32",
+            "value": "16"
+          }
+        }
+      ],
+      "passed": true,
+      "command": "typed-admission-check-first-v5-relax",
+      "declared": {
+        "lines": [
+          {
+            "fields": {
+              "held": "5",
+              "scaled": "32",
+              "value": "16"
+            },
+            "kind": "typed-admission"
+          }
+        ],
+        "passed": true
+      },
+      "holds": true
+    }
+  ],
+  "temporal_admission": {
+    "policy": "checked-before-execution",
+    "admission": "check-first",
+    "edits": [
+      {
+        "edit": 1,
+        "version": "v1",
+        "source_sha256": "292efa8877d6c7d79119541cabd8275382328a0079101c02c6f3c091c85937be",
+        "rust_reference": "rejected E0308",
+        "relax_outcome": "refuse",
+        "relax_error_codes": [
+          "E0308"
+        ],
+        "executed_in_segments": [],
+        "recovery": "old-version-continues"
+      },
+      {
+        "edit": 2,
+        "version": "v2",
+        "source_sha256": "c5319ffb7442d7228519099f859368c92ee918fa2c9e36b860fc74ccb03d7cde",
+        "rust_reference": "rejected E0061",
+        "relax_outcome": "refuse",
+        "relax_error_codes": [
+          "E0061"
+        ],
+        "executed_in_segments": [],
+        "recovery": "old-version-continues"
+      },
+      {
+        "edit": 3,
+        "version": "v3",
+        "source_sha256": "17007d1e5e6d7f5fd4c4fec89e3f2efb53ba78ffd9bb4e59969677b88f14450d",
+        "rust_reference": "accepted",
+        "relax_outcome": "restart",
+        "relax_error_codes": [],
+        "executed_in_segments": [],
+        "recovery": "restart-required"
+      },
+      {
+        "edit": 4,
+        "version": "v4",
+        "source_sha256": "a580726b4e0e45055ffb1b6c7dec8858c4c44e3ca31d7226958e09fd1b5dbfdb",
+        "rust_reference": "rejected E0506",
+        "relax_outcome": "refuse",
+        "relax_error_codes": [
+          "E0506"
+        ],
+        "executed_in_segments": [],
+        "recovery": "old-version-continues"
+      },
+      {
+        "edit": 5,
+        "version": "v5",
+        "source_sha256": "73355c239e5d249488ef6b3d4ae6bb9649625830d7596a391c34edda6e2ecba5",
+        "rust_reference": "accepted",
+        "relax_outcome": "patch",
+        "relax_error_codes": [],
+        "executed_in_segments": [
+          6
+        ],
+        "recovery": "accepted-replacement"
+      }
+    ],
+    "outcome": "pass",
+    "detail": "No version that the rustc reference rejects ran after its edit."
+  },
+  "relax_contract": "supported-outcome",
+  "result_class": "supported-outcome",
+  "reasons": [],
+  "faithful_mapping": "Noble's negative admission families map to edits that the pinned rustc rejects: a type error, a signature change without its caller, and a borrow error. Noble's incompatible schema maps to a layout change of a struct that a thread-local holds. The admission of each candidate is compared by whether its body ran, not by message text.",
+  "unsupported_dimensions": [
+    "generated typed cases and declared host bounds: the Relax lane runs one fixed sequence.",
+    "effect ceilings and nominal resource schemas: Rust has no direct counterpart."
+  ],
+  "relations": [
+    {
+      "dimension": "typed-admission",
+      "noble": "admission is an exact ordered interface plus nominal resource schema plus effect ceiling, refused before execution",
+      "relax": "a reload transaction's compatibility rule is its own; no exact-interface rule is implied",
+      "classification_rule": "an admitted Relax reload that Noble would refuse is a profile difference, not a defect, until a faithful mapping is declared",
+      "relation": "correspondence",
+      "observed": {
+        "admission": "check-first",
+        "rungs": [
+          "refuse",
+          "refuse",
+          "restart",
+          "refuse",
+          "patch"
+        ],
+        "versions_by_run": [
+          "v0",
+          "v0",
+          "v0",
+          "v0",
+          "v0",
+          "v0",
+          "v5"
+        ]
+      },
+      "basis": [
+        "typed.type-error-refused",
+        "typed.signature-change-refused",
+        "typed.layout-change-restart",
+        "typed.borrow-error-check-first"
+      ]
+    }
+  ],
+  "intentional_differences": [],
+  "timing": {
+    "started_at": "2026-11-17T02:55:09.005Z",
+    "ended_at": "2026-11-17T02:55:09.978Z",
+    "duration_ms": 972,
+    "edit_milliseconds": [
+      {
+        "check": 3.581,
+        "compile": 0.002,
+        "install": 0.0,
+        "parse+classify": 1.164
+      },
+      {
+        "check": 20.832,
+        "compile": 0.002,
+        "install": 0.0,
+        "parse+classify": 7.588
+      },
+      {
+        "check": 11.206,
+        "compile": 0.002,
+        "install": 0.0,
+        "parse+classify": 19.953
+      },
+      {
+        "check": 1.445,
+        "compile": 0.002,
+        "install": 0.0,
+        "parse+classify": 16.678
+      },
+      {
+        "check": 0.911,
+        "compile": 0.768,
+        "install": 0.125,
+        "parse+classify": 6.378
+      }
+    ],
+    "run_milliseconds": [
+      560.99,
+      0.12,
+      0.15,
+      0.2,
+      0.15,
+      0.18,
+      0.13
+    ],
+    "memory_kb": [
+      {
+        "hwm_kb": "143064",
+        "rss_kb": "140504"
+      },
+      {
+        "hwm_kb": "147776",
+        "rss_kb": "147776"
+      },
+      {
+        "hwm_kb": "141492",
+        "rss_kb": "141492"
+      },
+      {
+        "hwm_kb": "141548",
+        "rss_kb": "141548"
+      },
+      {
+        "hwm_kb": "141708",
+        "rss_kb": "141708"
+      },
+      {
+        "hwm_kb": "141796",
+        "rss_kb": "141796"
+      },
+      {
+        "hwm_kb": "142084",
+        "rss_kb": "142084"
+      }
+    ],
+    "bound_to": {
+      "admission": "check-first",
+      "admission_outcome": [
+        {
+          "edit": 1,
+          "error_codes": [
+            "E0308"
+          ],
+          "rung": "refuse"
+        },
+        {
+          "edit": 2,
+          "error_codes": [
+            "E0061"
+          ],
+          "rung": "refuse"
+        },
+        {
+          "edit": 3,
+          "error_codes": [],
+          "rung": "restart"
+        },
+        {
+          "edit": 4,
+          "error_codes": [
+            "E0506"
+          ],
+          "rung": "refuse"
+        },
+        {
+          "edit": 5,
+          "error_codes": [],
+          "rung": "patch"
+        }
+      ],
+      "case_id": "noble-live-update/typed-cases-and-bounds",
+      "event_binding_sha256": "c4817f69dd0124195766cfe6df0f5e5a0026a20d7d9e30304c2af4f8cdb4562d",
+      "host_sha256": "fed38792ec30d29829fae808398f39444008c03f6e90cf2eb4418a711738e260",
+      "profile_sha256": "7acb97fbec6ee1fe225f0ec1ae1b889cdcf0dd1cf45e1aadb71cb104a65cbb1a",
+      "relax_revision": "544158264603dbf90994ac47fc97a2636437b656",
+      "result_class": "supported-outcome",
+      "scenario": "typed-admission"
+    }
+  }
+}

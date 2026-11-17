@@ -1,0 +1,894 @@
+{
+  "schema": "noble-live-update-corpus-receipt/v2",
+  "claim": "comparison of the bounded Noble live-update export with compiler-lab's pinned Makepad Relax lane over the same scenarios, each runtime classified under its own frozen profile; experimental evidence, not a proof, not a conformance promotion and not a model-to-implementation claim",
+  "source": {
+    "commit": "6407c5ea0651530b3de8bb47541d045fdd698915",
+    "tree": "af126e08d9a523593ed453adf75ae5d2696ec559",
+    "clean": true,
+    "git": "git version 2.56.0"
+  },
+  "pins": [
+    {
+      "path": "crates/noble-cli/src/core/runtime/slot-registry.mjs",
+      "sha256": "67fe4007d69b0592fcf2ae70c0db17293d09275c77ea1cb09e476c1b7ee9a10a",
+      "what": "publication CAS, pins, retention and retirement"
+    },
+    {
+      "path": "crates/noble-cli/src/core/runtime/slot-engine.mjs",
+      "sha256": "85481b0223891a9150127fa8b859d477af0117fd3794811164fe6ec993262a9c",
+      "what": "root and frame pins, saved owners, module sweep"
+    },
+    {
+      "path": "crates/noble-cli/src/core/runtime/slot-policy.mjs",
+      "sha256": "d6d6976247001cbaa06c5a6278e2412a947dd209972c92dc67f630a579bd27c6",
+      "what": "bounded slot Wasm import/export policy"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_nested_roots.mjs",
+      "sha256": "665b893eeeeb9de798cb0568852d96b1c1ac11f02f195918d22f1f072e80dd77",
+      "what": "authoritative fixture lane nested"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_coherent_maps.mjs",
+      "sha256": "ca050321563c2ede42372689036ce29f6843fbcdb32f958a1d26b9bed4d18f70",
+      "what": "authoritative fixture lane coherent"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_package_retention.mjs",
+      "sha256": "3636e510e3ab351b45f0177720af6f71dced868cbbf80e497319fd8d2f683978",
+      "what": "authoritative fixture lane packageRetention"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_module_root_retention.mjs",
+      "sha256": "77518e47bec1c67a926863e5f859870b699d6bd27e0c4d7c641bb19b27024d4c",
+      "what": "authoritative fixture lane moduleRoot"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_program_capacity.mjs",
+      "sha256": "9da3fbe7aef7c3e89c7bda953dfbadb88b107abb19bb4d667ac2da913432aab3",
+      "what": "authoritative fixture lane capacity"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_relocation_witness.mjs",
+      "sha256": "313f864c22807700a3eaac0b5f9c73d586c70e7d3db3bd2c9a5efe00b471b506",
+      "what": "authoritative fixture lane relocation"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_typed_cases.mjs",
+      "sha256": "4b04ab2c1c68fd2a0ce1ae0e9f26137f98a824917174786d94e69e09a994f118",
+      "what": "authoritative fixture lane typed"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_ownership_cases.mjs",
+      "sha256": "2aa14d493aa120439bbf35bfe6b0002c06c3e2bc4a7416e33db639a13614cafa",
+      "what": "authoritative fixture lane ownership"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot.rs",
+      "sha256": "c23c15752485c115c2243cd12b7ead38e00bb310750d0c66357651816f453b4c",
+      "what": "lane test runner"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_coherent_maps.rs",
+      "sha256": "062c30b8ea9e105ed6461d8e5143767f4d2b59a8c4e48190d2f3e4a2fcf5288b",
+      "what": "lane test runner"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_direct_quote.rs",
+      "sha256": "354d2a3d99de3af20c9113acb6ac1491a389b0e0d5a22670781ee4e8b095a88a",
+      "what": "lane test runner"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_relocation_witness.rs",
+      "sha256": "6f48bcd5949e2d1ecaa5c41c82b4bdd2b1ff7fb90c1649dc4d507e402087083e",
+      "what": "lane test runner"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_typed_cases.rs",
+      "sha256": "456fee31834260bac6ace4af09fbc0bf0764f116c2b5b2f7d83b6a88c721a95c",
+      "what": "lane test runner"
+    },
+    {
+      "path": "crates/noble-cli/tests/live_slot_resource_ref_cli.mjs",
+      "sha256": "0b9c588fbb19fe1b479a57331b60a7b2ad87f2a225ab474a2fffb22e013204a9",
+      "what": "operator-session helper shared by the lanes"
+    },
+    {
+      "path": "verification/live-update-corpus/corpus.mjs",
+      "sha256": "492df89f634fb9ac7eac6ced95b124ba4906c3976d871252b38748aae2c18b95",
+      "what": "corpus expectations and raw-report derivation"
+    },
+    {
+      "path": "verification/live-update-corpus/export.mjs",
+      "sha256": "9bb1b68ad9662d4e868cb96a21f3e42d1330704a1081a0e6218b14831e619c10",
+      "what": "Noble lane exporter"
+    },
+    {
+      "path": "verification/live-update-corpus/controls.mjs",
+      "sha256": "edcd4bbfee9902ccc89fccb3ff4b4be2a591bf928f798feb5bccf943e9933b43",
+      "what": "evidence mutation controls"
+    },
+    {
+      "path": "verification/live-update-corpus/controls.test.mjs",
+      "sha256": "a2b8c9ea69c3f8ea597da37e845bc618e735da451c476eeedb722a6a1ee8a42b",
+      "what": "retained evidence control test"
+    },
+    {
+      "path": "verification/live-update-corpus/comparison.mjs",
+      "sha256": "89aedd3ff719ee7ade1a3d0f569867fb1440063d3ba9ca8dc1c332697a8d9e3d",
+      "what": "Relax comparison import, derivation and verification"
+    },
+    {
+      "path": "verification/live-update-corpus/import-relax.mjs",
+      "sha256": "801d70761bc3afbbe8ed5b548e2f86bddfc41dd9c53c6aa304727ea78bcf61c1",
+      "what": "Relax comparison importer"
+    },
+    {
+      "path": "verification/live-update-corpus/schema.json",
+      "sha256": "d29ef369e0cb91579dff1c8f49cf5ba17105c87c95bfded3b0ce6aada2886882",
+      "what": "versioned corpus schema"
+    },
+    {
+      "path": "specs/conformance/live-reference-cases.json",
+      "sha256": "83b9a68e5aa0f6d0da202ba6ed29721ea4248ddb8a0c8abaa86a99f82c868a63",
+      "what": "canonical LSLOT designs; states must stay unpromoted"
+    },
+    {
+      "path": ".cairn/changes/live-reference-lifetimes/design.md",
+      "sha256": "8d14310600bc71df02b8716fc5f64a2ee3e26f3abf00903343f957df4c3e8b15",
+      "what": "frozen profile text"
+    },
+    {
+      "path": ".cairn/changes/ownership-lifetime-contract/design.md",
+      "sha256": "7f889a3cfd1a19ddfd85267bffa4a0266d1303690ce04cf569f706a5509e2efb",
+      "what": "ownership expectations reused by the retention scenarios"
+    }
+  ],
+  "timing": {
+    "started_at": "2026-11-17T02:55:30.369Z",
+    "ended_at": "2026-11-17T02:55:31.674Z",
+    "duration_ms": 1305,
+    "bound_to": {
+      "source_commit": "6407c5ea0651530b3de8bb47541d045fdd698915",
+      "export_corpus_sha256": "99dc1505ceed462ccbfbbc64a4ae1e9c241145bad0fb2a87e52bc6e14d5310dd",
+      "relax_report_sha256": "b0ab02db8cd9dd89ac6d6e4b92363599bfb4b65644dc1975311f7232fdb1e6ca",
+      "relax_replay_sha256": "66cf7e0bc10863acb7111657550607e35ed4a4e8db97b2b5e44b98a8dabbbcd5",
+      "what": "this import; each Relax timing in relax_timings is bound to its own case, admission setting, Relax revision, profile, edits and admission outcome"
+    }
+  },
+  "export": {
+    "corpus": {
+      "path": "export/corpus.json",
+      "sha256": "99dc1505ceed462ccbfbbc64a4ae1e9c241145bad0fb2a87e52bc6e14d5310dd"
+    },
+    "receipt": {
+      "path": "export/receipt.json",
+      "sha256": "66fb9d86a5fc8925051f290eff4fdadaed4c8f9f1029d973f783aed3af900dcf",
+      "binding_sha256": "b7e469ecb454c02ba094c2823f3618d50515587a84a53ca55b2e9daa12efdd66"
+    },
+    "profile": {
+      "path": "export/profile.json",
+      "sha256": "38e64d885d3ff34def91be9e0a4f9b746e7837eaa58664d91b1840a1cf9da67d"
+    },
+    "source_commit": "6407c5ea0651530b3de8bb47541d045fdd698915"
+  },
+  "relax": {
+    "compiler_lab": {
+      "repository": "brittonr/compiler-lab",
+      "commit": "39fdff1592d0e1ae6c378958efa8a206764203be",
+      "visibility": "private"
+    },
+    "profile": {
+      "id": "compiler-lab-relax-live-profile/relax-5441582-v1",
+      "path": "src/validation/relax_live/profile.json",
+      "sha256": "7acb97fbec6ee1fe225f0ec1ae1b889cdcf0dd1cf45e1aadb71cb104a65cbb1a",
+      "repository": "brittonr/compiler-lab",
+      "commit": "39fdff1592d0e1ae6c378958efa8a206764203be"
+    },
+    "host": {
+      "source_repository": "https://github.com/makepad/relax",
+      "source_revision": "544158264603dbf90994ac47fc97a2636437b656",
+      "executable_sha256": "fed38792ec30d29829fae808398f39444008c03f6e90cf2eb4418a711738e260",
+      "manifest_sha256": "aca8125ac31a1a839c1679c7256ecf8a339bb9758bee91d8b617c87cb4fce41d",
+      "reported_version": "makepad run makepad d08642ed5eee jit 7c8930659157",
+      "std_tree_sha256": "73077222c2c40e616d2a58bb14921ebb9cd6f78cd1e7c96be4ddd30e64ba7c25"
+    },
+    "report": {
+      "path": "relax/run/report.json",
+      "sha256": "b0ab02db8cd9dd89ac6d6e4b92363599bfb4b65644dc1975311f7232fdb1e6ca"
+    },
+    "replay": {
+      "path": "relax/replay/report.json",
+      "sha256": "66cf7e0bc10863acb7111657550607e35ed4a4e8db97b2b5e44b98a8dabbbcd5"
+    }
+  },
+  "scenarios": [
+    {
+      "case_id": "noble-live-update/held-root-and-new-root",
+      "title": "Held root, nested replacement and a new root under one pinned map",
+      "noble": {
+        "result_class": "supported-outcome",
+        "unsupported_dimensions": [
+          "a single invocation routing to two emitting slots cannot be built from this authority shape",
+          "two host threads sharing one registry"
+        ]
+      },
+      "relax": {
+        "result_class": "intentional-semantic-difference",
+        "scenario": "held-root-and-new-root",
+        "reason": "Relax holds its own profile and differs from Noble on version-selection-boundary, held-root-mixing.",
+        "faithful_mapping": "Noble's held root maps to a root_a call parked on a thread across the edit, its nested replacement to the edit of leaf_b, and the new root to a fresh root_a call after the edit. The transitive chain root_t -> mid_c -> leaf_d maps to Noble's transitive dispatch. Relax has no root-scoped map, so selected versions are compared, not maps or epochs.",
+        "unsupported_dimensions": [
+          "root-scoped-version-pin: Relax declares per-call selection.",
+          "stale compare-and-set, omission and retention-budget controls: Relax has no publication compare-and-set or retention budget."
+        ],
+        "relations": [
+          {
+            "dimension": "version-selection-boundary",
+            "relation": "intentional-semantic-difference"
+          },
+          {
+            "dimension": "held-root-mixing",
+            "relation": "intentional-semantic-difference"
+          }
+        ],
+        "admission_settings": [
+          {
+            "admission": "default",
+            "result_class": "intentional-semantic-difference",
+            "relax_contract": "supported-outcome",
+            "temporal_admission": null
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "noble-live-update/saved-program-and-package-retention",
+      "title": "Saved Program, package retention and the retained-version quota",
+      "noble": {
+        "result_class": "supported-outcome",
+        "unsupported_dimensions": [
+          "cross-process persistence of the registry",
+          "a multi-slot atomic publication group"
+        ]
+      },
+      "relax": {
+        "result_class": "intentional-semantic-difference",
+        "scenario": "saved-callables-and-retention",
+        "reason": "Relax holds its own profile and differs from Noble on retention-unit.",
+        "faithful_mapping": "A saved Noble Program maps to a stored boxed closure and to a stored fn pointer, both saved in the first run. Replacements map to edits of leaf and make. Retention maps to calls of the stored values after later edits. Relax declares no retention quota, so Noble's quota boundary has no counterpart.",
+        "unsupported_dimensions": [
+          "retention-quota: Relax declares no bound on retained code.",
+          "package retirement order and saved-owner tokens: Relax has no per-value owner."
+        ],
+        "relations": [
+          {
+            "dimension": "retention-unit",
+            "relation": "intentional-semantic-difference"
+          }
+        ],
+        "admission_settings": [
+          {
+            "admission": "default",
+            "result_class": "intentional-semantic-difference",
+            "relax_contract": "supported-outcome",
+            "temporal_admission": null
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "noble-live-update/relocation-and-effect-prefix",
+      "title": "Event relocation under a pinned map and the abnormal effect prefix",
+      "noble": {
+        "result_class": "unsupported",
+        "unsupported_dimensions": [
+          "a duplicate-vs-omission ratio for one invocation routing to two emitting slots"
+        ]
+      },
+      "relax": {
+        "result_class": "supported-outcome",
+        "scenario": "effect-prefix-and-rollback",
+        "reason": "",
+        "faithful_mapping": "Noble's abnormal effect prefix maps to the effect lines that the panicking version printed before its panic. Noble's abnormal root exit maps to Relax's rollback of the patch group and its rerun. Event relocation has no Relax counterpart.",
+        "unsupported_dimensions": [
+          "event-relocation: Relax has no counterpart of Noble's relocation witness.",
+          "effect owner: Noble performs an effect for the checked target slot; a Relax effect belongs to the code that ran, so no owner correspondence is claimed."
+        ],
+        "relations": [
+          {
+            "dimension": "effect-performed-for",
+            "relation": "unsupported"
+          }
+        ],
+        "admission_settings": [
+          {
+            "admission": "default",
+            "result_class": "supported-outcome",
+            "relax_contract": "supported-outcome",
+            "temporal_admission": null
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "noble-live-update/typed-cases-and-bounds",
+      "title": "Typed generated cases, negative families and the declared host bounds",
+      "noble": {
+        "result_class": "supported-outcome",
+        "unsupported_dimensions": [
+          "structural coercion between differing slot interfaces"
+        ]
+      },
+      "relax": {
+        "result_class": "intentional-semantic-difference",
+        "scenario": "typed-admission",
+        "reason": "Relax holds its own profile and differs from Noble on typed-admission.",
+        "faithful_mapping": "Noble's negative admission families map to edits that the pinned rustc rejects: a type error, a signature change without its caller, and a borrow error. Noble's incompatible schema maps to a layout change of a struct that a thread-local holds. The admission of each candidate is compared by whether its body ran, not by message text.",
+        "unsupported_dimensions": [
+          "generated typed cases and declared host bounds: the Relax lane runs one fixed sequence.",
+          "effect ceilings and nominal resource schemas: Rust has no direct counterpart."
+        ],
+        "relations": [
+          {
+            "dimension": "typed-admission",
+            "relation": "intentional-semantic-difference"
+          }
+        ],
+        "admission_settings": [
+          {
+            "admission": "default",
+            "result_class": "intentional-semantic-difference",
+            "relax_contract": "supported-outcome",
+            "temporal_admission": {
+              "outcome": "fail",
+              "policy": "checked-before-execution"
+            }
+          },
+          {
+            "admission": "check-first",
+            "result_class": "supported-outcome",
+            "relax_contract": "supported-outcome",
+            "temporal_admission": {
+              "outcome": "pass",
+              "policy": "checked-before-execution"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "noble-live-update/ownership-duplicates-and-modules",
+      "title": "Shared saved owners, composition ownership and a cross-module alias",
+      "noble": {
+        "result_class": "supported-outcome",
+        "unsupported_dimensions": [
+          "owner tokens surviving a host process restart"
+        ]
+      },
+      "relax": {
+        "result_class": "unsupported",
+        "scenario": null,
+        "reason": "Noble's saved owners are host owner tokens with release orders. Retained Relax code has no per-value owner, so this lane maps no Relax counterpart and runs nothing for this scenario.",
+        "faithful_mapping": null,
+        "unsupported_dimensions": [],
+        "relations": [
+          {
+            "dimension": "owner-identity",
+            "relation": "not-measured"
+          }
+        ],
+        "admission_settings": []
+      }
+    }
+  ],
+  "result_class_counts": {
+    "noble": {
+      "contract-violation": 0,
+      "intentional-semantic-difference": 0,
+      "supported-outcome": 4,
+      "unexpected-refusal": 0,
+      "runtime-failure": 0,
+      "unsupported": 1,
+      "not-run": 0
+    },
+    "relax": {
+      "contract-violation": 0,
+      "intentional-semantic-difference": 3,
+      "supported-outcome": 1,
+      "unexpected-refusal": 0,
+      "runtime-failure": 0,
+      "unsupported": 1,
+      "not-run": 0
+    },
+    "relax_settings": {
+      "contract-violation": 0,
+      "intentional-semantic-difference": 3,
+      "supported-outcome": 2,
+      "unexpected-refusal": 0,
+      "runtime-failure": 0,
+      "unsupported": 0,
+      "not-run": 0
+    }
+  },
+  "counts_basis": "one Noble cell and one makepad-relax cell per case; relax_settings counts each Relax admission setting that ran",
+  "observations_for_issue_10": {
+    "noble_regressions": [],
+    "relax_observations": [
+      {
+        "subject": "typed-admission under Relax admission default",
+        "policy": "checked-before-execution",
+        "outcome": "fail",
+        "detail": "Rejected versions ran: v4 in runs [5]. A later verdict cannot erase an execution.",
+        "noble_defect": false,
+        "reasoning": "the checked-before-execution policy is evaluated against the Relax admission setting; the Noble column of the same case keeps its own classification"
+      }
+    ],
+    "performance": [],
+    "conclusion": "No actionable Noble regression or performance defect: every Noble cell keeps the class its export recorded, and the Relax timings have no baseline, so they are bounds and not a performance claim."
+  },
+  "relax_timings": [
+    {
+      "record": "relax/run/scenarios/effect-prefix-and-rollback/default/record.json",
+      "case_id": "noble-live-update/relocation-and-effect-prefix",
+      "admission": "default",
+      "duration_ms": 435,
+      "run_milliseconds": [
+        240.18,
+        0.09,
+        0.09,
+        0.09,
+        0.12
+      ],
+      "bound_to": {
+        "admission": "default",
+        "admission_outcome": [
+          {
+            "edit": 1,
+            "error_codes": [],
+            "rung": "patch"
+          },
+          {
+            "edit": 2,
+            "error_codes": [],
+            "rung": "patch"
+          }
+        ],
+        "case_id": "noble-live-update/relocation-and-effect-prefix",
+        "event_binding_sha256": "920f28bba3761e964cea304e4252866af3ba99abc94c7e9381f960b11be8cf4e",
+        "host_sha256": "fed38792ec30d29829fae808398f39444008c03f6e90cf2eb4418a711738e260",
+        "profile_sha256": "7acb97fbec6ee1fe225f0ec1ae1b889cdcf0dd1cf45e1aadb71cb104a65cbb1a",
+        "relax_revision": "544158264603dbf90994ac47fc97a2636437b656",
+        "result_class": "supported-outcome",
+        "scenario": "effect-prefix-and-rollback"
+      }
+    },
+    {
+      "record": "relax/run/scenarios/held-root-and-new-root/default/record.json",
+      "case_id": "noble-live-update/held-root-and-new-root",
+      "admission": "default",
+      "duration_ms": 451,
+      "run_milliseconds": [
+        268.15,
+        7.58,
+        2.3
+      ],
+      "bound_to": {
+        "admission": "default",
+        "admission_outcome": [
+          {
+            "edit": 1,
+            "error_codes": [],
+            "rung": "patch"
+          }
+        ],
+        "case_id": "noble-live-update/held-root-and-new-root",
+        "event_binding_sha256": "0e336db5719496c910892684d533485241f8206cec6bd17ba442dbddf8eec616",
+        "host_sha256": "fed38792ec30d29829fae808398f39444008c03f6e90cf2eb4418a711738e260",
+        "profile_sha256": "7acb97fbec6ee1fe225f0ec1ae1b889cdcf0dd1cf45e1aadb71cb104a65cbb1a",
+        "relax_revision": "544158264603dbf90994ac47fc97a2636437b656",
+        "result_class": "intentional-semantic-difference",
+        "scenario": "held-root-and-new-root"
+      }
+    },
+    {
+      "record": "relax/run/scenarios/saved-callables-and-retention/default/record.json",
+      "case_id": "noble-live-update/saved-program-and-package-retention",
+      "admission": "default",
+      "duration_ms": 389,
+      "run_milliseconds": [
+        230.01,
+        0.1,
+        0.09,
+        0.07,
+        0.06
+      ],
+      "bound_to": {
+        "admission": "default",
+        "admission_outcome": [
+          {
+            "edit": 1,
+            "error_codes": [],
+            "rung": "patch"
+          },
+          {
+            "edit": 2,
+            "error_codes": [],
+            "rung": "patch"
+          },
+          {
+            "edit": 3,
+            "error_codes": [],
+            "rung": "patch"
+          }
+        ],
+        "case_id": "noble-live-update/saved-program-and-package-retention",
+        "event_binding_sha256": "a890b8f66193b6a78d214b343f35fa0f3d6c5a5f1e94978e2c6e221de600688a",
+        "host_sha256": "fed38792ec30d29829fae808398f39444008c03f6e90cf2eb4418a711738e260",
+        "profile_sha256": "7acb97fbec6ee1fe225f0ec1ae1b889cdcf0dd1cf45e1aadb71cb104a65cbb1a",
+        "relax_revision": "544158264603dbf90994ac47fc97a2636437b656",
+        "result_class": "intentional-semantic-difference",
+        "scenario": "saved-callables-and-retention"
+      }
+    },
+    {
+      "record": "relax/run/scenarios/typed-admission/check-first/record.json",
+      "case_id": "noble-live-update/typed-cases-and-bounds",
+      "admission": "check-first",
+      "duration_ms": 972,
+      "run_milliseconds": [
+        560.99,
+        0.12,
+        0.15,
+        0.2,
+        0.15,
+        0.18,
+        0.13
+      ],
+      "bound_to": {
+        "admission": "check-first",
+        "admission_outcome": [
+          {
+            "edit": 1,
+            "error_codes": [
+              "E0308"
+            ],
+            "rung": "refuse"
+          },
+          {
+            "edit": 2,
+            "error_codes": [
+              "E0061"
+            ],
+            "rung": "refuse"
+          },
+          {
+            "edit": 3,
+            "error_codes": [],
+            "rung": "restart"
+          },
+          {
+            "edit": 4,
+            "error_codes": [
+              "E0506"
+            ],
+            "rung": "refuse"
+          },
+          {
+            "edit": 5,
+            "error_codes": [],
+            "rung": "patch"
+          }
+        ],
+        "case_id": "noble-live-update/typed-cases-and-bounds",
+        "event_binding_sha256": "c4817f69dd0124195766cfe6df0f5e5a0026a20d7d9e30304c2af4f8cdb4562d",
+        "host_sha256": "fed38792ec30d29829fae808398f39444008c03f6e90cf2eb4418a711738e260",
+        "profile_sha256": "7acb97fbec6ee1fe225f0ec1ae1b889cdcf0dd1cf45e1aadb71cb104a65cbb1a",
+        "relax_revision": "544158264603dbf90994ac47fc97a2636437b656",
+        "result_class": "supported-outcome",
+        "scenario": "typed-admission"
+      }
+    },
+    {
+      "record": "relax/run/scenarios/typed-admission/default/record.json",
+      "case_id": "noble-live-update/typed-cases-and-bounds",
+      "admission": "default",
+      "duration_ms": 451,
+      "run_milliseconds": [
+        225,
+        0.08,
+        0.11,
+        0.11,
+        0.11,
+        0.1,
+        0.05
+      ],
+      "bound_to": {
+        "admission": "default",
+        "admission_outcome": [
+          {
+            "edit": 1,
+            "error_codes": [
+              "E0308"
+            ],
+            "rung": "refuse"
+          },
+          {
+            "edit": 2,
+            "error_codes": [
+              "E0061"
+            ],
+            "rung": "refuse"
+          },
+          {
+            "edit": 3,
+            "error_codes": [],
+            "rung": "restart"
+          },
+          {
+            "edit": 4,
+            "error_codes": [],
+            "rung": "patch"
+          },
+          {
+            "edit": 5,
+            "error_codes": [],
+            "rung": "patch"
+          }
+        ],
+        "case_id": "noble-live-update/typed-cases-and-bounds",
+        "event_binding_sha256": "c4817f69dd0124195766cfe6df0f5e5a0026a20d7d9e30304c2af4f8cdb4562d",
+        "host_sha256": "fed38792ec30d29829fae808398f39444008c03f6e90cf2eb4418a711738e260",
+        "profile_sha256": "7acb97fbec6ee1fe225f0ec1ae1b889cdcf0dd1cf45e1aadb71cb104a65cbb1a",
+        "relax_revision": "544158264603dbf90994ac47fc97a2636437b656",
+        "result_class": "intentional-semantic-difference",
+        "scenario": "typed-admission"
+      }
+    }
+  ],
+  "non_claims": [
+    "this comparison is experimental evidence; it is not a proof, a conformance result or a model-to-implementation correspondence claim",
+    "the authoritative Noble lanes keep their own claims; the export binds their bytes and reproduces their observations",
+    "no LSLOT-01..09 canonical case state is promoted and no evidence is attached to a canonical case",
+    "each runtime is classified under its own frozen profile; an intentional semantic difference is a defect of neither runtime, and nothing here requires Relax to implement Noble root-pinned selection",
+    "a stored Rust closure or fn pointer is not equated with an immutable Noble Program beyond the faithful mapping each column states",
+    "a failed Relax checked-before-execution policy is an observation of that Relax admission setting, not a Noble defect",
+    "compiler-lab derives and replay-verifies the Relax observations; this corpus binds and cross-checks them and does not re-derive them from the raw streams",
+    "timing and memory samples are bounded observations bound to their scenario, revision and admission outcome, not benchmarks"
+  ],
+  "corpus": {
+    "evidence_path": "corpus.json",
+    "sha256": "e60f59d47efe55a052289bd28d918611049bd750529460cd1368a6b6b25b841a"
+  },
+  "controls": {
+    "suite": "verification/live-update-corpus/controls.mjs#runComparisonControls",
+    "controls": [
+      {
+        "control": "pristine-comparison-verifies",
+        "expected_reason": null,
+        "observed_reasons": [],
+        "passed": true,
+        "detail": [
+          "evidence verified"
+        ]
+      },
+      {
+        "control": "stale-relax-record",
+        "expected_reason": "stale-evidence",
+        "observed_reasons": [
+          "stale-evidence"
+        ],
+        "passed": true,
+        "detail": [
+          {
+            "code": "stale-evidence",
+            "target": "relax/run/scenarios/held-root-and-new-root/default/record.json",
+            "detail": "retained bytes differ from the recorded digest or length"
+          }
+        ]
+      },
+      {
+        "control": "forged-relax-class",
+        "expected_reason": "comparison-drift",
+        "observed_reasons": [
+          "comparison-drift"
+        ],
+        "passed": true,
+        "detail": [
+          {
+            "code": "comparison-drift",
+            "target": "corpus.json",
+            "detail": "the retained compiler-lab material derives another corpus (differs in: scenarios)"
+          },
+          {
+            "code": "comparison-drift",
+            "target": "noble-live-update/held-root-and-new-root",
+            "detail": "the makepad-relax column differs in: admission_settings, result_class"
+          },
+          {
+            "code": "comparison-drift",
+            "target": "receipt.scenarios",
+            "detail": "the receipt differs from the retained evidence"
+          },
+          {
+            "code": "comparison-drift",
+            "target": "receipt.result_class_counts",
+            "detail": "the receipt differs from the retained evidence"
+          }
+        ]
+      },
+      {
+        "control": "mutated-relax-edit-binding",
+        "expected_reason": "event-binding-mismatch",
+        "observed_reasons": [
+          "event-binding-mismatch"
+        ],
+        "passed": true,
+        "detail": [
+          {
+            "code": "event-binding-mismatch",
+            "target": "noble-live-update/held-root-and-new-root/default",
+            "detail": "the edit digests no longer give the bound event binding: the comparison evidence is invalid"
+          }
+        ]
+      },
+      {
+        "control": "mutated-relax-profile",
+        "expected_reason": "relax-profile-changed",
+        "observed_reasons": [
+          "relax-profile-changed"
+        ],
+        "passed": true,
+        "detail": [
+          {
+            "code": "relax-profile-changed",
+            "target": "relax/run/report.json",
+            "detail": "the Relax profile differs from the frozen profile this comparison accepts"
+          },
+          {
+            "code": "relax-profile-changed",
+            "target": "noble_columns.noble-live-update/held-root-and-new-root",
+            "detail": "the Relax profile differs from the frozen profile this comparison accepts"
+          },
+          {
+            "code": "relax-profile-changed",
+            "target": "noble_columns.noble-live-update/saved-program-and-package-retention",
+            "detail": "the Relax profile differs from the frozen profile this comparison accepts"
+          },
+          {
+            "code": "relax-profile-changed",
+            "target": "noble_columns.noble-live-update/relocation-and-effect-prefix",
+            "detail": "the Relax profile differs from the frozen profile this comparison accepts"
+          }
+        ]
+      },
+      {
+        "control": "wrong-noble-export",
+        "expected_reason": "corpus-binding-mismatch",
+        "observed_reasons": [
+          "corpus-binding-mismatch"
+        ],
+        "passed": true,
+        "detail": [
+          {
+            "code": "corpus-binding-mismatch",
+            "target": "relax/run/report.json",
+            "detail": "compiler-lab ran against another Noble export than export/corpus.json"
+          }
+        ]
+      },
+      {
+        "control": "mutated-noble-profile",
+        "expected_reason": "profile-changed",
+        "observed_reasons": [
+          "profile-changed"
+        ],
+        "passed": true,
+        "detail": [
+          {
+            "code": "profile-changed",
+            "target": "relax/run/report.json",
+            "detail": "compiler-lab compared against another Noble profile than the export carries"
+          },
+          {
+            "code": "profile-changed",
+            "target": "verification/live-update-corpus/profiles/noble.json",
+            "detail": "the live Noble profile differs from the one this comparison was computed against; prior comparison evidence is invalid"
+          }
+        ]
+      },
+      {
+        "control": "replay-diverged",
+        "expected_reason": "replay-not-reproduced",
+        "observed_reasons": [
+          "replay-not-reproduced"
+        ],
+        "passed": true,
+        "detail": [
+          {
+            "code": "replay-not-reproduced",
+            "target": "noble-live-update/held-root-and-new-root/default",
+            "detail": "the replay did not reproduce this setting from its retained edits"
+          }
+        ]
+      },
+      {
+        "control": "relax-control-failed",
+        "expected_reason": "relax-controls-failed",
+        "observed_reasons": [
+          "relax-controls-failed"
+        ],
+        "passed": true,
+        "detail": [
+          {
+            "code": "relax-controls-failed",
+            "target": "relax/run/report.json",
+            "detail": "the compiler-lab controls did not all run and pass for their intended reasons"
+          }
+        ]
+      },
+      {
+        "control": "unbound-relax-timing",
+        "expected_reason": "timing-unbound",
+        "observed_reasons": [
+          "timing-unbound"
+        ],
+        "passed": true,
+        "detail": [
+          {
+            "code": "timing-unbound",
+            "target": "noble-live-update/held-root-and-new-root/default",
+            "detail": "the Relax timing is not bound to this case, revision, profile, edits and admission outcome"
+          }
+        ]
+      },
+      {
+        "control": "private-path-leak",
+        "expected_reason": "private-path",
+        "observed_reasons": [
+          "private-path"
+        ],
+        "passed": true,
+        "detail": [
+          {
+            "code": "private-path",
+            "target": "relax/run/scenarios/held-root-and-new-root/default/live.stdout",
+            "detail": "retained bytes match \\/var\\/tmp\\/"
+          }
+        ]
+      },
+      {
+        "control": "source-excerpt-leak",
+        "expected_reason": "private-source",
+        "observed_reasons": [
+          "private-source"
+        ],
+        "passed": true,
+        "detail": [
+          {
+            "code": "private-source",
+            "target": "relax/run/scenarios/held-root-and-new-root/default/live.stdout",
+            "detail": "retained bytes quote a private fixture source line"
+          }
+        ]
+      },
+      {
+        "control": "unlisted-relax-file",
+        "expected_reason": "unlisted-evidence",
+        "observed_reasons": [
+          "unlisted-evidence"
+        ],
+        "passed": true,
+        "detail": [
+          {
+            "code": "unlisted-evidence",
+            "target": "relax/run/scenarios/held-root-and-new-root/default/source/v0.rs",
+            "detail": "a file under relax/ is not in the retained list"
+          }
+        ]
+      }
+    ],
+    "passed": true
+  },
+  "binding_sha256": "041c6c9e775ea682ea2eda8de36609c88dcaf7b840b3c6c21d284750f565bf25"
+}

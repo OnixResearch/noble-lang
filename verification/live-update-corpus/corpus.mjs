@@ -25,11 +25,19 @@ import { fileURLToPath } from 'node:url';
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const CORPUS_DIRECTORY = 'verification/live-update-corpus';
 export const PROFILE_PATH = `${CORPUS_DIRECTORY}/profiles/noble.json`;
-export const EVIDENCE_DIRECTORY = `${CORPUS_DIRECTORY}/evidence`;
+/** The current comparison: the v2 corpus and receipt, the retained Relax material and the export. */
+export const COMPARISON_DIRECTORY = `${CORPUS_DIRECTORY}/comparison`;
+/** The v1 Noble export that the current comparison was computed against. */
+export const EVIDENCE_DIRECTORY = `${COMPARISON_DIRECTORY}/export`;
 export const PROFILE_ID = 'noble-live-update-profile/noble-v1';
+/** Envelope revision of the Noble-side export, the bytes compiler-lab's Relax lane consumes. */
 export const SCHEMA = 'noble-live-update-corpus/v1';
+/** Envelope revision of the comparison corpus that carries the imported Relax column. */
+export const COMPARISON_SCHEMA = 'noble-live-update-corpus/v2';
 export const RECEIPT_SCHEMA = 'noble-live-update-corpus-receipt/v1';
-export const CORPUS_REVISION = '1';
+export const COMPARISON_RECEIPT_SCHEMA = 'noble-live-update-corpus-receipt/v2';
+/** Content revision: '2' is the scenario table under the profile frozen on 2026-11-16. */
+export const CORPUS_REVISION = '2';
 export const TESTS = 'crates/noble-cli/tests';
 export const CANONICAL_CASES = 'specs/conformance/live-reference-cases.json';
 export const SELECTION_COMMAND = 'noble live slot --engine v8 --authority <authority.json>';
@@ -55,7 +63,7 @@ export const RESULT_CLASS_IDS = RESULT_CLASSES.map(row => row.id);
 
 export const OTHER_RUNTIME = Object.freeze({
   name: 'makepad-relax',
-  reason: 'compiler-lab #188 (Relax host), #189 (temporal admission) and #190 (persistent sessions) are not available; no Relax profile is frozen, so the Relax column is not-run',
+  reason: 'the Noble exporter does not run Relax: compiler-lab `validate relax-live` consumes this export by SHA-256 under its own frozen Relax profile, and `import-relax.mjs` places the resulting column in the revision-2 comparison corpus',
 });
 
 export const RUNTIME_SOURCES = Object.freeze([
@@ -1446,15 +1454,193 @@ export function bundleFromFiles(directory, laneIds) {
 // ---------------------------------------------------------------------------------------------
 
 const HEX = /^[0-9a-f]{64}$/;
+const COMMIT = /^[0-9a-f]{40}$/u;
 const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const isString = value => typeof value === 'string' && value.length > 0;
+const keysWithin = (value, allowed) => Object.keys(value).filter(key => !allowed.includes(key));
+
+const TOP_LEVEL_KEYS = ['schema', 'corpus_revision', 'generated_at', 'profile', 'runtime', 'source',
+  'pins', 'result_classes', 'canonical_cases', 'scenarios', 'non_claims'];
+/** Result classes that require an executed counterpart, as opposed to `unsupported` and `not-run`. */
+export const MEASURED_CLASSES = Object.freeze(['contract-violation',
+  'intentional-semantic-difference', 'supported-outcome', 'unexpected-refusal', 'runtime-failure']);
+export const RELAX_ADMISSIONS = Object.freeze(['default', 'check-first']);
+const RELATIONS = ['intentional-semantic-difference', 'correspondence', 'unsupported'];
+const DIFFERENCE_KEYS = ['dimension', 'noble', 'relax', 'classification_rule'];
+const RELATION_KEYS = [...DIFFERENCE_KEYS, 'relation', 'observed', 'basis'];
+
+/** The identity of a frozen compiler-lab Relax profile: id, repository path, digest and commit. */
+export function relaxProfileFailures(profile) {
+  if (!isObject(profile)) return ['the Relax profile identity is missing'];
+  const failures = keysWithin(profile, ['id', 'path', 'sha256', 'repository', 'commit'])
+    .map(key => `the Relax profile identity has an undeclared field ${key}`);
+  if (!/^compiler-lab-relax-live-profile\/[a-z0-9.-]+$/u.test(profile.id ?? '')
+    || profile.path !== 'src/validation/relax_live/profile.json'
+    || !HEX.test(profile.sha256 ?? '') || profile.repository !== 'brittonr/compiler-lab'
+    || !COMMIT.test(profile.commit ?? ''))
+    failures.push('the Relax profile identity lacks its id, path, digest, repository or commit');
+  return failures;
+}
+
+/** Structural validation of one revision-2 makepad-relax column. */
+export function relaxColumnFailures(column) {
+  if (!isObject(column)) return ['the makepad-relax column is missing'];
+  const failures = keysWithin(column, ['name', 'scenario', 'profile', 'result_class', 'reason',
+    'faithful_mapping', 'unsupported_dimensions', 'anticipated_differences', 'admission_settings'])
+    .map(key => `the makepad-relax column has an undeclared field ${key}`);
+  const fail = reason => failures.push(reason);
+  if (column.name !== OTHER_RUNTIME.name) fail('the comparison column names another runtime');
+  failures.push(...relaxProfileFailures(column.profile));
+  if (!RESULT_CLASS_IDS.includes(column.result_class)) fail('unknown makepad-relax result class');
+  // Only a supported outcome may come without a stated reason: every other class explains itself.
+  if (typeof column.reason !== 'string'
+    || (column.reason.length === 0 && column.result_class !== 'supported-outcome'))
+    fail('the makepad-relax column does not state the reason for its class');
+  if (!Array.isArray(column.unsupported_dimensions)
+    || !column.unsupported_dimensions.every(isString))
+    fail('malformed unsupported dimensions');
+  const differences = Array.isArray(column.anticipated_differences)
+    ? column.anticipated_differences : [];
+  if (differences.length === 0) fail('no anticipated differences');
+  const settings = Array.isArray(column.admission_settings) ? column.admission_settings : null;
+  if (settings === null) fail('no admission settings list');
+  if (MEASURED_CLASSES.includes(column.result_class)) {
+    if (!isString(column.scenario) || !isString(column.faithful_mapping))
+      fail('a measured column names its compiler-lab scenario and its faithful mapping');
+    if (settings !== null && settings.length === 0)
+      fail('a measured column names at least one admission setting');
+    for (const row of differences) {
+      if (!isObject(row) || keysWithin(row, RELATION_KEYS).length > 0
+        || !DIFFERENCE_KEYS.every(key => isString(row[key])) || !RELATIONS.includes(row.relation)
+        || !Object.hasOwn(row, 'observed') || !Array.isArray(row.basis)
+        || !row.basis.every(isString))
+        fail('a measured column states each anticipated difference with its relation, observation and basis');
+    }
+    for (const setting of settings ?? []) {
+      const record = setting?.record;
+      const temporal = setting?.temporal_admission;
+      if (!isObject(setting) || keysWithin(setting, ['admission', 'result_class', 'relax_contract',
+        'temporal_admission', 'event_binding_sha256', 'record']).length > 0
+        || !RELAX_ADMISSIONS.includes(setting.admission)
+        || !RESULT_CLASS_IDS.includes(setting.result_class)
+        || !RESULT_CLASS_IDS.includes(setting.relax_contract)
+        || !HEX.test(setting.event_binding_sha256 ?? ''))
+        fail('malformed admission setting');
+      if (temporal !== null && !(isObject(temporal)
+        && keysWithin(temporal, ['policy', 'outcome']).length === 0
+        && temporal.policy === 'checked-before-execution'
+        && ['pass', 'fail', 'unverified'].includes(temporal.outcome)))
+        fail('malformed temporal admission summary');
+      if (!isObject(record) || keysWithin(record, ['path', 'sha256', 'original_path',
+        'original_sha256']).length > 0
+        || !/^relax\/run\/scenarios\/[a-z0-9-]+\/[a-z-]+\/record\.json$/u.test(record.path ?? '')
+        || !/^scenarios\/[a-z0-9-]+\/[a-z-]+\/record\.json$/u.test(record.original_path ?? '')
+        || !HEX.test(record.sha256 ?? '') || !HEX.test(record.original_sha256 ?? ''))
+        fail('an admission setting lacks its record binding');
+    }
+  } else {
+    if (column.scenario !== undefined || column.faithful_mapping !== undefined)
+      fail('an unmeasured column names no compiler-lab scenario and no mapping');
+    if (settings !== null && settings.length > 0)
+      fail('an unmeasured column names no admission setting');
+    for (const row of differences)
+      if (!isObject(row) || keysWithin(row, DIFFERENCE_KEYS).length > 0
+        || !DIFFERENCE_KEYS.every(key => isString(row[key])))
+        fail('an unmeasured column keeps the anticipated differences as declared');
+  }
+  return failures;
+}
+
+/** Structural validation of the revision-2 comparison block. */
+export function comparisonBlockFailures(comparison) {
+  if (!isObject(comparison)) return ['comparison: missing'];
+  const failures = keysWithin(comparison, ['export', 'relax', 'retained', 'withheld'])
+    .map(key => `comparison: undeclared field ${key}`);
+  const fail = (where, reason) => failures.push(`comparison.${where}: ${reason}`);
+  const exported = comparison.export;
+  if (!isObject(exported) || exported.corpus?.path !== 'export/corpus.json'
+    || !HEX.test(exported.corpus?.sha256 ?? '') || exported.receipt?.path !== 'export/receipt.json'
+    || !HEX.test(exported.receipt?.sha256 ?? '') || !HEX.test(exported.receipt?.binding_sha256 ?? '')
+    || exported.profile?.path !== 'export/profile.json' || !HEX.test(exported.profile?.sha256 ?? '')
+    || !COMMIT.test(exported.source_commit ?? ''))
+    fail('export', 'the export corpus, receipt, profile and source commit are not bound');
+  const relax = comparison.relax;
+  if (!isObject(relax)) {
+    fail('relax', 'missing');
+  } else {
+    if (keysWithin(relax, ['runtime', 'lane', 'compiler_lab', 'profile', 'host', 'options',
+      'report', 'replay', 'controls', 'temporal_admission', 'noble_columns_sha256']).length > 0)
+      fail('relax', 'undeclared field');
+    if (relax.runtime !== OTHER_RUNTIME.name || relax.lane !== 'validate relax-live')
+      fail('relax', 'another runtime or lane');
+    if (relax.compiler_lab?.repository !== 'brittonr/compiler-lab'
+      || !COMMIT.test(relax.compiler_lab?.commit ?? '')
+      || relax.compiler_lab?.visibility !== 'private')
+      fail('relax.compiler_lab', 'repository, commit and visibility are not bound');
+    for (const row of relaxProfileFailures(relax.profile)) fail('relax.profile', row);
+    const host = relax.host;
+    if (!isObject(host) || host.source_repository !== 'https://github.com/makepad/relax'
+      || !COMMIT.test(host.source_revision ?? '') || !HEX.test(host.executable_sha256 ?? '')
+      || !HEX.test(host.manifest_sha256 ?? '') || !isString(host.reported_version)
+      || !HEX.test(host.std_tree_sha256 ?? ''))
+      fail('relax.host', 'the pinned Relax host identity is incomplete');
+    const options = relax.options;
+    if (!isObject(options) || !Array.isArray(options.admission) || options.admission.length === 0
+      || !options.admission.every(value => RELAX_ADMISSIONS.includes(value))
+      || !isString(options.toolchain) || !Number.isInteger(options.timeout_ms))
+      fail('relax.options', 'the lane options are not recorded');
+    if (relax.report?.path !== 'relax/run/report.json' || !isString(relax.report?.outcome)
+      || relax.report?.identity_unchanged !== true)
+      fail('relax.report', 'the retained report is not bound or its host identity changed');
+    const relations = relax.replay?.relations;
+    if (relax.replay?.path !== 'relax/replay/report.json' || !isString(relax.replay?.outcome)
+      || !Array.isArray(relations) || relations.length === 0
+      || !relations.every(row => isString(row?.scenario) && RELAX_ADMISSIONS.includes(row?.admission)
+        && ['reproduced', 'stale', 'diverged'].includes(row?.relation)
+        && HEX.test(row?.retained_event_binding_sha256 ?? '')
+        && HEX.test(row?.event_binding_sha256 ?? '')))
+      fail('relax.replay', 'the replay relations are not recorded');
+    if (!Array.isArray(relax.controls) || relax.controls.length === 0
+      || !relax.controls.every(row => isString(row?.name) && isString(row?.expected_reason)
+        && typeof row?.passed === 'boolean'))
+      fail('relax.controls', 'the compiler-lab controls are not recorded');
+    if (!Array.isArray(relax.temporal_admission)
+      || !relax.temporal_admission.every(row => isString(row?.scenario)
+        && RELAX_ADMISSIONS.includes(row?.admission) && row?.policy === 'checked-before-execution'
+        && ['pass', 'fail', 'unverified'].includes(row?.outcome) && isString(row?.detail)))
+      fail('relax.temporal_admission', 'malformed policy outcomes');
+    if (!HEX.test(relax.noble_columns_sha256 ?? ''))
+      fail('relax.noble_columns_sha256', 'missing');
+  }
+  if (!Array.isArray(comparison.retained) || comparison.retained.length === 0)
+    fail('retained', 'no retained compiler-lab file');
+  else for (const entry of comparison.retained)
+    if (!isObject(entry) || !/^relax\/(run|replay)\/[A-Za-z0-9._/-]+$/u.test(entry.path ?? '')
+      || entry.path.split('/').includes('..') || !isString(entry.role)
+      || !HEX.test(entry.sha256 ?? '') || !Number.isInteger(entry.bytes)
+      || !isString(entry.original_path) || !HEX.test(entry.original_sha256 ?? '')
+      || !Number.isInteger(entry.original_bytes) || !isObject(entry.substitutions))
+      fail('retained', `malformed retained file ${entry?.path}`);
+  if (!Array.isArray(comparison.withheld) || comparison.withheld.length === 0
+    || !comparison.withheld.every(row => isString(row?.what) && isString(row?.reason)))
+    fail('withheld', 'the withheld compiler-lab material and its reasons are not stated');
+  return failures;
+}
 
 /** Structural validation of a corpus envelope. Returns an array of failure strings. */
 export function validateCorpus(document) {
   const failures = [];
   const fail = (where, reason) => failures.push(`${where}: ${reason}`);
   if (!isObject(document)) return ['corpus: not an object'];
-  if (document.schema !== SCHEMA) fail('schema', `expected ${SCHEMA}`);
+  const revision = document.schema === SCHEMA ? 1
+    : document.schema === COMPARISON_SCHEMA ? 2 : 0;
+  if (revision === 0) fail('schema', `expected ${SCHEMA} or ${COMPARISON_SCHEMA}`);
+  for (const key of keysWithin(document, revision === 2
+    ? [...TOP_LEVEL_KEYS, 'comparison'] : TOP_LEVEL_KEYS))
+    fail(key, revision === 1 && key === 'comparison'
+      ? 'a revision-1 export carries no comparison' : 'undeclared top-level field');
+  if (revision === 2)
+    for (const row of comparisonBlockFailures(document.comparison)) failures.push(row);
   if (!isString(document.corpus_revision)) fail('corpus_revision', 'missing');
   if (!isString(document.generated_at) || Number.isNaN(Date.parse(document.generated_at)))
     fail('generated_at', 'not a date-time');
@@ -1530,7 +1716,9 @@ export function validateCorpus(document) {
       || scenario.edits.variants.length === 0) fail(where, 'no exact edits recorded');
     else for (const variant of scenario.edits.variants)
       if (!isString(variant.variant) || !Number.isInteger(variant.count)
-        || !Array.isArray(variant.operations)) fail(where, 'malformed edit record');
+        || variant.count < 0 || !Array.isArray(variant.operations)
+        || variant.operations.length !== variant.count || !HEX.test(variant.requests_sha256 ?? ''))
+        fail(where, 'malformed edit record');
     if (!isObject(scenario.ordering)) fail(where, 'no ordering record');
     if (!Array.isArray(scenario.selected_identities)) fail(where, 'no selected identities');
     if (!isObject(scenario.effect_prefixes) || !Array.isArray(scenario.effect_prefixes.normal)
@@ -1557,14 +1745,20 @@ export function validateCorpus(document) {
       fail(where, 'noble comparison missing or misclassified');
     if (!isString(scenario.comparison?.faithful_mapping))
       fail(where, 'no faithful mapping statement');
-    if (scenario.other_runtime?.name !== OTHER_RUNTIME.name
-      || scenario.other_runtime?.result_class !== 'not-run'
-      || !isString(scenario.other_runtime?.reason)
-      || scenario.other_runtime.profile !== null)
-      fail(where, 'the foreign runtime column must be not-run with a reason and no profile');
-    if (!Array.isArray(scenario.other_runtime?.anticipated_differences)
-      || scenario.other_runtime.anticipated_differences.length === 0)
-      fail(where, 'no anticipated foreign-runtime differences');
+    if (revision === 2) {
+      for (const row of relaxColumnFailures(scenario.other_runtime)) fail(where, row);
+    } else {
+      if (scenario.other_runtime?.name !== OTHER_RUNTIME.name
+        || scenario.other_runtime?.result_class !== 'not-run'
+        || !isString(scenario.other_runtime?.reason)
+        || scenario.other_runtime.profile !== null
+        || keysWithin(scenario.other_runtime, ['name', 'profile', 'result_class', 'reason',
+          'anticipated_differences']).length > 0)
+        fail(where, 'the foreign runtime column of an export must be not-run with a reason and no profile');
+      if (!Array.isArray(scenario.other_runtime?.anticipated_differences)
+        || scenario.other_runtime.anticipated_differences.length === 0)
+        fail(where, 'no anticipated foreign-runtime differences');
+    }
     if (!isObject(scenario.timing) || scenario.timing.bound_to?.case_id !== scenario.case_id
       || scenario.timing.bound_to?.source_commit !== document.source?.commit
       || scenario.timing.bound_to?.result_class !== scenario.comparison?.result_class

@@ -1,0 +1,15 @@
+{"operation":"install","id":"dupper","source":"[ 1 + ] dup","inputs":[]}
+{"operation":"install","id":"leaf","source":"drop [ 1 + ]","inputs":["I64"]}
+{"operation":"install","id":"composer","source":"compose","inputs":["Program<I64,I64,pure>","Program<I64,I64,pure>"]}
+{"operation":"install","id":"runner","source":"run","inputs":["I64","Program<I64,I64,pure>"]}
+{"operation":"install","id":"maker","source":"[ 1 + ]","inputs":[]}
+{"operation":"install","id":"passer","source":"dup","inputs":["Program<I64,I64,pure>"]}
+{"operation":"invoke","id":"dupper","inputs":[],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"41"},{"kind":"program","owner":"program-1"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"41"},{"kind":"program","owner":"program-2"}],"refs":[]}
+{"operation":"release-program","owner":"program-2"}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"41"},{"kind":"program","owner":"program-2"}],"refs":[]}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"41"},{"kind":"program","owner":"program-1"}],"refs":[]}
+{"operation":"release-program","owner":"program-2"}
+{"operation":"release-program","owner":"program-1"}
+{"operation":"invoke","id":"runner","inputs":[{"kind":"i64","value":"41"},{"kind":"program","owner":"program-1"}],"refs":[]}

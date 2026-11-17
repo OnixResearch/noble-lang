@@ -947,6 +947,9 @@ impl ProcedureLibrary {
         };
         acceptance::accept(self.verifier.as_ref(), &mut record, retained)?;
         Self::validate_record(&record, policy, true)?;
+        if replacement {
+            Self::supersede_existing(&mut candidate_records, record.supersedes)?;
+        }
         if let Some(existing_index) = existing_position {
             let existing = candidate_records.get(existing_index).ok_or_else(|| {
                 Refusal::new(
@@ -972,6 +975,18 @@ impl ProcedureLibrary {
                     Diagnostic {
                         field: "library_dependencies",
                         message: "an existing subject cannot change its dependency closure",
+                    },
+                ));
+            }
+            if record.supersedes.is_some()
+                && record.supersedes != existing.supersedes
+                && (!replacement || existing.supersedes.is_some())
+            {
+                return Err(Refusal::new(
+                    RefusalKind::Invalid,
+                    Diagnostic {
+                        field: "supersedes",
+                        message: "retained replacement predecessors cannot change outside atomic replacement",
                     },
                 ));
             }
@@ -1018,9 +1033,7 @@ impl ProcedureLibrary {
                     },
                 ));
             }
-            if replacement {
-                Self::supersede_existing(&mut candidate_records, record.supersedes)?;
-            } else if record.supersedes.is_some() {
+            if !replacement && record.supersedes.is_some() {
                 return Err(Refusal::new(
                     RefusalKind::Invalid,
                     Diagnostic {
@@ -1584,53 +1597,97 @@ impl ProcedureLibrary {
     }
 
     fn validate_supersession(records: &[ProcedureRecord]) -> Result<(), Refusal> {
+        let mut successors = [None; MAX_RECORDS];
         let mut outcome = Ok(());
         let mut index = 0;
         while outcome.is_ok() && index < records.len() {
-            outcome = Self::check_supersession(records, index);
+            outcome = Self::link_successor(records, index, &mut successors);
             index += 1;
         }
-        outcome
-    }
-
-    /// One record of [`Self::validate_supersession`].
-    fn check_supersession(records: &[ProcedureRecord], index: usize) -> Result<(), Refusal> {
-        let record = &records[index];
-        if record.status == Status::Superseded
-            && crate::scan::find_first(records, |candidate| {
-                candidate.supersedes == Some(record.procedure_id)
-            })
-            .is_none()
-        {
-            return Err(Refusal::at(
+        outcome?;
+        let mut rooted_records = 0;
+        let mut outcome = Ok(());
+        let mut index = 0;
+        while outcome.is_ok() && index < records.len() {
+            match Self::rooted_path(records, &successors, index) {
+                Ok(count) => rooted_records += count,
+                Err(refusal) => outcome = Err(refusal),
+            }
+            index += 1;
+        }
+        outcome?;
+        if rooted_records != records.len() {
+            return Err(Refusal::new(
                 RefusalKind::Invalid,
                 Diagnostic {
                     field: "supersedes",
-                    message: "superseded record must remain linked to a retained replacement",
+                    message: "replacement relation must be acyclic",
                 },
-                index as u32,
             ));
         }
-        if let Some(replaced_id) = record.supersedes {
-            if record.status == Status::Superseded || replaced_id == record.procedure_id {
-                return Err(Refusal::at(RefusalKind::Invalid, Diagnostic { field: "supersedes", message: "replacement relation must point from a live distinct record to the replaced subject" }, index as u32));
-            }
-            if crate::scan::find_first(records, |old| {
+        Ok(())
+    }
+
+    /// One predecessor edge of [`Self::validate_supersession`]. Refusals stay
+    /// outside its loop so the complete lineage check remains extractable.
+    fn link_successor(
+        records: &[ProcedureRecord],
+        index: usize,
+        successors: &mut [Option<usize>],
+    ) -> Result<(), Refusal> {
+        if let Some(replaced_id) = records[index].supersedes {
+            let old_index = position_first(records, |old| {
                 old.procedure_id == replaced_id && old.status == Status::Superseded
             })
-            .is_none()
-            {
-                return Err(Refusal::at(
+            .ok_or_else(|| {
+                Refusal::at(
                     RefusalKind::Invalid,
                     Diagnostic {
                         field: "supersedes",
                         message: "replacement target is not retained as superseded",
                     },
                     index as u32,
+                )
+            })?;
+            if successors[old_index].replace(index).is_some() {
+                return Err(Refusal::at(
+                    RefusalKind::Invalid,
+                    Diagnostic {
+                        field: "supersedes",
+                        message: "a replaced subject must have exactly one retained successor",
+                    },
+                    index as u32,
                 ));
             }
         }
         Ok(())
+    }
+
+    /// Single predecessor/successor edges make rooted paths disjoint; records
+    /// outside those paths belong to a cycle. A non-root contributes zero.
+    fn rooted_path(
+        records: &[ProcedureRecord],
+        successors: &[Option<usize>],
+        index: usize,
+    ) -> Result<usize, Refusal> {
+        let record = &records[index];
+        if record.status == Status::Superseded && successors[index].is_none() {
+            return Err(Refusal::at(
+                RefusalKind::Invalid,
+                Diagnostic {
+                    field: "supersedes",
+                    message: "replacement target is not retained as superseded",
+                },
+                index as u32,
+            ));
+        }
+        let mut count = 0;
+        let mut current = record.supersedes.is_none().then_some(index);
+        while let Some(link_index) = current {
+            count += 1;
+            current = successors[link_index];
+        }
+        Ok(count)
     }
 
     fn supersede_existing(
@@ -1659,6 +1716,15 @@ impl ProcedureLibrary {
                 ));
             }
         };
+        if old.status == Status::Superseded {
+            return Err(Refusal::new(
+                RefusalKind::StaleContext,
+                Diagnostic {
+                    field: "supersedes",
+                    message: "a superseded record already has a retained successor",
+                },
+            ));
+        }
         old.status = Status::Superseded;
         old.promotion = None;
         old.retrieval = retrieval::signature(old);

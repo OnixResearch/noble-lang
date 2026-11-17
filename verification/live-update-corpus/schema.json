@@ -1,14 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://onixresearch.org/noble/schemas/live-update-corpus-v1.json",
+  "$id": "https://onixresearch.org/noble/schemas/live-update-corpus-v2.json",
   "title": "Noble bounded live-update corpus envelope",
-  "description": "Versioned envelope for bounded live-update observations exported from Noble's authoritative fixture lanes for later comparison with an external runtime. The envelope keeps case and runtime identities, raw-report provenance, independently declared expectations, the exact edits and checkpoint ordering, selected identities, effect prefixes and a per-runtime profile distinct. It is an experimental corpus, not a conformance promotion and not a model-to-implementation claim.",
+  "description": "Versioned envelope for bounded live-update observations exported from Noble's authoritative fixture lanes and compared with an external runtime. The envelope keeps case and runtime identities, raw-report provenance, independently declared expectations, the exact edits and checkpoint ordering, selected identities, effect prefixes and a per-runtime profile distinct. Two revisions share this schema and neither accepts the other's comparison column. Revision v1 is the Noble-side export: its makepad-relax column is not-run, and compiler-lab's `validate relax-live` lane consumes exactly these bytes. Revision v2 is the comparison corpus: the same Noble scenarios with the imported makepad-relax column (frozen Relax profile identity, one of the seven result classes, anticipated differences with their observed relation and record bindings) plus the raw-provenance binding of the retained compiler-lab report, records and replay and of the v1 export they were computed against. It is an experimental corpus, not a conformance promotion and not a model-to-implementation claim.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "corpus_revision", "generated_at", "profile", "runtime", "source",
     "pins", "result_classes", "canonical_cases", "scenarios", "non_claims"],
   "properties": {
-    "schema": {"const": "noble-live-update-corpus/v1"},
+    "schema": {"enum": ["noble-live-update-corpus/v1", "noble-live-update-corpus/v2"]},
     "corpus_revision": {"type": "string", "minLength": 1},
     "generated_at": {"type": "string", "format": "date-time"},
     "profile": {"$ref": "#/$defs/profile"},
@@ -30,10 +30,29 @@
       }
     },
     "scenarios": {"type": "array", "minItems": 3, "items": {"$ref": "#/$defs/scenario"}},
-    "non_claims": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+    "non_claims": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "comparison": {"$ref": "#/$defs/comparison"}
   },
+  "allOf": [
+    {
+      "if": {"properties": {"schema": {"const": "noble-live-update-corpus/v1"}}},
+      "then": {
+        "not": {"required": ["comparison"]},
+        "properties": {"scenarios": {"items": {"properties": {
+          "other_runtime": {"$ref": "#/$defs/notRunColumn"}}}}}
+      },
+      "else": {
+        "required": ["comparison"],
+        "properties": {"scenarios": {"items": {"properties": {
+          "other_runtime": {"$ref": "#/$defs/relaxColumn"}}}}}
+      }
+    }
+  ],
   "$defs": {
     "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "resultClassId": {"enum": ["contract-violation", "intentional-semantic-difference",
+      "supported-outcome", "unexpected-refusal", "runtime-failure", "unsupported", "not-run"]},
     "binding": {
       "type": "object", "additionalProperties": false,
       "required": ["path", "sha256"],
@@ -72,9 +91,11 @@
     },
     "source": {
       "type": "object", "additionalProperties": false,
-      "required": ["commit", "clean"],
+      "required": ["commit", "tree", "clean"],
+      "description": "The clean source revision of the export. Revision v1 of this text omitted the tree digest that every export records.",
       "properties": {
-        "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "commit": {"$ref": "#/$defs/commit"},
+        "tree": {"$ref": "#/$defs/commit"},
         "clean": {"const": true},
         "git": {"type": "string"}
       }
@@ -83,8 +104,7 @@
       "type": "object", "additionalProperties": false,
       "required": ["id", "meaning"],
       "properties": {
-        "id": {"enum": ["contract-violation", "intentional-semantic-difference",
-          "supported-outcome", "unexpected-refusal", "runtime-failure", "unsupported", "not-run"]},
+        "id": {"$ref": "#/$defs/resultClassId"},
         "meaning": {"type": "string", "minLength": 1}
       }
     },
@@ -193,7 +213,33 @@
         }
       }
     },
-    "otherRuntime": {
+    "anticipatedDifference": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dimension", "noble", "relax", "classification_rule"],
+      "properties": {
+        "dimension": {"type": "string", "minLength": 1},
+        "noble": {"type": "string", "minLength": 1},
+        "relax": {"type": "string", "minLength": 1},
+        "classification_rule": {"type": "string", "minLength": 1}
+      }
+    },
+    "observedRelation": {
+      "description": "An anticipated difference after the run: the comparison lane's relation of the Relax observation to the Noble dimension, the observed values and the expectation identifiers they rest on.",
+      "type": "object", "additionalProperties": false,
+      "required": ["dimension", "noble", "relax", "classification_rule", "relation", "observed",
+        "basis"],
+      "properties": {
+        "dimension": {"type": "string", "minLength": 1},
+        "noble": {"type": "string", "minLength": 1},
+        "relax": {"type": "string", "minLength": 1},
+        "classification_rule": {"type": "string", "minLength": 1},
+        "relation": {"enum": ["intentional-semantic-difference", "correspondence", "unsupported"]},
+        "observed": {},
+        "basis": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "notRunColumn": {
+      "description": "Revision v1: the external runtime column before any comparison. It names no profile and claims no outcome.",
       "type": "object", "additionalProperties": false,
       "required": ["name", "profile", "result_class", "reason", "anticipated_differences"],
       "properties": {
@@ -201,14 +247,212 @@
         "profile": {"type": "null"},
         "result_class": {"const": "not-run"},
         "reason": {"type": "string", "minLength": 1},
-        "anticipated_differences": {"type": "array", "minItems": 1, "items": {
+        "anticipated_differences": {"type": "array", "minItems": 1,
+          "items": {"$ref": "#/$defs/anticipatedDifference"}}
+      }
+    },
+    "relaxProfile": {
+      "description": "Identity of the frozen Relax profile in the private compiler-lab repository. The profile text stays there; the corpus binds its digest and commit.",
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "path", "sha256", "repository", "commit"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^compiler-lab-relax-live-profile/[a-z0-9.-]+$"},
+        "path": {"const": "src/validation/relax_live/profile.json"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "repository": {"const": "brittonr/compiler-lab"},
+        "commit": {"$ref": "#/$defs/commit"}
+      }
+    },
+    "relaxSetting": {
+      "description": "One Relax admission setting of a measured column and the retained record it came from. `record.original_sha256` is the digest the compiler-lab column names; `record.sha256` is the digest of the retained, path-scrubbed bytes.",
+      "type": "object", "additionalProperties": false,
+      "required": ["admission", "result_class", "relax_contract", "temporal_admission",
+        "event_binding_sha256", "record"],
+      "properties": {
+        "admission": {"enum": ["default", "check-first"]},
+        "result_class": {"$ref": "#/$defs/resultClassId"},
+        "relax_contract": {"$ref": "#/$defs/resultClassId"},
+        "temporal_admission": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object", "additionalProperties": false, "required": ["policy", "outcome"],
+              "properties": {
+                "policy": {"const": "checked-before-execution"},
+                "outcome": {"enum": ["pass", "fail", "unverified"]}
+              }
+            }
+          ]
+        },
+        "event_binding_sha256": {"$ref": "#/$defs/sha256"},
+        "record": {
           "type": "object", "additionalProperties": false,
-          "required": ["dimension", "noble", "relax", "classification_rule"],
+          "required": ["path", "sha256", "original_path", "original_sha256"],
           "properties": {
-            "dimension": {"type": "string", "minLength": 1},
-            "noble": {"type": "string", "minLength": 1},
-            "relax": {"type": "string", "minLength": 1},
-            "classification_rule": {"type": "string", "minLength": 1}
+            "path": {"type": "string", "pattern": "^relax/run/scenarios/[a-z0-9-]+/[a-z-]+/record\\.json$"},
+            "sha256": {"$ref": "#/$defs/sha256"},
+            "original_path": {"type": "string", "pattern": "^scenarios/[a-z0-9-]+/[a-z-]+/record\\.json$"},
+            "original_sha256": {"$ref": "#/$defs/sha256"}
+          }
+        }
+      }
+    },
+    "relaxColumn": {
+      "description": "Revision v2: the makepad-relax column imported from compiler-lab's `noble_columns`. A measured column names its scenario, faithful mapping, observed relations and at least one admission setting; an unsupported or not-run column keeps its reason and Noble's anticipated differences, and names no setting. Only a supported outcome may leave its reason empty.",
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "profile", "result_class", "reason", "unsupported_dimensions",
+        "anticipated_differences", "admission_settings"],
+      "properties": {
+        "name": {"const": "makepad-relax"},
+        "scenario": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+        "profile": {"$ref": "#/$defs/relaxProfile"},
+        "result_class": {"$ref": "#/$defs/resultClassId"},
+        "reason": {"type": "string"},
+        "faithful_mapping": {"type": "string", "minLength": 1},
+        "unsupported_dimensions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "anticipated_differences": {"type": "array", "minItems": 1},
+        "admission_settings": {"type": "array", "items": {"$ref": "#/$defs/relaxSetting"}}
+      },
+      "if": {"properties": {"result_class": {"enum": ["unsupported", "not-run"]}}},
+      "then": {
+        "not": {"anyOf": [{"required": ["scenario"]}, {"required": ["faithful_mapping"]}]},
+        "properties": {
+          "reason": {"minLength": 1},
+          "anticipated_differences": {"items": {"$ref": "#/$defs/anticipatedDifference"}},
+          "admission_settings": {"maxItems": 0}
+        }
+      },
+      "else": {
+        "required": ["scenario", "faithful_mapping"],
+        "properties": {
+          "anticipated_differences": {"items": {"$ref": "#/$defs/observedRelation"}},
+          "admission_settings": {"minItems": 1}
+        },
+        "if": {"properties": {"result_class": {"const": "supported-outcome"}}},
+        "else": {"properties": {"reason": {"minLength": 1}}}
+      }
+    },
+    "retainedFile": {
+      "description": "One retained compiler-lab file. Local paths are replaced by the named placeholders before retention, so `sha256` covers the retained bytes and `original_sha256` the bytes compiler-lab wrote.",
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "role", "sha256", "bytes", "original_path", "original_sha256",
+        "original_bytes", "substitutions"],
+      "properties": {
+        "path": {"type": "string", "pattern": "^relax/(run|replay)/[A-Za-z0-9._/-]+$"},
+        "role": {"enum": ["report", "request", "controls", "identity", "pins", "record",
+          "live-stdout", "live-stderr", "live-log"]},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "bytes": {"type": "integer", "minimum": 0},
+        "original_path": {"type": "string", "minLength": 1},
+        "original_sha256": {"$ref": "#/$defs/sha256"},
+        "original_bytes": {"type": "integer", "minimum": 0},
+        "substitutions": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}}
+      }
+    },
+    "comparison": {
+      "description": "Revision v2 only: what the imported column was computed against and from.",
+      "type": "object", "additionalProperties": false,
+      "required": ["export", "relax", "retained", "withheld"],
+      "properties": {
+        "export": {
+          "type": "object", "additionalProperties": false,
+          "required": ["corpus", "receipt", "profile", "source_commit"],
+          "properties": {
+            "corpus": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"],
+              "properties": {"path": {"const": "export/corpus.json"}, "sha256": {"$ref": "#/$defs/sha256"}}},
+            "receipt": {"type": "object", "additionalProperties": false,
+              "required": ["path", "sha256", "binding_sha256"],
+              "properties": {"path": {"const": "export/receipt.json"}, "sha256": {"$ref": "#/$defs/sha256"},
+                "binding_sha256": {"$ref": "#/$defs/sha256"}}},
+            "profile": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"],
+              "properties": {"path": {"const": "export/profile.json"}, "sha256": {"$ref": "#/$defs/sha256"}}},
+            "source_commit": {"$ref": "#/$defs/commit"}
+          }
+        },
+        "relax": {
+          "type": "object", "additionalProperties": false,
+          "required": ["runtime", "lane", "compiler_lab", "profile", "host", "options", "report",
+            "replay", "controls", "temporal_admission", "noble_columns_sha256"],
+          "properties": {
+            "runtime": {"const": "makepad-relax"},
+            "lane": {"const": "validate relax-live"},
+            "compiler_lab": {"type": "object", "additionalProperties": false,
+              "required": ["repository", "commit", "visibility"],
+              "properties": {"repository": {"const": "brittonr/compiler-lab"},
+                "commit": {"$ref": "#/$defs/commit"}, "visibility": {"const": "private"}}},
+            "profile": {"$ref": "#/$defs/relaxProfile"},
+            "host": {"type": "object", "additionalProperties": false,
+              "required": ["source_repository", "source_revision", "executable_sha256",
+                "manifest_sha256", "reported_version", "std_tree_sha256"],
+              "properties": {
+                "source_repository": {"const": "https://github.com/makepad/relax"},
+                "source_revision": {"$ref": "#/$defs/commit"},
+                "executable_sha256": {"$ref": "#/$defs/sha256"},
+                "manifest_sha256": {"$ref": "#/$defs/sha256"},
+                "reported_version": {"type": "string", "minLength": 1},
+                "std_tree_sha256": {"$ref": "#/$defs/sha256"}
+              }},
+            "options": {"type": "object", "additionalProperties": false,
+              "required": ["admission", "toolchain", "timeout_ms"],
+              "properties": {
+                "admission": {"type": "array", "minItems": 1,
+                  "items": {"enum": ["default", "check-first"]}},
+                "toolchain": {"type": "string", "minLength": 1},
+                "timeout_ms": {"type": "integer", "minimum": 1}
+              }},
+            "report": {"type": "object", "additionalProperties": false,
+              "required": ["path", "outcome", "identity_unchanged"],
+              "properties": {"path": {"const": "relax/run/report.json"},
+                "outcome": {"type": "string", "minLength": 1},
+                "identity_unchanged": {"const": true}}},
+            "replay": {"type": "object", "additionalProperties": false,
+              "required": ["path", "outcome", "relations"],
+              "properties": {
+                "path": {"const": "relax/replay/report.json"},
+                "outcome": {"type": "string", "minLength": 1},
+                "relations": {"type": "array", "minItems": 1, "items": {
+                  "type": "object", "additionalProperties": false,
+                  "required": ["scenario", "admission", "relation", "retained_event_binding_sha256",
+                    "event_binding_sha256"],
+                  "properties": {
+                    "scenario": {"type": "string", "minLength": 1},
+                    "admission": {"enum": ["default", "check-first"]},
+                    "relation": {"enum": ["reproduced", "stale", "diverged"]},
+                    "retained_event_binding_sha256": {"$ref": "#/$defs/sha256"},
+                    "event_binding_sha256": {"$ref": "#/$defs/sha256"}
+                  }
+                }}
+              }},
+            "controls": {"type": "array", "minItems": 1, "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["name", "expected_reason", "observed_reason", "passed"],
+              "properties": {
+                "name": {"type": "string", "minLength": 1},
+                "expected_reason": {"type": "string", "minLength": 1},
+                "observed_reason": {"type": ["string", "null"]},
+                "passed": {"type": "boolean"}
+              }
+            }},
+            "temporal_admission": {"type": "array", "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["scenario", "admission", "policy", "outcome", "detail"],
+              "properties": {
+                "scenario": {"type": "string", "minLength": 1},
+                "admission": {"enum": ["default", "check-first"]},
+                "policy": {"const": "checked-before-execution"},
+                "outcome": {"enum": ["pass", "fail", "unverified"]},
+                "detail": {"type": "string", "minLength": 1}
+              }
+            }},
+            "noble_columns_sha256": {"$ref": "#/$defs/sha256"}
+          }
+        },
+        "retained": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/retainedFile"}},
+        "withheld": {"type": "array", "minItems": 1, "items": {
+          "type": "object", "additionalProperties": false, "required": ["what", "reason"],
+          "properties": {
+            "what": {"type": "string", "minLength": 1},
+            "reason": {"type": "string", "minLength": 1}
           }
         }}
       }
@@ -257,10 +501,11 @@
           "properties": {"variants": {"type": "array", "minItems": 1, "items": {
             "type": "object", "additionalProperties": false,
             "required": ["variant", "count", "operations", "requests_sha256"],
+            "description": "One request file of a lane variant. A configure-only probe (the typed lane's type-stack and nesting bounds) sends no operator request: its count is 0, its operation list is empty and its digest is that of the empty file. Revision v1 of this text demanded at least one request, which the exported data never satisfied; v2 states the accepted shape.",
             "properties": {
               "variant": {"type": "string", "minLength": 1},
-              "count": {"type": "integer", "minimum": 1},
-              "operations": {"type": "array", "minItems": 1,
+              "count": {"type": "integer", "minimum": 0},
+              "operations": {"type": "array",
                 "items": {"type": "string", "minLength": 1}},
               "requests_sha256": {"$ref": "#/$defs/sha256"},
               "retained": {"type": "boolean"},
@@ -321,7 +566,8 @@
             "intentional_differences": {"type": "array", "items": {}}
           }
         },
-        "other_runtime": {"$ref": "#/$defs/otherRuntime"},
+        "other_runtime": {"type": "object",
+          "description": "The makepad-relax column; its shape is fixed by the envelope revision (notRunColumn in v1, relaxColumn in v2)."},
         "timing": {"$ref": "#/$defs/timing"}
       }
     }

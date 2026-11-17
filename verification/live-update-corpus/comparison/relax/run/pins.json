@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "source_repository": "https://github.com/makepad/relax",
+  "source_revision": "544158264603dbf90994ac47fc97a2636437b656",
+  "source_hash": "sha256-k2JxIErxsw0KjTWomLaB0xxYhMj2jUv6Yeq6qXBz400=",
+  "relax_provenance": "makepad run makepad d08642ed5eee jit 7c8930659157",
+  "bootstrap_channel": "1.99.0",
+  "check_first_variable": "COMPILER_LAB_RELAX_CHECK_FIRST"
+}

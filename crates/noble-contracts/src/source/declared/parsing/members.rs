@@ -259,17 +259,10 @@ fn binding<'a>(
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
 fn reference(text: &str, logical_target: bool) -> bool {
-    let target_name = |name| {
-        if logical_target {
-            super::logical_name(name)
-        } else {
-            super::name(name)
-        }
-    };
     let Some((scope, local)) = crate::scan::split_once_byte(text, b'.') else {
-        return target_name(text);
+        return reference_name(text, logical_target);
     };
-    if !target_name(local) || local.as_bytes().contains(&b'.') {
+    if !reference_name(local, logical_target) || local.as_bytes().contains(&b'.') {
         return false;
     }
     if let Some((module, version)) = crate::scan::split_once_byte(scope, b'@') {
@@ -280,6 +273,16 @@ fn reference(text: &str, logical_target: bool) -> bool {
             && version.parse::<u32>().is_ok()
     } else {
         super::name(scope)
+    }
+}
+
+/// Select the same identifier grammar without generating unused closure-trait
+/// forwarding methods that the selected translator does not emit.
+fn reference_name(name: &str, logical_target: bool) -> bool {
+    if logical_target {
+        super::logical_name(name)
+    } else {
+        super::name(name)
     }
 }
 

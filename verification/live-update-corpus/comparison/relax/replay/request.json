@@ -1,0 +1,17 @@
+{
+  "common": {
+    "out": "<compiler-lab-replay>",
+    "toolchain": "1.99.0",
+    "timeout_ms": 120000,
+    "max_storage_mib": 2048,
+    "min_free_mib": 1024,
+    "check_lifecycle": false
+  },
+  "host": "/nix/store/1m05wga7kwjxk4nwnsk27vxm0pmsg36x-compiler-lab-relax-host-544158264603dbf90994ac47fc97a2636437b656/bin/compiler-lab-relax-host",
+  "corpus": "<noble-export>/corpus.json",
+  "admission": [
+    "default",
+    "check-first"
+  ],
+  "replay": "<compiler-lab-run>"
+}

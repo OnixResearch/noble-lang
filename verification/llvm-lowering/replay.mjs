@@ -1,7 +1,9 @@
 // Fresh-process binding replay for issue #107's retained graph-to-LLVM bundle.
-// This verifies byte and stage bindings; it does not replace the Rust validator,
-// the Lean kernel proof, compiler-lab, or a native artifact check.
+// This verifies byte and stage bindings, including the retained compiler-lab
+// optimization-pilot receipt; it does not replace the Rust validator, the Lean
+// kernel proof, a compiler-lab run, or a native artifact check.
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, isAbsolute, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -260,8 +262,112 @@ assert.equal(stages.get('graph-rewrite').status, 'accepted');
 assert.equal(stages.get('graph-to-llvm-lowering').status, 'validated');
 assert.equal(stages.get('semantic-validation').status, 'proved');
 assert.equal(stages.get('concrete-agreement').status, 'checked');
-assert.equal(stages.get('llvm-optimisation').status, 'not-run');
-assert.equal(stages.get('native-artifact').status, 'not-run');
+assert.equal(stages.get('llvm-optimisation').status, 'semantic-validation');
+assert.equal(stages.get('native-artifact').status, 'concrete-agreement');
+
+// The compiler-lab optimization-pilot receipt: bound by SHA-256 and commit, run
+// on this pair's exact bytes, and reporting each stage with its own status.
+const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
+const pilotBytes = readFileSync(resolve(lane, bundle.bindings.compiler_lab_report));
+assert.equal(sha256(pilotBytes), bundle.bindings.compiler_lab_report_sha256);
+const pilot = JSON.parse(pilotBytes.toString('utf8'));
+assert.equal(pilot.schema, 'noble-compiler-lab-pilot-receipt/v1');
+assert.equal(pilot.issue, 107);
+assert.equal(pilot.compiler_lab.commit, bundle.bindings.compiler_lab_commit);
+assert.match(pilot.compiler_lab.commit, /^[0-9a-f]{40}$/);
+assert.match(pilot.noble.source_commit, /^[0-9a-f]{40}$/);
+assert.equal(pilot.noble.clean_source, true);
+assert.equal(pilot.run.exit_status, 0);
+assert.equal(pilot.run.validation, 'pass');
+assert.equal(pilot.replay.exit_status, 0);
+assert.equal(pilot.replay.validation, 'pass');
+assert.equal(pilot.replay.replay.matches, true);
+assert.deepEqual(pilot.replay.replay.differences, []);
+assert.equal(pilot.replay.recommendation, 'stop');
+assert.equal(pilot.replay.comparison.machine_code, 'identical');
+
+const report = pilot.report;
+assert.equal(report.kind, 'compiler-lab-optimization-pilot-report');
+assert.equal(report.outcome, 'pass');
+assert.equal(report.contract.sha256, pilot.compiler_lab.contract.sha256);
+assert.equal(report.producer.bundle_sha256, pilot.noble.bundle_sha256);
+assert.equal(report.producer.schema, bundle.schema);
+assert.equal(report.producer.profile, profile);
+assert.deepEqual(report.producer.revisions, bundle.revisions);
+assert.equal(report.target.triple, triple);
+assert.equal(report.target.data_layout, dataLayout);
+assert.equal(report.target.reported_data_layout, dataLayout);
+assert.equal(report.target.data_layout_confirmed, true);
+for (const tool of ['alive-tv', 'opt', 'llc', 'clang']) assert.equal(report.tools[tool].llvm_version, '21.1.8');
+assert.deepEqual(report.admission, []);
+assert.deepEqual(report.coverage.controls, { declared: 20, met: 20 });
+assert.deepEqual(report.decision.continue_with, []);
+assert.equal(report.decision.recommendation, 'stop');
+
+// Every graph, module and certificate the report consumed is a retained file here.
+function reportedDigest(owner, artifact) {
+  const found = new Set(report.identities
+    .filter(identity => identity.owner === owner && identity.artifact === artifact)
+    .map(identity => identity.sha256));
+  assert.equal(found.size, 1, `${owner} ${artifact} has one reported digest`);
+  return [...found][0];
+}
+const laneDigest = path => sha256(readFileSync(resolve(lane, path)));
+for (const name of ['foldable', 'wrapping', 'negative', 'subtractive', 'shared']) {
+  assert.equal(reportedDigest(`subject/${name}`, 'graph'), laneDigest(`artifacts/${name}.graph`));
+  assert.equal(reportedDigest(`subject/${name}`, 'module'), laneDigest(`artifacts/${name}.ll`));
+}
+const producerCandidate = 'candidate/foldable-producer';
+assert.equal(reportedDigest('subject/foldable', 'module'), laneDigest(bundle.pair.source_module));
+assert.equal(reportedDigest(producerCandidate, 'graph'), laneDigest(`artifacts/${bundle.pair.rewritten}.graph`));
+assert.equal(reportedDigest(producerCandidate, 'module'), laneDigest(bundle.pair.target_module));
+assert.equal(reportedDigest(producerCandidate, 'certificate'), laneDigest(bundle.pair.certificate));
+assert.equal(reportedDigest(producerCandidate, 'optimized'), reportedDigest('subject/foldable', 'optimized'));
+assert.equal(reportedDigest(producerCandidate, 'machine-code'), reportedDigest('subject/foldable', 'machine-code'));
+
+// The retained pair's own stages, each with a separate semantic and concrete status.
+assert.equal(report.stage_report.length, 1);
+const pairReport = report.stage_report[0];
+assert.equal(pairReport.candidate, 'foldable-producer');
+assert.equal(pairReport.original, bundle.pair.original);
+assert.equal(pairReport.rewritten, bundle.pair.rewritten);
+assert.equal(pairReport.eligible, true);
+assert.equal(pairReport.comparison.machine_code, 'identical');
+assert.equal(pairReport.comparison.settings, 'matched');
+assert.deepEqual(pairReport.stages.map(stage => [stage.stage, stage.side, stage.semantic, stage.concrete, stage.status]), [
+  ['graph-rewrite', 'pair', 'semantic-validation', 'concrete-agreement', 'semantic-validation'],
+  ['graph-to-llvm-lowering', 'baseline', 'semantic-validation', 'concrete-agreement', 'semantic-validation'],
+  ['graph-to-llvm-lowering', 'candidate', 'semantic-validation', 'concrete-agreement', 'semantic-validation'],
+  ['llvm-pair', 'pair', 'semantic-validation', 'concrete-agreement', 'semantic-validation'],
+  ['llvm-optimisation', 'baseline', 'semantic-validation', 'concrete-agreement', 'semantic-validation'],
+  ['llvm-optimisation', 'candidate', 'semantic-validation', 'concrete-agreement', 'semantic-validation'],
+  ['native-artifact', 'baseline', 'not-run', 'concrete-agreement', 'concrete-agreement'],
+  ['native-artifact', 'candidate', 'not-run', 'concrete-agreement', 'concrete-agreement'],
+]);
+
+// Across every candidate and control, the four evidence classes stay distinct and
+// a stage below its policy requirement never makes a candidate eligible.
+const statuses = ['semantic-validation', 'concrete-agreement', 'refuted', 'unknown', 'unsupported', 'timeout', 'not-run'];
+const edgeClaims = report.claims.filter(claim => 'semantic' in claim);
+for (const claim of edgeClaims) {
+  assert.ok(statuses.includes(claim.semantic) && statuses.includes(claim.concrete) && statuses.includes(claim.status));
+  if (claim.semantic !== 'semantic-validation') assert.notEqual(claim.status, 'semantic-validation');
+}
+const observed = new Set(edgeClaims.map(claim => claim.status));
+for (const status of ['semantic-validation', 'concrete-agreement', 'unknown', 'unsupported']) assert.ok(observed.has(status), status);
+const meets = { 'semantic-validation': ['semantic-validation'], 'concrete-agreement': ['semantic-validation', 'concrete-agreement'] };
+const eligibility = report.claims.filter(claim => claim.edge === 'eligibility');
+assert.equal(eligibility.length, report.coverage.attempted_candidates);
+assert.equal(eligibility.filter(claim => claim.status === true).length, report.coverage.eligible_candidates);
+for (const verdict of eligibility.filter(claim => claim.status === true)) {
+  const owned = edgeClaims.filter(claim => claim.owner === verdict.owner);
+  for (const [edge, required] of Object.entries(report.contract.policy.requirements)) {
+    const forEdge = owned.filter(claim => claim.edge === edge);
+    assert.ok(forEdge.length > 0, `${verdict.owner} reports ${edge}`);
+    for (const claim of forEdge) assert.ok(meets[required].includes(claim.status), `${verdict.owner} ${edge}`);
+  }
+}
 
 console.log(`replayed ${bundle.artifacts.length} graph/module bindings, ${certificate.steps.length} rewrite step, ${bundle.controls.length} retained controls, ${stages.size} stage records`);
-console.log('semantic validation and concrete agreement remain separate; LLVM optimisation and native artifact are not run');
+console.log(`compiler-lab ${pilot.compiler_lab.commit.slice(0, 12)} pilot: ${edgeClaims.length} stage claims, ${eligibility.length} candidates, decision ${report.decision.recommendation}`);
+console.log('semantic validation and concrete agreement remain separate; LLVM optimisation is compiler-lab semantic validation and the native artifact is concrete agreement only');

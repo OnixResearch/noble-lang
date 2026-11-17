@@ -1,0 +1,758 @@
+{
+  "schema": "noble-mm0-compiler-lab-admission/v1",
+  "issue": 127,
+  "noble_source_commit": "16d8c7c3df4dd6a72ff2c4628c2d58e4e1a732db",
+  "adapter_sha256": "746be49de49fd9ab2818802ffe8a42ccde3b7a9b1135b36922679f99ffdc0630",
+  "backend": {
+    "name": "compiler-lab validate mm0-certificate",
+    "compiler_lab_commit": "46a988bcbc3bf9b3a6296cecbef8eb4d499c454e",
+    "compiler_lab_binary_sha256": "01108e9bd23b8bb2bb99330991b280ca586c9bf757cde05caf9971203e38710f",
+    "checker_profile": "mm0-c-parser-v1",
+    "obligation_profile": "ngraph-i64-wrapping-v1",
+    "system": "x86_64-linux",
+    "tools_closure": "/nix/store/xkfk12m94zcdffzc98dnl57mmkyqs6y9-compiler-lab-mm0-certificate-tools",
+    "closure_identity_sha256": "9800e8c5a12b8fd5f6bd50c6e866d48a64bc52b398be83e75f28ea0c00e993d1",
+    "checker_sha256": "7b00b9c1373098567fcefda96ef4cffbea8fb7fe65ff729400ba9ab2cc06babb",
+    "negative_checker_sha256": "4f690e9da63e89d8bbd90fda0da94034da3a281d7f04dccb0d8ebaf4e52afb30",
+    "pins_sha256": "563a90f813ec7693d19e58e36cfe63e5a7cbe816be82bf85be478db1f69ee3b0",
+    "expression_sha256": "a5c3385cb11246534cc26e64343209b5bb39a2122f1bd5ed8c83cd4772cca0ef",
+    "base_theory_sha256": {
+      "peano.mm0": "463a7d6e4f4791313dedcfd737053dcf2cc07b466371e263c38a994c6fb72052",
+      "peano_hex.mm0": "e2f5e461c568e0e3ef784b507e9111272b38956093df98b943ccc4cd806e351b"
+    }
+  },
+  "noble_frozen_sha256": "0989392a15949c185b7c991b1b3dcf44feab525e8b6031d686644e8a0e649735",
+  "derived_claims": {
+    "small": {
+      "endpoint": "theorem endpoint_small (a: nat): $ 3 : 5 : umul a (uadd 3 5) : 0 = 3 : 5 : umul a 8 : 0 $;",
+      "fold_fact": "theorem ufold_small: $ uadd 3 5 = 8 $;",
+      "original_outputs": [
+        "3",
+        "5",
+        "(mul input0 (add 3 5))"
+      ],
+      "rewritten_outputs": [
+        "3",
+        "5",
+        "(mul input0 8)"
+      ],
+      "step": {
+        "node": 3,
+        "operands": [
+          1,
+          2
+        ],
+        "first": "3",
+        "second": "5",
+        "claimed": "8"
+      }
+    },
+    "boundary": {
+      "endpoint": "theorem endpoint_boundary (a: nat): $ wmax : 1 : umul a (uadd wmax 1) : 0 = wmax : 1 : umul a wmin : 0 $;",
+      "fold_fact": "theorem ufold_boundary: $ uadd wmax 1 = wmin $;",
+      "original_outputs": [
+        "9223372036854775807",
+        "1",
+        "(mul input0 (add 9223372036854775807 1))"
+      ],
+      "rewritten_outputs": [
+        "9223372036854775807",
+        "1",
+        "(mul input0 9223372036854775808)"
+      ],
+      "step": {
+        "node": 3,
+        "operands": [
+          1,
+          2
+        ],
+        "first": "9223372036854775807",
+        "second": "1",
+        "claimed": "9223372036854775808"
+      }
+    }
+  },
+  "approved_axioms": 49,
+  "artifacts": {
+    "specification_bytes": 34499,
+    "proof_bytes": 1242704,
+    "specification_sha256": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+    "proof_sha256": "2ced26177614e3af86ed74fb92c4ad3ef43d3d249512a357652f9b2111a56860"
+  },
+  "producer_invoked": false,
+  "rows": {
+    "positive": {
+      "expected": {
+        "outcome": "accepted"
+      },
+      "exit_code": 0,
+      "observed": {
+        "outcome": "accepted",
+        "stage": null,
+        "checker_stage": null,
+        "refused_stages": []
+      },
+      "controls": {
+        "held": 23,
+        "failed": 0,
+        "passed": true
+      },
+      "checker": {
+        "exit_code": 0,
+        "elapsed_ms": 11,
+        "peak_rss_kib": 1836,
+        "verdict": {
+          "verdict": "accepted"
+        },
+        "specification_sha256": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+        "proof_sha256": "2ced26177614e3af86ed74fb92c4ad3ef43d3d249512a357652f9b2111a56860"
+      },
+      "admission_wall_ms": 5764,
+      "report_sha256": "3c2ef0c919eba9e5cc091a4b6a298b3fd22c7e42e6038ffc3799f1a6398a59b1",
+      "exhausted-address-space": {
+        "checker_verdict": "resource-exhausted",
+        "checker_exit_code": 139,
+        "elapsed_ms": 7,
+        "passed": true
+      },
+      "exhausted-wall-clock": {
+        "checker_verdict": "timeout",
+        "checker_exit_code": null,
+        "elapsed_ms": 1001,
+        "passed": true
+      }
+    },
+    "replay": {
+      "expected": {
+        "outcome": "accepted",
+        "producer_invoked": false
+      },
+      "exit_code": 0,
+      "observed": {
+        "outcome": "accepted",
+        "stage": null,
+        "checker_stage": null,
+        "refused_stages": []
+      },
+      "controls": {
+        "held": 23,
+        "failed": 0,
+        "passed": true
+      },
+      "checker": {
+        "exit_code": 0,
+        "elapsed_ms": 11,
+        "peak_rss_kib": 1852,
+        "verdict": {
+          "verdict": "accepted"
+        },
+        "specification_sha256": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+        "proof_sha256": "2ced26177614e3af86ed74fb92c4ad3ef43d3d249512a357652f9b2111a56860"
+      },
+      "admission_wall_ms": 5539,
+      "report_sha256": "b81e34523501660c22895691197a47236f55541f83522c51ccf02f61f2a49473",
+      "replay": {
+        "retained": "accepted",
+        "fresh": "accepted",
+        "retained_frozen_sha256": "0989392a15949c185b7c991b1b3dcf44feab525e8b6031d686644e8a0e649735"
+      }
+    },
+    "malformed-proof": {
+      "expected": {
+        "outcome": "refused",
+        "stage": "logical-check",
+        "checker_stage": "mmb-header"
+      },
+      "exit_code": 1,
+      "observed": {
+        "outcome": "refused",
+        "stage": "logical-check",
+        "checker_stage": "mmb-header",
+        "refused_stages": [
+          "logical-check"
+        ]
+      },
+      "controls": {
+        "held": 21,
+        "failed": 2,
+        "passed": false
+      },
+      "checker": {
+        "exit_code": 255,
+        "elapsed_ms": 6,
+        "peak_rss_kib": 1096,
+        "verdict": {
+          "message": "Not a MM0B file",
+          "stage": "mmb-header",
+          "verdict": "rejected"
+        },
+        "specification_sha256": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+        "proof_sha256": "73290029c07bc8612dee9720ae153702abfc3609e3aef19da1a92178aa4a691c"
+      },
+      "admission_wall_ms": 5176,
+      "report_sha256": "1fa0bed75c7efa0b6222105c286a7257197879e7322b068dd08939140ac0042e"
+    },
+    "truncated-proof": {
+      "expected": {
+        "outcome": "refused",
+        "stage": "logical-check",
+        "checker_stage": "mmb-proof"
+      },
+      "exit_code": 1,
+      "observed": {
+        "outcome": "refused",
+        "stage": "logical-check",
+        "checker_stage": "mmb-proof",
+        "refused_stages": [
+          "logical-check"
+        ]
+      },
+      "controls": {
+        "held": 21,
+        "failed": 2,
+        "passed": false
+      },
+      "checker": {
+        "exit_code": 255,
+        "elapsed_ms": 11,
+        "peak_rss_kib": 1892,
+        "verdict": {
+          "message": "proof command out of range",
+          "stage": "mmb-proof",
+          "verdict": "rejected"
+        },
+        "specification_sha256": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+        "proof_sha256": "3283ef72dad6cffc3b716b8d559a1c23828b57b8686d3c7fb773637da59a8631"
+      },
+      "admission_wall_ms": 4595,
+      "report_sha256": "884deac5bff5c848c09b2fbbd36863412f87c95c02cd37817e6bfb251354e11e"
+    },
+    "unrelated-endpoint": {
+      "expected": {
+        "outcome": "refused",
+        "stage": "claim-reconstruction"
+      },
+      "exit_code": 1,
+      "observed": {
+        "outcome": "refused",
+        "stage": "claim-reconstruction",
+        "checker_stage": null,
+        "refused_stages": [
+          "claim-reconstruction",
+          "subject-identity"
+        ]
+      },
+      "controls": {
+        "held": 23,
+        "failed": 0,
+        "passed": true
+      },
+      "checker": {
+        "exit_code": 0,
+        "elapsed_ms": 11,
+        "peak_rss_kib": 1852,
+        "verdict": {
+          "verdict": "accepted"
+        },
+        "specification_sha256": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+        "proof_sha256": "2ced26177614e3af86ed74fb92c4ad3ef43d3d249512a357652f9b2111a56860"
+      },
+      "admission_wall_ms": 5109,
+      "report_sha256": "67613115550bc7b42568843b59c9033583d1182c9c9d164e6336aa21a039cf3b"
+    },
+    "reordered-outputs": {
+      "expected": {
+        "outcome": "refused",
+        "stage": "claim-reconstruction"
+      },
+      "exit_code": 1,
+      "observed": {
+        "outcome": "refused",
+        "stage": "claim-reconstruction",
+        "checker_stage": null,
+        "refused_stages": [
+          "claim-reconstruction",
+          "subject-identity"
+        ]
+      },
+      "controls": {
+        "held": 22,
+        "failed": 1,
+        "passed": false
+      },
+      "checker": {
+        "exit_code": 0,
+        "elapsed_ms": 11,
+        "peak_rss_kib": 1852,
+        "verdict": {
+          "verdict": "accepted"
+        },
+        "specification_sha256": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+        "proof_sha256": "2ced26177614e3af86ed74fb92c4ad3ef43d3d249512a357652f9b2111a56860"
+      },
+      "admission_wall_ms": 4511,
+      "report_sha256": "b9f3afac990dbf80ce94d5b8f57645d054de4001a2210e61035d916a180ef33e"
+    },
+    "changed-shared-use": {
+      "expected": {
+        "outcome": "refused",
+        "stage": "claim-reconstruction"
+      },
+      "exit_code": 1,
+      "observed": {
+        "outcome": "refused",
+        "stage": "claim-reconstruction",
+        "checker_stage": null,
+        "refused_stages": [
+          "claim-reconstruction",
+          "subject-identity"
+        ]
+      },
+      "controls": {
+        "held": 22,
+        "failed": 1,
+        "passed": false
+      },
+      "checker": {
+        "exit_code": 0,
+        "elapsed_ms": 11,
+        "peak_rss_kib": 1884,
+        "verdict": {
+          "verdict": "accepted"
+        },
+        "specification_sha256": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+        "proof_sha256": "2ced26177614e3af86ed74fb92c4ad3ef43d3d249512a357652f9b2111a56860"
+      },
+      "admission_wall_ms": 4795,
+      "report_sha256": "9b6e328d75dadd545da089a14043c9a6379754efb4d6b129324e603a198c1bda"
+    },
+    "changed-consumed-bits": {
+      "expected": {
+        "outcome": "refused",
+        "stage": "claim-reconstruction"
+      },
+      "exit_code": 1,
+      "observed": {
+        "outcome": "refused",
+        "stage": "claim-reconstruction",
+        "checker_stage": null,
+        "refused_stages": [
+          "claim-reconstruction",
+          "subject-identity"
+        ]
+      },
+      "controls": {
+        "held": 23,
+        "failed": 0,
+        "passed": true
+      },
+      "checker": {
+        "exit_code": 0,
+        "elapsed_ms": 11,
+        "peak_rss_kib": 1868,
+        "verdict": {
+          "verdict": "accepted"
+        },
+        "specification_sha256": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+        "proof_sha256": "2ced26177614e3af86ed74fb92c4ad3ef43d3d249512a357652f9b2111a56860"
+      },
+      "admission_wall_ms": 4541,
+      "report_sha256": "e8f97ba2febdf1f9c39a881fc989e4a6f90d739b541a8a3a1fe009b77026bce7"
+    },
+    "changed-certificate-bits": {
+      "expected": {
+        "outcome": "refused",
+        "stage": "claim-reconstruction"
+      },
+      "exit_code": 1,
+      "observed": {
+        "outcome": "refused",
+        "stage": "claim-reconstruction",
+        "checker_stage": null,
+        "refused_stages": [
+          "claim-reconstruction",
+          "subject-identity"
+        ]
+      },
+      "controls": {
+        "held": 23,
+        "failed": 0,
+        "passed": true
+      },
+      "checker": {
+        "exit_code": 0,
+        "elapsed_ms": 11,
+        "peak_rss_kib": 1840,
+        "verdict": {
+          "verdict": "accepted"
+        },
+        "specification_sha256": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+        "proof_sha256": "2ced26177614e3af86ed74fb92c4ad3ef43d3d249512a357652f9b2111a56860"
+      },
+      "admission_wall_ms": 4455,
+      "report_sha256": "7c9900dcacb339cf99bec765e7a81711cb4928c230cd7138379085b2891c2f66"
+    },
+    "proof-of-another-claim": {
+      "expected": {
+        "outcome": "refused",
+        "stage": "assumption-policy",
+        "also": [
+          "obligations"
+        ]
+      },
+      "exit_code": 1,
+      "observed": {
+        "outcome": "refused",
+        "stage": "assumption-policy",
+        "checker_stage": null,
+        "refused_stages": [
+          "assumption-policy",
+          "definitions",
+          "interpretation",
+          "obligations",
+          "claim-reconstruction",
+          "theory-authentication",
+          "specification-identity"
+        ]
+      },
+      "controls": {
+        "held": 15,
+        "failed": 8,
+        "passed": false
+      },
+      "checker": {
+        "exit_code": 0,
+        "elapsed_ms": 6,
+        "peak_rss_kib": 828,
+        "verdict": {
+          "verdict": "accepted"
+        },
+        "specification_sha256": "83ab9ef3f346fb5be56f1d587e5458c8d17b504b5fe104ce93496e8eb38b7062",
+        "proof_sha256": "71be574cef4fb04644853ee035e61a2552ecfffd423a23e669710ad511bd19de"
+      },
+      "admission_wall_ms": 3531,
+      "report_sha256": "0c02635264e83d8fe029900d14cb8a0c4b1c7f3d9125e49f1fc6e8c6fb1b05c9"
+    },
+    "unapproved-axiom": {
+      "expected": {
+        "outcome": "refused",
+        "stage": "assumption-policy"
+      },
+      "exit_code": 1,
+      "observed": {
+        "outcome": "refused",
+        "stage": "assumption-policy",
+        "checker_stage": null,
+        "refused_stages": [
+          "assumption-policy",
+          "definitions",
+          "interpretation",
+          "obligations",
+          "claim-reconstruction",
+          "theory-authentication",
+          "specification-identity"
+        ]
+      },
+      "controls": {
+        "held": 16,
+        "failed": 7,
+        "passed": false
+      },
+      "checker": {
+        "exit_code": 0,
+        "elapsed_ms": 6,
+        "peak_rss_kib": 848,
+        "verdict": {
+          "verdict": "accepted"
+        },
+        "specification_sha256": "68df61c76184f36e2fbc897e397d56d9d9dc919f06bdd28ccf0e89f83a41ec18",
+        "proof_sha256": "bf159c688be2c11b12b41e91f6ead07138d0a0416c3c3a00f5e69bb8e2b937fb"
+      },
+      "admission_wall_ms": 3367,
+      "report_sha256": "59b39b9eae9a68ca78aeaa38e860cbd915c0d1a9824c67e2a5ef9a322a303048"
+    },
+    "sorry-proof": {
+      "expected": {
+        "outcome": "refused",
+        "stage": "assumption-policy",
+        "checker_stage": "sorry"
+      },
+      "exit_code": 1,
+      "observed": {
+        "outcome": "refused",
+        "stage": "assumption-policy",
+        "checker_stage": "sorry",
+        "refused_stages": [
+          "assumption-policy",
+          "definitions",
+          "interpretation",
+          "obligations",
+          "claim-reconstruction",
+          "theory-authentication",
+          "specification-identity",
+          "logical-check"
+        ]
+      },
+      "controls": {
+        "held": 16,
+        "failed": 7,
+        "passed": false
+      },
+      "checker": {
+        "exit_code": 3,
+        "elapsed_ms": 6,
+        "peak_rss_kib": 1116,
+        "verdict": {
+          "message": "some theorems used sorry",
+          "stage": "sorry",
+          "verdict": "rejected"
+        },
+        "specification_sha256": "d1791f190b0f0c2f78ad955634c9372e9be16ea932a1a09c5d23d60cca28bdc2",
+        "proof_sha256": "a85d56e91d4c405630c7df8acb856d90e28bcd975d21835fef4de1395b76ed36"
+      },
+      "admission_wall_ms": 3603,
+      "report_sha256": "338b3e6df69eedbbf3f4a203f7bfee14854536e3354cd1e9c552e7dbe11dc85d"
+    },
+    "extra-axiom": {
+      "expected": {
+        "outcome": "refused",
+        "stage": "assumption-policy"
+      },
+      "exit_code": 1,
+      "observed": {
+        "outcome": "refused",
+        "stage": "assumption-policy",
+        "checker_stage": "specification-match",
+        "refused_stages": [
+          "assumption-policy",
+          "theory-authentication",
+          "specification-identity",
+          "logical-check"
+        ]
+      },
+      "controls": {
+        "held": 22,
+        "failed": 1,
+        "passed": false
+      },
+      "checker": {
+        "exit_code": 255,
+        "elapsed_ms": 11,
+        "peak_rss_kib": 2128,
+        "verdict": {
+          "message": "expecting an axiom",
+          "stage": "specification-match",
+          "verdict": "rejected"
+        },
+        "specification_sha256": "6270de6568219a1ec9545c8c689f8b7b49274049e4051e57dee2c2ba0cadfdb0",
+        "proof_sha256": "2ced26177614e3af86ed74fb92c4ad3ef43d3d249512a357652f9b2111a56860"
+      },
+      "admission_wall_ms": 4115,
+      "report_sha256": "c74e499159464af7e176fbfeb3a248d62e019384a9352d9ea868757e87080790"
+    },
+    "changed-axiom-formula": {
+      "expected": {
+        "outcome": "refused",
+        "stage": "assumption-policy"
+      },
+      "exit_code": 1,
+      "observed": {
+        "outcome": "refused",
+        "stage": "assumption-policy",
+        "checker_stage": "proof-or-specification",
+        "refused_stages": [
+          "assumption-policy",
+          "theory-authentication",
+          "specification-identity",
+          "logical-check"
+        ]
+      },
+      "controls": {
+        "held": 22,
+        "failed": 1,
+        "passed": false
+      },
+      "checker": {
+        "exit_code": 255,
+        "elapsed_ms": 6,
+        "peak_rss_kib": 1320,
+        "verdict": {
+          "message": "unify failure at term",
+          "stage": "proof-or-specification",
+          "verdict": "rejected"
+        },
+        "specification_sha256": "81e6697f5e68f53ac54fed30cdb7835926b57bb9ee98f413e5006d74134c72ed",
+        "proof_sha256": "2ced26177614e3af86ed74fb92c4ad3ef43d3d249512a357652f9b2111a56860"
+      },
+      "admission_wall_ms": 4172,
+      "report_sha256": "417c2a28d8a4be0c68740ae4c9b08fa821b9af803b2c5d31af9bf6cb27eb244e"
+    },
+    "changed-arithmetic-definition": {
+      "expected": {
+        "outcome": "refused",
+        "stage": "definitions"
+      },
+      "exit_code": 1,
+      "observed": {
+        "outcome": "refused",
+        "stage": "definitions",
+        "checker_stage": "proof-or-specification",
+        "refused_stages": [
+          "definitions",
+          "interpretation",
+          "theory-authentication",
+          "specification-identity",
+          "logical-check"
+        ]
+      },
+      "controls": {
+        "held": 22,
+        "failed": 1,
+        "passed": false
+      },
+      "checker": {
+        "exit_code": 255,
+        "elapsed_ms": 10,
+        "peak_rss_kib": 2172,
+        "verdict": {
+          "message": "unify failure at term",
+          "stage": "proof-or-specification",
+          "verdict": "rejected"
+        },
+        "specification_sha256": "46e591f180c690ee163b4c71f27114f1a9b6ec56db87029e45e31b508bf69b77",
+        "proof_sha256": "2ced26177614e3af86ed74fb92c4ad3ef43d3d249512a357652f9b2111a56860"
+      },
+      "admission_wall_ms": 4041,
+      "report_sha256": "7cde7a657373454db0cb05f2618671a81051f0a9b0b3db6f4c19f56028359b7e"
+    },
+    "changed-model-theory": {
+      "expected": {
+        "outcome": "refused",
+        "stage": "definitions"
+      },
+      "exit_code": 1,
+      "observed": {
+        "outcome": "refused",
+        "stage": "definitions",
+        "checker_stage": "specification-match",
+        "refused_stages": [
+          "definitions",
+          "interpretation",
+          "specification-identity",
+          "logical-check"
+        ]
+      },
+      "controls": {
+        "held": 22,
+        "failed": 1,
+        "passed": false
+      },
+      "checker": {
+        "exit_code": 255,
+        "elapsed_ms": 11,
+        "peak_rss_kib": 2124,
+        "verdict": {
+          "message": "expecting prefix expression, unrecognized token",
+          "stage": "specification-match",
+          "verdict": "rejected"
+        },
+        "specification_sha256": "24f2fe58c288f6eceb4eeca05323c6af16d830773b0c750e7453a13d9afbc1ab",
+        "proof_sha256": "2ced26177614e3af86ed74fb92c4ad3ef43d3d249512a357652f9b2111a56860"
+      },
+      "admission_wall_ms": 4748,
+      "report_sha256": "eb8f48465255dc664ab22616b456a0adaa1efe5ccfea94128e164825ff8a50b8"
+    },
+    "stale-subject": {
+      "expected": {
+        "outcome": "refused",
+        "stage": "subject-identity"
+      },
+      "exit_code": 1,
+      "observed": {
+        "outcome": "refused",
+        "stage": "subject-identity",
+        "checker_stage": null,
+        "refused_stages": [
+          "subject-identity"
+        ]
+      },
+      "controls": {
+        "held": 23,
+        "failed": 0,
+        "passed": true
+      },
+      "checker": {
+        "exit_code": 0,
+        "elapsed_ms": 11,
+        "peak_rss_kib": 1872,
+        "verdict": {
+          "verdict": "accepted"
+        },
+        "specification_sha256": "87391df344f8d8ca4be2f9ede31ae3dfaf00926721491f3f7d7bae820c13a53d",
+        "proof_sha256": "2ced26177614e3af86ed74fb92c4ad3ef43d3d249512a357652f9b2111a56860"
+      },
+      "admission_wall_ms": 4713,
+      "report_sha256": "44f33d7c6510e467533af4876ce184301e82a5a0674c5f122c60aed2ad44d0eb"
+    },
+    "exhausted-wall-limit": {
+      "expected": {
+        "outcome": "unavailable",
+        "stage": "checker-identity",
+        "command_status": "timeout"
+      },
+      "exit_code": 1,
+      "observed": {
+        "outcome": "unavailable",
+        "stage": "checker-identity",
+        "checker_stage": null,
+        "refused_stages": []
+      },
+      "controls": {
+        "held": null,
+        "failed": null,
+        "passed": false
+      },
+      "checker": null,
+      "admission_wall_ms": 96,
+      "report_sha256": "66e595051210b54c876ff033c3fc00e84dd498394770f657578016c5edf822ea",
+      "caller_limits": [
+        "--timeout-ms",
+        "1"
+      ],
+      "command_statuses": [
+        "timeout"
+      ],
+      "storage": null
+    },
+    "exhausted-storage-limit": {
+      "expected": {
+        "outcome": "unavailable",
+        "stage": "checker-identity",
+        "command_status": "storage_limit"
+      },
+      "exit_code": 1,
+      "observed": {
+        "outcome": "unavailable",
+        "stage": "checker-identity",
+        "checker_stage": null,
+        "refused_stages": []
+      },
+      "controls": {
+        "held": null,
+        "failed": null,
+        "passed": false
+      },
+      "checker": null,
+      "admission_wall_ms": 87,
+      "report_sha256": "0859549f770272e93b4c471fa943d80df3ca5f98cf2dedfb5ea1ed97f3c88edc",
+      "caller_limits": [
+        "--max-storage-mib",
+        "1"
+      ],
+      "command_statuses": [
+        "storage_limit"
+      ],
+      "storage": "Storage limit reached: used 1341323 bytes, maximum 1048576 bytes, free 6613106688 bytes, minimum free 1073741824 bytes."
+    }
+  }
+}
