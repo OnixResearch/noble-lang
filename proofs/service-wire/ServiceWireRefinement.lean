@@ -138,6 +138,7 @@ theorem from_utf8_ascii (value : Slice U8) (ascii : ∀ n ∈ bytesOf value, n <
     have h := ascii_bytes_are_valid_utf8 (bytesOf value) ascii
     simpa [bytesOf, List.map_map, Function.comp_def] using h
   unfold core.str.converts.from_utf8
+  dsimp only
   split
   · rfl
   · rename_i none
@@ -520,6 +521,7 @@ theorem from_utf8_cases (value : Slice U8) :
     core.str.converts.from_utf8 value = Result.ok (.Ok value) ∨
       core.str.converts.from_utf8 value = Result.ok (.Err .Invalid) := by
   unfold core.str.converts.from_utf8
+  dsimp only
   split
   · exact Or.inl rfl
   · exact Or.inr rfl
