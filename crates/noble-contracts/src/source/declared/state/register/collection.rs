@@ -265,11 +265,7 @@ impl Collected {
         words: alloc::vec::Vec<alloc::string::String>,
         span: crate::Span,
     ) -> Result<Self, crate::source::Error> {
-        if self
-            .signatures
-            .iter()
-            .any(|(known, _, _, _)| known == &name)
-        {
+        if crate::scan::find_first(&self.signatures, |(known, _, _, _)| known == &name).is_some() {
             return Err(crate::source::declared::error(
                 crate::source::Stage::Resolve,
                 "duplicate source signature",
@@ -338,12 +334,11 @@ impl Collected {
     }
 
     fn validate(&self) -> Result<(), crate::source::Error> {
-        if self.signatures.iter().any(|(name, _, _, _)| {
-            !self
-                .definitions
-                .iter()
-                .any(|(defined, _, _)| defined == name)
-        }) {
+        if crate::scan::find_first(&self.signatures, |(name, _, _, _)| {
+            crate::scan::find_first(&self.definitions, |(defined, _, _)| defined == name).is_none()
+        })
+        .is_some()
+        {
             return Err(crate::source::declared::error(
                 crate::source::Stage::Resolve,
                 "signature has no matching source definition",
@@ -368,47 +363,8 @@ impl Collected {
         }
         let mut position = 0;
         let mut has_missing_export = false;
-        while position < self.exports.len() {
-            let exported = &self.exports[position];
-            let exported_bytes = exported.as_bytes();
-            let mut split = 0;
-            while split < exported_bytes.len() {
-                if exported_bytes[split] == b'.' {
-                    break;
-                }
-                split += 1;
-            }
-            let schema = &exported[..split];
-            let mut has_declaration = false;
-            let mut index = 0;
-            while index < self.schemas.len() {
-                if self.schemas[index].name == schema {
-                    has_declaration = true;
-                    break;
-                }
-                index += 1;
-            }
-            if !has_declaration {
-                index = 0;
-                while index < self.definitions.len() {
-                    if self.definitions[index].0 == *exported {
-                        has_declaration = true;
-                        break;
-                    }
-                    index += 1;
-                }
-            }
-            if !has_declaration {
-                has_declaration = self
-                    .contracts
-                    .iter()
-                    .any(|contract| contract.name == *exported)
-                    || self.proofs.iter().any(|proof| proof.name == *exported);
-            }
-            if !has_declaration {
-                has_missing_export = true;
-                break;
-            }
+        while !has_missing_export && position < self.exports.len() {
+            has_missing_export = !self.declares(&self.exports[position]);
             position += 1;
         }
         if has_missing_export {
@@ -418,5 +374,26 @@ impl Collected {
             ));
         }
         Ok(())
+    }
+
+    /// Whether an export names a declaration of this module: a schema (by the
+    /// text before its first `.`), a definition, a contract or a proof.
+    fn declares(&self, exported: &str) -> bool {
+        let schema = &exported[..schema_name_len(exported)];
+        crate::scan::find_first(&self.schemas, |declared| declared.name == schema).is_some()
+            || crate::scan::find_first(&self.definitions, |(defined, _, _)| defined == exported)
+                .is_some()
+            || crate::scan::find_first(&self.contracts, |contract| contract.name == exported)
+                .is_some()
+            || crate::scan::find_first(&self.proofs, |proof| proof.name == exported).is_some()
+    }
+}
+
+/// The byte length of the schema name an export starts with: the text before
+/// its first `.`, or the whole export.
+fn schema_name_len(exported: &str) -> usize {
+    match crate::scan::split_once_byte(exported, b'.') {
+        Some((base, _)) => base.len(),
+        None => exported.len(),
     }
 }

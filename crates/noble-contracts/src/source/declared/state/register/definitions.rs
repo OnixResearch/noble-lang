@@ -125,9 +125,14 @@ fn finish(
 
 impl Work<'_> {
     fn conflicts(&self, session: &crate::source::declared::ModuleSession) -> bool {
-        session.source.definitions.iter().any(|definition| {
-            conflicts_with_definition(definition, self.name, self.version, &self.local_exports)
+        // The predicate copies plain borrows rather than holding `self`, a
+        // borrowed struct that itself holds references.
+        let (name, version, local_exports) =
+            (self.name, self.version, self.local_exports.as_slice());
+        crate::scan::find_first(&session.source.definitions, move |definition| {
+            conflicts_with_definition(definition, name, version, local_exports)
         })
+        .is_some()
     }
 }
 
@@ -168,13 +173,7 @@ fn contains_exported_word(exports: &[crate::source::declared::Export], word: &st
 }
 
 fn contains_word(words: &[(alloc::string::String, crate::source::Target)], word: &str) -> bool {
-    let mut entry_index = 0;
-    let mut has_word = false;
-    while entry_index < words.len() && !has_word {
-        has_word = words[entry_index].0.as_str() == word;
-        entry_index += 1;
-    }
-    has_word
+    crate::scan::find_first(words, |(name, _)| name.as_str() == word).is_some()
 }
 
 const fn definition_limits(count: u32, limits: crate::Limits) -> Option<crate::Limits> {
@@ -316,14 +315,13 @@ fn commit_definition(
             "module definition has executable initializer",
         ));
     }
-    if prepared
-        .definition
-        .as_ref()
-        .and_then(|definition| definition.signed.as_ref())
-        .is_some_and(|relation| {
+    let has_moved_owner_slot = match &prepared.definition {
+        Some(definition) => definition.signed.as_ref().is_some_and(|relation| {
             usize::try_from(relation.source_slot).ok() != Some(session.source.definitions.len())
-        })
-    {
+        }),
+        None => false,
+    };
+    if has_moved_owner_slot {
         return Err(crate::source::declared::error(
             crate::source::Stage::Check,
             "prospective signed owner slot changed before module installation",
