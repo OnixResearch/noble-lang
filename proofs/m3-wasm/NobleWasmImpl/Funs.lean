@@ -9073,7 +9073,7 @@ def output.Buffer.index
     ok (core.result.Result.Err Diagnostic.Exhausted, self)
 
 /-- [noble_wasm::signatures::signature_line]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 592:0-602:1 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 572:0-582:1 -/
 def signatures.signature_line
   (out : output.Buffer) (index : Std.Usize) (key : Slice Std.U8) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
@@ -9106,7 +9106,7 @@ def signatures.signature_line
   | core.result.Result.Err _ => ok (r, out1)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::emit]: loop body 0:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 461:8-469:9 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 441:8-449:9 -/
 @[rust_loop_body]
 def signatures.Pool.emit_loop.body
   (self : signatures.Pool) (out : output.Buffer) (index : Std.Usize) :
@@ -9129,7 +9129,7 @@ def signatures.Pool.emit_loop.body
   else ok (done (out, none))
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::emit]: loop 0:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 461:8-469:9 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 441:8-449:9 -/
 @[rust_loop]
 def signatures.Pool.emit_loop
   (self : signatures.Pool) (out : output.Buffer) (index : Std.Usize) :
@@ -9140,7 +9140,7 @@ def signatures.Pool.emit_loop
     (out, index)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::emit]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 458:4-474:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 438:4-454:5 -/
 def signatures.Pool.emit
   (self : signatures.Pool) (out : output.Buffer) :
   Result ((core.result.Result Unit Diagnostic) × output.Buffer)
@@ -10258,8 +10258,129 @@ impl_def Diagnostic.Insts.CoreCmpEq : core.cmp.Eq Diagnostic := {
     Diagnostic.Insts.CoreCmpEq
 }
 
+/-- [noble_wasm::source::{noble_wasm::source::Work}::unmetered]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 132:4-140:5 -/
+def source.Work.unmetered : Result source.Work := do
+  ok
+    {
+      remaining := core.num.U64.MAX,
+      issued := 0#u64,
+      calculator_preflight := false,
+      calculator_plan := false,
+      max_type_nodes := 0#u32
+    }
+
+/-- [noble_wasm::source::CALCULATOR_COMPILER_WORK_LIMIT]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 72:0-72:69 -/
+@[global_simps, irreducible]
+def source.CALCULATOR_COMPILER_WORK_LIMIT : Std.U64 := 2000000000#u64
+
+/-- [noble_wasm::source::{noble_wasm::source::Work}::grant_calculator]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 182:4-195:5 -/
+def source.Work.grant_calculator
+  (self : source.Work) (amount : Std.U64) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let o ← lift (U64.checked_add self.issued amount)
+  match o with
+  | none => ok (core.result.Result.Err Diagnostic.Exhausted, self)
+  | some issued =>
+    let o1 ← lift (U64.checked_add self.remaining amount)
+    match o1 with
+    | none => ok (core.result.Result.Err Diagnostic.Exhausted, self)
+    | some remaining =>
+      if issued > source.CALCULATOR_COMPILER_WORK_LIMIT
+      then ok (core.result.Result.Err Diagnostic.Exhausted, self)
+      else ok (core.result.Result.Ok (), { self with remaining, issued })
+
+/-- [noble_wasm::source::{noble_wasm::source::Work}::charge]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 161:4-178:5 -/
+def source.Work.charge
+  (self : source.Work) (amount : Std.U64) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  if self.calculator_preflight
+  then
+    if amount != 0#u64
+    then
+      let (r, self1) ← source.Work.grant_calculator self amount
+      match r with
+      | core.result.Result.Ok _ =>
+        let o ← lift (U64.checked_sub self1.remaining amount)
+        match o with
+        | none => ok (core.result.Result.Err Diagnostic.Exhausted, self1)
+        | some value =>
+          ok (core.result.Result.Ok (), { self1 with remaining := value })
+      | core.result.Result.Err _ => ok (r, self1)
+    else
+      if self.calculator_plan
+      then
+        if amount > self.remaining
+        then
+          let i ← amount - self.remaining
+          let (r, self1) ← source.Work.grant_calculator self i
+          match r with
+          | core.result.Result.Ok _ =>
+            let o ← lift (U64.checked_sub self1.remaining amount)
+            match o with
+            | none => ok (core.result.Result.Err Diagnostic.Exhausted, self1)
+            | some value =>
+              ok (core.result.Result.Ok (), { self1 with remaining := value })
+          | core.result.Result.Err _ => ok (r, self1)
+        else
+          let o ← lift (U64.checked_sub self.remaining amount)
+          match o with
+          | none => ok (core.result.Result.Err Diagnostic.Exhausted, self)
+          | some value =>
+            ok (core.result.Result.Ok (), { self with remaining := value })
+      else
+        let o ← lift (U64.checked_sub self.remaining amount)
+        match o with
+        | none => ok (core.result.Result.Err Diagnostic.Exhausted, self)
+        | some value =>
+          ok (core.result.Result.Ok (), { self with remaining := value })
+  else
+    if self.calculator_plan
+    then
+      if amount > self.remaining
+      then
+        let i ← amount - self.remaining
+        let (r, self1) ← source.Work.grant_calculator self i
+        match r with
+        | core.result.Result.Ok _ =>
+          let o ← lift (U64.checked_sub self1.remaining amount)
+          match o with
+          | none => ok (core.result.Result.Err Diagnostic.Exhausted, self1)
+          | some value =>
+            ok (core.result.Result.Ok (), { self1 with remaining := value })
+        | core.result.Result.Err _ => ok (r, self1)
+      else
+        let o ← lift (U64.checked_sub self.remaining amount)
+        match o with
+        | none => ok (core.result.Result.Err Diagnostic.Exhausted, self)
+        | some value =>
+          ok (core.result.Result.Ok (), { self with remaining := value })
+    else
+      let o ← lift (U64.checked_sub self.remaining amount)
+      match o with
+      | none => ok (core.result.Result.Err Diagnostic.Exhausted, self)
+      | some value =>
+        ok (core.result.Result.Ok (), { self with remaining := value })
+
+/-- [noble_wasm::source::{noble_wasm::source::Work}::entries]:
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 197:4-202:5 -/
+def source.Work.entries
+  (self : source.Work) (count : Std.Usize) :
+  Result ((core.result.Result Unit Diagnostic) × source.Work)
+  := do
+  let r ← U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from count
+  match r with
+  | core.result.Result.Ok count1 => source.Work.charge self count1
+  | core.result.Result.Err _ =>
+    ok (core.result.Result.Err Diagnostic.Exhausted, self)
+
 /-- [noble_wasm::signatures::number]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 608:0-613:1 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 588:0-593:1 -/
 def signatures.number
   (index : Std.Usize) : Result (core.result.Result Std.U32 Diagnostic) := do
   let r ← core.convert.num.ptr_try_from_impls.TryFromU32Usize.try_from index
@@ -10269,61 +10390,59 @@ def signatures.number
     ok (core.result.Result.Err Diagnostic.Exhausted)
 
 /-- [noble_wasm::signatures::compare_key]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 482:0-489:1 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 462:0-469:1 -/
 def signatures.compare_key
-  {T0 : Type _} (MeterInst : signatures.Meter T0) (stored : Slice Std.U8)
-  (key : Slice Std.U8) (meter : T0) :
-  Result ((core.result.Result Bool Diagnostic) × T0)
+  (stored : Slice Std.U8) (key : Slice Std.U8) (work : source.Work) :
+  Result ((core.result.Result Bool Diagnostic) × source.Work)
   := do
   let i := Slice.len stored
   let i1 := Slice.len key
   let i2 ← lift (core.cmp.impls.OrdUsize.min i i1)
   let i3 ← lift (core.num.Usize.saturating_add i2 1#usize)
-  let (r, meter1) ← MeterInst.visit meter i3
+  let (r, work1) ← source.Work.entries work i3
   match r with
   | core.result.Result.Ok _ =>
     let b ← core.slice.cmp.PartialEqSlice.eq core.cmp.PartialEqU8 stored key
-    ok (core.result.Result.Ok b, meter1)
+    ok (core.result.Result.Ok b, work1)
   | core.result.Result.Err failure =>
-    ok (core.result.Result.Err failure, meter1)
+    ok (core.result.Result.Err failure, work1)
 
 /-- [noble_wasm::signatures::decode_record]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 574:0-586:1 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 554:0-566:1 -/
 def signatures.decode_record
-  {T0 : Type _} (MeterInst : signatures.Meter T0)
-  (record : signatures.PrefixKey) (scratch : alloc.vec.Vec Std.U8) (meter : T0)
-  :
-  Result ((core.result.Result Unit Diagnostic) × (alloc.vec.Vec Std.U8) × T0)
+  (record : signatures.PrefixKey) (scratch : alloc.vec.Vec Std.U8)
+  (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × (alloc.vec.Vec Std.U8) ×
+    source.Work)
   := do
   let i ← lift (UScalar.cast .Usize record.prefix)
   let i1 := alloc.vec.Vec.len scratch
   if i > i1
-  then ok (core.result.Result.Err Diagnostic.Defective, scratch, meter)
+  then ok (core.result.Result.Err Diagnostic.Defective, scratch, work)
   else
     let i2 ← lift (UScalar.cast .Usize record.prefix)
     let scratch1 ← alloc.vec.Vec.truncate Global scratch i2
     let i3 := alloc.vec.Vec.len record.suffix
     let i4 ← lift (core.num.Usize.saturating_add i3 1#usize)
-    let (r, meter1) ← MeterInst.visit meter i4
+    let (r, work1) ← source.Work.entries work i4
     match r with
     | core.result.Result.Ok _ =>
       let s := alloc.vec.Vec.deref record.suffix
       let scratch2 ←
         alloc.vec.Vec.extend_from_slice core.clone.CloneU8 scratch1 s
-      ok (core.result.Result.Ok (), scratch2, meter1)
-    | core.result.Result.Err _ => ok (r, scratch1, meter1)
+      ok (core.result.Result.Ok (), scratch2, work1)
+    | core.result.Result.Err _ => ok (r, scratch1, work1)
 
 /-- [noble_wasm::signatures::decode_records]: loop body 0:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 561:4-564:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 541:4-544:5 -/
 @[rust_loop_body]
 def signatures.decode_records_loop.body
-  {T0 : Type _} (MeterInst : signatures.Meter T0)
   (records : Slice signatures.PrefixKey) (scratch : alloc.vec.Vec Std.U8)
-  (meter : T0) (index : Std.Usize)
+  (work : source.Work) (index : Std.Usize)
   (outcome : core.result.Result Unit Diagnostic) :
-  Result (ControlFlow ((alloc.vec.Vec Std.U8) × T0 × Std.Usize ×
+  Result (ControlFlow ((alloc.vec.Vec Std.U8) × source.Work × Std.Usize ×
     (core.result.Result Unit Diagnostic)) ((core.result.Result Unit Diagnostic)
-    × (alloc.vec.Vec Std.U8) × T0))
+    × (alloc.vec.Vec Std.U8) × source.Work))
   := do
   let b ← core.result.Result.is_ok outcome
   if b
@@ -10332,39 +10451,39 @@ def signatures.decode_records_loop.body
     if index < i
     then
       let pk ← Slice.index_usize records index
-      let (outcome1, scratch1, meter1) ←
-        signatures.decode_record MeterInst pk scratch meter
+      let (outcome1, scratch1, work1) ←
+        signatures.decode_record pk scratch work
       let index1 ← index + 1#usize
-      ok (cont (scratch1, meter1, index1, outcome1))
-    else ok (done (outcome, scratch, meter))
-  else ok (done (outcome, scratch, meter))
+      ok (cont (scratch1, work1, index1, outcome1))
+    else ok (done (outcome, scratch, work))
+  else ok (done (outcome, scratch, work))
 
 /-- [noble_wasm::signatures::decode_records]: loop 0:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 561:4-564:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 541:4-544:5 -/
 @[rust_loop]
 def signatures.decode_records_loop
-  {T0 : Type _} (MeterInst : signatures.Meter T0)
   (records : Slice signatures.PrefixKey) (scratch : alloc.vec.Vec Std.U8)
-  (meter : T0) (index : Std.Usize)
+  (work : source.Work) (index : Std.Usize)
   (outcome : core.result.Result Unit Diagnostic) :
-  Result ((core.result.Result Unit Diagnostic) × (alloc.vec.Vec Std.U8) × T0)
+  Result ((core.result.Result Unit Diagnostic) × (alloc.vec.Vec Std.U8) ×
+    source.Work)
   := do
   loop
-    (fun (scratch1, meter1, index1, outcome1) =>
-      signatures.decode_records_loop.body MeterInst records scratch1 meter1
-      index1 outcome1)
-    (scratch, meter, index, outcome)
+    (fun (scratch1, work1, index1, outcome1) =>
+      signatures.decode_records_loop.body records scratch1 work1 index1
+      outcome1)
+    (scratch, work, index, outcome)
 
 /-- [noble_wasm::signatures::decode_records]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 554:0-566:1 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 534:0-546:1 -/
 @[reducible]
 def signatures.decode_records
-  {T0 : Type _} (MeterInst : signatures.Meter T0)
   (records : Slice signatures.PrefixKey) (scratch : alloc.vec.Vec Std.U8)
-  (meter : T0) :
-  Result ((core.result.Result Unit Diagnostic) × (alloc.vec.Vec Std.U8) × T0)
+  (work : source.Work) :
+  Result ((core.result.Result Unit Diagnostic) × (alloc.vec.Vec Std.U8) ×
+    source.Work)
   := do
-  signatures.decode_records_loop MeterInst records scratch meter 0#usize
+  signatures.decode_records_loop records scratch work 0#usize
     (core.result.Result.Ok ())
 
 /-- [noble_wasm::signatures::PREFIX_BLOCK]
@@ -10373,15 +10492,14 @@ def signatures.decode_records
 def signatures.PREFIX_BLOCK : Std.Usize := 32#usize
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::candidate_record]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 400:4-427:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 380:4-407:5 -/
 def signatures.Pool.candidate_record
-  {T0 : Type _} (MeterInst : signatures.Meter T0) (self : signatures.Pool)
-  (candidate : Std.U32) (hash : Std.U64) (key : Slice Std.U8)
-  (scratch : alloc.vec.Vec Std.U8) (meter : T0) :
+  (self : signatures.Pool) (candidate : Std.U32) (hash : Std.U64)
+  (key : Slice Std.U8) (scratch : alloc.vec.Vec Std.U8) (work : source.Work) :
   Result ((core.result.Result (Option Std.Usize) Diagnostic) × (alloc.vec.Vec
-    Std.U8) × T0)
+    Std.U8) × source.Work)
   := do
-  let (r, meter1) ← MeterInst.visit meter 1#usize
+  let (r, work1) ← source.Work.entries work 1#usize
   match r with
   | core.result.Result.Ok _ =>
     let index ← lift (UScalar.cast .Usize candidate)
@@ -10390,15 +10508,15 @@ def signatures.Pool.candidate_record
       core.slice.Slice.get (core.slice.index.SliceIndexUsizeSlice
         signatures.PrefixKey) s index
     match o with
-    | none => ok (core.result.Result.Err Diagnostic.Defective, scratch, meter1)
+    | none => ok (core.result.Result.Err Diagnostic.Defective, scratch, work1)
     | some existing =>
       if existing.hash != hash
-      then ok (core.result.Result.Ok none, scratch, meter1)
+      then ok (core.result.Result.Ok none, scratch, work1)
       else
         let i ← lift (UScalar.cast .Usize existing.length_bytes)
         let i1 := Slice.len key
         if i != i1
-        then ok (core.result.Result.Ok none, scratch, meter1)
+        then ok (core.result.Result.Ok none, scratch, work1)
         else
           let scratch1 ← alloc.vec.Vec.clear Global scratch
           let i2 ← index / signatures.PREFIX_BLOCK
@@ -10408,32 +10526,33 @@ def signatures.Pool.candidate_record
             alloc.vec.Vec.index (core.slice.index.SliceIndexRangeUsizeSlice
               signatures.PrefixKey) self.prefix_keys
               { start := i3, «end» := i4 }
-          let (r1, scratch2, meter2) ←
-            signatures.decode_records MeterInst s1 scratch1 meter1
+          let (r1, scratch2, work2) ←
+            signatures.decode_records s1 scratch1 work1
           match r1 with
           | core.result.Result.Ok _ =>
             let s2 ← alloc.vec.Vec.as_slice Global scratch2
             let b ←
               core.slice.cmp.PartialEqSlice.eq core.cmp.PartialEqU8 s2 key
             if b
-            then ok (core.result.Result.Ok (some index), scratch2, meter2)
-            else ok (core.result.Result.Ok none, scratch2, meter2)
+            then ok (core.result.Result.Ok (some index), scratch2, work2)
+            else ok (core.result.Result.Ok none, scratch2, work2)
           | core.result.Result.Err failure =>
-            ok (core.result.Result.Err failure, scratch2, meter2)
+            ok (core.result.Result.Err failure, scratch2, work2)
   | core.result.Result.Err failure =>
-    ok (core.result.Result.Err failure, scratch, meter1)
+    ok (core.result.Result.Err failure, scratch, work1)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::existing_record]: loop body 0:
     Source: '/rustc/library/core/src/macros/mod.rs', lines 434:8-437:9 -/
 @[rust_loop_body]
 def signatures.Pool.existing_record_loop.body
-  {T0 : Type _} (MeterInst : signatures.Meter T0) (self : signatures.Pool)
-  (candidates : Slice Std.U32) (hash : Std.U64) (key : Slice Std.U8)
+  (self : signatures.Pool) (candidates : Slice Std.U32) (hash : Std.U64)
+  (key : Slice Std.U8)
   (verdict : core.result.Result (Option Std.Usize) Diagnostic)
-  (scratch : alloc.vec.Vec Std.U8) (meter : T0) (position : Std.Usize) :
+  (scratch : alloc.vec.Vec Std.U8) (work : source.Work) (position : Std.Usize)
+  :
   Result (ControlFlow ((core.result.Result (Option Std.Usize) Diagnostic) ×
-    (alloc.vec.Vec Std.U8) × T0 × Std.Usize) ((core.result.Result (Option
-    Std.Usize) Diagnostic) × (alloc.vec.Vec Std.U8) × T0))
+    (alloc.vec.Vec Std.U8) × source.Work × Std.Usize) ((core.result.Result
+    (Option Std.Usize) Diagnostic) × (alloc.vec.Vec Std.U8) × source.Work))
   := do
   match verdict with
   | core.result.Result.Ok o =>
@@ -10443,45 +10562,42 @@ def signatures.Pool.existing_record_loop.body
       if position < i
       then
         let i1 ← Slice.index_usize candidates position
-        let (verdict1, scratch1, meter1) ←
-          signatures.Pool.candidate_record MeterInst self i1 hash key scratch
-            meter
+        let (verdict1, scratch1, work1) ←
+          signatures.Pool.candidate_record self i1 hash key scratch work
         let position1 ← position + 1#usize
-        ok (cont (verdict1, scratch1, meter1, position1))
-      else ok (done (verdict, scratch, meter))
-    | some _ => ok (done (verdict, scratch, meter))
-  | core.result.Result.Err _ => ok (done (verdict, scratch, meter))
+        ok (cont (verdict1, scratch1, work1, position1))
+      else ok (done (verdict, scratch, work))
+    | some _ => ok (done (verdict, scratch, work))
+  | core.result.Result.Err _ => ok (done (verdict, scratch, work))
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::existing_record]: loop 0:
     Source: '/rustc/library/core/src/macros/mod.rs', lines 434:8-437:9 -/
 @[rust_loop]
 def signatures.Pool.existing_record_loop
-  {T0 : Type _} (MeterInst : signatures.Meter T0)
   (verdict : core.result.Result (Option Std.Usize) Diagnostic)
   (self : signatures.Pool) (candidates : Slice Std.U32) (hash : Std.U64)
-  (key : Slice Std.U8) (scratch : alloc.vec.Vec Std.U8) (meter : T0)
+  (key : Slice Std.U8) (scratch : alloc.vec.Vec Std.U8) (work : source.Work)
   (position : Std.Usize) :
   Result ((core.result.Result (Option Std.Usize) Diagnostic) × (alloc.vec.Vec
-    Std.U8) × T0)
+    Std.U8) × source.Work)
   := do
   loop
-    (fun (verdict1, scratch1, meter1, position1) =>
-      signatures.Pool.existing_record_loop.body MeterInst self candidates hash
-      key verdict1 scratch1 meter1 position1)
-    (verdict, scratch, meter, position)
+    (fun (verdict1, scratch1, work1, position1) =>
+      signatures.Pool.existing_record_loop.body self candidates hash key
+      verdict1 scratch1 work1 position1)
+    (verdict, scratch, work, position)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::existing_record]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 378:4-393:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 358:4-373:5 -/
 @[reducible]
 def signatures.Pool.existing_record
-  {T0 : Type _} (MeterInst : signatures.Meter T0) (self : signatures.Pool)
-  (candidates : Slice Std.U32) (hash : Std.U64) (key : Slice Std.U8)
-  (scratch : alloc.vec.Vec Std.U8) (meter : T0) :
+  (self : signatures.Pool) (candidates : Slice Std.U32) (hash : Std.U64)
+  (key : Slice Std.U8) (scratch : alloc.vec.Vec Std.U8) (work : source.Work) :
   Result ((core.result.Result (Option Std.Usize) Diagnostic) × (alloc.vec.Vec
-    Std.U8) × T0)
+    Std.U8) × source.Work)
   := do
-  signatures.Pool.existing_record_loop MeterInst (core.result.Result.Ok none)
-    self candidates hash key scratch meter 0#usize
+  signatures.Pool.existing_record_loop (core.result.Result.Ok none) self
+    candidates hash key scratch work 0#usize
 
 /-- [noble_wasm::signatures::candidate_key]:
     Source: 'crates/noble-wasm/src/signatures.rs', lines 49:0-51:1 -/
@@ -10550,7 +10666,7 @@ def signatures.PREFIX_RECORD_BYTES : Std.Usize := 16#usize
 def signatures.CALCULATOR_SOURCE_KEY_LIMIT : Std.Usize := 8192#usize
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::intern_prefix]: loop body 0:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 333:12-335:13 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 313:12-315:13 -/
 @[rust_loop_body]
 def signatures.Pool.intern_prefix_loop0.body
   (key : alloc.vec.Vec Std.U8) (scratch : alloc.vec.Vec Std.U8)
@@ -10577,7 +10693,7 @@ def signatures.Pool.intern_prefix_loop0.body
   else ok (done «prefix»)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::intern_prefix]: loop 0:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 333:12-335:13 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 313:12-315:13 -/
 @[rust_loop]
 def signatures.Pool.intern_prefix_loop0
   (key : alloc.vec.Vec Std.U8) (scratch : alloc.vec.Vec Std.U8)
@@ -10590,7 +10706,7 @@ def signatures.Pool.intern_prefix_loop0
     «prefix»
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::intern_prefix]: loop body 1:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 333:12-335:13 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 313:12-315:13 -/
 @[rust_loop_body]
 def signatures.Pool.intern_prefix_loop1.body
   (key : alloc.vec.Vec Std.U8) (scratch : alloc.vec.Vec Std.U8)
@@ -10617,7 +10733,7 @@ def signatures.Pool.intern_prefix_loop1.body
   else ok (done «prefix»)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::intern_prefix]: loop 1:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 333:12-335:13 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 313:12-315:13 -/
 @[rust_loop]
 def signatures.Pool.intern_prefix_loop1
   (key : alloc.vec.Vec Std.U8) (scratch : alloc.vec.Vec Std.U8)
@@ -10630,11 +10746,11 @@ def signatures.Pool.intern_prefix_loop1
     «prefix»
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::intern_prefix]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 294:4-370:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 274:4-350:5 -/
 def signatures.Pool.intern_prefix
-  {T0 : Type _} (MeterInst : signatures.Meter T0) (self : signatures.Pool)
-  (key : alloc.vec.Vec Std.U8) (meter : T0) :
-  Result ((core.result.Result Std.U32 Diagnostic) × signatures.Pool × T0)
+  (self : signatures.Pool) (key : alloc.vec.Vec Std.U8) (work : source.Work) :
+  Result ((core.result.Result Std.U32 Diagnostic) × signatures.Pool ×
+    source.Work)
   := do
   let s := alloc.vec.Vec.deref key
   let hash ← signatures.fingerprint s
@@ -10647,7 +10763,7 @@ def signatures.Pool.intern_prefix
       alloc.collections.btree.map.BTreeMap.len
         alloc.alloc.Global.Insts.CoreAllocAllocatorClone self.candidates
     let i2 ← signatures.index_probe_cost i1
-    let (r1, meter1) ← MeterInst.visit meter i2
+    let (r1, work1) ← source.Work.entries work i2
     match r1 with
     | core.result.Result.Ok _ =>
       let o ←
@@ -10659,17 +10775,17 @@ def signatures.Pool.intern_prefix
       | none =>
         let index := alloc.vec.Vec.len self.prefix_keys
         if index >= signatures.CALCULATOR_SOURCE_KEY_LIMIT
-        then ok (core.result.Result.Err Diagnostic.Exhausted, self, meter1)
+        then ok (core.result.Result.Err Diagnostic.Exhausted, self, work1)
         else
           let i3 := alloc.vec.Vec.len key
           if i3 > 65536#usize
-          then ok (core.result.Result.Err Diagnostic.Exhausted, self, meter1)
+          then ok (core.result.Result.Err Diagnostic.Exhausted, self, work1)
           else
             let i4 := alloc.vec.Vec.len key
             let o1 ← lift (Usize.checked_add self.expanded_bytes i4)
             match o1 with
             | none =>
-              ok (core.result.Result.Err Diagnostic.Exhausted, self, meter1)
+              ok (core.result.Result.Err Diagnostic.Exhausted, self, work1)
             | some bytes =>
               let i5 ← signatures.CALCULATOR_EXPANDED_KEY_LIMIT
               if bytes <= i5
@@ -10690,7 +10806,7 @@ def signatures.Pool.intern_prefix
                   match o2 with
                   | none =>
                     ok (core.result.Result.Err Diagnostic.Exhausted, self,
-                      meter1)
+                      work1)
                   | some size =>
                     let i8 := alloc.vec.Vec.len key
                     let r2 ←
@@ -10707,11 +10823,11 @@ def signatures.Pool.intern_prefix
                         let i10 ←
                           lift (core.num.Usize.saturating_add i9
                             signatures.PREFIX_RECORD_BYTES)
-                        let (r4, meter2) ← MeterInst.visit meter1 i10
+                        let (r4, work2) ← source.Work.entries work1 i10
                         match r4 with
                         | core.result.Result.Ok _ =>
                           let i11 ← signatures.index_probe_cost i1
-                          let (r5, meter3) ← MeterInst.visit meter2 i11
+                          let (r5, work3) ← source.Work.entries work2 i11
                           match r5 with
                           | core.result.Result.Ok _ =>
                             let r6 ← signatures.number index
@@ -10751,18 +10867,18 @@ def signatures.Pool.intern_prefix
                                     candidates := bm,
                                     bytes := size,
                                     expanded_bytes := bytes
-                                }, meter3)
-                            | core.result.Result.Err _ => ok (r6, self, meter3)
+                                }, work3)
+                            | core.result.Result.Err _ => ok (r6, self, work3)
                           | core.result.Result.Err failure =>
-                            ok (core.result.Result.Err failure, self, meter3)
+                            ok (core.result.Result.Err failure, self, work3)
                         | core.result.Result.Err failure =>
-                          ok (core.result.Result.Err failure, self, meter2)
+                          ok (core.result.Result.Err failure, self, work2)
                       | core.result.Result.Err _ =>
                         ok (core.result.Result.Err Diagnostic.Exhausted, self,
-                          meter1)
+                          work1)
                     | core.result.Result.Err _ =>
                       ok (core.result.Result.Err Diagnostic.Exhausted, self,
-                        meter1)
+                        work1)
                 else
                   let scratch ←
                     alloc.vec.Vec.clear Global (alloc.vec.Vec.new Std.U8)
@@ -10773,15 +10889,15 @@ def signatures.Pool.intern_prefix
                       (core.slice.index.SliceIndexRangeUsizeSlice
                       signatures.PrefixKey) self.prefix_keys
                       { start := i7, «end» := index }
-                  let (r2, scratch1, meter2) ←
-                    signatures.decode_records MeterInst s1 scratch meter1
+                  let (r2, scratch1, work2) ←
+                    signatures.decode_records s1 scratch work1
                   match r2 with
                   | core.result.Result.Ok _ =>
                     let «prefix» ←
                       signatures.Pool.intern_prefix_loop0 key scratch1 0#usize
                     let i8 ←
                       lift (core.num.Usize.saturating_add «prefix» 1#usize)
-                    let (r3, meter3) ← MeterInst.visit meter2 i8
+                    let (r3, work3) ← source.Work.entries work2 i8
                     match r3 with
                     | core.result.Result.Ok _ =>
                       let suffix ←
@@ -10796,7 +10912,7 @@ def signatures.Pool.intern_prefix
                       match o2 with
                       | none =>
                         ok (core.result.Result.Err Diagnostic.Exhausted, self,
-                          meter3)
+                          work3)
                       | some size =>
                         let i11 := alloc.vec.Vec.len key
                         let r4 ←
@@ -10813,7 +10929,7 @@ def signatures.Pool.intern_prefix
                             let i13 ←
                               lift (core.num.Usize.saturating_add i12
                                 signatures.PREFIX_RECORD_BYTES)
-                            let (r6, meter4) ← MeterInst.visit meter3 i13
+                            let (r6, work4) ← source.Work.entries work3 i13
                             match r6 with
                             | core.result.Result.Ok _ =>
                               let i14 ←
@@ -10821,7 +10937,7 @@ def signatures.Pool.intern_prefix
                                   alloc.alloc.Global.Insts.CoreAllocAllocatorClone
                                   self.candidates
                               let i15 ← signatures.index_probe_cost i14
-                              let (r7, meter5) ← MeterInst.visit meter4 i15
+                              let (r7, work5) ← source.Work.entries work4 i15
                               match r7 with
                               | core.result.Result.Ok _ =>
                                 let r8 ← signatures.number index
@@ -10862,51 +10978,50 @@ def signatures.Pool.intern_prefix
                                         candidates := bm,
                                         bytes := size,
                                         expanded_bytes := bytes
-                                    }, meter5)
+                                    }, work5)
                                 | core.result.Result.Err _ =>
-                                  ok (r8, self, meter5)
+                                  ok (r8, self, work5)
                               | core.result.Result.Err failure =>
                                 ok (core.result.Result.Err failure, self,
-                                  meter5)
+                                  work5)
                             | core.result.Result.Err failure =>
-                              ok (core.result.Result.Err failure, self, meter4)
+                              ok (core.result.Result.Err failure, self, work4)
                           | core.result.Result.Err _ =>
                             ok (core.result.Result.Err Diagnostic.Exhausted,
-                              self, meter3)
+                              self, work3)
                         | core.result.Result.Err _ =>
                           ok (core.result.Result.Err Diagnostic.Exhausted,
-                            self, meter3)
+                            self, work3)
                     | core.result.Result.Err failure =>
-                      ok (core.result.Result.Err failure, self, meter3)
+                      ok (core.result.Result.Err failure, self, work3)
                   | core.result.Result.Err failure =>
-                    ok (core.result.Result.Err failure, self, meter2)
+                    ok (core.result.Result.Err failure, self, work2)
               else
-                ok (core.result.Result.Err Diagnostic.Exhausted, self, meter1)
+                ok (core.result.Result.Err Diagnostic.Exhausted, self, work1)
       | some candidates =>
         let s1 := alloc.vec.Vec.deref candidates
         let s2 := alloc.vec.Vec.deref key
-        let (r2, scratch, meter2) ←
-          signatures.Pool.existing_record MeterInst self s1 hash s2
-            (alloc.vec.Vec.new Std.U8) meter1
+        let (r2, scratch, work2) ←
+          signatures.Pool.existing_record self s1 hash s2 (alloc.vec.Vec.new
+            Std.U8) work1
         match r2 with
         | core.result.Result.Ok value =>
           match value with
           | none =>
             let index := alloc.vec.Vec.len self.prefix_keys
             if index >= signatures.CALCULATOR_SOURCE_KEY_LIMIT
-            then ok (core.result.Result.Err Diagnostic.Exhausted, self, meter2)
+            then ok (core.result.Result.Err Diagnostic.Exhausted, self, work2)
             else
               let i3 := alloc.vec.Vec.len key
               if i3 > 65536#usize
               then
-                ok (core.result.Result.Err Diagnostic.Exhausted, self, meter2)
+                ok (core.result.Result.Err Diagnostic.Exhausted, self, work2)
               else
                 let i4 := alloc.vec.Vec.len key
                 let o1 ← lift (Usize.checked_add self.expanded_bytes i4)
                 match o1 with
                 | none =>
-                  ok (core.result.Result.Err Diagnostic.Exhausted, self,
-                    meter2)
+                  ok (core.result.Result.Err Diagnostic.Exhausted, self, work2)
                 | some bytes =>
                   let i5 ← signatures.CALCULATOR_EXPANDED_KEY_LIMIT
                   if bytes <= i5
@@ -10928,7 +11043,7 @@ def signatures.Pool.intern_prefix
                       match o2 with
                       | none =>
                         ok (core.result.Result.Err Diagnostic.Exhausted, self,
-                          meter2)
+                          work2)
                       | some size =>
                         let i8 := alloc.vec.Vec.len key
                         let r3 ←
@@ -10945,11 +11060,11 @@ def signatures.Pool.intern_prefix
                             let i10 ←
                               lift (core.num.Usize.saturating_add i9
                                 signatures.PREFIX_RECORD_BYTES)
-                            let (r5, meter3) ← MeterInst.visit meter2 i10
+                            let (r5, work3) ← source.Work.entries work2 i10
                             match r5 with
                             | core.result.Result.Ok _ =>
                               let i11 ← signatures.index_probe_cost i1
-                              let (r6, meter4) ← MeterInst.visit meter3 i11
+                              let (r6, work4) ← source.Work.entries work3 i11
                               match r6 with
                               | core.result.Result.Ok _ =>
                                 let r7 ← signatures.number index
@@ -10990,20 +11105,20 @@ def signatures.Pool.intern_prefix
                                         candidates := bm,
                                         bytes := size,
                                         expanded_bytes := bytes
-                                    }, meter4)
+                                    }, work4)
                                 | core.result.Result.Err _ =>
-                                  ok (r7, self, meter4)
+                                  ok (r7, self, work4)
                               | core.result.Result.Err failure =>
                                 ok (core.result.Result.Err failure, self,
-                                  meter4)
+                                  work4)
                             | core.result.Result.Err failure =>
-                              ok (core.result.Result.Err failure, self, meter3)
+                              ok (core.result.Result.Err failure, self, work3)
                           | core.result.Result.Err _ =>
                             ok (core.result.Result.Err Diagnostic.Exhausted,
-                              self, meter2)
+                              self, work2)
                         | core.result.Result.Err _ =>
                           ok (core.result.Result.Err Diagnostic.Exhausted,
-                            self, meter2)
+                            self, work2)
                     else
                       let scratch1 ← alloc.vec.Vec.clear Global scratch
                       let i6 ← index / signatures.PREFIX_BLOCK
@@ -11013,8 +11128,8 @@ def signatures.Pool.intern_prefix
                           (core.slice.index.SliceIndexRangeUsizeSlice
                           signatures.PrefixKey) self.prefix_keys
                           { start := i7, «end» := index }
-                      let (r3, scratch2, meter3) ←
-                        signatures.decode_records MeterInst s3 scratch1 meter2
+                      let (r3, scratch2, work3) ←
+                        signatures.decode_records s3 scratch1 work2
                       match r3 with
                       | core.result.Result.Ok _ =>
                         let «prefix» ←
@@ -11023,7 +11138,7 @@ def signatures.Pool.intern_prefix
                         let i8 ←
                           lift (core.num.Usize.saturating_add «prefix»
                             1#usize)
-                        let (r4, meter4) ← MeterInst.visit meter3 i8
+                        let (r4, work4) ← source.Work.entries work3 i8
                         match r4 with
                         | core.result.Result.Ok _ =>
                           let suffix ←
@@ -11038,7 +11153,7 @@ def signatures.Pool.intern_prefix
                           match o2 with
                           | none =>
                             ok (core.result.Result.Err Diagnostic.Exhausted,
-                              self, meter4)
+                              self, work4)
                           | some size =>
                             let i11 := alloc.vec.Vec.len key
                             let r5 ←
@@ -11055,7 +11170,8 @@ def signatures.Pool.intern_prefix
                                 let i13 ←
                                   lift (core.num.Usize.saturating_add i12
                                     signatures.PREFIX_RECORD_BYTES)
-                                let (r7, meter5) ← MeterInst.visit meter4 i13
+                                let (r7, work5) ←
+                                  source.Work.entries work4 i13
                                 match r7 with
                                 | core.result.Result.Ok _ =>
                                   let i14 ←
@@ -11063,8 +11179,8 @@ def signatures.Pool.intern_prefix
                                       alloc.alloc.Global.Insts.CoreAllocAllocatorClone
                                       self.candidates
                                   let i15 ← signatures.index_probe_cost i14
-                                  let (r8, meter6) ←
-                                    MeterInst.visit meter5 i15
+                                  let (r8, work6) ←
+                                    source.Work.entries work5 i15
                                   match r8 with
                                   | core.result.Result.Ok _ =>
                                     let r9 ← signatures.number index
@@ -11105,37 +11221,37 @@ def signatures.Pool.intern_prefix
                                             candidates := bm,
                                             bytes := size,
                                             expanded_bytes := bytes
-                                        }, meter6)
+                                        }, work6)
                                     | core.result.Result.Err _ =>
-                                      ok (r9, self, meter6)
+                                      ok (r9, self, work6)
                                   | core.result.Result.Err failure =>
                                     ok (core.result.Result.Err failure, self,
-                                      meter6)
+                                      work6)
                                 | core.result.Result.Err failure =>
                                   ok (core.result.Result.Err failure, self,
-                                    meter5)
+                                    work5)
                               | core.result.Result.Err _ =>
                                 ok (core.result.Result.Err
-                                  Diagnostic.Exhausted, self, meter4)
+                                  Diagnostic.Exhausted, self, work4)
                             | core.result.Result.Err _ =>
                               ok (core.result.Result.Err Diagnostic.Exhausted,
-                                self, meter4)
+                                self, work4)
                         | core.result.Result.Err failure =>
-                          ok (core.result.Result.Err failure, self, meter4)
+                          ok (core.result.Result.Err failure, self, work4)
                       | core.result.Result.Err failure =>
-                        ok (core.result.Result.Err failure, self, meter3)
+                        ok (core.result.Result.Err failure, self, work3)
                   else
                     ok (core.result.Result.Err Diagnostic.Exhausted, self,
-                      meter2)
+                      work2)
           | some index =>
             let r3 ← signatures.number index
-            ok (r3, self, meter2)
+            ok (r3, self, work2)
         | core.result.Result.Err failure =>
-          ok (core.result.Result.Err failure, self, meter2)
+          ok (core.result.Result.Err failure, self, work2)
     | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, self, meter1)
+      ok (core.result.Result.Err failure, self, work1)
   | core.result.Result.Err _ =>
-    ok (core.result.Result.Err Diagnostic.Exhausted, self, meter)
+    ok (core.result.Result.Err Diagnostic.Exhausted, self, work)
 
 /-- [noble_wasm::signatures::SOURCE_KEY_LIMIT]
     Source: 'crates/noble-wasm/src/signatures.rs', lines 3:0-3:48 -/
@@ -11841,14 +11957,13 @@ def signatures.walk.encode
     | some error => ok (core.result.Result.Err error)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::intern_charged]: loop body 0:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 259:8-271:9 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 239:8-251:9 -/
 @[rust_loop_body]
 def signatures.Pool.intern_charged_loop.body
-  {T0 : Type _} (MeterInst : signatures.Meter T0)
   (v : alloc.vec.Vec (alloc.vec.Vec Std.U8)) (key : alloc.vec.Vec Std.U8)
-  (meter : T0) (index : Std.Usize) :
-  Result (ControlFlow (T0 × Std.Usize) (T0 × (Option Std.Usize) × (Option
-    Diagnostic)))
+  (work : source.Work) (index : Std.Usize) :
+  Result (ControlFlow (source.Work × Std.Usize) (source.Work × (Option
+    Std.Usize) × (Option Diagnostic)))
   := do
   let i := alloc.vec.Vec.len v
   if index < i
@@ -11858,36 +11973,36 @@ def signatures.Pool.intern_charged_loop.body
         Std.U8)) v index
     let s := alloc.vec.Vec.deref v1
     let s1 := alloc.vec.Vec.deref key
-    let (r, meter1) ← signatures.compare_key MeterInst s s1 meter
+    let (r, work1) ← signatures.compare_key s s1 work
     match r with
     | core.result.Result.Ok b =>
       if b
-      then ok (done (meter1, some index, none))
+      then ok (done (work1, some index, none))
       else let index1 ← index + 1#usize
-           ok (cont (meter1, index1))
-    | core.result.Result.Err problem => ok (done (meter1, none, some problem))
-  else ok (done (meter, none, none))
+           ok (cont (work1, index1))
+    | core.result.Result.Err problem => ok (done (work1, none, some problem))
+  else ok (done (work, none, none))
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::intern_charged]: loop 0:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 259:8-271:9 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 239:8-251:9 -/
 @[rust_loop]
 def signatures.Pool.intern_charged_loop
-  {T0 : Type _} (MeterInst : signatures.Meter T0)
-  (v : alloc.vec.Vec (alloc.vec.Vec Std.U8)) (meter : T0)
+  (v : alloc.vec.Vec (alloc.vec.Vec Std.U8)) (work : source.Work)
   (key : alloc.vec.Vec Std.U8) (index : Std.Usize) :
-  Result (T0 × (Option Std.Usize) × (Option Diagnostic))
+  Result (source.Work × (Option Std.Usize) × (Option Diagnostic))
   := do
   loop
-    (fun (meter1, index1) => signatures.Pool.intern_charged_loop.body MeterInst
-      v key meter1 index1)
-    (meter, index)
+    (fun (work1, index1) => signatures.Pool.intern_charged_loop.body v key
+      work1 index1)
+    (work, index)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::intern_charged]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 246:4-292:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 226:4-272:5 -/
 def signatures.Pool.intern_charged
-  {T0 : Type _} (MeterInst : signatures.Meter T0) (self : signatures.Pool)
-  (stack : Slice noble_kernel.types.Ty) (meter : T0) :
-  Result ((core.result.Result Std.U32 Diagnostic) × signatures.Pool × T0)
+  (self : signatures.Pool) (stack : Slice noble_kernel.types.Ty)
+  (work : source.Work) :
+  Result ((core.result.Result Std.U32 Diagnostic) × signatures.Pool ×
+    source.Work)
   := do
   let r ← signatures.walk.encode stack self.extended self.compact
   match r with
@@ -11895,16 +12010,15 @@ def signatures.Pool.intern_charged
     if self.compact
     then
       let i := alloc.vec.Vec.len value
-      let (r1, meter1) ← MeterInst.visit meter i
+      let (r1, work1) ← source.Work.entries work i
       match r1 with
       | core.result.Result.Ok _ =>
-        signatures.Pool.intern_prefix MeterInst self value meter1
+        signatures.Pool.intern_prefix self value work1
       | core.result.Result.Err failure =>
-        ok (core.result.Result.Err failure, self, meter1)
+        ok (core.result.Result.Err failure, self, work1)
     else
-      let (meter1, found, failure) ←
-        signatures.Pool.intern_charged_loop MeterInst self.keys meter value
-          0#usize
+      let (work1, found, failure) ←
+        signatures.Pool.intern_charged_loop self.keys work value 0#usize
       match failure with
       | none =>
         match found with
@@ -11913,80 +12027,61 @@ def signatures.Pool.intern_charged
           then
             let i := alloc.vec.Vec.len self.keys
             if i >= signatures.SOURCE_KEY_LIMIT
-            then ok (core.result.Result.Err Diagnostic.Exhausted, self, meter1)
+            then ok (core.result.Result.Err Diagnostic.Exhausted, self, work1)
             else
               let i1 := alloc.vec.Vec.len value
               let o ← lift (Usize.checked_add self.bytes i1)
               match o with
               | none =>
-                ok (core.result.Result.Err Diagnostic.Exhausted, self, meter1)
+                ok (core.result.Result.Err Diagnostic.Exhausted, self, work1)
               | some bytes =>
                 if bytes > OUTPUT_BYTE_LIMIT
                 then
-                  ok (core.result.Result.Err Diagnostic.Exhausted, self,
-                    meter1)
+                  ok (core.result.Result.Err Diagnostic.Exhausted, self, work1)
                 else
                   let i2 := alloc.vec.Vec.len self.keys
                   let r1 ← signatures.number i2
                   match r1 with
                   | core.result.Result.Ok _ =>
                     let v ← alloc.vec.Vec.push self.keys value
-                    ok (r1, { self with keys := v, bytes }, meter1)
-                  | core.result.Result.Err _ => ok (r1, self, meter1)
+                    ok (r1, { self with keys := v, bytes }, work1)
+                  | core.result.Result.Err _ => ok (r1, self, work1)
           else
             let i := alloc.vec.Vec.len value
             let o ← lift (Usize.checked_add self.bytes i)
             match o with
             | none =>
-              ok (core.result.Result.Err Diagnostic.Exhausted, self, meter1)
+              ok (core.result.Result.Err Diagnostic.Exhausted, self, work1)
             | some bytes =>
               if bytes > OUTPUT_BYTE_LIMIT
               then
-                ok (core.result.Result.Err Diagnostic.Exhausted, self, meter1)
+                ok (core.result.Result.Err Diagnostic.Exhausted, self, work1)
               else
                 let i1 := alloc.vec.Vec.len self.keys
                 let r1 ← signatures.number i1
                 match r1 with
                 | core.result.Result.Ok _ =>
                   let v ← alloc.vec.Vec.push self.keys value
-                  ok (r1, { self with keys := v, bytes }, meter1)
-                | core.result.Result.Err _ => ok (r1, self, meter1)
-        | some index =>
-          let r1 ← signatures.number index
-          ok (r1, self, meter1)
-      | some problem => ok (core.result.Result.Err problem, self, meter1)
+                  ok (r1, { self with keys := v, bytes }, work1)
+                | core.result.Result.Err _ => ok (r1, self, work1)
+        | some index => let r1 ← signatures.number index
+                        ok (r1, self, work1)
+      | some problem => ok (core.result.Result.Err problem, self, work1)
   | core.result.Result.Err failure =>
-    ok (core.result.Result.Err failure, self, meter)
-
-/-- [noble_wasm::signatures::{impl noble_wasm::signatures::Meter for noble_wasm::signatures::Unmetered}::visit]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 68:4-70:5 -/
-def signatures.Unmetered.Insts.Noble_wasmSignaturesMeter.visit
-  (self : signatures.Unmetered) (_count : Std.Usize) :
-  Result ((core.result.Result Unit Diagnostic) × signatures.Unmetered)
-  := do
-  ok (core.result.Result.Ok (), self)
-
-/-- Trait implementation: [noble_wasm::signatures::{impl noble_wasm::signatures::Meter for noble_wasm::signatures::Unmetered}]
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 67:0-71:1 -/
-@[reducible]
-def signatures.Unmetered.Insts.Noble_wasmSignaturesMeter : signatures.Meter
-  signatures.Unmetered := {
-  visit := signatures.Unmetered.Insts.Noble_wasmSignaturesMeter.visit
-}
+    ok (core.result.Result.Err failure, self, work)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::intern]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 236:4-241:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 216:4-221:5 -/
 def signatures.Pool.intern
   (self : signatures.Pool) (stack : Slice noble_kernel.types.Ty) :
   Result ((core.result.Result Std.U32 Diagnostic) × signatures.Pool)
   := do
-  let (r, self1, _) ←
-    signatures.Pool.intern_charged
-      signatures.Unmetered.Insts.Noble_wasmSignaturesMeter self stack ()
+  let w ← source.Work.unmetered
+  let (r, self1, _) ← signatures.Pool.intern_charged self stack w
   ok (r, self1)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::interface]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 429:4-439:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 409:4-419:5 -/
 def signatures.Pool.interface
   (self : signatures.Pool) (interface : noble_kernel.untrusted.Interface) :
   Result ((core.result.Result signatures.Interface Diagnostic) ×
@@ -12011,7 +12106,7 @@ def signatures.Pool.interface
   else ok (core.result.Result.Err Diagnostic.Unsupported, self)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::new]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 103:4-113:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 83:4-93:5 -/
 def signatures.Pool.new : Result signatures.Pool := do
   let v := alloc.vec.Vec.with_capacity (alloc.vec.Vec Std.U8) 16#usize
   let bm ←
@@ -12029,7 +12124,7 @@ def signatures.Pool.new : Result signatures.Pool := do
     }
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::produced_program]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 441:4-456:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 421:4-436:5 -/
 def signatures.Pool.produced_program
   (self : signatures.Pool) (interface : noble_kernel.untrusted.Interface) :
   Result ((core.result.Result signatures.Interface Diagnostic) ×
@@ -13124,7 +13219,7 @@ def signatures.PrefixKey.Insts.CoreCmpEq : core.cmp.Eq signatures.PrefixKey
 }
 
 /-- [noble_wasm::signatures::{impl core::clone::Clone for noble_wasm::signatures::Pool}::clone]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 77:9-77:14
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 57:9-57:14
     Visibility: public -/
 def signatures.Pool.Insts.CoreCloneClone.clone
   (self : signatures.Pool) : Result signatures.Pool := do
@@ -13154,7 +13249,7 @@ def signatures.Pool.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_wasm::signatures::{impl core::clone::Clone for noble_wasm::signatures::Pool}]
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 77:9-77:14 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 57:9-57:14 -/
 @[reducible]
 def signatures.Pool.Insts.CoreCloneClone : core.clone.Clone signatures.Pool
   := {
@@ -13162,7 +13257,7 @@ def signatures.Pool.Insts.CoreCloneClone : core.clone.Clone signatures.Pool
 }
 
 /-- [noble_wasm::signatures::{impl core::fmt::Debug for noble_wasm::signatures::Pool}::fmt]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 77:16-77:21
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 57:16-57:21
     Visibility: public -/
 def signatures.Pool.Insts.CoreFmtDebug.fmt
   (self : signatures.Pool) (f : core.fmt.Formatter) :
@@ -13193,21 +13288,21 @@ def signatures.Pool.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_struct_fields_finish f (toStr "Pool") s values
 
 /-- Trait implementation: [noble_wasm::signatures::{impl core::fmt::Debug for noble_wasm::signatures::Pool}]
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 77:16-77:21 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 57:16-57:21 -/
 @[reducible]
 def signatures.Pool.Insts.CoreFmtDebug : core.fmt.Debug signatures.Pool := {
   fmt := signatures.Pool.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_wasm::signatures::{impl core::clone::Clone for noble_wasm::signatures::Interface}::clone]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 92:9-92:14
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 72:9-72:14
     Visibility: public -/
 def signatures.Interface.Insts.CoreCloneClone.clone
   (self : signatures.Interface) : Result signatures.Interface := do
   ok self
 
 /-- Trait implementation: [noble_wasm::signatures::{impl core::clone::Clone for noble_wasm::signatures::Interface}]
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 92:9-92:14 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 72:9-72:14 -/
 @[reducible]
 def signatures.Interface.Insts.CoreCloneClone : core.clone.Clone
   signatures.Interface := {
@@ -13215,7 +13310,7 @@ def signatures.Interface.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_wasm::signatures::{impl core::marker::Copy for noble_wasm::signatures::Interface}]
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 92:16-92:20 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 72:16-72:20 -/
 @[reducible]
 def signatures.Interface.Insts.CoreMarkerCopy : core.marker.Copy
   signatures.Interface := {
@@ -13223,7 +13318,7 @@ def signatures.Interface.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::source]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 115:4-125:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 95:4-105:5 -/
 def signatures.Pool.source : Result signatures.Pool := do
   let v := alloc.vec.Vec.with_capacity (alloc.vec.Vec Std.U8) 16#usize
   let bm ←
@@ -13241,18 +13336,18 @@ def signatures.Pool.source : Result signatures.Pool := do
     }
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::select_calculator]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 127:4-129:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 107:4-109:5 -/
 def signatures.Pool.select_calculator
   (self : signatures.Pool) : Result signatures.Pool := do
   ok { self with compact := true }
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::retained_bytes::RECORD]
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 135:8-135:33 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 115:8-115:33 -/
 @[global_simps, irreducible]
 def signatures.Pool.retained_bytes.RECORD : Std.Usize := 64#usize
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::retained_bytes]: loop body 0:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 137:8-139:9 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 117:8-119:9 -/
 @[rust_loop_body]
 def signatures.Pool.retained_bytes_loop0.body
   (iter : core.slice.iter.Iter (alloc.vec.Vec Std.U8)) (keys : Std.Usize) :
@@ -13271,7 +13366,7 @@ def signatures.Pool.retained_bytes_loop0.body
     ok (cont (iter1, keys1))
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::retained_bytes]: loop 0:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 137:8-139:9 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 117:8-119:9 -/
 @[rust_loop]
 def signatures.Pool.retained_bytes_loop0
   (iter : core.slice.iter.Iter (alloc.vec.Vec Std.U8)) (keys : Std.Usize) :
@@ -13283,7 +13378,7 @@ def signatures.Pool.retained_bytes_loop0
     (iter, keys)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::retained_bytes]: loop body 1:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 141:8-145:9 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 121:8-125:9 -/
 @[rust_loop_body]
 def signatures.Pool.retained_bytes_loop1.body
   (iter : core.slice.iter.Iter signatures.PrefixKey) (prefixes : Std.Usize) :
@@ -13302,7 +13397,7 @@ def signatures.Pool.retained_bytes_loop1.body
     ok (cont (iter1, prefixes1))
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::retained_bytes]: loop 1:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 141:8-145:9 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 121:8-125:9 -/
 @[rust_loop]
 def signatures.Pool.retained_bytes_loop1
   (iter : core.slice.iter.Iter signatures.PrefixKey) (prefixes : Std.Usize) :
@@ -13314,7 +13409,7 @@ def signatures.Pool.retained_bytes_loop1
     (iter, prefixes)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::retained_bytes]: loop body 2:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 147:8-151:9 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 127:8-131:9 -/
 @[rust_loop_body]
 def signatures.Pool.retained_bytes_loop2.body
   (iter : alloc.collections.btree.map.Values Std.U128 (alloc.vec.Vec Std.U32))
@@ -13337,7 +13432,7 @@ def signatures.Pool.retained_bytes_loop2.body
     ok (cont (iter1, candidates1))
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::retained_bytes]: loop 2:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 147:8-151:9 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 127:8-131:9 -/
 @[rust_loop]
 def signatures.Pool.retained_bytes_loop2
   (iter : alloc.collections.btree.map.Values Std.U128 (alloc.vec.Vec Std.U32))
@@ -13350,7 +13445,7 @@ def signatures.Pool.retained_bytes_loop2
     (iter, candidates)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::retained_bytes]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 134:4-153:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 114:4-133:5 -/
 def signatures.Pool.retained_bytes
   (self : signatures.Pool) : Result Std.Usize := do
   let iter ←
@@ -13369,14 +13464,14 @@ def signatures.Pool.retained_bytes
   ok (core.num.Usize.saturating_add i candidates)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::len]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 155:4-161:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 135:4-141:5 -/
 def signatures.Pool.len (self : signatures.Pool) : Result Std.Usize := do
   if self.compact
   then ok (alloc.vec.Vec.len self.prefix_keys)
   else ok (alloc.vec.Vec.len self.keys)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::key_len]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 163:4-169:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 143:4-149:5 -/
 def signatures.Pool.key_len
   (self : signatures.Pool) (index : Std.Usize) : Result Std.Usize := do
   if self.compact
@@ -13392,7 +13487,7 @@ def signatures.Pool.key_len
     ok (alloc.vec.Vec.len v)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::same_key]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 171:4-177:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 151:4-157:5 -/
 def signatures.Pool.same_key
   (self : signatures.Pool) (other : signatures.Pool) (index : Std.Usize) :
   Result Bool
@@ -13426,13 +13521,12 @@ def signatures.Pool.same_key
     alloc.vec.partial_eq.PartialEqVec.eq core.cmp.PartialEqU8 v v1
 
 /-- [noble_wasm::signatures::expand_record]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 520:0-545:1 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 500:0-525:1 -/
 def signatures.expand_record
-  {T0 : Type _} (MeterInst : signatures.Meter T0)
   (record : signatures.PrefixKey) (index : Std.Usize) (first : Std.Usize)
-  (scratch : alloc.vec.Vec Std.U8) (meter : T0) :
+  (scratch : alloc.vec.Vec Std.U8) (work : source.Work) :
   Result ((core.result.Result (Option (alloc.vec.Vec Std.U8)) Diagnostic) ×
-    (alloc.vec.Vec Std.U8) × T0)
+    (alloc.vec.Vec Std.U8) × source.Work)
   := do
   let b ← core.num.Usize.is_multiple_of index signatures.PREFIX_BLOCK
   let scratch1 ← if b
@@ -13441,121 +13535,117 @@ def signatures.expand_record
   let i ← lift (UScalar.cast .Usize record.prefix)
   let i1 := alloc.vec.Vec.len scratch1
   if i > i1
-  then ok (core.result.Result.Err Diagnostic.Defective, scratch1, meter)
+  then ok (core.result.Result.Err Diagnostic.Defective, scratch1, work)
   else
     let i2 ← lift (UScalar.cast .Usize record.prefix)
     let scratch2 ← alloc.vec.Vec.truncate Global scratch1 i2
     let i3 := alloc.vec.Vec.len record.suffix
     let i4 ← lift (core.num.Usize.saturating_add i3 1#usize)
-    let (r, meter1) ← MeterInst.visit meter i4
+    let (r, work1) ← source.Work.entries work i4
     match r with
     | core.result.Result.Ok _ =>
       let s := alloc.vec.Vec.deref record.suffix
       let scratch3 ←
         alloc.vec.Vec.extend_from_slice core.clone.CloneU8 scratch2 s
       let i5 := alloc.vec.Vec.len scratch3
-      let (r1, meter2) ← MeterInst.visit meter1 i5
+      let (r1, work2) ← source.Work.entries work1 i5
       match r1 with
       | core.result.Result.Ok _ =>
         let i6 := alloc.vec.Vec.len scratch3
         let i7 ← lift (UScalar.cast .Usize record.length_bytes)
         if i6 != i7
-        then ok (core.result.Result.Err Diagnostic.Defective, scratch3, meter2)
+        then ok (core.result.Result.Err Diagnostic.Defective, scratch3, work2)
         else
           let s1 := alloc.vec.Vec.deref scratch3
           let i8 ← signatures.fingerprint s1
           if i8 != record.hash
           then
-            ok (core.result.Result.Err Diagnostic.Defective, scratch3, meter2)
+            ok (core.result.Result.Err Diagnostic.Defective, scratch3, work2)
           else
             if index < first
-            then ok (core.result.Result.Ok none, scratch3, meter2)
+            then ok (core.result.Result.Ok none, scratch3, work2)
             else
               let i9 := alloc.vec.Vec.len scratch3
-              let (r2, meter3) ← MeterInst.visit meter2 i9
+              let (r2, work3) ← source.Work.entries work2 i9
               match r2 with
               | core.result.Result.Ok _ =>
                 let v ← alloc.vec.CloneVec.clone core.clone.CloneU8 scratch3
-                ok (core.result.Result.Ok (some v), scratch3, meter3)
+                ok (core.result.Result.Ok (some v), scratch3, work3)
               | core.result.Result.Err failure =>
-                ok (core.result.Result.Err failure, scratch3, meter3)
+                ok (core.result.Result.Err failure, scratch3, work3)
       | core.result.Result.Err failure =>
-        ok (core.result.Result.Err failure, scratch3, meter2)
+        ok (core.result.Result.Err failure, scratch3, work2)
     | core.result.Result.Err failure =>
-      ok (core.result.Result.Err failure, scratch2, meter1)
+      ok (core.result.Result.Err failure, scratch2, work1)
 
 /-- [noble_wasm::signatures::expanded_total]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 497:0-511:1 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 477:0-491:1 -/
 def signatures.expanded_total
-  {T0 : Type _} (MeterInst : signatures.Meter T0) (total : Std.Usize)
-  (record : signatures.PrefixKey) (meter : T0) :
-  Result ((core.result.Result Std.Usize Diagnostic) × T0)
+  (total : Std.Usize) (record : signatures.PrefixKey) (work : source.Work) :
+  Result ((core.result.Result Std.Usize Diagnostic) × source.Work)
   := do
-  let (r, meter1) ← MeterInst.visit meter 1#usize
+  let (r, work1) ← source.Work.entries work 1#usize
   match r with
   | core.result.Result.Ok _ =>
     let i ← lift (UScalar.cast .Usize record.length_bytes)
     let o ← lift (Usize.checked_add total i)
     match o with
-    | none => ok (core.result.Result.Err Diagnostic.Exhausted, meter1)
+    | none => ok (core.result.Result.Err Diagnostic.Exhausted, work1)
     | some value =>
       let i1 ← signatures.CALCULATOR_EXPANDED_KEY_LIMIT
       if value > i1
-      then ok (core.result.Result.Err Diagnostic.Exhausted, meter1)
-      else ok (core.result.Result.Ok value, meter1)
+      then ok (core.result.Result.Err Diagnostic.Exhausted, work1)
+      else ok (core.result.Result.Ok value, work1)
   | core.result.Result.Err failure =>
-    ok (core.result.Result.Err failure, meter1)
+    ok (core.result.Result.Err failure, work1)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::expanded_keys]: loop body 0:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 198:8-207:9 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 178:8-187:9 -/
 @[rust_loop_body]
 def signatures.Pool.expanded_keys_loop0.body
-  {T0 : Type _} (MeterInst : signatures.Meter T0)
-  (delta : Slice signatures.PrefixKey) (meter : T0)
+  (delta : Slice signatures.PrefixKey) (work : source.Work)
   (expanded_bytes : Std.Usize) (index : Std.Usize) :
-  Result (ControlFlow (T0 × Std.Usize × Std.Usize) (T0 × Std.Usize ×
-    (Option Diagnostic)))
+  Result (ControlFlow (source.Work × Std.Usize × Std.Usize) (source.Work ×
+    Std.Usize × (Option Diagnostic)))
   := do
   let i := Slice.len delta
   if index < i
   then
     let pk ← Slice.index_usize delta index
-    let (r, meter1) ←
-      signatures.expanded_total MeterInst expanded_bytes pk meter
+    let (r, work1) ← signatures.expanded_total expanded_bytes pk work
     match r with
     | core.result.Result.Ok total =>
       let index1 ← index + 1#usize
-      ok (cont (meter1, total, index1))
+      ok (cont (work1, total, index1))
     | core.result.Result.Err problem =>
-      ok (done (meter1, expanded_bytes, some problem))
-  else ok (done (meter, expanded_bytes, none))
+      ok (done (work1, expanded_bytes, some problem))
+  else ok (done (work, expanded_bytes, none))
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::expanded_keys]: loop 0:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 198:8-207:9 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 178:8-187:9 -/
 @[rust_loop]
 def signatures.Pool.expanded_keys_loop0
-  {T0 : Type _} (MeterInst : signatures.Meter T0) (meter : T0)
-  (delta : Slice signatures.PrefixKey) (expanded_bytes : Std.Usize)
-  (index : Std.Usize) :
-  Result (T0 × Std.Usize × (Option Diagnostic))
+  (work : source.Work) (delta : Slice signatures.PrefixKey)
+  (expanded_bytes : Std.Usize) (index : Std.Usize) :
+  Result (source.Work × Std.Usize × (Option Diagnostic))
   := do
   loop
-    (fun (meter1, expanded_bytes1, index1) =>
-      signatures.Pool.expanded_keys_loop0.body MeterInst delta meter1
-      expanded_bytes1 index1)
-    (meter, expanded_bytes, index)
+    (fun (work1, expanded_bytes1, index1) =>
+      signatures.Pool.expanded_keys_loop0.body delta work1 expanded_bytes1
+      index1)
+    (work, expanded_bytes, index)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::expanded_keys]: loop body 1:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 218:8-229:9 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 198:8-209:9 -/
 @[rust_loop_body]
 def signatures.Pool.expanded_keys_loop1.body
-  {T0 : Type _} (MeterInst : signatures.Meter T0)
-  (v : alloc.vec.Vec signatures.PrefixKey) (first : Std.Usize) (meter : T0)
-  (index : Std.Usize) (output : alloc.vec.Vec (alloc.vec.Vec Std.U8))
+  (v : alloc.vec.Vec signatures.PrefixKey) (first : Std.Usize)
+  (work : source.Work) (index : Std.Usize)
+  (output : alloc.vec.Vec (alloc.vec.Vec Std.U8))
   (scratch : alloc.vec.Vec Std.U8) :
-  Result (ControlFlow (T0 × Std.Usize × (alloc.vec.Vec (alloc.vec.Vec
-    Std.U8)) × (alloc.vec.Vec Std.U8)) (T0 × (Option Diagnostic) ×
-    (alloc.vec.Vec (alloc.vec.Vec Std.U8))))
+  Result (ControlFlow (source.Work × Std.Usize × (alloc.vec.Vec
+    (alloc.vec.Vec Std.U8)) × (alloc.vec.Vec Std.U8)) (source.Work × (Option
+    Diagnostic) × (alloc.vec.Vec (alloc.vec.Vec Std.U8))))
   := do
   let i := alloc.vec.Vec.len v
   if index < i
@@ -13563,8 +13653,8 @@ def signatures.Pool.expanded_keys_loop1.body
     let record ←
       alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
         signatures.PrefixKey) v index
-    let (r, scratch1, meter1) ←
-      signatures.expand_record MeterInst record index first scratch meter
+    let (r, scratch1, work1) ←
+      signatures.expand_record record index first scratch work
     match r with
     | core.result.Result.Ok o =>
       let output1 ←
@@ -13572,157 +13662,59 @@ def signatures.Pool.expanded_keys_loop1.body
         | none => ok output
         | some key => alloc.vec.Vec.push output key
       let index1 ← index + 1#usize
-      ok (cont (meter1, index1, output1, scratch1))
-    | core.result.Result.Err problem =>
-      ok (done (meter1, some problem, output))
-  else ok (done (meter, none, output))
+      ok (cont (work1, index1, output1, scratch1))
+    | core.result.Result.Err problem => ok (done (work1, some problem, output))
+  else ok (done (work, none, output))
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::expanded_keys]: loop 1:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 218:8-229:9 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 198:8-209:9 -/
 @[rust_loop]
 def signatures.Pool.expanded_keys_loop1
-  {T0 : Type _} (MeterInst : signatures.Meter T0)
-  (v : alloc.vec.Vec signatures.PrefixKey) (first : Std.Usize) (meter : T0)
-  (index : Std.Usize) (output : alloc.vec.Vec (alloc.vec.Vec Std.U8))
+  (v : alloc.vec.Vec signatures.PrefixKey) (first : Std.Usize)
+  (work : source.Work) (index : Std.Usize)
+  (output : alloc.vec.Vec (alloc.vec.Vec Std.U8))
   (scratch : alloc.vec.Vec Std.U8) :
-  Result (T0 × (Option Diagnostic) × (alloc.vec.Vec (alloc.vec.Vec Std.U8)))
+  Result (source.Work × (Option Diagnostic) × (alloc.vec.Vec (alloc.vec.Vec
+    Std.U8)))
   := do
   loop
-    (fun (meter1, index1, output1, scratch1) =>
-      signatures.Pool.expanded_keys_loop1.body MeterInst v first meter1 index1
-      output1 scratch1)
-    (meter, index, output, scratch)
+    (fun (work1, index1, output1, scratch1) =>
+      signatures.Pool.expanded_keys_loop1.body v first work1 index1 output1
+      scratch1)
+    (work, index, output, scratch)
 
 /-- [noble_wasm::signatures::{noble_wasm::signatures::Pool}::expanded_keys]:
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 184:4-234:5 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 164:4-214:5 -/
 def signatures.Pool.expanded_keys
-  {T0 : Type _} (MeterInst : signatures.Meter T0) (self : signatures.Pool)
-  (first : Std.Usize) (meter : T0) :
+  (self : signatures.Pool) (first : Std.Usize) (work : source.Work) :
   Result ((core.result.Result (alloc.vec.Vec (alloc.vec.Vec Std.U8))
-    Diagnostic) × T0)
+    Diagnostic) × source.Work)
   := do
   let s := alloc.vec.Vec.deref self.prefix_keys
   let o ←
     core.slice.Slice.get (core.slice.index.SliceIndexRangeFromUsizeSlice
       signatures.PrefixKey) s { start := first }
   match o with
-  | none => ok (core.result.Result.Err Diagnostic.Defective, meter)
+  | none => ok (core.result.Result.Err Diagnostic.Defective, work)
   | some delta =>
-    let (meter1, expanded_bytes, failure) ←
-      signatures.Pool.expanded_keys_loop0 MeterInst meter delta 0#usize 0#usize
+    let (work1, expanded_bytes, failure) ←
+      signatures.Pool.expanded_keys_loop0 work delta 0#usize 0#usize
     match failure with
     | none =>
       if expanded_bytes > self.expanded_bytes
-      then ok (core.result.Result.Err Diagnostic.Defective, meter1)
+      then ok (core.result.Result.Err Diagnostic.Defective, work1)
       else
         let i ← first / signatures.PREFIX_BLOCK
         let start ← i * signatures.PREFIX_BLOCK
         let i1 := Slice.len delta
         let output := alloc.vec.Vec.with_capacity (alloc.vec.Vec Std.U8) i1
-        let (meter2, failure1, output1) ←
-          signatures.Pool.expanded_keys_loop1 MeterInst self.prefix_keys first
-            meter1 start output (alloc.vec.Vec.new Std.U8)
+        let (work2, failure1, output1) ←
+          signatures.Pool.expanded_keys_loop1 self.prefix_keys first work1
+            start output (alloc.vec.Vec.new Std.U8)
         match failure1 with
-        | none => ok (core.result.Result.Ok output1, meter2)
-        | some problem => ok (core.result.Result.Err problem, meter2)
-    | some problem => ok (core.result.Result.Err problem, meter1)
-
-/-- [noble_wasm::source::CALCULATOR_COMPILER_WORK_LIMIT]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 72:0-72:69 -/
-@[global_simps, irreducible]
-def source.CALCULATOR_COMPILER_WORK_LIMIT : Std.U64 := 2000000000#u64
-
-/-- [noble_wasm::source::{noble_wasm::source::Work}::grant_calculator]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 147:4-160:5 -/
-def source.Work.grant_calculator
-  (self : source.Work) (amount : Std.U64) :
-  Result ((core.result.Result Unit Diagnostic) × source.Work)
-  := do
-  let o ← lift (U64.checked_add self.issued amount)
-  match o with
-  | none => ok (core.result.Result.Err Diagnostic.Exhausted, self)
-  | some issued =>
-    let o1 ← lift (U64.checked_add self.remaining amount)
-    match o1 with
-    | none => ok (core.result.Result.Err Diagnostic.Exhausted, self)
-    | some remaining =>
-      if issued > source.CALCULATOR_COMPILER_WORK_LIMIT
-      then ok (core.result.Result.Err Diagnostic.Exhausted, self)
-      else ok (core.result.Result.Ok (), { self with remaining, issued })
-
-/-- [noble_wasm::source::{noble_wasm::source::Work}::charge]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 126:4-143:5 -/
-def source.Work.charge
-  (self : source.Work) (amount : Std.U64) :
-  Result ((core.result.Result Unit Diagnostic) × source.Work)
-  := do
-  if self.calculator_preflight
-  then
-    if amount != 0#u64
-    then
-      let (r, self1) ← source.Work.grant_calculator self amount
-      match r with
-      | core.result.Result.Ok _ =>
-        let o ← lift (U64.checked_sub self1.remaining amount)
-        match o with
-        | none => ok (core.result.Result.Err Diagnostic.Exhausted, self1)
-        | some value =>
-          ok (core.result.Result.Ok (), { self1 with remaining := value })
-      | core.result.Result.Err _ => ok (r, self1)
-    else
-      if self.calculator_plan
-      then
-        if amount > self.remaining
-        then
-          let i ← amount - self.remaining
-          let (r, self1) ← source.Work.grant_calculator self i
-          match r with
-          | core.result.Result.Ok _ =>
-            let o ← lift (U64.checked_sub self1.remaining amount)
-            match o with
-            | none => ok (core.result.Result.Err Diagnostic.Exhausted, self1)
-            | some value =>
-              ok (core.result.Result.Ok (), { self1 with remaining := value })
-          | core.result.Result.Err _ => ok (r, self1)
-        else
-          let o ← lift (U64.checked_sub self.remaining amount)
-          match o with
-          | none => ok (core.result.Result.Err Diagnostic.Exhausted, self)
-          | some value =>
-            ok (core.result.Result.Ok (), { self with remaining := value })
-      else
-        let o ← lift (U64.checked_sub self.remaining amount)
-        match o with
-        | none => ok (core.result.Result.Err Diagnostic.Exhausted, self)
-        | some value =>
-          ok (core.result.Result.Ok (), { self with remaining := value })
-  else
-    if self.calculator_plan
-    then
-      if amount > self.remaining
-      then
-        let i ← amount - self.remaining
-        let (r, self1) ← source.Work.grant_calculator self i
-        match r with
-        | core.result.Result.Ok _ =>
-          let o ← lift (U64.checked_sub self1.remaining amount)
-          match o with
-          | none => ok (core.result.Result.Err Diagnostic.Exhausted, self1)
-          | some value =>
-            ok (core.result.Result.Ok (), { self1 with remaining := value })
-        | core.result.Result.Err _ => ok (r, self1)
-      else
-        let o ← lift (U64.checked_sub self.remaining amount)
-        match o with
-        | none => ok (core.result.Result.Err Diagnostic.Exhausted, self)
-        | some value =>
-          ok (core.result.Result.Ok (), { self with remaining := value })
-    else
-      let o ← lift (U64.checked_sub self.remaining amount)
-      match o with
-      | none => ok (core.result.Result.Err Diagnostic.Exhausted, self)
-      | some value =>
-        ok (core.result.Result.Ok (), { self with remaining := value })
+        | none => ok (core.result.Result.Ok output1, work2)
+        | some problem => ok (core.result.Result.Err problem, work2)
+    | some problem => ok (core.result.Result.Err problem, work1)
 
 /-- [noble_wasm::source::admission::has_signed_self::{impl core::ops::function::FnMut<(&'_0 noble_kernel::untrusted::Node,), bool> for noble_wasm::source::admission::has_signed_self::{closure}}::call_mut]:
     Source: 'crates/noble-wasm/src/source/admission.rs', lines 88:51-90:5 -/
@@ -13790,18 +13782,6 @@ def source.admission.has_signed_self
 /-- [noble_wasm::source::NODE_LIMIT]
     Source: 'crates/noble-wasm/src/source/mod.rs', lines 30:0-30:31 -/
 @[global_simps, irreducible] def source.NODE_LIMIT : Std.Usize := 4096#usize
-
-/-- [noble_wasm::source::{noble_wasm::source::Work}::entries]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 166:4-171:5 -/
-def source.Work.entries
-  (self : source.Work) (count : Std.Usize) :
-  Result ((core.result.Result Unit Diagnostic) × source.Work)
-  := do
-  let r ← U64.Insts.CoreConvertTryFromUsizeTryFromIntError.try_from count
-  match r with
-  | core.result.Result.Ok count1 => source.Work.charge self count1
-  | core.result.Result.Err _ =>
-    ok (core.result.Result.Err Diagnostic.Exhausted, self)
 
 /-- [noble_wasm::source::admission::nodes::node]:
     Source: 'crates/noble-wasm/src/source/admission/nodes.rs', lines 13:0-21:1 -/
@@ -35827,38 +35807,22 @@ def source.ProfileSelection.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Work}::observe_type_size]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 173:4-177:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 204:4-208:5 -/
 def source.Work.observe_type_size
   (self : source.Work) (nodes : Std.U32) : Result source.Work := do
   if nodes > self.max_type_nodes
   then ok { self with max_type_nodes := nodes }
   else ok self
 
-/-- [noble_wasm::source::{impl noble_wasm::signatures::Meter for noble_wasm::source::Work}::visit]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 187:4-189:5 -/
-def source.Work.Insts.Noble_wasmSignaturesMeter.visit
-  (self : source.Work) (count : Std.Usize) :
-  Result ((core.result.Result Unit Diagnostic) × source.Work)
-  := do
-  source.Work.entries self count
-
-/-- Trait implementation: [noble_wasm::source::{impl noble_wasm::signatures::Meter for noble_wasm::source::Work}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 186:0-190:1 -/
-@[reducible]
-def source.Work.Insts.Noble_wasmSignaturesMeter : signatures.Meter source.Work
-  := {
-  visit := source.Work.Insts.Noble_wasmSignaturesMeter.visit
-}
-
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::CalculatorCaps}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 195:9-195:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 214:9-214:14
     Visibility: public -/
 def source.CalculatorCaps.Insts.CoreCloneClone.clone
   (self : source.CalculatorCaps) : Result source.CalculatorCaps := do
   ok self
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::CalculatorCaps}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 195:9-195:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 214:9-214:14 -/
 @[reducible]
 def source.CalculatorCaps.Insts.CoreCloneClone : core.clone.Clone
   source.CalculatorCaps := {
@@ -35866,7 +35830,7 @@ def source.CalculatorCaps.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::Copy for noble_wasm::source::CalculatorCaps}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 195:16-195:20 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 214:16-214:20 -/
 @[reducible]
 def source.CalculatorCaps.Insts.CoreMarkerCopy : core.marker.Copy
   source.CalculatorCaps := {
@@ -35874,7 +35838,7 @@ def source.CalculatorCaps.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::CalculatorCaps}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 195:22-195:27
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 214:22-214:27
     Visibility: public -/
 def source.CalculatorCaps.Insts.CoreFmtDebug.fmt
   (self : source.CalculatorCaps) (f : core.fmt.Formatter) :
@@ -35902,7 +35866,7 @@ def source.CalculatorCaps.Insts.CoreFmtDebug.fmt
     values
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::CalculatorCaps}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 195:22-195:27 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 214:22-214:27 -/
 @[reducible]
 def source.CalculatorCaps.Insts.CoreFmtDebug : core.fmt.Debug
   source.CalculatorCaps := {
@@ -35910,14 +35874,14 @@ def source.CalculatorCaps.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::StructuralPartialEq for noble_wasm::source::CalculatorCaps}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 195:29-195:38 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 214:29-214:38 -/
 @[reducible]
 def source.CalculatorCaps.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq source.CalculatorCaps := {
 }
 
 /-- [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::CalculatorCaps> for noble_wasm::source::CalculatorCaps}::eq]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 195:29-195:38
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 214:29-214:38
     Visibility: public -/
 def source.CalculatorCaps.Insts.CoreCmpPartialEqCalculatorCaps.eq
   (self : source.CalculatorCaps) (other : source.CalculatorCaps) :
@@ -35946,7 +35910,7 @@ def source.CalculatorCaps.Insts.CoreCmpPartialEqCalculatorCaps.eq
   else ok false
 
 /-- Trait implementation: [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::CalculatorCaps> for noble_wasm::source::CalculatorCaps}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 195:29-195:38 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 214:29-214:38 -/
 @[reducible]
 impl_def source.CalculatorCaps.Insts.CoreCmpPartialEqCalculatorCaps :
   core.cmp.PartialEq source.CalculatorCaps source.CalculatorCaps := {
@@ -35956,14 +35920,14 @@ impl_def source.CalculatorCaps.Insts.CoreCmpPartialEqCalculatorCaps :
 }
 
 /-- [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::CalculatorCaps}::assert_fields_are_eq]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 195:40-195:42
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 214:40-214:42
     Visibility: public -/
 def source.CalculatorCaps.Insts.CoreCmpEq.assert_fields_are_eq
   (self : source.CalculatorCaps) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::CalculatorCaps}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 195:40-195:42 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 214:40-214:42 -/
 @[reducible]
 def source.CalculatorCaps.Insts.CoreCmpEq : core.cmp.Eq source.CalculatorCaps
   := {
@@ -35973,7 +35937,7 @@ def source.CalculatorCaps.Insts.CoreCmpEq : core.cmp.Eq source.CalculatorCaps
 }
 
 /-- [noble_wasm::source::CALCULATOR_CAPS]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 207:0-216:2
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 226:0-235:2
     Visibility: public -/
 @[global_simps, irreducible]
 def source.CALCULATOR_CAPS : Result source.CalculatorCaps := do
@@ -35997,14 +35961,14 @@ def source.CALCULATOR_CAPS : Result source.CalculatorCaps := do
     }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::CompileMetrics}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 223:9-223:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 242:9-242:14
     Visibility: public -/
 def source.CompileMetrics.Insts.CoreCloneClone.clone
   (self : source.CompileMetrics) : Result source.CompileMetrics := do
   ok self
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::CompileMetrics}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 223:9-223:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 242:9-242:14 -/
 @[reducible]
 def source.CompileMetrics.Insts.CoreCloneClone : core.clone.Clone
   source.CompileMetrics := {
@@ -36012,7 +35976,7 @@ def source.CompileMetrics.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::Copy for noble_wasm::source::CompileMetrics}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 223:16-223:20 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 242:16-242:20 -/
 @[reducible]
 def source.CompileMetrics.Insts.CoreMarkerCopy : core.marker.Copy
   source.CompileMetrics := {
@@ -36020,7 +35984,7 @@ def source.CompileMetrics.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::CompileMetrics}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 223:22-223:27
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 242:22-242:27
     Visibility: public -/
 def source.CompileMetrics.Insts.CoreFmtDebug.fmt
   (self : source.CompileMetrics) (f : core.fmt.Formatter) :
@@ -36069,7 +36033,7 @@ def source.CompileMetrics.Insts.CoreFmtDebug.fmt
     values
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::CompileMetrics}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 223:22-223:27 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 242:22-242:27 -/
 @[reducible]
 def source.CompileMetrics.Insts.CoreFmtDebug : core.fmt.Debug
   source.CompileMetrics := {
@@ -36077,7 +36041,7 @@ def source.CompileMetrics.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_wasm::source::{impl core::default::Default for noble_wasm::source::CompileMetrics}::default]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 223:29-223:36
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 242:29-242:36
     Visibility: public -/
 def source.CompileMetrics.Insts.CoreDefaultDefault.default
   : Result source.CompileMetrics := do
@@ -36105,7 +36069,7 @@ def source.CompileMetrics.Insts.CoreDefaultDefault.default
     }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::default::Default for noble_wasm::source::CompileMetrics}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 223:29-223:36 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 242:29-242:36 -/
 @[reducible]
 def source.CompileMetrics.Insts.CoreDefaultDefault : core.default.Default
   source.CompileMetrics := {
@@ -36113,14 +36077,14 @@ def source.CompileMetrics.Insts.CoreDefaultDefault : core.default.Default
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::StructuralPartialEq for noble_wasm::source::CompileMetrics}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 223:38-223:47 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 242:38-242:47 -/
 @[reducible]
 def source.CompileMetrics.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq source.CompileMetrics := {
 }
 
 /-- [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::CompileMetrics> for noble_wasm::source::CompileMetrics}::eq]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 223:38-223:47
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 242:38-242:47
     Visibility: public -/
 def source.CompileMetrics.Insts.CoreCmpPartialEqCompileMetrics.eq
   (self : source.CompileMetrics) (other : source.CompileMetrics) :
@@ -36188,7 +36152,7 @@ def source.CompileMetrics.Insts.CoreCmpPartialEqCompileMetrics.eq
   else ok false
 
 /-- Trait implementation: [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::CompileMetrics> for noble_wasm::source::CompileMetrics}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 223:38-223:47 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 242:38-242:47 -/
 @[reducible]
 impl_def source.CompileMetrics.Insts.CoreCmpPartialEqCompileMetrics :
   core.cmp.PartialEq source.CompileMetrics source.CompileMetrics := {
@@ -36198,14 +36162,14 @@ impl_def source.CompileMetrics.Insts.CoreCmpPartialEqCompileMetrics :
 }
 
 /-- [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::CompileMetrics}::assert_fields_are_eq]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 223:49-223:51
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 242:49-242:51
     Visibility: public -/
 def source.CompileMetrics.Insts.CoreCmpEq.assert_fields_are_eq
   (self : source.CompileMetrics) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::CompileMetrics}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 223:49-223:51 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 242:49-242:51 -/
 @[reducible]
 def source.CompileMetrics.Insts.CoreCmpEq : core.cmp.Eq source.CompileMetrics
   := {
@@ -36215,7 +36179,7 @@ def source.CompileMetrics.Insts.CoreCmpEq : core.cmp.Eq source.CompileMetrics
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::Identity}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 737:9-737:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 756:9-756:14
     Visibility: public -/
 def source.Identity.Insts.CoreCloneClone.clone
   (self : source.Identity) : Result source.Identity := do
@@ -36224,7 +36188,7 @@ def source.Identity.Insts.CoreCloneClone.clone
   ok { id := i, recipe := v }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::Identity}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 737:9-737:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 756:9-756:14 -/
 @[reducible]
 def source.Identity.Insts.CoreCloneClone : core.clone.Clone source.Identity
   := {
@@ -36232,14 +36196,14 @@ def source.Identity.Insts.CoreCloneClone : core.clone.Clone source.Identity
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::FreeCode}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 731:9-731:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 750:9-750:14
     Visibility: public -/
 def source.FreeCode.Insts.CoreCloneClone.clone
   (self : source.FreeCode) : Result source.FreeCode := do
   ok self
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::FreeCode}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 731:9-731:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 750:9-750:14 -/
 @[reducible]
 def source.FreeCode.Insts.CoreCloneClone : core.clone.Clone source.FreeCode
   := {
@@ -36247,14 +36211,14 @@ def source.FreeCode.Insts.CoreCloneClone : core.clone.Clone source.FreeCode
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::CodeSpan}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 293:9-293:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 312:9-312:14
     Visibility: public -/
 def source.CodeSpan.Insts.CoreCloneClone.clone
   (self : source.CodeSpan) : Result source.CodeSpan := do
   ok self
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::CodeSpan}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 293:9-293:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 312:9-312:14 -/
 @[reducible]
 def source.CodeSpan.Insts.CoreCloneClone : core.clone.Clone source.CodeSpan
   := {
@@ -36262,7 +36226,7 @@ def source.CodeSpan.Insts.CoreCloneClone : core.clone.Clone source.CodeSpan
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::Compiler}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 261:9-261:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 280:9-280:14
     Visibility: public -/
 def source.Compiler.Insts.CoreCloneClone.clone
   (self : source.Compiler) : Result source.Compiler := do
@@ -36325,7 +36289,7 @@ def source.Compiler.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::Compiler}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 261:9-261:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 280:9-280:14 -/
 @[reducible]
 def source.Compiler.Insts.CoreCloneClone : core.clone.Clone source.Compiler
   := {
@@ -36333,7 +36297,7 @@ def source.Compiler.Insts.CoreCloneClone : core.clone.Clone source.Compiler
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::Identity}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 737:16-737:21
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 756:16-756:21
     Visibility: public -/
 def source.Identity.Insts.CoreFmtDebug.fmt
   (self : source.Identity) (f : core.fmt.Formatter) :
@@ -36347,14 +36311,14 @@ def source.Identity.Insts.CoreFmtDebug.fmt
     "id") dyn (toStr "recipe") dyn1
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::Identity}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 737:16-737:21 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 756:16-756:21 -/
 @[reducible]
 def source.Identity.Insts.CoreFmtDebug : core.fmt.Debug source.Identity := {
   fmt := source.Identity.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::FreeCode}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 731:22-731:27
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 750:22-750:27
     Visibility: public -/
 def source.FreeCode.Insts.CoreFmtDebug.fmt
   (self : source.FreeCode) (f : core.fmt.Formatter) :
@@ -36366,14 +36330,14 @@ def source.FreeCode.Insts.CoreFmtDebug.fmt
     "start") dyn (toStr "slots") dyn1
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::FreeCode}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 731:22-731:27 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 750:22-750:27 -/
 @[reducible]
 def source.FreeCode.Insts.CoreFmtDebug : core.fmt.Debug source.FreeCode := {
   fmt := source.FreeCode.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::CodeSpan}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 293:22-293:27
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 312:22-312:27
     Visibility: public -/
 def source.CodeSpan.Insts.CoreFmtDebug.fmt
   (self : source.CodeSpan) (f : core.fmt.Formatter) :
@@ -36386,14 +36350,14 @@ def source.CodeSpan.Insts.CoreFmtDebug.fmt
     "start") dyn (toStr "slots") dyn1 (toStr "generation") dyn2
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::CodeSpan}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 293:22-293:27 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 312:22-312:27 -/
 @[reducible]
 def source.CodeSpan.Insts.CoreFmtDebug : core.fmt.Debug source.CodeSpan := {
   fmt := source.CodeSpan.Insts.CoreFmtDebug.fmt
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::Compiler}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 261:16-261:21
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 280:16-280:21
     Visibility: public -/
 def source.Compiler.Insts.CoreFmtDebug.fmt
   (self : source.Compiler) (f : core.fmt.Formatter) :
@@ -36452,14 +36416,14 @@ def source.Compiler.Insts.CoreFmtDebug.fmt
   core.fmt.Formatter.debug_struct_fields_finish f (toStr "Compiler") s values
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::Compiler}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 261:16-261:21 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 280:16-280:21 -/
 @[reducible]
 def source.Compiler.Insts.CoreFmtDebug : core.fmt.Debug source.Compiler := {
   fmt := source.Compiler.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::Copy for noble_wasm::source::CodeSpan}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 293:16-293:20 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 312:16-312:20 -/
 @[reducible]
 def source.CodeSpan.Insts.CoreMarkerCopy : core.marker.Copy source.CodeSpan
   := {
@@ -36467,14 +36431,14 @@ def source.CodeSpan.Insts.CoreMarkerCopy : core.marker.Copy source.CodeSpan
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::StructuralPartialEq for noble_wasm::source::CodeSpan}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 293:29-293:38 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 312:29-312:38 -/
 @[reducible]
 def source.CodeSpan.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq source.CodeSpan := {
 }
 
 /-- [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::CodeSpan> for noble_wasm::source::CodeSpan}::eq]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 293:29-293:38
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 312:29-312:38
     Visibility: public -/
 def source.CodeSpan.Insts.CoreCmpPartialEqCodeSpan.eq
   (self : source.CodeSpan) (other : source.CodeSpan) : Result Bool := do
@@ -36486,7 +36450,7 @@ def source.CodeSpan.Insts.CoreCmpPartialEqCodeSpan.eq
   else ok false
 
 /-- Trait implementation: [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::CodeSpan> for noble_wasm::source::CodeSpan}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 293:29-293:38 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 312:29-312:38 -/
 @[reducible]
 impl_def source.CodeSpan.Insts.CoreCmpPartialEqCodeSpan : core.cmp.PartialEq
   source.CodeSpan source.CodeSpan := {
@@ -36496,14 +36460,14 @@ impl_def source.CodeSpan.Insts.CoreCmpPartialEqCodeSpan : core.cmp.PartialEq
 }
 
 /-- [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::CodeSpan}::assert_fields_are_eq]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 293:40-293:42
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 312:40-312:42
     Visibility: public -/
 def source.CodeSpan.Insts.CoreCmpEq.assert_fields_are_eq
   (self : source.CodeSpan) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::CodeSpan}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 293:40-293:42 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 312:40-312:42 -/
 @[reducible]
 def source.CodeSpan.Insts.CoreCmpEq : core.cmp.Eq source.CodeSpan := {
   partialEqInst := source.CodeSpan.Insts.CoreCmpPartialEqCodeSpan
@@ -36511,7 +36475,7 @@ def source.CodeSpan.Insts.CoreCmpEq : core.cmp.Eq source.CodeSpan := {
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::LiveSiteMetadata}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 302:9-302:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 321:9-321:14
     Visibility: public -/
 def source.LiveSiteMetadata.Insts.CoreCloneClone.clone
   (self : source.LiveSiteMetadata) : Result source.LiveSiteMetadata := do
@@ -36555,7 +36519,7 @@ def source.LiveSiteMetadata.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::LiveSiteMetadata}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 302:9-302:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 321:9-321:14 -/
 @[reducible]
 def source.LiveSiteMetadata.Insts.CoreCloneClone : core.clone.Clone
   source.LiveSiteMetadata := {
@@ -36563,7 +36527,7 @@ def source.LiveSiteMetadata.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::LiveSiteMetadata}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 302:16-302:21
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 321:16-321:21
     Visibility: public -/
 def source.LiveSiteMetadata.Insts.CoreFmtDebug.fmt
   (self : source.LiveSiteMetadata) (f : core.fmt.Formatter) :
@@ -36610,7 +36574,7 @@ def source.LiveSiteMetadata.Insts.CoreFmtDebug.fmt
     values
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::LiveSiteMetadata}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 302:16-302:21 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 321:16-321:21 -/
 @[reducible]
 def source.LiveSiteMetadata.Insts.CoreFmtDebug : core.fmt.Debug
   source.LiveSiteMetadata := {
@@ -36618,7 +36582,7 @@ def source.LiveSiteMetadata.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::TargetMetadata}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 321:9-321:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 340:9-340:14
     Visibility: public -/
 def source.TargetMetadata.Insts.CoreCloneClone.clone
   (self : source.TargetMetadata) : Result source.TargetMetadata := do
@@ -36645,7 +36609,7 @@ def source.TargetMetadata.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::TargetMetadata}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 321:9-321:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 340:9-340:14 -/
 @[reducible]
 def source.TargetMetadata.Insts.CoreCloneClone : core.clone.Clone
   source.TargetMetadata := {
@@ -36653,7 +36617,7 @@ def source.TargetMetadata.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::TargetMetadata}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 321:16-321:21
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 340:16-340:21
     Visibility: public -/
 def source.TargetMetadata.Insts.CoreFmtDebug.fmt
   (self : source.TargetMetadata) (f : core.fmt.Formatter) :
@@ -36686,7 +36650,7 @@ def source.TargetMetadata.Insts.CoreFmtDebug.fmt
     values
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::TargetMetadata}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 321:16-321:21 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 340:16-340:21 -/
 @[reducible]
 def source.TargetMetadata.Insts.CoreFmtDebug : core.fmt.Debug
   source.TargetMetadata := {
@@ -36694,7 +36658,7 @@ def source.TargetMetadata.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::ProgramAtomMetadata}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 356:9-356:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 375:9-375:14
     Visibility: public -/
 def source.ProgramAtomMetadata.Insts.CoreCloneClone.clone
   (self : source.ProgramAtomMetadata) : Result source.ProgramAtomMetadata := do
@@ -36725,7 +36689,7 @@ def source.ProgramAtomMetadata.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::ProgramAtomMetadata}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 356:9-356:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 375:9-375:14 -/
 @[reducible]
 def source.ProgramAtomMetadata.Insts.CoreCloneClone : core.clone.Clone
   source.ProgramAtomMetadata := {
@@ -36733,7 +36697,7 @@ def source.ProgramAtomMetadata.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::ProgramMetadata}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 335:9-335:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 354:9-354:14
     Visibility: public -/
 def source.ProgramMetadata.Insts.CoreCloneClone.clone
   (self : source.ProgramMetadata) : Result source.ProgramMetadata := do
@@ -36774,7 +36738,7 @@ def source.ProgramMetadata.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::ProgramMetadata}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 335:9-335:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 354:9-354:14 -/
 @[reducible]
 def source.ProgramMetadata.Insts.CoreCloneClone : core.clone.Clone
   source.ProgramMetadata := {
@@ -36782,7 +36746,7 @@ def source.ProgramMetadata.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::ProgramAtomMetadata}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 356:16-356:21
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 375:16-375:21
     Visibility: public -/
 def source.ProgramAtomMetadata.Insts.CoreFmtDebug.fmt
   (self : source.ProgramAtomMetadata) (f : core.fmt.Formatter) :
@@ -36817,7 +36781,7 @@ def source.ProgramAtomMetadata.Insts.CoreFmtDebug.fmt
     s values
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::ProgramAtomMetadata}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 356:16-356:21 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 375:16-375:21 -/
 @[reducible]
 def source.ProgramAtomMetadata.Insts.CoreFmtDebug : core.fmt.Debug
   source.ProgramAtomMetadata := {
@@ -36825,7 +36789,7 @@ def source.ProgramAtomMetadata.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::ProgramMetadata}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 335:16-335:21
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 354:16-354:21
     Visibility: public -/
 def source.ProgramMetadata.Insts.CoreFmtDebug.fmt
   (self : source.ProgramMetadata) (f : core.fmt.Formatter) :
@@ -36870,7 +36834,7 @@ def source.ProgramMetadata.Insts.CoreFmtDebug.fmt
     values
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::ProgramMetadata}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 335:16-335:21 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 354:16-354:21 -/
 @[reducible]
 def source.ProgramMetadata.Insts.CoreFmtDebug : core.fmt.Debug
   source.ProgramMetadata := {
@@ -36878,7 +36842,7 @@ def source.ProgramMetadata.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginOutput}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 686:9-686:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 705:9-705:14
     Visibility: public -/
 def source.OriginOutput.Insts.CoreCloneClone.clone
   (self : source.OriginOutput) : Result source.OriginOutput := do
@@ -36889,7 +36853,7 @@ def source.OriginOutput.Insts.CoreCloneClone.clone
   ok { stack_position := i, result := r }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginOutput}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 686:9-686:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 705:9-705:14 -/
 @[reducible]
 def source.OriginOutput.Insts.CoreCloneClone : core.clone.Clone
   source.OriginOutput := {
@@ -36897,14 +36861,14 @@ def source.OriginOutput.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginAction}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 405:9-405:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 424:9-424:14
     Visibility: public -/
 def source.OriginAction.Insts.CoreCloneClone.clone
   (self : source.OriginAction) : Result source.OriginAction := do
   ok self
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginOperation}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 427:9-427:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 446:9-446:14
     Visibility: public -/
 def source.OriginOperation.Insts.CoreCloneClone.clone
   (self : source.OriginOperation) : Result source.OriginOperation := do
@@ -36942,7 +36906,7 @@ def source.OriginOperation.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginOperation}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 427:9-427:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 446:9-446:14 -/
 @[reducible]
 def source.OriginOperation.Insts.CoreCloneClone : core.clone.Clone
   source.OriginOperation := {
@@ -36950,14 +36914,14 @@ def source.OriginOperation.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginSource}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 381:9-381:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 400:9-400:14
     Visibility: public -/
 def source.OriginSource.Insts.CoreCloneClone.clone
   (self : source.OriginSource) : Result source.OriginSource := do
   ok self
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginProgram}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 391:9-391:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 410:9-410:14
     Visibility: public -/
 def source.OriginProgram.Insts.CoreCloneClone.clone
   (self : source.OriginProgram) : Result source.OriginProgram := do
@@ -36987,7 +36951,7 @@ def source.OriginProgram.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginProgram}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 391:9-391:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 410:9-410:14 -/
 @[reducible]
 def source.OriginProgram.Insts.CoreCloneClone : core.clone.Clone
   source.OriginProgram := {
@@ -36995,7 +36959,7 @@ def source.OriginProgram.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::SelectedOriginMetadata}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 371:9-371:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 390:9-390:14
     Visibility: public -/
 def source.SelectedOriginMetadata.Insts.CoreCloneClone.clone
   (self : source.SelectedOriginMetadata) :
@@ -37024,7 +36988,7 @@ def source.SelectedOriginMetadata.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::SelectedOriginMetadata}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 371:9-371:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 390:9-390:14 -/
 @[reducible]
 def source.SelectedOriginMetadata.Insts.CoreCloneClone : core.clone.Clone
   source.SelectedOriginMetadata := {
@@ -37032,7 +36996,7 @@ def source.SelectedOriginMetadata.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginProgramValue}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 589:4-591:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 608:4-610:5
     Visibility: public -/
 def source.OriginProgramValue.Insts.CoreFmtDebug.fmt
   (self : source.OriginProgramValue) (f : core.fmt.Formatter) :
@@ -37041,7 +37005,7 @@ def source.OriginProgramValue.Insts.CoreFmtDebug.fmt
   source.debug_origin (source.OriginRendering.Value self) f
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginProgramValue}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 584:0-592:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 603:0-611:1 -/
 @[reducible]
 def source.OriginProgramValue.Insts.CoreFmtDebug : core.fmt.Debug
   source.OriginProgramValue := {
@@ -37049,7 +37013,7 @@ def source.OriginProgramValue.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginOutput}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 686:16-686:21
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 705:16-705:21
     Visibility: public -/
 def source.OriginOutput.Insts.CoreFmtDebug.fmt
   (self : source.OriginOutput) (f : core.fmt.Formatter) :
@@ -37063,7 +37027,7 @@ def source.OriginOutput.Insts.CoreFmtDebug.fmt
     "stack_position") dyn (toStr "result") dyn1
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginOutput}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 686:16-686:21 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 705:16-705:21 -/
 @[reducible]
 def source.OriginOutput.Insts.CoreFmtDebug : core.fmt.Debug source.OriginOutput
   := {
@@ -37071,7 +37035,7 @@ def source.OriginOutput.Insts.CoreFmtDebug : core.fmt.Debug source.OriginOutput
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginAction}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 405:22-405:27
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 424:22-424:27
     Visibility: public -/
 def source.OriginAction.Insts.CoreFmtDebug.fmt
   (self : source.OriginAction) (f : core.fmt.Formatter) :
@@ -37112,7 +37076,7 @@ def source.OriginAction.Insts.CoreFmtDebug.fmt
       __self_01
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginAction}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 405:22-405:27 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 424:22-424:27 -/
 @[reducible]
 def source.OriginAction.Insts.CoreFmtDebug : core.fmt.Debug source.OriginAction
   := {
@@ -37120,7 +37084,7 @@ def source.OriginAction.Insts.CoreFmtDebug : core.fmt.Debug source.OriginAction
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginOperation}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 427:16-427:21
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 446:16-446:21
     Visibility: public -/
 def source.OriginOperation.Insts.CoreFmtDebug.fmt
   (self : source.OriginOperation) (f : core.fmt.Formatter) :
@@ -37164,7 +37128,7 @@ def source.OriginOperation.Insts.CoreFmtDebug.fmt
     values
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginOperation}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 427:16-427:21 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 446:16-446:21 -/
 @[reducible]
 def source.OriginOperation.Insts.CoreFmtDebug : core.fmt.Debug
   source.OriginOperation := {
@@ -37172,7 +37136,7 @@ def source.OriginOperation.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginSource}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 381:22-381:27
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 400:22-400:27
     Visibility: public -/
 def source.OriginSource.Insts.CoreFmtDebug.fmt
   (self : source.OriginSource) (f : core.fmt.Formatter) :
@@ -37185,7 +37149,7 @@ def source.OriginSource.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.write_str f (toStr "Selection")
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginSource}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 381:22-381:27 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 400:22-400:27 -/
 @[reducible]
 def source.OriginSource.Insts.CoreFmtDebug : core.fmt.Debug source.OriginSource
   := {
@@ -37193,7 +37157,7 @@ def source.OriginSource.Insts.CoreFmtDebug : core.fmt.Debug source.OriginSource
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginProgram}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 391:16-391:21
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 410:16-410:21
     Visibility: public -/
 def source.OriginProgram.Insts.CoreFmtDebug.fmt
   (self : source.OriginProgram) (f : core.fmt.Formatter) :
@@ -37226,7 +37190,7 @@ def source.OriginProgram.Insts.CoreFmtDebug.fmt
     values
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginProgram}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 391:16-391:21 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 410:16-410:21 -/
 @[reducible]
 def source.OriginProgram.Insts.CoreFmtDebug : core.fmt.Debug
   source.OriginProgram := {
@@ -37234,7 +37198,7 @@ def source.OriginProgram.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::SelectedOriginMetadata}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 371:16-371:21
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 390:16-390:21
     Visibility: public -/
 def source.SelectedOriginMetadata.Insts.CoreFmtDebug.fmt
   (self : source.SelectedOriginMetadata) (f : core.fmt.Formatter) :
@@ -37266,7 +37230,7 @@ def source.SelectedOriginMetadata.Insts.CoreFmtDebug.fmt
     "SelectedOriginMetadata") s values
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::SelectedOriginMetadata}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 371:16-371:21 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 390:16-390:21 -/
 @[reducible]
 def source.SelectedOriginMetadata.Insts.CoreFmtDebug : core.fmt.Debug
   source.SelectedOriginMetadata := {
@@ -37274,7 +37238,7 @@ def source.SelectedOriginMetadata.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginSource}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 381:9-381:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 400:9-400:14 -/
 @[reducible]
 def source.OriginSource.Insts.CoreCloneClone : core.clone.Clone
   source.OriginSource := {
@@ -37282,7 +37246,7 @@ def source.OriginSource.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::Copy for noble_wasm::source::OriginSource}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 381:16-381:20 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 400:16-400:20 -/
 @[reducible]
 def source.OriginSource.Insts.CoreMarkerCopy : core.marker.Copy
   source.OriginSource := {
@@ -37290,14 +37254,14 @@ def source.OriginSource.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::StructuralPartialEq for noble_wasm::source::OriginSource}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 381:29-381:38 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 400:29-400:38 -/
 @[reducible]
 def source.OriginSource.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq source.OriginSource := {
 }
 
 /-- [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::OriginSource> for noble_wasm::source::OriginSource}::eq]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 381:29-381:38
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 400:29-400:38
     Visibility: public -/
 def source.OriginSource.Insts.CoreCmpPartialEqOriginSource.eq
   (self : source.OriginSource) (other : source.OriginSource) :
@@ -37308,7 +37272,7 @@ def source.OriginSource.Insts.CoreCmpPartialEqOriginSource.eq
   ok (self1 = other1)
 
 /-- Trait implementation: [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::OriginSource> for noble_wasm::source::OriginSource}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 381:29-381:38 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 400:29-400:38 -/
 @[reducible]
 impl_def source.OriginSource.Insts.CoreCmpPartialEqOriginSource :
   core.cmp.PartialEq source.OriginSource source.OriginSource := {
@@ -37318,7 +37282,7 @@ impl_def source.OriginSource.Insts.CoreCmpPartialEqOriginSource :
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::OriginSource}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 381:40-381:42 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 400:40-400:42 -/
 @[reducible]
 impl_def source.OriginSource.Insts.CoreCmpEq : core.cmp.Eq source.OriginSource
   := {
@@ -37328,7 +37292,7 @@ impl_def source.OriginSource.Insts.CoreCmpEq : core.cmp.Eq source.OriginSource
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginAction}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 405:9-405:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 424:9-424:14 -/
 @[reducible]
 def source.OriginAction.Insts.CoreCloneClone : core.clone.Clone
   source.OriginAction := {
@@ -37336,7 +37300,7 @@ def source.OriginAction.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::Copy for noble_wasm::source::OriginAction}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 405:16-405:20 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 424:16-424:20 -/
 @[reducible]
 def source.OriginAction.Insts.CoreMarkerCopy : core.marker.Copy
   source.OriginAction := {
@@ -37344,7 +37308,7 @@ def source.OriginAction.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginI64}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 446:9-446:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 465:9-465:14
     Visibility: public -/
 def source.OriginI64.Insts.CoreCloneClone.clone
   (self : source.OriginI64) : Result source.OriginI64 := do
@@ -37360,7 +37324,7 @@ def source.OriginI64.Insts.CoreCloneClone.clone
     ok (source.OriginI64.Fixed i r)
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginI64}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 446:9-446:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 465:9-465:14 -/
 @[reducible]
 def source.OriginI64.Insts.CoreCloneClone : core.clone.Clone source.OriginI64
   := {
@@ -37368,7 +37332,7 @@ def source.OriginI64.Insts.CoreCloneClone : core.clone.Clone source.OriginI64
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginFixedExpression}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 599:4-601:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 618:4-620:5
     Visibility: public -/
 def source.OriginFixedExpression.Insts.CoreFmtDebug.fmt
   (self : source.OriginFixedExpression) (f : core.fmt.Formatter) :
@@ -37377,7 +37341,7 @@ def source.OriginFixedExpression.Insts.CoreFmtDebug.fmt
   source.debug_origin (source.OriginRendering.Recipe self) f
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginFixedExpression}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 594:0-602:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 613:0-621:1 -/
 @[reducible]
 def source.OriginFixedExpression.Insts.CoreFmtDebug : core.fmt.Debug
   source.OriginFixedExpression := {
@@ -37385,7 +37349,7 @@ def source.OriginFixedExpression.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginI64}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 446:16-446:21
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 465:16-465:21
     Visibility: public -/
 def source.OriginI64.Insts.CoreFmtDebug.fmt
   (self : source.OriginI64) (f : core.fmt.Formatter) :
@@ -37405,21 +37369,21 @@ def source.OriginI64.Insts.CoreFmtDebug.fmt
       "value") __self_01 (toStr "recipe") __self_11
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginI64}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 446:16-446:21 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 465:16-465:21 -/
 @[reducible]
 def source.OriginI64.Insts.CoreFmtDebug : core.fmt.Debug source.OriginI64 := {
   fmt := source.OriginI64.Insts.CoreFmtDebug.fmt
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::StructuralPartialEq for noble_wasm::source::OriginI64}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 446:23-446:32 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 465:23-465:32 -/
 @[reducible]
 def source.OriginI64.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq source.OriginI64 := {
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginFixedArithmetic}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 455:9-455:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 474:9-474:14
     Visibility: public -/
 def source.OriginFixedArithmetic.Insts.CoreCloneClone.clone
   (self : source.OriginFixedArithmetic) :
@@ -37428,7 +37392,7 @@ def source.OriginFixedArithmetic.Insts.CoreCloneClone.clone
   ok self
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginFixedExpression}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 462:9-462:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 481:9-481:14
     Visibility: public -/
 def source.OriginFixedExpression.Insts.CoreCloneClone.clone
   (self : source.OriginFixedExpression) :
@@ -37453,7 +37417,7 @@ def source.OriginFixedExpression.Insts.CoreCloneClone.clone
     ok (source.OriginFixedExpression.Arithmetic ofa r r1 i i1)
 
 /-- [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::OriginFixedArithmetic> for noble_wasm::source::OriginFixedArithmetic}::eq]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 455:29-455:38
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 474:29-474:38
     Visibility: public -/
 def source.OriginFixedArithmetic.Insts.CoreCmpPartialEqOriginFixedArithmetic.eq
   (self : source.OriginFixedArithmetic) (other : source.OriginFixedArithmetic)
@@ -37465,7 +37429,7 @@ def source.OriginFixedArithmetic.Insts.CoreCmpPartialEqOriginFixedArithmetic.eq
   ok (self1 = other1)
 
 /-- Trait implementation: [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::OriginFixedArithmetic> for noble_wasm::source::OriginFixedArithmetic}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 455:29-455:38 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 474:29-474:38 -/
 @[reducible]
 impl_def
   source.OriginFixedArithmetic.Insts.CoreCmpPartialEqOriginFixedArithmetic :
@@ -37478,7 +37442,7 @@ impl_def
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::RecipePairs}::compare_next]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 510:4-546:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 529:4-565:5 -/
 def source.RecipePairs.compare_next
   (self : source.RecipePairs) : Result (Bool × source.RecipePairs) := do
   let (o, v) ← alloc.vec.Vec.pop Global self.pairs
@@ -37532,7 +37496,7 @@ def source.RecipePairs.compare_next
               ok (true, { pairs := v2 })
 
 /-- [noble_wasm::source::recipes_equal]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 493:4-495:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 512:4-514:5 -/
 @[rust_loop_body]
 def source.recipes_equal_loop.body
   (pending : source.RecipePairs) (is_equal : Bool) :
@@ -37549,7 +37513,7 @@ def source.recipes_equal_loop.body
   else ok (done is_equal)
 
 /-- [noble_wasm::source::recipes_equal]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 493:4-495:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 512:4-514:5 -/
 @[rust_loop]
 def source.recipes_equal_loop
   (pending : source.RecipePairs) (is_equal : Bool) : Result Bool := do
@@ -37559,7 +37523,7 @@ def source.recipes_equal_loop
     (pending, is_equal)
 
 /-- [noble_wasm::source::recipes_equal]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 487:0-497:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 506:0-516:1 -/
 def source.recipes_equal
   (left : source.OriginFixedExpression) (right : source.OriginFixedExpression)
   :
@@ -37574,7 +37538,7 @@ def source.recipes_equal
   source.recipes_equal_loop { pairs := v1 } true
 
 /-- [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::OriginFixedExpression> for noble_wasm::source::OriginFixedExpression}::eq]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 479:4-481:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 498:4-500:5
     Visibility: public -/
 def source.OriginFixedExpression.Insts.CoreCmpPartialEqOriginFixedExpression.eq
   (self : source.OriginFixedExpression) (other : source.OriginFixedExpression)
@@ -37584,7 +37548,7 @@ def source.OriginFixedExpression.Insts.CoreCmpPartialEqOriginFixedExpression.eq
   source.recipes_equal self other
 
 /-- Trait implementation: [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::OriginFixedExpression> for noble_wasm::source::OriginFixedExpression}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 478:0-482:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 497:0-501:1 -/
 @[reducible]
 impl_def
   source.OriginFixedExpression.Insts.CoreCmpPartialEqOriginFixedExpression :
@@ -37597,7 +37561,7 @@ impl_def
 }
 
 /-- [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::OriginI64> for noble_wasm::source::OriginI64}::eq]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 446:23-446:32
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 465:23-465:32
     Visibility: public -/
 def source.OriginI64.Insts.CoreCmpPartialEqOriginI64.eq
   (self : source.OriginI64) (other : source.OriginI64) : Result Bool := do
@@ -37625,7 +37589,7 @@ def source.OriginI64.Insts.CoreCmpPartialEqOriginI64.eq
   else ok false
 
 /-- Trait implementation: [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::OriginI64> for noble_wasm::source::OriginI64}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 446:23-446:32 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 465:23-465:32 -/
 @[reducible]
 impl_def source.OriginI64.Insts.CoreCmpPartialEqOriginI64 : core.cmp.PartialEq
   source.OriginI64 source.OriginI64 := {
@@ -37635,14 +37599,14 @@ impl_def source.OriginI64.Insts.CoreCmpPartialEqOriginI64 : core.cmp.PartialEq
 }
 
 /-- [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::OriginI64}::assert_fields_are_eq]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 446:34-446:36
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 465:34-465:36
     Visibility: public -/
 def source.OriginI64.Insts.CoreCmpEq.assert_fields_are_eq
   (self : source.OriginI64) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::OriginI64}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 446:34-446:36 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 465:34-465:36 -/
 @[reducible]
 def source.OriginI64.Insts.CoreCmpEq : core.cmp.Eq source.OriginI64 := {
   partialEqInst := source.OriginI64.Insts.CoreCmpPartialEqOriginI64
@@ -37650,7 +37614,7 @@ def source.OriginI64.Insts.CoreCmpEq : core.cmp.Eq source.OriginI64 := {
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginFixedArithmetic}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 455:9-455:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 474:9-474:14 -/
 @[reducible]
 def source.OriginFixedArithmetic.Insts.CoreCloneClone : core.clone.Clone
   source.OriginFixedArithmetic := {
@@ -37658,7 +37622,7 @@ def source.OriginFixedArithmetic.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::Copy for noble_wasm::source::OriginFixedArithmetic}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 455:16-455:20 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 474:16-474:20 -/
 @[reducible]
 def source.OriginFixedArithmetic.Insts.CoreMarkerCopy : core.marker.Copy
   source.OriginFixedArithmetic := {
@@ -37666,7 +37630,7 @@ def source.OriginFixedArithmetic.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginFixedArithmetic}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 455:22-455:27
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 474:22-474:27
     Visibility: public -/
 def source.OriginFixedArithmetic.Insts.CoreFmtDebug.fmt
   (self : source.OriginFixedArithmetic) (f : core.fmt.Formatter) :
@@ -37681,7 +37645,7 @@ def source.OriginFixedArithmetic.Insts.CoreFmtDebug.fmt
     core.fmt.Formatter.write_str f (toStr "Mul")
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginFixedArithmetic}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 455:22-455:27 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 474:22-474:27 -/
 @[reducible]
 def source.OriginFixedArithmetic.Insts.CoreFmtDebug : core.fmt.Debug
   source.OriginFixedArithmetic := {
@@ -37689,14 +37653,14 @@ def source.OriginFixedArithmetic.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::StructuralPartialEq for noble_wasm::source::OriginFixedArithmetic}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 455:29-455:38 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 474:29-474:38 -/
 @[reducible]
 def source.OriginFixedArithmetic.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq source.OriginFixedArithmetic := {
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::OriginFixedArithmetic}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 455:40-455:42 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 474:40-474:42 -/
 @[reducible]
 impl_def source.OriginFixedArithmetic.Insts.CoreCmpEq : core.cmp.Eq
   source.OriginFixedArithmetic := {
@@ -37707,7 +37671,7 @@ impl_def source.OriginFixedArithmetic.Insts.CoreCmpEq : core.cmp.Eq
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginFixedExpression}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 462:9-462:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 481:9-481:14 -/
 @[reducible]
 def source.OriginFixedExpression.Insts.CoreCloneClone : core.clone.Clone
   source.OriginFixedExpression := {
@@ -37715,7 +37679,7 @@ def source.OriginFixedExpression.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::OriginFixedExpression}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 484:0-484:36 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 503:0-503:36 -/
 @[reducible]
 impl_def source.OriginFixedExpression.Insts.CoreCmpEq : core.cmp.Eq
   source.OriginFixedExpression := {
@@ -37726,7 +37690,7 @@ impl_def source.OriginFixedExpression.Insts.CoreCmpEq : core.cmp.Eq
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginOperand}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 568:9-568:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 587:9-587:14
     Visibility: public -/
 def source.OriginOperand.Insts.CoreCloneClone.clone
   (self : source.OriginOperand) : Result source.OriginOperand := do
@@ -37741,7 +37705,7 @@ def source.OriginOperand.Insts.CoreCloneClone.clone
     ok (source.OriginOperand.Program r)
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginProgramValue}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 549:9-549:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 568:9-568:14
     Visibility: public -/
 def source.OriginProgramValue.Insts.CoreCloneClone.clone
   (self : source.OriginProgramValue) : Result source.OriginProgramValue := do
@@ -37770,7 +37734,7 @@ def source.OriginProgramValue.Insts.CoreCloneClone.clone
     ok (source.OriginProgramValue.Compose ni i r r1)
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginProgramValue}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 549:9-549:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 568:9-568:14 -/
 @[reducible]
 def source.OriginProgramValue.Insts.CoreCloneClone : core.clone.Clone
   source.OriginProgramValue := {
@@ -37778,7 +37742,7 @@ def source.OriginProgramValue.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginOperand}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 568:9-568:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 587:9-587:14 -/
 @[reducible]
 def source.OriginOperand.Insts.CoreCloneClone : core.clone.Clone
   source.OriginOperand := {
@@ -37786,7 +37750,7 @@ def source.OriginOperand.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginOperand}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 579:4-581:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 598:4-600:5
     Visibility: public -/
 def source.OriginOperand.Insts.CoreFmtDebug.fmt
   (self : source.OriginOperand) (f : core.fmt.Formatter) :
@@ -37795,7 +37759,7 @@ def source.OriginOperand.Insts.CoreFmtDebug.fmt
   source.debug_origin (source.OriginRendering.Operand self) f
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::OriginOperand}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 574:0-582:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 593:0-601:1 -/
 @[reducible]
 def source.OriginOperand.Insts.CoreFmtDebug : core.fmt.Debug
   source.OriginOperand := {
@@ -37803,14 +37767,14 @@ def source.OriginOperand.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginRendering<'a>}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 605:9-605:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 624:9-624:14
     Visibility: public -/
 def source.OriginRendering.Insts.CoreCloneClone.clone
   (self : source.OriginRendering) : Result source.OriginRendering := do
   ok self
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::OriginRendering<'a>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 605:9-605:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 624:9-624:14 -/
 @[reducible]
 def source.OriginRendering.Insts.CoreCloneClone : core.clone.Clone
   source.OriginRendering := {
@@ -37818,7 +37782,7 @@ def source.OriginRendering.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::Copy for noble_wasm::source::OriginRendering<'a>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 605:16-605:20 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 624:16-624:20 -/
 @[reducible]
 def source.OriginRendering.Insts.CoreMarkerCopy : core.marker.Copy
   source.OriginRendering := {
@@ -37826,7 +37790,7 @@ def source.OriginRendering.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::NamedTargetMetadata}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 696:9-696:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 715:9-715:14
     Visibility: public -/
 def source.NamedTargetMetadata.Insts.CoreCloneClone.clone
   (self : source.NamedTargetMetadata) : Result source.NamedTargetMetadata := do
@@ -37863,7 +37827,7 @@ def source.NamedTargetMetadata.Insts.CoreCloneClone.clone
     }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::NamedTargetMetadata}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 696:9-696:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 715:9-715:14 -/
 @[reducible]
 def source.NamedTargetMetadata.Insts.CoreCloneClone : core.clone.Clone
   source.NamedTargetMetadata := {
@@ -37871,7 +37835,7 @@ def source.NamedTargetMetadata.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::NamedTargetMetadata}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 696:16-696:21
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 715:16-715:21
     Visibility: public -/
 def source.NamedTargetMetadata.Insts.CoreFmtDebug.fmt
   (self : source.NamedTargetMetadata) (f : core.fmt.Formatter) :
@@ -37914,7 +37878,7 @@ def source.NamedTargetMetadata.Insts.CoreFmtDebug.fmt
     s values
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::NamedTargetMetadata}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 696:16-696:21 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 715:16-715:21 -/
 @[reducible]
 def source.NamedTargetMetadata.Insts.CoreFmtDebug : core.fmt.Debug
   source.NamedTargetMetadata := {
@@ -37922,7 +37886,7 @@ def source.NamedTargetMetadata.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::SelectedTargetArtifact}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 717:9-717:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:9-736:14
     Visibility: public -/
 def source.SelectedTargetArtifact.Insts.CoreCloneClone.clone
   (self : source.SelectedTargetArtifact) :
@@ -37931,7 +37895,7 @@ def source.SelectedTargetArtifact.Insts.CoreCloneClone.clone
   ok self
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::SelectedTargetArtifact}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 717:9-717:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:9-736:14 -/
 @[reducible]
 def source.SelectedTargetArtifact.Insts.CoreCloneClone : core.clone.Clone
   source.SelectedTargetArtifact := {
@@ -37939,7 +37903,7 @@ def source.SelectedTargetArtifact.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::Copy for noble_wasm::source::SelectedTargetArtifact}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 717:16-717:20 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:16-736:20 -/
 @[reducible]
 def source.SelectedTargetArtifact.Insts.CoreMarkerCopy : core.marker.Copy
   source.SelectedTargetArtifact := {
@@ -37947,7 +37911,7 @@ def source.SelectedTargetArtifact.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::SelectedTargetArtifact}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 717:22-717:27
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:22-736:27
     Visibility: public -/
 def source.SelectedTargetArtifact.Insts.CoreFmtDebug.fmt
   (self : source.SelectedTargetArtifact) (f : core.fmt.Formatter) :
@@ -37966,7 +37930,7 @@ def source.SelectedTargetArtifact.Insts.CoreFmtDebug.fmt
     "source_generation") dyn1 (toStr "named_program_index") dyn2
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::SelectedTargetArtifact}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 717:22-717:27 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:22-736:27 -/
 @[reducible]
 def source.SelectedTargetArtifact.Insts.CoreFmtDebug : core.fmt.Debug
   source.SelectedTargetArtifact := {
@@ -37974,14 +37938,14 @@ def source.SelectedTargetArtifact.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::StructuralPartialEq for noble_wasm::source::SelectedTargetArtifact}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 717:29-717:38 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:29-736:38 -/
 @[reducible]
 def source.SelectedTargetArtifact.Insts.CoreMarkerStructuralPartialEq :
   core.marker.StructuralPartialEq source.SelectedTargetArtifact := {
 }
 
 /-- [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::SelectedTargetArtifact> for noble_wasm::source::SelectedTargetArtifact}::eq]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 717:29-717:38
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:29-736:38
     Visibility: public -/
 def
   source.SelectedTargetArtifact.Insts.CoreCmpPartialEqSelectedTargetArtifact.eq
@@ -38000,7 +37964,7 @@ def
   else ok false
 
 /-- Trait implementation: [noble_wasm::source::{impl core::cmp::PartialEq<noble_wasm::source::SelectedTargetArtifact> for noble_wasm::source::SelectedTargetArtifact}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 717:29-717:38 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:29-736:38 -/
 @[reducible]
 impl_def
   source.SelectedTargetArtifact.Insts.CoreCmpPartialEqSelectedTargetArtifact :
@@ -38013,14 +37977,14 @@ impl_def
 }
 
 /-- [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::SelectedTargetArtifact}::assert_fields_are_eq]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 717:40-717:42
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:40-736:42
     Visibility: public -/
 def source.SelectedTargetArtifact.Insts.CoreCmpEq.assert_fields_are_eq
   (self : source.SelectedTargetArtifact) : Result Unit := do
   ok ()
 
 /-- Trait implementation: [noble_wasm::source::{impl core::cmp::Eq for noble_wasm::source::SelectedTargetArtifact}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 717:40-717:42 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 736:40-736:42 -/
 @[reducible]
 def source.SelectedTargetArtifact.Insts.CoreCmpEq : core.cmp.Eq
   source.SelectedTargetArtifact := {
@@ -38031,7 +37995,7 @@ def source.SelectedTargetArtifact.Insts.CoreCmpEq : core.cmp.Eq
 }
 
 /-- [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::ResourceCatalogEntry}::clone]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 725:9-725:14
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 744:9-744:14
     Visibility: public -/
 def source.ResourceCatalogEntry.Insts.CoreCloneClone.clone
   (self : source.ResourceCatalogEntry) :
@@ -38045,7 +38009,7 @@ def source.ResourceCatalogEntry.Insts.CoreCloneClone.clone
   ok { declaration := nd, kind := rk }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::clone::Clone for noble_wasm::source::ResourceCatalogEntry}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 725:9-725:14 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 744:9-744:14 -/
 @[reducible]
 def source.ResourceCatalogEntry.Insts.CoreCloneClone : core.clone.Clone
   source.ResourceCatalogEntry := {
@@ -38053,7 +38017,7 @@ def source.ResourceCatalogEntry.Insts.CoreCloneClone : core.clone.Clone
 }
 
 /-- [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::ResourceCatalogEntry}::fmt]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 725:16-725:21
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 744:16-744:21
     Visibility: public -/
 def source.ResourceCatalogEntry.Insts.CoreFmtDebug.fmt
   (self : source.ResourceCatalogEntry) (f : core.fmt.Formatter) :
@@ -38069,7 +38033,7 @@ def source.ResourceCatalogEntry.Insts.CoreFmtDebug.fmt
     "ResourceCatalogEntry") (toStr "declaration") dyn (toStr "kind") dyn1
 
 /-- Trait implementation: [noble_wasm::source::{impl core::fmt::Debug for noble_wasm::source::ResourceCatalogEntry}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 725:16-725:21 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 744:16-744:21 -/
 @[reducible]
 def source.ResourceCatalogEntry.Insts.CoreFmtDebug : core.fmt.Debug
   source.ResourceCatalogEntry := {
@@ -38077,7 +38041,7 @@ def source.ResourceCatalogEntry.Insts.CoreFmtDebug : core.fmt.Debug
 }
 
 /-- Trait implementation: [noble_wasm::source::{impl core::marker::Copy for noble_wasm::source::FreeCode}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 731:16-731:20 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 750:16-750:20 -/
 @[reducible]
 def source.FreeCode.Insts.CoreMarkerCopy : core.marker.Copy source.FreeCode
   := {
@@ -38085,21 +38049,21 @@ def source.FreeCode.Insts.CoreMarkerCopy : core.marker.Copy source.FreeCode
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::wat]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 767:4-769:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 786:4-788:5
     Visibility: public -/
 def source.Prepared.impl.wat
   (self : source.Prepared) : Result (Slice Std.U8) := do
   ok (alloc.vec.Vec.deref self.wat)
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::metrics]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 772:4-774:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 791:4-793:5
     Visibility: public -/
 def source.Prepared.impl.metrics
   (self : source.Prepared) : Result source.CompileMetrics := do
   ok self.metrics
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::runtime_bridge_wat]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 778:4-783:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 797:4-802:5
     Visibility: public -/
 def source.Prepared.runtime_bridge_wat
   (self : source.Prepared) :
@@ -38123,7 +38087,7 @@ def source.Prepared.runtime_bridge_wat
     else ok (core.result.Result.Err Diagnostic.Invalid)
 
 /-- [noble_wasm::source::is_defective_descriptor::{impl core::ops::function::FnOnce<(u32,), bool> for noble_wasm::source::is_defective_descriptor::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1935:24-1935:48 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1954:24-1954:48 -/
 def
   source.is_defective_descriptor.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool.call_once
   (c : source.is_defective_descriptor.closure) (tupled_args : Std.U32) :
@@ -38132,7 +38096,7 @@ def
   ok (tupled_args > source.MEMORY_BYTES)
 
 /-- Trait implementation: [noble_wasm::source::is_defective_descriptor::{impl core::ops::function::FnOnce<(u32,), bool> for noble_wasm::source::is_defective_descriptor::{closure}}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1935:24-1935:48 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1954:24-1954:48 -/
 @[reducible]
 def
   source.is_defective_descriptor.closure.Insts.CoreOpsFunctionFnOnceTupleU32Bool
@@ -38143,7 +38107,7 @@ def
 }
 
 /-- [noble_wasm::source::is_defective_descriptor]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1930:0-1936:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1949:0-1955:1 -/
 def source.is_defective_descriptor
   (address : Std.U32) (length_bytes : Std.U32) (signature : Slice Std.U8) :
   Result Bool
@@ -38168,7 +38132,7 @@ def source.is_defective_descriptor
         o1 ()
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::runtime_signature_catalog::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_wasm::Diagnostic> for noble_wasm::source::{noble_wasm::source::Prepared}::runtime_signature_catalog::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 796:63-796:95 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 815:63-815:95 -/
 def
   source.Prepared.runtime_signature_catalog.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic.call_once
   (c : source.Prepared.runtime_signature_catalog.closure)
@@ -38178,7 +38142,7 @@ def
   ok Diagnostic.Exhausted
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Prepared}::runtime_signature_catalog::{impl core::ops::function::FnOnce<(core::num::error::TryFromIntError,), noble_wasm::Diagnostic> for noble_wasm::source::{noble_wasm::source::Prepared}::runtime_signature_catalog::{closure}}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 796:63-796:95 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 815:63-815:95 -/
 @[reducible]
 def
   source.Prepared.runtime_signature_catalog.closure.Insts.CoreOpsFunctionFnOnceTupleTryFromIntErrorDiagnostic
@@ -38189,7 +38153,7 @@ def
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::runtime_signature_catalog]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 800:8-811:9
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 819:8-830:9
     Visibility: public -/
 @[rust_loop_body]
 def source.Prepared.runtime_signature_catalog_loop0.body
@@ -38229,7 +38193,7 @@ def source.Prepared.runtime_signature_catalog_loop0.body
   else ok (done (bytes, none))
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::runtime_signature_catalog]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 800:8-811:9
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 819:8-830:9
     Visibility: public -/
 @[rust_loop]
 def source.Prepared.runtime_signature_catalog_loop0
@@ -38244,7 +38208,7 @@ def source.Prepared.runtime_signature_catalog_loop0
     (bytes, index)
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::runtime_signature_catalog]: loop body 1:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 800:8-811:9
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 819:8-830:9
     Visibility: public -/
 @[rust_loop_body]
 def source.Prepared.runtime_signature_catalog_loop1.body
@@ -38284,7 +38248,7 @@ def source.Prepared.runtime_signature_catalog_loop1.body
   else ok (done (bytes, none))
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::runtime_signature_catalog]: loop 1:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 800:8-811:9
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 819:8-830:9
     Visibility: public -/
 @[rust_loop]
 def source.Prepared.runtime_signature_catalog_loop1
@@ -38299,7 +38263,7 @@ def source.Prepared.runtime_signature_catalog_loop1
     (bytes, index)
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::runtime_signature_catalog]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 787:4-816:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 806:4-835:5
     Visibility: public -/
 def source.Prepared.runtime_signature_catalog
   (self : source.Prepared) :
@@ -38380,20 +38344,20 @@ def source.Prepared.runtime_signature_catalog
     else ok (core.result.Result.Err Diagnostic.Invalid)
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::code_span]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 821:4-823:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 840:4-842:5
     Visibility: public -/
 def source.Prepared.impl.code_span
   (self : source.Prepared) : Result source.CodeSpan := do
   ok self.code_span
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::literal_end]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 826:4-828:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 845:4-847:5
     Visibility: public -/
 def source.Prepared.literal_end (self : source.Prepared) : Result Std.U32 := do
   ok self.next.text_end
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::worker_literal_end]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 831:4-837:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 850:4-856:5
     Visibility: public -/
 def source.Prepared.worker_literal_end
   (self : source.Prepared) : Result (Option Std.U32) := do
@@ -38402,35 +38366,35 @@ def source.Prepared.worker_literal_end
   else ok none
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::live_sites]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 840:4-842:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 859:4-861:5
     Visibility: public -/
 def source.Prepared.impl.live_sites
   (self : source.Prepared) : Result (Slice source.LiveSiteMetadata) := do
   ok (alloc.vec.Vec.deref self.live_sites)
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::target_metadata]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 845:4-847:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 864:4-866:5
     Visibility: public -/
 def source.Prepared.impl.target_metadata
   (self : source.Prepared) : Result (Option source.TargetMetadata) := do
   core.option.Option.as_ref self.target_metadata
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::program_metadata]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 851:4-853:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 870:4-872:5
     Visibility: public -/
 def source.Prepared.impl.program_metadata
   (self : source.Prepared) : Result (Slice source.ProgramMetadata) := do
   ok (alloc.vec.Vec.deref self.program_metadata)
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::named_targets]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 858:4-860:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 877:4-879:5
     Visibility: public -/
 def source.Prepared.impl.named_targets
   (self : source.Prepared) : Result (Slice source.NamedTargetMetadata) := do
   ok (alloc.vec.Vec.deref self.named_targets)
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::selected_target]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 864:4-866:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 883:4-885:5
     Visibility: public -/
 def source.Prepared.impl.selected_target
   (self : source.Prepared) :
@@ -38439,7 +38403,7 @@ def source.Prepared.impl.selected_target
   ok self.selected_target
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::selected_origin]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 870:4-872:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 889:4-891:5
     Visibility: public -/
 def source.Prepared.impl.selected_origin
   (self : source.Prepared) :
@@ -38448,14 +38412,14 @@ def source.Prepared.impl.selected_origin
   core.option.Option.as_ref self.selected_origin
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::resource_catalog]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 876:4-878:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 895:4-897:5
     Visibility: public -/
 def source.Prepared.impl.resource_catalog
   (self : source.Prepared) : Result (Slice source.ResourceCatalogEntry) := do
   ok (alloc.vec.Vec.deref self.resource_catalog)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::owns_code]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 946:4-948:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 965:4-967:5 -/
 def source.Compiler.owns_code (self : source.Compiler) : Result Bool := do
   if self.live
   then ok true
@@ -38464,7 +38428,7 @@ def source.Compiler.owns_code (self : source.Compiler) : Result Bool := do
        else ok self.live_slots
 
 /-- [noble_wasm::source::extended_table]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1883:0-1888:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1902:0-1907:1 -/
 def source.extended_table
   (functions : Std.U32) (slots : Std.U32) :
   Result (core.result.Result Std.U32 Diagnostic)
@@ -38478,7 +38442,7 @@ def source.extended_table
     else ok (core.result.Result.Err Diagnostic.Exhausted)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::take_free_code]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 934:4-943:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 953:4-962:5 -/
 def source.Compiler.take_free_code
   (self : source.Compiler) (index : Std.Usize) (slots : Std.U32) :
   Result (Std.U32 × source.Compiler)
@@ -38498,7 +38462,7 @@ def source.Compiler.take_free_code
     ok (free.start, { self with free_code := v })
 
 /-- [noble_wasm::source::position_of]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1873:4-1878:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1892:4-1897:5 -/
 @[rust_loop_body]
 def source.position_of_loop.body
   {T : Type _} {T1 : Type _} (coreopsfunctionFnMutT1TupleSharedTBoolInst :
@@ -38525,7 +38489,7 @@ def source.position_of_loop.body
   else ok (done found)
 
 /-- [noble_wasm::source::position_of]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1873:4-1878:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1892:4-1897:5 -/
 @[rust_loop]
 def source.position_of_loop
   {T : Type _} {T1 : Type _} (coreopsfunctionFnMutT1TupleSharedTBoolInst :
@@ -38540,7 +38504,7 @@ def source.position_of_loop
     (predicate, index, found)
 
 /-- [noble_wasm::source::position_of]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1870:0-1880:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1889:0-1899:1 -/
 @[reducible]
 def source.position_of
   {T : Type _} {T1 : Type _} (coreopsfunctionFnMutT1TupleShared0TBoolInst :
@@ -38551,7 +38515,7 @@ def source.position_of
     predicate 0#usize none
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::fitting_free_code::{impl core::ops::function::FnMut<(&'_1 noble_wasm::source::FreeCode,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::fitting_free_code::{closure}<'_0>}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 926:37-926:63 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 945:37-945:63 -/
 def
   source.Compiler.fitting_free_code.closure.Insts.CoreOpsFunctionFnMutTupleShared1FreeCodeBool.call_mut
   (c : source.Compiler.fitting_free_code.closure)
@@ -38561,7 +38525,7 @@ def
   ok (tupled_args.slots >= c, c)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::fitting_free_code::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::FreeCode,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::fitting_free_code::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 926:37-926:63 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 945:37-945:63 -/
 def
   source.Compiler.fitting_free_code.closure.Insts.CoreOpsFunctionFnOnceTupleShared1FreeCodeBool.call_once
   (c : source.Compiler.fitting_free_code.closure) (fc : source.FreeCode) :
@@ -38573,7 +38537,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::fitting_free_code::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::FreeCode,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::fitting_free_code::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 926:37-926:63 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 945:37-945:63 -/
 @[reducible]
 def
   source.Compiler.fitting_free_code.closure.Insts.CoreOpsFunctionFnOnceTupleShared1FreeCodeBool
@@ -38584,7 +38548,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::fitting_free_code::{impl core::ops::function::FnMut<(&'_1 noble_wasm::source::FreeCode,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::fitting_free_code::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 926:37-926:63 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 945:37-945:63 -/
 @[reducible]
 def
   source.Compiler.fitting_free_code.closure.Insts.CoreOpsFunctionFnMutTupleShared1FreeCodeBool
@@ -38597,7 +38561,7 @@ def
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::fitting_free_code]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 922:4-927:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 941:4-946:5 -/
 def source.Compiler.fitting_free_code
   (self : source.Compiler) (slots : Std.U32) : Result (Option Std.Usize) := do
   if self.live_slots
@@ -38609,7 +38573,7 @@ def source.Compiler.fitting_free_code
   else ok none
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::code_start]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 912:4-919:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 931:4-938:5 -/
 def source.Compiler.code_start
   (self : source.Compiler) (slots : Std.U32) :
   Result ((core.result.Result Std.U32 Diagnostic) × source.Compiler)
@@ -38628,7 +38592,7 @@ def source.Compiler.code_start
     ok (core.result.Result.Ok i, self1)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::reserve_code]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 886:4-904:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 905:4-923:5 -/
 def source.Compiler.reserve_code
   (self : source.Compiler) (slots : Std.U32) :
   Result ((core.result.Result source.CodeSpan Diagnostic) × source.Compiler)
@@ -38659,7 +38623,7 @@ def source.Compiler.reserve_code
       ok (core.result.Result.Err failure, self1)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::signature]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 966:8-974:9 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 985:8-993:9 -/
 @[rust_loop_body]
 def source.Compiler.signature_loop.body
   (p : signatures.Pool) (work : source.Work) (index : Std.Usize) :
@@ -38690,7 +38654,7 @@ def source.Compiler.signature_loop.body
       p.extended, p.compact, work, none))
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::signature]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 966:8-974:9 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 985:8-993:9 -/
 @[rust_loop]
 def source.Compiler.signature_loop
   (p : signatures.Pool) (work : source.Work) (index : Std.Usize) :
@@ -38704,7 +38668,7 @@ def source.Compiler.signature_loop
     (work, index)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::signature]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 954:4-979:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 973:4-998:5 -/
 def source.Compiler.signature
   (self : source.Compiler) (stack : Slice noble_kernel.types.Ty)
   (work : source.Work) :
@@ -38720,9 +38684,7 @@ def source.Compiler.signature
       if self.calculator
       then
         let (r2, p, work3) ←
-          signatures.Pool.intern_charged
-            source.Work.Insts.Noble_wasmSignaturesMeter self.signatures stack
-            work2
+          signatures.Pool.intern_charged self.signatures stack work2
         ok (r2, { self with signatures := p }, work3)
       else
         let (v, v1, bm, i, i1, b, b1, work3, failure) ←
@@ -38763,7 +38725,7 @@ def source.Compiler.signature
     ok (core.result.Result.Err failure, self, work1)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 982:4-1006:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1001:4-1025:5
     Visibility: public -/
 def source.Compiler.new : Result source.Compiler := do
   let bm ←
@@ -38796,7 +38758,7 @@ def source.Compiler.new : Result source.Compiler := do
     }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_type_directed_experimental]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1010:4-1016:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1029:4-1035:5
     Visibility: public -/
 def source.Compiler.new_type_directed_experimental
   : Result source.Compiler := do
@@ -38805,56 +38767,56 @@ def source.Compiler.new_type_directed_experimental
     { c with type_directed_experimental := true, experimental_cleanup := true }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_experimental_baseline]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1019:4-1024:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1038:4-1043:5
     Visibility: public -/
 def source.Compiler.new_experimental_baseline : Result source.Compiler := do
   let c ← source.Compiler.new
   ok { c with experimental_cleanup := true }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_live]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1029:4-1034:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1048:4-1053:5
     Visibility: public -/
 def source.Compiler.new_live : Result source.Compiler := do
   let c ← source.Compiler.new
   ok { c with live := true }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_declared_live]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1038:4-1043:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1057:4-1062:5
     Visibility: public -/
 def source.Compiler.new_declared_live : Result source.Compiler := do
   let c ← source.Compiler.new
   ok { c with declared_live := true }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_live_slots]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1046:4-1051:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1065:4-1070:5
     Visibility: public -/
 def source.Compiler.new_live_slots : Result source.Compiler := do
   let c ← source.Compiler.new
   ok { c with live_slots := true }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_text_cursor]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1054:4-1059:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1073:4-1078:5
     Visibility: public -/
 def source.Compiler.new_text_cursor : Result source.Compiler := do
   let c ← source.Compiler.new
   ok { c with text_cursor := true }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_checked_i64]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1062:4-1067:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1081:4-1086:5
     Visibility: public -/
 def source.Compiler.new_checked_i64 : Result source.Compiler := do
   let c ← source.Compiler.new
   ok { c with checked_i64 := true }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_declared_text]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1070:4-1076:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1089:4-1095:5
     Visibility: public -/
 def source.Compiler.new_declared_text : Result source.Compiler := do
   let c ← source.Compiler.new
   ok { c with text_cursor := true, declared_text := true }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_calculator]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1079:4-1086:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1098:4-1105:5
     Visibility: public -/
 def source.Compiler.new_calculator : Result source.Compiler := do
   let compiler ← source.Compiler.new
@@ -38870,14 +38832,14 @@ def source.Compiler.new_calculator : Result source.Compiler := do
     }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_worker]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1089:4-1094:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1108:4-1113:5
     Visibility: public -/
 def source.Compiler.new_worker : Result source.Compiler := do
   let c ← source.Compiler.new
   ok { c with worker_inputs := true }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::new_interruptible_worker]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1099:4-1105:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1118:4-1124:5
     Visibility: public -/
 def source.Compiler.new_interruptible_worker : Result source.Compiler := do
   let c ← source.Compiler.new
@@ -44130,7 +44092,7 @@ def source.plan.lower
     ok (core.result.Result.Err failure, compiler1, work1)
 
 /-- [noble_wasm::source::literal_copy_entries]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1975:4-1977:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1994:4-1996:5 -/
 @[rust_loop_body]
 def source.literal_copy_entries_loop.body
   (iter : alloc.collections.btree.map.Keys (alloc.vec.Vec Std.U8) Std.U32)
@@ -44150,7 +44112,7 @@ def source.literal_copy_entries_loop.body
     ok (cont (iter1, total1))
 
 /-- [noble_wasm::source::literal_copy_entries]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1975:4-1977:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1994:4-1996:5 -/
 @[rust_loop]
 def source.literal_copy_entries_loop
   (iter : alloc.collections.btree.map.Keys (alloc.vec.Vec Std.U8) Std.U32)
@@ -44162,7 +44124,7 @@ def source.literal_copy_entries_loop
     (iter, total)
 
 /-- [noble_wasm::source::literal_copy_entries]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1971:0-1979:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1990:0-1998:1 -/
 def source.literal_copy_entries
   (static_literals : alloc.collections.btree.map.BTreeMap (alloc.vec.Vec
   Std.U8) Std.U32 Global) :
@@ -44174,7 +44136,7 @@ def source.literal_copy_entries
   source.literal_copy_entries_loop iter 0#usize
 
 /-- [noble_wasm::source::identity_copy_charge]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1951:4-1963:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1970:4-1982:5 -/
 @[rust_loop_body]
 def source.identity_copy_charge_loop.body
   (identities : Slice source.Identity) (retained : Std.Usize)
@@ -44199,7 +44161,7 @@ def source.identity_copy_charge_loop.body
   else ok (done (work, identity_charge, none))
 
 /-- [noble_wasm::source::identity_copy_charge]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1951:4-1963:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1970:4-1982:5 -/
 @[rust_loop]
 def source.identity_copy_charge_loop
   (identities : Slice source.Identity) (retained : Std.Usize)
@@ -44213,7 +44175,7 @@ def source.identity_copy_charge_loop
     (work, identity, identity_charge)
 
 /-- [noble_wasm::source::identity_copy_charge]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1943:0-1968:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1962:0-1987:1 -/
 def source.identity_copy_charge
   (identities : Slice source.Identity) (retained : Std.Usize)
   (work : source.Work) :
@@ -44226,7 +44188,7 @@ def source.identity_copy_charge
   | some problem => ok (core.result.Result.Err problem, work1)
 
 /-- [noble_wasm::source::fresh_signature_pool]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1900:0-1908:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1919:0-1927:1 -/
 def source.fresh_signature_pool
   (program_free : Bool) : Result (Option signatures.Pool) := do
   if program_free
@@ -44237,7 +44199,7 @@ def source.fresh_signature_pool
   else ok none
 
 /-- [noble_wasm::source::resource_entry]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2167:0-2182:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2186:0-2201:1 -/
 def source.resource_entry
   (environment : noble_kernel.contracts.Env)
   (id : noble_kernel.types.NominalTypeId) :
@@ -44290,7 +44252,7 @@ def source.resource_entry
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_wasm::source::admitted_resource_catalog]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2148:4-2159:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2167:4-2178:5 -/
 @[rust_loop_body]
 def source.admitted_resource_catalog_loop.body
   (environment : noble_kernel.contracts.Env)
@@ -44316,7 +44278,7 @@ def source.admitted_resource_catalog_loop.body
   else ok (done (catalog, none))
 
 /-- [noble_wasm::source::admitted_resource_catalog]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2148:4-2159:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2167:4-2178:5 -/
 @[rust_loop]
 def source.admitted_resource_catalog_loop
   (environment : noble_kernel.contracts.Env)
@@ -44329,7 +44291,7 @@ def source.admitted_resource_catalog_loop
     (catalog, index)
 
 /-- [noble_wasm::source::admitted_resource_catalog]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2142:0-2164:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2161:0-2183:1 -/
 def source.admitted_resource_catalog
   (environment : noble_kernel.contracts.Env) :
   Result (core.result.Result (alloc.vec.Vec source.ResourceCatalogEntry)
@@ -44343,7 +44305,7 @@ def source.admitted_resource_catalog
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::resource_metadata]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1625:4-1633:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1644:4-1652:5 -/
 def source.Compiler.resource_metadata
   (self : source.Compiler) (environment : noble_kernel.contracts.Env) :
   Result (core.result.Result (alloc.vec.Vec source.ResourceCatalogEntry)
@@ -44355,7 +44317,7 @@ def source.Compiler.resource_metadata
     ok (core.result.Result.Ok (alloc.vec.Vec.new source.ResourceCatalogEntry))
 
 /-- [noble_wasm::source::runtime_atoms]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2131:4-2133:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2150:4-2152:5 -/
 @[rust_loop_body]
 def source.runtime_atoms_loop.body
   (text_witness : Std.U32) (iter : core.slice.iter.Iter source.plan.Operation)
@@ -44373,7 +44335,7 @@ def source.runtime_atoms_loop.body
     ok (cont (iter1, atoms1))
 
 /-- [noble_wasm::source::runtime_atoms]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2131:4-2133:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2150:4-2152:5 -/
 @[rust_loop]
 def source.runtime_atoms_loop
   (iter : core.slice.iter.Iter source.plan.Operation) (text_witness : Std.U32)
@@ -44386,7 +44348,7 @@ def source.runtime_atoms_loop
     (iter, atoms)
 
 /-- [noble_wasm::source::runtime_atoms]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2126:0-2135:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2145:0-2154:1 -/
 def source.runtime_atoms
   (operations : Slice source.plan.Operation) (text_witness : Std.U32) :
   Result (alloc.vec.Vec source.ProgramAtomMetadata)
@@ -44399,7 +44361,7 @@ def source.runtime_atoms
   source.runtime_atoms_loop iter text_witness atoms
 
 /-- [noble_wasm::source::program_entry]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2096:0-2123:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2115:0-2142:1 -/
 def source.program_entry
   (program : source.plan.Program) (program_index : Std.Usize)
   (text_witness : Std.U32) (worker_inputs : Bool) :
@@ -44451,7 +44413,7 @@ def source.program_entry
     ok (core.result.Result.Err failure, { program with logical := o1 })
 
 /-- [noble_wasm::source::checked_program_metadata]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2068:4-2084:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2087:4-2103:5 -/
 @[rust_loop_body]
 def source.checked_program_metadata_loop.body
   (worker_inputs : Bool) (text_witness : Std.U32)
@@ -44480,7 +44442,7 @@ def source.checked_program_metadata_loop.body
   else ok (done (v, metadata, none))
 
 /-- [noble_wasm::source::checked_program_metadata]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2068:4-2084:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2087:4-2103:5 -/
 @[rust_loop]
 def source.checked_program_metadata_loop
   (v : alloc.vec.Vec source.plan.Program) (worker_inputs : Bool)
@@ -44495,7 +44457,7 @@ def source.checked_program_metadata_loop
     (v, metadata, index)
 
 /-- [noble_wasm::source::checked_program_metadata]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2060:0-2089:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2079:0-2108:1 -/
 def source.checked_program_metadata
   (plan : source.plan.Layout) (worker_inputs : Bool) :
   Result ((core.result.Result (alloc.vec.Vec source.ProgramMetadata)
@@ -44512,7 +44474,7 @@ def source.checked_program_metadata
     ok (core.result.Result.Err problem, { plan with programs := v })
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::program_metadata]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1614:4-1622:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1633:4-1641:5 -/
 def source.Compiler.program_metadata
   (self : source.Compiler) (plan : source.plan.Layout) :
   Result ((core.result.Result (alloc.vec.Vec source.ProgramMetadata)
@@ -44528,7 +44490,7 @@ def source.Compiler.program_metadata
         plan)
 
 /-- [noble_wasm::source::checked_named_target::{impl core::ops::function::FnMut<(&'_1 noble_wasm::source::Identity,), bool> for noble_wasm::source::checked_named_target::{closure}<'_0>}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2037:44-2037:68 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2056:44-2056:68 -/
 def
   source.checked_named_target.closure.Insts.CoreOpsFunctionFnMutTupleShared1IdentityBool.call_mut
   (c : source.checked_named_target.closure) (tupled_args : source.Identity) :
@@ -44537,7 +44499,7 @@ def
   ok (tupled_args.id = c, c)
 
 /-- [noble_wasm::source::checked_named_target::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::Identity,), bool> for noble_wasm::source::checked_named_target::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2037:44-2037:68 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2056:44-2056:68 -/
 def
   source.checked_named_target.closure.Insts.CoreOpsFunctionFnOnceTupleShared1IdentityBool.call_once
   (c : source.checked_named_target.closure) (i : source.Identity) :
@@ -44549,7 +44511,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_wasm::source::checked_named_target::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::Identity,), bool> for noble_wasm::source::checked_named_target::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2037:44-2037:68 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2056:44-2056:68 -/
 @[reducible]
 def
   source.checked_named_target.closure.Insts.CoreOpsFunctionFnOnceTupleShared1IdentityBool
@@ -44560,7 +44522,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::checked_named_target::{impl core::ops::function::FnMut<(&'_1 noble_wasm::source::Identity,), bool> for noble_wasm::source::checked_named_target::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2037:44-2037:68 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2056:44-2056:68 -/
 @[reducible]
 def
   source.checked_named_target.closure.Insts.CoreOpsFunctionFnMutTupleShared1IdentityBool
@@ -44573,7 +44535,7 @@ def
 }
 
 /-- [noble_wasm::source::checked_named_target]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2014:0-2053:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2033:0-2072:1 -/
 def source.checked_named_target
   (submission : noble_kernel.execution.Submission)
   (checked : source.admission.Accepted) (plan : source.plan.Layout)
@@ -44642,7 +44604,7 @@ def source.checked_named_target
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_wasm::source::checked_named_targets]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1995:4-2006:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2014:4-2025:5 -/
 @[rust_loop_body]
 def source.checked_named_targets_loop.body
   (submission : noble_kernel.execution.Submission)
@@ -44666,7 +44628,7 @@ def source.checked_named_targets_loop.body
   else ok (done (targets, none))
 
 /-- [noble_wasm::source::checked_named_targets]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1995:4-2006:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2014:4-2025:5 -/
 @[rust_loop]
 def source.checked_named_targets_loop
   (submission : noble_kernel.execution.Submission)
@@ -44681,7 +44643,7 @@ def source.checked_named_targets_loop
     (targets, index)
 
 /-- [noble_wasm::source::checked_named_targets]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1986:0-2011:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2005:0-2030:1 -/
 def source.checked_named_targets
   (submission : noble_kernel.execution.Submission)
   (checked : source.admission.Accepted) (plan : source.plan.Layout)
@@ -44697,7 +44659,7 @@ def source.checked_named_targets
   | some problem => ok (core.result.Result.Err problem)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::named_metadata]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1596:4-1607:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1615:4-1626:5 -/
 def source.Compiler.named_metadata
   (self : source.Compiler) (submission : noble_kernel.execution.Submission)
   (checked : source.admission.Accepted) (plan : source.plan.Layout)
@@ -44714,7 +44676,7 @@ def source.Compiler.named_metadata
       ok (core.result.Result.Ok (alloc.vec.Vec.new source.NamedTargetMetadata))
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::root_metadata]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1571:4-1593:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1590:4-1612:5 -/
 def source.Compiler.root_metadata
   (self : source.Compiler) (submission : noble_kernel.execution.Submission)
   (checked : source.admission.Accepted) (plan : source.plan.Layout) :
@@ -44782,7 +44744,7 @@ def source.Compiler.root_metadata
     else ok (core.result.Result.Ok none)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retained_descriptors]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1562:4-1568:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1581:4-1587:5 -/
 def source.Compiler.retained_descriptors
   (self : source.Compiler) (program_free : Bool) : Result Std.Usize := do
   if program_free
@@ -44790,7 +44752,7 @@ def source.Compiler.retained_descriptors
   else ok (alloc.vec.Vec.len self.descriptors)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::emitted]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1530:4-1559:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1549:4-1578:5 -/
 def source.Compiler.emitted
   (self : source.Compiler) (plan : source.plan.Layout) (next : source.Compiler)
   (program_free : Bool) (work : source.Work) :
@@ -44806,9 +44768,7 @@ def source.Compiler.emitted
       if next.calculator
       then
         let (r, work1) ←
-          signatures.Pool.expanded_keys
-            source.Work.Insts.Noble_wasmSignaturesMeter next.signatures
-            published work
+          signatures.Pool.expanded_keys next.signatures published work
         match r with
         | core.result.Result.Ok value =>
           let s := alloc.vec.Vec.deref value
@@ -44833,9 +44793,7 @@ def source.Compiler.emitted
     if next.calculator
     then
       let (r, work1) ←
-        signatures.Pool.expanded_keys
-          source.Work.Insts.Noble_wasmSignaturesMeter next.signatures published
-          work
+        signatures.Pool.expanded_keys next.signatures published work
       match r with
       | core.result.Result.Ok value =>
         let s := alloc.vec.Vec.deref value
@@ -44857,7 +44815,7 @@ def source.Compiler.emitted
         ok (core.result.Result.Err failure, work)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prospective::{impl core::ops::function::FnOnce<(), noble_wasm::signatures::Pool> for noble_wasm::source::{noble_wasm::source::Compiler}::prospective::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1489:57-1489:83 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1508:57-1508:83 -/
 def
   source.Compiler.prospective.closure.Insts.CoreOpsFunctionFnOnceTuplePool.call_once
   (c : source.Compiler.prospective.closure) (_ : Unit) :
@@ -44866,7 +44824,7 @@ def
   signatures.Pool.Insts.CoreCloneClone.clone c.signatures
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::prospective::{impl core::ops::function::FnOnce<(), noble_wasm::signatures::Pool> for noble_wasm::source::{noble_wasm::source::Compiler}::prospective::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1489:57-1489:83 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1508:57-1508:83 -/
 @[reducible]
 def source.Compiler.prospective.closure.Insts.CoreOpsFunctionFnOnceTuplePool :
   core.ops.function.FnOnce source.Compiler.prospective.closure Unit
@@ -44876,7 +44834,7 @@ def source.Compiler.prospective.closure.Insts.CoreOpsFunctionFnOnceTuplePool :
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prospective]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1475:4-1523:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1494:4-1542:5 -/
 def source.Compiler.prospective
   (self : source.Compiler) (functions : Std.U32) (quiescent : Bool)
   (program_free : Bool) (fresh_signatures : Option signatures.Pool) :
@@ -44996,7 +44954,7 @@ def source.reuse.Compiler.canonical_epoch
     b self
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::program_free_epoch]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1465:4-1471:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1484:4-1490:5 -/
 def source.Compiler.program_free_epoch
   (self : source.Compiler) (program_free : Bool) :
   Result (Option source.reuse.CanonicalEpoch)
@@ -45006,7 +44964,7 @@ def source.Compiler.program_free_epoch
   else ok none
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retained_signatures]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1456:4-1462:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1475:4-1481:5 -/
 def source.Compiler.retained_signatures
   (self : source.Compiler) (program_free : Bool) : Result Std.Usize := do
   if program_free
@@ -45014,7 +44972,7 @@ def source.Compiler.retained_signatures
   else signatures.Pool.len self.signatures
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retained_identities]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1447:4-1453:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1466:4-1472:5 -/
 def source.Compiler.retained_identities
   (self : source.Compiler) (quiescent : Bool) : Result Std.Usize := do
   if quiescent
@@ -49335,7 +49293,7 @@ def source.preflight.check
       | core.result.Result.Err _ => ok (r, work1)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::admitted]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1280:4-1338:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1299:4-1357:5 -/
 def source.Compiler.admitted
   (self : source.Compiler) (submission : noble_kernel.execution.Submission)
   (signed : Bool) :
@@ -49506,7 +49464,7 @@ def source.Compiler.admitted
     | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_layout]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1344:4-1444:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1363:4-1463:5 -/
 def source.Compiler.prepare_layout
   (self : source.Compiler) (submission : noble_kernel.execution.Submission)
   (functions : Std.U32) (quiescent : Bool) (program_free : Bool)
@@ -49683,7 +49641,7 @@ def source.Compiler.prepare_layout
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_from]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1266:4-1277:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1285:4-1296:5 -/
 def source.Compiler.prepare_from
   (self : source.Compiler) (submission : noble_kernel.execution.Submission)
   (functions : Std.U32) (quiescent : Bool) (program_free : Bool)
@@ -49700,7 +49658,7 @@ def source.Compiler.prepare_from
   | core.result.Result.Err failure => ok (core.result.Result.Err failure)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1108:4-1136:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1127:4-1155:5
     Visibility: public -/
 def source.Compiler.prepare
   (self : source.Compiler) (submission : noble_kernel.execution.Submission) :
@@ -49822,7 +49780,7 @@ def source.Compiler.prepare
             false false
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_signed::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_wasm::Diagnostic> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_signed::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1158:50-1158:80 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1177:50-1177:80 -/
 def
   source.Compiler.prepare_signed.closure.Insts.CoreOpsFunctionFnOnceTupleErrorDiagnostic.call_once
   (c : source.Compiler.prepare_signed.closure)
@@ -49832,7 +49790,7 @@ def
   ok Diagnostic.Invalid
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_signed::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_wasm::Diagnostic> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_signed::{closure}}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1158:50-1158:80 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1177:50-1177:80 -/
 @[reducible]
 def
   source.Compiler.prepare_signed.closure.Insts.CoreOpsFunctionFnOnceTupleErrorDiagnostic
@@ -49843,7 +49801,7 @@ def
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_signed]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1144:4-1166:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1163:4-1185:5
     Visibility: public -/
 def source.Compiler.prepare_signed
   (self : source.Compiler)
@@ -49897,7 +49855,7 @@ def source.Compiler.prepare_signed
                     source.Prepared (core.convert.FromSame Diagnostic) residual
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_worker_signed::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_wasm::Diagnostic> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_worker_signed::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1190:50-1190:80 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1209:50-1209:80 -/
 def
   source.Compiler.prepare_worker_signed.closure.Insts.CoreOpsFunctionFnOnceTupleErrorDiagnostic.call_once
   (c : source.Compiler.prepare_worker_signed.closure)
@@ -49907,7 +49865,7 @@ def
   ok Diagnostic.Invalid
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_worker_signed::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_wasm::Diagnostic> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_worker_signed::{closure}}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1190:50-1190:80 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1209:50-1209:80 -/
 @[reducible]
 def
   source.Compiler.prepare_worker_signed.closure.Insts.CoreOpsFunctionFnOnceTupleErrorDiagnostic
@@ -49918,7 +49876,7 @@ def
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_worker_signed]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1176:4-1192:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1195:4-1211:5
     Visibility: public -/
 def source.Compiler.prepare_worker_signed
   (self : source.Compiler)
@@ -49963,7 +49921,7 @@ def source.Compiler.prepare_worker_signed
   else ok (core.result.Result.Err Diagnostic.Unsupported)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}::{impl core::ops::function::FnMut<(&'_0 noble_kernel::untrusted::Node,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}::{closure}}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1221:70-1223:13 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1240:70-1242:13 -/
 def
   source.Compiler.prepare_declared_text.closure_1.closure.Insts.CoreOpsFunctionFnMutTupleShared0NodeBool.call_mut
   (c : source.Compiler.prepare_declared_text.closure_1.closure)
@@ -49978,7 +49936,7 @@ def
   | noble_kernel.untrusted.Node.Quotation _ _ => ok (false, c)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::untrusted::Node,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1221:70-1223:13 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1240:70-1242:13 -/
 def
   source.Compiler.prepare_declared_text.closure_1.closure.Insts.CoreOpsFunctionFnOnceTupleShared0NodeBool.call_once
   (c : source.Compiler.prepare_declared_text.closure_1.closure)
@@ -49991,7 +49949,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::untrusted::Node,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}::{closure}}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1221:70-1223:13 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1240:70-1242:13 -/
 @[reducible]
 def
   source.Compiler.prepare_declared_text.closure_1.closure.Insts.CoreOpsFunctionFnOnceTupleShared0NodeBool
@@ -50003,7 +49961,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}::{impl core::ops::function::FnMut<(&'_0 noble_kernel::untrusted::Node,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}::{closure}}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1221:70-1223:13 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1240:70-1242:13 -/
 @[reducible]
 def
   source.Compiler.prepare_declared_text.closure_1.closure.Insts.CoreOpsFunctionFnMutTupleShared0NodeBool
@@ -50017,7 +49975,7 @@ def
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{impl core::ops::function::FnMut<(&'_0 noble_kernel::execution::Definition,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1220:73-1225:9 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1239:73-1244:9 -/
 def
   source.Compiler.prepare_declared_text.closure_1.Insts.CoreOpsFunctionFnMutTupleShared0DefinitionBool.call_mut
   (c : source.Compiler.prepare_declared_text.closure_1)
@@ -50033,7 +49991,7 @@ def
   ok (b, c)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::execution::Definition,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1220:73-1225:9 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1239:73-1244:9 -/
 def
   source.Compiler.prepare_declared_text.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared0DefinitionBool.call_once
   (c : source.Compiler.prepare_declared_text.closure_1)
@@ -50046,7 +50004,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{impl core::ops::function::FnOnce<(&'_0 noble_kernel::execution::Definition,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1220:73-1225:9 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1239:73-1244:9 -/
 @[reducible]
 def
   source.Compiler.prepare_declared_text.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared0DefinitionBool
@@ -50057,7 +50015,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{impl core::ops::function::FnMut<(&'_0 noble_kernel::execution::Definition,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1220:73-1225:9 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1239:73-1244:9 -/
 @[reducible]
 def
   source.Compiler.prepare_declared_text.closure_1.Insts.CoreOpsFunctionFnMutTupleShared0DefinitionBool
@@ -50070,7 +50028,7 @@ def
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_wasm::Diagnostic> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure}}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1216:50-1216:80 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1235:50-1235:80 -/
 def
   source.Compiler.prepare_declared_text.closure.Insts.CoreOpsFunctionFnOnceTupleErrorDiagnostic.call_once
   (c : source.Compiler.prepare_declared_text.closure)
@@ -50080,7 +50038,7 @@ def
   ok Diagnostic.Invalid
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{impl core::ops::function::FnOnce<(noble_contracts::source::Error,), noble_wasm::Diagnostic> for noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure}}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1216:50-1216:80 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1235:50-1235:80 -/
 @[reducible]
 def
   source.Compiler.prepare_declared_text.closure.Insts.CoreOpsFunctionFnOnceTupleErrorDiagnostic
@@ -50091,7 +50049,7 @@ def
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1201:4-1228:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1220:4-1247:5
     Visibility: public -/
 def source.Compiler.prepare_declared_text
   (self : source.Compiler)
@@ -50152,7 +50110,7 @@ def source.Compiler.prepare_declared_text
   else ok (core.result.Result.Err Diagnostic.Unsupported)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_quiescent]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1239:4-1247:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1258:4-1266:5
     Visibility: public -/
 def source.Compiler.prepare_quiescent
   (self : source.Compiler) (submission : noble_kernel.execution.Submission) :
@@ -50165,7 +50123,7 @@ def source.Compiler.prepare_quiescent
   else ok (core.result.Result.Err Diagnostic.Invalid)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_program_free]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1255:4-1263:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1274:4-1282:5
     Visibility: public -/
 def source.Compiler.prepare_program_free
   (self : source.Compiler) (submission : noble_kernel.execution.Submission) :
@@ -53024,7 +52982,7 @@ def source.origin.build
                         source.SelectedOriginMetadata residual
 
 /-- [noble_wasm::source::is_named_selection]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2207:0-2213:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2226:0-2232:1 -/
 def source.is_named_selection
   (named : source.NamedTargetMetadata)
   (definition : noble_kernel.contracts.Definition) (identity : Std.U64) :
@@ -53038,7 +52996,7 @@ def source.is_named_selection
   else ok false
 
 /-- [noble_wasm::source::selected_named_target]: loop body 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2193:4-2202:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2212:4-2221:5 -/
 @[rust_loop_body]
 def source.selected_named_target_loop.body
   (named_targets : Slice source.NamedTargetMetadata)
@@ -53068,7 +53026,7 @@ def source.selected_named_target_loop.body
     else ok (done (first, has_duplicate))
 
 /-- [noble_wasm::source::selected_named_target]: loop 0:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2193:4-2202:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2212:4-2221:5 -/
 @[rust_loop]
 def source.selected_named_target_loop
   (named_targets : Slice source.NamedTargetMetadata)
@@ -53083,7 +53041,7 @@ def source.selected_named_target_loop
     (first, has_duplicate, index)
 
 /-- [noble_wasm::source::selected_named_target]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2185:0-2204:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2204:0-2223:1 -/
 @[reducible]
 def source.selected_named_target
   (named_targets : Slice source.NamedTargetMetadata)
@@ -53094,7 +53052,7 @@ def source.selected_named_target
     false 0#usize
 
 /-- [noble_wasm::source::selection_mismatch::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::TargetMetadata,), bool> for noble_wasm::source::selection_mismatch::{closure}<'_0>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1922:31-1926:9 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1941:31-1945:9 -/
 def
   source.selection_mismatch.closure.Insts.CoreOpsFunctionFnOnceTupleShared1TargetMetadataBool.call_once
   (c : source.selection_mismatch.closure) (tupled_args : source.TargetMetadata)
@@ -53119,7 +53077,7 @@ def
   else ok false
 
 /-- Trait implementation: [noble_wasm::source::selection_mismatch::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::TargetMetadata,), bool> for noble_wasm::source::selection_mismatch::{closure}<'_0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1922:31-1926:9 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1941:31-1945:9 -/
 @[reducible]
 def
   source.selection_mismatch.closure.Insts.CoreOpsFunctionFnOnceTupleShared1TargetMetadataBool
@@ -53130,7 +53088,7 @@ def
 }
 
 /-- [noble_wasm::source::selection_mismatch]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1911:0-1927:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1930:0-1946:1 -/
 def source.selection_mismatch
   (named : source.NamedTargetMetadata) (has_duplicate : Bool)
   (body : noble_kernel.untrusted.Interface)
@@ -53169,7 +53127,7 @@ def source.selection_mismatch
           ok (¬ b3)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_checked_selected]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1640:4-1680:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1659:4-1699:5
     Visibility: public -/
 def source.Compiler.prepare_checked_selected
   (self : source.Compiler)
@@ -53581,7 +53539,7 @@ def source.transaction.Base.matches
   else ok false
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::can_commit]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1684:4-1689:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1703:4-1708:5
     Visibility: public -/
 def source.Compiler.can_commit
   (self : source.Compiler) (prepared : source.Prepared) : Result Bool := do
@@ -53596,7 +53554,7 @@ def source.Compiler.can_commit
   else ok false
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::commit]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1697:4-1703:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1716:4-1722:5
     Visibility: public -/
 def source.Compiler.commit
   (self : source.Compiler) (prepared : source.Prepared) :
@@ -53608,7 +53566,7 @@ def source.Compiler.commit
   else ok (core.result.Result.Err Diagnostic.Invalid, self)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retire_declared_text_epoch]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1714:4-1742:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1733:4-1761:5
     Visibility: public -/
 def source.Compiler.retire_declared_text_epoch
   (self : source.Compiler) (generation : Std.U32) (code_end : Std.U32) :
@@ -53684,7 +53642,7 @@ def source.Compiler.retire_declared_text_epoch
   else ok (core.result.Result.Err Diagnostic.Invalid, self)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::declared_text_epoch_state]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1745:4-1754:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1764:4-1773:5
     Visibility: public -/
 def source.Compiler.declared_text_epoch_state
   (self : source.Compiler) : Result (Option (Std.U32 × Std.U32)) := do
@@ -53710,7 +53668,7 @@ def source.Compiler.declared_text_epoch_state
   core.bool.Bool.then_some b (self.generation, self.functions)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::release_table_end]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1854:4-1860:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1873:4-1879:5 -/
 def source.Compiler.release_table_end
   (self : source.Compiler) (index : Std.Usize) : Result source.Compiler := do
   let fc ←
@@ -53724,7 +53682,7 @@ def source.Compiler.release_table_end
     ok { self with functions := fc.start, free_code := v }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::touches_right]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1843:4-1847:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1862:4-1866:5 -/
 def source.Compiler.touches_right
   (self : source.Compiler) (index : Std.Usize) : Result Bool := do
   let i ← index + 1#usize
@@ -53742,7 +53700,7 @@ def source.Compiler.touches_right
   else ok false
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::coalesce_right]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1834:4-1840:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1853:4-1859:5 -/
 def source.Compiler.coalesce_right
   (self : source.Compiler) (index : Std.Usize) : Result source.Compiler := do
   let b ← source.Compiler.touches_right self index
@@ -53759,7 +53717,7 @@ def source.Compiler.coalesce_right
   else ok self
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::touches_left]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1823:4-1827:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1842:4-1846:5 -/
 def source.Compiler.touches_left
   (self : source.Compiler) (index : Std.Usize) : Result Bool := do
   if index > 0#usize
@@ -53779,7 +53737,7 @@ def source.Compiler.touches_left
   else ok false
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::coalesce_left]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1813:4-1820:5 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1832:4-1839:5 -/
 def source.Compiler.coalesce_left
   (self : source.Compiler) (index : Std.Usize) :
   Result (Std.Usize × source.Compiler)
@@ -53798,7 +53756,7 @@ def source.Compiler.coalesce_left
   else ok (index, self)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{impl core::ops::function::FnMut<(&'_1 noble_wasm::source::FreeCode,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{closure#1}<'_0, T0>}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1792:29-1792:59 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1811:29-1811:59 -/
 def
   source.Compiler.retire_code.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1FreeCodeBool.call_mut
   {T0 : Type _} (coreopsfunctionFnOnceT0TupleCodeSpanResultTupleDiagnosticInst
@@ -53810,7 +53768,7 @@ def
   ok (tupled_args.start < c, c)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::FreeCode,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{closure#1}<'_0, T0>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1792:29-1792:59 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1811:29-1811:59 -/
 def
   source.Compiler.retire_code.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1FreeCodeBool.call_once
   {T0 : Type _} (coreopsfunctionFnOnceT0TupleCodeSpanResultTupleDiagnosticInst
@@ -53825,7 +53783,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::FreeCode,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{closure#1}<'_0, T0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1792:29-1792:59 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1811:29-1811:59 -/
 @[reducible]
 def
   source.Compiler.retire_code.closure_1.Insts.CoreOpsFunctionFnOnceTupleShared1FreeCodeBool
@@ -53839,7 +53797,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{impl core::ops::function::FnMut<(&'_1 noble_wasm::source::FreeCode,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{closure#1}<'_0, T0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1792:29-1792:59 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1811:29-1811:59 -/
 @[reducible]
 def
   source.Compiler.retire_code.closure_1.Insts.CoreOpsFunctionFnMutTupleShared1FreeCodeBool
@@ -53856,7 +53814,7 @@ def
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{impl core::ops::function::FnMut<(&'_1 noble_wasm::source::CodeSpan,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{closure}<'_0, T0>}::call_mut]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1779:60-1779:82 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1798:60-1798:82 -/
 def
   source.Compiler.retire_code.closure.Insts.CoreOpsFunctionFnMutTupleShared1CodeSpanBool.call_mut
   {T0 : Type _} (coreopsfunctionFnOnceT0TupleCodeSpanResultTupleDiagnosticInst
@@ -53869,7 +53827,7 @@ def
   ok (b, c)
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::CodeSpan,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{closure}<'_0, T0>}::call_once]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1779:60-1779:82 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1798:60-1798:82 -/
 def
   source.Compiler.retire_code.closure.Insts.CoreOpsFunctionFnOnceTupleShared1CodeSpanBool.call_once
   {T0 : Type _} (coreopsfunctionFnOnceT0TupleCodeSpanResultTupleDiagnosticInst
@@ -53884,7 +53842,7 @@ def
   ok b
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{impl core::ops::function::FnOnce<(&'_1 noble_wasm::source::CodeSpan,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{closure}<'_0, T0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1779:60-1779:82 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1798:60-1798:82 -/
 @[reducible]
 def
   source.Compiler.retire_code.closure.Insts.CoreOpsFunctionFnOnceTupleShared1CodeSpanBool
@@ -53898,7 +53856,7 @@ def
 }
 
 /-- Trait implementation: [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{impl core::ops::function::FnMut<(&'_1 noble_wasm::source::CodeSpan,), bool> for noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{closure}<'_0, T0>}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1779:60-1779:82 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1798:60-1798:82 -/
 @[reducible]
 def
   source.Compiler.retire_code.closure.Insts.CoreOpsFunctionFnMutTupleShared1CodeSpanBool
@@ -53915,7 +53873,7 @@ def
 }
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1771:4-1805:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1790:4-1824:5
     Visibility: public -/
 def source.Compiler.retire_code
   {T0 : Type _} (coreopsfunctionFnOnceT0TupleCodeSpanResultTupleDiagnosticInst
@@ -53981,14 +53939,14 @@ def source.Compiler.retire_code
   else ok (core.result.Result.Err Diagnostic.Invalid, self)
 
 /-- [noble_wasm::source::{impl core::default::Default for noble_wasm::source::Compiler}::default]:
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1864:4-1866:5
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1883:4-1885:5
     Visibility: public -/
 def source.Compiler.Insts.CoreDefaultDefault.default
   : Result source.Compiler := do
   source.Compiler.new
 
 /-- Trait implementation: [noble_wasm::source::{impl core::default::Default for noble_wasm::source::Compiler}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1863:0-1867:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1882:0-1886:1 -/
 @[reducible]
 def source.Compiler.Insts.CoreDefaultDefault : core.default.Default
   source.Compiler := {

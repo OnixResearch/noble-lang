@@ -1009,7 +1009,7 @@ structure signatures.PrefixKey where
   suffix : alloc.vec.Vec Std.U8
 
 /-- [noble_wasm::signatures::Pool]
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 78:0-90:1 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 58:0-70:1 -/
 structure signatures.Pool where
   keys : alloc.vec.Vec (alloc.vec.Vec Std.U8)
   prefix_keys : alloc.vec.Vec signatures.PrefixKey
@@ -1021,7 +1021,7 @@ structure signatures.Pool where
   compact : Bool
 
 /-- [noble_wasm::signatures::Interface]
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 93:0-96:1 -/
+    Source: 'crates/noble-wasm/src/signatures.rs', lines 73:0-76:1 -/
 structure signatures.Interface where
   input : Std.U32
   output : Std.U32
@@ -1062,11 +1062,14 @@ inductive Representation where
 | WasmGc : Representation
 | ManagedLinearMemory : Representation
 
-/-- Trait declaration: [noble_wasm::signatures::Meter]
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 55:0-58:1 -/
-structure signatures.Meter (Self : Type _) where
-  visit : Self → Std.Usize → Result ((core.result.Result Unit Diagnostic)
-    × Self)
+/-- [noble_wasm::source::Work]
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 107:0-119:1 -/
+structure source.Work where
+  remaining : Std.U64
+  issued : Std.U64
+  calculator_preflight : Bool
+  calculator_plan : Bool
+  max_type_nodes : Std.U32
 
 /-- [noble_wasm::signatures::walk::Step]
     Source: 'crates/noble-wasm/src/signatures/walk.rs', lines 6:0-11:1 -/
@@ -1085,20 +1088,6 @@ structure signatures.walk.State where
   fuel : Std.Usize
   extended : Bool
   compact : Bool
-
-/-- [noble_wasm::signatures::Unmetered]
-    Source: 'crates/noble-wasm/src/signatures.rs', lines 61:0-61:28 -/
-@[reducible]
-def signatures.Unmetered := Unit
-
-/-- [noble_wasm::source::Work]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 107:0-119:1 -/
-structure source.Work where
-  remaining : Std.U64
-  issued : Std.U64
-  calculator_preflight : Bool
-  calculator_plan : Bool
-  max_type_nodes : Std.U32
 
 /-- [noble_wasm::source::admission::metadata::Totals]
     Source: 'crates/noble-wasm/src/source/admission/metadata.rs', lines 6:0-9:1 -/
@@ -1324,7 +1313,7 @@ structure source.ProfileSelection where
   declared_text : Bool
 
 /-- [noble_wasm::source::Identity]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 738:0-741:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 757:0-760:1 -/
 structure source.Identity where
   id : Std.U64
   recipe : alloc.vec.Vec Std.U8
@@ -1495,7 +1484,7 @@ structure source.types.Registry where
   shapes : alloc.vec.Vec source.types.Shape
 
 /-- [noble_wasm::source::LiveSiteMetadata]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 303:0-317:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 322:0-336:1
     Visibility: public -/
 structure source.LiveSiteMetadata where
   site_id : Std.U32
@@ -1564,7 +1553,7 @@ structure source.emit.reflection.Sections where
   witness_end : Std.Usize
 
 /-- [noble_wasm::source::ProgramAtomMetadata]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 357:0-367:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 376:0-386:1
     Visibility: public -/
 structure source.ProgramAtomMetadata where
   source_node : Std.U32
@@ -1639,7 +1628,7 @@ structure source.types.emission.SumCases where
   right : Std.U32
 
 /-- [noble_wasm::source::CalculatorCaps]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 196:0-205:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 215:0-224:1
     Visibility: public -/
 structure source.CalculatorCaps where
   work_issued : Std.U64
@@ -1652,7 +1641,7 @@ structure source.CalculatorCaps where
   text_end : Std.U32
 
 /-- [noble_wasm::source::CompileMetrics]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 224:0-256:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 243:0-275:1
     Visibility: public -/
 structure source.CompileMetrics where
   work_initial : Std.U64
@@ -1676,13 +1665,13 @@ structure source.CompileMetrics where
   type_directed_fallback_operations : Std.U64
 
 /-- [noble_wasm::source::FreeCode]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 732:0-735:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 751:0-754:1 -/
 structure source.FreeCode where
   start : Std.U32
   slots : Std.U32
 
 /-- [noble_wasm::source::CodeSpan]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 294:0-298:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 313:0-317:1
     Visibility: public -/
 structure source.CodeSpan where
   start : Std.U32
@@ -1690,7 +1679,7 @@ structure source.CodeSpan where
   generation : Std.U32
 
 /-- [noble_wasm::source::Compiler]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 262:0-289:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 281:0-308:1
     Visibility: public -/
 structure source.Compiler where
   live : Bool
@@ -1717,7 +1706,7 @@ structure source.Compiler where
   identities : alloc.vec.Vec source.Identity
 
 /-- [noble_wasm::source::TargetMetadata]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 322:0-330:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 341:0-349:1
     Visibility: public -/
 structure source.TargetMetadata where
   root_program_index : Std.Usize
@@ -1729,7 +1718,7 @@ structure source.TargetMetadata where
   effects : noble_kernel.types.EffSet
 
 /-- [noble_wasm::source::ProgramMetadata]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 336:0-354:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 355:0-373:1
     Visibility: public -/
 structure source.ProgramMetadata where
   program_index : Std.Usize
@@ -1747,7 +1736,7 @@ structure source.ProgramMetadata where
   runtime_atoms : alloc.vec.Vec source.ProgramAtomMetadata
 
 /-- [noble_wasm::source::OriginFixedArithmetic]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 456:0-460:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 475:0-479:1
     Visibility: public -/
 @[discriminant isize]
 inductive source.OriginFixedArithmetic where
@@ -1756,7 +1745,7 @@ inductive source.OriginFixedArithmetic where
 | Mul : source.OriginFixedArithmetic
 
 /-- [noble_wasm::source::OriginFixedExpression]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 463:0-472:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 482:0-491:1
     Visibility: public -/
 @[discriminant isize]
 inductive source.OriginFixedExpression where
@@ -1770,7 +1759,7 @@ inductive source.OriginFixedExpression where
   source.OriginFixedExpression
 
 /-- [noble_wasm::source::OriginI64]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 447:0-453:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 466:0-472:1
     Visibility: public -/
 @[discriminant isize]
 inductive source.OriginI64 where
@@ -1783,7 +1772,7 @@ inductive source.OriginI64 where
 mutual
 
 /-- [noble_wasm::source::OriginProgramValue]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 550:0-566:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 569:0-585:1
     Visibility: public -/
 @[discriminant isize]
 inductive source.OriginProgramValue where
@@ -1804,7 +1793,7 @@ inductive source.OriginProgramValue where
   source.OriginProgramValue
 
 /-- [noble_wasm::source::OriginOperand]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 569:0-572:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 588:0-591:1
     Visibility: public -/
 @[discriminant isize]
 inductive source.OriginOperand where
@@ -1814,14 +1803,14 @@ inductive source.OriginOperand where
 end
 
 /-- [noble_wasm::source::OriginOutput]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 687:0-690:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 706:0-709:1
     Visibility: public -/
 structure source.OriginOutput where
   stack_position : Std.Usize
   result : alloc.rc.Rc source.OriginProgramValue
 
 /-- [noble_wasm::source::OriginAction]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 406:0-425:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 425:0-444:1
     Visibility: public -/
 @[discriminant isize]
 inductive source.OriginAction where
@@ -1840,7 +1829,7 @@ inductive source.OriginAction where
 | CallSelected : Std.Usize → source.OriginAction
 
 /-- [noble_wasm::source::OriginOperation]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 428:0-444:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 447:0-463:1
     Visibility: public -/
 structure source.OriginOperation where
   node : noble_kernel.untrusted.NodeId
@@ -1857,7 +1846,7 @@ structure source.OriginOperation where
   action : source.OriginAction
 
 /-- [noble_wasm::source::OriginSource]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 386:0-389:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 405:0-408:1
     Visibility: public -/
 @[discriminant isize]
 inductive source.OriginSource where
@@ -1865,7 +1854,7 @@ inductive source.OriginSource where
 | Selection : source.OriginSource
 
 /-- [noble_wasm::source::OriginProgram]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 392:0-403:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 411:0-422:1
     Visibility: public -/
 structure source.OriginProgram where
   source_artifact : source.OriginSource
@@ -1878,7 +1867,7 @@ structure source.OriginProgram where
   operations : alloc.vec.Vec source.OriginOperation
 
 /-- [noble_wasm::source::SelectedOriginMetadata]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 372:0-379:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 391:0-398:1
     Visibility: public -/
 structure source.SelectedOriginMetadata where
   definition_id : noble_contracts.source.proof.CheckedDefinitionId
@@ -1889,7 +1878,7 @@ structure source.SelectedOriginMetadata where
   outputs : alloc.vec.Vec source.OriginOutput
 
 /-- [noble_wasm::source::OriginRendering]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 606:0-610:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 625:0-629:1 -/
 @[discriminant isize]
 inductive source.OriginRendering where
 | Operand : source.OriginOperand → source.OriginRendering
@@ -1897,13 +1886,13 @@ inductive source.OriginRendering where
 | Recipe : source.OriginFixedExpression → source.OriginRendering
 
 /-- [noble_wasm::source::RecipePairs]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 500:0-502:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 519:0-521:1 -/
 structure source.RecipePairs where
   pairs : alloc.vec.Vec (source.OriginFixedExpression ×
     source.OriginFixedExpression)
 
 /-- [noble_wasm::source::NamedTargetMetadata]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 697:0-711:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 716:0-730:1
     Visibility: public -/
 structure source.NamedTargetMetadata where
   definition : noble_kernel.contracts.Definition
@@ -1919,7 +1908,7 @@ structure source.NamedTargetMetadata where
   checked_recipe : alloc.vec.Vec Std.U8
 
 /-- [noble_wasm::source::SelectedTargetArtifact]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 718:0-722:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 737:0-741:1
     Visibility: public -/
 structure source.SelectedTargetArtifact where
   definition_id : noble_contracts.source.proof.CheckedDefinitionId
@@ -1927,7 +1916,7 @@ structure source.SelectedTargetArtifact where
   named_program_index : Std.Usize
 
 /-- [noble_wasm::source::ResourceCatalogEntry]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 726:0-729:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 745:0-748:1
     Visibility: public -/
 structure source.ResourceCatalogEntry where
   declaration : noble_kernel.contracts.NominalDecl
@@ -1967,7 +1956,7 @@ structure source.reuse.CanonicalEpoch where
     Std.U32 Global
 
 /-- [noble_wasm::source::Prepared]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 744:0-763:1
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 763:0-782:1
     Visibility: public -/
 structure source.Prepared where
   base : source.transaction.Base
@@ -1988,17 +1977,17 @@ structure source.Prepared where
   work_issued : Std.U64
 
 /-- [noble_wasm::source::is_defective_descriptor::{closure}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1935:24-1935:48 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1954:24-1954:48 -/
 @[reducible]
 def source.is_defective_descriptor.closure := Unit
 
 /-- [noble_wasm::source::{noble_wasm::source::Prepared}::runtime_signature_catalog::{closure}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 796:63-796:95 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 815:63-815:95 -/
 @[reducible]
 def source.Prepared.runtime_signature_catalog.closure := Unit
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::fitting_free_code::{closure}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 926:37-926:63 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 945:37-945:63 -/
 @[reducible]
 def source.Compiler.fitting_free_code.closure := Std.U32
 
@@ -2065,7 +2054,7 @@ def source.plan.operations.slot_invoke_action.closure := Std.U32
 def source.plan.allocation.literal.closure := Unit
 
 /-- [noble_wasm::source::Admitted]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1892:0-1897:1 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1911:0-1916:1 -/
 structure source.Admitted where
   work : source.Work
   checked : source.admission.Accepted
@@ -2073,12 +2062,12 @@ structure source.Admitted where
   admission_issued : Std.U64
 
 /-- [noble_wasm::source::checked_named_target::{closure}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2037:44-2037:68 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 2056:44-2056:68 -/
 @[reducible]
 def source.checked_named_target.closure := Std.U64
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prospective::{closure}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1489:57-1489:83 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1508:57-1508:83 -/
 @[reducible]
 def source.Compiler.prospective.closure := source.Compiler
 
@@ -2202,27 +2191,27 @@ structure source.preflight.variables.Walk where
 def source.preflight.variables.enter_appearance.closure := Unit
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_signed::{closure}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1158:50-1158:80 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1177:50-1177:80 -/
 @[reducible]
 def source.Compiler.prepare_signed.closure := Unit
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_worker_signed::{closure}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1190:50-1190:80 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1209:50-1209:80 -/
 @[reducible]
 def source.Compiler.prepare_worker_signed.closure := Unit
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}::{closure}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1221:70-1223:13 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1240:70-1242:13 -/
 @[reducible]
 def source.Compiler.prepare_declared_text.closure_1.closure := Unit
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure#1}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1220:73-1225:9 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1239:73-1244:9 -/
 @[reducible]
 def source.Compiler.prepare_declared_text.closure_1 := Unit
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::prepare_declared_text::{closure}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1216:50-1216:80 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1235:50-1235:80 -/
 @[reducible]
 def source.Compiler.prepare_declared_text.closure := Unit
 
@@ -2347,17 +2336,17 @@ inductive source.origin.ProgramVisit where
 | Lower : Std.Usize → source.origin.ProgramVisit
 
 /-- [noble_wasm::source::selection_mismatch::{closure}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1922:31-1926:9 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1941:31-1945:9 -/
 @[reducible]
 def source.selection_mismatch.closure := noble_kernel.untrusted.Interface
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{closure#1}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1792:29-1792:59 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1811:29-1811:59 -/
 @[reducible]
 def source.Compiler.retire_code.closure_1 (T0 : Type _) := Std.U32
 
 /-- [noble_wasm::source::{noble_wasm::source::Compiler}::retire_code::{closure}]
-    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1779:60-1779:82 -/
+    Source: 'crates/noble-wasm/src/source/mod.rs', lines 1798:60-1798:82 -/
 @[reducible]
 def source.Compiler.retire_code.closure (T0 : Type _) := source.CodeSpan
 
