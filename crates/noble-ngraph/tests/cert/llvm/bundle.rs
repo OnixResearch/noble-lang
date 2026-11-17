@@ -157,28 +157,11 @@ fn source_binding_entries() -> String {
         .join(",\n")
 }
 
-pub(super) fn retained_json(all: &[Artifact], records: &[ControlRecord]) -> String {
+fn binding_text(all: &[Artifact], records: &[ControlRecord]) -> String {
     let certificate = certificate_text(all);
     let request = request_text();
     let corpus = lean_source(all, records);
-    let mut text = String::from("{\n  \"schema\": \"noble-llvm-lowering-bundle/v1\",\n");
-    text.push_str(&format!(
-        "  \"profile\": {},\n  \"identity_scheme\": {},\n",
-        json_string(llvm::PROFILE),
-        json_string(TestIds.name())
-    ));
-    text.push_str(&revision_text());
-    text.push_str(assumption_text());
-    text.push_str(&target_text());
-    text.push_str(concat!(
-        "  \"pair\": {\n",
-        "    \"original\": \"foldable\", \"rewritten\": \"foldable-rewritten\",\n",
-        "    \"certificate\": \"pair/certificate.json\", \"relation\": \"equivalence\",\n",
-        "    \"direction\": \"both\", \"request\": \"request.json\",\n",
-        "    \"source_module\": \"pair/source.ll\", \"target_module\": \"pair/target.ll\"\n",
-        "  },\n",
-    ));
-    text.push_str(&format!(
+    format!(
         "  \"bindings\": {{\n    \"certificate_identity\": {},\n    \
          \"request_identity\": {},\n    \"lean_corpus\": {},\n    \
          \"lean_corpus_identity\": {},\n    \"compiler_lab_report\": {},\n    \
@@ -202,7 +185,28 @@ pub(super) fn retained_json(all: &[Artifact], records: &[ControlRecord]) -> Stri
         json_string(COMPILER_LAB_REPORT),
         json_string(COMPILER_LAB_REPORT_SHA256),
         json_string(COMPILER_LAB_COMMIT)
+    )
+}
+
+pub(super) fn retained_json(all: &[Artifact], records: &[ControlRecord]) -> String {
+    let mut text = String::from("{\n  \"schema\": \"noble-llvm-lowering-bundle/v1\",\n");
+    text.push_str(&format!(
+        "  \"profile\": {},\n  \"identity_scheme\": {},\n",
+        json_string(llvm::PROFILE),
+        json_string(TestIds.name())
     ));
+    text.push_str(&revision_text());
+    text.push_str(assumption_text());
+    text.push_str(&target_text());
+    text.push_str(concat!(
+        "  \"pair\": {\n",
+        "    \"original\": \"foldable\", \"rewritten\": \"foldable-rewritten\",\n",
+        "    \"certificate\": \"pair/certificate.json\", \"relation\": \"equivalence\",\n",
+        "    \"direction\": \"both\", \"request\": \"request.json\",\n",
+        "    \"source_module\": \"pair/source.ll\", \"target_module\": \"pair/target.ll\"\n",
+        "  },\n",
+    ));
+    text.push_str(&binding_text(all, records));
     text.push_str("  \"source_bindings\": [\n");
     text.push_str(&source_binding_entries());
     text.push_str("\n  ],\n  \"artifacts\": [\n");
