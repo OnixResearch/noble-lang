@@ -940,7 +940,7 @@ impl Compiler {
         {
             return Err(crate::Diagnostic::Unsupported);
         }
-        self.prepare_from(submission, None, self.functions, false, false, false)
+        self.prepare_from(submission, self.functions, false, false, false)
     }
 
     /// Rebuild a signed staged-source snapshot before authorizing `SignedSelf`.
@@ -970,7 +970,7 @@ impl Compiler {
         {
             return Err(crate::Diagnostic::Unsupported);
         }
-        self.prepare_from(&submission, None, self.functions, false, false, true)
+        self.prepare_from(&submission, self.functions, false, false, true)
     }
 
     /// Worker ingress for a pure Program with signed, scoped recursion. Like
@@ -996,7 +996,7 @@ impl Compiler {
             return Err(crate::Diagnostic::Unsupported);
         }
         let submission = source.rederive().map_err(|_| crate::Diagnostic::Invalid)?;
-        self.prepare_from(&submission, None, self.functions, false, false, true)
+        self.prepare_from(&submission, self.functions, false, false, true)
     }
 
     /// The merged cursor/declared profile has no raw Submission ingress.
@@ -1032,7 +1032,7 @@ impl Compiler {
             .is_some()
         })
         .is_some();
-        self.prepare_from(&submission, None, self.functions, false, false, is_signed)
+        self.prepare_from(&submission, self.functions, false, false, is_signed)
     }
 
     /// Calculator-only preparation at a quiescent submission boundary: the
@@ -1051,14 +1051,7 @@ impl Compiler {
         if !self.calculator {
             return Err(crate::Diagnostic::Invalid);
         }
-        self.prepare_from(
-            submission,
-            None,
-            CALCULATOR_FUNCTION_BASE,
-            true,
-            false,
-            false,
-        )
+        self.prepare_from(submission, CALCULATOR_FUNCTION_BASE, true, false, false)
     }
 
     /// Calculator-only preparation at a Program-free submission boundary: the
@@ -1074,31 +1067,29 @@ impl Compiler {
         if !self.calculator {
             return Err(crate::Diagnostic::Invalid);
         }
-        self.prepare_from(
-            submission,
-            None,
-            CALCULATOR_FUNCTION_BASE,
-            true,
-            true,
-            false,
-        )
+        self.prepare_from(submission, CALCULATOR_FUNCTION_BASE, true, true, false)
     }
 
-    // A selected target holds borrowed source state, so every loop of this
-    // preparation runs in a helper that never receives it.
-    #[expect(
-        tigerstyle::too_many_parameters,
-        reason = "Owner: noble-wasm-maintainers; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
-    )]
+    /// Independently accept and lower a submission into a preparation.
     fn prepare_from(
         &self,
         submission: &noble_kernel::execution::Submission,
-        selected: Option<&noble_contracts::source::proof::CheckedSelectedTarget<'_>>,
         functions: u32,
         quiescent: bool,
         program_free: bool,
         signed: bool,
     ) -> Result<Prepared, crate::Diagnostic> {
+        let (prepared, _) =
+            attempt!(self.prepare_layout(submission, functions, quiescent, program_free, signed));
+        Ok(prepared)
+    }
+
+    /// Charge borrowed preflight and independent admission of a submission.
+    fn admitted(
+        &self,
+        submission: &noble_kernel::execution::Submission,
+        signed: bool,
+    ) -> Result<Admitted, crate::Diagnostic> {
         if self.calculator
             && u64::from(submission.request.limits.work) > CALCULATOR_COMPILER_WORK_LIMIT
         {
@@ -1146,15 +1137,35 @@ impl Compiler {
             &mut work,
         ));
         let admission_issued = work.issued;
+        Ok(Admitted {
+            work,
+            checked,
+            preflight_issued,
+            admission_issued,
+        })
+    }
+
+    /// Independently accept and lower a submission. The unpublished plan is
+    /// returned beside the preparation, so a selected preparation derives the
+    /// returned target's lineage from it and no borrowed source state flows
+    /// through this preparation.
+    fn prepare_layout(
+        &self,
+        submission: &noble_kernel::execution::Submission,
+        functions: u32,
+        quiescent: bool,
+        program_free: bool,
+        signed: bool,
+    ) -> Result<(Prepared, plan::Layout), crate::Diagnostic> {
+        let Admitted {
+            mut work,
+            checked,
+            preflight_issued,
+            admission_issued,
+        } = attempt!(self.admitted(submission, signed));
         // A Program-free epoch interns into a fresh calculator pool, so no
         // committed key is retained, copied or charged.
-        let fresh_signatures = if program_free {
-            let mut pool = crate::signatures::Pool::source();
-            pool.select_calculator();
-            Some(pool)
-        } else {
-            None
-        };
+        let fresh_signatures = fresh_signature_pool(program_free);
         let signature_key_charge = attempt!(admission::meter::compilation(
             &checked,
             fresh_signatures.as_ref().unwrap_or(&self.signatures),
@@ -1162,47 +1173,12 @@ impl Compiler {
         ));
         // A quiescent epoch starts with an empty identity ledger: nothing of
         // the committed ledger is retained, so none of it is copied or charged.
-        let retained = if quiescent { 0 } else { self.identities.len() };
+        let retained = self.retained_identities(quiescent);
         let identity_charge = attempt!(identity_copy_charge(&self.identities, retained, &mut work));
         // The literal table is copied into the prospective compiler.
         attempt!(work.entries(literal_copy_entries(&self.static_literals)));
-        let mut next = Self {
-            live: self.live,
-            declared_live: self.declared_live,
-            live_slots: self.live_slots,
-            text_cursor: self.text_cursor,
-            declared_text: self.declared_text,
-            calculator: self.calculator,
-            checked_i64: self.checked_i64,
-            worker_inputs: self.worker_inputs,
-            worker_interruption: self.worker_interruption,
-            type_directed_experimental: self.type_directed_experimental,
-            experimental_cleanup: self.experimental_cleanup,
-            generation: match self.generation.checked_add(1) {
-                Some(value) => value,
-                None => return Err(crate::Diagnostic::Exhausted),
-            },
-            functions,
-            retention_revision: self.retention_revision,
-            free_code: self.free_code.clone(),
-            installed_code: self.installed_code.clone(),
-            text_end: self.text_end,
-            static_literals: self.static_literals.clone(),
-            signatures: match fresh_signatures {
-                Some(pool) => pool,
-                None => self.signatures.clone(),
-            },
-            descriptors: if program_free {
-                alloc::vec::Vec::new()
-            } else {
-                self.descriptors.clone()
-            },
-            identities: if quiescent {
-                alloc::vec::Vec::new()
-            } else {
-                self.identities.clone()
-            },
-        };
+        let mut next =
+            attempt!(self.prospective(functions, quiescent, program_free, fresh_signatures));
         attempt!(admission::identity::check(
             submission,
             &mut next.identities,
@@ -1212,79 +1188,17 @@ impl Compiler {
         ));
         work.calculator_plan = self.calculator;
         let mut plan = attempt!(plan::lower(submission, &checked, &mut next, &mut work));
-        // Worker literals share the scratch-region boundary used by calculator
-        // signature expansion; neither profile may let static Text overlap it.
-        if self.worker_inputs && next.text_end > CALCULATOR_TEXT_END {
-            return Err(crate::Diagnostic::Exhausted);
-        }
-        // A calculator module publishes only the signatures new since the
-        // committed compiler's descriptor table (all of its own after a
-        // Program-free rewind); the trusted engine retains that published
-        // prefix, so per-module metadata is history-independent.
-        let published = if program_free {
-            0
-        } else {
-            self.descriptors.len()
-        };
-        let wat = if next.calculator {
-            let keys = attempt!(next
-                .signatures
-                .expanded_keys(published, |bytes| work.entries(bytes)));
-            attempt!(emit::module(&plan, self.generation, published, &keys))
-        } else {
-            attempt!(emit::module(
-                &plan,
-                self.generation,
-                0,
-                &next.signatures.keys
-            ))
-        };
+        let (published, wat) = attempt!(self.emitted(&plan, &next, program_free, &mut work));
         let code_span = CodeSpan {
             start: plan.first_function,
             slots: plan.functions - plan.first_function,
             generation: next.generation,
         };
-        let target_metadata = if self.live_slots || self.worker_inputs {
-            let root = attempt!(plan
-                .programs
-                .get(plan.root)
-                .ok_or(crate::Diagnostic::Invalid));
-            Some(TargetMetadata {
-                root_program_index: plan.root,
-                input_signature: root.input,
-                output_signature: root.output,
-                effect_mask: root.effects,
-                stack_in: submission.request.expected.stack_in.clone(),
-                stack_out: submission.request.expected.stack_out.clone(),
-                effects: checked.root.interface.effects.clone(),
-            })
-        } else {
-            None
-        };
-        let named_targets = if self.live_slots || self.worker_inputs {
-            attempt!(checked_named_targets(
-                submission,
-                &checked,
-                &plan,
-                &next.identities
-            ))
-        } else {
-            alloc::vec::Vec::new()
-        };
-        let selected_origin = match selected {
-            Some(selected) => origin::build(selected, &plan),
-            None => None,
-        };
-        let program_metadata = if self.live_slots || self.worker_inputs {
-            attempt!(checked_program_metadata(&mut plan, self.worker_inputs))
-        } else {
-            alloc::vec::Vec::new()
-        };
-        let resource_catalog = if self.live_slots {
-            attempt!(admitted_resource_catalog(&submission.environment))
-        } else {
-            alloc::vec::Vec::new()
-        };
+        let target_metadata = attempt!(self.root_metadata(submission, &checked, &plan));
+        let named_targets =
+            attempt!(self.named_metadata(submission, &checked, &plan, &next.identities));
+        let program_metadata = attempt!(self.program_metadata(&mut plan));
+        let resource_catalog = attempt!(self.resource_metadata(&submission.environment));
         let named_bodies = submission.definitions.len() as u64;
         let work_environment_grant = admission_issued - preflight_issued;
         let metrics = CompileMetrics {
@@ -1313,37 +1227,219 @@ impl Compiler {
             type_directed_specializations: plan.type_directed_specializations,
             type_directed_fallback_operations: plan.type_directed_fallback_operations,
         };
-        Ok(Prepared {
-            base: transaction::Base::capture(
-                self,
-                retained,
-                if program_free {
-                    0
-                } else {
-                    self.signatures.len()
-                },
-                published,
-            ),
+        let signature_base = self.retained_signatures(program_free);
+        let epoch = self.program_free_epoch(program_free);
+        let live_sites = core::mem::take(&mut plan.live_sites);
+        let prepared = Prepared {
+            base: transaction::Base::capture(self, retained, signature_base, published),
             base_live_slots: self.live_slots,
             base_retention_revision: self.retention_revision,
             next,
             code_span,
-            live_sites: plan.live_sites,
+            live_sites,
             target_metadata,
             program_metadata,
             named_targets,
             selected_target: None,
-            selected_origin,
+            selected_origin: None,
             resource_catalog,
             wat,
             metrics,
-            epoch: if program_free {
-                self.canonical_epoch()
-            } else {
-                None
-            },
+            epoch,
             work_issued: work.issued,
+        };
+        Ok((prepared, plan))
+    }
+
+    /// The committed identities a preparation retains: none at a quiescent boundary.
+    fn retained_identities(&self, quiescent: bool) -> usize {
+        if quiescent {
+            0
+        } else {
+            self.identities.len()
+        }
+    }
+
+    /// The committed signature prefix a preparation retains: none at a Program-free boundary.
+    fn retained_signatures(&self, program_free: bool) -> usize {
+        if program_free {
+            0
+        } else {
+            self.signatures.len()
+        }
+    }
+
+    /// The canonical epoch recorded by a Program-free preparation, if any.
+    fn program_free_epoch(&self, program_free: bool) -> Option<CanonicalEpoch> {
+        if program_free {
+            self.canonical_epoch()
+        } else {
+            None
+        }
+    }
+
+    /// The prospective compiler a preparation lowers into: the committed state
+    /// at the next generation, rewound where the epoch restarts it.
+    fn prospective(
+        &self,
+        functions: u32,
+        quiescent: bool,
+        program_free: bool,
+        fresh_signatures: Option<crate::signatures::Pool>,
+    ) -> Result<Self, crate::Diagnostic> {
+        let generation = match self.generation.checked_add(1) {
+            Some(value) => value,
+            None => return Err(crate::Diagnostic::Exhausted),
+        };
+        let free_code = self.free_code.clone();
+        let installed_code = self.installed_code.clone();
+        let static_literals = self.static_literals.clone();
+        let signatures = fresh_signatures.unwrap_or_else(|| self.signatures.clone());
+        let descriptors = if program_free {
+            alloc::vec::Vec::new()
+        } else {
+            self.descriptors.clone()
+        };
+        let identities = if quiescent {
+            alloc::vec::Vec::new()
+        } else {
+            self.identities.clone()
+        };
+        Ok(Self {
+            live: self.live,
+            declared_live: self.declared_live,
+            live_slots: self.live_slots,
+            text_cursor: self.text_cursor,
+            declared_text: self.declared_text,
+            calculator: self.calculator,
+            checked_i64: self.checked_i64,
+            worker_inputs: self.worker_inputs,
+            worker_interruption: self.worker_interruption,
+            type_directed_experimental: self.type_directed_experimental,
+            experimental_cleanup: self.experimental_cleanup,
+            generation,
+            functions,
+            retention_revision: self.retention_revision,
+            free_code,
+            installed_code,
+            text_end: self.text_end,
+            static_literals,
+            signatures,
+            descriptors,
+            identities,
         })
+    }
+
+    /// Emit the module and report the committed descriptor prefix it publishes after.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-maintainers; the budget belongs to one private preparation and tracks consumed work without modifying the borrowed submission or published compiler."
+    )]
+    fn emitted(
+        &self,
+        plan: &plan::Layout,
+        next: &Self,
+        program_free: bool,
+        work: &mut Work,
+    ) -> Result<(usize, alloc::vec::Vec<u8>), crate::Diagnostic> {
+        // Worker literals share the scratch-region boundary used by calculator
+        // signature expansion; neither profile may let static Text overlap it.
+        if self.worker_inputs && next.text_end > CALCULATOR_TEXT_END {
+            return Err(crate::Diagnostic::Exhausted);
+        }
+        // A calculator module publishes only the signatures new since the
+        // committed compiler's descriptor table (all of its own after a
+        // Program-free rewind); the trusted engine retains that published
+        // prefix, so per-module metadata is history-independent.
+        let published = self.retained_descriptors(program_free);
+        if next.calculator {
+            let keys = attempt!(next
+                .signatures
+                .expanded_keys(published, |bytes| work.entries(bytes)));
+            let wat = attempt!(emit::module(plan, self.generation, published, &keys));
+            return Ok((published, wat));
+        }
+        let wat = attempt!(emit::module(
+            plan,
+            self.generation,
+            0,
+            &next.signatures.keys
+        ));
+        Ok((published, wat))
+    }
+
+    /// The committed descriptor prefix a preparation retains: none at a Program-free boundary.
+    fn retained_descriptors(&self, program_free: bool) -> usize {
+        if program_free {
+            0
+        } else {
+            self.descriptors.len()
+        }
+    }
+
+    /// The checked root interface the live-slot and Worker profiles publish.
+    fn root_metadata(
+        &self,
+        submission: &noble_kernel::execution::Submission,
+        checked: &admission::Accepted,
+        plan: &plan::Layout,
+    ) -> Result<Option<TargetMetadata>, crate::Diagnostic> {
+        if !(self.live_slots || self.worker_inputs) {
+            return Ok(None);
+        }
+        let root = attempt!(plan
+            .programs
+            .get(plan.root)
+            .ok_or(crate::Diagnostic::Invalid));
+        Ok(Some(TargetMetadata {
+            root_program_index: plan.root,
+            input_signature: root.input,
+            output_signature: root.output,
+            effect_mask: root.effects,
+            stack_in: submission.request.expected.stack_in.clone(),
+            stack_out: submission.request.expected.stack_out.clone(),
+            effects: checked.root.interface.effects.clone(),
+        }))
+    }
+
+    /// The named targets the live-slot and Worker profiles publish.
+    fn named_metadata(
+        &self,
+        submission: &noble_kernel::execution::Submission,
+        checked: &admission::Accepted,
+        plan: &plan::Layout,
+        identities: &[Identity],
+    ) -> Result<alloc::vec::Vec<NamedTargetMetadata>, crate::Diagnostic> {
+        if !(self.live_slots || self.worker_inputs) {
+            return Ok(alloc::vec::Vec::new());
+        }
+        checked_named_targets(submission, checked, plan, identities)
+    }
+
+    /// The program metadata the live-slot and Worker profiles publish.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-maintainers; metadata publication moves each logical interface out of the unpublished plan that this preparation owns; the borrowed submission stays immutable."
+    )]
+    fn program_metadata(
+        &self,
+        plan: &mut plan::Layout,
+    ) -> Result<alloc::vec::Vec<ProgramMetadata>, crate::Diagnostic> {
+        if !(self.live_slots || self.worker_inputs) {
+            return Ok(alloc::vec::Vec::new());
+        }
+        checked_program_metadata(plan, self.worker_inputs)
+    }
+
+    /// The resource catalog the live-slot profile publishes.
+    fn resource_metadata(
+        &self,
+        environment: &noble_kernel::contracts::Env,
+    ) -> Result<alloc::vec::Vec<ResourceCatalogEntry>, crate::Diagnostic> {
+        if !self.live_slots {
+            return Ok(alloc::vec::Vec::new());
+        }
+        admitted_resource_catalog(environment)
     }
 
     /// Recompile the exact independently accepted source-selected target, and
@@ -1358,14 +1454,14 @@ impl Compiler {
         if !self.live_slots {
             return Err(crate::Diagnostic::Unsupported);
         }
-        let mut prepared = attempt!(self.prepare_from(
+        let (mut prepared, plan) = attempt!(self.prepare_layout(
             selected.submission(),
-            Some(selected),
             self.functions,
             false,
             false,
             false,
         ));
+        prepared.selected_origin = origin::build(selected, &plan);
         let id = selected.definition_id();
         let (first, has_duplicate) = selected_named_target(
             &prepared.named_targets,
@@ -1375,23 +1471,20 @@ impl Compiler {
         let Some(index) = first else {
             return Err(crate::Diagnostic::Invalid);
         };
-        let named = &prepared.named_targets[index];
-        let has_interface_mismatch = has_duplicate
-            || named.stack_in != selected.body().interface.stack_in
-            || named.stack_out != selected.body().interface.stack_out
-            || named.effects != selected.body().interface.effects
-            || !prepared.target_metadata.as_ref().is_some_and(|root| {
-                root.stack_in == selected.root().interface.stack_in
-                    && root.stack_out == selected.root().interface.stack_out
-                    && root.effects == selected.root().interface.effects
-            });
-        if has_interface_mismatch {
+        let named_program_index = prepared.named_targets[index].program_index;
+        if selection_mismatch(
+            &prepared.named_targets[index],
+            has_duplicate,
+            &selected.body().interface,
+            prepared.target_metadata.as_ref(),
+            &selected.root().interface,
+        ) {
             return Err(crate::Diagnostic::Invalid);
         }
         prepared.selected_target = Some(SelectedTargetArtifact {
             definition_id: id,
             source_generation: selected.source_generation(),
-            named_program_index: named.program_index,
+            named_program_index,
         });
         Ok(prepared)
     }
@@ -1558,6 +1651,45 @@ fn position_of<T>(items: &[T], mut predicate: impl FnMut(&T) -> bool) -> Option<
         index += 1;
     }
     found
+}
+
+/// The work budget and checked submission after borrowed preflight and
+/// independent admission, with the issued work recorded at each stage.
+struct Admitted {
+    work: Work,
+    checked: admission::Accepted,
+    preflight_issued: u64,
+    admission_issued: u64,
+}
+
+/// A fresh calculator signature pool for a Program-free epoch.
+fn fresh_signature_pool(program_free: bool) -> Option<crate::signatures::Pool> {
+    if program_free {
+        let mut pool = crate::signatures::Pool::source();
+        pool.select_calculator();
+        Some(pool)
+    } else {
+        None
+    }
+}
+
+/// Whether the selected named target or the root disagrees with the checked selection.
+fn selection_mismatch(
+    named: &NamedTargetMetadata,
+    has_duplicate: bool,
+    body: &noble_kernel::untrusted::Interface,
+    target: Option<&TargetMetadata>,
+    root: &noble_kernel::untrusted::Interface,
+) -> bool {
+    has_duplicate
+        || named.stack_in != body.stack_in
+        || named.stack_out != body.stack_out
+        || named.effects != body.effects
+        || !target.is_some_and(|target| {
+            target.stack_in == root.stack_in
+                && target.stack_out == root.stack_out
+                && target.effects == root.effects
+        })
 }
 
 /// Whether a published descriptor fails to name exactly its key's bytes in memory.
@@ -2730,7 +2862,7 @@ mod declared_text_ingress_tests {
         );
         assert!(compiler.prepare_declared_text(&owner).is_ok());
         assert!(compiler
-            .prepare_from(&original, None, compiler.functions, false, false, true)
+            .prepare_from(&original, compiler.functions, false, false, true)
             .is_ok());
         let signed_owner = prepared.signed_source_owner().expect("signed owner source");
         assert!(
@@ -2752,7 +2884,7 @@ mod declared_text_ingress_tests {
             noble_kernel::words::Binding::Stack(alloc::vec![noble_kernel::types::Ty::Bool]);
         assert!(
             compiler
-                .prepare_from(&changed, None, compiler.functions, false, false, true)
+                .prepare_from(&changed, compiler.functions, false, false, true)
                 .is_err(),
             "fresh or foreign self Inst cannot dispatch to checked owner"
         );
@@ -2845,7 +2977,7 @@ mod signed_dispatch_tests {
         submission: &noble_kernel::execution::Submission,
     ) -> Result<super::Prepared, Diagnostic> {
         let compiler = Compiler::new();
-        compiler.prepare_from(submission, None, compiler.functions, false, false, true)
+        compiler.prepare_from(submission, compiler.functions, false, false, true)
     }
 
     fn prepared(

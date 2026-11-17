@@ -351,6 +351,14 @@ fn start(
     compiler: &mut super::Compiler,
     work: &mut super::Work,
 ) -> Result<(Layout, alloc::vec::Vec<Arena>), crate::Diagnostic> {
+    let is_live = submission
+        .environment
+        .effects
+        .contains(&noble_kernel::types::EffId(3));
+    let is_core_live = compiler.live || compiler.declared_live;
+    let has_checked_i64 = submission.environment.has_checked_i64();
+    let has_nominals = !submission.environment.nominals.is_empty()
+        || !submission.environment.generic_variants.is_empty();
     let body_count = submission.definitions.len().saturating_add(1);
     let mut programs = alloc::vec::Vec::with_capacity(body_count);
     let mut arenas = alloc::vec::Vec::with_capacity(body_count);
@@ -411,19 +419,15 @@ fn start(
         declared_text: compiler.declared_text,
         worker_inputs: compiler.worker_inputs,
         worker_interruption: compiler.worker_interruption,
-        live: submission
-            .environment
-            .effects
-            .contains(&noble_kernel::types::EffId(3)),
-        core_live: compiler.live || compiler.declared_live,
+        live: is_live,
+        core_live: is_core_live,
         live_slots: submission.environment.live_slots,
         live_test_hosts: submission.environment.live_test_hosts,
         live_sites: alloc::vec::Vec::new(),
         text_cursor: submission.environment.text_cursor,
         calculator: submission.environment.calculator,
-        checked_i64: submission.environment.has_checked_i64(),
-        has_nominals: !submission.environment.nominals.is_empty()
-            || !submission.environment.generic_variants.is_empty(),
+        checked_i64: has_checked_i64,
+        has_nominals,
         has_core_emit: false,
         has_core_abort: false,
         has_text_byte: false,

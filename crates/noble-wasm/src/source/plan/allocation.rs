@@ -10,12 +10,16 @@ fn signature(
     effects: &noble_kernel::types::EffSet,
     work: &mut super::super::Work,
 ) -> Result<super::Program, crate::Diagnostic> {
+    let input_signature = attempt!(compiler.signature(input, work));
+    let output_signature = attempt!(compiler.signature(output, work));
+    let effect_mask = attempt!(super::effect_mask(effects));
+    let has_logical = compiler.live_slots || compiler.worker_inputs;
     Ok(super::Program {
         entry: 0,
-        input: attempt!(compiler.signature(input, work)),
-        output: attempt!(compiler.signature(output, work)),
-        effects: attempt!(super::effect_mask(effects)),
-        logical: (compiler.live_slots || compiler.worker_inputs).then(|| super::ProgramTypes {
+        input: input_signature,
+        output: output_signature,
+        effects: effect_mask,
+        logical: has_logical.then(|| super::ProgramTypes {
             stack_in: input.to_vec(),
             stack_out: output.to_vec(),
             effects: effects.clone(),

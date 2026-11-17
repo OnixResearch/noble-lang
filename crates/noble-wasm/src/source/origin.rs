@@ -46,51 +46,80 @@ enum Value {
     },
 }
 
+// Every decision below that branches and then continues is made by a helper
+// over copied values: no borrow of the selected target or of a looked-up
+// program is live across a join of two continuing paths.
 fn action(
     selected: &CheckedSelectedTarget<'_>,
     plan: &Layout,
     program_index: usize,
-    operation: &super::plan::Operation,
+    node: NodeId,
+    operation: Action,
 ) -> Option<OriginAction> {
-    let result = match operation.action {
-        Action::I64(value) => OriginAction::I64(value),
-        Action::Word(0) => OriginAction::Dup,
-        Action::Word(1) => OriginAction::Drop,
-        Action::Word(2) => OriginAction::Swap,
-        Action::Word(3) if selected.is_generated_operation(operation.node) => OriginAction::Dip,
-        Action::Word(4) => OriginAction::Add,
-        Action::Word(5) => OriginAction::Sub,
-        Action::Word(6) => OriginAction::Mul,
-        Action::Word(10) => OriginAction::Run,
-        Action::Word(9) => OriginAction::Compose,
-        Action::Program(index) if index < plan.programs.len() => OriginAction::StaticProgram(index),
-        Action::Quote(input, output, witness) if program_index != plan.root => {
-            let site = selected.checked_quote_site(operation.node).ok()?;
-            let is_program_operand = match site.interface().stack_in.last()? {
-                Ty::I64 => false,
-                Ty::Program(_, _, effects) if effects.is_empty() => true,
-                _ => return None,
-            };
-            OriginAction::Quote {
+    match operation {
+        Action::I64(value) => Some(OriginAction::I64(value)),
+        Action::Word(0) => Some(OriginAction::Dup),
+        Action::Word(1) => Some(OriginAction::Drop),
+        Action::Word(2) => Some(OriginAction::Swap),
+        Action::Word(3) => selected
+            .is_generated_operation(node)
+            .then_some(OriginAction::Dip),
+        Action::Word(4) => Some(OriginAction::Add),
+        Action::Word(5) => Some(OriginAction::Sub),
+        Action::Word(6) => Some(OriginAction::Mul),
+        Action::Word(10) => Some(OriginAction::Run),
+        Action::Word(9) => Some(OriginAction::Compose),
+        Action::Program(index) => {
+            (index < plan.programs.len()).then_some(OriginAction::StaticProgram(index))
+        }
+        Action::Quote(input, output, witness) => {
+            if program_index == plan.root {
+                return None;
+            }
+            let site = selected.checked_quote_site(node).ok()?;
+            let is_program_operand = quote_operand(site.interface().stack_in.last()?)?;
+            Some(OriginAction::Quote {
                 input,
                 output,
                 witness,
                 program_operand: is_program_operand,
-            }
+            })
         }
-        Action::Call(index, identity)
-            if program_index == plan.root
-                && identity == selected.definition_id().identity()
-                && plan
-                    .definition_roots
-                    .first()
-                    .is_some_and(|first| *first == index) =>
-        {
-            OriginAction::CallSelected(index)
+        Action::Call(index, identity) => {
+            let is_root = program_index == plan.root;
+            let is_selected = identity == selected.definition_id().identity();
+            let is_first_root = first_root_is(&plan.definition_roots, index);
+            selected_call(is_root, is_selected, is_first_root, index)
         }
-        _ => return None,
-    };
-    Some(result)
+        // Every other action has no selected-origin lowering, so the origin is refused.
+        _ => None,
+    }
+}
+
+/// Whether a quotation captures a Program operand, refusing other captures.
+fn quote_operand(captured: &Ty) -> Option<bool> {
+    match captured {
+        Ty::I64 => Some(false),
+        Ty::Program(_, _, effects) => effects.is_empty().then_some(true),
+        _ => None,
+    }
+}
+
+/// Whether the first emitted definition root is program `index`.
+fn first_root_is(definition_roots: &[usize], index: usize) -> bool {
+    definition_roots
+        .first()
+        .is_some_and(|first| *first == index)
+}
+
+/// The selected call of the selection wrapper, when every condition holds.
+fn selected_call(
+    is_root: bool,
+    is_selected: bool,
+    is_first_root: bool,
+    index: usize,
+) -> Option<OriginAction> {
+    (is_root && is_selected && is_first_root).then_some(OriginAction::CallSelected(index))
 }
 
 // A selected target holds borrowed source state, so every walk that consults
@@ -112,9 +141,8 @@ fn programs(selected: &CheckedSelectedTarget<'_>, plan: &Layout) -> Option<Vec<O
 
 /// Lower the programs from `program_index` on, after `count` earlier operations.
 #[expect(
-    tigerstyle::compound_condition,
     tigerstyle::no_recursion,
-    reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation; the recursion follows the structure of an already checked, size-bounded input."
+    reason = "Owner: noble-wasm-maintainers; the recursion follows the structure of an already checked, size-bounded input."
 )]
 fn programs_from(
     selected: &CheckedSelectedTarget<'_>,
@@ -123,39 +151,93 @@ fn programs_from(
     count: usize,
     mut result: Vec<OriginProgram>,
 ) -> Option<Vec<OriginProgram>> {
+    let is_selection = program_index == plan.root;
+    let count = match program_visit(plan, program_index, count, is_selection) {
+        ProgramVisit::End => return Some(result),
+        ProgramVisit::Refuse => return None,
+        ProgramVisit::Lower(count) => count,
+    };
+    let operations = operations_from(
+        selected,
+        plan,
+        program_index,
+        0,
+        Vec::with_capacity(plan.programs[program_index].operations.len()),
+    )?;
+    result.push(lowered_program(
+        plan,
+        program_index,
+        is_selection,
+        operations,
+    ));
+    programs_from(selected, plan, program_index + 1, count, result)
+}
+
+/// How `programs_from` proceeds at one program index.
+enum ProgramVisit {
+    End,
+    Refuse,
+    Lower(usize),
+}
+
+/// Check program `program_index`, after `count` earlier operations, before lowering it.
+#[expect(
+    tigerstyle::compound_condition,
+    reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
+)]
+fn program_visit(
+    plan: &Layout,
+    program_index: usize,
+    count: usize,
+    is_selection: bool,
+) -> ProgramVisit {
     let Some(program) = plan.programs.get(program_index) else {
-        return Some(result);
+        return ProgramVisit::End;
     };
     if program.operations.is_empty()
         || program.effects != 0
         || program.depth > MAX_ORIGIN_DEPTH as u32
         || program.leaves > MAX_ORIGIN_OPERATIONS as u32
     {
-        return None;
+        return ProgramVisit::Refuse;
     }
-    let count = count.checked_add(program.operations.len())?;
+    let Some(count) = count.checked_add(program.operations.len()) else {
+        return ProgramVisit::Refuse;
+    };
     if count > MAX_ORIGIN_OPERATIONS {
-        return None;
+        return ProgramVisit::Refuse;
     }
-    let source_artifact = if program_index == plan.root {
+    let is_single_call = is_single_call(&program.operations);
+    if is_selection && !is_single_call {
+        return ProgramVisit::Refuse;
+    }
+    ProgramVisit::Lower(count)
+}
+
+/// Whether a program is exactly one call, as the selection wrapper must be.
+fn is_single_call(operations: &[super::plan::Operation]) -> bool {
+    operations.len() == 1 && matches!(operations[0].action, Action::Call(..))
+}
+
+/// The selection wrapper or a definition body, by whether a program is the root.
+fn artifact_of(is_selection: bool) -> OriginSource {
+    if is_selection {
         OriginSource::Selection
     } else {
         OriginSource::Definition
-    };
-    if source_artifact == OriginSource::Selection
-        && (program.operations.len() != 1
-            || !matches!(program.operations[0].action, Action::Call(..)))
-    {
-        return None;
     }
-    let operations = operations_from(
-        selected,
-        plan,
-        program_index,
-        0,
-        Vec::with_capacity(program.operations.len()),
-    )?;
-    result.push(OriginProgram {
+}
+
+/// The lowered origin of program `program_index` with its lowered operations.
+fn lowered_program(
+    plan: &Layout,
+    program_index: usize,
+    is_selection: bool,
+    operations: Vec<OriginOperation>,
+) -> OriginProgram {
+    let source_artifact = artifact_of(is_selection);
+    let program = &plan.programs[program_index];
+    OriginProgram {
         source_artifact,
         program_index,
         entry: program.entry,
@@ -164,8 +246,7 @@ fn programs_from(
         output_signature: program.output,
         effect_mask: program.effects,
         operations,
-    });
-    programs_from(selected, plan, program_index + 1, count, result)
+    }
 }
 
 /// Lower the operations of one program from `ordinal` on.
@@ -196,13 +277,40 @@ fn operation_at(
     ordinal: usize,
     prior: &[OriginOperation],
 ) -> Option<OriginOperation> {
+    let shape = operation_shape(plan, program_index, ordinal, prior)?;
+    let action = action(selected, plan, program_index, shape.node, shape.action)?;
+    if shape.is_selection {
+        if !is_selected_call(shape.node, action) {
+            return None;
+        }
+        return Some(lowered_operation(shape, action, None));
+    }
+    let site = selected.checked_operation_site(shape.node).ok()?;
+    Some(lowered_operation(shape, action, Some(site)))
+}
+
+/// The copied facts of one operation that survive its table and duplicate checks.
+#[derive(Clone, Copy)]
+struct OperationShape {
+    node: NodeId,
+    action: Action,
+    ordinal: u32,
+    table_entry: u32,
+    input: u32,
+    output: u32,
+    effects: u32,
+    is_selection: bool,
+}
+
+/// Check operation `ordinal` of a program against its table span and `prior` nodes.
+fn operation_shape(
+    plan: &Layout,
+    program_index: usize,
+    ordinal: usize,
+    prior: &[OriginOperation],
+) -> Option<OperationShape> {
     let program = &plan.programs[program_index];
     let operation = &program.operations[ordinal];
-    let source_artifact = if program_index == plan.root {
-        OriginSource::Selection
-    } else {
-        OriginSource::Definition
-    };
     let ordinal = u32::try_from(ordinal).ok()?;
     let table_entry = program.entry.checked_add(ordinal)?;
     let node = operation.node;
@@ -215,30 +323,44 @@ fn operation_at(
     if operation.effects != 0 {
         return None;
     }
-    let action = action(selected, plan, program_index, operation)?;
-    let site = if source_artifact == OriginSource::Selection {
-        if operation.node != NodeId(0) || !matches!(action, OriginAction::CallSelected(..)) {
-            return None;
-        }
-        None
-    } else {
-        Some(selected.checked_operation_site(operation.node).ok()?)
-    };
-    Some(OriginOperation {
-        node: operation.node,
+    Some(OperationShape {
+        node,
+        action: operation.action,
+        ordinal,
+        table_entry,
+        input: operation.input,
+        output: operation.output,
+        effects: operation.effects,
+        is_selection: program_index == plan.root,
+    })
+}
+
+/// Whether the selection wrapper's only operation is its selected call at node 0.
+fn is_selected_call(node: NodeId, action: OriginAction) -> bool {
+    node == NodeId(0) && matches!(action, OriginAction::CallSelected(..))
+}
+
+/// The lowered origin of one checked operation and its lexical site, if any.
+fn lowered_operation(
+    shape: OperationShape,
+    action: OriginAction,
+    site: Option<noble_contracts::source::proof::CheckedOperationSite>,
+) -> OriginOperation {
+    OriginOperation {
+        node: shape.node,
         lexical_node: site.as_ref().map(|site| site.lexical_node),
         authored_span: site.as_ref().and_then(|site| site.authored_span),
         generated: site
             .as_ref()
             .is_some_and(|site| site.generated_witness.is_some()),
         generated_witness: site.and_then(|site| site.generated_witness),
-        ordinal,
-        table_entry,
-        input_signature: operation.input,
-        output_signature: operation.output,
-        effect_mask: operation.effects,
+        ordinal: shape.ordinal,
+        table_entry: shape.table_entry,
+        input_signature: shape.input,
+        output_signature: shape.output,
+        effect_mask: shape.effects,
         action,
-    })
+    }
 }
 
 /// Record each static quotation's lexical body node, visiting the operations
@@ -254,23 +376,57 @@ fn quotation_bodies(
     ordinal: usize,
     mut body_nodes: Vec<Option<u32>>,
 ) -> Option<Vec<Option<u32>>> {
-    let Some(origin) = result.get(program) else {
-        return Some(body_nodes);
-    };
-    let Some(operation) = origin.operations.get(ordinal) else {
-        return quotation_bodies(selected, result, program + 1, 0, body_nodes);
-    };
-    if let OriginAction::StaticProgram(index) = operation.action {
-        let node = operation.lexical_node?;
-        if !matches!(
-            selected.checked_lexical_node(node).ok()?.kind,
-            CheckedLexicalKind::Quotation(_)
-        ) || body_nodes.get_mut(index)?.replace(node).is_some()
-        {
-            return None;
+    match quotation_cursor(result, program, ordinal) {
+        QuotationCursor::End => Some(body_nodes),
+        QuotationCursor::NextProgram => {
+            quotation_bodies(selected, result, program + 1, 0, body_nodes)
+        }
+        QuotationCursor::NextOperation => {
+            quotation_bodies(selected, result, program, ordinal + 1, body_nodes)
+        }
+        QuotationCursor::Static { index, node } => {
+            let node = node?;
+            let kind = selected.checked_lexical_node(node).ok()?.kind;
+            if !is_quotation(kind) {
+                return None;
+            }
+            let slot = body_nodes.get_mut(index)?;
+            if slot.replace(node).is_some() {
+                return None;
+            }
+            quotation_bodies(selected, result, program, ordinal + 1, body_nodes)
         }
     }
-    quotation_bodies(selected, result, program, ordinal + 1, body_nodes)
+}
+
+/// Where the quotation-body walk stands at one program and operation.
+enum QuotationCursor {
+    End,
+    NextProgram,
+    NextOperation,
+    Static { index: usize, node: Option<u32> },
+}
+
+/// Classify operation `ordinal` of program `program` for the quotation-body walk.
+fn quotation_cursor(result: &[OriginProgram], program: usize, ordinal: usize) -> QuotationCursor {
+    let Some(origin) = result.get(program) else {
+        return QuotationCursor::End;
+    };
+    let Some(operation) = origin.operations.get(ordinal) else {
+        return QuotationCursor::NextProgram;
+    };
+    match operation.action {
+        OriginAction::StaticProgram(index) => QuotationCursor::Static {
+            index,
+            node: operation.lexical_node,
+        },
+        _ => QuotationCursor::NextOperation,
+    }
+}
+
+/// Whether a checked lexical node is a quotation.
+fn is_quotation(kind: CheckedLexicalKind<'_>) -> bool {
+    matches!(kind, CheckedLexicalKind::Quotation(_))
 }
 
 /// Bind the programs from `index` on to their lexical bodies.
@@ -304,29 +460,31 @@ fn bind_body(
     program: &mut OriginProgram,
 ) -> Option<()> {
     let named = plan.definition_roots[0];
-    let lexical_body = if program.program_index == plan.root {
-        if body_nodes[program.program_index].is_some() {
+    let index = program.program_index;
+    if index == plan.root {
+        if body_nodes[index].is_some() {
             return None;
         }
         return Some(());
-    } else if program.program_index == named {
-        if body_nodes[program.program_index].is_some() {
+    }
+    if index == named {
+        if body_nodes[index].is_some() {
             return None;
         }
-        selected.lexical_body()
-    } else {
-        let body_node = body_nodes[program.program_index]?;
-        program.body_node = Some(body_node);
-        let CheckedLexicalKind::Quotation(body) =
-            selected.checked_lexical_node(body_node).ok()?.kind
-        else {
-            return None;
-        };
-        body
+        return follows_checked_body(selected.lexical_body(), &program.operations);
+    }
+    let body_node = body_nodes[index]?;
+    program.body_node = Some(body_node);
+    let CheckedLexicalKind::Quotation(body) = selected.checked_lexical_node(body_node).ok()?.kind
+    else {
+        return None;
     };
-    if lexical_body.len() != program.operations.len()
-        || !follows_lexical_body(lexical_body, &program.operations)
-    {
+    follows_checked_body(body, &program.operations)
+}
+
+/// `Some(())` when the operations follow the lexical body exactly.
+fn follows_checked_body(lexical_body: &[u32], operations: &[OriginOperation]) -> Option<()> {
+    if lexical_body.len() != operations.len() || !follows_lexical_body(lexical_body, operations) {
         return None;
     }
     Some(())
@@ -414,10 +572,9 @@ fn execute(
     reason = "Owner: noble-wasm-maintainers; the bounded origin interpreter threads its program table, layout, value stack, recursion guard, depth, static cache and step meter explicitly through each recursive step."
 )]
 #[expect(
-    tigerstyle::function_length,
     tigerstyle::mutating_input_in_pure,
     tigerstyle::too_many_parameters,
-    reason = "Owner: noble-wasm-maintainers; the function keeps one ordered pass in a single reviewable unit; splitting it would separate each step from its bounds checks; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+    reason = "Owner: noble-wasm-maintainers; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
 )]
 #[expect(
     tigerstyle::borrowed_argument_types,
@@ -437,14 +594,63 @@ fn execute_operation(
     if *steps > MAX_REPLAY_STEPS {
         return None;
     }
+    apply_operation(
+        programs,
+        plan,
+        operation,
+        stack,
+        active,
+        level,
+        static_programs,
+        steps,
+    )?;
+    if stack.len() > MAX_ORIGIN_OPERATIONS {
+        return None;
+    }
+    Some(())
+}
+
+/// Apply the stack effect of one replayed operation; every arm ends the function.
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Owner: noble-wasm-maintainers; the bounded origin interpreter threads its program table, layout, value stack, recursion guard, depth, static cache and step meter explicitly through each recursive step."
+)]
+#[expect(
+    tigerstyle::function_length,
+    tigerstyle::mutating_input_in_pure,
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-wasm-maintainers; the function keeps one ordered pass in a single reviewable unit; splitting it would separate each step from its bounds checks; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-wasm-maintainers; the replayed operand stack is pushed and popped, so it needs the growable vector."
+)]
+fn apply_operation(
+    programs: &[OriginProgram],
+    plan: &Layout,
+    operation: &OriginOperation,
+    stack: &mut Vec<Value>,
+    active: &mut [usize; MAX_ORIGIN_DEPTH],
+    level: usize,
+    static_programs: &mut [Option<Rc<OriginProgramValue>>],
+    steps: &mut usize,
+) -> Option<()> {
     match operation.action {
-        OriginAction::I64(value) => stack.push(Value::I64(OriginI64::Fixed {
-            value,
-            recipe: Rc::new(OriginFixedExpression::Literal(value)),
-        })),
-        OriginAction::Dup => stack.push(stack.last()?.clone()),
+        OriginAction::I64(value) => {
+            stack.push(Value::I64(OriginI64::Fixed {
+                value,
+                recipe: Rc::new(OriginFixedExpression::Literal(value)),
+            }));
+            Some(())
+        }
+        OriginAction::Dup => {
+            let top = stack.last()?.clone();
+            stack.push(top);
+            Some(())
+        }
         OriginAction::Drop => {
             stack.pop()?;
+            Some(())
         }
         OriginAction::Swap => {
             let len = stack.len();
@@ -452,6 +658,7 @@ fn execute_operation(
                 return None;
             }
             stack.swap(len - 1, len - 2);
+            Some(())
         }
         OriginAction::Dip => {
             let (helper, _) = program_value(stack.pop()?)?;
@@ -470,6 +677,7 @@ fn execute_operation(
                 steps,
             )?;
             stack.push(hidden);
+            Some(())
         }
         OriginAction::Add | OriginAction::Sub | OriginAction::Mul => {
             let Value::I64(OriginI64::Fixed {
@@ -486,12 +694,7 @@ fn execute_operation(
             else {
                 return None;
             };
-            let (value, kind) = match operation.action {
-                OriginAction::Add => (left.wrapping_add(right), OriginFixedArithmetic::Add),
-                OriginAction::Sub => (left.wrapping_sub(right), OriginFixedArithmetic::Sub),
-                OriginAction::Mul => (left.wrapping_mul(right), OriginFixedArithmetic::Mul),
-                _ => return None,
-            };
+            let (value, kind) = fixed_arithmetic(operation.action, left, right)?;
             let (left_nodes, left_depth) = fixed_dimensions(&left_recipe);
             let (right_nodes, right_depth) = fixed_dimensions(&right_recipe);
             let nodes = left_nodes.checked_add(right_nodes)?.checked_add(1)?;
@@ -509,6 +712,7 @@ fn execute_operation(
                     depth,
                 }),
             }));
+            Some(())
         }
         OriginAction::StaticProgram(program_index) => {
             let slot = static_programs.get_mut(program_index)?;
@@ -525,19 +729,12 @@ fn execute_operation(
                 })
                 .clone();
             stack.push(Value::Program { result, depth });
+            Some(())
         }
         OriginAction::Quote {
             program_operand, ..
         } => {
-            let (operand, depth) = if program_operand {
-                let (operand, depth) = program_value(stack.pop()?)?;
-                (OriginOperand::Program(operand), depth.checked_add(1)?)
-            } else {
-                let Value::I64(operand) = stack.pop()? else {
-                    return None;
-                };
-                (OriginOperand::I64(operand), 1)
-            };
+            let (operand, depth) = quoted_operand(stack.pop()?, program_operand)?;
             if depth > MAX_ORIGIN_DEPTH {
                 return None;
             }
@@ -549,6 +746,7 @@ fn execute_operation(
                 }),
                 depth,
             });
+            Some(())
         }
         OriginAction::Compose => {
             let (right, rdepth) = program_value(stack.pop()?)?;
@@ -566,13 +764,38 @@ fn execute_operation(
                 }),
                 depth,
             });
+            Some(())
         }
-        _ => return None,
+        // Run and the selected call are never replayed, so the origin is refused.
+        _ => None,
     }
-    if stack.len() > MAX_ORIGIN_OPERATIONS {
+}
+
+/// The folded value and recipe kind of one fixed arithmetic operation.
+fn fixed_arithmetic(
+    action: OriginAction,
+    left: i64,
+    right: i64,
+) -> Option<(i64, OriginFixedArithmetic)> {
+    match action {
+        OriginAction::Add => Some((left.wrapping_add(right), OriginFixedArithmetic::Add)),
+        OriginAction::Sub => Some((left.wrapping_sub(right), OriginFixedArithmetic::Sub)),
+        OriginAction::Mul => Some((left.wrapping_mul(right), OriginFixedArithmetic::Mul)),
+        // Only Add, Sub and Mul reach the fold.
+        _ => None,
+    }
+}
+
+/// The operand a quotation captures from `captured`, and the depth of the value it builds.
+fn quoted_operand(captured: Value, is_program_operand: bool) -> Option<(OriginOperand, usize)> {
+    if is_program_operand {
+        let (operand, depth) = program_value(captured)?;
+        return Some((OriginOperand::Program(operand), depth.checked_add(1)?));
+    }
+    let Value::I64(operand) = captured else {
         return None;
-    }
-    Some(())
+    };
+    Some((OriginOperand::I64(operand), 1))
 }
 
 #[expect(
@@ -677,24 +900,35 @@ fn replay_outputs(
 
 /// One returned stack entry: a constructed Program output, an I64, or a refusal.
 fn returned_output(ty: &Ty, value: &Value, stack_position: usize) -> Option<Option<OriginOutput>> {
-    if matches!(ty, Ty::Program(..)) {
-        let Value::Program { result, .. } = value else {
-            return None;
-        };
-        if matches!(result.as_ref(), OriginProgramValue::Static { .. }) {
-            // An installed static Program already has its own pinned
-            // source/index owner; it is not a constructed returned target.
-            return None;
-        }
-        return Some(Some(OriginOutput {
+    match ty {
+        Ty::Program(..) => program_output(value, stack_position),
+        Ty::I64 => i64_output(value),
+        _ => None,
+    }
+}
+
+/// A returned Program entry: a constructed output, or a refusal for anything else.
+fn program_output(value: &Value, stack_position: usize) -> Option<Option<OriginOutput>> {
+    let Value::Program { result, .. } = value else {
+        return None;
+    };
+    match result.as_ref() {
+        // An installed static Program already has its own pinned
+        // source/index owner; it is not a constructed returned target.
+        OriginProgramValue::Static { .. } => None,
+        _ => Some(Some(OriginOutput {
             stack_position,
             result: Rc::clone(result),
-        }));
+        })),
     }
-    if *ty != Ty::I64 || !matches!(value, Value::I64(_)) {
-        return None;
+}
+
+/// A returned I64 entry, which carries no output, or a refusal for anything else.
+fn i64_output(value: &Value) -> Option<Option<OriginOutput>> {
+    match value {
+        Value::I64(_) => Some(None),
+        Value::Program { .. } => None,
     }
-    Some(None)
 }
 
 #[expect(
@@ -734,9 +968,7 @@ fn bounded_graph_cells(
         let mut index = 0usize;
         let mut is_counted = false;
         while !is_counted && index < *constructed_count {
-            if let Some(prior) = &constructed[index] {
-                is_counted = Rc::ptr_eq(prior, value);
-            }
+            is_counted = is_same_cell(&constructed[index], value);
             index += 1;
         }
         if is_counted {
@@ -746,10 +978,16 @@ fn bounded_graph_cells(
         *constructed_count += 1;
         Some(false)
     }
+    /// Whether a recorded constructed cell is the allocation `value`.
+    fn is_same_cell(
+        prior: &Option<Rc<OriginProgramValue>>,
+        value: &Rc<OriginProgramValue>,
+    ) -> bool {
+        prior.as_ref().is_some_and(|prior| Rc::ptr_eq(prior, value))
+    }
     #[expect(
         tigerstyle::mutating_input_in_pure,
-        tigerstyle::no_recursion,
-        reason = "Owner: noble-wasm-maintainers; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the recursion follows the structure of an already checked, size-bounded input."
+        reason = "Owner: noble-wasm-maintainers; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
     )]
     fn static_body(
         index: usize,
@@ -767,12 +1005,26 @@ fn bounded_graph_cells(
         let mut at = 0usize;
         let mut outcome = Some(());
         while outcome.is_some() && at < operations.len() {
-            if let OriginAction::StaticProgram(child) = operations[at].action {
-                outcome = static_body(child, programs, seen, total);
-            }
+            outcome = static_child(operations[at].action, programs, seen, total);
             at += 1;
         }
         outcome
+    }
+    /// Count the static body a static-program operation installs, if it is one.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-wasm-maintainers; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    fn static_child(
+        action: OriginAction,
+        programs: &[OriginProgram],
+        seen: &mut [bool],
+        total: &mut usize,
+    ) -> Option<()> {
+        match action {
+            OriginAction::StaticProgram(child) => static_body(child, programs, seen, total),
+            _ => Some(()),
+        }
     }
     #[expect(
         tigerstyle::mutating_input_in_pure,
@@ -788,11 +1040,24 @@ fn bounded_graph_cells(
         if *nodes > MAX_ORIGIN_OPERATIONS || depth > MAX_ORIGIN_DEPTH {
             return None;
         }
-        if let OriginFixedExpression::Arithmetic { left, right, .. } = recipe.as_ref() {
-            fixed_recipe(left, depth + 1, nodes)?;
-            fixed_recipe(right, depth + 1, nodes)?;
+        match recipe.as_ref() {
+            OriginFixedExpression::Arithmetic { left, right, .. } => {
+                fixed_recipe(left, depth + 1, nodes)?;
+                fixed_recipe(right, depth + 1, nodes)
+            }
+            OriginFixedExpression::Literal(_) => Some(()),
         }
-        Some(())
+    }
+    /// Count the fixed recipe a captured scalar carries, if it has one.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-wasm-maintainers; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    fn scalar_recipe(scalar: &OriginI64, fixed_nodes: &mut usize) -> Option<()> {
+        match scalar {
+            OriginI64::Fixed { recipe, .. } => fixed_recipe(recipe, 1, fixed_nodes),
+            OriginI64::RootInput(_) => Some(()),
+        }
     }
     match value.as_ref() {
         OriginProgramValue::Static { program_index, .. } => {
@@ -804,9 +1069,7 @@ fn bounded_graph_cells(
             }
             match operand {
                 OriginOperand::I64(scalar) => {
-                    if let OriginI64::Fixed { recipe, .. } = scalar {
-                        fixed_recipe(recipe, 1, fixed_nodes)?;
-                    }
+                    scalar_recipe(scalar, fixed_nodes)?;
                     charge(total, 3)
                 }
                 OriginOperand::Program(child) => {
