@@ -488,8 +488,11 @@ for (const name of subjectNames) {
 }
 for (const [control, outcome] of [['exhausted-address-space', 'resource-exhausted'], ['exhausted-wall-clock', 'timeout']]) {
   const result = controlOutcome(positive.report, control);
-  assert.ok(result?.passed && result.observed.admission === outcome, `${control} did not end in ${outcome}`);
-  pos[control] = { observed: result.observed.admission, passed: result.passed };
+  const verdict = result?.observed?.checker?.verdict?.verdict;
+  assert.ok(result?.passed && result.input === 'presented' && verdict === outcome,
+    `${control} on the presented proof did not end in ${outcome}`);
+  pos[control] = { checker_verdict: verdict, checker_exit_code: result.observed.checker.exit_code,
+    elapsed_ms: result.observed.checker.elapsed_ms, passed: result.passed };
 }
 const replay = admit('replay', ['--replay', positive.runDir]);
 const rep = record('replay', replay, { outcome: 'accepted', producer_invoked: false });
