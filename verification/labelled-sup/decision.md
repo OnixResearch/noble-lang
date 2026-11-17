@@ -40,3 +40,43 @@ Re-open this model decision if the v3 rule contract or vendored inets pin change
 The runtime gate above made #37's backend decision a prerequisite and stated that a #37 NO-GO leaves this runtime arm unavailable. #37 has since recorded **NO-GO for continued runtime adoption** in [`net-decision.md`](../ngraph/net-decision.md): the opt-in revision-3 net passes its finite correctness gates but runs about 15x slower than packed execution against the frozen 1.15 speed threshold. There is therefore no adopted net runtime to extend with labelled DUP/SUP agents, and the #105 runtime arm is recorded as **NO-GO** under the unchanged criteria. No reducer, lowerer, differential or measurement was added for it, and none is claimed.
 
 The model-only GO above is unchanged. Reopen the runtime arm only if #37 reopens under a new pre-registered workload or implementation hypothesis and records a runtime GO; the unchanged #105 acceptance criteria and exact v3 identities then apply, with a separate reviewed GO/NO-GO.
+
+## Observation-contract change (2026-11-17, #135)
+
+**Selected: option (a), per-root collapse only.** The model does not promise a
+joint observation of several roots. The
+[contract](../../docs/labelled-dup-sup-v1.md#selected-multi-root-contract-135-per-root-collapse-only)
+now distinguishes labelled tree readback, label-erasing per-root marginals,
+and the unsupported joint-compositionality and no-nested-label-preservation
+claims. The different-label fixture's outputs carry label 5 and are no longer
+described as independent. This corrects documentation, not the reduction rules
+or any existing theorem.
+
+Eight additional finite-example theorems are closed with kernel-checked
+`decide` and inventoried. A focused pinned Lean 4.35 build of NetLabelled
+completed without warnings; an external throwaway script printed each new
+theorem's axioms (only propext and Quot.sound) and executed these observations:
+
+| Net | Observed per-root scalar alternatives |
+|---|---|
+| differentLabelFixture | some [[3,7],[3,7]] |
+| separateSupRootsFixture | some [[3,7],[3,7]] |
+| corrAdd | some [[6,14]] |
+| separateSupAddFixture | some [[6,14]] |
+| nestedEqualAddFixture | some [[11,12,23]] |
+
+The printed observations are execution smoke evidence; the corresponding
+inventoried theorems are the kernel-checked finite evidence. Neither establishes
+a universal joint semantics, a joint projection law, or preservation of an
+absence of nested equal labels. Reopen those claims only under the explicit
+predicates/semantics and proof or counterexample obligations in the contract.
+Option (b)'s joint-collapse fixtures are not applicable to this selection.
+
+Reproduce the focused proof check in the pinned environment with
+`cd proofs/foundation && lake build NobleFoundation.NetLabelled`; print axioms
+of the eight theorems named in the foundation README's #135 row from an external
+Lean file importing NobleFoundation.NetLabelled. The foundation claim-table
+audit also passed with no diagnostics. Source-bound receipt refresh and the
+shared full-foundation audit remain integration checks, not evidence produced
+by the focused smoke. No immutable receipt, frozen cap, rule, observation
+implementation, #37 backend gate, or Rust/Wasm path was changed.

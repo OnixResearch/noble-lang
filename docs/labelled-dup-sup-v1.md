@@ -66,6 +66,61 @@ collapse(sup L a b)    = collapse(a) ++ collapse(b)
 
 Thus the label controls interaction, while observation preserves the tree's left-to-right branch order and ignores labels when producing scalar results. `opSupFixture` checks `add 2` over `sup 7{3,5}` collapses to `[5,7]`; `op2SupFixture` checks `add` over `sup 7{3,5}` with the other operand `10` collapses to `[13,15]`.
 
+### Selected multi-root contract (#135): per-root collapse only
+
+**Decision: option (a).** The existing API promises a complete ordered list of
+per-root trees from `observe`, and per-root scalar alternatives from
+`collapseObserve`. It makes **no joint observation claim** about several roots.
+There is no joint-collapse API, output-tuple enumeration, product/independence
+guarantee, joint-to-marginal projection theorem, or probabilistic interpretation.
+Issue #135 step 3 is conditional on option (b) and is not selected here.
+
+`observe` retains labels in each tree. `collapseObserve` then maps `collapse`
+over the roots separately: labels are erased, branch order and repeated scalar
+values are retained, and no relation between different roots' choices is
+returned. These lists are marginals in the nondeterministic sense, not weighted
+distributions. In particular, `[[3,7],[3,7]]` does not specify whether simultaneous
+outputs are `(3,3)` and `(7,7)` or the four Cartesian-product tuples. Neither
+alignment by list position nor a Cartesian product is part of this contract.
+
+The two outputs of `differentLabelFixture` both carry label 5; they are not
+independent under later interaction. OP2-SUP duplicates the other operand with
+the encountered label, and an equal-label DUP/SUP projects matching branches.
+The same correlation occurs when separately constructed sibling SUPs meet:
+equal labels, not a shared origin, control that interaction. The following are
+kernel-checked **finite examples**, not universal joint-semantics results:
+
+| Example | Checked result | Theorem |
+|---|---|---|
+| Different-label duplication, two roots | Per-root alternatives [[3,7],[3,7]] | `different_label_fixture_marginals` |
+| Two separately built SUP 5 roots | Same labelled trees and per-root alternatives | `separate_sup_roots_labelled_result`, `separate_sup_roots_marginals` |
+| corrAdd: DUP 4 copies SUP 5 {3,7}, then adds its copies | One root with alternatives [6,14], not [6,10,10,14] | `corr_add_ordered_collapse` |
+| Two separately built SUP 5 {3,7} operands, then added | One root with alternatives [6,14] | `separate_sup_add_ordered_collapse` |
+| Nested SUP 7 (SUP 7 1 2) 3, added to SUP 7 10 20 | One root with alternatives [11,12,23] | `nested_equal_add_ordered_collapse` |
+| Input/tree acceptance of those finite examples | All four nets and the nested equal-label tree validate | `correlation_fixtures_validate`, `nested_equal_tree_validates` |
+
+Nested equal labels are allowed within the unchanged depth/size limits.
+The retained result 12 rules out interpreting all occurrences of label 7 as
+one global bit: that interpretation would select either 1 with 10 or 3 with
+20, omitting 2 with 10. We do not replace that failed interpretation with an
+unproved path-fresh joint semantics.
+
+**Unsupported: step-4 joint compositionality.** The two addition results above
+are checked, but they do not prove that addition maps over a joint observation
+of the pre-addition roots. Per-root collapse has no output-tuple relation to
+map over; choosing a Cartesian product would incorrectly introduce 10 in these
+examples. Reopen only with an explicitly selected joint semantics, a treatment
+of nested equal labels consistent with the rules (or a reviewed admission
+change), and kernel-checked composition and projection obligations. This is
+not a missing theorem of the selected per-root contract.
+
+**Unsupported: preservation of no nested equal labels (step 5).** No invariant
+or counterexample is established here for reduction from an input with no
+nested equal labels. The nested fixture starts with nesting and therefore
+does not settle that preservation question; validation itself does not enforce
+the premise. Reopen with a precise net/path predicate and either a rule-by-rule
+preservation proof or a validated, kernel-checked reduction counterexample.
+
 ## Trust boundary
 
 Proofs are checked by the pinned Lean 4.35 kernel against the byte-pinned vendored `proofs/inets/InteractionNets.lean` (provenance in `proofs/inets/UPSTREAM.json`) and this module. The generic inets results establish strong confluence for well-formed nets over this system, uniqueness of normal forms when reached, and the conditional reduction bound. They do **not** prove termination for every input, a source compiler, graph-to-net correspondence, Rust/Wasm behavior, allocator/scratch limits, or runtime scheduling. HVM3 `INTERS.md` is prior art for the labelled table only; its WIP status and all external performance claims are not Noble evidence.

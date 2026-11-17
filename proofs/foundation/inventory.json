@@ -5398,6 +5398,54 @@
       "claim": "different-label DUP nests the SUP value in both ordered output trees"
     },
     {
+      "name": "NobleFoundation.NetLabelled.correlation_fixtures_validate",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the separate-root, copied-addition, separate-addition and nested-equal addition nets pass existing validation"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.different_label_fixture_marginals",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "different-label duplication collapses separately to [3,7] at each root, without a joint claim"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.separate_sup_roots_labelled_result",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "separately constructed equal-label SUP roots read back as two labelled [3,7] trees"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.separate_sup_roots_marginals",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "separately constructed equal-label SUP roots have the same [3,7] per-root collapses as copied roots"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.corr_add_ordered_collapse",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "adding the two copies of SUP 5 made by DUP 4 collapses to [6,14]"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.separate_sup_add_ordered_collapse",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "adding two separately built SUP 5 operands collapses to [6,14]"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.nested_equal_tree_validates",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "the existing tree validator accepts the finite nested equal-label example"
+    },
+    {
+      "name": "NobleFoundation.NetLabelled.nested_equal_add_ordered_collapse",
+      "phase": 1,
+      "role": "fixture",
+      "claim": "nested equal-label addition retains [11,12,23], ruling out a single global bit for label 7 on this example"
+    },
+    {
       "name": "NobleFoundation.NetLabelled.op_sup_fixture_ordered_result",
       "phase": 1,
       "role": "fixture",

@@ -524,7 +524,9 @@ def observe (labels : List Nat) (fuel : Nat) (X : INet.XNet Symbol) : Option (Li
   else
     none
 
-/-- Read back and collapse each ordered boundary value. -/
+/-- Read back and collapse each ordered boundary value separately. These are
+per-root marginals, not output tuples or a joint observation: collapse erases
+labels and cannot retain cross-root branch correlation. -/
 def collapseObserve (labels : List Nat) (fuel : Nat) (X : INet.XNet Symbol) :
     Option (List (List (BitVec 64))) :=
   (observe labels fuel X).map (List.map collapse)
@@ -629,13 +631,56 @@ def equalLabelFixture : INet.XNet Symbol :=
     [(([0], 0), ([1], 0)), (([0], 1), ([2], 0)), (([0], 2), ([3], 0)),
       (([1], 1), ([4], 0)), (([1], 2), ([5], 0))]
 
-/-- Different-label DUP/SUP nesting, with two independent ordered outputs. -/
+/-- Different-label DUP/SUP nesting, with two ordered outputs carrying label 5.
+They are not independent choices: equal labels correlate when the outputs
+later meet through OP-SUP distribution and equal-label DUP/SUP projection. -/
 def differentLabelFixture : INet.XNet Symbol :=
   INet.XNet.ofWires
     [([0], .dupL 4), ([1], .sup 5), ([2], .num (word 3)), ([3], .num (word 7))]
     [([4], 0), ([5], 0)]
     [(([0], 0), ([1], 0)), (([0], 1), ([4], 0)), (([0], 2), ([5], 0)),
       (([1], 1), ([2], 0)), (([1], 2), ([3], 0))]
+
+/-- Two separately constructed SUPs with the same label, without shared origin. -/
+def separateSupRootsFixture : INet.XNet Symbol :=
+  INet.XNet.ofWires
+    [([0], .sup 5), ([1], .num (word 3)), ([2], .num (word 7)),
+      ([3], .sup 5), ([4], .num (word 3)), ([5], .num (word 7))]
+    [([6], 0), ([7], 0)]
+    [(([0], 0), ([6], 0)), (([0], 1), ([1], 0)), (([0], 2), ([2], 0)),
+      (([3], 0), ([7], 0)), (([3], 1), ([4], 0)), (([3], 2), ([5], 0))]
+
+/-- The issue #135 corrAdd net: copy SUP 5 with DUP 4 and add the copies. -/
+def corrAdd : INet.XNet Symbol :=
+  INet.XNet.ofWires
+    [([0], .dupL 4), ([1], .sup 5), ([2], .num (word 3)),
+      ([3], .num (word 7)), ([4], .op2 .add)]
+    [([5], 0)]
+    [(([0], 0), ([1], 0)), (([1], 1), ([2], 0)), (([1], 2), ([3], 0)),
+      (([0], 1), ([4], 0)), (([0], 2), ([4], 1)), (([4], 2), ([5], 0))]
+
+/-- Add separately constructed SUP 5 operands; equal-label correlation is
+controlled by labels, not by a shared duplication origin. -/
+def separateSupAddFixture : INet.XNet Symbol :=
+  INet.XNet.ofWires
+    [([0], .sup 5), ([1], .num (word 3)), ([2], .num (word 7)),
+      ([3], .sup 5), ([4], .num (word 3)), ([5], .num (word 7)), ([6], .op2 .add)]
+    [([7], 0)]
+    [(([0], 0), ([6], 0)), (([0], 1), ([1], 0)), (([0], 2), ([2], 0)),
+      (([3], 0), ([6], 1)), (([3], 1), ([4], 0)), (([3], 2), ([5], 0)),
+      (([6], 2), ([7], 0))]
+
+/-- Nested equal labels do not implement a single global bit per label:
+adding SUP 7 (SUP 7 1 2) 3 to SUP 7 10 20 retains the middle result 12. -/
+def nestedEqualAddFixture : INet.XNet Symbol :=
+  INet.XNet.ofWires
+    [([0], .sup 7), ([1], .sup 7), ([2], .num (word 1)),
+      ([3], .num (word 2)), ([4], .num (word 3)), ([5], .sup 7),
+      ([6], .num (word 10)), ([7], .num (word 20)), ([8], .op2 .add)]
+    [([9], 0)]
+    [(([0], 0), ([8], 0)), (([0], 1), ([1], 0)), (([0], 2), ([4], 0)),
+      (([1], 1), ([2], 0)), (([1], 2), ([3], 0)), (([5], 0), ([8], 1)),
+      (([5], 1), ([6], 0)), (([5], 2), ([7], 0)), (([8], 2), ([9], 0))]
 
 /-- One OP1/SUP interaction followed by both scalar branches. -/
 def opSupFixture : INet.XNet Symbol :=
@@ -728,6 +773,39 @@ theorem different_label_nesting_fixture :
     observe [4, 5] 4 differentLabelFixture =
       some [.sup 5 (.num (word 3)) (.num (word 7)),
         .sup 5 (.num (word 3)) (.num (word 7))] := by decide
+
+theorem correlation_fixtures_validate :
+    validate [5] separateSupRootsFixture = true ∧
+      validate [4, 5] corrAdd = true ∧
+      validate [5] separateSupAddFixture = true ∧
+      validate [7] nestedEqualAddFixture = true := by decide
+
+theorem different_label_fixture_marginals :
+    collapseObserve [4, 5] 4 differentLabelFixture =
+      some [[word 3, word 7], [word 3, word 7]] := by decide
+
+theorem separate_sup_roots_labelled_result :
+    observe [5] 0 separateSupRootsFixture =
+      some [.sup 5 (.num (word 3)) (.num (word 7)),
+        .sup 5 (.num (word 3)) (.num (word 7))] := by decide
+
+theorem separate_sup_roots_marginals :
+    collapseObserve [5] 0 separateSupRootsFixture =
+      some [[word 3, word 7], [word 3, word 7]] := by decide
+
+theorem corr_add_ordered_collapse :
+    collapseObserve [4, 5] 64 corrAdd = some [[word 6, word 14]] := by decide
+
+theorem separate_sup_add_ordered_collapse :
+    collapseObserve [5] 64 separateSupAddFixture = some [[word 6, word 14]] := by decide
+
+theorem nested_equal_tree_validates :
+    validateTree [7] (.sup 7 (.sup 7 (.num (word 1)) (.num (word 2)))
+      (.num (word 3))) = true := by decide
+
+theorem nested_equal_add_ordered_collapse :
+    collapseObserve [7] 64 nestedEqualAddFixture =
+      some [[word 11, word 12, word 23]] := by decide
 
 theorem op_sup_fixture_ordered_result :
     observe [7] 4 opSupFixture =
