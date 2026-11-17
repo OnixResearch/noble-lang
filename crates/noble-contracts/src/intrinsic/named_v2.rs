@@ -533,15 +533,24 @@ fn source_step(
     }
     Ok(())
 }
-#[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
-)]
+/// Verify the named v2 source graph in stage order: the subject, then its
+/// selected definition and call occurrences, then the two named steps.
+fn verify(goal: &ContractGoal, limits: Limits) -> Result<Graph<'_>, Diagnostic> {
+    let subject_body_span = verify_subject(goal, limits)?;
+    let (selected, selected_check) = verify_selected(goal, subject_body_span)?;
+    verify_steps(goal, selected, &selected_check, limits)?;
+    Ok(Graph {
+        first_use: &goal.subject.named_uses[1],
+        second_use: &goal.subject.named_uses[2],
+    })
+}
+/// The subject's shape, accepted submission and original source binding;
+/// returns the subject body's span in its original module.
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
-fn verify(goal: &ContractGoal, limits: Limits) -> Result<Graph<'_>, Diagnostic> {
+fn verify_subject(goal: &ContractGoal, limits: Limits) -> Result<Span, Diagnostic> {
     let subject = &goal.subject;
     let span = subject.source_span;
     if subject_shape_differs(goal) {
@@ -555,7 +564,6 @@ fn verify(goal: &ContractGoal, limits: Limits) -> Result<Graph<'_>, Diagnostic> 
     }
     let root = &subject.named_uses[0];
     let first_use = &subject.named_uses[1];
-    let second_use = &subject.named_uses[2];
     if root.definition_owner == first_use.definition_owner
         || root.module_index == first_use.module_index
     {
@@ -607,6 +615,26 @@ fn verify(goal: &ContractGoal, limits: Limits) -> Result<Graph<'_>, Diagnostic> 
             "selected subject body differs from original source",
         ));
     }
+    Ok(subject_body_span)
+}
+/// The selected subject definition, the accepted root invocation and the two
+/// ordered call occurrences inside the subject body at `subject_body_span`;
+/// returns the selected definition with its checked body.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+fn verify_selected(
+    goal: &ContractGoal,
+    subject_body_span: Span,
+) -> Result<(&execution::Definition, untrusted::Checked), Diagnostic> {
+    let subject = &goal.subject;
+    let span = subject.source_span;
+    let root = &subject.named_uses[0];
+    let first_use = &subject.named_uses[1];
+    let second_use = &subject.named_uses[2];
+    let accepted = &subject.accepted_submission;
+    let env = &accepted.environment;
     let Some(selected) = crate::scan::find_first(&accepted.definitions, |item| {
         item.definition == root.definition && item.identity == subject.definition_identity
     }) else {
@@ -648,6 +676,27 @@ fn verify(goal: &ContractGoal, limits: Limits) -> Result<Graph<'_>, Diagnostic> 
             "named call occurrence is outside ordered original subject body",
         ));
     }
+    Ok((selected, selected_check))
+}
+/// The two named steps: their source calls and typed occurrences, their fresh
+/// specializations of one original step, and that step's export.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+fn verify_steps(
+    goal: &ContractGoal,
+    selected: &execution::Definition,
+    selected_check: &untrusted::Checked,
+    limits: Limits,
+) -> Result<(), Diagnostic> {
+    let subject = &goal.subject;
+    let span = subject.source_span;
+    let root = &subject.named_uses[0];
+    let first_use = &subject.named_uses[1];
+    let second_use = &subject.named_uses[2];
+    let accepted = &subject.accepted_submission;
+    let env = &accepted.environment;
     source_call(goal, root, first_use, limits)?;
     source_call(goal, root, second_use, limits)?;
     unary_occurrence(first_use, selected_check.derivations.first(), span)?;
@@ -699,10 +748,7 @@ fn verify(goal: &ContractGoal, limits: Limits) -> Result<Graph<'_>, Diagnostic> 
             limits,
         )?;
     }
-    Ok(Graph {
-        first_use,
-        second_use,
-    })
+    Ok(())
 }
 /// Whether the subject is not a pure unary revision-2 subject with three
 /// named uses over two source modules.
@@ -1175,8 +1221,7 @@ fn statement(goal: &ContractGoal, graph: &Graph<'_>, limits: Limits) -> Result<S
     out.push_str("private theorem typedA : NamedV1.CodeTyped env entryA.body [.i64] [.i64] := by\n  exact .cons (.lit .i64) (.cons (NamedV1.OpTyped.add (s := [])) .nil)\n");
     out.push_str("private theorem typedB : NamedV1.CodeTyped env entryB.body [.i64] [.i64] := by\n  exact .cons (.lit .i64) (.cons (NamedV1.OpTyped.add (s := [])) .nil)\n");
     out.push_str("private theorem typedRoot : NamedV1.CodeTyped env root [.i64] [.i64] := by\n  exact .cons (NamedV1.OpTyped.call (entry := entryA) (s := []) (by rfl) (by simp [Entry.matches, entryA, useA]) typedA) (.cons (NamedV1.OpTyped.call (entry := entryB) (s := []) (by rfl) (by simp [Entry.matches, entryB, useB]) typedB) .nil)\n");
-    out.push_str("def subject : Subject :=\n  { provenance := caller, env, root, dependencies := [useA.slot, useB.slot], rank := 1,\n    closure, checkedEntries := by\n      intro entry he\n      simp only [env, List.mem_cons, List.mem_nil_iff, or_false] at he\n      rcases he with rfl | rfl\n      · exact typedA\n      · exact typedB,\n    input := [.i64], output := [.i64], typed := typedRoot }\n");
-    out.push_str("def claim : Prop := NobleContracts.NamedV2.exportedNamedClaim subject []\n  (fun before after params => NobleContracts.NamedV2.Holds₂ subject.env (.bool true) before after params)\n  (fun before after params => NobleContracts.NamedV2.Holds₂ subject.env (.eq (.output 0) (.add (.input 0) (.i64 2))) before after params)\nend NamedV2Obligation\n");
+    out = subject_and_claim(out);
     let is_within_work = u32::try_from(out.len()).is_ok_and(|len| len <= limits.work);
     let is_within_bytes = u64::try_from(out.len())
         .ok()
@@ -1189,6 +1234,22 @@ fn statement(goal: &ContractGoal, graph: &Graph<'_>, limits: Limits) -> Result<S
         ));
     }
     Ok(out)
+}
+/// `out` with the obligation's `subject` and `claim` definitions appended.
+/// Their non-ASCII Lean symbols (U+00B7 and U+2082) are appended as code
+/// points, because the extraction cannot print non-ASCII string literals.
+fn subject_and_claim(mut out: String) -> String {
+    out.push_str("def subject : Subject :=\n  { provenance := caller, env, root, dependencies := [useA.slot, useB.slot], rank := 1,\n    closure, checkedEntries := by\n      intro entry he\n      simp only [env, List.mem_cons, List.mem_nil_iff, or_false] at he\n      rcases he with rfl | rfl\n      ");
+    out = super::push_code_point(out, 0x00B7);
+    out.push_str(" exact typedA\n      ");
+    out = super::push_code_point(out, 0x00B7);
+    out.push_str(" exact typedB,\n    input := [.i64], output := [.i64], typed := typedRoot }\n");
+    out.push_str("def claim : Prop := NobleContracts.NamedV2.exportedNamedClaim subject []\n  (fun before after params => NobleContracts.NamedV2.Holds");
+    out = super::push_code_point(out, 0x2082);
+    out.push_str(" subject.env (.bool true) before after params)\n  (fun before after params => NobleContracts.NamedV2.Holds");
+    out = super::push_code_point(out, 0x2082);
+    out.push_str(" subject.env (.eq (.output 0) (.add (.input 0) (.i64 2))) before after params)\nend NamedV2Obligation\n");
+    out
 }
 /// Append the Lean `use` and `entry` definitions of one named occurrence.
 fn use_entry(mut out: String, name: &str, record: &NamedUseOrigin) -> Result<String, Diagnostic> {
@@ -1315,4 +1376,18 @@ fn call_slice(slice: &Form, index: usize) -> Result<(), Diagnostic> {
     operation(&call[1], "exec-literal-1", 0)?;
     operation(&call[2], "exec-add", 0)?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    /// The `subject` and `claim` templates as literals, before their non-ASCII
+    /// symbols moved to code points.
+    const SUBJECT: &str = "def subject : Subject :=\n  { provenance := caller, env, root, dependencies := [useA.slot, useB.slot], rank := 1,\n    closure, checkedEntries := by\n      intro entry he\n      simp only [env, List.mem_cons, List.mem_nil_iff, or_false] at he\n      rcases he with rfl | rfl\n      · exact typedA\n      · exact typedB,\n    input := [.i64], output := [.i64], typed := typedRoot }\n";
+    const CLAIM: &str = "def claim : Prop := NobleContracts.NamedV2.exportedNamedClaim subject []\n  (fun before after params => NobleContracts.NamedV2.Holds₂ subject.env (.bool true) before after params)\n  (fun before after params => NobleContracts.NamedV2.Holds₂ subject.env (.eq (.output 0) (.add (.input 0) (.i64 2))) before after params)\nend NamedV2Obligation\n";
+
+    #[test]
+    fn subject_and_claim_match_the_literal_templates() {
+        let emitted = super::subject_and_claim(alloc::string::String::from("prefix\n"));
+        assert_eq!(emitted, alloc::format!("prefix\n{SUBJECT}{CLAIM}"));
+    }
 }

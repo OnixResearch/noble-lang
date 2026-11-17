@@ -289,20 +289,25 @@ impl super::Session {
                 crate::invalid(tree.span, "signed owner has no module"),
             ));
         };
-        let (mut environment, rows) = environment_rows(environment);
+        let (environment, rows) = environment_rows(environment);
         let def = noble_kernel::contracts::Definition(attempt!(crate::index(rows, tree.span)
             .map_err(|problem| super::Error::at(super::Stage::Check, problem))));
         attempt!(meter
             .node(tree.span)
             .map_err(|problem| super::Error::at(super::Stage::Check, problem)));
         // Copy-on-write: only a signed declaration pays for an owned
-        // prospective environment row.
-        let owned = environment.to_mut();
+        // prospective environment row. The environment is taken by value (a
+        // borrowed one is cloned) rather than through `Cow::to_mut`, whose
+        // mutable borrow the pinned Aeneas cannot give back.
+        let mut owned = match environment {
+            Cow::Borrowed(borrowed) => borrowed.clone(),
+            Cow::Owned(owned) => owned,
+        };
         owned.defs.push(scheme.clone());
         owned.kinds.push(noble_kernel::contracts::Behavior::Named);
         owned.deps.push(alloc::vec::Vec::new());
         owned.definition_owners.push(Some(owner));
-        Ok((environment, Some(def)))
+        Ok((Cow::Owned(owned), Some(def)))
     }
 
     /// Infer the parsed root and, for a signed owner, relate its body to its
@@ -318,21 +323,23 @@ impl super::Session {
     fn infer_signed<'e>(
         &self,
         environment: Cow<'e, noble_kernel::contracts::Env>,
-        inference: Inference<'_>,
+        request: Inference<'_>,
         meter: &mut crate::Meter,
     ) -> (Cow<'e, noble_kernel::contracts::Env>, Inferred) {
         match environment {
             Cow::Borrowed(borrowed) => {
-                let inferred = self.infer_with(borrowed, inference, meter);
+                let inferred = self.infer_with(borrowed, request, meter);
                 (Cow::Borrowed(borrowed), inferred)
             }
             Cow::Owned(owned) => {
-                let inferred = self.infer_with(&owned, inference, meter);
+                let inferred = self.infer_with(&owned, request, meter);
                 (Cow::Owned(owned), inferred)
             }
         }
     }
 
+    /// Infer under one environment state. The request binder is not named
+    /// after the `inference` module, which generated Lean would shadow.
     #[expect(
         tigerstyle::missing_const_fn,
         reason = "Owner: noble-contracts; inference charges the shared meter and builds owned state through non-const calls."
@@ -340,38 +347,38 @@ impl super::Session {
     fn infer_with(
         &self,
         environment: &noble_kernel::contracts::Env,
-        inference: Inference<'_>,
+        request: Inference<'_>,
         meter: &mut crate::Meter,
     ) -> Inferred {
         let state = match super::inference::infer(
             super::inference::Scope {
-                root: inference.tree,
+                root: request.tree,
                 session: self,
                 environment,
-                root_signature: inference.signature,
-                prospective_owner: inference.prospective_owner,
+                root_signature: request.signature,
+                prospective_owner: request.prospective_owner,
             },
-            inference.mode,
-            inference.inputs,
+            request.mode,
+            request.inputs,
             meter,
         ) {
             Ok(state) => state,
             Err(error) => return Err(super::Error::at(super::Stage::Check, error)),
         };
-        let Some(owner) = inference.prospective_owner else {
+        let Some(owner) = request.prospective_owner else {
             return Ok((state, None));
         };
-        let Some(scheme) = inference.signature else {
+        let Some(scheme) = request.signature else {
             return Err(super::Error::at(
                 super::Stage::Check,
-                crate::invalid(inference.tree.span, "signed owner has no signature"),
+                crate::invalid(request.tree.span, "signed owner has no signature"),
             ));
         };
         match symbolic::check(
-            inference.tree,
+            request.tree,
             &state,
             scheme,
-            inference.source_bytes,
+            request.source_bytes,
             owner,
             self,
             environment,

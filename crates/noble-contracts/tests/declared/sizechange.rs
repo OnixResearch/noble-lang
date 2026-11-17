@@ -382,6 +382,111 @@ fn unmodelled_program_construct_is_unsupported() -> Result<(), String> {
     Ok(())
 }
 
+/// The certificate text, byte for byte. The emitter pushes `→`, `⟨`, `⟩`, `∀` and `¬` as code
+/// points rather than inside literals, and this pins each where the literals put it: `lex` is an
+/// accepted closure with several strict witnesses, `cycle` an idempotent refusal.
+#[test]
+fn certificate_text_is_pinned_byte_for_byte() -> Result<(), String> {
+    let accepted = only(analyze(&module(
+        "signature lex forall<S:stack> [ S I64 I64 -- S I64 I64 ! pure ] export lex \
+         def lex [ dup 0 swap < [ 1 - lex ] [ swap dup 0 swap < [ 1 - swap lex ] [ swap ] if ] if ]",
+    ))?);
+    let refused = only(analyze(&module(
+        "signature cycle forall<S:stack> [ S I64 I64 -- S I64 I64 ! pure ] export cycle \
+         def cycle [ swap cycle ]",
+    ))?);
+    let certificate = noble_contracts::source::certificate(&[accepted, refused]);
+    assert_eq!(certificate, PINNED_CERTIFICATE);
+    Ok(())
+}
+
+const PINNED_CERTIFICATE: &str = r"/-
+  Generated bounded size-change closure certificate (issue #101).
+
+  The finite matrix set and each call-site path are checked in the Lean model. Accepted
+  definitions carry one strict diagonal witness for every idempotent matrix; refusals name a
+  real idempotent closure entry without such an edge. Front-end/source correspondence is separate.
+-/
+import NobleM2.SizeChangeSCT
+
+namespace NobleSizeChangeCertificate
+
+open NobleM2.SizeChange
+
+/-- Bounded size-change evidence for definition 0: 2 self-call site(s) over 2 declared measure(s). The matrices and paths below are checked by the model. -/
+def definition_00 : MGraph 2 := fun oldIndex newIndex =>
+  match oldIndex.val, newIndex.val with
+  | 0, 0 => .same
+  | 1, 1 => .strict
+  | _, _ => .unknown
+
+def definition_01 : MGraph 2 := fun oldIndex newIndex =>
+  match oldIndex.val, newIndex.val with
+  | 0, 0 => .strict
+  | 1, 1 => .same
+  | _, _ => .unknown
+
+def definition_02 : MGraph 2 := fun oldIndex newIndex =>
+  match oldIndex.val, newIndex.val with
+  | 0, 0 => .strict
+  | 1, 1 => .strict
+  | _, _ => .unknown
+
+def definition_0Sites : Fin 2 → MGraph 2 := fun site =>
+  match site.val with
+  | 0 => definition_00
+  | 1 => definition_01
+  | _ => (fun _ _ => .unknown)
+
+def definition_0Entries : List (MatrixClosureEntry 2 2) :=
+  [
+    ⟨definition_00, [0]⟩,
+    ⟨definition_01, [1]⟩,
+    ⟨definition_02, [0, 1]⟩
+  ]
+
+def definition_0Certificate : MatrixClosureCertificate 2 2 definition_0Sites :=
+  ⟨definition_0Entries, [⟨definition_00, 1⟩, ⟨definition_01, 0⟩, ⟨definition_02, 0⟩], by decide, by decide⟩
+
+theorem definition_0Criterion : ∀ {graph : MGraph 2}, MatrixClosure definition_0Sites graph → composeMatrix graph graph = graph → HasStrictDiagonal graph := by
+  intro graph member idempotent
+  exact certificate_closure_criterion definition_0Certificate member idempotent
+
+/-- Bounded size-change evidence for definition 1: 1 self-call site(s) over 2 declared measure(s). The matrices and paths below are checked by the model. -/
+def definition_10 : MGraph 2 := fun oldIndex newIndex =>
+  match oldIndex.val, newIndex.val with
+  | 0, 1 => .same
+  | 1, 0 => .same
+  | _, _ => .unknown
+
+def definition_11 : MGraph 2 := fun oldIndex newIndex =>
+  match oldIndex.val, newIndex.val with
+  | 0, 0 => .same
+  | 1, 1 => .same
+  | _, _ => .unknown
+
+def definition_1Sites : Fin 1 → MGraph 2 := fun site =>
+  match site.val with
+  | 0 => definition_10
+  | _ => (fun _ _ => .unknown)
+
+def definition_1Entries : List (MatrixClosureEntry 1 2) :=
+  [
+    ⟨definition_10, [0]⟩,
+    ⟨definition_11, [0, 0]⟩
+  ]
+
+def definition_1ClosureSetCertificate : MatrixClosureSetCertificate 1 2 definition_1Sites := ⟨definition_1Entries, by decide⟩
+
+def definition_1Refusal : MatrixIdempotentRefusal definition_1ClosureSetCertificate :=
+  ⟨⟨definition_11, [0, 0]⟩, by decide, by decide, by decide⟩
+
+theorem definition_1RefusalGraphIsClosure : MatrixClosure definition_1Sites definition_1Refusal.entry.graph := refusal_graph_in_closure definition_1Refusal
+
+theorem definition_1RefusalHasNoStrictDiagonal : ¬ HasStrictDiagonal definition_1Refusal.entry.graph := refusal_no_strict_diagonal definition_1Refusal
+
+end NobleSizeChangeCertificate";
+
 /// A named call may execute its own recursion, so a direct decreasing self-call cannot hide it.
 #[test]
 fn named_recursive_helper_is_not_assumed_terminating() -> Result<(), String> {

@@ -307,14 +307,17 @@ impl super::ModuleSession {
                 )
             })?
             .owner;
-        let module =
-            crate::scan::find_first_mut(&mut self.modules, |module| owner == Some(module.identity))
-                .ok_or_else(|| {
-                    super::super::error(
-                        crate::source::Stage::Check,
-                        "certified signed owner module is absent",
-                    )
-                })?;
+        // The first matching module is located by index, so no mutable
+        // borrow passes through an Option combinator.
+        let Some(module_at) =
+            super::position_first(&self.modules, |module| owner == Some(module.identity))
+        else {
+            return Err(super::super::error(
+                crate::source::Stage::Check,
+                "certified signed owner module is absent",
+            ));
+        };
+        let module = &mut self.modules[module_at];
         if !module.verified_signed_slots.contains(&slot) {
             module.verified_signed_slots.push(slot);
         }

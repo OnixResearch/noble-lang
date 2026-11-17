@@ -46,7 +46,7 @@ pub(crate) mod scan {
             index += 1;
         }
         match found {
-            Some(at) => Some(&items[at]),
+            Some(position) => Some(&items[position]),
             None => None,
         }
     }
@@ -70,7 +70,7 @@ pub(crate) mod scan {
             index += 1;
         }
         match found {
-            Some(at) => Some(&mut items[at]),
+            Some(position) => Some(&mut items[position]),
             None => None,
         }
     }

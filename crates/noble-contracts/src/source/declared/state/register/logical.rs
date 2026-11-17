@@ -97,7 +97,7 @@ pub(super) fn stage(request: Request<'_>) -> Result<Staged, crate::source::Error
     let mut dependency_at = 0;
     let mut failure = None;
     while failure.is_none() && dependency_at < dependencies.len() {
-        match dependency_bytes(&dependencies[dependency_at], 0, limit) {
+        match dependency_bytes(&dependencies[dependency_at], limit) {
             Ok(bytes) => match copied.checked_add(bytes) {
                 Some(total) => copied = total,
                 None => {
@@ -270,21 +270,60 @@ fn stage_proof(
     reason = "Owner: noble-contracts; the constant counts source elements, and its unit is stated by the surrounding type and call sites"
 )]
 #[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+/// The snapshot bytes of one dependency and of every dependency it carries,
+/// added in the order the former work stack popped them: the dependency,
+/// then each of its dependencies depth first, the last listed first. One
+/// loop with an index path keeps the walk free of recursion.
+fn dependency_bytes(
+    dependency: &crate::intrinsic::ProofDependency,
+    limit: usize,
+) -> Result<usize, crate::source::Error> {
+    let mut total = attempt!(counted_bytes(0, dependency.source.len(), limit));
+    // One entry per open level: how many dependencies of that level's
+    // dependency are still unvisited, which is also the index of the one
+    // entered last, so the entries below the top lead to the current one.
+    let mut levels = alloc::vec![dependency.dependencies.len()];
+    let mut failure = None;
+    while failure.is_none() && !levels.is_empty() {
+        if let Some(remaining) = levels.pop() {
+            if let Some(entered) = remaining.checked_sub(1) {
+                levels.push(entered);
+                let (bytes, children) = entered_dependency(dependency, &levels);
+                match counted_bytes(total, bytes, limit) {
+                    Ok(counted) => {
+                        total = counted;
+                        levels.push(children);
+                    }
+                    Err(problem) => failure = Some(problem),
+                }
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(total),
+    }
+}
+
+#[expect(
     tigerstyle::ambiguous_params,
-    reason = "Owner: noble-contracts; `total` (bytes counted so far) and `limit` (the snapshot byte budget) keep this order through the stage loop and the mutually recursive dependency_bytes/nested_dependency_bytes pair."
+    reason = "Owner: noble-contracts; the running byte count, the bytes added and the byte budget are combined in this order at both call sites in dependency_bytes."
+)]
+#[expect(
+    tigerstyle::numeric_units,
+    reason = "Owner: noble-contracts; `limit` is the proof dependency snapshot byte budget (Limits::bytes widened to usize), in the same byte unit as `total`."
 )]
 #[expect(
     tigerstyle::missing_const_fn,
-    reason = "Owner: noble-contracts; the Vec deref of the nested dependencies, the declared::error diagnostics and the call into nested_dependency_bytes are not const (E0277/E0015)."
+    reason = "Owner: noble-contracts; the declared::error diagnostics are built by non-const calls (E0015)."
 )]
-/// Adds one dependency snapshot's bytes to `total`, then those of its own
-/// dependencies in the order the former work stack popped them.
-fn dependency_bytes(
-    dependency: &crate::intrinsic::ProofDependency,
-    total: usize,
-    limit: usize,
-) -> Result<usize, crate::source::Error> {
-    let Some(total) = total.checked_add(dependency.source.len()) else {
+/// `total` plus one dependency snapshot's `bytes`, refused once the sum
+/// overflows or exceeds `limit`.
+fn counted_bytes(total: usize, bytes: usize, limit: usize) -> Result<usize, crate::source::Error> {
+    let Some(total) = total.checked_add(bytes) else {
         return Err(crate::source::declared::error(
             crate::source::Stage::Check,
             "proof dependency byte count overflow",
@@ -296,34 +335,19 @@ fn dependency_bytes(
             "proof dependency snapshot byte budget exhausted",
         ));
     }
-    nested_dependency_bytes(&dependency.dependencies, total, limit)
+    Ok(total)
 }
 
-#[expect(
-    tigerstyle::ambiguous_params,
-    reason = "Owner: noble-contracts; `total` (bytes counted so far) and `limit` (the snapshot byte budget) keep this order through the stage loop and the mutually recursive dependency_bytes/nested_dependency_bytes pair."
-)]
-#[expect(
-    tigerstyle::numeric_units,
-    reason = "Owner: noble-contracts; `limit` is the proof dependency snapshot byte budget (Limits::bytes widened to usize), in the same byte unit as `total`."
-)]
-/// Adds the snapshot bytes of `dependencies` to `total`, the last listed
-/// first, as the former work stack popped them.
-fn nested_dependency_bytes(
-    dependencies: &[crate::intrinsic::ProofDependency],
-    total: usize,
-    limit: usize,
-) -> Result<usize, crate::source::Error> {
-    let mut remaining = dependencies.len();
-    let mut outcome = Ok(total);
-    while outcome.is_ok() && remaining != 0 {
-        remaining -= 1;
-        outcome = match outcome {
-            Ok(total) => dependency_bytes(&dependencies[remaining], total, limit),
-            Err(problem) => Err(problem),
-        };
+/// The snapshot bytes and dependency count of the dependency `path` leads to
+/// from `root`: each entry indexes the dependencies of the one before it.
+fn entered_dependency(root: &crate::intrinsic::ProofDependency, path: &[usize]) -> (usize, usize) {
+    let mut node = root;
+    let mut level = 0;
+    while level < path.len() {
+        node = &node.dependencies[path[level]];
+        level += 1;
     }
-    outcome
+    (node.source.len(), node.dependencies.len())
 }
 
 /// Contract binding types reach `pure_type` only from `types::parse_with_families`.
@@ -475,12 +499,12 @@ fn source_origin<'a>(
         )
     })?;
     let module = attempt!(origin_module(request, owner));
-    let (source, ordinal) = attempt!(definition_span(module.spans, &definition.name));
+    let (located, ordinal) = attempt!(definition_span(module.spans, &definition.name));
     Ok(SourceOrigin {
         module_name: module.name,
         version: module.version,
         module_source: module.source,
-        definition: source,
+        definition: located,
         ordinal,
         owner,
     })
@@ -955,8 +979,23 @@ fn imported_module<'a>(
 /// Logical bodies nest at most 64 lists deep (`lexer::next_logical_body`).
 const LIST_DEPTH: usize = 64;
 
+/// One list the use walk has entered: its items, moved out of the term while
+/// they are visited, and how many of them are visited so far.
+struct UseFrame {
+    items: alloc::vec::Vec<crate::intrinsic::Form>,
+    visited: usize,
+}
+
+/// What visiting one form leaves to the use walk: nothing, or the items of a
+/// list it enters, moved out of that list until they are visited.
+enum UseVisit {
+    Done,
+    Enter(alloc::vec::Vec<crate::intrinsic::Form>),
+}
+
 /// Resolves every `(use name)` in pre-order, left to right. The term and the
 /// module's dependency list are owned and returned; the first error wins.
+/// One loop over the stack of entered lists keeps the walk free of recursion.
 fn resolve_uses(
     request: Request<'_>,
     mut term: crate::intrinsic::Form,
@@ -969,8 +1008,99 @@ fn resolve_uses(
     ),
     crate::source::Error,
 > {
-    attempt!(visit_use(request, &mut term, 0, prior, &mut dependencies));
-    Ok((term, dependencies))
+    let mut frames = alloc::vec::Vec::new();
+    let root = attempt!(visit_use(request, &mut term, 0, prior, &mut dependencies));
+    if let UseVisit::Enter(items) = root {
+        frames.push(UseFrame { items, visited: 0 });
+    }
+    let mut failure = None;
+    while failure.is_none() && !frames.is_empty() {
+        if let Err(problem) = use_step(request, &mut term, &mut frames, prior, &mut dependencies) {
+            failure = Some(problem);
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok((term, dependencies)),
+    }
+}
+
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the term, the stack of entered lists and the dependency list are the use walk's own state, advanced one form per step"
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; entered lists are pushed and finished ones popped, and imported proof dependencies are appended with Vec::push, so the walk needs the growable vectors."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; Vec indexing, push and pop of the entered lists and the calls into visit_use and restore_items are not const (E0277/E0015)."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-contracts; an entered list's enclosing list counts the item it entered as visited before entering it, so that `visited` is at least 1 when the entered list finishes."
+)]
+/// Advances the use walk by one form: visits the next item of the innermost
+/// entered list, or moves the items of a finished list back into the form
+/// they were taken from, the enclosing list's last visited item or the term.
+fn use_step(
+    request: Request<'_>,
+    term: &mut crate::intrinsic::Form,
+    frames: &mut alloc::vec::Vec<UseFrame>,
+    prior: &[crate::intrinsic::ProofObligation],
+    dependencies: &mut alloc::vec::Vec<crate::intrinsic::ProofDependency>,
+) -> Result<(), crate::source::Error> {
+    // The items of the innermost entered list are `depth` lists deep.
+    let depth = frames.len();
+    let Some(top) = depth.checked_sub(1) else {
+        return Ok(());
+    };
+    let index = frames[top].visited;
+    if index < frames[top].items.len() {
+        frames[top].visited += 1;
+        let visited = attempt!(visit_use(
+            request,
+            &mut frames[top].items[index],
+            depth,
+            prior,
+            dependencies
+        ));
+        if let UseVisit::Enter(items) = visited {
+            frames.push(UseFrame { items, visited: 0 });
+        }
+        return Ok(());
+    }
+    let Some(finished) = frames.pop() else {
+        return Ok(());
+    };
+    match top.checked_sub(1) {
+        None => restore_items(term, finished.items),
+        Some(parent) => {
+            let entered = frames[parent].visited - 1;
+            restore_items(&mut frames[parent].items[entered], finished.items);
+        }
+    }
+    Ok(())
+}
+
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the form belongs to the use walk's own term, and its entered list gets its items back"
+)]
+/// Moves a finished list's items back into the list form they were taken
+/// from; the walk takes items only out of list forms.
+fn restore_items(
+    form: &mut crate::intrinsic::Form,
+    items: alloc::vec::Vec<crate::intrinsic::Form>,
+) {
+    if let crate::intrinsic::FormKind::List(slot) = &mut form.kind {
+        *slot = items;
+    }
 }
 
 #[expect(
@@ -983,34 +1113,35 @@ fn resolve_uses(
 )]
 #[expect(
     tigerstyle::missing_const_fn,
-    reason = "Owner: noble-contracts; Vec deref and indexing of the form items, the closure depth filter and the walk through visit_uses are not const (E0277/E0015)."
+    reason = "Owner: noble-contracts; Vec deref and indexing of the form items, core::mem::take and resolve_reference are not const (E0277/E0015)."
 )]
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
-/// Visits one form in pre-order: resolves a `(use name)` in place, or visits
-/// the items of any other list, which `depth` lists enclose.
+/// Visits one form `depth` lists deep: resolves a `(use name)` in place, or
+/// enters any other list by moving its items out for the walk to visit.
 fn visit_use(
     request: Request<'_>,
     form: &mut crate::intrinsic::Form,
     depth: usize,
     prior: &[crate::intrinsic::ProofObligation],
     dependencies: &mut alloc::vec::Vec<crate::intrinsic::ProofDependency>,
-) -> Result<(), crate::source::Error> {
+) -> Result<UseVisit, crate::source::Error> {
     let span = form.span;
     let crate::intrinsic::FormKind::List(items) = &mut form.kind else {
-        return Ok(());
+        return Ok(UseVisit::Done);
     };
     if !is_use_list(items) {
-        let Some(inner) = depth.checked_add(1).filter(|inner| *inner <= LIST_DEPTH) else {
+        // Its items would be `depth + 1` lists deep, at most LIST_DEPTH.
+        if depth >= LIST_DEPTH {
             return Err(at(
                 crate::source::Stage::Resolve,
                 span,
                 "logical nesting exceeds supported depth",
             ));
-        };
-        return visit_uses(request, items, inner, prior, dependencies);
+        }
+        return Ok(UseVisit::Enter(core::mem::take(items)));
     }
     if items.len() != 2 {
         return Err(at(
@@ -1027,32 +1158,14 @@ fn visit_use(
             "use requires a proof identifier",
         ));
     };
-    resolve_reference(request, reference, reference_span, prior, dependencies)
-}
-
-#[expect(
-    tigerstyle::mutating_input_in_pure,
-    reason = "Owner: noble-contracts; the items and the dependency list are the walk's own term and accumulator, rewritten in place"
-)]
-#[expect(
-    tigerstyle::borrowed_argument_types,
-    reason = "Owner: noble-contracts; imported proof dependencies are appended with Vec::push, so the walk needs the growable vector."
-)]
-/// Visits `items` in order, stopping at the first error.
-fn visit_uses(
-    request: Request<'_>,
-    items: &mut [crate::intrinsic::Form],
-    depth: usize,
-    prior: &[crate::intrinsic::ProofObligation],
-    dependencies: &mut alloc::vec::Vec<crate::intrinsic::ProofDependency>,
-) -> Result<(), crate::source::Error> {
-    let mut index = 0;
-    let mut outcome = Ok(());
-    while outcome.is_ok() && index < items.len() {
-        outcome = visit_use(request, &mut items[index], depth, prior, dependencies);
-        index += 1;
-    }
-    outcome
+    attempt!(resolve_reference(
+        request,
+        reference,
+        reference_span,
+        prior,
+        dependencies
+    ));
+    Ok(UseVisit::Done)
 }
 
 /// Whether a list is a `(use ...)` form: its first item is the atom `use`.
@@ -1294,16 +1407,30 @@ mod tests {
 
     #[test]
     fn dependency_bytes_match_the_former_work_stack() {
+        // Distinct powers of two: a skipped or repeated dependency changes the total.
         let tree = dependency(
-            3,
+            1,
             alloc::vec![
-                dependency(5, alloc::vec![dependency(7, alloc::vec::Vec::new())]),
-                dependency(11, alloc::vec::Vec::new()),
+                dependency(
+                    2,
+                    alloc::vec![
+                        dependency(4, alloc::vec::Vec::new()),
+                        dependency(8, alloc::vec::Vec::new()),
+                    ],
+                ),
+                dependency(
+                    16,
+                    alloc::vec![dependency(
+                        32,
+                        alloc::vec![dependency(64, alloc::vec::Vec::new())]
+                    )],
+                ),
+                dependency(128, alloc::vec::Vec::new()),
             ],
         );
-        for limit in 0..=30 {
+        for limit in 0..=260 {
             let expected = former_dependency_bytes(&tree, limit);
-            let actual = super::dependency_bytes(&tree, 0, limit)
+            let actual = super::dependency_bytes(&tree, limit)
                 .map_err(|problem| problem.diagnostic().message.clone());
             assert_eq!(
                 actual,
@@ -1311,8 +1438,293 @@ mod tests {
                 "{limit}"
             );
         }
-        assert_eq!(former_dependency_bytes(&tree, 26), Ok(26));
-        assert!(former_dependency_bytes(&tree, 25).is_err());
+        assert_eq!(former_dependency_bytes(&tree, 255), Ok(255));
+        assert!(former_dependency_bytes(&tree, 254).is_err());
+    }
+
+    /// The recursive use walk `resolve_uses` replaced, kept as the oracle.
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-contracts; test oracle: the former recursive walk, bounded by LIST_DEPTH like the walk it checks"
+    )]
+    #[expect(
+        tigerstyle::assertion_density,
+        reason = "Owner: noble-contracts; test oracle: the former recursive walk kept as it was, checked against resolve_uses by the test that calls it."
+    )]
+    fn former_visit_use(
+        request: super::Request<'_>,
+        form: &mut crate::intrinsic::Form,
+        depth: usize,
+        prior: &[crate::intrinsic::ProofObligation],
+        dependencies: &mut alloc::vec::Vec<crate::intrinsic::ProofDependency>,
+    ) -> Result<(), crate::source::Error> {
+        let span = form.span;
+        let crate::intrinsic::FormKind::List(items) = &mut form.kind else {
+            return Ok(());
+        };
+        if !super::is_use_list(items) {
+            let Some(inner) = depth
+                .checked_add(1)
+                .filter(|inner| *inner <= super::LIST_DEPTH)
+            else {
+                return Err(super::at(
+                    crate::source::Stage::Resolve,
+                    span,
+                    "logical nesting exceeds supported depth",
+                ));
+            };
+            for item in items.iter_mut() {
+                former_visit_use(request, item, inner, prior, dependencies)?;
+            }
+            return Ok(());
+        }
+        if items.len() != 2 {
+            return Err(super::at(
+                crate::source::Stage::Resolve,
+                span,
+                "use requires one resolved proof name",
+            ));
+        }
+        let reference_span = items[1].span;
+        let crate::intrinsic::FormKind::Atom(reference) = &mut items[1].kind else {
+            return Err(super::at(
+                crate::source::Stage::Resolve,
+                reference_span,
+                "use requires a proof identifier",
+            ));
+        };
+        super::resolve_reference(request, reference, reference_span, prior, dependencies)
+    }
+
+    fn form(kind: crate::intrinsic::FormKind, at: u32) -> crate::intrinsic::Form {
+        crate::intrinsic::Form {
+            kind,
+            span: crate::Span { start: at, end: at },
+        }
+    }
+
+    fn atom(text: &str, at: u32) -> crate::intrinsic::Form {
+        form(
+            crate::intrinsic::FormKind::Atom(alloc::string::String::from(text)),
+            at,
+        )
+    }
+
+    fn list(items: alloc::vec::Vec<crate::intrinsic::Form>, at: u32) -> crate::intrinsic::Form {
+        form(crate::intrinsic::FormKind::List(items), at)
+    }
+
+    /// `(use name)`: the list and its `use` atom at `spans[0]`, the name at `spans[1]`.
+    fn use_of(name: &str, spans: [u32; 2]) -> crate::intrinsic::Form {
+        list(
+            alloc::vec![atom("use", spans[0]), atom(name, spans[1])],
+            spans[0],
+        )
+    }
+
+    /// `inner` enclosed in `depth` lists.
+    fn nest(depth: usize, inner: crate::intrinsic::Form) -> crate::intrinsic::Form {
+        let mut nested = inner;
+        for _ in 0..depth {
+            nested = list(alloc::vec![nested], 0);
+        }
+        nested
+    }
+
+    fn obligation(name: &str) -> crate::intrinsic::ProofObligation {
+        crate::intrinsic::ProofObligation {
+            name: alloc::string::String::from(name),
+            revision: 1,
+            goal: crate::intrinsic::PendingGoal::Pure {
+                proposition: atom("p", 0),
+            },
+            term: atom("p", 0),
+            span: crate::Span { start: 0, end: 0 },
+        }
+    }
+
+    type Walked = Result<
+        (
+            crate::intrinsic::Form,
+            alloc::vec::Vec<crate::intrinsic::ProofDependency>,
+        ),
+        crate::source::Error,
+    >;
+
+    /// The rewritten term and dependency names, or the refusal's message and span.
+    fn outcome(
+        walked: Walked,
+    ) -> Result<
+        (
+            crate::intrinsic::Form,
+            alloc::vec::Vec<alloc::string::String>,
+        ),
+        (alloc::string::String, crate::Span),
+    > {
+        match walked {
+            Ok((term, dependencies)) => {
+                let mut names = alloc::vec::Vec::with_capacity(dependencies.len());
+                for dependency in &dependencies {
+                    names.push(dependency.name.clone());
+                }
+                Ok((term, names))
+            }
+            Err(problem) => Err((
+                problem.diagnostic().message.clone(),
+                problem.diagnostic().span,
+            )),
+        }
+    }
+
+    #[test]
+    fn use_walk_matches_the_former_recursive_walk() {
+        let session =
+            crate::source::declared::ModuleSession::new_calculator().expect("calculator session");
+        let collected = super::super::collection::Collected::collect(
+            alloc::vec::Vec::new(),
+            crate::Limits::default(),
+            false,
+            None,
+        )
+        .expect("empty module");
+        let request = super::Request {
+            session: &session,
+            collected: &collected,
+            name: "m",
+            version: 1,
+            identity: 0,
+            source: &[],
+            generation: 0,
+            limits: crate::Limits::default(),
+        };
+        let prior = [obligation("p"), obligation("q")];
+        let cases = alloc::vec![
+            atom("p", 1),
+            list(alloc::vec::Vec::new(), 2),
+            list(
+                alloc::vec![
+                    atom("a", 3),
+                    list(alloc::vec![atom("b", 4)], 5),
+                    atom("c", 6)
+                ],
+                7,
+            ),
+            use_of("p", [8, 9]),
+            use_of("m@1.p", [10, 11]),
+            list(
+                alloc::vec![
+                    use_of("m@1.p", [12, 13]),
+                    list(
+                        alloc::vec![use_of("q", [14, 15]), use_of("m@1.q", [16, 17])],
+                        18,
+                    ),
+                    list(alloc::vec::Vec::new(), 19),
+                    use_of("p", [20, 21]),
+                ],
+                22,
+            ),
+            list(
+                alloc::vec![
+                    list(alloc::vec![atom("use", 23), atom("p", 24)], 25),
+                    atom("use", 26)
+                ],
+                27,
+            ),
+            list(
+                alloc::vec![atom("x", 28), atom("use", 29), atom("p", 30)],
+                31
+            ),
+            use_of("zz", [32, 33]),
+            list(alloc::vec![use_of("m@1.zz", [34, 35])], 36),
+            list(alloc::vec![atom("use", 37)], 38),
+            list(
+                alloc::vec![atom("use", 39), list(alloc::vec::Vec::new(), 40)],
+                41
+            ),
+            list(
+                alloc::vec![atom("use", 42), atom("p", 43), atom("x", 44)],
+                45
+            ),
+            list(
+                alloc::vec![
+                    list(alloc::vec![use_of("zz", [46, 47])], 48),
+                    list(alloc::vec![atom("use", 49)], 50),
+                ],
+                51,
+            ),
+            list(
+                alloc::vec![
+                    list(alloc::vec![atom("use", 52)], 53),
+                    use_of("zz", [54, 55])
+                ],
+                56,
+            ),
+            use_of("other@2.p", [57, 58]),
+            nest(63, list(alloc::vec![atom("x", 59)], 60)),
+            nest(64, list(alloc::vec::Vec::new(), 61)),
+            nest(64, use_of("m@1.p", [62, 63])),
+            nest(64, atom("x", 64)),
+            nest(65, atom("x", 65)),
+            list(
+                alloc::vec![
+                    nest(64, list(alloc::vec::Vec::new(), 66)),
+                    use_of("zz", [67, 68])
+                ],
+                69,
+            ),
+            list(
+                alloc::vec![
+                    use_of("zz", [70, 71]),
+                    nest(64, list(alloc::vec::Vec::new(), 72))
+                ],
+                73,
+            ),
+        ];
+        let mut refusals = 0usize;
+        for case in cases {
+            let mut former_term = case.clone();
+            let mut former_dependencies = alloc::vec::Vec::new();
+            let former = former_visit_use(
+                request,
+                &mut former_term,
+                0,
+                &prior,
+                &mut former_dependencies,
+            )
+            .map(|()| (former_term, former_dependencies));
+            let expected = outcome(former);
+            if expected.is_err() {
+                refusals += 1;
+            }
+            let walked = super::resolve_uses(request, case, &prior, alloc::vec::Vec::new());
+            assert_eq!(outcome(walked), expected);
+        }
+        // Both accepted and refused walks are compared, and the qualifier of
+        // a current-module use is removed in place.
+        assert!(refusals > 0);
+        let local = super::resolve_uses(
+            request,
+            use_of("m@1.p", [1, 2]),
+            &prior,
+            alloc::vec::Vec::new(),
+        );
+        assert_eq!(
+            outcome(local),
+            Ok((use_of("p", [1, 2]), alloc::vec::Vec::new()))
+        );
+        let deep = super::resolve_uses(
+            request,
+            nest(64, list(alloc::vec::Vec::new(), 7)),
+            &prior,
+            alloc::vec::Vec::new(),
+        );
+        assert_eq!(
+            outcome(deep).err(),
+            Some((
+                alloc::string::String::from("logical nesting exceeds supported depth"),
+                crate::Span { start: 7, end: 7 },
+            ))
+        );
     }
 
     #[test]

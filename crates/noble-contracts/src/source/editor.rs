@@ -9,13 +9,104 @@ use alloc::{string::String, vec::Vec};
 
 pub const FORMAT: u32 = 1;
 
-#[derive(Clone, Debug)]
 pub enum Node {
     Integer(i64),
     Boolean(bool),
     Word(String),
     Quotation(Vec<Node>),
     Hole,
+}
+
+// `Node` is recursive through `Vec<Node>`, so derived `Clone` and `Debug`
+// impls refer to their own trait impl before the extracted Lean defines it.
+// The copy is a plain function with exactly the derived result; the rendering
+// is the one reviewed opaque formatting boundary (see `debug_node`).
+impl Clone for Node {
+    fn clone(&self) -> Self {
+        clone_node(self)
+    }
+}
+
+impl core::fmt::Debug for Node {
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; `Debug` renders by writing through the caller's formatter, which is the operation"
+    )]
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        debug_node(self, f)
+    }
+}
+
+/// Deep-copy one node, variant by variant, as the derived `Clone` did.
+fn clone_node(node: &Node) -> Node {
+    match node {
+        Node::Integer(value) => Node::Integer(*value),
+        Node::Boolean(value) => Node::Boolean(*value),
+        Node::Word(word) => Node::Word(word.clone()),
+        Node::Quotation(children) => {
+            let mut copy = Vec::with_capacity(children.len());
+            copy_nodes(children, &mut copy);
+            Node::Quotation(copy)
+        }
+        Node::Hole => Node::Hole,
+    }
+}
+
+/// Append copies of `nodes`, in order, as `Vec::clone` did. The list is halved
+/// instead of looped over, so no loop sits on the call cycle with
+/// `clone_node`, and the added depth is logarithmic in the list length.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; each call halves the list, so the depth is logarithmic in its length on top of the quotation nesting the derived copy followed too."
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; it appends only to the copy its caller is building."
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; the copy under construction grows with Vec::push, so it needs the growable vector."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; copying a node allocates and pushes, which is not const."
+)]
+fn copy_nodes(nodes: &[Node], copy: &mut Vec<Node>) {
+    if nodes.is_empty() {
+        return;
+    }
+    let half = nodes.len() / 2;
+    if half == 0 {
+        copy.push(clone_node(&nodes[0]));
+        return;
+    }
+    copy_nodes(&nodes[..half], copy);
+    copy_nodes(&nodes[half..], copy);
+}
+
+/// Render a node exactly as `#[derive(Debug)]` did.
+///
+/// Reviewed opaque extraction boundary: rendering a `Quotation` must format
+/// the nested nodes through `Node`'s own `Debug` impl, so no transparent body
+/// can avoid referring to that impl before the extracted Lean defines it.
+/// Formatting layout is already an abstracted trust boundary.
+#[charon::opaque]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper writes through the caller's formatter, so the const suggestion does not apply"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; rendering writes through the caller's formatter, which is the operation"
+)]
+fn debug_node(node: &Node, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    match node {
+        Node::Integer(value) => f.debug_tuple("Integer").field(value).finish(),
+        Node::Boolean(value) => f.debug_tuple("Boolean").field(value).finish(),
+        Node::Word(word) => f.debug_tuple("Word").field(word).finish(),
+        Node::Quotation(children) => f.debug_tuple("Quotation").field(children).finish(),
+        Node::Hole => f.write_str("Hole"),
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -607,6 +698,103 @@ fn same_text(left: &str, right: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The shape of `Node` with the derived `Debug` that its hand-written
+    /// rendering must reproduce byte for byte.
+    #[derive(Debug)]
+    #[expect(
+        dead_code,
+        reason = "the payloads exist only to be rendered by the derived Debug under comparison"
+    )]
+    enum Derived {
+        Integer(i64),
+        Boolean(bool),
+        Word(String),
+        Quotation(Vec<Derived>),
+        Hole,
+    }
+
+    fn derived(node: &Node) -> Derived {
+        match node {
+            Node::Integer(value) => Derived::Integer(*value),
+            Node::Boolean(value) => Derived::Boolean(*value),
+            Node::Word(word) => Derived::Word(word.clone()),
+            Node::Quotation(children) => Derived::Quotation(children.iter().map(derived).collect()),
+            Node::Hole => Derived::Hole,
+        }
+    }
+
+    /// Every variant, an empty and a nested quotation, and a word that needs
+    /// escaping.
+    fn sample() -> Vec<Node> {
+        alloc::vec![
+            Node::Integer(-7),
+            Node::Boolean(true),
+            Node::Word(String::from("dup \"x\"\n")),
+            Node::Quotation(alloc::vec![
+                Node::Hole,
+                Node::Quotation(Vec::new()),
+                Node::Quotation(alloc::vec![
+                    Node::Boolean(false),
+                    Node::Integer(i64::MIN),
+                    Node::Hole,
+                ]),
+            ]),
+            Node::Hole,
+        ]
+    }
+
+    /// Whether every list of `node` holds exactly its length, as `Vec::clone`
+    /// leaves it.
+    fn exactly_sized(node: &Node) -> bool {
+        match node {
+            Node::Quotation(children) => {
+                children.capacity() == children.len() && children.iter().all(exactly_sized)
+            }
+            Node::Integer(_) | Node::Boolean(_) | Node::Word(_) | Node::Hole => true,
+        }
+    }
+
+    #[test]
+    fn node_rendering_is_the_derived_rendering() {
+        for node in sample() {
+            let mirror = derived(&node);
+            assert_eq!(alloc::format!("{node:?}"), alloc::format!("{mirror:?}"));
+            assert_eq!(alloc::format!("{node:#?}"), alloc::format!("{mirror:#?}"));
+        }
+        let candidate = Candidate {
+            format: FORMAT,
+            nodes: sample(),
+        };
+        let mirrors: Vec<Derived> = candidate.nodes.iter().map(derived).collect();
+        assert_eq!(
+            alloc::format!("{:#?}", candidate.nodes),
+            alloc::format!("{mirrors:#?}")
+        );
+    }
+
+    #[test]
+    fn node_copies_are_deep_and_exactly_sized() {
+        let original = Node::Quotation(sample());
+        let mut copy = original.clone();
+        assert_eq!(alloc::format!("{copy:#?}"), alloc::format!("{original:#?}"));
+        assert!(exactly_sized(&copy));
+        if let Node::Quotation(children) = &mut copy {
+            children[3] = Node::Word(String::from("changed"));
+        }
+        let untouched = Node::Quotation(sample());
+        assert_eq!(
+            alloc::format!("{original:?}"),
+            alloc::format!("{untouched:?}")
+        );
+        // Lists of every small length, so each halving position is copied.
+        for count in 0..9 {
+            let list = Node::Quotation((0..count).map(Node::Integer).collect());
+            let copy = list.clone();
+            assert_eq!(alloc::format!("{copy:?}"), alloc::format!("{list:?}"));
+            assert!(exactly_sized(&copy));
+        }
+    }
 
     #[test]
     fn generated_spans_map_to_bounded_node_paths() {

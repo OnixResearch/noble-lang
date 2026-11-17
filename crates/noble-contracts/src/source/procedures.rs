@@ -390,6 +390,9 @@ pub struct Refusal {
 }
 
 #[derive(Clone, Copy)]
+// Extraction-only name: the crate-root `Diagnostic` is printed unqualified in
+// Lean, where it would resolve to this type inside `source.procedures`.
+#[charon::rename("ProcedureDiagnostic")]
 struct Diagnostic<'a> {
     field: &'a str,
     message: &'a str,
@@ -1643,16 +1646,19 @@ impl ProcedureLibrary {
                 },
             )
         })?;
-        let old = crate::scan::find_first_mut(records, |record| record.procedure_id == old_id)
-            .ok_or_else(|| {
-                Refusal::new(
+        let old = match crate::scan::find_first_mut(records, |record| record.procedure_id == old_id)
+        {
+            Some(old) => old,
+            None => {
+                return Err(Refusal::new(
                     RefusalKind::Invalid,
                     Diagnostic {
                         field: "supersedes",
                         message: "replaced identity is unavailable",
                     },
-                )
-            })?;
+                ));
+            }
+        };
         old.status = Status::Superseded;
         old.promotion = None;
         old.retrieval = retrieval::signature(old);
@@ -1910,19 +1916,20 @@ impl ProcedureLibrary {
         record.promotion = None;
         record.retrieval = retrieval::signature(&record);
         let mut candidate_records = self.current().records.clone();
-        let slot = crate::scan::find_first_mut(&mut candidate_records, |candidate| {
+        match crate::scan::find_first_mut(&mut candidate_records, |candidate| {
             candidate.procedure_id == procedure_id
-        })
-        .ok_or_else(|| {
-            Refusal::new(
-                RefusalKind::Internal,
-                Diagnostic {
-                    field: "procedure_id",
-                    message: "record disappeared",
-                },
-            )
-        })?;
-        *slot = record;
+        }) {
+            Some(slot) => *slot = record,
+            None => {
+                return Err(Refusal::new(
+                    RefusalKind::Internal,
+                    Diagnostic {
+                        field: "procedure_id",
+                        message: "record disappeared",
+                    },
+                ));
+            }
+        }
         candidate_records.sort_by(|left: &ProcedureRecord, right: &ProcedureRecord| {
             retrieval::compare_records(left, right)
         });

@@ -270,7 +270,9 @@ pub(super) fn slot_invoke(
     let mut is_ambiguous = false;
     let mut at = 0;
     let mut failure = None;
-    while failure.is_none() && at < state.borrows.len() {
+    // A failure always leaves the loop through `break`, so the loop condition
+    // never tests the (then constant) absent failure.
+    while at < state.borrows.len() {
         let borrowed = &state.borrows[at];
         at += 1;
         if let Err(problem) = meter.charge(1, span) {

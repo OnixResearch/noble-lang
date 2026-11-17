@@ -124,8 +124,7 @@ fn word(
 pub(super) fn name(name: &str) -> bool {
     let bytes = name.as_bytes();
     starts_identifier(bytes)
-        && super::position_first(&bytes[1..], |c| !(c.is_ascii_alphanumeric() || *c == b'_'))
-            .is_none()
+        && super::position_first(&bytes[1..], |c| outside_name(*c)).is_none()
         && !reserved_name(name)
 }
 
@@ -134,11 +133,18 @@ pub(super) fn name(name: &str) -> bool {
 pub(super) fn logical_name(name: &str) -> bool {
     let bytes = name.as_bytes();
     starts_identifier(bytes)
-        && super::position_first(&bytes[1..], |c| {
-            !(c.is_ascii_alphanumeric() || *c == b'_' || *c == b'-')
-        })
-        .is_none()
+        && super::position_first(&bytes[1..], |c| outside_logical_name(*c)).is_none()
         && !reserved_name(name)
+}
+
+/// Whether `byte` cannot continue an ordinary name.
+const fn outside_name(byte: u8) -> bool {
+    !(byte.is_ascii_alphanumeric() || byte == b'_')
+}
+
+/// Whether `byte` cannot continue a logical name.
+const fn outside_logical_name(byte: u8) -> bool {
+    !(byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-')
 }
 
 /// Whether `bytes` begins with an ASCII letter or underscore.

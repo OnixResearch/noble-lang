@@ -22,14 +22,14 @@ pub(super) fn describe(
     meter: &mut crate::Meter,
 ) -> Result<alloc::string::String, crate::Diagnostic> {
     // At most 255 pending parts precede scheduling at most four children.
-    let mut rendering = Traversal {
+    let mut traversal = Traversal {
         pending: alloc::vec::Vec::with_capacity(259),
         text: alloc::string::String::new(),
     };
-    rendering.pending.push(Part::Term(root));
+    traversal.pending.push(Part::Term(root));
     let mut failure = None;
-    while let Some(part) = rendering.pending.pop() {
-        match rendering.step(part, arena, span, meter) {
+    while let Some(part) = traversal.pending.pop() {
+        match traversal.step(part, arena, span, meter) {
             Ok(true) => break,
             Ok(false) => {}
             Err(problem) => {
@@ -40,7 +40,7 @@ pub(super) fn describe(
     }
     match failure {
         Some(problem) => Err(problem),
-        None => Ok(rendering.text),
+        None => Ok(traversal.text),
     }
 }
 

@@ -495,11 +495,14 @@ fn confirm_receipt(
         Some(owner) => owner.verify(record, claim),
         None => None,
     };
-    let reestablished = match attestation {
-        Some(attestation) => Some(VerifiedEvidence::mint(record, claim, attestation)?),
-        None => None,
+    let is_reestablished = match attestation {
+        Some(attestation) => {
+            let minted = VerifiedEvidence::mint(record, claim, attestation)?;
+            minted == *receipt
+        }
+        None => false,
     };
-    if reestablished.as_ref() != Some(receipt) {
+    if !is_reestablished {
         return Err(Refusal::at(
             RefusalKind::Invalid,
             Diagnostic {

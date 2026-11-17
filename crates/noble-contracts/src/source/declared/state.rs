@@ -675,10 +675,12 @@ impl ModulePrepared {
             enqueued: alloc::vec![false; named.len()],
             pending: alloc::vec![root_index],
         };
-        *walk
-            .enqueued
-            .get_mut(root_index)
-            .ok_or(ProgramClosureError::Invalid)? = true;
+        // The root slot must exist; checking the length first keeps the
+        // mutable borrow out of an Option combinator.
+        if root_index >= walk.enqueued.len() {
+            return Err(ProgramClosureError::Invalid);
+        }
+        walk.enqueued[root_index] = true;
         let mut outcome = Ok(());
         while outcome.is_ok() {
             let Some(index) = walk.pending.pop() else {
@@ -1518,7 +1520,8 @@ impl ModulePrepared {
     /// Publication still requires `ModuleSession::commit` on its original
     /// namespace snapshot; saved old Program values retain prior identities.
     pub fn rebuilt_import_definitions(&self) -> Option<&[RebuiltImportDefinition]> {
-        self.rebuilt_import_definitions.as_deref()
+        let definitions = self.rebuilt_import_definitions.as_ref()?;
+        Some(definitions.as_slice())
     }
     pub fn resolved_module(&self) -> Option<(u64, alloc::string::String, u32)> {
         let module = match self.kind {

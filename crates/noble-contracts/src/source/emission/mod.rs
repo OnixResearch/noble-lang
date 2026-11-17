@@ -383,17 +383,26 @@ fn checked(
         None
     };
     let (result, work_used) = match self_owner {
-        Some(owner) => crate::program::check_signed_structure_with_work(
-            &caller_environment,
-            &body.candidate,
-            &request,
-            &spans,
-            span,
-            owner,
-            owner_inst.as_ref().ok_or_else(|| {
-                super::Error::at(crate::source::Stage::Check, crate::internal(span))
-            })?,
-        ),
+        Some(owner) => {
+            // Branch directly: on the path without signed nodes the owner
+            // instantiation is provably absent, and the extraction cannot
+            // type a generic Option helper applied to that constant.
+            let Some(inst) = &owner_inst else {
+                return Err(super::Error::at(
+                    crate::source::Stage::Check,
+                    crate::internal(span),
+                ));
+            };
+            crate::program::check_signed_structure_with_work(
+                &caller_environment,
+                &body.candidate,
+                &request,
+                &spans,
+                span,
+                owner,
+                inst,
+            )
+        }
         None => crate::program::check_with_work(
             &caller_environment,
             &body.candidate,

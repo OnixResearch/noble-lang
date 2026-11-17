@@ -139,13 +139,13 @@ impl ProcedureLibrary {
                 },
             ));
         }
-        let mut source = BoundedProgramBytes::new();
+        let mut composed = BoundedProgramBytes::new();
         let mut retained_ids = Vec::with_capacity(selected.len());
-        source.append(&context.prefix)?;
+        composed.append(&context.prefix)?;
         let mut failure = None;
         let mut index = 0;
         while failure.is_none() && index < selected.len() {
-            match self.append_selected(&selected[index], &mut source) {
+            match self.append_selected(&selected[index], &mut composed) {
                 Ok(()) => retained_ids.push(selected[index]),
                 Err(refusal) => failure = Some(refusal),
             }
@@ -154,10 +154,10 @@ impl ProcedureLibrary {
         if let Some(refusal) = failure {
             return Err(refusal);
         }
-        source.append(&context.suffix)?;
-        let source = source.into_bytes();
+        composed.append(&context.suffix)?;
+        let composed_source = composed.into_bytes();
         let prepared = namespace
-            .prepare(&source, &context.stack_in, context.limits)
+            .prepare(&composed_source, &context.stack_in, context.limits)
             .map_err(|_| {
                 Refusal::new(
                     RefusalKind::Invalid,
@@ -206,17 +206,17 @@ impl ProcedureLibrary {
             cost_key: [0; 3],
         };
         Ok(ComposedProgram {
-            source,
+            source: composed_source,
             interface,
             selected: retained_ids,
         })
     }
 
-    /// Append the admitted source of the selected procedure `id` to `source`.
+    /// Append the admitted source of the selected procedure `id` to `composed`.
     fn append_selected(
         &self,
         id: &ProcedureId,
-        source: &mut BoundedProgramBytes,
+        composed: &mut BoundedProgramBytes,
     ) -> Result<(), Refusal> {
         let record = crate::scan::find_first(self.records(), |record| record.procedure_id == *id)
             .ok_or_else(|| {
@@ -250,7 +250,7 @@ impl ProcedureLibrary {
                 },
             )
         })?;
-        source.append(entry.source())
+        composed.append(entry.source())
     }
 
     /// Bind an MC2 proof to the exact retained source artifact. The host-side
@@ -259,7 +259,7 @@ impl ProcedureLibrary {
     pub fn bind_companion_evidence(
         &self,
         namespace: &Session,
-        core: &Core,
+        companion_core: &Core,
         procedure_id: ProcedureId,
         evidence: EvidenceId,
         limits: Limits,
@@ -317,7 +317,7 @@ impl ProcedureLibrary {
                 },
             )
         })?;
-        let subject = core
+        let subject = companion_core
             .bind_checked_program(evidence, submission)
             .map_err(Refusal::from_companion)?;
         let expected_input = interface_signature(&record.chunk.interface.stack_in);
@@ -345,7 +345,7 @@ impl ProcedureLibrary {
     pub fn compose_certified(
         &self,
         namespace: &Session,
-        core: &mut Core,
+        companion_core: &mut Core,
         left: &BoundOperand,
         right: &BoundOperand,
         context: &ComposeContext,
@@ -362,15 +362,15 @@ impl ProcedureLibrary {
         }
         let composition =
             self.compose(namespace, &[left.procedure_id, right.procedure_id], context)?;
-        let left_subject = core
+        let left_subject = companion_core
             .bind(left.evidence, &left.subject)
             .map_err(Refusal::from_companion)?;
-        let right_subject = core
+        let right_subject = companion_core
             .bind(right.evidence, &right.subject)
             .map_err(Refusal::from_companion)?;
         let joint = Core::compose_subject(&left_subject, &right_subject)
             .map_err(Refusal::from_companion)?;
-        let derivation = core
+        let derivation = companion_core
             .derive_compose(left.evidence, right.evidence, &joint)
             .map_err(Refusal::from_companion)?;
         Ok(CertifiedComposedProgram {

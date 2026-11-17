@@ -456,30 +456,30 @@ fn lexical_node(
     session: &crate::source::Session,
     meter: &mut crate::Meter,
 ) -> Result<(), crate::Diagnostic> {
-    let (source, raw) = nodes;
+    let (parsed, raw) = nodes;
     let (parsed_name, source_bytes) = lexical;
-    attempt!(meter.charge(16, source.span));
-    if source.span != raw.span {
-        return Err(refused(source.span));
+    attempt!(meter.charge(16, parsed.span));
+    if parsed.span != raw.span {
+        return Err(refused(parsed.span));
     }
-    if source.span.start >= source.span.end && !both_builtin(&source.kind, &raw.kind) {
-        return Err(refused(source.span));
+    if parsed.span.start >= parsed.span.end && !both_builtin(&parsed.kind, &raw.kind) {
+        return Err(refused(parsed.span));
     }
-    if !lexical_kind(source, raw, parsed_name, source_bytes) {
-        return Err(refused(source.span));
+    if !lexical_kind(parsed, raw, parsed_name, source_bytes) {
+        return Err(refused(parsed.span));
     }
-    if !attempt!(named_token_matches(source, raw, session, meter)) {
-        return Err(refused(source.span));
+    if !attempt!(named_token_matches(parsed, raw, session, meter)) {
+        return Err(refused(parsed.span));
     }
-    if !is_live && !is_empty_quotation(&source.kind) {
-        return Err(refused(source.span));
+    if !is_live && !is_empty_quotation(&parsed.kind) {
+        return Err(refused(parsed.span));
     }
     Ok(())
 }
 
 /// Whether both node kinds are builtin calls.
-const fn both_builtin(source: &Kind, raw: &Kind) -> bool {
-    matches!(source, Kind::Call(Target::Builtin(_)))
+const fn both_builtin(parsed: &Kind, raw: &Kind) -> bool {
+    matches!(parsed, Kind::Call(Target::Builtin(_)))
         && matches!(raw, Kind::Call(Target::Builtin(_)))
 }
 
@@ -545,7 +545,7 @@ fn pair_draft(
     let tree = subject.tree;
     let source_index = attempt!(crate::offset(source_id, tree.span));
     let draft_index = attempt!(crate::offset(draft_id, tree.span));
-    let Some(source) = tree.nodes.get(source_index) else {
+    let Some(node) = tree.nodes.get(source_index) else {
         return Err(refused(tree.span));
     };
     let Some(draft) = subject.body.nodes.get(draft_index) else {
@@ -555,9 +555,9 @@ fn pair_draft(
     if !subject.live.get(source_index).copied().unwrap_or(false)
         || pairing.source_to_draft[source_index].is_some()
         || pairing.drafts_seen[draft_index]
-        || source.span != draft.span
+        || node.span != draft.span
         || !draft_matches(
-            source,
+            node,
             draft,
             subject.state,
             subject.scheme,
@@ -568,16 +568,16 @@ fn pair_draft(
             meter,
         )?
     {
-        return Err(refused(source.span));
+        return Err(refused(node.span));
     }
     pairing.source_to_draft[source_index] = Some(draft_id);
     pairing.drafts_seen[draft_index] = true;
-    if let Kind::Quotation(children) = &source.kind {
+    if let Kind::Quotation(children) = &node.kind {
         let crate::source::inference::DraftKind::Quotation(inferred) = &draft.kind else {
-            return Err(refused(source.span));
+            return Err(refused(node.span));
         };
         if children.len() != inferred.len() {
-            return Err(refused(source.span));
+            return Err(refused(node.span));
         }
         pairing.pending.reserve(children.len());
         let mut at = 0;
@@ -606,34 +606,32 @@ fn drafts_match_reach(live: &[bool], source_to_draft: &[Option<u32>]) -> bool {
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
 fn relation_node(
-    source: &crate::source::Node,
+    node: &crate::source::Node,
     slot: Option<u32>,
     body: &crate::source::inference::Body,
     source_to_draft: &[Option<u32>],
     meter: &mut crate::Meter,
 ) -> Result<Option<SymbolicNode>, crate::Diagnostic> {
-    attempt!(meter.charge(1, source.span));
+    attempt!(meter.charge(1, node.span));
     let Some(draft_id) = slot else {
         return Ok(None);
     };
-    if let Kind::Quotation(children) = &source.kind {
+    if let Kind::Quotation(children) = &node.kind {
         let Some(crate::source::inference::Draft {
             kind: crate::source::inference::DraftKind::Quotation(drafts),
             ..
-        }) = body
-            .nodes
-            .get(attempt!(crate::offset(draft_id, source.span)))
+        }) = body.nodes.get(attempt!(crate::offset(draft_id, node.span)))
         else {
-            return Err(refused(source.span));
+            return Err(refused(node.span));
         };
         if !same_edges(children, drafts, source_to_draft) {
-            return Err(refused(source.span));
+            return Err(refused(node.span));
         }
     }
     Ok(Some(SymbolicNode {
         draft: draft_id,
-        span: source.span,
-        target: call_target(&source.kind),
+        span: node.span,
+        target: call_target(&node.kind),
     }))
 }
 
@@ -654,18 +652,18 @@ fn mapped(source_to_draft: &[Option<u32>], id: u32) -> Option<u32> {
 }
 
 fn same_edges(
-    source: &[u32],
+    children: &[u32],
     drafts: &[noble_kernel::untrusted::NodeId],
     source_to_draft: &[Option<u32>],
 ) -> bool {
-    if source.len() != drafts.len() {
+    if children.len() != drafts.len() {
         return false;
     }
     let mut at = 0;
     let mut is_same = true;
-    while is_same && at < source.len() {
+    while is_same && at < children.len() {
         is_same = matches!(
-            mapped(source_to_draft, source[at]),
+            mapped(source_to_draft, children[at]),
             Some(draft) if draft == drafts[at].0
         );
         at += 1;
@@ -674,20 +672,20 @@ fn same_edges(
 }
 
 fn named_token_matches(
-    source: &crate::source::Node,
+    parsed: &crate::source::Node,
     raw: &crate::source::Node,
     session: &crate::source::Session,
     meter: &mut crate::Meter,
 ) -> Result<bool, crate::Diagnostic> {
     // A named word can be an imported alias. Bind it against this transaction's
     // declared namespace, not the canonical name of its target definition.
-    let (Kind::Call(Target::Named(index)), Kind::Word(word)) = (&source.kind, &raw.kind) else {
+    let (Kind::Call(Target::Named(index)), Kind::Word(word)) = (&parsed.kind, &raw.kind) else {
         return Ok(true);
     };
     let Some(context) = session.declared.as_ref() else {
         return Ok(false);
     };
-    bound_word(&context.words, word, *index, source.span, meter)
+    bound_word(&context.words, word, *index, parsed.span, meter)
 }
 
 /// Whether the last namespace word spelling `word` binds `Named(index)`.
@@ -746,12 +744,12 @@ fn word_binding(
     reason = "Owner: noble-contracts; str and byte-slice equality are not const."
 )]
 fn lexical_kind(
-    source: &crate::source::Node,
+    parsed: &crate::source::Node,
     raw: &crate::source::Node,
     name: Option<&str>,
     bytes: &[u8],
 ) -> bool {
-    match (&source.kind, &raw.kind) {
+    match (&parsed.kind, &raw.kind) {
         (Kind::Literal(a), Kind::Literal(b)) => a == b,
         (Kind::Text(a), Kind::Text(b)) => a == b,
         (Kind::Quotation(a), Kind::Quotation(b)) => a == b,
@@ -761,7 +759,7 @@ fn lexical_kind(
                 usize::try_from(raw.span.start).ok(),
                 usize::try_from(raw.span.end).ok(),
             ) {
-                (Some(start), Some(end)) => bytes.get(start..end),
+                (Some(start), Some(stop)) => bytes.get(start..stop),
                 _ => None,
             };
             if spelled != Some(word.as_slice()) {
@@ -792,7 +790,7 @@ fn lexical_kind(
     reason = "Owner: noble-contracts; the comparison resolves definitions and charges the shared meter through non-const calls."
 )]
 fn draft_matches(
-    source: &crate::source::Node,
+    node: &crate::source::Node,
     draft: &crate::source::inference::Draft,
     state: &crate::source::inference::State,
     scheme: &Scheme,
@@ -808,7 +806,7 @@ fn draft_matches(
     )]
     use crate::source::inference::DraftKind;
     // Each occurrence kind is compared by its own helper, so the arms join only booleans.
-    let is_same = match (&source.kind, &draft.kind) {
+    let is_same = match (&node.kind, &draft.kind) {
         (Kind::Literal(a), DraftKind::Literal(b)) => literal_draft(a, b, draft),
         (Kind::Text(bytes), DraftKind::Literal(noble_kernel::untrusted::Lit::Text)) => {
             text_draft(bytes, draft)
@@ -819,7 +817,7 @@ fn draft_matches(
         (Kind::Call(Target::Named(index)), DraftKind::Invocation(def)) => {
             attempt!(named_draft(
                 (*index, *def),
-                source.span,
+                node.span,
                 draft,
                 state,
                 session
@@ -831,7 +829,7 @@ fn draft_matches(
         (Kind::Quotation(_), DraftKind::Quotation(_)) => quotation_draft(draft),
         _ => false,
     };
-    attempt!(meter.charge(1, source.span));
+    attempt!(meter.charge(1, node.span));
     Ok(is_same)
 }
 
@@ -841,11 +839,11 @@ fn draft_matches(
     reason = "Owner: noble-contracts; derived literal equality is a non-const PartialEq call."
 )]
 fn literal_draft(
-    source: &noble_kernel::untrusted::Lit,
+    parsed: &noble_kernel::untrusted::Lit,
     inferred: &noble_kernel::untrusted::Lit,
     draft: &crate::source::inference::Draft,
 ) -> bool {
-    source == inferred && draft.text.is_none() && single_stack(draft)
+    parsed == inferred && draft.text.is_none() && single_stack(draft)
 }
 
 /// Whether a text literal draft carries exactly the occurrence's bytes at one stack variable.
@@ -854,7 +852,13 @@ fn literal_draft(
     reason = "Owner: noble-contracts; byte-slice equality is not const."
 )]
 fn text_draft(bytes: &[u8], draft: &crate::source::inference::Draft) -> bool {
-    draft.text.as_deref() == Some(bytes) && single_stack(draft)
+    // An explicit match: `Option::as_deref` passes `Vec`'s Deref instance,
+    // which the generated Lean cannot elaborate.
+    let is_same_text = match &draft.text {
+        Some(text) => text.as_slice() == bytes,
+        None => false,
+    };
+    is_same_text && single_stack(draft)
 }
 
 /// Whether a draft has exactly one variable, a stack variable.

@@ -226,7 +226,7 @@ impl ProcedureLibrary {
                 query,
                 budget,
                 &mut examined_entries,
-                dependency_matches.as_ref(),
+                &dependency_matches,
                 record,
             ) {
                 Ok(true) => candidates.push(record.procedure_id),
@@ -259,7 +259,7 @@ impl ProcedureLibrary {
         query: &Query,
         budget: &mut QueryBudget,
         examined_entries: &mut u32,
-        dependency_matches: Option<&Vec<ProcedureId>>,
+        dependency_matches: &Option<Vec<ProcedureId>>,
         record: &ProcedureRecord,
     ) -> Result<bool, Refusal> {
         *examined_entries = examined_entries.checked_add(1).ok_or_else(|| {
@@ -326,8 +326,10 @@ impl ProcedureLibrary {
         {
             return Ok(false);
         }
-        if dependency_matches.is_some_and(|matches| !matches.contains(&record.procedure_id)) {
-            return Ok(false);
+        if let Some(matches) = dependency_matches {
+            if !matches.contains(&record.procedure_id) {
+                return Ok(false);
+            }
         }
         Ok(true)
     }

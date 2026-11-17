@@ -369,6 +369,10 @@ fn lowered_operation(
     tigerstyle::no_recursion,
     reason = "Owner: noble-wasm-maintainers; the recursion follows the structure of an already checked, size-bounded input."
 )]
+#[expect(
+    clippy::question_mark,
+    reason = "Owner: noble-wasm-maintainers; an explicit match moves the mutable slot out of its Option, which the pinned extractor supports where `?` on Option<&mut> is not."
+)]
 fn quotation_bodies(
     selected: &CheckedSelectedTarget<'_>,
     result: &[OriginProgram],
@@ -390,7 +394,10 @@ fn quotation_bodies(
             if !is_quotation(kind) {
                 return None;
             }
-            let slot = body_nodes.get_mut(index)?;
+            let slot = match body_nodes.get_mut(index) {
+                Some(slot) => slot,
+                None => return None,
+            };
             if slot.replace(node).is_some() {
                 return None;
             }
@@ -625,6 +632,10 @@ fn execute_operation(
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-wasm-maintainers; the replayed operand stack is pushed and popped, so it needs the growable vector."
 )]
+#[expect(
+    clippy::question_mark,
+    reason = "Owner: noble-wasm-maintainers; an explicit match moves the mutable slot out of its Option, which the pinned extractor supports where `?` on Option<&mut> is not."
+)]
 fn apply_operation(
     programs: &[OriginProgram],
     plan: &Layout,
@@ -715,7 +726,10 @@ fn apply_operation(
             Some(())
         }
         OriginAction::StaticProgram(program_index) => {
-            let slot = static_programs.get_mut(program_index)?;
+            let slot = match static_programs.get_mut(program_index) {
+                Some(slot) => slot,
+                None => return None,
+            };
             let depth = usize::try_from(plan.programs.get(program_index)?.depth).ok()?;
             if depth > MAX_ORIGIN_DEPTH {
                 return None;
@@ -974,7 +988,10 @@ fn bounded_graph_cells(
         if is_counted {
             return Some(true);
         }
-        *constructed.get_mut(*constructed_count)? = Some(Rc::clone(value));
+        match constructed.get_mut(*constructed_count) {
+            Some(slot) => *slot = Some(Rc::clone(value)),
+            None => return None,
+        }
         *constructed_count += 1;
         Some(false)
     }
@@ -998,7 +1015,10 @@ fn bounded_graph_cells(
         if *seen.get(index)? {
             return Some(());
         }
-        *seen.get_mut(index)? = true;
+        match seen.get_mut(index) {
+            Some(is_seen) => *is_seen = true,
+            None => return None,
+        }
         charge(total, 1)?;
         let operations = &programs.get(index)?.operations;
         charge(total, operations.len().checked_mul(2)?.checked_sub(1)?)?;

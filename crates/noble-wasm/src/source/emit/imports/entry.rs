@@ -235,14 +235,16 @@ fn live_operations(
     Ok(())
 }
 
-/// The live proposal entry, whose callback window depends on Core live.
+/// The live proposal entry, whose callback window depends on Core live. The
+/// entries are ASCII `str` literals emitted through `as_bytes`, so no large
+/// constant byte array is built.
 fn live_propose(
     out: &mut crate::output::Buffer,
     plan: &super::super::super::plan::Layout,
 ) -> Result<(), crate::Diagnostic> {
     if plan.has_live_propose && plan.core_live {
         out.append(
-            b"(func $op_live_propose (param $owner i64)
+            "(func $op_live_propose (param $owner i64)
  (local $program i32) (local $expected i64) (local $approved i32)
  (local.set $program (i32.wrap_i64 (call $pop_kind (i32.const 4))))
  (local.set $expected (call $pop_kind (i32.const 1)))
@@ -255,10 +257,12 @@ fn live_propose(
  (global.set $core_live_proposal_callback_active (i32.const 0))
  (if (i32.eqz (local.get $approved))
   (then (global.set $failure (i32.const 0)) (call $push_unit))))
-",
+"
+            .as_bytes(),
         )
     } else if plan.has_live_propose {
-        out.append(b"(func $op_live_propose (param $owner i64)
+        out.append(
+            "(func $op_live_propose (param $owner i64)
  (local $program i32) (local $expected i64)
  (local.set $program (i32.wrap_i64 (call $pop_kind (i32.const 4))))
  (local.set $expected (call $pop_kind (i32.const 1)))
@@ -267,7 +271,9 @@ fn live_propose(
  (global.set $failure (i32.const 5))
  (if (i32.eqz (call $host_live_propose (local.get $owner) (local.get $expected) (local.get $program)))
   (then (global.set $failure (i32.const 0)) (call $push_unit))))
-")
+"
+            .as_bytes(),
+        )
     } else {
         Ok(())
     }

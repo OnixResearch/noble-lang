@@ -115,7 +115,7 @@ fn lower_inner(
     };
     let envelope = if has_envelope { tree.nodes.pop() } else { None };
     let body = core::mem::take(&mut tree.body);
-    let lowered = lower_body(&mut tree.nodes, meter, witnesses, &body);
+    let lowered = lower_body(&mut tree.nodes, meter, witnesses, body);
     if let Some(envelope) = envelope {
         tree.nodes.push(envelope);
     }
@@ -137,7 +137,7 @@ fn lower_body(
     nodes: &mut Vec<super::Node>,
     meter: &mut crate::Meter,
     witnesses: Option<&mut Vec<GeneratedWitness>>,
-    body: &[u32],
+    body: Vec<u32>,
 ) -> Result<Vec<u32>, crate::Diagnostic> {
     let mut lower = Lower {
         nodes,
@@ -217,15 +217,17 @@ fn source_node(
 
 /// Check lexical free occurrences before moving any quotation body. `shadow`
 /// includes binders introduced inside the quoted body, not the outer locals.
+/// Nested quotations are walked with an explicit stack of levels rather than
+/// by recursion, so no loop sits on a recursive call; the depth meter bounds
+/// the stack before each level is pushed.
 #[expect(
     clippy::too_many_arguments,
-    reason = "Owner: noble-contracts; the lexical free-occurrence walk threads its node table, body, outer binders, shadow stack and meter explicitly; bundling them would hide which state each recursive step reads or extends"
+    reason = "Owner: noble-contracts; the lexical free-occurrence walk threads its node table, body, outer binders, shadow stack and meter explicitly; bundling them would hide which state each step reads or extends"
 )]
 #[expect(
-    tigerstyle::assertion_density,
     tigerstyle::mutating_input_in_pure,
     tigerstyle::too_many_parameters,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+    reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
 )]
 #[expect(
     tigerstyle::borrowed_argument_types,
@@ -242,30 +244,150 @@ fn free(
     span: crate::Span,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(meter.depth(depth, span));
-    let level = FreeLevel {
-        nodes,
-        body,
-        outer,
+    let walk = FreeWalk { nodes, body, outer };
+    // An explicit owned push: the pinned Aeneas fails on the erased regions
+    // of a `vec!` array conversion.
+    let mut frames = Vec::new();
+    frames.push(FreeFrame {
+        quotation: None,
+        cursor: 0,
         scope: shadow.len(),
         depth,
         span,
-    };
-    let mut at = 0;
-    let mut outcome = Ok(());
-    while outcome.is_ok() && at < body.len() {
-        match free_entry(level, at, shadow, used, meter) {
-            Ok(true) => at += 2,
-            Ok(false) => at += 1,
-            Err(problem) => outcome = Err(problem),
-        }
+    });
+    let mut outcome = Ok(false);
+    while matches!(outcome, Ok(false)) {
+        outcome = free_step(walk, &mut frames, shadow, used, meter);
     }
     attempt!(outcome);
-    shadow.truncate(level.scope);
     Ok(())
 }
 
-/// One quotation level of the `free` walk: its tables, its body and the
-/// shadow height at which the level's own binders start.
+/// The tables shared by every level of one `free` walk.
+#[derive(Clone, Copy)]
+struct FreeWalk<'a> {
+    nodes: &'a [super::Node],
+    body: &'a [u32],
+    outer: &'a [Bound],
+}
+
+impl<'a> FreeWalk<'a> {
+    /// The entries of a level: the walk's own body, or the children of the
+    /// nested quotation node `quotation`.
+    fn level_body(
+        self,
+        quotation: Option<u32>,
+        span: crate::Span,
+    ) -> Result<&'a [u32], crate::Diagnostic> {
+        let Some(id) = quotation else {
+            return Ok(self.body);
+        };
+        let node = attempt!(source_node(self.nodes, id, span));
+        let super::Kind::Quotation(children) = &node.kind else {
+            return Err(crate::internal(span));
+        };
+        Ok(children)
+    }
+}
+
+/// One pending quotation level of the `free` walk, without borrows: the
+/// quotation node whose body it walks (`None` for the walk's own body), its
+/// next entry, the shadow height at which its own binders start, and its
+/// depth and span.
+#[derive(Clone, Copy)]
+struct FreeFrame {
+    quotation: Option<u32>,
+    cursor: usize,
+    scope: usize,
+    depth: u32,
+    span: crate::Span,
+}
+
+/// What one checked entry of a `free` level asks the walk to do next.
+enum FreeEntry {
+    /// Continue with the following entry.
+    Next,
+    /// A `let` binder consumed its name too: skip both entries.
+    Binder,
+    /// Walk the body of the nested quotation node first, at `depth`.
+    Nested {
+        quotation: u32,
+        depth: u32,
+        span: crate::Span,
+    },
+}
+
+/// Advance the `free` walk by one entry of the innermost level, or finish
+/// that level and drop its binders. Returns whether the walk is complete.
+/// Entries, metering and errors follow the recursive walk's order exactly.
+#[expect(
+    tigerstyle::assertion_density,
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; the level stack and the shadow scope stack are pushed and popped by the walk, so they need growable vectors."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; it pushes and pops the walk's vectors and charges the meter, none of which is const."
+)]
+fn free_step(
+    walk: FreeWalk<'_>,
+    frames: &mut Vec<FreeFrame>,
+    shadow: &mut Vec<Vec<u8>>,
+    used: &mut [bool],
+    meter: &mut crate::Meter,
+) -> Result<bool, crate::Diagnostic> {
+    let Some(mut frame) = frames.pop() else {
+        return Ok(true);
+    };
+    let entries = attempt!(walk.level_body(frame.quotation, frame.span));
+    if frame.cursor >= entries.len() {
+        shadow.truncate(frame.scope);
+        return Ok(frames.is_empty());
+    }
+    let level = FreeLevel {
+        nodes: walk.nodes,
+        body: entries,
+        outer: walk.outer,
+        scope: frame.scope,
+        depth: frame.depth,
+        span: frame.span,
+    };
+    match attempt!(free_entry(level, frame.cursor, shadow, used, meter)) {
+        FreeEntry::Next => {
+            frame.cursor += 1;
+            frames.push(frame);
+        }
+        FreeEntry::Binder => {
+            frame.cursor += 2;
+            frames.push(frame);
+        }
+        FreeEntry::Nested {
+            quotation,
+            depth,
+            span,
+        } => {
+            frame.cursor += 1;
+            frames.push(frame);
+            attempt!(meter.depth(depth, span));
+            frames.push(FreeFrame {
+                quotation: Some(quotation),
+                cursor: 0,
+                scope: shadow.len(),
+                depth,
+                span,
+            });
+        }
+    }
+    Ok(false)
+}
+
+/// One quotation level of the `free` walk as seen by a single entry: its
+/// tables, its body and the shadow height at which the level's own binders
+/// start.
 #[derive(Clone, Copy)]
 struct FreeLevel<'a> {
     nodes: &'a [super::Node],
@@ -277,8 +399,7 @@ struct FreeLevel<'a> {
 }
 
 /// Check one body entry of a `free` level: a `let` binder with its name, a
-/// word occurrence or a nested quotation. Returns whether a binder consumed
-/// two entries.
+/// word occurrence or a nested quotation, which the caller walks next.
 #[expect(
     tigerstyle::assertion_density,
     tigerstyle::mutating_input_in_pure,
@@ -298,9 +419,10 @@ fn free_entry(
     shadow: &mut Vec<Vec<u8>>,
     used: &mut [bool],
     meter: &mut crate::Meter,
-) -> Result<bool, crate::Diagnostic> {
+) -> Result<FreeEntry, crate::Diagnostic> {
     attempt!(meter.charge(1, level.span));
-    let node = attempt!(source_node(level.nodes, level.body[at], level.span));
+    let id = level.body[at];
+    let node = attempt!(source_node(level.nodes, id, level.span));
     if is_let(&node.kind) {
         let next = level
             .body
@@ -319,33 +441,27 @@ fn free_entry(
         }
         attempt!(meter.node(bind.span));
         shadow.push(name_bytes.clone());
-        return Ok(true);
+        return Ok(FreeEntry::Binder);
     }
     match &node.kind {
         super::Kind::Word(word) => {
             if !attempt!(shadowed(shadow, word, meter, node.span)) {
                 attempt!(mark_outer_use(level.outer, word, used, meter, node.span));
             }
-            Ok(false)
+            Ok(FreeEntry::Next)
         }
-        super::Kind::Quotation(nested) => {
+        super::Kind::Quotation(_) => {
             let deeper = level
                 .depth
                 .checked_add(1)
                 .ok_or_else(|| crate::invalid(node.span, "lexical quotation depth overflow"))?;
-            attempt!(free(
-                level.nodes,
-                nested,
-                level.outer,
-                shadow,
-                used,
-                meter,
-                deeper,
-                node.span
-            ));
-            Ok(false)
+            Ok(FreeEntry::Nested {
+                quotation: id,
+                depth: deeper,
+                span: node.span,
+            })
         }
-        _ => Ok(false),
+        _ => Ok(FreeEntry::Next),
     }
 }
 
@@ -650,10 +766,6 @@ impl Lower<'_> {
         tigerstyle::borrowed_argument_types,
         reason = "Owner: noble-contracts; it forwards the growable code buffer to operation, which appends with Vec::push."
     )]
-    #[expect(
-        tigerstyle::raw_arithmetic_overflow,
-        reason = "Owner: noble-contracts; the preceding which >= locals.len() refusal guarantees locals.len() - which - 1 cannot underflow."
-    )]
     fn read(
         &mut self,
         code: &mut Vec<u32>,
@@ -678,50 +790,61 @@ impl Lower<'_> {
             occurrence_node,
             binder_node
         ));
-        let older_count = locals.len() - which - 1;
-        let mut older = 0;
-        let mut outcome = Ok(());
-        while outcome.is_ok() && older < older_count {
-            outcome = match which
-                .checked_add(1)
-                .and_then(|count| count.checked_add(older))
-            {
-                Some(hidden) => self.operation(
-                    code,
-                    2,
-                    locals,
-                    hidden,
-                    depth,
-                    span,
-                    Generation::ProjectionSwap,
-                    occurrence_node,
-                    binder_node,
-                ),
-                None => Err(crate::internal(span)),
-            };
-            older += 1;
+        // Swap the copy above each older hidden local, `which + 1` up to the
+        // oldest. Every iteration makes the same single call, so no branch
+        // in the loop decides whether `self` is borrowed.
+        let Some(mut hidden) = which.checked_add(1) else {
+            return Err(crate::internal(span));
+        };
+        let mut failure = None;
+        while hidden < locals.len() {
+            if let Err(problem) = self.operation(
+                code,
+                2,
+                locals,
+                hidden,
+                depth,
+                span,
+                Generation::ProjectionSwap,
+                occurrence_node,
+                binder_node,
+            ) {
+                failure = Some(problem);
+                break;
+            }
+            hidden += 1;
         }
-        outcome
+        match failure {
+            Some(problem) => Err(problem),
+            None => Ok(()),
+        }
     }
 
+    /// Open quotation `id`: take its body out of the arena, find the outer
+    /// binders it uses, charge and copy them, and emit the code capturing
+    /// them oldest first. The returned level lowers the body with those
+    /// binders; `close_quote` finishes the quotation once it is lowered.
     #[expect(
         tigerstyle::ambiguous_params,
         tigerstyle::mutating_input_in_pure,
         tigerstyle::unbounded_collection_growth,
         reason = "Owner: noble-contracts; the same-typed parameters are positional coordinates at each checked call site; a newtype would not change the call shape; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; growth is bounded by the checked input or admission limits that drive the loop."
     )]
-    fn quote(
+    fn open_quote(
         &mut self,
         id: u32,
         outer: &[Bound],
         depth: u32,
         span: crate::Span,
-    ) -> Result<Vec<u32>, crate::Diagnostic> {
+    ) -> Result<BodyLevel, crate::Diagnostic> {
+        // Explicit matches: a mutable node borrow must not pass through a std
+        // combinator for the extraction.
+        let arena_index = attempt!(crate::offset(id, span));
         let nested = {
-            let node = self
-                .nodes
-                .get_mut(attempt!(crate::offset(id, span)))
-                .ok_or_else(|| crate::internal(span))?;
+            let node = match self.nodes.get_mut(arena_index) {
+                Some(node) => node,
+                None => return Err(crate::internal(span)),
+            };
             let super::Kind::Quotation(body) = &mut node.kind else {
                 return Err(crate::internal(span));
             };
@@ -778,12 +901,56 @@ impl Lower<'_> {
         if let Some(problem) = failure {
             return Err(problem);
         }
-        let body = attempt!(self.body(&nested, captured, deeper));
-        let node = self
-            .nodes
-            .get_mut(attempt!(crate::offset(id, span)))
-            .ok_or_else(|| crate::internal(span))?;
-        node.kind = super::Kind::Quotation(body);
+        Ok(BodyLevel {
+            entries: nested,
+            state: BodyState {
+                code: Vec::new(),
+                locals: captured,
+                introduced: 0,
+            },
+            cursor: 0,
+            depth: deeper,
+            pending: Some(PendingQuote {
+                id,
+                arena_index,
+                depth,
+                span,
+                lowered,
+                is_first,
+            }),
+        })
+    }
+
+    /// Finish a quotation whose body was lowered to `code`: store the body
+    /// back in the arena, wrap the quotation for the enclosing binders
+    /// `outer`, and compose it after its captures.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; it writes the node arena and emits checked code through non-const helpers."
+    )]
+    fn close_quote(
+        &mut self,
+        pending: PendingQuote,
+        code: Vec<u32>,
+        outer: &[Bound],
+    ) -> Result<Vec<u32>, crate::Diagnostic> {
+        let PendingQuote {
+            id,
+            arena_index,
+            depth,
+            span,
+            mut lowered,
+            is_first,
+        } = pending;
+        let node = match self.nodes.get_mut(arena_index) {
+            Some(node) => node,
+            None => return Err(crate::internal(span)),
+        };
+        node.kind = super::Kind::Quotation(code);
         lowered.extend(attempt!(self.wrapped(
             id,
             outer,
@@ -863,31 +1030,108 @@ impl Lower<'_> {
         Ok(())
     }
 
+    /// Lower a body and every quotation nested in it. Nested bodies are kept
+    /// on an explicit stack of levels instead of a recursive call, so no loop
+    /// sits on a recursion; entries, metering and errors keep the order of
+    /// the recursive lowering exactly.
     #[expect(
         tigerstyle::mutating_input_in_pure,
         reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
     )]
     fn body(
         &mut self,
-        source: &[u32],
+        entries: Vec<u32>,
         locals: Vec<Bound>,
         depth: u32,
     ) -> Result<Vec<u32>, crate::Diagnostic> {
-        let mut state = BodyState {
-            code: Vec::new(),
-            locals,
-            introduced: 0,
-        };
-        let mut at = 0usize;
-        let mut outcome = Ok(());
-        while outcome.is_ok() && at < source.len() {
-            match self.body_entry(source, at, &mut state, depth) {
-                Ok(true) => at += 2,
-                Ok(false) => at += 1,
-                Err(problem) => outcome = Err(problem),
-            }
+        // An explicit owned push: the pinned Aeneas fails on the erased
+        // regions of a `vec!` array conversion.
+        let mut levels = Vec::new();
+        levels.push(BodyLevel {
+            entries,
+            state: BodyState {
+                code: Vec::new(),
+                locals,
+                introduced: 0,
+            },
+            cursor: 0,
+            depth,
+            pending: None,
+        });
+        let mut outcome = Ok(None);
+        while matches!(outcome, Ok(None)) {
+            outcome = self.lower_step(&mut levels);
         }
-        attempt!(outcome);
+        match outcome {
+            Ok(Some(code)) => Ok(code),
+            Ok(None) => Err(crate::internal(crate::Span { start: 0, end: 0 })),
+            Err(problem) => Err(problem),
+        }
+    }
+
+    /// One step of `body`: lower the next entry of the innermost level, or
+    /// open a nested quotation as a new level; once a level's entries are
+    /// done, drop its binders and hand its code to the quotation it belongs
+    /// to, or return it when it is the outermost body.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-contracts; levels are pushed and popped as quotation bodies open and close, so the stack needs the growable vector."
+    )]
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; it moves levels through the stack vector and emits checked code through non-const helpers."
+    )]
+    fn lower_step(
+        &mut self,
+        levels: &mut Vec<BodyLevel>,
+    ) -> Result<Option<Vec<u32>>, crate::Diagnostic> {
+        let Some(mut level) = levels.pop() else {
+            return Err(crate::internal(crate::Span { start: 0, end: 0 }));
+        };
+        if level.cursor < level.entries.len() {
+            match attempt!(self.body_entry(
+                &level.entries,
+                level.cursor,
+                &mut level.state,
+                level.depth
+            )) {
+                EntryStep::Next => level.cursor += 1,
+                EntryStep::Binder => level.cursor += 2,
+                EntryStep::Quotation { id, span } => {
+                    level.cursor += 1;
+                    let nested =
+                        attempt!(self.open_quote(id, &level.state.locals, level.depth, span));
+                    levels.push(level);
+                    levels.push(nested);
+                    return Ok(None);
+                }
+            }
+            levels.push(level);
+            return Ok(None);
+        }
+        let code = attempt!(self.cleanup(level.state));
+        let Some(pending) = level.pending else {
+            return Ok(Some(code));
+        };
+        let Some(mut parent) = levels.pop() else {
+            return Err(crate::internal(pending.span));
+        };
+        let lowered = attempt!(self.close_quote(pending, code, &parent.state.locals));
+        parent.state.code.extend(lowered);
+        levels.push(parent);
+        Ok(None)
+    }
+
+    /// Drop every binder of a finished body, newest first, after its code.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    fn cleanup(&mut self, mut state: BodyState) -> Result<Vec<u32>, crate::Diagnostic> {
         let mut index = 0;
         let mut failure = None;
         while index < state.locals.len() {
@@ -913,20 +1157,20 @@ impl Lower<'_> {
     }
 
     /// Lower one source entry: a `let` binding (with its name) or a local
-    /// read, quotation or other word. Returns whether a binding consumed two
-    /// entries.
+    /// read or other word. A quotation is left to the caller, which opens it
+    /// as a nested level.
     #[expect(
         tigerstyle::mutating_input_in_pure,
         reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
     )]
     fn body_entry(
         &mut self,
-        source: &[u32],
+        entries: &[u32],
         at: usize,
         state: &mut BodyState,
         depth: u32,
-    ) -> Result<bool, crate::Diagnostic> {
-        let id = source[at];
+    ) -> Result<EntryStep, crate::Diagnostic> {
+        let id = entries[at];
         let node = attempt!(source_node(
             self.nodes,
             id,
@@ -934,8 +1178,8 @@ impl Lower<'_> {
         ));
         let span = node.span;
         if is_let(&node.kind) {
-            attempt!(self.binding(source, at, state, depth, span));
-            return Ok(true);
+            attempt!(self.binding(entries, at, state, depth, span));
+            return Ok(EntryStep::Binder);
         }
         let local = match &node.kind {
             super::Kind::Word(word) => {
@@ -947,9 +1191,7 @@ impl Lower<'_> {
             self.nodes[attempt!(crate::offset(id, span))].kind = super::Kind::Quotation(Vec::new());
             attempt!(self.read(&mut state.code, which, &state.locals, depth, span, id));
         } else if matches!(&node.kind, super::Kind::Quotation(_)) {
-            state
-                .code
-                .extend(attempt!(self.quote(id, &state.locals, depth, span)));
+            return Ok(EntryStep::Quotation { id, span });
         } else {
             state.code.extend(attempt!(self.wrapped(
                 id,
@@ -960,7 +1202,7 @@ impl Lower<'_> {
                 id
             )));
         }
-        Ok(false)
+        Ok(EntryStep::Next)
     }
 
     /// Install the `let` binder at `at`: check its name, move the bound value
@@ -971,18 +1213,18 @@ impl Lower<'_> {
     )]
     #[expect(
         tigerstyle::raw_arithmetic_overflow,
-        reason = "Owner: noble-contracts; at is an in-bounds source index, so at + 1 is at most the source length and cannot overflow usize; a Vec length is below isize::MAX, so locals.len() + 1 cannot overflow usize."
+        reason = "Owner: noble-contracts; at is an in-bounds entry index, so at + 1 is at most the entry count and cannot overflow usize; a Vec length is below isize::MAX, so locals.len() + 1 cannot overflow usize."
     )]
     fn binding(
         &mut self,
-        source: &[u32],
+        entries: &[u32],
         at: usize,
         state: &mut BodyState,
         depth: u32,
         span: crate::Span,
     ) -> Result<(), crate::Diagnostic> {
-        let id = source[at];
-        let next = source
+        let id = entries[at];
+        let next = entries
             .get(at + 1)
             .copied()
             .ok_or_else(|| crate::invalid(span, "let requires a local name"))?;
@@ -1074,11 +1316,44 @@ impl Lower<'_> {
     }
 }
 
-/// The code, binders and binder count of one `Lower::body` walk.
+/// The code, binders and binder count of one body being lowered.
 struct BodyState {
     code: Vec<u32>,
     locals: Vec<Bound>,
     introduced: usize,
+}
+
+/// One body on the `Lower::body` stack: its entries, lowering state, next
+/// entry and depth, and for a nested quotation body the quotation to finish
+/// once the body is lowered.
+struct BodyLevel {
+    entries: Vec<u32>,
+    state: BodyState,
+    cursor: usize,
+    depth: u32,
+    pending: Option<PendingQuote>,
+}
+
+/// A quotation whose body is being lowered: its node and arena slot, its own
+/// depth and span, the code capturing its free binders, and whether that
+/// code captured nothing.
+struct PendingQuote {
+    id: u32,
+    arena_index: usize,
+    depth: u32,
+    span: crate::Span,
+    lowered: Vec<u32>,
+    is_first: bool,
+}
+
+/// How the lowering continues after one body entry.
+enum EntryStep {
+    /// Continue with the following entry.
+    Next,
+    /// A `let` binding consumed its name too: skip both entries.
+    Binder,
+    /// Open the quotation node `id` as a nested level.
+    Quotation { id: u32, span: crate::Span },
 }
 
 /// A copy of one binder, as captured by a quotation.
@@ -1086,5 +1361,68 @@ fn copy_bound(bound: &Bound) -> Bound {
     Bound {
         name: bound.name.clone(),
         binder_node: bound.binder_node,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    /// Binders and captures at several quotation depths, shadowing, a root
+    /// body without `def`, and malformed binders.
+    const PROGRAMS: [&[u8]; 12] = [
+        b"def a [ let x x ]",
+        b"def b [ let x [ x ] ]",
+        b"def c [ let x let y [ y [ x y ] ] x ]",
+        b"def d [ let x [ let y [ x y ] y ] ]",
+        b"def e [ let x [ let x x ] x ]",
+        b"def f [ 1 let x [ [ [ x ] ] ] run ]",
+        b"def g [ let a let b let c [ c b a ] [ a ] ]",
+        b"def h [ let ]",
+        b"def i [ let 1 ]",
+        b"def j [ let x let x x ]",
+        b"def k [ [ let y let y ] ]",
+        b"2 let x [ x x + ] x",
+    ];
+
+    /// Lower `text` with a fresh meter under `limits` and render the outcome,
+    /// the lowered tree, the witnesses and the work spent.
+    fn render(text: &[u8], limits: crate::Limits) -> alloc::string::String {
+        let mut parse_meter = crate::Meter::new(crate::Limits::default());
+        let (mut tree, _) = super::super::parsing::parse(text, &mut parse_meter).unwrap();
+        let mut meter = crate::Meter::new(limits);
+        let mut witnesses = alloc::vec::Vec::new();
+        let outcome = super::lower_with_witness(&mut tree, &mut meter, &mut witnesses);
+        alloc::format!("{outcome:?} {tree:?} {witnesses:?} {}\n", meter.spent())
+    }
+
+    /// FNV-1a of `text`, continuing from `hash`.
+    fn fnv(hash: u64, text: &str) -> u64 {
+        let mut next = hash;
+        for byte in text.bytes() {
+            next = (next ^ u64::from(byte)).wrapping_mul(0x0000_0100_0000_01b3);
+        }
+        next
+    }
+
+    /// The lowering keeps nested bodies and free-occurrence levels on explicit
+    /// stacks. Under every work, node and depth budget it reproduces the
+    /// recursive lowering it replaced: the digest was computed from that
+    /// implementation (commit fc2eb6c6) on the same programs and budgets.
+    #[test]
+    fn explicit_level_lowering_matches_the_recursive_lowering_under_every_budget() {
+        let full = crate::Limits::default();
+        let mut hash = 0xcbf2_9ce4_8422_2325_u64;
+        for text in PROGRAMS {
+            hash = fnv(hash, &render(text, full));
+            for work in 0..=400 {
+                hash = fnv(hash, &render(text, crate::Limits { work, ..full }));
+            }
+            for nodes in 0..=64 {
+                hash = fnv(hash, &render(text, crate::Limits { nodes, ..full }));
+            }
+            for depth in 0..=6 {
+                hash = fnv(hash, &render(text, crate::Limits { depth, ..full }));
+            }
+        }
+        assert_eq!(hash, 18_307_575_468_579_584_411);
     }
 }

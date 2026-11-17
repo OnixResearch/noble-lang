@@ -53,13 +53,8 @@ fn finite_pattern(
         noble_kernel::shapes::Pattern::List(item) => finite_pattern(item, depth + 1, generic, work),
         noble_kernel::shapes::Pattern::Program(input, output, _)
         | noble_kernel::shapes::Pattern::LiveRef(input, output, _) => {
-            let mut index = 0usize;
-            let mut outcome = Ok(());
-            while outcome.is_ok() && index < input.len() + output.len() {
-                outcome = finite_pattern(chained(input, output, index), depth + 1, generic, work);
-                index += 1;
-            }
-            outcome
+            attempt!(finite_patterns(input, 0, depth + 1, generic, work));
+            finite_patterns(output, 0, depth + 1, generic, work)
         }
         noble_kernel::shapes::Pattern::Nominal(_, _)
         | noble_kernel::shapes::Pattern::Var(_)
@@ -74,6 +69,31 @@ fn finite_pattern(
         | noble_kernel::shapes::Pattern::Certified
         | noble_kernel::shapes::Pattern::Resource(_) => Ok(()),
     }
+}
+
+// The calculator's environment clone budget, checked before any pricing walk,
+// bounds every scheme pattern to depth 64, 512 nodes and stacks of 128, so the
+// stack walks below recurse over a small bounded index instead of looping
+// inside the recursive pattern walk.
+
+/// Check the patterns of one Program stack from `index` on, in order,
+/// stopping at the first failure.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-wasm-maintainers; the walk follows the kernel's checked pattern tree, whose stacks the environment clone budget bounds to 128 patterns, and an explicit worklist would change the metered traversal order."
+)]
+fn finite_patterns(
+    patterns: &[noble_kernel::shapes::Pattern],
+    index: usize,
+    depth: usize,
+    generic: bool,
+    work: &mut super::super::Work,
+) -> Result<(), crate::Diagnostic> {
+    let Some(item) = patterns.get(index) else {
+        return Ok(());
+    };
+    attempt!(finite_pattern(item, depth, generic, work));
+    finite_patterns(patterns, index + 1, depth, generic, work)
 }
 
 pub(super) fn schemes(
@@ -166,40 +186,17 @@ fn pattern(
         noble_kernel::shapes::Pattern::Program(input, output, effects)
         | noble_kernel::shapes::Pattern::LiveRef(input, output, effects) => {
             attempt!(work.entries(effects.len()));
-            let mut total = attempt!(mul(
+            let total = attempt!(mul(
                 attempt!(add(effects.len() as u64, 1)),
                 attempt!(mul(next, 16))
             ));
-            let mut index = 0usize;
-            let mut failure = None;
-            while index < input.len() + output.len() {
-                match pattern(
-                    chained(input, output, index),
-                    sizes,
-                    next,
-                    lookup_rows,
-                    work,
-                ) {
-                    Ok(size) => match add(total, size) {
-                        Ok(sum) => {
-                            total = sum;
-                            index += 1;
-                        }
-                        Err(problem) => {
-                            failure = Some(problem);
-                            break;
-                        }
-                    },
-                    Err(problem) => {
-                        failure = Some(problem);
-                        break;
-                    }
-                }
-            }
-            match failure {
-                Some(problem) => Err(problem),
-                None => Ok(total),
-            }
+            let pricing = Pricing {
+                sizes,
+                depth: next,
+                lookup_rows,
+            };
+            let total = attempt!(stack_patterns(input, 0, total, pricing, work));
+            stack_patterns(output, 0, total, pricing, work)
         }
         noble_kernel::shapes::Pattern::GenericNominal(_, arguments, _) => {
             let first = attempt!(pattern(&arguments[0], sizes, next, lookup_rows, work));
@@ -234,6 +231,41 @@ fn pattern(
         | noble_kernel::shapes::Pattern::Certified
         | noble_kernel::shapes::Pattern::Resource(_) => mul(next, 16),
     }
+}
+
+/// The fixed inputs that price every pattern of one Program stack.
+#[derive(Clone, Copy)]
+struct Pricing<'a> {
+    sizes: &'a [u64; 8],
+    depth: u64,
+    lookup_rows: u64,
+}
+
+/// Add the price of every pattern of one Program stack from `index` on to
+/// `total`, in order, stopping at the first failure.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-wasm-maintainers; the walk follows the kernel's checked pattern tree, whose stacks the environment clone budget bounds to 128 patterns, and an explicit worklist would change the metered traversal order."
+)]
+fn stack_patterns(
+    patterns: &[noble_kernel::shapes::Pattern],
+    index: usize,
+    total: u64,
+    pricing: Pricing<'_>,
+    work: &mut super::super::Work,
+) -> Result<u64, crate::Diagnostic> {
+    let Some(item) = patterns.get(index) else {
+        return Ok(total);
+    };
+    let size = attempt!(pattern(
+        item,
+        pricing.sizes,
+        pricing.depth,
+        pricing.lookup_rows,
+        work
+    ));
+    let total = attempt!(add(total, size));
+    stack_patterns(patterns, index + 1, total, pricing, work)
 }
 
 #[derive(Clone, Copy, Default)]
@@ -381,31 +413,42 @@ fn projected_stack(
     depth: usize,
     work: &mut super::super::Work,
 ) -> Result<Volume, crate::Diagnostic> {
-    let mut result = Volume::default();
-    let mut index = 0usize;
-    let mut failure = None;
-    while index < patterns.len() {
-        match projected(&patterns[index], bindings, depth, work) {
-            Ok(volume) => match result.add(volume) {
-                Ok(sum) => {
-                    result = sum;
-                    index += 1;
-                }
-                Err(problem) => {
-                    failure = Some(problem);
-                    break;
-                }
-            },
-            Err(problem) => {
-                failure = Some(problem);
-                break;
-            }
-        }
-    }
-    match failure {
-        Some(problem) => Err(problem),
-        None => Ok(result),
-    }
+    projected_from(
+        patterns,
+        0,
+        Volume::default(),
+        Projection { bindings, depth },
+        work,
+    )
+}
+
+/// The fixed inputs that project every pattern of one stack.
+#[derive(Clone, Copy)]
+struct Projection<'a> {
+    bindings: &'a [Volume; 8],
+    depth: usize,
+}
+
+/// Add the projected volume of every pattern from `index` on to `result`, in
+/// order, stopping at the first failure. The environment clone budget bounds
+/// each stack to 128 patterns, so the recursion stays shallow.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-wasm-maintainers; the walk follows the kernel's checked pattern tree, whose stacks the environment clone budget bounds to 128 patterns, and an explicit worklist would change the metered traversal order."
+)]
+fn projected_from(
+    patterns: &[noble_kernel::shapes::Pattern],
+    index: usize,
+    result: Volume,
+    projection: Projection<'_>,
+    work: &mut super::super::Work,
+) -> Result<Volume, crate::Diagnostic> {
+    let Some(item) = patterns.get(index) else {
+        return Ok(result);
+    };
+    let volume = attempt!(projected(item, projection.bindings, projection.depth, work));
+    let result = attempt!(result.add(volume));
+    projected_from(patterns, index + 1, result, projection, work)
 }
 
 /// The summed volume of a stack binding's types, in order.
@@ -575,6 +618,7 @@ fn witness(
     }
 }
 
+#[derive(Clone, Copy)]
 struct Cost {
     clone: u64,
     input: u64,
@@ -787,7 +831,7 @@ fn scheme_cost(
     }
 }
 
-/// The immutable inputs shared by every recursive `appearance` visit.
+/// The immutable inputs shared by every appearance visit.
 #[derive(Clone, Copy)]
 struct Walk<'a> {
     body: &'a noble_kernel::execution::Body,
@@ -795,23 +839,130 @@ struct Walk<'a> {
     permitted_height: u32,
 }
 
+/// What one open level of the appearance walk iterates: the body's roots, or
+/// the children of one quotation appearance together with its priced cost.
+#[derive(Clone, Copy)]
+enum Scope {
+    Roots,
+    Quotation(usize, Cost),
+}
+
+/// One open level of the appearance walk: what it iterates, the depth of its
+/// children, the next child position and the frame its children carry.
+#[derive(Clone, Copy)]
+struct Level {
+    scope: Scope,
+    child_depth: usize,
+    next: usize,
+    frame: u64,
+    frame_height: u64,
+}
+
+/// The appearance walk's state: its open levels, innermost last, and the
+/// largest mismatch reserve seen so far.
+struct Appearances {
+    levels: alloc::vec::Vec<Level>,
+    largest: u64,
+}
+
 // Process quotation children on every occurrence, not merely once for each
 // unique quotation node. Cycles and depth past the kernel bound fail closed.
-#[expect(
-    tigerstyle::no_recursion,
-    reason = "Owner: noble-wasm-maintainers; the walk follows the kernel's checked node, type or pattern tree, and an explicit worklist would change the metered traversal order."
-)]
-#[expect(
-    tigerstyle::too_many_parameters,
-    reason = "Owner: noble-wasm-maintainers; the call passes the complete checked input, plan and shared-budget coordinates, and an options struct would only rename the same borrowed fields."
-)]
-fn appearance(
+// One loop walks every appearance depth-first over an explicit level stack,
+// so each appearance is entered, charged, closed and refused in exactly the
+// order of a recursive walk, without a loop inside a recursive call.
+/// Walk every appearance of a body against its carried frame and return the
+/// frame after the last root.
+fn appearances(
+    walk: Walk<'_>,
+    frame: u64,
+    frame_height: u64,
+    largest: &mut u64,
+    work: &mut super::super::Work,
+) -> Result<(u64, u64), crate::Diagnostic> {
+    let mut levels = alloc::vec::Vec::with_capacity(super::PATH_LIMIT + 2);
+    levels.push(Level {
+        scope: Scope::Roots,
+        child_depth: 0,
+        next: 0,
+        frame,
+        frame_height,
+    });
+    let mut state = Appearances {
+        levels,
+        largest: *largest,
+    };
+    let mut is_walking = true;
+    let mut failure = None;
+    while is_walking {
+        match appearance_step(walk, &mut state, work) {
+            Ok(is_open) => is_walking = is_open,
+            Err(problem) => {
+                failure = Some(problem);
+                is_walking = false;
+            }
+        }
+    }
+    *largest = state.largest;
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok((state.levels[0].frame, state.levels[0].frame_height)),
+    }
+}
+
+/// Advance the walk by one event: enter the innermost level's next child, or
+/// close that level once its children are done. `Ok(false)` once every root
+/// has been walked.
+fn appearance_step(
+    walk: Walk<'_>,
+    state: &mut Appearances,
+    work: &mut super::super::Work,
+) -> Result<bool, crate::Diagnostic> {
+    let top = state.levels.len() - 1;
+    let level = state.levels[top];
+    let Some(child) = next_child(walk, level) else {
+        return close_level(walk, state);
+    };
+    state.levels[top].next += 1;
+    attempt!(enter_appearance(
+        walk,
+        child,
+        level.child_depth,
+        state,
+        work
+    ));
+    Ok(true)
+}
+
+/// The next child an open level iterates, if any remain.
+fn next_child(walk: Walk<'_>, level: Level) -> Option<noble_kernel::untrusted::NodeId> {
+    match level.scope {
+        Scope::Roots => walk.body.candidate.body.get(level.next).copied(),
+        Scope::Quotation(index, _) => quotation_child(walk, index, level.next),
+    }
+}
+
+/// Child `position` of the quotation at arena `index`.
+fn quotation_child(
+    walk: Walk<'_>,
+    index: usize,
+    position: usize,
+) -> Option<noble_kernel::untrusted::NodeId> {
+    match walk.body.candidate.nodes.get(index) {
+        Some(noble_kernel::untrusted::Node::Quotation { body: children, .. }) => {
+            children.get(position).copied()
+        }
+        // Only a quotation appearance opens a level, so nothing else has children here.
+        Some(_) | None => None,
+    }
+}
+
+/// Enter one appearance at `depth`: charge it against the innermost level's
+/// frame, then open its quotation body or carry its output into that frame.
+fn enter_appearance(
     walk: Walk<'_>,
     id: noble_kernel::untrusted::NodeId,
     depth: usize,
-    frame: &mut u64,
-    frame_height: &mut u64,
-    largest: &mut u64,
+    state: &mut Appearances,
     work: &mut super::super::Work,
 ) -> Result<(), crate::Diagnostic> {
     if depth > super::PATH_LIMIT {
@@ -825,54 +976,70 @@ fn appearance(
         .nodes
         .get(index)
         .ok_or(crate::Diagnostic::Invalid));
-    let cost = attempt!(walk.sizes.get(index).ok_or(crate::Diagnostic::Invalid));
+    let cost = *attempt!(walk.sizes.get(index).ok_or(crate::Diagnostic::Invalid));
+    let target = state.levels[state.levels.len() - 1];
     // match_tail compares this carried frame with this invocation's input,
     // never a later frame against an earlier interface. Keep charging each
     // successful join's entire carried frame separately below.
-    *largest = (*largest).max(attempt!(mismatch_reserve(
-        *frame,
+    state.largest = state.largest.max(attempt!(mismatch_reserve(
+        target.frame,
         cost.input,
-        *frame_height,
+        target.frame_height,
         cost.input_height,
         walk.permitted_height
     )));
-    attempt!(work.charge(attempt!(mul(*frame, 16))));
+    attempt!(work.charge(attempt!(mul(target.frame, 16))));
     attempt!(work.charge(cost.clone));
-    if let noble_kernel::untrusted::Node::Quotation { body: children, .. } = node {
-        let mut child_frame = cost.quotation_input;
-        let mut child_height = cost.quotation_input_height;
-        let mut index = 0usize;
-        let mut outcome = Ok(());
-        while outcome.is_ok() && index < children.len() {
-            outcome = appearance(
-                walk,
-                children[index],
-                depth + 1,
-                &mut child_frame,
-                &mut child_height,
-                largest,
-                work,
-            );
-            index += 1;
+    match node {
+        noble_kernel::untrusted::Node::Quotation { .. } => {
+            state.levels.push(Level {
+                scope: Scope::Quotation(index, cost),
+                child_depth: depth + 1,
+                next: 0,
+                frame: cost.quotation_input,
+                frame_height: cost.quotation_input_height,
+            });
+            Ok(())
         }
-        attempt!(outcome);
-        // Even an empty quotation body completes against its claimed Stack2.
-        *largest = (*largest).max(attempt!(mismatch_reserve(
-            child_frame,
-            cost.quotation_output,
-            child_height,
-            cost.quotation_output_height,
-            walk.permitted_height
-        )));
+        _ => finish_appearance(cost, state),
     }
-    let remainder = attempt!(frame
+}
+
+/// Close the innermost level once its children are done. A quotation reserves
+/// its claimed output mismatch, then finishes against its parent's frame; the
+/// roots level ends the walk.
+fn close_level(walk: Walk<'_>, state: &mut Appearances) -> Result<bool, crate::Diagnostic> {
+    let top = state.levels.len() - 1;
+    let level = state.levels[top];
+    let Scope::Quotation(_, cost) = level.scope else {
+        return Ok(false);
+    };
+    // Even an empty quotation body completes against its claimed Stack2.
+    state.largest = state.largest.max(attempt!(mismatch_reserve(
+        level.frame,
+        cost.quotation_output,
+        level.frame_height,
+        cost.quotation_output_height,
+        walk.permitted_height
+    )));
+    state.levels.truncate(top);
+    attempt!(finish_appearance(cost, state));
+    Ok(true)
+}
+
+/// Carry a finished appearance's output into the innermost level's frame.
+fn finish_appearance(cost: Cost, state: &mut Appearances) -> Result<(), crate::Diagnostic> {
+    let top = state.levels.len() - 1;
+    let remainder = attempt!(state.levels[top]
+        .frame
         .checked_sub(cost.input)
         .ok_or(crate::Diagnostic::Invalid));
-    let remainder_height = attempt!(frame_height
+    let remainder_height = attempt!(state.levels[top]
+        .frame_height
         .checked_sub(cost.input_height)
         .ok_or(crate::Diagnostic::Invalid));
-    *frame = attempt!(add(remainder, cost.output));
-    *frame_height = attempt!(add(remainder_height, cost.output_height));
+    state.levels[top].frame = attempt!(add(remainder, cost.output));
+    state.levels[top].frame_height = attempt!(add(remainder_height, cost.output_height));
     Ok(())
 }
 
@@ -1020,7 +1187,7 @@ fn body(
             .saturating_add(submission.environment.generic_variants.len())
     )
     .map_err(|_| crate::Diagnostic::Exhausted));
-    let (mut frame, mut frame_height) = attempt!(input_frames(input, lookup_rows, work));
+    let (frame, frame_height) = attempt!(input_frames(input, lookup_rows, work));
     let (claimed_volume, claimed_height) = attempt!(claimed_frames(claimed, lookup_rows, work));
     let sizes = attempt!(node_costs(body, submission, work));
     let walk = Walk {
@@ -1028,21 +1195,7 @@ fn body(
         sizes: &sizes,
         permitted_height,
     };
-    let mut index = 0usize;
-    let mut outcome = Ok(());
-    while outcome.is_ok() && index < body.candidate.body.len() {
-        outcome = appearance(
-            walk,
-            body.candidate.body[index],
-            0,
-            &mut frame,
-            &mut frame_height,
-            largest,
-            work,
-        );
-        index += 1;
-    }
-    attempt!(outcome);
+    let (frame, frame_height) = attempt!(appearances(walk, frame, frame_height, largest, work));
     // A named definition or root can mismatch at completion with zero nodes.
     *largest = (*largest).max(attempt!(mismatch_reserve(
         frame,
@@ -1106,4 +1259,218 @@ pub(super) fn check(
     attempt!(outcome);
     attempt!(work.charge(largest));
     Ok(())
+}
+
+// Test harness only: the recursive appearance walk that the explicit-stack
+// walk replaced is kept verbatim as the differential oracle.
+#[allow(
+    clippy::too_many_arguments,
+    tigerstyle::function_length,
+    tigerstyle::no_recursion,
+    tigerstyle::numeric_units,
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-maintainers; test harness: the oracle is the replaced recursive walk verbatim, and fixture setup legs are the readable form."
+)]
+#[cfg(test)]
+mod appearance_tests {
+    use super::super::super::Work;
+
+    fn budget(remaining: u64) -> Work {
+        Work {
+            remaining,
+            issued: remaining,
+            calculator_preflight: false,
+            calculator_plan: false,
+            max_type_nodes: 0,
+        }
+    }
+
+    /// The replaced recursive walk of one appearance and its quotation body.
+    fn appearance(
+        walk: super::Walk<'_>,
+        id: noble_kernel::untrusted::NodeId,
+        depth: usize,
+        frame: &mut u64,
+        frame_height: &mut u64,
+        largest: &mut u64,
+        work: &mut Work,
+    ) -> Result<(), crate::Diagnostic> {
+        if depth > super::super::PATH_LIMIT {
+            return Err(crate::Diagnostic::Exhausted);
+        }
+        work.charge(1)?;
+        let index = usize::try_from(id.0).map_err(|_| crate::Diagnostic::Invalid)?;
+        let node = walk
+            .body
+            .candidate
+            .nodes
+            .get(index)
+            .ok_or(crate::Diagnostic::Invalid)?;
+        let cost = walk.sizes.get(index).ok_or(crate::Diagnostic::Invalid)?;
+        *largest = (*largest).max(super::mismatch_reserve(
+            *frame,
+            cost.input,
+            *frame_height,
+            cost.input_height,
+            walk.permitted_height,
+        )?);
+        work.charge(super::mul(*frame, 16)?)?;
+        work.charge(cost.clone)?;
+        if let noble_kernel::untrusted::Node::Quotation { body: children, .. } = node {
+            let mut child_frame = cost.quotation_input;
+            let mut child_height = cost.quotation_input_height;
+            for child in children {
+                appearance(
+                    walk,
+                    *child,
+                    depth + 1,
+                    &mut child_frame,
+                    &mut child_height,
+                    largest,
+                    work,
+                )?;
+            }
+            *largest = (*largest).max(super::mismatch_reserve(
+                child_frame,
+                cost.quotation_output,
+                child_height,
+                cost.quotation_output_height,
+                walk.permitted_height,
+            )?);
+        }
+        let remainder = frame
+            .checked_sub(cost.input)
+            .ok_or(crate::Diagnostic::Invalid)?;
+        let remainder_height = frame_height
+            .checked_sub(cost.input_height)
+            .ok_or(crate::Diagnostic::Invalid)?;
+        *frame = super::add(remainder, cost.output)?;
+        *frame_height = super::add(remainder_height, cost.output_height)?;
+        Ok(())
+    }
+
+    /// Every root appearance of a body through the recursive walk.
+    fn recursive_appearances(
+        walk: super::Walk<'_>,
+        frame: u64,
+        frame_height: u64,
+        largest: &mut u64,
+        work: &mut Work,
+    ) -> Result<(u64, u64), crate::Diagnostic> {
+        let mut frame = frame;
+        let mut frame_height = frame_height;
+        for root in &walk.body.candidate.body {
+            appearance(walk, *root, 0, &mut frame, &mut frame_height, largest, work)?;
+        }
+        Ok((frame, frame_height))
+    }
+
+    /// Both walks agree on the result, the largest reserve and the remaining
+    /// work for every budget from exhaustion at the first charge to success.
+    fn assert_walks_agree(
+        submission: &noble_kernel::execution::Submission,
+        body: &noble_kernel::execution::Body,
+        input: &[noble_kernel::types::Ty],
+    ) {
+        let lookup_rows = u64::try_from(
+            submission
+                .environment
+                .nominals
+                .len()
+                .saturating_add(submission.environment.generic_variants.len()),
+        )
+        .expect("lookup rows fit");
+        let mut setup = budget(u64::MAX / 4);
+        let (frame, frame_height) = super::input_frames(input, lookup_rows, &mut setup)
+            .unwrap_or_else(|_| panic!("input frame"));
+        let sizes = super::node_costs(body, submission, &mut setup)
+            .unwrap_or_else(|_| panic!("node costs"));
+        let walk = super::Walk {
+            body,
+            sizes: &sizes,
+            permitted_height: submission.request.limits.stack_height,
+        };
+        let full = u64::MAX / 4;
+        let mut probe = budget(full);
+        let mut probe_largest = 0u64;
+        assert!(
+            recursive_appearances(walk, frame, frame_height, &mut probe_largest, &mut probe)
+                .is_ok(),
+            "the fixture walks to completion"
+        );
+        let spent = full - probe.remaining;
+        assert!(spent > 0, "the fixture charges its appearances");
+        for remaining in 0..=spent {
+            let mut oracle_work = budget(remaining);
+            let mut oracle_largest = 0u64;
+            let expected = recursive_appearances(
+                walk,
+                frame,
+                frame_height,
+                &mut oracle_largest,
+                &mut oracle_work,
+            );
+            let mut walk_work = budget(remaining);
+            let mut walk_largest = 0u64;
+            let actual =
+                super::appearances(walk, frame, frame_height, &mut walk_largest, &mut walk_work);
+            assert!(expected == actual, "result differs at budget {remaining}");
+            assert_eq!(
+                oracle_largest, walk_largest,
+                "largest reserve differs at budget {remaining}"
+            );
+            assert_eq!(
+                oracle_work.remaining, walk_work.remaining,
+                "remaining work differs at budget {remaining}"
+            );
+        }
+    }
+
+    #[test]
+    fn explicit_stack_walk_matches_the_recursive_walk_at_every_budget() {
+        let limits = noble_contracts::Limits {
+            bytes: 262_144,
+            nodes: 524_288,
+            depth: 64,
+            work: 512_000_000,
+        };
+        let mut calculator = noble_contracts::source::Session::new_calculator();
+        let defined = calculator
+            .prepare(
+                b"def nest [ [ 1 [ 2 [ 3 ] drop ] drop ] drop [ ] drop ]",
+                &[],
+                limits,
+            )
+            .unwrap_or_else(|_| panic!("calculator definition refused"));
+        calculator
+            .commit(defined)
+            .unwrap_or_else(|_| panic!("calculator definition commit refused"));
+        let call = calculator
+            .prepare(b"[ 4 [ 5 ] drop ] drop nest 6 nest drop", &[], limits)
+            .unwrap_or_else(|_| panic!("calculator call refused"));
+        let submission = call
+            .submission()
+            .unwrap_or_else(|| panic!("missing calculator submission"));
+        assert!(
+            !submission.definitions.is_empty(),
+            "the call carries the nested definition body"
+        );
+        let has_nested_bodies = submission.definitions.iter().any(|definition| {
+            definition.body.candidate.nodes.iter().any(|node| {
+                matches!(node, noble_kernel::untrusted::Node::Quotation { body, .. } if !body.is_empty())
+            })
+        });
+        assert!(
+            has_nested_bodies,
+            "the fixture walks non-empty quotation bodies"
+        );
+        assert_walks_agree(
+            submission,
+            &submission.body,
+            &submission.request.expected.stack_in,
+        );
+        for definition in &submission.definitions {
+            assert_walks_agree(submission, &definition.body, &definition.expected.stack_in);
+        }
+    }
 }

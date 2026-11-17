@@ -378,21 +378,23 @@ fn reserve_ty(
     }
 }
 
-/// Reserve every type of a stack in order, stopping at the first refusal;
-/// the loop keeps the stack height out of the recursion depth.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; each call consumes one entry, and every entry is a node counted against TYPE_NODE_CAP before it is walked, so the depth stays within the node cap; recursion instead of a loop keeps the reservation cycle free of loops, which the pinned Aeneas cannot prove monotone."
+)]
+/// Reserve every type of a stack in order, stopping at the first refusal.
 fn reserve_stack(
     items: &[noble_kernel::types::Ty],
     walk: &mut Reservation,
     span: crate::Span,
     meter: &mut crate::Meter,
 ) -> bool {
-    let mut is_open = true;
-    let mut at = 0;
-    while is_open && at < items.len() {
-        is_open = reserve_ty(&items[at], walk, span, meter);
-        at += 1;
+    match items.split_first() {
+        Some((first, rest)) => {
+            reserve_ty(first, walk, span, meter) && reserve_stack(rest, walk, span, meter)
+        }
+        None => true,
     }
-    is_open
 }
 
 #[expect(
@@ -805,6 +807,32 @@ mod tests {
         let mut meter = crate::Meter::new(crate::Limits::default());
         let refused = super::reserve_descriptor(&deeper, SPAN, &mut meter)
             .expect_err("one node past the cap");
+        assert_eq!(
+            refused.message,
+            "inferred type representation exceeds the 4096-node limit"
+        );
+
+        // The recursion over a stack's entries is bounded the same way: a
+        // Program with cap - 1 inputs owns exactly cap nodes.
+        let widest = |inputs: u32| {
+            let mut stack = alloc::vec::Vec::new();
+            for _ in 0..inputs {
+                stack.push(Ty::I64);
+            }
+            NominalShape::Opaque(alloc::boxed::Box::new(Ty::program(
+                stack,
+                alloc::vec::Vec::new(),
+                noble_kernel::types::EffSet::empty(),
+            )))
+        };
+        let mut meter = crate::Meter::new(crate::Limits::default());
+        assert_eq!(
+            super::reserve_descriptor(&widest(cap - 1), SPAN, &mut meter).ok(),
+            Some(cap)
+        );
+        let mut meter = crate::Meter::new(crate::Limits::default());
+        let refused = super::reserve_descriptor(&widest(cap), SPAN, &mut meter)
+            .expect_err("one entry past the cap");
         assert_eq!(
             refused.message,
             "inferred type representation exceeds the 4096-node limit"

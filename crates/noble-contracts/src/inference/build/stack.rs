@@ -15,19 +15,7 @@ impl super::super::Arena {
         attempt!(meter.charge(1, span));
         values.push(attempt!(self.add(super::super::Term::Empty, span, meter)));
         attempt!(charge_scans(stack.len(), span, meter));
-        let mut failure = None;
-        let mut at = 0;
-        while at < stack.len() {
-            if let Err(problem) = self.push_ty_entry(&stack[at], values, span, meter) {
-                failure = Some(problem);
-                break;
-            }
-            at += 1;
-        }
-        match failure {
-            Some(problem) => Err(problem),
-            None => Ok(()),
-        }
+        self.push_ty_entries(stack, values, span, meter)
     }
 
     /// Charge one step, push the stack-variable or empty base, then build the
@@ -86,54 +74,62 @@ impl super::super::Arena {
             None => return Err(crate::internal(span)),
         };
         attempt!(charge_scans(entries.len(), span, meter));
-        let mut failure = None;
-        let mut at = 0;
-        while at < entries.len() {
-            if let Err(problem) =
-                self.push_pattern_entry(&entries[at], values, variables, span, meter)
-            {
-                failure = Some(problem);
-                break;
-            }
-            at += 1;
-        }
-        match failure {
-            Some(problem) => Err(problem),
-            None => Ok(()),
-        }
+        self.push_pattern_entries(entries, values, variables, span, meter)
     }
 
-    /// Build one stack entry and push it onto the stack below it.
+    /// Build and push every stack entry, bottom first, stopping at the first
+    /// refusal.
     #[expect(
         tigerstyle::borrowed_argument_types,
         reason = "Owner: noble-maintainers; the build pushes terms onto its growable value stack, which a slice cannot express."
     )]
-    fn push_ty_entry(
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-maintainers; each call consumes one entry of a stack bounded by the admitted stack height and type size; recursion instead of a loop keeps the build's recursive cycle free of loops, which the pinned Aeneas cannot prove monotone."
+    )]
+    fn push_ty_entries(
         &mut self,
-        ty: &noble_kernel::types::Ty,
+        entries: &[noble_kernel::types::Ty],
         values: &mut alloc::vec::Vec<u32>,
         span: crate::Span,
         meter: &mut crate::Meter,
     ) -> Result<(), crate::Diagnostic> {
-        attempt!(self.build_ty(ty, values, span, meter));
-        self.join(super::Join::Push, values, span, meter)
+        match entries.split_first() {
+            Some((ty, rest)) => {
+                attempt!(self.build_ty(ty, values, span, meter));
+                attempt!(self.join(super::Join::Push, values, span, meter));
+                self.push_ty_entries(rest, values, span, meter)
+            }
+            None => Ok(()),
+        }
     }
 
-    /// Build one stack-pattern entry and push it onto the stack below it.
+    /// Build and push every stack-pattern entry, bottom first, stopping at the
+    /// first refusal.
     #[expect(
         tigerstyle::borrowed_argument_types,
         reason = "Owner: noble-maintainers; the build pushes terms onto its growable value stack, which a slice cannot express."
     )]
-    fn push_pattern_entry(
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-maintainers; each call consumes one entry of a stack bounded by the admitted stack height and type size; recursion instead of a loop keeps the build's recursive cycle free of loops, which the pinned Aeneas cannot prove monotone."
+    )]
+    fn push_pattern_entries(
         &mut self,
-        pattern: &noble_kernel::shapes::Pattern,
+        entries: &[noble_kernel::shapes::Pattern],
         values: &mut alloc::vec::Vec<u32>,
         variables: &[super::super::Variable],
         span: crate::Span,
         meter: &mut crate::Meter,
     ) -> Result<(), crate::Diagnostic> {
-        attempt!(self.build_pattern(pattern, values, variables, span, meter));
-        self.join(super::Join::Push, values, span, meter)
+        match entries.split_first() {
+            Some((pattern, rest)) => {
+                attempt!(self.build_pattern(pattern, values, variables, span, meter));
+                attempt!(self.join(super::Join::Push, values, span, meter));
+                self.push_pattern_entries(rest, values, variables, span, meter)
+            }
+            None => Ok(()),
+        }
     }
 }
 

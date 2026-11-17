@@ -896,9 +896,9 @@ fn claims_differ(
 /// Whether a host result's claim or term differs from the source-checked one.
 fn claim_differs(
     result: &crate::intrinsic::CheckedProof,
-    source: &crate::intrinsic::CheckedProof,
+    source_checked: &crate::intrinsic::CheckedProof,
 ) -> bool {
-    result.claim != source.claim || result.lean_term != source.lean_term
+    result.claim != source_checked.claim || result.lean_term != source_checked.lean_term
 }
 
 /// Whether a host result is not bound to its obligation, over the shorter of
@@ -964,15 +964,16 @@ fn revision(value: &str) -> bool {
     is_hex
 }
 
-/// Whether a present `program` has a definition body with a signed self call.
-fn has_signed_self_body(program: Option<&noble_kernel::execution::Submission>) -> bool {
-    let Some(program) = program else {
+/// Whether a present `submission` has a definition body with a signed self call.
+fn has_signed_self_body(submission: Option<&noble_kernel::execution::Submission>) -> bool {
+    let Some(submission) = submission else {
         return false;
     };
     let mut is_found = false;
     let mut definition_at = 0usize;
-    while !is_found && definition_at < program.definitions.len() {
-        is_found = super::has_signed_self(&program.definitions[definition_at].body.candidate.nodes);
+    while !is_found && definition_at < submission.definitions.len() {
+        is_found =
+            super::has_signed_self(&submission.definitions[definition_at].body.candidate.nodes);
         definition_at += 1;
     }
     is_found
@@ -985,46 +986,97 @@ fn has_signed_self_body(program: Option<&noble_kernel::execution::Submission>) -
 /// Charges a retained dependency and its transitive closure in the same
 /// pre-order as the published copy, returning the remaining byte and node
 /// budgets, or `None` once either is exhausted.
+///
+/// Every proof is charged with the number of proofs queued behind it: the
+/// later siblings of each proof on its path. One cursor per open sibling list
+/// records that position, so the walk is a single loop whose stack holds at
+/// most one entry per tree level and nothing recurses.
 fn charge_dependency(
     dependency: &crate::intrinsic::ProofDependency,
     remaining_bytes: usize,
     remaining_nodes: usize,
 ) -> Option<(usize, usize)> {
-    charge_subtree(dependency, Some((remaining_bytes, remaining_nodes)), 0)
+    let mut charged = charge_proof(dependency, Some((remaining_bytes, remaining_nodes)), 0);
+    let mut pending = alloc::vec::Vec::new();
+    queue_children(&mut pending, dependency, charged, 0);
+    while charged.is_some() && !pending.is_empty() {
+        charged = charge_next_child(&mut pending, charged);
+    }
+    charged
 }
 
-/// Charges `proof` and its subtree in pre-order while `waiting` queued
-/// proofs follow it: each earlier child recursively, the last one in place.
-///
-/// The pinned extraction cannot keep borrowed proofs in a work queue, so the
-/// queue of later siblings lives in the call stack instead. A unary chain
-/// still runs in one frame, and no call nests deeper than the tree itself,
-/// whose derived copy and drop already recurse that deep.
-#[expect(
-    tigerstyle::no_recursion,
-    reason = "Owner: noble-contracts; the walk follows the finite, already constructed proof tree no deeper than its derived Clone and Drop, and the pinned extraction refuses a queue of borrowed proofs"
-)]
-fn charge_subtree(
-    proof: &crate::intrinsic::ProofDependency,
-    remaining: Option<(usize, usize)>,
+/// A charged proof's children from `next` on, still to be charged; `waiting`
+/// proofs were queued behind that proof when it was charged.
+#[derive(Clone, Copy)]
+struct ChildCursor<'a> {
+    siblings: &'a alloc::vec::Vec<crate::intrinsic::ProofDependency>,
+    next: usize,
     waiting: usize,
-) -> Option<(usize, usize)> {
-    let mut charged = charge_proof(proof, remaining, waiting);
-    let mut current = proof;
-    while charged.is_some() && !current.dependencies.is_empty() {
-        let last = current.dependencies.len().saturating_sub(1);
-        // Child `at` has `last - at` later siblings queued behind it. The
-        // charged fan-out check bounds `waiting + last`, so nothing saturates.
-        let mut queued = waiting.saturating_add(last);
-        let mut at = 0usize;
-        while charged.is_some() && at < last {
-            charged = charge_subtree(&current.dependencies[at], charged, queued);
-            queued -= 1;
-            at += 1;
-        }
-        current = &current.dependencies[last];
-        charged = charge_proof(current, charged, waiting);
+}
+
+/// Queues the children of a charged proof, which `waiting` proofs follow;
+/// nothing is queued once the charge failed or for a proof without children.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; the walk pushes onto its own growable cursor stack, so it takes the owned Vec rather than a slice"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the only mutable input is the walk's locally owned cursor stack, borrowed for one loop-free step"
+)]
+fn queue_children<'a>(
+    pending: &mut alloc::vec::Vec<ChildCursor<'a>>,
+    proof: &'a crate::intrinsic::ProofDependency,
+    charged: Option<(usize, usize)>,
+    waiting: usize,
+) {
+    if charged.is_some() && !proof.dependencies.is_empty() {
+        pending.push(ChildCursor {
+            siblings: &proof.dependencies,
+            next: 0,
+            waiting,
+        });
     }
+}
+
+/// Charges the next pending child in pre-order: its later siblings stay
+/// queued behind it, and its own children are queued once it is charged.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; the walk pushes onto its own growable cursor stack, so it takes the owned Vec rather than a slice"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the only mutable input is the walk's locally owned cursor stack, borrowed for one loop-free step"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn charge_next_child<'a>(
+    pending: &mut alloc::vec::Vec<ChildCursor<'a>>,
+    charged: Option<(usize, usize)>,
+) -> Option<(usize, usize)> {
+    let Some(cursor) = pending.pop() else {
+        return charged;
+    };
+    let child = &cursor.siblings[cursor.next];
+    // `next` indexes a child, so its successor never saturates and the
+    // children after it number `len - (next + 1)`.
+    let following = cursor.next.saturating_add(1);
+    let later = cursor.siblings.len().saturating_sub(following);
+    if following < cursor.siblings.len() {
+        pending.push(ChildCursor {
+            siblings: cursor.siblings,
+            next: following,
+            waiting: cursor.waiting,
+        });
+    }
+    // The parent's charged fan-out check bounds its waiting proofs plus all of
+    // its children, so this sum never saturates.
+    let waiting = cursor.waiting.saturating_add(later);
+    let charged = charge_proof(child, charged, waiting);
+    queue_children(pending, child, charged, waiting);
     charged
 }
 
@@ -1046,27 +1098,90 @@ fn charge_proof(
     Some((bytes, nodes))
 }
 
-#[expect(
-    tigerstyle::non_trait_imports,
-    reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
-)]
-#[expect(
-    tigerstyle::no_recursion,
-    reason = "Owner: noble-contracts; the walk follows the finite, already constructed proof term tree, and a direct self-call (not a closure) keeps the recursion a plain function for the pinned extraction"
-)]
+/// Whether `form` or a form nested in it is the list `(use name)`, searched in
+/// pre-order: a list before its items, and the items in turn. One cursor per
+/// open list keeps the search a single loop with no recursion.
 fn uses(form: &crate::intrinsic::Form, name: &str) -> bool {
-    use crate::intrinsic::FormKind;
-    // No early return precedes the walk and no match guard binds a borrow:
-    // the pinned extraction refuses both inside a recursive function.
-    let mut is_found = false;
-    if let FormKind::List(items) = &form.kind {
-        is_found = items.len() == 2 && atom_is(&items[0], "use") && atom_is(&items[1], name);
-        let mut at = 0;
-        while !is_found && at < items.len() {
-            is_found = uses(&items[at], name);
-            at += 1;
-        }
+    let mut is_found = is_use_of(form, name);
+    let mut pending = alloc::vec::Vec::new();
+    queue_items(&mut pending, form);
+    while !is_found && !pending.is_empty() {
+        is_found = uses_next(&mut pending, name);
     }
+    is_found
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+/// Whether `form` is the two-item list `(use name)`.
+fn is_use_of(form: &crate::intrinsic::Form, name: &str) -> bool {
+    match &form.kind {
+        crate::intrinsic::FormKind::List(items) => {
+            items.len() == 2 && atom_is(&items[0], "use") && atom_is(&items[1], name)
+        }
+        crate::intrinsic::FormKind::Atom(_) => false,
+    }
+}
+
+/// The items of a list from `next` on, still to be searched.
+#[derive(Clone, Copy)]
+struct ItemCursor<'a> {
+    items: &'a alloc::vec::Vec<crate::intrinsic::Form>,
+    next: usize,
+}
+
+/// Queues the items of a non-empty list; an atom or an empty list has none.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; the search pushes onto its own growable cursor stack, so it takes the owned Vec rather than a slice"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the only mutable input is the search's locally owned cursor stack, borrowed for one loop-free step"
+)]
+fn queue_items<'a>(
+    pending: &mut alloc::vec::Vec<ItemCursor<'a>>,
+    form: &'a crate::intrinsic::Form,
+) {
+    let crate::intrinsic::FormKind::List(items) = &form.kind else {
+        return;
+    };
+    if !items.is_empty() {
+        pending.push(ItemCursor { items, next: 0 });
+    }
+}
+
+/// Searches the next pending item: its later siblings stay queued behind it,
+/// then its own items are queued.
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; the search pushes onto its own growable cursor stack, so it takes the owned Vec rather than a slice"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the only mutable input is the search's locally owned cursor stack, borrowed for one loop-free step"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn uses_next<'a>(pending: &mut alloc::vec::Vec<ItemCursor<'a>>, name: &str) -> bool {
+    let Some(cursor) = pending.pop() else {
+        return false;
+    };
+    let item = &cursor.items[cursor.next];
+    // `next` indexes an item, so its successor never saturates.
+    let following = cursor.next.saturating_add(1);
+    if following < cursor.items.len() {
+        pending.push(ItemCursor {
+            items: cursor.items,
+            next: following,
+        });
+    }
+    let is_found = is_use_of(item, name);
+    queue_items(pending, item);
     is_found
 }
 
@@ -1519,5 +1634,96 @@ mod tests {
         session
             .prepare(b"1", &[], limits)
             .expect("an expression retains no source");
+    }
+
+    /// The search before it became a cursor walk, verbatim: the independent
+    /// reference the cursor search is compared against.
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-contracts; the test oracle is the earlier recursive search verbatim, run on fixtures at most 301 forms deep"
+    )]
+    fn uses_reference(form: &crate::intrinsic::Form, name: &str) -> bool {
+        let mut is_found = false;
+        if let crate::intrinsic::FormKind::List(items) = &form.kind {
+            is_found = items.len() == 2
+                && super::atom_is(&items[0], "use")
+                && super::atom_is(&items[1], name);
+            let mut at = 0;
+            while !is_found && at < items.len() {
+                is_found = uses_reference(&items[at], name);
+                at += 1;
+            }
+        }
+        is_found
+    }
+
+    fn list(items: alloc::vec::Vec<crate::intrinsic::Form>) -> crate::intrinsic::Form {
+        crate::intrinsic::Form {
+            kind: crate::intrinsic::FormKind::List(items),
+            span: crate::Span { start: 0, end: 1 },
+        }
+    }
+
+    /// A pseudo-random form over the atoms `use`, `a` and `b`.
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-contracts; the fixture generator recurses once per level of a form at most four levels deep"
+    )]
+    fn generated_form(seed: &mut u64, depth: u32) -> crate::intrinsic::Form {
+        *seed = seed
+            .wrapping_mul(6_364_136_223_846_793_005)
+            .wrapping_add(1_442_695_040_888_963_407);
+        let pick = usize::try_from((*seed >> 33) % 6).unwrap_or(0);
+        if depth == 0 || pick < 3 {
+            return atom(["use", "a", "b"][pick % 3]);
+        }
+        let width = usize::try_from((*seed >> 40) % 4).unwrap_or(0);
+        let mut items = alloc::vec::Vec::with_capacity(width);
+        for _ in 0..width {
+            items.push(generated_form(seed, depth.saturating_sub(1)));
+        }
+        list(items)
+    }
+
+    /// The cursor search finds a `(use name)` list exactly where the recursive
+    /// search does: on generated forms, a deep chain, a wide list, and near
+    /// misses whose length, head or position differs.
+    #[test]
+    fn use_search_matches_the_recursive_walk() {
+        let mut forms = alloc::vec![
+            list(alloc::vec![atom("use"), atom("a"), atom("b")]),
+            list(alloc::vec![atom("use")]),
+            list(alloc::vec![list(alloc::vec![atom("use")]), atom("a")]),
+            list(alloc::vec![atom("a"), atom("use")]),
+            list(alloc::vec![
+                atom("use"),
+                list(alloc::vec![atom("use"), atom("b")])
+            ]),
+        ];
+        let mut chain = list(alloc::vec![atom("use"), atom("a")]);
+        for _ in 0..300 {
+            chain = list(alloc::vec![atom("b"), chain]);
+        }
+        forms.push(chain);
+        let mut wide = alloc::vec![atom("a"); 300];
+        wide.push(list(alloc::vec![atom("use"), atom("b")]));
+        forms.push(list(wide));
+        let mut seed = 11u64;
+        for _ in 0..200 {
+            forms.push(generated_form(&mut seed, 4));
+        }
+        let mut found = 0usize;
+        for form in &forms {
+            for name in ["a", "b", "use", "c"] {
+                let is_found = uses_reference(form, name);
+                assert_eq!(super::uses(form, name), is_found, "{name}");
+                found += usize::from(is_found);
+            }
+        }
+        assert!(found > 0, "some fixtures name a used proof");
+        assert!(
+            found < forms.len().saturating_mul(4),
+            "some fixtures name none"
+        );
     }
 }

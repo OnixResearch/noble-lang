@@ -249,12 +249,12 @@ pub(super) fn verify_definition_origin_in_request(
             "subject module identity differs from source",
         ));
     }
-    let mut scan = OriginScan { at: 0, found: None };
+    let mut progress = OriginScan { at: 0, found: None };
     let mut failure = None;
     let mut index = 0usize;
     while failure.is_none() && index < members.len() {
-        match origin_member(&members[index], origin, definition_source, scan) {
-            Ok(next) => scan = next,
+        match origin_member(&members[index], origin, definition_source, progress) {
+            Ok(next) => progress = next,
             Err(problem) => failure = Some(problem),
         }
         index += 1;
@@ -262,7 +262,7 @@ pub(super) fn verify_definition_origin_in_request(
     if let Some(problem) = failure {
         return Err(problem);
     }
-    scan.found.ok_or_else(|| {
+    progress.found.ok_or_else(|| {
         crate::invalid(
             source_span,
             "subject definition is absent from module source",
@@ -294,7 +294,7 @@ fn origin_member(
     member: &parsing::Member,
     origin: DefinitionOrigin<'_>,
     definition_source: &[u8],
-    mut scan: OriginScan,
+    mut progress: OriginScan,
 ) -> Result<OriginScan, crate::Diagnostic> {
     let source_span = origin.span;
     if let parsing::Member::Definition {
@@ -305,8 +305,8 @@ fn origin_member(
     } = member
     {
         if name == origin.definition {
-            if scan.found.is_some()
-                || scan.at != origin.ordinal
+            if progress.found.is_some()
+                || progress.at != origin.ordinal
                 || *span != source_span
                 || bytes.as_slice() != definition_source
             {
@@ -315,13 +315,13 @@ fn origin_member(
                     "ambiguous or mismatched lexical subject definition",
                 ));
             }
-            scan.found = Some(*body_span);
+            progress.found = Some(*body_span);
         }
-        scan.at = attempt!(scan.at.checked_add(1).ok_or_else(|| {
+        progress.at = attempt!(progress.at.checked_add(1).ok_or_else(|| {
             crate::source::exhausted(source_span, "module definition ordinal limit exceeded")
         }));
     }
-    Ok(scan)
+    Ok(progress)
 }
 
 #[expect(
@@ -460,7 +460,7 @@ pub(crate) fn verify_named_export(
             "named export module differs from source",
         ));
     }
-    let mut scan = ExportScan {
+    let mut progress = ExportScan {
         at: 0,
         is_found: false,
         is_exported: false,
@@ -468,8 +468,14 @@ pub(crate) fn verify_named_export(
     let mut failure = None;
     let mut index = 0usize;
     while failure.is_none() && index < members.len() {
-        match export_member(&members[index], definition, ordinal, definition_span, scan) {
-            Ok(next) => scan = next,
+        match export_member(
+            &members[index],
+            definition,
+            ordinal,
+            definition_span,
+            progress,
+        ) {
+            Ok(next) => progress = next,
             Err(problem) => failure = Some(problem),
         }
         index += 1;
@@ -477,7 +483,7 @@ pub(crate) fn verify_named_export(
     if let Some(problem) = failure {
         return Err(problem);
     }
-    if !scan.is_found || !scan.is_exported {
+    if !progress.is_found || !progress.is_exported {
         return Err(crate::invalid(
             definition_span,
             "named source definition is absent or not is_exported",
@@ -508,29 +514,29 @@ fn export_member(
     definition: &str,
     ordinal: u32,
     definition_span: crate::Span,
-    mut scan: ExportScan,
+    mut progress: ExportScan,
 ) -> Result<ExportScan, crate::Diagnostic> {
     match member {
         parsing::Member::Export(name) if name == definition => {
-            if scan.is_exported {
+            if progress.is_exported {
                 return Err(crate::invalid(
                     definition_span,
                     "duplicate named source export",
                 ));
             }
-            scan.is_exported = true;
+            progress.is_exported = true;
         }
         parsing::Member::Definition { name, span, .. } => {
             if name == definition {
-                if scan.is_found || scan.at != ordinal || *span != definition_span {
+                if progress.is_found || progress.at != ordinal || *span != definition_span {
                     return Err(crate::invalid(
                         definition_span,
                         "named source export has a different lexical definition",
                     ));
                 }
-                scan.is_found = true;
+                progress.is_found = true;
             }
-            scan.at = attempt!(scan.at.checked_add(1).ok_or_else(|| {
+            progress.at = attempt!(progress.at.checked_add(1).ok_or_else(|| {
                 crate::source::exhausted(
                     definition_span,
                     "module definition ordinal limit exceeded",
@@ -539,7 +545,7 @@ fn export_member(
         }
         _ => (),
     }
-    Ok(scan)
+    Ok(progress)
 }
 
 #[expect(

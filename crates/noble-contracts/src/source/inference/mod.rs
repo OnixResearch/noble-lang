@@ -282,9 +282,16 @@ fn initial(
     inputs: &[noble_kernel::types::Ty],
     meter: &mut crate::Meter,
 ) -> Result<State, crate::Diagnostic> {
+    // Every session option is read once, before any branch on it, so the
+    // pinned Aeneas never folds an option a branch has shown absent into a
+    // literal `none` passed to a generic method.
+    let has_bindings = session.bindings.is_some();
+    let has_declared = session.declared.is_some();
+    let has_live_slots = session.live_slots.is_some();
+    let owner = session.declared.as_ref().and_then(|context| context.owner);
     let mut arena = crate::inference::Arena::source(
         session.effect_universe(),
-        session.bindings.is_some() || session.declared.is_some() || session.live_slots.is_some(),
+        has_bindings || has_declared || has_live_slots,
     );
     if let Some(bindings) = &session.bindings {
         arena.allow_program_type_effects(bindings.program_type_effects);
@@ -310,7 +317,7 @@ fn initial(
         arena.nominals = nominals;
         arena.generic_nominals = profile.environment.generic_variants.clone();
     }
-    let (borrows, value_inputs) = if session.live_slots.is_some() {
+    let (borrows, value_inputs) = if has_live_slots {
         attempt!(split_inputs(inputs, tree.span))
     } else {
         (alloc::vec::Vec::new(), alloc::vec::Vec::new())
@@ -321,7 +328,7 @@ fn initial(
     )]
     let input = match mode {
         Mode::Submission => attempt!(arena.stack(
-            if session.live_slots.is_some() {
+            if has_live_slots {
                 &value_inputs
             } else {
                 inputs
@@ -345,6 +352,11 @@ fn initial(
     };
     let effect = attempt!(arena.effect_empty(tree.span, meter));
     attempt!(meter.node(tree.span));
+    let logical_inputs = if has_live_slots {
+        Some(inputs.to_vec())
+    } else {
+        None
+    };
     let mut bodies = alloc::vec::Vec::with_capacity(1);
     bodies.push(Body {
         nodes: alloc::vec::Vec::new(),
@@ -353,7 +365,7 @@ fn initial(
         output: input,
         effect,
         identity: None,
-        owner: session.declared.as_ref().and_then(|context| context.owner),
+        owner,
         owner_slot: None,
         owner_variables: None,
         span: tree.span,
@@ -365,7 +377,7 @@ fn initial(
         text_bytes: 0,
         definition_base: 0,
         holes: alloc::vec::Vec::new(),
-        logical_inputs: session.live_slots.as_ref().map(|_| inputs.to_vec()),
+        logical_inputs,
         borrows,
     })
 }

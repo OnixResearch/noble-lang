@@ -2,9 +2,11 @@
 // guest cells. Ordinary and experimental WAT never includes these helpers.
 // Successful validation is reusable only until the next source submit,
 // which resets the table after the host's last input write.
+// The text is an ASCII `str` literal viewed as bytes: a byte-string literal
+// this long extracts as a constant array whose length proof is too deep.
 pub(super) fn certificates(out: &mut crate::output::Buffer) -> Result<(), crate::Diagnostic> {
     out.append(
-        b";; [57344,61440) is outside reflection events and source cell arenas.\n\
+        ";; [57344,61440) is outside reflection events and source cell arenas.\n\
 (func $type_certificate_reset\n\
  (memory.fill (i32.const 57344) (i32.const 0) (i32.const 4096)))\n\
 (func $type_certificate_address (param $type i32) (param $handle i32) (result i32)\n\
@@ -21,7 +23,8 @@ pub(super) fn certificates(out: &mut crate::output::Buffer) -> Result<(), crate:
  (local $address i32)\n\
  (local.set $address (call $type_certificate_address (local.get $type) (local.get $handle)))\n\
  (i32.store offset=4 (local.get $address) (local.get $handle))\n\
- (i32.store (local.get $address) (i32.add (local.get $type) (i32.const 1))))\n",
+ (i32.store (local.get $address) (i32.add (local.get $type) (i32.const 1))))\n"
+            .as_bytes(),
     )
 }
 

@@ -81,6 +81,10 @@ const REVISION_BYTES_U64: u64 = 32;
 
 /// One immutable scalar capture or fixture value. The variant *is* the type,
 /// so a capture cannot claim a type its value does not have.
+///
+/// The extracted constructors carry a `Scalar` suffix: `Bool` would otherwise
+/// shadow Lean's own `Bool` inside this type's derived instances.
+#[charon::variants_suffix("Scalar")]
 #[octet::sealed_enum]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Scalar {
@@ -212,6 +216,10 @@ fn spells(word: &[u8], spelling: &[u8]) -> bool {
 
 /// One retained recipe node. References are indices into the recipe's own
 /// node arena and are canonical only when a node refers to an earlier node.
+///
+/// The extracted constructors carry a `Node` suffix: `Bool` would otherwise
+/// shadow Lean's own `Bool` inside this type's derived instances.
+#[charon::variants_suffix("Node")]
 #[octet::sealed_enum]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Node {
@@ -763,6 +771,10 @@ impl Ledger {
 
 /// One flat emitted element. `Open`/`Close` are the quotation brackets, so one
 /// ordered list is both what gets emitted and what gets replayed.
+///
+/// The extracted constructors carry an `Element` suffix: `Bool` would
+/// otherwise shadow Lean's own `Bool` inside this type's derived instances.
+#[charon::variants_suffix("Element")]
 #[octet::sealed_enum]
 #[derive(Clone, Debug, PartialEq)]
 pub enum Element {
@@ -820,11 +832,11 @@ fn absorb_bytes_lanes(domain: u64, bytes: &[u8], lanes: usize, out: &mut [u8]) {
 
 /// The canonical source revision of one emitted program. An integrity index,
 /// never admission authority (VC-ID-03): admission re-prepares the source.
-pub fn canonical_revision(source: &[u8]) -> [u8; REVISION_BYTES] {
+pub fn canonical_revision(emitted: &[u8]) -> [u8; REVISION_BYTES] {
     let mut out = [0u8; REVISION_BYTES];
     absorb_bytes_lanes(
         crate::companion::digest::DOMAIN_CHUNK_SOURCE,
-        source,
+        emitted,
         REVISION_BYTES / 8,
         &mut out,
     );
@@ -3460,13 +3472,13 @@ struct AdmissionContext<'a> {
 fn derived_interface(
     context: &AdmissionContext<'_>,
     ledger: &mut Ledger,
-    source: &[u8],
+    emitted: &[u8],
     elements: &[Element],
     declared: &Interface,
 ) -> Result<(Interface, noble_kernel::untrusted::Candidate), Refusal> {
     let prepared = prepare_candidate(
         context.namespace,
-        source,
+        emitted,
         &declared.stack_in,
         ledger,
         context.at.clone(),
@@ -3487,7 +3499,7 @@ fn derived_interface(
 
 fn prepare_candidate(
     namespace: &super::Session,
-    source: &[u8],
+    emitted: &[u8],
     inputs: &[Ty],
     ledger: &mut Ledger,
     at: Location,
@@ -3497,7 +3509,7 @@ fn prepare_candidate(
         return Err(exhaust_checking_work(ledger, at));
     }
     debug_assert!(remaining_work > 0);
-    match namespace.prepare(source, inputs, ledger.prepare_limits(remaining_work)) {
+    match namespace.prepare(emitted, inputs, ledger.prepare_limits(remaining_work)) {
         Ok(prepared) => {
             debug_assert!(prepared.work_used() <= remaining_work);
             debug_assert!(prepared.checked().is_some());
@@ -3918,6 +3930,10 @@ struct Composition {
 /// One scalar or quotation value during fixture evaluation. A quotation is
 /// the element range `start..end` of the evaluated program, so a value holds
 /// no borrow.
+///
+/// The extracted constructors carry a `Value` suffix: `Bool` would otherwise
+/// shadow Lean's own `Bool` inside this type's derived instances.
+#[charon::variants_suffix("Value")]
 #[octet::sealed_enum]
 #[derive(Clone, Debug)]
 enum Value {
@@ -4493,7 +4509,7 @@ impl Search<'_> {
     )]
     fn prepare(
         &mut self,
-        source: &[u8],
+        emitted: &[u8],
         elements: &[Element],
         declared: &Interface,
         at: Location,
@@ -4502,7 +4518,7 @@ impl Search<'_> {
             namespace: self.namespace,
             at,
         };
-        match derived_interface(&admission, &mut self.ledger, source, elements, declared) {
+        match derived_interface(&admission, &mut self.ledger, emitted, elements, declared) {
             Ok(admitted) => Ok(Ok(admitted)),
             Err(refusal) => match refusal.class {
                 Class::Invalid | Class::Unsupported => Ok(Err(refusal)),
@@ -4608,19 +4624,22 @@ impl Search<'_> {
                 "completed program does not produce the task's exact ordered output stack",
             )));
         }
-        let source = match emit(&filled, at.clone()) {
-            Ok(source) => source,
+        let emitted = match emit(&filled, at.clone()) {
+            Ok(emitted) => emitted,
             Err(refusal) => return Ok(Step::Refused(refusal)),
         };
-        self.ledger
-            .observe_count(Resource::SourceBytes, encoded_len(source.len()), at.clone())?;
+        self.ledger.observe_count(
+            Resource::SourceBytes,
+            encoded_len(emitted.len()),
+            at.clone(),
+        )?;
         let declared = Interface {
             stack_in: self.request.task.stack_in.clone(),
             stack_out: self.request.task.stack_out.clone(),
             effects: self.request.task.allowed_effects.clone(),
         };
         self.checked_candidates = self.checked_candidates.saturating_add(1);
-        let (interface, candidate) = match self.prepare(&source, &filled, &declared, at.clone())? {
+        let (interface, candidate) = match self.prepare(&emitted, &filled, &declared, at.clone())? {
             Ok(admitted) => admitted,
             Err(refusal) => return Ok(Step::Refused(refusal)),
         };
@@ -4644,7 +4663,7 @@ impl Search<'_> {
         for length in stack_lengths {
             stack_bytes = stack_bytes.saturating_add(encoded_len(length));
         }
-        let output_bytes = encoded_len(source.len())
+        let output_bytes = encoded_len(emitted.len())
             .saturating_mul(2)
             .saturating_add(encoded_len(selected.len()).saturating_mul(IDENTITY_BYTES_U64))
             .saturating_add(stack_bytes);
@@ -4654,7 +4673,7 @@ impl Search<'_> {
             self.fixtures = Some(self.fixtures_for(&filled, set)?);
         }
         Ok(Step::Admitted(alloc::boxed::Box::new(Accepted {
-            source,
+            source: emitted,
             candidate,
             interface,
             selected,
@@ -5731,12 +5750,7 @@ fn run_length(
     let mut outcome = Ok(());
     let mut has_next = true;
     while outcome.is_ok() && has_next {
-        sequence.clear();
-        for digit in &digits {
-            if let Some(index) = order_index(order, *digit) {
-                sequence.push(index);
-            }
-        }
+        sequence = refill_sequence(sequence, order, &digits);
         debug_assert_eq!(sequence.len(), digits.len());
         let ordinal = *next_ordinal;
         *next_ordinal = (*next_ordinal).saturating_add(1);
@@ -5754,6 +5768,21 @@ fn run_length(
         has_next = outcome.is_ok() && advance(&mut digits, width);
     }
     outcome
+}
+
+/// Refill the reused sequence buffer with the order indices `digits` select.
+fn refill_sequence(
+    mut sequence: alloc::vec::Vec<u16>,
+    order: &[u16],
+    digits: &[u16],
+) -> alloc::vec::Vec<u16> {
+    sequence.clear();
+    for digit in digits {
+        if let Some(index) = order_index(order, *digit) {
+            sequence.push(index);
+        }
+    }
+    sequence
 }
 
 /// The library entry index that `digit` selects in the canonical order.

@@ -49,7 +49,10 @@ pub const fn pure_builtin_spelling(identity: u32) -> Option<&'static str> {
 
 /// Immutable source authority for the versioned Result interface. The same
 /// declaration bytes are checked through ordinary module registration.
-pub const RESULT_LIBRARY_SOURCE: &[u8] = include_bytes!("fixtures/result.noble");
+// Included as (ASCII) text rather than a byte array: the extraction prints a
+// byte-array constant as an array literal whose length proof Lean cannot
+// close, while `as_bytes` yields the identical bytes.
+pub const RESULT_LIBRARY_SOURCE: &[u8] = include_str!("fixtures/result.noble").as_bytes();
 
 /// Host-selected aggregate of original module bytes and outside definition history.
 /// This does not raise the per-submission `Limits::bytes` parser bound.
@@ -394,8 +397,8 @@ fn core_interface_word(
     reason = "Owner: noble-contracts; the recursion follows the structure of an already checked, size-bounded input."
 )]
 #[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; this is a total structural predicate over an already checked type; unsupported shapes return false rather than asserting."
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; it follows boxed child types through Deref and slices stack lists, neither of which is const."
 )]
 fn core_type(ty: &noble_kernel::types::Ty) -> bool {
     #[expect(
@@ -408,23 +411,32 @@ fn core_type(ty: &noble_kernel::types::Ty) -> bool {
         Ty::List(item) => core_type(item),
         Ty::Pair(left, right) | Ty::Sum(left, right) => core_type(left) && core_type(right),
         Ty::Program(input, output, effects) => {
-            // Explicit walks: passing `core_type` itself as a value would put
-            // a closure impl into this recursion for the extraction.
-            let mut is_accepted = effects.as_slice().is_empty();
-            let mut index = 0;
-            while is_accepted && index < input.len() {
-                is_accepted = core_type(&input[index]);
-                index += 1;
-            }
-            index = 0;
-            while is_accepted && index < output.len() {
-                is_accepted = core_type(&output[index]);
-                index += 1;
-            }
-            is_accepted
+            effects.as_slice().is_empty() && core_types(input) && core_types(output)
         }
         _ => false,
     }
+}
+
+/// Whether every type of a stack list is a Core type. The list is halved
+/// rather than looped over: no loop may sit on the recursion with `core_type`
+/// for the extraction, and halving keeps the added depth logarithmic.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; each call halves the list, so the depth is logarithmic in the stack length of an already checked type."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; range-indexing a slice and the mutual recursion with core_type are not const."
+)]
+fn core_types(types: &[noble_kernel::types::Ty]) -> bool {
+    if types.is_empty() {
+        return true;
+    }
+    let half = types.len() / 2;
+    if half == 0 {
+        return core_type(&types[0]);
+    }
+    core_types(&types[..half]) && core_types(&types[half..])
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -545,12 +557,17 @@ impl Reach {
             if index == self.target {
                 return Ok(true);
             }
-            let seen = self.visited.get_mut(index).ok_or_else(|| {
-                Error::at(
-                    Stage::Acceptance,
-                    crate::invalid(span, "invalid retained definition target"),
-                )
-            })?;
+            // An explicit match: a mutable borrow must not pass through a
+            // std combinator for the extraction.
+            let seen = match self.visited.get_mut(index) {
+                Some(seen) => seen,
+                None => {
+                    return Err(Error::at(
+                        Stage::Acceptance,
+                        crate::invalid(span, "invalid retained definition target"),
+                    ));
+                }
+            };
             if !*seen {
                 *seen = true;
                 self.pending.push(index);
@@ -712,6 +729,10 @@ struct AliasUse {
 
 /// An immutable preparation. A declaration deliberately has no executable root.
 #[derive(Clone, Debug)]
+// Renamed for extraction only: generated code names the crate-root `Prepared`
+// unqualified, which inside `source.*` would resolve to this type; the Rust
+// name is unchanged.
+#[charon::rename("SourcePrepared")]
 pub struct Prepared {
     generation: u64,
     history: alloc::vec::Vec<u8>,
@@ -2671,6 +2692,51 @@ mod tests {
                 .diagnostic()
                 .message,
             "Core stack height exhausted"
+        );
+    }
+
+    #[test]
+    fn program_types_are_core_only_when_every_stack_entry_is() {
+        let program = |input: alloc::vec::Vec<noble_kernel::types::Ty>, output| {
+            noble_kernel::types::Ty::Program(
+                alloc::boxed::Box::new(input),
+                alloc::boxed::Box::new(output),
+                noble_kernel::types::EffSet::empty(),
+            )
+        };
+        // Stacks of several heights with one non-Core entry at every position:
+        // the halving walk must reach each of them.
+        for count in 0..7 {
+            let core = alloc::vec![noble_kernel::types::Ty::I64; count];
+            assert!(super::core_type(&program(core.clone(), core.clone())));
+            for at in 0..count {
+                let mut mixed = core.clone();
+                mixed[at] = noble_kernel::types::Ty::Contract;
+                assert!(!super::core_type(&program(mixed.clone(), core.clone())));
+                assert!(!super::core_type(&program(core.clone(), mixed)));
+            }
+        }
+        let inner = program(
+            alloc::vec::Vec::new(),
+            alloc::vec![noble_kernel::types::Ty::Bool],
+        );
+        assert!(super::core_type(&program(
+            alloc::vec![inner],
+            alloc::vec::Vec::new()
+        )));
+        let effectful = noble_kernel::types::Ty::Program(
+            alloc::boxed::Box::default(),
+            alloc::boxed::Box::default(),
+            noble_kernel::types::EffSet::from_ids(&[noble_kernel::contracts::LIVE_DISPATCH]),
+        );
+        assert!(!super::core_type(&effectful));
+    }
+
+    #[test]
+    fn result_library_text_is_the_exact_fixture_bytes() {
+        assert_eq!(
+            super::RESULT_LIBRARY_SOURCE,
+            include_bytes!("fixtures/result.noble").as_slice()
         );
     }
 

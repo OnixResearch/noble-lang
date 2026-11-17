@@ -95,7 +95,7 @@ fn frame_binds(
 fn frame_bind(
     out: &mut crate::output::Buffer,
     index: usize,
-    source: u32,
+    origin: u32,
     target: u32,
 ) -> Result<(), crate::Diagnostic> {
     attempt!(out.append(b"(call $live_frame_bind (local.get $frame) "));
@@ -105,7 +105,7 @@ fn frame_bind(
     attempt!(out.append(b" "));
     attempt!(out.i32(target));
     attempt!(out.append(b" (call $live_frame_get "));
-    attempt!(out.i32(source));
+    attempt!(out.i32(origin));
     out.append(b"))\n(if (global.get $failure) (then (return)))\n")
 }
 

@@ -32,8 +32,9 @@ pub enum FormKind {
 // `Form` and `FormKind` are mutually recursive through `Vec<Form>`. Derived
 // `Clone`, `PartialEq` and `Debug` impls call each other through their trait
 // impls, and the pinned Aeneas refuses such mixed function/trait-impl groups.
-// The copy and equality walks below recurse through plain functions instead,
-// with exactly the derived results; `FormKind`'s rendering is the one reviewed
+// The copy and equality walks below are plain functions instead, with exactly
+// the derived results; nested lists are walked through explicit work lists, so
+// no loop sits on a call cycle. `FormKind`'s rendering is the one reviewed
 // opaque formatting boundary (see `debug_form_kind`).
 impl Clone for Form {
     fn clone(&self) -> Self {
@@ -85,15 +86,109 @@ fn clone_form_kind(kind: &FormKind) -> FormKind {
     }
 }
 
-/// Copy a list of forms in order into an exactly sized vector, as `Vec::clone` did.
+/// Copy a list of forms in order into exactly sized vectors, as `Vec::clone`
+/// did. Nested lists are copied through an explicit work list rather than by
+/// recursion; the list copies under construction stay open, innermost last.
 fn clone_forms(forms: &[Form]) -> Vec<Form> {
     let mut copy = Vec::with_capacity(forms.len());
-    let mut index = 0;
-    while index < forms.len() {
-        copy.push(clone_form(&forms[index]));
-        index += 1;
+    let mut open_lists = Vec::new();
+    let mut pending = Vec::new();
+    pending.push(CopyFrame::Forms(forms));
+    while let Some(frame) = pending.pop() {
+        copy_step(frame, &mut pending, &mut open_lists, &mut copy);
     }
     copy
+}
+
+/// One pending piece of a list copy.
+enum CopyFrame<'a> {
+    /// Copy these forms, in order, into the innermost open list copy.
+    Forms(&'a [Form]),
+    /// Close the innermost open list copy into a list form with this span.
+    Close(Span),
+}
+
+/// Copy the first pending form and schedule the rest, or close the innermost
+/// open list copy. A list form opens a list copy whose forms are copied before
+/// the forms that follow it.
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the work list and the copies are the copy loop's locally owned state, borrowed only for one loop-free step"
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; the step grows the copy loop's owned vectors, which must stay the caller's Vecs"
+)]
+fn copy_step<'a>(
+    frame: CopyFrame<'a>,
+    pending: &mut Vec<CopyFrame<'a>>,
+    open_lists: &mut Vec<Vec<Form>>,
+    copy: &mut Vec<Form>,
+) {
+    match frame {
+        CopyFrame::Forms(forms) => {
+            if forms.is_empty() {
+                return;
+            }
+            let form = &forms[0];
+            pending.push(CopyFrame::Forms(&forms[1..]));
+            match &form.kind {
+                FormKind::Atom(atom) => push_copied(
+                    open_lists,
+                    copy,
+                    Form {
+                        kind: FormKind::Atom(atom.clone()),
+                        span: form.span,
+                    },
+                ),
+                FormKind::List(children) => {
+                    open_lists.push(Vec::with_capacity(children.len()));
+                    pending.push(CopyFrame::Close(form.span));
+                    pending.push(CopyFrame::Forms(children));
+                }
+            }
+        }
+        CopyFrame::Close(span) => {
+            if let Some(items) = open_lists.pop() {
+                push_copied(
+                    open_lists,
+                    copy,
+                    Form {
+                        kind: FormKind::List(items),
+                        span,
+                    },
+                );
+            }
+        }
+    }
+}
+
+/// Append `item` to the innermost open list copy, else to the root `copy`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the copies are the copy loop's locally owned state, borrowed only to append one form"
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; appending grows the copy loop's owned root copy, which must stay the caller's Vec"
+)]
+fn push_copied<T>(open_lists: &mut [Vec<T>], copy: &mut Vec<T>, item: T) {
+    match open_lists.len().checked_sub(1) {
+        Some(top) => open_lists[top].push(item),
+        None => copy.push(item),
+    }
 }
 
 /// Field-wise form equality in declaration order, as the derived `PartialEq` did.
@@ -118,18 +213,75 @@ fn form_kind_equal(left: &FormKind, right: &FormKind) -> bool {
     }
 }
 
-/// Slice equality: equal lengths and pairwise equal forms in order.
+/// Slice equality: equal lengths and pairwise equal forms, compared through an
+/// explicit work list of list pairs rather than by recursion. Equality has no
+/// effects, so the comparison order cannot change the result.
 fn forms_equal(left: &[Form], right: &[Form]) -> bool {
+    let mut pending = Vec::new();
+    pending.push(ListPair { left, right });
+    let mut is_equal = true;
+    while let Some(lists) = pending.pop() {
+        is_equal = lists_step(lists, &mut pending);
+        if !is_equal {
+            break;
+        }
+    }
+    is_equal
+}
+
+/// A pending pair of form lists to compare.
+struct ListPair<'a> {
+    left: &'a [Form],
+    right: &'a [Form],
+}
+
+/// Compare the first forms of a pending list pair without descending: equal
+/// lengths, spans and atoms. A pair of nested lists and the remaining forms
+/// are queued.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the pending list pairs are the comparison loop's locally owned state, borrowed only for one loop-free step"
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; the step grows the comparison loop's owned work list, which must stay the caller's Vec"
+)]
+fn lists_step<'a>(lists: ListPair<'a>, pending: &mut Vec<ListPair<'a>>) -> bool {
+    let ListPair { left, right } = lists;
     if left.len() != right.len() {
         return false;
     }
-    let mut index = 0;
-    let mut is_equal = true;
-    while is_equal && index < left.len() {
-        is_equal = form_equal(&left[index], &right[index]);
-        index += 1;
+    if left.is_empty() {
+        return true;
     }
-    is_equal
+    pending.push(ListPair {
+        left: &left[1..],
+        right: &right[1..],
+    });
+    let first = &left[0];
+    let other = &right[0];
+    if first.span != other.span {
+        return false;
+    }
+    match (&first.kind, &other.kind) {
+        (FormKind::Atom(first), FormKind::Atom(other)) => first == other,
+        (FormKind::List(first), FormKind::List(other)) => {
+            pending.push(ListPair {
+                left: first,
+                right: other,
+            });
+            true
+        }
+        (FormKind::Atom(_), FormKind::List(_)) | (FormKind::List(_), FormKind::Atom(_)) => false,
+    }
 }
 
 /// Render a form kind exactly as `#[derive(Debug)]` did.
@@ -233,7 +385,6 @@ pub struct ProofObligation {
     pub term: Form,
     pub span: Span,
 }
-#[derive(Clone, Debug)]
 pub struct ProofDependency {
     pub name: String,
     pub module: String,
@@ -246,6 +397,147 @@ pub struct ProofDependency {
     pub model_revision: String,
     /// Exact checker/lowering/consumer identity at original acceptance.
     pub checker_revision: String,
+}
+// `ProofDependency` is recursive through `dependencies`. Derived `Clone` and
+// `Debug` impls would reach their own trait impls through
+// `Vec<ProofDependency>`, which the extracted model cannot define before use.
+// The copy below walks the dependency tree through plain functions and an
+// explicit work list instead, with exactly the derived result; the rendering
+// is a reviewed opaque formatting boundary (see `debug_proof_dependency`).
+impl Clone for ProofDependency {
+    fn clone(&self) -> Self {
+        clone_dependency(self)
+    }
+}
+impl core::fmt::Debug for ProofDependency {
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; `Debug` renders by writing through the caller's formatter, which is the operation"
+    )]
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        debug_proof_dependency(self, f)
+    }
+}
+
+/// Deep-copy one dependency, field by field, as the derived `Clone` did.
+fn clone_dependency(dependency: &ProofDependency) -> ProofDependency {
+    copied_dependency(dependency, clone_dependencies(&dependency.dependencies))
+}
+
+/// A copy of `dependency`'s own fields around its already copied
+/// `dependencies`.
+fn copied_dependency(
+    dependency: &ProofDependency,
+    dependencies: Vec<ProofDependency>,
+) -> ProofDependency {
+    ProofDependency {
+        name: dependency.name.clone(),
+        module: dependency.module.clone(),
+        version: dependency.version,
+        source: dependency.source.clone(),
+        declaration: dependency.declaration.clone(),
+        exported: dependency.exported,
+        dependencies,
+        model_revision: dependency.model_revision.clone(),
+        checker_revision: dependency.checker_revision.clone(),
+    }
+}
+
+/// Copy a list of dependencies in order into exactly sized vectors, as
+/// `Vec::clone` did, through an explicit work list rather than by recursion.
+fn clone_dependencies(dependencies: &[ProofDependency]) -> Vec<ProofDependency> {
+    let mut copy = Vec::with_capacity(dependencies.len());
+    let mut open_lists = Vec::new();
+    let mut pending = Vec::new();
+    pending.push(DependencyCopy::Nodes(dependencies));
+    while let Some(frame) = pending.pop() {
+        dependency_copy_step(frame, &mut pending, &mut open_lists, &mut copy);
+    }
+    copy
+}
+
+/// One pending piece of a dependency-list copy.
+enum DependencyCopy<'a> {
+    /// Copy these dependencies, in order, into the innermost open list copy.
+    Nodes(&'a [ProofDependency]),
+    /// Close the innermost open list copy into a copy of this dependency.
+    Close(&'a ProofDependency),
+}
+
+/// Open a list copy for the first pending dependency's own dependencies,
+/// copied before the dependencies that follow it, or close the innermost open
+/// list copy into a copy of its dependency.
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the work list and the copies are the copy loop's locally owned state, borrowed only for one loop-free step"
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; the step grows the copy loop's owned vectors, which must stay the caller's Vecs"
+)]
+fn dependency_copy_step<'a>(
+    frame: DependencyCopy<'a>,
+    pending: &mut Vec<DependencyCopy<'a>>,
+    open_lists: &mut Vec<Vec<ProofDependency>>,
+    copy: &mut Vec<ProofDependency>,
+) {
+    match frame {
+        DependencyCopy::Nodes(dependencies) => {
+            if dependencies.is_empty() {
+                return;
+            }
+            let dependency = &dependencies[0];
+            pending.push(DependencyCopy::Nodes(&dependencies[1..]));
+            open_lists.push(Vec::with_capacity(dependency.dependencies.len()));
+            pending.push(DependencyCopy::Close(dependency));
+            pending.push(DependencyCopy::Nodes(&dependency.dependencies));
+        }
+        DependencyCopy::Close(dependency) => {
+            if let Some(dependencies) = open_lists.pop() {
+                push_copied(
+                    open_lists,
+                    copy,
+                    copied_dependency(dependency, dependencies),
+                );
+            }
+        }
+    }
+}
+
+/// Render a proof dependency exactly as `#[derive(Debug)]` did.
+///
+/// Reviewed Debug-only opaque extraction boundary: a transparent body must
+/// format `Vec<ProofDependency>` through `dyn Debug`, which needs the very
+/// instance this body defines. Formatting layout is already an abstracted
+/// trust boundary.
+#[charon::opaque]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; rendering writes through the caller's formatter, which is the operation"
+)]
+fn debug_proof_dependency(
+    dependency: &ProofDependency,
+    f: &mut core::fmt::Formatter<'_>,
+) -> core::fmt::Result {
+    f.debug_struct("ProofDependency")
+        .field("name", &dependency.name)
+        .field("module", &dependency.module)
+        .field("version", &dependency.version)
+        .field("source", &dependency.source)
+        .field("declaration", &dependency.declaration)
+        .field("exported", &dependency.exported)
+        .field("dependencies", &dependency.dependencies)
+        .field("model_revision", &dependency.model_revision)
+        .field("checker_revision", &dependency.checker_revision)
+        .finish()
 }
 #[derive(Clone, Debug)]
 pub struct ProofBatch {
@@ -336,6 +628,9 @@ impl TreeBounds {
     }
 }
 #[derive(Clone, Copy)]
+// Extraction-only name: the crate-root `Meter` is printed unqualified in Lean,
+// where it would resolve to this type inside `intrinsic`.
+#[charon::rename("IntrinsicMeter")]
 struct Meter<'a> {
     nodes: u32,
     work: u32,
@@ -480,7 +775,13 @@ fn operation<'a>(form: &'a Form, head: &str, count: usize) -> Result<&'a [Form],
     }
     Ok(&items[1..])
 }
-#[derive(Clone, Debug, PartialEq, Eq)]
+// `Debug` is only derived for tests: no library code renders this private
+// type, and a derived rendering would reach its own impl through `Box<Code>`.
+#[derive(Clone, PartialEq, Eq)]
+#[cfg_attr(test, derive(Debug))]
+// Extraction-only variant names: inside the derived impls' Lean namespace the
+// constructors `Unit`, `Bool` and `List` would shadow the Lean types they name.
+#[charon::variants_suffix("Code")]
 enum Code {
     Unit,
     Bool,
@@ -1820,6 +2121,8 @@ enum LeanFrame<'a> {
     Proposition(&'a Proposition),
     Text(&'a str),
     Number(usize),
+    /// The opening of a dependent Pi, `(` U+2200 ` (v`, as one text part.
+    PiOpen,
 }
 fn lean_text(root: LeanFrame<'_>, span: Span, bounds: TreeBounds) -> Result<String, Diagnostic> {
     let mut pending = WorkStack::new();
@@ -1865,7 +2168,6 @@ fn lean_step<'a>(
     span: Span,
     bounds: TreeBounds,
 ) -> Result<(), Diagnostic> {
-    use core::fmt::Write;
     macro_rules! push {
         ($frame:expr) => {
             work_push!(pending, $frame, bounds.frames).map_err(|()| exhausted(span))?
@@ -1886,6 +2188,10 @@ fn lean_step<'a>(
     }
     match frame {
         LeanFrame::Text(part) => append!(part),
+        LeanFrame::PiOpen => {
+            let opening = pi_opening();
+            append!(opening.as_str());
+        }
         LeanFrame::Number(index) => {
             let digits = if index == 0 {
                 1
@@ -1902,7 +2208,7 @@ fn lean_step<'a>(
             {
                 return Err(exhausted(span));
             }
-            write!(output, "{index}").map_err(|_| exhausted(span))?;
+            output.push_str(&decimal(index));
         }
         LeanFrame::Code(code) => match code {
             Code::Unit => append!(".unit"),
@@ -1946,7 +2252,7 @@ fn lean_step<'a>(
                 push!(LeanFrame::Sort(sort));
                 push!(LeanFrame::Text(" : "));
                 push!(LeanFrame::Number(*index));
-                push!(LeanFrame::Text("(∀ (v"));
+                push!(LeanFrame::PiOpen);
             }
             Proposition::Eq(_, left, right) => {
                 push!(LeanFrame::Number(*right));
@@ -1958,6 +2264,56 @@ fn lean_step<'a>(
         },
     }
     Ok(())
+}
+/// The opening `(` U+2200 ` (v` of a rendered dependent Pi.
+fn pi_opening() -> String {
+    let mut opening = push_code_point(String::from("("), 0x2200);
+    opening.push_str(" (v");
+    opening
+}
+/// The decimal digits of `value`, exactly as `{value}` renders them, pushed
+/// as plain digits so rendering needs no formatting machinery.
+fn decimal(value: usize) -> String {
+    // The digits, least significant first; there is always at least one.
+    let mut reversed = String::new();
+    let mut rest = value;
+    reversed.push(char::from(digit_byte(rest % 10)));
+    rest /= 10;
+    while rest > 0 {
+        reversed.push(char::from(digit_byte(rest % 10)));
+        rest /= 10;
+    }
+    let digits = reversed.as_bytes();
+    let mut text = String::with_capacity(digits.len());
+    let mut index = digits.len();
+    while index > 0 {
+        index -= 1;
+        text.push(char::from(digits[index]));
+    }
+    text
+}
+/// The ASCII digit for `digit`, which is below ten; the last arm is nine.
+const fn digit_byte(digit: usize) -> u8 {
+    match digit {
+        0 => b'0',
+        1 => b'1',
+        2 => b'2',
+        3 => b'3',
+        4 => b'4',
+        5 => b'5',
+        6 => b'6',
+        7 => b'7',
+        8 => b'8',
+        _ => b'9',
+    }
+}
+/// `out` with the character `code` appended. Rendered Lean text keeps its
+/// non-ASCII symbols out of string literals, which the extraction cannot print.
+fn push_code_point(mut out: String, code: u32) -> String {
+    if let Some(symbol) = char::from_u32(code) {
+        out.push(symbol);
+    }
+    out
 }
 #[expect(
     tigerstyle::missing_const_fn,
@@ -4183,16 +4539,15 @@ fn matches_eq_add(form: &Form, input_name: &str, output_name: &str, literal: i64
 }
 
 #[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
-)]
-#[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
 /// Expansion of the checked constructors in `check_contract`. Every instance
 /// of `__N__` is sourced from the independently accepted literal node. These
 /// are actual PC introduction/elimination terms, not a selected theorem name.
+/// The term's non-ASCII Lean symbols are spelled as ASCII markers in the
+/// template and substituted afterwards: `__AND__` is U+2227, `__LANGLE__` and
+/// `__RANGLE__` are U+27E8 and U+27E9, and `__REWRITE__` is U+25B8.
 fn lower_unary_add(literal: i64) -> String {
     const TERM: &str = r#"
 (exportedClaim_consequence
@@ -4216,7 +4571,7 @@ fn lower_unary_add(literal: i64) -> String {
             (s := tail) (t := actual))
       let composed : PC ([.lit (.i64 __N__)] ++ [.word 4])
           (fun before => before = tail ++ [.i64 x])
-          (fun before actual => before = tail ++ [.i64 x] ∧
+          (fun before actual => before = tail ++ [.i64 x] __AND__
             actual = tail ++ [.i64 (x + (__N__ : BitVec 64))]) :=
         @pc_sequence
           [.lit (.i64 __N__)] [.word 4]
@@ -4224,24 +4579,32 @@ fn lower_unary_add(literal: i64) -> String {
           (fun (_ middle : Stack) => middle = (tail ++ [.i64 x]) ++ [.i64 __N__])
           (fun (middle : Stack) => middle = tail ++ [.i64 x, .i64 __N__])
           (fun (_ actual : Stack) => actual = tail ++ [.i64 (x + (__N__ : BitVec 64))])
-          (fun (before actual : Stack) => before = tail ++ [.i64 x] ∧
+          (fun (before actual : Stack) => before = tail ++ [.i64 x] __AND__
             actual = tail ++ [.i64 (x + (__N__ : BitVec 64))])
           first second
           (fun _ middle _ exactMiddle =>
             exactMiddle.trans (List.append_assoc tail [.i64 x] [.i64 __N__]))
-          (fun _ _ _ initial _ exactFinal => ⟨initial, exactFinal⟩)
+          (fun _ _ _ initial _ exactFinal => __LANGLE__initial, exactFinal__RANGLE__)
       ((composed (tail ++ [.i64 x]) final rfl execution).2)))
   (fun _ _ _ => True.intro)
   (fun before after params _ exactPost =>
     match exactPost with
-    | ⟨x, hbefore, hafter⟩ =>
-      hbefore.symm ▸ hafter.symm ▸
+    | __LANGLE__x, hbefore, hafter__RANGLE__ =>
+      hbefore.symm __REWRITE__ hafter.symm __REWRITE__
       (holds_eq (.output 0) (.add (.input 0) (.i64 __N__))
-        ⟨[.i64 x], [.i64 (x + (__N__ : BitVec 64))], params⟩
+        __LANGLE__[.i64 x], [.i64 (x + (__N__ : BitVec 64))], params__RANGLE__
         (.i64 (x + (__N__ : BitVec 64))) (.i64 (x + (__N__ : BitVec 64)))
         rfl rfl).mpr rfl))
 "#;
-    replace_all(TERM, "__N__", &literal.to_string())
+    let term = replace_all(TERM, "__N__", &literal.to_string());
+    let term = replace_all(&term, "__AND__", &push_code_point(String::new(), 0x2227));
+    let term = replace_all(&term, "__LANGLE__", &push_code_point(String::new(), 0x27E8));
+    let term = replace_all(&term, "__RANGLE__", &push_code_point(String::new(), 0x27E9));
+    replace_all(
+        &term,
+        "__REWRITE__",
+        &push_code_point(String::new(), 0x25B8),
+    )
 }
 /// `text.replace(marker, value)` for a non-empty `marker`: each match, found
 /// left to right without overlap, becomes `value`.
@@ -4274,8 +4637,9 @@ fn replace_all(text: &str, marker: &str, value: &str) -> String {
 
 #[cfg(test)]
 mod form_impl_tests {
-    //! The hand-written `Form`/`FormKind` impls must agree exactly with the
-    //! derived impls they replace; `mirror` keeps those derives for comparison.
+    //! The hand-written `Form`/`FormKind` and `ProofDependency` impls must agree
+    //! exactly with the derived impls they replace; `mirror` keeps those derives
+    //! for comparison.
     #[expect(
         tigerstyle::non_trait_imports,
         reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
@@ -4305,6 +4669,22 @@ mod form_impl_tests {
         pub enum FormKind {
             Atom(alloc::string::String),
             List(alloc::vec::Vec<Form>),
+        }
+        #[derive(Clone, Debug)]
+        #[expect(
+            dead_code,
+            reason = "Owner: noble-contracts; the mirror's fields are read only by its derived Debug, which is the reference rendering"
+        )]
+        pub struct ProofDependency {
+            pub name: alloc::string::String,
+            pub module: alloc::string::String,
+            pub version: u32,
+            pub source: alloc::vec::Vec<u8>,
+            pub declaration: crate::intrinsic::ProofObligation,
+            pub exported: bool,
+            pub dependencies: alloc::vec::Vec<ProofDependency>,
+            pub model_revision: alloc::string::String,
+            pub checker_revision: alloc::string::String,
         }
     }
 
@@ -4340,8 +4720,12 @@ mod form_impl_tests {
         }
     }
 
+    #[expect(
+        tigerstyle::assertion_density,
+        reason = "Owner: noble-contracts; the sample table is data, checked by the tests that consume it"
+    )]
     fn samples() -> Vec<Form> {
-        vec![
+        let mut forms = vec![
             atom("a", 0),
             atom("a\"\n", 0),
             atom("a", 1),
@@ -4350,7 +4734,45 @@ mod form_impl_tests {
             list(vec![atom("a", 0), list(vec![atom("b", 2)], 1)], 0),
             list(vec![atom("a", 0), list(vec![atom("b", 2)], 1)], 3),
             list(vec![atom("a", 0), list(vec![atom("c", 2)], 1)], 0),
-        ]
+        ];
+        // Deeper lists, with forms after nested lists and an empty nested
+        // list, differing only deep inside: in an atom, a span or a length.
+        for (deep, deep_start) in [("d", 4), ("x", 4), ("d", 5)] {
+            forms.push(list(
+                vec![
+                    list(
+                        vec![
+                            list(vec![atom(deep, deep_start)], 3),
+                            atom("e", 5),
+                            list(Vec::new(), 6),
+                        ],
+                        2,
+                    ),
+                    atom("f", 7),
+                ],
+                1,
+            ));
+        }
+        forms.push(list(
+            vec![
+                list(
+                    vec![
+                        list(vec![atom("d", 4), atom("d", 4)], 3),
+                        atom("e", 5),
+                        list(Vec::new(), 6),
+                    ],
+                    2,
+                ),
+                atom("f", 7),
+            ],
+            1,
+        ));
+        let mut chain = atom("g", 0);
+        for start in 0..64 {
+            chain = list(vec![chain, atom("h", start)], start);
+        }
+        forms.push(chain);
+        forms
     }
 
     #[test]
@@ -4391,6 +4813,89 @@ mod form_impl_tests {
                 items.push(atom("z", 9));
                 assert_ne!(copy, form);
             }
+        }
+    }
+
+    fn mirrored_dependency(dependency: &super::ProofDependency) -> mirror::ProofDependency {
+        mirror::ProofDependency {
+            name: dependency.name.clone(),
+            module: dependency.module.clone(),
+            version: dependency.version,
+            source: dependency.source.clone(),
+            declaration: dependency.declaration.clone(),
+            exported: dependency.exported,
+            dependencies: dependency
+                .dependencies
+                .iter()
+                .map(mirrored_dependency)
+                .collect(),
+            model_revision: dependency.model_revision.clone(),
+            checker_revision: dependency.checker_revision.clone(),
+        }
+    }
+
+    fn dependency(name: &str, dependencies: Vec<super::ProofDependency>) -> super::ProofDependency {
+        super::ProofDependency {
+            name: String::from(name),
+            module: String::from("Module"),
+            version: 3,
+            source: name.as_bytes().to_vec(),
+            declaration: super::ProofObligation {
+                name: String::from(name),
+                revision: 1,
+                goal: super::PendingGoal::Pure {
+                    proposition: atom("p", 1),
+                },
+                term: list(vec![atom("t", 2)], 2),
+                span: crate::Span { start: 0, end: 4 },
+            },
+            exported: name.len().is_multiple_of(2),
+            dependencies,
+            model_revision: String::from("model \"r\"\n"),
+            checker_revision: String::from("checker"),
+        }
+    }
+
+    fn dependency_samples() -> Vec<super::ProofDependency> {
+        vec![
+            dependency("leaf", Vec::new()),
+            dependency(
+                "a",
+                vec![
+                    dependency("b", Vec::new()),
+                    dependency("c", vec![dependency("d", Vec::new())]),
+                    dependency("e", Vec::new()),
+                ],
+            ),
+            dependency(
+                "deep",
+                vec![dependency(
+                    "x",
+                    vec![dependency("y", vec![dependency("z", Vec::new())])],
+                )],
+            ),
+        ]
+    }
+
+    #[test]
+    fn dependency_debug_matches_the_derived_rendering() {
+        for dependency in dependency_samples() {
+            let expected = mirrored_dependency(&dependency);
+            assert_eq!(format!("{dependency:?}"), format!("{expected:?}"));
+            assert_eq!(format!("{dependency:#?}"), format!("{expected:#?}"));
+        }
+    }
+
+    #[test]
+    fn dependency_clone_is_an_equal_independent_deep_copy() {
+        for dependency in dependency_samples() {
+            let mut copy = dependency.clone();
+            assert_eq!(
+                format!("{:?}", mirrored_dependency(&copy)),
+                format!("{:?}", mirrored_dependency(&dependency))
+            );
+            copy.dependencies.push(dependency.clone());
+            assert_ne!(format!("{copy:?}"), format!("{dependency:?}"));
         }
     }
 }
@@ -4666,6 +5171,94 @@ mod proposition_impl_tests {
         let term = super::lower_unary_add(-7);
         assert!(term.contains("(.i64 -7)"));
         assert!(!term.contains("__N__"));
+    }
+
+    /// `lower_unary_add`'s template as a literal, before its non-ASCII symbols
+    /// moved to markers substituted with code points.
+    const UNARY_ADD_TERM: &str = r#"
+(exportedClaim_consequence
+  (exportedClaim_unaryI64
+    (code := [.lit (.i64 __N__)] ++ [.word 4])
+    (f := fun x => x + (__N__ : BitVec 64))
+    (fun tail x final execution =>
+      let first : PC [.lit (.i64 __N__)]
+          (fun before => before = tail ++ [.i64 x])
+          (fun _ middle => middle = (tail ++ [.i64 x]) ++ [.i64 __N__]) :=
+        pc_exact (code := [.lit (.i64 __N__)]) (s := tail ++ [.i64 x])
+          (expected := (tail ++ [.i64 x]) ++ [.i64 __N__])
+          (fun actual => exec_lit_iff (v := .i64 __N__)
+            (s := tail ++ [.i64 x]) (t := actual))
+      let second : PC [.word 4]
+          (fun middle => middle = tail ++ [.i64 x, .i64 __N__])
+          (fun _ actual => actual = tail ++ [.i64 (x + (__N__ : BitVec 64))]) :=
+        pc_exact (code := [.word 4]) (s := tail ++ [.i64 x, .i64 __N__])
+          (expected := tail ++ [.i64 (x + (__N__ : BitVec 64))])
+          (fun actual => exec_add_iff (a := x) (b := __N__)
+            (s := tail) (t := actual))
+      let composed : PC ([.lit (.i64 __N__)] ++ [.word 4])
+          (fun before => before = tail ++ [.i64 x])
+          (fun before actual => before = tail ++ [.i64 x] ∧
+            actual = tail ++ [.i64 (x + (__N__ : BitVec 64))]) :=
+        @pc_sequence
+          [.lit (.i64 __N__)] [.word 4]
+          (fun (before : Stack) => before = tail ++ [.i64 x])
+          (fun (_ middle : Stack) => middle = (tail ++ [.i64 x]) ++ [.i64 __N__])
+          (fun (middle : Stack) => middle = tail ++ [.i64 x, .i64 __N__])
+          (fun (_ actual : Stack) => actual = tail ++ [.i64 (x + (__N__ : BitVec 64))])
+          (fun (before actual : Stack) => before = tail ++ [.i64 x] ∧
+            actual = tail ++ [.i64 (x + (__N__ : BitVec 64))])
+          first second
+          (fun _ middle _ exactMiddle =>
+            exactMiddle.trans (List.append_assoc tail [.i64 x] [.i64 __N__]))
+          (fun _ _ _ initial _ exactFinal => ⟨initial, exactFinal⟩)
+      ((composed (tail ++ [.i64 x]) final rfl execution).2)))
+  (fun _ _ _ => True.intro)
+  (fun before after params _ exactPost =>
+    match exactPost with
+    | ⟨x, hbefore, hafter⟩ =>
+      hbefore.symm ▸ hafter.symm ▸
+      (holds_eq (.output 0) (.add (.input 0) (.i64 __N__))
+        ⟨[.i64 x], [.i64 (x + (__N__ : BitVec 64))], params⟩
+        (.i64 (x + (__N__ : BitVec 64))) (.i64 (x + (__N__ : BitVec 64)))
+        rfl rfl).mpr rfl))
+"#;
+
+    #[test]
+    fn unary_add_term_matches_the_literal_template() {
+        for literal in [0, 2, -7, i64::MIN, i64::MAX] {
+            let value = alloc::string::ToString::to_string(&literal);
+            assert_eq!(
+                super::lower_unary_add(literal),
+                UNARY_ADD_TERM.replace("__N__", &value)
+            );
+        }
+    }
+
+    #[test]
+    fn pi_opening_is_the_literal_quantifier_text() {
+        assert_eq!(super::pi_opening(), "(\u{2200} (v");
+        assert_eq!(super::pi_opening().len(), "(∀ (v".len());
+    }
+
+    #[test]
+    fn decimal_matches_the_display_rendering() {
+        for value in [
+            0,
+            1,
+            9,
+            10,
+            11,
+            99,
+            100,
+            101,
+            4_096,
+            65_535,
+            1_000_000,
+            4_294_967_295,
+            usize::MAX,
+        ] {
+            assert_eq!(super::decimal(value), alloc::format!("{value}"));
+        }
     }
 
     #[test]

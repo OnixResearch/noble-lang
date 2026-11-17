@@ -163,7 +163,7 @@ fn node_action(
     program_id: usize,
     id: noble_kernel::untrusted::NodeId,
     node: &noble_kernel::untrusted::Node,
-    output: nominal::Output<'_>,
+    sink: nominal::Output<'_>,
 ) -> Result<super::Action, crate::Diagnostic> {
     match node {
         noble_kernel::untrusted::Node::Literal {
@@ -181,24 +181,22 @@ fn node_action(
         noble_kernel::untrusted::Node::Literal {
             lit: noble_kernel::untrusted::Lit::Text,
             ..
-        } => text_action(input, id, output),
+        } => text_action(input, id, sink),
         noble_kernel::untrusted::Node::Quotation { .. } => {
             match input.arena.quotes[attempt!(crate::admission::index(id))] {
                 Some(program) => Ok(super::Action::Program(program)),
                 None => Err(crate::Diagnostic::Defective),
             }
         }
-        noble_kernel::untrusted::Node::Invocation { def, .. } => {
-            input.lower_invocation(*def, output)
-        }
+        noble_kernel::untrusted::Node::Invocation { def, .. } => input.lower_invocation(*def, sink),
         noble_kernel::untrusted::Node::SignedSelf { def, .. } => {
             if input.owner_definition != Some(*def) {
                 return Err(crate::Diagnostic::Invalid);
             }
-            input.named_call(*def, output.interface)
+            input.named_call(*def, sink.interface)
         }
         noble_kernel::untrusted::Node::SlotInvoke { site_id, .. } => {
-            slot_invoke_action(input, program_id, id, *site_id, output)
+            slot_invoke_action(input, program_id, id, *site_id, sink)
         }
     }
 }
@@ -207,14 +205,14 @@ fn node_action(
 fn text_action(
     input: Input<'_>,
     id: noble_kernel::untrusted::NodeId,
-    output: nominal::Output<'_>,
+    sink: nominal::Output<'_>,
 ) -> Result<super::Action, crate::Diagnostic> {
     let nominal::Output {
         compiler,
         layout,
         work,
         ..
-    } = output;
+    } = sink;
     let text = attempt!(super::super::admission::nodes::text(input.body, id));
     if compiler.calculator {
         let (address, length) = attempt!(super::allocation::literal(
@@ -240,14 +238,14 @@ fn slot_invoke_action(
     program_id: usize,
     id: noble_kernel::untrusted::NodeId,
     site_id: u32,
-    output: nominal::Output<'_>,
+    sink: nominal::Output<'_>,
 ) -> Result<super::Action, crate::Diagnostic> {
     let nominal::Output {
         compiler,
         layout,
         work,
         ..
-    } = output;
+    } = sink;
     if !layout.live_slots || site_id != id.0 {
         return Err(crate::Diagnostic::Invalid);
     }
@@ -340,30 +338,30 @@ impl Input<'_> {
     fn lower_invocation(
         self,
         def: noble_kernel::contracts::Definition,
-        output: nominal::Output<'_>,
+        sink: nominal::Output<'_>,
     ) -> Result<super::Action, crate::Diagnostic> {
         if def.0 == 8 {
-            return quotation::lower(output.interface, output.compiler, output.work);
+            return quotation::lower(sink.interface, sink.compiler, sink.work);
         }
         if let Some(action) = builtin_action(&self.submission.environment, def, self.owner) {
             return action;
         }
-        self.defined_action(def, output)
+        self.defined_action(def, sink)
     }
 
     /// The action of a definition the environment declares by behaviour.
     fn defined_action(
         self,
         def: noble_kernel::contracts::Definition,
-        output: nominal::Output<'_>,
+        sink: nominal::Output<'_>,
     ) -> Result<super::Action, crate::Diagnostic> {
         let Some(kind) = self.submission.environment.kind(def) else {
             return Err(crate::Diagnostic::Invalid);
         };
         if is_named(kind) {
-            return self.named_call(def, output.interface);
+            return self.named_call(def, sink.interface);
         }
-        output.behavior_action(kind)
+        sink.behavior_action(kind)
     }
 
     fn named_call(

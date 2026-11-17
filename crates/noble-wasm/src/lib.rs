@@ -75,7 +75,7 @@ pub(crate) mod scan {
             index += 1;
         }
         match found {
-            Some(at) => Some(&items[at]),
+            Some(position) => Some(&items[position]),
             None => None,
         }
     }

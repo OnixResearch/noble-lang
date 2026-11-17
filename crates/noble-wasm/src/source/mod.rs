@@ -177,6 +177,18 @@ impl Work {
     }
 }
 
+// The signature pool charges every key comparison and byte it actually
+// visits to the preparation's own budget, in visit order.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-maintainers; the budget belongs to one private preparation and tracks consumed work without modifying the borrowed submission or published compiler."
+)]
+impl crate::signatures::Meter for Work {
+    fn visit(&mut self, count: usize) -> Result<(), crate::Diagnostic> {
+        self.entries(count)
+    }
+}
+
 /// The selected calculator's fixed compiler ceilings, published beside
 /// [`CompileMetrics`] so a headroom report compares against the code's own
 /// constants rather than a copy.
@@ -447,7 +459,7 @@ pub enum OriginFixedArithmetic {
     Mul,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone)]
 pub enum OriginFixedExpression {
     Literal(i64),
     Arithmetic {
@@ -459,7 +471,82 @@ pub enum OriginFixedExpression {
     },
 }
 
-#[derive(Clone, Debug)]
+// Equality compares recipes structurally, exactly as the derive did. A
+// derived impl would recurse through `Rc<Self>`, so its generated trait
+// instance would name itself before it exists; an explicit worklist of
+// shallow node clones walks the two trees instead.
+impl PartialEq for OriginFixedExpression {
+    fn eq(&self, other: &Self) -> bool {
+        recipes_equal(self, other)
+    }
+}
+
+impl Eq for OriginFixedExpression {}
+
+/// Whether two fixed recipes have equal shapes, literals, kinds and bounds.
+fn recipes_equal(left: &OriginFixedExpression, right: &OriginFixedExpression) -> bool {
+    let mut pending = RecipePairs {
+        pairs: alloc::vec::Vec::with_capacity(8),
+    };
+    pending.pairs.push((left.clone(), right.clone()));
+    let mut is_equal = true;
+    while is_equal && !pending.pairs.is_empty() {
+        is_equal = pending.compare_next();
+    }
+    is_equal
+}
+
+/// Recipe node pairs still to compare, innermost last.
+struct RecipePairs {
+    pairs: alloc::vec::Vec<(OriginFixedExpression, OriginFixedExpression)>,
+}
+
+impl RecipePairs {
+    /// Compare the next pending pair and queue its children; `false` at a difference.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-wasm-maintainers; the comparison mutates only its own private worklist of recipe pairs."
+    )]
+    fn compare_next(&mut self) -> bool {
+        let Some(pair) = self.pairs.pop() else {
+            return true;
+        };
+        match pair {
+            (OriginFixedExpression::Literal(left), OriginFixedExpression::Literal(right)) => {
+                left == right
+            }
+            (
+                OriginFixedExpression::Arithmetic {
+                    kind,
+                    left,
+                    right,
+                    nodes,
+                    depth,
+                },
+                OriginFixedExpression::Arithmetic {
+                    kind: other_kind,
+                    left: other_left,
+                    right: other_right,
+                    nodes: other_nodes,
+                    depth: other_depth,
+                },
+            ) => {
+                if kind != other_kind || nodes != other_nodes || depth != other_depth {
+                    return false;
+                }
+                self.pairs
+                    .push((right.as_ref().clone(), other_right.as_ref().clone()));
+                self.pairs
+                    .push((left.as_ref().clone(), other_left.as_ref().clone()));
+                true
+            }
+            // A literal never equals an arithmetic node.
+            _ => false,
+        }
+    }
+}
+
+#[derive(Clone)]
 pub enum OriginProgramValue {
     Static {
         node: noble_kernel::untrusted::NodeId,
@@ -490,30 +577,109 @@ impl core::fmt::Debug for OriginOperand {
         reason = "Owner: noble-wasm-maintainers; Debug formatting writes only to the caller's Formatter, which is the operation"
     )]
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        debug_origin_operand(self, f)
+        debug_origin(OriginRendering::Operand(self), f)
     }
 }
 
-/// Render an origin operand exactly as `#[derive(Debug)]` did.
+impl core::fmt::Debug for OriginProgramValue {
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-wasm-maintainers; Debug formatting writes only to the caller's Formatter, which is the operation"
+    )]
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        debug_origin(OriginRendering::Value(self), f)
+    }
+}
+
+impl core::fmt::Debug for OriginFixedExpression {
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-wasm-maintainers; Debug formatting writes only to the caller's Formatter, which is the operation"
+    )]
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        debug_origin(OriginRendering::Recipe(self), f)
+    }
+}
+
+/// One borrowed value of the recursive origin types to render.
+#[derive(Clone, Copy)]
+enum OriginRendering<'a> {
+    Operand(&'a OriginOperand),
+    Value(&'a OriginProgramValue),
+    Recipe(&'a OriginFixedExpression),
+}
+
+/// Render the recursive origin types exactly as `#[derive(Debug)]` did.
 ///
-/// Reviewed opaque extraction boundary: `OriginProgramValue` and
-/// `OriginOperand` are mutually recursive, so any rendering of `Program` must
-/// format the nested value through `OriginProgramValue`'s `Debug` impl, which in
-/// turn formats operands; no transparent body can avoid the mixed trait-impl
-/// cycle the pinned Aeneas refuses. Formatting layout is already an abstracted
-/// trust boundary.
+/// Reviewed opaque extraction boundary: `OriginProgramValue`, `OriginOperand`
+/// and `OriginFixedExpression` recurse through `Rc`, so rendering any nested
+/// value formats it through its own `Debug` impl; no transparent body can
+/// avoid the self- and mutually-referencing trait instances that the pinned
+/// Aeneas refuses or emits before they are defined. Formatting layout is
+/// already an abstracted trust boundary.
 #[charon::opaque]
 #[expect(
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-wasm-maintainers; Debug formatting writes only to the caller's Formatter, which is the operation"
 )]
-fn debug_origin_operand(
-    operand: &OriginOperand,
+fn debug_origin(
+    rendering: OriginRendering<'_>,
     f: &mut core::fmt::Formatter<'_>,
 ) -> core::fmt::Result {
-    match operand {
-        OriginOperand::I64(value) => f.debug_tuple("I64").field(value).finish(),
-        OriginOperand::Program(value) => f.debug_tuple("Program").field(value).finish(),
+    match rendering {
+        OriginRendering::Operand(OriginOperand::I64(value)) => {
+            f.debug_tuple("I64").field(value).finish()
+        }
+        OriginRendering::Operand(OriginOperand::Program(value)) => {
+            f.debug_tuple("Program").field(value).finish()
+        }
+        OriginRendering::Value(OriginProgramValue::Static {
+            node,
+            program_index,
+        }) => f
+            .debug_struct("Static")
+            .field("node", node)
+            .field("program_index", program_index)
+            .finish(),
+        OriginRendering::Value(OriginProgramValue::Quote {
+            node,
+            table_entry,
+            operand,
+        }) => f
+            .debug_struct("Quote")
+            .field("node", node)
+            .field("table_entry", table_entry)
+            .field("operand", operand)
+            .finish(),
+        OriginRendering::Value(OriginProgramValue::Compose {
+            node,
+            table_entry,
+            left,
+            right,
+        }) => f
+            .debug_struct("Compose")
+            .field("node", node)
+            .field("table_entry", table_entry)
+            .field("left", left)
+            .field("right", right)
+            .finish(),
+        OriginRendering::Recipe(OriginFixedExpression::Literal(value)) => {
+            f.debug_tuple("Literal").field(value).finish()
+        }
+        OriginRendering::Recipe(OriginFixedExpression::Arithmetic {
+            kind,
+            left,
+            right,
+            nodes,
+            depth,
+        }) => f
+            .debug_struct("Arithmetic")
+            .field("kind", kind)
+            .field("left", left)
+            .field("right", right)
+            .field("nodes", nodes)
+            .field("depth", depth)
+            .finish(),
     }
 }
 
@@ -793,9 +959,7 @@ impl Compiler {
         let bytes = attempt!(admission::meter::stack(stack, work));
         attempt!(work.charge(bytes));
         if self.calculator {
-            return self
-                .signatures
-                .intern_charged(stack, |visited| work.entries(visited));
+            return self.signatures.intern_charged(stack, work);
         }
         let mut index = 0usize;
         let mut failure = None;
@@ -979,7 +1143,7 @@ impl Compiler {
     )]
     pub fn prepare_signed(
         &self,
-        source: &noble_contracts::source::SignedSourceOwner<'_>,
+        owner: &noble_contracts::source::SignedSourceOwner<'_>,
     ) -> Result<Prepared, crate::Diagnostic> {
         if self.live
             || self.live_slots
@@ -991,7 +1155,7 @@ impl Compiler {
         {
             return Err(crate::Diagnostic::Unsupported);
         }
-        let submission = source.rederive().map_err(|_| crate::Diagnostic::Invalid)?;
+        let submission = owner.rederive().map_err(|_| crate::Diagnostic::Invalid)?;
         if !submission.environment.declared_modules
             || submission.environment.live_slots
             || submission.environment.text_cursor
@@ -1011,7 +1175,7 @@ impl Compiler {
     )]
     pub fn prepare_worker_signed(
         &self,
-        source: &noble_contracts::source::SignedSourceOwner<'_>,
+        owner: &noble_contracts::source::SignedSourceOwner<'_>,
     ) -> Result<Prepared, crate::Diagnostic> {
         if !self.worker_inputs
             || self.live
@@ -1023,7 +1187,7 @@ impl Compiler {
         {
             return Err(crate::Diagnostic::Unsupported);
         }
-        let submission = source.rederive().map_err(|_| crate::Diagnostic::Invalid)?;
+        let submission = owner.rederive().map_err(|_| crate::Diagnostic::Invalid)?;
         self.prepare_from(&submission, self.functions, false, false, true)
     }
 
@@ -1036,7 +1200,7 @@ impl Compiler {
     )]
     pub fn prepare_declared_text(
         &self,
-        source: &noble_contracts::source::DeclaredTextSourceOwner<'_>,
+        owner: &noble_contracts::source::DeclaredTextSourceOwner<'_>,
     ) -> Result<Prepared, crate::Diagnostic> {
         if !self.declared_text
             || !self.text_cursor
@@ -1049,7 +1213,7 @@ impl Compiler {
         {
             return Err(crate::Diagnostic::Unsupported);
         }
-        let submission = source.rederive().map_err(|_| crate::Diagnostic::Invalid)?;
+        let submission = owner.rederive().map_err(|_| crate::Diagnostic::Invalid)?;
         if !submission.environment.declared_modules || !submission.environment.text_cursor {
             return Err(crate::Diagnostic::Unsupported);
         }
@@ -1381,9 +1545,7 @@ impl Compiler {
         // prefix, so per-module metadata is history-independent.
         let published = self.retained_descriptors(program_free);
         if next.calculator {
-            let keys = attempt!(next
-                .signatures
-                .expanded_keys(published, |bytes| work.entries(bytes)));
+            let keys = attempt!(next.signatures.expanded_keys(published, work));
             let wat = attempt!(emit::module(plan, self.generation, published, &keys));
             return Ok((published, wat));
         }
@@ -3161,33 +3323,214 @@ mod signed_dispatch_tests {
 
 #[cfg(test)]
 mod origin_operand_debug_tests {
-    //! `OriginOperand`'s hand-written `Debug` must render exactly as the derive
-    //! it replaces; `mirror` keeps that derive over the same payload types.
+    //! The recursive origin types' hand-written `Debug` must render exactly as
+    //! the derives they replace, and recipe equality must agree with the
+    //! derived `PartialEq`; `mirror` keeps those derives over mirrored trees.
     #![allow(
         tigerstyle::non_trait_imports,
+        tigerstyle::no_recursion,
         tigerstyle::path_segment_repetition,
-        reason = "Owner: noble-wasm-maintainers; the origin types under test are imported directly, and the mirror and test names repeat the module's origin/debug subject on purpose."
+        reason = "Owner: noble-wasm-maintainers; the origin types under test are imported directly, the mirror conversions follow the test trees recursively, and the mirror and test names repeat the module's origin/debug subject on purpose."
     )]
-    use super::{OriginFixedExpression, OriginI64, OriginOperand, OriginProgramValue};
+    use super::{
+        OriginFixedArithmetic, OriginFixedExpression, OriginI64, OriginOperand, OriginProgramValue,
+    };
     use alloc::{format, rc::Rc, vec, vec::Vec};
 
     mod mirror {
+        use super::super::OriginFixedArithmetic;
+        use alloc::rc::Rc;
+
+        #[derive(Debug, PartialEq, Eq)]
+        pub enum OriginFixedExpression {
+            Literal(i64),
+            Arithmetic {
+                kind: OriginFixedArithmetic,
+                left: Rc<Self>,
+                right: Rc<Self>,
+                nodes: usize,
+                depth: usize,
+            },
+        }
+
+        #[derive(Debug)]
+        #[expect(
+            dead_code,
+            reason = "Owner: noble-wasm-maintainers; the mirror's payloads are read only by its derived Debug rendering under test."
+        )]
+        pub enum OriginI64 {
+            RootInput(u32),
+            Fixed {
+                value: i64,
+                recipe: Rc<OriginFixedExpression>,
+            },
+        }
+
+        #[derive(Debug)]
+        #[expect(
+            dead_code,
+            reason = "Owner: noble-wasm-maintainers; the mirror's payloads are read only by its derived Debug rendering under test."
+        )]
+        pub enum OriginProgramValue {
+            Static {
+                node: noble_kernel::untrusted::NodeId,
+                program_index: usize,
+            },
+            Quote {
+                node: noble_kernel::untrusted::NodeId,
+                table_entry: u32,
+                operand: OriginOperand,
+            },
+            Compose {
+                node: noble_kernel::untrusted::NodeId,
+                table_entry: u32,
+                left: Rc<Self>,
+                right: Rc<Self>,
+            },
+        }
+
         #[derive(Debug)]
         #[expect(
             dead_code,
             reason = "Owner: noble-wasm-maintainers; the mirror's payloads are read only by its derived Debug rendering under test."
         )]
         pub enum OriginOperand {
-            I64(super::OriginI64),
-            Program(alloc::rc::Rc<super::OriginProgramValue>),
+            I64(OriginI64),
+            Program(Rc<OriginProgramValue>),
         }
+    }
+
+    fn mirrored_recipe(recipe: &OriginFixedExpression) -> Rc<mirror::OriginFixedExpression> {
+        Rc::new(match recipe {
+            OriginFixedExpression::Literal(value) => mirror::OriginFixedExpression::Literal(*value),
+            OriginFixedExpression::Arithmetic {
+                kind,
+                left,
+                right,
+                nodes,
+                depth,
+            } => mirror::OriginFixedExpression::Arithmetic {
+                kind: *kind,
+                left: mirrored_recipe(left),
+                right: mirrored_recipe(right),
+                nodes: *nodes,
+                depth: *depth,
+            },
+        })
+    }
+
+    fn mirrored_i64(value: &OriginI64) -> mirror::OriginI64 {
+        match value {
+            OriginI64::RootInput(input) => mirror::OriginI64::RootInput(*input),
+            OriginI64::Fixed { value, recipe } => mirror::OriginI64::Fixed {
+                value: *value,
+                recipe: mirrored_recipe(recipe),
+            },
+        }
+    }
+
+    fn mirrored_value(value: &OriginProgramValue) -> Rc<mirror::OriginProgramValue> {
+        Rc::new(match value {
+            OriginProgramValue::Static {
+                node,
+                program_index,
+            } => mirror::OriginProgramValue::Static {
+                node: *node,
+                program_index: *program_index,
+            },
+            OriginProgramValue::Quote {
+                node,
+                table_entry,
+                operand,
+            } => mirror::OriginProgramValue::Quote {
+                node: *node,
+                table_entry: *table_entry,
+                operand: mirrored(operand),
+            },
+            OriginProgramValue::Compose {
+                node,
+                table_entry,
+                left,
+                right,
+            } => mirror::OriginProgramValue::Compose {
+                node: *node,
+                table_entry: *table_entry,
+                left: mirrored_value(left),
+                right: mirrored_value(right),
+            },
+        })
     }
 
     fn mirrored(operand: &OriginOperand) -> mirror::OriginOperand {
         match operand {
-            OriginOperand::I64(value) => mirror::OriginOperand::I64(value.clone()),
-            OriginOperand::Program(value) => mirror::OriginOperand::Program(Rc::clone(value)),
+            OriginOperand::I64(value) => mirror::OriginOperand::I64(mirrored_i64(value)),
+            OriginOperand::Program(value) => mirror::OriginOperand::Program(mirrored_value(value)),
         }
+    }
+
+    fn literal(value: i64) -> Rc<OriginFixedExpression> {
+        Rc::new(OriginFixedExpression::Literal(value))
+    }
+
+    fn arithmetic(
+        kind: OriginFixedArithmetic,
+        left: Rc<OriginFixedExpression>,
+        right: Rc<OriginFixedExpression>,
+        nodes: usize,
+        depth: usize,
+    ) -> Rc<OriginFixedExpression> {
+        Rc::new(OriginFixedExpression::Arithmetic {
+            kind,
+            left,
+            right,
+            nodes,
+            depth,
+        })
+    }
+
+    /// Recipes covering every variant and field, with value-equal trees in
+    /// separate allocations and a shared subtree.
+    fn recipes() -> Vec<Rc<OriginFixedExpression>> {
+        let shared = arithmetic(OriginFixedArithmetic::Add, literal(1), literal(2), 3, 2);
+        vec![
+            literal(-5),
+            literal(-5),
+            literal(3),
+            Rc::clone(&shared),
+            arithmetic(OriginFixedArithmetic::Add, literal(1), literal(2), 3, 2),
+            arithmetic(OriginFixedArithmetic::Sub, literal(1), literal(2), 3, 2),
+            arithmetic(OriginFixedArithmetic::Add, literal(1), literal(2), 4, 2),
+            arithmetic(OriginFixedArithmetic::Add, literal(1), literal(2), 3, 3),
+            arithmetic(OriginFixedArithmetic::Add, literal(1), literal(9), 3, 2),
+            arithmetic(
+                OriginFixedArithmetic::Mul,
+                Rc::clone(&shared),
+                literal(7),
+                5,
+                3,
+            ),
+            arithmetic(
+                OriginFixedArithmetic::Mul,
+                arithmetic(OriginFixedArithmetic::Add, literal(1), literal(2), 3, 2),
+                literal(7),
+                5,
+                3,
+            ),
+            arithmetic(
+                OriginFixedArithmetic::Mul,
+                arithmetic(OriginFixedArithmetic::Add, literal(1), literal(8), 3, 2),
+                literal(7),
+                5,
+                3,
+            ),
+            arithmetic(
+                OriginFixedArithmetic::Mul,
+                literal(7),
+                Rc::clone(&shared),
+                5,
+                3,
+            ),
+        ]
     }
 
     fn samples() -> Vec<OriginOperand> {
@@ -3207,7 +3550,20 @@ mod origin_operand_debug_tests {
             left: Rc::clone(&leaf),
             right: Rc::clone(&quoted),
         });
-        vec![
+        let fixed = Rc::new(OriginProgramValue::Quote {
+            node,
+            table_entry: 5,
+            operand: OriginOperand::I64(OriginI64::Fixed {
+                value: 21,
+                recipe: arithmetic(OriginFixedArithmetic::Mul, literal(3), literal(7), 3, 2),
+            }),
+        });
+        let nested = Rc::new(OriginProgramValue::Quote {
+            node,
+            table_entry: 6,
+            operand: OriginOperand::Program(Rc::clone(&composed)),
+        });
+        let mut operands = vec![
             OriginOperand::I64(OriginI64::RootInput(0)),
             OriginOperand::I64(OriginI64::Fixed {
                 value: -5,
@@ -3216,7 +3572,13 @@ mod origin_operand_debug_tests {
             OriginOperand::Program(leaf),
             OriginOperand::Program(quoted),
             OriginOperand::Program(composed),
-        ]
+            OriginOperand::Program(fixed),
+            OriginOperand::Program(nested),
+        ];
+        for recipe in recipes() {
+            operands.push(OriginOperand::I64(OriginI64::Fixed { value: 0, recipe }));
+        }
+        operands
     }
 
     #[test]
@@ -3226,6 +3588,45 @@ mod origin_operand_debug_tests {
             assert_eq!(format!("{operand:?}"), format!("{expected:?}"));
             assert_eq!(format!("{operand:#?}"), format!("{expected:#?}"));
             assert_eq!(format!("{operand:4?}"), format!("{expected:4?}"));
+            if let OriginOperand::Program(value) = &operand {
+                let expected = mirrored_value(value);
+                assert_eq!(format!("{value:?}"), format!("{expected:?}"));
+                assert_eq!(format!("{value:#?}"), format!("{expected:#?}"));
+            }
         }
+        for recipe in recipes() {
+            let expected = mirrored_recipe(&recipe);
+            assert_eq!(format!("{recipe:?}"), format!("{expected:?}"));
+            assert_eq!(format!("{recipe:#?}"), format!("{expected:#?}"));
+        }
+    }
+
+    #[test]
+    fn recipe_equality_matches_the_derived_equality() {
+        let recipes = recipes();
+        for left in &recipes {
+            for right in &recipes {
+                let expected = mirrored_recipe(left) == mirrored_recipe(right);
+                assert_eq!(**left == **right, expected, "{left:?} == {right:?}");
+                assert_eq!(left == right, expected, "Rc {left:?} == {right:?}");
+                assert_eq!(**left != **right, !expected, "{left:?} != {right:?}");
+            }
+        }
+        assert!(
+            recipes[0] == recipes[1],
+            "value-equal literals in separate allocations"
+        );
+        assert!(
+            recipes[3] == recipes[4],
+            "value-equal trees in separate allocations"
+        );
+        assert!(
+            recipes[9] == recipes[10],
+            "a shared subtree equals its separate copy"
+        );
+        assert!(
+            recipes[10] != recipes[11],
+            "a difference deep in the left subtree"
+        );
     }
 }

@@ -68,15 +68,29 @@ impl Base {
         self.generation
     }
 
-    #[allow(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; comparing the content-addressed calculator literal table size uses the non-const BTreeMap::len."
-    )]
+    // The checks run in their original order as short groups, each a
+    // conjunction of a few comparisons, so no condition nests deeply.
     fn positions_match(&self, current: &super::Compiler, next: &super::Compiler) -> bool {
-        // The descriptor table has exactly one entry for every emitted
-        // signature, so its transactional base shares the profile key bound.
-        let key_cap = key_limit(self.calculator);
-        let identity_cap = identity_limit(self.calculator);
+        if !self.live_flags_match(current, next) {
+            return false;
+        }
+        if !self.profile_flags_match(current, next) {
+            return false;
+        }
+        if !self.experiment_flags_match(current, next) {
+            return false;
+        }
+        if !self.positions_equal(current, next) {
+            return false;
+        }
+        if !self.bases_within(next) {
+            return false;
+        }
+        self.counts_within_caps()
+    }
+
+    /// Whether both compilers keep this base's live and text profile flags.
+    const fn live_flags_match(&self, current: &super::Compiler, next: &super::Compiler) -> bool {
         self.live == current.live
             && self.live == next.live
             && self.declared_live == current.declared_live
@@ -85,7 +99,12 @@ impl Base {
             && self.text_cursor == next.text_cursor
             && self.declared_text == current.declared_text
             && self.declared_text == next.declared_text
-            && self.calculator == current.calculator
+    }
+
+    /// Whether both compilers keep this base's calculator, checked-I64 and
+    /// Worker profile flags.
+    const fn profile_flags_match(&self, current: &super::Compiler, next: &super::Compiler) -> bool {
+        self.calculator == current.calculator
             && self.calculator == next.calculator
             && self.checked_i64 == current.checked_i64
             && self.checked_i64 == next.checked_i64
@@ -93,11 +112,28 @@ impl Base {
             && self.worker_inputs == next.worker_inputs
             && self.worker_interruption == current.worker_interruption
             && self.worker_interruption == next.worker_interruption
-            && self.type_directed_experimental == current.type_directed_experimental
+    }
+
+    /// Whether both compilers keep this base's experimental lowering flags.
+    const fn experiment_flags_match(
+        &self,
+        current: &super::Compiler,
+        next: &super::Compiler,
+    ) -> bool {
+        self.type_directed_experimental == current.type_directed_experimental
             && self.type_directed_experimental == next.type_directed_experimental
             && self.experimental_cleanup == current.experimental_cleanup
             && self.experimental_cleanup == next.experimental_cleanup
-            && self.generation == current.generation
+    }
+
+    /// Whether the committed compiler is still at this base's positions and
+    /// the prospective literal table only grew.
+    #[allow(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; comparing the content-addressed calculator literal table size uses the non-const BTreeMap::len."
+    )]
+    fn positions_equal(&self, current: &super::Compiler, next: &super::Compiler) -> bool {
+        self.generation == current.generation
             && self.functions == current.functions
             && self.text_end_bytes == current.text_end
             && self.static_literal_count == current.static_literals.len()
@@ -105,13 +141,25 @@ impl Base {
             && self.signature_count == current.signatures.len()
             && self.descriptor_count == current.descriptors.len()
             && self.identity_count == current.identities.len()
-            && self.signature_base <= self.signature_count
+    }
+
+    /// Whether each retained prefix lies within the committed and prospective tables.
+    fn bases_within(&self, next: &super::Compiler) -> bool {
+        self.signature_base <= self.signature_count
             && self.descriptor_base <= self.descriptor_count
             && self.signature_base <= next.signatures.len()
             && self.descriptor_base <= next.descriptors.len()
             && self.identity_base <= self.identity_count
             && self.identity_base <= next.identities.len()
-            && self.signature_count <= key_cap
+    }
+
+    /// Whether the committed counts respect the profile bounds. The descriptor
+    /// table has exactly one entry for every emitted signature, so its
+    /// transactional base shares the profile key bound.
+    const fn counts_within_caps(&self) -> bool {
+        let key_cap = key_limit(self.calculator);
+        let identity_cap = identity_limit(self.calculator);
+        self.signature_count <= key_cap
             && self.descriptor_count <= key_cap
             && self.identity_count <= identity_cap
     }

@@ -428,6 +428,43 @@ struct SiteMeasure {
     edge: Option<(GraphEdge, Relation)>,
 }
 
+/// The second branch of a two-way word, started once the first completes.
+struct Pending {
+    /// The stack the second branch starts from.
+    base: alloc::vec::Vec<Value>,
+    run: BranchRun,
+}
+
+/// One pending step of the walk. Program runs are scheduled on an explicit
+/// task stack rather than recursing, so no loop lies on a recursive cycle
+/// and native stack use stays flat; tasks run in the order the recursive
+/// walk would reach them. A task names its word sequence (the body, or a
+/// quotation node) instead of borrowing it, so the walker never stores a
+/// borrow of its own tree.
+#[octet::sealed_enum]
+enum Task {
+    /// Run the words of the body (`None`) or of a quotation node from `at` onwards.
+    Sequence {
+        quotation: Option<u32>,
+        at: usize,
+        depth: u32,
+    },
+    /// After a `dip` program: push the value it set aside.
+    Restore { value: Value, span: crate::Span },
+    /// After the first of two branches: keep its stack and start the second.
+    Second {
+        saved_guard: u32,
+        second: Pending,
+        span: crate::Span,
+    },
+    /// After the second branch: restore the guard and join both stacks.
+    Join {
+        saved_guard: u32,
+        first: alloc::vec::Vec<Value>,
+        span: crate::Span,
+    },
+}
+
 /// The bounded symbolic walk over one checked body.
 struct Walker<'a> {
     tree: &'a crate::source::Tree,
@@ -440,6 +477,8 @@ struct Walker<'a> {
     sites: alloc::vec::Vec<Site>,
     halt: Option<(Unsupported, crate::Span)>,
     steps: u32,
+    /// Scheduled steps, the most recent on top.
+    tasks: alloc::vec::Vec<Task>,
 }
 
 #[expect(
@@ -488,10 +527,10 @@ impl<'a> Walker<'a> {
         }
     }
 
-    /// Run one program value on the current stack.
+    /// Schedule one program value to run on the current stack.
     #[expect(
         tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; program follows a dynamically parsed source tree through Tree::node and recursively executes its checked quotation nodes; that runtime lookup is not const-evaluable."
+        reason = "Owner: noble-maintainers; program follows a dynamically parsed source tree through Tree::node and schedules its checked quotation nodes on the Vec-backed task stack; that runtime lookup is not const-evaluable."
     )]
     fn program(&mut self, invocation: ProgramRun) -> Step {
         if invocation.depth >= MAX_DEPTH {
@@ -502,44 +541,119 @@ impl<'a> Walker<'a> {
             Err(_) => return self.fail(Unsupported::UnhandledWord, self.tree.span),
         };
         match &quotation.kind {
-            crate::source::Kind::Quotation(items) => {
-                self.sequence(items, invocation.depth.saturating_add(1))
+            crate::source::Kind::Quotation(_) => {
+                self.tasks.push(Task::Sequence {
+                    quotation: Some(invocation.node),
+                    at: 0,
+                    depth: invocation.depth.saturating_add(1),
+                });
+                Ok(())
             }
             _ => self.fail(Unsupported::UnhandledWord, quotation.span),
         }
     }
 
-    /// Run a word sequence on the current stack.
-    fn sequence(&mut self, items: &'a [u32], depth: u32) -> Step {
-        let mut at = 0;
+    /// Walk the body on the current stack: run scheduled tasks until none
+    /// remain or one halts the walk.
+    fn walk(&mut self) -> Step {
+        self.tasks.push(Task::Sequence {
+            quotation: None,
+            at: 0,
+            depth: 0,
+        });
         let mut outcome = Ok(());
-        while outcome.is_ok() && at < items.len() {
-            outcome = self.word(ProgramRun {
-                node: items[at],
-                depth,
-            });
-            at += 1;
+        let mut is_pending = true;
+        while outcome.is_ok() && is_pending {
+            match self.tasks.pop() {
+                Some(task) => outcome = self.task(task),
+                None => is_pending = false,
+            }
         }
         outcome
     }
 
-    /// Run one branch from `base` under an explicit guard, restoring the caller's stack and guard.
-    fn branch(
-        &mut self,
-        base: &[Value],
-        invocation: BranchRun,
-    ) -> Result<alloc::vec::Vec<Value>, ()> {
-        let saved_guard = self.guard;
-        self.stack = base.to_vec();
-        self.guard = invocation.guard;
-        let outcome = self.program(ProgramRun {
-            node: invocation.node,
-            depth: invocation.depth.saturating_add(1),
+    /// Run one scheduled task.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-maintainers; a task runs words on the Vec-backed symbolic stack and task stack, which is interpreter state rather than a const computation."
+    )]
+    fn task(&mut self, task: Task) -> Step {
+        match task {
+            Task::Sequence {
+                quotation,
+                at,
+                depth,
+            } => self.sequence_step(quotation, at, depth),
+            Task::Restore { value, span } => self.push(value, span),
+            Task::Second {
+                saved_guard,
+                second,
+                span,
+            } => self.second_branch(saved_guard, second, span),
+            Task::Join {
+                saved_guard,
+                first,
+                span,
+            } => {
+                let second = core::mem::take(&mut self.stack);
+                self.guard = saved_guard;
+                self.join_branches(first, second, span)
+            }
+        }
+    }
+
+    /// Run the word at `at` of a sequence, scheduling the rest of the sequence after it.
+    fn sequence_step(&mut self, quotation: Option<u32>, at: usize, depth: u32) -> Step {
+        let Some(node) = sequence_word(self.tree, quotation, at) else {
+            return Ok(());
+        };
+        self.tasks.push(Task::Sequence {
+            quotation,
+            at: at.saturating_add(1),
+            depth,
         });
-        let produced = core::mem::take(&mut self.stack);
-        self.guard = saved_guard;
-        outcome?;
-        Ok(produced)
+        self.word(ProgramRun { node, depth })
+    }
+
+    /// Start the first of two branches from `base` under its own guard; the
+    /// second branch and the join run after it, and the caller's guard is
+    /// restored before the join.
+    fn branches(
+        &mut self,
+        base: alloc::vec::Vec<Value>,
+        first: BranchRun,
+        second: Pending,
+        span: crate::Span,
+    ) -> Step {
+        let saved_guard = self.guard;
+        self.stack = base;
+        self.guard = first.guard;
+        self.tasks.push(Task::Second {
+            saved_guard,
+            second,
+            span,
+        });
+        self.program(ProgramRun {
+            node: first.node,
+            depth: first.depth.saturating_add(1),
+        })
+    }
+
+    /// After the first branch: keep its stack and start the second branch
+    /// from its own base under its own guard.
+    fn second_branch(&mut self, saved_guard: u32, second: Pending, span: crate::Span) -> Step {
+        let first = core::mem::take(&mut self.stack);
+        self.stack = second.base;
+        self.guard = second.run.guard;
+        self.tasks.push(Task::Join {
+            saved_guard,
+            first,
+            span,
+        });
+        self.program(ProgramRun {
+            node: second.run.node,
+            depth: second.run.depth.saturating_add(1),
+        })
     }
 
     /// Record one self-call site and replace the frame with the declared result.
@@ -694,9 +808,9 @@ impl<'a> Walker<'a> {
             7 => self.compare_equals(span),
             9 => self.fail(Unsupported::UnmodelledCall, span),
             10 => {
-                let program = self.pop_program(span)?;
+                let quoted = self.pop_program(span)?;
                 self.program(ProgramRun {
-                    node: program,
+                    node: quoted,
                     depth: invocation.depth.saturating_add(1),
                 })
             }
@@ -765,13 +879,13 @@ impl<'a> Walker<'a> {
 
     /// `dip`: run one program under the top value, then restore it.
     fn dip(&mut self, span: crate::Span, depth: u32) -> Step {
-        let program = self.pop_program(span)?;
+        let quoted = self.pop_program(span)?;
         let value = self.pop(span)?;
+        self.tasks.push(Task::Restore { value, span });
         self.program(ProgramRun {
-            node: program,
+            node: quoted,
             depth: depth.saturating_add(1),
-        })?;
-        self.push(value, span)
+        })
     }
 
     /// `+`, `-` and `*`.
@@ -822,23 +936,23 @@ impl<'a> Walker<'a> {
             _ => outer_guard,
         };
         let base = self.stack.clone();
-        let taken = self.branch(
-            &base,
+        self.branches(
+            base.clone(),
             BranchRun {
                 node: consequent,
                 guard: guarded,
                 depth,
             },
-        )?;
-        let other = self.branch(
-            &base,
-            BranchRun {
-                node: alternative,
-                guard: outer_guard,
-                depth,
+            Pending {
+                base,
+                run: BranchRun {
+                    node: alternative,
+                    guard: outer_guard,
+                    depth,
+                },
             },
-        )?;
-        self.join_branches(taken, other, span)
+            span,
+        )
     }
 
     /// `case`: either constructor is possible, so both payloads are opaque and both branches are
@@ -850,23 +964,23 @@ impl<'a> Walker<'a> {
         let guard = self.guard;
         let mut payload = self.stack.clone();
         payload.push(Value::Other);
-        let first = self.branch(
-            &payload,
+        self.branches(
+            payload.clone(),
             BranchRun {
                 node: left,
                 guard,
                 depth,
             },
-        )?;
-        let second = self.branch(
-            &payload,
-            BranchRun {
-                node: right,
-                guard,
-                depth,
+            Pending {
+                base: payload,
+                run: BranchRun {
+                    node: right,
+                    guard,
+                    depth,
+                },
             },
-        )?;
-        self.join_branches(first, second, span)
+            span,
+        )
     }
 
     /// `list.case`: the cons branch receives the structural tail of a list measure.
@@ -880,23 +994,23 @@ impl<'a> Walker<'a> {
         let mut extended = base.clone();
         extended.push(Value::Other);
         extended.push(tail);
-        let first = self.branch(
-            &base,
+        self.branches(
+            base,
             BranchRun {
                 node: nil,
                 guard,
                 depth,
             },
-        )?;
-        let second = self.branch(
-            &extended,
-            BranchRun {
-                node: cons,
-                guard,
-                depth,
+            Pending {
+                base: extended,
+                run: BranchRun {
+                    node: cons,
+                    guard,
+                    depth,
+                },
             },
-        )?;
-        self.join_branches(first, second, span)
+            span,
+        )
     }
 
     /// Join two branch results; a cell that differs becomes opaque.
@@ -917,6 +1031,30 @@ impl<'a> Walker<'a> {
         }
         self.stack = joined;
         Ok(())
+    }
+}
+
+/// The word at `at` of a scheduled sequence: the definition body (`None`) or
+/// the items of a quotation node `program` has already checked. A copied
+/// node identity is returned, never a borrow of the tree.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; the lookup resolves a runtime source node through Tree::node and Vec indexing, which are not const."
+)]
+fn sequence_word(tree: &crate::source::Tree, quotation: Option<u32>, at: usize) -> Option<u32> {
+    let Some(node) = quotation else {
+        return tree.body.get(at).copied();
+    };
+    match tree.node(node) {
+        Ok(node) => match &node.kind {
+            crate::source::Kind::Quotation(items) => items.get(at).copied(),
+            crate::source::Kind::Literal(_)
+            | crate::source::Kind::Text(_)
+            | crate::source::Kind::Word(_)
+            | crate::source::Kind::Call(_)
+            | crate::source::Kind::EditorHole => None,
+        },
+        Err(_) => None,
     }
 }
 
@@ -975,31 +1113,49 @@ fn site_edge(
     target: MeasureIndex,
 ) -> Option<(GraphEdge, Relation)> {
     match value {
-        Value::Formal(source) => {
-            let source_index = Walker::measure_index(*source, measures.len())?;
+        Value::Formal(formal) => {
+            let source_index = Walker::measure_index(*formal, measures.len())?;
             if measures[source_index] == measure {
-                let source = MeasureIndex::from_usize(source_index)?;
-                return Some((GraphEdge { source, target }, Relation::Same));
+                let origin = MeasureIndex::from_usize(source_index)?;
+                return Some((
+                    GraphEdge {
+                        source: origin,
+                        target,
+                    },
+                    Relation::Same,
+                ));
             }
             None
         }
-        Value::Predecessor(source) => {
-            let source_index = Walker::measure_index(*source, measures.len())?;
+        Value::Predecessor(formal) => {
+            let source_index = Walker::measure_index(*formal, measures.len())?;
             let is_source_guarded = guard & Walker::measure_bit(source_index) != 0;
             if is_source_guarded
                 && measures[source_index] == Measure::Counter
                 && measure == Measure::Counter
             {
-                let source = MeasureIndex::from_usize(source_index)?;
-                return Some((GraphEdge { source, target }, Relation::Strict));
+                let origin = MeasureIndex::from_usize(source_index)?;
+                return Some((
+                    GraphEdge {
+                        source: origin,
+                        target,
+                    },
+                    Relation::Strict,
+                ));
             }
             None
         }
-        Value::Tail(source) => {
-            let source_index = Walker::measure_index(*source, measures.len())?;
+        Value::Tail(formal) => {
+            let source_index = Walker::measure_index(*formal, measures.len())?;
             if measures[source_index] == Measure::Structural && measure == Measure::Structural {
-                let source = MeasureIndex::from_usize(source_index)?;
-                return Some((GraphEdge { source, target }, Relation::Strict));
+                let origin = MeasureIndex::from_usize(source_index)?;
+                return Some((
+                    GraphEdge {
+                        source: origin,
+                        target,
+                    },
+                    Relation::Strict,
+                ));
             }
             None
         }
@@ -1194,6 +1350,7 @@ fn walk_definition(
         sites: alloc::vec::Vec::new(),
         halt: None,
         steps: 0,
+        tasks: alloc::vec::Vec::new(),
     };
     walker.stack.push(Value::Prefix);
     let mut index = 0;
@@ -1201,7 +1358,7 @@ fn walk_definition(
         walker.stack.push(Value::Formal(u32::from(index)));
         index += 1;
     }
-    let walked = walker.sequence(&definition.tree.body, 0);
+    let walked = walker.walk();
     let halt = match walker.halt {
         Some(halt) => Some(halt),
         None => match walked {
@@ -1303,8 +1460,8 @@ fn compose_graph(left: &Graph, right: &Graph, measure_count: usize) -> Graph {
     assert!(measure_count > 0);
     assert!(measure_count <= MAX_MEASURES);
     let mut product = Graph::unknown();
-    let mut source = 0;
-    while source < MAX_MEASURE_INDEX && usize::from(source) < measure_count {
+    let mut row = 0;
+    while row < MAX_MEASURE_INDEX && usize::from(row) < measure_count {
         let mut target = 0;
         while target < MAX_MEASURE_INDEX && usize::from(target) < measure_count {
             let mut joined = Relation::Unknown;
@@ -1313,7 +1470,7 @@ fn compose_graph(left: &Graph, right: &Graph, measure_count: usize) -> Graph {
                 joined = join_relation(
                     compose_relation(
                         left.get(GraphEdge {
-                            source: MeasureIndex(source),
+                            source: MeasureIndex(row),
                             target: MeasureIndex(middle),
                         }),
                         right.get(GraphEdge {
@@ -1327,14 +1484,14 @@ fn compose_graph(left: &Graph, right: &Graph, measure_count: usize) -> Graph {
             }
             product = product.with_relation(
                 GraphEdge {
-                    source: MeasureIndex(source),
+                    source: MeasureIndex(row),
                     target: MeasureIndex(target),
                 },
                 joined,
             );
             target += 1;
         }
-        source += 1;
+        row += 1;
     }
     product
 }
@@ -1698,21 +1855,21 @@ fn append_graph_edges(
 ) -> alloc::string::String {
     assert!(measure_count > 0);
     assert!(measure_count <= MAX_MEASURES);
-    let mut source = 0;
-    while source < MAX_MEASURE_INDEX && usize::from(source) < measure_count {
+    let mut row = 0;
+    while row < MAX_MEASURE_INDEX && usize::from(row) < measure_count {
         let mut target = 0;
         while target < MAX_MEASURE_INDEX && usize::from(target) < measure_count {
             output = append_graph_edge(
                 output,
                 graph,
                 GraphEdge {
-                    source: MeasureIndex(source),
+                    source: MeasureIndex(row),
                     target: MeasureIndex(target),
                 },
             );
             target += 1;
         }
-        source += 1;
+        row += 1;
     }
     output
 }
@@ -1810,6 +1967,27 @@ fn append_closure_graphs(
     output
 }
 
+/// `→` in the emitted Lean.
+const RIGHTWARDS_ARROW: u32 = 0x2192;
+/// `⟨` in the emitted Lean.
+const LEFT_ANGLE_BRACKET: u32 = 0x27E8;
+/// `⟩` in the emitted Lean.
+const RIGHT_ANGLE_BRACKET: u32 = 0x27E9;
+/// `∀` in the emitted Lean.
+const FOR_ALL: u32 = 0x2200;
+/// `¬` in the emitted Lean.
+const NOT_SIGN: u32 = 0x00AC;
+
+/// Append one Unicode symbol of the emitted Lean. Every non-ASCII symbol is
+/// pushed through here, never written in a string or char literal: the
+/// pinned Aeneas prints such literals in escapes Lean cannot parse.
+fn push_code_point(mut output: alloc::string::String, code: u32) -> alloc::string::String {
+    if let Some(symbol) = char::from_u32(code) {
+        output.push(symbol);
+    }
+    output
+}
+
 #[expect(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-maintainers; Lean site-table emission grows an owned String through runtime push_str calls."
@@ -1823,7 +2001,9 @@ fn append_site_table_header(
     output.push_str(name);
     output.push_str("Sites : Fin ");
     output = append_decimal(output, shape.site_count);
-    output.push_str(" → MGraph ");
+    output.push(' ');
+    output = push_code_point(output, RIGHTWARDS_ARROW);
+    output.push_str(" MGraph ");
     output = append_decimal(output, shape.measure_count);
     output.push_str(" := fun site =>\n  match site.val with\n");
     output
@@ -1857,11 +2037,13 @@ fn append_closure_entry(
     entry: &ClosureEntry,
     has_next: bool,
 ) -> alloc::string::String {
-    output.push_str("    ⟨");
+    output.push_str("    ");
+    output = push_code_point(output, LEFT_ANGLE_BRACKET);
     output = append_named_index(output, name, index);
     output.push_str(", [");
     output = append_site_path(output, &entry.path);
-    output.push_str("]⟩");
+    output.push(']');
+    output = push_code_point(output, RIGHT_ANGLE_BRACKET);
     if has_next {
         output.push(',');
     }
@@ -2123,7 +2305,9 @@ fn append_accepted_definition(
 ) -> alloc::string::String {
     let output = append_accepted_head(output, name, shape);
     let mut output = append_strict_witnesses(output, name, witnesses);
-    output.push_str("], by decide, by decide⟩\n\n");
+    output.push_str("], by decide, by decide");
+    output = push_code_point(output, RIGHT_ANGLE_BRACKET);
+    output.push_str("\n\n");
     output
 }
 
@@ -2140,16 +2324,13 @@ fn append_accepted_head(
     output = append_decimal(output, shape.measure_count);
     output.push(' ');
     output.push_str(name);
-    output.push_str("Sites :=\n  ⟨");
+    output.push_str("Sites :=\n  ");
+    output = push_code_point(output, LEFT_ANGLE_BRACKET);
     output.push_str(name);
     output.push_str("Entries, [");
     output
 }
 
-#[expect(
-    clippy::single_char_add_str,
-    reason = "Owner: noble-contracts; the pinned Aeneas cannot translate a non-ASCII char literal, so each bracket is pushed as a string literal"
-)]
 fn append_strict_witnesses(
     mut output: alloc::string::String,
     name: &str,
@@ -2159,11 +2340,11 @@ fn append_strict_witnesses(
         if witness_index > 0 {
             output.push_str(", ");
         }
-        output.push_str("⟨");
+        output = push_code_point(output, LEFT_ANGLE_BRACKET);
         output = append_named_u32(output, name, witness.closure_entry);
         output.push_str(", ");
         output = append_u32(output, witness.measure);
-        output.push_str("⟩");
+        output = push_code_point(output, RIGHT_ANGLE_BRACKET);
     }
     output
 }
@@ -2175,11 +2356,17 @@ fn append_criterion_theorem(
 ) -> alloc::string::String {
     output.push_str("theorem ");
     output.push_str(name);
-    output.push_str("Criterion : ∀ {graph : MGraph ");
+    output.push_str("Criterion : ");
+    output = push_code_point(output, FOR_ALL);
+    output.push_str(" {graph : MGraph ");
     output = append_decimal(output, measure_count);
     output.push_str("}, MatrixClosure ");
     output.push_str(name);
-    output.push_str("Sites graph → composeMatrix graph graph = graph → HasStrictDiagonal graph := by\n  intro graph member idempotent\n  exact certificate_closure_criterion ");
+    output.push_str("Sites graph ");
+    output = push_code_point(output, RIGHTWARDS_ARROW);
+    output.push_str(" composeMatrix graph graph = graph ");
+    output = push_code_point(output, RIGHTWARDS_ARROW);
+    output.push_str(" HasStrictDiagonal graph := by\n  intro graph member idempotent\n  exact certificate_closure_criterion ");
     output.push_str(name);
     output.push_str("Certificate member idempotent\n");
     output
@@ -2210,12 +2397,19 @@ fn append_closure_set_certificate(
     output = append_decimal(output, shape.measure_count);
     output.push(' ');
     output.push_str(name);
-    output.push_str("Sites := ⟨");
+    output.push_str("Sites := ");
+    output = push_code_point(output, LEFT_ANGLE_BRACKET);
     output.push_str(name);
-    output.push_str("Entries, by decide⟩\n\ndef ");
+    output.push_str("Entries, by decide");
+    output = push_code_point(output, RIGHT_ANGLE_BRACKET);
+    output.push_str("\n\ndef ");
     output
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; append_refusal_definition is a straight-line serializer of an already validated refusal; it returns the text unchanged when the cycle is absent from the closure and has no invariant of its own to assert."
+)]
 fn append_refusal_definition(
     mut output: alloc::string::String,
     name: &str,
@@ -2228,11 +2422,17 @@ fn append_refusal_definition(
     output.push_str(name);
     output.push_str("Refusal : MatrixIdempotentRefusal ");
     output.push_str(name);
-    output.push_str("ClosureSetCertificate :=\n  ⟨⟨");
+    output.push_str("ClosureSetCertificate :=\n  ");
+    output = push_code_point(output, LEFT_ANGLE_BRACKET);
+    output = push_code_point(output, LEFT_ANGLE_BRACKET);
     output = append_named_index(output, name, graph_index);
     output.push_str(", [");
     output = append_site_path(output, &cycle.path);
-    output.push_str("]⟩, by decide, by decide, by decide⟩\n\n");
+    output.push(']');
+    output = push_code_point(output, RIGHT_ANGLE_BRACKET);
+    output.push_str(", by decide, by decide, by decide");
+    output = push_code_point(output, RIGHT_ANGLE_BRACKET);
+    output.push_str("\n\n");
     output
 }
 
@@ -2273,7 +2473,9 @@ fn append_refusal_diagonal_theorem(
 ) -> alloc::string::String {
     output.push_str("theorem ");
     output.push_str(name);
-    output.push_str("RefusalHasNoStrictDiagonal : ¬ HasStrictDiagonal ");
+    output.push_str("RefusalHasNoStrictDiagonal : ");
+    output = push_code_point(output, NOT_SIGN);
+    output.push_str(" HasStrictDiagonal ");
     output.push_str(name);
     output.push_str("Refusal.entry.graph := refusal_no_strict_diagonal ");
     output.push_str(name);

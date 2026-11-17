@@ -211,9 +211,9 @@ impl World {
     /// a host still has to authenticate and install the actual Program cell.
     pub fn select_worker_program(
         self,
-        source: &crate::source::CheckedProgramInterface,
+        checked: &crate::source::CheckedProgramInterface,
     ) -> Result<Self, Error> {
-        if !source.is_pure_i64_endomorphism() {
+        if !checked.is_pure_i64_endomorphism() {
             return Err(unsupported("Worker WIT requires checked pure I64 Program"));
         }
         self.select_worker_program_shape(None)
@@ -223,9 +223,9 @@ impl World {
     /// test.emit. This is a WIT type selection, never a host operation grant.
     pub fn select_worker_program_for_test_emit(
         self,
-        source: &crate::source::CheckedProgramInterface,
+        checked: &crate::source::CheckedProgramInterface,
     ) -> Result<Self, Error> {
-        if !source.is_test_emit_i64_endomorphism() {
+        if !checked.is_test_emit_i64_endomorphism() {
             return Err(unsupported(
                 "Worker WIT requires checked I64 Program bound to test.emit",
             ));
@@ -237,9 +237,9 @@ impl World {
     /// source effect. WIT selection alone does not authorize publication.
     pub fn select_worker_program_for_test_code_export(
         self,
-        source: &crate::source::CheckedProgramInterface,
+        checked: &crate::source::CheckedProgramInterface,
     ) -> Result<Self, Error> {
-        if !source.is_test_code_export_i64_endomorphism() {
+        if !checked.is_test_code_export_i64_endomorphism() {
             return Err(unsupported(
                 "Worker WIT requires checked test.code-export Program",
             ));
@@ -251,9 +251,9 @@ impl World {
     /// effect. WIT selection alone authorizes, admits and observes nothing.
     pub fn select_worker_program_for_test_send(
         self,
-        source: &crate::source::CheckedProgramInterface,
+        checked: &crate::source::CheckedProgramInterface,
     ) -> Result<Self, Error> {
-        if !source.is_test_send_i64_endomorphism() {
+        if !checked.is_test_send_i64_endomorphism() {
             return Err(unsupported("Worker WIT requires checked test.send Program"));
         }
         self.select_worker_program_shape(Some(noble_kernel::contracts::TEST_SEND))
@@ -301,7 +301,7 @@ impl World {
     /// validates both frames against `state`, `event` and `action`.
     pub fn select_worker_transition(
         mut self,
-        source: &crate::source::CheckedProgramInterface,
+        checked: &crate::source::CheckedProgramInterface,
         state: &noble_kernel::types::Ty,
         event: &noble_kernel::types::Ty,
         action: &noble_kernel::types::Ty,
@@ -314,7 +314,7 @@ impl World {
             ],
             noble_kernel::types::EffSet::empty(),
         );
-        if source.ty() != expected || self.identity != "noble-test:worker-transition/guest@1.0.0" {
+        if checked.ty() != expected || self.identity != "noble-test:worker-transition/guest@1.0.0" {
             return Err(unsupported(
                 "Worker transition WIT requires the checked schema Program",
             ));

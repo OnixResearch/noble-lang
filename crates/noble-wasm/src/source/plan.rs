@@ -7,6 +7,10 @@ mod allocation;
 mod operations;
 mod topology;
 
+/// The extracted constructors carry an `Action` suffix: `Bool` and `Unit`
+/// would otherwise shadow Lean's own `Bool` and `Unit` inside the generated
+/// declarations that name this type. The Rust names are unchanged.
+#[charon::variants_suffix("Action")]
 #[derive(Clone, Copy)]
 pub(super) enum Action {
     I64(i64),

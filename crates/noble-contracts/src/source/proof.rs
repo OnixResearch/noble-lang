@@ -214,10 +214,13 @@ impl LexicalMap {
             reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency; the short local alias keeps the refusal constructors readable within this function."
         )]
         use SourceProofRefusal as Refusal;
-        let slot = self
-            .mapping
-            .get_mut(usize::try_from(checked).map_err(|_| Refusal::MismatchedSource)?)
-            .ok_or(Refusal::MismatchedSource)?;
+        let index = usize::try_from(checked).map_err(|_| Refusal::MismatchedSource)?;
+        // An explicit match: a mutable borrow must not pass through a std
+        // combinator for the extraction.
+        let slot = match self.mapping.get_mut(index) {
+            Some(slot) => slot,
+            None => return Err(Refusal::MismatchedSource),
+        };
         if *slot != u32::MAX {
             return Err(Refusal::MismatchedSource);
         }
@@ -255,13 +258,13 @@ impl LexicalMap {
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-contracts; literal comparison uses non-const PartialEq."
 )]
-fn kinds_correspond(source: &super::Kind, checked: &noble_kernel::untrusted::Node) -> bool {
+fn kinds_correspond(lexical: &super::Kind, checked: &noble_kernel::untrusted::Node) -> bool {
     #[expect(
         tigerstyle::non_trait_imports,
         reason = "Owner: noble-contracts; the module imports these domain items directly, and the qualified form at every use site would add noise without changing the dependency."
     )]
     use noble_kernel::untrusted::Node;
-    match (source, checked) {
+    match (lexical, checked) {
         (super::Kind::Literal(a), Node::Literal { lit: b, .. }) if a == b => true,
         (
             super::Kind::Text(_),
