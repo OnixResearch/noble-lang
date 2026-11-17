@@ -56,16 +56,16 @@ impl PartialEq for FormKind {
     }
 }
 impl core::fmt::Debug for FormKind {
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; `Debug` renders by writing through the caller's formatter, which is the operation"
+    )]
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         debug_form_kind(self, f)
     }
 }
 
 /// Deep-copy one form, field by field, as the derived `Clone` did.
-#[expect(
-    tigerstyle::no_recursion,
-    reason = "Owner: noble-contracts; the copy follows the finite, already constructed form tree, and plain-function recursion keeps the Form/FormKind cycle out of their trait impls for the pinned extraction"
-)]
 fn clone_form(form: &Form) -> Form {
     Form {
         kind: clone_form_kind(&form.kind),
@@ -75,8 +75,8 @@ fn clone_form(form: &Form) -> Form {
 
 /// Deep-copy one form kind, variant by variant, as the derived `Clone` did.
 #[expect(
-    tigerstyle::no_recursion,
-    reason = "Owner: noble-contracts; the copy follows the finite, already constructed form tree, and plain-function recursion keeps the Form/FormKind cycle out of their trait impls for the pinned extraction"
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
 )]
 fn clone_form_kind(kind: &FormKind) -> FormKind {
     match kind {
@@ -86,10 +86,6 @@ fn clone_form_kind(kind: &FormKind) -> FormKind {
 }
 
 /// Copy a list of forms in order into an exactly sized vector, as `Vec::clone` did.
-#[expect(
-    tigerstyle::no_recursion,
-    reason = "Owner: noble-contracts; the copy follows the finite, already constructed form tree, and plain-function recursion keeps the Form/FormKind cycle out of their trait impls for the pinned extraction"
-)]
 fn clone_forms(forms: &[Form]) -> Vec<Form> {
     let mut copy = Vec::with_capacity(forms.len());
     let mut index = 0;
@@ -102,8 +98,8 @@ fn clone_forms(forms: &[Form]) -> Vec<Form> {
 
 /// Field-wise form equality in declaration order, as the derived `PartialEq` did.
 #[expect(
-    tigerstyle::no_recursion,
-    reason = "Owner: noble-contracts; the comparison follows two finite, already constructed form trees, and plain-function recursion keeps the Form/FormKind cycle out of their trait impls for the pinned extraction"
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
 )]
 fn form_equal(left: &Form, right: &Form) -> bool {
     form_kind_equal(&left.kind, &right.kind) && left.span == right.span
@@ -111,8 +107,8 @@ fn form_equal(left: &Form, right: &Form) -> bool {
 
 /// Variant-wise form kind equality, as the derived `PartialEq` did.
 #[expect(
-    tigerstyle::no_recursion,
-    reason = "Owner: noble-contracts; the comparison follows two finite, already constructed form trees, and plain-function recursion keeps the Form/FormKind cycle out of their trait impls for the pinned extraction"
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
 )]
 fn form_kind_equal(left: &FormKind, right: &FormKind) -> bool {
     match (left, right) {
@@ -123,21 +119,17 @@ fn form_kind_equal(left: &FormKind, right: &FormKind) -> bool {
 }
 
 /// Slice equality: equal lengths and pairwise equal forms in order.
-#[expect(
-    tigerstyle::no_recursion,
-    reason = "Owner: noble-contracts; the comparison follows two finite, already constructed form trees, and plain-function recursion keeps the Form/FormKind cycle out of their trait impls for the pinned extraction"
-)]
 fn forms_equal(left: &[Form], right: &[Form]) -> bool {
     if left.len() != right.len() {
         return false;
     }
     let mut index = 0;
-    let mut equal = true;
-    while equal && index < left.len() {
-        equal = form_equal(&left[index], &right[index]);
+    let mut is_equal = true;
+    while is_equal && index < left.len() {
+        is_equal = form_equal(&left[index], &right[index]);
         index += 1;
     }
-    equal
+    is_equal
 }
 
 /// Render a form kind exactly as `#[derive(Debug)]` did.
@@ -147,6 +139,14 @@ fn forms_equal(left: &[Form], right: &[Form]) -> bool {
 /// so no transparent body can avoid the mixed trait-impl cycle the pinned Aeneas
 /// refuses. Formatting layout is already an abstracted trust boundary.
 #[charon::opaque]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper writes through the caller's formatter, so the const suggestion does not apply"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; rendering writes through the caller's formatter, which is the operation"
+)]
 fn debug_form_kind(kind: &FormKind, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     match kind {
         FormKind::Atom(atom) => f.debug_tuple("Atom").field(atom).finish(),
@@ -359,7 +359,7 @@ impl core::ops::Deref for Meter<'_> {
 // every transition returns its owned meter on both paths.
 type Transition<'a, T> = (Meter<'a>, Result<T, Diagnostic>);
 macro_rules! advance {
-    ($meter:ident,$transition:expr) => {{
+    ($meter:expr,$transition:expr) => {{
         let (next, result) = $transition;
         $meter = next;
         result?
@@ -475,9 +475,7 @@ fn list(form: &Form) -> Result<&[Form], Diagnostic> {
 }
 fn operation<'a>(form: &'a Form, head: &str, count: usize) -> Result<&'a [Form], Diagnostic> {
     let items = list(form)?;
-    if items.len().checked_sub(1) != Some(count)
-        || items.first().and_then(|a| atom(a).ok()) != Some(head)
-    {
+    if items.len().checked_sub(1) != Some(count) || head_atom(items) != Some(head) {
         return Err(reject(form.span, "unknown or ill-formed proof constructor"));
     }
     Ok(&items[1..])
@@ -532,10 +530,6 @@ impl PartialEq for Proposition {
     }
 }
 /// Deep-copy one sort, variant by variant, as the derived `Clone` did.
-#[expect(
-    tigerstyle::no_recursion,
-    reason = "Owner: noble-contracts; the copy follows the finite, already constructed proposition tree, and plain-function recursion keeps the Sort/Proposition cycle out of their trait impls for the pinned extraction"
-)]
 fn clone_sort(sort: &Sort) -> Sort {
     match sort {
         Sort::Codes => Sort::Codes,
@@ -558,8 +552,8 @@ fn clone_proposition(prop: &Proposition) -> Proposition {
 }
 /// Variant-wise sort equality, as the derived `PartialEq` did.
 #[expect(
-    tigerstyle::no_recursion,
-    reason = "Owner: noble-contracts; the comparison follows two finite, already constructed proposition trees, and plain-function recursion keeps the Sort/Proposition cycle out of their trait impls for the pinned extraction"
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
 )]
 fn sort_equal(left: &Sort, right: &Sort) -> bool {
     match (left, right) {
@@ -575,6 +569,10 @@ fn sort_equal(left: &Sort, right: &Sort) -> bool {
 #[expect(
     tigerstyle::no_recursion,
     reason = "Owner: noble-contracts; the comparison follows two finite, already constructed proposition trees, and plain-function recursion keeps the Sort/Proposition cycle out of their trait impls for the pinned extraction"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
 )]
 fn proposition_equal(left: &Proposition, right: &Proposition) -> bool {
     match (left, right) {
@@ -677,6 +675,30 @@ enum ValidationFrame<'a> {
     Enter(&'a Form, u32),
     Children(&'a [Form], usize, u32),
 }
+fn validated<'m>(form: &Form, mut meter: Meter<'m>, depth: u32) -> Transition<'m, ()> {
+    let result = validate_tree(form, &mut meter, depth);
+    (meter, result)
+}
+/// Validate every node of `form` in walk order, stopping at the first refusal.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the meter is the caller's owned transition state, written back through this borrow on every path"
+)]
+fn validate_tree(form: &Form, meter: &mut Meter<'_>, depth: u32) -> Result<(), Diagnostic> {
+    let mut pending = WorkStack::new();
+    let bound = meter.tree_bounds.frames;
+    work_push!(pending, ValidationFrame::Enter(form, depth), bound)
+        .map_err(|()| exhausted(form.span))?;
+    let mut outcome = Ok(());
+    while let Some(frame) = work_pop!(pending) {
+        outcome = validation_step(frame, &mut pending, bound, meter);
+        if outcome.is_err() {
+            break;
+        }
+    }
+    outcome
+}
+/// Visit one validation frame: check an atom or schedule a list's next child.
 #[expect(
     tigerstyle::fragile_exhaustive_enum_match,
     reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
@@ -685,70 +707,72 @@ enum ValidationFrame<'a> {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
-fn validated<'m>(form: &Form, mut meter: Meter<'m>, depth: u32) -> Transition<'m, ()> {
-    let result = (|| -> Result<(), Diagnostic> {
-        let mut pending = WorkStack::new();
-        let bound = meter.tree_bounds.frames;
-        work_push!(pending, ValidationFrame::Enter(form, depth), bound)
-            .map_err(|()| exhausted(form.span))?;
-        while let Some(frame) = work_pop!(pending) {
-            match frame {
-                ValidationFrame::Enter(node, depth) => {
-                    advance!(meter, meter.visit(depth, node.span));
-                    match &node.kind {
-                        FormKind::Atom(text) => {
-                            advance!(meter, meter.charge(text.len(), node.span));
-                            if text.is_empty()
-                                || !text.bytes().all(|b| {
-                                    b.is_ascii_alphanumeric()
-                                        || b == b'-'
-                                        || b == b'_'
-                                        || b == b'.'
-                                        || b == b'@'
-                                })
-                            {
-                                return Err(reject(node.span, "invalid logical identifier"));
-                            }
-                        }
-                        FormKind::List(items) if !items.is_empty() => {
-                            work_push!(pending, ValidationFrame::Children(items, 0, depth), bound)
-                                .map_err(|()| exhausted(node.span))?
-                        }
-                        FormKind::List(_) => {}
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the traversal stack and meter are the walk's locally owned state, borrowed only for one loop-free step"
+)]
+fn validation_step<'a>(
+    frame: ValidationFrame<'a>,
+    pending: &mut WorkStack<ValidationFrame<'a>>,
+    bound: usize,
+    meter: &mut Meter<'_>,
+) -> Result<(), Diagnostic> {
+    match frame {
+        ValidationFrame::Enter(node, depth) => {
+            advance!(*meter, meter.visit(depth, node.span));
+            match &node.kind {
+                FormKind::Atom(text) => {
+                    advance!(*meter, meter.charge(text.len(), node.span));
+                    if text.is_empty() || !bytes_within(text, b"-_.@") {
+                        return Err(reject(node.span, "invalid logical identifier"));
                     }
                 }
-                ValidationFrame::Children(items, index, depth) => {
-                    let Some(item) = items.get(index) else {
-                        continue;
-                    };
-                    let child_depth = deeper(depth, item.span)?;
-                    let next = index.checked_add(1).ok_or_else(|| exhausted(item.span))?;
-                    if next < items.len() {
-                        work_push!(
-                            pending,
-                            ValidationFrame::Children(items, next, depth),
-                            bound
-                        )
-                        .map_err(|()| exhausted(item.span))?;
+                FormKind::List(items) => {
+                    if !items.is_empty() {
+                        work_push!(pending, ValidationFrame::Children(items, 0, depth), bound)
+                            .map_err(|()| exhausted(node.span))?
                     }
-                    work_push!(pending, ValidationFrame::Enter(item, child_depth), bound)
-                        .map_err(|()| exhausted(item.span))?;
                 }
             }
         }
-        Ok(())
-    })();
-    (meter, result)
+        ValidationFrame::Children(items, index, depth) => {
+            let Some(item) = items.get(index) else {
+                return Ok(());
+            };
+            let child_depth = deeper(depth, item.span)?;
+            let next = index.checked_add(1).ok_or_else(|| exhausted(item.span))?;
+            if next < items.len() {
+                work_push!(
+                    pending,
+                    ValidationFrame::Children(items, next, depth),
+                    bound
+                )
+                .map_err(|()| exhausted(item.span))?;
+            }
+            work_push!(pending, ValidationFrame::Enter(item, child_depth), bound)
+                .map_err(|()| exhausted(item.span))?;
+        }
+    }
+    Ok(())
+}
+/// Whether every byte of `text` is ASCII alphanumeric or one of `extra`, as
+/// `text.bytes().all(..)` with that predicate: in order, up to the first miss.
+fn bytes_within(text: &str, extra: &[u8]) -> bool {
+    let bytes = text.as_bytes();
+    let mut index = 0;
+    let mut is_within = true;
+    while is_within && index < bytes.len() {
+        let byte = bytes[index];
+        is_within = byte.is_ascii_alphanumeric() || extra.contains(&byte);
+        index += 1;
+    }
+    is_within
 }
 enum SizeNode<'a> {
     Code(&'a Code),
     Sort(&'a Sort),
     Proposition(&'a Proposition),
 }
-#[expect(
-    tigerstyle::fragile_exhaustive_enum_match,
-    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
-)]
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
@@ -761,36 +785,69 @@ fn tree_size(root: SizeNode<'_>, bound: usize) -> Option<usize> {
         reason = "Owner: noble-contracts; the constant is a count of source elements, and the name states its unit at every use site through the surrounding type and call"
     )]
     let mut size = 0usize;
+    let mut is_complete = true;
     while let Some(node) = work_pop!(pending) {
-        match node {
-            SizeNode::Code(Code::Pair(left, right) | Code::Sum(left, right)) => {
-                size = size.checked_add(1)?;
-                work_push!(pending, SizeNode::Code(right), bound).ok()?;
-                work_push!(pending, SizeNode::Code(left), bound).ok()?;
-            }
-            SizeNode::Code(Code::List(item)) => {
-                size = size.checked_add(1)?;
-                work_push!(pending, SizeNode::Code(item), bound).ok()?;
-            }
-            SizeNode::Code(_) | SizeNode::Sort(Sort::Codes) => size = size.checked_add(1)?,
-            SizeNode::Sort(Sort::Value(code)) => {
-                work_push!(pending, SizeNode::Code(code), bound).ok()?;
-            }
-            SizeNode::Sort(Sort::Premise(prop)) => {
-                work_push!(pending, SizeNode::Proposition(prop), bound).ok()?;
-            }
-            SizeNode::Proposition(Proposition::Pi(_, sort, body)) => {
-                size = size.checked_add(1)?;
-                work_push!(pending, SizeNode::Proposition(body), bound).ok()?;
-                work_push!(pending, SizeNode::Sort(sort), bound).ok()?;
-            }
-            SizeNode::Proposition(Proposition::Eq(code, _, _)) => {
-                size = size.checked_add(3)?;
-                work_push!(pending, SizeNode::Code(code), bound).ok()?;
+        match size_step(node, &mut pending, &mut size, bound) {
+            Some(()) => {}
+            None => {
+                is_complete = false;
+                break;
             }
         }
     }
-    Some(size)
+    if is_complete {
+        Some(size)
+    } else {
+        None
+    }
+}
+/// Count one popped node into `size` and schedule its children, in walk order.
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the traversal stack and running count are the walk's locally owned state, borrowed only for one loop-free step"
+)]
+fn size_step<'a>(
+    node: SizeNode<'a>,
+    pending: &mut WorkStack<SizeNode<'a>>,
+    size: &mut usize,
+    bound: usize,
+) -> Option<()> {
+    match node {
+        SizeNode::Code(Code::Pair(left, right) | Code::Sum(left, right)) => {
+            *size = size.checked_add(1)?;
+            work_push!(pending, SizeNode::Code(right), bound).ok()?;
+            work_push!(pending, SizeNode::Code(left), bound).ok()?;
+        }
+        SizeNode::Code(Code::List(item)) => {
+            *size = size.checked_add(1)?;
+            work_push!(pending, SizeNode::Code(item), bound).ok()?;
+        }
+        SizeNode::Code(_) | SizeNode::Sort(Sort::Codes) => *size = size.checked_add(1)?,
+        SizeNode::Sort(Sort::Value(code)) => {
+            work_push!(pending, SizeNode::Code(code), bound).ok()?;
+        }
+        SizeNode::Sort(Sort::Premise(prop)) => {
+            work_push!(pending, SizeNode::Proposition(prop), bound).ok()?;
+        }
+        SizeNode::Proposition(Proposition::Pi(_, sort, body)) => {
+            *size = size.checked_add(1)?;
+            work_push!(pending, SizeNode::Proposition(body), bound).ok()?;
+            work_push!(pending, SizeNode::Sort(sort), bound).ok()?;
+        }
+        SizeNode::Proposition(Proposition::Eq(code, _, _)) => {
+            *size = size.checked_add(3)?;
+            work_push!(pending, SizeNode::Code(code), bound).ok()?;
+        }
+    }
+    Some(())
 }
 fn code_size(code: &Code, bound: usize) -> Option<usize> {
     if !matches!(code, Code::Pair(..) | Code::Sum(..) | Code::List(..)) {
@@ -868,6 +925,34 @@ macro_rules! take_prop {
         }
     };
 }
+fn rewrite_prop(
+    prop: &Proposition,
+    mode: Rewrite<'_>,
+    span: Span,
+    bound: usize,
+) -> Result<Proposition, Diagnostic> {
+    let mut frames = WorkStack::new();
+    let mut values = WorkStack::new();
+    push_rewrite_frame!(frames, RewriteFrame::Proposition(prop), bound, span)?;
+    let scope = RewriteScope { mode, span, bound };
+    let mut outcome = Ok(());
+    while let Some(frame) = work_pop!(frames) {
+        outcome = rewrite_step(frame, scope, &mut frames, &mut values);
+        if outcome.is_err() {
+            break;
+        }
+    }
+    outcome?;
+    take_prop!(values, span)
+}
+/// The fixed inputs of one `rewrite_prop` walk.
+#[derive(Clone, Copy)]
+struct RewriteScope<'a> {
+    mode: Rewrite<'a>,
+    span: Span,
+    bound: usize,
+}
+/// Rewrite one frame: schedule a node's parts or rebuild it from its parts.
 #[expect(
     tigerstyle::fragile_exhaustive_enum_match,
     reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
@@ -880,169 +965,195 @@ macro_rules! take_prop {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
-fn rewrite_prop(
-    prop: &Proposition,
-    mode: Rewrite<'_>,
-    span: Span,
-    bound: usize,
-) -> Result<Proposition, Diagnostic> {
-    let mut frames = WorkStack::new();
-    let mut values = WorkStack::new();
-    push_rewrite_frame!(frames, RewriteFrame::Proposition(prop), bound, span)?;
-    while let Some(frame) = work_pop!(frames) {
-        match frame {
-            RewriteFrame::Code(code, copy) => match code {
-                Code::Pair(left, right) | Code::Sum(left, right) => {
-                    push_rewrite_frame!(
-                        frames,
-                        if matches!(code, Code::Pair(..)) {
-                            RewriteFrame::Pair
-                        } else {
-                            RewriteFrame::Sum
-                        },
-                        bound,
-                        span
-                    )?;
-                    push_rewrite_frame!(frames, RewriteFrame::Code(right, copy), bound, span)?;
-                    push_rewrite_frame!(frames, RewriteFrame::Code(left, copy), bound, span)?;
-                }
-                Code::List(item) => {
-                    push_rewrite_frame!(frames, RewriteFrame::List, bound, span)?;
-                    push_rewrite_frame!(frames, RewriteFrame::Code(item, copy), bound, span)?;
-                }
-                Code::Variable(index) => {
-                    let rewritten = if copy {
-                        *index
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the frame and value stacks are the walk's locally owned state, borrowed only for one loop-free step"
+)]
+fn rewrite_step<'a>(
+    frame: RewriteFrame<'a>,
+    scope: RewriteScope<'a>,
+    frames: &mut WorkStack<RewriteFrame<'a>>,
+    values: &mut WorkStack<Rewritten>,
+) -> Result<(), Diagnostic> {
+    let RewriteScope { mode, span, bound } = scope;
+    match frame {
+        RewriteFrame::Code(code, copy) => match code {
+            Code::Pair(left, right) | Code::Sum(left, right) => {
+                push_rewrite_frame!(
+                    frames,
+                    if matches!(code, Code::Pair(..)) {
+                        RewriteFrame::Pair
                     } else {
-                        match mode {
-                            Rewrite::Shift(base) => {
-                                index.checked_add(base).ok_or_else(|| exhausted(span))?
-                            }
-                            Rewrite::Replace(binder, Argument::Code(argument))
-                                if *index == binder =>
-                            {
-                                // Copy the argument without applying the same substitution again.
-                                push_rewrite_frame!(
-                                    frames,
-                                    RewriteFrame::Code(argument, true),
-                                    bound,
-                                    span
-                                )?;
-                                continue;
-                            }
-                            // Every eliminated binder shifts later Type0 positions, not only Code binders.
-                            Rewrite::Replace(binder, _) if *index > binder => {
-                                index.checked_sub(1).ok_or_else(|| exhausted(span))?
-                            }
-                            Rewrite::Replace(..) => *index,
-                        }
-                    };
-                    push_rewritten!(
-                        values,
-                        Rewritten::Code(Code::Variable(rewritten)),
-                        bound,
-                        span
-                    )?;
-                }
-                Code::Unit => push_rewritten!(values, Rewritten::Code(Code::Unit), bound, span)?,
-                Code::Bool => push_rewritten!(values, Rewritten::Code(Code::Bool), bound, span)?,
-                Code::I64 => push_rewritten!(values, Rewritten::Code(Code::I64), bound, span)?,
-                Code::Text => push_rewritten!(values, Rewritten::Code(Code::Text), bound, span)?,
-            },
-            RewriteFrame::Sort(sort) => match sort {
-                Sort::Codes => push_rewritten!(values, Rewritten::Sort(Sort::Codes), bound, span)?,
-                Sort::Value(code) => {
-                    push_rewrite_frame!(frames, RewriteFrame::Value, bound, span)?;
-                    push_rewrite_frame!(frames, RewriteFrame::Code(code, false), bound, span)?;
-                }
-                Sort::Premise(prop) => {
-                    push_rewrite_frame!(frames, RewriteFrame::Premise, bound, span)?;
-                    push_rewrite_frame!(frames, RewriteFrame::Proposition(prop), bound, span)?;
-                }
-            },
-            RewriteFrame::Proposition(prop) => match prop {
-                Proposition::Pi(index, sort, body) => {
-                    let rewritten = match mode {
-                        Rewrite::Shift(base) => {
-                            index.checked_add(base).ok_or_else(|| exhausted(span))?
-                        }
-                        Rewrite::Replace(..) => {
-                            index.checked_sub(1).ok_or_else(|| exhausted(span))?
-                        }
-                    };
-                    push_rewrite_frame!(frames, RewriteFrame::Pi(rewritten), bound, span)?;
-                    push_rewrite_frame!(frames, RewriteFrame::Proposition(body), bound, span)?;
-                    push_rewrite_frame!(frames, RewriteFrame::Sort(sort), bound, span)?;
-                }
-                Proposition::Eq(code, left, right) => {
-                    push_rewrite_frame!(frames, RewriteFrame::Eq(*left, *right), bound, span)?;
-                    push_rewrite_frame!(frames, RewriteFrame::Code(code, false), bound, span)?;
-                }
-            },
-            RewriteFrame::Pair | RewriteFrame::Sum => {
-                let right = take_code!(values, span)?;
-                let left = take_code!(values, span)?;
-                let code = if matches!(frame, RewriteFrame::Pair) {
-                    Code::Pair(Box::new(left), Box::new(right))
+                        RewriteFrame::Sum
+                    },
+                    bound,
+                    span
+                )?;
+                push_rewrite_frame!(frames, RewriteFrame::Code(right, copy), bound, span)?;
+                push_rewrite_frame!(frames, RewriteFrame::Code(left, copy), bound, span)?;
+            }
+            Code::List(item) => {
+                push_rewrite_frame!(frames, RewriteFrame::List, bound, span)?;
+                push_rewrite_frame!(frames, RewriteFrame::Code(item, copy), bound, span)?;
+            }
+            Code::Variable(index) => {
+                let rewritten = if copy {
+                    *index
                 } else {
-                    Code::Sum(Box::new(left), Box::new(right))
-                };
-                push_rewritten!(values, Rewritten::Code(code), bound, span)?;
-            }
-            RewriteFrame::List => {
-                let item = take_code!(values, span)?;
-                push_rewritten!(
-                    values,
-                    Rewritten::Code(Code::List(Box::new(item))),
-                    bound,
-                    span
-                )?;
-            }
-            RewriteFrame::Value => {
-                let code = take_code!(values, span)?;
-                push_rewritten!(values, Rewritten::Sort(Sort::Value(code)), bound, span)?;
-            }
-            RewriteFrame::Premise => {
-                let prop = take_prop!(values, span)?;
-                push_rewritten!(
-                    values,
-                    Rewritten::Sort(Sort::Premise(Box::new(prop))),
-                    bound,
-                    span
-                )?;
-            }
-            RewriteFrame::Pi(index) => {
-                let body = take_prop!(values, span)?;
-                let sort = take_sort!(values, span)?;
-                push_rewritten!(
-                    values,
-                    Rewritten::Proposition(Proposition::Pi(index, sort, Box::new(body))),
-                    bound,
-                    span
-                )?;
-            }
-            RewriteFrame::Eq(left, right) => {
-                let code = take_code!(values, span)?;
-                let (left, right) = match mode {
-                    Rewrite::Shift(base) => (
-                        left.checked_add(base).ok_or_else(|| exhausted(span))?,
-                        right.checked_add(base).ok_or_else(|| exhausted(span))?,
-                    ),
-                    Rewrite::Replace(binder, argument) => (
-                        replace_index(left, binder, argument, span)?,
-                        replace_index(right, binder, argument, span)?,
-                    ),
+                    match variable_rewrite(*index, mode, span)? {
+                        VariableRewrite::Index(rewritten) => rewritten,
+                        VariableRewrite::Argument(argument) => {
+                            // Copy the argument without applying the same substitution again.
+                            push_rewrite_frame!(
+                                frames,
+                                RewriteFrame::Code(argument, true),
+                                bound,
+                                span
+                            )?;
+                            return Ok(());
+                        }
+                    }
                 };
                 push_rewritten!(
                     values,
-                    Rewritten::Proposition(Proposition::Eq(code, left, right)),
+                    Rewritten::Code(Code::Variable(rewritten)),
                     bound,
                     span
                 )?;
             }
+            Code::Unit => push_rewritten!(values, Rewritten::Code(Code::Unit), bound, span)?,
+            Code::Bool => push_rewritten!(values, Rewritten::Code(Code::Bool), bound, span)?,
+            Code::I64 => push_rewritten!(values, Rewritten::Code(Code::I64), bound, span)?,
+            Code::Text => push_rewritten!(values, Rewritten::Code(Code::Text), bound, span)?,
+        },
+        RewriteFrame::Sort(sort) => match sort {
+            Sort::Codes => push_rewritten!(values, Rewritten::Sort(Sort::Codes), bound, span)?,
+            Sort::Value(code) => {
+                push_rewrite_frame!(frames, RewriteFrame::Value, bound, span)?;
+                push_rewrite_frame!(frames, RewriteFrame::Code(code, false), bound, span)?;
+            }
+            Sort::Premise(prop) => {
+                push_rewrite_frame!(frames, RewriteFrame::Premise, bound, span)?;
+                push_rewrite_frame!(frames, RewriteFrame::Proposition(prop), bound, span)?;
+            }
+        },
+        RewriteFrame::Proposition(prop) => match prop {
+            Proposition::Pi(index, sort, body) => {
+                let rewritten = match mode {
+                    Rewrite::Shift(base) => {
+                        index.checked_add(base).ok_or_else(|| exhausted(span))?
+                    }
+                    Rewrite::Replace(..) => index.checked_sub(1).ok_or_else(|| exhausted(span))?,
+                };
+                push_rewrite_frame!(frames, RewriteFrame::Pi(rewritten), bound, span)?;
+                push_rewrite_frame!(frames, RewriteFrame::Proposition(body), bound, span)?;
+                push_rewrite_frame!(frames, RewriteFrame::Sort(sort), bound, span)?;
+            }
+            Proposition::Eq(code, left, right) => {
+                push_rewrite_frame!(frames, RewriteFrame::Eq(*left, *right), bound, span)?;
+                push_rewrite_frame!(frames, RewriteFrame::Code(code, false), bound, span)?;
+            }
+        },
+        RewriteFrame::Pair | RewriteFrame::Sum => {
+            let right = take_code!(values, span)?;
+            let left = take_code!(values, span)?;
+            let code = if matches!(frame, RewriteFrame::Pair) {
+                Code::Pair(Box::new(left), Box::new(right))
+            } else {
+                Code::Sum(Box::new(left), Box::new(right))
+            };
+            push_rewritten!(values, Rewritten::Code(code), bound, span)?;
+        }
+        RewriteFrame::List => {
+            let item = take_code!(values, span)?;
+            push_rewritten!(
+                values,
+                Rewritten::Code(Code::List(Box::new(item))),
+                bound,
+                span
+            )?;
+        }
+        RewriteFrame::Value => {
+            let code = take_code!(values, span)?;
+            push_rewritten!(values, Rewritten::Sort(Sort::Value(code)), bound, span)?;
+        }
+        RewriteFrame::Premise => {
+            let prop = take_prop!(values, span)?;
+            push_rewritten!(
+                values,
+                Rewritten::Sort(Sort::Premise(Box::new(prop))),
+                bound,
+                span
+            )?;
+        }
+        RewriteFrame::Pi(index) => {
+            let body = take_prop!(values, span)?;
+            let sort = take_sort!(values, span)?;
+            push_rewritten!(
+                values,
+                Rewritten::Proposition(Proposition::Pi(index, sort, Box::new(body))),
+                bound,
+                span
+            )?;
+        }
+        RewriteFrame::Eq(left, right) => {
+            let code = take_code!(values, span)?;
+            let (left, right) = match mode {
+                Rewrite::Shift(base) => (
+                    left.checked_add(base).ok_or_else(|| exhausted(span))?,
+                    right.checked_add(base).ok_or_else(|| exhausted(span))?,
+                ),
+                Rewrite::Replace(binder, argument) => (
+                    replace_index(left, binder, argument, span)?,
+                    replace_index(right, binder, argument, span)?,
+                ),
+            };
+            push_rewritten!(
+                values,
+                Rewritten::Proposition(Proposition::Eq(code, left, right)),
+                bound,
+                span
+            )?;
         }
     }
-    take_prop!(values, span)
+    Ok(())
+}
+/// What a rewrite makes of one code variable.
+enum VariableRewrite<'a> {
+    /// The variable stays, at this index.
+    Index(usize),
+    /// The substituted code argument replaces it.
+    Argument(&'a Code),
+}
+/// Rewrite the code variable `index` under `mode`.
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn variable_rewrite(
+    index: usize,
+    mode: Rewrite<'_>,
+    span: Span,
+) -> Result<VariableRewrite<'_>, Diagnostic> {
+    match mode {
+        Rewrite::Shift(base) => match index.checked_add(base) {
+            Some(shifted) => Ok(VariableRewrite::Index(shifted)),
+            None => Err(exhausted(span)),
+        },
+        Rewrite::Replace(binder, Argument::Code(argument)) if index == binder => {
+            Ok(VariableRewrite::Argument(argument))
+        }
+        // Every eliminated binder shifts later Type0 positions, not only Code binders.
+        Rewrite::Replace(binder, _) if index > binder => match index.checked_sub(1) {
+            Some(lowered) => Ok(VariableRewrite::Index(lowered)),
+            None => Err(exhausted(span)),
+        },
+        Rewrite::Replace(..) => Ok(VariableRewrite::Index(index)),
+    }
 }
 #[expect(
     tigerstyle::ambiguous_params,
@@ -1118,19 +1229,72 @@ enum ParseFrame<'a> {
     EqAfterCode(&'a Form, &'a Form),
 }
 fn stack_binder<'a>(stack: &'a WorkStack<Binder>, name: &str) -> Option<(usize, &'a Sort)> {
-    if let Some(index) = stack.spill.iter().rposition(|item| item.name == name) {
+    if let Some(index) = last_spilled_binder(stack, name) {
         let position = stack.inline_len.checked_add(index)?;
         return Some((position, &stack.spill[index].sort));
     }
-    if let Some(index) = stack.inline[..stack.inline_len]
-        .iter()
-        .rposition(|item| item.as_ref().is_some_and(|binder| binder.name == name))
-    {
-        return stack.inline[index]
-            .as_ref()
-            .map(|binder| (index, &binder.sort));
+    if let Some(index) = last_inline_binder(stack, name) {
+        return match &stack.inline[index] {
+            Some(binder) => Some((index, &binder.sort)),
+            None => None,
+        };
     }
     None
+}
+/// The last spilled binder named `name`, as `spill.iter().rposition(..)`.
+fn last_spilled_binder(stack: &WorkStack<Binder>, name: &str) -> Option<usize> {
+    let mut remaining = stack.spill.len();
+    let mut found = None;
+    while found.is_none() && remaining > 0 {
+        remaining -= 1;
+        if is_binder_named(&stack.spill[remaining], name) {
+            found = Some(remaining);
+        }
+    }
+    found
+}
+/// The last occupied inline slot holding a binder named `name`, as
+/// `inline[..inline_len].iter().rposition(..)`.
+fn last_inline_binder(stack: &WorkStack<Binder>, name: &str) -> Option<usize> {
+    let mut remaining = stack.inline_len;
+    let mut found = None;
+    while found.is_none() && remaining > 0 {
+        remaining -= 1;
+        if is_slot_named(&stack.inline[remaining], name) {
+            found = Some(remaining);
+        }
+    }
+    found
+}
+/// Whether `binder` is named `name`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn is_binder_named(binder: &Binder, name: &str) -> bool {
+    binder.name == name
+}
+/// Whether an occupied inline slot holds a binder named `name`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn is_slot_named(slot: &Option<Binder>, name: &str) -> bool {
+    match slot {
+        Some(binder) => is_binder_named(binder, name),
+        None => false,
+    }
+}
+/// The atom heading `items`, as `items.first().and_then(|item| atom(item).ok())`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn head_atom(items: &[Form]) -> Option<&str> {
+    match items.first() {
+        Some(first) => atom(first).ok(),
+        None => None,
+    }
 }
 fn binder<'a>(
     context: &'a WorkStack<Binder>,
@@ -1142,14 +1306,85 @@ fn binder<'a>(
     }
     stack_binder(context, name)
 }
+fn parsed<'m>(
+    root: ParseFrame<'_>,
+    context: &WorkStack<Binder>,
+    mut meter: Meter<'m>,
+    span: Span,
+) -> Transition<'m, Rewritten> {
+    let result = parse_tree(root, context, &mut meter, span);
+    (meter, result)
+}
+/// The owned stacks of one `parsed` walk.
+struct ParseStacks<'a> {
+    frames: WorkStack<ParseFrame<'a>>,
+    values: WorkStack<Rewritten>,
+    local: WorkStack<Binder>,
+}
+/// Parse `root` in walk order, stopping at the first refusal.
 #[expect(
-    tigerstyle::fragile_exhaustive_enum_match,
-    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the meter is the caller's owned transition state, written back through this borrow on every path"
+)]
+fn parse_tree<'a>(
+    root: ParseFrame<'a>,
+    context: &WorkStack<Binder>,
+    meter: &mut Meter<'_>,
+    span: Span,
+) -> Result<Rewritten, Diagnostic> {
+    let bound = meter.tree_bounds.frames;
+    let mut frames = WorkStack::new();
+    work_push!(frames, root, bound).map_err(|()| exhausted(span))?;
+    // Only Pi binders enter `local`. An existing caller context is borrowed,
+    // never copied at each nested Pi.
+    let mut stacks = ParseStacks {
+        frames,
+        values: WorkStack::new(),
+        local: WorkStack::new(),
+    };
+    let mut outcome = Ok(());
+    while let Some(frame) = stacks.frames.pop_bounded() {
+        outcome = parse_step(frame, &mut stacks, context, meter);
+        if outcome.is_err() {
+            break;
+        }
+    }
+    outcome?;
+    stacks.values.pop_bounded().ok_or_else(|| exhausted(span))
+}
+// Schedule `$frame` on the walk's `$frames`, refusing at `$at` once `$bound`
+// frames are pending.
+macro_rules! schedule_frame {
+    ($frames:ident,$bound:ident,$frame:expr,$at:expr) => {
+        work_push!($frames, $frame, $bound).map_err(|()| exhausted($at))?
+    };
+}
+/// Parse one frame: read a form or assemble a value from parsed parts.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
 )]
 #[expect(
-    tigerstyle::nested_conditionals,
-    reason = "Owner: noble-contracts; the guard chain states the admission rule verbatim; extracting it would obscure the predicate it states"
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the parse stacks and meter are the walk's locally owned state, borrowed only for one loop-free step"
 )]
+fn parse_step<'a>(
+    frame: ParseFrame<'a>,
+    stacks: &mut ParseStacks<'a>,
+    context: &WorkStack<Binder>,
+    meter: &mut Meter<'_>,
+) -> Result<(), Diagnostic> {
+    match frame {
+        ParseFrame::Code(form, depth) => parse_code(form, depth, stacks, context, meter),
+        ParseFrame::Proposition(form, depth) => parse_proposition(form, depth, stacks, meter),
+        ParseFrame::EqAfterCode(left, right) => {
+            parse_equality(left, right, stacks, context, meter.tree_bounds.frames)
+        }
+        frame => assemble_parsed(frame, stacks, context, meter.tree_bounds.frames),
+    }
+}
+/// Read a Type0 code: a base or bound code atom, or a `Pair`, `Sum` or `List`
+/// form whose parts are scheduled.
 #[expect(
     tigerstyle::foreign_enum_catch_all,
     reason = "Owner: noble-contracts; the foreign enum is matched only to translate its known variants, and a new variant is a deliberate fail-closed default"
@@ -1159,199 +1394,351 @@ fn binder<'a>(
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
 #[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the parse stacks and meter are the walk's locally owned state, borrowed only for one loop-free step"
+)]
+fn parse_code<'a>(
+    form: &'a Form,
+    depth: u32,
+    stacks: &mut ParseStacks<'a>,
+    context: &WorkStack<Binder>,
+    meter: &mut Meter<'_>,
+) -> Result<(), Diagnostic> {
+    let bound = meter.tree_bounds.frames;
+    let ParseStacks {
+        frames,
+        values,
+        local,
+    } = stacks;
+    advance!(*meter, meter.visit(depth, form.span));
+    if let Ok(value) = atom(form) {
+        let ty = match value {
+            "Unit" => Code::Unit,
+            "Bool" => Code::Bool,
+            "I64" => Code::I64,
+            "Text" => Code::Text,
+            _ => {
+                let (position, sort) = binder(context, local, value)
+                    .ok_or_else(|| reject(form.span, "not a bound Type0 code"))?;
+                if *sort != Sort::Codes {
+                    return Err(reject(form.span, "not a bound Type0 code"));
+                }
+                Code::Variable(position)
+            }
+        };
+        push_rewritten!(values, Rewritten::Code(ty), bound, form.span)?;
+        return Ok(());
+    }
+    let items = list(form)?;
+    match head_atom(items) {
+        Some("Pair") | Some("Sum") if items.len() == 3 => {
+            let first_depth = deeper(depth, items[1].span)?;
+            let is_pair = atom(&items[0])? == "Pair";
+            schedule_frame!(
+                frames,
+                bound,
+                ParseFrame::CodeSecond(&items[2], depth, is_pair),
+                form.span
+            );
+            schedule_frame!(
+                frames,
+                bound,
+                ParseFrame::Code(&items[1], first_depth),
+                items[1].span
+            );
+        }
+        Some("List") if items.len() == 2 => {
+            let child_depth = deeper(depth, items[1].span)?;
+            schedule_frame!(frames, bound, ParseFrame::CodeList(form.span), form.span);
+            schedule_frame!(
+                frames,
+                bound,
+                ParseFrame::Code(&items[1], child_depth),
+                items[1].span
+            );
+        }
+        _ => return Err(reject(form.span, "not a predicative Type0 code")),
+    }
+    Ok(())
+}
+/// Read a proposition: a `Pi` whose binder sort and body are scheduled, or an
+/// `Eq` whose code and operands are scheduled.
+#[expect(
+    tigerstyle::foreign_enum_catch_all,
+    reason = "Owner: noble-contracts; the foreign enum is matched only to translate its known variants, and a new variant is a deliberate fail-closed default"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the parse stacks and meter are the walk's locally owned state, borrowed only for one loop-free step"
+)]
+fn parse_proposition<'a>(
+    form: &'a Form,
+    depth: u32,
+    stacks: &mut ParseStacks<'a>,
+    meter: &mut Meter<'_>,
+) -> Result<(), Diagnostic> {
+    let bound = meter.tree_bounds.frames;
+    let ParseStacks { frames, .. } = stacks;
+    advance!(*meter, meter.visit(depth, form.span));
+    let items = list(form)?;
+    match head_atom(items) {
+        Some("Pi") if items.len() == 3 => {
+            let binding = list(&items[1])?;
+            if binding.len() != 2 {
+                return Err(reject(items[1].span, "Pi needs one typed binder"));
+            }
+            let name = atom(&binding[0])?.to_string();
+            let next_depth = deeper(depth, binding[1].span)?;
+            schedule_frame!(
+                frames,
+                bound,
+                ParseFrame::PiAfterSort {
+                    name,
+                    body: &items[2],
+                    depth
+                },
+                form.span
+            );
+            schedule_frame!(
+                frames,
+                bound,
+                ParseFrame::Sort(&binding[1], next_depth),
+                binding[1].span
+            );
+        }
+        Some("Eq") if items.len() == 4 => {
+            let next_depth = deeper(depth, items[1].span)?;
+            schedule_frame!(
+                frames,
+                bound,
+                ParseFrame::EqAfterCode(&items[2], &items[3]),
+                form.span
+            );
+            schedule_frame!(
+                frames,
+                bound,
+                ParseFrame::Code(&items[1], next_depth),
+                items[1].span
+            );
+        }
+        _ => {
+            return Err(reject(
+                form.span,
+                "expected dependent Pi or typed Eq proposition",
+            ))
+        }
+    }
+    Ok(())
+}
+/// Read an equality's operands once its code is parsed: each must be a bound
+/// value of exactly that code.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the parse stacks and meter are the walk's locally owned state, borrowed only for one loop-free step"
+)]
+fn parse_equality(
+    left: &Form,
+    right: &Form,
+    stacks: &mut ParseStacks<'_>,
+    context: &WorkStack<Binder>,
+    bound: usize,
+) -> Result<(), Diagnostic> {
+    let ParseStacks { values, local, .. } = stacks;
+    let ty = take_code!(values, left.span)?;
+    let left_name = atom(left)?;
+    let (first, first_sort) = binder(context, local, left_name)
+        .ok_or_else(|| reject(left.span, "unbound equality value"))?;
+    if !is_value_of(first_sort, &ty) {
+        return Err(reject(left.span, "equality operand has wrong code"));
+    }
+    let right_name = atom(right)?;
+    let (second, second_sort) = binder(context, local, right_name)
+        .ok_or_else(|| reject(right.span, "unbound equality value"))?;
+    if !is_value_of(second_sort, &ty) {
+        return Err(reject(right.span, "equality operand has wrong code"));
+    }
+    push_rewritten!(
+        values,
+        Rewritten::Proposition(Proposition::Eq(ty, first, second)),
+        bound,
+        right.span
+    )?;
+    Ok(())
+}
+/// Assemble a parsed value from its completed parts, or schedule the parts of
+/// a sort or of a `Pi` body.
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
 )]
-fn parsed<'m>(
-    root: ParseFrame<'_>,
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the parse stacks and meter are the walk's locally owned state, borrowed only for one loop-free step"
+)]
+fn assemble_parsed<'a>(
+    frame: ParseFrame<'a>,
+    stacks: &mut ParseStacks<'a>,
     context: &WorkStack<Binder>,
-    mut meter: Meter<'m>,
-    span: Span,
-) -> Transition<'m, Rewritten> {
-    let result = (|| -> Result<Rewritten, Diagnostic> {
-        let bound = meter.tree_bounds.frames;
-        let mut frames = WorkStack::new();
-        let mut values = WorkStack::new();
-        // Only Pi binders enter this suffix. An existing caller context is borrowed,
-        // never copied at each nested Pi.
-        let mut local = WorkStack::new();
-        macro_rules! push_frame {
-            ($frame:expr,$at:expr) => {
-                work_push!(frames, $frame, bound).map_err(|()| exhausted($at))?
-            };
+    bound: usize,
+) -> Result<(), Diagnostic> {
+    let ParseStacks {
+        frames,
+        values,
+        local,
+    } = stacks;
+    match frame {
+        ParseFrame::CodeSecond(second, depth, is_pair) => {
+            let next_depth = deeper(depth, second.span)?;
+            schedule_frame!(
+                frames,
+                bound,
+                ParseFrame::CodePair(is_pair, second.span),
+                second.span
+            );
+            schedule_frame!(
+                frames,
+                bound,
+                ParseFrame::Code(second, next_depth),
+                second.span
+            );
         }
-        macro_rules! push_value {
-            ($value:expr,$at:expr) => {
-                push_rewritten!(values, $value, bound, $at)?
+        ParseFrame::CodePair(is_pair, at) => {
+            let right = take_code!(values, at)?;
+            let left = take_code!(values, at)?;
+            let ty = if is_pair {
+                Code::Pair(Box::new(left), Box::new(right))
+            } else {
+                Code::Sum(Box::new(left), Box::new(right))
             };
+            push_rewritten!(values, Rewritten::Code(ty), bound, at)?;
         }
-        push_frame!(root, span);
-        while let Some(frame) = work_pop!(frames) {
-            match frame {
-                ParseFrame::Code(form, depth) => {
-                    advance!(meter, meter.visit(depth, form.span));
-                    if let Ok(value) = atom(form) {
-                        let ty = match value {
-                            "Unit" => Code::Unit,
-                            "Bool" => Code::Bool,
-                            "I64" => Code::I64,
-                            "Text" => Code::Text,
-                            _ => {
-                                let (position, sort) = binder(context, &local, value)
-                                    .ok_or_else(|| reject(form.span, "not a bound Type0 code"))?;
-                                if *sort != Sort::Codes {
-                                    return Err(reject(form.span, "not a bound Type0 code"));
-                                }
-                                Code::Variable(position)
-                            }
-                        };
-                        push_value!(Rewritten::Code(ty), form.span);
-                        continue;
-                    }
-                    let items = list(form)?;
-                    match items.first().and_then(|item| atom(item).ok()) {
-                        Some("Pair") | Some("Sum") if items.len() == 3 => {
-                            let first_depth = deeper(depth, items[1].span)?;
-                            let is_pair = atom(&items[0])? == "Pair";
-                            push_frame!(
-                                ParseFrame::CodeSecond(&items[2], depth, is_pair),
-                                form.span
-                            );
-                            push_frame!(ParseFrame::Code(&items[1], first_depth), items[1].span);
-                        }
-                        Some("List") if items.len() == 2 => {
-                            let child_depth = deeper(depth, items[1].span)?;
-                            push_frame!(ParseFrame::CodeList(form.span), form.span);
-                            push_frame!(ParseFrame::Code(&items[1], child_depth), items[1].span);
-                        }
-                        _ => return Err(reject(form.span, "not a predicative Type0 code")),
-                    }
-                }
-                ParseFrame::CodeSecond(second, depth, is_pair) => {
-                    let next_depth = deeper(depth, second.span)?;
-                    push_frame!(ParseFrame::CodePair(is_pair, second.span), second.span);
-                    push_frame!(ParseFrame::Code(second, next_depth), second.span);
-                }
-                ParseFrame::CodePair(is_pair, at) => {
-                    let right = take_code!(values, at)?;
-                    let left = take_code!(values, at)?;
-                    let ty = if is_pair {
-                        Code::Pair(Box::new(left), Box::new(right))
-                    } else {
-                        Code::Sum(Box::new(left), Box::new(right))
-                    };
-                    push_value!(Rewritten::Code(ty), at);
-                }
-                ParseFrame::CodeList(at) => {
-                    let item = take_code!(values, at)?;
-                    push_value!(Rewritten::Code(Code::List(Box::new(item))), at);
-                }
-                ParseFrame::Sort(form, depth) => {
-                    if atom(form).ok() == Some("Type0") {
-                        push_value!(Rewritten::Sort(Sort::Codes), form.span);
-                    } else if list(form)
-                        .ok()
-                        .and_then(|items| items.first())
-                        .and_then(|item| atom(item).ok())
-                        == Some("Eq")
-                    {
-                        let next_depth = deeper(depth, form.span)?;
-                        push_frame!(ParseFrame::SortPremise(form.span), form.span);
-                        push_frame!(ParseFrame::Proposition(form, next_depth), form.span);
-                    } else {
-                        let next_depth = deeper(depth, form.span)?;
-                        push_frame!(ParseFrame::SortValue(form.span), form.span);
-                        push_frame!(ParseFrame::Code(form, next_depth), form.span);
-                    }
-                }
-                ParseFrame::SortValue(at) => {
-                    let ty = take_code!(values, at)?;
-                    push_value!(Rewritten::Sort(Sort::Value(ty)), at);
-                }
-                ParseFrame::SortPremise(at) => {
-                    let proof = take_prop!(values, at)?;
-                    push_value!(Rewritten::Sort(Sort::Premise(Box::new(proof))), at);
-                }
-                ParseFrame::Proposition(form, depth) => {
-                    advance!(meter, meter.visit(depth, form.span));
-                    let items = list(form)?;
-                    match items.first().and_then(|item| atom(item).ok()) {
-                        Some("Pi") if items.len() == 3 => {
-                            let binding = list(&items[1])?;
-                            if binding.len() != 2 {
-                                return Err(reject(items[1].span, "Pi needs one typed binder"));
-                            }
-                            let name = atom(&binding[0])?.to_string();
-                            let next_depth = deeper(depth, binding[1].span)?;
-                            push_frame!(
-                                ParseFrame::PiAfterSort {
-                                    name,
-                                    body: &items[2],
-                                    depth
-                                },
-                                form.span
-                            );
-                            push_frame!(ParseFrame::Sort(&binding[1], next_depth), binding[1].span);
-                        }
-                        Some("Eq") if items.len() == 4 => {
-                            let next_depth = deeper(depth, items[1].span)?;
-                            push_frame!(ParseFrame::EqAfterCode(&items[2], &items[3]), form.span);
-                            push_frame!(ParseFrame::Code(&items[1], next_depth), items[1].span);
-                        }
-                        _ => {
-                            return Err(reject(
-                                form.span,
-                                "expected dependent Pi or typed Eq proposition",
-                            ))
-                        }
-                    }
-                }
-                ParseFrame::PiAfterSort { name, body, depth } => {
-                    let ty = take_sort!(values, body.span)?;
-                    let index = context
-                        .total
-                        .checked_add(local.total)
-                        .ok_or_else(|| exhausted(body.span))?;
-                    // Each active binder belongs to a visited Pi; the derived frame
-                    // cap is strictly above the source's maximum visited node count.
-                    work_push!(local, Binder { name, sort: ty }, bound)
-                        .map_err(|()| exhausted(body.span))?;
-                    let next_depth = deeper(depth, body.span)?;
-                    push_frame!(ParseFrame::PiFinish(index, body.span), body.span);
-                    push_frame!(ParseFrame::Proposition(body, next_depth), body.span);
-                }
-                ParseFrame::PiFinish(index, at) => {
-                    let body = take_prop!(values, at)?;
-                    let ty = work_pop!(local).ok_or_else(|| exhausted(at))?.sort;
-                    push_value!(
-                        Rewritten::Proposition(Proposition::Pi(index, ty, Box::new(body))),
-                        at
-                    );
-                }
-                ParseFrame::EqAfterCode(left, right) => {
-                    let ty = take_code!(values, left.span)?;
-                    let left_name = atom(left)?;
-                    let (first, first_sort) = binder(context, &local, left_name)
-                        .ok_or_else(|| reject(left.span, "unbound equality value"))?;
-                    if !matches!(first_sort,Sort::Value(value) if value == &ty) {
-                        return Err(reject(left.span, "equality operand has wrong code"));
-                    }
-                    let right_name = atom(right)?;
-                    let (second, second_sort) = binder(context, &local, right_name)
-                        .ok_or_else(|| reject(right.span, "unbound equality value"))?;
-                    if !matches!(second_sort,Sort::Value(value) if value == &ty) {
-                        return Err(reject(right.span, "equality operand has wrong code"));
-                    }
-                    push_value!(
-                        Rewritten::Proposition(Proposition::Eq(ty, first, second)),
-                        right.span
-                    );
-                }
+        ParseFrame::CodeList(at) => {
+            let item = take_code!(values, at)?;
+            push_rewritten!(
+                values,
+                Rewritten::Code(Code::List(Box::new(item))),
+                bound,
+                at
+            )?;
+        }
+        ParseFrame::Sort(form, depth) => {
+            if atom(form).ok() == Some("Type0") {
+                push_rewritten!(values, Rewritten::Sort(Sort::Codes), bound, form.span)?;
+            } else if list_head_atom(form) == Some("Eq") {
+                let next_depth = deeper(depth, form.span)?;
+                schedule_frame!(frames, bound, ParseFrame::SortPremise(form.span), form.span);
+                schedule_frame!(
+                    frames,
+                    bound,
+                    ParseFrame::Proposition(form, next_depth),
+                    form.span
+                );
+            } else {
+                let next_depth = deeper(depth, form.span)?;
+                schedule_frame!(frames, bound, ParseFrame::SortValue(form.span), form.span);
+                schedule_frame!(frames, bound, ParseFrame::Code(form, next_depth), form.span);
             }
         }
-        work_pop!(values).ok_or_else(|| exhausted(span))
-    })();
-    (meter, result)
+        ParseFrame::SortValue(at) => {
+            let ty = take_code!(values, at)?;
+            push_rewritten!(values, Rewritten::Sort(Sort::Value(ty)), bound, at)?;
+        }
+        ParseFrame::SortPremise(at) => {
+            let proof = take_prop!(values, at)?;
+            push_rewritten!(
+                values,
+                Rewritten::Sort(Sort::Premise(Box::new(proof))),
+                bound,
+                at
+            )?;
+        }
+        ParseFrame::PiAfterSort { name, body, depth } => {
+            let ty = take_sort!(values, body.span)?;
+            let index = context
+                .total
+                .checked_add(local.total)
+                .ok_or_else(|| exhausted(body.span))?;
+            // Each active binder belongs to a visited Pi; the derived frame
+            // cap is strictly above the source's maximum visited node count.
+            work_push!(local, Binder { name, sort: ty }, bound)
+                .map_err(|()| exhausted(body.span))?;
+            let next_depth = deeper(depth, body.span)?;
+            schedule_frame!(
+                frames,
+                bound,
+                ParseFrame::PiFinish(index, body.span),
+                body.span
+            );
+            schedule_frame!(
+                frames,
+                bound,
+                ParseFrame::Proposition(body, next_depth),
+                body.span
+            );
+        }
+        ParseFrame::PiFinish(index, at) => {
+            let body = take_prop!(values, at)?;
+            let ty = work_pop!(local).ok_or_else(|| exhausted(at))?.sort;
+            push_rewritten!(
+                values,
+                Rewritten::Proposition(Proposition::Pi(index, ty, Box::new(body))),
+                bound,
+                at
+            )?;
+        }
+        ParseFrame::Code(..) | ParseFrame::Proposition(..) | ParseFrame::EqAfterCode(..) => {
+            unreachable!()
+        }
+    }
+    Ok(())
+}
+/// Whether `sort` is a value of exactly `code`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn is_value_of(sort: &Sort, code: &Code) -> bool {
+    matches!(sort, Sort::Value(value) if value == code)
+}
+/// Whether `prop` is a dependent Pi proposition.
+fn is_pi(prop: &Proposition) -> bool {
+    matches!(prop, Proposition::Pi(..))
+}
+/// Whether `prop` is a dependent Pi proposition, with its size when it is.
+fn pi_goal_size(prop: &Proposition, bound: usize) -> (bool, Option<usize>) {
+    if is_pi(prop) {
+        (true, proposition_size(prop, bound))
+    } else {
+        (false, None)
+    }
+}
+/// The atom heading a list form, as
+/// `list(form).ok().and_then(|items| items.first()).and_then(|item| atom(item).ok())`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn list_head_atom(form: &Form) -> Option<&str> {
+    match list(form) {
+        Ok(items) => head_atom(items),
+        Err(_) => None,
+    }
 }
 #[expect(
     tigerstyle::fragile_exhaustive_enum_match,
@@ -1431,9 +1818,26 @@ enum LeanFrame<'a> {
     Code(&'a Code),
     Sort(&'a Sort),
     Proposition(&'a Proposition),
-    Text(&'static str),
+    Text(&'a str),
     Number(usize),
 }
+fn lean_text(root: LeanFrame<'_>, span: Span, bounds: TreeBounds) -> Result<String, Diagnostic> {
+    let mut pending = WorkStack::new();
+    work_push!(pending, root, bounds.frames).map_err(|()| exhausted(span))?;
+    // A small, constant initial allocation avoids reallocations for ordinary
+    // composite terms; it never reserves from attacker-controlled limits.
+    let mut output = String::with_capacity(64);
+    let mut outcome = Ok(());
+    while let Some(frame) = work_pop!(pending) {
+        outcome = lean_step(frame, &mut pending, &mut output, span, bounds);
+        if outcome.is_err() {
+            break;
+        }
+    }
+    outcome?;
+    Ok(output)
+}
+/// Render one frame: append its text or schedule its parts in print order.
 #[expect(
     tigerstyle::fragile_exhaustive_enum_match,
     reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
@@ -1446,18 +1850,27 @@ enum LeanFrame<'a> {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
-fn lean_text(root: LeanFrame<'_>, span: Span, bounds: TreeBounds) -> Result<String, Diagnostic> {
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the pending stack and output are the rendering's locally owned state, borrowed only for one loop-free step"
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; the step appends to the rendering's owned output buffer, which must stay the caller's String"
+)]
+fn lean_step<'a>(
+    frame: LeanFrame<'a>,
+    pending: &mut WorkStack<LeanFrame<'a>>,
+    output: &mut String,
+    span: Span,
+    bounds: TreeBounds,
+) -> Result<(), Diagnostic> {
     use core::fmt::Write;
-    let mut pending = WorkStack::new();
     macro_rules! push {
         ($frame:expr) => {
             work_push!(pending, $frame, bounds.frames).map_err(|()| exhausted(span))?
         };
     }
-    push!(root);
-    // A small, constant initial allocation avoids reallocations for ordinary
-    // composite terms; it never reserves from attacker-controlled limits.
-    let mut output = String::with_capacity(64);
     macro_rules! append {
         ($part:expr) => {{
             let part = $part;
@@ -1471,82 +1884,80 @@ fn lean_text(root: LeanFrame<'_>, span: Span, bounds: TreeBounds) -> Result<Stri
             output.push_str(part);
         }};
     }
-    while let Some(frame) = work_pop!(pending) {
-        match frame {
-            LeanFrame::Text(part) => append!(part),
-            LeanFrame::Number(index) => {
-                let digits = if index == 0 {
-                    1
-                } else {
-                    usize::try_from(index.ilog10())
-                        .map_err(|_| exhausted(span))?
-                        .checked_add(1)
-                        .ok_or_else(|| exhausted(span))?
-                };
-                if output
-                    .len()
-                    .checked_add(digits)
-                    .is_none_or(|len| len > bounds.bytes)
-                {
-                    return Err(exhausted(span));
-                }
-                write!(&mut output, "{index}").map_err(|_| exhausted(span))?;
+    match frame {
+        LeanFrame::Text(part) => append!(part),
+        LeanFrame::Number(index) => {
+            let digits = if index == 0 {
+                1
+            } else {
+                usize::try_from(index.ilog10())
+                    .map_err(|_| exhausted(span))?
+                    .checked_add(1)
+                    .ok_or_else(|| exhausted(span))?
+            };
+            if output
+                .len()
+                .checked_add(digits)
+                .is_none_or(|len| len > bounds.bytes)
+            {
+                return Err(exhausted(span));
             }
-            LeanFrame::Code(code) => match code {
-                Code::Unit => append!(".unit"),
-                Code::Bool => append!(".bool"),
-                Code::I64 => append!(".i64"),
-                Code::Text => append!(".text"),
-                Code::Variable(index) => {
-                    push!(LeanFrame::Number(*index));
-                    push!(LeanFrame::Text("v"));
-                }
-                Code::Pair(left, right) | Code::Sum(left, right) => {
-                    push!(LeanFrame::Text(")"));
-                    push!(LeanFrame::Code(right));
-                    push!(LeanFrame::Text(" "));
-                    push!(LeanFrame::Code(left));
-                    push!(LeanFrame::Text(if matches!(code, Code::Pair(..)) {
-                        "(.pair "
-                    } else {
-                        "(.sum "
-                    }));
-                }
-                Code::List(item) => {
-                    push!(LeanFrame::Text(")"));
-                    push!(LeanFrame::Code(item));
-                    push!(LeanFrame::Text("(.list "));
-                }
-            },
-            LeanFrame::Sort(sort) => match sort {
-                Sort::Codes => append!("PureTyCode"),
-                Sort::Value(code) => {
-                    push!(LeanFrame::Code(code));
-                    push!(LeanFrame::Text("El "));
-                }
-                Sort::Premise(prop) => push!(LeanFrame::Proposition(prop)),
-            },
-            LeanFrame::Proposition(prop) => match prop {
-                Proposition::Pi(index, sort, body) => {
-                    push!(LeanFrame::Text(")"));
-                    push!(LeanFrame::Proposition(body));
-                    push!(LeanFrame::Text("), "));
-                    push!(LeanFrame::Sort(sort));
-                    push!(LeanFrame::Text(" : "));
-                    push!(LeanFrame::Number(*index));
-                    push!(LeanFrame::Text("(∀ (v"));
-                }
-                Proposition::Eq(_, left, right) => {
-                    push!(LeanFrame::Number(*right));
-                    push!(LeanFrame::Text("v"));
-                    push!(LeanFrame::Text(" = "));
-                    push!(LeanFrame::Number(*left));
-                    push!(LeanFrame::Text("v"));
-                }
-            },
+            write!(output, "{index}").map_err(|_| exhausted(span))?;
         }
+        LeanFrame::Code(code) => match code {
+            Code::Unit => append!(".unit"),
+            Code::Bool => append!(".bool"),
+            Code::I64 => append!(".i64"),
+            Code::Text => append!(".text"),
+            Code::Variable(index) => {
+                push!(LeanFrame::Number(*index));
+                push!(LeanFrame::Text("v"));
+            }
+            Code::Pair(left, right) | Code::Sum(left, right) => {
+                push!(LeanFrame::Text(")"));
+                push!(LeanFrame::Code(right));
+                push!(LeanFrame::Text(" "));
+                push!(LeanFrame::Code(left));
+                push!(LeanFrame::Text(if matches!(code, Code::Pair(..)) {
+                    "(.pair "
+                } else {
+                    "(.sum "
+                }));
+            }
+            Code::List(item) => {
+                push!(LeanFrame::Text(")"));
+                push!(LeanFrame::Code(item));
+                push!(LeanFrame::Text("(.list "));
+            }
+        },
+        LeanFrame::Sort(sort) => match sort {
+            Sort::Codes => append!("PureTyCode"),
+            Sort::Value(code) => {
+                push!(LeanFrame::Code(code));
+                push!(LeanFrame::Text("El "));
+            }
+            Sort::Premise(prop) => push!(LeanFrame::Proposition(prop)),
+        },
+        LeanFrame::Proposition(prop) => match prop {
+            Proposition::Pi(index, sort, body) => {
+                push!(LeanFrame::Text(")"));
+                push!(LeanFrame::Proposition(body));
+                push!(LeanFrame::Text("), "));
+                push!(LeanFrame::Sort(sort));
+                push!(LeanFrame::Text(" : "));
+                push!(LeanFrame::Number(*index));
+                push!(LeanFrame::Text("(∀ (v"));
+            }
+            Proposition::Eq(_, left, right) => {
+                push!(LeanFrame::Number(*right));
+                push!(LeanFrame::Text("v"));
+                push!(LeanFrame::Text(" = "));
+                push!(LeanFrame::Number(*left));
+                push!(LeanFrame::Text("v"));
+            }
+        },
     }
-    Ok(output)
+    Ok(())
 }
 #[expect(
     tigerstyle::missing_const_fn,
@@ -1596,33 +2007,30 @@ enum ProofGoal<'a> {
     Borrowed(&'a Proposition),
     Owned(Proposition),
 }
-impl ProofGoal<'_> {
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
-    )]
-    fn as_ref(&self) -> &Proposition {
-        match self {
-            Self::Borrowed(goal) => goal,
-            Self::Owned(goal) => goal,
+// Apply `$body` to the proposition a goal stands for, inside each arm. The
+// pinned Aeneas refuses both a helper reading through `&ProofGoal` and a
+// reference joined out of the two arms; an owned goal borrowed in place, with
+// the use inside each arm, is accepted.
+macro_rules! with_goal {
+    ($goal:expr, |$prop:ident| $body:expr) => {
+        match &$goal {
+            ProofGoal::Borrowed($prop) => $body,
+            ProofGoal::Owned($prop) => $body,
         }
-    }
+    };
 }
 enum ProofSort<'a> {
     Borrowed(&'a Sort),
     Owned(Sort),
 }
-impl ProofSort<'_> {
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
-    )]
-    fn as_ref(&self) -> &Sort {
-        match self {
-            Self::Borrowed(sort) => sort,
-            Self::Owned(sort) => sort,
+// Apply `$body` to the sort a proof sort stands for, as `with_goal!`.
+macro_rules! with_sort {
+    ($sort:expr, |$value:ident| $body:expr) => {
+        match &$sort {
+            ProofSort::Borrowed($value) => $body,
+            ProofSort::Owned($value) => $body,
         }
-    }
+    };
 }
 enum ProofFrame<'a> {
     Infer(&'a Form, u32),
@@ -1649,17 +2057,7 @@ enum ProofFrame<'a> {
         index: usize,
         expected: ProofSort<'a>,
     },
-    SubstEquation {
-        term: &'a Form,
-        goal: ProofGoal<'a>,
-        code: Code,
-        name: String,
-        motive: &'a Form,
-        binder_span: Span,
-        evidence: &'a Form,
-        premise: &'a Form,
-        depth: u32,
-    },
+    SubstEquation(SubstEquation<'a>),
     SubstPremise {
         term: &'a Form,
         code: Code,
@@ -1668,10 +2066,626 @@ enum ProofFrame<'a> {
         equality_lean: String,
     },
 }
+/// A `subst` proof waiting for its equality evidence.
+struct SubstEquation<'a> {
+    term: &'a Form,
+    goal: ProofGoal<'a>,
+    code: Code,
+    name: String,
+    motive: &'a Form,
+    binder_span: Span,
+    evidence: &'a Form,
+    premise: &'a Form,
+    depth: u32,
+}
 enum ProofValue {
     Inferred(Proposition, String),
     Checked(String),
 }
+fn proof_walk<'a, 'm>(
+    root: ProofFrame<'a>,
+    available: &[Available],
+    mut meter: Meter<'m>,
+    span: Span,
+) -> Transition<'m, ProofValue> {
+    let result = proof_tree(root, available, &mut meter, span);
+    (meter, result)
+}
+/// The owned state of one `proof_walk`.
+struct ProofWalk<'a> {
+    frames: WorkStack<ProofFrame<'a>>,
+    context: WorkStack<Binder>,
+    completed: Option<ProofValue>,
+    failure: Option<Diagnostic>,
+}
+/// Check `root` in walk order. After a refusal the walk still unwinds every
+/// pending intro continuation, whose charge may replace that refusal.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the meter is the caller's owned transition state, written back through this borrow on every path"
+)]
+fn proof_tree<'a>(
+    root: ProofFrame<'a>,
+    available: &[Available],
+    meter: &mut Meter<'_>,
+    span: Span,
+) -> Result<ProofValue, Diagnostic> {
+    let bound = meter.tree_bounds.frames;
+    let mut frames = WorkStack::new();
+    work_push!(frames, root, bound).map_err(|()| exhausted(span))?;
+    let mut walk = ProofWalk {
+        frames,
+        context: WorkStack::new(),
+        completed: None,
+        failure: None,
+    };
+    let mut escaped = None;
+    while let Some(frame) = walk.frames.pop_bounded() {
+        // An intro charges its wrapper even when its body failed. The charge
+        // may itself fail and override that earlier diagnostic, so unwind all
+        // pending intro continuations instead of returning immediately.
+        if let ProofFrame::IntroFinish {
+            term,
+            index,
+            expected,
+        } = frame
+        {
+            if let Err(error) = finish_intro(term, index, expected, &mut walk, meter) {
+                escaped = Some(error);
+                break;
+            }
+            continue;
+        }
+        if walk.failure.is_some() {
+            continue;
+        }
+        if let Err(error) = proof_step(frame, &mut walk, available, meter) {
+            walk.failure = Some(error);
+            walk.completed = None;
+        }
+    }
+    if let Some(error) = escaped {
+        return Err(error);
+    }
+    if let Some(error) = walk.failure {
+        return Err(error);
+    }
+    walk.completed.ok_or_else(|| exhausted(span))
+}
+/// Close one intro: pop its binder, charge its wrapper even after a refusal,
+/// and wrap the checked body. An `Err` ends the whole walk at once.
+#[expect(
+    tigerstyle::foreign_enum_catch_all,
+    reason = "Owner: noble-contracts; the foreign enum is matched only to translate its known variants, and a new variant is a deliberate fail-closed default"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the walk state and meter are locally owned by the proof walk, borrowed only for one loop-free continuation"
+)]
+fn finish_intro(
+    term: &Form,
+    index: usize,
+    expected: ProofSort<'_>,
+    walk: &mut ProofWalk<'_>,
+    meter: &mut Meter<'_>,
+) -> Result<(), Diagnostic> {
+    let ProofWalk {
+        context,
+        completed,
+        failure,
+        ..
+    } = walk;
+    work_pop!(context);
+    let body = if failure.is_none() {
+        match completed.take() {
+            Some(ProofValue::Checked(body)) => Some(body),
+            _ => {
+                *failure = Some(exhausted(term.span));
+                None
+            }
+        }
+    } else {
+        None
+    };
+    let body_bytes = match &body {
+        Some(body) => body.len(),
+        None => 0,
+    };
+    match with_sort!(expected, |sort| charge_intro(
+        sort, body_bytes, term.span, meter
+    )) {
+        Err(error) => *failure = Some(error),
+        Ok(sort_text) => {
+            if failure.is_none() {
+                let body = body.ok_or_else(|| exhausted(term.span))?;
+                *completed = Some(ProofValue::Checked(format!(
+                    "(fun (v{index} : {sort_text}) => {body})"
+                )));
+            }
+        }
+    }
+    Ok(())
+}
+/// Charge one intro wrapper: its rendered binder sort plus its body text.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the meter is the caller's owned transition state, written back through this borrow on every path"
+)]
+fn charge_intro(
+    expected: &Sort,
+    body_bytes: usize,
+    span: Span,
+    meter: &mut Meter<'_>,
+) -> Result<String, Diagnostic> {
+    let sort_text = lean_sort(expected, span, meter.tree_bounds)?;
+    #[expect(
+        tigerstyle::numeric_units,
+        reason = "Owner: noble-contracts; the constant is a count of source elements, and the name states its unit at every use site through the surrounding type and call"
+    )]
+    let size = body_bytes
+        .checked_add(sort_text.len())
+        .ok_or_else(|| exhausted(span))?;
+    advance!(*meter, meter.charge(size, span));
+    Ok(sort_text)
+}
+/// The last available proof named `name`, as `available.iter().rev().find(..)`.
+fn last_available<'a>(available: &'a [Available], name: &str) -> Option<&'a Available> {
+    let mut remaining = available.len();
+    let mut found = None;
+    while found.is_none() && remaining > 0 {
+        remaining -= 1;
+        if is_available_named(&available[remaining], name) {
+            found = Some(remaining);
+        }
+    }
+    match found {
+        Some(index) => Some(&available[index]),
+        None => None,
+    }
+}
+/// Whether the available proof `item` is named `name`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn is_available_named(item: &Available, name: &str) -> bool {
+    item.name == name
+}
+// Take the proposition and Lean text the last frame inferred into `$completed`.
+macro_rules! take_inferred {
+    ($completed:ident,$at:expr) => {
+        match $completed.take() {
+            Some(ProofValue::Inferred(goal, lean)) => Ok((goal, lean)),
+            Some(ProofValue::Checked(_)) | None => Err(exhausted($at)),
+        }
+    };
+}
+// Take the Lean text the last frame checked into `$completed`.
+macro_rules! take_checked {
+    ($completed:ident,$at:expr) => {
+        match $completed.take() {
+            Some(ProofValue::Checked(lean)) => Ok(lean),
+            Some(ProofValue::Inferred(..)) | None => Err(exhausted($at)),
+        }
+    };
+}
+/// Check one proof frame, scheduling its continuations in walk order.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the walk state and meter are locally owned by the proof walk, borrowed only for one loop-free step"
+)]
+fn proof_step<'a>(
+    frame: ProofFrame<'a>,
+    walk: &mut ProofWalk<'a>,
+    available: &[Available],
+    meter: &mut Meter<'_>,
+) -> Result<(), Diagnostic> {
+    match frame {
+        ProofFrame::Infer(term, depth) => infer_step(term, depth, walk, available, meter),
+        ProofFrame::Check(term, goal, depth) => check_step(term, goal, depth, walk, meter),
+        ProofFrame::SubstEquation(equation) => subst_equation_step(equation, walk, meter),
+        frame => continuation_step(frame, walk, meter),
+    }
+}
+/// Infer the proposition a `use`, `apply` or `refl` proof term establishes.
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the walk state and meter are locally owned by the proof walk, borrowed only for one loop-free step"
+)]
+fn infer_step<'a>(
+    term: &'a Form,
+    depth: u32,
+    walk: &mut ProofWalk<'a>,
+    available: &[Available],
+    meter: &mut Meter<'_>,
+) -> Result<(), Diagnostic> {
+    let bound = meter.tree_bounds.frames;
+    let ProofWalk {
+        frames,
+        context,
+        completed,
+        ..
+    } = walk;
+    advance!(*meter, meter.visit(depth, term.span));
+    if let Ok(args) = operation(term, "use", 1) {
+        let name = atom(&args[0])?;
+        if let Some((index, sort)) = stack_binder(context, name) {
+            let Sort::Premise(proof) = sort else {
+                return Err(reject(term.span, "use does not name a proof premise"));
+            };
+            *completed = Some(ProofValue::Inferred((**proof).clone(), format!("v{index}")));
+            return Ok(());
+        }
+        let dependency = last_available(available, name).ok_or_else(|| {
+            reject(
+                term.span,
+                "unresolved, private, forward or cyclic proof use",
+            )
+        })?;
+        advance!(*meter, meter.charge(dependency.lean_term.len(), term.span));
+        advance!(
+            *meter,
+            meter.substitute(
+                proposition_size(&dependency.goal, bound).ok_or_else(|| exhausted(term.span))?,
+                term.span
+            )
+        );
+        *completed = Some(ProofValue::Inferred(
+            shifted_prop(&dependency.goal, context.total, term.span, bound)?,
+            dependency.lean_term.clone(),
+        ));
+        return Ok(());
+    }
+    if let Ok(args) = operation(term, "apply", 2) {
+        let child_depth = deeper(depth, args[0].span)?;
+        schedule_frame!(
+            frames,
+            bound,
+            ProofFrame::ApplyFunction {
+                term,
+                argument: &args[1],
+                depth
+            },
+            term.span
+        );
+        schedule_frame!(
+            frames,
+            bound,
+            ProofFrame::Infer(&args[0], child_depth),
+            args[0].span
+        );
+        return Ok(());
+    }
+    if let Ok(args) = operation(term, "refl", 1) {
+        let name = atom(&args[0])?;
+        let (index, sort) = stack_binder(context, name)
+            .ok_or_else(|| reject(args[0].span, "unbound refl value"))?;
+        let Sort::Value(code) = sort else {
+            return Err(reject(term.span, "refl operand is not a total value"));
+        };
+        *completed = Some(ProofValue::Inferred(
+            Proposition::Eq(code.clone(), index, index),
+            format!("(Eq.refl v{index})"),
+        ));
+        return Ok(());
+    }
+    Err(reject(term.span, "proof term has no inferable proposition"))
+}
+/// Check `term` against `goal`: an `intro` for a Pi goal, a `subst`, or an
+/// inferred proposition compared with the goal once it is inferred.
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the walk state and meter are locally owned by the proof walk, borrowed only for one loop-free step"
+)]
+fn check_step<'a>(
+    term: &'a Form,
+    goal: ProofGoal<'a>,
+    depth: u32,
+    walk: &mut ProofWalk<'a>,
+    meter: &mut Meter<'_>,
+) -> Result<(), Diagnostic> {
+    let bound = meter.tree_bounds.frames;
+    let ProofWalk {
+        frames, context, ..
+    } = walk;
+    advance!(*meter, meter.visit(depth, term.span));
+    // The size is only charged on the intro path below; it
+    // is read here, once, because the goal is still whole.
+    let (is_pi_goal, goal_size) = with_goal!(goal, |prop| pi_goal_size(prop, bound));
+    if is_pi_goal {
+        let args = match operation(term, "intro", 2) {
+            Ok(args) => args,
+            Err(_) => {
+                let child_depth = deeper(depth, term.span)?;
+                schedule_frame!(
+                    frames,
+                    bound,
+                    ProofFrame::AfterInfer {
+                        term,
+                        goal,
+                        pi: true
+                    },
+                    term.span
+                );
+                schedule_frame!(
+                    frames,
+                    bound,
+                    ProofFrame::Infer(term, child_depth),
+                    term.span
+                );
+                return Ok(());
+            }
+        };
+        let binder_form = list(&args[0])?;
+        if binder_form.len() != 2 {
+            return Err(reject(args[0].span, "intro needs a typed binder"));
+        }
+        let name = atom(&binder_form[0])?.to_string();
+        let actual = advance!(
+            *meter,
+            sort(
+                &binder_form[1],
+                context,
+                *meter,
+                deeper(depth, binder_form[1].span)?
+            )
+        );
+        advance!(
+            *meter,
+            meter.normalize(
+                goal_size.ok_or_else(|| exhausted(args[0].span))?,
+                args[0].span
+            )
+        );
+        let (index, expected, rest) = match goal {
+            ProofGoal::Borrowed(Proposition::Pi(index, expected, rest)) => (
+                *index,
+                ProofSort::Borrowed(expected),
+                ProofGoal::Borrowed(rest),
+            ),
+            ProofGoal::Owned(Proposition::Pi(index, expected, rest)) => {
+                (index, ProofSort::Owned(expected), ProofGoal::Owned(*rest))
+            }
+            _ => return Err(exhausted(term.span)),
+        };
+        let is_expected_sort = with_sort!(expected, |sort| sort_equal(&actual, sort));
+        if !is_expected_sort || index != context.total {
+            return Err(reject(args[0].span, "intro binder type differs from goal"));
+        }
+        let body_depth = deeper(depth, args[1].span)?;
+        work_push!(context, Binder { name, sort: actual }, bound)
+            .map_err(|()| exhausted(args[1].span))?;
+        schedule_frame!(
+            frames,
+            bound,
+            ProofFrame::IntroFinish {
+                term,
+                index,
+                expected
+            },
+            term.span
+        );
+        schedule_frame!(
+            frames,
+            bound,
+            ProofFrame::Check(&args[1], rest, body_depth),
+            args[1].span
+        );
+        return Ok(());
+    }
+    if let Ok(parts) = operation(term, "subst", 3) {
+        let motive = operation(&parts[0], "motive", 2)?;
+        let binder_form = list(&motive[0])?;
+        if binder_form.len() != 2 {
+            return Err(reject(
+                motive[0].span,
+                "subst motive needs one typed value binder",
+            ));
+        }
+        let name = atom(&binder_form[0])?.to_string();
+        let Sort::Value(code) = advance!(
+            *meter,
+            sort(
+                &binder_form[1],
+                context,
+                *meter,
+                deeper(depth, binder_form[1].span)?
+            )
+        ) else {
+            return Err(reject(
+                motive[0].span,
+                "subst motive binder must be a total value",
+            ));
+        };
+        let child_depth = deeper(depth, parts[1].span)?;
+        schedule_frame!(
+            frames,
+            bound,
+            ProofFrame::SubstEquation(SubstEquation {
+                term,
+                goal,
+                code,
+                name,
+                motive: &motive[1],
+                binder_span: motive[0].span,
+                evidence: &parts[1],
+                premise: &parts[2],
+                depth,
+            }),
+            term.span
+        );
+        schedule_frame!(
+            frames,
+            bound,
+            ProofFrame::Infer(&parts[1], child_depth),
+            parts[1].span
+        );
+        return Ok(());
+    }
+    let child_depth = deeper(depth, term.span)?;
+    schedule_frame!(
+        frames,
+        bound,
+        ProofFrame::AfterInfer {
+            term,
+            goal,
+            pi: false
+        },
+        term.span
+    );
+    schedule_frame!(
+        frames,
+        bound,
+        ProofFrame::Infer(term, child_depth),
+        term.span
+    );
+    Ok(())
+}
+/// Close a `subst` once its equality evidence is inferred: check the motive,
+/// substitute both sides, compare with the goal and schedule the premise.
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the walk state and meter are locally owned by the proof walk, borrowed only for one loop-free step"
+)]
+fn subst_equation_step<'a>(
+    equation: SubstEquation<'a>,
+    walk: &mut ProofWalk<'a>,
+    meter: &mut Meter<'_>,
+) -> Result<(), Diagnostic> {
+    let bound = meter.tree_bounds.frames;
+    let ProofWalk {
+        frames,
+        context,
+        completed,
+        ..
+    } = walk;
+    let SubstEquation {
+        term,
+        goal,
+        code,
+        name,
+        motive,
+        binder_span,
+        evidence,
+        premise,
+        depth,
+    } = equation;
+    let (equation, equality_lean) = take_inferred!(completed, evidence.span)?;
+    let Proposition::Eq(equation_code, left, right) = equation else {
+        return Err(reject(evidence.span, "subst requires equality evidence"));
+    };
+    advance!(
+        *meter,
+        meter.normalize(
+            code_size(&code, bound).ok_or_else(|| exhausted(evidence.span))?,
+            evidence.span
+        )
+    );
+    if equation_code != code {
+        return Err(reject(binder_span, "subst motive has wrong equality type"));
+    }
+    let index = context.total;
+    let body_depth = deeper(depth, motive.span)?;
+    work_push!(
+        context,
+        Binder {
+            name,
+            sort: Sort::Value(code.clone())
+        },
+        bound
+    )
+    .map_err(|()| exhausted(motive.span))?;
+    let (next, body) = proposition(motive, context, *meter, body_depth);
+    *meter = next;
+    work_pop!(context);
+    let body = body?;
+    if !matches!(body, Proposition::Eq(..)) {
+        return Err(reject(
+            motive.span,
+            "subst motive must be a total Eq proposition",
+        ));
+    }
+    #[expect(
+        tigerstyle::numeric_units,
+        reason = "Owner: noble-contracts; the constant is a count of source elements, and the name states its unit at every use site through the surrounding type and call"
+    )]
+    let size = proposition_size(&body, bound)
+        .and_then(|size| size.checked_mul(2))
+        .ok_or_else(|| exhausted(term.span))?;
+    advance!(*meter, meter.substitute(size, term.span));
+    let before = replace_prop(&body, index, &Argument::Value(left), term.span, bound)?;
+    let after = replace_prop(&body, index, &Argument::Value(right), term.span, bound)?;
+    advance!(
+        *meter,
+        meter.normalize(
+            with_goal!(goal, |prop| proposition_size(prop, bound))
+                .ok_or_else(|| exhausted(term.span))?,
+            term.span
+        )
+    );
+    let is_goal = with_goal!(goal, |prop| proposition_equal(&after, prop));
+    if !is_goal {
+        return Err(reject(term.span, "subst result differs from expected goal"));
+    }
+    let child_depth = deeper(depth, premise.span)?;
+    schedule_frame!(
+        frames,
+        bound,
+        ProofFrame::SubstPremise {
+            term,
+            code,
+            body,
+            index,
+            equality_lean
+        },
+        term.span
+    );
+    schedule_frame!(
+        frames,
+        bound,
+        ProofFrame::Check(premise, ProofGoal::Owned(before), child_depth),
+        premise.span
+    );
+    Ok(())
+}
+/// Resume a frame waiting on its completed child: finish an `apply`, compare
+/// an inferred proposition with its goal, or wrap a checked `subst` premise.
 #[expect(
     tigerstyle::fragile_exhaustive_enum_match,
     reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
@@ -1685,581 +2699,206 @@ enum ProofValue {
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
 #[expect(
-    tigerstyle::foreign_enum_catch_all,
-    reason = "Owner: noble-contracts; the foreign enum is matched only to translate its known variants, and a new variant is a deliberate fail-closed default"
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the walk state and meter are locally owned by the proof walk, borrowed only for one loop-free step"
 )]
-fn proof_walk<'a, 'm>(
-    root: ProofFrame<'a>,
-    available: &[Available],
-    mut meter: Meter<'m>,
-    span: Span,
-) -> Transition<'m, ProofValue> {
-    let result = (|| -> Result<ProofValue, Diagnostic> {
-        let bound = meter.tree_bounds.frames;
-        let mut frames = WorkStack::new();
-        let mut context = WorkStack::new();
-        let mut completed = None;
-        let mut failure = None;
-        macro_rules! schedule {
-            ($frame:expr,$at:expr) => {
-                work_push!(frames, $frame, bound).map_err(|()| exhausted($at))?
+fn continuation_step<'a>(
+    frame: ProofFrame<'a>,
+    walk: &mut ProofWalk<'a>,
+    meter: &mut Meter<'_>,
+) -> Result<(), Diagnostic> {
+    let bound = meter.tree_bounds.frames;
+    let ProofWalk {
+        frames,
+        context,
+        completed,
+        ..
+    } = walk;
+    macro_rules! finish_apply {
+        ($term:expr,$depth:expr,$body:expr,$index:expr,$argument:expr,$lowered:expr,$expression:expr) => {{
+            let (term, depth, body, index, argument, lowered, expression) = (
+                $term,
+                $depth,
+                $body,
+                $index,
+                $argument,
+                $lowered,
+                $expression,
+            );
+            let step = usize::try_from(depth)
+                .ok()
+                .and_then(|value| value.checked_add(1))
+                .ok_or_else(|| exhausted(term.span))?;
+            advance!(*meter, meter.charge(step, term.span));
+            advance!(
+                *meter,
+                meter.charge(
+                    lowered
+                        .len()
+                        .checked_add(expression.len())
+                        .ok_or_else(|| exhausted(term.span))?,
+                    term.span
+                )
+            );
+            advance!(
+                *meter,
+                meter.substitute(
+                    proposition_size(&body, bound).ok_or_else(|| exhausted(term.span))?,
+                    term.span
+                )
+            );
+            *completed = Some(ProofValue::Inferred(
+                replace_prop(&body, index, &argument, term.span, bound)?,
+                format!("({lowered} {expression})"),
+            ));
+        }};
+    }
+    match frame {
+        ProofFrame::ApplyFunction {
+            term,
+            argument,
+            depth,
+        } => {
+            let (function, lowered) = take_inferred!(completed, term.span)?;
+            let Proposition::Pi(index, domain, body) = function else {
+                return Err(reject(term.span, "apply requires dependent Pi proof"));
             };
-        }
-        macro_rules! take_inferred {
-            ($at:expr) => {
-                match completed.take() {
-                    Some(ProofValue::Inferred(goal, lean)) => Ok((goal, lean)),
-                    Some(ProofValue::Checked(_)) | None => Err(exhausted($at)),
-                }
-            };
-        }
-        macro_rules! take_checked {
-            ($at:expr) => {
-                match completed.take() {
-                    Some(ProofValue::Checked(lean)) => Ok(lean),
-                    Some(ProofValue::Inferred(..)) | None => Err(exhausted($at)),
-                }
-            };
-        }
-        macro_rules! finish_apply {
-            ($term:expr,$depth:expr,$body:expr,$index:expr,$argument:expr,$lowered:expr,$expression:expr) => {{
-                let (term, depth, body, index, argument, lowered, expression) = (
-                    $term,
-                    $depth,
-                    $body,
-                    $index,
-                    $argument,
-                    $lowered,
-                    $expression,
-                );
-                let step = usize::try_from(depth)
-                    .ok()
-                    .and_then(|value| value.checked_add(1))
-                    .ok_or_else(|| exhausted(term.span))?;
-                advance!(meter, meter.charge(step, term.span));
-                advance!(
-                    meter,
-                    meter.charge(
-                        lowered
-                            .len()
-                            .checked_add(expression.len())
-                            .ok_or_else(|| exhausted(term.span))?,
-                        term.span
-                    )
-                );
-                advance!(
-                    meter,
-                    meter.substitute(
-                        proposition_size(&body, bound).ok_or_else(|| exhausted(term.span))?,
-                        term.span
-                    )
-                );
-                completed = Some(ProofValue::Inferred(
-                    replace_prop(&body, index, &argument, term.span, bound)?,
-                    format!("({lowered} {expression})"),
-                ));
-            }};
-        }
-        schedule!(root, span);
-        while let Some(frame) = work_pop!(frames) {
-            // An intro charges its wrapper even when its body failed. The charge
-            // may itself fail and override that earlier diagnostic, so unwind all
-            // pending intro continuations instead of returning immediately.
-            if let ProofFrame::IntroFinish {
-                term,
-                index,
-                expected,
-            } = frame
-            {
-                work_pop!(context);
-                let body = if failure.is_none() {
-                    match completed.take() {
-                        Some(ProofValue::Checked(body)) => Some(body),
-                        _ => {
-                            failure = Some(exhausted(term.span));
-                            None
-                        }
-                    }
-                } else {
-                    None
-                };
-                let charged = (|| {
-                    let sort_text = lean_sort(expected.as_ref(), term.span, meter.tree_bounds)?;
-                    #[expect(
-                        tigerstyle::numeric_units,
-                        reason = "Owner: noble-contracts; the constant is a count of source elements, and the name states its unit at every use site through the surrounding type and call"
-                    )]
-                    let size = body
-                        .as_ref()
-                        .map_or(0, String::len)
-                        .checked_add(sort_text.len())
-                        .ok_or_else(|| exhausted(term.span))?;
-                    advance!(meter, meter.charge(size, term.span));
-                    Ok::<_, Diagnostic>(sort_text)
-                })();
-                match charged {
-                    Err(error) => failure = Some(error),
-                    Ok(sort_text) if failure.is_none() => {
-                        let body = body.ok_or_else(|| exhausted(term.span))?;
-                        completed = Some(ProofValue::Checked(format!(
-                            "(fun (v{index} : {sort_text}) => {body})"
-                        )));
-                    }
-                    Ok(_) => {}
-                }
-                continue;
+            if index != context.total {
+                return Err(reject(term.span, "apply binder scope mismatch"));
             }
-            if failure.is_some() {
-                continue;
-            }
-            let step = (|| -> Result<(), Diagnostic> {
-                match frame {
-                    ProofFrame::Infer(term, depth) => {
-                        advance!(meter, meter.visit(depth, term.span));
-                        if let Ok(args) = operation(term, "use", 1) {
-                            let name = atom(&args[0])?;
-                            if let Some((index, sort)) = stack_binder(&context, name) {
-                                let Sort::Premise(proof) = sort else {
-                                    return Err(reject(
-                                        term.span,
-                                        "use does not name a proof premise",
-                                    ));
-                                };
-                                completed = Some(ProofValue::Inferred(
-                                    (**proof).clone(),
-                                    format!("v{index}"),
-                                ));
-                                return Ok(());
-                            }
-                            let dependency = available
-                                .iter()
-                                .rev()
-                                .find(|item| item.name == name)
-                                .ok_or_else(|| {
-                                    reject(
-                                        term.span,
-                                        "unresolved, private, forward or cyclic proof use",
-                                    )
-                                })?;
-                            advance!(meter, meter.charge(dependency.lean_term.len(), term.span));
-                            advance!(
-                                meter,
-                                meter.substitute(
-                                    proposition_size(&dependency.goal, bound)
-                                        .ok_or_else(|| exhausted(term.span))?,
-                                    term.span
-                                )
-                            );
-                            completed = Some(ProofValue::Inferred(
-                                shifted_prop(&dependency.goal, context.total, term.span, bound)?,
-                                dependency.lean_term.clone(),
-                            ));
-                            return Ok(());
-                        }
-                        if let Ok(args) = operation(term, "apply", 2) {
-                            let child_depth = deeper(depth, args[0].span)?;
-                            schedule!(
-                                ProofFrame::ApplyFunction {
-                                    term,
-                                    argument: &args[1],
-                                    depth
-                                },
-                                term.span
-                            );
-                            schedule!(ProofFrame::Infer(&args[0], child_depth), args[0].span);
-                            return Ok(());
-                        }
-                        if let Ok(args) = operation(term, "refl", 1) {
-                            let name = atom(&args[0])?;
-                            let (index, sort) = stack_binder(&context, name)
-                                .ok_or_else(|| reject(args[0].span, "unbound refl value"))?;
-                            let Sort::Value(code) = sort else {
-                                return Err(reject(term.span, "refl operand is not a total value"));
-                            };
-                            completed = Some(ProofValue::Inferred(
-                                Proposition::Eq(code.clone(), index, index),
-                                format!("(Eq.refl v{index})"),
-                            ));
-                            return Ok(());
-                        }
-                        return Err(reject(term.span, "proof term has no inferable proposition"));
-                    }
-                    ProofFrame::ApplyFunction {
+            match domain {
+                Sort::Codes => {
+                    let ty = advance!(
+                        *meter,
+                        code(argument, context, *meter, deeper(depth, argument.span)?)
+                    );
+                    let expression = lean_code(&ty, argument.span, meter.tree_bounds)?;
+                    finish_apply!(
                         term,
-                        argument,
                         depth,
-                    } => {
-                        let (function, lowered) = take_inferred!(term.span)?;
-                        let Proposition::Pi(index, domain, body) = function else {
-                            return Err(reject(term.span, "apply requires dependent Pi proof"));
-                        };
-                        if index != context.total {
-                            return Err(reject(term.span, "apply binder scope mismatch"));
-                        }
-                        match domain {
-                            Sort::Codes => {
-                                let ty = advance!(
-                                    meter,
-                                    code(argument, &context, meter, deeper(depth, argument.span)?)
-                                );
-                                let expression = lean_code(&ty, argument.span, meter.tree_bounds)?;
-                                finish_apply!(
-                                    term,
-                                    depth,
-                                    body,
-                                    index,
-                                    Argument::Code(ty),
-                                    lowered,
-                                    expression
-                                );
-                            }
-                            Sort::Value(expected) => {
-                                let name = atom(argument)?;
-                                let (value, sort) =
-                                    stack_binder(&context, name).ok_or_else(|| {
-                                        reject(argument.span, "apply value is unbound")
-                                    })?;
-                                advance!(
-                                    meter,
-                                    meter.normalize(
-                                        code_size(&expected, bound)
-                                            .ok_or_else(|| exhausted(argument.span))?,
-                                        argument.span
-                                    )
-                                );
-                                if sort != &Sort::Value(expected) {
-                                    return Err(reject(
-                                        argument.span,
-                                        "apply value has wrong code",
-                                    ));
-                                }
-                                finish_apply!(
-                                    term,
-                                    depth,
-                                    body,
-                                    index,
-                                    Argument::Value(value),
-                                    lowered,
-                                    format!("v{value}")
-                                );
-                            }
-                            Sort::Premise(expected) => {
-                                let child_depth = deeper(depth, argument.span)?;
-                                schedule!(
-                                    ProofFrame::ApplyPremise {
-                                        term,
-                                        body,
-                                        index,
-                                        lowered,
-                                        depth
-                                    },
-                                    term.span
-                                );
-                                schedule!(
-                                    ProofFrame::Check(
-                                        argument,
-                                        ProofGoal::Owned(*expected),
-                                        child_depth
-                                    ),
-                                    argument.span
-                                );
-                            }
-                        }
-                    }
-                    ProofFrame::ApplyPremise {
-                        term,
                         body,
                         index,
+                        Argument::Code(ty),
                         lowered,
+                        expression
+                    );
+                }
+                Sort::Value(expected) => {
+                    let name = atom(argument)?;
+                    let (value, sort) = stack_binder(context, name)
+                        .ok_or_else(|| reject(argument.span, "apply value is unbound"))?;
+                    advance!(
+                        *meter,
+                        meter.normalize(
+                            code_size(&expected, bound).ok_or_else(|| exhausted(argument.span))?,
+                            argument.span
+                        )
+                    );
+                    if sort != &Sort::Value(expected) {
+                        return Err(reject(argument.span, "apply value has wrong code"));
+                    }
+                    finish_apply!(
+                        term,
                         depth,
-                    } => {
-                        let expression = take_checked!(term.span)?;
-                        finish_apply!(
+                        body,
+                        index,
+                        Argument::Value(value),
+                        lowered,
+                        format!("v{value}")
+                    );
+                }
+                Sort::Premise(expected) => {
+                    let child_depth = deeper(depth, argument.span)?;
+                    schedule_frame!(
+                        frames,
+                        bound,
+                        ProofFrame::ApplyPremise {
                             term,
-                            depth,
                             body,
                             index,
-                            Argument::Premise,
                             lowered,
-                            expression
-                        );
-                    }
-                    ProofFrame::Check(term, goal, depth) => {
-                        advance!(meter, meter.visit(depth, term.span));
-                        if matches!(goal.as_ref(), Proposition::Pi(..)) {
-                            let args = match operation(term, "intro", 2) {
-                                Ok(args) => args,
-                                Err(_) => {
-                                    let child_depth = deeper(depth, term.span)?;
-                                    schedule!(
-                                        ProofFrame::AfterInfer {
-                                            term,
-                                            goal,
-                                            pi: true
-                                        },
-                                        term.span
-                                    );
-                                    schedule!(ProofFrame::Infer(term, child_depth), term.span);
-                                    return Ok(());
-                                }
-                            };
-                            let binder_form = list(&args[0])?;
-                            if binder_form.len() != 2 {
-                                return Err(reject(args[0].span, "intro needs a typed binder"));
-                            }
-                            let name = atom(&binder_form[0])?.to_string();
-                            let actual = advance!(
-                                meter,
-                                sort(
-                                    &binder_form[1],
-                                    &context,
-                                    meter,
-                                    deeper(depth, binder_form[1].span)?
-                                )
-                            );
-                            advance!(
-                                meter,
-                                meter.normalize(
-                                    proposition_size(goal.as_ref(), bound)
-                                        .ok_or_else(|| exhausted(args[0].span))?,
-                                    args[0].span
-                                )
-                            );
-                            let (index, expected, rest) = match goal {
-                                ProofGoal::Borrowed(Proposition::Pi(index, expected, rest)) => (
-                                    *index,
-                                    ProofSort::Borrowed(expected),
-                                    ProofGoal::Borrowed(rest),
-                                ),
-                                ProofGoal::Owned(Proposition::Pi(index, expected, rest)) => {
-                                    (index, ProofSort::Owned(expected), ProofGoal::Owned(*rest))
-                                }
-                                _ => return Err(exhausted(term.span)),
-                            };
-                            if &actual != expected.as_ref() || index != context.total {
-                                return Err(reject(
-                                    args[0].span,
-                                    "intro binder type differs from goal",
-                                ));
-                            }
-                            let body_depth = deeper(depth, args[1].span)?;
-                            work_push!(context, Binder { name, sort: actual }, bound)
-                                .map_err(|()| exhausted(args[1].span))?;
-                            schedule!(
-                                ProofFrame::IntroFinish {
-                                    term,
-                                    index,
-                                    expected
-                                },
-                                term.span
-                            );
-                            schedule!(ProofFrame::Check(&args[1], rest, body_depth), args[1].span);
-                            return Ok(());
-                        }
-                        if let Ok(parts) = operation(term, "subst", 3) {
-                            let motive = operation(&parts[0], "motive", 2)?;
-                            let binder_form = list(&motive[0])?;
-                            if binder_form.len() != 2 {
-                                return Err(reject(
-                                    motive[0].span,
-                                    "subst motive needs one typed value binder",
-                                ));
-                            }
-                            let name = atom(&binder_form[0])?.to_string();
-                            let Sort::Value(code) = advance!(
-                                meter,
-                                sort(
-                                    &binder_form[1],
-                                    &context,
-                                    meter,
-                                    deeper(depth, binder_form[1].span)?
-                                )
-                            ) else {
-                                return Err(reject(
-                                    motive[0].span,
-                                    "subst motive binder must be a total value",
-                                ));
-                            };
-                            let child_depth = deeper(depth, parts[1].span)?;
-                            schedule!(
-                                ProofFrame::SubstEquation {
-                                    term,
-                                    goal,
-                                    code,
-                                    name,
-                                    motive: &motive[1],
-                                    binder_span: motive[0].span,
-                                    evidence: &parts[1],
-                                    premise: &parts[2],
-                                    depth,
-                                },
-                                term.span
-                            );
-                            schedule!(ProofFrame::Infer(&parts[1], child_depth), parts[1].span);
-                            return Ok(());
-                        }
-                        {
-                            let child_depth = deeper(depth, term.span)?;
-                            schedule!(
-                                ProofFrame::AfterInfer {
-                                    term,
-                                    goal,
-                                    pi: false
-                                },
-                                term.span
-                            );
-                            schedule!(ProofFrame::Infer(term, child_depth), term.span);
-                        }
-                    }
-                    ProofFrame::AfterInfer { term, goal, pi } => {
-                        let (inferred, lowered) = take_inferred!(term.span)?;
-                        advance!(
-                            meter,
-                            meter.normalize(
-                                proposition_size(goal.as_ref(), bound)
-                                    .ok_or_else(|| exhausted(term.span))?,
-                                term.span
-                            )
-                        );
-                        if inferred != *goal.as_ref() {
-                            let reason = if pi {
-                                "inferred proof does not match dependent Pi goal"
-                            } else {
-                                "proof does not establish exact expected equality"
-                            };
-                            return Err(reject(term.span, reason));
-                        }
-                        completed = Some(ProofValue::Checked(lowered));
-                    }
-                    ProofFrame::SubstEquation {
-                        term,
-                        goal,
-                        code,
-                        name,
-                        motive,
-                        binder_span,
-                        evidence,
-                        premise,
-                        depth,
-                    } => {
-                        let (equation, equality_lean) = take_inferred!(evidence.span)?;
-                        let Proposition::Eq(equation_code, left, right) = equation else {
-                            return Err(reject(evidence.span, "subst requires equality evidence"));
-                        };
-                        advance!(
-                            meter,
-                            meter.normalize(
-                                code_size(&code, bound).ok_or_else(|| exhausted(evidence.span))?,
-                                evidence.span
-                            )
-                        );
-                        if equation_code != code {
-                            return Err(reject(
-                                binder_span,
-                                "subst motive has wrong equality type",
-                            ));
-                        }
-                        let index = context.total;
-                        let body_depth = deeper(depth, motive.span)?;
-                        work_push!(
-                            context,
-                            Binder {
-                                name,
-                                sort: Sort::Value(code.clone())
-                            },
-                            bound
-                        )
-                        .map_err(|()| exhausted(motive.span))?;
-                        let (next, body) = proposition(motive, &context, meter, body_depth);
-                        meter = next;
-                        work_pop!(context);
-                        let body = body?;
-                        if !matches!(body, Proposition::Eq(..)) {
-                            return Err(reject(
-                                motive.span,
-                                "subst motive must be a total Eq proposition",
-                            ));
-                        }
-                        #[expect(
-                            tigerstyle::numeric_units,
-                            reason = "Owner: noble-contracts; the constant is a count of source elements, and the name states its unit at every use site through the surrounding type and call"
-                        )]
-                        let size = proposition_size(&body, bound)
-                            .and_then(|size| size.checked_mul(2))
-                            .ok_or_else(|| exhausted(term.span))?;
-                        advance!(meter, meter.substitute(size, term.span));
-                        let before =
-                            replace_prop(&body, index, &Argument::Value(left), term.span, bound)?;
-                        let after =
-                            replace_prop(&body, index, &Argument::Value(right), term.span, bound)?;
-                        advance!(
-                            meter,
-                            meter.normalize(
-                                proposition_size(goal.as_ref(), bound)
-                                    .ok_or_else(|| exhausted(term.span))?,
-                                term.span
-                            )
-                        );
-                        if after != *goal.as_ref() {
-                            return Err(reject(
-                                term.span,
-                                "subst result differs from expected goal",
-                            ));
-                        }
-                        let child_depth = deeper(depth, premise.span)?;
-                        schedule!(
-                            ProofFrame::SubstPremise {
-                                term,
-                                code,
-                                body,
-                                index,
-                                equality_lean
-                            },
-                            term.span
-                        );
-                        schedule!(
-                            ProofFrame::Check(premise, ProofGoal::Owned(before), child_depth),
-                            premise.span
-                        );
-                    }
-                    ProofFrame::SubstPremise {
-                        term,
-                        code,
-                        body,
-                        index,
-                        equality_lean,
-                    } => {
-                        let premise = take_checked!(term.span)?;
-                        advance!(
-                            meter,
-                            meter.charge(
-                                premise
-                                    .len()
-                                    .checked_add(equality_lean.len())
-                                    .ok_or_else(|| exhausted(term.span))?,
-                                term.span
-                            )
-                        );
-                        completed = Some(ProofValue::Checked(format!(
-                        "(Eq.ndrec (motive := fun (v{index} : El {}) => {}) {premise} {equality_lean})",
-                        lean_code(&code,term.span,meter.tree_bounds)?,
-                        lean_proposition(&body,term.span,meter.tree_bounds)?)));
-                    }
-                    ProofFrame::IntroFinish { .. } => unreachable!(),
+                            depth
+                        },
+                        term.span
+                    );
+                    schedule_frame!(
+                        frames,
+                        bound,
+                        ProofFrame::Check(argument, ProofGoal::Owned(*expected), child_depth),
+                        argument.span
+                    );
                 }
-                Ok(())
-            })();
-            if let Err(error) = step {
-                failure = Some(error);
-                completed = None;
             }
         }
-        if let Some(error) = failure {
-            return Err(error);
+        ProofFrame::ApplyPremise {
+            term,
+            body,
+            index,
+            lowered,
+            depth,
+        } => {
+            let expression = take_checked!(completed, term.span)?;
+            finish_apply!(
+                term,
+                depth,
+                body,
+                index,
+                Argument::Premise,
+                lowered,
+                expression
+            );
         }
-        completed.ok_or_else(|| exhausted(span))
-    })();
-    (meter, result)
+        ProofFrame::AfterInfer { term, goal, pi } => {
+            let (inferred, lowered) = take_inferred!(completed, term.span)?;
+            advance!(
+                *meter,
+                meter.normalize(
+                    with_goal!(goal, |prop| proposition_size(prop, bound))
+                        .ok_or_else(|| exhausted(term.span))?,
+                    term.span
+                )
+            );
+            let is_goal = with_goal!(goal, |prop| proposition_equal(&inferred, prop));
+            if !is_goal {
+                let reason = if pi {
+                    "inferred proof does not match dependent Pi goal"
+                } else {
+                    "proof does not establish exact expected equality"
+                };
+                return Err(reject(term.span, reason));
+            }
+            *completed = Some(ProofValue::Checked(lowered));
+        }
+        ProofFrame::SubstPremise {
+            term,
+            code,
+            body,
+            index,
+            equality_lean,
+        } => {
+            let premise = take_checked!(completed, term.span)?;
+            advance!(
+                *meter,
+                meter.charge(
+                    premise
+                        .len()
+                        .checked_add(equality_lean.len())
+                        .ok_or_else(|| exhausted(term.span))?,
+                    term.span
+                )
+            );
+            *completed = Some(ProofValue::Checked(format!(
+                "(Eq.ndrec (motive := fun (v{index} : El {}) => {}) {premise} {equality_lean})",
+                lean_code(&code, term.span, meter.tree_bounds)?,
+                lean_proposition(&body, term.span, meter.tree_bounds)?
+            )));
+        }
+        ProofFrame::Infer(..)
+        | ProofFrame::Check(..)
+        | ProofFrame::SubstEquation(..)
+        | ProofFrame::IntroFinish { .. } => unreachable!(),
+    }
+    Ok(())
 }
 /// Checks only the closed predicative fragment; contract proofs have a separate
 /// finite reviewed MC1 rule checker below. An unchecked term is never lowered.
@@ -2291,45 +2930,37 @@ pub fn check_batch_with_budgets(
         substitution: 0,
         config: &config,
     };
-    let mut result = Vec::new();
     // Each accepted obligation has already consumed a visited node. Do not
     // reserve caller-supplied fan-out before charging it.
     let result_bound =
         usize::try_from(limits.nodes).map_err(|_| exhausted(Span { start: 0, end: 0 }))?;
-    let mut available = Vec::new();
     let available_bound = batch
         .dependencies
         .len()
         .checked_add(batch.obligations.len())
         .ok_or_else(|| exhausted(Span { start: 0, end: 0 }))?;
-    for dependency in &batch.dependencies {
-        if !dependency.exported {
-            return Err(reject(
-                dependency.declaration.span,
-                "private proof cannot be imported",
-            ));
-        }
-        let checked = advance!(meter, check_dependency(dependency, meter));
-        if available.len() >= available_bound {
-            return Err(exhausted(dependency.declaration.span));
-        }
-        available.push(checked);
+    let mut admitted = Admitted {
+        available: Vec::new(),
+        available_bound,
+        result: Vec::new(),
+        result_bound,
+    };
+    let mut index = 0;
+    let mut dependencies = Ok(());
+    while dependencies.is_ok() && index < batch.dependencies.len() {
+        dependencies = admit_dependency(&batch.dependencies[index], &mut admitted, &mut meter);
+        index += 1;
     }
-    for obligation in &batch.obligations {
-        let (checked, exported) = advance!(meter, check_obligation(obligation, &available, meter));
-        if let Some(goal) = exported {
-            if available.len() >= available_bound {
-                return Err(exhausted(obligation.span));
-            }
-            available.push(goal);
-        }
-        if result.len() >= result_bound {
-            return Err(exhausted(obligation.span));
-        }
-        result.push(checked);
+    dependencies?;
+    let mut index = 0;
+    let mut obligations = Ok(());
+    while obligations.is_ok() && index < batch.obligations.len() {
+        obligations = admit_obligation(&batch.obligations[index], &mut admitted, &mut meter);
+        index += 1;
     }
+    obligations?;
     Ok((
-        result,
+        admitted.result,
         ProofWork {
             normalization: meter.normalization,
             substitution: meter.substitution,
@@ -2337,79 +2968,148 @@ pub fn check_batch_with_budgets(
         },
     ))
 }
+/// The proofs one batch check has admitted so far, with their bounds.
+struct Admitted {
+    available: Vec<Available>,
+    available_bound: usize,
+    result: Vec<CheckedProof>,
+    result_bound: usize,
+}
+/// Check one imported dependency and make it available to later proofs.
 #[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the admitted proofs and meter are the batch check's locally owned state, borrowed only for one loop-free step"
 )]
+fn admit_dependency(
+    dependency: &ProofDependency,
+    admitted: &mut Admitted,
+    meter: &mut Meter<'_>,
+) -> Result<(), Diagnostic> {
+    if !dependency.exported {
+        return Err(reject(
+            dependency.declaration.span,
+            "private proof cannot be imported",
+        ));
+    }
+    let checked = advance!(*meter, check_dependency(dependency, *meter));
+    if admitted.available.len() >= admitted.available_bound {
+        return Err(exhausted(dependency.declaration.span));
+    }
+    admitted.available.push(checked);
+    Ok(())
+}
+/// Check one obligation, recording its proof and any goal it exports.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the admitted proofs and meter are the batch check's locally owned state, borrowed only for one loop-free step"
+)]
+fn admit_obligation(
+    obligation: &ProofObligation,
+    admitted: &mut Admitted,
+    meter: &mut Meter<'_>,
+) -> Result<(), Diagnostic> {
+    let (checked, exported) = advance!(
+        *meter,
+        check_obligation(obligation, &admitted.available, *meter)
+    );
+    if let Some(goal) = exported {
+        if admitted.available.len() >= admitted.available_bound {
+            return Err(exhausted(obligation.span));
+        }
+        admitted.available.push(goal);
+    }
+    if admitted.result.len() >= admitted.result_bound {
+        return Err(exhausted(obligation.span));
+    }
+    admitted.result.push(checked);
+    Ok(())
+}
 fn check_obligation<'m>(
     obligation: &ProofObligation,
     available: &[Available],
     mut meter: Meter<'m>,
 ) -> Transition<'m, (CheckedProof, Option<Available>)> {
-    let result = (|| -> Result<(CheckedProof, Option<Available>), Diagnostic> {
-        advance!(meter, meter.visit(0, obligation.span));
-        advance!(meter, validated(&obligation.term, meter, 0));
-        match &obligation.goal {
-            PendingGoal::Pure {
-                proposition: statement,
-            } => {
-                if obligation.revision != 1 {
-                    return Err(reject(obligation.span, "pure proof requires revision 1"));
-                }
-                advance!(meter, validated(statement, meter, 0));
-                let goal = advance!(meter, proposition(statement, &WorkStack::new(), meter, 0));
-                let lowered = match advance!(
-                    meter,
-                    proof_walk(
-                        ProofFrame::Check(&obligation.term, ProofGoal::Borrowed(&goal), 0),
-                        available,
-                        meter,
-                        obligation.term.span
-                    )
-                ) {
-                    ProofValue::Checked(lowered) => lowered,
-                    ProofValue::Inferred(..) => return Err(exhausted(obligation.term.span)),
-                };
-                let checked = CheckedProof {
-                    name: obligation.name.clone(),
-                    kind: ProofKind::Pure,
-                    lean_term: lowered.clone(),
-                    claim: lean_proposition(&goal, obligation.span, meter.tree_bounds)?,
-                    model_revision: String::new(),
-                    checker_revision: String::new(),
-                };
-                Ok((
-                    checked,
-                    Some(Available {
-                        name: obligation.name.clone(),
-                        goal,
-                        lean_term: lowered,
-                    }),
-                ))
-            }
-            PendingGoal::Contract { contract } => {
-                if obligation.revision != contract.revision {
-                    return Err(reject(
-                        obligation.span,
-                        "proof and contract revisions differ",
-                    ));
-                }
-                let checked = match contract.revision {
-                    1 => advance!(meter, check_contract(obligation, contract, meter)),
-                    2 => advance!(meter, named_v2::check_contract(obligation, contract, meter)),
-                    _ => return Err(reject(obligation.span, "unknown contract revision")),
-                };
-                Ok((checked, None))
-            }
-        }
-    })();
+    let result = obligation_proof(obligation, available, &mut meter);
     (meter, result)
+}
+/// Check one obligation against the proofs available before it.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the meter is the caller's owned transition state, written back through this borrow on every path"
+)]
+fn obligation_proof(
+    obligation: &ProofObligation,
+    available: &[Available],
+    meter: &mut Meter<'_>,
+) -> Result<(CheckedProof, Option<Available>), Diagnostic> {
+    advance!(*meter, meter.visit(0, obligation.span));
+    advance!(*meter, validated(&obligation.term, *meter, 0));
+    match &obligation.goal {
+        PendingGoal::Pure {
+            proposition: statement,
+        } => {
+            if obligation.revision != 1 {
+                return Err(reject(obligation.span, "pure proof requires revision 1"));
+            }
+            advance!(*meter, validated(statement, *meter, 0));
+            let goal = advance!(*meter, proposition(statement, &WorkStack::new(), *meter, 0));
+            let lowered = match advance!(
+                *meter,
+                proof_walk(
+                    ProofFrame::Check(&obligation.term, ProofGoal::Borrowed(&goal), 0),
+                    available,
+                    *meter,
+                    obligation.term.span
+                )
+            ) {
+                ProofValue::Checked(lowered) => lowered,
+                ProofValue::Inferred(..) => return Err(exhausted(obligation.term.span)),
+            };
+            let checked = CheckedProof {
+                name: obligation.name.clone(),
+                kind: ProofKind::Pure,
+                lean_term: lowered.clone(),
+                claim: lean_proposition(&goal, obligation.span, meter.tree_bounds)?,
+                model_revision: String::new(),
+                checker_revision: String::new(),
+            };
+            Ok((
+                checked,
+                Some(Available {
+                    name: obligation.name.clone(),
+                    goal,
+                    lean_term: lowered,
+                }),
+            ))
+        }
+        PendingGoal::Contract { contract } => {
+            if obligation.revision != contract.revision {
+                return Err(reject(
+                    obligation.span,
+                    "proof and contract revisions differ",
+                ));
+            }
+            let checked = match contract.revision {
+                1 => advance!(*meter, check_contract(obligation, contract, *meter)),
+                2 => advance!(
+                    *meter,
+                    named_v2::check_contract(obligation, contract, *meter)
+                ),
+                _ => return Err(reject(obligation.span, "unknown contract revision")),
+            };
+            Ok((checked, None))
+        }
+    }
 }
 enum DependencyFrame<'a> {
     Enter {
         dependency: &'a ProofDependency,
         depth: u32,
-        parent: Option<(&'a str, u32, &'a [u8], u32)>,
+        parent: Option<&'a ProofDependency>,
     },
     Children {
         dependency: &'a ProofDependency,
@@ -2418,6 +3118,76 @@ enum DependencyFrame<'a> {
         start: usize,
     },
 }
+fn check_dependency<'m>(
+    dependency: &ProofDependency,
+    mut meter: Meter<'m>,
+) -> Transition<'m, Available> {
+    let result = dependency_proof(dependency, &mut meter);
+    (meter, result)
+}
+/// The identity by which an active dependency detects a cycle.
+struct DependencyIdentity {
+    module: String,
+    version: u32,
+    name: String,
+}
+/// The owned state of one `check_dependency` walk.
+struct DependencyWalk<'a> {
+    frames: WorkStack<DependencyFrame<'a>>,
+    active: WorkStack<DependencyIdentity>,
+    completed: Option<Available>,
+    // Contiguous siblings share one scratch buffer; a frame owns only its
+    // starting offset. No per-dependency vector or eager fan-out reservation.
+    available: Vec<Available>,
+    available_bound: usize,
+}
+/// Check a dependency after all of its prerequisites, depth first.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the meter is the caller's owned transition state, written back through this borrow on every path"
+)]
+fn dependency_proof(
+    dependency: &ProofDependency,
+    meter: &mut Meter<'_>,
+) -> Result<Available, Diagnostic> {
+    let bound = meter.tree_bounds.frames;
+    let available_bound =
+        usize::try_from(meter.limits.nodes).map_err(|_| exhausted(dependency.declaration.span))?;
+    let mut frames = WorkStack::new();
+    work_push!(
+        frames,
+        DependencyFrame::Enter {
+            dependency,
+            depth: 0,
+            parent: None
+        },
+        bound
+    )
+    .map_err(|()| exhausted(dependency.declaration.span))?;
+    let mut walk = DependencyWalk {
+        frames,
+        active: WorkStack::new(),
+        completed: None,
+        available: Vec::new(),
+        available_bound,
+    };
+    let mut outcome = Ok(());
+    while let Some(frame) = walk.frames.pop_bounded() {
+        outcome = dependency_step(frame, &mut walk, meter);
+        if outcome.is_err() {
+            break;
+        }
+    }
+    outcome?;
+    walk.completed
+        .ok_or_else(|| exhausted(dependency.declaration.span))
+}
+/// Visit one dependency frame: enter a dependency or advance through its
+/// prerequisites, closing it once all of them are checked.
 #[expect(
     tigerstyle::fragile_exhaustive_enum_match,
     reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
@@ -2430,258 +3200,325 @@ enum DependencyFrame<'a> {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
-fn check_dependency<'m>(
-    dependency: &ProofDependency,
-    mut meter: Meter<'m>,
-) -> Transition<'m, Available> {
-    let result = (|| -> Result<Available, Diagnostic> {
-        let bound = meter.tree_bounds.frames;
-        let available_bound = usize::try_from(meter.limits.nodes)
-            .map_err(|_| exhausted(dependency.declaration.span))?;
-        let mut frames = WorkStack::new();
-        let mut active = WorkStack::new();
-        let mut completed = None;
-        // Contiguous siblings share one scratch buffer; a frame owns only its
-        // starting offset. No per-dependency vector or eager fan-out reservation.
-        let mut available = Vec::new();
-        work_push!(
-            frames,
-            DependencyFrame::Enter {
-                dependency,
-                depth: 0,
-                parent: None
-            },
-            bound
-        )
-        .map_err(|()| exhausted(dependency.declaration.span))?;
-        while let Some(frame) = work_pop!(frames) {
-            match frame {
-                DependencyFrame::Enter {
-                    dependency,
-                    depth,
-                    parent,
-                } => {
-                    advance!(meter, meter.visit(depth, dependency.declaration.span));
-                    advance!(
-                        meter,
-                        meter.charge(dependency.source.len(), dependency.declaration.span)
-                    );
-                    let is_repeats = active.inline[..active.inline_len]
-                        .iter()
-                        .flatten()
-                        .chain(active.spill.iter())
-                        .any(|ancestor: &&ProofDependency| {
-                            ancestor.module == dependency.module
-                                && ancestor.version == dependency.version
-                                && ancestor.declaration.name == dependency.declaration.name
-                        });
-                    if is_repeats {
-                        return Err(reject(
-                            dependency.declaration.span,
-                            "cyclic proof dependency",
-                        ));
-                    }
-                    let is_private_local = parent.is_some_and(|(module, version, source, span)| {
-                        dependency.module == module
-                            && dependency.version == version
-                            && dependency.source == source
-                            && dependency.declaration.span.start < span
-                    });
-                    if (!dependency.exported && !is_private_local)
-                        || dependency.source.is_empty()
-                        || dependency.declaration.name.is_empty()
-                    {
-                        return Err(reject(
-                            dependency.declaration.span,
-                            "unpublished or private proof dependency",
-                        ));
-                    }
-                    work_push!(active, dependency, bound)
-                        .map_err(|()| exhausted(dependency.declaration.span))?;
-                    work_push!(
-                        frames,
-                        DependencyFrame::Children {
-                            dependency,
-                            depth,
-                            next: 0,
-                            start: available.len()
-                        },
-                        bound
-                    )
-                    .map_err(|()| exhausted(dependency.declaration.span))?;
-                }
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the walk state and meter are locally owned by the dependency walk, borrowed only for one loop-free step"
+)]
+fn dependency_step<'a>(
+    frame: DependencyFrame<'a>,
+    walk: &mut DependencyWalk<'a>,
+    meter: &mut Meter<'_>,
+) -> Result<(), Diagnostic> {
+    let bound = meter.tree_bounds.frames;
+    let DependencyWalk {
+        frames,
+        active,
+        completed,
+        available,
+        available_bound,
+    } = walk;
+    match frame {
+        DependencyFrame::Enter {
+            dependency,
+            depth,
+            parent,
+        } => {
+            advance!(*meter, meter.visit(depth, dependency.declaration.span));
+            advance!(
+                *meter,
+                meter.charge(dependency.source.len(), dependency.declaration.span)
+            );
+            let is_repeats = repeats_active(active, dependency);
+            if is_repeats {
+                return Err(reject(
+                    dependency.declaration.span,
+                    "cyclic proof dependency",
+                ));
+            }
+            let is_private_local = match parent {
+                Some(parent) => is_private_local_of(dependency, parent),
+                None => false,
+            };
+            if (!dependency.exported && !is_private_local)
+                || dependency.source.is_empty()
+                || dependency.declaration.name.is_empty()
+            {
+                return Err(reject(
+                    dependency.declaration.span,
+                    "unpublished or private proof dependency",
+                ));
+            }
+            work_push!(
+                active,
+                DependencyIdentity {
+                    module: dependency.module.clone(),
+                    version: dependency.version,
+                    name: dependency.declaration.name.clone(),
+                },
+                bound
+            )
+            .map_err(|()| exhausted(dependency.declaration.span))?;
+            work_push!(
+                frames,
                 DependencyFrame::Children {
                     dependency,
                     depth,
-                    next,
-                    start,
-                } => {
-                    if let Some(child) = completed.take() {
-                        let sibling_count = available
-                            .len()
-                            .checked_sub(start)
-                            .ok_or_else(|| exhausted(dependency.declaration.span))?;
-                        if sibling_count >= dependency.dependencies.len() {
-                            return Err(exhausted(dependency.declaration.span));
-                        }
-                        if available.len() >= available_bound {
-                            return Err(exhausted(dependency.declaration.span));
-                        }
-                        available.push(child);
-                    }
-                    if let Some(prerequisite) = dependency.dependencies.get(next) {
-                        let child_depth = deeper(depth, prerequisite.declaration.span)?;
-                        let following = next
-                            .checked_add(1)
-                            .ok_or_else(|| exhausted(prerequisite.declaration.span))?;
-                        work_push!(
-                            frames,
-                            DependencyFrame::Children {
-                                dependency,
-                                depth,
-                                next: following,
-                                start
-                            },
-                            bound
-                        )
-                        .map_err(|()| exhausted(prerequisite.declaration.span))?;
-                        work_push!(
-                            frames,
-                            DependencyFrame::Enter {
-                                dependency: prerequisite,
-                                depth: child_depth,
-                                parent: Some((
-                                    &dependency.module,
-                                    dependency.version,
-                                    &dependency.source,
-                                    dependency.declaration.span.start
-                                )),
-                            },
-                            bound
-                        )
-                        .map_err(|()| exhausted(prerequisite.declaration.span))?;
-                        continue;
-                    }
-                    let siblings = available
-                        .get(start..)
-                        .ok_or_else(|| exhausted(dependency.declaration.span))?;
-                    let (_, closed) = advance!(
-                        meter,
-                        check_obligation(&dependency.declaration, siblings, meter)
-                    );
-                    available.truncate(start);
-                    work_pop!(active);
-                    let mut closed = closed.ok_or_else(|| {
-                        reject(
-                            dependency.declaration.span,
-                            "contract theorem dependency is not in the pure fragment",
-                        )
-                    })?;
-                    closed.name = dependency.name.clone();
-                    completed = Some(closed);
-                }
-            }
+                    next: 0,
+                    start: available.len()
+                },
+                bound
+            )
+            .map_err(|()| exhausted(dependency.declaration.span))?;
         }
-        completed.ok_or_else(|| exhausted(dependency.declaration.span))
-    })();
-    (meter, result)
+        DependencyFrame::Children {
+            dependency,
+            depth,
+            next,
+            start,
+        } => {
+            if let Some(child) = completed.take() {
+                let sibling_count = available
+                    .len()
+                    .checked_sub(start)
+                    .ok_or_else(|| exhausted(dependency.declaration.span))?;
+                if sibling_count >= dependency.dependencies.len() {
+                    return Err(exhausted(dependency.declaration.span));
+                }
+                if available.len() >= *available_bound {
+                    return Err(exhausted(dependency.declaration.span));
+                }
+                available.push(child);
+            }
+            if let Some(prerequisite) = dependency.dependencies.get(next) {
+                let child_depth = deeper(depth, prerequisite.declaration.span)?;
+                let following = next
+                    .checked_add(1)
+                    .ok_or_else(|| exhausted(prerequisite.declaration.span))?;
+                work_push!(
+                    frames,
+                    DependencyFrame::Children {
+                        dependency,
+                        depth,
+                        next: following,
+                        start
+                    },
+                    bound
+                )
+                .map_err(|()| exhausted(prerequisite.declaration.span))?;
+                work_push!(
+                    frames,
+                    DependencyFrame::Enter {
+                        dependency: prerequisite,
+                        depth: child_depth,
+                        parent: Some(dependency),
+                    },
+                    bound
+                )
+                .map_err(|()| exhausted(prerequisite.declaration.span))?;
+                return Ok(());
+            }
+            let siblings = available
+                .get(start..)
+                .ok_or_else(|| exhausted(dependency.declaration.span))?;
+            let (_, closed) = advance!(
+                *meter,
+                check_obligation(&dependency.declaration, siblings, *meter)
+            );
+            available.truncate(start);
+            work_pop!(active);
+            let mut closed = closed.ok_or_else(|| {
+                reject(
+                    dependency.declaration.span,
+                    "contract theorem dependency is not in the pure fragment",
+                )
+            })?;
+            closed.name = dependency.name.clone();
+            *completed = Some(closed);
+        }
+    }
+    Ok(())
 }
+/// Whether `dependency` is a private declaration earlier in its parent's own
+/// module source.
 #[expect(
-    tigerstyle::compound_condition,
-    reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
 )]
+fn is_private_local_of(dependency: &ProofDependency, parent: &ProofDependency) -> bool {
+    dependency.module == parent.module
+        && dependency.version == parent.version
+        && dependency.source == parent.source
+        && dependency.declaration.span.start < parent.declaration.span.start
+}
+/// Whether an active ancestor has the identity of `dependency`: the inline
+/// slots, then the spill, in the order `iter().flatten().chain(..).any(..)` scanned.
+fn repeats_active(active: &WorkStack<DependencyIdentity>, dependency: &ProofDependency) -> bool {
+    let mut is_repeat = false;
+    let mut index = 0;
+    while !is_repeat && index < active.inline_len {
+        is_repeat = slot_is_identity_of(&active.inline[index], dependency);
+        index += 1;
+    }
+    let mut index = 0;
+    while !is_repeat && index < active.spill.len() {
+        is_repeat = is_identity_of(&active.spill[index], dependency);
+        index += 1;
+    }
+    is_repeat
+}
+/// Whether an occupied inline slot holds the identity of `dependency`.
 #[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
 )]
+fn slot_is_identity_of(slot: &Option<DependencyIdentity>, dependency: &ProofDependency) -> bool {
+    match slot {
+        Some(ancestor) => is_identity_of(ancestor, dependency),
+        None => false,
+    }
+}
+/// Whether `ancestor` names the same module, version and declaration.
 #[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
 )]
+fn is_identity_of(ancestor: &DependencyIdentity, dependency: &ProofDependency) -> bool {
+    ancestor.module == dependency.module
+        && ancestor.version == dependency.version
+        && ancestor.name == dependency.declaration.name
+}
 fn check_contract<'m>(
     obligation: &ProofObligation,
     contract: &ContractGoal,
     mut meter: Meter<'m>,
 ) -> Transition<'m, CheckedProof> {
-    let result = (|| -> Result<CheckedProof, Diagnostic> {
-        advance!(meter, meter.visit(0, obligation.span));
-        let (_, literal) = prepare_checked_contract(contract, meter.limits)?;
-        if contract.inputs.len() != 1
-            || contract.outputs.len() != 1
-            || contract.inputs[0].1 != "I64"
-            || contract.outputs[0].1 != "I64"
-            || atom(&contract.requires)? != "true"
-        {
-            return Err(reject(
-                obligation.span,
-                "selected unary I64 rule requires typed True precondition",
-            ));
-        }
-        let literal = literal.ok_or_else(|| {
-            reject(
-                obligation.span,
-                "selected proof rules require exact literal then wrapping-add subject slices",
-            )
-        })?;
-        if !matches_eq_add(
-            &contract.ensures,
-            &contract.inputs[0].0,
-            &contract.outputs[0].0,
-            literal,
-        ) {
-            return Err(reject(
-                contract.ensures.span,
-                "proof consequence does not match exact typed MC1 postcondition",
-            ));
-        }
-        let root = operation(&obligation.term, "export-unary-I64", 2)?;
-        let outer = operation(&root[0], "intro", 2)?;
-        let tail_binder = list(&outer[0])?;
-        if tail_binder.len() != 2 || atom(&tail_binder[1])? != "Stack" {
-            return Err(reject(outer[0].span, "expected explicit Stack tail binder"));
-        }
-        let tail_name = atom(&tail_binder[0])?;
-        let inner = operation(&outer[1], "intro", 2)?;
-        let x = list(&inner[0])?;
-        if x.len() != 2 || atom(&x[1])? != "I64" || atom(&x[0])? == tail_name {
-            return Err(reject(
-                inner[0].span,
-                "expected distinct explicit I64 input binder",
-            ));
-        }
-        let sequence = operation(&inner[1], "pc-sequence", 4)?;
-        let exact1 = operation(&sequence[0], "pc-exact", 1)?;
-        let lit = operation(&exact1[0], "exec-literal", 1)?;
-        if atom(&lit[0])?.parse::<i64>().ok() != Some(literal) {
-            return Err(reject(
-                lit[0].span,
-                "literal rule does not match first subject slice",
-            ));
-        }
-        let exact2 = operation(&sequence[1], "pc-exact", 1)?;
-        operation(&exact2[0], "exec-add", 0)?;
-        let bridge = operation(&sequence[2], "bridge", 1)?;
-        operation(&bridge[0], "by-exact-append-assoc", 0)?;
-        let join = operation(&sequence[3], "join", 1)?;
-        operation(&join[0], "by-exact-result", 0)?;
-        operation(&root[1], "mc1-true-eq-wrap", 0)?;
-        let lean_term = lower_unary_add(literal);
-        advance!(meter, meter.charge(lean_term.len(), obligation.span));
-        Ok(CheckedProof {
-            name: obligation.name.clone(),
-            kind: ProofKind::Contract,
-            lean_term,
-            claim: "MC1Obligation.claim".into(),
-            model_revision: String::new(),
-            checker_revision: String::new(),
-        })
-    })();
+    let result = contract_proof(obligation, contract, &mut meter);
     (meter, result)
+}
+/// Check the selected unary I64 rule of a source proof against its MC1 contract.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the meter is the caller's owned transition state, written back through this borrow on every path"
+)]
+fn contract_proof(
+    obligation: &ProofObligation,
+    contract: &ContractGoal,
+    meter: &mut Meter<'_>,
+) -> Result<CheckedProof, Diagnostic> {
+    advance!(*meter, meter.visit(0, obligation.span));
+    let (_, literal) = prepare_checked_contract(contract, meter.limits)?;
+    if unary_true_rule_differs(contract)? {
+        return Err(reject(
+            obligation.span,
+            "selected unary I64 rule requires typed True precondition",
+        ));
+    }
+    let literal = literal.ok_or_else(|| {
+        reject(
+            obligation.span,
+            "selected proof rules require exact literal then wrapping-add subject slices",
+        )
+    })?;
+    if !matches_eq_add(
+        &contract.ensures,
+        &contract.inputs[0].0,
+        &contract.outputs[0].0,
+        literal,
+    ) {
+        return Err(reject(
+            contract.ensures.span,
+            "proof consequence does not match exact typed MC1 postcondition",
+        ));
+    }
+    let root = operation(&obligation.term, "export-unary-I64", 2)?;
+    let outer = operation(&root[0], "intro", 2)?;
+    let tail_binder = list(&outer[0])?;
+    if typed_binder_differs(tail_binder, "Stack")? {
+        return Err(reject(outer[0].span, "expected explicit Stack tail binder"));
+    }
+    let tail_name = atom(&tail_binder[0])?;
+    let inner = operation(&outer[1], "intro", 2)?;
+    let x = list(&inner[0])?;
+    if typed_binder_differs(x, "I64")? || atom(&x[0])? == tail_name {
+        return Err(reject(
+            inner[0].span,
+            "expected distinct explicit I64 input binder",
+        ));
+    }
+    let sequence = operation(&inner[1], "pc-sequence", 4)?;
+    let exact1 = operation(&sequence[0], "pc-exact", 1)?;
+    let lit = operation(&exact1[0], "exec-literal", 1)?;
+    if atom(&lit[0])?.parse::<i64>().ok() != Some(literal) {
+        return Err(reject(
+            lit[0].span,
+            "literal rule does not match first subject slice",
+        ));
+    }
+    let exact2 = operation(&sequence[1], "pc-exact", 1)?;
+    operation(&exact2[0], "exec-add", 0)?;
+    let bridge = operation(&sequence[2], "bridge", 1)?;
+    operation(&bridge[0], "by-exact-append-assoc", 0)?;
+    let join = operation(&sequence[3], "join", 1)?;
+    operation(&join[0], "by-exact-result", 0)?;
+    operation(&root[1], "mc1-true-eq-wrap", 0)?;
+    let lean_term = lower_unary_add(literal);
+    advance!(*meter, meter.charge(lean_term.len(), obligation.span));
+    Ok(CheckedProof {
+        name: obligation.name.clone(),
+        kind: ProofKind::Contract,
+        lean_term,
+        claim: "MC1Obligation.claim".into(),
+        model_revision: String::new(),
+        checker_revision: String::new(),
+    })
+}
+/// Whether the contract is not a unary I64 rule with a `true` precondition;
+/// refuses a precondition that is not an atom.
+fn unary_true_rule_differs(contract: &ContractGoal) -> Result<bool, Diagnostic> {
+    Ok(contract.inputs.len() != 1
+        || contract.outputs.len() != 1
+        || contract.inputs[0].1 != "I64"
+        || contract.outputs[0].1 != "I64"
+        || atom(&contract.requires)? != "true")
+}
+/// Whether `binder` is not a two-part binder whose sort is the atom `sort`;
+/// refuses a sort that is not an atom.
+fn typed_binder_differs(binder: &[Form], sort: &str) -> Result<bool, Diagnostic> {
+    Ok(binder.len() != 2 || atom(&binder[1])? != sort)
 }
 enum Mc1Frame<'a> {
     Enter(&'a Form, u32),
     Children(&'a [Form], usize, u32),
 }
+fn mc1_expression<'m>(form: &Form, mut meter: Meter<'m>, depth: u32) -> Transition<'m, String> {
+    let result = mc1_text(form, &mut meter, depth);
+    (meter, result)
+}
+/// Render `form` as MC1 text in walk order, stopping at the first refusal.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the meter is the caller's owned transition state, written back through this borrow on every path"
+)]
+fn mc1_text(form: &Form, meter: &mut Meter<'_>, depth: u32) -> Result<String, Diagnostic> {
+    let mut pending = WorkStack::new();
+    let bound = meter.tree_bounds.frames;
+    work_push!(pending, Mc1Frame::Enter(form, depth), bound).map_err(|()| exhausted(form.span))?;
+    let mut text = String::new();
+    let mut outcome = Ok(());
+    while let Some(frame) = work_pop!(pending) {
+        outcome = mc1_step(frame, &mut pending, &mut text, meter);
+        if outcome.is_err() {
+            break;
+        }
+    }
+    outcome?;
+    Ok(text)
+}
+/// Render one MC1 frame: a word, a list opening, or a list's next part.
 #[expect(
     tigerstyle::fragile_exhaustive_enum_match,
     reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
@@ -2690,59 +3527,59 @@ enum Mc1Frame<'a> {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
-fn mc1_expression<'m>(form: &Form, mut meter: Meter<'m>, depth: u32) -> Transition<'m, String> {
-    let result = (|| -> Result<String, Diagnostic> {
-        let mut pending = WorkStack::new();
-        let bound = meter.tree_bounds.frames;
-        work_push!(pending, Mc1Frame::Enter(form, depth), bound)
-            .map_err(|()| exhausted(form.span))?;
-        let mut text = String::new();
-        while let Some(frame) = work_pop!(pending) {
-            match frame {
-                Mc1Frame::Enter(node, depth) => {
-                    advance!(meter, meter.visit(depth, node.span));
-                    match &node.kind {
-                        FormKind::Atom(word) => {
-                            if word.is_empty()
-                                || !word
-                                    .bytes()
-                                    .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
-                            {
-                                return Err(reject(node.span, "invalid MC1 logical word"));
-                            }
-                            text.push_str(word);
-                        }
-                        FormKind::List(items) => {
-                            text.push('(');
-                            if items.is_empty() {
-                                text.push(')');
-                            } else {
-                                work_push!(pending, Mc1Frame::Children(items, 0, depth), bound)
-                                    .map_err(|()| exhausted(node.span))?;
-                            }
-                        }
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the pending stack, text and meter are the rendering's locally owned state, borrowed only for one loop-free step"
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; the step appends to the rendering's owned text buffer, which must stay the caller's String"
+)]
+fn mc1_step<'a>(
+    frame: Mc1Frame<'a>,
+    pending: &mut WorkStack<Mc1Frame<'a>>,
+    text: &mut String,
+    meter: &mut Meter<'_>,
+) -> Result<(), Diagnostic> {
+    let bound = meter.tree_bounds.frames;
+    match frame {
+        Mc1Frame::Enter(node, depth) => {
+            advance!(*meter, meter.visit(depth, node.span));
+            match &node.kind {
+                FormKind::Atom(word) => {
+                    if word.is_empty() || !bytes_within(word, b"-_") {
+                        return Err(reject(node.span, "invalid MC1 logical word"));
                     }
+                    text.push_str(word);
                 }
-                Mc1Frame::Children(items, index, depth) => {
-                    let Some(part) = items.get(index) else {
+                FormKind::List(items) => {
+                    text.push('(');
+                    if items.is_empty() {
                         text.push(')');
-                        continue;
-                    };
-                    if index != 0 {
-                        text.push(' ');
+                    } else {
+                        work_push!(pending, Mc1Frame::Children(items, 0, depth), bound)
+                            .map_err(|()| exhausted(node.span))?;
                     }
-                    let child_depth = deeper(depth, part.span)?;
-                    let next = index.checked_add(1).ok_or_else(|| exhausted(part.span))?;
-                    work_push!(pending, Mc1Frame::Children(items, next, depth), bound)
-                        .map_err(|()| exhausted(part.span))?;
-                    work_push!(pending, Mc1Frame::Enter(part, child_depth), bound)
-                        .map_err(|()| exhausted(part.span))?;
                 }
             }
         }
-        Ok(text)
-    })();
-    (meter, result)
+        Mc1Frame::Children(items, index, depth) => {
+            let Some(part) = items.get(index) else {
+                text.push(')');
+                return Ok(());
+            };
+            if index != 0 {
+                text.push(' ');
+            }
+            let child_depth = deeper(depth, part.span)?;
+            let next = index.checked_add(1).ok_or_else(|| exhausted(part.span))?;
+            work_push!(pending, Mc1Frame::Children(items, next, depth), bound)
+                .map_err(|()| exhausted(part.span))?;
+            work_push!(pending, Mc1Frame::Enter(part, child_depth), bound)
+                .map_err(|()| exhausted(part.span))?;
+        }
+    }
+    Ok(())
 }
 /// Cross-checks the asserted source binding, reaccepted complete definition
 /// recipe and MC1-v1 frontend. Host authority over these public fields must
@@ -2753,10 +3590,6 @@ pub fn prepare_contract(
 ) -> Result<crate::Prepared, Diagnostic> {
     prepare_checked_contract(contract, limits).map(|(prepared, _)| prepared)
 }
-#[expect(
-    tigerstyle::compound_condition,
-    reason = "Owner: noble-contracts; the guard is the admission rule verbatim; splitting it would obscure the predicate it states"
-)]
 #[expect(
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
@@ -2792,10 +3625,7 @@ fn prepare_checked_contract(
             contract.contract_span
         )
     );
-    if !matches!(subject.source_dependencies.as_slice(), [origin] if
-        origin.module == subject.module && origin.version == subject.version &&
-        origin.full_source == subject.module_source)
-    {
+    if !is_own_module_origin(subject) {
         return Err(reject(
             subject.source_span,
             "subject source dependency differs from original module",
@@ -2818,26 +3648,28 @@ fn prepare_checked_contract(
             "subject candidate is not independently accepted",
         ));
     };
-    if interface.interface.stack_in != subject.input_types
-        || interface.interface.stack_out != subject.output_types
-        || interface.interface.effects != subject.effects
-    {
+    if interface_differs(&interface.interface, subject) {
         return Err(reject(
             subject.source_span,
             "accepted subject interface differs from contract",
         ));
     }
-    let mut matching = accepted
-        .definitions
-        .iter()
-        .filter(|item| item.identity == subject.definition_identity);
-    let Some(definition) = matching.next() else {
+    let Some(position) = identity_position(&accepted.definitions, subject.definition_identity, 0)
+    else {
         return Err(reject(
             subject.source_span,
             "resolved subject identity absent from accepted recipe",
         ));
     };
-    if matching.next().is_some() || accepted.definitions.len() != 1 {
+    let definition = &accepted.definitions[position];
+    if identity_position(
+        &accepted.definitions,
+        subject.definition_identity,
+        position.saturating_add(1),
+    )
+    .is_some()
+        || accepted.definitions.len() != 1
+    {
         return Err(reject(
             subject.source_span,
             "ambiguous resolved subject identity",
@@ -2849,24 +3681,13 @@ fn prepare_checked_contract(
             "subject definition slot exceeds address space",
         )
     })?;
-    if accepted.environment.definition_owners.get(slot) != Some(&Some(subject.definition_owner))
-        || accepted.environment.kind(definition.definition)
-            != Some(noble_kernel::contracts::Behavior::Named)
-        || !matches!(accepted.body.candidate.body.as_slice(), [node] if
-            matches!(usize::try_from(node.0).ok().and_then(|index| accepted.body.candidate.nodes.get(index)),
-                Some(noble_kernel::untrusted::Node::Invocation {def,..}) if *def == definition.definition))
-        || accepted.body.candidate.nodes.len() != 1
-        || !accepted.body.texts.is_empty()
-    {
+    if invocation_differs(subject, definition, slot) {
         return Err(reject(
             subject.source_span,
             "resolved subject owner or invocation differs from accepted recipe",
         ));
     }
-    if definition.expected.stack_in != subject.input_types
-        || definition.expected.stack_out != subject.output_types
-        || definition.expected.allowed_effects != subject.effects
-    {
+    if expected_differs(&definition.expected, subject) {
         return Err(reject(
             subject.source_span,
             "subject definition has different stack or effect bound",
@@ -2910,12 +3731,7 @@ fn prepare_checked_contract(
     let (_, charged) = meter.charge(text.len(), contract.contract_span);
     charged?;
     let result = crate::prepare(text.as_bytes(), limits)?;
-    if result.inputs().len() != contract.inputs.len()
-        || result.outputs().len() != contract.outputs.len()
-        || result.checked().interface.stack_in != subject.input_types
-        || result.checked().interface.stack_out != subject.output_types
-        || result.checked().interface.effects != subject.effects
-    {
+    if typed_contract_differs(&result, contract) {
         return Err(reject(
             subject.source_span,
             "MC1 typed contract differs from accepted subject interface",
@@ -2925,49 +3741,19 @@ fn prepare_checked_contract(
     // operation list. Any unresolved named call or different recipe is refused.
     let expected = &definition.body.candidate;
     let actual = result.candidate();
-    if !definition.body.texts.is_empty()
-        || expected.format != actual.format
-        || expected.revision != actual.revision
-        || expected.body.len() != actual.body.len()
-        || expected.nodes.len() != actual.nodes.len()
-        || expected.nodes.len() != expected.body.len()
-        || u32::try_from(expected.body.len()).map_or(true, |count| count > limits.nodes)
-    {
+    if recipe_shape_differs(definition, actual, limits) {
         return Err(reject(
             subject.source_span,
             "MC1 program differs from resolved subject recipe",
         ));
     }
-    for (a, b) in expected.body.iter().zip(&actual.body) {
-        let Some(left) = usize::try_from(a.0)
-            .ok()
-            .and_then(|index| expected.nodes.get(index))
-        else {
-            return Err(reject(subject.source_span, "invalid accepted subject node"));
-        };
-        let Some(right) = usize::try_from(b.0)
-            .ok()
-            .and_then(|index| actual.nodes.get(index))
-        else {
-            return Err(reject(subject.source_span, "invalid MC1 subject node"));
-        };
-        match (left, right) {
-            (
-                noble_kernel::untrusted::Node::Literal { lit: a, inst: ia },
-                noble_kernel::untrusted::Node::Literal { lit: b, inst: ib },
-            ) if a == b && same_inst(ia, ib) => (),
-            (
-                noble_kernel::untrusted::Node::Invocation { def: a, inst: ia },
-                noble_kernel::untrusted::Node::Invocation { def: b, inst: ib },
-            ) if a == b && same_inst(ia, ib) => (),
-            _ => {
-                return Err(reject(
-                    subject.source_span,
-                    "MC1 program differs from resolved subject operation",
-                ))
-            }
-        }
+    let mut index = 0;
+    let mut operations = Ok(());
+    while operations.is_ok() && index < expected.body.len() && index < actual.body.len() {
+        operations = same_subject_operation(expected, actual, index, subject.source_span);
+        index += 1;
     }
+    operations?;
     let request = noble_kernel::untrusted::Request {
         input_bytes: accepted.request.input_bytes,
         expected: definition.expected.clone(),
@@ -2981,56 +3767,25 @@ fn prepare_checked_contract(
             "subject definition body is not independently accepted",
         ));
     };
-    if checked_definition.interface.stack_in != subject.input_types
-        || checked_definition.interface.stack_out != subject.output_types
-        || checked_definition.interface.effects != subject.effects
-    {
+    if interface_differs(&checked_definition.interface, subject) {
         return Err(reject(
             subject.source_span,
             "accepted definition body differs from contract interface",
         ));
     }
     if checked_definition.derivations.len() != result.checked().derivations.len()
-        || !checked_definition
-            .derivations
-            .iter()
-            .zip(&result.checked().derivations)
-            .all(|(left, right)| {
-                left.node == right.node
-                    && left.interface.stack_in == right.interface.stack_in
-                    && left.interface.stack_out == right.interface.stack_out
-                    && left.interface.effects == right.interface.effects
-            })
+        || !derivations_agree(
+            &checked_definition.derivations,
+            &result.checked().derivations,
+        )
     {
         return Err(reject(
             subject.source_span,
             "MC1 node derivations differ from accepted definition body",
         ));
     }
-    let literal = match expected.nodes.as_slice() {
-        [noble_kernel::untrusted::Node::Literal {
-            lit: noble_kernel::untrusted::Lit::I64(value),
-            ..
-        }, noble_kernel::untrusted::Node::Invocation {
-            def: noble_kernel::contracts::Definition(4),
-            ..
-        }] if expected.body.as_slice()
-            == [
-                noble_kernel::untrusted::NodeId(0),
-                noble_kernel::untrusted::NodeId(1),
-            ]
-            && subject.input_types == [noble_kernel::types::Ty::I64]
-            && subject.output_types == [noble_kernel::types::Ty::I64] =>
-        {
-            Some(*value)
-        }
-        _ => None,
-    };
-    if literal.is_some()
-        && (!canonical_wrapping_add(&accepted.environment)
-            || accepted.environment.deps.get(slot).map(Vec::as_slice)
-                != Some(&[noble_kernel::contracts::Definition(4)][..]))
-    {
+    let literal = unary_literal(expected, subject);
+    if literal.is_some() && builtin_add_differs(&accepted.environment, slot) {
         return Err(reject(
             subject.source_span,
             "subject addition is not the fixed MC1 builtin",
@@ -3038,11 +3793,293 @@ fn prepare_checked_contract(
     }
     Ok((result, literal))
 }
-
+/// Whether an accepted interface differs from the subject's stacks or effects.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn interface_differs(
+    interface: &noble_kernel::untrusted::Interface,
+    subject: &SubjectBinding,
+) -> bool {
+    interface.stack_in != subject.input_types
+        || interface.stack_out != subject.output_types
+        || interface.effects != subject.effects
+}
+/// Whether a definition's expected bound differs from the subject's stacks or
+/// effects.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn expected_differs(
+    expected: &noble_kernel::untrusted::Expected,
+    subject: &SubjectBinding,
+) -> bool {
+    expected.stack_in != subject.input_types
+        || expected.stack_out != subject.output_types
+        || expected.allowed_effects != subject.effects
+}
+/// Whether the accepted recipe is not one plain invocation of `definition`,
+/// whose slot `slot` the subject's owner holds as a named definition.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn invocation_differs(
+    subject: &SubjectBinding,
+    definition: &noble_kernel::execution::Definition,
+    slot: usize,
+) -> bool {
+    let accepted = &subject.accepted_submission;
+    accepted.environment.definition_owners.get(slot) != Some(&Some(subject.definition_owner))
+        || accepted.environment.kind(definition.definition)
+            != Some(noble_kernel::contracts::Behavior::Named)
+        || !is_single_invocation(&accepted.body.candidate, definition.definition)
+        || accepted.body.candidate.nodes.len() != 1
+        || !accepted.body.texts.is_empty()
+}
+/// Whether the prepared MC1 contract's arity or checked interface differs
+/// from the contract and its subject.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn typed_contract_differs(result: &crate::Prepared, contract: &ContractGoal) -> bool {
+    result.inputs().len() != contract.inputs.len()
+        || result.outputs().len() != contract.outputs.len()
+        || interface_differs(&result.checked().interface, &contract.subject)
+}
+/// Whether the MC1 program `actual` differs in shape from the resolved
+/// subject definition's recipe, or that recipe exceeds the node limit.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn recipe_shape_differs(
+    definition: &noble_kernel::execution::Definition,
+    actual: &noble_kernel::untrusted::Candidate,
+    limits: Limits,
+) -> bool {
+    let expected = &definition.body.candidate;
+    !definition.body.texts.is_empty()
+        || expected.format != actual.format
+        || expected.revision != actual.revision
+        || expected.body.len() != actual.body.len()
+        || expected.nodes.len() != actual.nodes.len()
+        || expected.nodes.len() != expected.body.len()
+        || u32::try_from(expected.body.len()).map_or(true, |count| count > limits.nodes)
+}
+/// Whether the environment's addition at `slot` is not the fixed MC1 builtin.
+fn builtin_add_differs(environment: &noble_kernel::contracts::Env, slot: usize) -> bool {
+    !canonical_wrapping_add(environment)
+        || !deps_are(
+            &environment.deps,
+            slot,
+            &[noble_kernel::contracts::Definition(4)],
+        )
+}
+/// The literal of a literal-then-add recipe that visits its two nodes in
+/// order for a unary I64 subject; the guarded slice pattern this replaces.
+fn unary_literal(
+    expected: &noble_kernel::untrusted::Candidate,
+    subject: &SubjectBinding,
+) -> Option<i64> {
+    let value = literal_then_add(&expected.nodes)?;
+    if is_unary_literal_add(expected, subject) {
+        Some(value)
+    } else {
+        None
+    }
+}
+/// Whether a literal-then-add recipe visits its two nodes in order for a
+/// unary I64 subject.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn is_unary_literal_add(
+    expected: &noble_kernel::untrusted::Candidate,
+    subject: &SubjectBinding,
+) -> bool {
+    expected.body.as_slice()
+        == [
+            noble_kernel::untrusted::NodeId(0),
+            noble_kernel::untrusted::NodeId(1),
+        ]
+        && subject.input_types == [noble_kernel::types::Ty::I64]
+        && subject.output_types == [noble_kernel::types::Ty::I64]
+}
+/// Whether `subject` records exactly one source dependency, its own original
+/// module, as the slice pattern `[origin]` with that guard.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn is_own_module_origin(subject: &SubjectBinding) -> bool {
+    if subject.source_dependencies.len() != 1 {
+        return false;
+    }
+    let origin = &subject.source_dependencies[0];
+    origin.module == subject.module
+        && origin.version == subject.version
+        && origin.full_source == subject.module_source
+}
+/// The first definition at or after `from` with `identity`, as the next item
+/// of `definitions.iter().filter(..)`.
+fn identity_position(
+    definitions: &[noble_kernel::execution::Definition],
+    identity: u64,
+    from: usize,
+) -> Option<usize> {
+    let mut index = from;
+    let mut found = None;
+    while found.is_none() && index < definitions.len() {
+        if definitions[index].identity == identity {
+            found = Some(index);
+        }
+        index += 1;
+    }
+    found
+}
+/// The node an occurrence names, as
+/// `usize::try_from(id.0).ok().and_then(|index| nodes.get(index))`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn candidate_node(
+    nodes: &[noble_kernel::untrusted::Node],
+    id: noble_kernel::untrusted::NodeId,
+) -> Option<&noble_kernel::untrusted::Node> {
+    match usize::try_from(id.0) {
+        Ok(index) => nodes.get(index),
+        Err(_) => None,
+    }
+}
+/// Whether `candidate`'s body is one occurrence of a node invoking `definition`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn is_single_invocation(
+    candidate: &noble_kernel::untrusted::Candidate,
+    definition: noble_kernel::contracts::Definition,
+) -> bool {
+    if candidate.body.len() != 1 {
+        return false;
+    }
+    matches!(
+        candidate_node(&candidate.nodes, candidate.body[0]),
+        Some(noble_kernel::untrusted::Node::Invocation { def, .. }) if *def == definition
+    )
+}
+/// Refuse the `index`-th body occurrence unless the accepted subject and the
+/// MC1 program hold the same literal or invocation with the same `Inst` there.
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn same_subject_operation(
+    expected: &noble_kernel::untrusted::Candidate,
+    actual: &noble_kernel::untrusted::Candidate,
+    index: usize,
+    span: Span,
+) -> Result<(), Diagnostic> {
+    let Some(left) = candidate_node(&expected.nodes, expected.body[index]) else {
+        return Err(reject(span, "invalid accepted subject node"));
+    };
+    let Some(right) = candidate_node(&actual.nodes, actual.body[index]) else {
+        return Err(reject(span, "invalid MC1 subject node"));
+    };
+    match (left, right) {
+        (
+            noble_kernel::untrusted::Node::Literal { lit: a, inst: ia },
+            noble_kernel::untrusted::Node::Literal { lit: b, inst: ib },
+        ) if a == b && same_inst(ia, ib) => Ok(()),
+        (
+            noble_kernel::untrusted::Node::Invocation { def: a, inst: ia },
+            noble_kernel::untrusted::Node::Invocation { def: b, inst: ib },
+        ) if a == b && same_inst(ia, ib) => Ok(()),
+        _ => Err(reject(
+            span,
+            "MC1 program differs from resolved subject operation",
+        )),
+    }
+}
+/// Pairwise agreement of two derivation lists in order, as
+/// `left.iter().zip(right).all(..)` over `derivation_agrees`.
+fn derivations_agree(
+    left: &[noble_kernel::untrusted::Derivation],
+    right: &[noble_kernel::untrusted::Derivation],
+) -> bool {
+    let mut index = 0;
+    let mut is_agreed = true;
+    while is_agreed && index < left.len() && index < right.len() {
+        is_agreed = derivation_agrees(&left[index], &right[index]);
+        index += 1;
+    }
+    is_agreed
+}
+/// Whether two derivations name the same node with the same interface.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn derivation_agrees(
+    left: &noble_kernel::untrusted::Derivation,
+    right: &noble_kernel::untrusted::Derivation,
+) -> bool {
+    left.node == right.node
+        && left.interface.stack_in == right.interface.stack_in
+        && left.interface.stack_out == right.interface.stack_out
+        && left.interface.effects == right.interface.effects
+}
+/// The literal of a `[literal, builtin 4]` node list, as the slice pattern
+/// `[Literal { lit: I64(value), .. }, Invocation { def: Definition(4), .. }]`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn literal_then_add(nodes: &[noble_kernel::untrusted::Node]) -> Option<i64> {
+    if nodes.len() != 2 {
+        return None;
+    }
+    match (&nodes[0], &nodes[1]) {
+        (
+            noble_kernel::untrusted::Node::Literal {
+                lit: noble_kernel::untrusted::Lit::I64(value),
+                ..
+            },
+            noble_kernel::untrusted::Node::Invocation {
+                def: noble_kernel::contracts::Definition(4),
+                ..
+            },
+        ) => Some(*value),
+        _ => None,
+    }
+}
+/// Whether the definition at `slot` depends on exactly `expected`, as
+/// `deps.get(slot).map(Vec::as_slice) == Some(expected)`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn deps_are(
+    deps: &[Vec<noble_kernel::contracts::Definition>],
+    slot: usize,
+    expected: &[noble_kernel::contracts::Definition],
+) -> bool {
+    match deps.get(slot) {
+        Some(found) => found.as_slice() == expected,
+        None => false,
+    }
+}
+
 #[expect(
     tigerstyle::non_trait_imports,
     reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
@@ -3050,44 +4087,74 @@ fn prepare_checked_contract(
 pub(crate) fn canonical_wrapping_add(env: &noble_kernel::contracts::Env) -> bool {
     use noble_kernel::{
         contracts::{Behavior, Definition},
-        shapes::Pattern,
-        words::{Variable, VariableKind},
+        words::VariableKind,
     };
     let Some(scheme) = env.scheme(Definition(4)) else {
         return false;
     };
     env.kind(Definition(4)) == Some(Behavior::Arith)
         && env.definition_owners.get(4) == Some(&None)
-        && env.deps.get(4).is_some_and(Vec::is_empty)
+        && deps_are(&env.deps, 4, &[])
         && scheme.var_kinds == [VariableKind::Stack]
-        && matches!(
-            scheme.stack_in.as_slice(),
-            [Pattern::StackVar(Variable(0)), Pattern::I64, Pattern::I64]
-        )
-        && matches!(
-            scheme.stack_out.as_slice(),
-            [Pattern::StackVar(Variable(0)), Pattern::I64]
-        )
+        && is_stack_then_i64s(&scheme.stack_in, 2)
+        && is_stack_then_i64s(&scheme.stack_out, 1)
         && scheme.effects.is_empty()
 }
+/// Whether `patterns` is `StackVar(Variable(0))` followed by exactly `i64s`
+/// `I64` patterns, as the slice patterns of `canonical_wrapping_add` did.
+fn is_stack_then_i64s(patterns: &[noble_kernel::shapes::Pattern], i64s: usize) -> bool {
+    let Some((first, rest)) = patterns.split_first() else {
+        return false;
+    };
+    let mut is_shape = rest.len() == i64s && is_stack_zero(first);
+    let mut index = 0;
+    while is_shape && index < rest.len() {
+        is_shape = is_i64_pattern(&rest[index]);
+        index += 1;
+    }
+    is_shape
+}
+/// Whether `pattern` is the stack variable 0.
+fn is_stack_zero(pattern: &noble_kernel::shapes::Pattern) -> bool {
+    matches!(
+        pattern,
+        noble_kernel::shapes::Pattern::StackVar(noble_kernel::words::Variable(0))
+    )
+}
+/// Whether `pattern` is `I64`.
+fn is_i64_pattern(pattern: &noble_kernel::shapes::Pattern) -> bool {
+    matches!(pattern, noble_kernel::shapes::Pattern::I64)
+}
 
+/// Equal binding counts and pairwise equal bindings in order, as
+/// `a.bindings.iter().zip(&b.bindings).all(..)` after the length check.
+pub(crate) fn same_inst(a: &noble_kernel::words::Inst, b: &noble_kernel::words::Inst) -> bool {
+    let mut is_same = a.bindings.len() == b.bindings.len();
+    let mut index = 0;
+    while is_same && index < a.bindings.len() {
+        is_same = same_binding(&a.bindings[index], &b.bindings[index]);
+        index += 1;
+    }
+    is_same
+}
+/// Whether two bindings are the same variant with equal contents.
 #[expect(
     tigerstyle::non_trait_imports,
     reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
 )]
-pub(crate) fn same_inst(a: &noble_kernel::words::Inst, b: &noble_kernel::words::Inst) -> bool {
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+fn same_binding(a: &noble_kernel::words::Binding, b: &noble_kernel::words::Binding) -> bool {
     use noble_kernel::words::Binding;
-    a.bindings.len() == b.bindings.len()
-        && a.bindings
-            .iter()
-            .zip(&b.bindings)
-            .all(|(a, b)| match (a, b) {
-                (Binding::Stack(a), Binding::Stack(b)) => a == b,
-                (Binding::Value(a), Binding::Value(b)) => a == b,
-                (Binding::Effect(a), Binding::Effect(b)) => a == b,
-                (Binding::Ref(a), Binding::Ref(b)) => a == b,
-                _ => false,
-            })
+    match (a, b) {
+        (Binding::Stack(a), Binding::Stack(b)) => a == b,
+        (Binding::Value(a), Binding::Value(b)) => a == b,
+        (Binding::Effect(a), Binding::Effect(b)) => a == b,
+        (Binding::Ref(a), Binding::Ref(b)) => a == b,
+        _ => false,
+    }
 }
 #[expect(
     tigerstyle::missing_const_fn,
@@ -3174,7 +4241,35 @@ fn lower_unary_add(literal: i64) -> String {
         (.i64 (x + (__N__ : BitVec 64))) (.i64 (x + (__N__ : BitVec 64)))
         rfl rfl).mpr rfl))
 "#;
-    TERM.replace("__N__", &literal.to_string())
+    replace_all(TERM, "__N__", &literal.to_string())
+}
+/// `text.replace(marker, value)` for a non-empty `marker`: each match, found
+/// left to right without overlap, becomes `value`.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+)]
+fn replace_all(text: &str, marker: &str, value: &str) -> String {
+    debug_assert!(!marker.is_empty());
+    let haystack = text.as_bytes();
+    let needle = marker.as_bytes();
+    let mut replaced = String::new();
+    let mut copied = 0;
+    let mut index = 0;
+    while index < haystack.len() {
+        if haystack[index..].starts_with(needle) {
+            // A match of whole UTF-8 sequences starts and ends on character
+            // boundaries, so both slices below exist.
+            replaced.push_str(&text[copied..index]);
+            replaced.push_str(value);
+            index += needle.len();
+            copied = index;
+        } else {
+            index += 1;
+        }
+    }
+    replaced.push_str(&text[copied..]);
+    replaced
 }
 
 #[cfg(test)]
@@ -3194,11 +4289,19 @@ mod form_impl_tests {
 
     mod mirror {
         #[derive(Clone, Debug, PartialEq, Eq)]
+        #[expect(
+            tigerstyle::path_segment_repetition,
+            reason = "Owner: noble-contracts; the mirror keeps the replaced type's own name, so its derived Debug output is the reference rendering"
+        )]
         pub struct Form {
             pub kind: FormKind,
             pub span: crate::Span,
         }
         #[derive(Clone, Debug, PartialEq, Eq)]
+        #[expect(
+            tigerstyle::path_segment_repetition,
+            reason = "Owner: noble-contracts; the mirror keeps the replaced type's own name, so its derived Debug output is the reference rendering"
+        )]
         pub enum FormKind {
             Atom(alloc::string::String),
             List(alloc::vec::Vec<Form>),
@@ -3210,7 +4313,7 @@ mod form_impl_tests {
             kind: FormKind::Atom(String::from(text)),
             span: crate::Span {
                 start,
-                end: start + 1,
+                end: start.saturating_add(1),
             },
         }
     }
@@ -3220,7 +4323,7 @@ mod form_impl_tests {
             kind: FormKind::List(forms),
             span: crate::Span {
                 start,
-                end: start + 10,
+                end: start.saturating_add(10),
             },
         }
     }
@@ -3267,9 +4370,9 @@ mod form_impl_tests {
         let forms = samples();
         for left in &forms {
             for right in &forms {
-                let expected = mirrored(left) == mirrored(right);
-                assert_eq!(left == right, expected);
-                assert_eq!(left != right, !expected);
+                let is_expected = mirrored(left) == mirrored(right);
+                assert_eq!(left == right, is_expected);
+                assert_eq!(left != right, !is_expected);
                 assert_eq!(
                     left.kind == right.kind,
                     mirrored(left).kind == mirrored(right).kind
@@ -3315,6 +4418,10 @@ mod proposition_impl_tests {
             Premise(alloc::boxed::Box<Proposition>),
         }
         #[derive(Clone, Debug, PartialEq, Eq)]
+        #[expect(
+            tigerstyle::path_segment_repetition,
+            reason = "Owner: noble-contracts; the mirror keeps the replaced type's own name, so it reads as the derived reference"
+        )]
         pub enum Proposition {
             Pi(usize, Sort, alloc::boxed::Box<Proposition>),
             Eq(super::Code, usize, usize),
@@ -3329,6 +4436,10 @@ mod proposition_impl_tests {
         }
     }
 
+    #[expect(
+        tigerstyle::no_recursion,
+        reason = "Owner: noble-contracts; the test mirror follows the finite sample propositions"
+    )]
     fn mirrored(prop: &Proposition) -> mirror::Proposition {
         match prop {
             Proposition::Pi(index, sort, body) => {
@@ -3340,6 +4451,10 @@ mod proposition_impl_tests {
         }
     }
 
+    #[expect(
+        tigerstyle::assertion_density,
+        reason = "Owner: noble-contracts; the sample table is data, checked by the tests that consume it"
+    )]
     fn samples() -> Vec<Proposition> {
         let eq = |code: Code, left, right| Proposition::Eq(code, left, right);
         vec![
@@ -3381,9 +4496,9 @@ mod proposition_impl_tests {
         let props = samples();
         for left in &props {
             for right in &props {
-                let expected = mirrored(left) == mirrored(right);
-                assert_eq!(left == right, expected);
-                assert_eq!(left != right, !expected);
+                let is_expected = mirrored(left) == mirrored(right);
+                assert_eq!(left == right, is_expected);
+                assert_eq!(left != right, !is_expected);
             }
         }
         let sorts = [
@@ -3405,8 +4520,256 @@ mod proposition_impl_tests {
             let copy = prop.clone();
             assert_eq!(mirrored(&copy), mirrored(&prop));
             if let Proposition::Pi(_, sort, _) = &prop {
-                assert_eq!(mirrored_sort(&sort.clone()), mirrored_sort(sort));
+                let sort_copy = sort.clone();
+                assert_eq!(mirrored_sort(&sort_copy), mirrored_sort(sort));
             }
+        }
+    }
+
+    /// An atom spanning the one pre-order position `start`.
+    fn word(text: &str, start: u32) -> super::Form {
+        super::Form {
+            kind: super::FormKind::Atom(alloc::string::String::from(text)),
+            span: crate::Span {
+                start,
+                end: start.saturating_add(1),
+            },
+        }
+    }
+
+    /// A list spanning the pre-order positions `start..end`.
+    fn forms(items: Vec<super::Form>, (start, end): (u32, u32)) -> super::Form {
+        super::Form {
+            kind: super::FormKind::List(items),
+            span: crate::Span { start, end },
+        }
+    }
+
+    /// `(Pi (x I64) (Eq I64 x x))`, numbered 0..10 in pre-order.
+    fn reflexive_goal() -> super::Form {
+        let binder = forms(vec![word("x", 3), word("I64", 4)], (2, 5));
+        let body = vec![word("Eq", 6), word("I64", 7), word("x", 8), word("x", 9)];
+        forms(vec![word("Pi", 1), binder, forms(body, (5, 10))], (0, 10))
+    }
+
+    /// `(intro (x I64) (refl <name>))`, numbered 10..18 in pre-order.
+    fn reflexive_term(name: &str) -> super::Form {
+        let binder = forms(vec![word("x", 13), word("I64", 14)], (12, 15));
+        let refl = forms(vec![word("refl", 16), word(name, 17)], (15, 18));
+        forms(vec![word("intro", 11), binder, refl], (10, 18))
+    }
+
+    /// One pure obligation `p` proving `reflexive_goal` by `term`.
+    fn pure_batch(term: super::Form) -> super::ProofBatch {
+        let proposition = reflexive_goal();
+        super::ProofBatch {
+            module: alloc::string::String::from("m"),
+            version: 1,
+            source: vec![b's'; 10],
+            generation: 0,
+            dependencies: Vec::new(),
+            obligations: vec![super::ProofObligation {
+                name: alloc::string::String::from("p"),
+                revision: 1,
+                goal: super::PendingGoal::Pure { proposition },
+                term,
+                span: crate::Span { start: 0, end: 18 },
+            }],
+        }
+    }
+
+    fn limits(work: u32) -> crate::Limits {
+        crate::Limits {
+            bytes: 1000,
+            nodes: 100,
+            depth: 20,
+            work,
+        }
+    }
+
+    /// The proof walk keeps unwinding after a refused intro body: the intro
+    /// still charges its wrapper, and a failing charge replaces the refusal.
+    /// Expected values are those of the closure-based walk this replaces.
+    #[test]
+    fn intro_charges_its_wrapper_after_a_refused_body() {
+        let batch = pure_batch(reflexive_term("y"));
+        let refusal = |work| {
+            super::check_batch(&batch, limits(work))
+                .err()
+                .map(|error| (error.kind, error.span, error.message))
+        };
+        let exhausted = |start, end| {
+            Some((
+                crate::DiagnosticKind::Exhausted,
+                crate::Span { start, end },
+                alloc::string::String::from("proof size, depth or work limit exhausted"),
+            ))
+        };
+        assert_eq!(refusal(57), exhausted(12, 15));
+        assert_eq!(refusal(58), exhausted(10, 18));
+        assert_eq!(refusal(66), exhausted(10, 18));
+        assert_eq!(
+            refusal(67),
+            Some((
+                crate::DiagnosticKind::Invalid,
+                crate::Span { start: 17, end: 18 },
+                alloc::string::String::from("unbound refl value"),
+            ))
+        );
+    }
+
+    /// An accepted pure proof reports exactly the work the original walk charged.
+    #[test]
+    fn accepted_pure_proof_reports_its_exact_work() {
+        let batch = pure_batch(reflexive_term("x"));
+        let budgets = super::ProofBudgets::from_limits(limits(1000));
+        let checked = super::check_batch_with_budgets(&batch, limits(1000), budgets);
+        let summary = checked.map(|(proofs, work)| {
+            let terms: Vec<_> = proofs
+                .iter()
+                .map(|proof| (proof.lean_term.clone(), proof.claim.clone()))
+                .collect();
+            (terms, work.normalization, work.substitution, work.total)
+        });
+        assert_eq!(
+            summary.ok(),
+            Some((
+                vec![(
+                    alloc::string::String::from("(fun (v0 : El .i64) => (Eq.refl v0))"),
+                    alloc::string::String::from("(∀ (v0 : El .i64), v0 = v0)"),
+                )],
+                10,
+                0,
+                83,
+            ))
+        );
+        assert!(super::check_batch(&batch, limits(82)).is_err());
+    }
+
+    #[test]
+    fn replace_all_matches_str_replace() {
+        for text in [
+            "",
+            "__N__",
+            "a__N__b__N__c",
+            "____N__",
+            "__N_",
+            "__N____N__",
+            "\u{e9}__N__\u{e9}",
+            "no marker",
+        ] {
+            assert_eq!(
+                super::replace_all(text, "__N__", "-7"),
+                text.replace("__N__", "-7")
+            );
+        }
+        let term = super::lower_unary_add(-7);
+        assert!(term.contains("(.i64 -7)"));
+        assert!(!term.contains("__N__"));
+    }
+
+    #[test]
+    fn bytes_within_matches_bytes_all() {
+        for text in ["", "a-b_c", "a.b@c", "a b", "\u{e9}", "-", "A9"] {
+            for extra in [&b"-_"[..], &b"-_.@"[..]] {
+                let is_expected = text
+                    .bytes()
+                    .all(|b| b.is_ascii_alphanumeric() || extra.contains(&b));
+                assert_eq!(super::bytes_within(text, extra), is_expected);
+            }
+        }
+    }
+
+    /// `stack_binder` finds the innermost binder of a name: the last spilled
+    /// one, else the last inline one, as the `rposition` scans it replaces.
+    #[test]
+    fn stack_binder_finds_the_innermost_binder() {
+        let mut stack = super::WorkStack::new();
+        let mut index = 0usize;
+        for _ in 0..10 {
+            for name in ["x", "y", "x", "z"] {
+                let binder = super::Binder {
+                    name: alloc::string::String::from(name),
+                    sort: Sort::Value(Code::Variable(index)),
+                };
+                assert!(stack.push_bounded(binder, 100).is_ok());
+                index = index.saturating_add(1);
+            }
+        }
+        for name in ["x", "y", "z", "w"] {
+            let expected = match stack.spill.iter().rposition(|item| item.name == name) {
+                Some(index) => stack.inline_len.checked_add(index),
+                None => stack.inline[..stack.inline_len]
+                    .iter()
+                    .rposition(|item| item.as_ref().is_some_and(|binder| binder.name == name)),
+            };
+            let found = super::stack_binder(&stack, name).map(|(position, _)| position);
+            assert_eq!(found, expected);
+        }
+        let mut inline_only = super::WorkStack::new();
+        for name in ["a", "b", "a"] {
+            let binder = super::Binder {
+                name: alloc::string::String::from(name),
+                sort: Sort::Codes,
+            };
+            assert!(inline_only.push_bounded(binder, 100).is_ok());
+        }
+        assert_eq!(
+            super::stack_binder(&inline_only, "a").map(|(at, _)| at),
+            Some(2)
+        );
+        assert_eq!(
+            super::stack_binder(&inline_only, "b").map(|(at, _)| at),
+            Some(1)
+        );
+        assert!(super::stack_binder(&inline_only, "c").is_none());
+    }
+
+    #[test]
+    fn stack_shape_matches_the_slice_patterns() {
+        let stack_zero =
+            || noble_kernel::shapes::Pattern::StackVar(noble_kernel::words::Variable(0));
+        let i64_pattern = || noble_kernel::shapes::Pattern::I64;
+        let samples = [
+            vec![stack_zero(), i64_pattern(), i64_pattern()],
+            vec![stack_zero(), i64_pattern()],
+            vec![
+                noble_kernel::shapes::Pattern::StackVar(noble_kernel::words::Variable(1)),
+                i64_pattern(),
+                i64_pattern(),
+            ],
+            vec![i64_pattern(), i64_pattern(), i64_pattern()],
+            vec![
+                stack_zero(),
+                i64_pattern(),
+                noble_kernel::shapes::Pattern::Bool,
+            ],
+            vec![stack_zero()],
+            vec![stack_zero(), i64_pattern(), i64_pattern(), i64_pattern()],
+            Vec::new(),
+        ];
+        for sample in &samples {
+            assert_eq!(
+                super::is_stack_then_i64s(sample, 2),
+                matches!(
+                    sample.as_slice(),
+                    [
+                        noble_kernel::shapes::Pattern::StackVar(noble_kernel::words::Variable(0)),
+                        noble_kernel::shapes::Pattern::I64,
+                        noble_kernel::shapes::Pattern::I64
+                    ]
+                )
+            );
+            assert_eq!(
+                super::is_stack_then_i64s(sample, 1),
+                matches!(
+                    sample.as_slice(),
+                    [
+                        noble_kernel::shapes::Pattern::StackVar(noble_kernel::words::Variable(0)),
+                        noble_kernel::shapes::Pattern::I64
+                    ]
+                )
+            );
         }
     }
 }
