@@ -390,6 +390,186 @@ fn first_two<T>(
     (first, second)
 }
 
+/// Whether each lexical child of a quotation is the replayed source of its
+/// checked child under `candidate_to_lexical`, compared pairwise in order.
+fn maps_quotation(
+    candidate_to_lexical: &[u32],
+    source_body: &[u32],
+    body: &[noble_kernel::untrusted::NodeId],
+) -> bool {
+    let count = source_body.len().min(body.len());
+    let mut at = 0;
+    while at < count && is_lexical_source(candidate_to_lexical, body[at], source_body[at]) {
+        at += 1;
+    }
+    at == count
+}
+
+/// Whether lexical node `kind` and checked node `checked` are the same
+/// operation: equal authored literals, one builtin spelled as itself, or
+/// quotations whose children map pairwise. `bytes` is the authored token,
+/// empty for generated nodes. Every arm is a single call, so no arm branches
+/// while it holds the bindings into both nodes.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the arms call non-const slice comparisons."
+)]
+fn site_corresponds(
+    kind: &super::Kind,
+    checked: &noble_kernel::untrusted::Node,
+    is_generated: bool,
+    bytes: &[u8],
+    candidate_to_lexical: &[u32],
+) -> Result<bool, SourceProofRefusal> {
+    match (kind, checked) {
+        (
+            super::Kind::Literal(noble_kernel::untrusted::Lit::I64(authored)),
+            noble_kernel::untrusted::Node::Literal {
+                lit: noble_kernel::untrusted::Lit::I64(value),
+                ..
+            },
+        ) => Ok(same_literal(is_generated, *authored, *value)),
+        (
+            super::Kind::Call(super::Target::Builtin(builtin)),
+            noble_kernel::untrusted::Node::Invocation { def, .. },
+        ) => builtin_corresponds(is_generated, *builtin, def.0, bytes),
+        (
+            super::Kind::Quotation(source_body),
+            noble_kernel::untrusted::Node::Quotation { body, .. },
+        ) => Ok(quotation_corresponds(
+            is_generated,
+            bytes,
+            source_body,
+            body,
+            candidate_to_lexical,
+        )),
+        _ => Ok(false),
+    }
+}
+
+/// Whether an authored literal equals its checked literal; a generated node
+/// never stands for a literal.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; equality is symmetric, so the two literals cannot be swapped by accident."
+)]
+const fn same_literal(is_generated: bool, authored: i64, value: i64) -> bool {
+    !is_generated && authored == value
+}
+
+/// Whether a builtin call is checked invocation `def` and, when authored, is
+/// spelled as that builtin; a builtin outside the source-proof profile is
+/// refused.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the spelling check compares byte slices, which is not const."
+)]
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; equality is symmetric, so the two builtin identities cannot be swapped by accident."
+)]
+fn builtin_corresponds(
+    is_generated: bool,
+    builtin: u32,
+    def: u32,
+    bytes: &[u8],
+) -> Result<bool, SourceProofRefusal> {
+    if builtin != def {
+        return Ok(false);
+    }
+    if is_generated {
+        return Ok(true);
+    }
+    match builtin_spelled(builtin, bytes) {
+        Some(is_spelled) => Ok(is_spelled),
+        None => Err(SourceProofRefusal::UnsupportedProfile),
+    }
+}
+
+/// Whether `bytes` spells source-proof builtin `builtin`; `None` outside the
+/// profile.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; byte-slice comparison is not const."
+)]
+fn builtin_spelled(builtin: u32, bytes: &[u8]) -> Option<bool> {
+    match builtin {
+        0 => Some(bytes == b"dup"),
+        1 => Some(bytes == b"drop"),
+        2 => Some(bytes == b"swap"),
+        3 => Some(bytes == b"dip"),
+        4 => Some(bytes == b"+"),
+        5 => Some(bytes == b"-"),
+        6 => Some(bytes == b"*"),
+        8 => Some(bytes == b"quote"),
+        9 => Some(bytes == b"compose"),
+        10 => Some(bytes == b"run"),
+        _ => None,
+    }
+}
+
+/// Whether an authored quotation is bracketed (a generated one need not be)
+/// and its children map pairwise onto the checked quotation's children.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the pairwise map reads the runtime candidate-to-lexical table and is not const."
+)]
+fn quotation_corresponds(
+    is_generated: bool,
+    bytes: &[u8],
+    source_body: &[u32],
+    body: &[noble_kernel::untrusted::NodeId],
+    candidate_to_lexical: &[u32],
+) -> bool {
+    (is_generated || is_bracketed(bytes))
+        && source_body.len() == body.len()
+        && maps_quotation(candidate_to_lexical, source_body, body)
+}
+
+/// Whether an authored token starts with `[` and ends with `]`.
+const fn is_bracketed(bytes: &[u8]) -> bool {
+    let Some(last) = bytes.len().checked_sub(1) else {
+        return false;
+    };
+    bytes[0] == b'[' && bytes[last] == b']'
+}
+
+/// Whether `lexical` is the replayed lexical source of checked `node`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the lookup reads the runtime candidate-to-lexical table and is not const."
+)]
+#[expect(
+    tigerstyle::platform_dependent_cast,
+    reason = "Owner: noble-contracts; usize is at least 32 bits on every supported target, so the u32-to-usize widening is lossless."
+)]
+fn is_lexical_source(
+    candidate_to_lexical: &[u32],
+    node: noble_kernel::untrusted::NodeId,
+    lexical: u32,
+) -> bool {
+    match candidate_to_lexical.get(node.0 as usize) {
+        Some(source) => *source == lexical,
+        None => false,
+    }
+}
+
+/// Whether a stack entry is an I64 or a Program, the values `quote` captures.
+const fn is_quotable(ty: Option<&noble_kernel::types::Ty>) -> bool {
+    let Some(ty) = ty else {
+        return false;
+    };
+    matches!(ty, noble_kernel::types::Ty::I64) || matches!(ty, noble_kernel::types::Ty::Program(..))
+}
+
+/// Whether a stack entry is a Program.
+const fn is_program(ty: Option<&noble_kernel::types::Ty>) -> bool {
+    let Some(ty) = ty else {
+        return false;
+    };
+    matches!(ty, noble_kernel::types::Ty::Program(..))
+}
+
 impl CheckedSelectedTarget<'_> {
     pub const fn definition_id(&self) -> CheckedDefinitionId {
         self.id
@@ -485,10 +665,6 @@ impl CheckedSelectedTarget<'_> {
             .is_some_and(|lexical| self.generated.contains(&lexical))
     }
 
-    #[expect(
-        tigerstyle::non_trait_imports,
-        reason = "Owner: noble-contracts; this stage imports the domain types it operates on directly, matching the module vocabulary"
-    )]
     /// Locate an operation in the selected checked definition, mapping its
     /// compact kernel index back to the complete replayed lexical arena.
     /// Generated instructions have a witness, NEVER an authored byte span.
@@ -496,7 +672,6 @@ impl CheckedSelectedTarget<'_> {
         &self,
         node: noble_kernel::untrusted::NodeId,
     ) -> Result<CheckedOperationSite, SourceProofRefusal> {
-        use noble_kernel::untrusted::{Lit, Node};
         let candidate = &self.definition.body.candidate;
         let lexical_node = self
             .lexical_source_node(node)
@@ -505,11 +680,11 @@ impl CheckedSelectedTarget<'_> {
             .tree
             .node(lexical_node)
             .map_err(|_| SourceProofRefusal::MismatchedSource)?;
-        let checked = match usize::try_from(node.0) {
-            Ok(index) => candidate.nodes.get(index),
-            Err(_) => None,
-        }
-        .ok_or(SourceProofRefusal::MismatchedSource)?;
+        let index = usize::try_from(node.0).map_err(|_| SourceProofRefusal::MismatchedSource)?;
+        let checked = candidate
+            .nodes
+            .get(index)
+            .ok_or(SourceProofRefusal::MismatchedSource)?;
         let start =
             usize::try_from(source.span.start).map_err(|_| SourceProofRefusal::MismatchedSource)?;
         let end =
@@ -525,41 +700,13 @@ impl CheckedSelectedTarget<'_> {
                 .filter(|bytes| !bytes.is_empty())
                 .ok_or(SourceProofRefusal::MismatchedSource)?
         };
-        let is_valid = match (&source.kind, checked) {
-            (
-                super::Kind::Literal(Lit::I64(a)),
-                Node::Literal {
-                    lit: Lit::I64(b), ..
-                },
-            ) => !is_generated && a == b,
-            (super::Kind::Call(super::Target::Builtin(a)), Node::Invocation { def, .. })
-                if *a == def.0 =>
-            {
-                is_generated || {
-                    let expected = match a {
-                        0 => b"dup".as_slice(),
-                        1 => b"drop".as_slice(),
-                        2 => b"swap".as_slice(),
-                        3 => b"dip".as_slice(),
-                        4 => b"+".as_slice(),
-                        5 => b"-".as_slice(),
-                        6 => b"*".as_slice(),
-                        8 => b"quote".as_slice(),
-                        9 => b"compose".as_slice(),
-                        10 => b"run".as_slice(),
-                        _ => return Err(SourceProofRefusal::UnsupportedProfile),
-                    };
-                    bytes == expected
-                }
-            }
-            (super::Kind::Quotation(source_body), Node::Quotation { body, .. }) => {
-                (is_generated || (bytes.first() == Some(&b'[') && bytes.last() == Some(&b']')))
-                    && source_body.len() == body.len()
-                    && self.maps_quotation(source_body, body)
-            }
-            _ => false,
-        };
-        if !is_valid {
+        if !site_corresponds(
+            &source.kind,
+            checked,
+            is_generated,
+            bytes,
+            &self.candidate_to_lexical,
+        )? {
             return Err(SourceProofRefusal::MismatchedSource);
         }
         let (first, second) = first_two(&self.body.derivations, |item| item.node == node);
@@ -571,30 +718,6 @@ impl CheckedSelectedTarget<'_> {
             authored_span: (!is_generated).then_some(source.span),
             generated_witness: self.lexical_witness(lexical_node),
         })
-    }
-
-    /// Whether each lexical child of a quotation is the replayed source of its
-    /// checked child, compared pairwise in order.
-    fn maps_quotation(
-        &self,
-        source_body: &[u32],
-        body: &[noble_kernel::untrusted::NodeId],
-    ) -> bool {
-        let count = source_body.len().min(body.len());
-        let mut at = 0;
-        while at < count && self.is_lexical_source(body[at], source_body[at]) {
-            at += 1;
-        }
-        at == count
-    }
-
-    /// Whether `lexical` is the replayed lexical source of checked `node`.
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-contracts; the lookup reads the runtime candidate-to-lexical table and is not const."
-    )]
-    fn is_lexical_source(&self, node: noble_kernel::untrusted::NodeId, lexical: u32) -> bool {
-        self.lexical_source_node(node) == Some(lexical)
     }
 
     #[expect(
@@ -612,17 +735,15 @@ impl CheckedSelectedTarget<'_> {
         &self,
         node: noble_kernel::untrusted::NodeId,
     ) -> Result<CheckedQuoteSite<'_>, SourceProofRefusal> {
-        use noble_kernel::{contracts::Definition, types::Ty, untrusted::Node};
+        use noble_kernel::{contracts::Definition, untrusted::Node};
         let site = self.checked_operation_site(node)?;
         let candidate = &self.definition.body.candidate;
         let source_node = self
             .tree
             .node(site.lexical_node)
             .map_err(|_| SourceProofRefusal::MismatchedSource)?;
-        let checked = match usize::try_from(node.0) {
-            Ok(index) => candidate.nodes.get(index),
-            Err(_) => None,
-        };
+        let index = usize::try_from(node.0).map_err(|_| SourceProofRefusal::UnsupportedProfile)?;
+        let checked = candidate.nodes.get(index);
         let (
             super::Kind::Call(super::Target::Builtin(8)),
             Some(Node::Invocation {
@@ -638,11 +759,8 @@ impl CheckedSelectedTarget<'_> {
         };
         let derived = &self.body.derivations[first];
         if second.is_some()
-            || !matches!(
-                derived.interface.stack_in.last(),
-                Some(Ty::I64 | Ty::Program(..))
-            )
-            || !matches!(derived.interface.stack_out.last(), Some(Ty::Program(..)))
+            || !is_quotable(derived.interface.stack_in.last())
+            || !is_program(derived.interface.stack_out.last())
             || !derived.interface.effects.is_empty()
         {
             return Err(SourceProofRefusal::UnsupportedProfile);
@@ -881,5 +999,79 @@ impl super::Session {
             witnesses,
             candidate_to_lexical,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn authored_builtins_must_spell_themselves_and_generated_builtins_need_no_token() {
+        let spellings: [(u32, &[u8]); 10] = [
+            (0, b"dup"),
+            (1, b"drop"),
+            (2, b"swap"),
+            (3, b"dip"),
+            (4, b"+"),
+            (5, b"-"),
+            (6, b"*"),
+            (8, b"quote"),
+            (9, b"compose"),
+            (10, b"run"),
+        ];
+        let check = super::builtin_corresponds;
+        for (builtin, spelling) in spellings {
+            assert_eq!(check(false, builtin, builtin, spelling), Ok(true));
+            assert_eq!(check(false, builtin, builtin, b"dupe"), Ok(false));
+            assert_eq!(check(true, builtin, builtin, b""), Ok(true));
+            // A different checked invocation never corresponds.
+            assert_eq!(check(false, builtin, 99, spelling), Ok(false));
+        }
+        // Outside the profile an authored builtin is refused; a generated
+        // one, or one that is not the checked invocation, is not.
+        for builtin in [7, 11, u32::MAX] {
+            assert_eq!(
+                check(false, builtin, builtin, b"dup"),
+                Err(super::SourceProofRefusal::UnsupportedProfile)
+            );
+            assert_eq!(check(true, builtin, builtin, b""), Ok(true));
+            assert_eq!(check(false, builtin, 0, b"dup"), Ok(false));
+        }
+    }
+
+    #[test]
+    fn literals_and_quotations_correspond_only_when_their_authored_shapes_agree() {
+        assert!(super::same_literal(false, -3, -3));
+        assert!(!super::same_literal(false, -3, 3));
+        assert!(!super::same_literal(true, 7, 7));
+        assert!(super::is_bracketed(b"[ 1 ]"));
+        assert!(super::is_bracketed(b"[]"));
+        assert!(!super::is_bracketed(b"["));
+        assert!(!super::is_bracketed(b""));
+        assert!(!super::is_bracketed(b"[ 1"));
+        assert!(!super::is_bracketed(b"1 ]"));
+        let mapped = [
+            noble_kernel::untrusted::NodeId(1),
+            noble_kernel::untrusted::NodeId(2),
+        ];
+        assert!(corresponds(false, b"[ a b ]", &[6, 7], &mapped));
+        assert!(corresponds(true, b"", &[6, 7], &mapped));
+        // Swapped children, a length mismatch, missing brackets on an
+        // authored quotation and an unmapped checked child all refuse.
+        assert!(!corresponds(false, b"[ a b ]", &[7, 6], &mapped));
+        assert!(!corresponds(false, b"[ a b ]", &[6], &mapped));
+        assert!(!corresponds(false, b"a b", &[6, 7], &mapped));
+        let unmapped = [noble_kernel::untrusted::NodeId(3)];
+        assert!(!corresponds(true, b"", &[5], &unmapped));
+    }
+
+    /// Quotation correspondence under a table where checked node `i` replays
+    /// lexical node `5 + i`.
+    fn corresponds(
+        is_generated: bool,
+        token: &[u8],
+        source_body: &[u32],
+        body: &[noble_kernel::untrusted::NodeId],
+    ) -> bool {
+        super::quotation_corresponds(is_generated, token, source_body, body, &[5, 6, 7])
     }
 }

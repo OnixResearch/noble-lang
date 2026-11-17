@@ -187,14 +187,7 @@ impl Traversal {
                 }
             }
             noble_kernel::types::Ty::Nominal(id, shape) => {
-                let is_registered = match nominal_environment(session) {
-                    Some(env) => match env.nominal(*id) {
-                        Some(decl) => decl.shape == **shape,
-                        None => false,
-                    },
-                    None => false,
-                };
-                if is_registered {
+                if is_registered_nominal(session, *id, shape) {
                     Ok(())
                 } else {
                     Err(crate::invalid(
@@ -204,11 +197,7 @@ impl Traversal {
                 }
             }
             noble_kernel::types::Ty::GenericNominal(_, _, _) => {
-                let is_valid = match nominal_environment(session) {
-                    Some(env) => env.valid_generic_instance(ty),
-                    None => false,
-                };
-                if is_valid {
+                if is_registered_generic(session, ty) {
                     Ok(())
                 } else {
                     Err(crate::invalid(
@@ -379,5 +368,38 @@ const fn nominal_environment(session: &super::Session) -> Option<&noble_kernel::
             Some(profile) => Some(&profile.environment),
             None => None,
         },
+    }
+}
+
+/// Whether nominal input `id` names a schema the session registered with
+/// exactly `shape`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; schema lookup and shape comparison are runtime table reads."
+)]
+fn is_registered_nominal(
+    session: &super::Session,
+    id: noble_kernel::types::NominalTypeId,
+    shape: &noble_kernel::types::NominalShape,
+) -> bool {
+    let Some(environment) = nominal_environment(session) else {
+        return false;
+    };
+    let Some(declaration) = environment.nominal(id) else {
+        return false;
+    };
+    declaration.shape == *shape
+}
+
+/// Whether generic nominal input `ty` is a valid instance of a family the
+/// session registered.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; generic instance validation reads runtime family tables."
+)]
+fn is_registered_generic(session: &super::Session, ty: &noble_kernel::types::Ty) -> bool {
+    match nominal_environment(session) {
+        Some(environment) => environment.valid_generic_instance(ty),
+        None => false,
     }
 }

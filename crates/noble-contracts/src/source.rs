@@ -295,9 +295,10 @@ pub fn parse_core_interface(text: &str) -> Result<CoreInterface, Error> {
     let mut is_separator = false;
     let mut at = 0;
     let mut failure = None;
-    while let Some((word, end)) = next_ascii_word(text, at) {
-        at = end;
-        if let Err(error) = core_interface_word(word, span, &mut is_separator, &mut interface) {
+    while let Some(word) = next_ascii_word(text, at) {
+        at = word.1;
+        if let Err(error) = core_interface_word(text, word, span, &mut is_separator, &mut interface)
+        {
             failure = Some(error);
             break;
         }
@@ -314,9 +315,10 @@ pub fn parse_core_interface(text: &str) -> Result<CoreInterface, Error> {
     Ok(interface)
 }
 
-/// The next word at or after byte `from` and the offset just past it, as one
-/// step of `str::split_ascii_whitespace`.
-fn next_ascii_word(text: &str, from: usize) -> Option<(&str, usize)> {
+/// The byte range of the next word at or after byte `from`, as one step of
+/// `str::split_ascii_whitespace`. Only offsets are returned, so the caller's
+/// loop carries no borrow of `text`.
+fn next_ascii_word(text: &str, from: usize) -> Option<(usize, usize)> {
     let bytes = text.as_bytes();
     let mut start = from;
     while start < bytes.len() && bytes[start].is_ascii_whitespace() {
@@ -329,15 +331,11 @@ fn next_ascii_word(text: &str, from: usize) -> Option<(&str, usize)> {
     if start == end {
         return None;
     }
-    // ASCII whitespace never occurs inside a multi-byte UTF-8 sequence, so
-    // both offsets are character boundaries.
-    match text.get(start..end) {
-        Some(word) => Some((word, end)),
-        None => None,
-    }
+    Some((start, end))
 }
 
-/// Admit one Core interface word: the stack separator or one Core type.
+/// Admit the Core interface word at byte range `word`: the stack separator or
+/// one Core type.
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
@@ -347,11 +345,17 @@ fn next_ascii_word(text: &str, from: usize) -> Option<(&str, usize)> {
     reason = "Owner: noble-contracts; it mutates only the separator flag and interface being built by its single caller, one word at a time."
 )]
 fn core_interface_word(
-    word: &str,
+    text: &str,
+    word: (usize, usize),
     span: crate::Span,
     is_separator: &mut bool,
     interface: &mut CoreInterface,
 ) -> Result<(), Error> {
+    // ASCII whitespace never occurs inside a multi-byte UTF-8 sequence, so
+    // both offsets are character boundaries and the word always exists.
+    let Some(word) = text.get(word.0..word.1) else {
+        return Err(Error::at(Stage::Check, crate::internal(span)));
+    };
     if word == "--" {
         if *is_separator {
             return Err(Error::at(
@@ -1057,12 +1061,18 @@ impl Session {
         let mut names = alloc::vec::Vec::with_capacity(dependents.len());
         let mut at = 0;
         while at < dependents.len() {
-            if let Some(definition) = self.definitions.get(dependents[at]) {
-                names.push(definition.name.clone());
+            if let Some(name) = self.definition_name_at(dependents[at]) {
+                names.push(name);
             }
             at += 1;
         }
         names
+    }
+
+    /// An owned copy of the name of the definition at `index`, if any.
+    fn definition_name_at(&self, index: usize) -> Option<alloc::string::String> {
+        let definition = self.definitions.get(index)?;
+        Some(definition.name.clone())
     }
 
     /// Only current named bodies count as live dependents. Old Programs may
@@ -1103,14 +1113,27 @@ impl Session {
 
     /// Whether a later definition reuses the name of the one at `index`.
     fn is_shadowed(&self, index: usize) -> bool {
-        let name = self.definitions[index].name.as_str();
         let mut later = index.saturating_add(1);
         let mut found = false;
         while !found && later < self.definitions.len() {
-            found = self.definitions[later].is_named(name);
+            found = self.same_name(index, later);
             later += 1;
         }
         found
+    }
+
+    /// Whether the definitions at `left` and `right` share a name; only the
+    /// indexes cross the caller's loop.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; String comparison is not const."
+    )]
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "Owner: noble-contracts; name equality is symmetric, so the two indexes cannot be swapped by accident."
+    )]
+    fn same_name(&self, left: usize, right: usize) -> bool {
+        self.definitions[left].name == self.definitions[right].name
     }
 
     #[expect(
@@ -1488,10 +1511,6 @@ impl Session {
         tigerstyle::borrowed_argument_types,
         reason = "Owner: noble-contracts; unseen named callees are appended to the walk's worklist with Vec::push, so it needs the growable vector."
     )]
-    #[expect(
-        tigerstyle::platform_dependent_cast,
-        reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
-    )]
     fn nodes_require_host_effects(
         &self,
         environment: &noble_kernel::contracts::Env,
@@ -1502,29 +1521,98 @@ impl Session {
         let mut requires = false;
         let mut at = 0;
         while !requires && at < nodes.len() {
-            requires = match &nodes[at].kind {
-                Kind::Call(Target::Builtin(index)) => match environment.defs.get(*index as usize) {
-                    Some(scheme) => self.scheme_requires_host_effects(scheme),
-                    None => true,
-                },
-                Kind::Call(Target::Named(index)) => {
-                    let index = *index as usize;
-                    match (self.definitions.get(index), seen.get_mut(index)) {
-                        (Some(_), Some(visited)) => {
-                            if !*visited {
-                                *visited = true;
-                                pending.push(index);
-                            }
-                            false
-                        }
-                        _ => true,
-                    }
-                }
-                _ => false,
-            };
+            requires = self.node_requires_host_effects(environment, &nodes[at], seen, pending);
             at += 1;
         }
         requires
+    }
+
+    /// Whether one node needs an unavailable host effect; an unseen named
+    /// callee is queued instead.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it marks only the private visited set and worklist of tree_requires_host_effects."
+    )]
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-contracts; unseen named callees are appended to the walk's worklist with Vec::push, so it needs the growable vector."
+    )]
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
+    #[expect(
+        tigerstyle::platform_dependent_cast,
+        reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
+    )]
+    fn node_requires_host_effects(
+        &self,
+        environment: &noble_kernel::contracts::Env,
+        node: &Node,
+        seen: &mut [bool],
+        pending: &mut alloc::vec::Vec<usize>,
+    ) -> bool {
+        match &node.kind {
+            Kind::Call(Target::Builtin(index)) => {
+                self.builtin_requires_host_effects(environment, *index)
+            }
+            Kind::Call(Target::Named(index)) => self.queue_named(*index as usize, seen, pending),
+            _ => false,
+        }
+    }
+
+    /// Whether builtin `index` is unavailable or admits an unscoped effect.
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
+    #[expect(
+        tigerstyle::platform_dependent_cast,
+        reason = "Owner: noble-contracts; the operand is a u32 table index and the cast is a widening that cannot fail where usize is at least 32 bits; the portable form would add fallible plumbing to infallible lookups"
+    )]
+    fn builtin_requires_host_effects(
+        &self,
+        environment: &noble_kernel::contracts::Env,
+        index: u32,
+    ) -> bool {
+        match environment.defs.get(index as usize) {
+            Some(scheme) => self.scheme_requires_host_effects(scheme),
+            None => true,
+        }
+    }
+
+    /// Queue the named callee `index` once; a missing definition fails closed.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it marks only the private visited set and worklist of tree_requires_host_effects."
+    )]
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-contracts; unseen named callees are appended to the walk's worklist with Vec::push, so it needs the growable vector."
+    )]
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+    )]
+    fn queue_named(
+        &self,
+        index: usize,
+        seen: &mut [bool],
+        pending: &mut alloc::vec::Vec<usize>,
+    ) -> bool {
+        if self.definitions.get(index).is_none() {
+            return true;
+        }
+        match seen.get_mut(index) {
+            Some(visited) => {
+                if !*visited {
+                    *visited = true;
+                    pending.push(index);
+                }
+                false
+            }
+            None => true,
+        }
     }
 
     /// Whether a builtin scheme admits an effect other than this session's

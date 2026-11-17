@@ -90,9 +90,8 @@ pub(super) fn lower_with_witness(
 }
 
 #[expect(
-    tigerstyle::assertion_density,
     tigerstyle::mutating_input_in_pure,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
 )]
 fn lower_inner(
     tree: &mut super::Tree,
@@ -112,12 +111,7 @@ fn lower_inner(
     };
     let envelope = if has_envelope { tree.nodes.pop() } else { None };
     let body = core::mem::take(&mut tree.body);
-    let mut lower = Lower {
-        nodes: &mut tree.nodes,
-        meter,
-        witnesses,
-    };
-    let lowered = lower.body(&body, Vec::new(), 0);
+    let lowered = lower_body(&mut tree.nodes, meter, witnesses, &body);
     if let Some(envelope) = envelope {
         tree.nodes.push(envelope);
     }
@@ -125,16 +119,60 @@ fn lower_inner(
     Ok(())
 }
 
+/// Lower one body through a `Lower` that borrows the node arena, meter and
+/// witness log only for the duration of this call.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; lowering appends generated nodes to the growable node arena."
+)]
+fn lower_body(
+    nodes: &mut Vec<super::Node>,
+    meter: &mut crate::Meter,
+    witnesses: Option<&mut Vec<GeneratedWitness>>,
+    body: &[u32],
+) -> Result<Vec<u32>, crate::Diagnostic> {
+    let mut lower = Lower {
+        nodes,
+        meter,
+        witnesses,
+    };
+    lower.body(body, Vec::new(), 0)
+}
+
 /// Whether node `last` is an empty quotation the body never references.
 fn is_envelope(tree: &super::Tree, last: usize) -> bool {
-    if !matches!(&tree.nodes[last].kind, super::Kind::Quotation(children) if children.is_empty()) {
+    if !is_empty_quotation(&tree.nodes[last].kind) {
         return false;
     }
     let mut at = 0;
-    while at < tree.body.len() && !matches!(usize::try_from(tree.body[at]), Ok(id) if id == last) {
+    while at < tree.body.len() && !names_node(tree.body[at], last) {
         at += 1;
     }
     at == tree.body.len()
+}
+
+/// Whether a node is a quotation without children.
+const fn is_empty_quotation(kind: &super::Kind) -> bool {
+    match kind {
+        super::Kind::Quotation(children) => children.is_empty(),
+        _ => false,
+    }
+}
+
+/// Whether body entry `id` names the arena node `node`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the checked u32-to-usize conversion is not const."
+)]
+fn names_node(id: u32, node: usize) -> bool {
+    match usize::try_from(id) {
+        Ok(id) => id == node,
+        Err(_) => false,
+    }
 }
 
 /// Whether a node is the `let` binding keyword.
@@ -154,7 +192,7 @@ fn name(bytes: &[u8]) -> bool {
     let Some((&first, rest)) = bytes.split_first() else {
         return false;
     };
-    matches!(first, b'a'..=b'z' | b'A'..=b'Z' | b'_')
+    (first.is_ascii_alphabetic() || first == b'_')
         && super::every_byte(rest, |byte| byte.is_ascii_alphanumeric() || byte == b'_')
         && bytes != b"let"
 }
@@ -339,9 +377,8 @@ fn shadowed(
 /// Mark the first outer binder named `word` as used, charging one unit per
 /// binder inspected.
 #[expect(
-    tigerstyle::assertion_density,
     tigerstyle::mutating_input_in_pure,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
 )]
 fn mark_outer_use(
     outer: &[Bound],
@@ -358,15 +395,35 @@ fn mark_outer_use(
             failure = Some(problem);
             break;
         }
-        if same_bytes(&outer[at].name, word) {
-            used[at] = true;
-            is_found = true;
-        }
+        is_found = mark_if_named(outer, word, used, at);
         at += 1;
     }
     match failure {
         Some(problem) => Err(problem),
         None => Ok(()),
+    }
+}
+
+/// Mark outer binder `at` as used when it is named `word`, reporting whether
+/// it was.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; it marks only the caller-owned capture set for this bounded pass."
+)]
+fn mark_if_named(outer: &[Bound], word: &[u8], used: &mut [bool], at: usize) -> bool {
+    let is_named = same_bytes(&outer[at].name, word);
+    if is_named {
+        used[at] = true;
+    }
+    is_named
+}
+
+/// `Some(at)` when `is_match`, so a scan records its match without branching.
+const fn matched_at(is_match: bool, at: usize) -> Option<usize> {
+    if is_match {
+        Some(at)
+    } else {
+        None
     }
 }
 
@@ -568,9 +625,7 @@ impl Lower<'_> {
                 failure = Some(problem);
                 break;
             }
-            if same_bytes(&locals[at].name, word) {
-                found = Some(at);
-            }
+            found = matched_at(same_bytes(&locals[at].name, word), at);
             at += 1;
         }
         match failure {
@@ -703,42 +758,22 @@ impl Lower<'_> {
         // `outer[0]` is the newest/top binder. Capture oldest first, so
         // replaying the composed programs reconstructs that same stack order.
         let mut index = used.len();
-        let mut outcome = Ok(());
-        while outcome.is_ok() && index > 0 {
+        let mut failure = None;
+        while index > 0 {
             index -= 1;
             if used[index] {
-                let binder_node = Some(outer[index].binder_node);
-                outcome = self.read(&mut lowered, index, outer, depth, span, id);
-                if outcome.is_ok() {
-                    outcome = self.operation(
-                        &mut lowered,
-                        8,
-                        outer,
-                        outer.len(),
-                        depth,
-                        span,
-                        Generation::CaptureQuote,
-                        id,
-                        binder_node,
-                    );
-                }
-                if outcome.is_ok() && !is_first {
-                    outcome = self.operation(
-                        &mut lowered,
-                        9,
-                        outer,
-                        outer.len(),
-                        depth,
-                        span,
-                        Generation::CaptureCompose,
-                        id,
-                        binder_node,
-                    );
+                if let Err(problem) =
+                    self.capture(&mut lowered, index, outer, depth, span, id, is_first)
+                {
+                    failure = Some(problem);
+                    break;
                 }
                 is_first = false;
             }
         }
-        attempt!(outcome);
+        if let Some(problem) = failure {
+            return Err(problem);
+        }
         let body = attempt!(self.body(&nested, captured, deeper));
         let node = self
             .nodes
@@ -767,6 +802,61 @@ impl Lower<'_> {
             ));
         }
         Ok(lowered)
+    }
+
+    /// Capture outer binder `index` into a quotation's prefix: read it, quote
+    /// it, and compose it after the previous capture unless it is the first.
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Owner: noble-contracts; one capture step names its output code, binder, locals and owner coordinates separately; bundling them would hide which state each lowering call reads"
+    )]
+    #[expect(
+        tigerstyle::ambiguous_params,
+        tigerstyle::mutating_input_in_pure,
+        tigerstyle::too_many_parameters,
+        reason = "Owner: noble-contracts; the same-typed parameters are positional coordinates at each checked call site; a newtype would not change the call shape; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable; the parameters are independent checked inputs and shared budget state threaded explicitly; an options struct would only rename the same borrowed fields."
+    )]
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-contracts; the emitted code buffer grows with Vec::push, so it needs the growable vector."
+    )]
+    fn capture(
+        &mut self,
+        lowered: &mut Vec<u32>,
+        index: usize,
+        outer: &[Bound],
+        depth: u32,
+        span: crate::Span,
+        id: u32,
+        is_first: bool,
+    ) -> Result<(), crate::Diagnostic> {
+        let binder_node = Some(outer[index].binder_node);
+        attempt!(self.read(lowered, index, outer, depth, span, id));
+        attempt!(self.operation(
+            lowered,
+            8,
+            outer,
+            outer.len(),
+            depth,
+            span,
+            Generation::CaptureQuote,
+            id,
+            binder_node
+        ));
+        if !is_first {
+            attempt!(self.operation(
+                lowered,
+                9,
+                outer,
+                outer.len(),
+                depth,
+                span,
+                Generation::CaptureCompose,
+                id,
+                binder_node
+            ));
+        }
+        Ok(())
     }
 
     #[expect(
@@ -915,23 +1005,7 @@ impl Lower<'_> {
         // The new value is just below the previously hidden locals.
         // Move it above them before installing it as the newest
         // binder; `swap` moves ownership without copying or dropping.
-        let mut hidden = state.locals.len();
-        let mut outcome = Ok(());
-        while outcome.is_ok() && hidden > 0 {
-            hidden -= 1;
-            outcome = self.operation(
-                &mut state.code,
-                2,
-                &state.locals,
-                hidden,
-                depth,
-                span,
-                Generation::BindingSwap,
-                id,
-                Some(next),
-            );
-        }
-        attempt!(outcome);
+        attempt!(self.swap_above_hidden(&mut state.code, &state.locals, (id, next), depth, span));
         let bound = core::mem::replace(
             &mut self.nodes[attempt!(crate::offset(next, span))].kind,
             super::Kind::Quotation(Vec::new()),
@@ -949,6 +1023,50 @@ impl Lower<'_> {
         );
         state.introduced += 1;
         Ok(())
+    }
+
+    /// Move a just-bound value above every hidden local with `swap`s, from the
+    /// oldest hidden local down, stopping at the first refusal. `binding` is
+    /// the `let` node and its binder node.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-contracts; the emitted code buffer grows with Vec::push, so it needs the growable vector."
+    )]
+    fn swap_above_hidden(
+        &mut self,
+        code: &mut Vec<u32>,
+        locals: &[Bound],
+        binding: (u32, u32),
+        depth: u32,
+        span: crate::Span,
+    ) -> Result<(), crate::Diagnostic> {
+        let mut hidden = locals.len();
+        let mut failure = None;
+        while hidden > 0 {
+            hidden -= 1;
+            if let Err(problem) = self.operation(
+                code,
+                2,
+                locals,
+                hidden,
+                depth,
+                span,
+                Generation::BindingSwap,
+                binding.0,
+                Some(binding.1),
+            ) {
+                failure = Some(problem);
+                break;
+            }
+        }
+        match failure {
+            Some(problem) => Err(problem),
+            None => Ok(()),
+        }
     }
 }
 
