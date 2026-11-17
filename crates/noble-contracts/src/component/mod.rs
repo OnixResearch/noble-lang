@@ -324,16 +324,15 @@ impl World {
                 "Worker transition WIT requires the checked schema Program",
             ));
         }
-        let mut matches = self.resources.iter().filter(|resource| {
-            resource.identity == "noble-test:worker-transition/programs@1.0.0#program"
-        });
-        let resource = matches
-            .next()
-            .ok_or_else(|| unsupported("selected transition Program resource is absent"))?;
-        if matches.next().is_some() {
+        let (first, is_duplicate) = matching_resource(
+            &self.resources,
+            "noble-test:worker-transition/programs@1.0.0#program",
+        );
+        let kind =
+            first.ok_or_else(|| unsupported("selected transition Program resource is absent"))?;
+        if is_duplicate {
             return Err(invalid("duplicate transition Program resource"));
         }
-        let kind = resource.kind;
         if !self.has_transition_operation_shape(kind) {
             return Err(unsupported(
                 "Worker transition WIT operation or ownership shape differs",
@@ -358,16 +357,14 @@ impl World {
         {
             return Err(unsupported("Worker Program WIT world differs"));
         }
-        let mut matches = self.resources.iter().filter(|resource| {
-            resource.identity == "noble-test:worker-program/programs@2.0.0#program"
-        });
-        let resource = matches
-            .next()
-            .ok_or_else(|| unsupported("selected WIT Program resource is absent"))?;
-        if matches.next().is_some() {
+        let (first, is_duplicate) = matching_resource(
+            &self.resources,
+            "noble-test:worker-program/programs@2.0.0#program",
+        );
+        let kind = first.ok_or_else(|| unsupported("selected WIT Program resource is absent"))?;
+        if is_duplicate {
             return Err(invalid("duplicate WIT Program resource"));
         }
-        let kind = resource.kind;
         if self.resources.len() != 1
             || self.imports.len() != 3
             || self.exports.len() != 1
@@ -509,6 +506,32 @@ fn exhausted() -> Error {
     )
 }
 
+/// The kind of the first resource named `identity`, and whether a second one follows it.
+fn matching_resource(
+    resources: &[Resource],
+    identity: &str,
+) -> (Option<noble_kernel::types::ResourceKind>, bool) {
+    let mut first = None;
+    let mut is_duplicate = false;
+    let mut at = 0;
+    while !is_duplicate && at < resources.len() {
+        if has_identity(&resources[at], identity) {
+            if first.is_none() {
+                first = Some(resources[at].kind);
+            } else {
+                is_duplicate = true;
+            }
+        }
+        at += 1;
+    }
+    (first, is_duplicate)
+}
+
+/// Whether `resource` is named `identity`.
+fn has_identity(resource: &Resource, identity: &str) -> bool {
+    resource.identity == identity
+}
+
 /// Only actual source preparation can construct an export. All getters borrow.
 pub struct CheckedExport {
     world: alloc::vec::Vec<u8>,
@@ -532,5 +555,31 @@ impl CheckedExport {
     }
     pub fn submission(&self) -> Option<&noble_kernel::execution::Submission> {
         self.prepared.submission()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    fn resource(identity: &str, kind: u32) -> super::Resource {
+        super::Resource {
+            identity: alloc::string::String::from(identity),
+            interface: alloc::string::String::from("programs"),
+            name: alloc::string::String::from("program"),
+            kind: noble_kernel::types::ResourceKind(kind),
+        }
+    }
+
+    #[test]
+    fn matching_resource_selects_the_first_and_flags_a_second_match() {
+        let resources = [resource("a#x", 1), resource("b#y", 2), resource("a#x", 3)];
+        assert_eq!(
+            super::matching_resource(&resources, "b#y"),
+            (Some(noble_kernel::types::ResourceKind(2)), false)
+        );
+        assert_eq!(
+            super::matching_resource(&resources, "a#x"),
+            (Some(noble_kernel::types::ResourceKind(1)), true)
+        );
+        assert_eq!(super::matching_resource(&resources, "c#z"), (None, false));
     }
 }

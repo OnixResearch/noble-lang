@@ -47,8 +47,10 @@ impl super::Context<'_> {
         if let Some(problem) = failure {
             return Err(problem);
         }
-        let flat_count = parameters.iter().fold(0usize, |count, ty| {
-            count.saturating_add(match ty {
+        let mut flat_count = 0usize;
+        at = 0;
+        while at < parameters.len() {
+            flat_count = flat_count.saturating_add(match parameters[at] {
                 crate::component::Type::String | crate::component::Type::Bytes => 2,
                 crate::component::Type::ResultS64String
                 | crate::component::Type::ResultBytesString => 3,
@@ -60,8 +62,9 @@ impl super::Context<'_> {
                 | crate::component::Type::FutureResultS64String
                 | crate::component::Type::Own(_)
                 | crate::component::Type::Borrow(_) => 1,
-            })
-        });
+            });
+            at = at.saturating_add(1);
+        }
         if flat_count > super::MAX_FLAT_PARAMETERS {
             return Err(crate::component::unsupported(
                 "indirect parameter tuples are outside the bounded canonical adapter",

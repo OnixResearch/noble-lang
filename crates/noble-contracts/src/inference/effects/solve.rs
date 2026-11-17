@@ -24,10 +24,6 @@ impl Symbolic {
 }
 
 #[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-contracts; the single-pass dispatcher is kept linear so its stage order stays reviewable"
-)]
-#[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
 )]
@@ -43,91 +39,245 @@ pub(super) fn rigid(
         return Ok(());
     }
     let mut facts = alloc::vec::Vec::with_capacity(arena.effects.len());
-    for effect in &arena.effects {
-        facts.push(match effect {
-            super::Effect::Constant(bits) => Symbolic {
-                concrete: *bits,
-                ..Symbolic::empty()
-            },
-            super::Effect::Rigid(index) => Symbolic {
-                rigid: attempt!(1u64
-                    .checked_shl(*index)
-                    .ok_or_else(|| { crate::invalid(span, "rigid effect binder limit exceeded") })),
-                ..Symbolic::empty()
-            },
-            super::Effect::Hole => Symbolic {
-                unknown: true,
-                ..Symbolic::empty()
-            },
-            super::Effect::Union(_, _) => Symbolic::empty(),
-        });
+    let mut failure = None;
+    let mut at = 0;
+    while at < arena.effects.len() {
+        match initial_fact(&arena.effects[at], span) {
+            Ok(fact) => facts.push(fact),
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+        at += 1;
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
     }
     let mut is_changed = true;
     // Concrete and rigid bits only accumulate; an unconstrained hole can
     // only become constrained. The work meter bounds this finite fixed point
     // even when several independent equations constrain the same hole.
     while is_changed {
-        attempt!(meter.charge(1, span));
-        is_changed = false;
-        for (at, effect) in arena.effects.iter().enumerate() {
-            attempt!(meter.charge(1, span));
-            if let super::Effect::Union(a, b) = effect {
-                let left = attempt!(symbol(&facts, *a, span));
-                let right = attempt!(symbol(&facts, *b, span));
-                let next = left.union(right);
-                if facts[at] != next {
-                    facts[at] = next;
-                    is_changed = true;
-                }
-            }
-        }
-        for (a, b) in &arena.effect_equations {
-            attempt!(meter.charge(1, span));
-            let left = attempt!(symbol(&facts, *a, span));
-            let right = attempt!(symbol(&facts, *b, span));
-            let combined = Symbolic {
-                concrete: left.concrete | right.concrete,
-                rigid: left.rigid | right.rigid,
-                unknown: left.unknown && right.unknown,
-            };
-            for id in [*a, *b] {
-                is_changed |= attempt!(equate_through_pure(
-                    &arena.effects,
-                    &mut facts,
-                    id,
-                    combined,
-                    span,
-                    meter,
-                ));
+        match rigid_pass(arena, &mut facts, span, meter) {
+            Ok(has_changed) => is_changed = has_changed,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
             }
         }
     }
-    for (a, b) in &arena.effect_equations {
-        let left = attempt!(symbol(&facts, *a, span));
-        let right = attempt!(symbol(&facts, *b, span));
-        // Assign every still-open hole the union of its accumulated concrete
-        // effects and rigid binders. Equal summaries give one simultaneous
-        // symbolic witness for all equations under every binder instantiation.
-        // An unequal open equation may have another existential solution, but
-        // without a verified witness it cannot authorize a signed body.
-        if left.concrete != right.concrete || left.rigid != right.rigid {
-            let reason = if left.unknown || right.unknown {
-                "unresolved universal effect equation has no verified witness"
-            } else {
-                "signature narrows a universal effect"
-            };
-            return Err(crate::invalid(span, reason));
+    if let Some(problem) = failure {
+        return Err(problem);
+    }
+    at = 0;
+    while at < arena.effect_equations.len() {
+        let (a, b) = arena.effect_equations[at];
+        if let Err(problem) = rigid_equation_witness(&facts, a, b, span) {
+            failure = Some(problem);
+            break;
+        }
+        at += 1;
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
+    }
+    at = 0;
+    while at < arena.rigid_effect_goals.len() {
+        let (body, declared) = arena.rigid_effect_goals[at];
+        if let Err(problem) = rigid_goal(&facts, body, declared, span) {
+            failure = Some(problem);
+            break;
+        }
+        at += 1;
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
+}
+
+/// The symbolic summary an effect starts from before propagation.
+fn initial_fact(effect: &super::Effect, span: crate::Span) -> Result<Symbolic, crate::Diagnostic> {
+    Ok(match effect {
+        super::Effect::Constant(bits) => Symbolic {
+            concrete: *bits,
+            ..Symbolic::empty()
+        },
+        super::Effect::Rigid(index) => Symbolic {
+            rigid: attempt!(1u64
+                .checked_shl(*index)
+                .ok_or_else(|| { crate::invalid(span, "rigid effect binder limit exceeded") })),
+            ..Symbolic::empty()
+        },
+        super::Effect::Hole => Symbolic {
+            unknown: true,
+            ..Symbolic::empty()
+        },
+        super::Effect::Union(_, _) => Symbolic::empty(),
+    })
+}
+
+/// One charged propagation pass over unions, then equations; whether any fact changed.
+fn rigid_pass(
+    arena: &crate::inference::Arena,
+    facts: &mut [Symbolic],
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> Result<bool, crate::Diagnostic> {
+    attempt!(meter.charge(1, span));
+    let unions_changed = attempt!(rigid_unions(&arena.effects, facts, span, meter));
+    let equations_changed = attempt!(rigid_equations(arena, facts, span, meter));
+    Ok(unions_changed || equations_changed)
+}
+
+/// Recompute every union fact in order, stopping at the first refusal.
+fn rigid_unions(
+    effects: &[super::Effect],
+    facts: &mut [Symbolic],
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> Result<bool, crate::Diagnostic> {
+    let mut is_changed = false;
+    let mut outcome = Ok(());
+    let mut at = 0;
+    while at < effects.len() {
+        match rigid_union(&effects[at], at, facts, span, meter) {
+            Ok(has_changed) => is_changed |= has_changed,
+            Err(problem) => {
+                outcome = Err(problem);
+                break;
+            }
+        }
+        at += 1;
+    }
+    attempt!(outcome);
+    Ok(is_changed)
+}
+
+/// Charge one effect and refresh its fact when it is a union.
+fn rigid_union(
+    effect: &super::Effect,
+    at: usize,
+    facts: &mut [Symbolic],
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> Result<bool, crate::Diagnostic> {
+    attempt!(meter.charge(1, span));
+    if let super::Effect::Union(a, b) = effect {
+        let left = attempt!(symbol(facts, *a, span));
+        let right = attempt!(symbol(facts, *b, span));
+        let next = left.union(right);
+        if facts[at] != next {
+            facts[at] = next;
+            return Ok(true);
         }
     }
-    for (body, declared) in &arena.rigid_effect_goals {
-        let actual = attempt!(symbol(&facts, *body, span));
-        let expected = attempt!(symbol(&facts, *declared, span));
-        if actual.unknown || expected.unknown || actual != expected {
-            return Err(crate::invalid(
-                span,
-                "source body does not preserve its universal effect bound",
-            ));
+    Ok(false)
+}
+
+/// Propagate every effect equation in order, stopping at the first refusal.
+fn rigid_equations(
+    arena: &crate::inference::Arena,
+    facts: &mut [Symbolic],
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> Result<bool, crate::Diagnostic> {
+    let mut is_changed = false;
+    let mut outcome = Ok(());
+    let mut at = 0;
+    while at < arena.effect_equations.len() {
+        let (a, b) = arena.effect_equations[at];
+        match rigid_equation(&arena.effects, facts, a, b, span, meter) {
+            Ok(has_changed) => is_changed |= has_changed,
+            Err(problem) => {
+                outcome = Err(problem);
+                break;
+            }
         }
+        at += 1;
+    }
+    attempt!(outcome);
+    Ok(is_changed)
+}
+
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; the parameter list is the internal call shape; bundling it would change the extracted subject"
+)]
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+)]
+/// Charge one equation and push its combined summary through both sides.
+fn rigid_equation(
+    effects: &[super::Effect],
+    facts: &mut [Symbolic],
+    a: u32,
+    b: u32,
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> Result<bool, crate::Diagnostic> {
+    attempt!(meter.charge(1, span));
+    let left = attempt!(symbol(facts, a, span));
+    let right = attempt!(symbol(facts, b, span));
+    let combined = Symbolic {
+        concrete: left.concrete | right.concrete,
+        rigid: left.rigid | right.rigid,
+        unknown: left.unknown && right.unknown,
+    };
+    let mut is_changed = attempt!(equate_through_pure(effects, facts, a, combined, span, meter));
+    is_changed |= attempt!(equate_through_pure(effects, facts, b, combined, span, meter));
+    Ok(is_changed)
+}
+
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+)]
+/// Refuse an equation whose two sides do not share one symbolic witness.
+fn rigid_equation_witness(
+    facts: &[Symbolic],
+    a: u32,
+    b: u32,
+    span: crate::Span,
+) -> Result<(), crate::Diagnostic> {
+    let left = attempt!(symbol(facts, a, span));
+    let right = attempt!(symbol(facts, b, span));
+    // Assign every still-open hole the union of its accumulated concrete
+    // effects and rigid binders. Equal summaries give one simultaneous
+    // symbolic witness for all equations under every binder instantiation.
+    // An unequal open equation may have another existential solution, but
+    // without a verified witness it cannot authorize a signed body.
+    if left.concrete != right.concrete || left.rigid != right.rigid {
+        let reason = if left.unknown || right.unknown {
+            "unresolved universal effect equation has no verified witness"
+        } else {
+            "signature narrows a universal effect"
+        };
+        return Err(crate::invalid(span, reason));
+    }
+    Ok(())
+}
+
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; the same-typed parameters are positional by contract and named at every call site"
+)]
+/// Refuse a body whose effect summary differs from its declared universal bound.
+fn rigid_goal(
+    facts: &[Symbolic],
+    body: u32,
+    declared: u32,
+    span: crate::Span,
+) -> Result<(), crate::Diagnostic> {
+    let actual = attempt!(symbol(facts, body, span));
+    let expected = attempt!(symbol(facts, declared, span));
+    if actual.unknown || expected.unknown || actual != expected {
+        return Err(crate::invalid(
+            span,
+            "source body does not preserve its universal effect bound",
+        ));
     }
     Ok(())
 }
@@ -560,5 +710,27 @@ mod tests {
         let pure = arena.effect_empty(SPAN, &mut meter)?;
         arena.require_rigid_effect(pure, pure, SPAN, &mut meter)?;
         super::rigid(&arena, SPAN, &mut meter)
+    }
+
+    #[test]
+    fn rigid_fixed_point_charges_every_pass_effect_equation_and_propagation_step() {
+        // Three passes (the third changes nothing), each charging the pass,
+        // three effects, one equation and one propagation step per side.
+        let mut arena = crate::inference::Arena::new();
+        arena.effects = alloc::vec![Effect::Constant(1), Effect::Hole, Effect::Union(0, 1)];
+        arena.effect_equations = alloc::vec![(1, 0)];
+        arena.rigid_effect_goals = alloc::vec![(2, 2)];
+        let limits = |work| crate::Limits {
+            work,
+            ..crate::Limits::default()
+        };
+        let mut meter = crate::Meter::new(limits(21));
+        assert!(super::rigid(&arena, SPAN, &mut meter).is_ok());
+        assert_eq!(meter.spent(), 21);
+        let mut meter = crate::Meter::new(limits(20));
+        let refused = super::rigid(&arena, SPAN, &mut meter)
+            .expect_err("the last propagation step needs the 21st unit");
+        assert_eq!(refused.message, "frontend work limit exceeded");
+        assert_eq!(meter.spent(), 20);
     }
 }

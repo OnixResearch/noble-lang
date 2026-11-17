@@ -66,9 +66,14 @@ fn scoped_resource(
     interface: &str,
     name: &str,
 ) -> Result<noble_kernel::types::ResourceKind, crate::component::Error> {
-    let position = resources
-        .iter()
-        .position(|resource| resource.name == name && resource.interface == interface);
+    let mut position = None;
+    let mut at = 0;
+    while position.is_none() && at < resources.len() {
+        if is_scoped_resource(&resources[at], interface, name) {
+            position = Some(at);
+        }
+        at += 1;
+    }
     let index = match position {
         Some(index) => index,
         None => {
@@ -97,19 +102,34 @@ fn use_index(
     let mut at = 0usize;
     let mut failure = None;
     while let Some(item) = selected.items.get(at) {
-        if let super::super::Item::Use(usage) = item {
-            if usage.name == name {
-                if scope.is_some() {
-                    failure = Some(crate::component::invalid("ambiguous WIT resource use"));
-                    break;
-                }
-                scope = Some(at);
+        if is_named_use(item, name) {
+            if scope.is_some() {
+                failure = Some(crate::component::invalid("ambiguous WIT resource use"));
+                break;
             }
+            scope = Some(at);
         }
         at = at.saturating_add(1);
     }
     match failure {
         Some(problem) => Err(problem),
         None => Ok(scope),
+    }
+}
+
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-maintainers; the interface and member name are matched against their corresponding fields, mirroring scoped_resource."
+)]
+/// Whether `resource` is the member `name` of `interface`.
+fn is_scoped_resource(resource: &crate::component::Resource, interface: &str, name: &str) -> bool {
+    resource.name == name && resource.interface == interface
+}
+
+/// Whether `item` is a `use` of the resource `name`.
+fn is_named_use(item: &super::super::Item, name: &str) -> bool {
+    match item {
+        super::super::Item::Use(usage) => usage.name == name,
+        super::super::Item::Function(..) | super::super::Item::Interface(..) => false,
     }
 }
