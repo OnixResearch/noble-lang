@@ -62,6 +62,133 @@ fn get_global(out: &mut crate::output::Buffer, id: usize) -> Result<(), crate::D
     out.append(b")")
 }
 
+/// One `$index` dispatch arm returning Program global `id` for handle `index`.
+fn handle_case(
+    out: &mut crate::output::Buffer,
+    index: usize,
+    id: usize,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b"(if (i32.eq (local.get $index) "));
+    attempt!(out.i32(attempt!(
+        u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
+    )));
+    attempt!(out.append(b") (then (return "));
+    attempt!(get_global(out, id));
+    out.append(b")))\n")
+}
+
+/// Handle dispatch arms for the module's Program globals `0..programs`.
+fn program_handle_cases(
+    out: &mut crate::output::Buffer,
+    programs: usize,
+) -> Result<(), crate::Diagnostic> {
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < programs {
+        match handle_case(out, index, index) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
+}
+
+/// `prefix`, a read of Program global `id`, and `suffix` for every id in
+/// `0..programs`, in order.
+fn program_global_lines(
+    out: &mut crate::output::Buffer,
+    programs: usize,
+    prefix: &[u8],
+    suffix: &[u8],
+) -> Result<(), crate::Diagnostic> {
+    let mut id = 0usize;
+    let mut failure = None;
+    while id < programs {
+        match program_global_line(out, id, prefix, suffix) {
+            Ok(()) => id += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
+}
+
+/// `prefix`, a read of Program global `id`, and `suffix`.
+fn program_global_line(
+    out: &mut crate::output::Buffer,
+    id: usize,
+    prefix: &[u8],
+    suffix: &[u8],
+) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(prefix));
+    attempt!(get_global(out, id));
+    out.append(suffix)
+}
+
+/// Passive data segments for the calculator signature keys with IDs
+/// `base..`, in order.
+fn signature_segments(
+    out: &mut crate::output::Buffer,
+    base: usize,
+    keys: &[alloc::vec::Vec<u8>],
+) -> Result<(), crate::Diagnostic> {
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < keys.len() {
+        match metadata::signature_segment(out, base + index, &keys[index]) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
+}
+
+/// Clear every module Program global `0..programs`, in order.
+fn release_programs(
+    out: &mut crate::output::Buffer,
+    programs: usize,
+) -> Result<(), crate::Diagnostic> {
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < programs {
+        match release_program(out, index) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
+}
+
+/// Clear module Program global `index`.
+fn release_program(out: &mut crate::output::Buffer, index: usize) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b"(global.set "));
+    attempt!(global(out, index));
+    out.append(b" (i32.const 0))\n")
+}
+
 fn programs(
     out: &mut crate::output::Buffer,
     programs: &[super::plan::Program],
@@ -191,13 +318,7 @@ pub(super) fn module(
         return Err(crate::Diagnostic::Defective);
     }
     if plan.calculator {
-        for (offset, key) in signature_keys.iter().enumerate() {
-            attempt!(metadata::signature_segment(
-                &mut out,
-                signature_base + offset,
-                key
-            ));
-        }
+        attempt!(signature_segments(&mut out, signature_base, signature_keys));
     }
     attempt!(metadata::descriptors(
         &mut out,
@@ -248,22 +369,10 @@ pub(super) fn module(
         attempt!(out.append(
             b")\n(func (export \"module_program_handle\") (param $index i32) (result i32)\n"
         ));
-        for index in 0..plan.programs.len() {
-            attempt!(out.append(b"(if (i32.eq (local.get $index) "));
-            attempt!(out.i32(attempt!(
-                u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
-            )));
-            attempt!(out.append(b") (then (return "));
-            attempt!(get_global(&mut out, index));
-            attempt!(out.append(b")))\n"));
-        }
+        attempt!(program_handle_cases(&mut out, plan.programs.len()));
         attempt!(out
             .append(b"(i32.const 0))\n(func (export \"release_module_programs\") (result i32)\n"));
-        for index in 0..plan.programs.len() {
-            attempt!(out.append(b"(global.set "));
-            attempt!(global(&mut out, index));
-            attempt!(out.append(b" (i32.const 0))\n"));
-        }
+        attempt!(release_programs(&mut out, plan.programs.len()));
         // An idle signed/Text worker may retire its source epoch only with no
         // failure, operand, continuation, recipe or observed Program root.
         attempt!(out.append(

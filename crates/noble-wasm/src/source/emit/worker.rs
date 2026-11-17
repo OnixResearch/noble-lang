@@ -55,30 +55,37 @@ fn named_handles(
 (func (export \"worker_named_handle\") (param $index i32) (result i32)\n\
 (if (i32.eqz (global.get $worker_installed)) (then (return (i32.const 0))))\n"
     ));
-    for (index, program) in plan.definition_roots.iter().enumerate() {
-        attempt!(out.append(b"(if (i32.eq (local.get $index) "));
-        attempt!(out.i32(attempt!(
-            u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
-        )));
-        attempt!(out.append(b") (then (return "));
-        attempt!(super::get_global(out, *program));
-        attempt!(out.append(b")))\n"));
-    }
+    attempt!(definition_handle_cases(out, &plan.definition_roots));
     attempt!(out.append(
         b"(i32.const 0))\n\
 (func (export \"worker_program_handle\") (param $index i32) (result i32)\n\
 (if (i32.eqz (global.get $worker_installed)) (then (return (i32.const 0))))\n"
     ));
-    for index in 0..plan.programs.len() {
-        attempt!(out.append(b"(if (i32.eq (local.get $index) "));
-        attempt!(out.i32(attempt!(
-            u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
-        )));
-        attempt!(out.append(b") (then (return "));
-        attempt!(super::get_global(out, index));
-        attempt!(out.append(b")))\n"));
-    }
+    attempt!(super::program_handle_cases(out, plan.programs.len()));
     out.append(b"(i32.const 0))\n")
+}
+
+/// Handle dispatch arms returning each named definition's root Program, in
+/// definition order.
+fn definition_handle_cases(
+    out: &mut crate::output::Buffer,
+    roots: &[usize],
+) -> Result<(), crate::Diagnostic> {
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < roots.len() {
+        match super::handle_case(out, index, roots[index]) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
 }
 
 /// One checked invoke entry for the trusted host, plus the interruptible

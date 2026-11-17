@@ -175,7 +175,11 @@ pub(super) fn finish(
     if !state.stack.is_empty() {
         return Err(crate::Diagnostic::Invalid);
     }
-    if world.noble_type(ty).as_ref() != Some(&value.ty) {
+    let is_expected_type = match world.noble_type(ty) {
+        Some(expected) => expected == value.ty,
+        None => false,
+    };
+    if !is_expected_type {
         return Err(crate::Diagnostic::Invalid);
     }
     attempt!(validate(ty, &value, &mut state.code));

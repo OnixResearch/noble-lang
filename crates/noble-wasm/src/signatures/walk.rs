@@ -184,7 +184,7 @@ fn push_type(
                 }
             }
         }
-        noble_kernel::types::Ty::GenericNominal(id, arguments, shape) => {
+        noble_kernel::types::Ty::GenericNominal(id, mut arguments, shape) => {
             // The selected descriptor adds up to seven queued steps beyond
             // the ordinary argument walk. Keep the owned queue bounded even
             // when a deeply nested but otherwise valid type reaches it.
@@ -196,7 +196,10 @@ fn push_type(
             attempt!(out.append(b":"));
             attempt!(out.number(u64::from(id.ordinal)));
             attempt!(out.append(b","));
-            let [first, second] = *arguments;
+            // Move both owned arguments out without cloning them; Aeneas
+            // cannot translate a by-value array destructuring pattern.
+            let first = core::mem::replace(&mut arguments[0], noble_kernel::types::Ty::Unit);
+            let second = core::mem::replace(&mut arguments[1], noble_kernel::types::Ty::Unit);
             work.push(Step::Byte(b')'));
             work.push(Step::Type(second));
             work.push(Step::Byte(b','));

@@ -12,6 +12,14 @@ fn same_scheme(left: &noble_kernel::words::Scheme, right: &noble_kernel::words::
         && left.effects == right.effects
 }
 
+/// Whether two definition rows carry the same kernel behavior.
+fn same_kind(
+    left: noble_kernel::contracts::Behavior,
+    right: noble_kernel::contracts::Behavior,
+) -> bool {
+    left == right
+}
+
 fn abort_scheme() -> noble_kernel::words::Scheme {
     noble_kernel::words::Scheme {
         var_kinds: alloc::vec![noble_kernel::words::VariableKind::Stack],
@@ -157,21 +165,7 @@ pub(super) fn check(
     if !exact_effects(env, count, live_slots) {
         return Err(crate::Diagnostic::Invalid);
     }
-    if live
-        && (submission
-            .request
-            .expected
-            .allowed_effects
-            .as_slice()
-            .iter()
-            .chain(
-                submission
-                    .definitions
-                    .iter()
-                    .flat_map(|definition| definition.expected.allowed_effects.as_slice().iter()),
-            )
-            .any(|effect| !matches!(effect.0, 3 | 4)))
-    {
+    if live && has_non_live_effect(submission) {
         return Err(crate::Diagnostic::Invalid);
     }
     let expected = replay::ExpectedRows {
@@ -200,23 +194,45 @@ pub(super) fn check(
     }
 }
 
+/// Whether the root request or any named definition allows an effect other
+/// than the live operations' own two, in that order.
+fn has_non_live_effect(submission: &noble_kernel::execution::Submission) -> bool {
+    let mut has_other = has_non_live(submission.request.expected.allowed_effects.as_slice());
+    let mut index = 0usize;
+    while !has_other && index < submission.definitions.len() {
+        has_other = has_non_live(
+            submission.definitions[index]
+                .expected
+                .allowed_effects
+                .as_slice(),
+        );
+        index += 1;
+    }
+    has_other
+}
+
+/// Whether `effects` contains an effect other than the two live operations'.
+fn has_non_live(effects: &[noble_kernel::types::EffId]) -> bool {
+    crate::scan::find_first(effects, |effect| !matches!(effect.0, 3 | 4)).is_some()
+}
+
 #[expect(
     tigerstyle::compound_condition,
     reason = "Owner: noble-wasm-maintainers; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
 )]
 fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: bool) -> bool {
-    let has_clock = env
-        .kinds
-        .iter()
-        .any(|kind| matches!(kind, noble_kernel::contracts::Behavior::BoundClock(_)));
-    let has_code_export = env
-        .kinds
-        .iter()
-        .any(|kind| matches!(kind, noble_kernel::contracts::Behavior::BoundCodeExport(_)));
-    let has_send = env
-        .kinds
-        .iter()
-        .any(|kind| matches!(kind, noble_kernel::contracts::Behavior::BoundSend(_)));
+    let has_clock = crate::scan::find_first(&env.kinds, |kind| {
+        matches!(kind, noble_kernel::contracts::Behavior::BoundClock(_))
+    })
+    .is_some();
+    let has_code_export = crate::scan::find_first(&env.kinds, |kind| {
+        matches!(kind, noble_kernel::contracts::Behavior::BoundCodeExport(_))
+    })
+    .is_some();
+    let has_send = crate::scan::find_first(&env.kinds, |kind| {
+        matches!(kind, noble_kernel::contracts::Behavior::BoundSend(_))
+    })
+    .is_some();
     if live_slots {
         // Clock registration may precede or follow the host's slot opt-in.
         // Both orderings are produced by the checked Env APIs, but no other
@@ -265,10 +281,22 @@ fn exact_effects(env: &noble_kernel::contracts::Env, count: usize, live_slots: b
         return false;
     };
     env.effects.starts_with(&effects)
-        && tail.len() == optional.iter().filter(|(present, _)| *present).count()
-        && optional
-            .iter()
-            .all(|(present, effect)| tail.contains(effect) == *present)
+        && tail.len() == present_count(&optional)
+        && crate::scan::find_first(&optional, |(present, effect)| {
+            tail.contains(effect) != *present
+        })
+        .is_none()
+}
+
+/// The number of optional bound effects whose operation is registered.
+fn present_count(optional: &[(bool, noble_kernel::types::EffId)]) -> usize {
+    let mut present = 0usize;
+    for (is_present, _) in optional {
+        if *is_present {
+            present += 1;
+        }
+    }
+    present
 }
 
 #[expect(
@@ -305,16 +333,8 @@ fn canonical_prefix(
         emit.stack_out = alloc::vec![noble_kernel::shapes::Pattern::StackVar(
             noble_kernel::words::Variable(0),
         )];
-        let mut index = 0usize;
-        while index < 30 {
-            let has_definition_drift = !same_scheme(&env.defs[index], &fixed.defs[index])
-                || env.kinds[index] != fixed.kinds[index]
-                || !env.deps[index].is_empty()
-                || env.definition_owners[index].is_some();
-            if has_definition_drift {
-                return Err(crate::Diagnostic::Invalid);
-            }
-            index += 1;
+        if has_prefix_drift(env, &fixed, 30) {
+            return Err(crate::Diagnostic::Invalid);
         }
         return Ok((fixed, 30));
     }
@@ -324,16 +344,8 @@ fn canonical_prefix(
         if env.defs.len() < 32 {
             return Err(crate::Diagnostic::Invalid);
         }
-        let mut index = 0usize;
-        while index < 32 {
-            let has_definition_drift = !same_scheme(&env.defs[index], &fixed.defs[index])
-                || env.kinds[index] != fixed.kinds[index]
-                || !env.deps[index].is_empty()
-                || env.definition_owners[index].is_some();
-            if has_definition_drift {
-                return Err(crate::Diagnostic::Invalid);
-            }
-            index += 1;
+        if has_prefix_drift(env, &fixed, 32) {
+            return Err(crate::Diagnostic::Invalid);
         }
         return Ok((fixed, 32));
     }
@@ -348,16 +360,8 @@ fn canonical_prefix(
         if env.defs.len() < count {
             return Err(crate::Diagnostic::Invalid);
         }
-        let mut index = 0usize;
-        while index < count {
-            let has_definition_drift = !same_scheme(&env.defs[index], &fixed.defs[index])
-                || env.kinds[index] != fixed.kinds[index]
-                || !env.deps[index].is_empty()
-                || env.definition_owners[index].is_some();
-            if has_definition_drift {
-                return Err(crate::Diagnostic::Invalid);
-            }
-            index += 1;
+        if has_prefix_drift(env, &fixed, count) {
+            return Err(crate::Diagnostic::Invalid);
         }
         return Ok((fixed, count));
     }
@@ -369,12 +373,7 @@ fn canonical_prefix(
         // An unlisted catalog entry or altered resource kind cannot authorize
         // a candidate's nominal/resource interface.
         fixed = fixed.enable_live_slots();
-        for id in &env.live_resource_nominals {
-            let decl = env.nominal(*id).ok_or(crate::Diagnostic::Invalid)?;
-            fixed = fixed
-                .register_live_resource(decl.clone())
-                .map_err(|_| crate::Diagnostic::Invalid)?;
-        }
+        fixed = attempt!(live_resources(env, fixed));
         if fixed.resource_kinds != env.resource_kinds
             || fixed.live_resource_nominals != env.live_resource_nominals
         {
@@ -397,23 +396,83 @@ fn canonical_prefix(
         if env.declared_modules || !has_abort || env.defs.len() < 26 {
             return Err(crate::Diagnostic::Invalid);
         }
+        // The fixed rows are checked in order and none after the first drift.
+        let mut has_scheme_row_drift = false;
         for (index, scheme) in live_schemes().into_iter().enumerate() {
-            let row = index + 24;
-            let has_scheme_row_drift = !same_scheme(&env.defs[row], &scheme)
-                || env.kinds[row] != noble_kernel::contracts::Behavior::Named
-                || !env.deps[row].is_empty()
-                || env.definition_owners[row].is_some();
-            if has_scheme_row_drift {
-                return Err(crate::Diagnostic::Invalid);
+            if !has_scheme_row_drift {
+                let row = index + 24;
+                has_scheme_row_drift = !same_scheme(&env.defs[row], &scheme)
+                    || !same_kind(env.kinds[row], noble_kernel::contracts::Behavior::Named)
+                    || !env.deps[row].is_empty()
+                    || env.definition_owners[row].is_some();
+                if !has_scheme_row_drift {
+                    fixed.defs.push(scheme);
+                    fixed.kinds.push(noble_kernel::contracts::Behavior::Named);
+                    fixed.deps.push(alloc::vec::Vec::new());
+                    fixed.definition_owners.push(None);
+                }
             }
-            fixed.defs.push(scheme);
-            fixed.kinds.push(noble_kernel::contracts::Behavior::Named);
-            fixed.deps.push(alloc::vec::Vec::new());
-            fixed.definition_owners.push(None);
+        }
+        if has_scheme_row_drift {
+            return Err(crate::Diagnostic::Invalid);
         }
         return Ok((fixed, 26));
     }
     Ok((fixed, if has_abort { 24 } else { 23 }))
+}
+
+/// Whether any of the first `count` rows of `env` differs from the fixed
+/// row or carries supplied dependency or owner metadata. Rows are checked
+/// in order and none after the first drift.
+fn has_prefix_drift(
+    env: &noble_kernel::contracts::Env,
+    fixed: &noble_kernel::contracts::Env,
+    count: usize,
+) -> bool {
+    let mut index = 0usize;
+    let mut has_definition_drift = false;
+    while !has_definition_drift && index < count {
+        has_definition_drift = !same_scheme(&env.defs[index], &fixed.defs[index])
+            || !same_kind(env.kinds[index], fixed.kinds[index])
+            || !env.deps[index].is_empty()
+            || env.definition_owners[index].is_some();
+        index += 1;
+    }
+    has_definition_drift
+}
+
+/// Re-register every host live resource nominal of `env`, in order, on the
+/// reconstructed environment; the first refusal stops the replay.
+fn live_resources(
+    env: &noble_kernel::contracts::Env,
+    fixed: noble_kernel::contracts::Env,
+) -> Result<noble_kernel::contracts::Env, crate::Diagnostic> {
+    let mut index = 0usize;
+    let mut outcome = Ok(fixed);
+    while index < env.live_resource_nominals.len() {
+        outcome = match outcome {
+            Ok(current) => live_resource(env, current, env.live_resource_nominals[index]),
+            Err(problem) => Err(problem),
+        };
+        if outcome.is_err() {
+            break;
+        }
+        index += 1;
+    }
+    outcome
+}
+
+/// Register host live resource nominal `id` through the kernel's validated,
+/// constructor-free API.
+fn live_resource(
+    env: &noble_kernel::contracts::Env,
+    fixed: noble_kernel::contracts::Env,
+    id: noble_kernel::types::NominalTypeId,
+) -> Result<noble_kernel::contracts::Env, crate::Diagnostic> {
+    let decl = attempt!(env.nominal(id).ok_or(crate::Diagnostic::Invalid));
+    fixed
+        .register_live_resource(decl.clone())
+        .map_err(|_| crate::Diagnostic::Invalid)
 }
 
 fn bootstrap(
@@ -442,7 +501,7 @@ fn check_builtin_rows(
     let mut result = Ok(());
     while index < 23 {
         let has_incorrect_contract = !same_scheme(&env.defs[index], &fixed.defs[index])
-            || env.kinds[index] != fixed.kinds[index];
+            || !same_kind(env.kinds[index], fixed.kinds[index]);
         let has_supplied_metadata =
             !env.deps[index].is_empty() || env.definition_owners[index].is_some();
         if has_incorrect_contract || has_supplied_metadata {
@@ -711,6 +770,37 @@ mod contract_meter_tests {
             .expect("full environment budget")
                 > cost
         );
+    }
+
+    #[test]
+    fn calculator_scheme_weight_charges_every_pattern_node_in_root_order() {
+        use noble_kernel::shapes::Pattern;
+        let scheme = noble_kernel::words::Scheme {
+            var_kinds: alloc::vec::Vec::new(),
+            stack_in: alloc::vec![
+                Pattern::I64,
+                Pattern::Pair(
+                    alloc::boxed::Box::new(Pattern::I64),
+                    alloc::boxed::Box::new(Pattern::Bool)
+                ),
+            ],
+            stack_out: alloc::vec![Pattern::Unit],
+            effects: alloc::vec::Vec::new(),
+        };
+        // Five visited pattern nodes, one unit each. The scalar part and
+        // every root are each weighed at no less than 512.
+        let mut sufficient = budget(5);
+        assert!(matches!(
+            super::weight::scheme(&scheme, 0, &mut sufficient),
+            Ok(2048)
+        ));
+        assert_eq!(sufficient.remaining, 0);
+        let mut insufficient = budget(4);
+        assert!(matches!(
+            super::weight::scheme(&scheme, 0, &mut insufficient),
+            Err(Diagnostic::Exhausted)
+        ));
+        assert_eq!(insufficient.remaining, 0);
     }
 
     #[test]

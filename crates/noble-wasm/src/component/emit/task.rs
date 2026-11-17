@@ -8,17 +8,18 @@ pub(super) fn write(
 ) -> Result<(), crate::Diagnostic> {
     let qualified = plan.name.as_bytes();
     attempt!(buffer.append(b" (import "));
-    match qualified.iter().position(|byte| *byte == b'#') {
-        Some(at) => {
-            attempt!(names(
-                &qualified[..at],
-                &qualified[at.saturating_add(1)..],
-                buffer
-            ));
-        }
-        None => {
-            attempt!(names(b"$root", qualified, buffer));
-        }
+    let mut at = 0usize;
+    while at < qualified.len() && qualified[at] != b'#' {
+        at += 1;
+    }
+    if at < qualified.len() {
+        attempt!(names(
+            &qualified[..at],
+            &qualified[at.saturating_add(1)..],
+            buffer
+        ));
+    } else {
+        attempt!(names(b"$root", qualified, buffer));
     }
     attempt!(buffer.append(b" (func $task-return-"));
     attempt!(buffer.number(u64::from(plan.ordinal)));

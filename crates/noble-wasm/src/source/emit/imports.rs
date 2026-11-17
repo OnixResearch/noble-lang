@@ -181,23 +181,31 @@ pub(super) fn bridge(out: &mut crate::output::Buffer) -> Result<(), crate::Diagn
 
 fn core_runtime(out: &mut crate::output::Buffer, core_live: bool) -> Result<(), crate::Diagnostic> {
     // Same order as the ordinary guest runtime: Core live is never calculator.
-    for text in [
+    attempt!(fragment(
+        out,
         include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/runtime/accounting.wat"
-        )),
+        ))
+    ));
+    attempt!(fragment(
+        out,
         include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/runtime/linear-address.wat"
-        )),
+        ))
+    ));
+    attempt!(fragment(
+        out,
         include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/runtime/linear-storage.wat"
-        )),
-        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/stack.wat")),
-    ] {
-        attempt!(fragment(out, text));
-    }
+        ))
+    ));
+    attempt!(fragment(
+        out,
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/stack.wat"))
+    ));
     if core_live {
         attempt!(fragment(
             out,
@@ -207,17 +215,21 @@ fn core_runtime(out: &mut crate::output::Buffer, core_live: bool) -> Result<(), 
             ))
         ));
     }
-    for text in [
-        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/programs.wat")),
+    attempt!(fragment(
+        out,
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/programs.wat"))
+    ));
+    attempt!(fragment(
+        out,
         include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/runtime/operations.wat"
-        )),
+        ))
+    ));
+    fragment(
+        out,
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/runtime/data.wat")),
-    ] {
-        attempt!(fragment(out, text));
-    }
-    Ok(())
+    )
 }
 
 pub(super) fn bridge_runtime(

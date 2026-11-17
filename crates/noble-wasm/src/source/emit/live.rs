@@ -9,10 +9,21 @@ pub(super) fn sites(
     out: &mut crate::output::Buffer,
     sites: &[super::super::LiveSiteMetadata],
 ) -> Result<(), crate::Diagnostic> {
-    for site in sites {
-        attempt!(write_site(out, site));
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < sites.len() {
+        match write_site(out, &sites[index]) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
     }
-    Ok(())
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
 }
 
 fn write_site(
@@ -46,25 +57,56 @@ fn write_site(
     )
     .map_err(|_| crate::Diagnostic::Exhausted))));
     attempt!(out.append(b" (local.get $handle)))\n(if (global.get $failure) (then (return)))\n"));
-    for (index, (source, target)) in site
-        .forwarded_source_positions
-        .iter()
-        .zip(&site.forwarded_target_positions)
-        .enumerate()
-    {
-        attempt!(out.append(b"(call $live_frame_bind (local.get $frame) "));
-        attempt!(out.i32(attempt!(
-            u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
-        )));
-        attempt!(out.append(b" "));
-        attempt!(out.i32(*target));
-        attempt!(out.append(b" (call $live_frame_get "));
-        attempt!(out.i32(*source));
-        attempt!(out.append(b"))\n(if (global.get $failure) (then (return)))\n"));
-    }
+    attempt!(frame_binds(
+        out,
+        &site.forwarded_source_positions,
+        &site.forwarded_target_positions
+    ));
     attempt!(out.append(b"(call $live_frame_register (local.get $frame) "));
     attempt!(out.i32(site.site_id));
     out.append(b")\n(if (global.get $failure) (then (return)))\n(call $enqueue_program (local.get $handle)))\n")
+}
+
+/// Bind each forwarded source position to its target slot in the site's new
+/// frame, pairwise and in order, up to the shorter of the two lists.
+fn frame_binds(
+    out: &mut crate::output::Buffer,
+    sources: &[u32],
+    targets: &[u32],
+) -> Result<(), crate::Diagnostic> {
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < sources.len() && index < targets.len() {
+        match frame_bind(out, index, sources[index], targets[index]) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
+}
+
+/// Bind forwarded source position `source` to frame slot `index` at `target`.
+fn frame_bind(
+    out: &mut crate::output::Buffer,
+    index: usize,
+    source: u32,
+    target: u32,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b"(call $live_frame_bind (local.get $frame) "));
+    attempt!(out.i32(attempt!(
+        u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
+    )));
+    attempt!(out.append(b" "));
+    attempt!(out.i32(target));
+    attempt!(out.append(b" (call $live_frame_get "));
+    attempt!(out.i32(source));
+    out.append(b"))\n(if (global.get $failure) (then (return)))\n")
 }
 
 pub(super) fn root_check(
@@ -76,16 +118,36 @@ pub(super) fn root_check(
         u32::try_from(positions.len()).map_err(|_| crate::Diagnostic::Exhausted)
     )));
     attempt!(out.append(b") (then (call $fail (i32.const 3)) (return)))\n"));
-    for (index, position) in positions.iter().enumerate() {
-        attempt!(out.append(b"(if (i32.ne (call $live_root_position "));
-        attempt!(out.i32(attempt!(
-            u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
-        )));
-        attempt!(out.append(b") "));
-        attempt!(out.i32(*position));
-        attempt!(out.append(b") (then (call $fail (i32.const 3)) (return)))\n"));
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < positions.len() {
+        match root_position_check(out, index, positions[index]) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
     }
     out.append(b")\n")
+}
+
+/// Check that borrowed root `index` arrived at logical input `position`.
+fn root_position_check(
+    out: &mut crate::output::Buffer,
+    index: usize,
+    position: u32,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b"(if (i32.ne (call $live_root_position "));
+    attempt!(out.i32(attempt!(
+        u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
+    )));
+    attempt!(out.append(b") "));
+    attempt!(out.i32(position));
+    out.append(b") (then (call $fail (i32.const 3)) (return)))\n")
 }
 
 pub(super) fn root_frame_for(
@@ -100,22 +162,41 @@ pub(super) fn root_frame_for(
     attempt!(out.append(b" "));
     attempt!(super::get_global(out, root));
     attempt!(out.append(b"))\n(if (global.get $failure) (then (return (global.get $failure))))\n"));
-    for (index, position) in positions.iter().enumerate() {
-        attempt!(out.append(b"(call $live_frame_bind (local.get $root_frame) "));
-        attempt!(out.i32(attempt!(
-            u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
-        )));
-        attempt!(out.append(b" "));
-        attempt!(out.i32(*position));
-        attempt!(out.append(b" (call $live_root_ordinal "));
-        attempt!(out.i32(attempt!(
-            u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
-        )));
-        attempt!(
-            out.append(b"))\n(if (global.get $failure) (then (return (global.get $failure))))\n")
-        );
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < positions.len() {
+        match root_frame_bind(out, index, positions[index]) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
     }
     out.append(b"(call $live_frame_register (local.get $root_frame) (i32.const -1))\n(if (global.get $failure) (then (return (global.get $failure))))\n")
+}
+
+/// Bind borrowed root `index` to the root frame slot at logical input
+/// `position`.
+fn root_frame_bind(
+    out: &mut crate::output::Buffer,
+    index: usize,
+    position: u32,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(out.append(b"(call $live_frame_bind (local.get $root_frame) "));
+    attempt!(out.i32(attempt!(
+        u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
+    )));
+    attempt!(out.append(b" "));
+    attempt!(out.i32(position));
+    attempt!(out.append(b" (call $live_root_ordinal "));
+    attempt!(out.i32(attempt!(
+        u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
+    )));
+    out.append(b"))\n(if (global.get $failure) (then (return (global.get $failure))))\n")
 }
 
 pub(super) fn program_accessors(
@@ -127,15 +208,7 @@ pub(super) fn program_accessors(
         u32::try_from(programs).map_err(|_| crate::Diagnostic::Exhausted)
     )));
     attempt!(out.append(b")\n(func (export \"module_program_handle\") (param $index i32) (result i32)\n(if (i32.eqz (global.get $live_module_installed)) (then (return (i32.const 0))))\n"));
-    for index in 0..programs {
-        attempt!(out.append(b"(if (i32.eq (local.get $index) "));
-        attempt!(out.i32(attempt!(
-            u32::try_from(index).map_err(|_| crate::Diagnostic::Exhausted)
-        )));
-        attempt!(out.append(b") (then (return "));
-        attempt!(super::get_global(out, index));
-        attempt!(out.append(b")))\n"));
-    }
+    attempt!(super::program_handle_cases(out, programs));
     out.append(b"(i32.const 0))\n")
 }
 
@@ -227,10 +300,11 @@ pub(super) fn exports(
 (if (i32.eqz (global.get $live_module_installed))\
  (then (return (i32.const 4))))\n"
     ));
-    for id in 0..plan.programs.len() {
-        attempt!(out.append(b"(if (call $storage_unroot_program "));
-        attempt!(super::get_global(out, id));
-        attempt!(out.append(b") (then (return (i32.const 4))))\n"));
-    }
+    attempt!(super::program_global_lines(
+        out,
+        plan.programs.len(),
+        b"(if (call $storage_unroot_program ",
+        b") (then (return (i32.const 4))))\n",
+    ));
     out.append(b"(global.set $live_module_installed (i32.const 0))\n(call $storage_collect))\n")
 }

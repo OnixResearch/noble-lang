@@ -83,12 +83,7 @@ fn text(
     data: &mut super::Data,
     buffer: &mut crate::output::Buffer,
 ) -> Result<(), crate::Diagnostic> {
-    let position = body.texts.iter().position(|text| text.node == id);
-    let index = match position {
-        Some(index) => index,
-        None => return Err(crate::Diagnostic::Invalid),
-    };
-    let bytes = match body.texts.get(index) {
+    let bytes = match crate::scan::find_first(&body.texts, |text| text.node == id) {
         Some(text) => &text.bytes,
         None => return Err(crate::Diagnostic::Invalid),
     };
@@ -156,14 +151,9 @@ fn invoke(
         14 => unpair(state),
         24.. => {
             let imports = world.imports();
-            let position = imports
-                .iter()
-                .position(|operation| operation.definition == Some(definition));
-            let index = match position {
-                Some(index) => index,
-                None => return Err(crate::Diagnostic::Invalid),
-            };
-            let operation = match imports.get(index) {
+            let operation = match crate::scan::find_first(imports, |operation| {
+                operation.definition == Some(definition)
+            }) {
                 Some(operation) => operation,
                 None => return Err(crate::Diagnostic::Invalid),
             };

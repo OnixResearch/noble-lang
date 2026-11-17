@@ -79,7 +79,7 @@ impl Encoding {
             noble_kernel::untrusted::Node::Invocation { def, .. } => {
                 let is_byte_cursor =
                     submission.environment.text_cursor || submission.environment.calculator;
-                if is_byte_cursor && (22..=25).contains(&def.0) {
+                if is_byte_cursor && matches!(def.0, 22..=25) {
                     return Err(crate::Diagnostic::Invalid);
                 }
                 if is_byte_cursor && def.0 == 26 {
@@ -117,16 +117,10 @@ impl Encoding {
                             | noble_kernel::contracts::Behavior::BoundCodeExport(slot)
                             | noble_kernel::contracts::Behavior::BoundSend(slot),
                         ) => {
-                            let mut found = None;
-                            let mut at = 0usize;
-                            while at < submission.environment.bound_adapters.len() {
-                                let row = &submission.environment.bound_adapters[at];
-                                if row.definition == *def && row.adapter_slot == slot {
-                                    found = Some(row);
-                                    break;
-                                }
-                                at += 1;
-                            }
+                            let found = crate::scan::find_first(
+                                &submission.environment.bound_adapters,
+                                |row| row.definition == *def && row.adapter_slot == slot,
+                            );
                             let binding = match found {
                                 Some(binding) => binding,
                                 None => return Err(crate::Diagnostic::Invalid),
@@ -225,10 +219,7 @@ impl Encoding {
                 attempt!(self.out.number(u64::from(*ref_ordinal)));
                 attempt!(self.out.append(b":"));
                 attempt!(work.entries(forwarded_ref_ordinals.len()));
-                for ordinal in forwarded_ref_ordinals {
-                    attempt!(self.out.number(u64::from(*ordinal)));
-                    attempt!(self.out.append(b","));
-                }
+                attempt!(forwarded_ordinals(&mut self.out, forwarded_ref_ordinals));
                 self.out.append(b");")
             }
             noble_kernel::untrusted::Node::Quotation { body, .. } => {
@@ -244,6 +235,37 @@ impl Encoding {
             }
         }
     }
+}
+
+/// Append each forwarded reference ordinal, comma-terminated, in order.
+fn forwarded_ordinals(
+    out: &mut crate::output::Buffer,
+    ordinals: &[u32],
+) -> Result<(), crate::Diagnostic> {
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < ordinals.len() {
+        match forwarded_ordinal(out, ordinals[index]) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(()),
+    }
+}
+
+/// Append one forwarded reference ordinal and its comma.
+fn forwarded_ordinal(
+    out: &mut crate::output::Buffer,
+    ordinal: u32,
+) -> Result<(), crate::Diagnostic> {
+    attempt!(out.number(u64::from(ordinal)));
+    out.append(b",")
 }
 
 #[expect(

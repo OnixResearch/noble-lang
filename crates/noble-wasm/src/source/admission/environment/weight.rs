@@ -41,10 +41,29 @@ fn types(
     work: &mut super::super::super::Work,
 ) -> Result<u64, crate::Diagnostic> {
     let mut total = 0;
-    for value in values {
-        total = attempt!(add(total, attempt!(ty(value, depth, lookups, work))));
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < values.len() {
+        let weight = match ty(&values[index], depth, lookups, work) {
+            Ok(weight) => weight,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        };
+        match add(total, weight) {
+            Ok(sum) => total = sum,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+        index += 1;
     }
-    Ok(total)
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(total),
+    }
 }
 
 #[expect(
@@ -102,10 +121,29 @@ fn patterns(
     work: &mut super::super::super::Work,
 ) -> Result<u64, crate::Diagnostic> {
     let mut total = 0;
-    for value in values {
-        total = attempt!(add(total, attempt!(pattern(value, depth, lookups, work))));
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < values.len() {
+        let weight = match pattern(&values[index], depth, lookups, work) {
+            Ok(weight) => weight,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        };
+        match add(total, weight) {
+            Ok(sum) => total = sum,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+        index += 1;
     }
-    Ok(total)
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(total),
+    }
 }
 
 #[expect(
@@ -206,12 +244,41 @@ pub(super) fn scheme(
     )
     .map_err(|_| crate::Diagnostic::Exhausted));
     attempt!(work.entries(scheme.var_kinds.len().saturating_add(scheme.effects.len())));
-    let mut cost = attempt!(scalar.checked_mul(512).ok_or(crate::Diagnostic::Exhausted));
-    for value in &scheme.stack_in {
-        cost = attempt!(add(cost, attempt!(root(value, lookup_rows, work))));
+    let cost = attempt!(scalar.checked_mul(512).ok_or(crate::Diagnostic::Exhausted));
+    let cost = attempt!(roots(&scheme.stack_in, lookup_rows, cost, work));
+    roots(&scheme.stack_out, lookup_rows, cost, work)
+}
+
+/// Add each root pattern's weighted cost to `cost`, in order, stopping at
+/// the first exhausted weight or sum.
+fn roots(
+    values: &[noble_kernel::shapes::Pattern],
+    lookup_rows: usize,
+    cost: u64,
+    work: &mut super::super::super::Work,
+) -> Result<u64, crate::Diagnostic> {
+    let mut total = cost;
+    let mut index = 0usize;
+    let mut failure = None;
+    while index < values.len() {
+        let weight = match root(&values[index], lookup_rows, work) {
+            Ok(weight) => weight,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        };
+        match add(total, weight) {
+            Ok(sum) => total = sum,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
+        }
+        index += 1;
     }
-    for value in &scheme.stack_out {
-        cost = attempt!(add(cost, attempt!(root(value, lookup_rows, work))));
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(total),
     }
-    Ok(cost)
 }

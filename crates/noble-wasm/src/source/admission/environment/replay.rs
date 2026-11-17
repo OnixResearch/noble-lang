@@ -89,7 +89,8 @@ impl Cursor {
                 self = attempt!(self.append_non_nominal(env, index));
             }
         }
-        let has_matching_contract = self.fixed.kinds.get(index) == env.kinds.get(index)
+        let has_matching_contract = self.fixed.kinds.get(index).copied()
+            == env.kinds.get(index).copied()
             && super::same_scheme(&self.fixed.defs[index], &env.defs[index]);
         let has_matching_owner =
             self.fixed.definition_owners[index] == env.definition_owners[index];
@@ -148,15 +149,9 @@ impl Cursor {
             Ok(value) => noble_kernel::contracts::Definition(value),
             Err(_) => return Err(crate::Diagnostic::Invalid),
         };
-        let mut row_index = 0usize;
-        while row_index < env.bound_adapters.len() {
-            let row = &env.bound_adapters[row_index];
-            if row.definition == def && row.adapter_slot == slot {
-                break;
-            }
-            row_index += 1;
-        }
-        let row = match env.bound_adapters.get(row_index) {
+        let row = match crate::scan::find_first(&env.bound_adapters, |row| {
+            row.definition == def && row.adapter_slot == slot
+        }) {
             Some(row) => row,
             None => return Err(crate::Diagnostic::Invalid),
         };
@@ -192,11 +187,10 @@ impl Cursor {
         let def = noble_kernel::contracts::Definition(
             u32::try_from(index).map_err(|_| crate::Diagnostic::Invalid)?,
         );
-        let row = env
-            .bound_adapters
-            .iter()
-            .find(|row| row.definition == def && row.adapter_slot == slot)
-            .ok_or(crate::Diagnostic::Invalid)?;
+        let row = crate::scan::find_first(&env.bound_adapters, |row| {
+            row.definition == def && row.adapter_slot == slot
+        })
+        .ok_or(crate::Diagnostic::Invalid)?;
         let owner = env.definition_owners[index].ok_or(crate::Diagnostic::Invalid)?;
         let registration = noble_kernel::contracts::BoundClockRegistration {
             adapter_identity: row.adapter_identity.clone(),
@@ -226,11 +220,10 @@ impl Cursor {
         let def = noble_kernel::contracts::Definition(
             u32::try_from(index).map_err(|_| crate::Diagnostic::Invalid)?,
         );
-        let row = env
-            .bound_adapters
-            .iter()
-            .find(|row| row.definition == def && row.adapter_slot == slot)
-            .ok_or(crate::Diagnostic::Invalid)?;
+        let row = crate::scan::find_first(&env.bound_adapters, |row| {
+            row.definition == def && row.adapter_slot == slot
+        })
+        .ok_or(crate::Diagnostic::Invalid)?;
         let owner = env.definition_owners[index].ok_or(crate::Diagnostic::Invalid)?;
         let registration = noble_kernel::contracts::BoundCodeExportRegistration {
             adapter_identity: row.adapter_identity.clone(),
@@ -260,11 +253,10 @@ impl Cursor {
         let def = noble_kernel::contracts::Definition(
             u32::try_from(index).map_err(|_| crate::Diagnostic::Invalid)?,
         );
-        let row = env
-            .bound_adapters
-            .iter()
-            .find(|row| row.definition == def && row.adapter_slot == slot)
-            .ok_or(crate::Diagnostic::Invalid)?;
+        let row = crate::scan::find_first(&env.bound_adapters, |row| {
+            row.definition == def && row.adapter_slot == slot
+        })
+        .ok_or(crate::Diagnostic::Invalid)?;
         let owner = env.definition_owners[index].ok_or(crate::Diagnostic::Invalid)?;
         let registration = noble_kernel::contracts::BoundSendRegistration {
             adapter_identity: row.adapter_identity.clone(),

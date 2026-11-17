@@ -16,10 +16,13 @@ pub(super) fn write(
         match entry(out, program, start, end, function) {
             Ok(()) => {
                 start = end;
-                function = match function.checked_add(1) {
-                    Some(value) => value,
-                    None => return Err(crate::Diagnostic::Exhausted),
-                };
+                match function.checked_add(1) {
+                    Some(value) => function = value,
+                    None => {
+                        failure = Some(crate::Diagnostic::Exhausted);
+                        break;
+                    }
+                }
             }
             Err(problem) => {
                 failure = Some(problem);
@@ -49,32 +52,55 @@ fn entry(
     attempt!(out
         .append(b" (type $entry) (param $env i32)\n(if (global.get $failure) (then (return)))\n"));
     let mut index = start;
+    let mut failure = None;
     while index < end {
-        if index + 1 < program.operations.len() {
-            attempt!(out.append(b"(call $enqueue "));
-            // A private inline continuation uses this valid table entry only
-            // as an unobservable pending slot. It is consumed after the next
-            // original dispatch tick, before any subsequent operation.
-            let next = if index + 1 < end {
-                function
-            } else {
-                match function.checked_add(1) {
-                    Some(value) => value,
-                    None => return Err(crate::Diagnostic::Exhausted),
-                }
-            };
-            attempt!(out.i32(next));
-            attempt!(out.append(b" (local.get $env))\n"));
+        match inline_operation(out, program, index, end, function) {
+            Ok(()) => index += 1,
+            Err(problem) => {
+                failure = Some(problem);
+                break;
+            }
         }
-        attempt!(out.append(b"(if (i32.eqz (global.get $failure)) (then\n"));
-        attempt!(instruction(out, program.operations[index].action));
-        attempt!(out.append(b"))\n"));
-        if index + 1 < end {
-            attempt!(out.append(b"(if (i32.eqz (call $inline_step)) (then (return)))\n"));
-        }
-        index += 1;
+    }
+    if let Some(problem) = failure {
+        return Err(problem);
     }
     out.append(b")\n")
+}
+
+/// Operation `index` of entry function `function`, which inlines the
+/// operations before `end`: its continuation enqueue, guarded instruction
+/// and inline dispatch step.
+fn inline_operation(
+    out: &mut crate::output::Buffer,
+    program: &super::super::plan::Program,
+    index: usize,
+    end: usize,
+    function: u32,
+) -> Result<(), crate::Diagnostic> {
+    if index + 1 < program.operations.len() {
+        attempt!(out.append(b"(call $enqueue "));
+        // A private inline continuation uses this valid table entry only
+        // as an unobservable pending slot. It is consumed after the next
+        // original dispatch tick, before any subsequent operation.
+        let next = if index + 1 < end {
+            function
+        } else {
+            match function.checked_add(1) {
+                Some(value) => value,
+                None => return Err(crate::Diagnostic::Exhausted),
+            }
+        };
+        attempt!(out.i32(next));
+        attempt!(out.append(b" (local.get $env))\n"));
+    }
+    attempt!(out.append(b"(if (i32.eqz (global.get $failure)) (then\n"));
+    attempt!(instruction(out, program.operations[index].action));
+    attempt!(out.append(b"))\n"));
+    if index + 1 < end {
+        attempt!(out.append(b"(if (i32.eqz (call $inline_step)) (then (return)))\n"));
+    }
+    Ok(())
 }
 
 #[expect(

@@ -119,14 +119,18 @@ fn one(
         return Err(crate::Diagnostic::Unsupported);
     }
     attempt!(same_environment(&submission.environment, environment));
-    if operation.input_types(world).as_deref()
-        != Some(submission.request.expected.stack_in.as_slice())
-    {
+    let is_input_mismatch = match operation.input_types(world) {
+        Some(types) => types.as_slice() != submission.request.expected.stack_in.as_slice(),
+        None => true,
+    };
+    if is_input_mismatch {
         return Err(crate::Diagnostic::Invalid);
     }
-    if operation.output_types(world).as_deref()
-        != Some(submission.request.expected.stack_out.as_slice())
-    {
+    let is_output_mismatch = match operation.output_types(world) {
+        Some(types) => types.as_slice() != submission.request.expected.stack_out.as_slice(),
+        None => true,
+    };
+    if is_output_mismatch {
         return Err(crate::Diagnostic::Invalid);
     }
     let candidate = &submission.body.candidate;
