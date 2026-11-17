@@ -493,16 +493,107 @@ enum Code {
     Sum(Box<Code>, Box<Code>),
     List(Box<Code>),
 }
-#[derive(Clone, Debug, PartialEq, Eq)]
+// `Sort` and `Proposition` are mutually recursive (`Sort::Premise` and
+// `Proposition::Pi`). Their copy and equality recurse through plain functions,
+// with exactly the derived results, so the pinned Aeneas never sees a trait
+// impl inside the recursion; `Debug` is only derived for tests because no
+// library code renders these private types.
+#[derive(Eq)]
+#[cfg_attr(test, derive(Debug))]
 enum Sort {
     Codes,
     Value(Code),
     Premise(Box<Proposition>),
 }
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Eq)]
+#[cfg_attr(test, derive(Debug))]
 enum Proposition {
     Pi(usize, Sort, Box<Proposition>),
     Eq(Code, usize, usize),
+}
+impl Clone for Sort {
+    fn clone(&self) -> Self {
+        clone_sort(self)
+    }
+}
+impl Clone for Proposition {
+    fn clone(&self) -> Self {
+        clone_proposition(self)
+    }
+}
+impl PartialEq for Sort {
+    fn eq(&self, other: &Self) -> bool {
+        sort_equal(self, other)
+    }
+}
+impl PartialEq for Proposition {
+    fn eq(&self, other: &Self) -> bool {
+        proposition_equal(self, other)
+    }
+}
+/// Deep-copy one sort, variant by variant, as the derived `Clone` did.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; the copy follows the finite, already constructed proposition tree, and plain-function recursion keeps the Sort/Proposition cycle out of their trait impls for the pinned extraction"
+)]
+fn clone_sort(sort: &Sort) -> Sort {
+    match sort {
+        Sort::Codes => Sort::Codes,
+        Sort::Value(code) => Sort::Value(code.clone()),
+        Sort::Premise(premise) => Sort::Premise(Box::new(clone_proposition(premise))),
+    }
+}
+/// Deep-copy one proposition, field by field in order, as the derived `Clone` did.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; the copy follows the finite, already constructed proposition tree, and plain-function recursion keeps the Sort/Proposition cycle out of their trait impls for the pinned extraction"
+)]
+fn clone_proposition(prop: &Proposition) -> Proposition {
+    match prop {
+        Proposition::Pi(index, sort, body) => {
+            Proposition::Pi(*index, clone_sort(sort), Box::new(clone_proposition(body)))
+        }
+        Proposition::Eq(code, left, right) => Proposition::Eq(code.clone(), *left, *right),
+    }
+}
+/// Variant-wise sort equality, as the derived `PartialEq` did.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; the comparison follows two finite, already constructed proposition trees, and plain-function recursion keeps the Sort/Proposition cycle out of their trait impls for the pinned extraction"
+)]
+fn sort_equal(left: &Sort, right: &Sort) -> bool {
+    match (left, right) {
+        (Sort::Codes, Sort::Codes) => true,
+        (Sort::Value(left), Sort::Value(right)) => left == right,
+        (Sort::Premise(left), Sort::Premise(right)) => proposition_equal(left, right),
+        (Sort::Codes, Sort::Value(_) | Sort::Premise(_))
+        | (Sort::Value(_), Sort::Codes | Sort::Premise(_))
+        | (Sort::Premise(_), Sort::Codes | Sort::Value(_)) => false,
+    }
+}
+/// Field-wise proposition equality in declaration order, as the derived `PartialEq` did.
+#[expect(
+    tigerstyle::no_recursion,
+    reason = "Owner: noble-contracts; the comparison follows two finite, already constructed proposition trees, and plain-function recursion keeps the Sort/Proposition cycle out of their trait impls for the pinned extraction"
+)]
+fn proposition_equal(left: &Proposition, right: &Proposition) -> bool {
+    match (left, right) {
+        (
+            Proposition::Pi(left_index, left_sort, left_body),
+            Proposition::Pi(right_index, right_sort, right_body),
+        ) => {
+            left_index == right_index
+                && sort_equal(left_sort, right_sort)
+                && proposition_equal(left_body, right_body)
+        }
+        (
+            Proposition::Eq(left_code, left_from, left_to),
+            Proposition::Eq(right_code, right_from, right_to),
+        ) => left_code == right_code && left_from == right_from && left_to == right_to,
+        (Proposition::Pi(..), Proposition::Eq(..)) | (Proposition::Eq(..), Proposition::Pi(..)) => {
+            false
+        }
+    }
 }
 const INLINE_TREE_FRAMES: usize = 32;
 struct WorkStack<T> {
@@ -3138,7 +3229,9 @@ mod form_impl_tests {
         mirror::Form {
             kind: match &form.kind {
                 FormKind::Atom(text) => mirror::FormKind::Atom(text.clone()),
-                FormKind::List(forms) => mirror::FormKind::List(forms.iter().map(mirrored).collect()),
+                FormKind::List(forms) => {
+                    mirror::FormKind::List(forms.iter().map(mirrored).collect())
+                }
             },
             span: form.span,
         }
@@ -3177,7 +3270,10 @@ mod form_impl_tests {
                 let expected = mirrored(left) == mirrored(right);
                 assert_eq!(left == right, expected);
                 assert_eq!(left != right, !expected);
-                assert_eq!(left.kind == right.kind, mirrored(left).kind == mirrored(right).kind);
+                assert_eq!(
+                    left.kind == right.kind,
+                    mirrored(left).kind == mirrored(right).kind
+                );
             }
         }
     }
@@ -3191,6 +3287,125 @@ mod form_impl_tests {
             if let FormKind::List(items) = &mut copy.kind {
                 items.push(atom("z", 9));
                 assert_ne!(copy, form);
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod proposition_impl_tests {
+    //! The hand-written `Sort`/`Proposition` copy and equality must agree
+    //! exactly with the derived impls they replace; `mirror` keeps the derives.
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+    )]
+    use super::{Code, Proposition, Sort};
+    #[expect(
+        tigerstyle::non_trait_imports,
+        reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"
+    )]
+    use alloc::{boxed::Box, vec, vec::Vec};
+
+    mod mirror {
+        #[derive(Clone, Debug, PartialEq, Eq)]
+        pub enum Sort {
+            Codes,
+            Value(super::Code),
+            Premise(alloc::boxed::Box<Proposition>),
+        }
+        #[derive(Clone, Debug, PartialEq, Eq)]
+        pub enum Proposition {
+            Pi(usize, Sort, alloc::boxed::Box<Proposition>),
+            Eq(super::Code, usize, usize),
+        }
+    }
+
+    fn mirrored_sort(sort: &Sort) -> mirror::Sort {
+        match sort {
+            Sort::Codes => mirror::Sort::Codes,
+            Sort::Value(code) => mirror::Sort::Value(code.clone()),
+            Sort::Premise(prop) => mirror::Sort::Premise(Box::new(mirrored(prop))),
+        }
+    }
+
+    fn mirrored(prop: &Proposition) -> mirror::Proposition {
+        match prop {
+            Proposition::Pi(index, sort, body) => {
+                mirror::Proposition::Pi(*index, mirrored_sort(sort), Box::new(mirrored(body)))
+            }
+            Proposition::Eq(code, left, right) => {
+                mirror::Proposition::Eq(code.clone(), *left, *right)
+            }
+        }
+    }
+
+    fn samples() -> Vec<Proposition> {
+        let eq = |code: Code, left, right| Proposition::Eq(code, left, right);
+        vec![
+            eq(Code::I64, 0, 0),
+            eq(Code::I64, 0, 1),
+            eq(Code::Bool, 0, 0),
+            eq(
+                Code::Pair(Box::new(Code::I64), Box::new(Code::Variable(2))),
+                1,
+                0,
+            ),
+            Proposition::Pi(0, Sort::Codes, Box::new(eq(Code::Unit, 0, 0))),
+            Proposition::Pi(1, Sort::Codes, Box::new(eq(Code::Unit, 0, 0))),
+            Proposition::Pi(0, Sort::Value(Code::Text), Box::new(eq(Code::Unit, 0, 0))),
+            Proposition::Pi(
+                0,
+                Sort::Premise(Box::new(eq(Code::I64, 1, 1))),
+                Box::new(eq(Code::Unit, 0, 0)),
+            ),
+            Proposition::Pi(
+                0,
+                Sort::Premise(Box::new(eq(Code::I64, 1, 2))),
+                Box::new(eq(Code::Unit, 0, 0)),
+            ),
+            Proposition::Pi(
+                0,
+                Sort::Premise(Box::new(Proposition::Pi(
+                    3,
+                    Sort::Codes,
+                    Box::new(eq(Code::List(Box::new(Code::I64)), 0, 0)),
+                ))),
+                Box::new(eq(Code::Unit, 0, 0)),
+            ),
+        ]
+    }
+
+    #[test]
+    fn equality_matches_the_derived_relation() {
+        let props = samples();
+        for left in &props {
+            for right in &props {
+                let expected = mirrored(left) == mirrored(right);
+                assert_eq!(left == right, expected);
+                assert_eq!(left != right, !expected);
+            }
+        }
+        let sorts = [
+            Sort::Codes,
+            Sort::Value(Code::I64),
+            Sort::Value(Code::Bool),
+            Sort::Premise(Box::new(Proposition::Eq(Code::I64, 0, 0))),
+        ];
+        for left in &sorts {
+            for right in &sorts {
+                assert_eq!(left == right, mirrored_sort(left) == mirrored_sort(right));
+            }
+        }
+    }
+
+    #[test]
+    fn clone_is_an_equal_deep_copy() {
+        for prop in samples() {
+            let copy = prop.clone();
+            assert_eq!(mirrored(&copy), mirrored(&prop));
+            if let Proposition::Pi(_, sort, _) = &prop {
+                assert_eq!(mirrored_sort(&sort.clone()), mirrored_sort(sort));
             }
         }
     }
