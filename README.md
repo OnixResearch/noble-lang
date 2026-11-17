@@ -1395,3 +1395,77 @@ Start with the [language specification](.cairn/specs/language/spec.md),
 features; consult the status ledger for implementation progress. The
 [Cairn guide](.cairn/README.md#inspect-and-validate) explains document validation
 and how to edit specifications.
+
+### Building and publishing the draft website
+
+The static website renders all sixteen canonical `.cairn/specs/*/spec.md`
+documents directly. It does not render the generated compatibility views as
+authority, run Noble, generate Lean proof HTML, or provide a browser playground.
+The landing page takes its introduction and complete quickstart from this
+README, with explicit bounded-scope and draft caveats. Historical status prose
+inside the canonical documents is preserved and distinguished from current
+implementation status.
+
+The existing pinned Bun 1.4.4 supplies the Markdown parser; the site has no new
+Cargo target, npm dependency tree, remote fonts, scripts, or runtime fetches.
+With the repository's Nix inputs available:
+
+```sh
+nix build .#site --out-link result-site
+nix build .#checks.x86_64-linux.site --no-link
+```
+
+For a docs-only build, use Bun 1.4.4 directly (also available in `nix develop`).
+Run publication builds from a clean committed checkout. The output directory
+must be fresh; omitting `--revision` selects `main` source links for a local
+preview, not an immutable publication identity.
+
+```sh
+bun test tools/site.test.mjs
+bun tools/site.mjs build --out site-dist --revision "$(git rev-parse HEAD)"
+bun tools/site.mjs serve --dir site-dist --port 4173
+```
+
+Open `http://127.0.0.1:4173/`. The build checks every published Markdown
+destination and fragment, rejects missing sources, escaping paths and unsafe
+link schemes, and records canonical source SHA-256 digests in `build.json`.
+Referenced family documents have stable `/spec/<family>/` routes; supporting
+repository files link to their source revision on GitHub. Regression tests
+exercise GFM/code preservation, canonical-versus-generated provenance,
+complete quickstart extraction, hostile links, anchors, and byte-reproducible
+output. The site is a publication of draft text, not additional conformance or
+implementation-refinement evidence.
+
+The [Pages workflow](.github/workflows/site.yml) is configured to build on every
+push to `main` and direct-upload the static tree with pinned Actions, Bun and
+Wrangler versions. It needs these operator-provided settings before it can
+publish:
+
+- A Cloudflare Pages **Direct Upload** project named `noble-lang`, with
+  production branch `main`; the output is `site-dist` as configured in
+  [`wrangler.jsonc`](wrangler.jsonc). Do not enable a second Git-based build.
+- A GitHub environment named `docs-production`, restricted to `main`, holding
+  `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` secrets. Scope the token to
+  **Account → Cloudflare Pages → Edit** on that account only; the deploy job
+  does not need zone/DNS permissions. Do not require manual environment approval
+  if unattended main-branch updates are intended. Repository token permissions
+  remain `contents: read`, and checkout credentials are not persisted.
+- Add `noble-lang.org` and `www.noble-lang.org` as Pages custom domains before
+  configuring their proxied DNS to the Pages-provided target. Enable Cloudflare
+  **Always Use HTTPS** for HTTP-to-HTTPS at the apex. Import the build's
+  `cloudflare-bulk-redirects.csv` into an account Bulk Redirect list named
+  `noble_lang_www_to_apex`, then enable a Bulk Redirect rule using that list.
+  The row redirects both schemes on the exact `www` hostname with status 301,
+  preserving the query string and every subpath/path suffix, without matching
+  further subdomains. Pages does **not** support hostname redirects through
+  `_redirects`; this follows its [supported www-to-apex setup](https://developers.cloudflare.com/pages/how-to/www-redirect/).
+  The workflow does not import or enable account rules. `_headers` supplies a
+  script-free CSP, frame denial, content-type protection and revalidation.
+  Confirm the certificates and both redirects against the actual deployment,
+  including a nested path with a query string.
+
+No production deployment or domain readiness is established by a local build.
+Advertise the public site in repository/homepage, README and Cargo/flake
+metadata only after HTTPS and redirects have been verified. Registrar renewal
+and lock, delegation, null MX/SPF/DMARC, issuer-specific CAA and any DNSSEC
+activation are separate operator tasks, not actions performed by this workflow.

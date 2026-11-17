@@ -1,6 +1,8 @@
 .pi/
 .octet/
 node_modules/
+/site-dist/
+/.wrangler/
 # Only the root Cargo build directory: tracked source modules may be named `target`
 # (crates/noble-ngraph/src/belt/target/, the #118 transfer fixtures).
 /target
