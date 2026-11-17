@@ -1351,6 +1351,15 @@ universal frontend, kernel, compiler, backend, and host correctness remain
 open. Runtime tests, application proofs, extraction results, and implementation
 proofs are recorded separately.
 
+The analyses are also tested for order independence: a deterministic
+order-variation harness reruns frontend, kernel, numeric-graph and
+specialization-cache queries under alternative legal orders and concurrent
+identical requests, and compares their semantic results. Its
+[lane](verification/schedule-independence/README.md) records the inventory,
+the invariants and the unsupported cases. Parallel analysis execution is not
+offered; its frozen [decision](verification/schedule-independence/decision.md)
+is NO-GO until correctness and throughput gates qualify an opt-in mode.
+
 The [status ledger](specs/STATUS.json),
 [proof obligations](specs/verification/obligations.json), and
 [source inventory](verification/source-inventory.md) record the exact scope.

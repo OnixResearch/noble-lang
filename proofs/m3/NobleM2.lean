@@ -55,3 +55,4 @@ import NobleM2.SizeChangeMatrixPreserve
 import NobleM2.SizeChangeCallGraph
 import NobleM2.SizeChangeCallProgram
 import NobleM2.SizeChangeSCT
+import NobleM2.DependencyOrder

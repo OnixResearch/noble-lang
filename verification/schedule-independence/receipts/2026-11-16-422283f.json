@@ -1,0 +1,155 @@
+{
+  "schema": "noble-schedule-independence-receipt/v1",
+  "issue": 134,
+  "source_commit": "422283f90494b4fc3cf103e81b08c98f3426c55c",
+  "source_tree": "b2326c02203fc13353dcd6edd0d75d47d578f160",
+  "dirty": false,
+  "criteria": {
+    "path": "verification/schedule-independence/criteria.md",
+    "revision": 1,
+    "sha256": "92df81a30516c543af1336b3ae76b54d45f3f585e36cb498963efa61513ffd14"
+  },
+  "command": "cargo test --offline --locked -p noble-ngraph --test schedule_correspondence --all-features -- schedule_independence --nocapture --test-threads=1",
+  "toolchain": {
+    "cargo": "cargo 1.96.0-nightly (cbb9bb8bd 2026-03-13)",
+    "rustc": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0"
+  },
+  "test_executable_sha256": "dcf5913d9ab139ac091fa796ecc3f9932d2879757512b057225f4c14999a07db",
+  "test_summary": "test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 82 filtered out; finished in 49.77s",
+  "families": [
+    {
+      "family": "F8 cache-sequences",
+      "cases": 6,
+      "schedules": 210,
+      "comparisons": 2898,
+      "divergences": 0,
+      "allowed": {
+        "a1_numbering": 0,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 0,
+        "a4_metadata": 340,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F4 contracts-commits",
+      "cases": 1,
+      "schedules": 11,
+      "comparisons": 110,
+      "divergences": 0,
+      "allowed": {
+        "a1_numbering": 31,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 0,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F5 contracts-modules",
+      "cases": 3,
+      "schedules": 75,
+      "comparisons": 75,
+      "divergences": 0,
+      "allowed": {
+        "a1_numbering": 0,
+        "a2_first_defect": 12,
+        "a3_exhaustion": 0,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F3 contracts-queries",
+      "cases": 2,
+      "schedules": 70,
+      "comparisons": 828,
+      "divergences": 0,
+      "allowed": {
+        "a1_numbering": 0,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 0,
+        "a4_metadata": 0,
+        "a5_shared_pool": 259
+      }
+    },
+    {
+      "family": "F7 net-schedules",
+      "cases": 6,
+      "schedules": 204,
+      "comparisons": 1224,
+      "divergences": 0,
+      "allowed": {
+        "a1_numbering": 0,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 204,
+        "a4_metadata": 126,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F6 graph-orders",
+      "cases": 6,
+      "schedules": 204,
+      "comparisons": 204,
+      "divergences": 0,
+      "allowed": {
+        "a1_numbering": 0,
+        "a2_first_defect": 27,
+        "a3_exhaustion": 0,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F1 kernel-dependencies",
+      "cases": 40,
+      "schedules": 730,
+      "comparisons": 730,
+      "divergences": 0,
+      "allowed": {
+        "a1_numbering": 0,
+        "a2_first_defect": 122,
+        "a3_exhaustion": 30,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F9 threads",
+      "cases": 21,
+      "schedules": 96,
+      "comparisons": 672,
+      "divergences": 0,
+      "allowed": {
+        "a1_numbering": 0,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 0,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    },
+    {
+      "family": "F2 kernel-threads",
+      "cases": 16,
+      "schedules": 32,
+      "comparisons": 512,
+      "divergences": 0,
+      "allowed": {
+        "a1_numbering": 0,
+        "a2_first_defect": 0,
+        "a3_exhaustion": 0,
+        "a4_metadata": 0,
+        "a5_shared_pool": 0
+      }
+    }
+  ],
+  "retained_fixtures": 2,
+  "divergences": 0,
+  "elapsed_ms": 68999,
+  "non_claims": [
+    "finite order-variation evidence for the listed cases, not a proof of confluence",
+    "no Rust-to-Lean refinement and no performance result",
+    "allowed differences are counted by class, not compared"
+  ]
+}
