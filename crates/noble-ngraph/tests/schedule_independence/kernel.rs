@@ -102,7 +102,7 @@ impl Dependencies {
             Seen::Accepted => Verdict::Diverged(String::from("accepted a cyclic dependency graph")),
             Seen::Cycle(item) if self.is_on_cycle(*item) => Verdict::Same,
             Seen::Cycle(item) => Verdict::Diverged(format!("named item {item} lies on no cycle")),
-            Seen::Exhausted if (self.work as usize) < self.edges() => Verdict::Same,
+            Seen::Exhausted if usize::try_from(self.work).unwrap() < self.edges() => Verdict::Same,
             Seen::Exhausted => Verdict::Diverged(String::from("exhausted under sufficient work")),
             Seen::Other(text) => Verdict::Diverged(format!("unexpected outcome {text}")),
         }
@@ -152,6 +152,10 @@ impl Case for Dependencies {
 
     fn orders(&self) -> Vec<(String, Vec<usize>)> {
         super::permutations(self.items())
+    }
+
+    fn item_schedules(&self) -> Option<u64> {
+        None
     }
 }
 
@@ -220,7 +224,8 @@ pub(super) fn graphs() -> Vec<(&'static str, Vec<Vec<usize>>)> {
 }
 
 fn cases() -> Vec<Dependencies> {
-    let mut out = Vec::new();
+    const TIGHT_WORK: [u32; 3] = [1, 2, 3];
+    let mut out = Vec::with_capacity(graphs().len() * (2 + TIGHT_WORK.len()));
     for (label, deps) in graphs() {
         for is_reversed in [false, true] {
             out.push(Dependencies {
@@ -233,7 +238,7 @@ fn cases() -> Vec<Dependencies> {
     }
     // A3: a budget below the edge count may exhaust in some orders and decide in others.
     for (label, deps) in graphs() {
-        for work in [1, 2, 3] {
+        for work in TIGHT_WORK {
             out.push(Dependencies {
                 label,
                 deps: deps.clone(),
@@ -252,7 +257,7 @@ pub(super) fn replay(name: &str, order: &[usize]) -> Option<Result<(), String>> 
 }
 
 #[test]
-fn kernel_dependencies_agree_across_renumberings() {
+fn dependencies_agree_across_renumberings() {
     let mut tally = Tally::default();
     for case in cases() {
         tally.absorb(&super::check_case(&case));

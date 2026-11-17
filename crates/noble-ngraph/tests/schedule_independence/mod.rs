@@ -36,32 +36,20 @@ pub(super) enum Allowed {
 }
 
 impl Allowed {
-    const ALL: [Self; 5] = [
-        Self::Numbering,
-        Self::FirstDefect,
-        Self::Exhaustion,
-        Self::Metadata,
-        Self::SharedPool,
+    /// Every class with its receipt label, in criteria order.
+    const ALL: [(Self, &'static str); 5] = [
+        (Self::Numbering, "a1_numbering"),
+        (Self::FirstDefect, "a2_first_defect"),
+        (Self::Exhaustion, "a3_exhaustion"),
+        (Self::Metadata, "a4_metadata"),
+        (Self::SharedPool, "a5_shared_pool"),
     ];
 
-    const fn label(self) -> &'static str {
-        match self {
-            Self::Numbering => "a1_numbering",
-            Self::FirstDefect => "a2_first_defect",
-            Self::Exhaustion => "a3_exhaustion",
-            Self::Metadata => "a4_metadata",
-            Self::SharedPool => "a5_shared_pool",
-        }
-    }
-
-    const fn index(self) -> usize {
-        match self {
-            Self::Numbering => 0,
-            Self::FirstDefect => 1,
-            Self::Exhaustion => 2,
-            Self::Metadata => 3,
-            Self::SharedPool => 4,
-        }
+    fn index(self) -> usize {
+        Self::ALL
+            .iter()
+            .position(|(class, _)| *class == self)
+            .expect("every class is listed")
     }
 }
 
@@ -130,9 +118,7 @@ pub(super) trait Case {
     fn orders(&self) -> Vec<(String, Vec<usize>)>;
     /// Distinct admitted schedules a case covers when they are its items rather than its orders
     /// (F7 runs every pair-selection schedule as one query); `None` counts the orders run.
-    fn item_schedules(&self) -> Option<u64> {
-        None
-    }
+    fn item_schedules(&self) -> Option<u64>;
 }
 
 /// Counts for one family, emitted as one receipt line.
@@ -174,7 +160,7 @@ impl Tally {
         assert!(self.comparisons > 0, "{family}: nothing was compared");
         let allowed = Allowed::ALL
             .iter()
-            .map(|class| format!("\"{}\":{}", class.label(), self.allowed[class.index()]))
+            .map(|(class, label)| format!("\"{label}\":{}", self.allowed[class.index()]))
             .collect::<Vec<_>>()
             .join(",");
         println!(
@@ -195,7 +181,8 @@ pub(super) fn shuffled(items: &[usize], seed: u64) -> Vec<usize> {
     let mut random = noble_ngraph::prng::SplitMix64::new(seed);
     let mut index = out.len();
     while index > 1 {
-        let pick = random.below(index as u64) as usize;
+        let bound = u64::try_from(index).expect("order length fits u64");
+        let pick = usize::try_from(random.below(bound)).expect("a pick below a usize length");
         index -= 1;
         out.swap(index, pick);
     }
@@ -354,26 +341,24 @@ fn settle<C: Case>(
     (label, order): (&str, &[usize]),
 ) {
     tally.comparisons += 1;
-    match case.compare(query, base, other) {
-        Verdict::Same => {}
-        Verdict::Allowed(classes) => {
-            for class in classes {
-                tally.count(class);
-            }
-        }
-        Verdict::Diverged(reason) => {
-            let minimal = minimize(case, order);
-            println!(
-                "NOBLE_SCHEDULE_DIVERGENCE {{\"token\":\"{}\",\"schedule\":\"{label}\",\"original\":\"{}\",\"reason\":{:?}}}",
-                token(&case.name(), &minimal),
-                token(&case.name(), order),
-                reason
-            );
-            panic!(
-                "{}: divergence ({reason}); replay with NOBLE_SCHEDULE_REPLAY={}",
-                case.name(),
-                token(&case.name(), &minimal)
-            );
+    let verdict = case.compare(query, base, other);
+    if let Verdict::Diverged(reason) = &verdict {
+        let minimal = minimize(case, order);
+        println!(
+            "NOBLE_SCHEDULE_DIVERGENCE {{\"token\":\"{}\",\"schedule\":\"{label}\",\"original\":\"{}\",\"reason\":{:?}}}",
+            token(&case.name(), &minimal),
+            token(&case.name(), order),
+            reason
+        );
+        panic!(
+            "{}: divergence ({reason}); replay with NOBLE_SCHEDULE_REPLAY={}",
+            case.name(),
+            token(&case.name(), &minimal)
+        );
+    }
+    if let Verdict::Allowed(classes) = verdict {
+        for class in classes {
+            tally.count(class);
         }
     }
 }
@@ -401,7 +386,7 @@ pub(super) fn parse_token(token: &str) -> Option<(String, Vec<usize>)> {
 }
 
 #[test]
-fn replay_requested_schedule() {
+fn replay_requested_order() {
     let Ok(requested) = std::env::var("NOBLE_SCHEDULE_REPLAY") else {
         return;
     };

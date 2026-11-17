@@ -19,7 +19,7 @@ pub(super) const RETAINED: &[(&str, &str)] = &[
 ];
 
 #[test]
-fn retained_minimized_schedules_agree() {
+fn minimized_divergences_stay_fixed() {
     for (token, _) in RETAINED {
         let (name, order) = super::parse_token(token).expect("retained tokens parse");
         let outcome = super::kernel::replay(&name, &order)

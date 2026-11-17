@@ -36,7 +36,7 @@ pub(super) enum Semantic {
 }
 
 #[derive(Debug)]
-pub(super) struct CacheSeen {
+pub(super) struct RequestSeen {
     semantic: Semantic,
     status: Option<Status>,
     /// A violated memoization invariant (criteria section 2 item 5).
@@ -140,25 +140,25 @@ impl Requests {
             ));
         }
         let is_unchanged = before == after;
-        match status {
-            None | Some(Status::Hit | Status::MissUncached | Status::BudgetBypass)
-                if !is_unchanged =>
-            {
-                Some(format!(
-                    "{status:?} changed the session from {before:?} to {after:?}"
-                ))
-            }
-            Some(Status::Hit) if !is_repeat => {
-                Some(String::from("hit before the request was made"))
-            }
-            Some(Status::CorruptRebuilt) => Some(String::from("an untampered entry was rebuilt")),
-            _ => None,
+        // A refusal, a hit, a declined publication and a bypass must leave the session as it was.
+        let is_publication = matches!(status, Some(Status::MissStored | Status::CorruptRebuilt));
+        if !is_publication && !is_unchanged {
+            return Some(format!(
+                "{status:?} changed the session from {before:?} to {after:?}"
+            ));
         }
+        if status == Some(Status::Hit) && !is_repeat {
+            return Some(String::from("hit before the request was made"));
+        }
+        if status == Some(Status::CorruptRebuilt) {
+            return Some(String::from("an untampered entry was rebuilt"));
+        }
+        None
     }
 }
 
 impl Case for Requests {
-    type Seen = CacheSeen;
+    type Seen = RequestSeen;
 
     fn name(&self) -> String {
         format!("cache-sequences/{}", self.label)
@@ -172,7 +172,7 @@ impl Case for Requests {
         true
     }
 
-    fn run(&self, order: &[usize]) -> Vec<(usize, CacheSeen)> {
+    fn run(&self, order: &[usize]) -> Vec<(usize, RequestSeen)> {
         let mut session = Session::new(self.limits).expect("valid cache limits");
         let mut out = Vec::with_capacity(order.len());
         for (position, index) in order.iter().enumerate() {
@@ -183,7 +183,7 @@ impl Case for Requests {
             let invariant = self.invariant(before, after, status, is_repeat);
             out.push((
                 *index,
-                CacheSeen {
+                RequestSeen {
                     semantic,
                     status,
                     invariant,
@@ -193,7 +193,7 @@ impl Case for Requests {
         out
     }
 
-    fn compare(&self, query: usize, base: &CacheSeen, other: &CacheSeen) -> Verdict {
+    fn compare(&self, query: usize, base: &RequestSeen, other: &RequestSeen) -> Verdict {
         if let Some(reason) = &other.invariant {
             return Verdict::Diverged(format!("memoization invariant: {reason}"));
         }
@@ -212,6 +212,10 @@ impl Case for Requests {
 
     fn orders(&self) -> Vec<(String, Vec<usize>)> {
         super::query_orders(self.items())
+    }
+
+    fn item_schedules(&self) -> Option<u64> {
+        None
     }
 }
 
@@ -352,7 +356,7 @@ pub(super) fn replay(name: &str, order: &[usize]) -> Option<Result<(), String>> 
 }
 
 #[test]
-fn cache_sequences_agree_with_cold_runs() {
+fn request_sequences_agree_with_cold_runs() {
     let mut tally = Tally::default();
     for case in cases() {
         let refusals = case

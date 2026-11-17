@@ -68,7 +68,7 @@ divergence printed:
 ```sh
 NOBLE_SCHEDULE_REPLAY='<case>@<order>' cargo test --offline --locked -p noble-ngraph \
   --test schedule_correspondence --all-features \
-  -- schedule_independence::replay_requested_schedule --nocapture
+  -- schedule_independence::replay_requested_order --nocapture
 ```
 
 A receipt is produced from a clean commit only:

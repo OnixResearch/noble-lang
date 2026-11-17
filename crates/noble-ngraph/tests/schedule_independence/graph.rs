@@ -20,6 +20,10 @@ pub(super) enum Spec {
 }
 
 impl Spec {
+    #[expect(
+        tigerstyle::fragile_exhaustive_enum_match,
+        reason = "Owner: noble-maintainers; a new abstract node kind must name its operands here, so the harness fails to compile until it does."
+    )]
     fn operands(self) -> Vec<usize> {
         match self {
             Self::Input(_) | Self::Const(_) => vec![],
@@ -28,6 +32,10 @@ impl Spec {
         }
     }
 
+    #[expect(
+        tigerstyle::fragile_exhaustive_enum_match,
+        reason = "Owner: noble-maintainers; a new abstract node kind must choose its graph operation here, so the harness fails to compile until it does."
+    )]
     fn op(self, at: &[noble_ngraph::ir::NodeId]) -> Op {
         match self {
             Self::Input(slot) => Op::Input(slot),
@@ -152,15 +160,15 @@ pub(super) enum RowSeen {
 
 /// A graph observation with node sites mapped back to abstract nodes.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) enum GraphSeen {
+pub(super) enum ShapeSeen {
     Refused { code: String, site: String },
     Checked(Vec<RowSeen>),
 }
 
 #[derive(Debug)]
 pub(super) struct Observed {
-    main: GraphSeen,
-    variants: Vec<GraphSeen>,
+    main: ShapeSeen,
+    variants: Vec<ShapeSeen>,
     /// The compiled evaluator disagreed with the reference evaluator in this order.
     disagreement: Option<String>,
 }
@@ -203,13 +211,13 @@ pub(super) fn build(shape: &Shape, nodes: &[Spec], order: &[usize]) -> noble_ngr
 }
 
 /// Checks and evaluates one build; also reports a compiled/reference disagreement.
-fn observe(shape: &Shape, nodes: &[Spec], order: &[usize]) -> (GraphSeen, Option<String>) {
+fn observe(shape: &Shape, nodes: &[Spec], order: &[usize]) -> (ShapeSeen, Option<String>) {
     let checked = match noble_ngraph::check::check(&IDS, build(shape, nodes, order)) {
         Ok(checked) => checked,
         Err(diagnostic) => {
             let code = format!("{:?}", diagnostic.code);
             return (
-                GraphSeen::Refused {
+                ShapeSeen::Refused {
                     code,
                     site: site(&diagnostic.site, order),
                 },
@@ -238,7 +246,7 @@ fn observe(shape: &Shape, nodes: &[Spec], order: &[usize]) -> (GraphSeen, Option
         }
         rows.push(row_seen(&reference.obs, order));
     }
-    (GraphSeen::Checked(rows), disagreement)
+    (ShapeSeen::Checked(rows), disagreement)
 }
 
 impl Case for Shape {
@@ -282,8 +290,8 @@ impl Case for Shape {
         }
         match (&base.main, &other.main) {
             (
-                GraphSeen::Refused { code, site },
-                GraphSeen::Refused {
+                ShapeSeen::Refused { code, site },
+                ShapeSeen::Refused {
                     code: other_code,
                     site: other_site,
                 },
@@ -291,7 +299,7 @@ impl Case for Shape {
                 .refusal_sound(other)
                 .and(Verdict::equal("refusal code", code, other_code))
                 .and(self.site_difference(site, other_site)),
-            (GraphSeen::Checked(rows), GraphSeen::Checked(other_rows)) => {
+            (ShapeSeen::Checked(rows), ShapeSeen::Checked(other_rows)) => {
                 self.compare_rows(rows, other_rows)
             }
             _ => Verdict::Diverged(format!(
@@ -302,17 +310,26 @@ impl Case for Shape {
     }
 
     fn orders(&self) -> Vec<(String, Vec<usize>)> {
-        let mut orders = vec![(
+        let seeded = usize::try_from(super::SEEDED_ORDERS).expect("seeded order count fits usize");
+        let mut orders = Vec::with_capacity(1 + seeded);
+        orders.push((
             String::from("reversed"),
             self.admitted_order(|ready| ready - 1),
-        )];
+        ));
         for round in 0..super::SEEDED_ORDERS {
             let seed = super::seed(round);
             let mut random = noble_ngraph::prng::SplitMix64::new(seed);
-            let order = self.admitted_order(|ready| random.below(ready as u64) as usize);
+            let order = self.admitted_order(|ready| {
+                let bound = u64::try_from(ready).expect("ready count fits u64");
+                usize::try_from(random.below(bound)).expect("a pick below a usize count")
+            });
             orders.push((format!("seed-{seed:#018x}"), order));
         }
         orders
+    }
+
+    fn item_schedules(&self) -> Option<u64> {
+        None
     }
 }
 
@@ -320,7 +337,7 @@ impl Shape {
     /// A refusal naming a node must name a defect: a cycle member, or one single-defect variant's
     /// own refusal in the same order.
     fn refusal_sound(&self, other: &Observed) -> Verdict {
-        let GraphSeen::Refused { code, site } = &other.main else {
+        let ShapeSeen::Refused { code, site } = &other.main else {
             return Verdict::Same;
         };
         if code.contains("Cycle") {
@@ -329,7 +346,9 @@ impl Shape {
                 .and_then(|node| node.parse::<usize>().ok());
             return match node {
                 Some(node) if self.is_on_cycle(node) => Verdict::Same,
-                _ => Verdict::Diverged(format!("cycle refusal names {site}, not a cycle member")),
+                Some(_) | None => {
+                    Verdict::Diverged(format!("cycle refusal names {site}, not a cycle member"))
+                }
             };
         }
         if !self.variants.is_empty() && !other.variants.contains(&other.main) {
@@ -527,18 +546,22 @@ enum Cap {
 }
 
 const CAPS: [Cap; 3] = [Cap::None, Cap::Fuel, Cap::Worklist];
+/// Lifo, Fifo and the seeded schedules.
+const NET_SCHEDULES: u64 = 2 + super::SEEDED_ORDERS;
 
 /// Item `index` is schedule `index / 3` (Lifo, Fifo, then seeded SplitMix64) under cap
 /// `index % 3`.
-fn schedule(index: usize) -> (noble_ngraph::net::Schedule, Cap) {
-    let schedule = match index / CAPS.len() {
+fn pair_selection(index: usize) -> (noble_ngraph::net::Schedule, Cap) {
+    let selection = index.checked_div(CAPS.len()).expect("three caps");
+    let cap = CAPS[index.checked_rem(CAPS.len()).expect("three caps")];
+    let schedule = match selection {
         0 => noble_ngraph::net::Schedule::Lifo,
         1 => noble_ngraph::net::Schedule::Fifo,
         seeded => noble_ngraph::net::Schedule::SplitMix64 {
-            seed: super::seed((seeded - 2) as u64),
+            seed: super::seed(u64::try_from(seeded - 2).expect("seed round fits u64")),
         },
     };
-    (schedule, CAPS[index % CAPS.len()])
+    (schedule, cap)
 }
 
 /// One reduction of `net` under `schedule`, optional interaction fuel and optional worklist cap.
@@ -599,13 +622,14 @@ impl NetSchedules {
             &inputs,
             (noble_ngraph::net::Schedule::Lifo, Some(cap), None),
         );
-        let worklist_cap = (0..2 + super::SEEDED_ORDERS as usize)
+        let schedules = usize::try_from(NET_SCHEDULES).expect("schedule count fits usize");
+        let worklist_cap = (0..schedules)
             .map(|index| {
                 reduce(
                     &checked,
                     &net,
                     &inputs,
-                    (schedule(index * CAPS.len()).0, None, None),
+                    (pair_selection(index * CAPS.len()).0, None, None),
                 )
             })
             .map(|seen| seen.queue_high_water)
@@ -613,12 +637,14 @@ impl NetSchedules {
             .expect("schedules exist");
         let control = &mut noble_ngraph::eval::Control::default();
         let reference = noble_ngraph::eval::reference(&checked, &inputs, None, control);
+        let net_values = if let noble_ngraph::net::Obs::Normal(values) = &lifo.obs {
+            Some(values.as_slice())
+        } else {
+            None
+        };
         assert_eq!(
             reference.obs.outputs(),
-            match &lifo.obs {
-                noble_ngraph::net::Obs::Normal(values) => Some(values.as_slice()),
-                _ => None,
-            },
+            net_values,
             "{}: the net computes the reference outputs",
             shape.label
         );
@@ -647,7 +673,7 @@ impl Case for NetSchedules {
     }
 
     fn items(&self) -> usize {
-        CAPS.len() * (2 + super::SEEDED_ORDERS as usize)
+        CAPS.len() * usize::try_from(NET_SCHEDULES).expect("schedule count fits usize")
     }
 
     fn is_query_case(&self) -> bool {
@@ -658,7 +684,7 @@ impl Case for NetSchedules {
         order
             .iter()
             .map(|index| {
-                let (schedule, cap) = schedule(*index);
+                let (schedule, cap) = pair_selection(*index);
                 let fuel = (cap == Cap::Fuel).then(|| self.lifo.interactions - 1);
                 let worklist = (cap == Cap::Worklist).then_some(self.worklist_cap);
                 let seen = reduce(
@@ -673,6 +699,28 @@ impl Case for NetSchedules {
     }
 
     fn compare(&self, query: usize, _base: &NetSeen, other: &NetSeen) -> Verdict {
+        let exhausted = if let noble_ngraph::net::Obs::Exhausted { limit, .. } = &other.obs {
+            Some(*limit)
+        } else {
+            None
+        };
+        let cap = pair_selection(query).1;
+        if cap == Cap::Fuel {
+            // Every reduction fires the same interactions, so fuel one short refuses everywhere.
+            return if exhausted == Some(noble_ngraph::net::Limit::Fuel) {
+                Verdict::equal(
+                    "fuel-capped observation",
+                    &self.lifo_fuel_capped.obs,
+                    &other.obs,
+                )
+            } else {
+                Verdict::Diverged(format!("fuel one below the interactions: {other:?}"))
+            };
+        }
+        if cap == Cap::Worklist && exhausted == Some(noble_ngraph::net::Limit::WorklistReservation)
+        {
+            return Verdict::Allowed(vec![Allowed::Exhaustion]);
+        }
         let semantic = |seen: &NetSeen| {
             (
                 seen.obs.clone(),
@@ -681,43 +729,13 @@ impl Case for NetSchedules {
                 seen.peak_live_agents,
             )
         };
-        let metadata = Verdict::allowed_if_differs(
-            Allowed::Metadata,
-            &self.lifo.queue_high_water,
-            &other.queue_high_water,
-        );
-        match schedule(query).1 {
-            Cap::None => Verdict::equal("net observation", &semantic(&self.lifo), &semantic(other))
-                .and(metadata),
-            Cap::Fuel
-                if matches!(
-                    other.obs,
-                    noble_ngraph::net::Obs::Exhausted {
-                        limit: noble_ngraph::net::Limit::Fuel,
-                        ..
-                    }
-                ) =>
-            {
-                Verdict::equal(
-                    "fuel-capped observation",
-                    &self.lifo_fuel_capped.obs,
-                    &other.obs,
-                )
-            }
-            Cap::Fuel => Verdict::Diverged(format!("fuel one below the interactions: {other:?}")),
-            Cap::Worklist => match other.obs {
-                noble_ngraph::net::Obs::Normal(_) => Verdict::equal(
-                    "worklist-capped result",
-                    &semantic(&self.lifo),
-                    &semantic(other),
-                ),
-                noble_ngraph::net::Obs::Exhausted {
-                    limit: noble_ngraph::net::Limit::WorklistReservation,
-                    ..
-                } => Verdict::Allowed(vec![Allowed::Exhaustion]),
-                _ => Verdict::Diverged(format!("worklist cap: {other:?}")),
-            },
-        }
+        Verdict::equal("net observation", &semantic(&self.lifo), &semantic(other)).and(
+            Verdict::allowed_if_differs(
+                Allowed::Metadata,
+                &self.lifo.queue_high_water,
+                &other.queue_high_water,
+            ),
+        )
     }
 
     fn orders(&self) -> Vec<(String, Vec<usize>)> {
@@ -725,20 +743,16 @@ impl Case for NetSchedules {
     }
 
     fn item_schedules(&self) -> Option<u64> {
-        Some(2 + super::SEEDED_ORDERS)
+        Some(NET_SCHEDULES)
     }
 }
 
 fn net_cases() -> Vec<NetSchedules> {
-    let mut out = Vec::new();
-    for shape in shapes() {
-        if shape.label == "shared-diamond" || shape.label == "fanout" {
-            for row in &shape.rows {
-                out.push(NetSchedules::new(&shape, row));
-            }
-        }
-    }
-    out
+    shapes()
+        .iter()
+        .filter(|shape| shape.label == "shared-diamond" || shape.label == "fanout")
+        .flat_map(|shape| shape.rows.iter().map(|row| NetSchedules::new(shape, row)))
+        .collect()
 }
 
 /// Reruns one named schedule of these families, if the case belongs to them.
@@ -751,7 +765,7 @@ pub(super) fn replay(name: &str, order: &[usize]) -> Option<Result<(), String>> 
 }
 
 #[test]
-fn graph_node_orders_agree() {
+fn node_orders_agree() {
     let mut tally = Tally::default();
     for case in shapes() {
         tally.absorb(&super::check_case(&case));

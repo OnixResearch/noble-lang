@@ -109,6 +109,10 @@ impl Case for Queries {
     fn orders(&self) -> Vec<(String, Vec<usize>)> {
         super::query_orders(self.items())
     }
+
+    fn item_schedules(&self) -> Option<u64> {
+        None
+    }
 }
 
 /// F3 on a declared-module session whose queries share one request-work pool (A5): with an
@@ -172,6 +176,10 @@ impl Case for Pooled {
     fn orders(&self) -> Vec<(String, Vec<usize>)> {
         super::query_orders(self.items())
     }
+
+    fn item_schedules(&self) -> Option<u64> {
+        None
+    }
 }
 
 /// F4: every dependency-respecting commit order of named definitions, then a query set.
@@ -227,7 +235,7 @@ impl Case for Commits {
             .map(|item| self.definitions[*item].1)
             .collect::<Vec<_>>();
         let session = session(&texts).expect("an admitted commit order commits");
-        let mut out = Vec::new();
+        let mut out = Vec::with_capacity(self.queries.len() + self.definitions.len());
         for (index, query) in self.queries.iter().enumerate() {
             let rendered = match session.prepare(query, &[], LIMITS) {
                 Ok(prepared) => Rendered::Prepared(normalized(&prepared)),
@@ -273,6 +281,10 @@ impl Case for Commits {
             .into_iter()
             .filter(|(_, order)| self.is_admitted(order))
             .collect()
+    }
+
+    fn item_schedules(&self) -> Option<u64> {
+        None
     }
 }
 
@@ -379,6 +391,10 @@ impl Case for Module {
 
     fn orders(&self) -> Vec<(String, Vec<usize>)> {
         super::permutations(self.items())
+    }
+
+    fn item_schedules(&self) -> Option<u64> {
+        None
     }
 }
 
@@ -501,7 +517,7 @@ pub(super) fn replay(name: &str, order: &[usize]) -> Option<Result<(), String>> 
 }
 
 #[test]
-fn contracts_queries_agree_across_orders_and_repeats() {
+fn queries_agree_across_orders_and_repeats() {
     let mut tally = Tally::default();
     for case in query_cases() {
         tally.absorb(&super::check_case(&case));
@@ -513,7 +529,7 @@ fn contracts_queries_agree_across_orders_and_repeats() {
 }
 
 #[test]
-fn contracts_commit_orders_agree_after_mapping_names() {
+fn commit_orders_agree_after_mapping_names() {
     let mut tally = Tally::default();
     for case in commit_cases() {
         tally.absorb(&super::check_case(&case));
@@ -522,7 +538,7 @@ fn contracts_commit_orders_agree_after_mapping_names() {
 }
 
 #[test]
-fn contracts_module_definition_orders_agree() {
+fn module_definition_orders_agree() {
     let mut tally = Tally::default();
     for case in module_cases() {
         tally.absorb(&super::check_case(&case));
