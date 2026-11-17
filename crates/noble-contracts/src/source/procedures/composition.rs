@@ -134,49 +134,17 @@ impl ProcedureLibrary {
         let mut source = BoundedProgramBytes::new();
         let mut retained_ids = Vec::with_capacity(selected.len());
         source.append(&context.prefix)?;
-        for id in selected {
-            let record = self
-                .records()
-                .iter()
-                .find(|record| record.procedure_id == *id)
-                .ok_or_else(|| {
-                    Refusal::new(
-                        RefusalKind::UnknownRecord,
-                        super::Diagnostic {
-                            field: "composition.selected",
-                            message: "selected identity is not in the current generation",
-                        },
-                    )
-                })?;
-            if record.chunk.interface.effects != EffSet::empty() {
-                return Err(Refusal::new(
-                    RefusalKind::Unsupported,
-                    super::Diagnostic {
-                        field: "chunk.interface.effects",
-                        message: "a selected procedure has a nonempty effect closure",
-                    },
-                ));
+        let mut failure = None;
+        let mut index = 0;
+        while failure.is_none() && index < selected.len() {
+            match self.append_selected(&selected[index], &mut source) {
+                Ok(()) => retained_ids.push(selected[index]),
+                Err(refusal) => failure = Some(refusal),
             }
-            let entry = self
-                .chunk_library
-                .entries()
-                .iter()
-                .find(|entry| {
-                    entry.envelope().chunk_id == record.chunk.chunk_id
-                        && entry.envelope().source_revision == record.chunk.source_revision
-                })
-                .ok_or_else(|| {
-                    Refusal::new(
-                        RefusalKind::Invalid,
-                        super::Diagnostic {
-                            field: "composition.selected",
-                            message:
-                                "selected procedure is absent from the admitted #73 chunk view",
-                        },
-                    )
-                })?;
-            source.append(entry.source())?;
-            retained_ids.push(*id);
+            index += 1;
+        }
+        if let Some(refusal) = failure {
+            return Err(refusal);
         }
         source.append(&context.suffix)?;
         let source = source.into_bytes();
@@ -236,6 +204,47 @@ impl ProcedureLibrary {
         })
     }
 
+    /// Append the admitted source of the selected procedure `id` to `source`.
+    fn append_selected(
+        &self,
+        id: &ProcedureId,
+        source: &mut BoundedProgramBytes,
+    ) -> Result<(), Refusal> {
+        let record = crate::scan::find_first(self.records(), |record| record.procedure_id == *id)
+            .ok_or_else(|| {
+            Refusal::new(
+                RefusalKind::UnknownRecord,
+                super::Diagnostic {
+                    field: "composition.selected",
+                    message: "selected identity is not in the current generation",
+                },
+            )
+        })?;
+        if record.chunk.interface.effects != EffSet::empty() {
+            return Err(Refusal::new(
+                RefusalKind::Unsupported,
+                super::Diagnostic {
+                    field: "chunk.interface.effects",
+                    message: "a selected procedure has a nonempty effect closure",
+                },
+            ));
+        }
+        let entry = crate::scan::find_first(self.chunk_library.entries(), |entry| {
+            entry.envelope().chunk_id == record.chunk.chunk_id
+                && entry.envelope().source_revision == record.chunk.source_revision
+        })
+        .ok_or_else(|| {
+            Refusal::new(
+                RefusalKind::Invalid,
+                super::Diagnostic {
+                    field: "composition.selected",
+                    message: "selected procedure is absent from the admitted #73 chunk view",
+                },
+            )
+        })?;
+        source.append(entry.source())
+    }
+
     /// Bind an MC2 proof to the exact retained source artifact. The host-side
     /// core remains the proof authority; this API only carries its checked
     /// result into a later composition.
@@ -247,11 +256,9 @@ impl ProcedureLibrary {
         evidence: EvidenceId,
         limits: Limits,
     ) -> Result<BoundOperand, Refusal> {
-        let record = self
-            .records()
-            .iter()
-            .find(|record| record.procedure_id == procedure_id)
-            .ok_or_else(|| {
+        let record =
+            crate::scan::find_first(self.records(), |record| record.procedure_id == procedure_id)
+                .ok_or_else(|| {
                 Refusal::new(
                     RefusalKind::UnknownRecord,
                     super::Diagnostic {
@@ -260,23 +267,19 @@ impl ProcedureLibrary {
                     },
                 )
             })?;
-        let entry = self
-            .chunk_library
-            .entries()
-            .iter()
-            .find(|entry| {
-                entry.envelope().chunk_id == record.chunk.chunk_id
-                    && entry.envelope().source_revision == record.chunk.source_revision
-            })
-            .ok_or_else(|| {
-                Refusal::new(
-                    RefusalKind::Invalid,
-                    super::Diagnostic {
-                        field: "chunk",
-                        message: "admitted chunk source unavailable",
-                    },
-                )
-            })?;
+        let entry = crate::scan::find_first(self.chunk_library.entries(), |entry| {
+            entry.envelope().chunk_id == record.chunk.chunk_id
+                && entry.envelope().source_revision == record.chunk.source_revision
+        })
+        .ok_or_else(|| {
+            Refusal::new(
+                RefusalKind::Invalid,
+                super::Diagnostic {
+                    field: "chunk",
+                    message: "admitted chunk source unavailable",
+                },
+            )
+        })?;
         let prepared = namespace
             .prepare(entry.source(), &record.chunk.interface.stack_in, limits)
             .map_err(|_| {

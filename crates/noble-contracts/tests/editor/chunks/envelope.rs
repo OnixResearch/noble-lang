@@ -195,3 +195,43 @@ fn unsupported_format_and_foreign_types_are_unsupported() -> Result<(), String> 
     assert_eq!(refusal.location.field, "envelope.interface.stack_out");
     Ok(())
 }
+
+#[test]
+fn a_shadowed_profile_spelling_is_refused_at_its_first_operation() -> Result<(), String> {
+    let mut entries = library();
+    let mut session = noble_contracts::source::Session::without_test_hosts();
+    // `+` keeps the bootstrap interface but names a different definition.
+    let shadow = session
+        .prepare(b"def + [ - ]", &[], limits())
+        .map_err(|error| format!("prepare shadow: {error:?}"))?;
+    session
+        .commit(shadow)
+        .map_err(|error| format!("commit shadow: {error:?}"))?;
+    let body = Recipe {
+        nodes: vec![
+            Node::I64(1),
+            Node::I64(2),
+            Node::Operation {
+                op: Op::Sub,
+                instantiation: 0,
+            },
+            Node::I64(3),
+            Node::Operation {
+                op: Op::Add,
+                instantiation: 0,
+            },
+        ],
+        entry: vec![0, 1, 2, 3, 4],
+    };
+    let candidate = envelope(&[], &[Ty::I64], body, b"1 2 - 3 + ");
+    let refusal = entries
+        .admit(&session, candidate)
+        .expect_err("shadowed `+`");
+    // The bootstrap `-` is the first expected target; the shadowed `+` is the
+    // second operation and the first one that resolves elsewhere.
+    assert_eq!(refusal.class_name(), "unsupported");
+    assert_eq!(refusal.location.field, "envelope.interface");
+    assert_eq!(refusal.location.index, Some(1));
+    assert!(entries.entries().is_empty());
+    Ok(())
+}

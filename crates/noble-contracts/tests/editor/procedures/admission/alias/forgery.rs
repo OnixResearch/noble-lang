@@ -103,6 +103,30 @@ fn forged_validation_evidence_is_refused() -> Result<(), String> {
 }
 
 #[test]
+fn a_repeated_own_validation_evidence_is_refused() -> Result<(), String> {
+    let (namespace, mut library, mut candidate, alias) = pair_fixture()?;
+    alias
+        .attach(&mut candidate)
+        .map_err(|error| format!("attach evidence: {error:?}"))?;
+    let own = candidate
+        .evidence
+        .first()
+        .cloned()
+        .ok_or_else(|| String::from("missing own evidence"))?;
+    candidate.evidence.push(own);
+    let refusal = library
+        .admit(&namespace, None, candidate)
+        .expect_err("a second own exact-pair claim must be refused");
+    assert_eq!(refusal.kind, RefusalKind::Invalid);
+    assert_eq!(refusal.location.field, "alias_of");
+    assert_eq!(
+        refusal.message,
+        "alias lacks its own exact-pair validation evidence binding"
+    );
+    Ok(())
+}
+
+#[test]
 fn tampered_wire_is_refused_on_reload() -> Result<(), String> {
     let (namespace, mut library, mut candidate, alias) = pair_fixture()?;
     alias

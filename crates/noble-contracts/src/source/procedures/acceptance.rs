@@ -12,6 +12,7 @@
 //! encoding and every other inspection never call the verifier.
 
 use super::*;
+use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
 use core::cmp::Ordering;
@@ -49,6 +50,41 @@ pub trait EvidenceVerifier: core::fmt::Debug {
         subject: VerificationSubject<'_>,
         claim: &EvidenceRecord,
     ) -> Option<Attestation>;
+}
+
+/// The owner's verifier as the library holds it: the only place a
+/// `dyn EvidenceVerifier` is stored or called.
+///
+/// Reviewed extraction exception (#97): Aeneas cannot represent trait
+/// objects, so this host plug-in handle is an opaque type, and its `verify`
+/// and `Debug::fmt` are opaque; translated code only passes the handle on.
+#[charon::opaque]
+pub(super) struct OwnerVerifier(pub(super) Box<dyn EvidenceVerifier>);
+
+impl OwnerVerifier {
+    /// Ask the owner's verifier about `claim` against `record`'s immutable subject.
+    ///
+    /// Reviewed extraction exception (#97): opaque because it calls through
+    /// the trait object.
+    #[charon::opaque]
+    pub(super) fn verify(
+        &self,
+        record: &ProcedureRecord,
+        claim: &EvidenceRecord,
+    ) -> Option<Attestation> {
+        self.0.verify(VerificationSubject { record }, claim)
+    }
+}
+
+impl core::fmt::Debug for OwnerVerifier {
+    /// Format exactly as the boxed verifier does.
+    ///
+    /// Reviewed extraction exception (#97): opaque because it calls through
+    /// the trait object.
+    #[charon::opaque]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Debug::fmt(&self.0, formatter)
+    }
 }
 
 /// The exact immutable subject a verifier judges. It exposes only the fields
@@ -168,7 +204,7 @@ impl VerifiedEvidence {
     fn check_shape(&self, index: u32) -> Result<(), Refusal> {
         let is_identified = !self.verifier.is_empty()
             && !self.toolchain.is_empty()
-            && self.toolchain.iter().all(|toolchain| !toolchain.is_empty());
+            && crate::scan::find_first(&self.toolchain, |toolchain| toolchain.is_empty()).is_none();
         if !is_identified || self.toolchain.len() > MAX_EVIDENCE {
             return Err(Refusal::at(
                 RefusalKind::Invalid,
@@ -224,9 +260,10 @@ pub(super) fn compare(left: &VerifiedEvidence, right: &VerifiedEvidence) -> Orde
 
 /// `tested` needs a passing test outcome observed by the owner's verifier.
 pub(super) fn has_verified_passing_test(record: &ProcedureRecord) -> bool {
-    record.verified.iter().any(|receipt| {
+    crate::scan::find_first(&record.verified, |receipt| {
         receipt.class == EvidenceClass::Test && receipt.outcome == EvidenceOutcome::Passed
     })
+    .is_some()
 }
 
 /// Whether the owner's verifier observed `obligation` proved under the
@@ -237,13 +274,14 @@ pub(super) fn has_verified_proof(
     obligation: u32,
     required: Option<&ConsumerObligation>,
 ) -> bool {
-    record.verified.iter().any(|receipt| {
+    crate::scan::find_first(&record.verified, |receipt| {
         receipt.obligation == obligation
             && receipt.policy_revision == promotion.policy_revision
             && receipt.outcome == EvidenceOutcome::Proved
             && receipt.class.proves()
             && required.is_none_or(|policy| policy.allowed_classes.contains(&receipt.class))
     })
+    .is_some()
 }
 
 /// The retained claim a receipt answers, found by its exact claim digest.
@@ -252,10 +290,25 @@ fn cited_claim<'a>(
     receipt: &VerifiedEvidence,
     index: u32,
 ) -> Result<&'a EvidenceRecord, Refusal> {
-    for claim in &record.evidence {
-        if persistence::claim_digest(claim)? == receipt.claim_digest {
-            return Ok(claim);
+    let mut cited = None;
+    let mut failure = None;
+    let mut at = 0;
+    while cited.is_none() && failure.is_none() && at < record.evidence.len() {
+        match persistence::claim_digest(&record.evidence[at]) {
+            Ok(digest) => {
+                if digest == receipt.claim_digest {
+                    cited = Some(at);
+                }
+            }
+            Err(refusal) => failure = Some(refusal),
         }
+        at += 1;
+    }
+    if let Some(refusal) = failure {
+        return Err(refusal);
+    }
+    if let Some(at) = cited {
+        return Ok(&record.evidence[at]);
     }
     Err(Refusal::at(
         RefusalKind::Invalid,
@@ -280,40 +333,50 @@ pub(super) fn validate(record: &ProcedureRecord) -> Result<(), Refusal> {
             },
         ));
     }
-    for (index, receipt) in record.verified.iter().enumerate() {
-        let position = index as u32;
-        if receipt.subject_binding != record.procedure_id {
-            return Err(Refusal::at(
-                RefusalKind::StaleContext,
-                Diagnostic {
-                    field: "verified_evidence.subject_binding",
-                    message:
-                        "a verification receipt is not bound to this immutable procedure subject",
-                },
-                position,
-            ));
-        }
-        let claim = cited_claim(record, receipt, position)?;
-        let is_answer = receipt.obligation == claim.obligation
-            && receipt.class == claim.class
-            && receipt.policy_revision == claim.policy_revision;
-        let is_repeated = record.verified[..index]
-            .iter()
-            .any(|earlier| earlier.claim_digest == receipt.claim_digest);
-        if !is_answer || is_repeated {
-            return Err(Refusal::at(
-                RefusalKind::Invalid,
-                Diagnostic {
-                    field: "verified_evidence.claim_digest",
-                    message: "each verification receipt answers exactly one retained claim with its obligation, class and policy revision",
-                },
-                position,
-            ));
-        }
-        receipt.check_shape(position)?;
-        debug_assert_eq!(receipt.class, claim.class);
-        debug_assert_eq!(receipt.policy_revision, claim.policy_revision);
+    let mut outcome = Ok(());
+    let mut index = 0;
+    while outcome.is_ok() && index < record.verified.len() {
+        outcome = validate_receipt(record, index);
+        index += 1;
     }
+    outcome
+}
+
+/// One retained receipt of [`validate`].
+fn validate_receipt(record: &ProcedureRecord, index: usize) -> Result<(), Refusal> {
+    let receipt = &record.verified[index];
+    let position = index as u32;
+    if receipt.subject_binding != record.procedure_id {
+        return Err(Refusal::at(
+            RefusalKind::StaleContext,
+            Diagnostic {
+                field: "verified_evidence.subject_binding",
+                message: "a verification receipt is not bound to this immutable procedure subject",
+            },
+            position,
+        ));
+    }
+    let claim = cited_claim(record, receipt, position)?;
+    let is_answer = receipt.obligation == claim.obligation
+        && receipt.class == claim.class
+        && receipt.policy_revision == claim.policy_revision;
+    let is_repeated = crate::scan::find_first(&record.verified[..index], |earlier| {
+        earlier.claim_digest == receipt.claim_digest
+    })
+    .is_some();
+    if !is_answer || is_repeated {
+        return Err(Refusal::at(
+            RefusalKind::Invalid,
+            Diagnostic {
+                field: "verified_evidence.claim_digest",
+                message: "each verification receipt answers exactly one retained claim with its obligation, class and policy revision",
+            },
+            position,
+        ));
+    }
+    receipt.check_shape(position)?;
+    debug_assert_eq!(receipt.class, claim.class);
+    debug_assert_eq!(receipt.policy_revision, claim.policy_revision);
     Ok(())
 }
 
@@ -322,35 +385,53 @@ pub(super) fn validate(record: &ProcedureRecord) -> Result<(), Refusal> {
 /// first entered the library; every other claim goes to the owner's
 /// verifier, once. Without a verifier every new claim stays unverified.
 pub(super) fn accept(
-    verifier: Option<&dyn EvidenceVerifier>,
+    verifier: Option<&OwnerVerifier>,
     record: &mut ProcedureRecord,
     retained: Option<&ProcedureRecord>,
 ) -> Result<(), Refusal> {
     debug_assert!(retained.is_none_or(|existing| existing.procedure_id == record.procedure_id));
     record.verified = Vec::new();
     let mut receipts = Vec::with_capacity(record.evidence.len());
-    for (index, claim) in record.evidence.iter().enumerate() {
-        if record.evidence[..index].contains(claim) {
-            continue;
-        }
-        if let Some(existing) = retained.filter(|existing| existing.evidence.contains(claim)) {
-            let digest = persistence::claim_digest(claim)?;
-            receipts.extend(
-                existing
-                    .verified
-                    .iter()
-                    .filter(|receipt| receipt.claim_digest == digest)
-                    .cloned(),
-            );
-            continue;
-        }
-        let subject = VerificationSubject { record: &*record };
-        if let Some(attestation) = verifier.and_then(|owner| owner.verify(subject, claim)) {
-            receipts.push(VerifiedEvidence::mint(&*record, claim, attestation)?);
-        }
+    let mut outcome = Ok(());
+    let mut index = 0;
+    while outcome.is_ok() && index < record.evidence.len() {
+        outcome = accept_claim(verifier, record, retained, index, &mut receipts);
+        index += 1;
     }
+    outcome?;
     debug_assert!(receipts.len() <= record.evidence.len());
     record.verified = receipts;
+    Ok(())
+}
+
+/// One claim of [`accept`]: keep the retained decision or ask the owner once.
+fn accept_claim(
+    verifier: Option<&OwnerVerifier>,
+    record: &ProcedureRecord,
+    retained: Option<&ProcedureRecord>,
+    index: usize,
+    receipts: &mut Vec<VerifiedEvidence>,
+) -> Result<(), Refusal> {
+    let claim = &record.evidence[index];
+    if record.evidence[..index].contains(claim) {
+        return Ok(());
+    }
+    if let Some(existing) = retained.filter(|existing| existing.evidence.contains(claim)) {
+        let digest = persistence::claim_digest(claim)?;
+        for receipt in existing.verified.iter() {
+            if receipt.claim_digest == digest {
+                receipts.push(receipt.clone());
+            }
+        }
+        return Ok(());
+    }
+    let attestation = match verifier {
+        Some(owner) => owner.verify(record, claim),
+        None => None,
+    };
+    if let Some(attestation) = attestation {
+        receipts.push(VerifiedEvidence::mint(record, claim, attestation)?);
+    }
     Ok(())
 }
 
@@ -361,34 +442,53 @@ pub(super) fn accept(
 /// generation retains the same receipt) are reused from `confirmed`, which is
 /// returned extended with this record's receipts.
 pub(super) fn confirm(
-    verifier: Option<&dyn EvidenceVerifier>,
+    verifier: Option<&OwnerVerifier>,
     record: &ProcedureRecord,
     mut confirmed: Vec<VerifiedEvidence>,
 ) -> Result<Vec<VerifiedEvidence>, Refusal> {
-    for (index, receipt) in record.verified.iter().enumerate() {
-        if confirmed.contains(receipt) {
-            continue;
-        }
-        let position = index as u32;
-        let claim = cited_claim(record, receipt, position)?;
-        let subject = VerificationSubject { record };
-        let reestablished = match verifier.and_then(|owner| owner.verify(subject, claim)) {
-            Some(attestation) => Some(VerifiedEvidence::mint(record, claim, attestation)?),
-            None => None,
-        };
-        if reestablished.as_ref() != Some(receipt) {
-            return Err(Refusal::at(
-                RefusalKind::Invalid,
-                Diagnostic {
-                    field: "verified_evidence",
-                    message: "a persisted verification receipt is not re-established by the loading owner's verifier",
-                },
-                position,
-            ));
-        }
-        debug_assert_eq!(receipt.subject_binding, record.procedure_id);
-        debug_assert_eq!(receipt.obligation, claim.obligation);
-        confirmed.push(receipt.clone());
+    let mut outcome = Ok(());
+    let mut index = 0;
+    while outcome.is_ok() && index < record.verified.len() {
+        outcome = confirm_receipt(verifier, record, index, &mut confirmed);
+        index += 1;
     }
+    outcome?;
     Ok(confirmed)
+}
+
+/// One receipt of [`confirm`]: reuse an earlier confirmation or ask the owner.
+fn confirm_receipt(
+    verifier: Option<&OwnerVerifier>,
+    record: &ProcedureRecord,
+    index: usize,
+    confirmed: &mut Vec<VerifiedEvidence>,
+) -> Result<(), Refusal> {
+    let receipt = &record.verified[index];
+    if confirmed.contains(receipt) {
+        return Ok(());
+    }
+    let position = index as u32;
+    let claim = cited_claim(record, receipt, position)?;
+    let attestation = match verifier {
+        Some(owner) => owner.verify(record, claim),
+        None => None,
+    };
+    let reestablished = match attestation {
+        Some(attestation) => Some(VerifiedEvidence::mint(record, claim, attestation)?),
+        None => None,
+    };
+    if reestablished.as_ref() != Some(receipt) {
+        return Err(Refusal::at(
+            RefusalKind::Invalid,
+            Diagnostic {
+                field: "verified_evidence",
+                message: "a persisted verification receipt is not re-established by the loading owner's verifier",
+            },
+            position,
+        ));
+    }
+    debug_assert_eq!(receipt.subject_binding, record.procedure_id);
+    debug_assert_eq!(receipt.obligation, claim.obligation);
+    confirmed.push(receipt.clone());
+    Ok(())
 }

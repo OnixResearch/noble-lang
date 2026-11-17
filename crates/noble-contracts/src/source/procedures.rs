@@ -390,13 +390,13 @@ pub struct Refusal {
 }
 
 #[derive(Clone, Copy)]
-struct Diagnostic {
-    field: &'static str,
-    message: &'static str,
+struct Diagnostic<'a> {
+    field: &'a str,
+    message: &'a str,
 }
 
 impl Refusal {
-    fn new(kind: RefusalKind, diagnostic: Diagnostic) -> Self {
+    fn new(kind: RefusalKind, diagnostic: Diagnostic<'_>) -> Self {
         Self {
             kind,
             location: chunks::Location::field(diagnostic.field),
@@ -405,7 +405,7 @@ impl Refusal {
         }
     }
 
-    fn at(kind: RefusalKind, diagnostic: Diagnostic, index: u32) -> Self {
+    fn at(kind: RefusalKind, diagnostic: Diagnostic<'_>, index: u32) -> Self {
         Self {
             kind,
             location: chunks::Location::at(diagnostic.field, index),
@@ -538,7 +538,7 @@ pub struct ProcedureLibrary {
     pub(super) current_generation: u32,
     /// The owner's trust root for evidence acceptance; `None` keeps every
     /// claim unverified, so `tested` and `promoted` cannot be reached.
-    pub(super) verifier: Option<Box<dyn EvidenceVerifier>>,
+    verifier: Option<acceptance::OwnerVerifier>,
 }
 
 impl ProcedureLibrary {
@@ -572,12 +572,17 @@ impl ProcedureLibrary {
     /// A library whose owner supplies the verifier that alone decides which
     /// claims become verification receipts at admission. Records and their
     /// submitters cannot select or replace it.
+    ///
+    /// Reviewed extraction exclusion (#97): the signature names
+    /// `dyn EvidenceVerifier`, which Aeneas cannot represent; the checked
+    /// logic is `ProcedureLibrary::new`.
+    #[charon::exclude]
     pub fn with_verifier(
         revision: [u8; chunks::REVISION_BYTES],
         verifier: Box<dyn EvidenceVerifier>,
     ) -> Self {
         let mut library = Self::new(revision);
-        library.verifier = Some(verifier);
+        library.verifier = Some(acceptance::OwnerVerifier(verifier));
         library
     }
 
@@ -594,10 +599,11 @@ impl ProcedureLibrary {
     }
 
     pub fn generation_records(&self) -> Vec<&GenerationRecord> {
-        self.generations
-            .iter()
-            .map(|snapshot| &snapshot.record)
-            .collect()
+        let mut records = Vec::with_capacity(self.generations.len());
+        for snapshot in self.generations.iter() {
+            records.push(&snapshot.record);
+        }
+        records
     }
 
     pub fn records(&self) -> &[ProcedureRecord] {
@@ -612,37 +618,18 @@ impl ProcedureLibrary {
     /// procedure identities that own those exact admitted envelopes.
     pub fn canonical_chunk_order(&self) -> Result<Vec<ProcedureId>, Refusal> {
         let mut order = Vec::with_capacity(self.chunk_library.entries().len());
-        for entry_index in chunks::canonical_entry_order(&self.chunk_library) {
-            let entry = self
-                .chunk_library
-                .entries()
-                .get(usize::from(entry_index))
-                .ok_or_else(|| {
-                    Refusal::new(
-                        RefusalKind::Invalid,
-                        Diagnostic {
-                            field: "chunk_order",
-                            message: "typed-chunk canonical order names an absent entry",
-                        },
-                    )
-                })?;
-            let record = self
-                .records()
-                .iter()
-                .find(|record| {
-                    record.chunk.chunk_id == entry.envelope().chunk_id
-                        && record.chunk.source_revision == entry.envelope().source_revision
-                })
-                .ok_or_else(|| {
-                    Refusal::new(
-                        RefusalKind::Invalid,
-                        Diagnostic {
-                            field: "chunk_order",
-                            message: "typed-chunk entry has no owning procedure record",
-                        },
-                    )
-                })?;
-            order.push(record.procedure_id);
+        let entry_order = chunks::canonical_entry_order(&self.chunk_library);
+        let mut failure = None;
+        let mut position = 0;
+        while failure.is_none() && position < entry_order.len() {
+            match self.chunk_order_owner(entry_order[position]) {
+                Ok(procedure_id) => order.push(procedure_id),
+                Err(refusal) => failure = Some(refusal),
+            }
+            position += 1;
+        }
+        if let Some(refusal) = failure {
+            return Err(refusal);
         }
         if order.len() != self.records().len() {
             return Err(Refusal::new(
@@ -656,17 +643,48 @@ impl ProcedureLibrary {
         Ok(order)
     }
 
+    /// The procedure owning the typed-chunk entry at `entry_index`.
+    fn chunk_order_owner(&self, entry_index: u16) -> Result<ProcedureId, Refusal> {
+        let entry = self
+            .chunk_library
+            .entries()
+            .get(usize::from(entry_index))
+            .ok_or_else(|| {
+                Refusal::new(
+                    RefusalKind::Invalid,
+                    Diagnostic {
+                        field: "chunk_order",
+                        message: "typed-chunk canonical order names an absent entry",
+                    },
+                )
+            })?;
+        let record = crate::scan::find_first(self.records(), |record| {
+            record.chunk.chunk_id == entry.envelope().chunk_id
+                && record.chunk.source_revision == entry.envelope().source_revision
+        })
+        .ok_or_else(|| {
+            Refusal::new(
+                RefusalKind::Invalid,
+                Diagnostic {
+                    field: "chunk_order",
+                    message: "typed-chunk entry has no owning procedure record",
+                },
+            )
+        })?;
+        Ok(record.procedure_id)
+    }
+
     pub(super) fn current(&self) -> &Snapshot {
-        self.generations
-            .iter()
-            .find(|snapshot| snapshot.record.generation == self.current_generation)
-            .unwrap_or(&self.generations[0])
+        crate::scan::find_first(&self.generations, |snapshot| {
+            snapshot.record.generation == self.current_generation
+        })
+        .unwrap_or(&self.generations[0])
     }
 
     pub(super) fn generation(&self, id: u32) -> Option<&Snapshot> {
-        self.generations
-            .iter()
-            .find(|snapshot| snapshot.record.generation == id)
+        crate::scan::find_first(&self.generations, |snapshot| {
+            snapshot.record.generation == id
+        })
     }
 
     pub fn admit(
@@ -685,7 +703,7 @@ impl ProcedureLibrary {
         &mut self,
         namespace: &super::Session,
         policy: Option<&ConsumerPolicy>,
-        incoming_records: Vec<ProcedureRecord>,
+        mut incoming_records: Vec<ProcedureRecord>,
     ) -> Result<Vec<ProcedureId>, Refusal> {
         if incoming_records.is_empty() {
             return Ok(Vec::new());
@@ -701,103 +719,26 @@ impl ProcedureLibrary {
         }
         let mut candidate_records = self.current().records.clone();
         let mut identities = Vec::with_capacity(incoming_records.len());
-        for mut record in incoming_records {
-            Self::validate_claims(&record)?;
-            if record.identity_digest()? != record.procedure_id {
-                return Err(Refusal::new(RefusalKind::Invalid, Diagnostic { field: "procedure_id", message: "retained procedure identity differs from recomputed immutable subject fields" }));
+        let mut failure = None;
+        let mut index = 0;
+        while failure.is_none() && index < incoming_records.len() {
+            match self.admit_batch_record(
+                policy,
+                &mut candidate_records,
+                &mut incoming_records[index],
+            ) {
+                Ok(procedure_id) => identities.push(procedure_id),
+                Err(refusal) => failure = Some(refusal),
             }
-            if record.supersedes.is_some() {
-                return Err(Refusal::new(
-                    RefusalKind::Invalid,
-                    Diagnostic {
-                        field: "supersedes",
-                        message:
-                            "replacement must use the atomic replace operation, not batch admission",
-                    },
-                ));
-            }
-            let existing_position = candidate_records
-                .iter()
-                .position(|existing| existing.procedure_id == record.procedure_id);
-            acceptance::accept(
-                self.verifier.as_deref(),
-                &mut record,
-                existing_position.and_then(|index| candidate_records.get(index)),
-            )?;
-            Self::validate_record(&record, policy, true)?;
-            if let Some(existing_index) = existing_position {
-                let existing = candidate_records.get(existing_index).ok_or_else(|| {
-                    Refusal::new(
-                        RefusalKind::Internal,
-                        Diagnostic {
-                            field: "procedure_id",
-                            message: "record index disappeared",
-                        },
-                    )
-                })?;
-                if persistence::identity_bytes(existing)? != persistence::identity_bytes(&record)? {
-                    return Err(Refusal::new(
-                        RefusalKind::Invalid,
-                        Diagnostic {
-                            field: "procedure_id",
-                            message: "identity collision between unequal immutable subjects",
-                        },
-                    ));
-                }
-                if existing.library_dependencies != record.library_dependencies {
-                    return Err(Refusal::new(
-                        RefusalKind::Invalid,
-                        Diagnostic {
-                            field: "library_dependencies",
-                            message: "an existing subject cannot change its dependency closure",
-                        },
-                    ));
-                }
-                if existing.status == Status::Superseded {
-                    return Err(Refusal::new(
-                        RefusalKind::StaleContext,
-                        Diagnostic {
-                            field: "status",
-                            message: "a superseded record cannot be silently reactivated",
-                        },
-                    ));
-                }
-                let updated = Self::merge_state(existing, record.clone())?;
-                Self::validate_record(&updated, policy, true)?;
-                if let Some(slot) = candidate_records.get_mut(existing_index) {
-                    *slot = updated;
-                }
-            } else {
-                if candidate_records.len() >= MAX_RECORDS {
-                    return Err(Refusal::new(
-                        RefusalKind::Exhausted,
-                        Diagnostic {
-                            field: "library.entries",
-                            message: "procedure record limit reached",
-                        },
-                    ));
-                }
-                if record.provenance.producer == Producer::Composition
-                    && candidate_records.iter().any(|existing| {
-                        existing.provenance.producer == Producer::Composition
-                            && existing.library_dependencies == record.library_dependencies
-                            && existing.chunk.chunk_id == record.chunk.chunk_id
-                    })
-                {
-                    return Err(Refusal::new(
-                        RefusalKind::DuplicateEntry,
-                        Diagnostic {
-                            field: "library_dependencies",
-                            message: "composition restates an existing derivation",
-                        },
-                    ));
-                }
-                candidate_records.push(record.clone());
-            }
-            identities.push(record.procedure_id);
+            index += 1;
+        }
+        if let Some(refusal) = failure {
+            return Err(refusal);
         }
         Self::canonicalize_evidence(&mut candidate_records)?;
-        candidate_records.sort_by(retrieval::compare_records);
+        candidate_records.sort_by(|left: &ProcedureRecord, right: &ProcedureRecord| {
+            retrieval::compare_records(left, right)
+        });
         if candidate_records == self.current().records {
             return Ok(identities);
         }
@@ -853,6 +794,109 @@ impl ProcedureLibrary {
         Ok(identities)
     }
 
+    /// One record of [`Self::admit_batch`], checked and merged into `candidate_records`.
+    fn admit_batch_record(
+        &self,
+        policy: Option<&ConsumerPolicy>,
+        candidate_records: &mut Vec<ProcedureRecord>,
+        record: &mut ProcedureRecord,
+    ) -> Result<ProcedureId, Refusal> {
+        Self::validate_claims(record)?;
+        if record.identity_digest()? != record.procedure_id {
+            return Err(Refusal::new(RefusalKind::Invalid, Diagnostic { field: "procedure_id", message: "retained procedure identity differs from recomputed immutable subject fields" }));
+        }
+        if record.supersedes.is_some() {
+            return Err(Refusal::new(
+                RefusalKind::Invalid,
+                Diagnostic {
+                    field: "supersedes",
+                    message:
+                        "replacement must use the atomic replace operation, not batch admission",
+                },
+            ));
+        }
+        let existing_position = position_first(candidate_records, |existing| {
+            existing.procedure_id == record.procedure_id
+        });
+        let retained = match existing_position {
+            Some(index) => candidate_records.get(index),
+            None => None,
+        };
+        acceptance::accept(self.verifier.as_ref(), record, retained)?;
+        Self::validate_record(record, policy, true)?;
+        if let Some(existing_index) = existing_position {
+            let existing = candidate_records.get(existing_index).ok_or_else(|| {
+                Refusal::new(
+                    RefusalKind::Internal,
+                    Diagnostic {
+                        field: "procedure_id",
+                        message: "record index disappeared",
+                    },
+                )
+            })?;
+            if persistence::identity_bytes(existing)? != persistence::identity_bytes(record)? {
+                return Err(Refusal::new(
+                    RefusalKind::Invalid,
+                    Diagnostic {
+                        field: "procedure_id",
+                        message: "identity collision between unequal immutable subjects",
+                    },
+                ));
+            }
+            if existing.library_dependencies != record.library_dependencies {
+                return Err(Refusal::new(
+                    RefusalKind::Invalid,
+                    Diagnostic {
+                        field: "library_dependencies",
+                        message: "an existing subject cannot change its dependency closure",
+                    },
+                ));
+            }
+            if existing.status == Status::Superseded {
+                return Err(Refusal::new(
+                    RefusalKind::StaleContext,
+                    Diagnostic {
+                        field: "status",
+                        message: "a superseded record cannot be silently reactivated",
+                    },
+                ));
+            }
+            let updated = Self::merge_state(existing, record.clone())?;
+            Self::validate_record(&updated, policy, true)?;
+            if let Some(slot) = candidate_records.get_mut(existing_index) {
+                *slot = updated;
+            }
+        } else {
+            if candidate_records.len() >= MAX_RECORDS {
+                return Err(Refusal::new(
+                    RefusalKind::Exhausted,
+                    Diagnostic {
+                        field: "library.entries",
+                        message: "procedure record limit reached",
+                    },
+                ));
+            }
+            if record.provenance.producer == Producer::Composition
+                && crate::scan::find_first(candidate_records, |existing| {
+                    existing.provenance.producer == Producer::Composition
+                        && existing.library_dependencies == record.library_dependencies
+                        && existing.chunk.chunk_id == record.chunk.chunk_id
+                })
+                .is_some()
+            {
+                return Err(Refusal::new(
+                    RefusalKind::DuplicateEntry,
+                    Diagnostic {
+                        field: "library_dependencies",
+                        message: "composition restates an existing derivation",
+                    },
+                ));
+            }
+            candidate_records.push(record.clone());
+        }
+        Ok(record.procedure_id)
+    }
+
     pub fn replace(
         &mut self,
         namespace: &super::Session,
@@ -887,14 +931,14 @@ impl ProcedureLibrary {
         }
         let result_id = record.procedure_id;
         let mut candidate_records = self.current().records.clone();
-        let existing_position = candidate_records
-            .iter()
-            .position(|existing| existing.procedure_id == record.procedure_id);
-        acceptance::accept(
-            self.verifier.as_deref(),
-            &mut record,
-            existing_position.and_then(|index| candidate_records.get(index)),
-        )?;
+        let existing_position = position_first(&candidate_records, |existing| {
+            existing.procedure_id == record.procedure_id
+        });
+        let retained = match existing_position {
+            Some(index) => candidate_records.get(index),
+            None => None,
+        };
+        acceptance::accept(self.verifier.as_ref(), &mut record, retained)?;
         Self::validate_record(&record, policy, true)?;
         if let Some(existing_index) = existing_position {
             let existing = candidate_records.get(existing_index).ok_or_else(|| {
@@ -952,11 +996,12 @@ impl ProcedureLibrary {
                 ));
             }
             if record.provenance.producer == Producer::Composition
-                && candidate_records.iter().any(|existing| {
+                && crate::scan::find_first(&candidate_records, |existing| {
                     existing.provenance.producer == Producer::Composition
                         && existing.library_dependencies == record.library_dependencies
                         && existing.chunk.chunk_id == record.chunk.chunk_id
                 })
+                .is_some()
             {
                 return Err(Refusal::new(
                     RefusalKind::DuplicateEntry,
@@ -981,7 +1026,9 @@ impl ProcedureLibrary {
             candidate_records.push(record.clone());
         }
         Self::canonicalize_evidence(&mut candidate_records)?;
-        candidate_records.sort_by(retrieval::compare_records);
+        candidate_records.sort_by(|left: &ProcedureRecord, right: &ProcedureRecord| {
+            retrieval::compare_records(left, right)
+        });
         let next_generation = self.current_generation.checked_add(1).ok_or_else(|| {
             Refusal::new(
                 RefusalKind::Exhausted,
@@ -1083,18 +1130,31 @@ impl ProcedureLibrary {
     }
 
     fn canonicalize_evidence(records: &mut [ProcedureRecord]) -> Result<(), Refusal> {
-        for record in records.iter_mut() {
-            record.evidence.sort_by(persistence::compare_evidence);
-            record.verified.sort_by(acceptance::compare);
-            if record.evidence.len() > MAX_EVIDENCE {
-                return Err(Refusal::new(
-                    RefusalKind::Exhausted,
-                    Diagnostic {
-                        field: "evidence",
-                        message: "evidence record limit reached",
-                    },
-                ));
-            }
+        let mut is_exhausted = false;
+        let mut index = 0;
+        while !is_exhausted && index < records.len() {
+            let record = &mut records[index];
+            record
+                .evidence
+                .sort_by(|left: &EvidenceRecord, right: &EvidenceRecord| {
+                    persistence::compare_evidence(left, right)
+                });
+            record
+                .verified
+                .sort_by(|left: &VerifiedEvidence, right: &VerifiedEvidence| {
+                    acceptance::compare(left, right)
+                });
+            is_exhausted = record.evidence.len() > MAX_EVIDENCE;
+            index += 1;
+        }
+        if is_exhausted {
+            return Err(Refusal::new(
+                RefusalKind::Exhausted,
+                Diagnostic {
+                    field: "evidence",
+                    message: "evidence record limit reached",
+                },
+            ));
         }
         Ok(())
     }
@@ -1132,13 +1192,14 @@ impl ProcedureLibrary {
                 },
             ));
         }
-        if record
-            .chunk
-            .interface
-            .stack_in
-            .iter()
-            .chain(&record.chunk.interface.stack_out)
-            .any(|ty| !chunks::profile_type(ty))
+        if crate::scan::find_first(&record.chunk.interface.stack_in, |ty| {
+            !chunks::profile_type(ty)
+        })
+        .is_some()
+            || crate::scan::find_first(&record.chunk.interface.stack_out, |ty| {
+                !chunks::profile_type(ty)
+            })
+            .is_some()
         {
             return Err(Refusal::new(
                 RefusalKind::Unsupported,
@@ -1169,37 +1230,47 @@ impl ProcedureLibrary {
         if record.retrieval != retrieval::signature(record) {
             return Err(Refusal::new(RefusalKind::Invalid, Diagnostic { field: "retrieval", message: "retrieval signature differs from recomputed interface, status and integer cost" }));
         }
-        for (index, evidence) in record.evidence.iter().enumerate() {
-            if evidence.capability.is_some() {
-                return Err(Refusal::at(RefusalKind::LiveCapabilityInEvidence, Diagnostic { field: "evidence.capability", message: "capability-bearing evidence cannot enter the resource-free procedure profile" }, index as u32));
-            }
-            if evidence.subject_binding != record.procedure_id {
-                return Err(Refusal::at(
-                    RefusalKind::StaleContext,
-                    Diagnostic {
-                        field: "evidence.subject_binding",
-                        message: "evidence is not bound to this immutable procedure subject",
-                    },
-                    index as u32,
-                ));
-            }
-            if matches!(
-                evidence.outcome,
-                EvidenceOutcome::Proved | EvidenceOutcome::Disproved
-            ) && !evidence.class.proves()
-            {
-                return Err(Refusal::at(RefusalKind::ForgedStatus, Diagnostic { field: "evidence.outcome", message: "test, validation, review or assumption evidence cannot claim a proof outcome" }, index as u32));
-            }
-            if evidence.toolchain.is_empty() || evidence.claim.is_empty() {
-                return Err(Refusal::at(
-                    RefusalKind::Invalid,
-                    Diagnostic {
-                        field: "evidence",
-                        message: "evidence requires an explicit claim and toolchain identity",
-                    },
-                    index as u32,
-                ));
-            }
+        let mut outcome = Ok(());
+        let mut index = 0;
+        while outcome.is_ok() && index < record.evidence.len() {
+            outcome = Self::validate_claim(record, index);
+            index += 1;
+        }
+        outcome
+    }
+
+    /// One evidence claim of [`Self::validate_claims`].
+    fn validate_claim(record: &ProcedureRecord, index: usize) -> Result<(), Refusal> {
+        let evidence = &record.evidence[index];
+        if evidence.capability.is_some() {
+            return Err(Refusal::at(RefusalKind::LiveCapabilityInEvidence, Diagnostic { field: "evidence.capability", message: "capability-bearing evidence cannot enter the resource-free procedure profile" }, index as u32));
+        }
+        if evidence.subject_binding != record.procedure_id {
+            return Err(Refusal::at(
+                RefusalKind::StaleContext,
+                Diagnostic {
+                    field: "evidence.subject_binding",
+                    message: "evidence is not bound to this immutable procedure subject",
+                },
+                index as u32,
+            ));
+        }
+        if matches!(
+            evidence.outcome,
+            EvidenceOutcome::Proved | EvidenceOutcome::Disproved
+        ) && !evidence.class.proves()
+        {
+            return Err(Refusal::at(RefusalKind::ForgedStatus, Diagnostic { field: "evidence.outcome", message: "test, validation, review or assumption evidence cannot claim a proof outcome" }, index as u32));
+        }
+        if evidence.toolchain.is_empty() || evidence.claim.is_empty() {
+            return Err(Refusal::at(
+                RefusalKind::Invalid,
+                Diagnostic {
+                    field: "evidence",
+                    message: "evidence requires an explicit claim and toolchain identity",
+                },
+                index as u32,
+            ));
         }
         Ok(())
     }
@@ -1269,56 +1340,26 @@ impl ProcedureLibrary {
                         ));
                     }
                 }
-                for (index, obligation) in promotion.obligations.iter().enumerate() {
-                    if index > 0
-                        && promotion
-                            .obligations
-                            .get(index.saturating_sub(1))
-                            .is_some_and(|previous| previous >= obligation)
+                let mut outcome = Ok(());
+                let mut index = 0;
+                while outcome.is_ok() && index < promotion.obligations.len() {
+                    outcome = Self::validate_promoted_obligation(record, promotion, policy, index);
+                    index += 1;
+                }
+                outcome?;
+                if let Some(policy) = policy {
+                    if crate::scan::find_first(&policy.obligations, |required| {
+                        !promotion.obligations.contains(&required.id)
+                    })
+                    .is_some()
                     {
-                        return Err(Refusal::at(
+                        return Err(Refusal::new(
                             RefusalKind::ForgedStatus,
                             Diagnostic {
                                 field: "promotion.obligations",
-                                message: "consumer obligations must be strictly increasing",
+                                message: "promotion omits an obligation demanded by the selected consumer policy",
                             },
-                            index as u32,
                         ));
-                    }
-                    let policy_obligation = if let Some(policy) = policy {
-                        Some(
-                            policy
-                                .obligations
-                                .iter()
-                                .find(|candidate| candidate.id == *obligation)
-                                .ok_or_else(|| {
-                                    Refusal::at(RefusalKind::StaleContext, Diagnostic { field: "promotion.obligations", message: "promotion obligation is absent from the selected consumer policy" }, index as u32)
-                                })?,
-                        )
-                    } else {
-                        None
-                    };
-                    let is_satisfied = acceptance::has_verified_proof(
-                        record,
-                        promotion,
-                        *obligation,
-                        policy_obligation,
-                    );
-                    if !is_satisfied {
-                        return Err(Refusal::at(RefusalKind::ForgedStatus, Diagnostic { field: "promotion.obligations", message: "each promoted obligation requires exact-subject proof evidence verified by the library owner's verifier and allowed by policy" }, index as u32));
-                    }
-                }
-                if let Some(policy) = policy {
-                    for required in &policy.obligations {
-                        if !promotion.obligations.contains(&required.id) {
-                            return Err(Refusal::new(
-                                RefusalKind::ForgedStatus,
-                                Diagnostic {
-                                    field: "promotion.obligations",
-                                    message: "promotion omits an obligation demanded by the selected consumer policy",
-                                },
-                            ));
-                        }
                     }
                 }
             }
@@ -1369,6 +1410,58 @@ impl ProcedureLibrary {
         Ok(())
     }
 
+    /// One promoted obligation of [`Self::validate_record`]: strictly ordered,
+    /// named by the selected policy and proved under it.
+    fn validate_promoted_obligation(
+        record: &ProcedureRecord,
+        promotion: &Promotion,
+        policy: Option<&ConsumerPolicy>,
+        index: usize,
+    ) -> Result<(), Refusal> {
+        let obligation = &promotion.obligations[index];
+        if index > 0
+            && promotion
+                .obligations
+                .get(index.saturating_sub(1))
+                .is_some_and(|previous| previous >= obligation)
+        {
+            return Err(Refusal::at(
+                RefusalKind::ForgedStatus,
+                Diagnostic {
+                    field: "promotion.obligations",
+                    message: "consumer obligations must be strictly increasing",
+                },
+                index as u32,
+            ));
+        }
+        let policy_obligation = if let Some(policy) = policy {
+            Some(
+                crate::scan::find_first(&policy.obligations, |candidate| {
+                    candidate.id == *obligation
+                })
+                .ok_or_else(|| {
+                    Refusal::at(
+                        RefusalKind::StaleContext,
+                        Diagnostic {
+                            field: "promotion.obligations",
+                            message:
+                                "promotion obligation is absent from the selected consumer policy",
+                        },
+                        index as u32,
+                    )
+                })?,
+            )
+        } else {
+            None
+        };
+        let is_satisfied =
+            acceptance::has_verified_proof(record, promotion, *obligation, policy_obligation);
+        if !is_satisfied {
+            return Err(Refusal::at(RefusalKind::ForgedStatus, Diagnostic { field: "promotion.obligations", message: "each promoted obligation requires exact-subject proof evidence verified by the library owner's verifier and allowed by policy" }, index as u32));
+        }
+        Ok(())
+    }
+
     fn check_dependencies(
         records: &[ProcedureRecord],
         record: &ProcedureRecord,
@@ -1382,82 +1475,120 @@ impl ProcedureLibrary {
                 },
             ));
         }
-        for (index, dependency) in record.library_dependencies.iter().enumerate() {
-            if dependency.procedure_id == record.procedure_id
-                || !records.iter().any(|candidate| {
+        let unresolved = position_first(&record.library_dependencies, |dependency| {
+            dependency.procedure_id == record.procedure_id
+                || crate::scan::find_first(records, |candidate| {
                     candidate.procedure_id == dependency.procedure_id
                         && candidate.chunk.chunk_id == dependency.chunk_id
                         && candidate.chunk.source_revision == dependency.source_revision
                 })
-            {
-                return Err(Refusal::at(
-                    RefusalKind::Invalid,
-                    Diagnostic {
-                        field: "library_dependencies",
-                        message: "library dependency does not resolve to an exact retained record",
-                    },
-                    index as u32,
-                ));
-            }
+                .is_none()
+        });
+        if let Some(index) = unresolved {
+            return Err(Refusal::at(
+                RefusalKind::Invalid,
+                Diagnostic {
+                    field: "library_dependencies",
+                    message: "library dependency does not resolve to an exact retained record",
+                },
+                index as u32,
+            ));
         }
-        for (index, (dependency, procedure)) in record
-            .chunk
-            .dependencies
-            .iter()
-            .zip(&record.library_dependencies)
-            .enumerate()
+        let mut mismatched = None;
+        let mut index = 0;
+        while mismatched.is_none()
+            && index < record.chunk.dependencies.len()
+            && index < record.library_dependencies.len()
         {
-            let mut identity = [0u8; 8];
-            identity.copy_from_slice(&procedure.chunk_id[..8]);
-            let is_matched = u64::from_be_bytes(identity) == dependency.identity
-                && procedure.source_revision == dependency.source_revision
-                && records.iter().any(|candidate| {
-                    candidate.procedure_id == procedure.procedure_id
-                        && candidate.chunk.chunk_id == procedure.chunk_id
-                        && candidate.chunk.source_revision == procedure.source_revision
-                        && candidate.chunk.format == dependency.format
-                        && candidate.chunk.semantic_revision == dependency.semantic_revision
-                });
-            if !is_matched {
-                return Err(Refusal::at(RefusalKind::Invalid, Diagnostic { field: "library_dependencies", message: "typed-chunk and procedure dependency edges must match in retained order" }, index as u32));
+            if !Self::is_edge_matched(
+                records,
+                &record.chunk.dependencies[index],
+                &record.library_dependencies[index],
+            ) {
+                mismatched = Some(index);
             }
+            index += 1;
+        }
+        if let Some(index) = mismatched {
+            return Err(Refusal::at(
+                RefusalKind::Invalid,
+                Diagnostic {
+                    field: "library_dependencies",
+                    message:
+                        "typed-chunk and procedure dependency edges must match in retained order",
+                },
+                index as u32,
+            ));
         }
         Ok(())
     }
 
+    /// Whether a typed-chunk dependency edge and its procedure edge name the
+    /// same retained record.
+    fn is_edge_matched(
+        records: &[ProcedureRecord],
+        dependency: &chunks::DefinitionRef,
+        procedure: &LibraryDependency,
+    ) -> bool {
+        let mut identity = [0u8; 8];
+        identity.copy_from_slice(&procedure.chunk_id[..8]);
+        u64::from_be_bytes(identity) == dependency.identity
+            && procedure.source_revision == dependency.source_revision
+            && crate::scan::find_first(records, |candidate| {
+                candidate.procedure_id == procedure.procedure_id
+                    && candidate.chunk.chunk_id == procedure.chunk_id
+                    && candidate.chunk.source_revision == procedure.source_revision
+                    && candidate.chunk.format == dependency.format
+                    && candidate.chunk.semantic_revision == dependency.semantic_revision
+            })
+            .is_some()
+    }
+
     fn validate_supersession(records: &[ProcedureRecord]) -> Result<(), Refusal> {
-        for (index, record) in records.iter().enumerate() {
-            if record.status == Status::Superseded
-                && !records
-                    .iter()
-                    .any(|candidate| candidate.supersedes == Some(record.procedure_id))
+        let mut outcome = Ok(());
+        let mut index = 0;
+        while outcome.is_ok() && index < records.len() {
+            outcome = Self::check_supersession(records, index);
+            index += 1;
+        }
+        outcome
+    }
+
+    /// One record of [`Self::validate_supersession`].
+    fn check_supersession(records: &[ProcedureRecord], index: usize) -> Result<(), Refusal> {
+        let record = &records[index];
+        if record.status == Status::Superseded
+            && crate::scan::find_first(records, |candidate| {
+                candidate.supersedes == Some(record.procedure_id)
+            })
+            .is_none()
+        {
+            return Err(Refusal::at(
+                RefusalKind::Invalid,
+                Diagnostic {
+                    field: "supersedes",
+                    message: "superseded record must remain linked to a retained replacement",
+                },
+                index as u32,
+            ));
+        }
+        if let Some(replaced_id) = record.supersedes {
+            if record.status == Status::Superseded || replaced_id == record.procedure_id {
+                return Err(Refusal::at(RefusalKind::Invalid, Diagnostic { field: "supersedes", message: "replacement relation must point from a live distinct record to the replaced subject" }, index as u32));
+            }
+            if crate::scan::find_first(records, |old| {
+                old.procedure_id == replaced_id && old.status == Status::Superseded
+            })
+            .is_none()
             {
                 return Err(Refusal::at(
                     RefusalKind::Invalid,
                     Diagnostic {
                         field: "supersedes",
-                        message: "superseded record must remain linked to a retained replacement",
+                        message: "replacement target is not retained as superseded",
                     },
                     index as u32,
                 ));
-            }
-            if let Some(replaced_id) = record.supersedes {
-                if record.status == Status::Superseded || replaced_id == record.procedure_id {
-                    return Err(Refusal::at(RefusalKind::Invalid, Diagnostic { field: "supersedes", message: "replacement relation must point from a live distinct record to the replaced subject" }, index as u32));
-                }
-                if !records
-                    .iter()
-                    .any(|old| old.procedure_id == replaced_id && old.status == Status::Superseded)
-                {
-                    return Err(Refusal::at(
-                        RefusalKind::Invalid,
-                        Diagnostic {
-                            field: "supersedes",
-                            message: "replacement target is not retained as superseded",
-                        },
-                        index as u32,
-                    ));
-                }
             }
         }
         Ok(())
@@ -1476,9 +1607,7 @@ impl ProcedureLibrary {
                 },
             )
         })?;
-        let old = records
-            .iter_mut()
-            .find(|record| record.procedure_id == old_id)
+        let old = crate::scan::find_first_mut(records, |record| record.procedure_id == old_id)
             .ok_or_else(|| {
                 Refusal::new(
                     RefusalKind::Invalid,
@@ -1509,42 +1638,29 @@ impl ProcedureLibrary {
             ));
         }
         Self::validate_supersession(records)?;
-        for (index, record) in records.iter().enumerate() {
-            Self::validate_record(record, None, false).map_err(|mut refusal| {
-                refusal.location = chunks::Location::at("records", index as u32);
-                refusal
-            })?;
-            if record.identity_digest()? != record.procedure_id {
-                return Err(Refusal::at(
-                    RefusalKind::Invalid,
-                    Diagnostic {
-                        field: "procedure_id",
-                        message:
-                            "retained procedure identity differs from recomputed immutable fields",
-                    },
-                    index as u32,
-                ));
-            }
+        let mut outcome = Ok(());
+        let mut index = 0;
+        while outcome.is_ok() && index < records.len() {
+            outcome = Self::check_retained(records, index);
+            index += 1;
         }
+        outcome?;
         let order = Self::admission_order(records)?;
         let mut library = chunks::Library::new(revision);
         let mut admitted: Vec<ProcedureRecord> = Vec::with_capacity(records.len());
-        for index in order {
-            let record = records.get(index).ok_or_else(|| {
-                Refusal::new(
-                    RefusalKind::Internal,
-                    Diagnostic {
-                        field: "library.entries",
-                        message: "admission order invalid",
-                    },
-                )
-            })?;
-            Self::check_dependencies(&admitted, record)?;
-            library
-                .admit(namespace, record.chunk.clone())
-                .map_err(Refusal::from_chunk)?;
-            admitted.push(record.clone());
+        let mut outcome = Ok(());
+        let mut position = 0;
+        while outcome.is_ok() && position < order.len() {
+            outcome = Self::admit_rebuilt(
+                namespace,
+                records,
+                order[position],
+                &mut library,
+                &mut admitted,
+            );
+            position += 1;
         }
+        outcome?;
         alias::verify(records)?;
         if library.revision() != &revision {
             return Err(Refusal::new(
@@ -1558,54 +1674,129 @@ impl ProcedureLibrary {
         Ok(library)
     }
 
+    /// One retained record of [`Self::rebuild_chunks`]: valid and identity-stable.
+    fn check_retained(records: &[ProcedureRecord], index: usize) -> Result<(), Refusal> {
+        let record = &records[index];
+        Self::validate_record(record, None, false).map_err(|mut refusal| {
+            refusal.location = chunks::Location::at("records", index as u32);
+            refusal
+        })?;
+        if record.identity_digest()? != record.procedure_id {
+            return Err(Refusal::at(
+                RefusalKind::Invalid,
+                Diagnostic {
+                    field: "procedure_id",
+                    message: "retained procedure identity differs from recomputed immutable fields",
+                },
+                index as u32,
+            ));
+        }
+        Ok(())
+    }
+
+    /// Re-admit the record at `index` of [`Self::rebuild_chunks`] after its dependencies.
+    fn admit_rebuilt(
+        namespace: &super::Session,
+        records: &[ProcedureRecord],
+        index: usize,
+        library: &mut chunks::Library,
+        admitted: &mut Vec<ProcedureRecord>,
+    ) -> Result<(), Refusal> {
+        let record = records.get(index).ok_or_else(|| {
+            Refusal::new(
+                RefusalKind::Internal,
+                Diagnostic {
+                    field: "library.entries",
+                    message: "admission order invalid",
+                },
+            )
+        })?;
+        Self::check_dependencies(admitted, record)?;
+        library
+            .admit(namespace, record.chunk.clone())
+            .map_err(Refusal::from_chunk)?;
+        admitted.push(record.clone());
+        Ok(())
+    }
+
     fn admission_order(records: &[ProcedureRecord]) -> Result<Vec<usize>, Refusal> {
         let mut order = Vec::with_capacity(records.len());
-        while order.len() < records.len() {
-            let mut selected = None;
-            for (candidate_index, record) in records.iter().enumerate() {
-                if order.contains(&candidate_index) {
-                    continue;
-                }
-                let is_dependencies_are_ready =
-                    record.library_dependencies.iter().all(|dependency| {
-                        records
-                            .iter()
-                            .enumerate()
-                            .any(|(dependency_index, candidate)| {
-                                candidate.procedure_id == dependency.procedure_id
-                                    && order.contains(&dependency_index)
-                            })
-                    }) && record.chunk.dependencies.iter().all(|dependency| {
-                        records
-                            .iter()
-                            .enumerate()
-                            .any(|(dependency_index, candidate)| {
-                                order.contains(&dependency_index)
-                                    && candidate.chunk.chunk_id[..8]
-                                        == dependency.identity.to_be_bytes()
-                                    && candidate.chunk.source_revision == dependency.source_revision
-                            })
-                    });
-                if is_dependencies_are_ready {
-                    selected = Some(candidate_index);
-                    break;
-                }
-            }
-            match selected {
+        let mut is_stuck = false;
+        while !is_stuck && order.len() < records.len() {
+            match Self::next_ready(records, &order) {
                 Some(index) => order.push(index),
-                None => {
-                    return Err(Refusal::new(
-                        RefusalKind::Invalid,
-                        Diagnostic {
-                            field: "library_dependencies",
-                            message:
-                                "procedure dependency closure is cyclic or names a missing chunk",
-                        },
-                    ))
-                }
+                None => is_stuck = true,
             }
         }
+        if is_stuck {
+            return Err(Refusal::new(
+                RefusalKind::Invalid,
+                Diagnostic {
+                    field: "library_dependencies",
+                    message: "procedure dependency closure is cyclic or names a missing chunk",
+                },
+            ));
+        }
         Ok(order)
+    }
+
+    /// The first record outside `order` whose dependencies are all in `order`.
+    fn next_ready(records: &[ProcedureRecord], order: &[usize]) -> Option<usize> {
+        let mut selected = None;
+        let mut candidate_index = 0;
+        while selected.is_none() && candidate_index < records.len() {
+            if !order.contains(&candidate_index)
+                && Self::is_dependencies_ready(records, order, &records[candidate_index])
+            {
+                selected = Some(candidate_index);
+            }
+            candidate_index += 1;
+        }
+        selected
+    }
+
+    /// Whether every procedure and typed-chunk dependency of `record` is in `order`.
+    fn is_dependencies_ready(
+        records: &[ProcedureRecord],
+        order: &[usize],
+        record: &ProcedureRecord,
+    ) -> bool {
+        let mut is_ready = true;
+        let mut index = 0;
+        while is_ready && index < record.library_dependencies.len() {
+            let dependency = &record.library_dependencies[index];
+            is_ready = Self::any_record(records, |dependency_index, candidate| {
+                candidate.procedure_id == dependency.procedure_id
+                    && order.contains(&dependency_index)
+            });
+            index += 1;
+        }
+        let mut index = 0;
+        while is_ready && index < record.chunk.dependencies.len() {
+            let dependency = &record.chunk.dependencies[index];
+            is_ready = Self::any_record(records, |dependency_index, candidate| {
+                order.contains(&dependency_index)
+                    && candidate.chunk.chunk_id[..8] == dependency.identity.to_be_bytes()
+                    && candidate.chunk.source_revision == dependency.source_revision
+            });
+            index += 1;
+        }
+        is_ready
+    }
+
+    /// Whether some record satisfies `predicate` with its index, as
+    /// `records.iter().enumerate().any(..)`.
+    fn any_record(
+        records: &[ProcedureRecord],
+        mut predicate: impl FnMut(usize, &ProcedureRecord) -> bool,
+    ) -> bool {
+        let mut is_found = false;
+        let mut index = 0;
+        while !is_found && index < records.len() {
+            is_found = predicate(index, &records[index]);
+            index += 1;
+        }
+        is_found
     }
 
     fn snapshot(
@@ -1614,11 +1805,21 @@ impl ProcedureLibrary {
         records: Vec<ProcedureRecord>,
     ) -> Result<Snapshot, Refusal> {
         let mut closure = Vec::with_capacity(records.len());
-        for record in records.iter() {
-            closure.push(ClosureEntry {
-                procedure_id: record.procedure_id,
-                state_digest: persistence::state_digest(record)?,
-            });
+        let mut failure = None;
+        let mut index = 0;
+        while failure.is_none() && index < records.len() {
+            let record = &records[index];
+            match persistence::state_digest(record) {
+                Ok(state_digest) => closure.push(ClosureEntry {
+                    procedure_id: record.procedure_id,
+                    state_digest,
+                }),
+                Err(refusal) => failure = Some(refusal),
+            }
+            index += 1;
+        }
+        if let Some(refusal) = failure {
+            return Err(refusal);
         }
         let procedure_library_revision = persistence::procedure_revision(&records)?;
         Ok(Snapshot {
@@ -1640,20 +1841,18 @@ impl ProcedureLibrary {
         namespace: &super::Session,
         procedure_id: ProcedureId,
     ) -> Result<(), Refusal> {
-        let mut record = self
-            .records()
-            .iter()
-            .find(|record| record.procedure_id == procedure_id)
-            .cloned()
-            .ok_or_else(|| {
-                Refusal::new(
-                    RefusalKind::UnknownRecord,
-                    Diagnostic {
-                        field: "procedure_id",
-                        message: "record unavailable",
-                    },
-                )
-            })?;
+        let mut record =
+            crate::scan::find_first(self.records(), |record| record.procedure_id == procedure_id)
+                .cloned()
+                .ok_or_else(|| {
+                    Refusal::new(
+                        RefusalKind::UnknownRecord,
+                        Diagnostic {
+                            field: "procedure_id",
+                            message: "record unavailable",
+                        },
+                    )
+                })?;
         if record.status != Status::Promoted {
             return Err(Refusal::new(
                 RefusalKind::Invalid,
@@ -1671,20 +1870,22 @@ impl ProcedureLibrary {
         record.promotion = None;
         record.retrieval = retrieval::signature(&record);
         let mut candidate_records = self.current().records.clone();
-        let slot = candidate_records
-            .iter_mut()
-            .find(|candidate| candidate.procedure_id == procedure_id)
-            .ok_or_else(|| {
-                Refusal::new(
-                    RefusalKind::Internal,
-                    Diagnostic {
-                        field: "procedure_id",
-                        message: "record disappeared",
-                    },
-                )
-            })?;
+        let slot = crate::scan::find_first_mut(&mut candidate_records, |candidate| {
+            candidate.procedure_id == procedure_id
+        })
+        .ok_or_else(|| {
+            Refusal::new(
+                RefusalKind::Internal,
+                Diagnostic {
+                    field: "procedure_id",
+                    message: "record disappeared",
+                },
+            )
+        })?;
         *slot = record;
-        candidate_records.sort_by(retrieval::compare_records);
+        candidate_records.sort_by(|left: &ProcedureRecord, right: &ProcedureRecord| {
+            retrieval::compare_records(left, right)
+        });
         let generation = self.current_generation.checked_add(1).ok_or_else(|| {
             Refusal::new(
                 RefusalKind::Exhausted,
@@ -1762,51 +1963,17 @@ impl ProcedureLibrary {
         })?;
         let records = retained.records.clone();
         Self::verify_snapshot(retained)?;
-        for (record_index, record) in records.iter().enumerate() {
-            for (evidence_index, evidence) in record.evidence.iter().enumerate() {
-                if evidence
-                    .toolchain
-                    .iter()
-                    .any(|toolchain| !available_toolchains.contains(toolchain))
-                {
-                    return Err(Refusal::at(
-                        RefusalKind::Invalid,
-                        Diagnostic {
-                            field: "evidence.toolchain",
-                            message:
-                                "rollback refused because an evidence toolchain is unavailable",
-                        },
-                        evidence_index as u32,
-                    ));
-                }
-            }
-            for (receipt_index, receipt) in record.verified.iter().enumerate() {
-                if receipt
-                    .toolchain
-                    .iter()
-                    .any(|toolchain| !available_toolchains.contains(toolchain))
-                {
-                    return Err(Refusal::at(
-                        RefusalKind::Invalid,
-                        Diagnostic {
-                            field: "verified_evidence.toolchain",
-                            message:
-                                "rollback refused because a verified evidence toolchain is unavailable",
-                        },
-                        receipt_index as u32,
-                    ));
-                }
-            }
-            if record_index >= MAX_RECORDS {
-                return Err(Refusal::new(
-                    RefusalKind::Exhausted,
-                    Diagnostic {
-                        field: "closure",
-                        message: "rollback closure exceeds the record bound",
-                    },
-                ));
-            }
+        let mut outcome = Ok(());
+        let mut record_index = 0;
+        while outcome.is_ok() && record_index < records.len() {
+            outcome = Self::check_rollback_record(
+                &records[record_index],
+                record_index,
+                available_toolchains,
+            );
+            record_index += 1;
         }
+        outcome?;
         let generation = self.current_generation.checked_add(1).ok_or_else(|| {
             Refusal::new(
                 RefusalKind::Exhausted,
@@ -1826,6 +1993,70 @@ impl ProcedureLibrary {
                 kind: GenerationKind::Rollback,
             },
         )
+    }
+
+    /// One record of [`Self::rollback`]: every toolchain it names is still
+    /// available and the closure stays within the record bound.
+    fn check_rollback_record(
+        record: &ProcedureRecord,
+        record_index: usize,
+        available_toolchains: &[String],
+    ) -> Result<(), Refusal> {
+        let mut unavailable = None;
+        let mut evidence_index = 0;
+        while unavailable.is_none() && evidence_index < record.evidence.len() {
+            if crate::scan::find_first(&record.evidence[evidence_index].toolchain, |toolchain| {
+                !available_toolchains.contains(toolchain)
+            })
+            .is_some()
+            {
+                unavailable = Some(evidence_index);
+            }
+            evidence_index += 1;
+        }
+        if let Some(evidence_index) = unavailable {
+            return Err(Refusal::at(
+                RefusalKind::Invalid,
+                Diagnostic {
+                    field: "evidence.toolchain",
+                    message: "rollback refused because an evidence toolchain is unavailable",
+                },
+                evidence_index as u32,
+            ));
+        }
+        let mut unavailable = None;
+        let mut receipt_index = 0;
+        while unavailable.is_none() && receipt_index < record.verified.len() {
+            if crate::scan::find_first(&record.verified[receipt_index].toolchain, |toolchain| {
+                !available_toolchains.contains(toolchain)
+            })
+            .is_some()
+            {
+                unavailable = Some(receipt_index);
+            }
+            receipt_index += 1;
+        }
+        if let Some(receipt_index) = unavailable {
+            return Err(Refusal::at(
+                RefusalKind::Invalid,
+                Diagnostic {
+                    field: "verified_evidence.toolchain",
+                    message:
+                        "rollback refused because a verified evidence toolchain is unavailable",
+                },
+                receipt_index as u32,
+            ));
+        }
+        if record_index >= MAX_RECORDS {
+            return Err(Refusal::new(
+                RefusalKind::Exhausted,
+                Diagnostic {
+                    field: "closure",
+                    message: "rollback closure exceeds the record bound",
+                },
+            ));
+        }
+        Ok(())
     }
 
     fn verify_snapshot(snapshot: &Snapshot) -> Result<(), Refusal> {
@@ -1850,34 +2081,63 @@ impl ProcedureLibrary {
                 },
             ));
         }
-        for (index, (entry, record)) in snapshot
-            .record
-            .closure
-            .iter()
-            .zip(&snapshot.records)
-            .enumerate()
+        let mut outcome = Ok(());
+        let mut index = 0;
+        while outcome.is_ok()
+            && index < snapshot.record.closure.len()
+            && index < snapshot.records.len()
         {
-            if entry.procedure_id != record.procedure_id {
-                return Err(Refusal::at(
-                    RefusalKind::Invalid,
-                    Diagnostic {
-                        field: "closure.procedure_id",
-                        message: "retained identity differs from generation closure",
-                    },
-                    index as u32,
-                ));
-            }
-            if entry.state_digest != persistence::state_digest(record)? {
-                return Err(Refusal::at(
-                    RefusalKind::Invalid,
-                    Diagnostic {
-                        field: "closure.state_digest",
-                        message: "retained mutable state differs from generation closure",
-                    },
-                    index as u32,
-                ));
-            }
+            outcome = Self::check_closure_entry(
+                &snapshot.record.closure[index],
+                &snapshot.records[index],
+                index,
+            );
+            index += 1;
+        }
+        outcome
+    }
+
+    /// One generation closure entry of [`Self::verify_snapshot`] against its record.
+    fn check_closure_entry(
+        entry: &ClosureEntry,
+        record: &ProcedureRecord,
+        index: usize,
+    ) -> Result<(), Refusal> {
+        if entry.procedure_id != record.procedure_id {
+            return Err(Refusal::at(
+                RefusalKind::Invalid,
+                Diagnostic {
+                    field: "closure.procedure_id",
+                    message: "retained identity differs from generation closure",
+                },
+                index as u32,
+            ));
+        }
+        if entry.state_digest != persistence::state_digest(record)? {
+            return Err(Refusal::at(
+                RefusalKind::Invalid,
+                Diagnostic {
+                    field: "closure.state_digest",
+                    message: "retained mutable state differs from generation closure",
+                },
+                index as u32,
+            ));
         }
         Ok(())
     }
+}
+
+/// The index of the first element satisfying `predicate`, as
+/// `items.iter().position(..)`: elements are tested in order and none after
+/// the first match.
+fn position_first<T>(items: &[T], mut predicate: impl FnMut(&T) -> bool) -> Option<usize> {
+    let mut index = 0;
+    let mut found = None;
+    while found.is_none() && index < items.len() {
+        if predicate(&items[index]) {
+            found = Some(index);
+        }
+        index += 1;
+    }
+    found
 }

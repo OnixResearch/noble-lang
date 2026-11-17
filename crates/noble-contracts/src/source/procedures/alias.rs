@@ -49,7 +49,7 @@ pub enum Certificate {
     ExactPair(Box<ExactPairCertificate>),
 }
 
-fn refused(kind: RefusalKind, message: &'static str) -> Refusal {
+fn refused(kind: RefusalKind, message: &str) -> Refusal {
     Refusal::new(
         kind,
         Diagnostic {
@@ -138,56 +138,99 @@ impl Polynomial {
     }
 
     fn combine(mut self, other: &Self, subtract: bool, work: &mut u32) -> Result<Self, Refusal> {
-        for term in &other.terms {
-            let mut term = term.clone();
+        let mut outcome = Ok(());
+        let mut index = 0;
+        while outcome.is_ok() && index < other.terms.len() {
+            let mut term = other.terms[index].clone();
             if subtract {
                 term.coefficient = term.coefficient.wrapping_neg();
             }
-            self.insert(term, work)?;
+            outcome = self.insert(term, work);
+            index += 1;
         }
+        outcome?;
         Ok(self)
     }
 
     fn multiply(&self, other: &Self, work: &mut u32) -> Result<Self, Refusal> {
         charge(work, self.terms.len().saturating_mul(other.terms.len()))?;
         let mut result = Self { terms: Vec::new() };
-        for left in &self.terms {
-            for right in &other.terms {
-                let mut powers = [0; MAX_ALIAS_INPUTS];
-                let mut degree = 0u16;
-                for (index, exponent) in powers.iter_mut().enumerate() {
-                    let next = u16::from(left.powers[index])
-                        .checked_add(u16::from(right.powers[index]))
-                        .ok_or_else(|| {
-                            refused(RefusalKind::Exhausted, "alias exponent overflows")
-                        })?;
-                    degree = degree.checked_add(next).ok_or_else(|| {
-                        refused(RefusalKind::Exhausted, "alias total degree overflows")
-                    })?;
-                    if next > MAX_ALIAS_DEGREE || degree > MAX_ALIAS_DEGREE {
-                        return Err(refused(
-                            RefusalKind::Exhausted,
-                            "alias polynomial exceeds the degree bound",
-                        ));
-                    }
-                    *exponent = u8::try_from(next).map_err(|_| {
-                        refused(
-                            RefusalKind::Exhausted,
-                            "alias exponent overflows the wire domain",
-                        )
-                    })?;
-                }
-                result.insert(
+        let mut outcome = Ok(());
+        let mut left_index = 0;
+        while outcome.is_ok() && left_index < self.terms.len() {
+            outcome = result.add_products(&self.terms[left_index], other, work);
+            left_index += 1;
+        }
+        outcome?;
+        Ok(result)
+    }
+
+    /// Insert the product of `left` with each term of `other`, in order.
+    fn add_products(
+        &mut self,
+        left: &Monomial,
+        other: &Self,
+        work: &mut u32,
+    ) -> Result<(), Refusal> {
+        let mut outcome = Ok(());
+        let mut right_index = 0;
+        while outcome.is_ok() && right_index < other.terms.len() {
+            let right = &other.terms[right_index];
+            outcome = match product_powers(left, right) {
+                Ok(powers) => self.insert(
                     Monomial {
                         coefficient: left.coefficient.wrapping_mul(right.coefficient),
                         powers,
                     },
                     work,
-                )?;
-            }
+                ),
+                Err(refusal) => Err(refusal),
+            };
+            right_index += 1;
         }
-        Ok(result)
+        outcome
     }
+}
+
+/// The exponents of the product of two monomials, within the degree bound.
+fn product_powers(left: &Monomial, right: &Monomial) -> Result<[u8; MAX_ALIAS_INPUTS], Refusal> {
+    let mut powers = [0; MAX_ALIAS_INPUTS];
+    let mut degree = 0u16;
+    let mut failure = None;
+    let mut index = 0;
+    while failure.is_none() && index < powers.len() {
+        match product_exponent(left.powers[index], right.powers[index], &mut degree) {
+            Ok(exponent) => powers[index] = exponent,
+            Err(refusal) => failure = Some(refusal),
+        }
+        index += 1;
+    }
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(powers),
+    }
+}
+
+/// One exponent of [`product_powers`], added to the running total `degree`.
+fn product_exponent(left: u8, right: u8, degree: &mut u16) -> Result<u8, Refusal> {
+    let next = u16::from(left)
+        .checked_add(u16::from(right))
+        .ok_or_else(|| refused(RefusalKind::Exhausted, "alias exponent overflows"))?;
+    *degree = degree
+        .checked_add(next)
+        .ok_or_else(|| refused(RefusalKind::Exhausted, "alias total degree overflows"))?;
+    if next > MAX_ALIAS_DEGREE || *degree > MAX_ALIAS_DEGREE {
+        return Err(refused(
+            RefusalKind::Exhausted,
+            "alias polynomial exceeds the degree bound",
+        ));
+    }
+    u8::try_from(next).map_err(|_| {
+        refused(
+            RefusalKind::Exhausted,
+            "alias exponent overflows the wire domain",
+        )
+    })
 }
 
 struct PolynomialStack {
@@ -235,8 +278,8 @@ fn check_fragment(record: &ProcedureRecord) -> Result<(), Refusal> {
             "alias interface exceeds the polynomial input or output limit",
         ));
     }
-    if chunk.interface.stack_in.iter().any(|ty| *ty != Ty::I64)
-        || chunk.interface.stack_out.iter().any(|ty| *ty != Ty::I64)
+    if crate::scan::find_first(&chunk.interface.stack_in, |ty| *ty != Ty::I64).is_some()
+        || crate::scan::find_first(&chunk.interface.stack_out, |ty| *ty != Ty::I64).is_some()
     {
         return Err(refused(
             RefusalKind::Unsupported,
@@ -353,14 +396,22 @@ fn normalize(record: &ProcedureRecord) -> Result<Vec<Polynomial>, Refusal> {
     check_fragment(record)?;
     let chunk = &record.chunk;
     let mut stack = PolynomialStack::new(chunk.interface.stack_in.len());
-    for index in 0..chunk.interface.stack_in.len() {
-        stack.push(Polynomial::variable(index))?;
+    let mut outcome = Ok(());
+    let mut index = 0;
+    while outcome.is_ok() && index < chunk.interface.stack_in.len() {
+        outcome = stack.push(Polynomial::variable(index));
+        index += 1;
     }
+    outcome?;
     let mut work = 0;
-    for index in &chunk.body.entry {
-        normalize_node(chunk, *index, &mut stack, &mut work)?;
-        debug_assert!(stack.values.len() <= 32);
+    let mut outcome = Ok(());
+    let mut position = 0;
+    while outcome.is_ok() && position < chunk.body.entry.len() {
+        outcome = normalize_node(chunk, chunk.body.entry[position], &mut stack, &mut work);
+        debug_assert!(outcome.is_err() || stack.values.len() <= 32);
+        position += 1;
     }
+    outcome?;
     if stack.values.len() != chunk.interface.stack_out.len() {
         return Err(refused(
             RefusalKind::Unsupported,
@@ -418,7 +469,7 @@ impl Alias {
     }
 
     fn evidence(&self, subject: ProcedureId) -> EvidenceRecord {
-        const HEX: &[u8; 16] = b"0123456789abcdef";
+        const HEX: [u8; 16] = *b"0123456789abcdef";
         let mut claim = String::with_capacity(CLAIM_CAPACITY_BYTES);
         claim.push_str("exact-pair:");
         for id in [subject, self.procedure_id] {
@@ -443,32 +494,53 @@ impl Alias {
 }
 
 pub(super) fn verify(records: &[ProcedureRecord]) -> Result<(), Refusal> {
-    for record in records {
-        let Some(alias) = &record.alias_of else {
-            continue;
-        };
-        let Certificate::ExactPair(certificate) = &alias.certificate else {
-            return Err(refused(
-                RefusalKind::Unsupported,
-                "a legacy alias digest is not an exact-pair proof",
-            ));
-        };
-        let target = records
-            .iter()
-            .find(|candidate| candidate.procedure_id == alias.procedure_id)
-            .ok_or_else(|| refused(RefusalKind::StaleContext, "alias target is not retained"))?;
-        verify_pair(record, alias, target, certificate)?;
+    let mut outcome = Ok(());
+    let mut index = 0;
+    while outcome.is_ok() && index < records.len() {
+        outcome = verify_record(records, &records[index]);
+        index += 1;
     }
-    Ok(())
+    outcome
+}
+
+/// One record of [`verify`]: its exact-pair claim, if any, against the retained target.
+fn verify_record(records: &[ProcedureRecord], record: &ProcedureRecord) -> Result<(), Refusal> {
+    let Some(alias) = &record.alias_of else {
+        return Ok(());
+    };
+    let Certificate::ExactPair(certificate) = &alias.certificate else {
+        return Err(refused(
+            RefusalKind::Unsupported,
+            "a legacy alias digest is not an exact-pair proof",
+        ));
+    };
+    let target = crate::scan::find_first(records, |candidate| {
+        candidate.procedure_id == alias.procedure_id
+    })
+    .ok_or_else(|| refused(RefusalKind::StaleContext, "alias target is not retained"))?;
+    verify_pair(record, alias, target, certificate)
 }
 
 fn verify_evidence(record: &ProcedureRecord, alias: &Alias) -> Result<(), Refusal> {
     let evidence = alias.evidence(record.procedure_id);
-    let mut own_evidence = record
-        .evidence
-        .iter()
-        .filter(|entry| entry.obligation == ALIAS_EVIDENCE_OBLIGATION);
-    if own_evidence.next() != Some(&evidence) || own_evidence.next().is_some() {
+    let mut first_own = None;
+    let mut is_repeated = false;
+    let mut index = 0;
+    while !is_repeated && index < record.evidence.len() {
+        if record.evidence[index].obligation == ALIAS_EVIDENCE_OBLIGATION {
+            if first_own.is_none() {
+                first_own = Some(index);
+            } else {
+                is_repeated = true;
+            }
+        }
+        index += 1;
+    }
+    let is_bound = match first_own {
+        Some(at) => record.evidence[at] == evidence,
+        None => false,
+    };
+    if !is_bound || is_repeated {
         return Err(refused(
             RefusalKind::Invalid,
             "alias lacks its own exact-pair validation evidence binding",

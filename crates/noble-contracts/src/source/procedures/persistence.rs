@@ -21,23 +21,32 @@ const MAX_RECIPE_NODES: u32 = chunks::MAX_RECIPE_NODES;
 const MAX_DEPTH_LIST: u32 = chunks::MAX_STACK_HEIGHT;
 /// Revision 2 of the store adds the verification receipts minted at
 /// admission; revision-1 bytes carried claims only and are refused.
-const MAGIC: &[u8; 8] = b"NPLIB002";
+const MAGIC: [u8; 8] = *b"NPLIB002";
 
+/// A bounded JSON export; names the refusal its overflow reports.
 #[derive(Clone, Copy)]
-struct JsonLimitDiagnostic {
-    field: &'static str,
-    message: &'static str,
+enum JsonLimit {
+    Manifest,
+    Metrics,
 }
 
-const MANIFEST_LIMIT_DIAGNOSTIC: JsonLimitDiagnostic = JsonLimitDiagnostic {
-    field: "manifest.bytes",
-    message: "identity manifest exceeds its bound",
-};
+impl JsonLimit {
+    /// The refusal field of this export's bound.
+    const fn field(self) -> &'static str {
+        match self {
+            Self::Manifest => "manifest.bytes",
+            Self::Metrics => "metrics.bytes",
+        }
+    }
 
-const METRICS_LIMIT_DIAGNOSTIC: JsonLimitDiagnostic = JsonLimitDiagnostic {
-    field: "metrics.bytes",
-    message: "metrics record exceeds its bound",
-};
+    /// The refusal message of this export's bound.
+    const fn message(self) -> &'static str {
+        match self {
+            Self::Manifest => "identity manifest exceeds its bound",
+            Self::Metrics => "metrics record exceeds its bound",
+        }
+    }
+}
 
 struct BoundedJson {
     text: String,
@@ -87,11 +96,12 @@ impl BoundedJson {
     fn push_u64(&mut self, mut value: u64) {
         let mut digits = [0u8; 20];
         let mut start = digits.len();
+        let mut is_digit_valid = true;
         loop {
             start -= 1;
             let Ok(digit) = u8::try_from(value % 10) else {
-                self.exceeded_limit = true;
-                return;
+                is_digit_valid = false;
+                break;
             };
             digits[start] = b"0123456789"[usize::from(digit)];
             value /= 10;
@@ -99,8 +109,14 @@ impl BoundedJson {
                 break;
             }
         }
-        for digit in &digits[start..] {
-            self.push(char::from(*digit));
+        if !is_digit_valid {
+            self.exceeded_limit = true;
+            return;
+        }
+        let mut index = start;
+        while index < digits.len() {
+            self.push(char::from(digits[index]));
+            index += 1;
         }
     }
 
@@ -120,49 +136,67 @@ impl BoundedJson {
     }
 
     fn push_hex(&mut self, bytes: &[u8]) {
-        const DIGITS: &[u8; 16] = b"0123456789abcdef";
-        for byte in bytes {
+        const DIGITS: [u8; 16] = *b"0123456789abcdef";
+        let mut index = 0;
+        while index < bytes.len() {
             if self.exceeded_limit {
                 break;
             }
+            let byte = bytes[index];
             self.push(char::from(DIGITS[usize::from(byte >> 4)]));
             self.push(char::from(DIGITS[usize::from(byte & 0x0f)]));
+            index += 1;
         }
     }
 
+    /// Pushes `value` as a JSON string, walking it one UTF-8 sequence at a time.
     fn push_json_string(&mut self, value: &str) {
         self.push('"');
-        for character in value.chars() {
+        let bytes = value.as_bytes();
+        let mut index = 0;
+        while index < bytes.len() {
             if self.exceeded_limit {
                 break;
             }
-            match character {
-                '"' => self.push_str("\\\""),
-                '\\' => self.push_str("\\\\"),
-                '\n' => self.push_str("\\n"),
-                '\r' => self.push_str("\\r"),
-                '\t' => self.push_str("\\t"),
-                character if character <= '\u{001f}' => {
+            let lead = bytes[index];
+            let width = if lead < 0x80 {
+                1
+            } else if lead < 0xe0 {
+                2
+            } else if lead < 0xf0 {
+                3
+            } else {
+                4
+            };
+            match lead {
+                b'"' => self.push_str("\\\""),
+                b'\\' => self.push_str("\\\\"),
+                b'\n' => self.push_str("\\n"),
+                b'\r' => self.push_str("\\r"),
+                b'\t' => self.push_str("\\t"),
+                control if control <= 0x1f => {
                     self.push_str("\\u00");
-                    if let Ok(ascii) = u8::try_from(u32::from(character)) {
-                        self.push_hex(&[ascii]);
-                    } else {
-                        self.exceeded_limit = true;
-                    }
+                    self.push_hex(&[control]);
                 }
-                character => self.push(character),
+                // A `str` walked from a character boundary always holds the
+                // whole sequence; pushing it equals pushing its `char`.
+                _ => match value.get(index..index + width) {
+                    Some(character) => self.push_str(character),
+                    None => self.exceeded_limit = true,
+                },
             }
+            index += width;
         }
         self.push('"');
     }
 
-    fn ensure_within_limit(&self, diagnostic: JsonLimitDiagnostic) -> Result<(), Refusal> {
+    fn ensure_within_limit(&self, limit: JsonLimit) -> Result<(), Refusal> {
         if self.exceeded_limit {
             Err(Refusal::new(
                 RefusalKind::Exhausted,
                 super::Diagnostic {
-                    field: diagnostic.field,
-                    message: diagnostic.message,
+                    field: limit.field(),
+                    message: limit.message(),
                 },
             ))
         } else {
@@ -170,8 +204,8 @@ impl BoundedJson {
         }
     }
 
-    fn finish(self, diagnostic: JsonLimitDiagnostic) -> Result<Vec<u8>, Refusal> {
-        self.ensure_within_limit(diagnostic)?;
+    fn finish(self, limit: JsonLimit) -> Result<Vec<u8>, Refusal> {
+        self.ensure_within_limit(limit)?;
         Ok(self.text.into_bytes())
     }
 }
@@ -213,12 +247,7 @@ impl Writer {
         self.bytes.extend_from_slice(value);
     }
 
-    fn sized(
-        &mut self,
-        value: &[u8],
-        maximum_bytes: u32,
-        field: &'static str,
-    ) -> Result<(), Refusal> {
+    fn sized(&mut self, value: &[u8], maximum_bytes: u32, field: &str) -> Result<(), Refusal> {
         let length_bytes = u32::try_from(value.len()).map_err(|_| {
             Refusal::new(
                 RefusalKind::Exhausted,
@@ -250,7 +279,7 @@ impl Writer {
         &mut self,
         item_count: usize,
         maximum_items: MaximumItems,
-        field: &'static str,
+        field: &str,
     ) -> Result<(), Refusal>
     where
         MaximumItems: TryInto<u64>,
@@ -300,7 +329,7 @@ impl<'a> Reader<'a> {
         }
     }
 
-    fn read<const N: usize>(&mut self, field: &'static str) -> Result<[u8; N], Refusal> {
+    fn read<const N: usize>(&mut self, field: &str) -> Result<[u8; N], Refusal> {
         let end_byte_offset_bytes = self.byte_offset_bytes.checked_add(N).ok_or_else(|| {
             Refusal::new(
                 RefusalKind::Invalid,
@@ -328,11 +357,11 @@ impl<'a> Reader<'a> {
         Ok(out)
     }
 
-    fn byte(&mut self, field: &'static str) -> Result<u8, Refusal> {
+    fn byte(&mut self, field: &str) -> Result<u8, Refusal> {
         Ok(self.read::<1>(field)?[0])
     }
 
-    fn bool(&mut self, field: &'static str) -> Result<bool, Refusal> {
+    fn bool(&mut self, field: &str) -> Result<bool, Refusal> {
         match self.byte(field)? {
             0 => Ok(false),
             1 => Ok(true),
@@ -346,25 +375,25 @@ impl<'a> Reader<'a> {
         }
     }
 
-    fn u16(&mut self, field: &'static str) -> Result<u16, Refusal> {
+    fn u16(&mut self, field: &str) -> Result<u16, Refusal> {
         Ok(u16::from_be_bytes(self.read::<2>(field)?))
     }
 
-    fn u32(&mut self, field: &'static str) -> Result<u32, Refusal> {
+    fn u32(&mut self, field: &str) -> Result<u32, Refusal> {
         Ok(u32::from_be_bytes(self.read::<4>(field)?))
     }
 
-    fn u64(&mut self, field: &'static str) -> Result<u64, Refusal> {
+    fn u64(&mut self, field: &str) -> Result<u64, Refusal> {
         Ok(u64::from_be_bytes(self.read::<8>(field)?))
     }
 
-    fn i64(&mut self, field: &'static str) -> Result<i64, Refusal> {
+    fn i64(&mut self, field: &str) -> Result<i64, Refusal> {
         Ok(i64::from_be_bytes(self.read::<8>(field)?))
     }
 
     fn count<MaximumItems>(
         &mut self,
-        field: &'static str,
+        field: &str,
         maximum_items: MaximumItems,
     ) -> Result<usize, Refusal>
     where
@@ -400,11 +429,11 @@ impl<'a> Reader<'a> {
         })
     }
 
-    fn raw<const N: usize>(&mut self, field: &'static str) -> Result<[u8; N], Refusal> {
+    fn raw<const N: usize>(&mut self, field: &str) -> Result<[u8; N], Refusal> {
         self.read::<N>(field)
     }
 
-    fn sized(&mut self, field: &'static str, maximum_bytes: u32) -> Result<&'a [u8], Refusal> {
+    fn sized(&mut self, field: &str, maximum_bytes: u32) -> Result<&'a [u8], Refusal> {
         let length_bytes = self.count(field, maximum_bytes)?;
         let end_byte_offset_bytes = self
             .byte_offset_bytes
@@ -434,7 +463,7 @@ impl<'a> Reader<'a> {
         Ok(value)
     }
 
-    fn string(&mut self, field: &'static str) -> Result<String, Refusal> {
+    fn string(&mut self, field: &str) -> Result<String, Refusal> {
         let bytes = self.sized(field, MAX_STRING_BYTES)?;
         let value = core::str::from_utf8(bytes).map_err(|_| {
             Refusal::new(
@@ -461,10 +490,13 @@ fn digest32(domain: u64, bytes: &[u8]) -> ProcedureId {
         domain ^ 0x3c6e_f372_fe94_f82a,
         domain ^ 0xdaa6_6d2c_7ddf_743f,
     ];
-    for (output_lane, lane_domain) in output.chunks_exact_mut(8).zip(lane_domains) {
-        let mut fold = crate::companion::digest::Fold::new(lane_domain);
+    let mut lane = 0;
+    while lane < lane_domains.len() {
+        let mut fold = crate::companion::digest::Fold::new(lane_domains[lane]);
         fold.absorb_bytes(bytes);
-        output_lane.copy_from_slice(&fold.finish().to_be_bytes());
+        let lane_start = lane * 8;
+        output[lane_start..lane_start + 8].copy_from_slice(&fold.finish().to_be_bytes());
+        lane += 1;
     }
     output
 }
@@ -542,11 +574,21 @@ pub(super) fn empty_alias_closure_digest() -> ProcedureId {
 
 pub(super) fn procedure_revision(records: &[ProcedureRecord]) -> Result<ProcedureId, Refusal> {
     let mut writer = Writer::new();
-    for record in records {
-        writer.raw(&record.procedure_id);
-        writer.raw(&state_digest(record)?);
+    let mut index = 0;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < records.len() {
+        outcome = write_revision_entry(&mut writer, &records[index]);
+        index += 1;
     }
+    outcome?;
     Ok(digest32(DOMAIN_LIBRARY, &writer.bytes))
+}
+
+/// Appends one record's identity and state digest to the revision subject.
+fn write_revision_entry(writer: &mut Writer, record: &ProcedureRecord) -> Result<(), Refusal> {
+    writer.raw(&record.procedure_id);
+    writer.raw(&state_digest(record)?);
+    Ok(())
 }
 
 /// Digest of one claim's canonical bytes; a verification receipt cites the
@@ -592,7 +634,7 @@ fn write_type(writer: &mut Writer, ty: &Ty) -> Result<(), Refusal> {
     Ok(())
 }
 
-fn read_type(reader: &mut Reader<'_>, field: &'static str) -> Result<Ty, Refusal> {
+fn read_type(reader: &mut Reader<'_>, field: &str) -> Result<Ty, Refusal> {
     match reader.byte(field)? {
         0 => Ok(Ty::I64),
         1 => Ok(Ty::Bool),
@@ -617,19 +659,31 @@ fn write_types(writer: &mut Writer, types: &[Ty]) -> Result<(), Refusal> {
         ));
     }
     writer.bounded_count(types.len(), MAX_DEPTH_LIST, "interface.types")?;
-    for ty in types {
-        write_type(writer, ty)?;
+    let mut index = 0;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < types.len() {
+        outcome = write_type(writer, &types[index]);
+        index += 1;
     }
-    Ok(())
+    outcome
 }
 
-fn read_types(reader: &mut Reader<'_>, field: &'static str) -> Result<Vec<Ty>, Refusal> {
+fn read_types(reader: &mut Reader<'_>, field: &str) -> Result<Vec<Ty>, Refusal> {
     let count = reader.count(field, MAX_DEPTH_LIST)?;
     let mut types = Vec::with_capacity(count);
-    for _ in 0..count {
-        types.push(read_type(reader, field)?);
+    let mut failure = None;
+    let mut index = 0;
+    while failure.is_none() && index < count {
+        match read_type(reader, field) {
+            Ok(ty) => types.push(ty),
+            Err(refusal) => failure = Some(refusal),
+        }
+        index += 1;
     }
-    Ok(types)
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(types),
+    }
 }
 
 fn write_scalar(writer: &mut Writer, scalar: chunks::Scalar) {
@@ -645,7 +699,7 @@ fn write_scalar(writer: &mut Writer, scalar: chunks::Scalar) {
     }
 }
 
-fn read_scalar(reader: &mut Reader<'_>, field: &'static str) -> Result<chunks::Scalar, Refusal> {
+fn read_scalar(reader: &mut Reader<'_>, field: &str) -> Result<chunks::Scalar, Refusal> {
     match reader.byte(field)? {
         0 => Ok(chunks::Scalar::I64(reader.i64(field)?)),
         1 => Ok(chunks::Scalar::Bool(reader.bool(field)?)),
@@ -672,7 +726,7 @@ fn write_op(writer: &mut Writer, op: chunks::Op) {
     });
 }
 
-fn read_op(reader: &mut Reader<'_>, field: &'static str) -> Result<chunks::Op, Refusal> {
+fn read_op(reader: &mut Reader<'_>, field: &str) -> Result<chunks::Op, Refusal> {
     match reader.byte(field)? {
         0 => Ok(chunks::Op::Dup),
         1 => Ok(chunks::Op::Drop),
@@ -766,66 +820,96 @@ fn write_chunk_instantiations(
         MAX_RECIPE_NODES,
         "chunk.instantiations",
     )?;
-    for instantiation in &chunk.instantiations {
-        writer.bounded_count(
-            instantiation.bindings.len(),
-            MAX_BINDINGS,
-            "chunk.instantiations.bindings",
-        )?;
-        for binding in &instantiation.bindings {
-            writer.u16(binding.variable);
-            writer.byte(variable_kind_tag(binding.kind)?);
-            write_type(writer, &binding.ty)?;
-        }
+    let mut index = 0;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < chunk.instantiations.len() {
+        outcome = write_chunk_instantiation(writer, &chunk.instantiations[index]);
+        index += 1;
     }
-    Ok(())
+    outcome
+}
+
+/// Writes one instantiation's bounded binding list.
+fn write_chunk_instantiation(
+    writer: &mut Writer,
+    instantiation: &chunks::Instantiation,
+) -> Result<(), Refusal> {
+    writer.bounded_count(
+        instantiation.bindings.len(),
+        MAX_BINDINGS,
+        "chunk.instantiations.bindings",
+    )?;
+    let mut index = 0;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < instantiation.bindings.len() {
+        outcome = write_chunk_binding(writer, &instantiation.bindings[index]);
+        index += 1;
+    }
+    outcome
+}
+
+/// Writes one binding: variable, kind tag and type.
+fn write_chunk_binding(writer: &mut Writer, binding: &chunks::Binding) -> Result<(), Refusal> {
+    writer.u16(binding.variable);
+    writer.byte(variable_kind_tag(binding.kind)?);
+    write_type(writer, &binding.ty)
 }
 
 fn write_chunk_body(writer: &mut Writer, chunk: &chunks::Envelope) -> Result<(), Refusal> {
     writer.bounded_count(chunk.body.nodes.len(), MAX_RECIPE_NODES, "chunk.body.nodes")?;
-    for node in &chunk.body.nodes {
-        match node {
-            chunks::Node::I64(value) => {
-                writer.byte(0);
-                writer.i64(*value);
-            }
-            chunks::Node::Bool(value) => {
-                writer.byte(1);
-                writer.bool(*value);
-            }
-            chunks::Node::Capture { index } => {
-                writer.byte(2);
-                writer.u16(*index);
-            }
-            chunks::Node::Operation { op, instantiation } => {
-                writer.byte(3);
-                write_op(writer, *op);
-                writer.u16(*instantiation);
-            }
-            chunks::Node::Invoke {
-                dependency,
-                instantiation,
-            } => {
-                writer.byte(4);
-                writer.u16(*dependency);
-                writer.u16(*instantiation);
-            }
-            chunks::Node::Quotation {
-                body,
-                instantiation,
-            } => {
-                writer.byte(5);
-                writer.bounded_count(body.len(), MAX_RECIPE_NODES, "chunk.body.quotation")?;
-                for node in body {
-                    writer.u32(*node);
-                }
-                writer.u16(*instantiation);
-            }
-        }
+    let mut index = 0;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < chunk.body.nodes.len() {
+        outcome = write_chunk_body_node(writer, &chunk.body.nodes[index]);
+        index += 1;
     }
+    outcome?;
     writer.bounded_count(chunk.body.entry.len(), MAX_RECIPE_NODES, "chunk.body.entry")?;
     for node in &chunk.body.entry {
         writer.u32(*node);
+    }
+    Ok(())
+}
+
+/// Writes one recipe node behind its tag byte.
+fn write_chunk_body_node(writer: &mut Writer, node: &chunks::Node) -> Result<(), Refusal> {
+    match node {
+        chunks::Node::I64(value) => {
+            writer.byte(0);
+            writer.i64(*value);
+        }
+        chunks::Node::Bool(value) => {
+            writer.byte(1);
+            writer.bool(*value);
+        }
+        chunks::Node::Capture { index } => {
+            writer.byte(2);
+            writer.u16(*index);
+        }
+        chunks::Node::Operation { op, instantiation } => {
+            writer.byte(3);
+            write_op(writer, *op);
+            writer.u16(*instantiation);
+        }
+        chunks::Node::Invoke {
+            dependency,
+            instantiation,
+        } => {
+            writer.byte(4);
+            writer.u16(*dependency);
+            writer.u16(*instantiation);
+        }
+        chunks::Node::Quotation {
+            body,
+            instantiation,
+        } => {
+            writer.byte(5);
+            writer.bounded_count(body.len(), MAX_RECIPE_NODES, "chunk.body.quotation")?;
+            for node in body {
+                writer.u32(*node);
+            }
+            writer.u16(*instantiation);
+        }
     }
     Ok(())
 }
@@ -874,27 +958,55 @@ fn read_chunk(reader: &mut Reader<'_>) -> Result<chunks::Envelope, Refusal> {
 fn read_chunk_captures(reader: &mut Reader<'_>) -> Result<Vec<chunks::Capture>, Refusal> {
     let capture_count = reader.count("chunk.captures", chunks::MAX_CAPTURES)?;
     let mut captures = Vec::with_capacity(capture_count);
-    for _ in 0..capture_count {
-        captures.push(chunks::Capture {
-            index: reader.u16("chunk.captures.index")?,
-            value: read_scalar(reader, "chunk.captures.value")?,
-        });
+    let mut failure = None;
+    let mut index = 0;
+    while failure.is_none() && index < capture_count {
+        match read_chunk_capture(reader) {
+            Ok(capture) => captures.push(capture),
+            Err(refusal) => failure = Some(refusal),
+        }
+        index += 1;
     }
-    Ok(captures)
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(captures),
+    }
+}
+
+/// Reads one capture: its slot index, then its scalar value.
+fn read_chunk_capture(reader: &mut Reader<'_>) -> Result<chunks::Capture, Refusal> {
+    Ok(chunks::Capture {
+        index: reader.u16("chunk.captures.index")?,
+        value: read_scalar(reader, "chunk.captures.value")?,
+    })
 }
 
 fn read_chunk_dependencies(reader: &mut Reader<'_>) -> Result<Vec<chunks::DefinitionRef>, Refusal> {
     let dependency_count = reader.count("chunk.dependencies", MAX_LIBRARY_DEPENDENCIES)?;
     let mut dependencies = Vec::with_capacity(dependency_count);
-    for _ in 0..dependency_count {
-        dependencies.push(chunks::DefinitionRef {
-            identity: reader.u64("chunk.dependencies.identity")?,
-            format: reader.u32("chunk.dependencies.format")?,
-            semantic_revision: reader.u32("chunk.dependencies.semantic_revision")?,
-            source_revision: reader.raw("chunk.dependencies.source_revision")?,
-        });
+    let mut failure = None;
+    let mut index = 0;
+    while failure.is_none() && index < dependency_count {
+        match read_chunk_dependency(reader) {
+            Ok(dependency) => dependencies.push(dependency),
+            Err(refusal) => failure = Some(refusal),
+        }
+        index += 1;
     }
-    Ok(dependencies)
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(dependencies),
+    }
+}
+
+/// Reads one chunk dependency reference in canonical field order.
+fn read_chunk_dependency(reader: &mut Reader<'_>) -> Result<chunks::DefinitionRef, Refusal> {
+    Ok(chunks::DefinitionRef {
+        identity: reader.u64("chunk.dependencies.identity")?,
+        format: reader.u32("chunk.dependencies.format")?,
+        semantic_revision: reader.u32("chunk.dependencies.semantic_revision")?,
+        source_revision: reader.raw("chunk.dependencies.source_revision")?,
+    })
 }
 
 fn read_chunk_instantiations(
@@ -902,90 +1014,157 @@ fn read_chunk_instantiations(
 ) -> Result<Vec<chunks::Instantiation>, Refusal> {
     let instantiation_count = reader.count("chunk.instantiations", MAX_RECIPE_NODES)?;
     let mut instantiations = Vec::with_capacity(instantiation_count);
-    for _ in 0..instantiation_count {
-        let binding_count = reader.count("chunk.instantiations.bindings", MAX_BINDINGS)?;
-        let mut bindings = Vec::with_capacity(binding_count);
-        for _ in 0..binding_count {
-            let variable = reader.u16("chunk.instantiations.variable")?;
-            let kind = match reader.byte("chunk.instantiations.kind")? {
-                0 => noble_kernel::words::VariableKind::Stack,
-                1 => noble_kernel::words::VariableKind::Value,
-                2 => noble_kernel::words::VariableKind::Effect,
-                _ => {
-                    return Err(Refusal::new(
-                        RefusalKind::Invalid,
-                        super::Diagnostic {
-                            field: "chunk.instantiations.kind",
-                            message: "unknown variable kind tag",
-                        },
-                    ))
-                }
-            };
-            let ty = read_type(reader, "chunk.instantiations.type")?;
-            bindings.push(chunks::Binding { variable, kind, ty });
+    let mut failure = None;
+    let mut index = 0;
+    while failure.is_none() && index < instantiation_count {
+        match read_chunk_instantiation(reader) {
+            Ok(instantiation) => instantiations.push(instantiation),
+            Err(refusal) => failure = Some(refusal),
         }
-        instantiations.push(chunks::Instantiation { bindings });
+        index += 1;
     }
-    Ok(instantiations)
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(instantiations),
+    }
+}
+
+/// Reads one instantiation's bounded binding list.
+fn read_chunk_instantiation(reader: &mut Reader<'_>) -> Result<chunks::Instantiation, Refusal> {
+    let binding_count = reader.count("chunk.instantiations.bindings", MAX_BINDINGS)?;
+    let mut bindings = Vec::with_capacity(binding_count);
+    let mut failure = None;
+    let mut index = 0;
+    while failure.is_none() && index < binding_count {
+        match read_chunk_binding(reader) {
+            Ok(binding) => bindings.push(binding),
+            Err(refusal) => failure = Some(refusal),
+        }
+        index += 1;
+    }
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(chunks::Instantiation { bindings }),
+    }
+}
+
+/// Reads one binding: variable, kind tag and type.
+fn read_chunk_binding(reader: &mut Reader<'_>) -> Result<chunks::Binding, Refusal> {
+    let variable = reader.u16("chunk.instantiations.variable")?;
+    let kind = match reader.byte("chunk.instantiations.kind")? {
+        0 => noble_kernel::words::VariableKind::Stack,
+        1 => noble_kernel::words::VariableKind::Value,
+        2 => noble_kernel::words::VariableKind::Effect,
+        _ => {
+            return Err(Refusal::new(
+                RefusalKind::Invalid,
+                super::Diagnostic {
+                    field: "chunk.instantiations.kind",
+                    message: "unknown variable kind tag",
+                },
+            ))
+        }
+    };
+    let ty = read_type(reader, "chunk.instantiations.type")?;
+    Ok(chunks::Binding { variable, kind, ty })
 }
 
 fn read_chunk_body(reader: &mut Reader<'_>) -> Result<chunks::Recipe, Refusal> {
     let nodes = read_chunk_body_nodes(reader)?;
-    let entry = read_chunk_body_entry(reader)?;
+    let entry = read_u32_list(
+        reader,
+        "chunk.body.entry",
+        MAX_RECIPE_NODES,
+        "chunk.body.entry.node",
+    )?;
     Ok(chunks::Recipe { nodes, entry })
 }
 
 fn read_chunk_body_nodes(reader: &mut Reader<'_>) -> Result<Vec<chunks::Node>, Refusal> {
     let node_count = reader.count("chunk.body.nodes", MAX_RECIPE_NODES)?;
     let mut nodes = Vec::with_capacity(node_count);
-    for _ in 0..node_count {
-        let node = match reader.byte("chunk.body.node")? {
-            0 => chunks::Node::I64(reader.i64("chunk.body.i64")?),
-            1 => chunks::Node::Bool(reader.bool("chunk.body.bool")?),
-            2 => chunks::Node::Capture {
-                index: reader.u16("chunk.body.capture")?,
-            },
-            3 => chunks::Node::Operation {
-                op: read_op(reader, "chunk.body.operation")?,
-                instantiation: reader.u16("chunk.body.instantiation")?,
-            },
-            4 => chunks::Node::Invoke {
-                dependency: reader.u16("chunk.body.dependency")?,
-                instantiation: reader.u16("chunk.body.instantiation")?,
-            },
-            5 => {
-                let body_count = reader.count("chunk.body.quotation", MAX_RECIPE_NODES)?;
-                let mut body = Vec::with_capacity(body_count);
-                for _ in 0..body_count {
-                    body.push(reader.u32("chunk.body.quotation.node")?);
-                }
-                chunks::Node::Quotation {
-                    body,
-                    instantiation: reader.u16("chunk.body.instantiation")?,
-                }
-            }
-            _ => {
-                return Err(Refusal::new(
-                    RefusalKind::Invalid,
-                    super::Diagnostic {
-                        field: "chunk.body.node",
-                        message: "unknown node tag",
-                    },
-                ))
-            }
-        };
-        nodes.push(node);
+    let mut failure = None;
+    let mut index = 0;
+    while failure.is_none() && index < node_count {
+        match read_chunk_body_node(reader) {
+            Ok(node) => nodes.push(node),
+            Err(refusal) => failure = Some(refusal),
+        }
+        index += 1;
     }
-    Ok(nodes)
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(nodes),
+    }
 }
 
-fn read_chunk_body_entry(reader: &mut Reader<'_>) -> Result<Vec<u32>, Refusal> {
-    let entry_count = reader.count("chunk.body.entry", MAX_RECIPE_NODES)?;
-    let mut entry = Vec::with_capacity(entry_count);
-    for _ in 0..entry_count {
-        entry.push(reader.u32("chunk.body.entry.node")?);
+/// Reads one recipe node behind its tag byte.
+fn read_chunk_body_node(reader: &mut Reader<'_>) -> Result<chunks::Node, Refusal> {
+    let node = match reader.byte("chunk.body.node")? {
+        0 => chunks::Node::I64(reader.i64("chunk.body.i64")?),
+        1 => chunks::Node::Bool(reader.bool("chunk.body.bool")?),
+        2 => chunks::Node::Capture {
+            index: reader.u16("chunk.body.capture")?,
+        },
+        3 => chunks::Node::Operation {
+            op: read_op(reader, "chunk.body.operation")?,
+            instantiation: reader.u16("chunk.body.instantiation")?,
+        },
+        4 => chunks::Node::Invoke {
+            dependency: reader.u16("chunk.body.dependency")?,
+            instantiation: reader.u16("chunk.body.instantiation")?,
+        },
+        5 => {
+            let body = read_u32_list(
+                reader,
+                "chunk.body.quotation",
+                MAX_RECIPE_NODES,
+                "chunk.body.quotation.node",
+            )?;
+            chunks::Node::Quotation {
+                body,
+                instantiation: reader.u16("chunk.body.instantiation")?,
+            }
+        }
+        _ => {
+            return Err(Refusal::new(
+                RefusalKind::Invalid,
+                super::Diagnostic {
+                    field: "chunk.body.node",
+                    message: "unknown node tag",
+                },
+            ))
+        }
+    };
+    Ok(node)
+}
+
+/// Reads a bounded `u32` list: the count under `count_field`, at most
+/// `maximum_items`, then each value under `item_field`.
+fn read_u32_list<MaximumItems>(
+    reader: &mut Reader<'_>,
+    count_field: &str,
+    maximum_items: MaximumItems,
+    item_field: &str,
+) -> Result<Vec<u32>, Refusal>
+where
+    MaximumItems: TryInto<u64>,
+{
+    let item_count = reader.count(count_field, maximum_items)?;
+    let mut items = Vec::with_capacity(item_count);
+    let mut failure = None;
+    let mut index = 0;
+    while failure.is_none() && index < item_count {
+        match reader.u32(item_field) {
+            Ok(item) => items.push(item),
+            Err(refusal) => failure = Some(refusal),
+        }
+        index += 1;
     }
-    Ok(entry)
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(items),
+    }
 }
 
 fn write_provenance(writer: &mut Writer, provenance: &Provenance) -> Result<(), Refusal> {
@@ -1164,24 +1343,20 @@ fn write_evidence_records(
     evidence_records: &[EvidenceRecord],
 ) -> Result<(), Refusal> {
     writer.bounded_count(evidence_records.len(), MAX_EVIDENCE, "evidence")?;
-    for evidence in evidence_records {
-        write_evidence_record(writer, evidence)?;
+    let mut index = 0;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < evidence_records.len() {
+        outcome = write_evidence_record(writer, &evidence_records[index]);
+        index += 1;
     }
-    Ok(())
+    outcome
 }
 
 fn write_evidence_record(writer: &mut Writer, evidence: &EvidenceRecord) -> Result<(), Refusal> {
     writer.u32(evidence.obligation);
     write_evidence_class(writer, evidence.class);
     write_outcome(writer, evidence.outcome);
-    writer.bounded_count(
-        evidence.toolchain.len(),
-        MAX_TOOLCHAINS,
-        "evidence.toolchain",
-    )?;
-    for toolchain in &evidence.toolchain {
-        writer.string(toolchain)?;
-    }
+    write_toolchain(writer, &evidence.toolchain, "evidence.toolchain")?;
     writer.string(&evidence.claim)?;
     writer.raw(&evidence.subject_binding);
     writer.u32(evidence.policy_revision);
@@ -1194,30 +1369,44 @@ fn write_evidence_record(writer: &mut Writer, evidence: &EvidenceRecord) -> Resu
     Ok(())
 }
 
+/// Writes a bounded toolchain name list, refusing under `field`.
+fn write_toolchain(writer: &mut Writer, toolchain: &[String], field: &str) -> Result<(), Refusal> {
+    writer.bounded_count(toolchain.len(), MAX_TOOLCHAINS, field)?;
+    let mut index = 0;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < toolchain.len() {
+        outcome = writer.string(&toolchain[index]);
+        index += 1;
+    }
+    outcome
+}
+
 fn write_verified_evidence(
     writer: &mut Writer,
     receipts: &[VerifiedEvidence],
 ) -> Result<(), Refusal> {
     writer.bounded_count(receipts.len(), MAX_EVIDENCE, "verified_evidence")?;
-    for receipt in receipts {
-        writer.u32(receipt.obligation);
-        write_evidence_class(writer, receipt.class);
-        write_outcome(writer, receipt.outcome);
-        writer.raw(&receipt.subject_binding);
-        writer.u32(receipt.policy_revision);
-        writer.raw(&receipt.claim_digest);
-        writer.string(&receipt.verifier)?;
-        writer.bounded_count(
-            receipt.toolchain.len(),
-            MAX_TOOLCHAINS,
-            "verified_evidence.toolchain",
-        )?;
-        for toolchain in &receipt.toolchain {
-            writer.string(toolchain)?;
-        }
-        writer.raw(&receipt.command_digest);
-        writer.raw(&receipt.input_digest);
+    let mut index = 0;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < receipts.len() {
+        outcome = write_verified_receipt(writer, &receipts[index]);
+        index += 1;
     }
+    outcome
+}
+
+/// Writes one verification receipt in canonical field order.
+fn write_verified_receipt(writer: &mut Writer, receipt: &VerifiedEvidence) -> Result<(), Refusal> {
+    writer.u32(receipt.obligation);
+    write_evidence_class(writer, receipt.class);
+    write_outcome(writer, receipt.outcome);
+    writer.raw(&receipt.subject_binding);
+    writer.u32(receipt.policy_revision);
+    writer.raw(&receipt.claim_digest);
+    writer.string(&receipt.verifier)?;
+    write_toolchain(writer, &receipt.toolchain, "verified_evidence.toolchain")?;
+    writer.raw(&receipt.command_digest);
+    writer.raw(&receipt.input_digest);
     Ok(())
 }
 
@@ -1263,8 +1452,8 @@ fn write_retrieval_signature(
     }
     writer.u32(0);
     writer.byte(retrieval.status_rank);
-    for key in retrieval.cost_key {
-        writer.u32(key);
+    for key in retrieval.cost_key.iter() {
+        writer.u32(*key);
     }
     Ok(())
 }
@@ -1307,12 +1496,21 @@ fn write_alias(writer: &mut Writer, alias: Option<&Alias>) -> Result<(), Refusal
 
 fn write_alias_form(writer: &mut Writer, form: &[Polynomial]) -> Result<(), Refusal> {
     writer.bounded_count(form.len(), MAX_ALIAS_OUTPUTS, "alias.form.outputs")?;
-    for polynomial in form {
-        writer.bounded_count(polynomial.terms.len(), MAX_ALIAS_TERMS, "alias.form.terms")?;
-        for term in &polynomial.terms {
-            writer.u64(term.coefficient);
-            writer.raw(&term.powers);
-        }
+    let mut index = 0;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < form.len() {
+        outcome = write_alias_polynomial(writer, &form[index]);
+        index += 1;
+    }
+    outcome
+}
+
+/// Writes one output polynomial's bounded term list.
+fn write_alias_polynomial(writer: &mut Writer, polynomial: &Polynomial) -> Result<(), Refusal> {
+    writer.bounded_count(polynomial.terms.len(), MAX_ALIAS_TERMS, "alias.form.terms")?;
+    for term in &polynomial.terms {
+        writer.u64(term.coefficient);
+        writer.raw(&term.powers);
     }
     Ok(())
 }
@@ -1333,34 +1531,53 @@ fn read_state(reader: &mut Reader<'_>, record: &mut ProcedureRecord) -> Result<(
 fn read_library_dependencies(reader: &mut Reader<'_>) -> Result<Vec<LibraryDependency>, Refusal> {
     let dependency_count = reader.count("library_dependencies", MAX_LIBRARY_DEPENDENCIES)?;
     let mut dependencies = Vec::with_capacity(dependency_count);
-    for _ in 0..dependency_count {
-        dependencies.push(LibraryDependency {
-            procedure_id: reader.raw("library_dependencies.procedure_id")?,
-            chunk_id: reader.raw("library_dependencies.chunk_id")?,
-            source_revision: reader.raw("library_dependencies.source_revision")?,
-        });
+    let mut failure = None;
+    let mut index = 0;
+    while failure.is_none() && index < dependency_count {
+        match read_library_dependency(reader) {
+            Ok(dependency) => dependencies.push(dependency),
+            Err(refusal) => failure = Some(refusal),
+        }
+        index += 1;
     }
-    Ok(dependencies)
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(dependencies),
+    }
+}
+
+/// Reads one library dependency in canonical field order.
+fn read_library_dependency(reader: &mut Reader<'_>) -> Result<LibraryDependency, Refusal> {
+    Ok(LibraryDependency {
+        procedure_id: reader.raw("library_dependencies.procedure_id")?,
+        chunk_id: reader.raw("library_dependencies.chunk_id")?,
+        source_revision: reader.raw("library_dependencies.source_revision")?,
+    })
 }
 
 fn read_evidence_records(reader: &mut Reader<'_>) -> Result<Vec<EvidenceRecord>, Refusal> {
     let evidence_count = reader.count("evidence", MAX_EVIDENCE)?;
     let mut evidence = Vec::with_capacity(evidence_count);
-    for _ in 0..evidence_count {
-        evidence.push(read_evidence_record(reader)?);
+    let mut failure = None;
+    let mut index = 0;
+    while failure.is_none() && index < evidence_count {
+        match read_evidence_record(reader) {
+            Ok(record) => evidence.push(record),
+            Err(refusal) => failure = Some(refusal),
+        }
+        index += 1;
     }
-    Ok(evidence)
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(evidence),
+    }
 }
 
 fn read_evidence_record(reader: &mut Reader<'_>) -> Result<EvidenceRecord, Refusal> {
     let obligation = reader.u32("evidence.obligation")?;
     let class = read_evidence_class(reader)?;
     let outcome = read_outcome(reader)?;
-    let toolchain_count = reader.count("evidence.toolchain", MAX_TOOLCHAINS)?;
-    let mut toolchain = Vec::with_capacity(toolchain_count);
-    for _ in 0..toolchain_count {
-        toolchain.push(reader.string("evidence.toolchain.name")?);
-    }
+    let toolchain = read_toolchain(reader, "evidence.toolchain", "evidence.toolchain.name")?;
     let claim = reader.string("evidence.claim")?;
     let subject_binding = reader.raw("evidence.subject_binding")?;
     let policy_revision = reader.u32("evidence.policy_revision")?;
@@ -1385,48 +1602,87 @@ fn read_evidence_record(reader: &mut Reader<'_>) -> Result<EvidenceRecord, Refus
     })
 }
 
+/// Reads a bounded toolchain name list: the count under `count_field`, then
+/// each name under `name_field`.
+fn read_toolchain(
+    reader: &mut Reader<'_>,
+    count_field: &str,
+    name_field: &str,
+) -> Result<Vec<String>, Refusal> {
+    let toolchain_count = reader.count(count_field, MAX_TOOLCHAINS)?;
+    let mut toolchain = Vec::with_capacity(toolchain_count);
+    let mut failure = None;
+    let mut index = 0;
+    while failure.is_none() && index < toolchain_count {
+        match reader.string(name_field) {
+            Ok(name) => toolchain.push(name),
+            Err(refusal) => failure = Some(refusal),
+        }
+        index += 1;
+    }
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(toolchain),
+    }
+}
+
 /// Persisted receipts are parsed here but trusted only after load re-derives
 /// each one through the loading owner's verifier (`acceptance::confirm`).
 fn read_verified_evidence(reader: &mut Reader<'_>) -> Result<Vec<VerifiedEvidence>, Refusal> {
     let receipt_count = reader.count("verified_evidence", MAX_EVIDENCE)?;
     let mut receipts = Vec::with_capacity(receipt_count);
-    for _ in 0..receipt_count {
-        let obligation = reader.u32("verified_evidence.obligation")?;
-        let class = read_evidence_class(reader)?;
-        let outcome = read_outcome(reader)?;
-        let subject_binding = reader.raw("verified_evidence.subject_binding")?;
-        let policy_revision = reader.u32("verified_evidence.policy_revision")?;
-        let claim_digest = reader.raw("verified_evidence.claim_digest")?;
-        let verifier = reader.string("verified_evidence.verifier")?;
-        let toolchain_count = reader.count("verified_evidence.toolchain", MAX_TOOLCHAINS)?;
-        let mut toolchain = Vec::with_capacity(toolchain_count);
-        for _ in 0..toolchain_count {
-            toolchain.push(reader.string("verified_evidence.toolchain.name")?);
+    let mut failure = None;
+    let mut index = 0;
+    while failure.is_none() && index < receipt_count {
+        match read_verified_receipt(reader) {
+            Ok(receipt) => receipts.push(receipt),
+            Err(refusal) => failure = Some(refusal),
         }
-        receipts.push(VerifiedEvidence {
-            obligation,
-            class,
-            outcome,
-            subject_binding,
-            policy_revision,
-            claim_digest,
-            verifier,
-            toolchain,
-            command_digest: reader.raw("verified_evidence.command_digest")?,
-            input_digest: reader.raw("verified_evidence.input_digest")?,
-        });
+        index += 1;
     }
-    Ok(receipts)
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(receipts),
+    }
+}
+
+/// Reads one verification receipt in canonical field order.
+fn read_verified_receipt(reader: &mut Reader<'_>) -> Result<VerifiedEvidence, Refusal> {
+    let obligation = reader.u32("verified_evidence.obligation")?;
+    let class = read_evidence_class(reader)?;
+    let outcome = read_outcome(reader)?;
+    let subject_binding = reader.raw("verified_evidence.subject_binding")?;
+    let policy_revision = reader.u32("verified_evidence.policy_revision")?;
+    let claim_digest = reader.raw("verified_evidence.claim_digest")?;
+    let verifier = reader.string("verified_evidence.verifier")?;
+    let toolchain = read_toolchain(
+        reader,
+        "verified_evidence.toolchain",
+        "verified_evidence.toolchain.name",
+    )?;
+    Ok(VerifiedEvidence {
+        obligation,
+        class,
+        outcome,
+        subject_binding,
+        policy_revision,
+        claim_digest,
+        verifier,
+        toolchain,
+        command_digest: reader.raw("verified_evidence.command_digest")?,
+        input_digest: reader.raw("verified_evidence.input_digest")?,
+    })
 }
 
 fn read_promotion(reader: &mut Reader<'_>) -> Result<Option<Promotion>, Refusal> {
     if reader.bool("promotion.present")? {
         let policy_revision = reader.u32("promotion.policy_revision")?;
-        let count = reader.count("promotion.obligations", MAX_EVIDENCE)?;
-        let mut obligations = Vec::with_capacity(count);
-        for _ in 0..count {
-            obligations.push(reader.u32("promotion.obligation")?);
-        }
+        let obligations = read_u32_list(
+            reader,
+            "promotion.obligations",
+            MAX_EVIDENCE,
+            "promotion.obligation",
+        )?;
         Ok(Some(Promotion {
             policy_revision,
             obligations,
@@ -1512,18 +1768,46 @@ fn read_alias(reader: &mut Reader<'_>) -> Result<Option<Alias>, Refusal> {
 fn read_alias_form(reader: &mut Reader<'_>) -> Result<Vec<Polynomial>, Refusal> {
     let output_count = reader.count("alias.form.outputs", MAX_ALIAS_OUTPUTS)?;
     let mut form = Vec::with_capacity(output_count);
-    for _ in 0..output_count {
-        let term_count = reader.count("alias.form.terms", MAX_ALIAS_TERMS)?;
-        let mut terms = Vec::with_capacity(term_count);
-        for _ in 0..term_count {
-            terms.push(Monomial {
-                coefficient: reader.u64("alias.term.coefficient")?,
-                powers: reader.raw("alias.term.powers")?,
-            });
+    let mut failure = None;
+    let mut index = 0;
+    while failure.is_none() && index < output_count {
+        match read_alias_polynomial(reader) {
+            Ok(polynomial) => form.push(polynomial),
+            Err(refusal) => failure = Some(refusal),
         }
-        form.push(Polynomial { terms });
+        index += 1;
     }
-    Ok(form)
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(form),
+    }
+}
+
+/// Reads one output polynomial's bounded term list.
+fn read_alias_polynomial(reader: &mut Reader<'_>) -> Result<Polynomial, Refusal> {
+    let term_count = reader.count("alias.form.terms", MAX_ALIAS_TERMS)?;
+    let mut terms = Vec::with_capacity(term_count);
+    let mut failure = None;
+    let mut index = 0;
+    while failure.is_none() && index < term_count {
+        match read_alias_term(reader) {
+            Ok(term) => terms.push(term),
+            Err(refusal) => failure = Some(refusal),
+        }
+        index += 1;
+    }
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(Polynomial { terms }),
+    }
+}
+
+/// Reads one term: coefficient, then exponent vector.
+fn read_alias_term(reader: &mut Reader<'_>) -> Result<Monomial, Refusal> {
+    Ok(Monomial {
+        coefficient: reader.u64("alias.term.coefficient")?,
+        powers: reader.raw("alias.term.powers")?,
+    })
 }
 
 fn write_record(writer: &mut Writer, record: &ProcedureRecord) -> Result<(), Refusal> {
@@ -1601,10 +1885,13 @@ fn write_generation(writer: &mut Writer, snapshot: &Snapshot) -> Result<(), Refu
         writer.raw(&entry.state_digest);
     }
     writer.bounded_count(snapshot.records.len(), MAX_RECORDS, "generation.records")?;
-    for procedure in &snapshot.records {
-        write_record(writer, procedure)?;
+    let mut index = 0;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < snapshot.records.len() {
+        outcome = write_record(writer, &snapshot.records[index]);
+        index += 1;
     }
-    Ok(())
+    outcome
 }
 
 pub(super) fn encode_parts(
@@ -1622,14 +1909,18 @@ pub(super) fn encode_parts(
         ));
     }
     let mut writer = Writer::new();
-    writer.raw(MAGIC);
+    writer.raw(&MAGIC);
     writer.u32(RECORD_FORMAT);
     writer.raw(&chunk_revision);
     writer.u32(current);
     writer.bounded_count(generations.len(), MAX_GENERATIONS, "generations")?;
-    for generation in generations {
-        write_generation(&mut writer, generation)?;
+    let mut index = 0;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < generations.len() {
+        outcome = write_generation(&mut writer, &generations[index]);
+        index += 1;
     }
+    outcome?;
     if writer.bytes.len() > MAX_STORAGE_BYTES {
         return Err(Refusal::new(
             RefusalKind::Exhausted,
@@ -1669,19 +1960,8 @@ fn read_generation(reader: &mut Reader<'_>) -> Result<Snapshot, Refusal> {
     };
     let chunk_library_revision = reader.raw("chunk_library_revision")?;
     let procedure_library_revision = reader.raw("procedure_library_revision")?;
-    let closure_count = reader.count("generation.closure", MAX_RECORDS)?;
-    let mut closure = Vec::with_capacity(closure_count);
-    for _ in 0..closure_count {
-        closure.push(ClosureEntry {
-            procedure_id: reader.raw("generation.closure.procedure_id")?,
-            state_digest: reader.raw("generation.closure.state_digest")?,
-        });
-    }
-    let record_count = reader.count("generation.records", MAX_RECORDS)?;
-    let mut records = Vec::with_capacity(record_count);
-    for _ in 0..record_count {
-        records.push(read_record(reader)?);
-    }
+    let closure = read_closure(reader)?;
+    let records = read_generation_records(reader)?;
     Ok(Snapshot {
         record: GenerationRecord {
             generation,
@@ -1694,6 +1974,330 @@ fn read_generation(reader: &mut Reader<'_>) -> Result<Snapshot, Refusal> {
         },
         records,
     })
+}
+
+/// Reads a generation's bounded closure list.
+fn read_closure(reader: &mut Reader<'_>) -> Result<Vec<ClosureEntry>, Refusal> {
+    let closure_count = reader.count("generation.closure", MAX_RECORDS)?;
+    let mut closure = Vec::with_capacity(closure_count);
+    let mut failure = None;
+    let mut index = 0;
+    while failure.is_none() && index < closure_count {
+        match read_closure_entry(reader) {
+            Ok(entry) => closure.push(entry),
+            Err(refusal) => failure = Some(refusal),
+        }
+        index += 1;
+    }
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(closure),
+    }
+}
+
+/// Reads one closure entry: procedure identity, then state digest.
+fn read_closure_entry(reader: &mut Reader<'_>) -> Result<ClosureEntry, Refusal> {
+    Ok(ClosureEntry {
+        procedure_id: reader.raw("generation.closure.procedure_id")?,
+        state_digest: reader.raw("generation.closure.state_digest")?,
+    })
+}
+
+/// Reads a generation's bounded procedure record list.
+fn read_generation_records(reader: &mut Reader<'_>) -> Result<Vec<ProcedureRecord>, Refusal> {
+    let record_count = reader.count("generation.records", MAX_RECORDS)?;
+    let mut records = Vec::with_capacity(record_count);
+    let mut failure = None;
+    let mut index = 0;
+    while failure.is_none() && index < record_count {
+        match read_record(reader) {
+            Ok(record) => records.push(record),
+            Err(refusal) => failure = Some(refusal),
+        }
+        index += 1;
+    }
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(records),
+    }
+}
+
+/// Reads the store's `count` generations in order.
+fn read_generations(reader: &mut Reader<'_>, count: usize) -> Result<Vec<Snapshot>, Refusal> {
+    let mut generations = Vec::with_capacity(count);
+    let mut failure = None;
+    let mut index = 0;
+    while failure.is_none() && index < count {
+        match read_generation(reader) {
+            Ok(snapshot) => generations.push(snapshot),
+            Err(refusal) => failure = Some(refusal),
+        }
+        index += 1;
+    }
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(generations),
+    }
+}
+
+/// Validates the loaded generations in order and re-establishes each one's
+/// persisted receipts through `verifier`; the first refusal ends the walk.
+fn confirm_generations(
+    generations: &[Snapshot],
+    chunk_revision: [u8; chunks::REVISION_BYTES],
+    namespace: &super::super::Session,
+    verifier: Option<&super::acceptance::OwnerVerifier>,
+) -> Result<(), Refusal> {
+    let mut confirmed = Vec::new();
+    let mut failure = None;
+    let mut index = 0;
+    while failure.is_none() && index < generations.len() {
+        match check_generation(generations, index, chunk_revision, namespace) {
+            Ok(()) => match confirm_records(
+                verifier,
+                &generations[index].records,
+                core::mem::take(&mut confirmed),
+            ) {
+                Ok(extended) => confirmed = extended,
+                Err(refusal) => failure = Some(refusal),
+            },
+            Err(refusal) => failure = Some(refusal),
+        }
+        index += 1;
+    }
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(()),
+    }
+}
+
+/// Validates generation `index` of a loaded store against its sequence,
+/// ancestry, pinned chunk revision, records and rebuilt #73 chunk view.
+fn check_generation(
+    generations: &[Snapshot],
+    index: usize,
+    chunk_revision: [u8; chunks::REVISION_BYTES],
+    namespace: &super::super::Session,
+) -> Result<(), Refusal> {
+    let snapshot = &generations[index];
+    let generation_index = u32::try_from(index).map_err(|_| {
+        Refusal::new(
+            RefusalKind::Exhausted,
+            super::Diagnostic {
+                field: "generation",
+                message: "generation index exceeds the wire domain",
+            },
+        )
+    })?;
+    if snapshot.record.generation != generation_index {
+        return Err(Refusal::at(
+            RefusalKind::Invalid,
+            super::Diagnostic {
+                field: "generation",
+                message: "generation sequence is not contiguous",
+            },
+            generation_index,
+        ));
+    }
+    check_generation_ancestry(generations, index, generation_index)?;
+    if snapshot.record.chunk_library_revision != chunk_revision {
+        return Err(Refusal::at(
+            RefusalKind::Invalid,
+            super::Diagnostic {
+                field: "chunk_library_revision",
+                message: "generation chunk revision differs from pinned #73 revision",
+            },
+            generation_index,
+        ));
+    }
+    if has_unordered_records(&snapshot.records) {
+        return Err(Refusal::at(
+            RefusalKind::Invalid,
+            super::Diagnostic {
+                field: "records.order",
+                message: "records are not in canonical retrieval order",
+            },
+            generation_index,
+        ));
+    }
+    check_loaded_records(&snapshot.records)?;
+    ProcedureLibrary::verify_snapshot(snapshot)?;
+    let rebuilt = ProcedureLibrary::rebuild_chunks(namespace, chunk_revision, &snapshot.records)?;
+    if *rebuilt.revision() != snapshot.record.chunk_library_revision {
+        return Err(Refusal::at(
+            RefusalKind::Invalid,
+            super::Diagnostic {
+                field: "chunk_library_revision",
+                message: "#73 chunk view does not reproduce the retained revision",
+            },
+            generation_index,
+        ));
+    }
+    Ok(())
+}
+
+/// Checks generation `index` against the append-only ancestry rules.
+fn check_generation_ancestry(
+    generations: &[Snapshot],
+    index: usize,
+    generation_index: u32,
+) -> Result<(), Refusal> {
+    let snapshot = &generations[index];
+    if index == 0 {
+        let is_initial_generation = matches!(
+            (
+                snapshot.record.parent_generation,
+                snapshot.record.rollback_of,
+                snapshot.record.kind,
+                snapshot.records.is_empty(),
+            ),
+            (None, None, GenerationKind::Publish, true)
+        );
+        if !is_initial_generation {
+            return Err(Refusal::new(
+                RefusalKind::Invalid,
+                super::Diagnostic {
+                    field: "generation.zero",
+                    message: "initial generation must be empty and parentless",
+                },
+            ));
+        }
+    } else {
+        let previous_index = index.checked_sub(1).ok_or_else(|| {
+            Refusal::new(
+                RefusalKind::Internal,
+                super::Diagnostic {
+                    field: "generation",
+                    message: "noninitial generation has no previous index",
+                },
+            )
+        })?;
+        let previous = u32::try_from(previous_index).map_err(|_| {
+            Refusal::new(
+                RefusalKind::Exhausted,
+                super::Diagnostic {
+                    field: "generation",
+                    message: "previous generation index exceeds the wire domain",
+                },
+            )
+        })?;
+        let is_ancestry_valid = match snapshot.record.kind {
+            GenerationKind::Publish => {
+                snapshot.record.parent_generation == Some(previous)
+                    && snapshot.record.rollback_of.is_none()
+            }
+            GenerationKind::Rollback => {
+                snapshot.record.parent_generation.is_some_and(|parent| {
+                    parent <= previous
+                        && usize::try_from(parent)
+                            .ok()
+                            .is_some_and(|parent_index| generations.get(parent_index).is_some())
+                }) && snapshot.record.rollback_of == Some(previous)
+            }
+        };
+        if !is_ancestry_valid {
+            return Err(Refusal::at(
+                RefusalKind::Invalid,
+                super::Diagnostic {
+                    field: "generation.parent",
+                    message: "generation parent or rollback ancestry is not canonical",
+                },
+                generation_index,
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// Whether some adjacent pair of `records` is out of canonical retrieval order.
+fn has_unordered_records(records: &[ProcedureRecord]) -> bool {
+    let mut is_unordered = false;
+    let mut index = 1;
+    while !is_unordered && index < records.len() {
+        is_unordered = super::retrieval::compare_records(&records[index - 1], &records[index])
+            == Ordering::Greater;
+        index += 1;
+    }
+    is_unordered
+}
+
+/// Rechecks every loaded record of one generation in order.
+fn check_loaded_records(records: &[ProcedureRecord]) -> Result<(), Refusal> {
+    let mut index = 0;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < records.len() {
+        outcome = check_loaded_record(records, &records[index]);
+        index += 1;
+    }
+    outcome
+}
+
+/// Rechecks one loaded record: dependencies, recomputed identity and
+/// retrieval signature, and the absence of capability-bearing evidence.
+fn check_loaded_record(
+    records: &[ProcedureRecord],
+    record: &ProcedureRecord,
+) -> Result<(), Refusal> {
+    ProcedureLibrary::check_dependencies(records, record)?;
+    let actual_id = identity(
+        &record.encoder,
+        record.semantic_revision,
+        &record.chunk,
+        &record.provenance,
+        &record.library_dependencies,
+    )?;
+    if actual_id != record.procedure_id {
+        return Err(Refusal::new(
+            RefusalKind::Invalid,
+            super::Diagnostic {
+                field: "procedure_id",
+                message: "persisted identity differs from recomputed immutable fields",
+            },
+        ));
+    }
+    if record.retrieval != super::retrieval::signature(record) {
+        return Err(Refusal::new(
+            RefusalKind::Invalid,
+            super::Diagnostic {
+                field: "retrieval",
+                message: "persisted retrieval signature differs from recomputed fields",
+            },
+        ));
+    }
+    if crate::scan::find_first(&record.evidence, |evidence| evidence.capability.is_some()).is_some()
+    {
+        return Err(Refusal::new(
+            RefusalKind::LiveCapabilityInEvidence,
+            super::Diagnostic {
+                field: "evidence.capability",
+                message: "capability-bearing evidence cannot be loaded",
+            },
+        ));
+    }
+    Ok(())
+}
+
+/// Re-establishes the persisted receipts of `records` in order through
+/// `verifier`, extending `confirmed`.
+fn confirm_records(
+    verifier: Option<&super::acceptance::OwnerVerifier>,
+    records: &[ProcedureRecord],
+    mut confirmed: Vec<VerifiedEvidence>,
+) -> Result<Vec<VerifiedEvidence>, Refusal> {
+    let mut failure = None;
+    let mut index = 0;
+    while failure.is_none() && index < records.len() {
+        match super::acceptance::confirm(verifier, &records[index], core::mem::take(&mut confirmed))
+        {
+            Ok(extended) => confirmed = extended,
+            Err(refusal) => failure = Some(refusal),
+        }
+        index += 1;
+    }
+    match failure {
+        Some(refusal) => Err(refusal),
+        None => Ok(confirmed),
+    }
 }
 
 impl ProcedureLibrary {
@@ -1715,18 +2319,27 @@ impl ProcedureLibrary {
     /// only if this verifier re-derives the identical receipt for the same
     /// subject and claim; claims stay unverified and no receipt is minted.
     /// The verifier then serves later admissions to the loaded library.
+    ///
+    /// Reviewed extraction exclusion (#97): the signature names
+    /// `dyn EvidenceVerifier` and no translated code calls it; the checked
+    /// logic is `load_with`.
+    #[charon::exclude]
     pub fn load_with_verifier(
         bytes: &[u8],
         namespace: &super::super::Session,
         verifier: Box<dyn EvidenceVerifier>,
     ) -> Result<Self, Refusal> {
-        Self::load_with(bytes, namespace, Some(verifier))
+        Self::load_with(
+            bytes,
+            namespace,
+            Some(super::acceptance::OwnerVerifier(verifier)),
+        )
     }
 
     fn load_with(
         bytes: &[u8],
         namespace: &super::super::Session,
-        verifier: Option<Box<dyn EvidenceVerifier>>,
+        verifier: Option<super::acceptance::OwnerVerifier>,
     ) -> Result<Self, Refusal> {
         if bytes.len() > MAX_STORAGE_BYTES {
             return Err(Refusal::new(
@@ -1738,7 +2351,7 @@ impl ProcedureLibrary {
             ));
         }
         let mut reader = Reader::new(bytes);
-        if reader.raw::<8>("magic")? != *MAGIC {
+        if reader.raw::<8>("magic")? != MAGIC {
             return Err(Refusal::new(
                 RefusalKind::Invalid,
                 super::Diagnostic {
@@ -1768,10 +2381,7 @@ impl ProcedureLibrary {
                 },
             ));
         }
-        let mut generations = Vec::with_capacity(count);
-        for _ in 0..count {
-            generations.push(read_generation(&mut reader)?);
-        }
+        let generations = read_generations(&mut reader, count)?;
         if !reader.finished() {
             return Err(Refusal::new(
                 RefusalKind::Invalid,
@@ -1781,170 +2391,7 @@ impl ProcedureLibrary {
                 },
             ));
         }
-        let mut confirmed = Vec::new();
-        for (index, snapshot) in generations.iter().enumerate() {
-            let generation_index = u32::try_from(index).map_err(|_| {
-                Refusal::new(
-                    RefusalKind::Exhausted,
-                    super::Diagnostic {
-                        field: "generation",
-                        message: "generation index exceeds the wire domain",
-                    },
-                )
-            })?;
-            if snapshot.record.generation != generation_index {
-                return Err(Refusal::at(
-                    RefusalKind::Invalid,
-                    super::Diagnostic {
-                        field: "generation",
-                        message: "generation sequence is not contiguous",
-                    },
-                    generation_index,
-                ));
-            }
-            if index == 0 {
-                let is_initial_generation = matches!(
-                    (
-                        snapshot.record.parent_generation,
-                        snapshot.record.rollback_of,
-                        snapshot.record.kind,
-                        snapshot.records.is_empty(),
-                    ),
-                    (None, None, GenerationKind::Publish, true)
-                );
-                if !is_initial_generation {
-                    return Err(Refusal::new(
-                        RefusalKind::Invalid,
-                        super::Diagnostic {
-                            field: "generation.zero",
-                            message: "initial generation must be empty and parentless",
-                        },
-                    ));
-                }
-            } else {
-                let previous_index = index.checked_sub(1).ok_or_else(|| {
-                    Refusal::new(
-                        RefusalKind::Internal,
-                        super::Diagnostic {
-                            field: "generation",
-                            message: "noninitial generation has no previous index",
-                        },
-                    )
-                })?;
-                let previous = u32::try_from(previous_index).map_err(|_| {
-                    Refusal::new(
-                        RefusalKind::Exhausted,
-                        super::Diagnostic {
-                            field: "generation",
-                            message: "previous generation index exceeds the wire domain",
-                        },
-                    )
-                })?;
-                let is_ancestry_valid = match snapshot.record.kind {
-                    GenerationKind::Publish => {
-                        snapshot.record.parent_generation == Some(previous)
-                            && snapshot.record.rollback_of.is_none()
-                    }
-                    GenerationKind::Rollback => {
-                        snapshot.record.parent_generation.is_some_and(|parent| {
-                            parent <= previous
-                                && usize::try_from(parent).ok().is_some_and(|parent_index| {
-                                    generations.get(parent_index).is_some()
-                                })
-                        }) && snapshot.record.rollback_of == Some(previous)
-                    }
-                };
-                if !is_ancestry_valid {
-                    return Err(Refusal::at(
-                        RefusalKind::Invalid,
-                        super::Diagnostic {
-                            field: "generation.parent",
-                            message: "generation parent or rollback ancestry is not canonical",
-                        },
-                        generation_index,
-                    ));
-                }
-            }
-            if snapshot.record.chunk_library_revision != chunk_revision {
-                return Err(Refusal::at(
-                    RefusalKind::Invalid,
-                    super::Diagnostic {
-                        field: "chunk_library_revision",
-                        message: "generation chunk revision differs from pinned #73 revision",
-                    },
-                    generation_index,
-                ));
-            }
-            if snapshot.records.windows(2).any(|pair| {
-                pair.first().zip(pair.get(1)).is_some_and(|(left, right)| {
-                    super::retrieval::compare_records(left, right) == Ordering::Greater
-                })
-            }) {
-                return Err(Refusal::at(
-                    RefusalKind::Invalid,
-                    super::Diagnostic {
-                        field: "records.order",
-                        message: "records are not in canonical retrieval order",
-                    },
-                    generation_index,
-                ));
-            }
-            for record in &snapshot.records {
-                ProcedureLibrary::check_dependencies(&snapshot.records, record)?;
-                let actual_id = identity(
-                    &record.encoder,
-                    record.semantic_revision,
-                    &record.chunk,
-                    &record.provenance,
-                    &record.library_dependencies,
-                )?;
-                if actual_id != record.procedure_id {
-                    return Err(Refusal::new(
-                        RefusalKind::Invalid,
-                        super::Diagnostic {
-                            field: "procedure_id",
-                            message: "persisted identity differs from recomputed immutable fields",
-                        },
-                    ));
-                }
-                if record.retrieval != super::retrieval::signature(record) {
-                    return Err(Refusal::new(
-                        RefusalKind::Invalid,
-                        super::Diagnostic {
-                            field: "retrieval",
-                            message: "persisted retrieval signature differs from recomputed fields",
-                        },
-                    ));
-                }
-                for evidence in &record.evidence {
-                    if evidence.capability.is_some() {
-                        return Err(Refusal::new(
-                            RefusalKind::LiveCapabilityInEvidence,
-                            super::Diagnostic {
-                                field: "evidence.capability",
-                                message: "capability-bearing evidence cannot be loaded",
-                            },
-                        ));
-                    }
-                }
-            }
-            ProcedureLibrary::verify_snapshot(snapshot)?;
-            let rebuilt =
-                ProcedureLibrary::rebuild_chunks(namespace, chunk_revision, &snapshot.records)?;
-            if rebuilt.revision() != &snapshot.record.chunk_library_revision {
-                return Err(Refusal::at(
-                    RefusalKind::Invalid,
-                    super::Diagnostic {
-                        field: "chunk_library_revision",
-                        message: "#73 chunk view does not reproduce the retained revision",
-                    },
-                    generation_index,
-                ));
-            }
-            for record in &snapshot.records {
-                confirmed = super::acceptance::confirm(verifier.as_deref(), record, confirmed)?;
-            }
-        }
+        confirm_generations(&generations, chunk_revision, namespace, verifier.as_ref())?;
         let last_generation_index = generations.len().checked_sub(1).ok_or_else(|| {
             Refusal::new(
                 RefusalKind::Internal,
@@ -1963,18 +2410,18 @@ impl ProcedureLibrary {
                 },
             ));
         }
-        let current = generations
-            .iter()
-            .find(|snapshot| snapshot.record.generation == current_generation)
-            .ok_or_else(|| {
-                Refusal::new(
-                    RefusalKind::Internal,
-                    super::Diagnostic {
-                        field: "current_generation",
-                        message: "verified generation disappeared",
-                    },
-                )
-            })?;
+        let current = crate::scan::find_first(&generations, |snapshot| {
+            snapshot.record.generation == current_generation
+        })
+        .ok_or_else(|| {
+            Refusal::new(
+                RefusalKind::Internal,
+                super::Diagnostic {
+                    field: "current_generation",
+                    message: "verified generation disappeared",
+                },
+            )
+        })?;
         let chunk_library =
             ProcedureLibrary::rebuild_chunks(namespace, chunk_revision, &current.records)?;
         Ok(ProcedureLibrary {
@@ -1991,7 +2438,7 @@ impl ProcedureLibrary {
         out.push_str("{\"schema\":\"noble-procedure-library-export/1\",\"schema_revision\":1,");
         out.push_str("\"profile\":\"pure-i64-bool/1\",\"semantic_revision\":0,");
         out.push_str("\"encoder\":{\"id\":");
-        out.push_json_string(ENCODER_ID);
+        push_encoder_id(&mut out);
         out.push_str(",\"encoding_revision\":");
         out.push_u32(ENCODING_REVISION);
         out.push_str(",\"experimental\":true},\"library\":{\"generation\":");
@@ -2025,12 +2472,16 @@ impl ProcedureLibrary {
             out.push_str("\"}");
         }
         out.push_str("]},\"entries\":[");
-        for (index, record) in current.records.iter().enumerate() {
+        let mut index = 0;
+        let mut outcome = Ok(());
+        while outcome.is_ok() && index < current.records.len() {
             if index != 0 {
                 out.push(',');
             }
-            write_manifest_record(&mut out, record)?;
+            outcome = write_manifest_record(&mut out, &current.records[index]);
+            index += 1;
         }
+        outcome?;
         out.push_str("],\"retrieval_order\":[");
         for (index, record) in current.records.iter().enumerate() {
             if index != 0 {
@@ -2041,7 +2492,7 @@ impl ProcedureLibrary {
             out.push('"');
         }
         out.push_str("],\"non_claims\":[\"experimental library-local identity; not a canonical Noble hash\",\"evidence lists submitter claims kept as unverified provenance; only verified_evidence, minted at admission by the library owner's verifier, supports tested or promoted\"]}");
-        out.finish(MANIFEST_LIMIT_DIAGNOSTIC)
+        out.finish(JsonLimit::Manifest)
     }
 
     pub fn metrics_record(&self, metrics: &Metrics) -> Result<Vec<u8>, Refusal> {
@@ -2054,10 +2505,8 @@ impl ProcedureLibrary {
                 },
             ));
         }
-        if metrics
-            .arms
-            .iter()
-            .any(|arm| !arm.has_consistent_transfer_counts())
+        if crate::scan::find_first(&metrics.arms, |arm| !arm.has_consistent_transfer_counts())
+            .is_some()
         {
             return Err(Refusal::new(
                 RefusalKind::Invalid,
@@ -2110,92 +2559,107 @@ impl ProcedureLibrary {
         out.push_str(",\"bytes_added\":");
         out.push_u32(aggregate.growth_bytes_added);
         out.push_str("},\"acquisition\":[");
-        for (index, arm) in metrics.arms.iter().enumerate() {
-            if index != 0 {
-                out.push(',');
-            }
-            out.push_str("{\"arm\":");
-            out.push_json_string(&arm.arm);
-            out.push_str(",\"seed\":");
-            out.push_u64(arm.seed);
-            out.push_str(",\"entries\":");
-            out.push_u32(arm.acquisition_entries);
-            out.push_str(",\"tasks\":");
-            out.push_u32(arm.acquisition_tasks);
-            out.push('}');
-            out.ensure_within_limit(METRICS_LIMIT_DIAGNOSTIC)?;
-        }
+        write_arm_section(&mut out, &metrics.arms, ArmSection::Acquisition)?;
         out.push_str("],\"retention\":[");
-        for (index, arm) in metrics.arms.iter().enumerate() {
-            if index != 0 {
-                out.push(',');
-            }
-            out.push_str("{\"arm\":");
-            out.push_json_string(&arm.arm);
-            out.push_str(",\"seed\":");
-            out.push_u64(arm.seed);
-            out.push_str(",\"surviving_generations\":");
-            out.push_u32(arm.surviving_generations);
-            out.push('}');
-            out.ensure_within_limit(METRICS_LIMIT_DIAGNOSTIC)?;
-        }
-        let is_transfer_valid = metrics
-            .arms
-            .iter()
-            .all(|arm| arm.proposer_calls == 0 && arm.teacher_calls == 0);
+        write_arm_section(&mut out, &metrics.arms, ArmSection::Retention)?;
+        let is_transfer_valid = crate::scan::find_first(&metrics.arms, |arm| {
+            arm.proposer_calls != 0 || arm.teacher_calls != 0
+        })
+        .is_none();
         out.push_str("],\"transfer_valid\":");
         out.push_str(if is_transfer_valid { "true" } else { "false" });
         out.push_str(",\"transfer\":[");
         if is_transfer_valid {
-            for (index, arm) in metrics.arms.iter().enumerate() {
-                if index != 0 {
-                    out.push(',');
-                }
-                out.push_str("{\"arm\":");
-                out.push_json_string(&arm.arm);
-                out.push_str(",\"seed\":");
-                out.push_u64(arm.seed);
-                out.push_str(",\"held_out_tasks\":");
-                out.push_u32(arm.held_out_tasks);
-                out.push_str(",\"passed\":");
-                out.push_u32(arm.transfer_passed);
-                out.push('}');
-                out.ensure_within_limit(METRICS_LIMIT_DIAGNOSTIC)?;
-            }
+            write_arm_section(&mut out, &metrics.arms, ArmSection::Transfer)?;
         }
         out.push_str("],\"regression\":[");
-        for (index, arm) in metrics.arms.iter().enumerate() {
-            if index != 0 {
-                out.push(',');
-            }
-            out.push_str("{\"arm\":");
-            out.push_json_string(&arm.arm);
-            out.push_str(",\"seed\":");
-            out.push_u64(arm.seed);
+        write_arm_section(&mut out, &metrics.arms, ArmSection::Regression)?;
+        out.push_str("],\"restart\":{\"identity_match\":");
+        let is_restart_identity_match =
+            crate::scan::find_first(&metrics.arms, |arm| !arm.restart_identity_match).is_none();
+        out.push_str(if is_restart_identity_match {
+            "true"
+        } else {
+            "false"
+        });
+        out.push_str("},\"arms\":[");
+        write_arm_section(&mut out, &metrics.arms, ArmSection::Arms)?;
+        out.push_str("],\"proposer_calls\":");
+        out.push_u32(aggregate.proposer_calls);
+        out.push_str(",\"teacher_calls\":");
+        out.push_u32(aggregate.teacher_calls);
+        out.push_str(",\"claim_separation\":{\"model_synthesis\":");
+        out.push_json_string(&metrics.model_synthesis);
+        out.push_str(",\"executed_mechanics\":");
+        out.push_json_string(&metrics.executed_mechanics);
+        out.push_str(",\"correspondence\":");
+        out.push_json_string(&metrics.correspondence);
+        out.push_str(",\"assumptions\":");
+        out.push_json_string(&metrics.assumptions);
+        out.push_str("}}");
+        out.finish(JsonLimit::Metrics)
+    }
+}
+
+/// One per-arm list of the metrics record.
+#[derive(Clone, Copy)]
+enum ArmSection {
+    Acquisition,
+    Retention,
+    Transfer,
+    Regression,
+    Arms,
+}
+
+/// Writes one per-arm list in arm order, checking the bound after each entry.
+fn write_arm_section(
+    out: &mut BoundedJson,
+    arms: &[ArmMetrics],
+    section: ArmSection,
+) -> Result<(), Refusal> {
+    let mut index = 0;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < arms.len() {
+        if index != 0 {
+            out.push(',');
+        }
+        write_arm_entry(out, &arms[index], section);
+        outcome = out.ensure_within_limit(JsonLimit::Metrics);
+        index += 1;
+    }
+    outcome
+}
+
+/// Writes one arm's object of `section`.
+fn write_arm_entry(out: &mut BoundedJson, arm: &ArmMetrics, section: ArmSection) {
+    out.push_str("{\"arm\":");
+    out.push_json_string(&arm.arm);
+    out.push_str(",\"seed\":");
+    out.push_u64(arm.seed);
+    match section {
+        ArmSection::Acquisition => {
+            out.push_str(",\"entries\":");
+            out.push_u32(arm.acquisition_entries);
+            out.push_str(",\"tasks\":");
+            out.push_u32(arm.acquisition_tasks);
+        }
+        ArmSection::Retention => {
+            out.push_str(",\"surviving_generations\":");
+            out.push_u32(arm.surviving_generations);
+        }
+        ArmSection::Transfer => {
+            out.push_str(",\"held_out_tasks\":");
+            out.push_u32(arm.held_out_tasks);
+            out.push_str(",\"passed\":");
+            out.push_u32(arm.transfer_passed);
+        }
+        ArmSection::Regression => {
             out.push_str(",\"earlier_tasks\":");
             out.push_u32(arm.earlier_tasks);
             out.push_str(",\"failed\":");
             out.push_u32(arm.regression_failed);
-            out.push('}');
-            out.ensure_within_limit(METRICS_LIMIT_DIAGNOSTIC)?;
         }
-        out.push_str("],\"restart\":{\"identity_match\":");
-        out.push_str(
-            if metrics.arms.iter().all(|arm| arm.restart_identity_match) {
-                "true"
-            } else {
-                "false"
-            },
-        );
-        out.push_str("},\"arms\":[");
-        for (index, arm) in metrics.arms.iter().enumerate() {
-            if index != 0 {
-                out.push(',');
-            }
-            out.push_str("{\"arm\":");
-            out.push_json_string(&arm.arm);
-            out.push_str(",\"seed\":");
-            out.push_u64(arm.seed);
+        ArmSection::Arms => {
             out.push_str(",\"growth_entries_added\":");
             out.push_u32(arm.growth_entries_added);
             out.push_str(",\"growth_bytes_added\":");
@@ -2215,24 +2679,9 @@ impl ProcedureLibrary {
             }
             out.push_str(",\"break_even_reason\":");
             out.push_json_string(&arm.break_even_reason);
-            out.push('}');
-            out.ensure_within_limit(METRICS_LIMIT_DIAGNOSTIC)?;
         }
-        out.push_str("],\"proposer_calls\":");
-        out.push_u32(aggregate.proposer_calls);
-        out.push_str(",\"teacher_calls\":");
-        out.push_u32(aggregate.teacher_calls);
-        out.push_str(",\"claim_separation\":{\"model_synthesis\":");
-        out.push_json_string(&metrics.model_synthesis);
-        out.push_str(",\"executed_mechanics\":");
-        out.push_json_string(&metrics.executed_mechanics);
-        out.push_str(",\"correspondence\":");
-        out.push_json_string(&metrics.correspondence);
-        out.push_str(",\"assumptions\":");
-        out.push_json_string(&metrics.assumptions);
-        out.push_str("}}");
-        out.finish(METRICS_LIMIT_DIAGNOSTIC)
     }
+    out.push('}');
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -2299,44 +2748,53 @@ impl ArmAggregate {
             proposer_calls: 0,
             teacher_calls: 0,
         };
-        for arm in arms {
-            aggregate.retrieval_queries = aggregate
-                .retrieval_queries
-                .checked_add(arm.retrieval_queries)
-                .ok_or_else(|| metric_sum_overflow("metrics.retrieval_queries"))?;
-            aggregate.retrieval_examined = aggregate
-                .retrieval_examined
-                .checked_add(arm.retrieval_examined)
-                .ok_or_else(|| metric_sum_overflow("metrics.retrieval_examined"))?;
-            aggregate.max_examined = Some(
-                aggregate
-                    .max_examined
-                    .map_or(arm.max_examined, |current_maximum| {
-                        current_maximum.max(arm.max_examined)
-                    }),
-            );
-            aggregate.growth_entries_added = aggregate
-                .growth_entries_added
-                .checked_add(arm.growth_entries_added)
-                .ok_or_else(|| metric_sum_overflow("metrics.growth_entries_added"))?;
-            aggregate.growth_bytes_added = aggregate
-                .growth_bytes_added
-                .checked_add(arm.growth_bytes_added)
-                .ok_or_else(|| metric_sum_overflow("metrics.growth_bytes_added"))?;
-            aggregate.proposer_calls = aggregate
-                .proposer_calls
-                .checked_add(arm.proposer_calls)
-                .ok_or_else(|| metric_sum_overflow("metrics.proposer_calls"))?;
-            aggregate.teacher_calls = aggregate
-                .teacher_calls
-                .checked_add(arm.teacher_calls)
-                .ok_or_else(|| metric_sum_overflow("metrics.teacher_calls"))?;
+        let mut index = 0;
+        let mut outcome = Ok(());
+        while outcome.is_ok() && index < arms.len() {
+            outcome = aggregate.add(&arms[index]);
+            index += 1;
         }
+        outcome?;
         Ok(aggregate)
+    }
+
+    /// Adds one arm's counts, refusing any total that exceeds `u32`.
+    fn add(&mut self, arm: &ArmMetrics) -> Result<(), Refusal> {
+        self.retrieval_queries = self
+            .retrieval_queries
+            .checked_add(arm.retrieval_queries)
+            .ok_or_else(|| metric_sum_overflow("metrics.retrieval_queries"))?;
+        self.retrieval_examined = self
+            .retrieval_examined
+            .checked_add(arm.retrieval_examined)
+            .ok_or_else(|| metric_sum_overflow("metrics.retrieval_examined"))?;
+        self.max_examined = Some(
+            self.max_examined
+                .map_or(arm.max_examined, |current_maximum| {
+                    current_maximum.max(arm.max_examined)
+                }),
+        );
+        self.growth_entries_added = self
+            .growth_entries_added
+            .checked_add(arm.growth_entries_added)
+            .ok_or_else(|| metric_sum_overflow("metrics.growth_entries_added"))?;
+        self.growth_bytes_added = self
+            .growth_bytes_added
+            .checked_add(arm.growth_bytes_added)
+            .ok_or_else(|| metric_sum_overflow("metrics.growth_bytes_added"))?;
+        self.proposer_calls = self
+            .proposer_calls
+            .checked_add(arm.proposer_calls)
+            .ok_or_else(|| metric_sum_overflow("metrics.proposer_calls"))?;
+        self.teacher_calls = self
+            .teacher_calls
+            .checked_add(arm.teacher_calls)
+            .ok_or_else(|| metric_sum_overflow("metrics.teacher_calls"))?;
+        Ok(())
     }
 }
 
-fn metric_sum_overflow(field: &'static str) -> Refusal {
+fn metric_sum_overflow(field: &str) -> Refusal {
     Refusal::new(
         RefusalKind::Exhausted,
         super::Diagnostic {
@@ -2344,6 +2802,11 @@ fn metric_sum_overflow(field: &'static str) -> Refusal {
             message: "transfer metric total exceeds u32",
         },
     )
+}
+
+/// Pushes the encoder identity; kept loop-free because it reads a borrowed `const`.
+fn push_encoder_id(out: &mut BoundedJson) {
+    out.push_json_string(ENCODER_ID);
 }
 
 fn write_manifest_record(out: &mut BoundedJson, record: &ProcedureRecord) -> Result<(), Refusal> {
@@ -2582,25 +3045,34 @@ fn generation_kind_code(kind: GenerationKind) -> &'static str {
 }
 
 fn write_type_tags(out: &mut BoundedJson, types: &[Ty]) -> Result<(), Refusal> {
-    for (index, ty) in types.iter().enumerate() {
+    let mut index = 0;
+    let mut outcome = Ok(());
+    while outcome.is_ok() && index < types.len() {
         if index != 0 {
             out.push(',');
         }
-        let type_tag = if ty == &Ty::I64 {
-            "I64"
-        } else if ty == &Ty::Bool {
-            "Bool"
-        } else {
-            return Err(Refusal::new(
-                RefusalKind::Unsupported,
-                super::Diagnostic {
-                    field: "interface.type",
-                    message: "manifest type is outside the procedure profile",
-                },
-            ));
-        };
-        out.push_json_string(type_tag);
+        outcome = write_type_tag(out, &types[index]);
+        index += 1;
     }
+    outcome
+}
+
+/// Writes one manifest type tag, refusing types outside the profile.
+fn write_type_tag(out: &mut BoundedJson, ty: &Ty) -> Result<(), Refusal> {
+    let type_tag = if *ty == Ty::I64 {
+        "I64"
+    } else if *ty == Ty::Bool {
+        "Bool"
+    } else {
+        return Err(Refusal::new(
+            RefusalKind::Unsupported,
+            super::Diagnostic {
+                field: "interface.type",
+                message: "manifest type is outside the procedure profile",
+            },
+        ));
+    };
+    out.push_json_string(type_tag);
     Ok(())
 }
 
@@ -2609,5 +3081,245 @@ fn producer_code(producer: Producer) -> &'static str {
         Producer::Chunk => "chunk",
         Producer::Synthesis => "synthesis",
         Producer::Composition => "composition",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The lane walk `digest32` replaced: chunks zipped with lane domains.
+    fn zipped_lane_digest(domain: u64, bytes: &[u8]) -> ProcedureId {
+        let mut output = [0; 32];
+        let lane_domains = [
+            domain,
+            domain ^ 0x9e37_79b9_7f4a_7c15,
+            domain ^ 0x3c6e_f372_fe94_f82a,
+            domain ^ 0xdaa6_6d2c_7ddf_743f,
+        ];
+        for (output_lane, lane_domain) in output.chunks_exact_mut(8).zip(lane_domains) {
+            let mut fold = crate::companion::digest::Fold::new(lane_domain);
+            fold.absorb_bytes(bytes);
+            output_lane.copy_from_slice(&fold.finish().to_be_bytes());
+        }
+        output
+    }
+
+    /// The escaper `push_json_string` replaced, walking `chars()`.
+    fn char_walk_json_string(out: &mut BoundedJson, value: &str) {
+        out.push('"');
+        for character in value.chars() {
+            if out.exceeded_limit {
+                break;
+            }
+            match character {
+                '"' => out.push_str("\\\""),
+                '\\' => out.push_str("\\\\"),
+                '\n' => out.push_str("\\n"),
+                '\r' => out.push_str("\\r"),
+                '\t' => out.push_str("\\t"),
+                character if character <= '\u{001f}' => {
+                    out.push_str("\\u00");
+                    if let Ok(ascii) = u8::try_from(u32::from(character)) {
+                        out.push(char::from(b"0123456789abcdef"[usize::from(ascii >> 4)]));
+                        out.push(char::from(b"0123456789abcdef"[usize::from(ascii & 0x0f)]));
+                    } else {
+                        out.exceeded_limit = true;
+                    }
+                }
+                character => out.push(character),
+            }
+        }
+        out.push('"');
+    }
+
+    fn arm(name: &str, base: u32) -> ArmMetrics {
+        ArmMetrics {
+            arm: String::from(name),
+            seed: u64::from(base) + 100,
+            acquisition_entries: base + 1,
+            acquisition_tasks: base + 2,
+            surviving_generations: base + 3,
+            held_out_tasks: base + 4,
+            transfer_passed: base + 4,
+            earlier_tasks: base + 5,
+            regression_failed: base,
+            growth_entries_added: base + 6,
+            growth_bytes_added: base + 7,
+            retrieval_queries: base + 8,
+            retrieval_examined: base + 9,
+            max_examined: base + 9,
+            retrieval_overhead_ns: u64::from(base) + 10,
+            restart_identity_match: base == 0,
+            proposer_calls: 0,
+            teacher_calls: 0,
+            break_even_invocations: if base == 0 { Some(11) } else { None },
+            break_even_reason: String::from("reason \"quoted\""),
+        }
+    }
+
+    #[test]
+    fn digest32_matches_the_zipped_lane_walk() {
+        for domain in [DOMAIN_ID, DOMAIN_STATE, DOMAIN_LIBRARY ^ 0x4d, 0, u64::MAX] {
+            for bytes in [&b""[..], &b"x"[..], &b"NPLIB002 canonical record bytes"[..]] {
+                assert_eq!(digest32(domain, bytes), zipped_lane_digest(domain, bytes));
+            }
+        }
+    }
+
+    #[test]
+    fn json_string_byte_walk_matches_the_char_walk_at_every_bound() {
+        let samples = [
+            "",
+            "plain",
+            "escaped: \n\t\"\\\u{001f}\r\u{0}\u{7f}",
+            "two é, three €, four 𝄞, mixed \u{1}é",
+        ];
+        for sample in samples {
+            for maximum_bytes in 0..=sample.len() * 6 + 2 {
+                let mut walked = BoundedJson::new(maximum_bytes);
+                walked.push_str("[");
+                walked.push_json_string(sample);
+                let mut reference = BoundedJson::new(maximum_bytes);
+                reference.push_str("[");
+                char_walk_json_string(&mut reference, sample);
+                assert_eq!(
+                    walked.text, reference.text,
+                    "{sample:?} within {maximum_bytes}"
+                );
+                assert_eq!(
+                    walked.exceeded_limit, reference.exceeded_limit,
+                    "{sample:?} within {maximum_bytes}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn decimal_and_hex_pushes_match_standard_formatting() {
+        for value in [0, 7, 10, 99, 1_000_000, u64::from(u32::MAX), u64::MAX] {
+            let mut out = BoundedJson::new(64);
+            out.push_u64(value);
+            assert_eq!(out.text, alloc::format!("{value}"));
+            assert!(!out.exceeded_limit);
+        }
+        let mut out = BoundedJson::new(64);
+        out.push_hex(&[0x00, 0x0f, 0xa5, 0xff]);
+        assert_eq!(out.text, "000fa5ff");
+        let mut bounded = BoundedJson::new(3);
+        bounded.push_hex(&[0xab, 0xcd, 0xef]);
+        assert_eq!(bounded.text, "abc");
+        assert!(bounded.exceeded_limit);
+    }
+
+    #[test]
+    fn list_readers_stop_at_the_first_refusal() {
+        let unknown_tag_then_truncated = [0, 0, 0, 3, 0, 9];
+        let refusal = read_types(
+            &mut Reader::new(&unknown_tag_then_truncated),
+            "retrieval.stack_in",
+        )
+        .expect_err("an unknown type tag refuses before the truncated third tag");
+        assert_eq!(refusal.kind, RefusalKind::Unsupported);
+        assert_eq!(refusal.location.field, "retrieval.stack_in");
+        assert_eq!(refusal.message, "unsupported type tag");
+
+        let one_of_two_values = [0, 0, 0, 2, 0, 0, 0, 1];
+        let refusal = read_u32_list(
+            &mut Reader::new(&one_of_two_values),
+            "promotion.obligations",
+            MAX_EVIDENCE,
+            "promotion.obligation",
+        )
+        .expect_err("the second value is missing");
+        assert_eq!(refusal.kind, RefusalKind::Invalid);
+        assert_eq!(refusal.location.field, "promotion.obligation");
+        assert_eq!(refusal.message, "truncated canonical record");
+
+        let unknown_node_then_truncated = [0, 0, 0, 2, 9];
+        let refusal = read_chunk_body_nodes(&mut Reader::new(&unknown_node_then_truncated))
+            .expect_err("an unknown node tag refuses before the missing second node");
+        assert_eq!(refusal.kind, RefusalKind::Invalid);
+        assert_eq!(refusal.location.field, "chunk.body.node");
+        assert_eq!(refusal.message, "unknown node tag");
+    }
+
+    #[test]
+    fn arm_sections_write_each_entry_in_order() {
+        let arms = [arm("first", 0), arm("second", 20)];
+        let expected = [
+            (
+                ArmSection::Acquisition,
+                "{\"arm\":\"first\",\"seed\":100,\"entries\":1,\"tasks\":2},\
+                 {\"arm\":\"second\",\"seed\":120,\"entries\":21,\"tasks\":22}",
+            ),
+            (
+                ArmSection::Retention,
+                "{\"arm\":\"first\",\"seed\":100,\"surviving_generations\":3},\
+                 {\"arm\":\"second\",\"seed\":120,\"surviving_generations\":23}",
+            ),
+            (
+                ArmSection::Transfer,
+                "{\"arm\":\"first\",\"seed\":100,\"held_out_tasks\":4,\"passed\":4},\
+                 {\"arm\":\"second\",\"seed\":120,\"held_out_tasks\":24,\"passed\":24}",
+            ),
+            (
+                ArmSection::Regression,
+                "{\"arm\":\"first\",\"seed\":100,\"earlier_tasks\":5,\"failed\":0},\
+                 {\"arm\":\"second\",\"seed\":120,\"earlier_tasks\":25,\"failed\":20}",
+            ),
+            (
+                ArmSection::Arms,
+                "{\"arm\":\"first\",\"seed\":100,\"growth_entries_added\":6,\
+                 \"growth_bytes_added\":7,\"retrieval_queries\":8,\"retrieval_examined\":9,\
+                 \"retrieval_overhead_ns\":10,\"restart_identity_match\":true,\
+                 \"break_even_invocations\":11,\"break_even_reason\":\"reason \\\"quoted\\\"\"},\
+                 {\"arm\":\"second\",\"seed\":120,\"growth_entries_added\":26,\
+                 \"growth_bytes_added\":27,\"retrieval_queries\":28,\"retrieval_examined\":29,\
+                 \"retrieval_overhead_ns\":30,\"restart_identity_match\":false,\
+                 \"break_even_invocations\":null,\"break_even_reason\":\"reason \\\"quoted\\\"\"}",
+            ),
+        ];
+        for (section, entries) in expected {
+            let mut out = BoundedJson::new(MAX_METRICS_BYTES);
+            assert!(write_arm_section(&mut out, &arms, section).is_ok());
+            assert_eq!(out.text, entries);
+        }
+
+        let mut bounded = BoundedJson::new(30);
+        let refusal = write_arm_section(&mut bounded, &arms, ArmSection::Retention)
+            .expect_err("the first entry already passes the bound");
+        assert_eq!(refusal.kind, RefusalKind::Exhausted);
+        assert_eq!(refusal.location.field, "metrics.bytes");
+        assert_eq!(refusal.message, "metrics record exceeds its bound");
+        assert!(!bounded.text.contains("second"));
+    }
+
+    #[test]
+    fn aggregate_reports_the_first_overflowing_total() {
+        let mut queries_overflow = arm("first", 0);
+        queries_overflow.retrieval_queries = u32::MAX;
+        queries_overflow.retrieval_examined = u32::MAX;
+        let Err(refusal) = ArmAggregate::from_arms(&[queries_overflow.clone(), queries_overflow])
+        else {
+            panic!("both totals overflow on the second arm");
+        };
+        assert_eq!(refusal.kind, RefusalKind::Exhausted);
+        assert_eq!(refusal.location.field, "metrics.retrieval_queries");
+
+        let mut examined_overflow = arm("first", 0);
+        examined_overflow.retrieval_examined = u32::MAX;
+        let Err(refusal) = ArmAggregate::from_arms(&[examined_overflow, arm("second", 0)]) else {
+            panic!("the examined total overflows on the second arm");
+        };
+        assert_eq!(refusal.location.field, "metrics.retrieval_examined");
+        assert_eq!(refusal.message, "transfer metric total exceeds u32");
+
+        let Ok(aggregate) = ArmAggregate::from_arms(&[arm("first", 0), arm("second", 20)]) else {
+            panic!("small totals fit");
+        };
+        assert_eq!(aggregate.retrieval_queries, 36);
+        assert_eq!(aggregate.max_examined, Some(29));
+        assert_eq!(aggregate.teacher_calls, 0);
     }
 }
