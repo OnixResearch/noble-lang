@@ -1766,6 +1766,43 @@ def noble_kernel.acceptance.check (env : noble_kernel.contracts.Env)
     (toEnv env) (toRequest request) (toCandidate candidate)
   ok (fromOutcome outcome)
 
+/-- The signed-owner entry of the inherited checker: the owner definition is the
+same `u32` identity on both sides and the owner instantiation is transported
+losslessly. -/
+@[rust_fun "noble_kernel::acceptance::check_signed_structure"]
+def noble_kernel.acceptance.check_signed_structure (env : noble_kernel.contracts.Env)
+    (request : noble_kernel.untrusted.Request) (candidate : noble_kernel.untrusted.Candidate)
+    (owner : noble_kernel.contracts.Definition) (inst : noble_kernel.words.Inst) :
+    Result noble_kernel.untrusted.Outcome := do
+  let outcome ← _root_.noble_kernel.acceptance.check_signed_structure
+    (toEnv env) (toRequest request) (toCandidate candidate) owner (toInst inst)
+  ok (fromOutcome outcome)
+
+@[rust_const "noble_kernel::contracts::clone_budget::CALCULATOR_ENVIRONMENT_ROW_LIMIT"]
+def noble_kernel.contracts.clone_budget.CALCULATOR_ENVIRONMENT_ROW_LIMIT : Result Usize :=
+  ok _root_.noble_kernel.contracts.clone_budget.CALCULATOR_ENVIRONMENT_ROW_LIMIT
+
+/-- The inherited constant is itself a checked shift, so its Result is reused. -/
+@[rust_const "noble_kernel::contracts::clone_budget::CALCULATOR_ENV_CLONE_FANOUT_LIMIT"]
+def noble_kernel.contracts.clone_budget.CALCULATOR_ENV_CLONE_FANOUT_LIMIT : Result U64 :=
+  _root_.noble_kernel.contracts.clone_budget.CALCULATOR_ENV_CLONE_FANOUT_LIMIT
+
+/-- The inherited clone-budget walk. It reaches the inherited `size_of` model,
+which fails with `undef` (see `NobleKernel/FunsExternal.lean`), so no successful
+budget is derivable through this boundary either. -/
+@[rust_fun "noble_kernel::contracts::clone_budget::{noble_kernel::contracts::Env}::calculator_clone_budget"]
+def noble_kernel.contracts.clone_budget.Env.calculator_clone_budget
+    (env : noble_kernel.contracts.Env) :
+    Result (Option noble_kernel.contracts.clone_budget.CloneBudget) := do
+  let budget ← _root_.noble_kernel.contracts.clone_budget.Env.calculator_clone_budget (toEnv env)
+  ok (budget.map fromCloneBudget)
+
+@[rust_fun "noble_kernel::contracts::{core::fmt::Debug<noble_kernel::contracts::Definition>}::fmt"]
+def noble_kernel.contracts.Definition.Insts.CoreFmtDebug.fmt
+    (definition : noble_kernel.contracts.Definition) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  _root_.noble_kernel.contracts.Definition.Insts.CoreFmtDebug.fmt definition formatter
+
 @[rust_fun "noble_kernel::contracts::{core::clone::Clone<noble_kernel::contracts::Definition>}::clone"]
 def noble_kernel.contracts.Definition.Insts.CoreCloneClone.clone
     (definition : noble_kernel.contracts.Definition) :
@@ -1781,6 +1818,33 @@ def noble_kernel.contracts.Definition.Insts.CoreCmpPartialEqDefinition.eq
 def noble_kernel.contracts.FIXTURE_RESOURCE : Result noble_kernel.types.ResourceKind :=
   ok _root_.noble_kernel.contracts.FIXTURE_RESOURCE
 
+@[rust_const "noble_kernel::contracts::TEST_EMIT"]
+def noble_kernel.contracts.TEST_EMIT : Result noble_kernel.types.EffId :=
+  ok _root_.noble_kernel.contracts.TEST_EMIT
+
+@[rust_const "noble_kernel::contracts::TEST_CLOCK"]
+def noble_kernel.contracts.TEST_CLOCK : Result noble_kernel.types.EffId :=
+  ok _root_.noble_kernel.contracts.TEST_CLOCK
+
+@[rust_const "noble_kernel::contracts::TEST_CODE_EXPORT"]
+def noble_kernel.contracts.TEST_CODE_EXPORT : Result noble_kernel.types.EffId :=
+  ok _root_.noble_kernel.contracts.TEST_CODE_EXPORT
+
+@[rust_const "noble_kernel::contracts::TEST_SEND"]
+def noble_kernel.contracts.TEST_SEND : Result noble_kernel.types.EffId :=
+  ok _root_.noble_kernel.contracts.TEST_SEND
+
+@[rust_const "noble_kernel::contracts::LIVE_DISPATCH"]
+def noble_kernel.contracts.LIVE_DISPATCH : Result noble_kernel.types.EffId :=
+  ok _root_.noble_kernel.contracts.LIVE_DISPATCH
+
+@[rust_fun "noble_kernel::contracts::{core::clone::Clone<noble_kernel::contracts::Behavior>}::clone"]
+def noble_kernel.contracts.Behavior.Insts.CoreCloneClone.clone
+    (behavior : noble_kernel.contracts.Behavior) : Result noble_kernel.contracts.Behavior := do
+  let cloned ← _root_.noble_kernel.contracts.Behavior.Insts.CoreCloneClone.clone
+    (toBehavior behavior)
+  ok (fromBehavior cloned)
+
 @[rust_fun "noble_kernel::contracts::{core::cmp::PartialEq<noble_kernel::contracts::Behavior, noble_kernel::contracts::Behavior>}::eq"]
 def noble_kernel.contracts.Behavior.Insts.CoreCmpPartialEqBehavior.eq
     (left right : noble_kernel.contracts.Behavior) : Result Bool :=
@@ -1795,11 +1859,100 @@ def noble_kernel.contracts.NominalDecl.Insts.CoreCloneClone.clone
     (toNominalDecl decl)
   ok (fromNominalDecl cloned)
 
+@[rust_fun "noble_kernel::contracts::{core::fmt::Debug<noble_kernel::contracts::NominalDecl>}::fmt"]
+def noble_kernel.contracts.NominalDecl.Insts.CoreFmtDebug.fmt
+    (decl : noble_kernel.contracts.NominalDecl) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  _root_.noble_kernel.contracts.NominalDecl.Insts.CoreFmtDebug.fmt (toNominalDecl decl) formatter
+
+@[rust_fun "noble_kernel::contracts::{core::clone::Clone<noble_kernel::contracts::GenericVariantDecl>}::clone"]
+def noble_kernel.contracts.GenericVariantDecl.Insts.CoreCloneClone.clone
+    (decl : noble_kernel.contracts.GenericVariantDecl) :
+    Result noble_kernel.contracts.GenericVariantDecl := do
+  let cloned ← _root_.noble_kernel.contracts.GenericVariantDecl.Insts.CoreCloneClone.clone
+    (toGenericVariantDecl decl)
+  ok (fromGenericVariantDecl cloned)
+
 @[rust_fun "noble_kernel::contracts::{core::clone::Clone<noble_kernel::contracts::Env>}::clone"]
 def noble_kernel.contracts.Env.Insts.CoreCloneClone.clone
     (env : noble_kernel.contracts.Env) : Result noble_kernel.contracts.Env := do
   let cloned ← _root_.noble_kernel.contracts.Env.Insts.CoreCloneClone.clone (toEnv env)
   ok (fromEnv cloned)
+
+@[rust_fun "noble_kernel::contracts::{noble_kernel::contracts::Env}::enable_live_slots"]
+def noble_kernel.contracts.Env.enable_live_slots (env : noble_kernel.contracts.Env) :
+    Result noble_kernel.contracts.Env := do
+  let enabled ← _root_.noble_kernel.contracts.Env.enable_live_slots (toEnv env)
+  ok (fromEnv enabled)
+
+@[rust_fun "noble_kernel::contracts::{noble_kernel::contracts::Env}::has_checked_i64"]
+def noble_kernel.contracts.Env.has_checked_i64 (env : noble_kernel.contracts.Env) :
+    Result Bool :=
+  _root_.noble_kernel.contracts.Env.has_checked_i64 (toEnv env)
+
+@[rust_fun "noble_kernel::contracts::{noble_kernel::contracts::Env}::register_live_resource"]
+def noble_kernel.contracts.Env.register_live_resource (env : noble_kernel.contracts.Env)
+    (decl : noble_kernel.contracts.NominalDecl) :
+    Result (core.result.Result noble_kernel.contracts.Env noble_kernel.contracts.NominalError) := do
+  let result ← _root_.noble_kernel.contracts.Env.register_live_resource
+    (toEnv env) (toNominalDecl decl)
+  match result with
+  | .Ok registered => ok (.Ok (fromEnv registered))
+  | .Err error => ok (.Err (fromNominalError error))
+
+@[rust_fun "noble_kernel::contracts::{noble_kernel::contracts::Env}::generic_instance_matches"]
+def noble_kernel.contracts.Env.generic_instance_matches (env : noble_kernel.contracts.Env)
+    (ty : noble_kernel.types.Ty) (id : noble_kernel.types.NominalTypeId) : Result Bool :=
+  _root_.noble_kernel.contracts.Env.generic_instance_matches
+    (toEnv env) (toTy ty) (toNominalTypeId id)
+
+@[rust_fun "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_generic_variant"]
+def noble_kernel.contracts.Env.declare_generic_variant (env : noble_kernel.contracts.Env)
+    (decl : noble_kernel.contracts.GenericVariantDecl) :
+    Result (core.result.Result
+      (noble_kernel.contracts.Env × noble_kernel.contracts.NominalOps)
+      noble_kernel.contracts.NominalError) := do
+  let result ← _root_.noble_kernel.contracts.Env.declare_generic_variant
+    (toEnv env) (toGenericVariantDecl decl)
+  match result with
+  | .Ok (registered, ops) => ok (.Ok (fromEnv registered, fromNominalOps ops))
+  | .Err error => ok (.Err (fromNominalError error))
+
+@[rust_fun "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_clock"]
+def noble_kernel.contracts.Env.declare_bound_clock (env : noble_kernel.contracts.Env)
+    (registration : noble_kernel.contracts.BoundClockRegistration) :
+    Result (core.result.Result
+      (noble_kernel.contracts.Env × noble_kernel.contracts.Definition)
+      noble_kernel.contracts.NominalError) := do
+  let result ← _root_.noble_kernel.contracts.Env.declare_bound_clock
+    (toEnv env) (toBoundClockRegistration registration)
+  match result with
+  | .Ok (registered, definition) => ok (.Ok (fromEnv registered, definition))
+  | .Err error => ok (.Err (fromNominalError error))
+
+@[rust_fun "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_code_export"]
+def noble_kernel.contracts.Env.declare_bound_code_export (env : noble_kernel.contracts.Env)
+    (registration : noble_kernel.contracts.BoundCodeExportRegistration) :
+    Result (core.result.Result
+      (noble_kernel.contracts.Env × noble_kernel.contracts.Definition)
+      noble_kernel.contracts.NominalError) := do
+  let result ← _root_.noble_kernel.contracts.Env.declare_bound_code_export
+    (toEnv env) (toBoundCodeExportRegistration registration)
+  match result with
+  | .Ok (registered, definition) => ok (.Ok (fromEnv registered, definition))
+  | .Err error => ok (.Err (fromNominalError error))
+
+@[rust_fun "noble_kernel::contracts::{noble_kernel::contracts::Env}::declare_bound_send"]
+def noble_kernel.contracts.Env.declare_bound_send (env : noble_kernel.contracts.Env)
+    (registration : noble_kernel.contracts.BoundSendRegistration) :
+    Result (core.result.Result
+      (noble_kernel.contracts.Env × noble_kernel.contracts.Definition)
+      noble_kernel.contracts.NominalError) := do
+  let result ← _root_.noble_kernel.contracts.Env.declare_bound_send
+    (toEnv env) (toBoundSendRegistration registration)
+  match result with
+  | .Ok (registered, definition) => ok (.Ok (fromEnv registered, definition))
+  | .Err error => ok (.Err (fromNominalError error))
 
 @[rust_fun "noble_kernel::contracts::{noble_kernel::contracts::Env}::nominal"]
 def noble_kernel.contracts.Env.nominal (env : noble_kernel.contracts.Env)
@@ -1854,6 +2007,53 @@ def noble_kernel.contracts.environment :
   | .Ok env => ok (.Ok (fromEnv env))
   | .Err error => ok (.Err (fromDefect error))
 
+@[rust_fun "noble_kernel::contracts::text_cursor_environment"]
+def noble_kernel.contracts.text_cursor_environment :
+    Result (core.result.Result noble_kernel.contracts.Env noble_kernel.shapes.Defect) := do
+  let result ← _root_.noble_kernel.contracts.text_cursor_environment
+  match result with
+  | .Ok env => ok (.Ok (fromEnv env))
+  | .Err error => ok (.Err (fromDefect error))
+
+@[rust_fun "noble_kernel::contracts::checked_i64_environment"]
+def noble_kernel.contracts.checked_i64_environment :
+    Result (core.result.Result noble_kernel.contracts.Env noble_kernel.shapes.Defect) := do
+  let result ← _root_.noble_kernel.contracts.checked_i64_environment
+  match result with
+  | .Ok env => ok (.Ok (fromEnv env))
+  | .Err error => ok (.Err (fromDefect error))
+
+@[rust_fun "noble_kernel::contracts::calculator_environment"]
+def noble_kernel.contracts.calculator_environment :
+    Result (core.result.Result noble_kernel.contracts.Env noble_kernel.shapes.Defect) := do
+  let result ← _root_.noble_kernel.contracts.calculator_environment
+  match result with
+  | .Ok env => ok (.Ok (fromEnv env))
+  | .Err error => ok (.Err (fromDefect error))
+
+@[rust_fun "noble_kernel::contracts::declared_text_environment"]
+def noble_kernel.contracts.declared_text_environment :
+    Result (core.result.Result noble_kernel.contracts.Env noble_kernel.shapes.Defect) := do
+  let result ← _root_.noble_kernel.contracts.declared_text_environment
+  match result with
+  | .Ok env => ok (.Ok (fromEnv env))
+  | .Err error => ok (.Err (fromDefect error))
+
+@[rust_fun "noble_kernel::shapes::impls::{core::clone::Clone<noble_kernel::shapes::Pattern>}::clone"]
+def noble_kernel.shapes.Pattern.Insts.CoreCloneClone.clone
+    (pattern : noble_kernel.shapes.Pattern) : Result noble_kernel.shapes.Pattern := do
+  let cloned ← _root_.noble_kernel.shapes.Pattern.Insts.CoreCloneClone.clone (toPattern pattern)
+  ok (fromPattern cloned)
+
+@[rust_fun "noble_kernel::shapes::{noble_kernel::shapes::Pattern}::program"]
+def noble_kernel.shapes.Pattern.program
+    (stackIn stackOut : alloc.vec.Vec noble_kernel.shapes.Pattern)
+    (effects : alloc.vec.Vec noble_kernel.shapes.EffectSlot) :
+    Result noble_kernel.shapes.Pattern := do
+  let pattern ← _root_.noble_kernel.shapes.Pattern.program
+    (toPatternVec stackIn) (toPatternVec stackOut) (mapVec toEffectSlot effects)
+  ok (fromPattern pattern)
+
 @[rust_fun "noble_kernel::shapes::impls::{core::cmp::PartialEq<noble_kernel::shapes::Pattern, noble_kernel::shapes::Pattern>}::eq"]
 def noble_kernel.shapes.Pattern.Insts.CoreCmpPartialEqPattern.eq
     (left right : noble_kernel.shapes.Pattern) : Result Bool :=
@@ -1876,10 +2076,27 @@ def noble_kernel.types.Ty.Insts.CoreCloneClone.clone (ty : noble_kernel.types.Ty
   let cloned ← _root_.noble_kernel.types.Ty.Insts.CoreCloneClone.clone (toTy ty)
   ok (fromTy cloned)
 
+@[rust_fun "noble_kernel::types::impls::{core::fmt::Debug<noble_kernel::types::Ty>}::fmt"]
+def noble_kernel.types.Ty.Insts.CoreFmtDebug.fmt (ty : noble_kernel.types.Ty)
+    (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  _root_.noble_kernel.types.Ty.Insts.CoreFmtDebug.fmt (toTy ty) formatter
+
 @[rust_fun "noble_kernel::types::impls::{core::cmp::PartialEq<noble_kernel::types::Ty, noble_kernel::types::Ty>}::eq"]
 def noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy.eq
     (left right : noble_kernel.types.Ty) : Result Bool :=
   _root_.noble_kernel.types.Ty.Insts.CoreCmpPartialEqTy.eq (toTy left) (toTy right)
+
+@[rust_fun "noble_kernel::types::{core::clone::Clone<noble_kernel::types::ResourceKind>}::clone"]
+def noble_kernel.types.ResourceKind.Insts.CoreCloneClone.clone
+    (kind : noble_kernel.types.ResourceKind) : Result noble_kernel.types.ResourceKind :=
+  _root_.noble_kernel.types.ResourceKind.Insts.CoreCloneClone.clone kind
+
+@[rust_fun "noble_kernel::types::{core::fmt::Debug<noble_kernel::types::ResourceKind>}::fmt"]
+def noble_kernel.types.ResourceKind.Insts.CoreFmtDebug.fmt
+    (kind : noble_kernel.types.ResourceKind) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  _root_.noble_kernel.types.ResourceKind.Insts.CoreFmtDebug.fmt kind formatter
 
 @[rust_fun "noble_kernel::types::{core::cmp::PartialEq<noble_kernel::types::ResourceKind, noble_kernel::types::ResourceKind>}::eq"]
 def noble_kernel.types.ResourceKind.Insts.CoreCmpPartialEqResourceKind.eq
@@ -1908,6 +2125,17 @@ def noble_kernel.types.EffSet.Insts.CoreCloneClone.clone
     (effects : noble_kernel.types.EffSet) : Result noble_kernel.types.EffSet :=
   _root_.noble_kernel.types.EffSet.Insts.CoreCloneClone.clone effects
 
+@[rust_fun "noble_kernel::types::{core::fmt::Debug<noble_kernel::types::EffSet>}::fmt"]
+def noble_kernel.types.EffSet.Insts.CoreFmtDebug.fmt
+    (effects : noble_kernel.types.EffSet) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  _root_.noble_kernel.types.EffSet.Insts.CoreFmtDebug.fmt effects formatter
+
+@[rust_fun "noble_kernel::types::{noble_kernel::types::EffSet}::is_subset_of"]
+def noble_kernel.types.EffSet.is_subset_of (effects other : noble_kernel.types.EffSet) :
+    Result Bool :=
+  _root_.noble_kernel.types.EffSet.is_subset_of effects other
+
 @[rust_fun "noble_kernel::types::{core::cmp::PartialEq<noble_kernel::types::EffSet, noble_kernel::types::EffSet>}::eq"]
 def noble_kernel.types.EffSet.Insts.CoreCmpPartialEqEffSet.eq
     (left right : noble_kernel.types.EffSet) : Result Bool :=
@@ -1933,6 +2161,17 @@ def noble_kernel.untrusted.CANDIDATE_FORMAT : Result U32 :=
 @[rust_const "noble_kernel::untrusted::SEMANTIC_REVISION"]
 def noble_kernel.untrusted.SEMANTIC_REVISION : Result U32 :=
   ok _root_.noble_kernel.untrusted.SEMANTIC_REVISION
+
+@[rust_fun "noble_kernel::untrusted::{core::clone::Clone<noble_kernel::untrusted::NodeId>}::clone"]
+def noble_kernel.untrusted.NodeId.Insts.CoreCloneClone.clone
+    (node : noble_kernel.untrusted.NodeId) : Result noble_kernel.untrusted.NodeId :=
+  _root_.noble_kernel.untrusted.NodeId.Insts.CoreCloneClone.clone node
+
+@[rust_fun "noble_kernel::untrusted::{core::fmt::Debug<noble_kernel::untrusted::NodeId>}::fmt"]
+def noble_kernel.untrusted.NodeId.Insts.CoreFmtDebug.fmt
+    (node : noble_kernel.untrusted.NodeId) (formatter : core.fmt.Formatter) :
+    Result (core.result.Result Unit core.fmt.Error × core.fmt.Formatter) :=
+  _root_.noble_kernel.untrusted.NodeId.Insts.CoreFmtDebug.fmt node formatter
 
 @[rust_fun "noble_kernel::untrusted::{core::cmp::PartialEq<noble_kernel::untrusted::NodeId, noble_kernel::untrusted::NodeId>}::eq"]
 def noble_kernel.untrusted.NodeId.Insts.CoreCmpPartialEqNodeId.eq
