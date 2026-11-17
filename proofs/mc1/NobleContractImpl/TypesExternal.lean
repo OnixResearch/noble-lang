@@ -166,12 +166,12 @@ structure source.chunks.ObserverHandle where
 
 /-- `RankerHandle<'a>(&'a mut dyn CandidateRanker)`. `scored` counts the
 `score` calls so far; the scorer state after them answers `model_identity`
-and `provenance_matches` (an `&self` call, applied to the image of the
-`RankingIdentity`), and `replies` is the prophecy sequence of `score`
-results. -/
+(`identities`) and `provenance_matches` (`provenance`, an `&self` call,
+applied to the image of the `RankingIdentity`), and `replies` is the prophecy
+sequence of `score` results. -/
 @[rust_type "noble_contracts::source::chunks::RankerHandle"]
 structure source.chunks.RankerHandle where
-  model_identity : Nat → Result (Array U8 32#usize)
+  identities : Nat → Result (Array U8 32#usize)
   provenance : Nat → HostPlugin.Value → Result Bool
   replies : Nat → Result HostPlugin.ScoreReply
   scored : Nat
@@ -186,11 +186,11 @@ structure source.chunks.MonotonicClock where
   taken : Nat
 
 /-- `OwnerVerifier(Box<dyn EvidenceVerifier>)`. Every call is `&self`, so the
-verifier is a fixed function of the images of the procedure record and the
-claim, and its `Debug` result under the abstract Aeneas formatter. -/
+verifier is a fixed function `attest` of the images of the procedure record
+and the claim, and its `Debug` result under the abstract Aeneas formatter. -/
 @[rust_type "noble_contracts::source::procedures::acceptance::OwnerVerifier"]
 structure source.procedures.acceptance.OwnerVerifier where
-  verify : HostPlugin.Value → HostPlugin.Value →
+  attest : HostPlugin.Value → HostPlugin.Value →
     Result (Option HostPlugin.AttestationReply)
   debug : Result (core.result.Result Unit core.fmt.Error)
 
