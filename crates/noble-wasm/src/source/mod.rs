@@ -104,7 +104,7 @@ const fn declared_builtin_count(env: &noble_kernel::contracts::Env) -> u32 {
     23
 }
 
-struct Work {
+pub(crate) struct Work {
     // Spent is always issued - remaining; both the original caller budget
     // and every selected allowance stay in the same cumulative ledger.
     remaining: u64,
@@ -123,6 +123,41 @@ struct Work {
     reason = "Owner: noble-maintainers; the budget belongs to one private preparation and tracks consumed work without modifying the borrowed submission or published compiler."
 )]
 impl Work {
+    /// The ledger of ordinary, unmetered interning. It cannot refuse: with
+    /// both calculator flags clear, `charge` only subtracts the visited
+    /// amount from `remaining`, every `usize` count fits in `u64`, and one
+    /// interning call visits fewer than `u64::MAX` entries in total, because
+    /// each charge is bounded by the in-memory keys and bytes it actually
+    /// visits.
+    pub(crate) const fn unmetered() -> Self {
+        Self {
+            remaining: u64::MAX,
+            issued: 0,
+            calculator_preflight: false,
+            calculator_plan: false,
+            max_type_nodes: 0,
+        }
+    }
+
+    /// An ordinary ledger holding exactly `remaining` units, for tests that
+    /// charge or exhaust a small budget.
+    #[cfg(test)]
+    pub(crate) const fn limited(remaining: u64) -> Self {
+        Self {
+            remaining,
+            issued: remaining,
+            calculator_preflight: false,
+            calculator_plan: false,
+            max_type_nodes: 0,
+        }
+    }
+
+    /// The units still unspent, for tests that observe what was charged.
+    #[cfg(test)]
+    pub(crate) const fn remaining(&self) -> u64 {
+        self.remaining
+    }
+
     const fn charge(&mut self, amount: u64) -> Result<(), crate::Diagnostic> {
         if self.calculator_preflight && amount != 0 {
             // No owned kernel clone can begin until the complete borrowed
@@ -159,11 +194,7 @@ impl Work {
         Ok(())
     }
 
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-maintainers; charging a platform-sized entry count uses non-const TryFrom and preserves Exhausted when the count cannot fit the u64 work meter."
-    )]
-    fn entries(&mut self, count: usize) -> Result<(), crate::Diagnostic> {
+    pub(crate) fn entries(&mut self, count: usize) -> Result<(), crate::Diagnostic> {
         match u64::try_from(count) {
             Ok(count) => self.charge(count),
             Err(_) => Err(crate::Diagnostic::Exhausted),
@@ -174,18 +205,6 @@ impl Work {
         if nodes > self.max_type_nodes {
             self.max_type_nodes = nodes;
         }
-    }
-}
-
-// The signature pool charges every key comparison and byte it actually
-// visits to the preparation's own budget, in visit order.
-#[expect(
-    tigerstyle::mutating_input_in_pure,
-    reason = "Owner: noble-maintainers; the budget belongs to one private preparation and tracks consumed work without modifying the borrowed submission or published compiler."
-)]
-impl crate::signatures::Meter for Work {
-    fn visit(&mut self, count: usize) -> Result<(), crate::Diagnostic> {
-        self.entries(count)
     }
 }
 
