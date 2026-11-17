@@ -254,10 +254,6 @@ fn binding<'a>(
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
 )]
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
-)]
 fn reference(text: &str, logical_target: bool) -> bool {
     let Some((scope, local)) = crate::scan::split_once_byte(text, b'.') else {
         return reference_name(text, logical_target);
