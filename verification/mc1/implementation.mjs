@@ -74,6 +74,41 @@ function identicalEntry(actual, expected) {
     .filter(line => line.trim() && !line.trimStart().startsWith('--')).join('\n');
   if (imports(actual) !== imports(expected)) throw Error(`changed generated entrypoint: ${expected}`);
 }
+// The reviewed crate-local opaque functions of the contracts subject (#97), each
+// with the Lean model that replaces its body and why the model is faithful.
+// The extraction must report exactly these Rust names as local and opaque.
+const reviewedContractsOpaque = [
+  { rust: 'noble_contracts::intrinsic::debug_form_kind',
+    model: 'proofs/mc1/NobleContractImpl/FunsExternal.lean intrinsic.debug_form_kind',
+    reason: 'Derived-Debug rendering of FormKind, opaque only to break the Form/FormKind trait-impl cycle Aeneas refuses; in the formatter model every write and every composed leaf Debug succeeds and returns the formatter, so the model is that successful step (as the five kernel debug helpers).' },
+  { rust: 'noble_contracts::intrinsic::debug_proof_dependency',
+    model: 'proofs/mc1/NobleContractImpl/FunsExternal.lean intrinsic.debug_proof_dependency',
+    reason: 'Derived-Debug rendering of ProofDependency, opaque only because a transparent body formats Vec<ProofDependency> through the instance it defines; same formatter-model step.' },
+  { rust: 'noble_contracts::source::editor::debug_node',
+    model: 'proofs/mc1/NobleContractImpl/FunsExternal.lean source.editor.debug_node',
+    reason: 'Derived-Debug rendering of editor Node, opaque only because Quotation formats nested nodes through the instance it defines; same formatter-model step.' },
+  { rust: "noble_contracts::source::chunks::{noble_contracts::source::chunks::ObserverHandle<'_0>}::observe",
+    model: 'proofs/mc1/NobleContractImpl/FunsExternal.lean source.chunks.ObserverHandle.observe',
+    reason: 'Calls the caller-owned dyn FnMut observer, which the Rust source does not determine; the handle carries the host as a prophecy sequence of call results, so every observer is represented.' },
+  { rust: "noble_contracts::source::chunks::{noble_contracts::source::chunks::RankerHandle<'_0>}::model_identity",
+    model: 'proofs/mc1/NobleContractImpl/FunsExternal.lean source.chunks.RankerHandle.model_identity',
+    reason: 'Calls the host dyn CandidateRanker (&self); the handle carries the answer for each scorer state.' },
+  { rust: "noble_contracts::source::chunks::{noble_contracts::source::chunks::RankerHandle<'_0>}::provenance_matches",
+    model: 'proofs/mc1/NobleContractImpl/FunsExternal.lean source.chunks.RankerHandle.provenance_matches',
+    reason: 'Calls the host dyn CandidateRanker (&self); the handle carries the answer as a function of the scorer state and of an injective image of the RankingIdentity.' },
+  { rust: "noble_contracts::source::chunks::{noble_contracts::source::chunks::RankerHandle<'_0>}::score",
+    model: 'proofs/mc1/NobleContractImpl/FunsExternal.lean source.chunks.RankerHandle.score',
+    reason: 'Calls the host dyn CandidateRanker (&mut self); the handle carries the prophecy sequence of replies, so every scorer is represented.' },
+  { rust: 'noble_contracts::source::chunks::{noble_contracts::source::chunks::MonotonicClock}::now_ns',
+    model: 'proofs/mc1/NobleContractImpl/FunsExternal.lean source.chunks.MonotonicClock.now_ns',
+    reason: 'Calls the host fn() -> u64 clock, whose readings the Rust source does not determine; the handle carries the prophecy sequence of readings.' },
+  { rust: 'noble_contracts::source::procedures::acceptance::{noble_contracts::source::procedures::acceptance::OwnerVerifier}::verify',
+    model: 'proofs/mc1/NobleContractImpl/FunsExternal.lean source.procedures.acceptance.OwnerVerifier.verify',
+    reason: "Calls the owner's dyn EvidenceVerifier (&self); the handle carries the answer as a function of injective images of the record and the claim." },
+  { rust: 'noble_contracts::source::procedures::acceptance::{impl core::fmt::Debug for noble_contracts::source::procedures::acceptance::OwnerVerifier}::fmt',
+    model: 'proofs/mc1/NobleContractImpl/FunsExternal.lean source.procedures.acceptance.OwnerVerifier.Insts.CoreFmtDebug.fmt',
+    reason: "Formats through the owner's boxed verifier; the handle carries that Debug result under the abstract formatter." },
+];
 function extract(label, manifest, basename, checkedDirectory, allowedOpaque) {
   const directory = path.join(artifacts, label);
   fs.mkdirSync(directory);
@@ -117,7 +152,7 @@ try {
       'noble_kernel::shapes::impls::debug_slots',
     ]);
   const contracts = extract('contracts', 'crates/noble-contracts/Cargo.toml', 'noble_contract_impl',
-    'proofs/mc1/NobleContractImpl', []);
+    'proofs/mc1/NobleContractImpl', reviewedContractsOpaque.map(entry => entry.rust));
   const proofRoot = path.join(root, 'proofs/mc1');
   run('lean-build', tool('lean', 'lake'), ['build', 'NobleContracts',
     'NobleContractImpl.Projection', 'NobleContractImpl.Statement'], proofRoot);
@@ -135,19 +170,34 @@ try {
     .map(line => JSON.parse(line.slice(prefix.length)));
   const [implementation, ...extra] = records('MC1-IMPLEMENTATION ');
   const statements = records('MC1-SOURCE-EQUATION ');
-  if (!implementation || extra.length || implementation.strict_theorems !== 61 || statements.length !== 6) {
+  const literalSize = records('MC1-LITERAL-SIZE ');
+  // 31 bridge types (the #97 port added GenericVariantDecl, the three bound
+  // registrations and LiveSite) with both round trips, plus nine named theorems.
+  if (!implementation || extra.length || implementation.strict_theorems !== 71 || statements.length !== 6) {
     throw Error('incomplete compiled implementation theorem audit');
+  }
+  // Only the linked kernel checker reaches the generated literal-size axioms; they
+  // are reported apart from the strict axioms, and the in-gate controls refused
+  // the forged type and the foreign owner.
+  if (literalSize.some(record => record.theorem !== 'noble_contracts.KernelBridge.check_from_inputs') ||
+      JSON.stringify(literalSize.flatMap(record => record.axioms).sort()) !==
+        JSON.stringify([...implementation.literal_size_axioms].sort()) ||
+      !implementation.literal_size_controls?.refused_contracts_owner) {
+    throw Error('unreviewed generated literal-size admission');
   }
   if (JSON.stringify(snapshot()) !== JSON.stringify(sourceFiles)) throw Error('source changed during proof gate');
   const evidence = { schema_version: 1, result: 'passed', scope: 'mc1-statement-export-v1',
     source_revision: `sha256:${sha(JSON.stringify(sourceFiles))}`, source_files: sourceFiles,
-    versions, commands, kernel, contracts, implementation, statements,
+    versions, commands, kernel, contracts, local_opaque_reviews: reviewedContractsOpaque,
+    implementation, literal_size: literalSize, statements,
     assumptions: [
       'Pinned Charon/Aeneas translation and handwritten standard-library models are explicit trust boundaries.',
       'Inherited local opaque copy/format helpers are exactly the five enumerated kernel boundaries.',
+      'The contracts subject has exactly the ten reviewed local opaque functions: three derived-Debug helpers modelled in the formatter abstraction, and seven host plug-in calls answered by host behaviour the handle carries (prophecy sequences for &mut calls, functions of injective argument images for &self calls).',
       'Allocation identity, spare capacity, allocator failure, and formatting layout are abstracted by the inherited models.',
+      'Models without a faithful value fail rather than guess: core::mem::size_of, Cell::set (shared mutation) and Arc::ptr_eq (allocation identity); no ok result is derived through them.',
       'Generated string-bound proofs and six closed source equations use the separately listed native-evaluation axioms.',
-      'The 61 universal bridge/projection theorems and 43 application/rule theorems use strict standard axioms only.',
+      'The 71 universal bridge/projection theorems use strict standard axioms, except that check_from_inputs also uses the separately listed generated literal-size axioms of the linked kernel checker; the 43 application/rule theorems use strict standard axioms only.',
       'This is a named source-export fragment, not universal frontend/exporter or runtime correctness.',
     ] };
   fs.writeFileSync(path.join(artifacts, 'implementation.json'), JSON.stringify(evidence, null, 2) + '\n');
