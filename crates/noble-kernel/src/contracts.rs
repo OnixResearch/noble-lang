@@ -714,33 +714,43 @@ pub fn checked_i64_environment() -> Result<Env, crate::shapes::Defect> {
         )),
         alloc::boxed::Box::new(crate::shapes::Pattern::I64),
     );
-    let binary = |output: crate::shapes::Pattern| crate::words::Scheme {
-        var_kinds: alloc::vec![crate::words::VariableKind::Stack],
-        stack_in: alloc::vec![
-            tail.clone(),
-            crate::shapes::Pattern::I64,
-            crate::shapes::Pattern::I64
-        ],
-        stack_out: alloc::vec![tail.clone(), output],
-        effects: alloc::vec![],
-    };
-    let unary = |output: crate::shapes::Pattern| crate::words::Scheme {
-        var_kinds: alloc::vec![crate::words::VariableKind::Stack],
-        stack_in: alloc::vec![tail.clone(), crate::shapes::Pattern::I64],
-        stack_out: alloc::vec![tail.clone(), output],
-        effects: alloc::vec![],
-    };
+    fn binary(
+        tail: &crate::shapes::Pattern,
+        output: crate::shapes::Pattern,
+    ) -> crate::words::Scheme {
+        crate::words::Scheme {
+            var_kinds: alloc::vec![crate::words::VariableKind::Stack],
+            stack_in: alloc::vec![
+                (*tail).clone(),
+                crate::shapes::Pattern::I64,
+                crate::shapes::Pattern::I64
+            ],
+            stack_out: alloc::vec![(*tail).clone(), output],
+            effects: alloc::vec![],
+        }
+    }
+    fn unary(
+        tail: &crate::shapes::Pattern,
+        output: crate::shapes::Pattern,
+    ) -> crate::words::Scheme {
+        crate::words::Scheme {
+            var_kinds: alloc::vec![crate::words::VariableKind::Stack],
+            stack_in: alloc::vec![(*tail).clone(), crate::shapes::Pattern::I64],
+            stack_out: alloc::vec![(*tail).clone(), output],
+            effects: alloc::vec![],
+        }
+    }
     let operations = [
-        (Behavior::CheckedI64Add, binary(result.clone())),
-        (Behavior::CheckedI64Sub, binary(result.clone())),
-        (Behavior::CheckedI64Mul, binary(result.clone())),
-        (Behavior::CheckedI64Neg, unary(result.clone())),
-        (Behavior::CheckedI64Abs, unary(result)),
+        (Behavior::CheckedI64Add, binary(&tail, result.clone())),
+        (Behavior::CheckedI64Sub, binary(&tail, result.clone())),
+        (Behavior::CheckedI64Mul, binary(&tail, result.clone())),
+        (Behavior::CheckedI64Neg, unary(&tail, result.clone())),
+        (Behavior::CheckedI64Abs, unary(&tail, result)),
         (
             Behavior::CheckedI64Less,
-            binary(crate::shapes::Pattern::Bool),
+            binary(&tail, crate::shapes::Pattern::Bool),
         ),
-        (Behavior::CheckedI64DivRem, binary(div_rem_result)),
+        (Behavior::CheckedI64DivRem, binary(&tail, div_rem_result)),
     ];
     env.deps
         .extend(alloc::vec![alloc::vec::Vec::new(); operations.len()]);
