@@ -66,30 +66,33 @@ impl super::ModuleSession {
         if context.module_generation != self.generation {
             return Err(Refusal::StaleContext);
         }
-        let mut modules = self
-            .modules
-            .iter()
-            .filter(|entry| entry.name == module_name && entry.version == version);
-        let module = modules.next().ok_or(Refusal::MissingEvidence)?;
-        if modules.next().is_some() {
+        // Each selector must name exactly one entry: the first match is
+        // used, and any later match makes the selection ambiguous.
+        let is_module =
+            |entry: &super::super::Module| entry.name == module_name && entry.version == version;
+        let module_at =
+            super::position_first(&self.modules, is_module).ok_or(Refusal::MissingEvidence)?;
+        let later_modules = &self.modules[module_at.saturating_add(1)..];
+        if super::position_first(later_modules, is_module).is_some() {
             return Err(Refusal::MismatchedSource);
         }
-        let mut contracts = module
-            .contracts
-            .iter()
-            .filter(|entry| entry.name == contract_name);
-        let contract = contracts.next().ok_or(Refusal::MissingEvidence)?;
-        if contracts.next().is_some() {
+        let module = &self.modules[module_at];
+        let is_contract = |entry: &super::super::LogicalContract| entry.name == contract_name;
+        let contract_at = super::position_first(&module.contracts, is_contract)
+            .ok_or(Refusal::MissingEvidence)?;
+        let later_contracts = &module.contracts[contract_at.saturating_add(1)..];
+        if super::position_first(later_contracts, is_contract).is_some() {
             return Err(Refusal::MismatchedClaim);
         }
-        let mut proofs = module
-            .proofs
-            .iter()
-            .filter(|entry| entry.reference.name == proof_name);
-        let proof = proofs.next().ok_or(Refusal::MissingEvidence)?;
-        if proofs.next().is_some() {
+        let contract = &module.contracts[contract_at];
+        let is_proof = |entry: &super::super::PublishedProof| entry.reference.name == proof_name;
+        let proof_at =
+            super::position_first(&module.proofs, is_proof).ok_or(Refusal::MissingEvidence)?;
+        let later_proofs = &module.proofs[proof_at.saturating_add(1)..];
+        if super::position_first(later_proofs, is_proof).is_some() {
             return Err(Refusal::MismatchedClaim);
         }
+        let proof = &module.proofs[proof_at];
         let goal = &contract.goal;
         let crate::intrinsic::PendingGoal::Contract { contract: bound } =
             &proof.reference.declaration.goal
@@ -148,9 +151,10 @@ impl super::ModuleSession {
             return Err(Refusal::MismatchedSource);
         }
         let accepted = &goal.subject.accepted_submission;
-        let [defined] = accepted.definitions.as_slice() else {
+        if accepted.definitions.len() != 1 {
             return Err(Refusal::MismatchedDefinition);
-        };
+        }
+        let defined = &accepted.definitions[0];
         if defined.identity != goal.subject.definition_identity
             || goal.subject.input_types != body.interface.stack_in
             || goal.subject.output_types != body.interface.stack_out

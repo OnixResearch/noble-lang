@@ -300,17 +300,23 @@ impl super::super::ModuleSession {
         words = attempt!(append_alias_exports(self, words));
         words = attempt!(append_versioned_exports(self, words, permit_signed));
         let mut aliases = alloc::vec::Vec::with_capacity(self.aliases.len());
-        for alias in &self.aliases {
-            if alias.pending {
-                continue;
+        let mut is_owned = true;
+        let mut alias_slot = 0usize;
+        while is_owned && alias_slot < self.aliases.len() {
+            let alias = &self.aliases[alias_slot];
+            if !alias.pending {
+                match self.modules.get(alias.module) {
+                    Some(module) => aliases.push((alias.spelling.clone(), module.identity)),
+                    None => is_owned = false,
+                }
             }
-            let module = self.modules.get(alias.module).ok_or_else(|| {
-                super::super::super::error(
-                    crate::source::Stage::Check,
-                    "checked alias has no immutable module owner",
-                )
-            })?;
-            aliases.push((alias.spelling.clone(), module.identity));
+            alias_slot += 1;
+        }
+        if !is_owned {
+            return Err(super::super::super::error(
+                crate::source::Stage::Check,
+                "checked alias has no immutable module owner",
+            ));
         }
         if let Some(context) = &mut self.source.declared {
             context.owner = None;

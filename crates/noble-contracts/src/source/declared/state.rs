@@ -312,17 +312,17 @@ impl ModulePrepared {
         }
         let module = self.staged.modules.last()?;
         let environment = &self.staged.source.declared.as_ref()?.environment;
-        Some(
-            environment
-                .nominals
-                .iter()
-                .filter(|declaration| declaration.id.module == module.identity)
-                .map(move |declaration| CheckedNominal {
+        let mut nominals = alloc::vec::Vec::with_capacity(environment.nominals.len());
+        for declaration in &environment.nominals {
+            if declaration.id.module == module.identity {
+                nominals.push(CheckedNominal {
                     declaration,
                     module_identity: module.identity,
                     module_version: module.version,
-                }),
-        )
+                });
+            }
+        }
+        Some(nominals.into_iter())
     }
 
     /// This owner comes from an exported, matching module-owned checked
@@ -363,13 +363,12 @@ impl ModulePrepared {
         module: &super::Module,
         name: &str,
     ) -> Option<CheckedProgramOwner> {
-        let ordinal = module
-            .definition_spans
-            .iter()
-            .position(|definition| definition.name == name)?;
-        let exported = module.exports.iter().find(|entry| entry.name == name)?;
+        let ordinal = position_first(&module.definition_spans, |definition| {
+            definition.name == name
+        })?;
+        let exported = crate::scan::find_first(&module.exports, |entry| entry.name == name)?;
         let (_, crate::source::Target::Named(index)) =
-            exported.words.iter().find(|(word, _)| word == name)?
+            crate::scan::find_first(&exported.words, |(word, _)| word == name)?
         else {
             return None;
         };
@@ -433,12 +432,10 @@ impl ModulePrepared {
         {
             return Err(ProgramClosureError::Invalid);
         }
-        let module = self
-            .staged
-            .modules
-            .iter()
-            .find(|module| module.identity == module_identity)
-            .ok_or(ProgramClosureError::Invalid)?;
+        let module = crate::scan::find_first(&self.staged.modules, |module| {
+            module.identity == module_identity
+        })
+        .ok_or(ProgramClosureError::Invalid)?;
         let selected = self.selected_dependency_modules(module_identity, dependencies)?;
         let owner = self
             .checked_program_owner_source(module, root)
@@ -450,26 +447,32 @@ impl ModulePrepared {
         Ok((owner, closure))
     }
 
-    /// Distinct committed modules other than the root, in selection order.
+    /// Distinct committed modules other than the root, in selection order, as
+    /// indices of the first staged module with each selected identity.
     fn selected_dependency_modules(
         &self,
         root_module: u64,
         dependencies: &[u64],
-    ) -> Result<alloc::vec::Vec<&super::Module>, ProgramClosureError> {
+    ) -> Result<alloc::vec::Vec<usize>, ProgramClosureError> {
         let mut selected = alloc::vec::Vec::with_capacity(dependencies.len());
-        for (at, identity) in dependencies.iter().enumerate() {
-            if *identity == root_module || dependencies[..at].contains(identity) {
-                return Err(ProgramClosureError::Invalid);
+        let mut is_valid = true;
+        let mut at = 0usize;
+        while is_valid && at < dependencies.len() {
+            let identity = dependencies[at];
+            is_valid = identity != root_module && !dependencies[..at].contains(&identity);
+            if is_valid {
+                match position_first(&self.staged.modules, |module| module.identity == identity) {
+                    Some(index) => selected.push(index),
+                    None => is_valid = false,
+                }
             }
-            let module = self
-                .staged
-                .modules
-                .iter()
-                .find(|module| module.identity == *identity)
-                .ok_or(ProgramClosureError::Invalid)?;
-            selected.push(module);
+            at += 1;
         }
-        Ok(selected)
+        if is_valid {
+            Ok(selected)
+        } else {
+            Err(ProgramClosureError::Invalid)
+        }
     }
 
     /// Only a closed source graph that actually invokes the exact selected
@@ -512,33 +515,42 @@ impl ModulePrepared {
         }
     }
 
-    #[expect(
-        tigerstyle::missing_const_fn,
-        reason = "Owner: noble-contracts; iterator adapters and slice comparisons in the body are not const."
-    )]
     fn closure_invokes_bound(
         &self,
         closure: &[CheckedProgramOwner],
         bound: noble_kernel::contracts::Definition,
     ) -> bool {
-        closure.iter().any(|member| {
-            usize::try_from(member.definition_slot)
-                .ok()
-                .and_then(|slot| self.staged.source.definitions.get(slot))
-                .is_some_and(|definition| {
-                    definition.tree.nodes.iter().any(|node| {
-                        matches!(node.kind,
-                        crate::source::Kind::Call(crate::source::Target::Builtin(target))
-                            if target == bound.0)
-                    })
-                })
-        })
+        let mut is_invoked = false;
+        let mut at = 0usize;
+        while !is_invoked && at < closure.len() {
+            is_invoked = self.member_invokes_bound(&closure[at], bound);
+            at += 1;
+        }
+        is_invoked
+    }
+
+    #[expect(
+        tigerstyle::missing_const_fn,
+        reason = "Owner: noble-contracts; iterator adapters and slice comparisons in the body are not const."
+    )]
+    /// Whether one closure member's definition calls the bound builtin.
+    fn member_invokes_bound(
+        &self,
+        member: &CheckedProgramOwner,
+        bound: noble_kernel::contracts::Definition,
+    ) -> bool {
+        let Ok(slot) = usize::try_from(member.definition_slot) else {
+            return false;
+        };
+        match self.staged.source.definitions.get(slot) {
+            Some(definition) => calls_builtin(definition, bound.0),
+            None => false,
+        }
     }
 
     #[expect(
         tigerstyle::compound_condition,
-        tigerstyle::platform_dependent_cast,
-        reason = "Owner: noble-contracts; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation; usize is at least 32 bits on every supported target, so the u32-to-usize widening is lossless."
+        reason = "Owner: noble-contracts; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
     )]
     fn checked_bound_adapter(
         &self,
@@ -558,38 +570,35 @@ impl ModulePrepared {
             return None;
         }
         let environment = &self.staged.source.declared.as_ref()?.environment;
-        let mut matching = environment.bound_adapters.iter().filter(|adapter| {
-            adapter.adapter_slot == binding.adapter_slot
-                && adapter.adapter_identity == binding.adapter_identity
-                && adapter.input == binding.input
-                && adapter.output == binding.output
-                && adapter.effects.as_slice() == binding.effects.as_slice()
-                && environment
-                    .definition_owners
-                    .get(adapter.definition.0 as usize)
-                    == Some(&Some(module.identity))
-                && (matches!(environment.kind(adapter.definition),
-                    Some(noble_kernel::contracts::Behavior::BoundEmit(slot))
-                        if slot == binding.adapter_slot
-                            && binding.operation == "test.emit")
-                    || matches!(environment.kind(adapter.definition),
-                        Some(noble_kernel::contracts::Behavior::BoundCodeExport(slot))
-                            if slot == binding.adapter_slot
-                                && binding.operation == "test.code-export")
-                    || matches!(environment.kind(adapter.definition),
-                        Some(noble_kernel::contracts::Behavior::BoundSend(slot))
-                            if slot == binding.adapter_slot
-                                && binding.operation == "test.send"))
-        });
-        let adapter = matching.next()?;
-        matching.next().is_none().then_some(adapter)
+        // Exactly one adapter row may match: a second one is ambiguous.
+        let mut matched = None;
+        let mut is_ambiguous = false;
+        let mut at = 0usize;
+        while !is_ambiguous && at < environment.bound_adapters.len() {
+            if adapter_matches(
+                environment,
+                &environment.bound_adapters[at],
+                binding,
+                module.identity,
+            ) {
+                is_ambiguous = matched.is_some();
+                if !is_ambiguous {
+                    matched = Some(at);
+                }
+            }
+            at += 1;
+        }
+        if is_ambiguous {
+            return None;
+        }
+        environment.bound_adapters.get(matched?)
     }
 
     fn checked_program_closure_source(
         &self,
         module: &super::Module,
         owner: &CheckedProgramOwner,
-        dependencies: &[&super::Module],
+        dependencies: &[usize],
     ) -> Result<alloc::vec::Vec<CheckedProgramOwner>, ProgramClosureError> {
         if module.definition_spans.is_empty() {
             return Err(ProgramClosureError::Invalid);
@@ -597,9 +606,8 @@ impl ModulePrepared {
         // The closure traversal is bounded by the module definition cap that
         // admission enforces, not by the module *count* cap; a module at its
         // legal definition cap still closes.
-        if core::iter::once(module)
-            .chain(dependencies.iter().copied())
-            .any(|selected| selected.definition_spans.len() > super::CONSTRUCTOR_CAP)
+        if module.definition_spans.len() > super::CONSTRUCTOR_CAP
+            || self.dependency_over_cap(dependencies)
         {
             return Err(ProgramClosureError::Exhausted);
         }
@@ -607,22 +615,64 @@ impl ModulePrepared {
         let (visited, meter) = self.closure_walk(module, owner, dependencies, meter)?;
         // Every root-module definition is reachable; a selected dependency
         // module contributes exactly its reached definitions, and at least one.
-        let (mut closure, unreached, mut meter) = self.reached_rows(module, &visited, meter)?;
+        let (meter, rows) = self.reached_rows(module, &visited, meter);
+        let (closure, unreached) = rows?;
         if unreached != 0 {
             return Err(ProgramClosureError::Invalid);
         }
-        for dependency in dependencies {
-            let (rows, _, next) = self.reached_rows(dependency, &visited, meter)?;
-            meter = next;
-            if rows.is_empty() {
-                return Err(ProgramClosureError::Invalid);
-            }
-            closure.extend(rows);
-        }
-        if visited.iter().filter(|seen| **seen).count() == closure.len() {
+        let closure = self.dependency_rows(dependencies, &visited, meter, closure)?;
+        if reached_count(&visited) == closure.len() {
             Ok(closure)
         } else {
             Err(ProgramClosureError::Invalid)
+        }
+    }
+
+    /// Whether a selected dependency module exceeds the definition cap,
+    /// checked in selection order.
+    fn dependency_over_cap(&self, dependencies: &[usize]) -> bool {
+        let mut is_over = false;
+        let mut at = 0usize;
+        while !is_over && at < dependencies.len() {
+            is_over = self.staged.modules[dependencies[at]].definition_spans.len()
+                > super::CONSTRUCTOR_CAP;
+            at += 1;
+        }
+        is_over
+    }
+
+    /// Appends each selected dependency module's reached rows in selection
+    /// order; a selected module that contributes no reached row fails closed.
+    fn dependency_rows(
+        &self,
+        dependencies: &[usize],
+        visited: &[bool],
+        meter: crate::Meter,
+        closure: alloc::vec::Vec<CheckedProgramOwner>,
+    ) -> Result<alloc::vec::Vec<CheckedProgramOwner>, ProgramClosureError> {
+        let mut meter = meter;
+        let mut closure = closure;
+        let mut failure = None;
+        let mut at = 0usize;
+        while failure.is_none() && at < dependencies.len() {
+            let dependency = &self.staged.modules[dependencies[at]];
+            let (next, rows) = self.reached_rows(dependency, visited, meter);
+            meter = next;
+            match rows {
+                Ok((rows, _)) => {
+                    if rows.is_empty() {
+                        failure = Some(ProgramClosureError::Invalid);
+                    } else {
+                        closure.extend(rows);
+                    }
+                }
+                Err(error) => failure = Some(error),
+            }
+            at += 1;
+        }
+        match failure {
+            Some(error) => Err(error),
+            None => Ok(closure),
         }
     }
 
@@ -633,65 +683,73 @@ impl ModulePrepared {
         &self,
         module: &super::Module,
         owner: &CheckedProgramOwner,
-        dependencies: &[&super::Module],
+        dependencies: &[usize],
         meter: crate::Meter,
     ) -> Result<(alloc::vec::Vec<bool>, crate::Meter), ProgramClosureError> {
-        let mut meter = meter;
         let named = &self.staged.source.definitions;
         let root_index =
             usize::try_from(owner.definition_slot).map_err(|_| ProgramClosureError::Invalid)?;
-        let mut visited = alloc::vec![false; named.len()];
-        let mut enqueued = alloc::vec![false; named.len()];
-        let mut pending = alloc::vec![root_index];
-        *enqueued
+        let mut walk = ClosureWalk {
+            meter,
+            visited: alloc::vec![false; named.len()],
+            enqueued: alloc::vec![false; named.len()],
+            pending: alloc::vec![root_index],
+        };
+        *walk
+            .enqueued
             .get_mut(root_index)
             .ok_or(ProgramClosureError::Invalid)? = true;
-        while let Some(index) = pending.pop() {
-            let definition = named.get(index).ok_or(ProgramClosureError::Invalid)?;
-            let owning = closure_owner(module, dependencies, definition.owner)
-                .ok_or(ProgramClosureError::Invalid)?;
-            if definition.signed.is_some()
-                && !owning
-                    .verified_signed_slots
-                    .contains(&u32::try_from(index).map_err(|_| ProgramClosureError::Invalid)?)
-            {
-                return Err(ProgramClosureError::Invalid);
-            }
-            if visited[index] {
-                continue;
-            }
-            visited[index] = true;
-            for node in &definition.tree.nodes {
-                meter
-                    .charge(1, node.span)
-                    .map_err(|_| ProgramClosureError::Exhausted)?;
-                match &node.kind {
-                    crate::source::Kind::Call(crate::source::Target::Named(target)) => {
-                        let next =
-                            usize::try_from(*target).map_err(|_| ProgramClosureError::Invalid)?;
-                        if !*enqueued.get(next).ok_or(ProgramClosureError::Invalid)? {
-                            enqueued[next] = true;
-                            pending.push(next);
-                        }
-                    }
-                    // A scoped recursive call is admitted only inside its own
-                    // verified signed owner; it adds no edge to the closure.
-                    crate::source::Kind::Call(crate::source::Target::SelfOwner) => {
-                        let is_own_owner = definition.signed.as_ref().is_some_and(|relation| {
-                            usize::try_from(relation.source_slot).ok() == Some(index)
-                        });
-                        if !is_own_owner {
-                            return Err(ProgramClosureError::Invalid);
-                        }
-                    }
-                    crate::source::Kind::Call(crate::source::Target::SlotInvoke(_)) => {
-                        return Err(ProgramClosureError::Unsupported)
-                    }
-                    _ => {}
-                }
-            }
+        let mut outcome = Ok(());
+        while outcome.is_ok() {
+            let Some(index) = walk.pending.pop() else {
+                break;
+            };
+            outcome = self.closure_step(module, dependencies, index, &mut walk);
         }
-        Ok((visited, meter))
+        outcome?;
+        Ok((walk.visited, walk.meter))
+    }
+
+    /// Visits one pending definition: its owner must be the root or a
+    /// selected module, which must have verified a signed slot, and each of
+    /// its nodes is charged and followed once.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    fn closure_step(
+        &self,
+        module: &super::Module,
+        dependencies: &[usize],
+        index: usize,
+        walk: &mut ClosureWalk,
+    ) -> Result<(), ProgramClosureError> {
+        let definition = self
+            .staged
+            .source
+            .definitions
+            .get(index)
+            .ok_or(ProgramClosureError::Invalid)?;
+        let owning = closure_owner(&self.staged.modules, module, dependencies, definition.owner)
+            .ok_or(ProgramClosureError::Invalid)?;
+        if definition.signed.is_some()
+            && !owning
+                .verified_signed_slots
+                .contains(&u32::try_from(index).map_err(|_| ProgramClosureError::Invalid)?)
+        {
+            return Err(ProgramClosureError::Invalid);
+        }
+        if walk.visited[index] {
+            return Ok(());
+        }
+        walk.visited[index] = true;
+        let mut outcome = Ok(());
+        let mut at = 0usize;
+        while outcome.is_ok() && at < definition.tree.nodes.len() {
+            outcome = walk.follow(definition, index, &definition.tree.nodes[at]);
+            at += 1;
+        }
+        outcome
     }
 
     /// Rows for `module`'s reached definitions in ordinal order, and how many
@@ -701,37 +759,59 @@ impl ModulePrepared {
         module: &super::Module,
         visited: &[bool],
         meter: crate::Meter,
-    ) -> Result<(alloc::vec::Vec<CheckedProgramOwner>, usize, crate::Meter), ProgramClosureError>
-    {
+    ) -> (
+        crate::Meter,
+        Result<(alloc::vec::Vec<CheckedProgramOwner>, usize), ProgramClosureError>,
+    ) {
         let mut meter = meter;
-        let named = &self.staged.source.definitions;
         let mut closure = alloc::vec::Vec::with_capacity(module.definition_spans.len());
         let mut unreached = 0usize;
-        for (ordinal, entry) in module.definition_spans.iter().enumerate() {
-            meter
-                .charge(1, super::SPAN)
-                .map_err(|_| ProgramClosureError::Exhausted)?;
-            let index = named
-                .iter()
-                .position(|definition| {
-                    definition.name == entry.name && definition.owner == Some(module.identity)
-                })
-                .ok_or(ProgramClosureError::Invalid)?;
-            if !*visited.get(index).ok_or(ProgramClosureError::Invalid)? {
-                unreached = unreached.saturating_add(1);
-                continue;
+        let mut failure = None;
+        let mut ordinal = 0usize;
+        while failure.is_none() && ordinal < module.definition_spans.len() {
+            if meter.charge(1, super::SPAN).is_err() {
+                failure = Some(ProgramClosureError::Exhausted);
+            } else {
+                match self.reached_row(module, visited, ordinal) {
+                    Ok(Some(row)) => closure.push(row),
+                    Ok(None) => unreached = unreached.saturating_add(1),
+                    Err(error) => failure = Some(error),
+                }
             }
-            closure.push(CheckedProgramOwner {
-                module_identity: module.identity,
-                module_version: module.version,
-                definition_ordinal: u32::try_from(ordinal)
-                    .map_err(|_| ProgramClosureError::Invalid)?,
-                definition_identity: named[index].identity,
-                definition_slot: u32::try_from(index).map_err(|_| ProgramClosureError::Invalid)?,
-                recursive: calls_self(&named[index]),
-            });
+            ordinal += 1;
         }
-        Ok((closure, unreached, meter))
+        let rows = match failure {
+            Some(error) => Err(error),
+            None => Ok((closure, unreached)),
+        };
+        (meter, rows)
+    }
+
+    /// The row for the module definition at `ordinal`, or `None` if the walk
+    /// did not reach it.
+    fn reached_row(
+        &self,
+        module: &super::Module,
+        visited: &[bool],
+        ordinal: usize,
+    ) -> Result<Option<CheckedProgramOwner>, ProgramClosureError> {
+        let named = &self.staged.source.definitions;
+        let entry = &module.definition_spans[ordinal];
+        let index = position_first(named, |definition| {
+            definition.name == entry.name && definition.owner == Some(module.identity)
+        })
+        .ok_or(ProgramClosureError::Invalid)?;
+        if !*visited.get(index).ok_or(ProgramClosureError::Invalid)? {
+            return Ok(None);
+        }
+        Ok(Some(CheckedProgramOwner {
+            module_identity: module.identity,
+            module_version: module.version,
+            definition_ordinal: u32::try_from(ordinal).map_err(|_| ProgramClosureError::Invalid)?,
+            definition_identity: named[index].identity,
+            definition_slot: u32::try_from(index).map_err(|_| ProgramClosureError::Invalid)?,
+            recursive: calls_self(&named[index]),
+        }))
     }
 
     pub fn declared_text_source_owner(&self) -> Option<DeclaredTextSourceOwner<'_>> {
@@ -757,13 +837,8 @@ impl ModulePrepared {
     }
 
     #[expect(
-        tigerstyle::compound_condition,
         tigerstyle::unbounded_collection_growth,
-        reason = "Owner: noble-contracts; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation; growth is bounded by the checked input or admission limits that drive the loop."
-    )]
-    #[expect(
-        tigerstyle::sentinel_fallback,
-        reason = "Owner: noble-contracts; an unrepresentable definition index maps to usize::MAX, which get() reports as absent, so the ownership guard fails closed."
+        reason = "Owner: noble-contracts; growth is bounded by the checked input or admission limits that drive the loop."
     )]
     fn verify_signed_origins(&self) -> Result<(), crate::source::Error> {
         let Some(submission) = self.submission.as_ref() else {
@@ -773,360 +848,510 @@ impl ModulePrepared {
             ));
         };
         let mut requested_slots = alloc::vec::Vec::new();
-        for definition in &submission.definitions {
-            let mut has_self = false;
-            for node in &definition.body.candidate.nodes {
-                if let noble_kernel::untrusted::Node::SignedSelf { def, .. } = node {
-                    has_self = true;
-                    if *def != definition.definition {
-                        return Err(super::error(
-                            crate::source::Stage::Check,
-                            "signed call does not target its containing definition",
-                        ));
-                    }
-                    let index = usize::try_from(def.0).map_err(|_| {
-                        super::error(crate::source::Stage::Check, "signed owner index overflow")
-                    })?;
-                    let owner = submission
-                        .environment
-                        .definition_owners
-                        .get(index)
-                        .copied()
-                        .flatten()
-                        .ok_or_else(|| {
-                            super::error(
-                                crate::source::Stage::Check,
-                                "signed call has no declared module owner",
-                            )
-                        })?;
-                    let source_slot = definition.owner_slot.ok_or_else(|| {
-                        super::error(
-                            crate::source::Stage::Check,
-                            "signed owner has no exact source slot",
-                        )
-                    })?;
-                    let source_index = usize::try_from(source_slot).map_err(|_| {
-                        super::error(
-                            crate::source::Stage::Check,
-                            "signed owner source slot overflow",
-                        )
-                    })?;
-                    let source = self
-                        .staged
-                        .source
-                        .definitions
-                        .get(source_index)
-                        .ok_or_else(|| {
-                            super::error(
-                                crate::source::Stage::Check,
-                                "signed owner source slot is absent",
-                            )
-                        })?;
-                    if source.owner != Some(owner)
-                        || definition.source_identity != source.identity
-                        || source
-                            .signed
-                            .as_ref()
-                            .is_none_or(|relation| relation.source_slot != source_slot)
-                        || definition.owner_inst.is_none()
-                    {
-                        return Err(super::error(
-                            crate::source::Stage::Check,
-                            "signed owner source slot, module and binder differ",
-                        ));
-                    }
-                    if !requested_slots.contains(&source_index) {
-                        requested_slots.push(source_index);
-                    }
-                }
-            }
-            if !has_self && definition.owner_inst.is_some() {
-                return Err(super::error(
-                    crate::source::Stage::Check,
-                    "unsigned body carries a signed owner binder",
-                ));
-            }
+        let mut requested = Ok(());
+        let mut definition_at = 0usize;
+        while requested.is_ok() && definition_at < submission.definitions.len() {
+            requested = self.request_signed_slots(
+                submission,
+                &submission.definitions[definition_at],
+                &mut requested_slots,
+            );
+            definition_at += 1;
         }
+        attempt!(requested);
         let mut checked_slots = alloc::vec::Vec::new();
-        for (source_index, definition) in self.staged.source.definitions.iter().enumerate() {
-            if !definition.tree.nodes.iter().any(|node| {
-                matches!(
-                    node.kind,
-                    crate::source::Kind::Call(crate::source::Target::SelfOwner)
-                )
-            }) {
-                continue;
+        let mut failure = None;
+        let mut source_index = 0usize;
+        while failure.is_none() && source_index < self.staged.source.definitions.len() {
+            match self.check_signed_source(submission, &requested_slots, source_index) {
+                Ok(true) => checked_slots.push(source_index),
+                Ok(false) => {}
+                Err(error) => failure = Some(error),
             }
-            if !requested_slots.contains(&source_index) {
-                continue;
-            }
-            let Some(owner) = definition.owner else {
-                return Err(super::error(
-                    crate::source::Stage::Check,
-                    "signed source has no module owner",
-                ));
-            };
-            let Some(relation) = definition.signed.as_ref() else {
-                return Err(super::error(
-                    crate::source::Stage::Check,
-                    "signed source lacks its precommit rigid owner relation",
-                ));
-            };
-            if usize::try_from(relation.source_slot).ok() != Some(source_index)
-                || relation.lexical_nodes.is_empty()
-            {
-                return Err(super::error(
-                    crate::source::Stage::Check,
-                    "signed owner source slot differs from its checked reservation",
-                ));
-            }
-            let Some(module) = self
-                .staged
-                .modules
-                .iter()
-                .find(|module| module.identity == owner)
-            else {
-                return Err(super::error(
-                    crate::source::Stage::Check,
-                    "signed source owner has no original module",
-                ));
-            };
-            let Some((ordinal, span)) = module
-                .definition_spans
-                .iter()
-                .enumerate()
-                .find(|(_, original)| original.name == definition.name)
-            else {
-                return Err(super::error(
-                    crate::source::Stage::Check,
-                    "signed definition absent from original module",
-                ));
-            };
-            let start = usize::try_from(span.span.start).map_err(|_| {
-                super::error(
-                    crate::source::Stage::Check,
-                    "signed source span exceeds address space",
-                )
-            })?;
-            let end = usize::try_from(span.span.end).map_err(|_| {
-                super::error(
-                    crate::source::Stage::Check,
-                    "signed source span exceeds address space",
-                )
-            })?;
-            let Some(bytes) = module.source.get(start..end) else {
-                return Err(super::error(
-                    crate::source::Stage::Check,
-                    "signed definition lies outside original module",
-                ));
-            };
-            let lexical_body = attempt!(super::verify_definition_origin_in_request(
-                super::DefinitionOrigin {
-                    module_source: &module.source,
-                    module: &module.name,
-                    version: module.version,
-                    definition: &definition.name,
-                    ordinal: u32::try_from(ordinal).map_err(|_| super::error(
-                        crate::source::Stage::Check,
-                        "signed definition ordinal overflow"
-                    ))?,
-                    span: span.span,
-                },
-                bytes,
-                self.limits,
-                self.staged.source.request_work(),
-            )
-            .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem)));
-            if lexical_body != span.body_span {
-                return Err(super::error(
-                    crate::source::Stage::Check,
-                    "signed body differs from original module",
-                ));
-            }
-            let mut meter = crate::Meter::pooled(self.limits, self.staged.source.request_work());
-            attempt!(meter
-                .charge(
-                    attempt!(
-                        crate::index(module.source.len(), definition.tree.span).map_err(
-                            |problem| super::diagnostic(crate::source::Stage::Check, problem)
-                        )
-                    ),
-                    definition.tree.span,
-                )
-                .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem)));
-            let original_scheme = attempt!(register::original_signature(
-                &self.staged,
-                module,
-                &definition.name,
-                self.limits,
-            ));
-            let saved_scheme = definition.signature.as_ref().ok_or_else(|| {
-                super::error(
-                    crate::source::Stage::Check,
-                    "signed definition has no retained signature",
-                )
-            })?;
-            if !same_scheme(&original_scheme, saved_scheme) {
-                return Err(super::error(
-                    crate::source::Stage::Check,
-                    "signed definition signature differs from original module",
-                ));
-            }
-            let source_slot = attempt!(crate::index(source_index, definition.tree.span)
-                .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem)));
-            let mut is_matched_specialization = false;
-            for specialization in submission
-                .definitions
-                .iter()
-                .filter(|specialization| specialization.owner_slot == Some(source_slot))
-            {
-                attempt!(meter
-                    .charge(
-                        attempt!(
-                            crate::index(module.source.len(), definition.tree.span).map_err(
-                                |problem| super::diagnostic(crate::source::Stage::Check, problem)
-                            )
-                        ),
-                        definition.tree.span,
-                    )
-                    .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem)));
-                if specialization.source_identity != definition.identity
-                    || submission
-                        .environment
-                        .definition_owners
-                        .get(usize::try_from(specialization.definition.0).unwrap_or(usize::MAX))
-                        != Some(&Some(owner))
-                    || submission
-                        .environment
-                        .scheme(specialization.definition)
-                        .is_none_or(|scheme| !same_scheme(&original_scheme, scheme))
-                {
-                    return Err(super::error(
-                        crate::source::Stage::Check,
-                        "signed specialization has a foreign source, signature or effect ceiling",
-                    ));
-                }
-                is_matched_specialization = true;
-            }
-            if !is_matched_specialization {
-                return Err(super::error(
-                    crate::source::Stage::Check,
-                    "signed definition has no exact specialized owner",
-                ));
-            }
-            let (mut original, name) =
-                attempt!(crate::source::parsing::parse_declared(bytes, &mut meter)
-                    .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem)));
-            if self
-                .staged
-                .source
-                .declared
-                .as_ref()
-                .is_some_and(|context| context.declared_text)
-            {
-                attempt!(crate::source::locals::lower(&mut original, &mut meter)
-                    .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem)));
-            }
-            if name.as_deref() != Some(definition.name.as_str())
-                || original.body != definition.tree.body
-                || original.nodes.len() != definition.tree.nodes.len()
-            {
-                return Err(super::error(
-                    crate::source::Stage::Check,
-                    "signed tree differs from original definition",
-                ));
-            }
-            let mut signed_count = 0usize;
-            for (node_index, (saved, parsed)) in definition
-                .tree
-                .nodes
-                .iter()
-                .zip(&original.nodes)
-                .enumerate()
-            {
-                if saved.span != parsed.span {
-                    return Err(super::error(
-                        crate::source::Stage::Check,
-                        "signed node moved from original source",
-                    ));
-                }
-                match (&saved.kind, &parsed.kind) {
-                    (
-                        crate::source::Kind::Call(crate::source::Target::SelfOwner),
-                        crate::source::Kind::Word(word),
-                    ) if word == definition.name.as_bytes() => {
-                        let index = u32::try_from(node_index).map_err(|_| {
-                            super::error(
-                                crate::source::Stage::Check,
-                                "signed lexical node index overflow",
-                            )
-                        })?;
-                        if relation.lexical_nodes.binary_search(&index).is_err() {
-                            return Err(super::error(
-                                crate::source::Stage::Check,
-                                "signed occurrence was not checked in its original quotation path",
-                            ));
-                        }
-                        signed_count += 1;
-                    }
-                    (crate::source::Kind::Call(_), crate::source::Kind::Word(word))
-                        if word != definition.name.as_bytes() => {}
-                    (
-                        crate::source::Kind::Call(crate::source::Target::Builtin(saved)),
-                        crate::source::Kind::Call(crate::source::Target::Builtin(parsed)),
-                    ) if saved == parsed => {}
-                    (crate::source::Kind::Literal(a), crate::source::Kind::Literal(b))
-                        if a == b => {}
-                    (crate::source::Kind::Text(a), crate::source::Kind::Text(b)) if a == b => {}
-                    (crate::source::Kind::Quotation(a), crate::source::Kind::Quotation(b))
-                        if a == b => {}
-                    _ => {
-                        return Err(super::error(
-                            crate::source::Stage::Check,
-                            "signed lexical occurrence differs from original source",
-                        ))
-                    }
-                }
-            }
-            if signed_count != relation.lexical_nodes.len() || definition.signature.is_none() {
-                return Err(super::error(
-                    crate::source::Stage::Check,
-                    "signed owner lacks lexical self or signature",
-                ));
-            }
-            attempt!(crate::source::preparation::symbolic::verify(
-                &definition.tree,
-                &original,
-                relation,
-                &definition.name,
-                bytes,
-                &mut meter,
-            )
-            .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem)));
-            checked_slots.push(source_index);
+            source_index += 1;
         }
-        if requested_slots
-            .iter()
-            .any(|slot| !checked_slots.contains(slot))
-        {
+        if let Some(error) = failure {
+            return Err(error);
+        }
+        let mut is_unchecked = false;
+        let mut slot_at = 0usize;
+        while !is_unchecked && slot_at < requested_slots.len() {
+            is_unchecked = !checked_slots.contains(&requested_slots[slot_at]);
+            slot_at += 1;
+        }
+        if is_unchecked {
             return Err(super::error(
                 crate::source::Stage::Check,
                 "signed call has no authenticated exact source definition",
             ));
         }
-        if submission
-            .body
-            .candidate
-            .nodes
-            .iter()
-            .any(|node| matches!(node, noble_kernel::untrusted::Node::SignedSelf { .. }))
-        {
+        if has_signed_self(&submission.body.candidate.nodes) {
             return Err(super::error(
                 crate::source::Stage::Check,
                 "signed self in executable root is not an owner definition",
             ));
         }
         Ok(())
+    }
+
+    /// Checks each signed self call of one submitted definition and records
+    /// its exact source slot once; an unsigned body carries no owner binder.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-contracts; recording a requested slot requires the caller's growable Vec, not a fixed slice."
+    )]
+    fn request_signed_slots(
+        &self,
+        submission: &noble_kernel::execution::Submission,
+        definition: &noble_kernel::execution::Definition,
+        requested_slots: &mut alloc::vec::Vec<usize>,
+    ) -> Result<(), crate::source::Error> {
+        let mut has_self = false;
+        let mut requested = Ok(());
+        let mut node_at = 0usize;
+        while requested.is_ok() && node_at < definition.body.candidate.nodes.len() {
+            if let noble_kernel::untrusted::Node::SignedSelf { def, .. } =
+                &definition.body.candidate.nodes[node_at]
+            {
+                has_self = true;
+                requested = self.request_signed_slot(submission, definition, *def, requested_slots);
+            }
+            node_at += 1;
+        }
+        attempt!(requested);
+        if !has_self && definition.owner_inst.is_some() {
+            return Err(super::error(
+                crate::source::Stage::Check,
+                "unsigned body carries a signed owner binder",
+            ));
+        }
+        Ok(())
+    }
+
+    /// Checks one signed self call against its containing definition and its
+    /// exact retained source slot, recording that slot once.
+    #[expect(
+        tigerstyle::compound_condition,
+        reason = "Owner: noble-contracts; each compound guard states one ordered admission rule verbatim; extracting its operands would change short-circuit evaluation."
+    )]
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    #[expect(
+        tigerstyle::borrowed_argument_types,
+        reason = "Owner: noble-contracts; recording a requested slot requires the caller's growable Vec, not a fixed slice."
+    )]
+    fn request_signed_slot(
+        &self,
+        submission: &noble_kernel::execution::Submission,
+        definition: &noble_kernel::execution::Definition,
+        def: noble_kernel::contracts::Definition,
+        requested_slots: &mut alloc::vec::Vec<usize>,
+    ) -> Result<(), crate::source::Error> {
+        if def != definition.definition {
+            return Err(super::error(
+                crate::source::Stage::Check,
+                "signed call does not target its containing definition",
+            ));
+        }
+        let index = usize::try_from(def.0).map_err(|_| {
+            super::error(crate::source::Stage::Check, "signed owner index overflow")
+        })?;
+        let owner = submission
+            .environment
+            .definition_owners
+            .get(index)
+            .copied()
+            .flatten()
+            .ok_or_else(|| {
+                super::error(
+                    crate::source::Stage::Check,
+                    "signed call has no declared module owner",
+                )
+            })?;
+        let source_slot = definition.owner_slot.ok_or_else(|| {
+            super::error(
+                crate::source::Stage::Check,
+                "signed owner has no exact source slot",
+            )
+        })?;
+        let source_index = usize::try_from(source_slot).map_err(|_| {
+            super::error(
+                crate::source::Stage::Check,
+                "signed owner source slot overflow",
+            )
+        })?;
+        let source = self
+            .staged
+            .source
+            .definitions
+            .get(source_index)
+            .ok_or_else(|| {
+                super::error(
+                    crate::source::Stage::Check,
+                    "signed owner source slot is absent",
+                )
+            })?;
+        if source.owner != Some(owner)
+            || definition.source_identity != source.identity
+            || source
+                .signed
+                .as_ref()
+                .is_none_or(|relation| relation.source_slot != source_slot)
+            || definition.owner_inst.is_none()
+        {
+            return Err(super::error(
+                crate::source::Stage::Check,
+                "signed owner source slot, module and binder differ",
+            ));
+        }
+        if !requested_slots.contains(&source_index) {
+            requested_slots.push(source_index);
+        }
+        Ok(())
+    }
+
+    /// Authenticates one requested signed owner against its original module
+    /// bytes: span, lexical body, signature, specializations, reparsed tree
+    /// and symbolic relation. `false` for a definition that is not one.
+    fn check_signed_source(
+        &self,
+        submission: &noble_kernel::execution::Submission,
+        requested_slots: &[usize],
+        source_index: usize,
+    ) -> Result<bool, crate::source::Error> {
+        let definition = &self.staged.source.definitions[source_index];
+        if !calls_self(definition) || !requested_slots.contains(&source_index) {
+            return Ok(false);
+        }
+        let Some(owner) = definition.owner else {
+            return Err(super::error(
+                crate::source::Stage::Check,
+                "signed source has no module owner",
+            ));
+        };
+        let Some(relation) = definition.signed.as_ref() else {
+            return Err(super::error(
+                crate::source::Stage::Check,
+                "signed source lacks its precommit rigid owner relation",
+            ));
+        };
+        if usize::try_from(relation.source_slot).ok() != Some(source_index)
+            || relation.lexical_nodes.is_empty()
+        {
+            return Err(super::error(
+                crate::source::Stage::Check,
+                "signed owner source slot differs from its checked reservation",
+            ));
+        }
+        let Some(module) =
+            crate::scan::find_first(&self.staged.modules, |module| module.identity == owner)
+        else {
+            return Err(super::error(
+                crate::source::Stage::Check,
+                "signed source owner has no original module",
+            ));
+        };
+        let Some(ordinal) = position_first(&module.definition_spans, |original| {
+            original.name == definition.name
+        }) else {
+            return Err(super::error(
+                crate::source::Stage::Check,
+                "signed definition absent from original module",
+            ));
+        };
+        let span = &module.definition_spans[ordinal];
+        let start = usize::try_from(span.span.start).map_err(|_| {
+            super::error(
+                crate::source::Stage::Check,
+                "signed source span exceeds address space",
+            )
+        })?;
+        let end = usize::try_from(span.span.end).map_err(|_| {
+            super::error(
+                crate::source::Stage::Check,
+                "signed source span exceeds address space",
+            )
+        })?;
+        let Some(bytes) = module.source.get(start..end) else {
+            return Err(super::error(
+                crate::source::Stage::Check,
+                "signed definition lies outside original module",
+            ));
+        };
+        let lexical_body = attempt!(super::verify_definition_origin_in_request(
+            super::DefinitionOrigin {
+                module_source: &module.source,
+                module: &module.name,
+                version: module.version,
+                definition: &definition.name,
+                ordinal: u32::try_from(ordinal).map_err(|_| super::error(
+                    crate::source::Stage::Check,
+                    "signed definition ordinal overflow"
+                ))?,
+                span: span.span,
+            },
+            bytes,
+            self.limits,
+            self.staged.source.request_work(),
+        )
+        .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem)));
+        if lexical_body != span.body_span {
+            return Err(super::error(
+                crate::source::Stage::Check,
+                "signed body differs from original module",
+            ));
+        }
+        let mut meter = crate::Meter::pooled(self.limits, self.staged.source.request_work());
+        attempt!(meter
+            .charge(
+                attempt!(crate::index(module.source.len(), definition.tree.span)
+                    .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem))),
+                definition.tree.span,
+            )
+            .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem)));
+        let original_scheme = attempt!(register::original_signature(
+            &self.staged,
+            module,
+            &definition.name,
+            self.limits,
+        ));
+        let saved_scheme = definition.signature.as_ref().ok_or_else(|| {
+            super::error(
+                crate::source::Stage::Check,
+                "signed definition has no retained signature",
+            )
+        })?;
+        if !same_scheme(&original_scheme, saved_scheme) {
+            return Err(super::error(
+                crate::source::Stage::Check,
+                "signed definition signature differs from original module",
+            ));
+        }
+        let source_slot = attempt!(crate::index(source_index, definition.tree.span)
+            .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem)));
+        let origin = SignedOrigin {
+            definition,
+            scheme: &original_scheme,
+            owner,
+            source_slot,
+            module_source_len: module.source.len(),
+        };
+        if !attempt!(Self::check_specializations(submission, origin, &mut meter)) {
+            return Err(super::error(
+                crate::source::Stage::Check,
+                "signed definition has no exact specialized owner",
+            ));
+        }
+        let (mut original, name) =
+            attempt!(crate::source::parsing::parse_declared(bytes, &mut meter)
+                .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem)));
+        if self
+            .staged
+            .source
+            .declared
+            .as_ref()
+            .is_some_and(|context| context.declared_text)
+        {
+            attempt!(crate::source::locals::lower(&mut original, &mut meter)
+                .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem)));
+        }
+        if name.as_deref() != Some(definition.name.as_str())
+            || original.body != definition.tree.body
+            || original.nodes.len() != definition.tree.nodes.len()
+        {
+            return Err(super::error(
+                crate::source::Stage::Check,
+                "signed tree differs from original definition",
+            ));
+        }
+        let signed_count = attempt!(Self::count_signed_nodes(definition, relation, &original));
+        if signed_count != relation.lexical_nodes.len() || definition.signature.is_none() {
+            return Err(super::error(
+                crate::source::Stage::Check,
+                "signed owner lacks lexical self or signature",
+            ));
+        }
+        attempt!(crate::source::preparation::symbolic::verify(
+            &definition.tree,
+            &original,
+            relation,
+            &definition.name,
+            bytes,
+            &mut meter,
+        )
+        .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem)));
+        Ok(true)
+    }
+
+    /// Charges and checks every submitted specialization of the signed owner
+    /// in submission order; `false` when none exists.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    fn check_specializations(
+        submission: &noble_kernel::execution::Submission,
+        origin: SignedOrigin<'_>,
+        meter: &mut crate::Meter,
+    ) -> Result<bool, crate::source::Error> {
+        let mut is_matched = false;
+        let mut failure = None;
+        let mut at = 0usize;
+        while failure.is_none() && at < submission.definitions.len() {
+            match Self::check_specialization(submission, &submission.definitions[at], origin, meter)
+            {
+                Ok(is_specialization) => is_matched = is_matched || is_specialization,
+                Err(error) => failure = Some(error),
+            }
+            at += 1;
+        }
+        match failure {
+            Some(error) => Err(error),
+            None => Ok(is_matched),
+        }
+    }
+
+    /// Charges and checks one submitted definition if it specializes the
+    /// signed owner; `false` for any other definition.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    #[expect(
+        tigerstyle::sentinel_fallback,
+        reason = "Owner: noble-contracts; an unrepresentable definition index maps to usize::MAX, which get() reports as absent, so the ownership guard fails closed."
+    )]
+    fn check_specialization(
+        submission: &noble_kernel::execution::Submission,
+        specialization: &noble_kernel::execution::Definition,
+        origin: SignedOrigin<'_>,
+        meter: &mut crate::Meter,
+    ) -> Result<bool, crate::source::Error> {
+        if specialization.owner_slot != Some(origin.source_slot) {
+            return Ok(false);
+        }
+        attempt!(meter
+            .charge(
+                attempt!(
+                    crate::index(origin.module_source_len, origin.definition.tree.span)
+                        .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem))
+                ),
+                origin.definition.tree.span,
+            )
+            .map_err(|problem| super::diagnostic(crate::source::Stage::Check, problem)));
+        if specialization.source_identity != origin.definition.identity
+            || submission
+                .environment
+                .definition_owners
+                .get(usize::try_from(specialization.definition.0).unwrap_or(usize::MAX))
+                != Some(&Some(origin.owner))
+            || submission
+                .environment
+                .scheme(specialization.definition)
+                .is_none_or(|scheme| !same_scheme(origin.scheme, scheme))
+        {
+            return Err(super::error(
+                crate::source::Stage::Check,
+                "signed specialization has a foreign source, signature or effect ceiling",
+            ));
+        }
+        Ok(true)
+    }
+
+    /// Compares every retained node with its reparsed original, in order, and
+    /// counts the checked lexical self occurrences.
+    fn count_signed_nodes(
+        definition: &crate::source::Named,
+        relation: &crate::source::SignedRelation,
+        original: &crate::source::Tree,
+    ) -> Result<usize, crate::source::Error> {
+        let mut signed_count = 0usize;
+        let mut failure = None;
+        let mut node_index = 0usize;
+        while failure.is_none()
+            && node_index < definition.tree.nodes.len()
+            && node_index < original.nodes.len()
+        {
+            match Self::compare_signed_node(
+                definition,
+                relation,
+                node_index,
+                &definition.tree.nodes[node_index],
+                &original.nodes[node_index],
+            ) {
+                Ok(true) => signed_count += 1,
+                Ok(false) => {}
+                Err(error) => failure = Some(error),
+            }
+            node_index += 1;
+        }
+        match failure {
+            Some(error) => Err(error),
+            None => Ok(signed_count),
+        }
+    }
+
+    /// Compares one retained node with its reparsed original: `true` for a
+    /// checked lexical self occurrence, `false` for an equal ordinary node.
+    fn compare_signed_node(
+        definition: &crate::source::Named,
+        relation: &crate::source::SignedRelation,
+        node_index: usize,
+        saved: &crate::source::Node,
+        parsed: &crate::source::Node,
+    ) -> Result<bool, crate::source::Error> {
+        if saved.span != parsed.span {
+            return Err(super::error(
+                crate::source::Stage::Check,
+                "signed node moved from original source",
+            ));
+        }
+        match (&saved.kind, &parsed.kind) {
+            (
+                crate::source::Kind::Call(crate::source::Target::SelfOwner),
+                crate::source::Kind::Word(word),
+            ) if word == definition.name.as_bytes() => {
+                let index = u32::try_from(node_index).map_err(|_| {
+                    super::error(
+                        crate::source::Stage::Check,
+                        "signed lexical node index overflow",
+                    )
+                })?;
+                if relation.lexical_nodes.binary_search(&index).is_err() {
+                    return Err(super::error(
+                        crate::source::Stage::Check,
+                        "signed occurrence was not checked in its original quotation path",
+                    ));
+                }
+                Ok(true)
+            }
+            (crate::source::Kind::Call(_), crate::source::Kind::Word(word))
+                if word != definition.name.as_bytes() =>
+            {
+                Ok(false)
+            }
+            (
+                crate::source::Kind::Call(crate::source::Target::Builtin(saved)),
+                crate::source::Kind::Call(crate::source::Target::Builtin(parsed)),
+            ) if saved == parsed => Ok(false),
+            (crate::source::Kind::Literal(a), crate::source::Kind::Literal(b)) if a == b => {
+                Ok(false)
+            }
+            (crate::source::Kind::Text(a), crate::source::Kind::Text(b)) if a == b => Ok(false),
+            (crate::source::Kind::Quotation(a), crate::source::Kind::Quotation(b)) if a == b => {
+                Ok(false)
+            }
+            _ => Err(super::error(
+                crate::source::Stage::Check,
+                "signed lexical occurrence differs from original source",
+            )),
+        }
     }
 
     /// Bind a checked named invocation to its original pure interface. A
@@ -1171,32 +1396,7 @@ impl ModulePrepared {
         if !self.closure_invokes_bound(&closure, adapter.definition)
             || submission.request.expected.allowed_effects != adapter.effects
             || definition.expected.allowed_effects != adapter.effects
-            || submission
-                .environment
-                .bound_adapters
-                .iter()
-                .filter(|actual| {
-                    actual.definition == adapter.definition
-                        && actual.adapter_identity == binding.adapter_identity
-                        && actual.adapter_slot == binding.adapter_slot
-                        && actual.input == binding.input
-                        && actual.output == binding.output
-                        && actual.effects == adapter.effects
-                        && (matches!(submission.environment.kind(actual.definition),
-                        Some(noble_kernel::contracts::Behavior::BoundEmit(slot))
-                            if slot == binding.adapter_slot
-                                && binding.operation == "test.emit")
-                            || matches!(submission.environment.kind(actual.definition),
-                        Some(noble_kernel::contracts::Behavior::BoundCodeExport(slot))
-                            if slot == binding.adapter_slot
-                                && binding.operation == "test.code-export")
-                            || matches!(submission.environment.kind(actual.definition),
-                        Some(noble_kernel::contracts::Behavior::BoundSend(slot))
-                            if slot == binding.adapter_slot
-                                && binding.operation == "test.send"))
-                })
-                .count()
-                != 1
+            || bound_adapter_count(&submission.environment, adapter, binding) != 1
         {
             return None;
         }
@@ -1223,7 +1423,7 @@ impl ModulePrepared {
         if self.kind != ModuleKind::Expression || self.pending.is_some() {
             return None;
         }
-        let module = self.staged.modules.iter().find(|module| {
+        let module = crate::scan::find_first(&self.staged.modules, |module| {
             module.identity == owner.module_identity && module.version == owner.module_version
         })?;
         let ordinal = usize::try_from(owner.definition_ordinal).ok()?;
@@ -1241,7 +1441,8 @@ impl ModulePrepared {
         if submission.request.expected.stack_out != self.output {
             return None;
         }
-        let mut matched = submission.definitions.iter().filter(|definition| {
+        // Exactly one submitted specialization may belong to the owner.
+        let is_owned = |definition: &noble_kernel::execution::Definition| {
             definition.owner_slot == Some(owner.definition_slot)
                 && definition.source_identity == owner.definition_identity
                 && submission
@@ -1249,18 +1450,21 @@ impl ModulePrepared {
                     .definition_owners
                     .get(definition.definition.0 as usize)
                     == Some(&Some(owner.module_identity))
-        });
-        let definition = matched.next()?;
-        if matched.next().is_some() {
+        };
+        let matched = position_first(&submission.definitions, is_owned)?;
+        let later = submission.definitions.get(matched.saturating_add(1)..)?;
+        if position_first(later, is_owned).is_some() {
             return None;
         }
+        let definition = &submission.definitions[matched];
         // This token describes the named Program itself, not an arbitrary
         // expression that happens to call that name once before doing other
         // work. Only a single exact root invocation has that provenance.
-        let [root] = submission.body.candidate.body.as_slice() else {
+        let body = &submission.body.candidate.body;
+        if body.len() != 1 {
             return None;
-        };
-        let root = usize::try_from(root.0).ok()?;
+        }
+        let root = usize::try_from(body[0].0).ok()?;
         if !matches!(
             submission.body.candidate.nodes.get(root),
             Some(noble_kernel::untrusted::Node::Invocation { def, .. })
@@ -1295,10 +1499,12 @@ impl ModulePrepared {
             Some(context) => &context.environment,
             None => return alloc::vec::Vec::new(),
         };
-        let recursive_count = definitions[start..]
-            .iter()
-            .filter(|definition| crate::source::sizechange::calls_self(definition))
-            .count();
+        let mut recursive_count = 0usize;
+        for definition in &definitions[start..] {
+            if crate::source::sizechange::calls_self(definition) {
+                recursive_count += 1;
+            }
+        }
         let mut evidence = alloc::vec::Vec::with_capacity(recursive_count);
         for definition in &definitions[start..] {
             if crate::source::sizechange::calls_self(definition) {
@@ -1310,12 +1516,16 @@ impl ModulePrepared {
     /// Typed, non-executable contract metadata for the newly staged module,
     /// including modules with no proof; this is not a proof receipt.
     pub fn contract_goals(&self) -> impl Iterator<Item = &crate::intrinsic::ContractGoal> {
-        self.staged
-            .modules
-            .last()
-            .filter(|_| self.kind == ModuleKind::Module)
-            .into_iter()
-            .flat_map(|module| module.contracts.iter().map(|entry| &entry.goal))
+        let mut goals = alloc::vec::Vec::new();
+        if let Some(module) = self.staged.modules.last() {
+            if self.kind == ModuleKind::Module {
+                goals = alloc::vec::Vec::with_capacity(module.contracts.len());
+                for entry in &module.contracts {
+                    goals.push(&entry.goal);
+                }
+            }
+        }
+        goals.into_iter()
     }
     pub fn bindings(&self) -> &[super::BoundOperation] {
         &self.staged.bindings
@@ -1326,11 +1536,11 @@ impl ModulePrepared {
         if self.kind != ModuleKind::Import {
             return None;
         }
-        self.staged
-            .aliases
-            .last()
-            .filter(|alias| !alias.pending)
-            .map(|alias| alias.spelling.as_str())
+        let alias = self.staged.aliases.last()?;
+        if alias.pending {
+            return None;
+        }
+        Some(alias.spelling.as_str())
     }
     /// A source-checked transitive rebind preview, not an alias-word refresh.
     /// Publication still requires `ModuleSession::commit` on its original
@@ -1378,17 +1588,9 @@ impl ModulePrepared {
                 if is_invalid_owner {
                     return None;
                 }
-                let mut found = None;
-                let mut module_at = 0usize;
-                while module_at < self.staged.modules.len() {
-                    let module = &self.staged.modules[module_at];
-                    if Some(module.identity) == owner {
-                        found = Some(module);
-                        break;
-                    }
-                    module_at += 1;
-                }
-                present!(found)
+                present!(crate::scan::find_first(&self.staged.modules, |module| {
+                    Some(module.identity) == owner
+                }))
             }
         };
         Some((module.identity, module.name.clone(), module.version))
@@ -1430,17 +1632,9 @@ impl ModulePrepared {
             }
         }
         let (_, module, version) = present!(self.resolved_module());
-        let mut linked = None;
-        let mut module_at = 0usize;
-        while module_at < self.staged.modules.len() {
-            let entry = &self.staged.modules[module_at];
-            if entry.name == module && entry.version == version {
-                linked = Some(entry);
-                break;
-            }
-            module_at += 1;
-        }
-        let linked = present!(linked);
+        let linked = present!(crate::scan::find_first(&self.staged.modules, |entry| {
+            entry.name == module && entry.version == version
+        }));
         let slot = present!(linked.adapter_slot);
         self.binding_for_slot(slot)
     }
@@ -1662,28 +1856,247 @@ impl ModuleSession {
 /// Whether a definition contains a lexical self call. Only a signed owner
 /// can resolve one; the closure walk separately requires it to be its own.
 fn calls_self(definition: &crate::source::Named) -> bool {
-    definition.tree.nodes.iter().any(|node| {
-        matches!(
-            node.kind,
+    let mut is_found = false;
+    let mut at = 0usize;
+    while !is_found && at < definition.tree.nodes.len() {
+        is_found = matches!(
+            definition.tree.nodes[at].kind,
             crate::source::Kind::Call(crate::source::Target::SelfOwner)
-        )
-    })
+        );
+        at += 1;
+    }
+    is_found
 }
 
-/// The root module or the selected dependency module owning a definition.
+/// Whether candidate `nodes` hold a signed self call.
+fn has_signed_self(nodes: &[noble_kernel::untrusted::Node]) -> bool {
+    let mut is_found = false;
+    let mut at = 0usize;
+    while !is_found && at < nodes.len() {
+        is_found = matches!(nodes[at], noble_kernel::untrusted::Node::SignedSelf { .. });
+        at += 1;
+    }
+    is_found
+}
+
+/// The root module or the first selected dependency module owning a
+/// definition; `dependencies` index `modules`.
 fn closure_owner<'module>(
+    modules: &'module [super::Module],
     module: &'module super::Module,
-    dependencies: &[&'module super::Module],
+    dependencies: &[usize],
     owner: Option<u64>,
 ) -> Option<&'module super::Module> {
     let owner = owner?;
     if owner == module.identity {
         return Some(module);
     }
-    dependencies
-        .iter()
-        .copied()
-        .find(|dependency| dependency.identity == owner)
+    let mut found = None;
+    let mut at = 0usize;
+    while found.is_none() && at < dependencies.len() {
+        if modules[dependencies[at]].identity == owner {
+            found = Some(dependencies[at]);
+        }
+        at += 1;
+    }
+    match found {
+        Some(index) => Some(&modules[index]),
+        None => None,
+    }
+}
+
+/// Work state of one closure walk: its meter, the visited and enqueued
+/// definition marks, and the definitions still to visit.
+struct ClosureWalk {
+    meter: crate::Meter,
+    visited: alloc::vec::Vec<bool>,
+    enqueued: alloc::vec::Vec<bool>,
+    pending: alloc::vec::Vec<usize>,
+}
+
+/// The original signed owner every submitted specialization must match,
+/// passed by value so a checking loop never reads through a borrow of it.
+#[derive(Clone, Copy)]
+struct SignedOrigin<'a> {
+    definition: &'a crate::source::Named,
+    scheme: &'a noble_kernel::words::Scheme,
+    owner: u64,
+    source_slot: u32,
+    module_source_len: usize,
+}
+
+impl ClosureWalk {
+    /// Charges and follows one node of the visited definition at `index`: a
+    /// named call is enqueued once, a lexical self call must be the
+    /// definition's own verified signed owner, and a slot invocation is
+    /// unsupported.
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; it mutates only exclusively borrowed, caller-owned work state for this bounded pass; checked inputs stay immutable."
+    )]
+    fn follow(
+        &mut self,
+        definition: &crate::source::Named,
+        index: usize,
+        node: &crate::source::Node,
+    ) -> Result<(), ProgramClosureError> {
+        self.meter
+            .charge(1, node.span)
+            .map_err(|_| ProgramClosureError::Exhausted)?;
+        match &node.kind {
+            crate::source::Kind::Call(crate::source::Target::Named(target)) => {
+                let next = usize::try_from(*target).map_err(|_| ProgramClosureError::Invalid)?;
+                if !*self
+                    .enqueued
+                    .get(next)
+                    .ok_or(ProgramClosureError::Invalid)?
+                {
+                    self.enqueued[next] = true;
+                    self.pending.push(next);
+                }
+            }
+            // A scoped recursive call is admitted only inside its own
+            // verified signed owner; it adds no edge to the closure.
+            crate::source::Kind::Call(crate::source::Target::SelfOwner) => {
+                let is_own_owner = definition.signed.as_ref().is_some_and(|relation| {
+                    usize::try_from(relation.source_slot).ok() == Some(index)
+                });
+                if !is_own_owner {
+                    return Err(ProgramClosureError::Invalid);
+                }
+            }
+            crate::source::Kind::Call(crate::source::Target::SlotInvoke(_)) => {
+                return Err(ProgramClosureError::Unsupported)
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+}
+
+/// The index of the first element satisfying `predicate`, as
+/// `items.iter().position(..)`: elements are tested in order and none after
+/// the first match.
+fn position_first<T>(items: &[T], mut predicate: impl FnMut(&T) -> bool) -> Option<usize> {
+    let mut index = 0usize;
+    let mut found = None;
+    while found.is_none() && index < items.len() {
+        if predicate(&items[index]) {
+            found = Some(index);
+        }
+        index += 1;
+    }
+    found
+}
+
+/// How many definitions the closure walk reached.
+fn reached_count(visited: &[bool]) -> usize {
+    let mut count = 0usize;
+    for seen in visited {
+        if *seen {
+            count += 1;
+        }
+    }
+    count
+}
+
+/// Whether a definition calls builtin `target`.
+fn calls_builtin(definition: &crate::source::Named, target: u32) -> bool {
+    let mut is_found = false;
+    let mut at = 0usize;
+    while !is_found && at < definition.tree.nodes.len() {
+        is_found = matches!(definition.tree.nodes[at].kind,
+            crate::source::Kind::Call(crate::source::Target::Builtin(called))
+                if called == target);
+        at += 1;
+    }
+    is_found
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+#[expect(
+    tigerstyle::platform_dependent_cast,
+    reason = "Owner: noble-contracts; usize is at least 32 bits on every supported target, so the u32-to-usize widening is lossless."
+)]
+/// Whether one environment adapter row is exactly the selected binding's
+/// adapter, owned by `module_identity` with the binding's bound behavior.
+fn adapter_matches(
+    environment: &noble_kernel::contracts::Env,
+    adapter: &noble_kernel::contracts::BoundAdapter,
+    binding: &super::BoundOperation,
+    module_identity: u64,
+) -> bool {
+    adapter.adapter_slot == binding.adapter_slot
+        && adapter.adapter_identity == binding.adapter_identity
+        && adapter.input == binding.input
+        && adapter.output == binding.output
+        && adapter.effects.as_slice() == binding.effects.as_slice()
+        && environment
+            .definition_owners
+            .get(adapter.definition.0 as usize)
+            == Some(&Some(module_identity))
+        && (matches!(environment.kind(adapter.definition),
+            Some(noble_kernel::contracts::Behavior::BoundEmit(slot))
+                if slot == binding.adapter_slot
+                    && binding.operation == "test.emit")
+            || matches!(environment.kind(adapter.definition),
+                Some(noble_kernel::contracts::Behavior::BoundCodeExport(slot))
+                    if slot == binding.adapter_slot
+                        && binding.operation == "test.code-export")
+            || matches!(environment.kind(adapter.definition),
+                Some(noble_kernel::contracts::Behavior::BoundSend(slot))
+                    if slot == binding.adapter_slot
+                        && binding.operation == "test.send"))
+}
+
+/// How many submitted adapter rows are exactly `adapter` under `binding`.
+fn bound_adapter_count(
+    environment: &noble_kernel::contracts::Env,
+    adapter: &noble_kernel::contracts::BoundAdapter,
+    binding: &super::BoundOperation,
+) -> usize {
+    let mut count = 0usize;
+    for actual in &environment.bound_adapters {
+        if actual_adapter_matches(environment, actual, adapter, binding) {
+            count += 1;
+        }
+    }
+    count
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
+)]
+/// Whether one submitted adapter row is exactly `adapter` under `binding`,
+/// with the binding's bound behavior.
+fn actual_adapter_matches(
+    environment: &noble_kernel::contracts::Env,
+    actual: &noble_kernel::contracts::BoundAdapter,
+    adapter: &noble_kernel::contracts::BoundAdapter,
+    binding: &super::BoundOperation,
+) -> bool {
+    actual.definition == adapter.definition
+        && actual.adapter_identity == binding.adapter_identity
+        && actual.adapter_slot == binding.adapter_slot
+        && actual.input == binding.input
+        && actual.output == binding.output
+        && actual.effects == adapter.effects
+        && (matches!(environment.kind(actual.definition),
+            Some(noble_kernel::contracts::Behavior::BoundEmit(slot))
+                if slot == binding.adapter_slot
+                    && binding.operation == "test.emit")
+            || matches!(environment.kind(actual.definition),
+                Some(noble_kernel::contracts::Behavior::BoundCodeExport(slot))
+                    if slot == binding.adapter_slot
+                        && binding.operation == "test.code-export")
+            || matches!(environment.kind(actual.definition),
+                Some(noble_kernel::contracts::Behavior::BoundSend(slot))
+                    if slot == binding.adapter_slot
+                        && binding.operation == "test.send"))
 }
 
 #[expect(
@@ -1709,6 +2122,63 @@ fn same_scheme(left: &noble_kernel::words::Scheme, right: &noble_kernel::words::
 mod symbolic_owner_tests {
     use super::{ModuleKind, ModulePrepared, ModuleSession, RebuiltImportDefinition};
     use crate::source::Target;
+
+    /// The closure walk draws one unit of the shared request budget per node
+    /// of each visited definition, then one per reached definition row: every
+    /// smaller budget refuses as exhaustion and the exact budget is spent.
+    #[test]
+    fn closure_walk_charges_each_visited_node_and_reached_row() {
+        let limits = crate::Limits {
+            bytes: 65_536,
+            nodes: 16_384,
+            depth: 64,
+            work: 2_000_000,
+        };
+        let retained = crate::source::RetainedSourceLimit::new(limits.bytes)
+            .expect("valid historical retained source bound");
+        let session = ModuleSession::new(&[], retained).expect("source session");
+        let mut prepared = session
+            .prepare(
+                b"module walk@1 [ def helper [ 1 + ] export root def root [ helper helper ] ]",
+                &[],
+                limits,
+            )
+            .expect("closed module prepares");
+        let charge = {
+            let module = prepared.staged.modules.last().expect("staged module");
+            let nodes: usize = prepared
+                .staged
+                .source
+                .definitions
+                .iter()
+                .filter(|definition| definition.owner == Some(module.identity))
+                .map(|definition| definition.tree.nodes.len())
+                .sum();
+            u32::try_from(nodes + module.definition_spans.len()).expect("small walk")
+        };
+        assert!(charge > 2, "both definitions have nodes");
+        for budget in 0..=charge {
+            let pool = alloc::rc::Rc::new(core::cell::Cell::new(budget));
+            prepared
+                .staged
+                .source
+                .declared
+                .as_mut()
+                .expect("declared context")
+                .request_work = Some(alloc::rc::Rc::clone(&pool));
+            let walked = prepared.checked_program_closure("root");
+            if budget < charge {
+                assert_eq!(
+                    walked.err(),
+                    Some(super::ProgramClosureError::Exhausted),
+                    "budget {budget} of {charge}"
+                );
+            } else {
+                assert_eq!(walked.map(|closure| closure.len()), Ok(2));
+                assert_eq!(pool.get(), 0, "the exact budget is spent");
+            }
+        }
+    }
 
     fn prepared_owner() -> ModulePrepared {
         let limits = crate::Limits {
