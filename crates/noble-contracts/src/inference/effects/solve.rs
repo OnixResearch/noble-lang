@@ -226,8 +226,12 @@ fn rigid_equation(
         rigid: left.rigid | right.rigid,
         unknown: left.unknown && right.unknown,
     };
-    let mut is_changed = attempt!(equate_through_pure(effects, facts, a, combined, span, meter));
-    is_changed |= attempt!(equate_through_pure(effects, facts, b, combined, span, meter));
+    let mut is_changed = attempt!(equate_through_pure(
+        effects, facts, a, combined, span, meter
+    ));
+    is_changed |= attempt!(equate_through_pure(
+        effects, facts, b, combined, span, meter
+    ));
     Ok(is_changed)
 }
 

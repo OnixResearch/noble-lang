@@ -622,7 +622,10 @@ mod tests {
             ..crate::Limits::default()
         };
         let mut meter = crate::Meter::new(limits(9));
-        assert_eq!(super::reserve_descriptor(&shape, SPAN, &mut meter).ok(), Some(9));
+        assert_eq!(
+            super::reserve_descriptor(&shape, SPAN, &mut meter).ok(),
+            Some(9)
+        );
         assert_eq!(meter.work, 0);
         let mut meter = crate::Meter::new(limits(8));
         let refused = super::reserve_descriptor(&shape, SPAN, &mut meter)
@@ -648,9 +651,24 @@ mod tests {
     fn stack_difference_reports_the_first_differing_position_from_the_top() {
         let mut meter = crate::Meter::new(crate::Limits::default());
         let mut arena = Arena::new();
-        let expected = stack_of(&mut arena, Term::Empty, &[Term::Bool, Term::I64], &mut meter);
-        let actual = stack_of(&mut arena, Term::Empty, &[Term::Text, Term::I64], &mut meter);
-        let alike = stack_of(&mut arena, Term::Empty, &[Term::Bool, Term::I64], &mut meter);
+        let expected = stack_of(
+            &mut arena,
+            Term::Empty,
+            &[Term::Bool, Term::I64],
+            &mut meter,
+        );
+        let actual = stack_of(
+            &mut arena,
+            Term::Empty,
+            &[Term::Text, Term::I64],
+            &mut meter,
+        );
+        let alike = stack_of(
+            &mut arena,
+            Term::Empty,
+            &[Term::Bool, Term::I64],
+            &mut meter,
+        );
         let (shared, expected_text, actual_text) = arena
             .stack_difference(expected, actual, SPAN, &mut meter)
             .expect("both stacks render")
@@ -689,11 +707,15 @@ mod tests {
         assert_eq!(suffix.len(), 2);
         assert_eq!(
             suffix[0],
-            arena.describe_stack(bottom, SPAN, &mut meter).expect("renders")
+            arena
+                .describe_stack(bottom, SPAN, &mut meter)
+                .expect("renders")
         );
         assert_eq!(
             suffix[1],
-            arena.describe_stack(top, SPAN, &mut meter).expect("renders")
+            arena
+                .describe_stack(top, SPAN, &mut meter)
+                .expect("renders")
         );
         let malformed = stack_of(&mut arena, Term::Unit, &[Term::I64], &mut meter);
         let refused = arena

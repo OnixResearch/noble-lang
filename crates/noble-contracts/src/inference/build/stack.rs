@@ -81,7 +81,8 @@ impl super::super::Arena {
         let mut failure = None;
         let mut at = 0;
         while at < entries.len() {
-            if let Err(problem) = self.push_pattern_entry(&entries[at], values, variables, span, meter)
+            if let Err(problem) =
+                self.push_pattern_entry(&entries[at], values, variables, span, meter)
             {
                 failure = Some(problem);
                 break;
@@ -121,7 +122,11 @@ impl super::super::Arena {
 }
 
 /// Charge one scan step per stack entry, stopping at the first refusal.
-fn charge_scans(count: usize, span: crate::Span, meter: &mut crate::Meter) -> Result<(), crate::Diagnostic> {
+fn charge_scans(
+    count: usize,
+    span: crate::Span,
+    meter: &mut crate::Meter,
+) -> Result<(), crate::Diagnostic> {
     let mut outcome = Ok(());
     let mut remaining = count;
     while outcome.is_ok() && remaining > 0 {

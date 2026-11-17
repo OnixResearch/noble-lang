@@ -51,12 +51,16 @@ impl super::Arena {
             .checked_add(1)
             .ok_or_else(|| { crate::invalid(span, "rigid signature binder limit exceeded") }));
         Ok(match kind {
-            noble_kernel::words::VariableKind::Value => super::Variable::Value(attempt!(
-                self.add(super::Term::RigidValue(identity), span, meter)
-            )),
-            noble_kernel::words::VariableKind::Stack => super::Variable::Stack(attempt!(
-                self.add(super::Term::RigidStack(identity), span, meter)
-            )),
+            noble_kernel::words::VariableKind::Value => super::Variable::Value(attempt!(self.add(
+                super::Term::RigidValue(identity),
+                span,
+                meter
+            ))),
+            noble_kernel::words::VariableKind::Stack => super::Variable::Stack(attempt!(self.add(
+                super::Term::RigidStack(identity),
+                span,
+                meter
+            ))),
             noble_kernel::words::VariableKind::Effect => {
                 super::Variable::EffectValue(attempt!(self.rigid_effect(identity, span, meter)))
             }

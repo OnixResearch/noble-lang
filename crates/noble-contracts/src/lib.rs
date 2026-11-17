@@ -36,10 +36,7 @@ macro_rules! attempt {
 pub(crate) mod scan {
     /// The first element satisfying `predicate`, as `items.iter().find(..)`:
     /// elements are tested in order and none after the first match.
-    pub(crate) fn find_first<T>(
-        items: &[T],
-        mut predicate: impl FnMut(&T) -> bool,
-    ) -> Option<&T> {
+    pub(crate) fn find_first<T>(items: &[T], mut predicate: impl FnMut(&T) -> bool) -> Option<&T> {
         let mut index = 0;
         let mut found = None;
         while found.is_none() && index < items.len() {

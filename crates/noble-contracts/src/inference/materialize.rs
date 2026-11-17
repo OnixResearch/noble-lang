@@ -113,9 +113,9 @@ impl super::Arena {
                 suffix.push(described);
                 Ok(Some(stack))
             }
-            super::Term::Hole(super::Sort::Stack) | super::Term::Empty | super::Term::RigidStack(_) => {
-                Ok(None)
-            }
+            super::Term::Hole(super::Sort::Stack)
+            | super::Term::Empty
+            | super::Term::RigidStack(_) => Ok(None),
             _ => Err(crate::internal(span)),
         }
     }

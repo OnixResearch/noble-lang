@@ -66,10 +66,7 @@ fn token(
     if next == at {
         return Err(super::super::invalid("invalid WIT token"));
     }
-    if bytes[at].is_ascii_whitespace()
-        || pair_at(bytes, at, b"//")
-        || pair_at(bytes, at, b"/*")
-    {
+    if bytes[at].is_ascii_whitespace() || pair_at(bytes, at, b"//") || pair_at(bytes, at, b"/*") {
         return Ok((next, None));
     }
     let nodes = match u32::try_from(count) {

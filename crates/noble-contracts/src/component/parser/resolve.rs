@@ -81,8 +81,7 @@ pub(super) fn world(
     {
         return Err(crate::component::exhausted());
     }
-    let is_unsigned =
-        any_uses_checked_u64(&world.imports) || any_uses_checked_u64(&world.exports);
+    let is_unsigned = any_uses_checked_u64(&world.imports) || any_uses_checked_u64(&world.exports);
     if !checked_u64 && is_unsigned {
         return Err(crate::component::error(
             crate::component::Stage::Binding,
@@ -124,10 +123,11 @@ fn any_type(
 
 /// Whether a parameter or result of `operation` is a WIT u64.
 fn uses_checked_u64(operation: &crate::component::Operation) -> bool {
-    any_type(&operation.parameters, |ty| ty == crate::component::Type::CheckedU64)
-        || any_type(&operation.results, |ty| {
-            ty == crate::component::Type::CheckedU64
-        })
+    any_type(&operation.parameters, |ty| {
+        ty == crate::component::Type::CheckedU64
+    }) || any_type(&operation.results, |ty| {
+        ty == crate::component::Type::CheckedU64
+    })
 }
 
 /// Whether any of `operations` uses a WIT u64.
@@ -169,8 +169,11 @@ fn is_unsupported_checked_export(
     if operation.parameters.len() != 1 || operation.results.len() != 1 {
         return true;
     }
-    any_type(&operation.parameters, |ty| ty != crate::component::Type::CheckedU64)
-        || any_type(&operation.results, |ty| ty != crate::component::Type::CheckedU64)
+    any_type(&operation.parameters, |ty| {
+        ty != crate::component::Type::CheckedU64
+    }) || any_type(&operation.results, |ty| {
+        ty != crate::component::Type::CheckedU64
+    })
 }
 
 /// Whether `operation` repeats the word or export name of an earlier operation.
@@ -188,18 +191,12 @@ fn is_duplicate_operation(
 }
 
 /// Whether two operations share a generated word or an export name.
-fn collides(
-    old: &crate::component::Operation,
-    operation: &crate::component::Operation,
-) -> bool {
+fn collides(old: &crate::component::Operation, operation: &crate::component::Operation) -> bool {
     old.word == operation.word || old.export_name == operation.export_name
 }
 
 /// The position of the local interface named `name`.
-fn interface_position(
-    interfaces: &[super::Interface],
-    name: &str,
-) -> Option<usize> {
+fn interface_position(interfaces: &[super::Interface], name: &str) -> Option<usize> {
     let mut position = None;
     let mut at = 0;
     while position.is_none() && at < interfaces.len() {
