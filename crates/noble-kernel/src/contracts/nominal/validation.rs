@@ -126,10 +126,6 @@ fn calculator_prefix_matches(env: &super::super::Env) -> bool {
 /// First row the calculator profile adds and visibility grants by index.
 const CALCULATOR_FIRST_ROW: usize = 27;
 
-#[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
-)]
 fn generic_counts_match(env: &super::super::Env) -> bool {
     if !env.valid_generic_declarations() {
         return false;
@@ -150,6 +146,10 @@ fn generic_counts_match(env: &super::super::Env) -> bool {
 /// Each row's behavior is copied out before it is matched, into scalar
 /// counters rather than an indexed count array: the selected Aeneas cannot
 /// join the per-arm borrows of a matched table row or an updated array.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-kernel; the invariants of this linear dispatcher are enforced by its callers and the kernel test suite"
+)]
 fn generic_family_counts(env: &super::super::Env, id: crate::types::NominalTypeId) -> [u8; 3] {
     let mut left = 0u8;
     let mut right = 0u8;
@@ -613,6 +613,10 @@ fn first_bound_row(
 }
 
 /// Whether bound-adapter row `index` names `def` at `slot`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; both pinned Rust compilers reject indexing bound_adapters Vec (E0277/E0658) and its runtime Definition equality; reassess when those reads and comparisons become const-capable."
+)]
 fn bound_row_names(
     env: &super::super::Env,
     index: usize,
@@ -627,6 +631,10 @@ fn bound_row_names(
 }
 
 /// Whether bound-adapter row `index` declares exactly the single `effect`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; both pinned Rust compilers reject indexing bound_adapters Vec (E0277/E0658) and its runtime EffId slice equality; reassess when those reads and comparisons become const-capable."
+)]
 fn bound_row_has_only_effect(
     env: &super::super::Env,
     index: usize,

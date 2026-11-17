@@ -289,6 +289,14 @@ impl ClockPlan<'_> {
 ///
 /// The plan is taken by value: the selected Aeneas cannot join control flow
 /// while a borrow of a borrow-carrying struct is in scope, as `&self` is here.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; decide_clock reports an unexpected binding as a typed NominalError and every scripted outcome as a ClockDecision; forged plans must not reach assertion panics."
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; decide_clock compares str and type slices through non-const PartialEq on both pinned compilers; reassess when those comparisons become const-capable."
+)]
 fn decide_clock(
     plan: ClockPlan<'_>,
     requested: &str,

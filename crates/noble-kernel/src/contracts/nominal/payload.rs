@@ -67,8 +67,8 @@ fn advance<'a>(
 }
 
 #[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-kernel; the single-pass dispatcher is kept linear so its stage order stays reviewable"
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; both pinned Rust compilers reject Vec<Frame/Pattern>::push (E0658) and owned Build destruction (E0493) in enter; reassess when these runtime transitions become const-capable."
 )]
 #[expect(
     tigerstyle::nested_conditionals,
@@ -144,8 +144,10 @@ fn push_reversed<'a>(
     mut work: alloc::vec::Vec<Frame<'a>>,
 ) -> alloc::vec::Vec<Frame<'a>> {
     let mut rest = types;
-    while let Some(last) = rest.len().checked_sub(1) {
-        let (head, tail) = rest.split_at(last);
+    let mut remaining = types.len();
+    while remaining > 0 {
+        remaining -= 1;
+        let (head, tail) = rest.split_at(remaining);
         let mut tail = tail.iter();
         if let Some(ty) = tail.next() {
             work.push(Frame {
@@ -314,7 +316,7 @@ fn pair_pattern(
 #[cfg(test)]
 mod tests {
     #[test]
-    fn program_payload_keeps_input_and_output_order() {
+    fn program_patterns_keep_input_and_output_order() {
         let env = crate::contracts::Env::default();
         let program = crate::types::Ty::Program(
             alloc::boxed::Box::new(alloc::vec![crate::types::Ty::I64, crate::types::Ty::Text]),

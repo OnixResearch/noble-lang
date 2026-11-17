@@ -152,10 +152,6 @@ const fn node_signed_self(node: &crate::untrusted::Node) -> Option<&crate::words
 
 /// Validate one signed-self node against the request-local work allowance. No
 /// loop appears in this body, so its early returns stay extractable.
-#[expect(
-    tigerstyle::missing_const_fn,
-    reason = "Owner: noble-maintainers; signed-self validation reads the runtime definition-owner and behavior tables before returning the typed owner refusal, so the helper cannot be const."
-)]
 fn signed_self_check(
     env: &crate::contracts::Env,
     node: &crate::untrusted::Node,
@@ -179,6 +175,10 @@ fn signed_self_check(
 ///
 /// Each conjunct is checked in turn without closures: the selected Aeneas
 /// cannot end the borrow an `and_then` closure captures from `env`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; signed-self validation reads the runtime definition-owner and behavior tables before returning the typed owner refusal, so the helper cannot be const."
+)]
 fn signed_self_valid(
     env: &crate::contracts::Env,
     def: crate::contracts::Definition,
@@ -406,17 +406,26 @@ fn guard_inst(
     Ok((cost, remaining))
 }
 
+/// Charge one bounded walk over a binding's type, visiting every node and
+/// reserving each program's children before queueing them.
+///
+/// The pending stack starts as `vec![ty]`'s capacity-one buffer, built
+/// without the macro: the selected Aeneas crashes on `into_vec` over a boxed
+/// array of borrows. A program's inputs then its outputs are queued in turn,
+/// as `chain` would: the selected Aeneas library models no `Iterator::chain`.
 #[expect(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; the bounded type walk preserves charge-before-queue order and reports typed type-size/work exhaustion rather than assertion failures."
+)]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-kernel; the single-pass dispatcher is kept linear so its stage order stays reviewable"
 )]
 fn guard_ty(
     ty: &crate::types::Ty,
     request: &crate::untrusted::Request,
     remaining: u32,
 ) -> Result<(u32, u32), super::Fail> {
-    // `vec![ty]`'s capacity-one buffer, built without the macro: the selected
-    // Aeneas crashes on `into_vec` over a boxed array of borrows.
     let mut pending: alloc::vec::Vec<&crate::types::Ty> = alloc::vec::Vec::with_capacity(1);
     pending.push(ty);
     let mut visited = 0u32;
@@ -451,8 +460,6 @@ fn guard_ty(
                     .map_err(|_| super::Fail::Exhausted(crate::untrusted::LimitKind::Work))?;
                 remaining = attempt!(super::parts::charge(remaining, count));
                 reserved = reserved.saturating_add(count);
-                // Inputs then outputs, as `chain` would: the selected Aeneas
-                // library models no `Iterator::chain`.
                 for child in input.iter() {
                     pending.push(child);
                 }
@@ -681,7 +688,7 @@ const fn nominal_size_within_limit(
 
 #[cfg(test)]
 mod tests {
-    fn request(type_size: u32) -> crate::untrusted::Request {
+    fn request() -> crate::untrusted::Request {
         crate::untrusted::Request {
             input_bytes: 0,
             expected: crate::untrusted::Expected {
@@ -693,7 +700,7 @@ mod tests {
                 bytes: 1024,
                 nodes: 64,
                 depth: 8,
-                type_size,
+                type_size: 64,
                 stack_height: 64,
                 work: 1024,
                 diagnostics: 16,
@@ -710,12 +717,11 @@ mod tests {
         );
         // One program node and three children are visited; the three children
         // are also reserved when the program node is charged.
+        assert!(matches!(super::guard_ty(&ty, &request(), 100), Ok((7, 93))));
+        let mut tight = request();
+        tight.limits.type_size = 3;
         assert!(matches!(
-            super::guard_ty(&ty, &request(64), 100),
-            Ok((7, 93))
-        ));
-        assert!(matches!(
-            super::guard_ty(&ty, &request(3), 100),
+            super::guard_ty(&ty, &tight, 100),
             Err(super::super::Fail::Exhausted(
                 crate::untrusted::LimitKind::TypeSize
             ))

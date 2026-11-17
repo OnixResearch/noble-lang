@@ -189,6 +189,10 @@ pub(super) fn fold_node(
     tigerstyle::ambiguous_params,
     reason = "Owner: noble-kernel; the same-typed parameters are positional by contract and named at every call site"
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; fold_slot clones interface stacks, joins the owned frame and allocates the LiveSite vectors; reassess only if those owned transitions become const-capable."
+)]
 /// Derive a live invocation solely from the host-owned root input and the
 /// checked forwarding positions. A raw ordinal is never type authority.
 fn fold_slot(
@@ -294,6 +298,10 @@ fn fold_slot(
 /// flow while a borrow of the borrow-carrying `Ctx` is in scope. The
 /// single-pass fold records its first refusal and stops, leaving the walked
 /// prefix identical to returning from inside the loop.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-maintainers; fold_formals records the first forwarded-reference refusal as a typed Fail and stops the walk; untrusted formals must not reach assertion panics."
+)]
 fn fold_formals(
     stack_in: &[crate::types::Ty],
     forwarded: &[u32],
@@ -533,10 +541,15 @@ mod tests {
             context,
         );
         assert!(matches!(
-            folded,
-            Err(super::super::Fail::Invalid(ref diagnostic))
+            &folded,
+            Err(super::super::Fail::Invalid(diagnostic))
+                if diagnostic.constraint == crate::untrusted::Constraint::StackJoin
+        ));
+        assert!(matches!(
+            &folded,
+            Err(super::super::Fail::Invalid(diagnostic))
                 if diagnostic.expected == [first.clone()]
-                    && diagnostic.constraint == crate::untrusted::Constraint::StackJoin
+                    && diagnostic.actual == [live_ref(crate::types::Ty::I64)]
         ));
     }
 }

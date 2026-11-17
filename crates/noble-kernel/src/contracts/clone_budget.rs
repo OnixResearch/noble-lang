@@ -23,7 +23,7 @@ const NODE_LIMIT: usize = 512;
 /// A boolean-returning helper rather than a disjunction bound to a local: for
 /// the latter the selected Aeneas emits a `Prop`-typed binding that the
 /// generated Lean cannot branch on.
-fn stacks_exceed_bound(scheme: &crate::words::Scheme) -> bool {
+const fn stacks_exceed_bound(scheme: &crate::words::Scheme) -> bool {
     scheme.stack_in.len() > 128 || scheme.stack_out.len() > 128
 }
 
@@ -96,6 +96,10 @@ impl Counter {
     #[expect(
         tigerstyle::no_recursion,
         reason = "one call per stack entry of the deliberately recursive per-subtree walk; the caller bounds the stack at 128 entries and the shared node budget bounds the visits"
+    )]
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "the stack index and the subtree depth are positional by contract and named at every call site"
     )]
     fn patterns(
         &mut self,
@@ -196,6 +200,10 @@ impl Counter {
     #[expect(
         tigerstyle::no_recursion,
         reason = "one call per stack entry of the deliberately recursive per-subtree walk; the caller bounds the stack at 128 entries and the shared node budget bounds the visits"
+    )]
+    #[expect(
+        tigerstyle::ambiguous_params,
+        reason = "the stack index and the subtree depth are positional by contract and named at every call site"
     )]
     fn types(
         &mut self,

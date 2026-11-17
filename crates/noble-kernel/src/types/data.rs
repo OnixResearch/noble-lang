@@ -146,7 +146,7 @@ mod tests {
     }
 
     #[test]
-    fn a_descriptor_owns_a_resource_when_any_payload_is_not_data() {
+    fn descriptors_own_a_resource_through_either_payload() {
         let resource = || super::super::Ty::Resource(super::super::ResourceKind(0));
         assert!(super::super::NominalShape::Opaque(boxed(resource())).owns_resource());
         assert!(!super::super::NominalShape::Opaque(boxed(super::super::Ty::I64)).owns_resource());

@@ -80,6 +80,10 @@ pub(crate) fn limits_of_entry(stack: &[crate::types::Ty], ctx: &Ctx) -> Result<(
     tigerstyle::assertion_density,
     reason = "Owner: noble-maintainers; limits_of_with rejects unrepresentable or excessive stack height before checking each type size, preserving typed StackHeight/TypeSize exhaustion instead of assertions."
 )]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-maintainers; limits_of_with validates entries through Env's runtime type walks and measures sizes with Vec-backed bounds checks; reassess only if those checks become const-capable."
+)]
 fn limits_of_with(
     stack: &[crate::types::Ty],
     ctx: &Ctx,

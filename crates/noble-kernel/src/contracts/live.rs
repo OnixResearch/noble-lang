@@ -227,7 +227,7 @@ pub(super) fn valid_ref(env: &super::Env, ty: &crate::types::Ty) -> bool {
 
 #[cfg(test)]
 mod tests {
-    fn live_ref(input: alloc::vec::Vec<crate::types::Ty>, effect: Option<u32>) -> crate::types::Ty {
+    fn borrowed(input: alloc::vec::Vec<crate::types::Ty>, effect: Option<u32>) -> crate::types::Ty {
         let effects = match effect {
             Some(id) => crate::types::EffSet::from_ids(&[crate::types::EffId(id)]),
             None => crate::types::EffSet::empty(),
@@ -245,9 +245,9 @@ mod tests {
             live_slots: true,
             ..crate::contracts::Env::default()
         };
-        let valid_nested = live_ref(alloc::vec![live_ref(alloc::vec![], None)], None);
+        let valid_nested = borrowed(alloc::vec![borrowed(alloc::vec![], None)], None);
         assert!(super::valid_ref(&env, &valid_nested));
-        let unknown_effect = live_ref(alloc::vec![live_ref(alloc::vec![], Some(99))], None);
+        let unknown_effect = borrowed(alloc::vec![borrowed(alloc::vec![], Some(99))], None);
         assert!(!super::valid_ref(&env, &unknown_effect));
     }
 }
