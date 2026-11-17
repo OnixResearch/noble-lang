@@ -4662,6 +4662,19 @@ net validation and complete ordered readback/collapse, with equal-label,
 different-label, OP1-SUP, OP2-SUP, and plain-v3 fixtures plus seeded semantic
 faults.
 
+For #135 the selected observation contract is per-root collapse only, with no
+joint-output or independence claim. Both copied and separately constructed
+equal-label sibling SUPs yield [6,14] when added, not the four-element product;
+nested equal labels retain [11,12,23] in the finite addition example and do
+not support a global one-bit-per-label interpretation. See the
+[observation contract](../../docs/labelled-dup-sup-v1.md#selected-multi-root-contract-135-per-root-collapse-only)
+for the unsupported joint-compositionality and no-nested-label-preservation
+claims and their reopen conditions.
+
+| Claim | Model / theorem(s) | Implementation boundary | Status |
+|---|---|---|---|
+| Finite per-root correlation controls (#135) | `correlation_fixtures_validate`, `different_label_fixture_marginals`, `separate_sup_roots_labelled_result`, `separate_sup_roots_marginals`, `corr_add_ordered_collapse`, `separate_sup_add_ordered_collapse`, `nested_equal_tree_validates`, `nested_equal_add_ordered_collapse` | Model only; no Rust/Wasm or joint observation correspondence | Proved finite examples; open / unsupported joint compositionality and no-nested-label preservation |
+
 **Gate decision:** model-only GO; runtime HOLD pending the #37 Rust-backend
 decision and #105-specific runtime evidence. This model is not a Rust reducer,
 source-to-net translation, runtime resource proof, or backend selection. See
