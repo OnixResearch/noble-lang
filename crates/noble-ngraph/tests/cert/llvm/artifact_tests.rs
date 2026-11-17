@@ -77,6 +77,8 @@ fn fresh_process_replays_retained_bindings_and_stages() {
     );
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(stdout.contains("6 graph/module bindings"));
+    assert!(stdout.contains("compiler-lab 2ff04a542a43 pilot"));
+    assert!(stdout.contains("decision stop"));
     assert!(stdout.contains("semantic validation and concrete agreement remain separate"));
 }
 

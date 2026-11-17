@@ -39,10 +39,13 @@
     "certificate_identity": "e76079d76b4a96a3000000000000000000000000000000000000000000000000",
     "request_identity": "bb8c378809df6418000000000000000000000000000000000000000000000000",
     "lean_corpus": "proofs/foundation/NobleFoundation/LlvmLoweringCorpus.lean",
-    "lean_corpus_identity": "0083985571839a17000000000000000000000000000000000000000000000000"
+    "lean_corpus_identity": "0083985571839a17000000000000000000000000000000000000000000000000",
+    "compiler_lab_report": "compiler-lab-pilot-2026-11-16.json",
+    "compiler_lab_report_sha256": "0c766ac353d18bd17d97bedc72ed6c072c5de15929ece11e7cff9d9dd2128af9",
+    "compiler_lab_commit": "2ff04a542a43fe635385b9b23b6a7b99daf1a6ec"
   },
   "source_bindings": [
-    {"path": "crates/noble-ngraph/src/llvm.rs", "identity": "931bf383b932c7f6000000000000000000000000000000000000000000000000"},
+    {"path": "crates/noble-ngraph/src/llvm.rs", "identity": "966fb12570a76188000000000000000000000000000000000000000000000000"},
     {"path": "crates/noble-ngraph/src/ir.rs", "identity": "404a876a10776da6000000000000000000000000000000000000000000000000"},
     {"path": "crates/noble-ngraph/src/check.rs", "identity": "dc914de32cebfc5d000000000000000000000000000000000000000000000000"},
     {"path": "crates/noble-ngraph/src/format/graph.rs", "identity": "cca10bb49c8636ec000000000000000000000000000000000000000000000000"},
@@ -51,15 +54,15 @@
     {"path": "crates/noble-ngraph/src/cert.rs", "identity": "be9af1a2445335f4000000000000000000000000000000000000000000000000"},
     {"path": "crates/noble-ngraph/tests/cert/differential.rs", "identity": "877ea09f2d3315ad000000000000000000000000000000000000000000000000"},
     {"path": "crates/noble-ngraph/tests/cert/llvm.rs", "identity": "45d3ae70c30c4be0000000000000000000000000000000000000000000000000"},
-    {"path": "crates/noble-ngraph/tests/cert/llvm/artifact_tests.rs", "identity": "e8e22ebe64763971000000000000000000000000000000000000000000000000"},
-    {"path": "crates/noble-ngraph/tests/cert/llvm/bundle.rs", "identity": "4a34ae682f827e68000000000000000000000000000000000000000000000000"},
+    {"path": "crates/noble-ngraph/tests/cert/llvm/artifact_tests.rs", "identity": "24524338a39cc1fd000000000000000000000000000000000000000000000000"},
+    {"path": "crates/noble-ngraph/tests/cert/llvm/bundle.rs", "identity": "8d6d57704a45e8bd000000000000000000000000000000000000000000000000"},
     {"path": "crates/noble-ngraph/tests/cert/llvm/controls.rs", "identity": "6a212ad15d5ef17e000000000000000000000000000000000000000000000000"},
     {"path": "crates/noble-ngraph/tests/cert/llvm/corpus.rs", "identity": "ac07e75df4c69819000000000000000000000000000000000000000000000000"},
     {"path": "crates/noble-ngraph/tests/cert/llvm/fixtures.rs", "identity": "8256c22cc63bc4b1000000000000000000000000000000000000000000000000"},
     {"path": "crates/noble-ngraph/tests/cert/llvm/model.rs", "identity": "5436b7b772b4d9d7000000000000000000000000000000000000000000000000"},
     {"path": "crates/noble-ngraph/tests/cert/llvm/profile_tests.rs", "identity": "c9272fcbfde5f626000000000000000000000000000000000000000000000000"},
     {"path": "proofs/foundation/NobleFoundation/LlvmLowering.lean", "identity": "ae1b80badede01b0000000000000000000000000000000000000000000000000"},
-    {"path": "verification/llvm-lowering/replay.mjs", "identity": "c73a9e370f337ba6000000000000000000000000000000000000000000000000"}
+    {"path": "verification/llvm-lowering/replay.mjs", "identity": "1c1092c23880961f000000000000000000000000000000000000000000000000"}
   ],
   "artifacts": [
     {
@@ -391,7 +394,7 @@
     {"stage": "graph-to-llvm-lowering", "status": "validated", "evidence": "llvm::validate on the retained bytes"},
     {"stage": "semantic-validation", "status": "proved", "evidence": "LlvmLowering.validate_sound over all BitVec 64 input pairs"},
     {"stage": "concrete-agreement", "status": "checked", "evidence": "parsed artifacts versus graph reference at the recorded finite inputs"},
-    {"stage": "llvm-optimisation", "status": "not-run", "evidence": "compiler-lab #124 owns it; no pinned LLVM here"},
-    {"stage": "native-artifact", "status": "not-run", "evidence": "compiler-lab #124 owns it; no pinned LLVM here"}
+    {"stage": "llvm-optimisation", "status": "semantic-validation", "evidence": "compiler-lab optimization pilot: pinned Alive2 (LLVM 21.1.8) accepts each pair module's opt default<O2> result as a refinement for every u64 input pair; not a Noble proof"},
+    {"stage": "native-artifact", "status": "concrete-agreement", "evidence": "compiler-lab optimization pilot: pinned llc/clang native code agrees with the graph reference on the 24 frozen inputs; both sides compile to identical machine code, so there is no speedup (decision stop); not a machine-code proof"}
   ]
 }

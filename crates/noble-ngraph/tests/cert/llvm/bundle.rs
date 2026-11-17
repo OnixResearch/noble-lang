@@ -1,5 +1,12 @@
 use super::*;
 
+/// The retained compiler-lab optimization-pilot receipt (immutable), its
+/// SHA-256 and the compiler-lab commit that produced it.
+const COMPILER_LAB_REPORT: &str = "compiler-lab-pilot-2026-11-16.json";
+const COMPILER_LAB_REPORT_SHA256: &str =
+    "0c766ac353d18bd17d97bedc72ed6c072c5de15929ece11e7cff9d9dd2128af9";
+const COMPILER_LAB_COMMIT: &str = "2ff04a542a43fe635385b9b23b6a7b99daf1a6ec";
+
 fn revision_text() -> String {
     format!(
         concat!(
@@ -174,7 +181,8 @@ pub(super) fn retained_json(all: &[Artifact], records: &[ControlRecord]) -> Stri
     text.push_str(&format!(
         "  \"bindings\": {{\n    \"certificate_identity\": {},\n    \
          \"request_identity\": {},\n    \"lean_corpus\": {},\n    \
-         \"lean_corpus_identity\": {}\n  }},\n",
+         \"lean_corpus_identity\": {},\n    \"compiler_lab_report\": {},\n    \
+         \"compiler_lab_report_sha256\": {},\n    \"compiler_lab_commit\": {}\n  }},\n",
         json_string(&retained_identity(
             "noble.ngraph.retained-text.v1",
             "pair/certificate.json",
@@ -190,7 +198,10 @@ pub(super) fn retained_json(all: &[Artifact], records: &[ControlRecord]) -> Stri
             "noble.ngraph.retained-text.v1",
             "proofs/foundation/NobleFoundation/LlvmLoweringCorpus.lean",
             &corpus
-        ))
+        )),
+        json_string(COMPILER_LAB_REPORT),
+        json_string(COMPILER_LAB_REPORT_SHA256),
+        json_string(COMPILER_LAB_COMMIT)
     ));
     text.push_str("  \"source_bindings\": [\n");
     text.push_str(&source_binding_entries());
@@ -214,8 +225,8 @@ pub(super) fn retained_json(all: &[Artifact], records: &[ControlRecord]) -> Stri
         "    {\"stage\": \"graph-to-llvm-lowering\", \"status\": \"validated\", \"evidence\": \"llvm::validate on the retained bytes\"},\n",
         "    {\"stage\": \"semantic-validation\", \"status\": \"proved\", \"evidence\": \"LlvmLowering.validate_sound over all BitVec 64 input pairs\"},\n",
         "    {\"stage\": \"concrete-agreement\", \"status\": \"checked\", \"evidence\": \"parsed artifacts versus graph reference at the recorded finite inputs\"},\n",
-        "    {\"stage\": \"llvm-optimisation\", \"status\": \"not-run\", \"evidence\": \"compiler-lab #124 owns it; no pinned LLVM here\"},\n",
-        "    {\"stage\": \"native-artifact\", \"status\": \"not-run\", \"evidence\": \"compiler-lab #124 owns it; no pinned LLVM here\"}\n",
+        "    {\"stage\": \"llvm-optimisation\", \"status\": \"semantic-validation\", \"evidence\": \"compiler-lab optimization pilot: pinned Alive2 (LLVM 21.1.8) accepts each pair module's opt default<O2> result as a refinement for every u64 input pair; not a Noble proof\"},\n",
+        "    {\"stage\": \"native-artifact\", \"status\": \"concrete-agreement\", \"evidence\": \"compiler-lab optimization pilot: pinned llc/clang native code agrees with the graph reference on the 24 frozen inputs; both sides compile to identical machine code, so there is no speedup (decision stop); not a machine-code proof\"}\n",
         "  ]\n}\n",
     ));
     text
